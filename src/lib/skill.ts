@@ -160,6 +160,14 @@ export class SkillManager {
     })
   }
 
+  // Reset all state (used when switching maps)
+  reset(): void {
+    this.activeSkills = {}
+    this.characterColorModifiers = {}
+    this.skillTargets.clear()
+    this.targetVersion++ // Trigger reactivity to clear UI
+  }
+
   // Add color modifier for a specific character (used by skills for companions)
   addCharacterColorModifier(characterId: number, team: Team, color: string): void {
     const key = this.getSkillKey(characterId, team)
