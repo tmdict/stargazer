@@ -12,7 +12,7 @@
           <tbody>
             <tr>
               <td>
-                <a href="https://www.yaphalla.com/" target="_blank">
+                <a href="https://www.yaphalla.com/">
                   <span class="link-title">Yaphalla</span>: Team formation builder, priority list
                   builder, and database.
                 </a>
@@ -20,7 +20,7 @@
             </tr>
             <tr>
               <td>
-                <a href="https://www.prydwen.gg/afk-journey/" target="_blank">
+                <a href="https://www.prydwen.gg/afk-journey/">
                   <span class="link-title">Prydwen: AFKJ</span>: AFKJ database and guides.
                 </a>
               </td>

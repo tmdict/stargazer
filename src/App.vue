@@ -5,6 +5,7 @@ import { RouterLink, RouterView } from 'vue-router'
 import rowanSvg from '@/assets/rowan.svg'
 import rowanGif from '@/assets/rowan.gif'
 import DragPreview from './components/DragPreview.vue'
+import GitHubIcon from './components/GitHubIcon.vue'
 
 const isLogoHovered = ref(false)
 </script>
@@ -24,6 +25,11 @@ const isLogoHovered = ref(false)
       <ul class="menu">
         <li><RouterLink to="/about">About</RouterLink></li>
         <li><RouterLink to="/link">Resources</RouterLink></li>
+        <li>
+          <a href="https://github.com/tmdict/stargazer/" class="github-link" title="View on GitHub">
+            <GitHubIcon />
+          </a>
+        </li>
       </ul>
     </nav>
   </header>
@@ -55,6 +61,10 @@ nav ul {
   margin-bottom: 0;
 }
 
+nav ul li {
+  margin-bottom: 0;
+}
+
 .logo-link {
   display: inline-block;
   line-height: 0;
@@ -73,6 +83,7 @@ nav ul {
 .menu {
   display: flex;
   list-style: none;
+  align-items: center;
 }
 
 .menu a {
@@ -80,14 +91,20 @@ nav ul {
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 600;
-  padding: 0.6rem 1.5rem;
+  padding: 0.6rem 1.5rem 0;
   border-radius: 6px;
   transition: all 0.2s ease;
 }
 
 .menu a:hover {
   color: #f7d87c;
-  background: rgba(0, 0, 0, 0.3);
+}
+
+.github-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: -5px;
 }
 
 @media (max-width: 768px) {
