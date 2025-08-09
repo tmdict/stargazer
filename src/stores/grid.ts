@@ -6,6 +6,7 @@ import { Grid, type GridTile } from '../lib/grid'
 import type { Hex } from '../lib/hex'
 import { Layout, POINTY } from '../lib/layout'
 import { getMapByKey, type MapConfig } from '../lib/maps'
+import type { SkillManager } from '../lib/skill'
 import { State } from '../lib/types/state'
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop'
@@ -76,8 +77,20 @@ export const useGridStore = defineStore('grid', () => {
       return false
     }
 
+    // Save the skill manager reference before creating new grid
+    const savedSkillManager = grid.skillManager as SkillManager | undefined
+    
+    // Deactivate all skills before switching maps
+    if (savedSkillManager) {
+      savedSkillManager.deactivateAllSkills(grid as Grid)
+    }
+
     // Create new grid with the selected map
     const newGrid = new Grid(FULL_GRID, mapConfig)
+    
+    // Restore the skill manager reference
+    newGrid.skillManager = savedSkillManager
+    
     // Copy properties to maintain reactivity
     Object.assign(grid, newGrid)
     currentMap.value = mapKey
