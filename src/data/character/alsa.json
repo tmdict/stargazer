@@ -1,0 +1,10 @@
+{
+  "id": 48,
+  "name": "alsa",
+  "level": "s",
+  "faction": "mauler",
+  "class": "mage",
+  "damage": "magic",
+  "range": 6,
+  "season": 1
+}

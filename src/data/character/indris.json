@@ -1,0 +1,10 @@
+{
+  "id": 79,
+  "name": "indris",
+  "level": "a",
+  "faction": "wilder",
+  "class": "marksman",
+  "damage": "physical",
+  "range": 15,
+  "season": 4
+}

@@ -1,0 +1,10 @@
+{
+  "id": 83,
+  "name": "velara",
+  "level": "s",
+  "faction": "wilder",
+  "class": "support",
+  "damage": "magic",
+  "range": 5,
+  "season": 4
+}

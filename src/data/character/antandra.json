@@ -1,0 +1,10 @@
+{
+  "id": 3,
+  "name": "antandra",
+  "level": "a",
+  "faction": "mauler",
+  "class": "tank",
+  "damage": "physical",
+  "range": 1,
+  "season": 0
+}

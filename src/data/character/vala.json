@@ -1,0 +1,10 @@
+{
+  "id": 46,
+  "name": "vala",
+  "level": "s",
+  "faction": "lightbearer",
+  "class": "rogue",
+  "damage": "physical",
+  "range": 7,
+  "season": 0
+}
