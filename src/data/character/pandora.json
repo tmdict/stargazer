@@ -1,0 +1,10 @@
+{
+  "id": 85,
+  "name": "pandora",
+  "level": "s",
+  "faction": "dimensional",
+  "class": "support",
+  "damage": "magic",
+  "range": 5,
+  "season": 4
+}

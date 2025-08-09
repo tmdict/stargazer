@@ -1,0 +1,55 @@
+:root {
+  /* Brand Colors */
+  --color-primary: #36958e;
+  --color-primary-hover: #2a7a73;
+  --color-danger: #c05b4d;
+  --color-danger-hover: #a04936;
+
+  /* Team Colors */
+  --color-ally: #36958e;
+  --color-enemy: #c82333;
+
+  /* Background Colors */
+  --color-bg-primary: #f7f2ec;
+  --color-bg-secondary: #ebe6db;
+  --color-bg-tertiary: #f0ebe0;
+  --color-bg-white: #fff;
+  --color-bg-light-gray: #f0f0f0;
+
+  /* Border Colors */
+  --color-border-primary: #d4cfc0;
+  --color-border-light: #ddd;
+
+  /* Text Colors */
+  --color-text-primary: #333;
+  --color-text-secondary: #666;
+  --color-text-muted: #484848;
+
+  /* Border Radius */
+  --radius-small: 4px;
+  --radius-medium: 6px;
+  --radius-large: 8px;
+  --radius-round: 50%;
+
+  /* Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 0.75rem;
+  --spacing-lg: 1rem;
+  --spacing-xl: 1.5rem;
+  --spacing-2xl: 2rem;
+
+  /* Transitions */
+  --transition-fast: 0.2s ease;
+  --transition-medium: 0.3s ease;
+
+  /* Shadows */
+  --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+
+  /* Z-index scale */
+  --z-grid-base: 1;
+  --z-arrows: 5;
+  --z-artifacts: 10;
+  --z-dropdown: 9999;
+}
