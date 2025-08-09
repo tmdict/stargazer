@@ -183,6 +183,7 @@ onUnmounted(() => {
 
 .tab-content {
   background: var(--color-bg-primary);
+  border-radius: 0 0 var(--radius-large) var(--radius-large);
 }
 
 .tab-dropdown {
