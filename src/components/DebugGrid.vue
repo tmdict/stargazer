@@ -110,7 +110,7 @@ defineExpose({
               <span class="symmetry-info"
                 >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
               >
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets()" :key="key">
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
                 <span v-if="key === `${tile.characterId}-${tile.team}`" class="skill-target">
                   → Targeting Hex {{ targetInfo.targetHexId }}
                   <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
