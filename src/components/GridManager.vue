@@ -18,6 +18,7 @@ import GridCharacters from './GridCharacters.vue'
 import CharacterSelectionModal from './CharacterSelectionModal.vue'
 import GridTiles from './GridTiles.vue'
 import PathfindingDebug from './PathfindingDebug.vue'
+import SkillTargeting from './SkillTargeting.vue'
 
 interface Props {
   // Data props
@@ -29,6 +30,7 @@ interface Props {
   showArrows?: boolean
   showHexIds?: boolean
   showDebug?: boolean
+  showSkills?: boolean
   // Map editor props
   isMapEditorMode?: boolean
   selectedMapEditorState?: State
@@ -44,6 +46,7 @@ const props = withDefaults(defineProps<Props>(), {
   showArrows: true,
   showHexIds: true,
   showDebug: false,
+  showSkills: true,
   isMapEditorMode: false,
   selectedMapEditorState: State.DEFAULT,
   showPerspective: false,
@@ -320,6 +323,13 @@ defineExpose({
     <!-- Arrow layer (above characters) -->
     <GridArrows
       :show-arrows="showArrows"
+      :show-perspective="showPerspective"
+      :default-svg-height="defaultSvgHeight"
+    />
+
+    <!-- Skill targeting layer (above arrows) -->
+    <SkillTargeting 
+      v-if="showSkills"
       :show-perspective="showPerspective"
       :default-svg-height="defaultSvgHeight"
     />

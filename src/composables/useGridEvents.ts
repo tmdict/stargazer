@@ -16,6 +16,11 @@ export interface GridEvents {
   // Character interactions
   'character:remove': (hexId: number) => void
   'character:dragStart': (hexId: number, characterId: number) => void
+  'character:placed': (hexId: number, characterId: number) => void
+  'character:removed': (hexId: number) => void
+
+  // Grid updates
+  'grid:updated': () => void
 
   // Artifact interactions
   'artifact:remove': (team: Team) => void
