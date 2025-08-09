@@ -35,7 +35,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
       Team.ALLY,
       Team.ENEMY,
       characterRanges,
-      grid.gridPreset,
       ENABLE_CACHE,
       (hex) => {
         try {
@@ -56,7 +55,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
       Team.ENEMY,
       Team.ALLY,
       characterRanges,
-      grid.gridPreset,
       ENABLE_CACHE,
       (hex) => {
         try {
@@ -102,8 +100,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
         range,
         getTileHelper,
         defaultCanTraverse,
-        grid.gridPreset,
-        false, // Don't use caching for debug (always fresh calculations for visualization)
       )
 
       if (closestEnemy) {
@@ -138,8 +134,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
         range,
         getTileHelper,
         defaultCanTraverse,
-        grid.gridPreset,
-        false, // Don't use caching for debug (always fresh calculations for visualization)
       )
 
       if (closestAlly) {

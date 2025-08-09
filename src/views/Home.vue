@@ -106,6 +106,9 @@ const handleMapChange = (mapKey: string) => {
   const success = gridStore.switchMap(mapKey)
   if (success) {
     selectedMap.value = mapKey
+    // Reset skill manager state and reconnect to the new grid
+    skillStore._getSkillManager().reset()
+    gridStore._getGrid().skillManager = skillStore._getSkillManager()
   }
 }
 
@@ -391,8 +394,8 @@ onUnmounted(() => {
   }
 
   .sections-container > .section:first-child {
-    flex: 0 0 640px;
-    width: 640px;
+    flex: 0 0 660px;
+    width: 660px;
   }
 
   .sections-container > .section:last-child {

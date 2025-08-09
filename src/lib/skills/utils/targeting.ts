@@ -14,7 +14,6 @@ export interface TargetCandidate {
 export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
 
-  // Use a more efficient single pass through tiles
   const tiles = grid.getAllTiles()
   for (const tile of tiles) {
     if (tile.characterId && tile.team === team) {
