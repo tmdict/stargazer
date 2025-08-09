@@ -61,6 +61,8 @@ export class SkillManager {
   private characterColorModifiers: Record<string, string> = {}
   // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
+  // Version counter to trigger reactivity
+  private targetVersion = 0
 
   private getSkillKey(characterId: number, team: Team): string {
     return `${characterId}-${team}`
@@ -199,6 +201,7 @@ export class SkillManager {
   setSkillTarget(characterId: number, team: Team, target: SkillTargetInfo): void {
     const key = this.getSkillKey(characterId, team)
     this.skillTargets.set(key, target)
+    this.targetVersion++ // Trigger reactivity
   }
 
   getSkillTarget(characterId: number, team: Team): SkillTargetInfo | undefined {
@@ -209,10 +212,15 @@ export class SkillManager {
   clearSkillTarget(characterId: number, team: Team): void {
     const key = this.getSkillKey(characterId, team)
     this.skillTargets.delete(key)
+    this.targetVersion++ // Trigger reactivity
   }
 
   getAllSkillTargets(): Map<string, SkillTargetInfo> {
     return new Map(this.skillTargets)
+  }
+  
+  getTargetVersion(): number {
+    return this.targetVersion
   }
 
   // Update all active skills

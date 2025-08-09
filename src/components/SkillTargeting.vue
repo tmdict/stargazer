@@ -21,9 +21,11 @@ const gridStore = useGridStore()
 const skillStore = useSkillStore()
 const gridEvents = useGridEvents()
 
-// Get all active skill targets
+// Get all active skill targets - Vue will track this computed
 const skillTargets = computed(() => {
-  return skillStore.getAllSkillTargets()
+  // This computed will automatically re-run when getAllSkillTargets changes
+  // because getAllSkillTargets itself is a computed that depends on targetVersion
+  return skillStore.getAllSkillTargets
 })
 
 // Compute SVG dimensions based on grid scale
