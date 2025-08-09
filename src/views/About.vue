@@ -22,18 +22,21 @@
           <li><strong>Build Teams:</strong> Place up to 5 heroes per team (ally/enemy)</li>
           <li><strong>Add Artifacts:</strong> Click the Artifacts tab to equip team bonuses</li>
           <li>
-            <strong>Simulation Details:</strong> Use the dropdown to toggle view options:
+            <strong>Simulation Details:</strong> Toggle to show/hide various view options:
             <ul>
               <li><strong>Grid Info:</strong> Display hex coordinates and tile information</li>
+              <li>
+                <strong>Skills:</strong> Simulate skill effects of character currently on the map
+              </li>
               <li><strong>Targeting:</strong> Simulate attack ranges and movement paths</li>
               <li><strong>Debug:</strong> Show technical information for troubleshooting</li>
             </ul>
           </li>
+          <li><strong>Create Maps:</strong> Use Map Editor tab to design custom arenas</li>
           <li>
             <strong>Share Teams:</strong> Click "Link" for shareable URL, "Copy" for image to
             clipboard, or "Download" to save image
           </li>
-          <li><strong>Create Maps:</strong> Use Map Editor tab to design custom arenas</li>
         </ul>
 
         <h2>Tips</h2>
@@ -42,7 +45,6 @@
           <li>Click and drag to move heroes between positions</li>
           <li>Click any grid tile to quickly place characters via popup menu</li>
           <li>Use "Flat" view for easier team overview</li>
-          <li>Export as image with the "Download" button</li>
           <li>The grid is fully responsive - works seamlessly on mobile, tablet, and desktop!</li>
         </ul>
       </div>
