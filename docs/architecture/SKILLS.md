@@ -1,8 +1,8 @@
-# Skills
+# Skill System
 
 ## Overview
 
-The skill system enables characters to have unique abilities that activate when placed on the grid. Skills can modify game rules, spawn companion characters, add visual effects, and more. The system is designed to be extensible while maintaining clean separation from core game mechanics.
+The skill system enables characters to have unique abilities that activate when placed on the grid. Skills modify game rules, spawn companions, target enemies, and provide visual feedback through an extensible, lifecycle-managed architecture.
 
 ## Design Principles
 
@@ -49,12 +49,14 @@ interface Skill {
   characterId: number
   name: string
   description: string
-  colorModifier?: string // Border color for main unit
-  companionColorModifier?: string // Border color for companion units
-  companionRange?: number // Override range for companion units
+  colorModifier?: string // Border color for visual effects
+  targetingColorModifier?: string // Arrow color for targeting skills
+  companionColorModifier?: string // Border color for companions
+  companionRange?: number // Override range for companions
 
   onActivate(context: SkillContext): void
   onDeactivate(context: SkillContext): void
+  onUpdate?(context: SkillContext): void // Called on grid changes
 }
 
 interface SkillContext {
@@ -100,60 +102,50 @@ Features:
 - Cross-team movement handles skill state transitions
 - Transaction pattern ensures atomicity
 
-### Skill-specific Systems
+## Skill Categories
 
-#### Companion System
+### Companion Skills
 
-Companions are linked characters that share fate with their main character:
+Spawn linked characters that share fate with their main unit:
 
-- **ID Convention**: Companions use characterId + 10000 (e.g., Phraesto 50 → companion 10050)
-- **Team-aware linking**: Companion links stored as `mainId-team` → Set of companion IDs
-- **Linked removal**: Removing either main or companion removes both
-- **Movement rules**: Companions can move within team but not cross teams
-- **Range overrides**: Skills can define `companionRange` to override default range for companions
+- **Linked lifecycle**: Main and companion removed together
+- **Team capacity**: Increases beyond standard limit
+- **Visual differentiation**: Custom border colors
+- **Range independence**: Companions can have different ranges
 
-Grid enhancements:
+See [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) for implementation details.
 
-- `isCompanionId()` - Check if character is a companion
-- `getCompanions(mainId, team?)` - Get companions for a character
-- `addCompanionLink()` / `removeCompanionLink()` - Manage links
-- `findCharacterHex(characterId, team?)` - Team-aware character lookup
+### Targeting Skills  
+
+Automatically select and track enemy targets:
+
+- **Dynamic recalculation**: Updates when characters move
+- **Visual feedback**: Colored arrows instead of borders
+- **Custom logic**: Symmetrical, closest, or priority-based
+- **Performance optimized**: Pre-computed lookups
+
+See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implementation details.
 
 ## Implemented Skills
 
-### Phraesto - Shadow Companion
+### Companion Skills
 
-**Character ID**: 50  
-**Type**: Companion Spawning
+**Phraesto** (ID: 50) - Shadow Companion:
+- Main: White border (`#ffffff`)
+- Companion: Red border (`#c83232`)
+- Implementation: `/src/lib/skills/phraesto.ts`
 
-**Behavior**:
+**Elijah & Lailah** (ID: 68) - Twin Units:
+- Elijah: Blue border (`#78b5b2`), range 6
+- Lailah: Pink border (`#e47d75`), range 1
+- Implementation: `/src/lib/skills/elijah-lailah.ts`
 
-1. When placed, spawns a shadow companion on a random allied tile
-2. Increases team capacity by 1 (5 → 6)
-3. Main Phraesto has white border (`#ffffff`)
-4. Shadow companion has red border (`#c83232`)
-5. If either is removed, both are removed
-6. Companions can move within team but cannot cross teams
-7. Skill deactivates/reactivates on team changes
+### Targeting Skills
 
-**Implementation**: `/src/lib/skills/phraesto.ts`
-
-### Elijah & Lailah - Twins
-
-**Character ID**: 68  
-**Type**: Companion Spawning with Range Override
-
-**Behavior**:
-
-1. When placed, spawns Lailah companion on a random allied tile
-2. Increases team capacity by 1 (5 → 6)
-3. Elijah has light blue border (`#78b5b2`)
-4. Lailah has light pink border (`#e47d75`)
-5. Lailah has range of 1 (overrides Elijah's range of 6)
-6. If either twin is removed, both are removed
-7. Skill deactivates/reactivates on team changes
-
-**Implementation**: `/src/lib/skills/elijah-lailah.ts`
+**Silvina** (ID: 39) - First Strike:
+- Green targeting arrow (`#73be25`)
+- Symmetrical positioning with fallback
+- Implementation: `/src/lib/skills/silvina.ts`
 
 ## Adding New Skills
 
@@ -167,28 +159,23 @@ export const mySkill: Skill = {
   characterId: 123,
   name: 'Skill Name',
   description: 'What it does',
-  colorModifier: '#hexcolor', // optional - main unit color
-  companionColorModifier: '#hexcolor', // optional - companion color
-  companionRange: 2, // optional - override companion range
+  colorModifier: '#hexcolor', // optional - border color
+  targetingColorModifier: '#hexcolor', // optional - arrow color
+  companionColorModifier: '#hexcolor', // optional - companion border
+  companionRange: 2, // optional - companion range override
 
   onActivate(context) {
     const { grid, team, characterId, skillManager } = context
 
-    // Apply color to main character if defined
-    if (this.colorModifier) {
-      skillManager.addCharacterColorModifier(characterId, team, this.colorModifier)
-    }
-
-    // Activation logic
+    // Activation logic - spawn companions, set targets, etc.
   },
 
   onDeactivate(context) {
-    const { skillManager, characterId, team } = context
-
-    // Remove color modifier
-    skillManager.removeCharacterColorModifier(characterId, team)
-
-    // Cleanup logic
+    // Cleanup logic - remove companions, clear targets, etc.
+  },
+  
+  onUpdate(context) {
+    // Optional - recalculate targets, update visuals, etc.
   },
 }
 ```
@@ -199,9 +186,13 @@ export const mySkill: Skill = {
 import { mySkill } from './skills/mySkill'
 
 const skillRegistry = new Map<number, Skill>([
+  // Companion skills
   [phraestoSkill.characterId, phraestoSkill],
   [elijahLailahSkill.characterId, elijahLailahSkill],
-  [mySkill.characterId, mySkill], // Add here
+  // Targeting skills
+  [silvinaSkill.characterId, silvinaSkill],
+  // Add new skills here
+  [mySkill.characterId, mySkill],
 ])
 ```
 
@@ -211,6 +202,15 @@ const skillRegistry = new Map<number, Skill>([
    - Team changes
    - Edge cases
 
+## Performance Considerations
+
+- **Lazy activation**: Skills only initialize when characters placed
+- **Transaction atomicity**: Multi-step operations rollback on failure
+- **Reactive updates**: Vue integration for efficient rendering
+- **Memory efficiency**: Cleanup on deactivation prevents leaks
+
 ## Related Documentation
 
 - [`/docs/architecture/GRID.md`](./GRID.md) - Grid & character management system
+- [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) - Companion skill implementation
+- [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) - Targeting skill implementation
