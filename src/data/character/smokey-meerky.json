@@ -1,0 +1,10 @@
+{
+  "id": 40,
+  "name": "smokey-meerky",
+  "level": "s",
+  "faction": "mauler",
+  "class": "support",
+  "damage": "magic",
+  "range": 8,
+  "season": 0
+}

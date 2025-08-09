@@ -1,0 +1,10 @@
+{
+  "id": 50,
+  "name": "phraesto",
+  "level": "s",
+  "faction": "hypogean",
+  "class": "tank",
+  "damage": "physical",
+  "range": 1,
+  "season": 1
+}

@@ -1,0 +1,10 @@
+{
+  "id": 69,
+  "name": "valka",
+  "level": "a",
+  "faction": "graveborn",
+  "class": "warrior",
+  "damage": "physical",
+  "range": 1,
+  "season": 3
+}

@@ -1,0 +1,199 @@
+# URL Serialization
+
+## Overview
+
+The URL serialization system enables sharing game state through compact URLs using binary encoding and Base64. It preserves complete game state including character placements, hex states, and team configurations.
+
+## Design Principles
+
+1. **Compact Representation**: Binary encoding with bit packing for minimal URL length
+2. **Complete State**: Captures all placements, states, teams, and artifacts
+3. **Fixed Format**: Simple, stable binary format without versioning overhead
+4. **Fast Encoding**: O(n) performance with millisecond execution
+5. **Robust Decoding**: Graceful handling of invalid or partial state
+
+## Core Components
+
+### URL State Manager (`/src/utils/urlStateManager.ts`)
+
+High-level API for URL generation and parsing with grid state.
+
+### Binary Encoder (`/src/utils/binaryEncoder.ts`)
+
+Handles bit-level operations for compact encoding:
+
+```typescript
+class BitWriter {
+  writeBits(value: number, bits: number): void
+  getBytes(): Uint8Array
+}
+```
+
+### Grid State Serializer (`/src/utils/gridStateSerializer.ts`)
+
+Converts between game state and compact format:
+
+```typescript
+interface GridState {
+  t?: number[][] // tiles: [hexId, state]
+  c?: number[][] // characters: [hexId, characterId, team]
+  a?: (number | null)[] // artifacts: [ally, enemy]
+  d?: number // display flags (bit-packed)
+}
+```
+
+## Encoding Strategy
+
+### Bit Allocation
+
+- **Hex States**: 3 bits (8 possible states)
+- **Character IDs**: 14 bits (supports IDs 0-16,383)
+- **Team Assignment**: 1 bit (ALLY/ENEMY)
+- **Artifacts**: 3 bits each (supports 7 artifact types)
+- **Display Flags**: 3 bits (Grid Info, Targeting, Perspective)
+
+### Extended Header Mode
+
+Extended mode is triggered for:
+
+- More than 7 tiles or characters
+- Display flags present
+
+```typescript
+// Extended flags byte when bit 7 set:
+// Bit 0: Needs extended counts
+// Bits 1-3: Display flags
+// Bits 4-7: Reserved
+```
+
+## Serialization Format
+
+### Header Byte Structure
+
+```
+[Header: 8 bits]
+  - Bits 0-2: Tile count (0-7)
+  - Bits 3-5: Character count (0-7)
+  - Bit 6: Has artifacts flag
+  - Bit 7: Extended mode flag
+
+[Extended Header (if bit 7 set)]
+  - Extended flags byte (8 bits)
+  - Additional tile count (if needed)
+  - Additional character count (if needed)
+
+[Tiles: 9 bits each]
+  - Hex ID (6 bits)
+  - State (3 bits)
+
+[Characters: 21 bits each]
+  - Hex ID (6 bits)
+  - Character ID (14 bits)
+  - Team (1 bit)
+
+[Artifacts (if present): 6 bits]
+  - Ally artifact (3 bits)
+  - Enemy artifact (3 bits)
+```
+
+Only non-default hex states are stored, significantly reducing size.
+
+## URL Generation Process
+
+1. Collect non-default hex states
+2. Gather character placements and display flags
+3. Binary encode with variable-length IDs
+4. Base64-like encode to URL-safe string
+5. Append as URL parameter
+
+Example: `https://stargazer.app/?g=AQIDBAUGBwgJCg`
+
+## Decoding Process
+
+### Standard Characters
+
+Direct placement for regular character IDs (< 10000).
+
+### Companion Characters
+
+Two-phase restoration for companions (ID ≥ 10000):
+
+1. **Place main characters** - triggers skill activation
+2. **Reposition companions** - move from random to saved positions
+
+This respects skill-based companion creation while preserving exact layouts.
+
+**Note**: Character IDs are currently limited to 16,383 (14-bit encoding). This supports approximately 6,383 main characters with their companions.
+
+## Grid Export
+
+### Image Export
+
+PNG generation from grid visualization:
+
+```typescript
+const dataUrl = await toPng(element, {
+  quality: 1.0,
+  pixelRatio: 2,
+  backgroundColor: 'transparent',
+})
+```
+
+### Clipboard Integration
+
+Direct copy to clipboard for easy sharing.
+
+## Performance Characteristics
+
+- **Compression**: Fixed 21-bit encoding for all characters
+- **All characters**: 21 bits each (supports IDs 0-16,383)
+- **URL Length**: Shorter for most real-world cases (IDs > 127)
+- **Encoding Speed**: Milliseconds for typical grids
+- **Memory**: Temporary buffers only, streaming encoding
+
+## Integration Points
+
+### Grid System
+
+Direct state access for efficient serialization.
+
+### Router
+
+URL parameter handling and history management.
+
+### Character System
+
+Character ID mapping with companion support:
+
+- Regular characters: Direct placement
+- Companions: Skill-triggered creation with repositioning
+
+## Format Stability
+
+The binary format is fixed and stable without versioning overhead. Changes would require:
+
+- New URL parameter (e.g., `?g2=` for format v2)
+- Maintaining backward compatibility via parameter detection
+- Keeping the format simple avoids versioning complexity
+
+## Security
+
+- **Input Validation**: Bounds checking and type verification
+- **Data Integrity**: State consistency validation
+- **Safe Defaults**: Graceful handling of invalid data
+
+## Display Flags
+
+View preferences preserved in URLs:
+
+- **Grid Info**: Hex ID display toggle
+- **Targeting**: Arrow visualization toggle
+- **Flat**: Perspective mode toggle
+
+Bit-packed into 3 bits within extended header.
+
+## Related Documentation
+
+- [`/docs/architecture/GRID.md`](./GRID.md) - Grid state being serialized
+- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Companion character system
+- [`/docs/architecture/MAP_EDITOR.md`](./MAP_EDITOR.md) - Map sharing features

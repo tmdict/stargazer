@@ -1,0 +1,10 @@
+{
+  "id": 80,
+  "name": "kulu",
+  "level": "s",
+  "faction": "hypogean",
+  "class": "marksman",
+  "damage": "physical",
+  "range": 6,
+  "season": 4
+}

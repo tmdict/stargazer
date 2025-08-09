@@ -1,0 +1,10 @@
+{
+  "id": 77,
+  "name": "lucy",
+  "level": "a",
+  "faction": "dimensional",
+  "class": "mage",
+  "damage": "magic",
+  "range": 3,
+  "season": 3
+}

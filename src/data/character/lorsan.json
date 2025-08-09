@@ -1,0 +1,10 @@
+{
+  "id": 67,
+  "name": "lorsan",
+  "level": "s",
+  "faction": "wilder",
+  "class": "support",
+  "damage": "physical",
+  "range": 5,
+  "season": 3
+}

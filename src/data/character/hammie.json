@@ -1,0 +1,10 @@
+{
+  "id": 2,
+  "name": "hammie",
+  "level": "rare",
+  "faction": "lightbearer",
+  "class": "support",
+  "damage": "magic",
+  "range": 5,
+  "season": 0
+}

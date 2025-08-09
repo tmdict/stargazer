@@ -1,0 +1,10 @@
+{
+  "id": 81,
+  "name": "daimon",
+  "level": "s",
+  "faction": "graveborn",
+  "class": "rogue",
+  "damage": "magic",
+  "range": 3,
+  "season": 4
+}

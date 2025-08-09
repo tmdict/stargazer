@@ -1,0 +1,10 @@
+{
+  "id": 63,
+  "name": "harak",
+  "level": "s",
+  "faction": "hypogean",
+  "class": "warrior",
+  "damage": "physical",
+  "range": 1,
+  "season": 2
+}
