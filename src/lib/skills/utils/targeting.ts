@@ -13,7 +13,7 @@ export interface TargetCandidate {
  */
 export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
-  
+
   // Use a more efficient single pass through tiles
   const tiles = grid.getAllTiles()
   for (const tile of tiles) {
@@ -21,11 +21,11 @@ export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
       characters.push({
         hexId: tile.hex.getId(),
         characterId: tile.characterId,
-        distances: new Map()
+        distances: new Map(),
       })
     }
   }
-  
+
   return characters
 }
 
@@ -43,11 +43,11 @@ export function getEnemyCharacters(grid: Grid, team: Team): TargetCandidate[] {
 export function calculateDistances(
   candidates: TargetCandidate[],
   referenceHexIds: number[],
-  grid: Grid
+  grid: Grid,
 ): void {
   for (const refHexId of referenceHexIds) {
     const refHex = grid.getHexById(refHexId)
-    
+
     for (const candidate of candidates) {
       const candidateHex = grid.getHexById(candidate.hexId)
       const distance = refHex.distance(candidateHex)
@@ -61,19 +61,19 @@ export function calculateDistances(
  */
 export function sortByDistancePriorities(
   candidates: TargetCandidate[],
-  priorities: number[] // Array of hex IDs in priority order
+  priorities: number[], // Array of hex IDs in priority order
 ): TargetCandidate[] {
   return candidates.sort((a, b) => {
     // Check each priority in order
     for (const priorityHexId of priorities) {
       const distA = a.distances.get(priorityHexId) ?? Infinity
       const distB = b.distances.get(priorityHexId) ?? Infinity
-      
+
       if (distA !== distB) {
         return distA - distB
       }
     }
-    
+
     // Final tie-breaker: hex ID
     return a.hexId - b.hexId
   })
@@ -86,17 +86,17 @@ export function sortByDistancePriorities(
 export function findBestTarget(
   grid: Grid,
   sourceTeam: Team,
-  priorityHexIds: number[]
+  priorityHexIds: number[],
 ): { hexId: number; characterId: number } | null {
   const candidates = getEnemyCharacters(grid, sourceTeam)
-  
+
   if (candidates.length === 0) return null
-  
+
   calculateDistances(candidates, priorityHexIds, grid)
   const sorted = sortByDistancePriorities(candidates, priorityHexIds)
-  
+
   return {
     hexId: sorted[0].hexId,
-    characterId: sorted[0].characterId
+    characterId: sorted[0].characterId,
   }
 }

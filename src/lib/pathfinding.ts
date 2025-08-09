@@ -477,7 +477,6 @@ function applyTieBreakingRules(
   return bestTarget
 }
 
-
 /*
  * Check if source and target hex are vertically aligned (same q coordinate).
  */
