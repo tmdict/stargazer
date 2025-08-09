@@ -299,7 +299,16 @@ defineExpose({
       :show-perspective="showPerspective"
     />
 
-    <!-- Character layer (above grid) -->
+    <!-- Artifact layer (behind characters) -->
+    <GridArtifacts
+      :allyArtifactId="artifactStore.allyArtifactId"
+      :enemyArtifactId="artifactStore.enemyArtifactId"
+      :artifactImages="artifactImages"
+      :show-perspective="showPerspective"
+      :scaleY="verticalScaleComp"
+    />
+
+    <!-- Character layer (above artifacts) -->
     <GridCharacters
       :character-images="characterImages"
       :characters="characters"
@@ -326,15 +335,6 @@ defineExpose({
         <PathfindingDebug :debugGridRef="props.debugGridRef" />
       </g>
     </svg>
-
-    <!-- Artifact Display -->
-    <GridArtifacts
-      :allyArtifactId="artifactStore.allyArtifactId"
-      :enemyArtifactId="artifactStore.enemyArtifactId"
-      :artifactImages="artifactImages"
-      :show-perspective="showPerspective"
-      :scaleY="verticalScaleComp"
-    />
   </div>
 
   <!-- Character Selection Modal - Outside of map container to avoid transform issues -->
