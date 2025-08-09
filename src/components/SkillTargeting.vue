@@ -55,7 +55,7 @@ const arrowStyle = computed(() => {
 // Get arrow path for skill targeting
 function getSkillArrowPath(fromHexId: number, toHexId: number): string | null {
   if (!fromHexId || !toHexId) return null
-  
+
   try {
     // Use the same arrow path logic as targeting arrows
     // Character radius of 30 to start/end at character edge
@@ -69,10 +69,10 @@ function getSkillArrowPath(fromHexId: number, toHexId: number): string | null {
 function parseSkillKey(key: string): { characterId: number; team: string } | null {
   const parts = key.split('-')
   if (parts.length !== 2) return null
-  
+
   return {
     characterId: parseInt(parts[0]),
-    team: parts[1]
+    team: parts[1],
   }
 }
 
@@ -121,7 +121,9 @@ onUnmounted(() => {
       <!-- Render skill targeting arrows -->
       <template v-for="[key, targetInfo] in skillTargets" :key="key">
         <!-- Skill targeting arrow -->
-        <g v-if="isTargetingSkill(key) && targetInfo.metadata?.sourceHexId && targetInfo.targetHexId">
+        <g
+          v-if="isTargetingSkill(key) && targetInfo.metadata?.sourceHexId && targetInfo.targetHexId"
+        >
           <!-- Arrow head definition -->
           <defs>
             <marker
@@ -133,13 +135,10 @@ onUnmounted(() => {
               orient="auto"
               markerUnits="strokeWidth"
             >
-              <polygon
-                points="0 0, 10 3, 0 6"
-                :fill="getTargetingColor(key)"
-              />
+              <polygon points="0 0, 10 3, 0 6" :fill="getTargetingColor(key)" />
             </marker>
           </defs>
-          
+
           <!-- White shadow path for better visibility -->
           <path
             v-if="getSkillArrowPath(targetInfo.metadata.sourceHexId, targetInfo.targetHexId)"
@@ -151,7 +150,7 @@ onUnmounted(() => {
             stroke-linecap="round"
             opacity="0.8"
           />
-          
+
           <!-- Curved dotted arrow path -->
           <path
             v-if="getSkillArrowPath(targetInfo.metadata.sourceHexId, targetInfo.targetHexId)"

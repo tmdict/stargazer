@@ -328,7 +328,7 @@ defineExpose({
     />
 
     <!-- Skill targeting layer (above arrows) -->
-    <SkillTargeting 
+    <SkillTargeting
       v-if="showSkills"
       :show-perspective="showPerspective"
       :default-svg-height="defaultSvgHeight"

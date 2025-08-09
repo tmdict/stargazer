@@ -41,16 +41,19 @@ export function generateShareableUrl(
   // Encode using binary compression
   const encodedState = encodeGridStateToUrl(gridState)
 
-  // Generate full URL with current origin and path
+  // Generate full URL with hash and query parameter format
   const baseUrl = `${window.location.origin}${window.location.pathname}`
-  return `${baseUrl}?g=${encodedState}`
+  return `${baseUrl}#/?g=${encodedState}`
 }
 
-/* Get grid state from current URL parameters */
+/* Get grid state from current URL hash */
 export function getGridStateFromCurrentUrl(): GridState | null {
-  const urlParams = new URLSearchParams(window.location.search)
-  const stateParam = urlParams.get('g')
+  const hash = window.location.hash
+  if (!hash || !hash.startsWith('#/?g=')) {
+    return null
+  }
 
+  const stateParam = hash.substring(5) // Remove '#/?g='
   if (!stateParam) {
     return null
   }

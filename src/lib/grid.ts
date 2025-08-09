@@ -590,12 +590,12 @@ export class Grid {
 
     // All successful - update skills
     clearPathfindingCache()
-    
+
     // Trigger skill updates for any active skills
     if (this.skillManager) {
       this.skillManager.updateActiveSkills(this)
     }
-    
+
     return true
   }
 

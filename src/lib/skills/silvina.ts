@@ -11,7 +11,7 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
 
   // Get symmetrical hex ID using O(1) lookup
   const symmetricalHexId = getSymmetricalHexId(hexId)
-  
+
   if (!symmetricalHexId) {
     // No valid symmetrical hex (shouldn't happen with valid grid)
     return null
@@ -54,7 +54,8 @@ export const silvinaSkill: Skill = {
   id: 'silvina',
   characterId: 39,
   name: 'First Strike',
-  description: 'Targets the character on the opposing team on a symmetrical tile to Silvina. ' +
+  description:
+    'Targets the character on the opposing team on a symmetrical tile to Silvina. ' +
     'If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
   targetingColorModifier: '#73be25', // Green color for Silvina's targeting arrow
 
@@ -67,7 +68,7 @@ export const silvinaSkill: Skill = {
       // Add source hex to metadata
       targetInfo.metadata = {
         ...targetInfo.metadata,
-        sourceHexId: hexId
+        sourceHexId: hexId,
       }
       // Store the targeting state
       skillManager.setSkillTarget(characterId, team, targetInfo)
@@ -90,7 +91,7 @@ export const silvinaSkill: Skill = {
       // Add source hex to metadata (hexId is now always current)
       targetInfo.metadata = {
         ...targetInfo.metadata,
-        sourceHexId: hexId
+        sourceHexId: hexId,
       }
       skillManager.setSkillTarget(characterId, team, targetInfo)
     } else {
