@@ -24,7 +24,6 @@ const isLogoHovered = ref(false)
 
       <ul class="menu">
         <li><RouterLink to="/about">About</RouterLink></li>
-        <li><RouterLink to="/link">Resources</RouterLink></li>
         <li>
           <a href="https://github.com/tmdict/stargazer/" class="github-link" title="View on GitHub">
             <GitHubIcon />
