@@ -1,4 +1,3 @@
-import { FULL_GRID, type GridPreset } from './constants'
 import type { GridTile } from './grid'
 import { Hex } from './hex'
 import { MemoCache, generatePathCacheKey, generateGridCacheKey } from './memoization'
@@ -266,12 +265,11 @@ export function calculateEffectiveDistance(
   getTile: (hex: Hex) => GridTile | undefined,
   canTraverse: (tile: GridTile) => boolean,
   cachingEnabled: boolean = false,
-  cache: PathfindingCache = defaultCache,
 ): DistanceResult {
   // Check cache first if caching is enabled
   if (cachingEnabled) {
     const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-    const cached = cache.getEffectiveDistance(cacheKey)
+    const cached = defaultCache.getEffectiveDistance(cacheKey)
     if (cached) {
       return cached
     }
@@ -285,7 +283,7 @@ export function calculateEffectiveDistance(
     const result = { movementDistance: 0, canReach: true, directDistance }
     if (cachingEnabled) {
       const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-      cache.setEffectiveDistance(cacheKey, result)
+      defaultCache.setEffectiveDistance(cacheKey, result)
     }
     return result
   }
@@ -298,7 +296,7 @@ export function calculateEffectiveDistance(
     const result = { movementDistance: Infinity, canReach: false, directDistance }
     if (cachingEnabled) {
       const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-      cache.setEffectiveDistance(cacheKey, result)
+      defaultCache.setEffectiveDistance(cacheKey, result)
     }
     return result
   }
@@ -315,7 +313,7 @@ export function calculateEffectiveDistance(
 
   if (cachingEnabled) {
     const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-    cache.setEffectiveDistance(cacheKey, result)
+    defaultCache.setEffectiveDistance(cacheKey, result)
   }
   return result
 }
@@ -505,9 +503,6 @@ export function findClosestTarget(
   sourceRange: number,
   getTile: (hex: Hex) => GridTile | undefined,
   canTraverse: (tile: GridTile) => boolean,
-  _gridPreset: GridPreset = FULL_GRID,
-  _cachingEnabled: boolean = false,
-  _cache: PathfindingCache = defaultCache,
 ): TargetResult | null {
   if (targetTiles.length === 0) {
     return null
@@ -558,18 +553,16 @@ export function getClosestTargetMap(
   sourceTeam: Team,
   targetTeam: Team,
   characterRanges: Map<number, number> = new Map(),
-  gridPreset: GridPreset = FULL_GRID,
   cachingEnabled: boolean = true,
   getTile?: (hex: Hex) => GridTile | undefined,
-  cache: PathfindingCache = defaultCache,
 ): Map<number, TargetInfo> {
   // Check cache first if caching is enabled
   if (cachingEnabled) {
     const cacheKey = generateGridCacheKey(tilesWithCharacters, characterRanges)
     const cached =
       sourceTeam === Team.ALLY
-        ? cache.getClosestEnemyMap(cacheKey)
-        : cache.getClosestAllyMap(cacheKey)
+        ? defaultCache.getClosestEnemyMap(cacheKey)
+        : defaultCache.getClosestAllyMap(cacheKey)
     if (cached) {
       return cached
     }
@@ -598,9 +591,6 @@ export function getClosestTargetMap(
       range,
       getTileHelper,
       defaultCanTraverse,
-      gridPreset,
-      cachingEnabled,
-      cache,
     )
 
     if (closestTarget) {
@@ -623,9 +613,9 @@ export function getClosestTargetMap(
   if (cachingEnabled) {
     const cacheKey = generateGridCacheKey(tilesWithCharacters, characterRanges)
     if (sourceTeam === Team.ALLY) {
-      cache.setClosestEnemyMap(cacheKey, result)
+      defaultCache.setClosestEnemyMap(cacheKey, result)
     } else {
-      cache.setClosestAllyMap(cacheKey, result)
+      defaultCache.setClosestAllyMap(cacheKey, result)
     }
   }
   return result
@@ -638,23 +628,6 @@ export function getClosestTargetMap(
 /*
  * Clear all pathfinding caches.
  */
-export function clearPathfindingCache(cache: PathfindingCache = defaultCache): void {
-  cache.clear()
-}
-
-/*
- * Clear specific cache types.
- */
-export function clearSpecificCache(
-  cacheType: 'path' | 'effectiveDistance' | 'closestEnemy' | 'closestAlly',
-  cache: PathfindingCache = defaultCache,
-): void {
-  cache.clearSpecific(cacheType)
-}
-
-/*
- * Get cache statistics for debugging.
- */
-export function getCacheStats(cache: PathfindingCache = defaultCache) {
-  return cache.getStats()
+export function clearPathfindingCache(): void {
+  defaultCache.clear()
 }
