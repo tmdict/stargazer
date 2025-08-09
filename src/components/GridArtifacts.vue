@@ -24,7 +24,7 @@ const artifactDimensions = computed(() => {
   return {
     containerSize: 45 * scale,
     imageSize: 95 * scale,
-    position: 60 * scale,
+    position: 50 * scale,
     offset: 25 * scale,
     borderWidth: Math.max(2, 2 * scale),
     shadowWidth: Math.max(3, 3 * scale),
@@ -144,7 +144,6 @@ const handleArtifactClick = (team: Team) => {
 
 .grid-artifact {
   position: absolute;
-  z-index: 10;
   border-radius: var(--radius-round);
   display: flex;
   align-items: center;
@@ -152,7 +151,7 @@ const handleArtifactClick = (team: Team) => {
   overflow: hidden;
   border-style: solid;
   border-color: var(--color-bg-white);
-  box-shadow: 0 0 0 3px #999;
+  box-shadow: 0 0 0 2px #fff;
   cursor: pointer;
   pointer-events: auto;
 }

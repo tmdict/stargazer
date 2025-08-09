@@ -106,10 +106,12 @@ GridManager
 │   ├── Regular Hexes (visual)
 │   ├── Elevated Hexes (visual)
 │   └── Event Capture (invisible)
+├── GridArtifacts (HTML overlay)
 ├── GridCharacters (HTML overlay)
-├── GridArrows (SVG overlay)
-└── GridArtifacts (HTML overlay)
+└── GridArrows (SVG overlay)
 ```
+
+GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view, while ally artifacts naturally avoid overlap due to their corner positioning.
 
 ### Utility Layer (`/src/utils/`)
 

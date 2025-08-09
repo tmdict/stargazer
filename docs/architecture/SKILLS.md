@@ -214,4 +214,3 @@ const skillRegistry = new Map<number, Skill>([
 ## Related Documentation
 
 - [`/docs/architecture/GRID.md`](./GRID.md) - Grid & character management system
-- [`/SKILL-TODO.md`](/SKILL-TODO.md) - Implementation archive

@@ -55,10 +55,10 @@ GridManager (Orchestrator)
 │   ├── Regular Hexes (visual layer 1)
 │   ├── Elevated Hexes (visual layer 2)
 │   └── Invisible Event Layer (topmost)
+├── GridArtifacts (HTML overlay - behind characters)
 ├── GridCharacters (HTML overlay)
 ├── GridArrows (SVG overlay)
-├── PathfindingDebug (conditional)
-└── GridArtifacts (HTML overlay)
+└── PathfindingDebug (conditional)
 ```
 
 **GridTiles Internal Structure:**
@@ -87,7 +87,7 @@ GridManager (Orchestrator)
 │  └───────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
 
-[GridCharacters, GridArrows, GridArtifacts render
+[GridArtifacts, GridCharacters, GridArrows render
  above with selective pointer-events control]
 ```
 
@@ -175,9 +175,9 @@ function validateDrop(hexId: number, character: CharacterType): boolean {
 
 **GridManager**: Orchestrates all layers and registers position-based detection
 **GridTiles**: Renders hexes with three-layer SVG structure and invisible events
+**GridArtifacts**: Shows team artifacts in fixed corner positions (renders before characters)
 **GridCharacters**: Positions character portraits with absolute positioning
 **GridArrows**: Displays pathfinding visualization with SVG arrows
-**GridArtifacts**: Shows team artifacts in fixed corner positions
 
 ### Visual Layer Separation
 
