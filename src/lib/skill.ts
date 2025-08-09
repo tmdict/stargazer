@@ -30,7 +30,7 @@ export interface Skill {
 
   onActivate(context: SkillContext): void
   onDeactivate(context: SkillContext): void
-  
+
   // Optional lifecycle method called when any character moves or grid state changes
   // Useful for skills that need to recalculate targets or update visual indicators
   onUpdate?(context: SkillContext): void
@@ -218,7 +218,7 @@ export class SkillManager {
   getAllSkillTargets(): Map<string, SkillTargetInfo> {
     return new Map(this.skillTargets)
   }
-  
+
   getTargetVersion(): number {
     return this.targetVersion
   }
@@ -227,7 +227,7 @@ export class SkillManager {
   updateActiveSkills(grid: Grid): void {
     for (const [key, info] of Object.entries(this.activeSkills)) {
       const skill = getCharacterSkill(info.characterId)
-      
+
       // Find the character's current position
       const currentHexId = grid.findCharacterHex(info.characterId, info.team)
       if (!currentHexId) {
@@ -235,12 +235,12 @@ export class SkillManager {
         delete this.activeSkills[key]
         continue
       }
-      
+
       // Update stored position if it changed
       if (info.hexId !== currentHexId) {
         info.hexId = currentHexId
       }
-      
+
       if (skill?.onUpdate) {
         const context: SkillContext = {
           grid,

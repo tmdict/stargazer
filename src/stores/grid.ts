@@ -79,7 +79,7 @@ export const useGridStore = defineStore('grid', () => {
 
     // Save the skill manager reference before creating new grid
     const savedSkillManager = grid.skillManager as SkillManager | undefined
-    
+
     // Deactivate all skills before switching maps
     if (savedSkillManager) {
       savedSkillManager.deactivateAllSkills(grid as Grid)
@@ -87,10 +87,10 @@ export const useGridStore = defineStore('grid', () => {
 
     // Create new grid with the selected map
     const newGrid = new Grid(FULL_GRID, mapConfig)
-    
+
     // Restore the skill manager reference
     newGrid.skillManager = savedSkillManager
-    
+
     // Copy properties to maintain reactivity
     Object.assign(grid, newGrid)
     currentMap.value = mapKey

@@ -6,6 +6,7 @@ import rowanSvg from '@/assets/rowan.svg'
 import rowanGif from '@/assets/rowan.gif'
 import DragPreview from './components/DragPreview.vue'
 import GitHubIcon from './components/GitHubIcon.vue'
+import InfoIcon from './components/InfoIcon.vue'
 
 const isLogoHovered = ref(false)
 </script>
@@ -13,21 +14,25 @@ const isLogoHovered = ref(false)
 <template>
   <header>
     <nav>
-      <RouterLink
-        to="/"
+      <a
+        href="/"
         class="logo-link"
         @mouseenter="isLogoHovered = true"
         @mouseleave="isLogoHovered = false"
       >
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
-      </RouterLink>
+      </a>
 
       <ul class="menu">
-        <li><RouterLink to="/about">About</RouterLink></li>
         <li>
-          <a href="https://github.com/tmdict/stargazer/" class="github-link" title="View on GitHub">
+          <a href="https://github.com/tmdict/stargazer/" class="icon-link" title="GitHub">
             <GitHubIcon />
           </a>
+        </li>
+        <li>
+          <RouterLink to="/about" class="icon-link" title="About">
+            <InfoIcon />
+          </RouterLink>
         </li>
       </ul>
     </nav>
@@ -48,9 +53,8 @@ header {
 
 nav {
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: flex-end;
-  gap: 0.5rem;
   max-width: none;
   margin: 0;
   padding: 0 2.5em 0 2em;
@@ -90,16 +94,15 @@ nav ul li {
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 600;
-  padding: 0.6rem 1.5rem 0;
+  margin-left: 1.5rem;
   border-radius: 6px;
-  transition: all 0.2s ease;
 }
 
 .menu a:hover {
   color: #f7d87c;
 }
 
-.github-link {
+.icon-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -127,9 +130,6 @@ nav ul li {
   }
 
   nav {
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
     padding: 0.5rem 1rem 0;
   }
 
