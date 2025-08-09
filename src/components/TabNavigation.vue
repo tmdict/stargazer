@@ -150,6 +150,7 @@ onUnmounted(() => {
   border-right: 1px solid var(--color-border-primary);
   position: relative;
 }
+
 @media (min-width: 1281px) {
   .tab-btn {
     font-size: 0.9rem;
@@ -182,9 +183,6 @@ onUnmounted(() => {
 
 .tab-content {
   background: var(--color-bg-primary);
-  border: 2px solid var(--color-border-primary);
-  border-radius: 0 0 var(--radius-large) var(--radius-large);
-  border-top: none;
 }
 
 .tab-dropdown {

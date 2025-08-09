@@ -129,8 +129,8 @@ const removeCharacterFromGrid = (characterId: number) => {
 .characters {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xl);
-  justify-content: center;
+  gap: var(--spacing-md);
+  justify-content: space-evenly;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
 }
@@ -161,7 +161,7 @@ const removeCharacterFromGrid = (characterId: number) => {
 /* Responsive styles */
 @media (max-width: 768px) {
   .characters {
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
     padding: var(--spacing-md);
   }
 }
@@ -172,7 +172,7 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 
   .characters {
-    gap: var(--spacing-lg);
+    gap: var(--spacing-xs);
     padding: var(--spacing-sm);
   }
 }
