@@ -23,7 +23,8 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
  *   - Bits 1-3: Display flags (showHexIds, showArrows, showPerspective)
- *   - Bits 4-7: Reserved
+ *   - Bits 4-6: Map ID (1-5, 0 means default/arena1)
+ *   - Bit 7: Reserved
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -77,7 +78,6 @@ class BitWriter {
 
 class BitReader {
   private position = 0
-  private bitPosition = 0
 
   constructor(private bytes: Uint8Array) {}
 
@@ -110,10 +110,11 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const charCount = state.c?.length || 0
   const hasArtifacts = state.a !== undefined
   const hasDisplayFlags = state.d !== undefined
+  const hasMapId = state.mapId !== undefined && state.mapId !== 1 // Only encode if not default arena1
 
-  // Check if we need extended header (for counts or display flags)
+  // Check if we need extended header (for counts, display flags, or map ID)
   const needsExtendedCounts = tileCount > 7 || charCount > 7
-  const needsExtended = needsExtendedCounts || hasDisplayFlags
+  const needsExtended = needsExtendedCounts || hasDisplayFlags || hasMapId
 
   // Write header byte
   let header = 0
@@ -133,6 +134,10 @@ export function encodeToBinary(state: GridState): Uint8Array {
     if (hasDisplayFlags && state.d !== undefined) {
       // Pack display flags into bits 1-3
       extendedFlags |= (state.d & 0x07) << 1
+    }
+    if (hasMapId && state.mapId !== undefined) {
+      // Pack map ID into bits 4-6 (3 bits support maps 0-7)
+      extendedFlags |= (state.mapId & 0x07) << 4
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -205,6 +210,12 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       if (displayFlags !== 0 || extendedFlags > 0) {
         // Only set display flags if they were explicitly stored
         state.d = displayFlags
+      }
+
+      // Extract map ID from bits 4-6
+      const mapId = (extendedFlags >> 4) & 0x07
+      if (mapId > 0) {
+        state.mapId = mapId
       }
 
       // Read extended counts if present
