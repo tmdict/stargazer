@@ -44,7 +44,7 @@ export function generateShareableUrl(
     // Extract the number from 'arena1', 'arena2', etc.
     const mapIdMatch = mapKey.match(/arena(\d+)/)
     if (mapIdMatch) {
-      gridState.mapId = parseInt(mapIdMatch[1], 10)
+      gridState.m = parseInt(mapIdMatch[1], 10)
     }
   }
 

@@ -31,8 +31,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
       }
 
       // Switch to the correct map if specified
-      if (urlState.mapId) {
-        const mapKey = `arena${urlState.mapId}`
+      if (urlState.m) {
+        const mapKey = `arena${urlState.m}`
         const switchSuccess = gridStore.switchMap(mapKey)
         if (!switchSuccess) {
           console.warn(`Failed to switch to map: ${mapKey}`)
@@ -124,7 +124,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
       // Return the display flags and map key to be applied by the caller
       return {
         ...displayFlags,
-        mapKey: urlState.mapId ? `arena${urlState.mapId}` : undefined,
+        mapKey: urlState.m ? `arena${urlState.m}` : undefined,
       }
     } catch (err) {
       console.error('Failed to restore state from URL:', err)
