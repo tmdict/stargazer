@@ -13,18 +13,18 @@ import {
 // Get tie-breaking preference based on position in DIAGONAL_ROWS
 function getTieBreakingPreference(symmetricalHexId: number, team: Team): 'lower' | 'higher' {
   // Find which row this hex belongs to
-  const rowIndex = DIAGONAL_ROWS.findIndex(row => row.includes(symmetricalHexId))
+  const rowIndex = DIAGONAL_ROWS.findIndex((row) => row.includes(symmetricalHexId))
   if (rowIndex === -1) {
     // Fallback for unknown tiles
     return 'higher'
   }
-  
+
   const row = DIAGONAL_ROWS[rowIndex]
   const position = row.indexOf(symmetricalHexId)
-  
+
   // Determine base preference (from ally perspective)
   let basePreference: 'lower' | 'higher'
-  
+
   // Special case: Row 14 (uppermost) - both tiles prefer higher
   if (rowIndex === 14) {
     basePreference = 'higher'
@@ -48,12 +48,12 @@ function getTieBreakingPreference(symmetricalHexId: number, team: Team): 'lower'
       basePreference = 'lower'
     }
   }
-  
+
   // Invert preference for enemy team (180° rotational symmetry)
   if (team === Team.ENEMY) {
     return basePreference === 'lower' ? 'higher' : 'lower'
   }
-  
+
   return basePreference
 }
 
@@ -102,11 +102,11 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
 
     // Tie-breaking based on position in DIAGONAL_ROWS with team symmetry
     const preference = getTieBreakingPreference(symmetricalHexId, team)
-    
+
     // Simple sorting based on preference
-    return preference === 'lower' 
-      ? a.hexId - b.hexId  // Lower hex ID wins
-      : b.hexId - a.hexId  // Higher hex ID wins
+    return preference === 'lower'
+      ? a.hexId - b.hexId // Lower hex ID wins
+      : b.hexId - a.hexId // Higher hex ID wins
   })
 
   const bestTarget = sorted.length > 0 ? sorted[0] : null

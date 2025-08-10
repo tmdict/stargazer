@@ -20,7 +20,7 @@ export function useStateReset() {
     // Clear characters and artifacts
     characterStore.clearAllCharacters()
     artifactStore.clearAllArtifacts()
-    
+
     // Reset all tiles to DEFAULT state
     for (const hex of gridStore.hexes) {
       gridStore.setState(hex, State.DEFAULT)
