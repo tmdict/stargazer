@@ -8,6 +8,7 @@
 import { ref } from 'vue'
 
 import type { CharacterType } from '../lib/types/character'
+import { useGridStore } from '../stores/grid'
 
 // MIME type for character drag data - prevents conflicts with other drag operations
 const CHARACTER_MIME_TYPE = 'application/character'
@@ -72,7 +73,14 @@ export const useDragDrop = () => {
 
   // Update drag preview position and current mouse position
   const updateDragPosition = (x: number, y: number) => {
-    dragPreviewPosition.value = { x: x - 35, y: y - 35 } // Offset to center the preview
+    // Get the current grid scale to adjust preview offset
+    const gridStore = useGridStore()
+    const scale = gridStore.getHexScale()
+    
+    // Scale the offset based on current grid scale (35px is for 100% scale)
+    const offset = 35 * scale
+    
+    dragPreviewPosition.value = { x: x - offset, y: y - offset } // Offset to center the preview
     currentMousePosition.value = { x, y }
   }
 
