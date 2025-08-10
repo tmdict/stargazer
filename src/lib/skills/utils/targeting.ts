@@ -75,8 +75,7 @@ export function sortByDistancePriorities(
     }
 
     // Final tie-breaker: hex ID
-    // Ally team targeting enemy: prefer highest hex ID
-    // Enemy team targeting ally: prefer lowest hex ID
+    // Default behavior for non-Silvina skills
     if (sourceTeam === Team.ALLY) {
       return b.hexId - a.hexId // Highest ID wins for ally team
     } else {
