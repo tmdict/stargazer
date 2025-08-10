@@ -9,6 +9,7 @@ import { useArtifactStore } from '../stores/artifact'
 import { useGameDataStore } from '../stores/gameData'
 import { useGridStore, type Breakpoint } from '../stores/grid'
 import { useMapEditorStore } from '../stores/mapEditor'
+import { useSkillStore } from '../stores/skill'
 import { useUrlStateStore } from '../stores/urlState'
 import { generateShareableUrl } from '../utils/urlStateManager'
 import ArtifactSelection from '../components/ArtifactSelection.vue'
@@ -31,7 +32,11 @@ const gameDataStore = useGameDataStore()
 const urlStateStore = useUrlStateStore()
 const artifactStore = useArtifactStore()
 const mapEditorStore = useMapEditorStore()
+const skillStore = useSkillStore()
 const { success, error } = useToast()
+
+// Connect grid and skill manager
+gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // Tab state management
 const activeTab = ref('characters')
@@ -101,6 +106,9 @@ const handleMapChange = (mapKey: string) => {
   const success = gridStore.switchMap(mapKey)
   if (success) {
     selectedMap.value = mapKey
+    // Reset skill manager state and reconnect to the new grid
+    skillStore._getSkillManager().reset()
+    gridStore._getGrid().skillManager = skillStore._getSkillManager()
   }
 }
 
@@ -283,6 +291,7 @@ onUnmounted(() => {
                   :show-arrows="showArrows"
                   :show-hex-ids="showHexIds"
                   :show-debug="showDebug"
+                  :show-skills="showSkills"
                   :is-map-editor-mode="activeTab === 'mapEditor'"
                   :selected-map-editor-state="selectedMapEditorState"
                   :showPerspective="showPerspective"
@@ -385,8 +394,8 @@ onUnmounted(() => {
   }
 
   .sections-container > .section:first-child {
-    flex: 0 0 640px;
-    width: 640px;
+    flex: 0 0 660px;
+    width: 660px;
   }
 
   .sections-container > .section:last-child {

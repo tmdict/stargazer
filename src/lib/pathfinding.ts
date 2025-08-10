@@ -1,8 +1,8 @@
-import { FULL_GRID, type GridPreset } from './constants'
 import type { GridTile } from './grid'
 import { Hex } from './hex'
 import { MemoCache, generatePathCacheKey, generateGridCacheKey } from './memoization'
 import { PriorityQueue } from './priorityQueue'
+import { areHexesInSameDiagonalRow } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -265,12 +265,11 @@ export function calculateEffectiveDistance(
   getTile: (hex: Hex) => GridTile | undefined,
   canTraverse: (tile: GridTile) => boolean,
   cachingEnabled: boolean = false,
-  cache: PathfindingCache = defaultCache,
 ): DistanceResult {
   // Check cache first if caching is enabled
   if (cachingEnabled) {
     const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-    const cached = cache.getEffectiveDistance(cacheKey)
+    const cached = defaultCache.getEffectiveDistance(cacheKey)
     if (cached) {
       return cached
     }
@@ -284,7 +283,7 @@ export function calculateEffectiveDistance(
     const result = { movementDistance: 0, canReach: true, directDistance }
     if (cachingEnabled) {
       const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-      cache.setEffectiveDistance(cacheKey, result)
+      defaultCache.setEffectiveDistance(cacheKey, result)
     }
     return result
   }
@@ -297,7 +296,7 @@ export function calculateEffectiveDistance(
     const result = { movementDistance: Infinity, canReach: false, directDistance }
     if (cachingEnabled) {
       const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-      cache.setEffectiveDistance(cacheKey, result)
+      defaultCache.setEffectiveDistance(cacheKey, result)
     }
     return result
   }
@@ -314,7 +313,7 @@ export function calculateEffectiveDistance(
 
   if (cachingEnabled) {
     const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-    cache.setEffectiveDistance(cacheKey, result)
+    defaultCache.setEffectiveDistance(cacheKey, result)
   }
   return result
 }
@@ -476,47 +475,6 @@ function applyTieBreakingRules(
   return bestTarget
 }
 
-// Diagonal rows organized by hex IDs - visually represents the hex grid structure
-const DIAGONAL_ROWS = [
-  [1, 2], // Row 1
-  [3, 4, 5], // Row 2
-  [6, 7], // Row 3
-  [8, 9, 10], // Row 4
-  [11, 12, 13, 14], // Row 5
-  [15, 16, 17], // Row 6
-  [18, 19, 20, 21], // Row 7
-  [22, 23, 24], // Row 8
-  [25, 26, 27, 28], // Row 9
-  [29, 30, 31], // Row 10
-  [32, 33, 34, 35], // Row 11
-  [36, 37, 38], // Row 12
-  [39, 40], // Row 13
-  [41, 42, 43], // Row 14
-  [44, 45], // Row 15
-]
-
-/*
- * Get the diagonal row number for a given hex ID.
- * Simple lookup in the DIAGONAL_ROWS array.
- */
-function getDiagonalRowNumber(hexId: number): number {
-  for (let rowIndex = 0; rowIndex < DIAGONAL_ROWS.length; rowIndex++) {
-    if (DIAGONAL_ROWS[rowIndex].includes(hexId)) {
-      return rowIndex + 1 // Row numbers start at 1
-    }
-  }
-
-  // Hex ID not found in our grid - shouldn't happen in normal usage
-  return -1
-}
-
-/*
- * Check if two hexes are in the same diagonal row based on hex ID patterns.
- */
-export function areHexesInSameDiagonalRow(hexId1: number, hexId2: number): boolean {
-  return getDiagonalRowNumber(hexId1) === getDiagonalRowNumber(hexId2)
-}
-
 /*
  * Check if source and target hex are vertically aligned (same q coordinate).
  */
@@ -545,9 +503,6 @@ export function findClosestTarget(
   sourceRange: number,
   getTile: (hex: Hex) => GridTile | undefined,
   canTraverse: (tile: GridTile) => boolean,
-  _gridPreset: GridPreset = FULL_GRID,
-  _cachingEnabled: boolean = false,
-  _cache: PathfindingCache = defaultCache,
 ): TargetResult | null {
   if (targetTiles.length === 0) {
     return null
@@ -598,18 +553,16 @@ export function getClosestTargetMap(
   sourceTeam: Team,
   targetTeam: Team,
   characterRanges: Map<number, number> = new Map(),
-  gridPreset: GridPreset = FULL_GRID,
   cachingEnabled: boolean = true,
   getTile?: (hex: Hex) => GridTile | undefined,
-  cache: PathfindingCache = defaultCache,
 ): Map<number, TargetInfo> {
   // Check cache first if caching is enabled
   if (cachingEnabled) {
     const cacheKey = generateGridCacheKey(tilesWithCharacters, characterRanges)
     const cached =
       sourceTeam === Team.ALLY
-        ? cache.getClosestEnemyMap(cacheKey)
-        : cache.getClosestAllyMap(cacheKey)
+        ? defaultCache.getClosestEnemyMap(cacheKey)
+        : defaultCache.getClosestAllyMap(cacheKey)
     if (cached) {
       return cached
     }
@@ -638,9 +591,6 @@ export function getClosestTargetMap(
       range,
       getTileHelper,
       defaultCanTraverse,
-      gridPreset,
-      cachingEnabled,
-      cache,
     )
 
     if (closestTarget) {
@@ -663,9 +613,9 @@ export function getClosestTargetMap(
   if (cachingEnabled) {
     const cacheKey = generateGridCacheKey(tilesWithCharacters, characterRanges)
     if (sourceTeam === Team.ALLY) {
-      cache.setClosestEnemyMap(cacheKey, result)
+      defaultCache.setClosestEnemyMap(cacheKey, result)
     } else {
-      cache.setClosestAllyMap(cacheKey, result)
+      defaultCache.setClosestAllyMap(cacheKey, result)
     }
   }
   return result
@@ -678,23 +628,6 @@ export function getClosestTargetMap(
 /*
  * Clear all pathfinding caches.
  */
-export function clearPathfindingCache(cache: PathfindingCache = defaultCache): void {
-  cache.clear()
-}
-
-/*
- * Clear specific cache types.
- */
-export function clearSpecificCache(
-  cacheType: 'path' | 'effectiveDistance' | 'closestEnemy' | 'closestAlly',
-  cache: PathfindingCache = defaultCache,
-): void {
-  cache.clearSpecific(cacheType)
-}
-
-/*
- * Get cache statistics for debugging.
- */
-export function getCacheStats(cache: PathfindingCache = defaultCache) {
-  return cache.getStats()
+export function clearPathfindingCache(): void {
+  defaultCache.clear()
 }
