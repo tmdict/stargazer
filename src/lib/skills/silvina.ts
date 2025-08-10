@@ -33,8 +33,8 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
 
   // Find best enemy target with priority:
   // 1. Closest to symmetrical tile
-  // 2. Closest to Silvina
-  const bestTarget = findBestTarget(grid, team, [symmetricalHexId, hexId])
+  // 2. Hex ID tie-breaking (implemented in findBestTarget)
+  const bestTarget = findBestTarget(grid, team, [symmetricalHexId])
 
   if (bestTarget) {
     return {
