@@ -34,19 +34,9 @@ export function generateShareableUrl(
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: { showHexIds?: boolean; showArrows?: boolean; showPerspective?: boolean },
-  mapKey?: string,
 ): string {
   // Serialize to compact format
   const gridState = serializeGridState(allTiles, allyArtifact, enemyArtifact, displayFlags)
-  
-  // Convert map key to ID and add to grid state
-  if (mapKey && mapKey !== 'arena1') {
-    // Extract the number from 'arena1', 'arena2', etc.
-    const mapIdMatch = mapKey.match(/arena(\d+)/)
-    if (mapIdMatch) {
-      gridState.m = parseInt(mapIdMatch[1], 10)
-    }
-  }
 
   // Encode using binary compression
   const encodedState = encodeGridStateToUrl(gridState)
@@ -68,7 +58,6 @@ export function getGridStateFromCurrentUrl(): GridState | null {
     return null
   }
 
-  // Binary decoder will extract map ID if present
   return decodeGridStateFromUrl(stateParam)
 }
 
@@ -78,10 +67,9 @@ export function updateUrlWithGridState(
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: { showHexIds?: boolean; showArrows?: boolean; showPerspective?: boolean },
-  mapKey?: string,
 ): void {
   try {
-    const shareableUrl = generateShareableUrl(allTiles, allyArtifact, enemyArtifact, displayFlags, mapKey)
+    const shareableUrl = generateShareableUrl(allTiles, allyArtifact, enemyArtifact, displayFlags)
 
     // Update URL without triggering navigation
     window.history.replaceState({}, '', shareableUrl)

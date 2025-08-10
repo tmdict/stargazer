@@ -116,17 +116,12 @@ const handleMapChange = (mapKey: string) => {
 gameDataStore.initializeData()
 // After data is loaded, try to restore state from URL
 if (gameDataStore.dataLoaded) {
-  const restoredState = urlStateStore.restoreStateFromUrl()
-  // Apply display flags and map from URL if they exist
-  if (restoredState) {
-    showHexIds.value = restoredState.showHexIds ?? true
-    showArrows.value = restoredState.showArrows ?? true
-    showPerspective.value = restoredState.showPerspective ?? true
-    
-    // Apply map key if present
-    if (restoredState.mapKey) {
-      selectedMap.value = restoredState.mapKey
-    }
+  const displayFlags = urlStateStore.restoreStateFromUrl()
+  // Apply display flags from URL if they exist
+  if (displayFlags) {
+    showHexIds.value = displayFlags.showHexIds ?? true
+    showArrows.value = displayFlags.showArrows ?? true
+    showPerspective.value = displayFlags.showPerspective ?? true
   }
 }
 
@@ -144,7 +139,6 @@ const handleCopyLink = async () => {
         showArrows: showArrows.value,
         showPerspective: showPerspective.value,
       },
-      selectedMap.value,
     )
 
     // Copy URL to clipboard

@@ -110,11 +110,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const charCount = state.c?.length || 0
   const hasArtifacts = state.a !== undefined
   const hasDisplayFlags = state.d !== undefined
-  const hasMapId = state.m !== undefined && state.m !== 1 // Only encode if not default arena1
-
-  // Check if we need extended header (for counts, display flags, or map ID)
+  // Check if we need extended header (for counts or display flags)
   const needsExtendedCounts = tileCount > 7 || charCount > 7
-  const needsExtended = needsExtendedCounts || hasDisplayFlags || hasMapId
+  const needsExtended = needsExtendedCounts || hasDisplayFlags
 
   // Write header byte
   let header = 0
@@ -134,10 +132,6 @@ export function encodeToBinary(state: GridState): Uint8Array {
     if (hasDisplayFlags && state.d !== undefined) {
       // Pack display flags into bits 1-3
       extendedFlags |= (state.d & 0x07) << 1
-    }
-    if (hasMapId && state.m !== undefined) {
-      // Pack map ID into bits 4-6 (3 bits support maps 0-7)
-      extendedFlags |= (state.m & 0x07) << 4
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -210,12 +204,6 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       if (displayFlags !== 0 || extendedFlags > 0) {
         // Only set display flags if they were explicitly stored
         state.d = displayFlags
-      }
-
-      // Extract map ID from bits 4-6
-      const mapId = (extendedFlags >> 4) & 0x07
-      if (mapId > 0) {
-        state.m = mapId
       }
 
       // Read extended counts if present

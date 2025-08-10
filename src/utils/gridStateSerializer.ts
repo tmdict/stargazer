@@ -6,7 +6,6 @@ export interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective)
-  m?: number // map ID: 1-5 for arena1-arena5 (encoded in binary)
 }
 
 /* Create compact serialized state for URL generation */

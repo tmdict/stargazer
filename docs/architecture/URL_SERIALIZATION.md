@@ -51,7 +51,6 @@ interface GridState {
 - **Team Assignment**: 1 bit (ALLY/ENEMY)
 - **Artifacts**: 3 bits each (supports 7 artifact types)
 - **Display Flags**: 3 bits (Grid Info, Targeting, Perspective)
-- **Map ID**: 3 bits (supports maps 1-7, encoded in extended flags)
 
 ### Extended Header Mode
 
@@ -59,14 +58,12 @@ Extended mode is triggered for:
 
 - More than 7 tiles or characters
 - Display flags present
-- Map ID other than default (arena1)
 
 ```typescript
 // Extended flags byte when bit 7 set:
 // Bit 0: Needs extended counts
 // Bits 1-3: Display flags (showHexIds, showArrows, showPerspective)
-// Bits 4-6: Map ID (1-5 for arena1-arena5)
-// Bit 7: Reserved
+// Bits 4-7: Reserved
 ```
 
 ## Serialization Format

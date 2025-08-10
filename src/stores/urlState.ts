@@ -22,7 +22,6 @@ export const useUrlStateStore = defineStore('urlState', () => {
     showHexIds?: boolean
     showArrows?: boolean
     showPerspective?: boolean
-    mapKey?: string
   } | null => {
     try {
       const urlState = getGridStateFromCurrentUrl()
@@ -30,16 +29,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
         return null // No state in URL
       }
 
-      // Switch to the correct map if specified
-      if (urlState.m) {
-        const mapKey = `arena${urlState.m}`
-        const switchSuccess = gridStore.switchMap(mapKey)
-        if (!switchSuccess) {
-          console.warn(`Failed to switch to map: ${mapKey}`)
-        }
-      }
-
       // Clear existing state first using shared utility
+      // This resets all tiles to DEFAULT, clears characters and artifacts
       clearAllState()
 
       // Restore tile states from compact format: [hexId, state]
@@ -121,11 +112,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
       // URL state restoration completed successfully
       success('Grid loaded from URL!')
 
-      // Return the display flags and map key to be applied by the caller
-      return {
-        ...displayFlags,
-        mapKey: urlState.m ? `arena${urlState.m}` : undefined,
-      }
+      // Return the display flags to be applied by the caller
+      return displayFlags
     } catch (err) {
       console.error('Failed to restore state from URL:', err)
       error('Invalid URL - using default grid')
