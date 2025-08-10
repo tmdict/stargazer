@@ -420,13 +420,13 @@ onUnmounted(() => {
 
 @media (max-width: 768px) {
   .tab-panel {
-    padding: var(--spacing-lg);
+    padding: var(--spacing-lg) 0;
   }
 }
 
 @media (max-width: 480px) {
   .tab-panel {
-    padding: var(--spacing-sm);
+    padding: var(--spacing-sm) 0;
   }
 }
 
