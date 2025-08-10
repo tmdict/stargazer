@@ -61,6 +61,7 @@ export function calculateDistances(
 export function sortByDistancePriorities(
   candidates: TargetCandidate[],
   priorities: number[], // Array of hex IDs in priority order
+  sourceTeam: Team,
 ): TargetCandidate[] {
   return candidates.sort((a, b) => {
     // Check each priority in order
@@ -74,7 +75,13 @@ export function sortByDistancePriorities(
     }
 
     // Final tie-breaker: hex ID
-    return a.hexId - b.hexId
+    // Ally team targeting enemy: prefer highest hex ID
+    // Enemy team targeting ally: prefer lowest hex ID
+    if (sourceTeam === Team.ALLY) {
+      return b.hexId - a.hexId // Highest ID wins for ally team
+    } else {
+      return a.hexId - b.hexId // Lowest ID wins for enemy team
+    }
   })
 }
 
@@ -92,7 +99,7 @@ export function findBestTarget(
   if (candidates.length === 0) return null
 
   calculateDistances(candidates, priorityHexIds, grid)
-  const sorted = sortByDistancePriorities(candidates, priorityHexIds)
+  const sorted = sortByDistancePriorities(candidates, priorityHexIds, sourceTeam)
 
   return {
     hexId: sorted[0].hexId,
