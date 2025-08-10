@@ -1,5 +1,5 @@
 import { ARENA_1 } from './arena/arena1'
-import { FULL_GRID, type GridPreset } from './constants'
+import { FULL_GRID, type GridPreset } from './types/grid'
 import { Hex } from './hex'
 import { clearPathfindingCache } from './pathfinding'
 import type { SkillManager } from './skill'
