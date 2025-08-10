@@ -78,6 +78,7 @@ export const useGridStore = defineStore('grid', () => {
 
     // Create new grid with the selected map
     const newGrid = new Grid(FULL_GRID, mapConfig)
+
     // Copy properties to maintain reactivity
     Object.assign(grid, newGrid)
     currentMap.value = mapKey

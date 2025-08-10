@@ -62,7 +62,7 @@ Extended mode is triggered for:
 ```typescript
 // Extended flags byte when bit 7 set:
 // Bit 0: Needs extended counts
-// Bits 1-3: Display flags
+// Bits 1-3: Display flags (showHexIds, showArrows, showPerspective)
 // Bits 4-7: Reserved
 ```
 
@@ -104,9 +104,9 @@ Only non-default hex states are stored, significantly reducing size.
 2. Gather character placements and display flags
 3. Binary encode with variable-length IDs
 4. Base64-like encode to URL-safe string
-5. Append as URL parameter
+5. Append as hash with query parameter
 
-Example: `https://stargazer.app/?g=AQIDBAUGBwgJCg`
+Example: `https://<url>>/#/?g=AQIDBAUGBwgJCg`
 
 ## Decoding Process
 
@@ -150,31 +150,6 @@ Direct copy to clipboard for easy sharing.
 - **URL Length**: Shorter for most real-world cases (IDs > 127)
 - **Encoding Speed**: Milliseconds for typical grids
 - **Memory**: Temporary buffers only, streaming encoding
-
-## Integration Points
-
-### Grid System
-
-Direct state access for efficient serialization.
-
-### Router
-
-URL parameter handling and history management.
-
-### Character System
-
-Character ID mapping with companion support:
-
-- Regular characters: Direct placement
-- Companions: Skill-triggered creation with repositioning
-
-## Format Stability
-
-The binary format is fixed and stable without versioning overhead. Changes would require:
-
-- New URL parameter (e.g., `?g2=` for format v2)
-- Maintaining backward compatibility via parameter detection
-- Keeping the format simple avoids versioning complexity
 
 ## Security
 

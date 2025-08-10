@@ -108,10 +108,11 @@ GridManager
 │   └── Event Capture (invisible)
 ├── GridArtifacts (HTML overlay)
 ├── GridCharacters (HTML overlay)
-└── GridArrows (SVG overlay)
+├── GridArrows (SVG overlay)
+└── SkillTargeting (SVG overlay)
 ```
 
-GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view, while ally artifacts naturally avoid overlap due to their corner positioning.
+GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view, while ally artifacts naturally avoid overlap due to their corner positioning. SkillTargeting renders above arrows for targeting skills like Silvina's First Strike.
 
 ### Utility Layer (`/src/utils/`)
 
