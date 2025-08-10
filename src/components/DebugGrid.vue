@@ -7,8 +7,10 @@ import { useCharacterStore } from '../stores/character'
 import { useGameDataStore } from '../stores/gameData'
 import { useGridStore } from '../stores/grid'
 import { usePathfindingStore } from '../stores/pathfinding'
+import { useSkillStore } from '../stores/skill'
 import { extractFileName } from '../utils/dataLoader'
 import { getStateName, getStateClass } from '../utils/stateFormatting'
+import { getSymmetricalHexId } from '../lib/skills/utils/symmetry'
 
 // Access Pinia stores
 const gridStore = useGridStore()
@@ -16,6 +18,7 @@ const characterStore = useCharacterStore()
 const pathfindingStore = usePathfindingStore()
 const artifactStore = useArtifactStore()
 const gameDataStore = useGameDataStore()
+const skillStore = useSkillStore()
 
 // Character visibility toggles for debug lines
 const hiddenCharacters = ref<Set<number>>(new Set())
@@ -100,59 +103,73 @@ defineExpose({
               <span class="state-label" :class="getStateClass(tile.state)">
                 {{ getStateName(tile.state) }}
               </span>
-              <!-- Show closest enemy info for Ally characters -->
-              <div
-                v-if="
-                  tile.team === Team.ALLY && pathfindingStore.closestEnemyMap.has(tile.hex.getId())
-                "
-                class="closest-info"
+            </div>
+            <!-- Show skill targeting info -->
+            <div v-if="tile.characterId === 39 && tile.team" class="skill-info">
+              <span class="skill-label">Skill: First Strike (Silvina)</span>
+              <span class="symmetry-info"
+                >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
               >
-                <div class="closest-target-line">
-                  <span class="closest-enemy">
-                    → Enemy at Hex
-                    {{ pathfindingStore.closestEnemyMap.get(tile.hex.getId())?.enemyHexId }}
-                    (distance:
-                    {{ pathfindingStore.closestEnemyMap.get(tile.hex.getId())?.distance }})
-                  </span>
-                </div>
-                <div class="debug-toggle-line">
-                  <label class="debug-toggle-inline">
-                    <input
-                      type="checkbox"
-                      :checked="shouldShowDebugLines(tile.hex.getId())"
-                      @change="toggleCharacterDebugLines(tile.hex.getId())"
-                      class="debug-checkbox"
-                    />
-                    <span class="debug-label">Show debug lines</span>
-                  </label>
-                </div>
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
+                <span v-if="key === `${tile.characterId}-${tile.team}`" class="skill-target">
+                  → Targeting Hex {{ targetInfo.targetHexId }}
+                  <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
+                  <span v-else>(fallback)</span>
+                </span>
+              </template>
+            </div>
+            <!-- Show closest enemy info for Ally characters -->
+            <div
+              v-if="
+                tile.team === Team.ALLY && pathfindingStore.closestEnemyMap.has(tile.hex.getId())
+              "
+              class="closest-info"
+            >
+              <div class="closest-target-line">
+                <span class="closest-enemy">
+                  → Enemy at Hex
+                  {{ pathfindingStore.closestEnemyMap.get(tile.hex.getId())?.enemyHexId }}
+                  (distance:
+                  {{ pathfindingStore.closestEnemyMap.get(tile.hex.getId())?.distance }})
+                </span>
               </div>
-              <!-- Show closest ally info for Enemy characters -->
-              <div
-                v-if="
-                  tile.team === Team.ENEMY && pathfindingStore.closestAllyMap.has(tile.hex.getId())
-                "
-                class="closest-info"
-              >
-                <div class="closest-target-line">
-                  <span class="closest-ally">
-                    → Ally at Hex
-                    {{ pathfindingStore.closestAllyMap.get(tile.hex.getId())?.allyHexId }}
-                    (distance:
-                    {{ pathfindingStore.closestAllyMap.get(tile.hex.getId())?.distance }})
-                  </span>
-                </div>
-                <div class="debug-toggle-line">
-                  <label class="debug-toggle-inline">
-                    <input
-                      type="checkbox"
-                      :checked="shouldShowDebugLines(tile.hex.getId())"
-                      @change="toggleCharacterDebugLines(tile.hex.getId())"
-                      class="debug-checkbox"
-                    />
-                    <span class="debug-label">Show debug lines</span>
-                  </label>
-                </div>
+              <div class="debug-toggle-line">
+                <label class="debug-toggle-inline">
+                  <input
+                    type="checkbox"
+                    :checked="shouldShowDebugLines(tile.hex.getId())"
+                    @change="toggleCharacterDebugLines(tile.hex.getId())"
+                    class="debug-checkbox"
+                  />
+                  <span class="debug-label">Show debug lines</span>
+                </label>
+              </div>
+            </div>
+            <!-- Show closest ally info for Enemy characters -->
+            <div
+              v-if="
+                tile.team === Team.ENEMY && pathfindingStore.closestAllyMap.has(tile.hex.getId())
+              "
+              class="closest-info"
+            >
+              <div class="closest-target-line">
+                <span class="closest-ally">
+                  → Ally at Hex
+                  {{ pathfindingStore.closestAllyMap.get(tile.hex.getId())?.allyHexId }}
+                  (distance:
+                  {{ pathfindingStore.closestAllyMap.get(tile.hex.getId())?.distance }})
+                </span>
+              </div>
+              <div class="debug-toggle-line">
+                <label class="debug-toggle-inline">
+                  <input
+                    type="checkbox"
+                    :checked="shouldShowDebugLines(tile.hex.getId())"
+                    @change="toggleCharacterDebugLines(tile.hex.getId())"
+                    class="debug-checkbox"
+                  />
+                  <span class="debug-label">Show debug lines</span>
+                </label>
               </div>
             </div>
           </div>
@@ -540,5 +557,35 @@ defineExpose({
 .debug-label {
   font-style: italic;
   color: var(--color-text-secondary);
+}
+
+/* Skill targeting info styles */
+.skill-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.25rem 1rem 0.25rem 0;
+  padding: 0.5rem;
+  background: #f0f8ff;
+  border-radius: 4px;
+  border-left: 3px solid #4a90e2;
+}
+
+.skill-label {
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: #2c5aa0;
+}
+
+.symmetry-info {
+  font-size: 0.75rem;
+  color: #666;
+  font-style: italic;
+}
+
+.skill-target {
+  font-size: 0.75rem;
+  color: #4a90e2;
+  font-weight: 500;
 }
 </style>

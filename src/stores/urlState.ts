@@ -30,6 +30,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
       }
 
       // Clear existing state first using shared utility
+      // This resets all tiles to DEFAULT, clears characters and artifacts
       clearAllState()
 
       // Restore tile states from compact format: [hexId, state]

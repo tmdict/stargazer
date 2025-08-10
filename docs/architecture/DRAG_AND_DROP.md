@@ -58,6 +58,7 @@ GridManager (Orchestrator)
 ├── GridArtifacts (HTML overlay - behind characters)
 ├── GridCharacters (HTML overlay)
 ├── GridArrows (SVG overlay)
+├── SkillTargeting (SVG overlay)
 └── PathfindingDebug (conditional)
 ```
 
@@ -87,8 +88,8 @@ GridManager (Orchestrator)
 │  └───────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
 
-[GridArtifacts, GridCharacters, GridArrows render
- above with selective pointer-events control]
+[GridArtifacts, GridCharacters, GridArrows, SkillTargeting
+ render above with selective pointer-events control]
 ```
 
 This architecture separates responsibilities: SVG handles tile rendering and base events, HTML overlays handle interactive elements, and the invisible layer ensures reliable event capture.
@@ -178,6 +179,7 @@ function validateDrop(hexId: number, character: CharacterType): boolean {
 **GridArtifacts**: Shows team artifacts in fixed corner positions (renders before characters)
 **GridCharacters**: Positions character portraits with absolute positioning
 **GridArrows**: Displays pathfinding visualization with SVG arrows
+**SkillTargeting**: Shows skill-specific targeting arrows (e.g., Silvina's First Strike)
 
 ### Visual Layer Separation
 

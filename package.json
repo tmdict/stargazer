@@ -9,7 +9,9 @@
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "test": "npx tsx test/skills/silvina/silvina.test.ts",
+    "test:silvina": "npx tsx test/skills/silvina/silvina.test.ts"
   },
   "dependencies": {
     "html-to-image": "^1.11.13",

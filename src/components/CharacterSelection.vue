@@ -138,23 +138,23 @@ const removeCharacterFromGrid = (characterId: number) => {
 /* Add scroll for large screens when in side-by-side layout */
 @media (min-width: 1281px) {
   .characters {
-    min-height: 475px;
-    height: 475px;
+    min-height: 496px;
+    height: 496px;
     overflow-y: auto;
   }
 }
 
-@media (min-width: 1524px) {
+@media (min-width: 1540px) {
   .characters {
-    min-height: 522px;
-    height: 522px;
+    min-height: 544px;
+    height: 544px;
   }
 }
 
-@media (min-width: 1875px) {
+@media (min-width: 1892px) {
   .characters {
-    min-height: 574px;
-    height: 574px;
+    min-height: 596px;
+    height: 596px;
   }
 }
 

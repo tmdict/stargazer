@@ -47,6 +47,17 @@
           <li>Use "Flat" view for easier team overview</li>
           <li>The grid is fully responsive - works seamlessly on mobile, tablet, and desktop!</li>
         </ul>
+
+        <h2>Useful Links and Resources</h2>
+        <ul>
+          <li>
+            <a href="https://www.yaphalla.com/">Yaphalla</a>: Team formation builder, priority list
+            builder, and database.
+          </li>
+          <li>
+            <a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ database and guides.
+          </li>
+        </ul>
       </div>
     </div>
   </main>

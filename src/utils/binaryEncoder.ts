@@ -23,7 +23,8 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
  *   - Bits 1-3: Display flags (showHexIds, showArrows, showPerspective)
- *   - Bits 4-7: Reserved
+ *   - Bits 4-6: Map ID (1-5, 0 means default/arena1)
+ *   - Bit 7: Reserved
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -77,7 +78,6 @@ class BitWriter {
 
 class BitReader {
   private position = 0
-  private bitPosition = 0
 
   constructor(private bytes: Uint8Array) {}
 
@@ -110,7 +110,6 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const charCount = state.c?.length || 0
   const hasArtifacts = state.a !== undefined
   const hasDisplayFlags = state.d !== undefined
-
   // Check if we need extended header (for counts or display flags)
   const needsExtendedCounts = tileCount > 7 || charCount > 7
   const needsExtended = needsExtendedCounts || hasDisplayFlags

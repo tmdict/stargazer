@@ -2,6 +2,7 @@ import { ARENA_1 } from './arena/arena1'
 import { FULL_GRID, type GridPreset } from './constants'
 import { Hex } from './hex'
 import { clearPathfindingCache } from './pathfinding'
+import type { SkillManager } from './skill'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -54,6 +55,9 @@ export class Grid {
   private companionIdOffset = 10000
   // Changed to include team in the key: "mainId-team" -> Set of companions
   private companionLinks: Map<string, Set<number>> = new Map()
+
+  // Skill manager reference for triggering skill updates
+  skillManager?: SkillManager
 
   readonly gridPreset: GridPreset
 
@@ -584,8 +588,14 @@ export class Grid {
       return false
     }
 
-    // All successful
+    // All successful - update skills
     clearPathfindingCache()
+
+    // Trigger skill updates for any active skills
+    if (this.skillManager) {
+      this.skillManager.updateActiveSkills(this)
+    }
+
     return true
   }
 
