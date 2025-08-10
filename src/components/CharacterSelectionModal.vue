@@ -47,7 +47,16 @@ const availableCharacters = computed(() => {
     .filter((tile) => tile.team === team.value)
     .map((tile) => tile.characterId)
 
-  return props.characters.filter((char) => !placedCharacterIds.includes(char.id))
+  return props.characters
+    .filter((char) => !placedCharacterIds.includes(char.id))
+    .sort((a, b) => {
+      // First sort by faction
+      const factionCompare = a.faction.localeCompare(b.faction)
+      if (factionCompare !== 0) return factionCompare
+      
+      // Then sort by name within the same faction
+      return a.name.localeCompare(b.name)
+    })
 })
 
 const handleCharacterClick = (character: CharacterType) => {
