@@ -1,8 +1,61 @@
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
 import type { Grid } from '../grid'
 import { Team } from '../types/team'
+import { DIAGONAL_ROWS } from '../types/grid'
 import { getSymmetricalHexId } from './utils/symmetry'
-import { findBestTarget, getEnemyCharacters, calculateDistances, sortByDistancePriorities } from './utils/targeting'
+import {
+  findBestTarget,
+  getEnemyCharacters,
+  calculateDistances,
+  sortByDistancePriorities,
+} from './utils/targeting'
+
+// Get tie-breaking preference based on position in DIAGONAL_ROWS
+function getTieBreakingPreference(symmetricalHexId: number, team: Team): 'lower' | 'higher' {
+  // Find which row this hex belongs to
+  const rowIndex = DIAGONAL_ROWS.findIndex(row => row.includes(symmetricalHexId))
+  if (rowIndex === -1) {
+    // Fallback for unknown tiles
+    return 'higher'
+  }
+  
+  const row = DIAGONAL_ROWS[rowIndex]
+  const position = row.indexOf(symmetricalHexId)
+  
+  // Determine base preference (from ally perspective)
+  let basePreference: 'lower' | 'higher'
+  
+  // Special case: Row 14 (uppermost) - both tiles prefer higher
+  if (rowIndex === 14) {
+    basePreference = 'higher'
+  }
+  // Position-based rules
+  else if (position === 0) {
+    // First position in row prefers LOWER
+    basePreference = 'lower'
+  } else if (position === row.length - 1) {
+    // Last position in row prefers HIGHER
+    basePreference = 'higher'
+  } else {
+    // Middle positions
+    const diagonalTiles = [4, 9, 16, 23, 30, 37, 42]
+    if (diagonalTiles.includes(symmetricalHexId)) {
+      // Diagonal tiles prefer LOWER
+      basePreference = 'lower'
+    } else {
+      // Other middle positions generally prefer lower
+      // (tile 34 is inconsistent but we default to lower)
+      basePreference = 'lower'
+    }
+  }
+  
+  // Invert preference for enemy team (180° rotational symmetry)
+  if (team === Team.ENEMY) {
+    return basePreference === 'lower' ? 'higher' : 'lower'
+  }
+  
+  return basePreference
+}
 
 // Optimized target calculation for Silvina's skill
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
@@ -34,41 +87,28 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   // Find best enemy target with diagonal-aware tie-breaking
   const candidates = getEnemyCharacters(grid, team)
   if (candidates.length === 0) return null
-  
+
   // Calculate distances from symmetrical tile
   calculateDistances(candidates, [symmetricalHexId], grid)
-  
+
   // Custom sorting with diagonal-aware tie-breaking for Silvina
   const sorted = candidates.sort((a, b) => {
     const distA = a.distances.get(symmetricalHexId) ?? Infinity
     const distB = b.distances.get(symmetricalHexId) ?? Infinity
-    
+
     if (distA !== distB) {
       return distA - distB // Closest wins
     }
+
+    // Tie-breaking based on position in DIAGONAL_ROWS with team symmetry
+    const preference = getTieBreakingPreference(symmetricalHexId, team)
     
-    // Diagonal-aware tie-breaking based on symmetrical tile position
-    // The diagonal line through 4,9,16,23,30,37,42 creates zones
-    const diagonalTiles = [4, 9, 16, 23, 30, 37, 42]
-    const leftZoneTiles = [30, 33, 36, 39, 41]
-    const rightZoneTiles = [34, 38, 40, 43, 44, 45]  // 34 is in right zone based on TEST_M
-    
-    // Determine which zone the symmetrical tile is in
-    if (leftZoneTiles.includes(symmetricalHexId)) {
-      // Left zone prefers lower hex ID
-      return a.hexId - b.hexId
-    } else if (rightZoneTiles.includes(symmetricalHexId)) {
-      // Right zone prefers higher hex ID
-      return b.hexId - a.hexId
-    } else if (diagonalTiles.includes(symmetricalHexId)) {
-      // On diagonal: special case - seems to prefer lower based on tests
-      return a.hexId - b.hexId
-    } else {
-      // Default to higher hex ID for unknown tiles
-      return b.hexId - a.hexId
-    }
+    // Simple sorting based on preference
+    return preference === 'lower' 
+      ? a.hexId - b.hexId  // Lower hex ID wins
+      : b.hexId - a.hexId  // Higher hex ID wins
   })
-  
+
   const bestTarget = sorted.length > 0 ? sorted[0] : null
 
   if (bestTarget) {
