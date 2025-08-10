@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed, readonly, reactive } from 'vue'
 
-import { FULL_GRID } from '../lib/constants'
+import { FULL_GRID } from '../lib/types/grid'
 import { Grid, type GridTile } from '../lib/grid'
 import type { Hex } from '../lib/hex'
 import { Layout, POINTY } from '../lib/layout'
