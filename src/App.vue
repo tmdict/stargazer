@@ -4,11 +4,13 @@ import { RouterLink, RouterView } from 'vue-router'
 
 import rowanSvg from '@/assets/rowan.svg'
 import rowanGif from '@/assets/rowan.gif'
+import AboutModal from './components/AboutModal.vue'
 import DragPreview from './components/DragPreview.vue'
 import GitHubIcon from './components/GitHubIcon.vue'
 import InfoIcon from './components/InfoIcon.vue'
 
 const isLogoHovered = ref(false)
+const showAboutModal = ref(false)
 </script>
 
 <template>
@@ -30,9 +32,9 @@ const isLogoHovered = ref(false)
           </a>
         </li>
         <li>
-          <RouterLink to="/about" class="icon-link" title="About">
+          <button @click="showAboutModal = true" class="icon-link icon-button" title="About">
             <InfoIcon />
-          </RouterLink>
+          </button>
         </li>
       </ul>
     </nav>
@@ -42,6 +44,9 @@ const isLogoHovered = ref(false)
 
   <!-- Global drag preview -->
   <DragPreview />
+
+  <!-- About modal -->
+  <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
 </template>
 
 <style scoped>
@@ -89,7 +94,8 @@ nav ul li {
   align-items: center;
 }
 
-.menu a {
+.menu a,
+.menu button {
   color: #ddd;
   text-decoration: none;
   font-size: 1.1rem;
@@ -98,7 +104,8 @@ nav ul li {
   border-radius: 6px;
 }
 
-.menu a:hover {
+.menu a:hover,
+.menu button:hover {
   color: #f7d87c;
 }
 
@@ -107,6 +114,14 @@ nav ul li {
   align-items: center;
   justify-content: center;
   margin-top: -5px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s ease;
 }
 
 @media (max-width: 768px) {
@@ -118,9 +133,10 @@ nav ul li {
     height: 50px;
   }
 
-  .menu a {
+  .menu a,
+  .menu button {
     font-size: 1rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
   }
 }
 
@@ -140,9 +156,10 @@ nav ul li {
     padding-bottom: 0;
   }
 
-  .menu a {
+  .menu a,
+  .menu button {
     font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
+    padding: 0;
   }
 
   .logo {
