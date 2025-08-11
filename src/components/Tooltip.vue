@@ -3,13 +3,13 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 interface Props {
   targetElement: HTMLElement
+  // Visual variants
+  variant: 'simple' | 'detailed'
   // Content props for simple text mode
   text?: string
   // Positioning options
   offset?: number
   placement?: 'top' | 'bottom' | 'auto'
-  // Visual variants
-  variant?: 'simple' | 'detailed'
   // Custom styling options
   minWidth?: string
   maxWidth?: string
@@ -18,7 +18,6 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), {
   offset: 8,
   placement: 'auto',
-  variant: 'simple',
   minWidth: 'auto',
   maxWidth: '300px',
 })

@@ -15,18 +15,18 @@ import { getHexFillColor } from '../utils/stateFormatting'
 interface Props {
   hexes: Hex[]
   layout: Layout
-  width?: number | string
-  height?: number | string
+  width?: number
+  height: number
   rotation?: number
   scaleX?: number
   scaleY?: number
   skewX?: number
   skewY?: number
-  centerX?: number
-  centerY?: number
+  centerX: number
+  centerY: number
   strokeWidth?: number
-  showHexIds?: boolean
-  showCoordinates?: boolean
+  showHexIds: boolean
+  showCoordinates: boolean
   hexIdFontSize?: number
   coordinateFontSize?: number
   textColor?: string
@@ -34,34 +34,26 @@ interface Props {
   textRotation?: number
   hexFillColor?: string
   hexStrokeColor?: string
-  isMapEditorMode?: boolean
-  selectedMapEditorState?: State
-  showPerspective?: boolean
+  isMapEditorMode: boolean
+  selectedMapEditorState: State
+  showPerspective: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  width: 500,
-  height: 500,
+  width: 600,
   rotation: 0,
   scaleX: 1,
   scaleY: 1,
   skewX: 0,
   skewY: 0,
-  centerX: 250,
-  centerY: 250,
   strokeWidth: 2,
-  showHexIds: true,
-  showCoordinates: true,
   hexIdFontSize: 18,
   coordinateFontSize: 8,
   textColor: '#222',
   coordinateColor: '#555',
-  textRotation: 0,
+  textRotation: 30,
   hexFillColor: '#fff',
   hexStrokeColor: '#ccc',
-  isMapEditorMode: false,
-  selectedMapEditorState: State.DEFAULT,
-  showPerspective: false,
 })
 
 const gridEvents = useGridEvents()
@@ -152,8 +144,8 @@ const blockHover = ref(false)
 const svgDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
-    width: (props.width as number) * scale,
-    height: (props.height as number) * scale,
+    width: props.width * scale,
+    height: props.height * scale,
   }
 })
 
