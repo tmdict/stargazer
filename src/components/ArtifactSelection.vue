@@ -40,7 +40,7 @@ const sortedArtifacts = computed(() => {
 </script>
 
 <template>
-  <SelectionContainer containerClass="artifact-selection" :showCounts="false">
+  <SelectionContainer containerClass="artifact-selection">
     <!-- Artifacts Grid -->
     <div class="artifacts">
       <div v-for="artifact in sortedArtifacts" :key="artifact.id" class="artifact-profile">
