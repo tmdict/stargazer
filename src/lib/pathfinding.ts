@@ -417,16 +417,11 @@ export function defaultCanTraverse(tile: GridTile): boolean {
   return tile.state !== State.BLOCKED && tile.state !== State.BLOCKED_BREAKABLE
 }
 
-/*
- * Apply tie-breaking rules when multiple targets have the same movement distance.
- * Selection priority:
- * 1. Vertically aligned targets (same q coordinate)
- * 2. Same diagonal row targets with lower hex ID
- * 3. Targets with minimum direct distance
- */
+// Internal helper for applying tie-breaking rules (see findClosestTarget for details)
 function applyTieBreakingRules(
   candidates: GridTile[],
   sourceHex: Hex,
+  sourceTeam?: Team,
   currentBest: GridTile | null = null,
 ): GridTile {
   if (candidates.length === 0) {
@@ -452,8 +447,13 @@ function applyTieBreakingRules(
       // Keep current best (already vertical)
       continue
     } else if (areHexesInSameDiagonalRow(candidate.hex.getId(), bestTarget.hex.getId())) {
-      // Rule 2: Same diagonal row - prefer lower hex ID
-      if (candidate.hex.getId() < bestTarget.hex.getId()) {
+      // Rule 2: Same diagonal row - team-based ID preference
+      // ALLY to ENEMY: prefer larger ID, ENEMY to ALLY: prefer lower ID
+      const preferLowerId = sourceTeam === Team.ENEMY
+      const shouldUpdate = preferLowerId
+        ? candidate.hex.getId() < bestTarget.hex.getId()
+        : candidate.hex.getId() > bestTarget.hex.getId()
+      if (shouldUpdate) {
         bestTarget = candidate
       }
     } else if (!candidateIsVertical && !bestIsVertical) {
@@ -462,12 +462,15 @@ function applyTieBreakingRules(
       const bestDirectDistance = sourceHex.distance(bestTarget.hex)
       if (candidateDirectDistance < bestDirectDistance) {
         bestTarget = candidate
-      } else if (
-        candidateDirectDistance === bestDirectDistance &&
-        candidate.hex.getId() < bestTarget.hex.getId()
-      ) {
-        // Final fallback: prefer lower hex ID for consistency
-        bestTarget = candidate
+      } else if (candidateDirectDistance === bestDirectDistance) {
+        // Final fallback: team-based ID preference
+        const preferLowerId = sourceTeam === Team.ENEMY
+        const shouldUpdate = preferLowerId
+          ? candidate.hex.getId() < bestTarget.hex.getId()
+          : candidate.hex.getId() > bestTarget.hex.getId()
+        if (shouldUpdate) {
+          bestTarget = candidate
+        }
       }
     }
   }
@@ -494,7 +497,7 @@ export function isVerticallyAligned(sourceHex: Hex, targetHex: Hex): boolean {
  *
  * Tie-breaking Rules (when multiple targets have same movement distance):
  * 1. Vertical alignment (same q coordinate) - straight-line movement preference
- * 2. Same diagonal row position - lower hex ID preferred
+ * 2. Same diagonal row position - team-based ID preference
  * 3. Minimum direct distance - spatial proximity
  */
 export function findClosestTarget(
@@ -532,7 +535,7 @@ export function findClosestTarget(
   }
 
   // Apply tie-breaking rules to select the best target
-  const bestTarget = applyTieBreakingRules(candidateTargets, sourceTile.hex)
+  const bestTarget = applyTieBreakingRules(candidateTargets, sourceTile.hex, sourceTile.team, null)
 
   return {
     hexId: bestTarget.hex.getId(),

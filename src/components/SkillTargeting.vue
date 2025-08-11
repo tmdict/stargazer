@@ -47,8 +47,9 @@ const skillTransform = computed(() => {
 const arrowStyle = computed(() => {
   const scale = gridStore.getHexScale()
   return {
-    strokeWidth: Math.max(2, 3 * scale), // Min 2px
+    strokeWidth: Math.max(3, 5 * scale), // Min 3px, thicker arrows
     dashArray: `${8 * scale},${8 * scale}`, // Scale the dash pattern
+    arrowheadSize: Math.max(4, 4 * scale), // Same as normal arrows
   }
 })
 
@@ -128,14 +129,14 @@ onUnmounted(() => {
           <defs>
             <marker
               :id="`skill-arrow-${key}`"
-              markerWidth="10"
-              markerHeight="10"
-              refX="9"
-              refY="3"
+              markerWidth="20"
+              markerHeight="14"
+              refX="16"
+              refY="7"
               orient="auto"
-              markerUnits="strokeWidth"
+              markerUnits="userSpaceOnUse"
             >
-              <polygon points="0 0, 10 3, 0 6" :fill="getTargetingColor(key)" />
+              <polygon points="0 0, 20 7, 0 14" :fill="getTargetingColor(key)" />
             </marker>
           </defs>
 

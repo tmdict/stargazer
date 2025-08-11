@@ -11,6 +11,7 @@ The pathfinding system provides movement calculations, target selection, and dis
 3. **Performance First**: LRU caching, early termination, optimized data structures
 4. **Framework Agnostic**: Works with any grid via callback functions
 5. **Deterministic Behavior**: Consistent tie-breaking rules for predictable outcomes
+6. **Team Asymmetry**: Different targeting preferences based on attacking team
 
 ## Core Algorithms
 
@@ -57,21 +58,25 @@ Handles both melee (range 1) and ranged attacks by finding positions within atta
 When multiple targets are equidistant:
 
 1. **Vertical Alignment**: Prefer same q-coordinate (straight vertical movement)
-2. **Diagonal Priority**: Within diagonal row, prefer lower hex ID
-3. **ID Fallback**: Otherwise, lowest hex ID wins
+2. **Diagonal Priority**: Within diagonal row, team-based ID preference:
+   - **ALLY → ENEMY**: Prefer higher hex ID
+   - **ENEMY → ALLY**: Prefer lower hex ID
+3. **Direct Distance**: Targets with minimum euclidean distance
+4. **ID Fallback**: Team-based preference (same as rule 2)
 
 ### Finding Closest Target
 
 ```typescript
 function findClosestTarget(
-  source: Hex,
-  targets: Hex[],
-  range: number,
-  // ... callbacks
+  sourceTile: GridTile,
+  targetTiles: GridTile[],
+  sourceRange: number,
+  getTile: (hex: Hex) => GridTile | undefined,
+  canTraverse: (tile: GridTile) => boolean,
 ): { hexId: number; distance: number } | null
 ```
 
-Combines BFS exploration with tie-breaking for consistent target selection.
+Combines BFS exploration with team-aware tie-breaking for consistent target selection. The source tile's team determines ID preference during tie-breaking, creating asymmetric targeting behavior between teams.
 
 ## Game Integration
 

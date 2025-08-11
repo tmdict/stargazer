@@ -44,7 +44,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   showArrows: true,
-  showHexIds: true,
+  showHexIds: false,
   showDebug: false,
   showSkills: true,
   isMapEditorMode: false,
