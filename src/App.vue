@@ -44,7 +44,7 @@ const showAboutModal = ref(false)
 
   <!-- Global drag preview -->
   <DragPreview />
-  
+
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
 </template>
