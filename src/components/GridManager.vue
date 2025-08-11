@@ -27,33 +27,22 @@ interface Props {
   artifactImages: Readonly<Record<string, string>>
   icons?: Readonly<Record<string, string>>
   // Display toggle props
-  showArrows?: boolean
-  showHexIds?: boolean
-  showDebug?: boolean
-  showSkills?: boolean
+  showArrows: boolean
+  showHexIds: boolean
+  showDebug: boolean
+  showSkills: boolean
   // Map editor props
-  isMapEditorMode?: boolean
-  selectedMapEditorState?: State
+  isMapEditorMode: boolean
+  selectedMapEditorState: State
   // Perspective mode props
-  showPerspective?: boolean
-  verticalScaleComp?: number
-  defaultSvgHeight?: number
+  showPerspective: boolean
+  verticalScaleComp: number
+  defaultSvgHeight: number
   // Debug props
-  debugGridRef?: any
+  debugGridRef: any
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  showArrows: true,
-  showHexIds: false,
-  showDebug: false,
-  showSkills: true,
-  isMapEditorMode: false,
-  selectedMapEditorState: State.DEFAULT,
-  showPerspective: false,
-  verticalScaleComp: 1.0,
-  defaultSvgHeight: 600,
-  debugGridRef: null,
-})
+const props = defineProps<Props>()
 
 // Use stores and inject drag/drop API
 const gridStore = useGridStore()
@@ -289,12 +278,9 @@ defineExpose({
     <GridTiles
       :hexes="gridStore.hexes"
       :layout="gridStore.layout"
-      :width="600"
       :height="defaultSvgHeight"
-      :rotation="0"
       :center-x="gridStore.gridOrigin.x"
       :center-y="gridStore.gridOrigin.y"
-      :text-rotation="30"
       :show-hex-ids="showHexIds"
       :show-coordinates="showDebug"
       :is-map-editor-mode="isMapEditorMode"
