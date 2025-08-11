@@ -136,7 +136,7 @@ nav ul li {
   .menu a,
   .menu button {
     font-size: 1rem;
-    padding: 0.5rem 1rem;
+    padding: 0.5rem;
   }
 }
 
@@ -159,7 +159,7 @@ nav ul li {
   .menu a,
   .menu button {
     font-size: 0.9rem;
-    padding: 0.4rem 0.8rem;
+    padding: 0;
   }
 
   .logo {
