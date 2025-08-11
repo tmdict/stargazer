@@ -7,14 +7,11 @@ import { useSkillStore } from '../stores/skill'
 import { getCharacterSkill } from '../lib/skill'
 
 interface Props {
-  showPerspective?: boolean
-  defaultSvgHeight?: number
+  showPerspective: boolean
+  defaultSvgHeight: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  showPerspective: false,
-  defaultSvgHeight: 600,
-})
+const props = defineProps<Props>()
 
 // Grid and skill stores
 const gridStore = useGridStore()

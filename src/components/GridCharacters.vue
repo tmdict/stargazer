@@ -12,16 +12,12 @@ import type { DragDropAPI } from './DragDropProvider.vue'
 interface Props {
   characterImages: Readonly<Record<string, string>>
   characters: readonly CharacterType[]
-  showPerspective?: boolean
-  scaleY?: number
-  isMapEditorMode?: boolean
+  showPerspective: boolean
+  scaleY: number
+  isMapEditorMode: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  showPerspective: false,
-  scaleY: 1.0,
-  isMapEditorMode: false,
-})
+const props = defineProps<Props>()
 
 const gridStore = useGridStore()
 const characterStore = useCharacterStore()

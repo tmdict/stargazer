@@ -6,18 +6,15 @@ import { useGridStore } from '../stores/grid'
 interface Props {
   startHexId: number
   endHexId: number
-  color?: string
-  strokeWidth?: number
-  arrowheadSize?: number
+  color: string
+  strokeWidth: number
+  arrowheadSize: number
   characterRadius?: number
   invertCurve?: boolean
   id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  color: '#ff6b6b',
-  strokeWidth: 3,
-  arrowheadSize: 10,
   characterRadius: 30,
   invertCurve: false,
   id: '',

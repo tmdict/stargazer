@@ -7,16 +7,12 @@ import { useGridStore } from '../stores/grid'
 import GridArrow from './GridArrow.vue'
 
 interface Props {
-  showArrows?: boolean
-  showPerspective?: boolean
-  defaultSvgHeight?: number
+  showArrows: boolean
+  showPerspective: boolean
+  defaultSvgHeight: number
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  showArrows: true,
-  showPerspective: false,
-  defaultSvgHeight: 600,
-})
+const props = defineProps<Props>()
 
 const pathfindingStore = usePathfindingStore()
 const gridStore = useGridStore()
