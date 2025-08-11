@@ -18,7 +18,7 @@ const handleClick = () => {
   color: white;
   border: 2px solid var(--color-danger);
   padding: var(--spacing-sm) var(--spacing-md);
-  margin-right: 5px;
+  margin: 0 5px;
   border-radius: var(--radius-medium);
   cursor: pointer;
   font-size: 0.85rem;
