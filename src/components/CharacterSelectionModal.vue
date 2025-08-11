@@ -53,7 +53,7 @@ const availableCharacters = computed(() => {
       // First sort by faction
       const factionCompare = a.faction.localeCompare(b.faction)
       if (factionCompare !== 0) return factionCompare
-      
+
       // Then sort by name within the same faction
       return a.name.localeCompare(b.name)
     })

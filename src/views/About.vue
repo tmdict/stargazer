@@ -13,23 +13,36 @@
           strategies before committing resources in-game. Place heroes, visualize their attack
           ranges, and share your formations with friends or guild members to discuss tactics.
         </p>
+        <p>
+          The purpose of this tool is to allow rapid testing and sharing of skill targeting
+          strategies with different arena formations. For comprehensive formation building with full
+          features, we recommend using
+          <a href="https://www.yaphalla.com/editor">Yaphalla's builder</a>.
+        </p>
 
         <h2>How to Use</h2>
         <ul>
           <li>
             <strong>Place Heroes:</strong> Drag characters onto the grid or click them to add/remove
           </li>
-          <li><strong>Build Teams:</strong> Place up to 5 heroes per team (ally/enemy)</li>
+          <li>
+            <strong>Build Teams:</strong> Click and drag to move heroes around and switch teams
+          </li>
           <li><strong>Add Artifacts:</strong> Click the Artifacts tab to equip team bonuses</li>
           <li>
-            <strong>Simulation Details:</strong> Toggle to show/hide various view options:
+            <strong>Simulation Details:</strong> Toggle to show/hide different simulation
+            information:
             <ul>
-              <li><strong>Grid Info:</strong> Display hex coordinates and tile information</li>
+              <li>
+                <strong>Flat View:</strong> Display the grid in a top-down flat view, similar to
+                Yaphalla's builder
+              </li>
+              <li><strong>Grid Info:</strong> Show hex coordinates and tile information</li>
               <li>
                 <strong>Skills:</strong> Simulate skill effects of character currently on the map
               </li>
               <li><strong>Targeting:</strong> Simulate attack ranges and movement paths</li>
-              <li><strong>Debug:</strong> Show technical information for troubleshooting</li>
+              <li><strong>Debug:</strong> Show debug information for troubleshooting</li>
             </ul>
           </li>
           <li><strong>Create Maps:</strong> Use Map Editor tab to design custom arenas</li>
@@ -41,10 +54,8 @@
 
         <h2>Tips</h2>
         <ul>
-          <li>Heroes with special abilities show companion units automatically</li>
-          <li>Click and drag to move heroes between positions</li>
-          <li>Click any grid tile to quickly place characters via popup menu</li>
-          <li>Use "Flat" view for easier team overview</li>
+          <li>Heroes with special abilities will modify the map or diplay special effects</li>
+          <li>Click any grid tile to quickly place characters via a popup menu</li>
           <li>The grid is fully responsive - works seamlessly on mobile, tablet, and desktop!</li>
         </ul>
 

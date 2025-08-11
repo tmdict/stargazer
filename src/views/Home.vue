@@ -47,8 +47,8 @@ const availableMaps = getMapNames()
 const selectedMap = ref('arena1')
 
 // Grid display toggles
-const showArrows = ref(false)
-const showHexIds = ref(true)
+const showArrows = ref(true)
+const showHexIds = ref(false)
 const showPerspective = ref(true)
 const showSkills = ref(true)
 
@@ -371,13 +371,6 @@ onUnmounted(() => {
 </template>
 
 <style scoped>
-/* Override main max-width for large screens - only for Home page */
-@media (min-width: 1281px) {
-  main {
-    --main-max-width: none;
-  }
-}
-
 /* Container for sections - side by side on large screens */
 .sections-container {
   display: flex;

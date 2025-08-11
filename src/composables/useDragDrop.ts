@@ -76,10 +76,10 @@ export const useDragDrop = () => {
     // Get the current grid scale to adjust preview offset
     const gridStore = useGridStore()
     const scale = gridStore.getHexScale()
-    
+
     // Scale the offset based on current grid scale (35px is for 100% scale)
     const offset = 35 * scale
-    
+
     dragPreviewPosition.value = { x: x - offset, y: y - offset } // Offset to center the preview
     currentMousePosition.value = { x, y }
   }
