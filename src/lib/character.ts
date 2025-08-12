@@ -250,7 +250,7 @@ function performCrossTeamSwap(
         // Handle toChar skill reactivation
         if (toHasSkill) {
           skillManager.activateCharacterSkill(toChar, toHexId, toTeam, grid)
-          // Special handling for companion skills to restore companion positions  
+          // Special handling for companion skills to restore companion positions
           if (hasCompanionSkill(toChar)) {
             restoreCompanions(grid, skillManager, toChar, companionPositions)
           }
@@ -335,7 +335,7 @@ export function moveCharacter(
 
   // For cross-team moves with skills, we need proper transaction handling
   const hasActiveSkill = skillManager.hasActiveSkill(characterId, fromTeam)
-  
+
   // Store companion positions before deactivation (for rollback if needed)
   let companionPositions: CompanionPosition[] = []
   if (hasActiveSkill && hasSkill(characterId)) {
@@ -375,7 +375,7 @@ export function moveCharacter(
         if (skillDeactivated && !moved) {
           // Reactivate the skill at original position
           skillManager.activateCharacterSkill(characterId, fromHexId, fromTeam, grid)
-          
+
           // Special handling for companion skills to restore companion positions
           if (hasCompanionSkill(characterId)) {
             restoreCompanions(grid, skillManager, characterId, companionPositions)
