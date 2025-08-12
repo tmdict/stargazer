@@ -54,6 +54,11 @@ export function hasSkill(characterId: number): boolean {
   return skillRegistry.has(characterId)
 }
 
+export function hasCompanionSkill(characterId: number): boolean {
+  const skill = getCharacterSkill(characterId)
+  return skill?.companionColorModifier !== undefined
+}
+
 // SkillManager class for managing active skills
 export class SkillManager {
   // Track which characters have active skills on which hexes
