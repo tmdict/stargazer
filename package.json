@@ -10,8 +10,8 @@
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
     "format": "prettier --write src/",
-    "test": "npx tsx test/skills/silvina/silvina.test.ts",
-    "test:silvina": "npx tsx test/skills/silvina/silvina.test.ts"
+    "test": "tsx test/skills/silvina/silvina.test.ts",
+    "test:silvina": "tsx test/skills/silvina/silvina.test.ts"
   },
   "dependencies": {
     "html-to-image": "^1.11.13",
@@ -26,6 +26,7 @@
     "@vue/tsconfig": "^0.7.0",
     "npm-run-all2": "^8.0.4",
     "prettier": "3.5.3",
+    "tsx": "^4.20.3",
     "typescript": "~5.8.0",
     "vite": "^7.0.0",
     "vite-imagetools": "^7.1.0",
