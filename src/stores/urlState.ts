@@ -22,6 +22,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
     showHexIds?: boolean
     showArrows?: boolean
     showPerspective?: boolean
+    showSkills?: boolean
   } | null => {
     try {
       const urlState = getGridStateFromCurrentUrl()

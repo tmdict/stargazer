@@ -33,7 +33,12 @@ export function generateShareableUrl(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
-  displayFlags?: { showHexIds?: boolean; showArrows?: boolean; showPerspective?: boolean },
+  displayFlags?: {
+    showHexIds?: boolean
+    showArrows?: boolean
+    showPerspective?: boolean
+    showSkills?: boolean
+  },
 ): string {
   // Serialize to compact format
   const gridState = serializeGridState(allTiles, allyArtifact, enemyArtifact, displayFlags)
@@ -63,7 +68,12 @@ export function updateUrlWithGridState(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
-  displayFlags?: { showHexIds?: boolean; showArrows?: boolean; showPerspective?: boolean },
+  displayFlags?: {
+    showHexIds?: boolean
+    showArrows?: boolean
+    showPerspective?: boolean
+    showSkills?: boolean
+  },
 ): void {
   try {
     const shareableUrl = generateShareableUrl(allTiles, allyArtifact, enemyArtifact, displayFlags)
