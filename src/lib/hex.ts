@@ -54,12 +54,12 @@ export class Hex {
   neighbor(direction: number): Hex {
     // Direction indices 0-5 clockwise from top-right
     const directions = [
-      new Hex(1, -1, 0),  // 0: top-right
-      new Hex(1, 0, -1),  // 1: right
-      new Hex(0, 1, -1),  // 2: bottom-right
-      new Hex(-1, 1, 0),  // 3: bottom-left
-      new Hex(-1, 0, 1),  // 4: left
-      new Hex(0, -1, 1),  // 5: top-left
+      new Hex(1, -1, 0), // 0: top-right
+      new Hex(1, 0, -1), // 1: right
+      new Hex(0, 1, -1), // 2: bottom-right
+      new Hex(-1, 1, 0), // 3: bottom-left
+      new Hex(-1, 0, 1), // 4: left
+      new Hex(0, -1, 1), // 5: top-left
     ]
     return this.add(directions[direction % 6])
   }

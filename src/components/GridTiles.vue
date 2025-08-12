@@ -369,7 +369,7 @@ const isElevated = (hex: Hex) => {
 // Get stroke style for tiles - includes skill tile color modifiers
 const getHexStroke = (hex: Hex) => {
   const hexId = hex.getId()
-  
+
   // Check for skill tile color modifier if skills are enabled
   if (props.showSkills) {
     const tileColorModifier = skillStore.getTileColorModifier(hexId)
@@ -377,7 +377,7 @@ const getHexStroke = (hex: Hex) => {
       return tileColorModifier
     }
   }
-  
+
   // Default stroke colors
   const isOccupied = gridStore.grid.hasCharacter(hexId)
   return isOccupied ? '#999' : props.hexStrokeColor
@@ -386,7 +386,7 @@ const getHexStroke = (hex: Hex) => {
 const getHexStrokeWidth = (hex: Hex) => {
   const hexId = hex.getId()
   const scale = gridStore.getHexScale()
-  
+
   // Check if this tile has a skill color modifier
   if (props.showSkills) {
     const tileColorModifier = skillStore.getTileColorModifier(hexId)
@@ -395,7 +395,7 @@ const getHexStrokeWidth = (hex: Hex) => {
       return Math.max(3, 4 * scale)
     }
   }
-  
+
   const isOccupied = gridStore.grid.hasCharacter(hexId)
   return isOccupied ? Math.max(2, 3 * scale) : scaledStrokeWidth.value
 }
@@ -408,8 +408,12 @@ const hasSkillHighlight = (hex: Hex) => {
 }
 
 // Separate hexes into rendering layers for proper z-ordering
-const regularHexes = computed(() => props.hexes.filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex)))
-const elevatedHexes = computed(() => props.hexes.filter((hex) => isElevated(hex) && !hasSkillHighlight(hex)))
+const regularHexes = computed(() =>
+  props.hexes.filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex)),
+)
+const elevatedHexes = computed(() =>
+  props.hexes.filter((hex) => isElevated(hex) && !hasSkillHighlight(hex)),
+)
 const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
 
 // Hover state is now managed by position-based detection
@@ -472,7 +476,11 @@ onUnmounted(() => {
         </g>
 
         <!-- Skill-highlighted hexes (render on top to ensure skill borders are visible) -->
-        <g v-for="hex in skillHighlightedHexes" :key="`skill-${hex.getId()}`" class="grid-tile skill-highlighted">
+        <g
+          v-for="hex in skillHighlightedHexes"
+          :key="`skill-${hex.getId()}`"
+          class="grid-tile skill-highlighted"
+        >
           <polygon
             :points="
               layout

@@ -1,14 +1,8 @@
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
-import type { Grid } from '../grid'
 import { Team } from '../types/team'
 import { DIAGONAL_ROWS } from '../types/grid'
 import { getSymmetricalHexId } from './utils/symmetry'
-import {
-  findBestTarget,
-  getEnemyCharacters,
-  calculateDistances,
-  sortByDistancePriorities,
-} from './utils/targeting'
+import { getEnemyCharacters, calculateDistances } from './utils/targeting'
 
 // Get tie-breaking preference based on position in DIAGONAL_ROWS
 function getTieBreakingPreference(symmetricalHexId: number, team: Team): 'lower' | 'higher' {
