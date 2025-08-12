@@ -2,6 +2,7 @@ import type { Grid } from './grid'
 import type { Team } from './types/team'
 import { elijahLailahSkill } from './skills/elijah-lailah'
 import { phraestoSkill } from './skills/phraesto'
+import { reinierSkill } from './skills/reinier'
 import { silvinaSkill } from './skills/silvina'
 
 export interface SkillContext {
@@ -40,6 +41,7 @@ export interface Skill {
 const skillRegistry = new Map<number, Skill>([
   [phraestoSkill.characterId, phraestoSkill],
   [elijahLailahSkill.characterId, elijahLailahSkill],
+  [reinierSkill.characterId, reinierSkill],
   [silvinaSkill.characterId, silvinaSkill],
 ])
 
