@@ -40,46 +40,6 @@ function getAdjacentAllies(context: SkillContext): Array<{ hexId: number; positi
 }
 
 /**
- * Apply tie-breaking logic to select the highest priority ally
- * Position indices: 0=top-right, 1=right, 2=bottom-right, 3=bottom-left, 4=left, 5=top-left
- *
- * For ALLY to ENEMY targeting, priority order: 3 > 4 > 2 > 1 > 5 > 0
- * (bottom-left > left > bottom-right > right > top-left > top-right)
- * 
- * For ENEMY to ALLY targeting (180-degree rotation): 0 > 5 > 1 > 2 > 4 > 3
- * (top-right > top-left > right > bottom-right > left > bottom-left)
- */
-function applyTieBreaking(
-  adjacentAllies: Array<{ hexId: number; position: number }>,
-  team: Team,
-): number | null {
-  if (adjacentAllies.length === 0) return null
-  if (adjacentAllies.length === 1) return adjacentAllies[0].hexId
-
-  // Priority order based on position indices
-  // Ally team priority: bottom-left > left > bottom-right > right > top-left > top-right
-  const allyPriority = [3, 4, 2, 1, 5, 0]
-  // Enemy team priority (180-degree rotation): top-right > top-left > right > bottom-right > left > bottom-left
-  const enemyPriority = [0, 5, 1, 2, 4, 3]
-
-  const priorityOrder = team === Team.ALLY ? allyPriority : enemyPriority
-
-  // Find the ally with the highest priority position
-  let bestAlly = adjacentAllies[0]
-  let bestPriorityIndex = priorityOrder.indexOf(bestAlly.position)
-
-  for (const ally of adjacentAllies) {
-    const priorityIndex = priorityOrder.indexOf(ally.position)
-    if (priorityIndex < bestPriorityIndex) {
-      bestAlly = ally
-      bestPriorityIndex = priorityIndex
-    }
-  }
-
-  return bestAlly.hexId
-}
-
-/**
  * Check if there's an enemy on the symmetrical tile of the given ally
  */
 function findSymmetricalEnemy(context: SkillContext, allyHexId: number): number | null {
@@ -103,6 +63,35 @@ function findSymmetricalEnemy(context: SkillContext, allyHexId: number): number 
 }
 
 /**
+ * Find the highest priority ally that has a valid enemy target
+ * Returns the ally and enemy hex IDs, or null if no valid pair exists
+ */
+function findValidAllyEnemyPair(
+  context: SkillContext,
+  adjacentAllies: Array<{ hexId: number; position: number }>,
+  team: Team,
+): { allyHexId: number; enemyHexId: number } | null {
+  // Sort allies by priority
+  const allyPriority = team === Team.ALLY ? [3, 4, 2, 1, 5, 0] : [0, 5, 1, 2, 4, 3]
+
+  const sortedAllies = [...adjacentAllies].sort((a, b) => {
+    const priorityA = allyPriority.indexOf(a.position)
+    const priorityB = allyPriority.indexOf(b.position)
+    return priorityA - priorityB
+  })
+
+  // Check each ally in priority order to find one with a valid enemy target
+  for (const ally of sortedAllies) {
+    const enemyHexId = findSymmetricalEnemy(context, ally.hexId)
+    if (enemyHexId) {
+      return { allyHexId: ally.hexId, enemyHexId }
+    }
+  }
+
+  return null
+}
+
+/**
  * Calculate and set skill targets
  */
 function updateSkillTargets(context: SkillContext): void {
@@ -119,39 +108,36 @@ function updateSkillTargets(context: SkillContext): void {
   // Find adjacent allies
   const adjacentAllies = getAdjacentAllies(context)
 
-  // Apply tie-breaking to get the priority ally
-  const targetAllyHexId = applyTieBreaking(adjacentAllies, team)
-
-  if (!targetAllyHexId) {
+  if (adjacentAllies.length === 0) {
     // No adjacent allies, clear any existing targets
     skillManager.clearSkillTarget(characterId, team)
     return
   }
 
-  // Check if the ally has an enemy on its symmetrical tile
-  const targetEnemyHexId = findSymmetricalEnemy(context, targetAllyHexId)
+  // Find the highest priority ally that has a valid enemy target
+  const validPair = findValidAllyEnemyPair(context, adjacentAllies, team)
 
-  if (!targetEnemyHexId) {
-    // No enemy on symmetrical tile, clear targets
+  if (!validPair) {
+    // No valid ally-enemy pair found, clear targets
     skillManager.clearSkillTarget(characterId, team)
     return
   }
 
   // Set skill targets with metadata
   const targetInfo: SkillTargetInfo = {
-    targetHexId: targetAllyHexId,
+    targetHexId: validPair.allyHexId,
     targetCharacterId: null,
     metadata: {
-      allyHexId: targetAllyHexId,
-      enemyHexId: targetEnemyHexId,
+      allyHexId: validPair.allyHexId,
+      enemyHexId: validPair.enemyHexId,
     },
   }
 
   skillManager.setSkillTarget(characterId, team, targetInfo)
 
   // Set tile color modifiers for visual feedback
-  skillManager.setTileColorModifier(targetAllyHexId, reinierSkill.tileColorModifier!)
-  skillManager.setTileColorModifier(targetEnemyHexId, reinierSkill.tileColorModifier!)
+  skillManager.setTileColorModifier(validPair.allyHexId, reinierSkill.tileColorModifier!)
+  skillManager.setTileColorModifier(validPair.enemyHexId, reinierSkill.tileColorModifier!)
 }
 
 export const reinierSkill: Skill = {
@@ -168,7 +154,7 @@ export const reinierSkill: Skill = {
 
   onDeactivate(context: SkillContext): void {
     const { team, skillManager, characterId } = context
-    
+
     // Clear tile modifiers for current targets before clearing the skill target
     const currentTarget = skillManager.getSkillTarget(characterId, team)
     if (currentTarget?.metadata) {
@@ -176,7 +162,7 @@ export const reinierSkill: Skill = {
       if (allyHexId) skillManager.removeTileColorModifier(allyHexId)
       if (enemyHexId) skillManager.removeTileColorModifier(enemyHexId)
     }
-    
+
     skillManager.clearSkillTarget(characterId, team)
   },
 
