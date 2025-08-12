@@ -354,11 +354,15 @@ export function autoPlaceCharacter(
   const placed = grid.autoPlaceCharacter(characterId, team)
   if (!placed) return false
 
-  // Find where it was placed and activate skill
-  const tile = grid.getTilesWithCharacters().find((t) => t.characterId === characterId)
+  // Find where it was placed - must match both character ID AND team
+  const tile = grid.getTilesWithCharacters().find(
+    (t) => t.characterId === characterId && t.team === team
+  )
+  
   if (tile && hasSkill(characterId)) {
     const hexId = tile.hex.getId()
     const activated = skillManager.activateCharacterSkill(characterId, hexId, team, grid)
+    
     if (!activated) {
       // Clean up on skill failure
       grid.removeCharacter(hexId, true)

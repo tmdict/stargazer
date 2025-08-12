@@ -25,8 +25,9 @@ export interface Skill {
   name: string
   description: string
   colorModifier?: string // Border color for visual effects (main unit)
-  targetingColorModifier?: string // Arrow color for targeting skills
   companionColorModifier?: string // Border color for companion units
+  targetingColorModifier?: string // Arrow color for targeting skills
+  tileColorModifier?: string // Tile color for targeting skills
   companionRange?: number // Override range for companion units
 
   onActivate(context: SkillContext): void
@@ -61,6 +62,8 @@ export class SkillManager {
   // Track color modifiers for specific characters (for companions)
   // Key is "characterId-team" to support same companion ID on different teams
   private characterColorModifiers: Record<string, string> = {}
+  // Track color modifiers for specific tiles
+  private tileColorModifiers: Map<number, string> = new Map()
   // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Version counter to trigger reactivity
@@ -166,6 +169,7 @@ export class SkillManager {
   reset(): void {
     this.activeSkills = {}
     this.characterColorModifiers = {}
+    this.tileColorModifiers.clear()
     this.skillTargets.clear()
     this.targetVersion++ // Trigger reactivity to clear UI
   }
@@ -185,6 +189,34 @@ export class SkillManager {
   // Clear all character color modifiers
   clearCharacterColorModifiers(): void {
     this.characterColorModifiers = {}
+  }
+
+  // Add color modifier for a specific tile
+  setTileColorModifier(hexId: number, color: string): void {
+    this.tileColorModifiers.set(hexId, color)
+    this.targetVersion++ // Trigger reactivity
+  }
+
+  // Remove color modifier for a specific tile
+  removeTileColorModifier(hexId: number): void {
+    this.tileColorModifiers.delete(hexId)
+    this.targetVersion++ // Trigger reactivity
+  }
+
+  // Get color modifier for a specific tile
+  getTileColorModifier(hexId: number): string | undefined {
+    return this.tileColorModifiers.get(hexId)
+  }
+
+  // Clear all tile color modifiers
+  clearTileColorModifiers(): void {
+    this.tileColorModifiers.clear()
+    this.targetVersion++ // Trigger reactivity
+  }
+
+  // Get all tile color modifiers
+  getTileColorModifiers(): Map<number, string> {
+    return new Map(this.tileColorModifiers)
   }
 
   // Get color modifiers mapped by "characterId-team"

@@ -286,6 +286,7 @@ defineExpose({
       :is-map-editor-mode="isMapEditorMode"
       :selected-map-editor-state="selectedMapEditorState"
       :show-perspective="showPerspective"
+      :show-skills="showSkills"
     />
 
     <!-- Artifact layer (behind characters) -->
