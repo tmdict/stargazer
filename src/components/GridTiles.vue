@@ -38,7 +38,7 @@ interface Props {
   isMapEditorMode: boolean
   selectedMapEditorState: State
   showPerspective: boolean
-  showSkills?: boolean
+  showSkills: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -56,7 +56,6 @@ const props = withDefaults(defineProps<Props>(), {
   textRotation: 30,
   hexFillColor: '#fff',
   hexStrokeColor: '#ccc',
-  showSkills: true,
 })
 
 const gridEvents = useGridEvents()

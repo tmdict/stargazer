@@ -5,6 +5,13 @@ import { getSymmetricalHexId } from './utils/symmetry'
 /**
  * Get adjacent allies to the given hex position
  * Returns array of {hexId, position} where position is 0-5 indicating direction
+ *
+ * Hexagonal neighbor positions (clockwise from top-right):
+ *        5     0
+ *         \ _ /
+ *       4 |   | 1
+ *         / ‾ \
+ *        3     2
  */
 function getAdjacentAllies(context: SkillContext): Array<{ hexId: number; position: number }> {
   const { grid, hexId, team } = context
@@ -65,19 +72,43 @@ function findSymmetricalEnemy(context: SkillContext, allyHexId: number): number 
 /**
  * Find the highest priority ally that has a valid enemy target
  * Returns the ally and enemy hex IDs, or null if no valid pair exists
+ *
+ * TIE-BREAKING LOGIC:
+ * When multiple adjacent allies exist, we need to select one based on position priority.
+ *
+ * Hexagonal neighbors are indexed 0-5 in clockwise order:
+ *   Position 0: Top-right
+ *   Position 1: Right
+ *   Position 2: Bottom-right
+ *   Position 3: Bottom-left
+ *   Position 4: Left
+ *   Position 5: Top-left
+ *
+ * Priority order for ALLY team (targeting enemy):
+ *   [3, 4, 2, 1, 5, 0] = Bottom-left > Left > Bottom-right > Right > Top-left > Top-right
+ *
+ * Priority order for ENEMY team (targeting ally):
+ *   [0, 5, 1, 2, 4, 3] = Top-right > Top-left > Right > Bottom-right > Left > Bottom-left
+ *   (This is a 180-degree rotation of the ally priority)
+ *
+ * The algorithm:
+ * 1. Sort all adjacent allies by their position priority
+ * 2. Check each ally in priority order to see if they have a valid enemy on their symmetrical tile
+ * 3. Return the first valid ally-enemy pair found
  */
 function findValidAllyEnemyPair(
   context: SkillContext,
   adjacentAllies: Array<{ hexId: number; position: number }>,
   team: Team,
 ): { allyHexId: number; enemyHexId: number } | null {
-  // Sort allies by priority
+  // Priority arrays define which neighbor positions to check first
+  // Lower index = higher priority
   const allyPriority = team === Team.ALLY ? [3, 4, 2, 1, 5, 0] : [0, 5, 1, 2, 4, 3]
 
   const sortedAllies = [...adjacentAllies].sort((a, b) => {
     const priorityA = allyPriority.indexOf(a.position)
     const priorityB = allyPriority.indexOf(b.position)
-    return priorityA - priorityB
+    return priorityA - priorityB // Lower priority index comes first
   })
 
   // Check each ally in priority order to find one with a valid enemy target
