@@ -4,6 +4,7 @@ import { elijahLailahSkill } from './skills/elijah-lailah'
 import { phraestoSkill } from './skills/phraesto'
 import { reinierSkill } from './skills/reinier'
 import { silvinaSkill } from './skills/silvina'
+import { valaSkill } from './skills/vala'
 
 export interface SkillContext {
   grid: Grid
@@ -44,6 +45,7 @@ const skillRegistry = new Map<number, Skill>([
   [elijahLailahSkill.characterId, elijahLailahSkill],
   [reinierSkill.characterId, reinierSkill],
   [silvinaSkill.characterId, silvinaSkill],
+  [valaSkill.characterId, valaSkill],
 ])
 
 export function getCharacterSkill(characterId: number): Skill | undefined {
