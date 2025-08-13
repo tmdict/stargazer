@@ -50,7 +50,7 @@ interface GridState {
 - **Character IDs**: 14 bits (supports IDs 0-16,383)
 - **Team Assignment**: 1 bit (ALLY/ENEMY)
 - **Artifacts**: 3 bits each (supports 7 artifact types)
-- **Display Flags**: 3 bits (Grid Info, Targeting, Perspective)
+- **Display Flags**: 4 bits (Grid Info, Targeting, Perspective, Skills)
 
 ### Extended Header Mode
 
@@ -62,8 +62,8 @@ Extended mode is triggered for:
 ```typescript
 // Extended flags byte when bit 7 set:
 // Bit 0: Needs extended counts
-// Bits 1-3: Display flags (showHexIds, showArrows, showPerspective)
-// Bits 4-7: Reserved
+// Bits 1-4: Display flags (showHexIds, showArrows, showPerspective, showSkills)
+// Bits 5-7: Reserved
 ```
 
 ## Serialization Format
@@ -161,11 +161,12 @@ Direct copy to clipboard for easy sharing.
 
 View preferences preserved in URLs:
 
-- **Grid Info**: Hex ID display toggle
-- **Targeting**: Arrow visualization toggle
-- **Flat**: Perspective mode toggle
+- **Grid Info**: Hex ID display toggle (bit 0)
+- **Targeting**: Arrow visualization toggle (bit 1)
+- **Flat**: Perspective mode toggle (bit 2)
+- **Skills**: Skill targeting display toggle (bit 3)
 
-Bit-packed into 3 bits within extended header.
+Bit-packed into 4 bits within extended header.
 
 ## Related Documentation
 

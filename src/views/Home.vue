@@ -122,6 +122,7 @@ if (gameDataStore.dataLoaded) {
     showHexIds.value = displayFlags.showHexIds ?? true
     showArrows.value = displayFlags.showArrows ?? true
     showPerspective.value = displayFlags.showPerspective ?? true
+    showSkills.value = displayFlags.showSkills ?? true
   }
 }
 
@@ -138,6 +139,7 @@ const handleCopyLink = async () => {
         showHexIds: showHexIds.value,
         showArrows: showArrows.value,
         showPerspective: showPerspective.value,
+        showSkills: showSkills.value,
       },
     )
 

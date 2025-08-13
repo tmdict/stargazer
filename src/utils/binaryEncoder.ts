@@ -22,8 +22,8 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * Extended header (if bit 7 is set):
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
- *   - Bits 1-3: Display flags (showHexIds, showArrows, showPerspective)
- *   - Bits 4-6: Map ID (1-5, 0 means default/arena1)
+ *   - Bits 1-4: Display flags (showHexIds, showArrows, showPerspective, showSkills)
+ *   - Bits 5-6: Map ID (1-3, 0 means default/arena1)
  *   - Bit 7: Reserved
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
@@ -130,8 +130,8 @@ export function encodeToBinary(state: GridState): Uint8Array {
       extendedFlags |= 0x01 // Bit 0: needs extended counts
     }
     if (hasDisplayFlags && state.d !== undefined) {
-      // Pack display flags into bits 1-3
-      extendedFlags |= (state.d & 0x07) << 1
+      // Pack display flags into bits 1-4
+      extendedFlags |= (state.d & 0x0f) << 1
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -199,8 +199,8 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const extendedFlags = reader.readBits(8)
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
 
-      // Extract display flags from bits 1-3
-      const displayFlags = (extendedFlags >> 1) & 0x07
+      // Extract display flags from bits 1-4
+      const displayFlags = (extendedFlags >> 1) & 0x0f
       if (displayFlags !== 0 || extendedFlags > 0) {
         // Only set display flags if they were explicitly stored
         state.d = displayFlags

@@ -1,5 +1,5 @@
 import type { Grid } from './grid'
-import { SkillManager, hasSkill, getCharacterSkill } from './skill'
+import { SkillManager, hasSkill, hasCompanionSkill, getCharacterSkill } from './skill'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -148,8 +148,8 @@ function storeCompanionPositions(grid: Grid, characterId: number, team: Team): C
   return positions
 }
 
-// Helper to restore Phraesto companions to original positions
-function restorePharestoCompanions(
+// Helper to restore companions to original positions
+function restoreCompanions(
   grid: Grid,
   skillManager: SkillManager,
   mainCharId: number,
@@ -164,10 +164,10 @@ function restorePharestoCompanions(
         grid.removeCharacter(currentHexId, true)
         // Place at original position
         grid.placeCharacter(originalHexId, companionId, team, true)
-        // Re-add color modifier
+        // Re-add color modifier (use companion color for companions)
         const skill = getCharacterSkill(mainCharId)
-        if (skill?.colorModifier) {
-          skillManager.addCharacterColorModifier(companionId, team, skill.colorModifier)
+        if (skill?.companionColorModifier) {
+          skillManager.addCharacterColorModifier(companionId, team, skill.companionColorModifier)
         }
       }
     })
@@ -241,18 +241,18 @@ function performCrossTeamSwap(
         // Handle fromChar skill reactivation
         if (fromHasSkill) {
           skillManager.activateCharacterSkill(fromChar, fromHexId, fromTeam, grid)
-          // Special handling for Phraesto to restore companion positions
-          if (fromChar === 50) {
-            restorePharestoCompanions(grid, skillManager, fromChar, companionPositions)
+          // Special handling for companion skills to restore companion positions
+          if (hasCompanionSkill(fromChar)) {
+            restoreCompanions(grid, skillManager, fromChar, companionPositions)
           }
         }
 
         // Handle toChar skill reactivation
         if (toHasSkill) {
           skillManager.activateCharacterSkill(toChar, toHexId, toTeam, grid)
-          // Special handling for Phraesto to restore companion positions
-          if (toChar === 50) {
-            restorePharestoCompanions(grid, skillManager, toChar, companionPositions)
+          // Special handling for companion skills to restore companion positions
+          if (hasCompanionSkill(toChar)) {
+            restoreCompanions(grid, skillManager, toChar, companionPositions)
           }
         }
       },
@@ -328,20 +328,62 @@ export function moveCharacter(
     return false
   }
 
-  // Pre-move: deactivate skill if changing teams
-  if (changingTeams && skillManager.hasActiveSkill(characterId, fromTeam)) {
-    skillManager.deactivateCharacterSkill(characterId, fromHexId, fromTeam, grid)
+  // If not changing teams, use simple move
+  if (!changingTeams) {
+    return grid.moveCharacter(fromHexId, toHexId, characterId)
   }
 
-  // Use grid's transactional move
-  const moved = grid.moveCharacter(fromHexId, toHexId, characterId)
+  // For cross-team moves with skills, we need proper transaction handling
+  const hasActiveSkill = skillManager.hasActiveSkill(characterId, fromTeam)
 
-  // Post-move: reactivate skill at new position
-  if (moved && changingTeams && hasSkill(characterId)) {
-    skillManager.activateCharacterSkill(characterId, toHexId, toTeam, grid)
+  // Store companion positions before deactivation (for rollback if needed)
+  let companionPositions: CompanionPosition[] = []
+  if (hasActiveSkill && hasSkill(characterId)) {
+    companionPositions = storeCompanionPositions(grid, characterId, fromTeam)
   }
 
-  return moved
+  let skillDeactivated = false
+  let moved = false
+
+  // Execute as a transaction
+  return grid.executeTransaction(
+    [
+      // Step 1: Deactivate skill if needed
+      () => {
+        if (hasActiveSkill) {
+          skillManager.deactivateCharacterSkill(characterId, fromHexId, fromTeam, grid)
+          skillDeactivated = true
+        }
+        return true
+      },
+      // Step 2: Attempt the move
+      () => {
+        moved = grid.moveCharacter(fromHexId, toHexId, characterId)
+        return moved
+      },
+      // Step 3: Reactivate skill at new position if move succeeded
+      () => {
+        if (moved && hasSkill(characterId)) {
+          return skillManager.activateCharacterSkill(characterId, toHexId, toTeam, grid)
+        }
+        return true
+      },
+    ],
+    [
+      // Rollback: Restore skill if it was deactivated
+      () => {
+        if (skillDeactivated && !moved) {
+          // Reactivate the skill at original position
+          skillManager.activateCharacterSkill(characterId, fromHexId, fromTeam, grid)
+
+          // Special handling for companion skills to restore companion positions
+          if (hasCompanionSkill(characterId)) {
+            restoreCompanions(grid, skillManager, characterId, companionPositions)
+          }
+        }
+      },
+    ],
+  )
 }
 
 export function autoPlaceCharacter(
@@ -354,11 +396,15 @@ export function autoPlaceCharacter(
   const placed = grid.autoPlaceCharacter(characterId, team)
   if (!placed) return false
 
-  // Find where it was placed and activate skill
-  const tile = grid.getTilesWithCharacters().find((t) => t.characterId === characterId)
+  // Find where it was placed - must match both character ID AND team
+  const tile = grid
+    .getTilesWithCharacters()
+    .find((t) => t.characterId === characterId && t.team === team)
+
   if (tile && hasSkill(characterId)) {
     const hexId = tile.hex.getId()
     const activated = skillManager.activateCharacterSkill(characterId, hexId, team, grid)
+
     if (!activated) {
       // Clean up on skill failure
       grid.removeCharacter(hexId, true)

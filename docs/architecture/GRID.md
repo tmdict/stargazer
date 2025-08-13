@@ -171,6 +171,15 @@ Example swap operation:
 2. Place in swapped positions
 3. If any step fails, rollback all
 
+### Performance Optimizations
+
+The transaction system includes intelligent cache management:
+
+- **Batched Cache Invalidation**: All operations within a transaction share a single cache clear
+- **Skip Flags**: Operations pass `skipCacheInvalidation = true` to defer clearing
+- **Automatic Batching**: The `executeTransaction` method handles batching transparently
+- **Rollback Efficiency**: Failed transactions still only trigger one cache clear
+
 ## Hexagonal Coordinates
 
 Uses axial coordinates with constraint q + r + s = 0:
@@ -223,8 +232,9 @@ The Layout class handles pixel conversions:
 
 - **Map storage**: O(1) tile access by coordinate key
 - **Set-based teams**: O(1) membership checks
-- **Transaction batching**: Single cache clear per operation
+- **Cache batching**: Single pathfinding cache clear per transaction (not per operation)
 - **Pre-allocated rollbacks**: Minimal allocation during operations
+- **Granular reactive state**: Character store uses separate computed properties to minimize recalculations
 
 ## Related Documentation
 
