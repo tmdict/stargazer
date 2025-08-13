@@ -15,32 +15,39 @@ export const useCharacterStore = defineStore('character', () => {
   const grid = gridStore._getGrid() as Grid
   const skillManager = skillStore._getSkillManager()
 
-  // Consolidated character state - single computation point
-  const characterState = computed(() => {
-    const grid = gridStore._getGrid()
-    return {
-      count: grid.getCharacterCount(),
-      placements: grid.getCharacterPlacements(),
-      placedList: Array.from(grid.getCharacterPlacements().entries()),
-      tilesWithCharacters: grid.getTilesWithCharacters(),
-      availableAlly: grid.getAvailableForTeam(Team.ALLY),
-      availableEnemy: grid.getAvailableForTeam(Team.ENEMY),
-      maxTeamSizeAlly: grid.getMaxTeamSize(Team.ALLY),
-      maxTeamSizeEnemy: grid.getMaxTeamSize(Team.ENEMY),
-    }
+  const charactersPlaced = computed(() => {
+    return grid.getCharacterCount()
   })
 
-  // Individual getters that access consolidated state
-  const charactersPlaced = computed(() => characterState.value.count)
-  const placedCharactersList = computed(() => characterState.value.placedList)
-  const characterPlacements = computed(() => characterState.value.placements)
-  const availableAlly = computed(() => characterState.value.availableAlly)
-  const availableEnemy = computed(() => characterState.value.availableEnemy)
-  const maxTeamSizeAlly = computed(() => characterState.value.maxTeamSizeAlly)
-  const maxTeamSizeEnemy = computed(() => characterState.value.maxTeamSizeEnemy)
+  const characterPlacements = computed(() => {
+    return grid.getCharacterPlacements()
+  })
 
+  const placedCharactersList = computed(() => {
+    return Array.from(characterPlacements.value.entries())
+  })
+
+  // Separate computed for team counts to avoid full traversal
+  const teamCharacterCounts = computed(() => {
+    const allyCount = grid.getTeamCharacters(Team.ALLY).size
+    const enemyCount = grid.getTeamCharacters(Team.ENEMY).size
+    return { ally: allyCount, enemy: enemyCount }
+  })
+
+  const availableAlly = computed(() => {
+    return grid.getMaxTeamSize(Team.ALLY) - teamCharacterCounts.value.ally
+  })
+
+  const availableEnemy = computed(() => {
+    return grid.getMaxTeamSize(Team.ENEMY) - teamCharacterCounts.value.enemy
+  })
+
+  const maxTeamSizeAlly = computed(() => grid.getMaxTeamSize(Team.ALLY))
+  const maxTeamSizeEnemy = computed(() => grid.getMaxTeamSize(Team.ENEMY))
+
+  // This one stays as a function since it's rarely called
   const getTilesWithCharacters = (): GridTile[] => {
-    return characterState.value.tilesWithCharacters
+    return grid.getTilesWithCharacters()
   }
 
   // Character management actions - delegate to character manager
