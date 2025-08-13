@@ -63,6 +63,17 @@ export class Grid {
   // Skill manager reference for triggering skill updates
   skillManager?: SkillManager
 
+  // Helper method for cache invalidation logic
+  private handleCacheInvalidation(skipCacheInvalidation: boolean): void {
+    if (skipCacheInvalidation) return
+
+    if (this.batchingCacheClears) {
+      this.pendingCacheClears = true
+    } else {
+      clearPathfindingCache()
+    }
+  }
+
   readonly gridPreset: GridPreset
 
   // Constructor & Basic Setup
@@ -200,16 +211,8 @@ export class Grid {
 
     this.setCharacterOnTile(tile, characterId, team)
 
-    // Smart cache invalidation with batching support
-    if (!skipCacheInvalidation) {
-      if (this.batchingCacheClears) {
-        // Just mark that we need to clear later
-        this.pendingCacheClears = true
-      } else {
-        // Clear immediately if not in a transaction
-        clearPathfindingCache()
-      }
-    }
+    // Handle cache invalidation with batching support
+    this.handleCacheInvalidation(skipCacheInvalidation)
 
     return true
   }
@@ -223,16 +226,8 @@ export class Grid {
       this.removeCharacterFromTeam(characterId, team)
       this.clearCharacterFromTile(tile, hexId)
 
-      // Smart cache invalidation with batching support
-      if (!skipCacheInvalidation) {
-        if (this.batchingCacheClears) {
-          // Just mark that we need to clear later
-          this.pendingCacheClears = true
-        } else {
-          // Clear immediately if not in a transaction
-          clearPathfindingCache()
-        }
-      }
+      // Handle cache invalidation with batching support
+      this.handleCacheInvalidation(skipCacheInvalidation)
     }
   }
 
@@ -246,10 +241,7 @@ export class Grid {
 
     // If no characters to clear, return success immediately
     if (currentPlacements.length === 0) {
-      // Still respect batching even when no characters
-      if (!this.batchingCacheClears) {
-        clearPathfindingCache()
-      }
+      this.handleCacheInvalidation(false) // Don't skip, but respect batching
       return true
     }
 
@@ -477,11 +469,7 @@ export class Grid {
     }
 
     // Clear pathfinding cache after all removals (respect batching)
-    if (this.batchingCacheClears) {
-      this.pendingCacheClears = true
-    } else {
-      clearPathfindingCache()
-    }
+    this.handleCacheInvalidation(false) // false = don't skip cache invalidation
   }
 
   findCharacterHex(characterId: number, team?: Team): number | null {
@@ -612,7 +600,7 @@ export class Grid {
       // Rollback all operations
       rollbackOperations.forEach((rollback) => rollback())
       this.batchingCacheClears = false
-      
+
       // Clear cache once after rollback (if any operations were attempted)
       if (this.pendingCacheClears) {
         clearPathfindingCache()
