@@ -1,54 +1,11 @@
 import { getSymmetricalHexId } from '../../../src/lib/skills/utils/symmetry'
+import { getTieBreakingPreference } from '../../../src/lib/skills/silvina'
 import { Hex } from '../../../src/lib/hex'
-import { DIAGONAL_ROWS, FULL_GRID } from '../../../src/lib/types/grid'
+import { FULL_GRID } from '../../../src/lib/types/grid'
 import { Team } from '../../../src/lib/types/team'
 import { readFileSync, readdirSync, statSync } from 'fs'
 import { join, basename, dirname } from 'path'
 import { fileURLToPath } from 'url'
-
-// Get tie-breaking preference (copied from silvina.ts for testing)
-function getTieBreakingPreference(symmetricalHexId: number, team: Team): 'lower' | 'higher' {
-  const rowIndex = DIAGONAL_ROWS.findIndex(row => row.includes(symmetricalHexId))
-  if (rowIndex === -1) {
-    return 'higher'
-  }
-  
-  const row = DIAGONAL_ROWS[rowIndex]
-  const position = row.indexOf(symmetricalHexId)
-  
-  // Determine base preference (from ally perspective)
-  let basePreference: 'lower' | 'higher' = 'lower'
-  
-  // Special case: Row 14 (uppermost) - both tiles prefer higher
-  if (rowIndex === 14) {
-    basePreference = 'higher'
-  }
-  // Position-based rules
-  else if (position === 0) {
-    // First position in row prefers LOWER
-    basePreference = 'lower'
-  } else if (position === row.length - 1) {
-    // Last position in row prefers HIGHER
-    basePreference = 'higher'
-  } else {
-    // Middle positions
-    const diagonalTiles = [4, 9, 16, 23, 30, 37, 42]
-    if (diagonalTiles.includes(symmetricalHexId)) {
-      // Diagonal tiles prefer LOWER
-      basePreference = 'lower'
-    } else {
-      // Other middle positions generally prefer lower
-      basePreference = 'lower'
-    }
-  }
-  
-  // Invert preference for enemy team
-  if (team === Team.ENEMY) {
-    return basePreference === 'lower' ? 'higher' : 'lower'
-  }
-  
-  return basePreference
-}
 
 interface TargetingConfig {
   silvinaTile: number
