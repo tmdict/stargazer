@@ -293,6 +293,8 @@ interface DragData {
 - **Event Delegation**: Single set of global listeners
 - **Conditional Rendering**: Preview only shown when dragging
 - **Cached Calculations**: Hex boundaries computed once
+- **Reactive State Optimization**: Character store uses granular computed properties to minimize recalculations during drag
+- **Cache Invalidation Batching**: Drop operations benefit from transaction-level cache batching
 
 ## Browser Compatibility
 

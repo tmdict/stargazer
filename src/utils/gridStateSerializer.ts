@@ -5,7 +5,7 @@ export interface GridState {
   t?: number[][] // tiles: [hexId, state] (only non-default states)
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
-  d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective)
+  d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills)
 }
 
 /* Create compact serialized state for URL generation */
@@ -13,7 +13,12 @@ export function serializeGridState(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
-  displayFlags?: { showHexIds?: boolean; showArrows?: boolean; showPerspective?: boolean },
+  displayFlags?: {
+    showHexIds?: boolean
+    showArrows?: boolean
+    showPerspective?: boolean
+    showSkills?: boolean
+  },
 ): GridState {
   const state: GridState = {}
 
@@ -46,11 +51,13 @@ export function serializeGridState(
   // Bit 0: showHexIds (Grid Info)
   // Bit 1: showArrows (Targeting)
   // Bit 2: showPerspective (!Flat)
+  // Bit 3: showSkills (Skills)
   if (displayFlags) {
     let packed = 0
     if (displayFlags.showHexIds) packed |= 1 << 0
     if (displayFlags.showArrows) packed |= 1 << 1
     if (displayFlags.showPerspective) packed |= 1 << 2
+    if (displayFlags.showSkills) packed |= 1 << 3
     // Always include display flags even if 0 (all false)
     state.d = packed
   }
@@ -63,6 +70,7 @@ export function unpackDisplayFlags(packed: number | undefined): {
   showHexIds: boolean
   showArrows: boolean
   showPerspective: boolean
+  showSkills: boolean
 } {
   if (packed === undefined) {
     // Return defaults if no flags are stored
@@ -70,6 +78,7 @@ export function unpackDisplayFlags(packed: number | undefined): {
       showHexIds: true,
       showArrows: true,
       showPerspective: true,
+      showSkills: true,
     }
   }
 
@@ -77,5 +86,6 @@ export function unpackDisplayFlags(packed: number | undefined): {
     showHexIds: !!(packed & (1 << 0)),
     showArrows: !!(packed & (1 << 1)),
     showPerspective: !!(packed & (1 << 2)),
+    showSkills: !!(packed & (1 << 3)),
   }
 }

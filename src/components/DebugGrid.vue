@@ -104,7 +104,7 @@ defineExpose({
                 {{ getStateName(tile.state) }}
               </span>
             </div>
-            <!-- Show skill targeting info -->
+            <!-- Show skill targeting info for Silvina -->
             <div v-if="tile.characterId === 39 && tile.team" class="skill-info">
               <span class="skill-label">Skill: First Strike (Silvina)</span>
               <span class="symmetry-info"
@@ -115,6 +115,21 @@ defineExpose({
                   → Targeting Hex {{ targetInfo.targetHexId }}
                   <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
                   <span v-else>(fallback)</span>
+                </span>
+              </template>
+            </div>
+            <!-- Show skill targeting info for Reinier -->
+            <div v-if="tile.characterId === 31 && tile.team" class="skill-info">
+              <span class="skill-label">Skill: Dynamic Balance (Reinier)</span>
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
+                <span v-if="key === `${tile.characterId}-${tile.team}`" class="skill-target">
+                  <template
+                    v-if="targetInfo.metadata?.allyHexId && targetInfo.metadata?.enemyHexId"
+                  >
+                    → Targeting Ally Hex {{ targetInfo.metadata.allyHexId }}, Enemy Hex
+                    {{ targetInfo.metadata.enemyHexId }}
+                    <span>(symmetrical pair)</span>
+                  </template>
                 </span>
               </template>
             </div>

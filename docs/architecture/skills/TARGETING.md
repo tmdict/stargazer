@@ -21,11 +21,11 @@ Key features:
 - No border changes - uses arrows only
 - Metadata for visual hints (e.g., `isSymmetricalTarget`)
 
-## Example
+## Examples
 
 **Silvina** (ID: 39) - First Strike:
 
-- Green arrows (`#73be25`)
+- Green arrows
 - Targets enemy on symmetrical hex position
 - Falls back to closest enemy when symmetrical hex is empty
 - Uses pre-computed map for O(1) symmetry lookups
@@ -34,7 +34,19 @@ Key features:
   - RIGHT zone (tiles 34,38,40,43,44,45): Prefers higher hex ID
   - ON diagonal (tiles 37,42): Prefers lower hex ID
 
+**Vala** (ID: 46) - Assassin:
+
+- Purple arrows
+- Targets the furthest opposing character from Vala's position
+- **Simple tie-breaking**: When multiple enemies are equidistant at maximum range:
+  - Ally team Vala: Prefers lower hex ID
+  - Enemy team Vala: Prefers higher hex ID (180° rotation)
+- Clean implementation without complex fallback logic
+
 ## Utilities
 
 - `symmetry.ts`: Pre-computed hex symmetry map
-- `targeting.ts`: Enemy enumeration and distance sorting
+- `targeting.ts`: Opposing character enumeration and distance sorting
+  - `getOpposingCharacters()`: Get all characters from the opposing team
+  - `calculateDistances()`: Calculate distances from reference points
+  - `sortByDistancePriorities()`: Sort candidates by distance with tie-breaking

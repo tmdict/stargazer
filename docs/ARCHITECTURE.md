@@ -102,9 +102,11 @@ Vue components with single responsibilities. Multi-layer rendering solves SVG li
 
 ```
 GridManager
-├── GridTiles (SVG base with 3 internal layers)
+├── GridTiles (SVG base with 5 internal layers)
 │   ├── Regular Hexes (visual)
 │   ├── Elevated Hexes (visual)
+│   ├── Skill-Highlighted Hexes (visual, topmost)
+│   ├── Text Layer (hex IDs and coordinates)
 │   └── Event Capture (invisible)
 ├── GridArtifacts (HTML overlay)
 ├── GridCharacters (HTML overlay)
@@ -112,7 +114,7 @@ GridManager
 └── SkillTargeting (SVG overlay)
 ```
 
-GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view, while ally artifacts naturally avoid overlap due to their corner positioning. SkillTargeting renders above arrows for targeting skills like Silvina's First Strike.
+GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view, while ally artifacts naturally avoid overlap due to their corner positioning. Skill-highlighted hexes render above elevated hexes to ensure skill borders are always visible. SkillTargeting renders above arrows for targeting skills like Silvina's First Strike.
 
 ### Utility Layer (`/src/utils/`)
 
@@ -148,7 +150,9 @@ Ensures atomic operations - all succeed or all rollback.
 ## Performance Optimizations
 
 - **LRU Caching**: Pathfinding results cached to avoid recalculation
+- **Cache Invalidation Batching**: Transaction-based operations trigger single cache clear instead of multiple
 - **Lazy Evaluation**: Computed properties calculate only when needed
+- **Granular Reactive State**: Character store uses separate computed properties to minimize unnecessary recalculations
 - **Layer Independence**: Each rendering layer updates separately
 - **Throttled Events**: Map editor drag-paint throttled to 50ms
 
