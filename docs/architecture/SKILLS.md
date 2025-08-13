@@ -143,21 +143,21 @@ Highlight multiple tiles based on game state:
 
 **Phraesto** (ID: 50) - Shadow Companion:
 
-- Main: White border (`#ffffff`)
-- Companion: Red border (`#c83232`)
+- Main: White border
+- Companion: Red border
 - Implementation: `/src/lib/skills/phraesto.ts`
 
 **Elijah & Lailah** (ID: 68) - Twin Units:
 
-- Elijah: Blue border (`#78b5b2`), range 6
-- Lailah: Pink border (`#e47d75`), range 1
+- Elijah: Blue border, range 6
+- Lailah: Pink border, range 1
 - Implementation: `/src/lib/skills/elijah-lailah.ts`
 
 ### Targeting Skills
 
 **Silvina** (ID: 39) - First Strike:
 
-- Green targeting arrow (`#73be25`)
+- Green targeting arrow
 - Symmetrical positioning with fallback
 - Implementation: `/src/lib/skills/silvina.ts`
 
@@ -165,7 +165,7 @@ Highlight multiple tiles based on game state:
 
 **Reinier** (ID: 31) - Dynamic Balance:
 
-- Purple tile borders (`#9925be`)
+- Purple tile borders
 - Targets adjacent ally with symmetrical enemy
 - Priority-based selection with tie-breaking
 - Implementation: `/src/lib/skills/reinier.ts`
