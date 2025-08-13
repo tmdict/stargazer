@@ -123,8 +123,11 @@ defineExpose({
               <span class="skill-label">Skill: Dynamic Balance (Reinier)</span>
               <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
                 <span v-if="key === `${tile.characterId}-${tile.team}`" class="skill-target">
-                  <template v-if="targetInfo.metadata?.allyHexId && targetInfo.metadata?.enemyHexId">
-                    → Targeting Ally Hex {{ targetInfo.metadata.allyHexId }}, Enemy Hex {{ targetInfo.metadata.enemyHexId }}
+                  <template
+                    v-if="targetInfo.metadata?.allyHexId && targetInfo.metadata?.enemyHexId"
+                  >
+                    → Targeting Ally Hex {{ targetInfo.metadata.allyHexId }}, Enemy Hex
+                    {{ targetInfo.metadata.enemyHexId }}
                     <span>(symmetrical pair)</span>
                   </template>
                 </span>
