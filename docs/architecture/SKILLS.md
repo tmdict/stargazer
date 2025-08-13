@@ -52,7 +52,7 @@ interface Skill {
   colorModifier?: string // Border color for visual effects
   targetingColorModifier?: string // Arrow color for targeting skills
   companionColorModifier?: string // Border color for companions
-  tileColorModifier?: string // Tile border color for area effects
+  tileColorModifier?: string // Tile border color for tile effects
   companionRange?: number // Override range for companions
 
   onActivate(context: SkillContext): void
@@ -161,6 +161,13 @@ Highlight multiple tiles based on game state:
 - Symmetrical positioning with fallback
 - Implementation: `/src/lib/skills/silvina.ts`
 
+**Vala** (ID: 46) - Assassin:
+
+- Purple targeting arrow
+- Targets furthest opposing character
+- Team-aware tie-breaking
+- Implementation: `/src/lib/skills/vala.ts`
+
 ### Tile Effect Skills
 
 **Reinier** (ID: 31) - Dynamic Balance:
@@ -217,7 +224,8 @@ const skillRegistry = new Map<number, Skill>([
   [elijahLailahSkill.characterId, elijahLailahSkill],
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
-  // Area effect skills
+  [valaSkill.characterId, valaSkill],
+  // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
   // Add new skills here
   [mySkill.characterId, mySkill],
