@@ -150,7 +150,9 @@ Ensures atomic operations - all succeed or all rollback.
 ## Performance Optimizations
 
 - **LRU Caching**: Pathfinding results cached to avoid recalculation
+- **Cache Invalidation Batching**: Transaction-based operations trigger single cache clear instead of multiple
 - **Lazy Evaluation**: Computed properties calculate only when needed
+- **Granular Reactive State**: Character store uses separate computed properties to minimize unnecessary recalculations
 - **Layer Independence**: Each rendering layer updates separately
 - **Throttled Events**: Map editor drag-paint throttled to 50ms
 
