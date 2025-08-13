@@ -56,6 +56,10 @@ export class Grid {
   // Changed to include team in the key: "mainId-team" -> Set of companions
   private companionLinks: Map<string, Set<number>> = new Map()
 
+  // Cache invalidation batching support
+  private batchingCacheClears = false
+  private pendingCacheClears = false
+
   // Skill manager reference for triggering skill updates
   skillManager?: SkillManager
 
@@ -196,9 +200,15 @@ export class Grid {
 
     this.setCharacterOnTile(tile, characterId, team)
 
-    // Clear pathfinding caches when grid state changes
+    // Smart cache invalidation with batching support
     if (!skipCacheInvalidation) {
-      clearPathfindingCache()
+      if (this.batchingCacheClears) {
+        // Just mark that we need to clear later
+        this.pendingCacheClears = true
+      } else {
+        // Clear immediately if not in a transaction
+        clearPathfindingCache()
+      }
     }
 
     return true
@@ -213,9 +223,15 @@ export class Grid {
       this.removeCharacterFromTeam(characterId, team)
       this.clearCharacterFromTile(tile, hexId)
 
-      // Clear pathfinding caches when grid state changes
+      // Smart cache invalidation with batching support
       if (!skipCacheInvalidation) {
-        clearPathfindingCache()
+        if (this.batchingCacheClears) {
+          // Just mark that we need to clear later
+          this.pendingCacheClears = true
+        } else {
+          // Clear immediately if not in a transaction
+          clearPathfindingCache()
+        }
       }
     }
   }
@@ -230,7 +246,10 @@ export class Grid {
 
     // If no characters to clear, return success immediately
     if (currentPlacements.length === 0) {
-      clearPathfindingCache()
+      // Still respect batching even when no characters
+      if (!this.batchingCacheClears) {
+        clearPathfindingCache()
+      }
       return true
     }
 
@@ -457,8 +476,12 @@ export class Grid {
       }
     }
 
-    // Clear pathfinding cache after all removals
-    clearPathfindingCache()
+    // Clear pathfinding cache after all removals (respect batching)
+    if (this.batchingCacheClears) {
+      this.pendingCacheClears = true
+    } else {
+      clearPathfindingCache()
+    }
   }
 
   findCharacterHex(characterId: number, team?: Team): number | null {
@@ -577,6 +600,10 @@ export class Grid {
     operations: (() => boolean)[],
     rollbackOperations: (() => void)[] = [],
   ): boolean {
+    // Start batching - no cache clears during transaction
+    this.batchingCacheClears = true
+    this.pendingCacheClears = false
+
     // Execute all operations
     const results = operations.map((op) => op())
 
@@ -584,12 +611,22 @@ export class Grid {
     if (results.some((result) => !result)) {
       // Rollback all operations
       rollbackOperations.forEach((rollback) => rollback())
-      clearPathfindingCache()
+      this.batchingCacheClears = false
+      
+      // Clear cache once after rollback (if any operations were attempted)
+      if (this.pendingCacheClears) {
+        clearPathfindingCache()
+      }
       return false
     }
 
-    // All successful - update skills
-    clearPathfindingCache()
+    // Success - stop batching
+    this.batchingCacheClears = false
+
+    // Clear cache ONCE after all operations complete successfully
+    if (this.pendingCacheClears) {
+      clearPathfindingCache()
+    }
 
     // Trigger skill updates for any active skills
     if (this.skillManager) {
