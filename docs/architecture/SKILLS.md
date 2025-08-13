@@ -52,6 +52,7 @@ interface Skill {
   colorModifier?: string // Border color for visual effects
   targetingColorModifier?: string // Arrow color for targeting skills
   companionColorModifier?: string // Border color for companions
+  tileColorModifier?: string // Tile border color for area effects
   companionRange?: number // Override range for companions
 
   onActivate(context: SkillContext): void
@@ -74,14 +75,15 @@ The SkillManager tracks active skills and visual modifiers:
 
 - **Team-aware tracking**: Uses composite keys (`characterId-team`) to support same character on different teams
 - **Active skill registry**: Tracks which characters have active skills
-- **Color modifier system**: Manages visual effects for characters and companions
+- **Color modifier system**: Manages visual effects for characters, companions, and tiles
 - **Lifecycle management**: Handles skill activation/deactivation with proper cleanup
 
 Key methods:
 
 - `activateCharacterSkill()` - Activates a skill with rollback on failure
 - `deactivateCharacterSkill()` - Deactivates and cleans up
-- `getColorModifiersByCharacterAndTeam()` - Returns visual modifiers for UI
+- `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
+- `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
 
 #### 3. Character Manager (`/src/lib/character.ts`)
 
@@ -115,7 +117,7 @@ Spawn linked characters that share fate with their main unit:
 
 See [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) for implementation details.
 
-### Targeting Skills  
+### Targeting Skills
 
 Automatically select and track enemy targets:
 
@@ -126,16 +128,27 @@ Automatically select and track enemy targets:
 
 See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implementation details.
 
+### Tile Effect Skills
+
+Highlight multiple tiles based on game state:
+
+- **Tile modifiers**: Color borders on affected tiles
+- **Priority selection**: Find valid targets using tie-breaking rules
+- **Dynamic updates**: Recalculate when board state changes
+- **Layered rendering**: Skill borders always visible on top
+
 ## Implemented Skills
 
 ### Companion Skills
 
 **Phraesto** (ID: 50) - Shadow Companion:
+
 - Main: White border (`#ffffff`)
 - Companion: Red border (`#c83232`)
 - Implementation: `/src/lib/skills/phraesto.ts`
 
 **Elijah & Lailah** (ID: 68) - Twin Units:
+
 - Elijah: Blue border (`#78b5b2`), range 6
 - Lailah: Pink border (`#e47d75`), range 1
 - Implementation: `/src/lib/skills/elijah-lailah.ts`
@@ -143,9 +156,19 @@ See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implem
 ### Targeting Skills
 
 **Silvina** (ID: 39) - First Strike:
+
 - Green targeting arrow (`#73be25`)
 - Symmetrical positioning with fallback
 - Implementation: `/src/lib/skills/silvina.ts`
+
+### Tile Effect Skills
+
+**Reinier** (ID: 31) - Dynamic Balance:
+
+- Purple tile borders (`#9925be`)
+- Targets adjacent ally with symmetrical enemy
+- Priority-based selection with tie-breaking
+- Implementation: `/src/lib/skills/reinier.ts`
 
 ## Adding New Skills
 
@@ -159,21 +182,24 @@ export const mySkill: Skill = {
   characterId: 123,
   name: 'Skill Name',
   description: 'What it does',
-  colorModifier: '#hexcolor', // optional - border color
+  colorModifier: '#hexcolor', // optional - character border
   targetingColorModifier: '#hexcolor', // optional - arrow color
   companionColorModifier: '#hexcolor', // optional - companion border
+  tileColorModifier: '#hexcolor', // optional - tile border
   companionRange: 2, // optional - companion range override
 
   onActivate(context) {
     const { grid, team, characterId, skillManager } = context
 
     // Activation logic - spawn companions, set targets, etc.
+    // Use skillManager.setTileColorModifier(hexId, color) for tiles
   },
 
   onDeactivate(context) {
     // Cleanup logic - remove companions, clear targets, etc.
+    // Use skillManager.removeTileColorModifier(hexId) for tiles
   },
-  
+
   onUpdate(context) {
     // Optional - recalculate targets, update visuals, etc.
   },
@@ -191,6 +217,8 @@ const skillRegistry = new Map<number, Skill>([
   [elijahLailahSkill.characterId, elijahLailahSkill],
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
+  // Area effect skills
+  [reinierSkill.characterId, reinierSkill],
   // Add new skills here
   [mySkill.characterId, mySkill],
 ])

@@ -10,6 +10,7 @@ import { useGridEvents } from '../composables/useGridEvents'
 import { useCharacterStore } from '../stores/character'
 import { useGridStore } from '../stores/grid'
 import { useMapEditorStore } from '../stores/mapEditor'
+import { useSkillStore } from '../stores/skill'
 import { getHexFillColor } from '../utils/stateFormatting'
 
 interface Props {
@@ -37,6 +38,7 @@ interface Props {
   isMapEditorMode: boolean
   selectedMapEditorState: State
   showPerspective: boolean
+  showSkills: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -71,6 +73,7 @@ const {
 const gridStore = useGridStore()
 const characterStore = useCharacterStore()
 const mapEditorStore = useMapEditorStore()
+const skillStore = useSkillStore()
 
 // Track which hex is currently being hovered (non-drag)
 const hoveredHex = ref<number | null>(null)
@@ -362,20 +365,55 @@ const isElevated = (hex: Hex) => {
   return gridStore.grid.hasCharacter(hex.getId())
 }
 
-// Get stroke style for occupied tiles
+// Get stroke style for tiles - includes skill tile color modifiers
 const getHexStroke = (hex: Hex) => {
-  const isOccupied = gridStore.grid.hasCharacter(hex.getId())
+  const hexId = hex.getId()
+
+  // Check for skill tile color modifier if skills are enabled
+  if (props.showSkills) {
+    const tileColorModifier = skillStore.getTileColorModifier(hexId)
+    if (tileColorModifier) {
+      return tileColorModifier
+    }
+  }
+
+  // Default stroke colors
+  const isOccupied = gridStore.grid.hasCharacter(hexId)
   return isOccupied ? '#999' : props.hexStrokeColor
 }
 
 const getHexStrokeWidth = (hex: Hex) => {
-  const isOccupied = gridStore.grid.hasCharacter(hex.getId())
+  const hexId = hex.getId()
   const scale = gridStore.getHexScale()
+
+  // Check if this tile has a skill color modifier
+  if (props.showSkills) {
+    const tileColorModifier = skillStore.getTileColorModifier(hexId)
+    if (tileColorModifier) {
+      // Use a thicker stroke for skill-highlighted tiles
+      return Math.max(3, 4 * scale)
+    }
+  }
+
+  const isOccupied = gridStore.grid.hasCharacter(hexId)
   return isOccupied ? Math.max(2, 3 * scale) : scaledStrokeWidth.value
 }
 
-const regularHexes = computed(() => props.hexes.filter((hex) => !isElevated(hex)))
-const elevatedHexes = computed(() => props.hexes.filter((hex) => isElevated(hex)))
+// Helper to check if a hex has a skill highlight
+const hasSkillHighlight = (hex: Hex) => {
+  if (!props.showSkills) return false
+  const hexId = hex.getId()
+  return skillStore.getTileColorModifier(hexId) !== undefined
+}
+
+// Separate hexes into rendering layers for proper z-ordering
+const regularHexes = computed(() =>
+  props.hexes.filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex)),
+)
+const elevatedHexes = computed(() =>
+  props.hexes.filter((hex) => isElevated(hex) && !hasSkillHighlight(hex)),
+)
+const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
 
 // Hover state is now managed by position-based detection
 const handleDragEnded = () => {
@@ -419,33 +457,9 @@ onUnmounted(() => {
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
-          <text
-            v-if="showHexIds && shouldShowHexId(hex)"
-            :x="gridStore.layout.hexToPixel(hex).x"
-            :y="gridStore.layout.hexToPixel(hex).y + 6"
-            text-anchor="middle"
-            :font-size="scaledFontSizes.hexId"
-            :fill="textColor"
-            font-family="monospace"
-            :transform="textTransform(hex)"
-          >
-            {{ hex.getId() }}
-          </text>
-          <text
-            v-if="shouldShowCoordinates"
-            :x="gridStore.layout.hexToPixel(hex).x"
-            :y="gridStore.layout.hexToPixel(hex).y + 18"
-            text-anchor="middle"
-            :font-size="scaledFontSizes.coordinate"
-            :fill="coordinateColor"
-            font-family="monospace"
-            :transform="textTransform(hex)"
-          >
-            ({{ hex.q }},{{ hex.r }},{{ hex.s }})
-          </text>
         </g>
 
-        <!-- Elevated hexes (render above regular hexes, but below character components) -->
+        <!-- Elevated hexes (render above regular hexes, but below skill highlights) -->
         <g v-for="hex in elevatedHexes" :key="`elevated-${hex.getId()}`" class="grid-tile">
           <polygon
             :points="
@@ -458,6 +472,29 @@ onUnmounted(() => {
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
+        </g>
+
+        <!-- Skill-highlighted hexes (render on top to ensure skill borders are visible) -->
+        <g
+          v-for="hex in skillHighlightedHexes"
+          :key="`skill-${hex.getId()}`"
+          class="grid-tile skill-highlighted"
+        >
+          <polygon
+            :points="
+              layout
+                .polygonCorners(hex)
+                .map((p) => `${p.x},${p.y}`)
+                .join(' ')
+            "
+            :fill="getHexFill(hex)"
+            :stroke="getHexStroke(hex)"
+            :stroke-width="getHexStrokeWidth(hex)"
+          />
+        </g>
+
+        <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
+        <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">
           <text
             v-if="showHexIds && shouldShowHexId(hex)"
             :x="gridStore.layout.hexToPixel(hex).x"
@@ -532,6 +569,10 @@ onUnmounted(() => {
 
 .grid-tile {
   cursor: pointer;
+}
+
+.hex-text {
+  pointer-events: none; /* Text doesn't block mouse events */
 }
 
 .grid-event-layer {

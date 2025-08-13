@@ -13,6 +13,13 @@ export const useSkillStore = defineStore('skill', () => {
     return skillManager.getColorModifiersByCharacterAndTeam()
   })
 
+  // Computed tile color modifiers from skill manager
+  const tileColorModifiers = computed(() => {
+    // Access version to trigger reactivity when modifiers change
+    skillManager.getTargetVersion()
+    return skillManager.getTileColorModifiers()
+  })
+
   // Helper to get color modifier for a character on a specific hex
   const getColorModifierForHex = (
     hexId: number,
@@ -22,6 +29,11 @@ export const useSkillStore = defineStore('skill', () => {
     const key = `${characterId}-${team}`
     const color = colorModifiersByCharacterAndTeam.value.get(key)
     return color
+  }
+
+  // Helper to get tile color modifier for a specific hex
+  const getTileColorModifier = (hexId: number): string | undefined => {
+    return tileColorModifiers.value.get(hexId)
   }
 
   // Skill targeting methods - return as computed to ensure reactivity
@@ -38,7 +50,9 @@ export const useSkillStore = defineStore('skill', () => {
 
   return {
     colorModifiersByCharacterAndTeam,
+    tileColorModifiers,
     getColorModifierForHex,
+    getTileColorModifier,
     getAllSkillTargets,
     getActiveSkillInfo,
 
