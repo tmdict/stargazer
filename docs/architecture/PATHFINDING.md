@@ -108,9 +108,21 @@ Combines position, range, and grid state into compact strings:
 const key = `${sourceId}-${targetId}-${range}-${gridHash}`
 ```
 
-### Invalidation
+### Invalidation Strategy
 
-Call `clearPathfindingCache()` when grid state changes significantly.
+The cache invalidation system uses intelligent batching to minimize performance overhead:
+
+#### Batched Invalidation
+- **Transaction Batching**: Multiple character operations within a transaction trigger only ONE cache clear
+- **Automatic Batching**: The Grid's `executeTransaction` method automatically batches cache invalidations
+- **Manual Control**: Operations can pass `skipCacheInvalidation = true` to defer clearing
+
+#### When Cache is Cleared
+- **After Transactions**: Single clear after all operations complete
+- **On Rollback**: Single clear if transaction fails
+- **Direct Operations**: Immediate clear for non-transactional operations
+
+Call `clearPathfindingCache()` directly only for significant grid state changes outside of normal character operations.
 
 ## Performance Characteristics
 
