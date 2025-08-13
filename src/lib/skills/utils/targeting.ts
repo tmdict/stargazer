@@ -29,11 +29,11 @@ export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
 }
 
 /**
- * Get all enemy characters for a given team
+ * Get all opposing team characters for a given team
  */
-export function getEnemyCharacters(grid: Grid, team: Team): TargetCandidate[] {
-  const enemyTeam = team === Team.ALLY ? Team.ENEMY : Team.ALLY
-  return getTeamCharacters(grid, enemyTeam)
+export function getOpposingCharacters(grid: Grid, team: Team): TargetCandidate[] {
+  const opposingTeam = team === Team.ALLY ? Team.ENEMY : Team.ALLY
+  return getTeamCharacters(grid, opposingTeam)
 }
 
 /**
@@ -93,7 +93,7 @@ export function findBestTarget(
   sourceTeam: Team,
   priorityHexIds: number[],
 ): { hexId: number; characterId: number } | null {
-  const candidates = getEnemyCharacters(grid, sourceTeam)
+  const candidates = getOpposingCharacters(grid, sourceTeam)
 
   if (candidates.length === 0) return null
 

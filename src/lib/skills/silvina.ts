@@ -2,7 +2,7 @@ import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
 import { Team } from '../types/team'
 import { DIAGONAL_ROWS } from '../types/grid'
 import { getSymmetricalHexId } from './utils/symmetry'
-import { getEnemyCharacters, calculateDistances } from './utils/targeting'
+import { getOpposingCharacters, calculateDistances } from './utils/targeting'
 
 // Get tie-breaking preference based on position in DIAGONAL_ROWS
 function getTieBreakingPreference(symmetricalHexId: number, team: Team): 'lower' | 'higher' {
@@ -78,8 +78,8 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
     }
   }
 
-  // Find best enemy target with diagonal-aware tie-breaking
-  const candidates = getEnemyCharacters(grid, team)
+  // Find best opposing target with diagonal-aware tie-breaking
+  const candidates = getOpposingCharacters(grid, team)
   if (candidates.length === 0) return null
 
   // Calculate distances from symmetrical tile

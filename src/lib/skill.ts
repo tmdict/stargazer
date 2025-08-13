@@ -4,6 +4,7 @@ import { elijahLailahSkill } from './skills/elijah-lailah'
 import { phraestoSkill } from './skills/phraesto'
 import { reinierSkill } from './skills/reinier'
 import { silvinaSkill } from './skills/silvina'
+import { valaSkill } from './skills/vala'
 
 export interface SkillContext {
   grid: Grid
@@ -40,10 +41,14 @@ export interface Skill {
 
 // Skill registry
 const skillRegistry = new Map<number, Skill>([
+  // Companion skills
   [phraestoSkill.characterId, phraestoSkill],
   [elijahLailahSkill.characterId, elijahLailahSkill],
-  [reinierSkill.characterId, reinierSkill],
+  // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
+  [valaSkill.characterId, valaSkill],
+  // Tile effect skills
+  [reinierSkill.characterId, reinierSkill],
 ])
 
 export function getCharacterSkill(characterId: number): Skill | undefined {
