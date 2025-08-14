@@ -1,6 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+
+import { useI18nStore } from '../stores/i18n'
 import Tooltip from './Tooltip.vue'
+
+const i18n = useI18nStore()
 
 interface Props {
   options: string[]
@@ -25,6 +29,17 @@ const getIconPath = (iconPrefix: string, option: string): string => {
 const hoveredOption = ref<string | null>(null)
 const hoveredElement = ref<HTMLElement | null>(null)
 
+const getTooltipText = computed(() => {
+  if (!hoveredOption.value) return ''
+  
+  if (hoveredOption.value === 'show-all') {
+    return i18n.t('app.show-all')
+  }
+  
+  // For faction, class, damage options, use game translations
+  return i18n.t(`game.${hoveredOption.value}`)
+})
+
 const handleMouseEnter = (option: string, event: MouseEvent) => {
   hoveredOption.value = option
   hoveredElement.value = event.currentTarget as HTMLElement
@@ -47,42 +62,46 @@ const handleMouseLeave = () => {
         @mouseleave="handleMouseLeave"
       >
         <svg viewBox="0 0 24 24" class="all-icon">
-          <rect
-            x="3"
-            y="3"
-            width="7"
-            height="7"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          />
-          <rect
-            x="14"
-            y="3"
-            width="7"
-            height="7"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          />
-          <rect
-            x="3"
-            y="14"
-            width="7"
-            height="7"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          />
-          <rect
-            x="14"
-            y="14"
-            width="7"
-            height="7"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          />
+          <!-- Asterisk with 6 rays for more elegance -->
+          <g transform="translate(12, 12)">
+            <!-- Vertical line -->
+            <line
+              x1="0"
+              y1="-5.5"
+              x2="0"
+              y2="5.5"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <!-- 60 degree line -->
+            <line
+              x1="-4.76"
+              y1="-2.75"
+              x2="4.76"
+              y2="2.75"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <!-- 120 degree line -->
+            <line
+              x1="-4.76"
+              y1="2.75"
+              x2="4.76"
+              y2="-2.75"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+            />
+            <!-- Optional: Add a small center dot for style -->
+            <circle
+              cx="0"
+              cy="0"
+              r="1.2"
+              fill="currentColor"
+            />
+          </g>
         </svg>
       </button>
 
@@ -110,7 +129,7 @@ const handleMouseLeave = () => {
     <Teleport to="body">
       <Tooltip
         v-if="hoveredOption && hoveredElement"
-        :text="hoveredOption"
+        :text="getTooltipText"
         :targetElement="hoveredElement"
         variant="simple"
       />
