@@ -1,5 +1,6 @@
 import type { CharacterType } from '../lib/types/character'
 import type { ArtifactType } from '../lib/types/artifact'
+import type { LocaleData, LocaleDictionary } from '../lib/types/i18n'
 
 export function extractFileName(path: string, removeExtension = true): string {
   const fileName = path.split('/').pop() || 'Unknown'
@@ -134,6 +135,89 @@ export function loadAllData() {
   }
 }
 
+// Module-level cache for locales
+let appLocalesCache: Record<string, LocaleData> | null = null
+let characterLocalesCache: Record<string, LocaleData> | null = null
+let artifactLocalesCache: Record<string, LocaleData> | null = null
+let gameLocalesCache: Record<string, LocaleData> | null = null
+
+export function loadAppLocales(): Record<string, LocaleData> {
+  if (appLocalesCache) {
+    return appLocalesCache
+  }
+
+  const locales = import.meta.glob('../locales/app/*.json', { eager: true, import: 'default' })
+  const result: Record<string, LocaleData> = {}
+  
+  Object.entries(locales).forEach(([path, content]) => {
+    const fileName = extractFileName(path)
+    result[fileName] = content as LocaleData
+  })
+
+  appLocalesCache = result
+  return result
+}
+
+export function loadCharacterLocales(): Record<string, LocaleData> {
+  if (characterLocalesCache) {
+    return characterLocalesCache
+  }
+
+  const locales = import.meta.glob('../locales/character/*.json', { eager: true, import: 'default' })
+  const result: Record<string, LocaleData> = {}
+  
+  Object.entries(locales).forEach(([path, content]) => {
+    const fileName = extractFileName(path)
+    result[fileName] = content as LocaleData
+  })
+
+  characterLocalesCache = result
+  return result
+}
+
+export function loadArtifactLocales(): Record<string, LocaleData> {
+  if (artifactLocalesCache) {
+    return artifactLocalesCache
+  }
+
+  const locales = import.meta.glob('../locales/artifact/*.json', { eager: true, import: 'default' })
+  const result: Record<string, LocaleData> = {}
+  
+  Object.entries(locales).forEach(([path, content]) => {
+    const fileName = extractFileName(path)
+    result[fileName] = content as LocaleData
+  })
+
+  artifactLocalesCache = result
+  return result
+}
+
+export function loadGameLocales(): Record<string, LocaleData> {
+  if (gameLocalesCache) {
+    return gameLocalesCache
+  }
+
+  const locales = import.meta.glob('../locales/game/*.json', { eager: true, import: 'default' })
+  const result: Record<string, LocaleData> = {}
+  
+  Object.entries(locales).forEach(([path, content]) => {
+    const fileName = extractFileName(path)
+    result[fileName] = content as LocaleData
+  })
+
+  gameLocalesCache = result
+  return result
+}
+
+export function loadAllLocales(): LocaleDictionary {
+  return {
+    app: loadAppLocales(),
+    character: loadCharacterLocales(),
+    artifact: loadArtifactLocales(),
+    game: loadGameLocales()
+  }
+}
+
 export function clearCache() {
   charactersCache = null
   artifactsCache = null
@@ -141,4 +225,8 @@ export function clearCache() {
   artifactImagesCache = null
   iconsCache = null
   characterRangesCache = null
+  appLocalesCache = null
+  characterLocalesCache = null
+  artifactLocalesCache = null
+  gameLocalesCache = null
 }
