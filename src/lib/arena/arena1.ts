@@ -2,7 +2,7 @@ import { State } from '../types/state'
 
 export const ARENA_1 = {
   id: 1,
-  name: 'Arena I',
+  name: 'I',
   grid: [
     { type: State.AVAILABLE_ALLY, hex: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 16] },
     {
