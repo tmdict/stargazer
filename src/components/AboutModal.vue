@@ -56,7 +56,7 @@ onUnmounted(() => {
           <div class="modal-content">
             <h1>AFK Journey Arena Simulator</h1>
             <p>
-              Stargazer is a AFKJ arena simulator and planning tool. It lets you experiment with
+              Stargazer is an AFKJ arena simulator and planning tool. It lets you experiment with
               different hero positions and team compositions on a hexagonal grid, just like the
               actual game's battle arena.
             </p>
