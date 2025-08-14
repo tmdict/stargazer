@@ -148,7 +148,7 @@ export function loadAppLocales(): Record<string, LocaleData> {
 
   const locales = import.meta.glob('../locales/app/*.json', { eager: true, import: 'default' })
   const result: Record<string, LocaleData> = {}
-  
+
   Object.entries(locales).forEach(([path, content]) => {
     const fileName = extractFileName(path)
     result[fileName] = content as LocaleData
@@ -163,9 +163,12 @@ export function loadCharacterLocales(): Record<string, LocaleData> {
     return characterLocalesCache
   }
 
-  const locales = import.meta.glob('../locales/character/*.json', { eager: true, import: 'default' })
+  const locales = import.meta.glob('../locales/character/*.json', {
+    eager: true,
+    import: 'default',
+  })
   const result: Record<string, LocaleData> = {}
-  
+
   Object.entries(locales).forEach(([path, content]) => {
     const fileName = extractFileName(path)
     result[fileName] = content as LocaleData
@@ -182,7 +185,7 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
 
   const locales = import.meta.glob('../locales/artifact/*.json', { eager: true, import: 'default' })
   const result: Record<string, LocaleData> = {}
-  
+
   Object.entries(locales).forEach(([path, content]) => {
     const fileName = extractFileName(path)
     result[fileName] = content as LocaleData
@@ -199,7 +202,7 @@ export function loadGameLocales(): Record<string, LocaleData> {
 
   const locales = import.meta.glob('../locales/game/*.json', { eager: true, import: 'default' })
   const result: Record<string, LocaleData> = {}
-  
+
   Object.entries(locales).forEach(([path, content]) => {
     const fileName = extractFileName(path)
     result[fileName] = content as LocaleData
@@ -214,7 +217,7 @@ export function loadAllLocales(): LocaleDictionary {
     app: loadAppLocales(),
     character: loadCharacterLocales(),
     artifact: loadArtifactLocales(),
-    game: loadGameLocales()
+    game: loadGameLocales(),
   }
 }
 
