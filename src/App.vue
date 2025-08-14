@@ -50,12 +50,20 @@ onUnmounted(() => {
           <LanguageToggle class="icon-link" />
         </li>
         <li>
-          <a href="https://github.com/tmdict/stargazer/" class="icon-link" :title="i18n.t('app.code')">
+          <a
+            href="https://github.com/tmdict/stargazer/"
+            class="icon-link"
+            :title="i18n.t('app.code')"
+          >
             <GitHubIcon />
           </a>
         </li>
         <li>
-          <button @click="showAboutModal = true" class="icon-link icon-button" :title="i18n.t('app.about')">
+          <button
+            @click="showAboutModal = true"
+            class="icon-link icon-button"
+            :title="i18n.t('app.about')"
+          >
             <InfoIcon />
           </button>
         </li>

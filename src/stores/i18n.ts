@@ -7,6 +7,9 @@ import { loadAllLocales } from '../utils/dataLoader'
 // Re-export types for convenience
 export type { Locale, LocaleData, LocaleDictionary } from '../lib/types/i18n'
 
+// Constants
+const LOCALE_STORAGE_KEY = 'stargazer.locale' as const
+
 export const useI18nStore = defineStore('i18n', () => {
   // State
   const currentLocale = ref<Locale>('en')
@@ -14,10 +17,17 @@ export const useI18nStore = defineStore('i18n', () => {
   const loaded = ref(false)
   const error = ref<string | null>(null)
 
-  // Load saved locale from localStorage
-  const savedLocale = localStorage.getItem('stargazer-locale')
-  if (savedLocale === 'zh' || savedLocale === 'en') {
-    currentLocale.value = savedLocale
+  // Load saved locale from localStorage with error handling
+  try {
+    const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
+    if (savedLocale === 'zh' || savedLocale === 'en') {
+      currentLocale.value = savedLocale
+    }
+  } catch (e) {
+    // If localStorage is not available (private browsing, disabled, etc.),
+    // fallback to default 'en'
+    console.warn('Could not access localStorage for locale preference:', e)
+    currentLocale.value = 'en'
   }
 
   // Getters
@@ -25,7 +35,7 @@ export const useI18nStore = defineStore('i18n', () => {
     return (key: string): string => {
       // Split key into category and name (e.g., "app.characters" -> ["app", "characters"])
       const parts = key.split('.')
-      
+
       if (parts.length !== 2) {
         console.warn(`Invalid translation key format: ${key}`)
         return key
@@ -33,7 +43,7 @@ export const useI18nStore = defineStore('i18n', () => {
 
       const [category, name] = parts
       const categoryTranslations = translations.value[category]
-      
+
       if (!categoryTranslations) {
         if (loaded.value) {
           console.warn(`Translation category not found: ${category}`)
@@ -42,7 +52,7 @@ export const useI18nStore = defineStore('i18n', () => {
       }
 
       const translation = categoryTranslations[name]
-      
+
       if (!translation) {
         if (loaded.value) {
           console.warn(`Translation not found: ${key}`)
@@ -57,14 +67,14 @@ export const useI18nStore = defineStore('i18n', () => {
   const hasTranslation = computed(() => {
     return (key: string): boolean => {
       const parts = key.split('.')
-      
+
       if (parts.length !== 2) {
         return false
       }
 
       const [category, name] = parts
       const categoryTranslations = translations.value[category]
-      
+
       return !!(
         categoryTranslations &&
         categoryTranslations[name] &&
@@ -82,7 +92,7 @@ export const useI18nStore = defineStore('i18n', () => {
     try {
       translations.value = loadAllLocales()
       loaded.value = true
-      
+
       // Set HTML lang attribute
       document.documentElement.lang = currentLocale.value
     } catch (e) {
@@ -93,7 +103,14 @@ export const useI18nStore = defineStore('i18n', () => {
 
   const setLocale = (locale: Locale) => {
     currentLocale.value = locale
-    localStorage.setItem('stargazer-locale', locale)
+
+    // Try to persist to localStorage, but don't fail if it's not available
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+    } catch (e) {
+      console.warn('Could not save locale preference to localStorage:', e)
+    }
+
     document.documentElement.lang = locale
   }
 
@@ -112,14 +129,14 @@ export const useI18nStore = defineStore('i18n', () => {
     currentLocale,
     loaded,
     error,
-    
+
     // Getters
     t,
     hasTranslation,
-    
+
     // Actions
     initialize,
     setLocale,
-    toggleLocale
+    toggleLocale,
   }
 })

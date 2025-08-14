@@ -35,7 +35,9 @@ const setTeam = (team: Team) => {
       @click="setTeam(Team.ENEMY)"
       :class="['team-btn', { active: selectedTeam === Team.ENEMY }]"
     >
-      <span v-if="showCounts">{{ i18n.t('app.enemy') }} ({{ enemyCount }}/{{ maxEnemyCount }})</span>
+      <span v-if="showCounts"
+        >{{ i18n.t('app.enemy') }} ({{ enemyCount }}/{{ maxEnemyCount }})</span
+      >
       <span v-else>{{ i18n.t('app.enemy') }}</span>
     </button>
   </div>

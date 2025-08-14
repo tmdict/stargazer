@@ -95,7 +95,9 @@ onUnmounted(() => {
       </button>
       <div class="tab-dropdown" @mouseenter="openMapDropdown" @mouseleave="closeMapDropdown">
         <button @click="toggleMapDropdown" class="tab-btn dropdown-btn">
-          {{ `${i18n.t('app.arena')} ${availableMaps.find((m) => m.key === selectedMap)?.name || 'I'}` }}
+          {{
+            `${i18n.t('app.arena')} ${availableMaps.find((m) => m.key === selectedMap)?.name || 'I'}`
+          }}
           ▼
         </button>
         <div

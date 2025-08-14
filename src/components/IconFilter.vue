@@ -31,11 +31,11 @@ const hoveredElement = ref<HTMLElement | null>(null)
 
 const getTooltipText = computed(() => {
   if (!hoveredOption.value) return ''
-  
+
   if (hoveredOption.value === 'show-all') {
     return i18n.t('app.show-all')
   }
-  
+
   // For faction, class, damage options, use game translations
   return i18n.t(`game.${hoveredOption.value}`)
 })
@@ -95,12 +95,7 @@ const handleMouseLeave = () => {
               stroke-linecap="round"
             />
             <!-- Optional: Add a small center dot for style -->
-            <circle
-              cx="0"
-              cy="0"
-              r="1.2"
-              fill="currentColor"
-            />
+            <circle cx="0" cy="0" r="1.2" fill="currentColor" />
           </g>
         </svg>
       </button>
