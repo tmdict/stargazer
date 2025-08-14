@@ -8,6 +8,7 @@ import { useToast } from '../composables/useToast'
 import { useArtifactStore } from '../stores/artifact'
 import { useGameDataStore } from '../stores/gameData'
 import { useGridStore, type Breakpoint } from '../stores/grid'
+import { useI18nStore } from '../stores/i18n'
 import { useMapEditorStore } from '../stores/mapEditor'
 import { useSkillStore } from '../stores/skill'
 import { useUrlStateStore } from '../stores/urlState'
@@ -29,6 +30,7 @@ const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 // Use Pinia stores
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
+const i18nStore = useI18nStore()
 const urlStateStore = useUrlStateStore()
 const artifactStore = useArtifactStore()
 const mapEditorStore = useMapEditorStore()
@@ -114,6 +116,7 @@ const handleMapChange = (mapKey: string) => {
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
+i18nStore.initialize()
 // After data is loaded, try to restore state from URL
 if (gameDataStore.dataLoaded) {
   const displayFlags = urlStateStore.restoreStateFromUrl()
