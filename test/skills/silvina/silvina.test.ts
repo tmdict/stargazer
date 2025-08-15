@@ -1,5 +1,4 @@
-import { getSymmetricalHexId } from '../../../src/lib/skills/utils/symmetry'
-import { getTieBreakingPreference } from '../../../src/lib/skills/silvina'
+import { calculateTarget } from '../../../src/lib/skills/silvina'
 import { Hex } from '../../../src/lib/hex'
 import { FULL_GRID } from '../../../src/lib/types/grid'
 import { Team } from '../../../src/lib/types/team'
@@ -19,7 +18,9 @@ interface TargetingResult {
   isSymmetricalTarget: boolean
 }
 
-// Build a map of hex IDs to Hex objects
+/**
+ * Initialize hex coordinate map for testing
+ */
 const hexCoordinates = new Map<number, Hex>()
 
 function initializeHexGrid() {
@@ -40,10 +41,8 @@ function initializeHexGrid() {
   }
 }
 
-// Initialize on module load
 initializeHexGrid()
 
-// Test file parsing
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
@@ -62,9 +61,6 @@ interface TestCase {
   expectedTarget: number
 }
 
-/**
- * Parse a test file in markdown format
- */
 function parseTestFile(filePath: string): TestData {
   const content = readFileSync(filePath, 'utf-8')
   const lines = content.split('\n')
@@ -81,17 +77,14 @@ function parseTestFile(filePath: string): TestData {
   let currentTestCase: Partial<TestCase> = {}
   
   for (const line of lines) {
-    // Parse arena
     if (line.startsWith('arena:')) {
       testData.arena = line.replace('arena:', '').trim()
     }
     
-    // Parse notes
     if (line.startsWith('notes:')) {
       testData.notes = line.replace('notes:', '').trim()
     }
     
-    // Parse enemy positions
     if (line.includes('Enemy Team Positions')) {
       inEnemySection = true
       continue
@@ -108,7 +101,6 @@ function parseTestFile(filePath: string): TestData {
       inEnemySection = false
     }
     
-    // Parse test cases
     if (line.startsWith('silvina tile:')) {
       if (currentTestCase.silvinaTile) {
         testData.testCases.push(currentTestCase as TestCase)
@@ -127,7 +119,6 @@ function parseTestFile(filePath: string): TestData {
     }
   }
   
-  // Add the last test case
   if (currentTestCase.silvinaTile) {
     testData.testCases.push(currentTestCase as TestCase)
   }
@@ -135,9 +126,6 @@ function parseTestFile(filePath: string): TestData {
   return testData
 }
 
-/**
- * Load all test files from a directory
- */
 function loadTestsFromDirectory(dirPath: string): TestData[] {
   const tests: TestData[] = []
   const files = readdirSync(dirPath)
@@ -147,7 +135,6 @@ function loadTestsFromDirectory(dirPath: string): TestData[] {
     const stat = statSync(fullPath)
     
     if (stat.isDirectory()) {
-      // Recursively load tests from subdirectories
       tests.push(...loadTestsFromDirectory(fullPath))
     } else if (file.endsWith('.md') && !file.includes('README') && !file.includes('FORMAT') && !file.includes('format') && !file.includes('RESULTS')) {
       tests.push({
@@ -160,75 +147,73 @@ function loadTestsFromDirectory(dirPath: string): TestData[] {
   return tests
 }
 
-/**
- * Load all Silvina tests
- */
 function loadAllTests(): TestData[] {
   return loadTestsFromDirectory(__dirname)
 }
 
-// Get distance between two hex IDs
-function getHexDistance(hex1Id: number, hex2Id: number): number {
-  const hex1 = hexCoordinates.get(hex1Id)
-  const hex2 = hexCoordinates.get(hex2Id)
-  
-  if (!hex1 || !hex2) {
-    throw new Error(`Invalid hex IDs: ${hex1Id}, ${hex2Id}`)
-  }
-  
-  return hex1.distance(hex2)
-}
 
-// Silvina targeting algorithm (testing the actual logic)
+/**
+ * Test wrapper for Silvina's calculateTarget function.
+ * Creates a mock grid with specified enemy positions and calls the actual implementation.
+ */
 function runSilvinaTargeting(config: TargetingConfig): TargetingResult {
   const { silvinaTile, enemyTiles, team = Team.ALLY } = config
   
-  // Get symmetrical tile using actual function
-  const symmetricalTile = getSymmetricalHexId(silvinaTile)
+  const opposingTeam = team === Team.ALLY ? Team.ENEMY : Team.ALLY
   
-  if (!symmetricalTile) {
-    throw new Error(`No symmetrical tile found for ${silvinaTile}`)
-  }
-  
-  // Check if an enemy is on the symmetrical tile
-  if (enemyTiles.includes(symmetricalTile)) {
-    return {
-      symmetricalTile,
-      targetTile: symmetricalTile,
-      isSymmetricalTarget: true
+  // Create mock grid for testing
+  const mockGrid = {
+    getHexById: (id: number) => hexCoordinates.get(id),
+    getTileById: (id: number) => {
+      if (enemyTiles.includes(id)) {
+        return {
+          hex: hexCoordinates.get(id),
+          characterId: id,
+          team: opposingTeam
+        }
+      }
+      return { hex: hexCoordinates.get(id) }
+    },
+    getAllTiles: () => {
+      const tiles: any[] = []
+      for (const [id, hex] of hexCoordinates.entries()) {
+        if (enemyTiles.includes(id)) {
+          tiles.push({ hex, characterId: id, team: opposingTeam })
+        } else {
+          tiles.push({ hex })
+        }
+      }
+      return tiles
     }
   }
   
-  // Calculate distances from symmetrical tile to all enemies
-  const enemiesWithDistance = enemyTiles.map(enemyTile => ({
-    tile: enemyTile,
-    distance: getHexDistance(symmetricalTile, enemyTile)
-  }))
-  
-  // Sort by distance, then apply tie-breaking
-  enemiesWithDistance.sort((a, b) => {
-    // Primary sort: distance
-    if (a.distance !== b.distance) {
-      return a.distance - b.distance
+  const context = {
+    grid: mockGrid,
+    team,
+    hexId: silvinaTile,
+    characterId: 39,
+    skillManager: {
+      setSkillTarget: () => {},
+      clearSkillTarget: () => {}
     }
-    
-    // Tie-breaking based on position in DIAGONAL_ROWS
-    const preference = getTieBreakingPreference(symmetricalTile, team)
-    
-    // Simple sorting based on preference
-    return preference === 'lower' 
-      ? a.tile - b.tile  // Lower hex ID wins
-      : b.tile - a.tile  // Higher hex ID wins
-  })
+  } as any
+  
+  const result = calculateTarget(context)
+  
+  if (!result || !result.metadata?.symmetricalHexId) {
+    throw new Error('No target found')
+  }
   
   return {
-    symmetricalTile,
-    targetTile: enemiesWithDistance[0].tile,
-    isSymmetricalTarget: false
+    symmetricalTile: result.metadata.symmetricalHexId,
+    targetTile: result.targetHexId,
+    isSymmetricalTarget: result.metadata.isSymmetricalTarget || false
   }
 }
 
-// Simple test framework
+/**
+ * Simple test runner for Silvina targeting tests
+ */
 class TestRunner {
   tests: Array<{ name: string; fn: () => void | Promise<void> }> = []
   passed = 0
@@ -315,14 +300,15 @@ class TestRunner {
   }
 }
 
-// Assertion helper
 function expect<T>(actual: T, expected: T, message?: string) {
   if (actual !== expected) {
     throw new Error(message || `Expected ${expected}, got ${actual}`)
   }
 }
 
-// Main test execution
+/**
+ * Main test execution - loads all test files and runs them
+ */
 async function runTests() {
   const runner = new TestRunner()
   const testFiles = loadAllTests()
@@ -335,7 +321,6 @@ async function runTests() {
   }
   console.log(`📝 Total test cases: ${totalTestCases}`)
   
-  // Run tests for each file
   for (const testFile of testFiles) {
     const fileDesc = `${testFile.path}`
     
@@ -343,21 +328,18 @@ async function runTests() {
       const testName = `${fileDesc} - Silvina at ${testCase.silvinaTile}`
       
       runner.test(testName, () => {
-        // Run the targeting algorithm
         const result = runSilvinaTargeting({
           silvinaTile: testCase.silvinaTile,
           enemyTiles: testFile.enemies,
-          team: Team.ALLY // Default to ally for these tests
+          team: Team.ALLY
         })
         
-        // Verify symmetrical tile calculation
         expect(
           result.symmetricalTile,
           testCase.symmetricalTile,
           `Symmetrical tile mismatch: expected ${testCase.symmetricalTile}, got ${result.symmetricalTile}`
         )
         
-        // Verify target selection
         expect(
           result.targetTile,
           testCase.expectedTarget,
@@ -367,11 +349,32 @@ async function runTests() {
     }
   }
   
+  // Test enemy team behavior (180° rotation)
+  runner.test('Enemy Team - Counter-clockwise walk at distance 1', () => {
+    const result = runSilvinaTargeting({
+      silvinaTile: 44,
+      enemyTiles: [2, 6],
+      team: Team.ENEMY
+    })
+    
+    expect(result.symmetricalTile, 1, `Symmetrical tile mismatch`)
+    expect(result.targetTile, 6, `Should select tile 6 in counter-clockwise walk`)
+  })
+  
+  runner.test('Enemy Team - Counter-clockwise walk at distance 2', () => {
+    const result = runSilvinaTargeting({
+      silvinaTile: 36,
+      enemyTiles: [1, 2, 11, 14, 15],
+      team: Team.ENEMY
+    })
+    
+    expect(result.symmetricalTile, 8, `Symmetrical tile mismatch`)
+  })
+  
   // Run all tests
   await runner.run()
 }
 
-// Execute tests
 runTests().catch(error => {
   console.error('Test runner error:', error)
   process.exit(1)

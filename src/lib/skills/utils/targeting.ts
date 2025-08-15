@@ -1,5 +1,4 @@
-import type { Grid, GridTile } from '../../grid'
-import type { Hex } from '../../hex'
+import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 
 export interface TargetCandidate {
@@ -56,15 +55,17 @@ export function calculateDistances(
 }
 
 /**
- * Sort candidates by multiple distance priorities
+ * Sort candidates by multiple distance priorities.
+ *
+ * Note: This uses simple hex ID tie-breaking. Skills requiring special
+ * tie-breaking (like Silvina's spiral search) implement their own logic.
  */
 export function sortByDistancePriorities(
   candidates: TargetCandidate[],
-  priorities: number[], // Array of hex IDs in priority order
+  priorities: number[],
   sourceTeam: Team,
 ): TargetCandidate[] {
   return candidates.sort((a, b) => {
-    // Check each priority in order
     for (const priorityHexId of priorities) {
       const distA = a.distances.get(priorityHexId) ?? Infinity
       const distB = b.distances.get(priorityHexId) ?? Infinity
@@ -74,19 +75,16 @@ export function sortByDistancePriorities(
       }
     }
 
-    // Final tie-breaker: hex ID
-    // Default behavior for non-Silvina skills
-    if (sourceTeam === Team.ALLY) {
-      return b.hexId - a.hexId // Highest ID wins for ally team
-    } else {
-      return a.hexId - b.hexId // Lowest ID wins for enemy team
-    }
+    // Simple tie-breaker by hex ID
+    return sourceTeam === Team.ALLY ? b.hexId - a.hexId : a.hexId - b.hexId
   })
 }
 
 /**
- * High-level targeting function combining all steps
- * Uses simple distance calculation without pathfinding
+ * Find the best target using simple distance-based priority.
+ *
+ * This is a generic targeting function for skills that don't require
+ * special targeting logic like Silvina's spiral search.
  */
 export function findBestTarget(
   grid: Grid,
@@ -94,7 +92,6 @@ export function findBestTarget(
   priorityHexIds: number[],
 ): { hexId: number; characterId: number } | null {
   const candidates = getOpposingCharacters(grid, sourceTeam)
-
   if (candidates.length === 0) return null
 
   calculateDistances(candidates, priorityHexIds, grid)

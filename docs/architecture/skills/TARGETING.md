@@ -29,10 +29,12 @@ Key features:
 - Targets enemy on symmetrical hex position
 - Falls back to closest enemy when symmetrical hex is empty
 - Uses pre-computed map for O(1) symmetry lookups
-- **Diagonal-aware tie-breaking**: When multiple enemies are equidistant from the symmetrical tile, uses zone-based logic determined by a diagonal line through tiles 4,9,16,23,30,37,42
-  - LEFT zone (tiles 30,33,36,39,41): Prefers lower hex ID
-  - RIGHT zone (tiles 34,38,40,43,44,45): Prefers higher hex ID
-  - ON diagonal (tiles 37,42): Prefers lower hex ID
+- **Spiral search tie-breaking**: When multiple enemies are equidistant from the symmetrical tile, uses a clockwise spiral search pattern:
+  - **Ally team**: Walks clockwise starting just after top-right position (q+N, r-N)
+  - **Enemy team**: Walks counter-clockwise starting just after bottom-left position (q-N, r+N)
+  - Searches expanding rings (distance 1, 2, 3...) until an enemy is found
+  - Within each ring, tiles are checked in the appropriate walk order
+  - Ensures consistent, predictable targeting behavior
 
 **Vala** (ID: 46) - Assassin:
 
@@ -45,8 +47,10 @@ Key features:
 
 ## Utilities
 
-- `symmetry.ts`: Pre-computed hex symmetry map
-- `targeting.ts`: Opposing character enumeration and distance sorting
+- `symmetry.ts`: Pre-computed hex symmetry map for O(1) lookups
+- `targeting.ts`: Generic targeting utilities for simple skills
   - `getOpposingCharacters()`: Get all characters from the opposing team
   - `calculateDistances()`: Calculate distances from reference points
-  - `sortByDistancePriorities()`: Sort candidates by distance with tie-breaking
+  - `sortByDistancePriorities()`: Sort candidates by distance with simple hex ID tie-breaking
+  - `findBestTarget()`: Generic targeting function for skills without special logic
+- Note: Complex skills like Silvina implement their own specialized targeting algorithms

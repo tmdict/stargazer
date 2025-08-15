@@ -2,7 +2,6 @@
 
 ## Test Setup
 
-setup: http://localhost:5173/#/?g=rwMXAK1UsfwqttSplFWwegpJ1knUriCVNoFiNWORI0mYPhVCJAjbAExrgGEOEKwCZkpA
 arena: Arena III
 
 ## Enemy Team Positions
@@ -54,7 +53,7 @@ expected target: 33
 ```
 silvina tile: 13
 symmetrical tile: 34
-expected target: 44
+expected target: 33
 ```
 
 ```
