@@ -144,6 +144,9 @@ onUnmounted(() => {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
   overflow-y: auto;
   z-index: 9998;
   padding: 40px 20px;
@@ -160,7 +163,7 @@ onUnmounted(() => {
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   max-width: 1000px;
   width: 100%;
-  margin: 0 auto;
+  margin: auto;
   display: flex;
   flex-direction: column;
 }
