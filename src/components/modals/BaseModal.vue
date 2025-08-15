@@ -4,10 +4,13 @@ import { ref, onMounted, onUnmounted } from 'vue'
 interface Props {
   show: boolean
   maxWidth?: string
+  showLinkButton?: boolean
+  linkParam?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxWidth: '800px',
+  showLinkButton: false,
 })
 
 const emit = defineEmits<{
@@ -37,6 +40,19 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape)
 })
+
+// Copy link with query parameter
+const copyLink = () => {
+  if (!props.linkParam) return
+  
+  const url = new URL(window.location.href)
+  url.searchParams.set('s', props.linkParam)
+  
+  navigator.clipboard.writeText(url.toString()).then(() => {
+    // Optional: Could add a toast notification here
+    console.log('Link copied to clipboard')
+  })
+}
 </script>
 
 <template>
@@ -44,18 +60,39 @@ onUnmounted(() => {
     <Transition name="modal">
       <div v-if="show" class="modal-overlay" @click="handleClickOutside">
         <div ref="modalRef" class="modal-container" :style="{ maxWidth }" @click.stop>
-          <button class="modal-close" @click="emit('close')" aria-label="Close">
-            <svg
-              width="24"
-              height="24"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
+          <div class="modal-buttons">
+            <button 
+              v-if="showLinkButton && linkParam"
+              class="modal-link"
+              @click="copyLink"
+              aria-label="Copy link"
+              title="Copy shareable link"
             >
-              <path d="M18 6L6 18M6 6l12 12" />
-            </svg>
-          </button>
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+              </svg>
+            </button>
+            <button class="modal-close" @click="emit('close')" aria-label="Close">
+              <svg
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M18 6L6 18M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
 
           <div class="modal-content">
             <slot />
@@ -97,10 +134,17 @@ onUnmounted(() => {
   flex-direction: column;
 }
 
-.modal-close {
+.modal-buttons {
   position: absolute;
   top: 12px;
   right: 12px;
+  display: flex;
+  gap: 8px;
+  z-index: 1;
+}
+
+.modal-close,
+.modal-link {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 4px;
@@ -112,12 +156,16 @@ onUnmounted(() => {
   justify-content: center;
   cursor: pointer;
   transition: all 0.2s ease;
-  z-index: 1;
 }
 
-.modal-close:hover {
+.modal-close:hover,
+.modal-link:hover {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.9);
+}
+
+.modal-link:active {
+  transform: scale(0.95);
 }
 
 .modal-content {

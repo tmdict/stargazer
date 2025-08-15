@@ -48,7 +48,7 @@ const gridStyle = {
 </script>
 
 <template>
-  <BaseModal :show="show" @close="$emit('close')">
+  <BaseModal :show="show" :showLinkButton="true" linkParam="silvina" @close="$emit('close')">
     <h1>Silvina - First Strike</h1>
     <p>
       Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches
