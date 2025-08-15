@@ -1,16 +1,36 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { RouterLink, RouterView } from 'vue-router'
 
 import rowanSvg from '@/assets/rowan.svg'
 import rowanGif from '@/assets/rowan.gif'
+import { useI18nStore } from './stores/i18n'
 import AboutModal from './components/AboutModal.vue'
 import DragPreview from './components/DragPreview.vue'
 import GitHubIcon from './components/GitHubIcon.vue'
 import InfoIcon from './components/InfoIcon.vue'
+import LanguageToggle from './components/LanguageToggle.vue'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
+const i18n = useI18nStore()
+
+// Keyboard shortcut handler
+const handleKeyDown = (e: KeyboardEvent) => {
+  // Alt+L to toggle language
+  if (e.altKey && e.key === 'l') {
+    e.preventDefault()
+    i18n.toggleLocale()
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('keydown', handleKeyDown)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', handleKeyDown)
+})
 </script>
 
 <template>
@@ -27,12 +47,23 @@ const showAboutModal = ref(false)
 
       <ul class="menu">
         <li>
-          <a href="https://github.com/tmdict/stargazer/" class="icon-link" title="GitHub">
+          <LanguageToggle class="icon-link" />
+        </li>
+        <li>
+          <a
+            href="https://github.com/tmdict/stargazer/"
+            class="icon-link"
+            :title="i18n.t('app.code')"
+          >
             <GitHubIcon />
           </a>
         </li>
         <li>
-          <button @click="showAboutModal = true" class="icon-link icon-button" title="About">
+          <button
+            @click="showAboutModal = true"
+            class="icon-link icon-button"
+            :title="i18n.t('app.about')"
+          >
             <InfoIcon />
           </button>
         </li>
@@ -113,7 +144,6 @@ nav ul li {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: -5px;
 }
 
 .icon-button {

@@ -3,6 +3,7 @@ import { ref, computed } from 'vue'
 
 import type { CharacterType } from '../lib/types/character'
 import { useDragDrop } from '../composables/useDragDrop'
+import { useI18nStore } from '../stores/i18n'
 import { useTouchDetection } from '../composables/useTouchDetection'
 import Tooltip from './Tooltip.vue'
 
@@ -19,6 +20,7 @@ const emit = defineEmits<{
   characterClick: [character: CharacterType]
 }>()
 
+const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
 const { isTouchDevice } = useTouchDetection()
 
@@ -35,6 +37,13 @@ const characterElement = ref<HTMLElement>()
 const interactionStartedAsTouch = ref(false)
 
 const formattedCharacterName = computed(() => {
+  // Use i18n for character name if available, fallback to formatted name
+  const translationKey = `character.${props.character.name}`
+  const translated = i18n.t(translationKey)
+  if (translated !== translationKey) {
+    return translated
+  }
+  // Fallback to formatted name
   return props.character.name
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -145,8 +154,8 @@ const handleTouchStart = () => {
                   :alt="character.faction"
                   class="tooltip-icon"
                 />
-                <span class="tooltip-label">Faction:</span>
-                <span class="tooltip-value">{{ character.faction }}</span>
+                <span class="tooltip-label">{{ i18n.t('game.faction') }}:</span>
+                <span class="tooltip-value">{{ i18n.t(`game.${character.faction}`) }}</span>
               </div>
 
               <div class="tooltip-row">
@@ -155,8 +164,8 @@ const handleTouchStart = () => {
                   :alt="character.class"
                   class="tooltip-icon"
                 />
-                <span class="tooltip-label">Class:</span>
-                <span class="tooltip-value">{{ character.class }}</span>
+                <span class="tooltip-label">{{ i18n.t('game.class') }}:</span>
+                <span class="tooltip-value">{{ i18n.t(`game.${character.class}`) }}</span>
               </div>
 
               <div class="tooltip-row">
@@ -166,17 +175,17 @@ const handleTouchStart = () => {
                   :alt="character.damage"
                   class="tooltip-icon"
                 />
-                <span class="tooltip-label">Damage:</span>
-                <span class="tooltip-value">{{ character.damage }}</span>
+                <span class="tooltip-label">{{ i18n.t('game.damage') }}:</span>
+                <span class="tooltip-value">{{ i18n.t(`game.${character.damage}`) }}</span>
               </div>
 
               <div class="tooltip-row">
-                <span class="tooltip-label">Range:</span>
+                <span class="tooltip-label">{{ i18n.t('game.range') }}:</span>
                 <span class="tooltip-value">{{ character.range }}</span>
               </div>
 
               <div class="tooltip-row">
-                <span class="tooltip-label">Season:</span>
+                <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
                 <span class="tooltip-value">{{ character.season }}</span>
               </div>
             </div>
