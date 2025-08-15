@@ -1,12 +1,7 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 
-import { ARENA_1 } from '../../lib/arena/arena1'
-import { Grid } from '../../lib/grid'
-import { Hex } from '../../lib/hex'
-import { Layout, POINTY } from '../../lib/layout'
-import { FULL_GRID } from '../../lib/types/grid'
-import { State } from '../../lib/types/state'
+import GridSnippet from '../GridSnippet.vue'
 
 interface Props {
   show: boolean
@@ -27,54 +22,8 @@ const gridStyle = {
     12: 4,
     13: 5,
     16: 6,
-  } as Record<number, number>,
+  },
   highlight: [9],
-}
-
-// Create grid for snippet
-const snippetGrid = computed(() => {
-  if (!props.show) return null
-  return new Grid(FULL_GRID, ARENA_1)
-})
-
-// Layout for the snippet grid (smaller size for modal)
-const snippetLayout = computed(() => {
-  return new Layout(
-    POINTY,
-    { x: 18, y: 18 }, // Small hex size for modal
-    { x: 150, y: 150 }, // Origin position (centered in taller viewbox)
-  )
-})
-
-// Get polygon points for a hex
-const getHexPolygon = (hex: Hex): string => {
-  const layout = snippetLayout.value
-  const corners = layout.polygonCorners(hex)
-  return corners.map((p) => `${p.x},${p.y}`).join(' ')
-}
-
-// Get hex fill color based on state and highlighting
-const getHexFill = (tile: any): string => {
-  if (gridStyle.highlight.includes(tile.hex.getId())) {
-    return 'rgba(255, 215, 0, 0.4)' // Gold highlight
-  }
-
-  switch (tile.state) {
-    case State.AVAILABLE_ALLY:
-      return 'rgba(54, 149, 142, 0.15)'
-    case State.AVAILABLE_ENEMY:
-      return 'rgba(200, 35, 51, 0.15)'
-    case State.BLOCKED:
-      return 'rgba(128, 128, 128, 0.3)'
-    default:
-      return 'rgba(255, 255, 255, 0.05)'
-  }
-}
-
-// Get text position for hex center
-const getHexCenter = (hex: Hex) => {
-  const layout = snippetLayout.value
-  return layout.hexToPixel(hex)
 }
 
 // Handle escape key
@@ -149,32 +98,7 @@ onUnmounted(() => {
               </li>
             </ul>
 
-            <div class="grid-snippet">
-              <svg v-if="snippetGrid" width="300" height="300" viewBox="0 0 300 300">
-                <!-- Hex tiles -->
-                <g v-for="tile in snippetGrid.getAllTiles()" :key="tile.hex.getId()">
-                  <polygon
-                    :points="getHexPolygon(tile.hex)"
-                    :fill="getHexFill(tile)"
-                    stroke="rgba(255, 255, 255, 0.2)"
-                    stroke-width="1"
-                  />
-                  <!-- Numeric labels -->
-                  <text
-                    v-if="gridStyle.numericLabel[tile.hex.getId()]"
-                    :x="getHexCenter(tile.hex).x"
-                    :y="getHexCenter(tile.hex).y"
-                    text-anchor="middle"
-                    dominant-baseline="middle"
-                    fill="white"
-                    font-size="14"
-                    font-weight="bold"
-                  >
-                    {{ gridStyle.numericLabel[tile.hex.getId()] }}
-                  </text>
-                </g>
-              </svg>
-            </div>
+            <GridSnippet :gridStyle="gridStyle" />
           </div>
         </div>
       </div>
@@ -279,19 +203,6 @@ onUnmounted(() => {
 .modal-content strong {
   color: white;
   font-weight: 600;
-}
-
-/* Grid snippet styles */
-.grid-snippet {
-  margin: 20px 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px 0;
-}
-
-.grid-snippet svg {
-  display: block;
 }
 
 /* Transitions */
