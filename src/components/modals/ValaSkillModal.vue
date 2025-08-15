@@ -65,7 +65,7 @@ onUnmounted(() => {
               furthest away from her current tile.
             </p>
             <p>
-              Distance Calculation uses hexagonal grid distance to determine the furthest enemy.
+              Distance calculation uses hexagonal grid distance to determine the furthest enemy.
             </p>
 
             <h2>Tie-Breaking Rules</h2>
