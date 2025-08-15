@@ -144,7 +144,6 @@ nav ul li {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  margin-top: -5px;
 }
 
 .icon-button {
