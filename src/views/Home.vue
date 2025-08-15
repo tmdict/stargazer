@@ -8,6 +8,7 @@ import { useToast } from '../composables/useToast'
 import { useArtifactStore } from '../stores/artifact'
 import { useGameDataStore } from '../stores/gameData'
 import { useGridStore, type Breakpoint } from '../stores/grid'
+import { useI18nStore } from '../stores/i18n'
 import { useMapEditorStore } from '../stores/mapEditor'
 import { useSkillStore } from '../stores/skill'
 import { useUrlStateStore } from '../stores/urlState'
@@ -19,6 +20,7 @@ import DragDropProvider from '../components/DragDropProvider.vue'
 import GridControls from '../components/GridControls.vue'
 import GridManager from '../components/GridManager.vue'
 import MapEditor from '../components/MapEditor.vue'
+import SkillsSelection from '../components/SkillsSelection.vue'
 import TabNavigation from '../components/TabNavigation.vue'
 import ToastContainer from '../components/ToastContainer.vue'
 
@@ -29,6 +31,7 @@ const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 // Use Pinia stores
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
+const i18nStore = useI18nStore()
 const urlStateStore = useUrlStateStore()
 const artifactStore = useArtifactStore()
 const mapEditorStore = useMapEditorStore()
@@ -114,6 +117,7 @@ const handleMapChange = (mapKey: string) => {
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
+i18nStore.initialize()
 // After data is loaded, try to restore state from URL
 if (gameDataStore.dataLoaded) {
   const displayFlags = urlStateStore.restoreStateFromUrl()
@@ -353,6 +357,15 @@ onUnmounted(() => {
                 :artifacts="gameDataStore.artifacts"
                 :artifactImages="gameDataStore.artifactImages"
                 :icons="gameDataStore.icons"
+              />
+            </div>
+            <!-- Skills Tab -->
+            <div v-show="activeTab === 'skills'" class="tab-panel">
+              <SkillsSelection
+                :characters="gameDataStore.characters"
+                :characterImages="gameDataStore.characterImages"
+                :icons="gameDataStore.icons"
+                :isDraggable="true"
               />
             </div>
             <!-- Map Editor Tab -->

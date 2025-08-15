@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { Team } from '../lib/types/team'
+import { useI18nStore } from '../stores/i18n'
+
+const i18n = useI18nStore()
 
 const props = defineProps<{
   selectedTeam: Team
@@ -25,15 +28,17 @@ const setTeam = (team: Team) => {
       @click="setTeam(Team.ALLY)"
       :class="['team-btn', { active: selectedTeam === Team.ALLY }]"
     >
-      <span v-if="showCounts">Ally ({{ allyCount }}/{{ maxAllyCount }})</span>
-      <span v-else>Ally</span>
+      <span v-if="showCounts">{{ i18n.t('app.ally') }} ({{ allyCount }}/{{ maxAllyCount }})</span>
+      <span v-else>{{ i18n.t('app.ally') }}</span>
     </button>
     <button
       @click="setTeam(Team.ENEMY)"
       :class="['team-btn', { active: selectedTeam === Team.ENEMY }]"
     >
-      <span v-if="showCounts">Enemy ({{ enemyCount }}/{{ maxEnemyCount }})</span>
-      <span v-else>Enemy</span>
+      <span v-if="showCounts"
+        >{{ i18n.t('app.enemy') }} ({{ enemyCount }}/{{ maxEnemyCount }})</span
+      >
+      <span v-else>{{ i18n.t('app.enemy') }}</span>
     </button>
   </div>
 </template>
