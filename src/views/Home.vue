@@ -20,6 +20,7 @@ import DragDropProvider from '../components/DragDropProvider.vue'
 import GridControls from '../components/GridControls.vue'
 import GridManager from '../components/GridManager.vue'
 import MapEditor from '../components/MapEditor.vue'
+import SkillsSelection from '../components/SkillsSelection.vue'
 import TabNavigation from '../components/TabNavigation.vue'
 import ToastContainer from '../components/ToastContainer.vue'
 
@@ -356,6 +357,15 @@ onUnmounted(() => {
                 :artifacts="gameDataStore.artifacts"
                 :artifactImages="gameDataStore.artifactImages"
                 :icons="gameDataStore.icons"
+              />
+            </div>
+            <!-- Skills Tab -->
+            <div v-show="activeTab === 'skills'" class="tab-panel">
+              <SkillsSelection
+                :characters="gameDataStore.characters"
+                :characterImages="gameDataStore.characterImages"
+                :icons="gameDataStore.icons"
+                :isDraggable="true"
               />
             </div>
             <!-- Map Editor Tab -->
