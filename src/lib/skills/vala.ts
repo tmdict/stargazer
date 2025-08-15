@@ -10,16 +10,23 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const candidates = getOpposingCharacters(grid, team)
   if (candidates.length === 0) return null
 
+  // Track examined tiles for debug info
+  const examinedTiles: number[] = []
+
   // Calculate distances from Vala's current position
   calculateDistances(candidates, [hexId], grid)
 
-  // Sort by distance (furthest first) with tie-breaking
-  const sorted = candidates.sort((a, b) => {
-    const distA = a.distances.get(hexId) ?? 0
-    const distB = b.distances.get(hexId) ?? 0
+  // Collect all candidate tiles with distances
+  const candidatesWithDistance = candidates.map((c) => {
+    const distance = c.distances.get(hexId) ?? 0
+    examinedTiles.push(c.hexId)
+    return { ...c, distance }
+  })
 
-    if (distA !== distB) {
-      return distB - distA // Furthest wins (reversed from closest)
+  // Sort by distance (furthest first) with tie-breaking
+  const sorted = candidatesWithDistance.sort((a, b) => {
+    if (a.distance !== b.distance) {
+      return b.distance - a.distance // Furthest wins (reversed from closest)
     }
 
     // Tie-breaking: team-aware hex ID preference
@@ -39,6 +46,8 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
     targetCharacterId: bestTarget.characterId,
     metadata: {
       sourceHexId: hexId,
+      distance: bestTarget.distance,
+      examinedTiles,
     },
   }
 }

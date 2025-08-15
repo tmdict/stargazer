@@ -138,6 +138,23 @@ defineExpose({
                 </span>
               </template>
             </div>
+            <!-- Show skill targeting info for Vala -->
+            <div v-if="tile.characterId === 46 && tile.team" class="skill-info">
+              <span class="skill-label">Skill: Assassin (Vala)</span>
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
+                <template v-if="key === `${tile.characterId}-${tile.team}`">
+                  <span class="skill-target">
+                    → Targeting Hex {{ targetInfo.targetHexId }}
+                    <span v-if="targetInfo.metadata?.distance"
+                      >(distance: {{ targetInfo.metadata.distance }})</span
+                    >
+                  </span>
+                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
+                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
+                  </span>
+                </template>
+              </template>
+            </div>
             <!-- Show closest enemy info for Ally characters -->
             <div
               v-if="
