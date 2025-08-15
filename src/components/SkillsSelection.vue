@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 
 import type { CharacterType } from '../lib/types/character'
 import { useSelectionState } from '../composables/useSelectionState'
@@ -87,6 +87,27 @@ const openDetailsModal = (character: CharacterType) => {
       break
   }
 }
+
+// Check URL query parameters on mount
+onMounted(() => {
+  const urlParams = new URLSearchParams(window.location.search)
+  const skillParam = urlParams.get('s')
+
+  if (skillParam) {
+    const normalizedParam = skillParam.toLowerCase()
+    switch (normalizedParam) {
+      case 'silvina':
+        showSilvinaModal.value = true
+        break
+      case 'vala':
+        showValaModal.value = true
+        break
+      case 'reinier':
+        showReinierModal.value = true
+        break
+    }
+  }
+})
 </script>
 
 <template>
