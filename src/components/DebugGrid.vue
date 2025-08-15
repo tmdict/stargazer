@@ -111,11 +111,16 @@ defineExpose({
                 >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
               >
               <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <span v-if="key === `${tile.characterId}-${tile.team}`" class="skill-target">
-                  → Targeting Hex {{ targetInfo.targetHexId }}
-                  <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
-                  <span v-else>(fallback)</span>
-                </span>
+                <template v-if="key === `${tile.characterId}-${tile.team}`">
+                  <span class="skill-target">
+                    → Targeting Hex {{ targetInfo.targetHexId }}
+                    <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
+                    <span v-else>(spiral search)</span>
+                  </span>
+                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
+                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
+                  </span>
+                </template>
               </template>
             </div>
             <!-- Show skill targeting info for Reinier -->
@@ -602,5 +607,13 @@ defineExpose({
   font-size: 0.75rem;
   color: #4a90e2;
   font-weight: 500;
+}
+
+.examined-tiles {
+  font-size: 0.7rem;
+  color: #7a8a9a;
+  font-style: italic;
+  display: block;
+  margin-top: 0.25rem;
 }
 </style>

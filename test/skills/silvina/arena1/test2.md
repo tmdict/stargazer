@@ -2,7 +2,6 @@
 
 ## Test Setup
 
-setup: http://localhost:5173/#/?g=twMTAKtamkKpkqWokidTeQpFSkkTKEWOJGEihIgRJEGGtDRAVAao8gBZKWCZAzyFzg
 arena: Arena I
 
 ## Enemy Team Positions

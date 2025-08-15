@@ -4,11 +4,11 @@ This directory contains the test suite for Silvina's "First Strike" targeting al
 
 ## Files
 
-- **silvina.test.ts** - Self-contained test file that includes:
+- **silvina.test.ts** - Test file that includes:
   - Test parser for markdown test files
   - Test runner with detailed reporting
-  - Actual implementation testing (not mocks)
-  - Current status: 89.5% accuracy (128/143 tests passing)
+  - Tests the actual implementation from silvina.ts
+  - Current status: 100% accuracy (145/145 tests passing)
 
 ## Test Data Format
 
@@ -63,16 +63,19 @@ npm run test:silvina  # Same as above
 ## Test Coverage
 
 - **4 different arenas** tested
-- **Various enemy configurations**: 2-enemy, 3-enemy, adjacent, symmetrical
-- **Edge cases**: Tile 34 inconsistencies, three-way ties
-- **Team perspectives**: Primarily ally team (enemy team uses rotational symmetry)
+- **Various enemy configurations**: 2-enemy, 3-enemy, 5-enemy, adjacent, symmetrical
+- **Edge cases**: Multiple enemies at same distance, ring walking order
+- **Team perspectives**: Both ally team (clockwise) and enemy team (counter-clockwise) tested
 
-## Known Failures
+## Algorithm
 
-Consistent failures occur with:
+Silvina's targeting now uses a **clockwise spiral search** algorithm:
 
-- **Tile 13 (sym 34)**: Middle position with inconsistent behavior
-- **Tile 1 (sym 44)**: Occasional Arena 3 failures
-- **Tile 9 (sym 37)**: Diagonal tile edge cases
+- **Priority 1**: Enemy on the symmetrical tile (immediate target)
+- **Priority 2**: Nearest enemy via spiral search
+  - Ally team: Walks clockwise starting just after top-right (q+N, r-N)
+  - Enemy team: Walks counter-clockwise starting just after bottom-left (q-N, r+N)
+  - Searches expanding rings (distance 1, 2, 3...) until an enemy is found
+  - Within each ring, tiles are checked in the appropriate walk order
 
-These failures are acceptable given the trade-off between code maintainability and 100% accuracy.
+This approach ensures consistent, predictable targeting behavior with 100% test accuracy.

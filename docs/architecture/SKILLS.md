@@ -158,7 +158,8 @@ Highlight multiple tiles based on game state:
 **Silvina** (ID: 39) - First Strike:
 
 - Green targeting arrow
-- Symmetrical positioning with fallback
+- Targets enemy on symmetrical hex position
+- Uses clockwise spiral search for tie-breaking (counter-clockwise for enemy team)
 - Implementation: `/src/lib/skills/silvina.ts`
 
 **Vala** (ID: 46) - Assassin:
