@@ -4,25 +4,32 @@ all characters * - Painting over any tile removes characters and replaces state 
 events for state selection and map clearing * * Usage: Only active when 'mapEditor' tab is selected
 */
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 import { State } from '../lib/types/state'
+import { useI18nStore } from '../stores/i18n'
 import { getHexFillColor } from '../utils/stateFormatting'
+
+const i18n = useI18nStore()
 
 const selectedState = ref<State>(State.DEFAULT)
 
 interface StateOption {
   state: State
-  label: string
+  labelKey: string
 }
 
 const stateOptions: StateOption[] = [
-  { state: State.DEFAULT, label: 'Empty' },
-  { state: State.AVAILABLE_ALLY, label: 'Ally Tile' },
-  { state: State.AVAILABLE_ENEMY, label: 'Enemy Tile' },
-  { state: State.BLOCKED, label: 'Blocked' },
-  { state: State.BLOCKED_BREAKABLE, label: 'Breakable' },
+  { state: State.DEFAULT, labelKey: 'app.empty' },
+  { state: State.AVAILABLE_ALLY, labelKey: 'app.ally-tile' },
+  { state: State.AVAILABLE_ENEMY, labelKey: 'app.enemy-tile' },
+  { state: State.BLOCKED, labelKey: 'app.blocked' },
+  { state: State.BLOCKED_BREAKABLE, labelKey: 'app.breakable' },
 ]
+
+const getStateLabel = computed(() => (labelKey: string) => {
+  return i18n.t(labelKey)
+})
 
 const emit = defineEmits<{
   stateSelected: [state: State]
@@ -41,7 +48,7 @@ const handleClearMap = () => {
 
 <template>
   <div class="map-editor">
-    <p class="editor-description">Select a tile state and click/drag on the map to paint tiles</p>
+    <p class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
 
     <div class="state-options">
       <button
@@ -61,12 +68,12 @@ const handleClearMap = () => {
             />
           </svg>
         </div>
-        <span class="state-label">{{ option.label }}</span>
+        <span class="state-label">{{ getStateLabel(option.labelKey) }}</span>
       </button>
     </div>
 
     <div class="map-editor-actions">
-      <button class="clear-button" @click="handleClearMap">Reset</button>
+      <button class="clear-button" @click="handleClearMap">{{ i18n.t('app.clear') }}</button>
     </div>
   </div>
 </template>

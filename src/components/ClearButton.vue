@@ -1,4 +1,8 @@
 <script setup lang="ts">
+import { useI18nStore } from '../stores/i18n'
+
+const i18n = useI18nStore()
+
 const emit = defineEmits<{
   click: []
 }>()
@@ -9,7 +13,7 @@ const handleClick = () => {
 </script>
 
 <template>
-  <button @click="handleClick" class="clear-all-btn">Clear</button>
+  <button @click="handleClick" class="clear-all-btn">{{ i18n.t('app.clear') }}</button>
 </template>
 
 <style scoped>

@@ -2,9 +2,11 @@
 import { ref, computed } from 'vue'
 
 import type { ArtifactType } from '../lib/types/artifact'
+import { useI18nStore } from '../stores/i18n'
 import { useTouchDetection } from '../composables/useTouchDetection'
-
 import Tooltip from './Tooltip.vue'
+
+const i18n = useI18nStore()
 
 const props = defineProps<{
   artifact: ArtifactType
@@ -26,6 +28,13 @@ const artifactElement = ref<HTMLElement>()
 const interactionStartedAsTouch = ref(false)
 
 const formattedArtifactName = computed(() => {
+  // Use i18n for artifact name if available, fallback to formatted name
+  const translationKey = `artifact.${props.artifact.name}`
+  const translated = i18n.t(translationKey)
+  if (translated !== translationKey) {
+    return translated
+  }
+  // Fallback to formatted name
   return props.artifact.name
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -82,7 +91,7 @@ const handleTouchStart = () => {
           </div>
           <div class="tooltip-info">
             <div class="tooltip-row">
-              <span class="tooltip-label">Season:</span>
+              <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
               <span class="tooltip-value">{{ artifact.season }}</span>
             </div>
           </div>

@@ -47,17 +47,10 @@ The parser extracts:
 silvina/
 ├── README.md           # This file
 ├── silvina.test.ts     # Main test file
+├── control/           # Control test cases
 ├── arena1/            # Arena 1 test cases
-│   ├── control1.md    # Control tests with 2 enemies
-│   ├── control2.md    # Control tests with 3 enemies
-│   ├── test1.md       # Additional scenarios
-│   └── test2.md       # Edge cases
 ├── arena3/            # Arena 3 test cases
-│   ├── test1.md
-│   ├── test2.md
-│   └── test3.md
 └── arena4/            # Arena 4 test cases
-    └── test1.md
 ```
 
 ## Running Tests

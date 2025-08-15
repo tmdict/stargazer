@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
+import { useI18nStore } from '../stores/i18n'
+
 interface MapInfo {
   key: string
   name: string
 }
+
+const i18n = useI18nStore()
 
 const props = defineProps<{
   activeTab: string
@@ -75,23 +79,32 @@ onUnmounted(() => {
         @click="setActiveTab('characters')"
         :class="['tab-btn', { active: activeTab === 'characters' }]"
       >
-        Characters
+        {{ i18n.t('app.characters') }}
       </button>
       <button
         @click="setActiveTab('artifacts')"
         :class="['tab-btn', { active: activeTab === 'artifacts' }]"
       >
-        Artifacts
+        {{ i18n.t('app.artifacts') }}
+      </button>
+      <button
+        @click="setActiveTab('skills')"
+        :class="['tab-btn', { active: activeTab === 'skills' }]"
+      >
+        {{ i18n.t('app.skills') }}
       </button>
       <button
         @click="setActiveTab('mapEditor')"
         :class="['tab-btn', { active: activeTab === 'mapEditor' }]"
       >
-        Editor
+        {{ i18n.t('app.editor') }}
       </button>
       <div class="tab-dropdown" @mouseenter="openMapDropdown" @mouseleave="closeMapDropdown">
         <button @click="toggleMapDropdown" class="tab-btn dropdown-btn">
-          {{ availableMaps.find((m) => m.key === selectedMap)?.name || 'Arena 1' }} ▼
+          {{
+            `${i18n.t('app.arena')} ${availableMaps.find((m) => m.key === selectedMap)?.name || 'I'}`
+          }}
+          ▼
         </button>
         <div
           v-if="showMapDropdown"
@@ -105,7 +118,7 @@ onUnmounted(() => {
             @click="handleMapChange(map.key)"
             :class="['dropdown-item', { selected: selectedMap === map.key }]"
           >
-            {{ map.name }}
+            {{ `${i18n.t('app.arena')} ${map.name}` }}
           </button>
         </div>
       </div>
