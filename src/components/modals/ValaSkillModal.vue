@@ -12,7 +12,7 @@ defineEmits<{
 </script>
 
 <template>
-  <BaseModal :show="show" @close="$emit('close')">
+  <BaseModal :show="show" :showLinkButton="true" linkParam="vala" @close="$emit('close')">
     <h1>Vala - Notice Beforehand</h1>
     <p>Vala's Notice Beforehand skill targets the enemy furthest from her current position.</p>
 
