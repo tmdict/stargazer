@@ -184,7 +184,7 @@ const imaginaryHexes = computed(() => {
 
 <template>
   <div class="grid-snippet">
-    <svg :width="width" :height="height" :viewBox="`0 0 ${width} ${height}`">
+    <svg :width :height :viewBox="`0 0 ${width} ${height}`">
       <!-- Define clip paths for each hex -->
       <defs>
         <clipPath

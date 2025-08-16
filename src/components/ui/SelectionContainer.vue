@@ -31,12 +31,12 @@ const { selectedTeam, characterStore, artifactStore, handleTeamChange, handleCle
     <div class="controls-row">
       <div class="left-controls">
         <TeamToggle
-          :selectedTeam="selectedTeam"
-          :showCounts="showCounts"
-          :allyCount="allyCount"
-          :enemyCount="enemyCount"
-          :maxAllyCount="maxAllyCount"
-          :maxEnemyCount="maxEnemyCount"
+          :selectedTeam
+          :showCounts
+          :allyCount
+          :enemyCount
+          :maxAllyCount
+          :maxEnemyCount
           @team-change="handleTeamChange"
         />
         <ClearButton @click="handleClearAll" />
@@ -45,9 +45,9 @@ const { selectedTeam, characterStore, artifactStore, handleTeamChange, handleCle
     </div>
 
     <slot
-      :selectedTeam="selectedTeam"
-      :characterStore="characterStore"
-      :artifactStore="artifactStore"
+      :selectedTeam
+      :characterStore
+      :artifactStore
     />
   </div>
 </template>

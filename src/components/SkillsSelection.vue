@@ -133,8 +133,8 @@ onMounted(() => {
         <Character
           :character="{ ...character, team: selectedTeam }"
           :characterImage="characterImages[character.name]"
-          :icons="icons"
-          :isDraggable="isDraggable"
+          :icons
+          :isDraggable
           :isPlaced="isCharacterPlaced(character.id)"
           @character-click="handleCharacterClick"
         />
