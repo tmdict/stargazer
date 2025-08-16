@@ -12,7 +12,7 @@ defineEmits<{
 </script>
 
 <template>
-  <BaseModal :show="show" :showLinkButton="true" linkParam="dunlingr" @close="$emit('close')">
+  <BaseModal :show="show" linkParam="dunlingr" @close="$emit('close')">
     <h1>Dunlingr - Bell of Order</h1>
     <p>
       Dunlingr's Bell of Order skill targets an ally character on his team. Depending on which mode

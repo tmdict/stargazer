@@ -12,7 +12,7 @@ defineEmits<{
 </script>
 
 <template>
-  <BaseModal :show="show" maxWidth="1000px" @close="$emit('close')">
+  <BaseModal :show="show" maxWidth="1000px" linkParam="about" @close="$emit('close')">
     <h1>AFK Journey Arena Simulator</h1>
     <p>
       Stargazer is an AFKJ arena simulator and planning tool. It lets you experiment with different

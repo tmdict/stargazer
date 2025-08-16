@@ -125,6 +125,7 @@ const removeCharacterFromGrid = (characterId: number) => {
   flex-direction: column;
 }
 
+/* Add scroll for large screens when in side-by-side layout */
 .characters {
   display: flex;
   flex-wrap: wrap;

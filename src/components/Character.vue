@@ -327,7 +327,6 @@ const handleTouchStart = () => {
   margin-left: 28px; /* 20px icon + 8px gap */
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .character-wrapper {
     font-size: 0.9rem;

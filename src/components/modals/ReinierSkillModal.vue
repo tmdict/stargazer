@@ -28,7 +28,7 @@ const gridStyle = {
 </script>
 
 <template>
-  <BaseModal :show="show" :showLinkButton="true" linkParam="reinier" @close="$emit('close')">
+  <BaseModal :show="show" linkParam="reinier" @close="$emit('close')">
     <h1>Reinier - Dynamic Balance</h1>
     <p>
       Reinier's Dynamic Balance skill connects an adjacent ally's position with an enemy hero if
