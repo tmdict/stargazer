@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { usePathfindingStore } from '../stores/pathfinding'
-import { useGridStore } from '../stores/grid'
+import { usePathfindingStore } from '../../stores/pathfinding'
+import { useGridStore } from '../../stores/grid'
 
 import GridArrow from './GridArrow.vue'
 

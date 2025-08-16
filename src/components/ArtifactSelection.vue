@@ -5,7 +5,7 @@ import type { ArtifactType } from '../lib/types/artifact'
 import { Team } from '../lib/types/team'
 import { useSelectionState } from '../composables/useSelectionState'
 import Artifact from './Artifact.vue'
-import SelectionContainer from './SelectionContainer.vue'
+import SelectionContainer from './ui/SelectionContainer.vue'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BaseModal from './BaseModal.vue'
-import GridSnippet from '../GridSnippet.vue'
+import GridSnippet from '../grid/GridSnippet.vue'
 
 interface Props {
   show: boolean

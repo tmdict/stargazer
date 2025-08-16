@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useGridStore } from '../stores/grid'
-import { usePathfindingStore } from '../stores/pathfinding'
-import { Team } from '../lib/types/team'
+import { useGridStore } from '../../stores/grid'
+import { usePathfindingStore } from '../../stores/pathfinding'
+import { Team } from '../../lib/types/team'
 
 interface Props {
   debugGridRef?: any

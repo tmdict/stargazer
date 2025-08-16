@@ -7,9 +7,9 @@ import rowanGif from '@/assets/rowan.gif'
 import { useI18nStore } from './stores/i18n'
 import AboutModal from './components/modals/AboutModal.vue'
 import DragPreview from './components/DragPreview.vue'
-import GitHubIcon from './components/GitHubIcon.vue'
-import InfoIcon from './components/InfoIcon.vue'
-import LanguageToggle from './components/LanguageToggle.vue'
+import GitHubIcon from './components/ui/GitHubIcon.vue'
+import InfoIcon from './components/ui/InfoIcon.vue'
+import LanguageToggle from './components/ui/LanguageToggle.vue'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)

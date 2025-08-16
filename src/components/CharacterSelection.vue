@@ -5,7 +5,7 @@ import type { CharacterType } from '../lib/types/character'
 import { useSelectionState } from '../composables/useSelectionState'
 import Character from './Character.vue'
 import CharacterFilters from './CharacterFilters.vue'
-import SelectionContainer from './SelectionContainer.vue'
+import SelectionContainer from './ui/SelectionContainer.vue'
 
 const props = defineProps<{
   characters: readonly CharacterType[]

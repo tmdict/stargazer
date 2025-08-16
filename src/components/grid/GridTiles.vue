@@ -1,17 +1,17 @@
 <script setup lang="ts">
 import { computed, ref, onMounted, onUnmounted, watch, onBeforeUnmount, watchEffect } from 'vue'
 
-import type { Hex } from '../lib/hex'
-import type { Layout } from '../lib/layout'
-import { State } from '../lib/types/state'
-import { Team } from '../lib/types/team'
-import { useDragDrop } from '../composables/useDragDrop'
-import { useGridEvents } from '../composables/useGridEvents'
-import { useCharacterStore } from '../stores/character'
-import { useGridStore } from '../stores/grid'
-import { useMapEditorStore } from '../stores/mapEditor'
-import { useSkillStore } from '../stores/skill'
-import { getHexFillColor } from '../utils/stateFormatting'
+import type { Hex } from '../../lib/hex'
+import type { Layout } from '../../lib/layout'
+import { State } from '../../lib/types/state'
+import { Team } from '../../lib/types/team'
+import { useDragDrop } from '../../composables/useDragDrop'
+import { useGridEvents } from '../../composables/useGridEvents'
+import { useCharacterStore } from '../../stores/character'
+import { useGridStore } from '../../stores/grid'
+import { useMapEditorStore } from '../../stores/mapEditor'
+import { useSkillStore } from '../../stores/skill'
+import { getHexFillColor } from '../../utils/stateFormatting'
 
 interface Props {
   hexes: Hex[]

@@ -7,7 +7,7 @@ import { useI18nStore } from '../stores/i18n'
 import Character from './Character.vue'
 import DunlingrSkillModal from './modals/DunlingrSkillModal.vue'
 import ReinierSkillModal from './modals/ReinierSkillModal.vue'
-import SelectionContainer from './SelectionContainer.vue'
+import SelectionContainer from './ui/SelectionContainer.vue'
 import SilvinaSkillModal from './modals/SilvinaSkillModal.vue'
 import ValaSkillModal from './modals/ValaSkillModal.vue'
 
