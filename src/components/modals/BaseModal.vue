@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+
+import CloseIcon from '../ui/CloseIcon.vue'
+import LinkIcon from '../ui/LinkIcon.vue'
 
 interface Props {
   show: boolean
   maxWidth?: string
-  showLinkButton?: boolean
-  linkParam?: string
+  linkParam: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxWidth: '800px',
-  showLinkButton: false,
 })
 
 const emit = defineEmits<{
@@ -18,6 +19,11 @@ const emit = defineEmits<{
 }>()
 
 const modalRef = ref<HTMLElement>()
+
+// Compute the href for the link
+const linkHref = computed(() => {
+  return props.linkParam === 'about' ? '/about' : `/skill/${props.linkParam}`
+})
 
 // Handle escape key
 const handleEscape = (e: KeyboardEvent) => {
@@ -40,19 +46,6 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('keydown', handleEscape)
 })
-
-// Copy link with query parameter
-const copyLink = () => {
-  if (!props.linkParam) return
-
-  const url = new URL(window.location.href)
-  url.searchParams.set('s', props.linkParam)
-
-  navigator.clipboard.writeText(url.toString()).then(() => {
-    // Optional: Could add a toast notification here
-    console.log('Link copied to clipboard')
-  })
-}
 </script>
 
 <template>
@@ -61,36 +54,17 @@ const copyLink = () => {
       <div v-if="show" class="modal-overlay" @click="handleClickOutside">
         <div ref="modalRef" class="modal-container" :style="{ maxWidth }" @click.stop>
           <div class="modal-buttons">
-            <button
-              v-if="showLinkButton && linkParam"
+            <a
+              :href="linkHref"
               class="modal-link"
-              @click="copyLink"
-              aria-label="Copy link"
-              title="Copy shareable link"
+              :aria-label="linkParam"
+              :title="linkParam"
+              @click="emit('close')"
             >
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-              </svg>
-            </button>
+              <LinkIcon :size="16" />
+            </a>
             <button class="modal-close" @click="emit('close')" aria-label="Close">
-              <svg
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
+              <CloseIcon />
             </button>
           </div>
 
