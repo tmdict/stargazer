@@ -5,7 +5,7 @@ import type { CharacterType } from '../lib/types/character'
 import { useDragDrop } from '../composables/useDragDrop'
 import { useI18nStore } from '../stores/i18n'
 import { useTouchDetection } from '../composables/useTouchDetection'
-import Tooltip from './Tooltip.vue'
+import Tooltip from './ui/Tooltip.vue'
 
 const props = defineProps<{
   character: CharacterType
