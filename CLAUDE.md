@@ -38,6 +38,22 @@ For comprehensive project documentation, see:
 - `npm run type-check` - TypeScript validation
 - `npm run format` - Code formatting
 
+## Vue Components Best Practices
+
+- Name files consistently using PascalCase (`UserProfile.vue`)
+- ALWAYS use PascalCase for component names in source code
+- Compose names from the most general to the most specific: `SearchButtonClear.vue` not `ClearSearchButton.vue`
+- ALWAYS define props with `defineProps<{ propOne: number }>()` and TypeScript types, WITHOUT `const props =`
+- Use `const props =` ONLY if props are used in the script block
+- Destructure props to declare default values
+- ALWAYS define emits with `const emit = defineEmits<{ eventName: [argOne: type]; otherEvent: [] }>()` for type safety
+- ALWAYS use camelCase in JS for props and emits, even if they are kebab-case in templates
+- ALWAYS use kebab-case in templates for props and emits
+- ALWAYS use the prop shorthand if possible: `<MyComponent :count />` instead of `<MyComponent :count="count" />` (value has the same name as the prop)
+- ALWAYS Use the shorthand for slots: `<template #default>` instead of `<template v-slot:default>`
+- ALWAYS use explicit `<template>` tags for ALL used slots
+- ALWAYS use `defineModel<type>({ required, get, set, default })` to define allowed v-model bindings in components. This avoids defining `modelValue` prop and `update:modelValue` event manually
+
 ## Import Ordering Convention
 
 ### Order Groups (top to bottom)

@@ -8,17 +8,12 @@ const i18n = useI18nStore()
 
 interface Props {
   options: string[]
-  modelValue: string
   iconPrefix: string // e.g., 'class', 'faction', 'damage'
   icons: Readonly<Record<string, string>>
 }
 
-interface Emits {
-  (e: 'update:modelValue', value: string): void
-}
-
 const props = defineProps<Props>()
-defineEmits<Emits>()
+const modelValue = defineModel<string>({ required: true })
 
 const getIconPath = (iconPrefix: string, option: string): string => {
   const iconKey = `${iconPrefix}-${option}`
@@ -57,7 +52,7 @@ const handleMouseLeave = () => {
       <!-- Clear/None option -->
       <button
         :class="['icon-option', 'clear-option', { active: modelValue === '' }]"
-        @click="$emit('update:modelValue', '')"
+        @click="modelValue = ''"
         @mouseenter="handleMouseEnter('show-all', $event)"
         @mouseleave="handleMouseLeave"
       >
@@ -105,7 +100,7 @@ const handleMouseLeave = () => {
         v-for="option in options"
         :key="option"
         :class="['icon-option', { active: modelValue === option }]"
-        @click="$emit('update:modelValue', option)"
+        @click="modelValue = option"
         @mouseenter="handleMouseEnter(option, $event)"
         @mouseleave="handleMouseLeave"
       >

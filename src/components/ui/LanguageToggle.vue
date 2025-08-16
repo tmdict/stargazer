@@ -75,7 +75,7 @@ const i18n = useI18nStore()
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 4px 0;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
