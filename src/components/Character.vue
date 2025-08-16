@@ -350,10 +350,6 @@ const handleTouchStart = () => {
 }
 
 @media (max-width: 480px) {
-  .characters {
-    gap: 0.5rem;
-  }
-
   .character-wrapper {
     font-size: 0.85rem;
     margin-top: 0.125rem;

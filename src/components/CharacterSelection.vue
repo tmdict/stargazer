@@ -123,58 +123,54 @@ const removeCharacterFromGrid = (characterId: number) => {
 .character-selection {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
 }
 
 .characters {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
   justify-content: flex-start;
   align-content: flex-start;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
+  min-height: 612px;
+  max-height: 612px;
+  overflow-y: auto;
 }
 
-/* Add scroll for large screens when in side-by-side layout */
-@media (min-width: 1281px) {
+@media (max-width: 1896px) {
+  .characters {
+    min-height: 560px;
+    max-height: 560px;
+  }
+}
+
+@media (max-width: 1539px) {
+  .characters {
+    min-height: 512px;
+    max-height: 512px;
+  }
+}
+
+@media (max-width: 1351px) {
   .characters {
     min-height: 496px;
     max-height: 496px;
-    overflow-y: auto;
   }
 }
 
-@media (min-width: 1540px) {
-  .characters {
-    min-height: 544px;
-    max-height: 544px;
-  }
-}
-
-@media (min-width: 1892px) {
-  .characters {
-    min-height: 596px;
-    max-height: 596px;
-  }
-}
-
-/* Responsive styles */
 @media (max-width: 768px) {
   .characters {
-    gap: var(--spacing-sm);
     padding: var(--spacing-md);
+    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
-  .character-selection {
-    gap: var(--spacing-sm);
-  }
-
   .characters {
-    gap: var(--spacing-xs);
+    gap: var(--spacing-sm);
     padding: var(--spacing-sm);
+    justify-content: center;
   }
 }
 </style>
