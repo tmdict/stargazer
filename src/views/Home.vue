@@ -300,9 +300,9 @@ onUnmounted(() => {
                   :show-skills="showSkills"
                   :is-map-editor-mode="activeTab === 'mapEditor'"
                   :selected-map-editor-state="selectedMapEditorState"
-                  :showPerspective="showPerspective"
-                  :debugGridRef="debugGridRef"
-                  :verticalScaleComp="verticalScaleComp"
+                  :showPerspective
+                  :debugGridRef
+                  :verticalScaleComp
                   :defaultSvgHeight="DEFAULT_SVG_HEIGHT"
                 />
               </div>
@@ -316,11 +316,11 @@ onUnmounted(() => {
 
           <!-- Grid Display Toggle -->
           <GridControls
-            :showDebug="showDebug"
-            :showArrows="showArrows"
-            :showHexIds="showHexIds"
-            :showPerspective="showPerspective"
-            :showSkills="showSkills"
+            :showDebug
+            :showArrows
+            :showHexIds
+            :showPerspective
+            :showSkills
             @update:showDebug="showDebug = $event"
             @update:showArrows="showArrows = $event"
             @update:showHexIds="showHexIds = $event"
@@ -335,9 +335,9 @@ onUnmounted(() => {
         <!-- Tab Navigation -->
         <div class="section">
           <TabNavigation
-            :activeTab="activeTab"
-            :availableMaps="availableMaps"
-            :selectedMap="selectedMap"
+            :activeTab
+            :availableMaps
+            :selectedMap
             @tab-change="handleTabChange"
             @map-change="handleMapChange"
           >

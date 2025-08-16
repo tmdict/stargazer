@@ -92,11 +92,11 @@ const removeCharacterFromGrid = (characterId: number) => {
     <!-- Character Filters in Controls Row -->
     <template #filters>
       <CharacterFilters
-        :characters="characters"
-        :icons="icons"
-        :factionFilter="factionFilter"
-        :classFilter="classFilter"
-        :damageFilter="damageFilter"
+        :characters
+        :icons
+        :factionFilter
+        :classFilter
+        :damageFilter
         @update:factionFilter="factionFilter = $event"
         @update:classFilter="classFilter = $event"
         @update:damageFilter="damageFilter = $event"
@@ -110,8 +110,8 @@ const removeCharacterFromGrid = (characterId: number) => {
         :key="character.id"
         :character="{ ...character, team: selectedTeam }"
         :characterImage="characterImages[character.name]"
-        :icons="icons"
-        :isDraggable="isDraggable"
+        :icons
+        :isDraggable
         :isPlaced="isCharacterPlaced(character.id)"
         @character-click="handleCharacterClick"
       />
