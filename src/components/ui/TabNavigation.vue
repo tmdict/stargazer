@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
 
-import { useI18nStore } from '../stores/i18n'
+import { useI18nStore } from '../../stores/i18n'
 
 interface MapInfo {
   key: string

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { useI18nStore } from '../stores/i18n'
+import { useI18nStore } from '../../stores/i18n'
 
 const i18n = useI18nStore()
 

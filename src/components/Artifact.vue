@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import type { ArtifactType } from '../lib/types/artifact'
 import { useI18nStore } from '../stores/i18n'
 import { useTouchDetection } from '../composables/useTouchDetection'
-import Tooltip from './Tooltip.vue'
+import Tooltip from './ui/Tooltip.vue'
 
 const i18n = useI18nStore()
 

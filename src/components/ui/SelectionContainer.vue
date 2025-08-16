@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import TeamToggle from './TeamToggle.vue'
 import ClearButton from './ClearButton.vue'
-import { useSelectionState } from '../composables/useSelectionState'
+import { useSelectionState } from '../../composables/useSelectionState'
 
 interface Props {
   containerClass?: string
