@@ -251,14 +251,13 @@ const copyLink = () => {
   transform: translateY(3px);
 }
 
-/* Responsive adjustments */
 @media (max-width: 768px) {
   .modal-overlay {
     padding: 20px;
   }
 
   .modal-container {
-    max-width: 100%;
+    max-width: 90% !important;
   }
 
   .modal-content {
