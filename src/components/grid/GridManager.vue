@@ -293,7 +293,7 @@ defineExpose({
     <GridArtifacts
       :allyArtifactId="artifactStore.allyArtifactId"
       :enemyArtifactId="artifactStore.enemyArtifactId"
-      :artifactImages="artifactImages"
+      :artifactImages
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
     />
@@ -301,7 +301,7 @@ defineExpose({
     <!-- Character layer (above artifacts) -->
     <GridCharacters
       :character-images="characterImages"
-      :characters="characters"
+      :characters
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"

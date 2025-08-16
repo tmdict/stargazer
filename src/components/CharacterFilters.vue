@@ -42,21 +42,21 @@ const damageOptions = computed(() => {
     <div class="filters-row">
       <IconFilter
         iconPrefix="faction"
-        :icons="icons"
+        :icons
         :options="factionOptions"
         :modelValue="factionFilter"
         @update:modelValue="$emit('update:factionFilter', $event)"
       />
       <IconFilter
         iconPrefix="class"
-        :icons="icons"
+        :icons
         :options="classOptions"
         :modelValue="classFilter"
         @update:modelValue="$emit('update:classFilter', $event)"
       />
       <IconFilter
         iconPrefix="damage"
-        :icons="icons"
+        :icons
         :options="damageOptions"
         :modelValue="damageFilter"
         @update:modelValue="$emit('update:damageFilter', $event)"
