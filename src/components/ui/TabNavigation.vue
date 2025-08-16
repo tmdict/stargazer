@@ -253,7 +253,6 @@ onUnmounted(() => {
   color: white;
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .tab-container {
     margin: -1em;

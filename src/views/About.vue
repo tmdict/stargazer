@@ -1,18 +1,9 @@
 <script setup lang="ts">
-import BaseModal from './BaseModal.vue'
-
-interface Props {
-  show: boolean
-}
-
-defineProps<Props>()
-defineEmits<{
-  close: []
-}>()
+import PageContainer from '@/components/ui/PageContainer.vue'
 </script>
 
 <template>
-  <BaseModal :show="show" maxWidth="1000px" linkParam="about" @close="$emit('close')">
+  <PageContainer maxWidth="1000px">
     <h1>AFK Journey Arena Simulator</h1>
     <p>
       Stargazer is an AFKJ arena simulator and planning tool. It lets you experiment with different
@@ -77,5 +68,5 @@ defineEmits<{
         AFKJ database and guides.
       </li>
     </ul>
-  </BaseModal>
+  </PageContainer>
 </template>

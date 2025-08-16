@@ -1,15 +1,16 @@
 <script setup lang="ts">
-import { computed, ref, onMounted } from 'vue'
+import { computed, ref } from 'vue'
 
-import type { CharacterType } from '../lib/types/character'
 import { useSelectionState } from '../composables/useSelectionState'
+import type { CharacterType } from '../lib/types/character'
 import { useI18nStore } from '../stores/i18n'
 import Character from './Character.vue'
 import DunlingrSkillModal from './modals/DunlingrSkillModal.vue'
 import ReinierSkillModal from './modals/ReinierSkillModal.vue'
-import SelectionContainer from './ui/SelectionContainer.vue'
 import SilvinaSkillModal from './modals/SilvinaSkillModal.vue'
 import ValaSkillModal from './modals/ValaSkillModal.vue'
+import InfoIcon from './ui/InfoIcon.vue'
+import SelectionContainer from './ui/SelectionContainer.vue'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -92,30 +93,6 @@ const openDetailsModal = (character: CharacterType) => {
       break
   }
 }
-
-// Check URL query parameters on mount
-onMounted(() => {
-  const urlParams = new URLSearchParams(window.location.search)
-  const skillParam = urlParams.get('s')
-
-  if (skillParam) {
-    const normalizedParam = skillParam.toLowerCase()
-    switch (normalizedParam) {
-      case 'silvina':
-        showSilvinaModal.value = true
-        break
-      case 'vala':
-        showValaModal.value = true
-        break
-      case 'reinier':
-        showReinierModal.value = true
-        break
-      case 'dunlingr':
-        showDunlingrModal.value = true
-        break
-    }
-  }
-})
 </script>
 
 <template>
@@ -143,17 +120,7 @@ onMounted(() => {
           class="details-button"
           title="View skill details"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 16 16"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <circle cx="8" cy="8" r="7" stroke="white" stroke-width="1.5" />
-            <circle cx="8" cy="5" r="0.5" fill="white" />
-            <path d="M8 7V12" stroke="white" stroke-width="1.5" stroke-linecap="round" />
-          </svg>
+          <InfoIcon :size="12" />
           {{ i18n.t('app.details') }}
         </button>
       </div>
@@ -213,11 +180,6 @@ onMounted(() => {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
 }
 
-.details-button svg {
-  width: 16px;
-  height: 16px;
-}
-
 /* Add scroll for large screens when in side-by-side layout */
 @media (min-width: 1281px) {
   .characters {
@@ -241,7 +203,6 @@ onMounted(() => {
   }
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .characters {
     gap: var(--spacing-lg);

@@ -1,7 +1,17 @@
+<script setup lang="ts">
+interface Props {
+  size?: number
+}
+
+withDefaults(defineProps<Props>(), {
+  size: 24,
+})
+</script>
+
 <template>
   <svg
-    width="20"
-    height="20"
+    :width="size"
+    :height="size"
     viewBox="2 2 20 20"
     fill="currentColor"
     xmlns="http://www.w3.org/2000/svg"

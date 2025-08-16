@@ -87,7 +87,6 @@ const sortedArtifacts = computed(() => {
   padding-top: 0.4rem;
 }
 
-/* Responsive styles */
 @media (max-width: 768px) {
   .artifacts {
     gap: var(--spacing-lg);

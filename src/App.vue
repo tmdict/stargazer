@@ -64,7 +64,7 @@ onUnmounted(() => {
             class="icon-link icon-button"
             :title="i18n.t('app.about')"
           >
-            <InfoIcon />
+            <InfoIcon :size="20" />
           </button>
         </li>
       </ul>
