@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { useI18nStore } from '@/stores/i18n'
-import CloseIcon from './CloseIcon.vue'
+import IconClose from './IconClose.vue'
 
 interface Props {
   maxWidth?: string
@@ -21,7 +21,7 @@ i18n.initialize()
     <div class="page-container" :style="{ maxWidth }">
       <div class="page-buttons">
         <a href="/" class="page-close" :aria-label="i18n.t('app.home')" :title="i18n.t('app.home')">
-          <CloseIcon />
+          <IconClose />
         </a>
       </div>
 

@@ -7,8 +7,8 @@ import rowanGif from '@/assets/rowan.gif'
 import { useI18nStore } from './stores/i18n'
 import AboutModal from './components/modals/AboutModal.vue'
 import DragPreview from './components/DragPreview.vue'
-import GitHubIcon from './components/ui/GitHubIcon.vue'
-import InfoIcon from './components/ui/InfoIcon.vue'
+import IconGitHub from './components/ui/IconGitHub.vue'
+import IconInfo from './components/ui/IconInfo.vue'
 import LanguageToggle from './components/ui/LanguageToggle.vue'
 
 const isLogoHovered = ref(false)
@@ -55,7 +55,7 @@ onUnmounted(() => {
             class="icon-link"
             :title="i18n.t('app.code')"
           >
-            <GitHubIcon />
+            <IconGitHub />
           </a>
         </li>
         <li>
@@ -64,7 +64,7 @@ onUnmounted(() => {
             class="icon-link icon-button"
             :title="i18n.t('app.about')"
           >
-            <InfoIcon :size="20" />
+            <IconInfo />
           </button>
         </li>
       </ul>

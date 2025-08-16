@@ -2,9 +2,9 @@
 import { ref } from 'vue'
 
 import { useI18nStore } from '../../stores/i18n'
-import CopyIcon from '../ui/CopyIcon.vue'
-import DownloadIcon from '../ui/DownloadIcon.vue'
-import LinkIcon from '../ui/LinkIcon.vue'
+import IconCopy from '../ui/IconCopy.vue'
+import IconDownload from '../ui/IconDownload.vue'
+import IconLink from '../ui/IconLink.vue'
 
 const i18n = useI18nStore()
 
@@ -115,15 +115,15 @@ const handleDownload = () => {
 
     <!-- Action Buttons -->
     <button @click="handleCopyLink" class="action-btn">
-      <LinkIcon :size="14" class="btn-icon" />
+      <IconLink :size="14" class="btn-icon" />
       {{ i18n.t('app.link') }}
     </button>
     <button @click="handleCopyImage" class="action-btn">
-      <CopyIcon :size="14" class="btn-icon" />
+      <IconCopy :size="14" class="btn-icon" />
       {{ i18n.t('app.copy') }}
     </button>
     <button @click="handleDownload" class="action-btn">
-      <DownloadIcon :size="14" class="btn-icon" />
+      <IconDownload :size="14" class="btn-icon" />
       {{ i18n.t('app.download') }}
     </button>
   </div>

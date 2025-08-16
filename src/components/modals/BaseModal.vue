@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 
-import CloseIcon from '../ui/CloseIcon.vue'
-import LinkIcon from '../ui/LinkIcon.vue'
+import IconClose from '../ui/IconClose.vue'
+import IconLink from '../ui/IconLink.vue'
 
 interface Props {
   show: boolean
@@ -61,10 +61,10 @@ onUnmounted(() => {
               :title="linkParam"
               @click="emit('close')"
             >
-              <LinkIcon :size="16" />
+              <IconLink :size="16" />
             </a>
             <button class="modal-close" @click="emit('close')" aria-label="Close">
-              <CloseIcon />
+              <IconClose />
             </button>
           </div>
 
