@@ -9,7 +9,7 @@ import DunlingrSkillModal from './modals/DunlingrSkillModal.vue'
 import ReinierSkillModal from './modals/ReinierSkillModal.vue'
 import SilvinaSkillModal from './modals/SilvinaSkillModal.vue'
 import ValaSkillModal from './modals/ValaSkillModal.vue'
-import InfoIcon from './ui/InfoIcon.vue'
+import IconInfo from './ui/IconInfo.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 
 const props = defineProps<{
@@ -120,7 +120,7 @@ const openDetailsModal = (character: CharacterType) => {
           class="details-button"
           title="View skill details"
         >
-          <InfoIcon :size="12" />
+          <IconInfo :size="14" />
           {{ i18n.t('app.details') }}
         </button>
       </div>
