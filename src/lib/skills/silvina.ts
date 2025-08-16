@@ -183,7 +183,7 @@ export const silvinaSkill: Skill = {
   name: 'First Strike',
   description:
     'Targets the character on the opposing team on a symmetrical tile to Silvina. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
-  targetingColorModifier: '#68ab21', // Green color for Silvina's targeting arrow
+  targetingColorModifier: '#68ab21', // Green color for targeting arrow
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context

@@ -5,6 +5,7 @@ import type { CharacterType } from '../lib/types/character'
 import { useSelectionState } from '../composables/useSelectionState'
 import { useI18nStore } from '../stores/i18n'
 import Character from './Character.vue'
+import DunlingrSkillModal from './modals/DunlingrSkillModal.vue'
 import ReinierSkillModal from './modals/ReinierSkillModal.vue'
 import SelectionContainer from './SelectionContainer.vue'
 import SilvinaSkillModal from './modals/SilvinaSkillModal.vue'
@@ -19,7 +20,7 @@ const props = defineProps<{
 
 // List of characters that have skill implementations
 // Single source of truth - add more character names here as skills are implemented
-const SKILL_CHARACTERS = ['silvina', 'vala', 'reinier'] as const
+const SKILL_CHARACTERS = ['silvina', 'vala', 'reinier', 'dunlingr'] as const
 
 const { selectedTeam, characterStore } = useSelectionState()
 const i18n = useI18nStore()
@@ -73,6 +74,7 @@ const removeCharacterFromGrid = (characterId: number) => {
 const showSilvinaModal = ref(false)
 const showValaModal = ref(false)
 const showReinierModal = ref(false)
+const showDunlingrModal = ref(false)
 
 const openDetailsModal = (character: CharacterType) => {
   switch (character.name) {
@@ -84,6 +86,9 @@ const openDetailsModal = (character: CharacterType) => {
       break
     case 'reinier':
       showReinierModal.value = true
+      break
+    case 'dunlingr':
+      showDunlingrModal.value = true
       break
   }
 }
@@ -104,6 +109,9 @@ onMounted(() => {
         break
       case 'reinier':
         showReinierModal.value = true
+        break
+      case 'dunlingr':
+        showDunlingrModal.value = true
         break
     }
   }
@@ -155,6 +163,7 @@ onMounted(() => {
     <SilvinaSkillModal :show="showSilvinaModal" @close="showSilvinaModal = false" />
     <ValaSkillModal :show="showValaModal" @close="showValaModal = false" />
     <ReinierSkillModal :show="showReinierModal" @close="showReinierModal = false" />
+    <DunlingrSkillModal :show="showDunlingrModal" @close="showDunlingrModal = false" />
   </SelectionContainer>
 </template>
 

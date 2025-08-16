@@ -1,5 +1,6 @@
 import type { Grid } from './grid'
 import type { Team } from './types/team'
+import { dunlingrSkill } from './skills/dunlingr'
 import { elijahLailahSkill } from './skills/elijah-lailah'
 import { phraestoSkill } from './skills/phraesto'
 import { reinierSkill } from './skills/reinier'
@@ -47,6 +48,7 @@ const skillRegistry = new Map<number, Skill>([
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
   [valaSkill.characterId, valaSkill],
+  [dunlingrSkill.characterId, dunlingrSkill],
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
 ])

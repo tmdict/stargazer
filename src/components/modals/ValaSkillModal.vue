@@ -14,7 +14,11 @@ defineEmits<{
 <template>
   <BaseModal :show="show" :showLinkButton="true" linkParam="vala" @close="$emit('close')">
     <h1>Vala - Notice Beforehand</h1>
-    <p>Vala's Notice Beforehand skill targets the enemy furthest from her current position.</p>
+    <p>
+      Vala's Notice Beforehand skill targets the enemy furthest from her current position at the
+      start of the battle. During battle Vala will attacks the Noticed enemy in priority, and absorb
+      energy for each hit.
+    </p>
 
     <h2>How It Works</h2>
     <p>
