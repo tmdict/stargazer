@@ -130,7 +130,8 @@ const removeCharacterFromGrid = (characterId: number) => {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-md);
-  justify-content: space-evenly;
+  justify-content: flex-start;
+  align-content: flex-start;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
 }
@@ -139,7 +140,7 @@ const removeCharacterFromGrid = (characterId: number) => {
 @media (min-width: 1281px) {
   .characters {
     min-height: 496px;
-    height: 496px;
+    max-height: 496px;
     overflow-y: auto;
   }
 }
@@ -147,14 +148,14 @@ const removeCharacterFromGrid = (characterId: number) => {
 @media (min-width: 1540px) {
   .characters {
     min-height: 544px;
-    height: 544px;
+    max-height: 544px;
   }
 }
 
 @media (min-width: 1892px) {
   .characters {
     min-height: 596px;
-    height: 596px;
+    max-height: 596px;
   }
 }
 
