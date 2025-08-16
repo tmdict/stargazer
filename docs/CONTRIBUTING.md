@@ -69,7 +69,7 @@ Edit `src/lib/grid.ts` - ensure transaction safety for complex operations.
 ### Changing Styles
 
 - Component styles: `<style scoped>` blocks
-- Global styles: `src/assets/styles/`
+- Global styles: `src/styles/`
 - State colors: `src/utils/stateFormatting.ts`
 
 ## Troubleshooting
