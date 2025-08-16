@@ -74,6 +74,6 @@ const gridStyle = {
       Ally (targeting enemy) walks clockwise from top-right, while Enemy (targeting ally) walks
       counter-clockwise from bottom-left (180° rotation).
     </p>
-    <p>(Credit: rkkñ for providing the exact algorithm for Silvina's targeting mechanics)</p>
+    <p>(Credit: rkkñ for documenting Silvina's targeting mechanics)</p>
   </BaseModal>
 </template>

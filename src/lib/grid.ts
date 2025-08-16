@@ -71,6 +71,10 @@ export class Grid {
       this.pendingCacheClears = true
     } else {
       clearPathfindingCache()
+      // Trigger skill updates immediately when not batching
+      if (this.skillManager) {
+        this.skillManager.updateActiveSkills(this)
+      }
     }
   }
 
