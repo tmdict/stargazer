@@ -44,11 +44,7 @@ const { selectedTeam, characterStore, artifactStore, handleTeamChange, handleCle
       </div>
     </div>
 
-    <slot
-      :selectedTeam
-      :characterStore
-      :artifactStore
-    />
+    <slot :selectedTeam :characterStore :artifactStore />
   </div>
 </template>
 

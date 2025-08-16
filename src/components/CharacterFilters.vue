@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import IconFilter from './ui/IconFilter.vue'
 import type { CharacterType } from '../lib/types/character'
 
