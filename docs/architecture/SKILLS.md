@@ -169,6 +169,13 @@ Highlight multiple tiles based on game state:
 - Team-aware tie-breaking
 - Implementation: `/src/lib/skills/vala.ts`
 
+**Dunlingr** (ID: 57) - Bell of Order:
+
+- Yellow targeting arrow
+- Targets furthest same-team character (excluding self)
+- Team-aware tie-breaking
+- Implementation: `/src/lib/skills/dunlingr.ts`
+
 ### Tile Effect Skills
 
 **Reinier** (ID: 31) - Dynamic Balance:
@@ -226,6 +233,7 @@ const skillRegistry = new Map<number, Skill>([
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
   [valaSkill.characterId, valaSkill],
+  [dunlingrSkill.characterId, dunlingrSkill],
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
   // Add new skills here

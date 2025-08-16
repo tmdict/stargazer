@@ -44,10 +44,10 @@ onUnmounted(() => {
 // Copy link with query parameter
 const copyLink = () => {
   if (!props.linkParam) return
-  
+
   const url = new URL(window.location.href)
   url.searchParams.set('s', props.linkParam)
-  
+
   navigator.clipboard.writeText(url.toString()).then(() => {
     // Optional: Could add a toast notification here
     console.log('Link copied to clipboard')
@@ -61,7 +61,7 @@ const copyLink = () => {
       <div v-if="show" class="modal-overlay" @click="handleClickOutside">
         <div ref="modalRef" class="modal-container" :style="{ maxWidth }" @click.stop>
           <div class="modal-buttons">
-            <button 
+            <button
               v-if="showLinkButton && linkParam"
               class="modal-link"
               @click="copyLink"

@@ -32,8 +32,8 @@ const gridStyle = {
     <h1>Reinier - Dynamic Balance</h1>
     <p>
       Reinier's Dynamic Balance skill connects an adjacent ally's position with an enemy hero if
-      they're in a symmetrical position. This unique targeting system affects both teams
-      simultaneously.
+      they're in a symmetrical position. At the start of the battle the connected ally and enemy's
+      positions are swapped, the ally receives a buff and the enemy receives a debuff.
     </p>
 
     <h2>How It Works</h2>
