@@ -40,8 +40,11 @@ src/
 ├── lib/            # Domain logic (framework-agnostic)
 ├── stores/         # State management (Pinia)
 ├── components/     # Vue components
+├── content/        # Content components (i18n)
+├── composables/    # Vue composition functions
 ├── data/           # Character/artifact data
 ├── assets/         # Images and styles
+├── styles/         # Global styles
 └── utils/          # Helper functions
 ```
 

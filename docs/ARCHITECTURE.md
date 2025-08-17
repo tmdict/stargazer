@@ -98,6 +98,10 @@ Thin reactive wrappers around domain objects using Pinia. Bridges framework-agno
 
 Vue components with single responsibilities. Multi-layer rendering solves SVG limitations.
 
+### Content Layer (`/src/content/`)
+
+Localized content components separated from UI logic. Single source of truth for all translatable content, with locale-specific files (`.en.vue`, `.zh.vue`) and shared data files (`.data.ts`).
+
 **Component Architecture:**
 
 ```
