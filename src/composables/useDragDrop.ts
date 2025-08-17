@@ -14,8 +14,12 @@ import { useGridStore } from '../stores/grid'
 const CHARACTER_MIME_TYPE = 'application/character'
 
 // Pre-load transparent drag image to avoid timing issues and eliminate browser drag visuals
-const transparentDragImage = new Image()
-transparentDragImage.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs='
+let transparentDragImage: HTMLImageElement | null = null
+if (!import.meta.env.SSR && typeof Image !== 'undefined') {
+  transparentDragImage = new Image()
+  transparentDragImage.src =
+    'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs='
+}
 
 // Global drag state - shared across all components
 const isDragging = ref(false)
@@ -59,7 +63,9 @@ export const useDragDrop = () => {
     event.dataTransfer.effectAllowed = 'copy'
 
     // Hide the default drag image using pre-loaded transparent image
-    event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
+    if (transparentDragImage) {
+      event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
+    }
 
     // Add visual feedback to original element
     if (event.target instanceof HTMLElement) {

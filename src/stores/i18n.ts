@@ -26,18 +26,32 @@ export const useI18nStore = defineStore('i18n', () => {
   // Actions (defined early for use in initialization)
   const setLocale = (locale: Locale) => {
     currentLocale.value = locale
-    document.documentElement.lang = locale
 
-    // Try to persist to localStorage, but don't fail if it's not available
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, locale)
-    } catch (e) {
-      console.warn('Could not save locale preference to localStorage:', e)
+    // Only access DOM/localStorage on client
+    if (!import.meta.env.SSR) {
+      document.documentElement.lang = locale
+
+      // Try to persist to localStorage, but don't fail if it's not available
+      try {
+        localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+      } catch (e) {
+        console.warn('Could not save locale preference to localStorage:', e)
+      }
     }
+  }
+
+  // For SSG: Allow setting locale directly without side effects
+  const setLocaleForSSG = (locale: Locale) => {
+    currentLocale.value = locale
   }
 
   // Initialize locale from localStorage, then query param
   const initializeLocale = () => {
+    // Skip during SSG
+    if (import.meta.env.SSR) {
+      return
+    }
+
     // Load saved locale from localStorage with error handling
     try {
       const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
@@ -63,8 +77,10 @@ export const useI18nStore = defineStore('i18n', () => {
     }
   }
 
-  // Initialize locale on store creation
-  initializeLocale()
+  // Initialize locale on store creation (only on client)
+  if (!import.meta.env.SSR) {
+    initializeLocale()
+  }
 
   // Getters
   const t = computed(() => {
@@ -128,6 +144,11 @@ export const useI18nStore = defineStore('i18n', () => {
     try {
       translations.value = loadAllLocales()
       loaded.value = true
+
+      // Only initialize locale on client
+      if (!import.meta.env.SSR) {
+        initializeLocale()
+      }
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load translations'
       console.error('Failed to initialize i18n:', e)
@@ -152,6 +173,7 @@ export const useI18nStore = defineStore('i18n', () => {
     // Actions
     initialize,
     setLocale,
+    setLocaleForSSG,
     toggleLocale,
   }
 })

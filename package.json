@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "run-p type-check \"build-only {@}\" --",
+    "build": "run-p type-check build:ssg",
+    "build:ssg": "vite-ssg build",
+    "build:spa": "vite build",
     "preview": "vite preview",
     "build-only": "vite build",
     "type-check": "vue-tsc --build",
@@ -31,6 +33,7 @@
     "vite": "^7.0.0",
     "vite-imagetools": "^7.1.0",
     "vite-plugin-vue-devtools": "^7.7.7",
+    "vite-ssg": "^28.1.0",
     "vue-tsc": "^2.2.10"
   }
 }
