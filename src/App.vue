@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
 
 import rowanSvg from '@/assets/rowan.svg'
 import rowanGif from '@/assets/rowan.gif'

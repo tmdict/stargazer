@@ -13,8 +13,10 @@ withDefaults(defineProps<Props>(), {
 
 const i18n = useI18nStore()
 
-// Initialize i18n if not already initialized
-i18n.initialize()
+// Only initialize on client - during SSG, use defaults
+if (!import.meta.env.SSR) {
+  i18n.initialize()
+}
 </script>
 
 <template>
