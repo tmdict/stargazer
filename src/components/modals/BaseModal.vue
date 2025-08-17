@@ -26,7 +26,7 @@ const i18n = useI18nStore()
 // Compute the href for the link with locale
 const linkHref = computed(() => {
   const locale = i18n.currentLocale
-  return props.linkParam === 'about' ? `/${locale}/about` : `/${locale}/skill/${props.linkParam}`
+  return props.linkParam === 'about' ? `/${locale}/about` : `/${locale}/skill/${props.linkParam.toLowerCase()}`
 })
 
 // Handle escape key
