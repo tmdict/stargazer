@@ -81,6 +81,10 @@ const handleClearMap = () => {
 <style scoped>
 .map-editor {
   padding: 1rem;
+  gap: var(--spacing-lg);
+  min-height: 656px;
+  max-height: 656px;
+  overflow-y: auto;
 }
 
 .editor-description {

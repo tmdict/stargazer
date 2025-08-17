@@ -1,6 +1,6 @@
 <template>
   <article>
-    <h1>Silvina - First Strike</h1>
+    <h1>Silvina · First Strike</h1>
     <p>
       Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches
       an attack when a battle starts.

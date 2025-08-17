@@ -105,7 +105,7 @@ const openDetailsModal = (character: CharacterType) => {
           title="View skill details"
         >
           <IconInfo :size="14" />
-          {{ i18n.t('app.details') }}
+          {{ i18n.t('app.info') }}
         </button>
       </div>
     </div>
@@ -124,6 +124,9 @@ const openDetailsModal = (character: CharacterType) => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  min-height: 656px;
+  max-height: 656px;
+  overflow-y: auto;
 }
 
 .characters {
@@ -147,6 +150,7 @@ const openDetailsModal = (character: CharacterType) => {
   align-items: center;
   justify-content: center;
   gap: 4px;
+  width: 75px;
   padding: 4px 8px;
   background: var(--color-primary);
   color: white;
@@ -163,29 +167,6 @@ const openDetailsModal = (character: CharacterType) => {
   border-color: var(--color-primary-hover);
   transform: translateY(-1px);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Add scroll for large screens when in side-by-side layout */
-@media (min-width: 1281px) {
-  .characters {
-    min-height: 496px;
-    height: 496px;
-    overflow-y: auto;
-  }
-}
-
-@media (min-width: 1540px) {
-  .characters {
-    min-height: 544px;
-    height: 544px;
-  }
-}
-
-@media (min-width: 1892px) {
-  .characters {
-    min-height: 596px;
-    height: 596px;
-  }
 }
 
 @media (max-width: 768px) {
