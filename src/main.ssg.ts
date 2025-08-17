@@ -4,6 +4,7 @@ import App from './App.vue'
 import type { RouteRecordRaw } from 'vue-router'
 import { loadCharacterImages } from './utils/dataLoader'
 import { useGameDataStore } from './stores/gameData'
+import { useI18nStore } from './stores/i18n'
 
 import './styles/base.css'
 import './styles/variables.css'
@@ -35,25 +36,33 @@ const routes: RouteRecordRaw[] = [
     path: '/:locale(en|zh)/about',
     name: 'about',
     component: () => import('./views/About.vue'),
-    props: (route) => ({ locale: route.params.locale }),
+    // No props needed - locale is handled by router guard
   },
   {
     path: '/:locale(en|zh)/skill/:name',
     name: 'skill',
     component: () => import('./views/Skill.vue'),
-    props: (route) => ({
-      locale: route.params.locale as string,
-      name: route.params.name as string,
-    }),
+    // Passes 'name' as prop for better testability (Skill.vue can also fallback to route.params)
+    props: true,
   },
 ]
 
-export const createApp = ViteSSG(App, { routes }, async ({ app, initialState }) => {
+export const createApp = ViteSSG(App, { routes }, async ({ app, router, initialState }) => {
   const pinia = createPinia()
   app.use(pinia)
 
   if (import.meta.env.SSR) {
-    // During SSG: Pre-load only what's needed for content pages
+    // During SSG: Set locale based on route before rendering each page
+    router.beforeEach((to) => {
+      const match = to.path.match(/^\/(en|zh)\//)
+      if (match) {
+        const i18n = useI18nStore(pinia)
+        // Use setLocaleForSSG to avoid browser API calls during SSG
+        i18n.setLocaleForSSG(match[1] as 'en' | 'zh')
+      }
+    })
+
+    // Pre-load only what's needed for content pages
     // Load character images for GridSnippet component
     const characterImages = loadCharacterImages()
 
