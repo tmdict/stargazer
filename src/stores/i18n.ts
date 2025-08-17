@@ -24,6 +24,15 @@ export const useI18nStore = defineStore('i18n', () => {
   const error = ref<string | null>(null)
 
   // Actions (defined early for use in initialization)
+  /**
+   * Sets the application locale.
+   * 
+   * This method is SSR-safe and automatically detects the environment:
+   * - During SSG/SSR: Only updates the reactive locale value
+   * - On client: Also updates document.lang and persists to localStorage
+   * 
+   * @param locale - The locale to set ('en' or 'zh')
+   */
   const setLocale = (locale: Locale) => {
     currentLocale.value = locale
 
@@ -38,21 +47,6 @@ export const useI18nStore = defineStore('i18n', () => {
         console.warn('Could not save locale preference to localStorage:', e)
       }
     }
-  }
-
-  /**
-   * For SSG: Sets the locale during SSG pre-rendering without side effects.
-   *
-   * During static site generation, we need to set the locale based on the route
-   * (e.g., /en/about or /zh/skill/<character>) but we can't access browser APIs like
-   * localStorage or document. This method allows the SSG process to set the
-   * correct locale for rendering content without attempting any browser operations.
-   *
-   * @param locale - The locale to set during SSG
-   */
-
-  const setLocaleForSSG = (locale: Locale) => {
-    currentLocale.value = locale
   }
 
   // Initialize locale from localStorage, then query param
@@ -183,7 +177,6 @@ export const useI18nStore = defineStore('i18n', () => {
     // Actions
     initialize,
     setLocale,
-    setLocaleForSSG,
     toggleLocale,
   }
 })
