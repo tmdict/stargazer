@@ -123,6 +123,9 @@ const removeCharacterFromGrid = (characterId: number) => {
 .character-selection {
   display: flex;
   flex-direction: column;
+  min-height: 656px;
+  max-height: 656px;
+  overflow-y: auto;
 }
 
 /* Add scroll for large screens when in side-by-side layout */
@@ -134,30 +137,6 @@ const removeCharacterFromGrid = (characterId: number) => {
   align-content: flex-start;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
-  min-height: 612px;
-  max-height: 612px;
-  overflow-y: auto;
-}
-
-@media (max-width: 1896px) {
-  .characters {
-    min-height: 560px;
-    max-height: 560px;
-  }
-}
-
-@media (max-width: 1539px) {
-  .characters {
-    min-height: 512px;
-    max-height: 512px;
-  }
-}
-
-@media (max-width: 1351px) {
-  .characters {
-    min-height: 496px;
-    max-height: 496px;
-  }
 }
 
 @media (max-width: 768px) {

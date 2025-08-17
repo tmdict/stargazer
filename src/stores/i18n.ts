@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed, watch } from 'vue'
+import { ref, computed } from 'vue'
 
 import type { Locale, LocaleDictionary } from '../lib/types/i18n'
 import { loadAllLocales } from '../utils/dataLoader'
@@ -9,6 +9,12 @@ export type { Locale, LocaleData, LocaleDictionary } from '../lib/types/i18n'
 
 // Constants
 const LOCALE_STORAGE_KEY = 'stargazer.locale' as const
+const VALID_LOCALES: readonly Locale[] = ['en', 'zh'] as const
+
+// Helper function to validate locale
+const isValidLocale = (value: unknown): value is Locale => {
+  return VALID_LOCALES.includes(value as Locale)
+}
 
 export const useI18nStore = defineStore('i18n', () => {
   // State
@@ -17,18 +23,48 @@ export const useI18nStore = defineStore('i18n', () => {
   const loaded = ref(false)
   const error = ref<string | null>(null)
 
-  // Load saved locale from localStorage with error handling
-  try {
-    const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
-    if (savedLocale === 'zh' || savedLocale === 'en') {
-      currentLocale.value = savedLocale
+  // Actions (defined early for use in initialization)
+  const setLocale = (locale: Locale) => {
+    currentLocale.value = locale
+    document.documentElement.lang = locale
+
+    // Try to persist to localStorage, but don't fail if it's not available
+    try {
+      localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+    } catch (e) {
+      console.warn('Could not save locale preference to localStorage:', e)
     }
-  } catch (e) {
-    // If localStorage is not available (private browsing, disabled, etc.),
-    // fallback to default 'en'
-    console.warn('Could not access localStorage for locale preference:', e)
-    currentLocale.value = 'en'
   }
+
+  // Initialize locale from localStorage, then query param
+  const initializeLocale = () => {
+    // Load saved locale from localStorage with error handling
+    try {
+      const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
+      if (isValidLocale(savedLocale)) {
+        currentLocale.value = savedLocale
+      }
+    } catch (e) {
+      // If localStorage is not available (private browsing, disabled, etc.),
+      // fallback to default 'en'
+      console.warn('Could not access localStorage for locale preference:', e)
+      currentLocale.value = 'en'
+    }
+
+    // Check for locale query parameter and override if valid
+    const urlParams = new URLSearchParams(window.location.search)
+    const localeParam = urlParams.get('l')
+    if (isValidLocale(localeParam)) {
+      // Use setLocale to update both currentLocale and localStorage
+      setLocale(localeParam)
+    } else {
+      // Set the HTML lang attribute for the initial locale
+      document.documentElement.lang = currentLocale.value
+    }
+  }
+
+  // Initialize locale on store creation
+  initializeLocale()
 
   // Getters
   const t = computed(() => {
@@ -92,37 +128,16 @@ export const useI18nStore = defineStore('i18n', () => {
     try {
       translations.value = loadAllLocales()
       loaded.value = true
-
-      // Set HTML lang attribute
-      document.documentElement.lang = currentLocale.value
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load translations'
       console.error('Failed to initialize i18n:', e)
     }
   }
 
-  const setLocale = (locale: Locale) => {
-    currentLocale.value = locale
-
-    // Try to persist to localStorage, but don't fail if it's not available
-    try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, locale)
-    } catch (e) {
-      console.warn('Could not save locale preference to localStorage:', e)
-    }
-
-    document.documentElement.lang = locale
-  }
-
   const toggleLocale = () => {
     const newLocale = currentLocale.value === 'en' ? 'zh' : 'en'
     setLocale(newLocale)
   }
-
-  // Watch for locale changes to update HTML lang attribute
-  watch(currentLocale, (newLocale) => {
-    document.documentElement.lang = newLocale
-  })
 
   return {
     // State (readonly through refs)

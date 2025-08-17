@@ -394,8 +394,8 @@ onUnmounted(() => {
   width: 100%;
 }
 
-/* Side-by-side layout for screens > 1280px */
-@media (min-width: 1281px) {
+/* Side-by-side layout for screens > 1440px */
+@media (min-width: 1400px) {
   .sections-container {
     flex-direction: row;
     align-items: flex-start;

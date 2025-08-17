@@ -1,6 +1,6 @@
 <template>
   <article>
-    <h1>Reinier - Dynamic Balance</h1>
+    <h1>Reinier · Dynamic Balance</h1>
     <p>
       Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a
       symmetrical position at the start of the battle. After the battle starts, the connected ally

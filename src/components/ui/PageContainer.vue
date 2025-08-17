@@ -19,7 +19,11 @@ i18n.initialize()
 
 <template>
   <div class="overlay">
-    <div class="container" :style="{ maxWidth }">
+    <!-- Backdrop link to home -->
+    <a href="/" class="backdrop-link" :aria-label="i18n.t('app.home')"></a>
+
+    <!-- Content container (stops event propagation) -->
+    <div class="container" :style="{ maxWidth }" @click.stop>
       <div class="buttons">
         <a href="/" class="button" :aria-label="i18n.t('app.home')" :title="i18n.t('app.home')">
           <IconClose />

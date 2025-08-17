@@ -1,6 +1,6 @@
 <template>
   <article>
-    <h1>Dunlingr - Bell of Order</h1>
+    <h1>Dunlingr · Bell of Order</h1>
     <p>
       Dunlingr's Bell of Order skill targets the ally furthest from his current position at the
       start of the battle. Depending on which mode the Bell is set to, the following effects will

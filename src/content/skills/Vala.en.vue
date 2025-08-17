@@ -1,6 +1,6 @@
 <template>
   <article>
-    <h1>Vala - Notice Beforehand</h1>
+    <h1>Vala · Notice Beforehand</h1>
     <p>
       Vala's Notice Beforehand skill targets the enemy furthest from her current position at the
       start of the battle. During battle Vala will attacks the Noticed enemy in priority, and absorb
