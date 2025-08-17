@@ -40,7 +40,17 @@ export const useI18nStore = defineStore('i18n', () => {
     }
   }
 
-  // For SSG: Allow setting locale directly without side effects
+  /**
+   * For SSG: Sets the locale during SSG pre-rendering without side effects.
+   *
+   * During static site generation, we need to set the locale based on the route
+   * (e.g., /en/about or /zh/skill/<character>) but we can't access browser APIs like
+   * localStorage or document. This method allows the SSG process to set the
+   * correct locale for rendering content without attempting any browser operations.
+   *
+   * @param locale - The locale to set during SSG
+   */
+
   const setLocaleForSSG = (locale: Locale) => {
     currentLocale.value = locale
   }
