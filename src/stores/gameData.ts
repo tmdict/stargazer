@@ -42,7 +42,12 @@ export const useGameDataStore = defineStore('gameData', () => {
     }
   }
 
-  // Allow setting character images directly for SSG
+  /**
+   * Sets character images directly.
+   * Used by SSG to inject pre-loaded images during hydration.
+   * This allows content pages to display character images without
+   * loading the full game data.
+   */
   const setCharacterImages = (images: Record<string, string>) => {
     characterImages.value = images
   }

@@ -57,8 +57,8 @@ export const createApp = ViteSSG(App, { routes }, async ({ app, router, initialS
       const match = to.path.match(/^\/(en|zh)\//)
       if (match) {
         const i18n = useI18nStore(pinia)
-        // Use setLocaleForSSG to avoid browser API calls during SSG
-        i18n.setLocaleForSSG(match[1] as 'en' | 'zh')
+        // setLocale is SSR-safe and will skip browser APIs during SSG
+        i18n.setLocale(match[1] as 'en' | 'zh')
       }
     })
 
