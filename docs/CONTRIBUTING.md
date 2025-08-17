@@ -39,11 +39,15 @@ src/
 │   └── arena/      # Map configurations
 ├── stores/         # Pinia state management
 ├── components/     # Vue UI components
+├── content/        # Content components (i18n)
+│   ├── skills/     # Skill descriptions (en/zh)
+│   └── About.*.vue # About page content
 ├── composables/    # Vue composition functions
 ├── utils/          # Helper utilities
 ├── views/          # Page-level components
 ├── data/           # Static JSON data
-└── assets/         # Images and styles
+├── assets/         # Images and styles
+└── styles/         # Global CSS styles
 ```
 
 ## Architecture
@@ -61,6 +65,12 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 1. Add JSON: `src/data/characters/[name].json`
 2. Add image: `src/assets/images/characters/[name].webp`
 3. Character automatically appears in roster
+
+### Adding Skill Content
+
+1. Create content files: `src/content/skills/SkillName.en.vue` and `SkillName.zh.vue`
+2. For shared data (like grid styles), create: `src/content/skills/SkillName.data.ts`
+3. Content is automatically loaded by the `useContentComponent` composable
 
 ### Modifying Grid Logic
 

@@ -2,6 +2,7 @@
 import { ref, onMounted, onUnmounted, computed } from 'vue'
 
 import '@/styles/modal.css'
+import { useI18nStore } from '@/stores/i18n'
 import IconClose from '../ui/IconClose.vue'
 import IconLink from '../ui/IconLink.vue'
 
@@ -20,10 +21,12 @@ const emit = defineEmits<{
 }>()
 
 const modalRef = ref<HTMLElement>()
+const i18n = useI18nStore()
 
-// Compute the href for the link
+// Compute the href for the link with locale
 const linkHref = computed(() => {
-  return props.linkParam === 'about' ? '/about' : `/skill/${props.linkParam}`
+  const locale = i18n.currentLocale
+  return props.linkParam === 'about' ? `/${locale}/about` : `/${locale}/skill/${props.linkParam}`
 })
 
 // Handle escape key

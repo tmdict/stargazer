@@ -1,23 +1,10 @@
-<script setup lang="ts">
-import BaseModal from './BaseModal.vue'
-
-interface Props {
-  show: boolean
-}
-
-defineProps<Props>()
-defineEmits<{
-  close: []
-}>()
-</script>
-
 <template>
-  <BaseModal :show="show" linkParam="dunlingr" @close="$emit('close')">
+  <article>
     <h1>Dunlingr - Bell of Order</h1>
     <p>
-      Dunlingr's Bell of Order skill targets an ally character on his team. Depending on which mode
-      the Bell is set to, the following effects will apply to all characters on the field other than
-      the targeted ally:
+      Dunlingr's Bell of Order skill targets the ally furthest from his current position at the
+      start of the battle. Depending on which mode the Bell is set to, the following effects will
+      apply to all characters on the field other than the targeted ally:
     </p>
     <ul>
       <li>Spellbind: Unable to cast Ultimate.</li>
@@ -35,7 +22,7 @@ defineEmits<{
     </p>
 
     <h2>Tie-Breaking Rules</h2>
-    <p>When multiple teammates are equidistant at maximum range:</p>
+    <p>When multiple teammates have the same distance:</p>
     <ul>
       <li><strong>Ally Team Dunlingr:</strong> Prefers the ally with the lower hex ID</li>
       <li>
@@ -43,5 +30,9 @@ defineEmits<{
         rotation)
       </li>
     </ul>
-  </BaseModal>
+  </article>
 </template>
+
+<script setup lang="ts">
+// No grid data for Dunlingr
+</script>

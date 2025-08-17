@@ -5,10 +5,7 @@ import { useSelectionState } from '../composables/useSelectionState'
 import type { CharacterType } from '../lib/types/character'
 import { useI18nStore } from '../stores/i18n'
 import Character from './Character.vue'
-import DunlingrSkillModal from './modals/DunlingrSkillModal.vue'
-import ReinierSkillModal from './modals/ReinierSkillModal.vue'
-import SilvinaSkillModal from './modals/SilvinaSkillModal.vue'
-import ValaSkillModal from './modals/ValaSkillModal.vue'
+import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 
@@ -71,27 +68,14 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 }
 
-// Modal states for each character
-const showSilvinaModal = ref(false)
-const showValaModal = ref(false)
-const showReinierModal = ref(false)
-const showDunlingrModal = ref(false)
+// Modal state - single modal for all skills
+const showSkillModal = ref(false)
+const selectedSkillName = ref('')
 
 const openDetailsModal = (character: CharacterType) => {
-  switch (character.name) {
-    case 'silvina':
-      showSilvinaModal.value = true
-      break
-    case 'vala':
-      showValaModal.value = true
-      break
-    case 'reinier':
-      showReinierModal.value = true
-      break
-    case 'dunlingr':
-      showDunlingrModal.value = true
-      break
-  }
+  // Capitalize first letter for proper filename
+  selectedSkillName.value = character.name.charAt(0).toUpperCase() + character.name.slice(1)
+  showSkillModal.value = true
 }
 </script>
 
@@ -126,11 +110,12 @@ const openDetailsModal = (character: CharacterType) => {
       </div>
     </div>
 
-    <!-- Skill Detail Modals -->
-    <SilvinaSkillModal :show="showSilvinaModal" @close="showSilvinaModal = false" />
-    <ValaSkillModal :show="showValaModal" @close="showValaModal = false" />
-    <ReinierSkillModal :show="showReinierModal" @close="showReinierModal = false" />
-    <DunlingrSkillModal :show="showDunlingrModal" @close="showDunlingrModal = false" />
+    <!-- Skill Modal -->
+    <SkillModal
+      :show="showSkillModal"
+      :skill-name="selectedSkillName"
+      @close="showSkillModal = false"
+    />
   </SelectionContainer>
 </template>
 

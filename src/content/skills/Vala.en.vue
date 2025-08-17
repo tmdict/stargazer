@@ -1,18 +1,5 @@
-<script setup lang="ts">
-import BaseModal from './BaseModal.vue'
-
-interface Props {
-  show: boolean
-}
-
-defineProps<Props>()
-defineEmits<{
-  close: []
-}>()
-</script>
-
 <template>
-  <BaseModal :show="show" linkParam="vala" @close="$emit('close')">
+  <article>
     <h1>Vala - Notice Beforehand</h1>
     <p>
       Vala's Notice Beforehand skill targets the enemy furthest from her current position at the
@@ -28,12 +15,12 @@ defineEmits<{
     <p>Distance calculation uses hexagonal grid distance to determine the furthest enemy.</p>
 
     <h2>Tie-Breaking Rules</h2>
-    <p>When multiple enemies are equidistant at maximum range:</p>
+    <p>When multiple enemies have the same distance:</p>
     <ul>
       <li><strong>Ally Team Vala:</strong> Prefers the enemy with the lower hex ID</li>
       <li>
         <strong>Enemy Team Vala:</strong> Prefers the enemy with the higher hex ID (180° rotation)
       </li>
     </ul>
-  </BaseModal>
+  </article>
 </template>

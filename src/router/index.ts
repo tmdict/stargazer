@@ -12,15 +12,31 @@ const router = createRouter({
       name: 'home',
       component: HomeView,
     },
+    // English routes
     {
-      path: '/about',
-      name: 'about',
+      path: '/en/about',
+      name: 'about-en',
       component: AboutView,
+      props: { locale: 'en' },
     },
     {
-      path: '/skill/:name',
-      name: 'skill',
+      path: '/en/skill/:name',
+      name: 'skill-en',
       component: SkillView,
+      props: (route) => ({ locale: 'en', name: route.params.name }),
+    },
+    // Chinese routes
+    {
+      path: '/zh/about',
+      name: 'about-zh',
+      component: AboutView,
+      props: { locale: 'zh' },
+    },
+    {
+      path: '/zh/skill/:name',
+      name: 'skill-zh',
+      component: SkillView,
+      props: (route) => ({ locale: 'zh', name: route.params.name }),
     },
   ],
 })
