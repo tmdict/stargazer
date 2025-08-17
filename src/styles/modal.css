@@ -30,6 +30,16 @@
   z-index: 9998;
 }
 
+/* Backdrop link - covers entire overlay for click-to-close */
+.backdrop-link {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  cursor: pointer;
+}
+
 /* Container styles */
 .container {
   position: relative;
@@ -44,6 +54,7 @@
   margin: auto;
   display: flex;
   flex-direction: column;
+  z-index: 1; /* Ensure container is above backdrop-link */
 }
 
 /* Button container */

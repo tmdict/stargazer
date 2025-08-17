@@ -60,6 +60,10 @@ const sortedArtifacts = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+  gap: var(--spacing-lg);
+  min-height: 656px;
+  max-height: 656px;
+  overflow-y: auto;
 }
 
 .artifacts {
