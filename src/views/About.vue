@@ -1,22 +1,9 @@
 <script setup lang="ts">
 import PageContainer from '@/components/ui/PageContainer.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
-import { useI18nStore } from '@/stores/i18n'
 
-interface Props {
-  locale?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  locale: 'en',
-})
-
-// During SSG, set locale from route prop
-const i18n = useI18nStore()
-if (import.meta.env.SSR && props.locale) {
-  i18n.setLocaleForSSG(props.locale as 'en' | 'zh')
-}
-
+// No props or SSG-specific code needed
+// useContentComponent reads locale from i18n store automatically
 const { ContentComponent } = useContentComponent({
   type: 'about',
   name: 'About',
