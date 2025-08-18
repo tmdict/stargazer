@@ -66,8 +66,7 @@ export const createApp = ViteSSG(
   App,
   { routes }, // Shared routes from router/routes.ts
   async ({ app }) => {
-    const pinia = createPinia()
-    app.use(pinia)
+    app.use(createPinia())
     // No i18n store setup needed - static pages handle locale themselves
   },
 )
@@ -140,6 +139,18 @@ import { gridStyles, images } from './Silvina.data'
 </script>
 ```
 
+Data files use optimized images via vite-imagetools:
+
+```typescript
+// src/content/skills/Silvina.data.ts
+import silvinaImage from '@/assets/images/character/silvina.png?format=webp&quality=80&w=100'
+
+export const gridStyles = { /* ... */ }
+export const images = {
+  silvina: silvinaImage,
+}
+```
+
 Key considerations:
 
 - **Dual mode support**: Components work with both props (SSG) and store (SPA)
@@ -147,6 +158,7 @@ Key considerations:
 - **Clean separation**: Static content is self-contained with its own data
 - **Locale from route**: Static views extract locale from URL path using `useRouteLocale`
 - **No i18n dependency**: PageContainer and static views use hardcoded strings
+- **Optimized images**: Content data files use vite-imagetools for WebP conversion
 
 ### SSR-Safe Stores
 
@@ -245,6 +257,20 @@ ssgOptions: {
   }
 }
 ```
+
+### TypeScript Support for Imagetools
+
+TypeScript declarations for vite-imagetools queries are defined in `env.d.ts`:
+
+```typescript
+// env.d.ts
+declare module '*.png?format=webp&quality=80&w=100' {
+  const src: string
+  export default src
+}
+```
+
+This allows content data files to import optimized images with proper type support.
 
 ### Browser API Protection
 
