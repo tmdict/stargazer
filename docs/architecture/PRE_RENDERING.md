@@ -11,6 +11,7 @@ The pre-rendering system uses vite-ssg to generate static HTML for content pages
 3. **Route-based Locale**: Determine language from URL path rather than global state during SSG
 4. **SSR Safety**: Guard browser APIs with environment checks to prevent build errors
 5. **Shared Routes**: Single route definition used by both SPA and SSG modes
+6. **Minimal Store Dependencies**: Static pages avoid store dependencies, using hardcoded strings and props instead
 
 ## How It Works
 
@@ -58,26 +59,16 @@ Key considerations:
 
 ### SSG Entry Point (`/src/main.ssg.ts`)
 
-Configures vite-ssg with router guard for locale:
+Simplified configuration without i18n store dependency:
 
 ```typescript
 export const createApp = ViteSSG(
   App,
   { routes }, // Shared routes from router/routes.ts
-  async ({ app, router }) => {
+  async ({ app }) => {
     const pinia = createPinia()
     app.use(pinia)
-
-    if (import.meta.env.SSR) {
-      // Set locale from URL during pre-rendering
-      router.beforeEach((to) => {
-        const match = to.path.match(/^\/(en|zh)\//)
-        if (match) {
-          const i18n = useI18nStore(pinia)
-          i18n.setLocale(match[1] as 'en' | 'zh')
-        }
-      })
-    }
+    // No i18n store setup needed - static pages handle locale themselves
   },
 )
 ```
@@ -85,10 +76,30 @@ export const createApp = ViteSSG(
 Key considerations:
 
 - **Shared routes**: Uses same route definitions as SPA
-- **Router guard**: Sets locale based on URL path during SSG
-- **No pre-loading**: Static content pages handle their own data
+- **No global locale state**: Static pages extract locale from route
+- **Minimal setup**: No pre-loading or router guards needed
 
 ### Static Content Components
+
+#### PageContainer Component
+
+The PageContainer component does not depend on i18n store for static pages:
+
+```typescript
+// PageContainer.vue - simplified without i18n
+<template>
+  <div class="overlay">
+    <a href="/" class="backdrop-link" aria-label="Stargazer"></a>
+    <!-- content -->
+  </div>
+</template>
+```
+
+Key considerations:
+
+- Uses hardcoded "Stargazer" instead of translations
+- No store dependencies for static rendering
+- Clean separation from dynamic app state
 
 #### GridSnippet Component
 
@@ -116,7 +127,7 @@ const getCharacterImage = (characterName: string): string | undefined => {
 
 #### Content Components
 
-Content components pass images as props to avoid store dependency:
+Content components are self-contained with their own data and locale handling:
 
 ```vue
 <!-- src/content/skills/Silvina.en.vue -->
@@ -131,9 +142,11 @@ import { gridStyles, images } from './Silvina.data'
 
 Key considerations:
 
-- **Dual mode support**: Component works with both props (SSG) and store (SPA)
+- **Dual mode support**: Components work with both props (SSG) and store (SPA)
 - **No hydration mismatch**: Static pages use props, avoiding store state changes
 - **Clean separation**: Static content is self-contained with its own data
+- **Locale from route**: Static views extract locale from URL path using `useRouteLocale`
+- **No i18n dependency**: PageContainer and static views use hardcoded strings
 
 ### SSR-Safe Stores
 
@@ -157,6 +170,42 @@ Key considerations:
 - **SSR guard**: Skip initialization during pre-rendering
 - **Direct setters**: Allow SSG to inject pre-loaded data
 - **Preserved functionality**: Client-side behavior unchanged
+
+### Locale Extraction
+
+#### Route Locale Composable (`/src/composables/useRouteLocale.ts`)
+
+Extract locale from the current route path:
+
+```typescript
+import { computed } from 'vue'
+import { useRoute } from 'vue-router'
+
+export function useRouteLocale() {
+  const route = useRoute()
+
+  const locale = computed(() => {
+    const match = route.path.match(/^\/(en|zh)\//)
+    return match ? match[1] : 'en'
+  })
+
+  return locale
+}
+```
+
+Used in static view components:
+
+```typescript
+// In About.vue and Skill.vue
+import { useRouteLocale } from '@/composables/useRouteLocale'
+
+const locale = useRouteLocale()
+const { ContentComponent } = useContentComponent({
+  type: 'skill',
+  name: normalizedSkillName,
+  locale, // Pass extracted locale
+})
+```
 
 #### i18n Store (`/src/stores/i18n.ts`)
 

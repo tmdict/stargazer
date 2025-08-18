@@ -1,10 +1,14 @@
 <script setup lang="ts">
 import PageContainer from '@/components/ui/PageContainer.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
+import { useRouteLocale } from '@/composables/useRouteLocale'
+
+const locale = useRouteLocale()
 
 const { ContentComponent } = useContentComponent({
   type: 'about',
   name: 'About',
+  locale,
 })
 </script>
 

@@ -98,6 +98,17 @@ Thin reactive wrappers around domain objects using Pinia. Bridges framework-agno
 
 Vue components with single responsibilities. Multi-layer rendering solves SVG limitations.
 
+### Composables Layer (`/src/composables/`)
+
+Vue 3 composition functions that encapsulate reusable logic. These provide shared functionality across components while maintaining reactivity.
+
+**Key Composables:**
+
+- `useRouteLocale`: Extracts locale from current route path
+- `useContentComponent`: Dynamically loads content components based on locale
+- `useDragDrop`: Handles drag-and-drop interactions with custom preview
+- `useArenaSwitcher`: Manages arena selection and transitions
+
 ### Content Layer (`/src/content/`)
 
 Localized content components separated from UI logic. Single source of truth for all translatable content, with locale-specific files (`.en.vue`, `.zh.vue`) and shared data files (`.data.ts`). These content pages are pre-rendered at build time for SEO and performance.

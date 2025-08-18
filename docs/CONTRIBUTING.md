@@ -43,7 +43,7 @@ src/
 │   └── arena/      # Map configurations
 ├── stores/         # Pinia state management
 ├── components/     # Vue UI components
-├── content/        # Content components (i18n, pre-rendered)
+├── content/        # Content components (localized, pre-rendered)
 │   ├── skills/     # Skill descriptions (en/zh)
 │   └── About.*.vue # About page content
 ├── composables/    # Vue composition functions
