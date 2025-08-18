@@ -7,7 +7,6 @@ import { Hex } from '../../lib/hex'
 import { Layout, POINTY } from '../../lib/layout'
 import { FULL_GRID } from '../../lib/types/grid'
 import { State } from '../../lib/types/state'
-import { useGameDataStore } from '../../stores/gameData'
 
 interface GridStyleConfig {
   numericLabel?: Record<number, number>
@@ -30,6 +29,7 @@ interface Props {
   width?: number
   height?: number
   hexSize?: number
+  images?: Record<string, string>
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -37,8 +37,6 @@ const props = withDefaults(defineProps<Props>(), {
   height: 300,
   hexSize: 18,
 })
-
-const gameDataStore = useGameDataStore()
 
 // Create grid for snippet
 const snippetGrid = computed(() => {
@@ -108,7 +106,7 @@ const getCharacterForHex = (hexId: number): string | null => {
 
 // Get character image by name
 const getCharacterImage = (characterName: string): string | undefined => {
-  return gameDataStore.characterImages[characterName]
+  return props.images?.[characterName]
 }
 
 // Calculate imaginary hex positions

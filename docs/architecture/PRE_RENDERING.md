@@ -7,7 +7,7 @@ The pre-rendering system uses vite-ssg to generate static HTML for content pages
 ## Design Principles
 
 1. **Selective Pre-rendering**: Only content pages are pre-rendered, not the interactive game
-2. **Minimal State Hydration**: Pre-load only essential data (character images) for content pages
+2. **Prop-based Static Content**: Pass data as props to components in static pages to avoid hydration mismatches
 3. **Route-based Locale**: Determine language from URL path rather than global state during SSG
 4. **SSR Safety**: Guard browser APIs with environment checks to prevent build errors
 5. **Shared Routes**: Single route definition used by both SPA and SSG modes
@@ -58,13 +58,13 @@ Key considerations:
 
 ### SSG Entry Point (`/src/main.ssg.ts`)
 
-Configures vite-ssg with router guard for locale and minimal data loading:
+Configures vite-ssg with router guard for locale:
 
 ```typescript
 export const createApp = ViteSSG(
   App,
   { routes }, // Shared routes from router/routes.ts
-  async ({ app, router, initialState }) => {
+  async ({ app, router }) => {
     const pinia = createPinia()
     app.use(pinia)
 
@@ -77,10 +77,6 @@ export const createApp = ViteSSG(
           i18n.setLocale(match[1] as 'en' | 'zh')
         }
       })
-
-      // Pre-load character images for GridSnippet
-      const characterImages = loadCharacterImages()
-      initialState.gameData = { characterImages }
     }
   },
 )
@@ -90,27 +86,54 @@ Key considerations:
 
 - **Shared routes**: Uses same route definitions as SPA
 - **Router guard**: Sets locale based on URL path during SSG
-- **Minimal data**: Only loads character images for content pages
+- **No pre-loading**: Static content pages handle their own data
 
-### Data Loader (`/src/utils/dataLoader.ts`)
+### Static Content Components
 
-Provides focused loading functions for SSG:
+#### GridSnippet Component
+
+The GridSnippet component supports both dynamic (store-based) and static (prop-based) image loading to avoid hydration mismatches:
 
 ```typescript
-export function loadCharacterImages(): Record<string, string> {
-  const modules = import.meta.glob('/src/assets/characters/*.webp', {
-    eager: true,
-    import: 'default',
-  })
-  // Map to { name: url } dictionary
+// GridSnippet.vue
+interface Props {
+  gridStyle: GridStyleConfig
+  width?: number
+  height?: number
+  hexSize?: number
+  images?: Record<string, string> // Optional images prop for SSG
 }
+
+const getCharacterImage = (characterName: string): string | undefined => {
+  // First check if images were passed as props (for SSG/static content)
+  if (props.images && props.images[characterName]) {
+    return props.images[characterName]
+  }
+  // Fall back to store for dynamic content
+  return gameDataStore.characterImages[characterName]
+}
+```
+
+#### Content Components
+
+Content components pass images as props to avoid store dependency:
+
+```vue
+<!-- src/content/skills/Silvina.en.vue -->
+<template>
+  <GridSnippet :grid-style="gridStyles.main" :images />
+</template>
+
+<script setup lang="ts">
+import { gridStyles, images } from './Silvina.data'
+</script>
 ```
 
 Key considerations:
 
-- **Isolated loading**: Load only what's needed for content pages
-- **Synchronous**: Uses eager imports for SSG compatibility
-- **Type-safe**: Returns typed data structures
+- **Dual mode support**: Component works with both props (SSG) and store (SPA)
+- **No hydration mismatch**: Static pages use props, avoiding store state changes
+- **Clean separation**: Static content is self-contained with its own data
 
 ### SSR-Safe Stores
 
