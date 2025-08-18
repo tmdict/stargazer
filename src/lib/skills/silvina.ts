@@ -1,7 +1,8 @@
+import type { Grid } from '../grid'
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
 import { Team } from '../types/team'
-import { getSymmetricalHexId } from './utils/symmetry'
 import { getOpposingCharacters } from './utils/targeting'
+import { getSymmetricalHexId } from './utils/symmetry'
 
 /**
  * Find the nearest enemy using a spiral search pattern.
@@ -14,7 +15,7 @@ import { getOpposingCharacters } from './utils/targeting'
  * Within each ring, tiles are checked in the appropriate walk order.
  */
 function findNearestEnemySpiral(
-  grid: any,
+  grid: Grid,
   symmetricalHexId: number,
   team: Team,
 ): SkillTargetInfo | null {

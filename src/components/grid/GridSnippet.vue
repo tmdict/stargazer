@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import { ARENA_1 } from '../../lib/arena/arena1'
-import { Grid } from '../../lib/grid'
+import { Grid, type GridTile } from '../../lib/grid'
 import { Hex } from '../../lib/hex'
 import { Layout, POINTY } from '../../lib/layout'
 import { FULL_GRID } from '../../lib/types/grid'
@@ -60,7 +60,7 @@ const getHexPolygon = (hex: Hex): string => {
 }
 
 // Get hex fill color based on state and highlighting
-const getHexFill = (tile: any): string => {
+const getHexFill = (tile: GridTile): string => {
   const hexId = tile.hex.getId()
 
   // Check for different highlight groups
