@@ -26,11 +26,11 @@ export const useI18nStore = defineStore('i18n', () => {
   // Actions (defined early for use in initialization)
   /**
    * Sets the application locale.
-   * 
+   *
    * This method is SSR-safe and automatically detects the environment:
    * - During SSG/SSR: Only updates the reactive locale value
    * - On client: Also updates document.lang and persists to localStorage
-   * 
+   *
    * @param locale - The locale to set ('en' or 'zh')
    */
   const setLocale = (locale: Locale) => {

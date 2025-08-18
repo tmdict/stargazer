@@ -28,7 +28,8 @@ Open http://localhost:5173
 
 ```bash
 npm run dev         # Development server
-npm run build       # Production build
+npm run build       # Production build (with pre-rendering)
+npm run build:spa   # Traditional SPA build (no pre-rendering)
 npm run type-check  # TypeScript validation
 npm run format      # Code formatting
 ```

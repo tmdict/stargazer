@@ -2,7 +2,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 /**
  * Shared route definitions used by both SPA and SSG modes.
- * 
+ *
  * These routes define the structure of the application and are imported by:
  * - src/router/index.ts (for SPA mode)
  * - src/main.ssg.ts (for SSG mode)
