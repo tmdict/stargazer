@@ -2,7 +2,7 @@
 
 /**
  * Type declarations for vite-imagetools
- * Used for optimized character images in content files
+ * Used for optimized images in content files
  */
 declare module '*.png?format=webp&quality=80&w=100' {
   const src: string
