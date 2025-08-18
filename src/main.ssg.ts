@@ -19,6 +19,5 @@ import './styles/variables.css'
  * Locale is extracted from the URL path in each view component.
  */
 export const createApp = ViteSSG(App, { routes }, async ({ app }) => {
-  const pinia = createPinia()
-  app.use(pinia)
+  app.use(createPinia())
 })
