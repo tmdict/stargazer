@@ -21,13 +21,17 @@ Open http://localhost:5173 in your browser.
 
 ```bash
 npm run dev         # Development server
-npm run build       # Production build
+npm run build       # Production build (SSG - pre-renders content pages)
+npm run build:spa   # Traditional SPA build (no pre-rendering)
+npm run build:ssg   # Explicit SSG build (same as build)
 npm run type-check  # TypeScript validation
 npm run format      # Code formatting
 npm run preview     # Preview production build
 ```
 
 Always run `type-check` and `build` before committing.
+
+**Note:** Development mode always runs as SPA for hot reloading. Pre-rendering only happens during production builds.
 
 ## Project Structure
 
@@ -39,15 +43,20 @@ src/
 │   └── arena/      # Map configurations
 ├── stores/         # Pinia state management
 ├── components/     # Vue UI components
-├── content/        # Content components (i18n)
+├── content/        # Content components (i18n, pre-rendered)
 │   ├── skills/     # Skill descriptions (en/zh)
 │   └── About.*.vue # About page content
 ├── composables/    # Vue composition functions
 ├── utils/          # Helper utilities
 ├── views/          # Page-level components
+├── router/         # Vue Router configuration
+│   ├── index.ts    # Router setup
+│   └── routes.ts   # Shared route definitions
 ├── data/           # Static JSON data
 ├── assets/         # Images and styles
-└── styles/         # Global CSS styles
+├── styles/         # Global CSS styles
+├── main.ts         # SPA entry point
+└── main.ssg.ts     # SSG entry point (pre-rendering)
 ```
 
 ## Architecture
