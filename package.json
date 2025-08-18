@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build:ssg",
+    "build-only": "vite-ssg build",
     "build:ssg": "vite-ssg build",
     "build:spa": "npm run type-check && vite build",
     "preview": "vite preview",
