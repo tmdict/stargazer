@@ -209,7 +209,7 @@ const handleDetectedHexDrop = (event: DragEvent) => {
 }
 
 // Utility function to trigger drop logic programmatically
-const triggerHexDrop = (event: DragEvent, hex: any) => {
+const triggerHexDrop = (event: DragEvent, hex: Hex) => {
   // Use the same drop logic as GridTiles.vue
   const dropResult = handleDrop(event)
 

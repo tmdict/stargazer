@@ -25,12 +25,12 @@ const backgroundImage = computed(() => {
         top: `${dragPreviewPosition.y}px`,
       }"
     >
-      <div 
-        class="character-preview" 
+      <div
+        class="character-preview"
         :style="{
           backgroundImage: backgroundImage,
           backgroundSize: 'cover',
-          backgroundPosition: 'center'
+          backgroundPosition: 'center',
         }"
       >
         <img :src="draggedImageSrc" :alt="draggedCharacter.name" class="portrait" />

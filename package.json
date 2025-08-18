@@ -11,7 +11,7 @@
     "preview": "vite preview",
     "type-check": "vue-tsc --build",
     "format": "prettier --write src/",
-    "test": "tsx test/skills/silvina/silvina.test.ts",
+    "test": "node --import tsx --test test/**/*.test.ts",
     "test:silvina": "tsx test/skills/silvina/silvina.test.ts"
   },
   "dependencies": {
