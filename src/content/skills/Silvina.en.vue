@@ -21,7 +21,7 @@
       <li>And so on...</li>
     </ul>
 
-    <GridSnippet :gridStyle="gridStyles.main" />
+    <GridSnippet :grid-style="gridStyles.main" :images />
 
     <p>
       Ally (targeting enemy) walks clockwise from top-right, while Enemy (targeting ally) walks
@@ -33,5 +33,5 @@
 
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles } from './Silvina.data'
+import { gridStyles, images } from './Silvina.data'
 </script>

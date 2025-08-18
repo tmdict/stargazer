@@ -1,3 +1,5 @@
+import silvinaImage from '@/assets/images/character/silvina.png'
+
 export const gridStyles = {
   main: {
     numericLabel: {
@@ -33,4 +35,8 @@ export const gridStyles = {
       },
     ],
   },
+}
+
+export const images = {
+  silvina: silvinaImage,
 }

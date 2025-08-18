@@ -12,7 +12,7 @@
       <li>以此类推...</li>
     </ul>
 
-    <GridSnippet :gridStyle="gridStyles.main" />
+    <GridSnippet :grid-style="gridStyles.main" :images />
 
     <p>友方（瞄准敌人）从右上角顺时针行走，而敌方（瞄准友方）从左下角逆时针行走（180°旋转）。</p>
     <p>（感谢rkkñ提供西尔维娜的机制信息）</p>
@@ -21,5 +21,5 @@
 
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles } from './Silvina.data'
+import { gridStyles, images } from './Silvina.data'
 </script>

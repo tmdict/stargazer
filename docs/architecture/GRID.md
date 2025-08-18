@@ -200,6 +200,28 @@ The Layout class handles pixel conversions:
 - `pixelToHex(point)` - Find hex at position
 - `polygonCorners(hex)` - Vertices for rendering
 
+## Component Usage
+
+### GridSnippet Component (`/src/components/grid/GridSnippet.vue`)
+
+A lightweight grid visualization component used for static content pages (skill documentation):
+
+```typescript
+interface Props {
+  gridStyle: GridStyleConfig
+  width?: number
+  height?: number
+  hexSize?: number
+  images?: Record<string, string> // Optional for SSG compatibility
+}
+```
+
+Key features:
+- **Dual-mode image loading**: Accepts images via props (for SSG) or reads from store (for SPA)
+- **Non-interactive**: Display-only, no drag & drop functionality
+- **SSG-friendly**: Avoids hydration mismatches by using props for static content
+- **Flexible styling**: Supports highlights, numeric labels, and character placement
+
 ## Integration Points
 
 ### Drag & Drop

@@ -20,11 +20,11 @@
       </li>
     </ul>
 
-    <GridSnippet :gridStyle="gridStyles.main" />
+    <GridSnippet :grid-style="gridStyles.main" :images />
   </article>
 </template>
 
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles } from './Reinier.data'
+import { gridStyles, images } from './Reinier.data'
 </script>
