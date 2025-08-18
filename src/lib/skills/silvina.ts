@@ -1,6 +1,5 @@
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
 import { Team } from '../types/team'
-import { Hex } from '../hex'
 import { getSymmetricalHexId } from './utils/symmetry'
 import { getOpposingCharacters } from './utils/targeting'
 

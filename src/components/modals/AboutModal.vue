@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BaseModal from './BaseModal.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
+import { useI18nStore } from '@/stores/i18n'
 
 interface Props {
   show: boolean
@@ -11,9 +12,12 @@ defineEmits<{
   close: []
 }>()
 
+const i18n = useI18nStore()
+
 const { ContentComponent } = useContentComponent({
   type: 'about',
   name: 'About',
+  locale: i18n.currentLocale,
 })
 </script>
 
