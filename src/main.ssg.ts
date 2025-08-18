@@ -2,8 +2,6 @@ import { ViteSSG } from 'vite-ssg'
 import { createPinia } from 'pinia'
 import App from './App.vue'
 import { routes } from './router/routes'
-import { loadCharacterImages } from './utils/dataLoader'
-import { useGameDataStore } from './stores/gameData'
 import { useI18nStore } from './stores/i18n'
 
 import './styles/base.css'
@@ -17,8 +15,11 @@ import './styles/variables.css'
  * - Pre-render content pages (/en/about, /zh/skill/*, etc.)
  * - Skip the home page (it's a fully interactive app)
  * - Generate static HTML with proper locale attributes
+ *
+ * Content pages are rendered as static HTML without client-side hydration
+ * to avoid issues with JavaScript overriding pre-rendered content.
  */
-export const createApp = ViteSSG(App, { routes }, async ({ app, router, initialState }) => {
+export const createApp = ViteSSG(App, { routes }, async ({ app, router }) => {
   const pinia = createPinia()
   app.use(pinia)
 
@@ -32,18 +33,5 @@ export const createApp = ViteSSG(App, { routes }, async ({ app, router, initialS
         i18n.setLocale(match[1] as 'en' | 'zh')
       }
     })
-
-    // Pre-load only what's needed for content pages
-    // Load character images for GridSnippet component
-    const characterImages = loadCharacterImages()
-
-    // Store minimal data in initialState
-    initialState.gameData = {
-      characterImages,
-    }
-  } else if (initialState.gameData) {
-    // On client: Restore pre-fetched character images
-    const gameDataStore = useGameDataStore(pinia)
-    gameDataStore.setCharacterImages(initialState.gameData.characterImages)
   }
 })
