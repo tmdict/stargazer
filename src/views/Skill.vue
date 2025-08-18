@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 
 import PageContainer from '@/components/ui/PageContainer.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
+import { useRouteLocale } from '@/composables/useRouteLocale'
 
 interface Props {
   name?: string
@@ -12,6 +13,8 @@ interface Props {
 const props = defineProps<Props>()
 
 const route = useRoute()
+const locale = useRouteLocale()
+
 // Use the prop if provided, otherwise fall back to route params
 const skillName = computed(() => props.name || (route.params.name as string))
 
@@ -35,6 +38,7 @@ const normalizedSkillName = computed(() => {
 const { ContentComponent } = useContentComponent({
   type: 'skill',
   name: normalizedSkillName,
+  locale,
 })
 </script>
 
