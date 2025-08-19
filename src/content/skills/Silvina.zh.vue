@@ -8,8 +8,8 @@ setupContentMeta({
   title: '西尔维娜 · 先发制人',
   description: '战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人。',
   url: 'skill/silvina',
-  keywords: ['Silvina', '西尔维娜'],
   locale: 'zh',
+  keywords: ['Silvina', '西尔维娜'],
 })
 </script>
 
