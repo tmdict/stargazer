@@ -4,6 +4,7 @@ import { defineConfig } from 'vite'
 import { imagetools } from 'vite-imagetools'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
+import generateSitemap from 'vite-ssg-sitemap'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -50,6 +51,15 @@ export default defineConfig({
         return html.replace(/<html[^>]*>/, `<html lang="${locale}">`)
       }
       return html
+    },
+    onFinished() {
+      generateSitemap({
+        hostname: 'https://stargazer.tmdict.com',
+        changefreq: 'weekly',
+        priority: 0.8,
+        readable: true,
+        generateRobotsTxt: true,
+      })
     },
   },
 })
