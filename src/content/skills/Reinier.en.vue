@@ -9,8 +9,8 @@ setupContentMeta({
   description:
     "Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a symmetrical position at the start of the battle. After the battle starts, the connected ally and enemy's positions are swapped, the ally receives a buff and the enemy receives a debuff.",
   url: 'skill/reinier',
-  keywords: ['Reinier', '雷内亚'],
   locale: 'en',
+  keywords: ['Reinier', '雷内亚'],
 })
 </script>
 

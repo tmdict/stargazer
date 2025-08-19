@@ -6,8 +6,8 @@ setupContentMeta({
   description:
     '在战斗开始前指定一个友方角色。在战斗中，根据钟设置的模式，以下效果将应用于场上除友方目标外的所有角色',
   url: 'skill/dunlingr',
-  keywords: ['Dunlingr', '顿里尔'],
   locale: 'zh',
+  keywords: ['Dunlingr', '顿里尔'],
 })
 </script>
 
