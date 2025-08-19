@@ -1,3 +1,26 @@
+<script setup lang="ts">
+import { useHead } from '@unhead/vue'
+
+if (import.meta.env.SSR) {
+  const meta = {
+    title: '关于',
+    description:
+      'Stargazer是一个剑与远征：启程（AFK Journey）竞技场模拟器和规划工具。此工具让玩家能更方便测试不同竞技场阵型和技能的机制，可视化他们的攻击范围，并与朋友或公会成员分享阵型和战术。',
+    url: 'https://stargazer.tmdict.com/zh/about',
+  }
+  useHead({
+    title: meta.title,
+    meta: [
+      { name: 'description', content: meta.description },
+      { property: 'og:title', content: meta.title },
+      { property: 'og:description', content: meta.description },
+      { property: 'og:url', content: meta.url },
+    ],
+    link: [{ rel: 'canonical', href: meta.url }],
+  })
+}
+</script>
+
 <template>
   <article>
     <h1>剑与远征：启程竞技场模拟器</h1>
@@ -28,7 +51,7 @@
       <li><strong>编辑地图：</strong>使用地图编辑器以设计自定义竞技场</li>
       <li>
         <strong>分享团队：</strong
-        >点击“链接”获取可分享的URL链接，“复制”将图像复制到剪贴板，或“下载”保存图像
+        >点击"链接"获取可分享的URL链接，"复制"将图像复制到剪贴板，或"下载"保存图像
       </li>
     </ul>
 

@@ -1,3 +1,18 @@
+<script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
+import { setupContentMeta } from '@/utils/contentMeta'
+
+import { gridStyles, images } from './Silvina.data'
+
+setupContentMeta({
+  title: 'Silvina · First Strike',
+  description:
+    'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts.',
+  url: 'https://stargazer.tmdict.com/en/skill/silvina',
+  keywords: ['Silvina', '西尔维娜'],
+})
+</script>
+
 <template>
   <article>
     <h1>Silvina · First Strike</h1>
@@ -30,8 +45,3 @@
     <p>(Credit: rkkñ for documenting Silvina's targeting mechanics)</p>
   </article>
 </template>
-
-<script setup lang="ts">
-import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles, images } from './Silvina.data'
-</script>

@@ -1,3 +1,17 @@
+<script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
+import { setupContentMeta } from '@/utils/contentMeta'
+
+import { gridStyles, images } from './Silvina.data'
+
+setupContentMeta({
+  title: '西尔维娜 · 先发制人',
+  description: '战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人。',
+  url: 'https://stargazer.tmdict.com/zh/skill/silvina',
+  keywords: ['Silvina', '西尔维娜'],
+})
+</script>
+
 <template>
   <article>
     <h1>西尔维娜 · 先发制人</h1>
@@ -18,8 +32,3 @@
     <p>（感谢rkkñ提供西尔维娜的机制信息）</p>
   </article>
 </template>
-
-<script setup lang="ts">
-import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles, images } from './Silvina.data'
-</script>

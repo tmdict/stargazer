@@ -1,3 +1,26 @@
+<script setup lang="ts">
+import { useHead } from '@unhead/vue'
+
+if (import.meta.env.SSR) {
+  const meta = {
+    title: 'About',
+    description:
+      'Plan and simulate AFK Journey battles, test hero formations, visualize skill mechanics and share team compositions for Arena and other game modes.',
+    url: 'https://stargazer.tmdict.com/en/about',
+  }
+  useHead({
+    title: meta.title,
+    meta: [
+      { name: 'description', content: meta.description },
+      { property: 'og:title', content: meta.title },
+      { property: 'og:description', content: meta.description },
+      { property: 'og:url', content: meta.url },
+    ],
+    link: [{ rel: 'canonical', href: meta.url }],
+  })
+}
+</script>
+
 <template>
   <article>
     <h1>AFK Journey Arena Simulator</h1>
