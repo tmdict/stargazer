@@ -52,30 +52,3 @@ silvina/
 ├── arena3/            # Arena 3 test cases
 └── arena4/            # Arena 4 test cases
 ```
-
-## Running Tests
-
-```bash
-npm test          # Run all Silvina tests
-npm run test:silvina  # Same as above
-```
-
-## Test Coverage
-
-- **4 different arenas** tested
-- **Various enemy configurations**: 2-enemy, 3-enemy, 5-enemy, adjacent, symmetrical
-- **Edge cases**: Multiple enemies at same distance, ring walking order
-- **Team perspectives**: Both ally team (clockwise) and enemy team (counter-clockwise) tested
-
-## Algorithm
-
-Silvina's targeting now uses a **clockwise spiral search** algorithm:
-
-- **Priority 1**: Enemy on the symmetrical tile (immediate target)
-- **Priority 2**: Nearest enemy via spiral search
-  - Ally team: Walks clockwise starting just after top-right (q+N, r-N)
-  - Enemy team: Walks counter-clockwise starting just after bottom-left (q-N, r+N)
-  - Searches expanding rings (distance 1, 2, 3...) until an enemy is found
-  - Within each ring, tiles are checked in the appropriate walk order
-
-This approach ensures consistent, predictable targeting behavior with 100% test accuracy.
