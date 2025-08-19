@@ -5,8 +5,9 @@ setupContentMeta({
   title: 'Dunlingr · Bell of Order',
   description:
     "Dunlingr's Bell of Order skill targets the ally furthest from his current position at the start of the battle. Depending on which mode the Bell is set to, the following effects will apply to all characters on the field other than the targeted ally",
-  url: 'https://stargazer.tmdict.com/en/skill/dunlingr',
+  url: 'skill/dunlingr',
   keywords: ['Dunlingr', '顿里尔'],
+  locale: 'en',
 })
 </script>
 

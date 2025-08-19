@@ -8,8 +8,9 @@ setupContentMeta({
   title: 'Silvina · First Strike',
   description:
     'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts.',
-  url: 'https://stargazer.tmdict.com/en/skill/silvina',
+  url: 'skill/silvina',
   keywords: ['Silvina', '西尔维娜'],
+  locale: 'en',
 })
 </script>
 
