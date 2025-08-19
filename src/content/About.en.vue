@@ -1,3 +1,15 @@
+<script setup lang="ts">
+import { setupContentMeta } from '@/utils/contentMeta'
+
+setupContentMeta({
+  title: 'About',
+  description:
+    'Plan and simulate AFK Journey battles, test hero formations, visualize skill mechanics and share team compositions for Arena and other game modes.',
+  url: 'about',
+  locale: 'en',
+})
+</script>
+
 <template>
   <article>
     <h1>AFK Journey Arena Simulator</h1>
