@@ -85,6 +85,9 @@ export function removeCharacter(grid: Grid, skillManager: SkillManager, hexId: n
     grid.removeCharacter(hexId, true)
   }
 
+  // Update all active skills to recalculate targets after removal
+  skillManager.updateActiveSkills(grid)
+
   return true
 }
 
