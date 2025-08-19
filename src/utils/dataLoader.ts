@@ -66,7 +66,7 @@ export function loadCharacterImages(): Record<string, string> {
 
   const images = loadAssetsDict(
     import.meta.glob('../assets/images/character/*.png', {
-      query: { format: 'webp', quality: 80, w: 100 },
+      query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
       eager: true,
       import: 'default',
     }) as Record<string, string>,
