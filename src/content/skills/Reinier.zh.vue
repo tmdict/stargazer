@@ -8,8 +8,9 @@ setupContentMeta({
   title: '雷内亚 · 动态平衡',
   description:
     '战斗开始时，若自身1格范围内存在一名友军与敌军的位置处于对称关系。战斗开始后，被连接的友方和敌方位置会互换，友方获得增益效果，敌方获得减益效果。',
-  url: 'https://stargazer.tmdict.com/zh/skill/reinier',
+  url: 'skill/reinier',
   keywords: ['Reinier', '雷内亚'],
+  locale: 'zh',
 })
 </script>
 

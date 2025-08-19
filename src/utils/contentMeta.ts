@@ -5,6 +5,7 @@ interface ContentMetaOptions {
   description: string
   url: string
   keywords?: string[]
+  locale?: 'en' | 'zh'
 }
 
 /**
@@ -12,11 +13,13 @@ interface ContentMetaOptions {
  * Centralizes the meta tag configuration for all content components
  */
 export function setupContentMeta(options: ContentMetaOptions): void {
-  if (!import.meta.env.SSR) {
+  const { title, description, url, keywords, locale } = options
+
+  // Set document language during runtime
+  if (!import.meta.env.SSR && locale) {
+    document.documentElement.lang = locale
     return
   }
-
-  const { title, description, url, keywords } = options
 
   // // Truncates to 150 chars at word boundary, adds "..."
   const truncate = (str: string, max = 150) =>
@@ -35,8 +38,8 @@ export function setupContentMeta(options: ContentMetaOptions): void {
       { name: 'keywords', content: allKeywords.join(', ') },
       { property: 'og:title', content: title },
       { property: 'og:description', content: truncate(description) },
-      { property: 'og:url', content: url },
+      { property: 'og:url', content: `https://stargazer.tmdict.com/${locale}/${url}` },
     ],
-    link: [{ rel: 'canonical', href: url }],
+    link: [{ rel: 'canonical', href: `https://stargazer.tmdict.com/${locale}/${url}` }],
   })
 }
