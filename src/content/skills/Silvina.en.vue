@@ -28,8 +28,8 @@ setupContentMeta({
       an enemy is there, they become the target.
     </p>
     <p>
-      If the symmetrical tile is empty, Silvina searches for the nearest enemy to that position
-      using an expanding clockwise spiral pattern:
+      If the symmetrical tile is empty, Silvina searches for the nearest enemy in a clockwise spiral
+      expanding from that tile's position:
     </p>
     <ul>
       <li><strong>Ring 1:</strong> 6 tiles immediately adjacent</li>
