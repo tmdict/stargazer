@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { toRef } from 'vue'
+import { computed } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
 import { useI18nStore } from '@/stores/i18n'
@@ -19,8 +19,8 @@ const i18n = useI18nStore()
 // Pass a reactive reference to skillName so the composable reacts to changes
 const { ContentComponent } = useContentComponent({
   type: 'skill',
-  name: toRef(props, 'skillName'),
-  locale: i18n.currentLocale,
+  name: computed(() => props.skillName),
+  locale: computed(() => i18n.currentLocale),
 })
 </script>
 
