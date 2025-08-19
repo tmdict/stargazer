@@ -1,7 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useDragDrop } from '../composables/useDragDrop'
+import { useGameDataStore } from '../stores/gameData'
 
 const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = useDragDrop()
+const gameData = useGameDataStore()
+
+// Get background image based on character level
+const backgroundImage = computed(() => {
+  if (!draggedCharacter.value) return ''
+  const level = draggedCharacter.value.level
+  const bgImage = gameData.icons[`bg-${level}`]
+  return bgImage ? `url(${bgImage})` : ''
+})
 </script>
 
 <template>
@@ -14,7 +25,14 @@ const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = u
         top: `${dragPreviewPosition.y}px`,
       }"
     >
-      <div class="character-preview" :class="`level-${draggedCharacter.level}`">
+      <div
+        class="character-preview"
+        :style="{
+          backgroundImage: backgroundImage,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }"
+      >
         <img :src="draggedImageSrc" :alt="draggedCharacter.name" class="portrait" />
       </div>
     </div>
@@ -64,13 +82,5 @@ const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = u
   border: 2px solid #484848;
   border-radius: 50%;
   z-index: 1;
-}
-
-.level-s {
-  background: url('@/assets/images/icons/bg-s.png') center/cover;
-}
-
-.level-a {
-  background: url('@/assets/images/icons/bg-a.png') center/cover;
 }
 </style>

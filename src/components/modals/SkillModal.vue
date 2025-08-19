@@ -2,6 +2,7 @@
 import { toRef } from 'vue'
 import BaseModal from './BaseModal.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
+import { useI18nStore } from '@/stores/i18n'
 
 interface Props {
   show: boolean
@@ -13,10 +14,13 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const i18n = useI18nStore()
+
 // Pass a reactive reference to skillName so the composable reacts to changes
 const { ContentComponent } = useContentComponent({
   type: 'skill',
   name: toRef(props, 'skillName'),
+  locale: i18n.currentLocale,
 })
 </script>
 

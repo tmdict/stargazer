@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted } from 'vue'
-import { RouterLink, RouterView } from 'vue-router'
+import { RouterView } from 'vue-router'
 
 import rowanSvg from '@/assets/rowan.svg'
 import rowanGif from '@/assets/rowan.gif'
@@ -163,6 +163,10 @@ nav ul li {
     height: 50px;
   }
 
+  .menu {
+    margin-bottom: -0.5rem;
+  }
+
   .menu a,
   .menu button {
     font-size: 1rem;
@@ -183,6 +187,7 @@ nav ul li {
     flex-direction: row;
     gap: 0.5rem;
     margin: 0;
+    margin-bottom: -0.3rem;
     padding-bottom: 0;
   }
 

@@ -1,3 +1,19 @@
+<script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
+import { setupContentMeta } from '@/utils/contentMeta'
+
+import { gridStyles, images } from './Silvina.data'
+
+setupContentMeta({
+  title: 'Silvina · First Strike',
+  description:
+    'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts.',
+  url: 'skill/silvina',
+  locale: 'en',
+  keywords: ['Silvina', '西尔维娜'],
+})
+</script>
+
 <template>
   <article>
     <h1>Silvina · First Strike</h1>
@@ -21,7 +37,7 @@
       <li>And so on...</li>
     </ul>
 
-    <GridSnippet :gridStyle="gridStyles.main" />
+    <GridSnippet :grid-style="gridStyles.main" :images />
 
     <p>
       Ally (targeting enemy) walks clockwise from top-right, while Enemy (targeting ally) walks
@@ -30,8 +46,3 @@
     <p>(Credit: rkkñ for documenting Silvina's targeting mechanics)</p>
   </article>
 </template>
-
-<script setup lang="ts">
-import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles } from './Silvina.data'
-</script>

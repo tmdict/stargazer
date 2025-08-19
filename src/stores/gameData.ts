@@ -20,8 +20,9 @@ export const useGameDataStore = defineStore('gameData', () => {
 
   // Initialize all data using dataLoader
   const initializeData = () => {
-    if (dataLoaded.value) {
-      return // Already loaded
+    // Skip if already loaded or during SSG
+    if (dataLoaded.value || import.meta.env.SSR) {
+      return
     }
 
     try {
@@ -39,6 +40,16 @@ export const useGameDataStore = defineStore('gameData', () => {
     } catch (error) {
       console.error('Failed to initialize data:', error)
     }
+  }
+
+  /**
+   * Sets character images directly.
+   * Used by SSG to inject pre-loaded images during hydration.
+   * This allows content pages to display character images without
+   * loading the full game data.
+   */
+  const setCharacterImages = (images: Record<string, string>) => {
+    characterImages.value = images
   }
 
   // Helper to get character range by ID
@@ -90,6 +101,7 @@ export const useGameDataStore = defineStore('gameData', () => {
 
     // Actions
     initializeData,
+    setCharacterImages,
     getCharacterRange,
     getCharacterById,
     getCharacterNameById,
