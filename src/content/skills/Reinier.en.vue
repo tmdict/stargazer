@@ -1,3 +1,18 @@
+<script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
+import { setupContentMeta } from '@/utils/contentMeta'
+
+import { gridStyles, images } from './Reinier.data'
+
+setupContentMeta({
+  title: 'Reinier · Dynamic Balance',
+  description:
+    "Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a symmetrical position at the start of the battle. After the battle starts, the connected ally and enemy's positions are swapped, the ally receives a buff and the enemy receives a debuff.",
+  url: 'https://stargazer.tmdict.com/en/skill/reinier',
+  keywords: ['Reinier', '雷内亚'],
+})
+</script>
+
 <template>
   <article>
     <h1>Reinier · Dynamic Balance</h1>
@@ -12,8 +27,6 @@
       Reinier identifies symmetrical hex pairs where one contains an ally and the other contains an
       enemy.
     </p>
-
-    <h2>Tie-Breaking Rules</h2>
     <p>When multiple ally-enemy pairs are present, use the following rules to handle tie-break:</p>
     <ul>
       <li>
@@ -29,8 +42,3 @@
     <GridSnippet :grid-style="gridStyles.main" :images />
   </article>
 </template>
-
-<script setup lang="ts">
-import GridSnippet from '@/components/grid/GridSnippet.vue'
-import { gridStyles, images } from './Reinier.data'
-</script>
