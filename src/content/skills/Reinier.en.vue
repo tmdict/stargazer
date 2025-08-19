@@ -31,12 +31,12 @@ setupContentMeta({
     <p>When multiple ally-enemy pairs are present, use the following rules to handle tie-break:</p>
     <ul>
       <li>
-        <strong>Ally Team (targeting enemy):</strong> Neighbor tile priority: Bottom-left > Left >
-        Bottom-right > Right > Top-left > Top-right
+        <strong>Ally Team (targeting enemy):</strong> Neighbor tile priority: Bottom-left → Left →
+        Bottom-right → Right → Top-left → Top-right
       </li>
       <li>
-        <strong>Enemy Team (targeting ally):</strong> Neighbor tile priority: Top-right > Top-left >
-        Right > Bottom-right > Left > Bottom-left (180° rotation)
+        <strong>Enemy Team (targeting ally):</strong> Neighbor tile priority: Top-right → Top-left →
+        Right → Bottom-right → Left → Bottom-left (180° rotation)
       </li>
     </ul>
 
