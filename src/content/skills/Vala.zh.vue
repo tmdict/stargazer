@@ -6,8 +6,8 @@ setupContentMeta({
   description:
     '在战斗开始前指定一个敌方角色。在战斗中，维拉会优先攻击被标记的敌人，并且每次攻击时会吸收能量。',
   url: 'skill/vala',
-  keywords: ['Vala', '维拉'],
   locale: 'zh',
+  keywords: ['Vala', '维拉'],
 })
 </script>
 

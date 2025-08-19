@@ -4,8 +4,8 @@ interface ContentMetaOptions {
   title: string
   description: string
   url: string
+  locale: 'en' | 'zh'
   keywords?: string[]
-  locale?: 'en' | 'zh'
 }
 
 /**
@@ -16,7 +16,7 @@ export function setupContentMeta(options: ContentMetaOptions): void {
   const { title, description, url, keywords, locale } = options
 
   // Set document language during runtime
-  if (!import.meta.env.SSR && locale) {
+  if (!import.meta.env.SSR) {
     document.documentElement.lang = locale
     return
   }

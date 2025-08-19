@@ -9,8 +9,8 @@ setupContentMeta({
   description:
     'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts.',
   url: 'skill/silvina',
-  keywords: ['Silvina', '西尔维娜'],
   locale: 'en',
+  keywords: ['Silvina', '西尔维娜'],
 })
 </script>
 

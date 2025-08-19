@@ -6,8 +6,8 @@ setupContentMeta({
   description:
     "Vala's Notice Beforehand skill targets the enemy furthest from her current position at the start of the battle. During battle Vala will attacks the Noticed enemy in priority, and absorb energy for each hit.",
   url: 'skill/vala',
-  keywords: ['Vala', '维拉'],
   locale: 'en',
+  keywords: ['Vala', '维拉'],
 })
 </script>
 
