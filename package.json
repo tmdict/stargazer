@@ -34,6 +34,7 @@
     "vite-imagetools": "^7.1.0",
     "vite-plugin-vue-devtools": "^7.7.7",
     "vite-ssg": "^28.1.0",
+    "vite-ssg-sitemap": "^0.10.0",
     "vue-tsc": "^2.2.10"
   }
 }
