@@ -149,8 +149,8 @@ function findNearestEnemySpiral(
  * Calculate the target for Silvina's First Strike skill.
  *
  * Targeting priority:
- * 1. Enemy on the symmetrical tile (immediate target)
- * 2. Nearest enemy to the symmetrical tile (spiral search)
+ * 1. Enemy on the symmetrical tile
+ * 2. Nearest enemy to the symmetrical tile via spiral search
  */
 export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const { grid, team, hexId } = context
