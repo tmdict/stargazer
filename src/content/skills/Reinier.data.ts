@@ -1,3 +1,5 @@
+import reinierImage from '@/assets/images/character/reinier.png?format=webp&quality=80&w=100'
+
 export const gridStyles = {
   main: {
     numericLabel: {
@@ -13,4 +15,8 @@ export const gridStyles = {
       reinier: 9,
     },
   },
+}
+
+export const images = {
+  reinier: reinierImage,
 }

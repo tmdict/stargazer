@@ -98,9 +98,20 @@ Thin reactive wrappers around domain objects using Pinia. Bridges framework-agno
 
 Vue components with single responsibilities. Multi-layer rendering solves SVG limitations.
 
+### Composables Layer (`/src/composables/`)
+
+Vue 3 composition functions that encapsulate reusable logic. These provide shared functionality across components while maintaining reactivity.
+
+**Key Composables:**
+
+- `useRouteLocale`: Extracts locale from current route path
+- `useContentComponent`: Dynamically loads content components based on locale
+- `useDragDrop`: Handles drag-and-drop interactions with custom preview
+- `useArenaSwitcher`: Manages arena selection and transitions
+
 ### Content Layer (`/src/content/`)
 
-Localized content components separated from UI logic. Single source of truth for all translatable content, with locale-specific files (`.en.vue`, `.zh.vue`) and shared data files (`.data.ts`).
+Localized content components separated from UI logic. Single source of truth for all translatable content, with locale-specific files (`.en.vue`, `.zh.vue`) and shared data files (`.data.ts`). These content pages are pre-rendered at build time for SEO and performance.
 
 **Component Architecture:**
 
@@ -179,14 +190,29 @@ src/
 ├── components/       # Vue components
 ├── composables/      # Vue composition API
 ├── utils/            # Helper utilities
-└── views/            # Page components
+├── views/            # Page components
+├── router/           # Routing configuration
+│   ├── index.ts      # Router setup
+│   └── routes.ts     # Shared route definitions
+├── main.ts           # SPA entry point
+└── main.ssg.ts       # SSG entry point (pre-rendering)
 ```
+
+## Build Modes
+
+The application supports two build modes:
+
+- **SSG Mode** (`npm run build`): Pre-renders content pages at build time for SEO and performance. The interactive game remains client-side.
+- **SPA Mode** (`npm run build:spa`): Traditional single-page application without pre-rendering.
+
+Development always runs in SPA mode for hot module replacement.
 
 ## Related Documentation
 
 - [`/docs/architecture/GRID.md`](./architecture/GRID.md) - Grid & character system details
 - [`/docs/architecture/SKILLS.md`](./architecture/SKILLS.md) - Skill system implementation
 - [`/docs/architecture/PATHFINDING.md`](./architecture/PATHFINDING.md) - Pathfinding algorithms
+- [`/docs/architecture/PRE_RENDERING.md`](./architecture/PRE_RENDERING.md) - SSG/pre-rendering implementation
 - [`/docs/architecture/DRAG_AND_DROP.md`](./architecture/DRAG_AND_DROP.md) - Multi-layer drag system
 - [`/docs/architecture/EVENT_SYSTEM.md`](./architecture/EVENT_SYSTEM.md) - Event communication
 - [`/docs/architecture/URL_SERIALIZATION.md`](./architecture/URL_SERIALIZATION.md) - State sharing
