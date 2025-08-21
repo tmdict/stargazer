@@ -33,6 +33,7 @@ The pre-rendering system uses vite-ssg to generate static HTML for content pages
 - Uses `main.ssg.ts` entry point
 - Generates static HTML for content pages
 - Home page remains client-only
+- Share page is pre-rendered with default state for direct URL access
 
 ## Implementation Details
 
@@ -55,7 +56,8 @@ export const routes: RouteRecordRaw[] = [
 Key considerations:
 
 - Single source of truth for all routes
-- Home and Share route included but not pre-rendered during SSG
+- Home route included but not pre-rendered (fully interactive)
+- Share route is pre-rendered with default content for direct URL navigation
 - Locale determined from URL path, not props
 
 ### SSG Entry Point (`/src/main.ssg.ts`)
@@ -250,7 +252,8 @@ Vite config includes SSG-specific options:
 ssgOptions: {
   entry: 'src/main.ssg.ts',
   includedRoutes: () => [
-    '/', '/en/about', '/zh/about',
+    '/', '/share', // Share page for direct URL access
+    '/en/about', '/zh/about',
     '/en/skill/silvina', // ... all skill pages
   ],
   onPageRendered: (route, html) => {
@@ -274,6 +277,17 @@ declare module '*.png?format=webp&quality=80&w=100' {
 ```
 
 This allows content data files to import optimized images with proper type support.
+
+### Share Page Handling
+
+The Share page (`/share`) is a special case in the SSG build:
+
+- **Pre-rendered with default state**: Generates a share.html file with empty/default content
+- **Direct URL support**: Allows users to navigate directly to `site.com/share?g=...` without 404 errors
+- **Client-side hydration**: Once loaded, JavaScript parses the query parameter and displays the shared grid state
+- **Same behavior as home page**: After hydration, works identically to the home page for grid visualization
+
+This approach ensures that shared links work reliably even when accessed directly, while maintaining the interactive nature of the grid visualization.
 
 ### Browser API Protection
 
