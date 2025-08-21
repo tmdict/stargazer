@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import type { CharacterType } from '../../lib/types/character'
 import { State } from '../../lib/types/state'
 import type DebugGrid from '../debug/DebugGrid.vue'
@@ -38,7 +39,9 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 // Vertical scale compensation - automatically inverse of grid compression when in perspective mode
-const verticalScaleComp = props.showPerspective ? 1 / props.perspectiveVerticalCompression : 1.0
+const verticalScaleComp = computed(() =>
+  props.showPerspective ? 1 / props.perspectiveVerticalCompression : 1.0,
+)
 </script>
 
 <template>

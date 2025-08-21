@@ -573,7 +573,7 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
-.grid-tiles[data-readonly="true"] .grid-tile {
+.grid-tiles[data-readonly='true'] .grid-tile {
   cursor: default;
 }
 
@@ -587,7 +587,7 @@ onUnmounted(() => {
   /* Ensure event layer can receive drop events even with HTML overlays above */
 }
 
-.grid-tiles[data-readonly="true"] .grid-event-layer {
+.grid-tiles[data-readonly='true'] .grid-event-layer {
   cursor: default;
 }
 
