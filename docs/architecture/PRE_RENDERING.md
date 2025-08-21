@@ -44,6 +44,7 @@ Shared routes defined once and used by both modes:
 // src/router/routes.ts
 export const routes: RouteRecordRaw[] = [
   { path: '/', component: () => import('../views/Home.vue') },
+  { path: '/share', component: () => import('../views/Share.vue') },
   { path: '/en/about', component: () => import('../views/About.vue') },
   { path: '/zh/about', component: () => import('../views/About.vue') },
   { path: '/en/skill/:name', component: () => import('../views/Skill.vue'), props: true },
@@ -54,7 +55,7 @@ export const routes: RouteRecordRaw[] = [
 Key considerations:
 
 - Single source of truth for all routes
-- Home route included but not pre-rendered during SSG
+- Home and Share route included but not pre-rendered during SSG
 - Locale determined from URL path, not props
 
 ### SSG Entry Point (`/src/main.ssg.ts`)
@@ -145,7 +146,9 @@ Data files use optimized images via vite-imagetools:
 // src/content/skills/Silvina.data.ts
 import silvinaImage from '@/assets/images/character/silvina.png?format=webp&quality=80&w=100'
 
-export const gridStyles = { /* ... */ }
+export const gridStyles = {
+  /* ... */
+}
 export const images = {
   silvina: silvinaImage,
 }

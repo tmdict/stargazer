@@ -104,9 +104,36 @@ Only non-default hex states are stored, significantly reducing size.
 2. Gather character placements and display flags
 3. Binary encode with variable-length IDs
 4. Base64-like encode to URL-safe string
-5. Append as hash with query parameter
+5. Append as query parameter
 
-Example: `https://<url>>/#/?g=AQIDBAUGBwgJCg`
+Example: `https://<url>>/?g=AQIDBAUGBwgJCg`
+
+## Share Page Integration
+
+The URL serialization system powers the Share page feature, enabling read-only grid viewing through direct links.
+
+### Share URL Format
+
+```
+https://<url>/share?g=<encoded-state>
+```
+
+### Share Page Behavior
+
+- **Read-only Mode**: Grid is displayed but not interactable (no dragging, clicking, or state changes)
+- **Full State Preservation**: All display settings (perspective, arrows, hex IDs, skills) are maintained
+- **Responsive Design**: Grid adapts to screen size without forcing perspective flattening on mobile
+- **Modal Presentation**: Dark overlay background with centered grid container
+- **Navigation**: Clicking outside the grid or using browser back returns to main page with state preserved
+
+### Share Link Generation
+
+The Link button in GridControls generates share URLs:
+
+1. Serializes current grid state
+2. Creates `/share?g=<encoded>` URL
+3. Copies to clipboard with toast notification
+4. Redirects to Share page for preview
 
 ## Decoding Process
 

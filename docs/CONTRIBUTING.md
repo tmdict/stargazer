@@ -69,6 +69,13 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 
 ## Common Tasks
 
+### Sharing a Grid
+
+1. Set up your grid with characters and settings
+2. Click the "Link" button in grid controls
+3. The share URL is copied to clipboard and you're redirected to the Share page
+4. Share the URL with others - they'll see a read-only view of your exact grid setup
+
 ### Adding a Character
 
 1. Add JSON: `src/data/characters/[name].json`
