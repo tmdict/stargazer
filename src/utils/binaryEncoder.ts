@@ -23,8 +23,7 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
  *   - Bits 1-4: Display flags (showHexIds, showArrows, showPerspective, showSkills)
- *   - Bits 5-6: Map ID (1-3, 0 means default/arena1)
- *   - Bit 7: Reserved
+ *   - Bits 5-7: Reserved (not currently used)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
