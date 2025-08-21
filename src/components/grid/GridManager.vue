@@ -40,6 +40,8 @@ interface Props {
   defaultSvgHeight: number
   // Debug props
   debugGridRef: any
+  // Interaction control
+  readonly?: boolean
 }
 
 const props = defineProps<Props>()
@@ -77,6 +79,11 @@ const modalPosition = ref({ x: 0, y: 0 })
 // When in map editor mode, clicking a hex changes its state to the selected state
 // In normal mode, show character selection modal
 gridEvents.on('hex:click', (hex: Hex) => {
+  // Skip all interactions if readonly
+  if (props.readonly) {
+    return
+  }
+
   if (props.isMapEditorMode) {
     const hexId = hex.getId()
     mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
@@ -260,10 +267,12 @@ const triggerHexDrop = (event: DragEvent, hex: Hex) => {
   }
 }
 
-// Register hex detector and drop handler with DragDropProvider
+// Register hex detector and drop handler with DragDropProvider (only if not readonly)
 onMounted(() => {
-  registerHexDetector(findHexUnderMouse)
-  registerDropHandler(handleDetectedHexDrop)
+  if (!props.readonly) {
+    registerHexDetector(findHexUnderMouse)
+    registerDropHandler(handleDetectedHexDrop)
+  }
 })
 
 // Expose methods for parent components if needed
@@ -287,6 +296,7 @@ defineExpose({
       :selected-map-editor-state="selectedMapEditorState"
       :show-perspective="showPerspective"
       :show-skills="showSkills"
+      :readonly
     />
 
     <!-- Artifact layer (behind characters) -->
@@ -305,6 +315,7 @@ defineExpose({
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
+      :readonly
     />
 
     <!-- Arrow layer (above characters) -->

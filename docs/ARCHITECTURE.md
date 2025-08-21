@@ -108,6 +108,7 @@ Vue 3 composition functions that encapsulate reusable logic. These provide share
 - `useContentComponent`: Dynamically loads content components based on locale
 - `useDragDrop`: Handles drag-and-drop interactions with custom preview
 - `useArenaSwitcher`: Manages arena selection and transitions
+- `useBreakpoint`: Responsive breakpoint detection with optional mobile perspective control
 
 ### Content Layer (`/src/content/`)
 
@@ -116,17 +117,18 @@ Localized content components separated from UI logic. Single source of truth for
 **Component Architecture:**
 
 ```
-GridManager
-├── GridTiles (SVG base with 5 internal layers)
-│   ├── Regular Hexes (visual)
-│   ├── Elevated Hexes (visual)
-│   ├── Skill-Highlighted Hexes (visual, topmost)
-│   ├── Text Layer (hex IDs and coordinates)
-│   └── Event Capture (invisible)
-├── GridArtifacts (HTML overlay)
-├── GridCharacters (HTML overlay)
-├── GridArrows (SVG overlay)
-└── SkillTargeting (SVG overlay)
+GridContainer (Reusable grid wrapper)
+└── GridManager
+    ├── GridTiles (SVG base with 5 internal layers)
+    │   ├── Regular Hexes (visual)
+    │   ├── Elevated Hexes (visual)
+    │   ├── Skill-Highlighted Hexes (visual, topmost)
+    │   ├── Text Layer (hex IDs and coordinates)
+    │   └── Event Capture (invisible)
+    ├── GridArtifacts (HTML overlay)
+    ├── GridCharacters (HTML overlay)
+    ├── GridArrows (SVG overlay)
+    └── SkillTargeting (SVG overlay)
 ```
 
 GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view, while ally artifacts naturally avoid overlap due to their corner positioning. Skill-highlighted hexes render above elevated hexes to ensure skill borders are always visible. SkillTargeting renders above arrows for targeting skills like Silvina's First Strike.

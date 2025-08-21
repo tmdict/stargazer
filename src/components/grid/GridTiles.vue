@@ -39,6 +39,7 @@ interface Props {
   selectedMapEditorState: State
   showPerspective: boolean
   showSkills: boolean
+  readonly?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -527,7 +528,7 @@ onUnmounted(() => {
         Invisible event layer - MUST be rendered last to be topmost layer
         This ensures drag and drop events are captured even when hovering over characters
         All character visual elements have pointer-events: none to allow events to pass through
-      -->
+        -->
         <g
           v-for="hex in hexes"
           :key="`event-${hex.getId()}`"
@@ -544,12 +545,12 @@ onUnmounted(() => {
             fill="transparent"
             stroke="transparent"
             stroke-width="0"
-            @click="gridEvents.emit('hex:click', hex)"
-            @mouseenter="handleHexMouseEnter(hex)"
-            @mouseleave="handleHexMouseLeave(hex)"
-            @dragover="handleHexDragOver($event, hex)"
-            @dragleave="handleHexDragLeave($event, hex)"
-            @drop="handleHexDrop($event, hex)"
+            @click="!readonly && gridEvents.emit('hex:click', hex)"
+            @mouseenter="!readonly && handleHexMouseEnter(hex)"
+            @mouseleave="!readonly && handleHexMouseLeave(hex)"
+            @dragover="!readonly && handleHexDragOver($event, hex)"
+            @dragleave="!readonly && handleHexDragLeave($event, hex)"
+            @drop="!readonly && handleHexDrop($event, hex)"
           />
         </g>
       </g>
