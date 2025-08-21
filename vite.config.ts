@@ -26,6 +26,7 @@ export default defineConfig({
       
       const routes: string[] = [
         '/', // Include home but won't be pre-rendered (no static content)
+        '/share', // Include share for direct URL navigation
       ]
       
       // Add about pages
