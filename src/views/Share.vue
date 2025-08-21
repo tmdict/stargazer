@@ -212,7 +212,9 @@ const homeLink = computed(() => {
     <!-- Empty state -->
     <div v-else class="empty-state">
       <p>{{ emptyMessage }}</p>
-      <a href="/" class="home-link">Back to Stargazer</a>
+      <a href="/" class="rowan-link" aria-label="Stargazer" title="Stargazer">
+        <img src="../assets/rowan.gif" alt="logo" class="rowan-gif" />
+      </a>
     </div>
   </div>
 
@@ -256,21 +258,21 @@ const homeLink = computed(() => {
   margin: 0 0 24px 0;
 }
 
-.home-link {
+.rowan-link {
   display: inline-block;
-  padding: 12px 24px;
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 6px;
-  color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: transform 0.2s ease;
 }
 
-.home-link:hover {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
+.rowan-link:hover {
+  transform: scale(1.05);
+}
+
+.rowan-gif {
+  display: block;
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
 }
 
 /* Responsive adjustments */
