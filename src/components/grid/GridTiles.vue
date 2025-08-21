@@ -436,6 +436,7 @@ onUnmounted(() => {
     :height="svgDimensions.height"
     class="grid-tiles"
     :class="{ 'map-editor-mode': isMapEditorMode }"
+    :data-readonly="readonly"
     @mousedown="handleMapEditorMouseDown"
     @mouseup="handleMapEditorMouseUp"
     @mouseleave="handleMapEditorMouseUp"
@@ -572,6 +573,10 @@ onUnmounted(() => {
   cursor: pointer;
 }
 
+.grid-tiles[data-readonly="true"] .grid-tile {
+  cursor: default;
+}
+
 .hex-text {
   pointer-events: none; /* Text doesn't block mouse events */
 }
@@ -580,6 +585,10 @@ onUnmounted(() => {
   cursor: pointer;
   pointer-events: all;
   /* Ensure event layer can receive drop events even with HTML overlays above */
+}
+
+.grid-tiles[data-readonly="true"] .grid-event-layer {
+  cursor: default;
 }
 
 /* Ensure event layer polygons can receive all pointer events including drops */

@@ -306,6 +306,7 @@ defineExpose({
       :artifactImages
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
+      :readonly
     />
 
     <!-- Character layer (above artifacts) -->

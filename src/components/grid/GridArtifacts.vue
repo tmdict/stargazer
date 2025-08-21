@@ -12,6 +12,7 @@ const props = defineProps<{
   artifactImages: Record<string, string>
   showPerspective?: boolean
   scaleY?: number
+  readonly?: boolean
 }>()
 
 const gridEvents = useGridEvents()
@@ -104,8 +105,9 @@ const handleArtifactClick = (team: Team) => {
     <div
       v-if="allyArtifactName"
       class="grid-artifact"
+      :class="{ readonly }"
       :style="getAllyStyles"
-      @click="handleArtifactClick(Team.ALLY)"
+      @click="!readonly && handleArtifactClick(Team.ALLY)"
     >
       <img
         :src="artifactImages[allyArtifactName]"
@@ -119,8 +121,9 @@ const handleArtifactClick = (team: Team) => {
     <div
       v-if="enemyArtifactName"
       class="grid-artifact"
+      :class="{ readonly }"
       :style="getEnemyStyles"
-      @click="handleArtifactClick(Team.ENEMY)"
+      @click="!readonly && handleArtifactClick(Team.ENEMY)"
     >
       <img
         :src="artifactImages[enemyArtifactName]"
@@ -154,6 +157,10 @@ const handleArtifactClick = (team: Team) => {
   box-shadow: 0 0 0 2px #fff;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.grid-artifact.readonly {
+  cursor: default;
 }
 
 .artifact-image {
