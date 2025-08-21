@@ -1,13 +1,15 @@
 /** * Home.vue - Main application layout */
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 
 import { getMapNames } from '../lib/maps'
 import { State } from '../lib/types/state'
+import { useBreakpoint } from '../composables/useBreakpoint'
 import { useToast } from '../composables/useToast'
 import { useArtifactStore } from '../stores/artifact'
 import { useGameDataStore } from '../stores/gameData'
-import { useGridStore, type Breakpoint } from '../stores/grid'
+import { useGridStore } from '../stores/grid'
 import { useI18nStore } from '../stores/i18n'
 import { useMapEditorStore } from '../stores/mapEditor'
 import { useSkillStore } from '../stores/skill'
@@ -17,8 +19,8 @@ import ArtifactSelection from '../components/ArtifactSelection.vue'
 import CharacterSelection from '../components/CharacterSelection.vue'
 import DebugGrid from '../components/debug/DebugGrid.vue'
 import DragDropProvider from '../components/DragDropProvider.vue'
+import GridContainer from '../components/grid/GridContainer.vue'
 import GridControls from '../components/grid/GridControls.vue'
-import GridManager from '../components/grid/GridManager.vue'
 import MapEditor from '../components/MapEditor.vue'
 import SkillsSelection from '../components/SkillsSelection.vue'
 import TabNavigation from '../components/ui/TabNavigation.vue'
@@ -28,7 +30,7 @@ import ToastContainer from '../components/ui/ToastContainer.vue'
 const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
 const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 
-// Use Pinia stores
+// Use Pinia stores and router
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
@@ -37,6 +39,8 @@ const artifactStore = useArtifactStore()
 const mapEditorStore = useMapEditorStore()
 const skillStore = useSkillStore()
 const { success, error } = useToast()
+const router = useRouter()
+const { showPerspective } = useBreakpoint()
 
 // Connect grid and skill manager
 gridStore._getGrid().skillManager = skillStore._getSkillManager()
@@ -52,48 +56,13 @@ const selectedMap = ref('arena1')
 // Grid display toggles
 const showArrows = ref(true)
 const showHexIds = ref(false)
-const showPerspective = ref(true)
 const showSkills = ref(true)
-
-// Vertical scale compensation - automatically inverse of grid compression when in perspective mode
-const verticalScaleComp = computed(() => {
-  return showPerspective.value ? 1 / PERSPECTIVE_VERTICAL_COMPRESSION : 1.0
-})
 
 // Debug grid ref
 const debugGridRef = ref<InstanceType<typeof DebugGrid> | null>(null)
 
 // Map editor state
 const selectedMapEditorState = ref<State>(State.DEFAULT)
-
-// Breakpoint thresholds for grid resize
-const MOBILE_BREAKPOINT = 480
-const TABLET_BREAKPOINT = 768
-
-// Track current breakpoint instead of exact width
-const currentBreakpoint = ref<Breakpoint>('desktop')
-
-const getBreakpoint = (width: number): Breakpoint => {
-  if (width <= MOBILE_BREAKPOINT) return 'mobile'
-  if (width <= TABLET_BREAKPOINT) return 'tablet'
-  return 'desktop'
-}
-
-const handleResize = () => {
-  const newBreakpoint = getBreakpoint(window.innerWidth)
-
-  // Only update if breakpoint actually changed
-  if (newBreakpoint !== currentBreakpoint.value) {
-    const previousBreakpoint = currentBreakpoint.value
-    currentBreakpoint.value = newBreakpoint
-    gridStore.updateBreakpoint(newBreakpoint)
-
-    // Automatically enable flat view (disable perspective) when moving to mobile
-    if (newBreakpoint === 'mobile' && previousBreakpoint !== 'mobile') {
-      showPerspective.value = false
-    }
-  }
-}
 
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
@@ -147,9 +116,20 @@ const handleCopyLink = async () => {
       },
     )
 
-    // Copy URL to clipboard
-    await navigator.clipboard.writeText(shareableUrl)
-    success('Copied to clipboard!')
+    // Convert to share link format
+    const urlParams = new URLSearchParams(shareableUrl.split('?')[1])
+    const encodedState = urlParams.get('g')
+    const shareLink = `${window.location.origin}/share?g=${encodedState}`
+
+    // Copy share URL to clipboard
+    await navigator.clipboard.writeText(shareLink)
+
+    // Navigate to share page with state indicating link was copied
+    router.push({
+      path: '/share',
+      query: { g: encodedState },
+      state: { linkCopied: true },
+    })
   } catch (err) {
     console.error('Failed to copy grid link:', err)
     error('Failed to copy link')
@@ -247,29 +227,6 @@ const handleMapEditorStateSelected = (state: State) => {
 const handleClearMap = () => {
   mapEditorStore.resetToCurrentMap()
 }
-
-// Lifecycle hooks for viewport management
-onMounted(() => {
-  // Initial setup
-  currentBreakpoint.value = getBreakpoint(window.innerWidth)
-  gridStore.updateBreakpoint(currentBreakpoint.value)
-
-  // If starting on mobile, automatically enable flat view
-  if (currentBreakpoint.value === 'mobile') {
-    showPerspective.value = false
-  }
-
-  // Add resize listener (no debouncing needed)
-  window.addEventListener('resize', handleResize)
-
-  // Handle orientation change
-  window.addEventListener('orientationchange', handleResize)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('resize', handleResize)
-  window.removeEventListener('orientationchange', handleResize)
-})
 </script>
 
 <template>
@@ -280,33 +237,22 @@ onUnmounted(() => {
           <!-- Grid and Debug Layout -->
           <div class="grid-and-debug">
             <!-- Grid Manager Component -->
-            <div class="perspective-container">
-              <div
-                :style="
-                  showPerspective
-                    ? { transform: `scaleY(${PERSPECTIVE_VERTICAL_COMPRESSION})` }
-                    : {}
-                "
-                style="transform-origin: center; transition: transform 0.3s ease-out"
-              >
-                <GridManager
-                  :characters="gameDataStore.characters"
-                  :character-images="gameDataStore.characterImages"
-                  :artifact-images="gameDataStore.artifactImages"
-                  :icons="gameDataStore.icons"
-                  :show-arrows="showArrows"
-                  :show-hex-ids="showHexIds"
-                  :show-debug="showDebug"
-                  :show-skills="showSkills"
-                  :is-map-editor-mode="activeTab === 'mapEditor'"
-                  :selected-map-editor-state="selectedMapEditorState"
-                  :showPerspective
-                  :debugGridRef
-                  :verticalScaleComp
-                  :defaultSvgHeight="DEFAULT_SVG_HEIGHT"
-                />
-              </div>
-            </div>
+            <GridContainer
+              :characters="gameDataStore.characters"
+              :character-images="gameDataStore.characterImages"
+              :artifact-images="gameDataStore.artifactImages"
+              :icons="gameDataStore.icons"
+              :show-arrows="showArrows"
+              :show-hex-ids="showHexIds"
+              :show-debug="showDebug"
+              :show-skills="showSkills"
+              :is-map-editor-mode="activeTab === 'mapEditor'"
+              :selected-map-editor-state="selectedMapEditorState"
+              :show-perspective
+              :debugGridRef
+              :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
+              :default-svg-height="DEFAULT_SVG_HEIGHT"
+            />
 
             <!-- Debug Panel (outside perspective transforms) -->
             <div v-if="showDebug" class="debug-panel">
@@ -436,13 +382,6 @@ onUnmounted(() => {
   .tab-panel {
     padding: var(--spacing-sm) 0;
   }
-}
-
-/* Perspective container - simplified to just hold the grid */
-.perspective-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
 }
 
 /* Debug panel styling (moved from GridManager) */

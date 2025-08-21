@@ -15,6 +15,7 @@ interface Props {
   showPerspective: boolean
   scaleY: number
   isMapEditorMode: boolean
+  readonly?: boolean
 }
 
 const props = defineProps<Props>()
@@ -145,12 +146,12 @@ const handleClick = (hexId: number) => {
       v-for="[hexId, characterId] in characterStore.characterPlacements"
       :key="hexId"
       class="character"
-      :class="{ 'map-editor-disabled': isMapEditorMode }"
+      :class="{ 'map-editor-disabled': isMapEditorMode, readonly: readonly }"
       :style="getCharacterStyle(hexId)"
-      :draggable="!isMapEditorMode"
-      @dragstart="handleDragStart($event, hexId, characterId)"
-      @dragend="handleDragEnd($event)"
-      @click="handleClick(hexId)"
+      :draggable="!isMapEditorMode && !readonly"
+      @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
+      @dragend="!readonly && handleDragEnd($event)"
+      @click="!readonly && handleClick(hexId)"
     >
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />
@@ -187,6 +188,11 @@ const handleClick = (hexId: number) => {
 }
 
 .character.map-editor-disabled {
+  pointer-events: none;
+  cursor: default;
+}
+
+.character.readonly {
   pointer-events: none;
   cursor: default;
 }

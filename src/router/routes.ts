@@ -13,6 +13,11 @@ export const routes: RouteRecordRaw[] = [
     name: 'home',
     component: () => import('../views/Home.vue'),
   },
+  {
+    path: '/share',
+    name: 'share',
+    component: () => import('../views/Share.vue'),
+  },
   // English routes
   {
     path: '/en/about',
