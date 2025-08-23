@@ -10,7 +10,7 @@
     "build:spa": "npm run type-check && vite build",
     "preview": "vite preview",
     "type-check": "vue-tsc --build",
-    "format": "prettier --write src/",
+    "format": "prettier --write src/ docs/ test/",
     "test": "node --import tsx --test test/**/*.test.ts",
     "test:targeting": "tsx test/lib/skills/targeting/targeting.test.ts"
   },
