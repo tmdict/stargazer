@@ -146,7 +146,7 @@ function findNearestEnemySpiral(
 }
 
 /**
- * Calculate the target for Silvina's First Strike skill.
+ * Calculate the target for skill.
  *
  * Targeting priority:
  * 1. Enemy on the symmetrical tile

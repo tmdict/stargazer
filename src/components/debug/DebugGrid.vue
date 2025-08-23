@@ -56,16 +56,6 @@ const shouldShowDebugLines = (hexId: number): boolean => {
   return !hiddenCharacters.value.has(hexId)
 }
 
-// Show/hide all debug lines
-const toggleAllDebugLines = (show: boolean) => {
-  if (show) {
-    hiddenCharacters.value.clear()
-  } else {
-    const allHexIds = characterStore.getTilesWithCharacters().map((tile) => tile.hex.getId())
-    hiddenCharacters.value = new Set(allHexIds)
-  }
-}
-
 // Expose functions for PathfindingDebug component
 defineExpose({
   shouldShowDebugLines,
@@ -165,6 +155,25 @@ defineExpose({
                     <span v-if="targetInfo.metadata?.distance"
                       >(distance: {{ targetInfo.metadata.distance }})</span
                     >
+                  </span>
+                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
+                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
+                  </span>
+                </template>
+              </template>
+            </div>
+            <!-- Show skill targeting info for Nara -->
+            <div v-if="tile.characterId === 58 && tile.team" class="skill-info">
+              <span class="skill-label">Skill: Phantom Chains (Nara)</span>
+              <span class="symmetry-info"
+                >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
+              >
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
+                <template v-if="key === `${tile.characterId}-${tile.team}`">
+                  <span class="skill-target">
+                    → Targeting Hex {{ targetInfo.targetHexId }}
+                    <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
+                    <span v-else>(spiral search)</span>
                   </span>
                   <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
                     Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
