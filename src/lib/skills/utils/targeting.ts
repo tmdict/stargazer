@@ -13,16 +13,10 @@ export enum TargetingMethod {
   FURTHEST,
 }
 
-export enum TieBreaker {
-  HEX_ID, // Team-aware hex ID
-  SPIRAL, // Team-aware spiral walk
-}
-
 export interface TargetingOptions {
   targetTeam: Team
   excludeSelf?: boolean
   targetingMethod: TargetingMethod
-  tieBreaker: TieBreaker
   referenceHexId?: number // Default to context.hexId
 }
 
@@ -121,12 +115,13 @@ function sortByTargetingMethod(
 }
 
 /**
- * Apply tie-breaking logic when multiple candidates are at the same distance
+ * Apply team-aware hex ID tie-breaking when multiple candidates are at the same distance
+ * - Ally team prefers lower hex IDs
+ * - Enemy team prefers higher hex IDs (180° rotation symmetry)
  */
-function applyTieBreaker(
+function applyHexIdTieBreaker(
   sortedCandidates: TargetCandidate[],
   casterTeam: Team,
-  tieBreaker: TieBreaker,
   referenceHexId: number,
 ): TargetCandidate | null {
   if (sortedCandidates.length === 0) return null
@@ -141,21 +136,14 @@ function applyTieBreaker(
     return tiedCandidates[0]
   }
 
-  // Apply tie-breaking
-  if (tieBreaker === TieBreaker.HEX_ID) {
-    // Team-aware hex ID preference
-    return tiedCandidates.sort((a, b) => {
-      if (casterTeam === Team.ALLY) {
-        return a.hexId - b.hexId // Lower hex ID wins for ally team
-      } else {
-        return b.hexId - a.hexId // Higher hex ID wins for enemy team
-      }
-    })[0]
-  }
-
-  // For SPIRAL tie-breaking, we'd need more complex logic (to be implemented later)
-  // For now, default to first candidate
-  return tiedCandidates[0]
+  // Apply team-aware hex ID tie-breaking
+  return tiedCandidates.sort((a, b) => {
+    if (casterTeam === Team.ALLY) {
+      return a.hexId - b.hexId // Lower hex ID wins for ally team
+    } else {
+      return b.hexId - a.hexId // Higher hex ID wins for enemy team
+    }
+  })[0]
 }
 
 /**
@@ -183,8 +171,8 @@ export function findTarget(
   // Sort by targeting method (closest/furthest)
   const sorted = sortByTargetingMethod(candidates, referenceHexId, options.targetingMethod)
 
-  // Apply tie-breaking
-  const winner = applyTieBreaker(sorted, team, options.tieBreaker, referenceHexId)
+  // Apply team-aware hex ID tie-breaking
+  const winner = applyHexIdTieBreaker(sorted, team, referenceHexId)
 
   if (!winner) return null
 
@@ -200,4 +188,103 @@ export function findTarget(
       examinedTiles,
     },
   }
+}
+
+/**
+ * Searches outward  from a given tile (usually a symmetrical tile) in a spiral pattern
+ * until finding the first target.
+ *
+ * Search pattern:
+ * - Ally team: Walks clockwise starting after top-right position (q+N, r-N)
+ * - Enemy team: Walks counter-clockwise starting after bottom-left position (q-N, r+N)
+ *
+ * The search expands ring by ring (distance 1, 2, 3...) until a target is found.
+ * Within each ring, tiles are checked in the appropriate walk order.
+ */
+export function spiralSearchFromTile(
+  grid: Grid,
+  centerHexId: number,
+  targetTeam: Team,
+  casterTeam: Team,
+): SkillTargetInfo | null {
+  const centerHex = grid.getHexById(centerHexId)
+  if (!centerHex) return null
+
+  const candidates = getTeamCharacters(grid, targetTeam)
+  if (candidates.length === 0) return null
+
+  // Create lookup structures for efficient checking
+  const candidateTileSet = new Set(candidates.map((c) => c.hexId))
+  const candidateMap = new Map(candidates.map((c) => [c.hexId, c.characterId]))
+
+  // Track examined tiles for debug info
+  const examinedTiles: number[] = []
+
+  // Find the maximum distance to any candidate
+  let maxDistance = 0
+  for (const candidate of candidates) {
+    const candidateHex = grid.getHexById(candidate.hexId)
+    if (!candidateHex) continue
+    const distance = centerHex.distance(candidateHex)
+    if (distance > maxDistance) maxDistance = distance
+  }
+
+  // Search expanding rings from distance 1 outward
+  for (let distance = 1; distance <= maxDistance; distance++) {
+    const ringTiles: Array<{ hexId: number; angle: number }> = []
+    const allTiles = grid.getAllTiles()
+
+    // Collect all tiles at the current distance
+    for (const tile of allTiles) {
+      if (tile?.hex && centerHex.distance(tile.hex) === distance) {
+        const tileHex = tile.hex
+        const tileId = tileHex.getId()
+        const dq = tileHex.q - centerHex.q
+        const dr = tileHex.r - centerHex.r
+
+        // Convert hex coordinates to angle for sorting
+        const x = (3 / 2) * dq
+        const y = Math.sqrt(3) * (dr + dq / 2)
+        const angle = Math.atan2(y, x)
+
+        // Normalize angle based on team's walk direction
+        // Ally: clockwise from top-right
+        // Enemy: counter-clockwise from bottom-left
+        let normalizedAngle: number
+        if (casterTeam === Team.ALLY) {
+          // Ally team: Start walk after top-right (-60°), normalize from -30°
+          // This creates a clockwise walk starting just after the top-right position
+          normalizedAngle = (angle + Math.PI / 6 + 2 * Math.PI) % (2 * Math.PI)
+        } else {
+          // Enemy team: Start walk after bottom-left (120°), normalize from 150° and reverse
+          // This creates a counter-clockwise walk starting just after the bottom-left position
+          const tempAngle = (angle - (5 * Math.PI) / 6 + 2 * Math.PI) % (2 * Math.PI)
+          normalizedAngle = 2 * Math.PI - tempAngle
+        }
+
+        ringTiles.push({ hexId: tileId, angle: normalizedAngle })
+      }
+    }
+
+    // Sort tiles by their angle to create the spiral walk order
+    ringTiles.sort((a, b) => a.angle - b.angle)
+
+    // Walk through tiles in spiral order and return the first target found
+    for (const tile of ringTiles) {
+      examinedTiles.push(tile.hexId)
+      if (candidateTileSet.has(tile.hexId)) {
+        return {
+          targetHexId: tile.hexId,
+          targetCharacterId: candidateMap.get(tile.hexId)!,
+          metadata: {
+            symmetricalHexId: centerHexId,
+            isSymmetricalTarget: false,
+            examinedTiles: [...examinedTiles],
+          },
+        }
+      }
+    }
+  }
+
+  return null
 }
