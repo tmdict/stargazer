@@ -372,7 +372,17 @@ const handleClearMap = () => {
   color: var(--color-text-muted);
 }
 
+@media (max-width: 1280px) {
+  .sections-container {
+    gap: var(--spacing-lg);
+  }
+}
+
 @media (max-width: 768px) {
+  .sections-container {
+    gap: 0;
+  }
+
   .tab-panel {
     padding: var(--spacing-lg) 0;
   }
