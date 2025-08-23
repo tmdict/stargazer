@@ -135,7 +135,7 @@ export class Grid {
   }
 
   getTilesWithCharacters(): GridTile[] {
-    return Array.from(this.storage.values()).filter((tile) => tile.characterId !== undefined)
+    return this.getAllTiles().filter((tile) => tile.characterId !== undefined)
   }
 
   // Character Query Methods
