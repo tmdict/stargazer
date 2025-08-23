@@ -113,11 +113,13 @@ const key = `${sourceId}-${targetId}-${range}-${gridHash}`
 The cache invalidation system uses intelligent batching to minimize performance overhead:
 
 #### Batched Invalidation
+
 - **Transaction Batching**: Multiple character operations within a transaction trigger only ONE cache clear
 - **Automatic Batching**: The Grid's `executeTransaction` method automatically batches cache invalidations
 - **Manual Control**: Operations can pass `skipCacheInvalidation = true` to defer clearing
 
 #### When Cache is Cleared
+
 - **After Transactions**: Single clear after all operations complete
 - **On Rollback**: Single clear if transaction fails
 - **Direct Operations**: Immediate clear for non-transactional operations
