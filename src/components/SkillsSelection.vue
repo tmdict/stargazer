@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import { useSelectionState } from '../composables/useSelectionState'
+import { DOCUMENTED_SKILLS } from '../lib/skill'
 import type { CharacterType } from '../lib/types/character'
 import { useI18nStore } from '../stores/i18n'
 import Character from './Character.vue'
@@ -16,21 +17,17 @@ const props = defineProps<{
   isDraggable?: boolean
 }>()
 
-// List of characters that have skill implementations
-// Single source of truth - add more character names here as skills are implemented
-const SKILL_CHARACTERS = ['silvina', 'nara', 'vala', 'reinier', 'dunlingr'] as const
-
 const { selectedTeam, characterStore } = useSelectionState()
 const i18n = useI18nStore()
 
 // Filter characters to only show those with skills
 const skillCharacters = computed(() => {
   return props.characters
-    .filter((char) => SKILL_CHARACTERS.includes(char.name as any))
+    .filter((char) => DOCUMENTED_SKILLS.includes(char.name as any))
     .sort((a, b) => {
-      // Sort by the order in SKILL_CHARACTERS array
-      const aIndex = SKILL_CHARACTERS.indexOf(a.name as any)
-      const bIndex = SKILL_CHARACTERS.indexOf(b.name as any)
+      // Sort by the order in DOCUMENTED_SKILLS array
+      const aIndex = DOCUMENTED_SKILLS.indexOf(a.name as any)
+      const bIndex = DOCUMENTED_SKILLS.indexOf(b.name as any)
       return aIndex - bIndex
     })
 })

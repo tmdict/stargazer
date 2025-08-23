@@ -79,7 +79,7 @@ const getSkillBorderStyle = (characterId: number, hexId: number) => {
   if (!team) return {}
 
   // Check if this character has a color modifier (either main character with skill or companion)
-  const borderColor = skillStore.getColorModifierForHex(hexId, characterId, team)
+  const borderColor = skillStore.getColorModifierForCharacter(characterId, team)
   if (borderColor) {
     return { borderColor }
   }

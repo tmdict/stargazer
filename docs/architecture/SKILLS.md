@@ -208,22 +208,26 @@ To add documentation pages for a skill:
    - `SkillName.zh.vue` - Chinese documentation content  
    - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
 
-2. **Update Skill.vue** in `/src/views/Skill.vue`:
-   - Add the skill name to the `nameMap` object with proper casing:
+2. **Update DOCUMENTED_SKILLS** in `/src/lib/skill.ts`:
+   - Add the skill name to the `DOCUMENTED_SKILLS` array (near the skillRegistry):
    ```typescript
-   const nameMap: Record<string, string> = {
-     skillname: 'SkillName',  // lowercase key, PascalCase value
-     // ...
-   }
+   // List of skills with documentation pages
+   // Update this when adding new skill documentation
+   export const DOCUMENTED_SKILLS = [
+     'silvina',
+     'nara', 
+     'vala',
+     'reinier',
+     'dunlingr',
+     'newskill',  // Add your new skill here
+   ] as const
    ```
 
-3. **Update vite config** in `/vite.config.ts`:
-   - Add the skill ID to the `skillIds` array for static site generation:
-   ```typescript
-   const skillIds = ['silvina', 'nara', 'vala', 'dunlingr', 'reinier', 'newskill']
-   ```
-
-This ensures the skill documentation pages are properly routed and statically generated during builds.
+This single update ensures:
+- The skill appears in SkillsSelection.vue automatically
+- Skill.vue properly normalizes the skill name for routing
+- vite.config.ts includes it for static site generation
+- All skill documentation references use this single source of truth
 
 ## Performance Considerations
 
