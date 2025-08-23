@@ -12,7 +12,7 @@
     "type-check": "vue-tsc --build",
     "format": "prettier --write src/",
     "test": "node --import tsx --test test/**/*.test.ts",
-    "test:silvina": "tsx test/lib/skills/silvina/silvina.test.ts"
+    "test:targeting": "tsx test/lib/skills/targeting/targeting.test.ts"
   },
   "dependencies": {
     "html-to-image": "^1.11.13",
