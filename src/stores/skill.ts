@@ -20,12 +20,8 @@ export const useSkillStore = defineStore('skill', () => {
     return skillManager.getTileColorModifiers()
   })
 
-  // Helper to get color modifier for a character on a specific hex
-  const getColorModifierForHex = (
-    hexId: number,
-    characterId: number,
-    team: Team,
-  ): string | undefined => {
+  // Helper to get color modifier for a character
+  const getColorModifierForCharacter = (characterId: number, team: Team): string | undefined => {
     const key = `${characterId}-${team}`
     const color = colorModifiersByCharacterAndTeam.value.get(key)
     return color
@@ -51,7 +47,7 @@ export const useSkillStore = defineStore('skill', () => {
   return {
     colorModifiersByCharacterAndTeam,
     tileColorModifiers,
-    getColorModifierForHex,
+    getColorModifierForCharacter,
     getTileColorModifier,
     getAllSkillTargets,
     getActiveSkillInfo,
