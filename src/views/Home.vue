@@ -54,7 +54,7 @@ const availableMaps = getMapNames()
 const selectedMap = ref('arena1')
 
 // Grid display toggles
-const showArrows = ref(true)
+const showArrows = ref(false)
 const showHexIds = ref(false)
 const showSkills = ref(true)
 
@@ -92,8 +92,8 @@ if (gameDataStore.dataLoaded) {
   const displayFlags = urlStateStore.restoreStateFromUrl()
   // Apply display flags from URL if they exist
   if (displayFlags) {
-    showHexIds.value = displayFlags.showHexIds ?? true
-    showArrows.value = displayFlags.showArrows ?? true
+    showHexIds.value = displayFlags.showHexIds ?? false
+    showArrows.value = displayFlags.showArrows ?? false
     showPerspective.value = displayFlags.showPerspective ?? true
     showSkills.value = displayFlags.showSkills ?? true
   }

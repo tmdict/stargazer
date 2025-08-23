@@ -177,13 +177,13 @@ export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return findNearestEnemySpiral(grid, symmetricalHexId, team)
 }
 
-export const silvinaSkill: Skill = {
-  id: 'silvina',
-  characterId: 39,
-  name: 'First Strike',
+export const naraSkill: Skill = {
+  id: 'nara',
+  characterId: 58,
+  name: 'Phantom Chains',
   description:
-    'Targets the character on the opposing team on a symmetrical tile to Silvina. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
-  targetingColorModifier: '#6d9c86', // Green color for targeting arrow
+    'Targets the character on the opposing team on a symmetrical tile to Nara. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
+  targetingColorModifier: '#98be5d', // Green color for targeting arrow
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context

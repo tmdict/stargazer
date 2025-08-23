@@ -85,9 +85,9 @@ function isTargetingSkill(key: string): boolean {
 // Get the targeting color for a skill
 function getTargetingColor(key: string): string {
   const parsed = parseSkillKey(key)
-  if (!parsed) return '#73be25'
+  if (!parsed) return '#36958e'
   const skill = getCharacterSkill(parsed.characterId)
-  return skill?.targetingColorModifier || '#73be25' // Default to green if not specified
+  return skill?.targetingColorModifier || '#36958e' // Default to green if not specified
 }
 
 // Force update when grid changes

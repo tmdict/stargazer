@@ -137,54 +137,6 @@ Highlight multiple tiles based on game state:
 - **Dynamic updates**: Recalculate when board state changes
 - **Layered rendering**: Skill borders always visible on top
 
-## Implemented Skills
-
-### Companion Skills
-
-**Phraesto** (ID: 50) - Shadow Companion:
-
-- Main: White border
-- Companion: Red border
-- Implementation: `/src/lib/skills/phraesto.ts`
-
-**Elijah & Lailah** (ID: 68) - Twin Units:
-
-- Elijah: Blue border, range 6
-- Lailah: Pink border, range 1
-- Implementation: `/src/lib/skills/elijah-lailah.ts`
-
-### Targeting Skills
-
-**Silvina** (ID: 39) - First Strike:
-
-- Green targeting arrow
-- Targets enemy on symmetrical hex position
-- Uses clockwise spiral search for tie-breaking (counter-clockwise for enemy team)
-- Implementation: `/src/lib/skills/silvina.ts`
-
-**Vala** (ID: 46) - Assassin:
-
-- Purple targeting arrow
-- Targets furthest opposing character
-- Team-aware tie-breaking
-- Implementation: `/src/lib/skills/vala.ts`
-
-**Dunlingr** (ID: 57) - Bell of Order:
-
-- Yellow targeting arrow
-- Targets furthest same-team character (excluding self)
-- Team-aware tie-breaking
-- Implementation: `/src/lib/skills/dunlingr.ts`
-
-### Tile Effect Skills
-
-**Reinier** (ID: 31) - Dynamic Balance:
-
-- Purple tile borders
-- Targets adjacent ally with symmetrical enemy
-- Priority-based selection with tie-breaking
-- Implementation: `/src/lib/skills/reinier.ts`
-
 ## Adding New Skills
 
 To add a new skill:
@@ -229,13 +181,13 @@ import { mySkill } from './skills/mySkill'
 const skillRegistry = new Map<number, Skill>([
   // Companion skills
   [phraestoSkill.characterId, phraestoSkill],
-  [elijahLailahSkill.characterId, elijahLailahSkill],
+  // ...
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
-  [valaSkill.characterId, valaSkill],
-  [dunlingrSkill.characterId, dunlingrSkill],
+  // ...
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
+  // ...
   // Add new skills here
   [mySkill.characterId, mySkill],
 ])
@@ -246,6 +198,32 @@ const skillRegistry = new Map<number, Skill>([
    - Clean deactivation
    - Team changes
    - Edge cases
+
+## Adding Skill Documentation
+
+To add documentation pages for a skill:
+
+1. **Create content files** in `/src/content/skills/`:
+   - `SkillName.en.vue` - English documentation content
+   - `SkillName.zh.vue` - Chinese documentation content  
+   - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
+
+2. **Update Skill.vue** in `/src/views/Skill.vue`:
+   - Add the skill name to the `nameMap` object with proper casing:
+   ```typescript
+   const nameMap: Record<string, string> = {
+     skillname: 'SkillName',  // lowercase key, PascalCase value
+     // ...
+   }
+   ```
+
+3. **Update vite config** in `/vite.config.ts`:
+   - Add the skill ID to the `skillIds` array for static site generation:
+   ```typescript
+   const skillIds = ['silvina', 'nara', 'vala', 'dunlingr', 'reinier', 'newskill']
+   ```
+
+This ensures the skill documentation pages are properly routed and statically generated during builds.
 
 ## Performance Considerations
 

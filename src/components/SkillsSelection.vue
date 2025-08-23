@@ -18,7 +18,7 @@ const props = defineProps<{
 
 // List of characters that have skill implementations
 // Single source of truth - add more character names here as skills are implemented
-const SKILL_CHARACTERS = ['silvina', 'vala', 'reinier', 'dunlingr'] as const
+const SKILL_CHARACTERS = ['silvina', 'nara', 'vala', 'reinier', 'dunlingr'] as const
 
 const { selectedTeam, characterStore } = useSelectionState()
 const i18n = useI18nStore()

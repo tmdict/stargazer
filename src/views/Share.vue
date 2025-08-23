@@ -39,7 +39,7 @@ gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // State management
 const hasValidGrid = ref(false)
-const showArrows = ref(true)
+const showArrows = ref(false)
 const showHexIds = ref(false)
 const showPerspective = ref(true)
 const showSkills = ref(true)
@@ -136,7 +136,7 @@ const restoreStateFromUrl = () => {
     const displayFlags = unpackDisplayFlags(urlState.d)
     if (displayFlags) {
       showHexIds.value = displayFlags.showHexIds ?? false
-      showArrows.value = displayFlags.showArrows ?? true
+      showArrows.value = displayFlags.showArrows ?? false
       showPerspective.value = displayFlags.showPerspective ?? true
       showSkills.value = displayFlags.showSkills ?? true
     }

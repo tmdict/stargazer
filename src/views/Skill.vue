@@ -26,6 +26,7 @@ const normalizedSkillName = computed(() => {
   // Map lowercase names to properly cased filenames
   const nameMap: Record<string, string> = {
     silvina: 'Silvina',
+    nara: 'Nara',
     vala: 'Vala',
     reinier: 'Reinier',
     dunlingr: 'Dunlingr',

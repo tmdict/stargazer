@@ -24,8 +24,3 @@ Key features:
 - Team-aware tracking via `mainId-team` keys
 - Visual differentiation via `companionColorModifier`
 - Optional range override via `companionRange`
-
-## Examples
-
-**Phraesto** (ID: 50) - Spawns shadow with red border  
-**Elijah & Lailah** (ID: 68) - Spawns Lailah with pink border and range 1

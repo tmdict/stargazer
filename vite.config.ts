@@ -21,7 +21,7 @@ export default defineConfig({
     formatting: 'minify',
     includedRoutes: () => {
       // Only generate content pages
-      const skillIds = ['silvina', 'vala', 'dunlingr', 'reinier']
+      const skillIds = ['silvina', 'nara', 'vala', 'dunlingr', 'reinier']
       const locales = ['en', 'zh']
       
       const routes: string[] = [
