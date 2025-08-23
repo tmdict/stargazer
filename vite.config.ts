@@ -5,6 +5,7 @@ import { imagetools } from 'vite-imagetools'
 import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
+import { DOCUMENTED_SKILLS } from './src/lib/skill'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -20,8 +21,8 @@ export default defineConfig({
     script: 'async',
     formatting: 'minify',
     includedRoutes: () => {
-      // Only generate content pages
-      const skillIds = ['silvina', 'nara', 'vala', 'dunlingr', 'reinier']
+      // Get skill IDs from the single source of truth
+      const skillIds = [...DOCUMENTED_SKILLS]
       const locales = ['en', 'zh']
       
       const routes: string[] = [
