@@ -217,6 +217,7 @@ interface Props {
 ```
 
 Key features:
+
 - **Dual-mode image loading**: Accepts images via props (for SSG) or reads from store (for SPA)
 - **Non-interactive**: Display-only, no drag & drop functionality
 - **SSG-friendly**: Avoids hydration mismatches by using props for static content

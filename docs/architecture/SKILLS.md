@@ -205,8 +205,9 @@ const skillRegistry = new Map<number, Skill>([
 To add documentation pages for a skill:
 
 1. **Create content files** in `/src/content/skills/`:
+
    - `SkillName.en.vue` - English documentation content
-   - `SkillName.zh.vue` - Chinese documentation content  
+   - `SkillName.zh.vue` - Chinese documentation content
    - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
 
 2. **Update DOCUMENTED_SKILLS** in `/src/lib/skill.ts`:
@@ -216,15 +217,16 @@ To add documentation pages for a skill:
    // Update this when adding new skill documentation
    export const DOCUMENTED_SKILLS = [
      'silvina',
-     'nara', 
+     'nara',
      'vala',
      'reinier',
      'dunlingr',
-     'newskill',  // Add your new skill here
+     'newskill', // Add your new skill here
    ] as const
    ```
 
 This single update ensures:
+
 - The skill appears in SkillsSelection.vue automatically
 - Skill.vue properly normalizes the skill name for routing
 - vite.config.ts includes it for static site generation
