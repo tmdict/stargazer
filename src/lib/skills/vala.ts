@@ -1,12 +1,11 @@
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
-import { findTarget, getOpposingTeam, TargetingMethod, TieBreaker } from './utils/targeting'
+import { findTarget, getOpposingTeam, TargetingMethod } from './utils/targeting'
 
 // Calculate the furthest opposing target from Vala's position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return findTarget(context, {
     targetTeam: getOpposingTeam(context.team), // Opposing team
     targetingMethod: TargetingMethod.FURTHEST,
-    tieBreaker: TieBreaker.HEX_ID,
   })
 }
 

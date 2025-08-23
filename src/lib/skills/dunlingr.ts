@@ -1,5 +1,5 @@
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
-import { findTarget, TargetingMethod, TieBreaker } from './utils/targeting'
+import { findTarget, TargetingMethod } from './utils/targeting'
 
 // Calculate the furthest same-team target from Dunlingr's position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
@@ -7,7 +7,6 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
     targetTeam: context.team, // Same team
     excludeSelf: true,
     targetingMethod: TargetingMethod.FURTHEST,
-    tieBreaker: TieBreaker.HEX_ID,
   })
 }
 

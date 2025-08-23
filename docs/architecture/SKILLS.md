@@ -121,10 +121,11 @@ See [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) for implem
 
 Automatically select and track enemy targets:
 
+- **Unified API**: Composable targeting functions eliminate duplication
 - **Dynamic recalculation**: Updates when characters move
 - **Visual feedback**: Colored arrows instead of borders
-- **Custom logic**: Symmetrical, closest, or priority-based
-- **Performance optimized**: Pre-computed lookups
+- **Flexible patterns**: Furthest/closest, same/opposing team, spiral search
+- **Performance optimized**: Efficient grid queries and early termination
 
 See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implementation details.
 
