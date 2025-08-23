@@ -168,7 +168,6 @@ main {
 
 .section {
   padding: 2em;
-  margin: 0 0 var(--spacing-xl);
   width: 100%;
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-large);
@@ -176,15 +175,8 @@ main {
   flex-direction: column;
 }
 
-@media (max-width: 1280px) {
-  .section {
-    margin-bottom: var(--spacing-md);
-  }
-}
-
 @media (max-width: 768px) {
   .section {
-    padding: 1.5em;
     margin-bottom: var(--spacing-md);
     border-radius: var(--radius-medium);
   }
@@ -192,7 +184,7 @@ main {
 
 @media (max-width: 480px) {
   .section {
-    margin: 0;
+    margin-bottom: 4px;
     border-radius: 0;
   }
 }
