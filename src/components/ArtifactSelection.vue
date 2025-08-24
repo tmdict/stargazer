@@ -4,7 +4,7 @@ import { computed } from 'vue'
 import type { ArtifactType } from '../lib/types/artifact'
 import { Team } from '../lib/types/team'
 import { useSelectionState } from '../composables/useSelectionState'
-import Artifact from './Artifact.vue'
+import ArtifactIcon from './ArtifactIcon.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 
 const props = defineProps<{
@@ -44,7 +44,7 @@ const sortedArtifacts = computed(() => {
     <!-- Artifacts Grid -->
     <div class="artifacts">
       <div v-for="artifact in sortedArtifacts" :key="artifact.id" class="artifact-profile">
-        <Artifact
+        <ArtifactIcon
           :artifact="artifact"
           :artifactImage="artifactImages[artifact.name]"
           :isPlaced="isArtifactPlaced(artifact.id)"
