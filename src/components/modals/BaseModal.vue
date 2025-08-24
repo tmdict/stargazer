@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import '@/styles/modal.css'
-import { useI18nStore } from '@/stores/i18n'
 import IconClose from '../ui/IconClose.vue'
 import IconLink from '../ui/IconLink.vue'
+import { useI18nStore } from '@/stores/i18n'
+
+import '@/styles/modal.css'
 
 interface Props {
   show: boolean

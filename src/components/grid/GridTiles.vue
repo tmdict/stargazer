@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, onBeforeUnmount, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 
+import { useDragDrop } from '../../composables/useDragDrop'
+import { useGridEvents } from '../../composables/useGridEvents'
 import type { Hex } from '../../lib/hex'
 import type { Layout } from '../../lib/layout'
 import { State } from '../../lib/types/state'
 import { Team } from '../../lib/types/team'
-import { useDragDrop } from '../../composables/useDragDrop'
-import { useGridEvents } from '../../composables/useGridEvents'
 import { useCharacterStore } from '../../stores/character'
 import { useGridStore } from '../../stores/grid'
 import { useMapEditorStore } from '../../stores/mapEditor'

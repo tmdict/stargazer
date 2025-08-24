@@ -1,24 +1,25 @@
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import '@/styles/modal.css'
-import { Team } from '../lib/types/team'
+import DragDropProvider from '../components/DragDropProvider.vue'
+import GridContainer from '../components/grid/GridContainer.vue'
+import IconClose from '../components/ui/IconClose.vue'
+import ToastContainer from '../components/ui/ToastContainer.vue'
 import { useBreakpoint } from '../composables/useBreakpoint'
 import { useStateReset } from '../composables/useStateReset'
 import { useToast } from '../composables/useToast'
+import { Team } from '../lib/types/team'
 import { useArtifactStore } from '../stores/artifact'
 import { useCharacterStore } from '../stores/character'
 import { useGameDataStore } from '../stores/gameData'
 import { useGridStore } from '../stores/grid'
 import { useI18nStore } from '../stores/i18n'
 import { useSkillStore } from '../stores/skill'
-import { decodeGridStateFromUrl } from '../utils/urlStateManager'
 import { unpackDisplayFlags } from '../utils/gridStateSerializer'
-import DragDropProvider from '../components/DragDropProvider.vue'
-import GridContainer from '../components/grid/GridContainer.vue'
-import IconClose from '../components/ui/IconClose.vue'
-import ToastContainer from '../components/ui/ToastContainer.vue'
+import { decodeGridStateFromUrl } from '../utils/urlStateManager'
+
+import '@/styles/modal.css'
 
 // Use stores
 const gridStore = useGridStore()

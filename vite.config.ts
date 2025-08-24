@@ -1,10 +1,10 @@
 import { fileURLToPath, URL } from 'node:url'
-
+import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import { imagetools } from 'vite-imagetools'
-import vue from '@vitejs/plugin-vue'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
+
 import { DOCUMENTED_SKILLS } from './src/lib/skill'
 
 // https://vite.dev/config/

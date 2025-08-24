@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 
-import { Team } from '../lib/types/team'
 import { useStateReset } from '../composables/useStateReset'
 import { useToast } from '../composables/useToast'
+import { Team } from '../lib/types/team'
 import { unpackDisplayFlags } from '../utils/gridStateSerializer'
 import { getGridStateFromCurrentUrl } from '../utils/urlStateManager'
 import { useArtifactStore } from './artifact'
