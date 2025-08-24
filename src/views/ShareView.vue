@@ -233,7 +233,7 @@ const homeLink = computed(() => {
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  padding: 40px;
+  padding: 10px;
   z-index: 1;
   display: flex;
   justify-content: center;
@@ -277,9 +277,12 @@ const homeLink = computed(() => {
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .overlay {
+    align-items: flex-start;
+  }
+
   .grid-wrapper {
-    padding: 20px;
-    margin: 20px;
+    margin: 80px 20px;
   }
 
   .empty-state {
@@ -288,9 +291,12 @@ const homeLink = computed(() => {
 }
 
 @media (max-width: 480px) {
+  .overlay {
+    align-items: flex-start;
+  }
+
   .grid-wrapper {
-    padding: 15px;
-    margin: 10px;
+    margin: 80px 10px;
   }
 
   .empty-state {
