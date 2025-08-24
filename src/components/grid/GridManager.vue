@@ -1,25 +1,24 @@
 <script setup lang="ts">
-import { onMounted, inject, ref } from 'vue'
+import { inject, onMounted, ref } from 'vue'
 
-import type { CharacterType } from '../../lib/types/character'
+import CharacterSelectionModal from '../CharacterSelectionModal.vue'
+import type DebugGrid from '../debug/DebugGrid.vue'
+import PathfindingDebug from '../debug/PathfindingDebug.vue'
+import type { DragDropAPI } from '../DragDropProvider.vue'
+import SkillTargeting from '../SkillTargeting.vue'
+import GridArrows from './GridArrows.vue'
+import GridArtifacts from './GridArtifacts.vue'
+import GridCharacters from './GridCharacters.vue'
+import GridTiles from './GridTiles.vue'
+import { provideGridEvents } from '../../composables/useGridEvents'
 import type { Hex } from '../../lib/hex'
+import type { CharacterType } from '../../lib/types/character'
 import { State } from '../../lib/types/state'
 import { Team } from '../../lib/types/team'
-import { provideGridEvents } from '../../composables/useGridEvents'
 import { useArtifactStore } from '../../stores/artifact'
 import { useCharacterStore } from '../../stores/character'
 import { useGridStore } from '../../stores/grid'
 import { useMapEditorStore } from '../../stores/mapEditor'
-import type { DragDropAPI } from '../DragDropProvider.vue'
-
-import GridArrows from './GridArrows.vue'
-import GridArtifacts from './GridArtifacts.vue'
-import GridCharacters from './GridCharacters.vue'
-import CharacterSelectionModal from '../CharacterSelectionModal.vue'
-import GridTiles from './GridTiles.vue'
-import PathfindingDebug from '../debug/PathfindingDebug.vue'
-import SkillTargeting from '../SkillTargeting.vue'
-import type DebugGrid from '../debug/DebugGrid.vue'
 
 interface Props {
   // Data props

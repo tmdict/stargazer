@@ -1,8 +1,8 @@
-import { defineStore } from 'pinia'
 import { computed } from 'vue'
+import { defineStore } from 'pinia'
 
-import type { GridTile } from '../lib/grid'
 import * as character from '../lib/character'
+import type { GridTile } from '../lib/grid'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
 import { useSkillStore } from './skill'

@@ -4,7 +4,7 @@ all characters * - Painting over any tile removes characters and replaces state 
 events for state selection and map clearing * * Usage: Only active when 'mapEditor' tab is selected
 */
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import { State } from '../lib/types/state'
 import { useI18nStore } from '../stores/i18n'

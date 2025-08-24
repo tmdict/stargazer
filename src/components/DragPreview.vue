@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+
 import { useDragDrop } from '../composables/useDragDrop'
 import { useGameDataStore } from '../stores/gameData'
 

@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import type { CharacterType } from '../lib/types/character'
-import { useSelectionState } from '../composables/useSelectionState'
 import CharacterFilters from './CharacterFilters.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
+import { useSelectionState } from '../composables/useSelectionState'
+import type { CharacterType } from '../lib/types/character'
 
 const props = defineProps<{
   characters: readonly CharacterType[]

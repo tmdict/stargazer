@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { useI18nStore } from '../../stores/i18n'
 import IconCopy from '../ui/IconCopy.vue'
 import IconDownload from '../ui/IconDownload.vue'
 import IconLink from '../ui/IconLink.vue'
+import { useI18nStore } from '../../stores/i18n'
 
 const i18n = useI18nStore()
 

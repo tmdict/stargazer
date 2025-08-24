@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { Team } from '../../lib/types/team'
 import { useGridEvents } from '../../composables/useGridEvents'
+import { Team } from '../../lib/types/team'
 import { useGameDataStore } from '../../stores/gameData'
 import { useGridStore } from '../../stores/grid'
 

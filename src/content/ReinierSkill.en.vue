@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
-
 import { gridStyles, images } from './ReinierSkill.data'
 
 setupContentMeta({

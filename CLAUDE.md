@@ -56,45 +56,20 @@ For comprehensive project documentation, see:
 
 ## Import Ordering Convention
 
+Imports are automatically sorted by Prettier using @ianvs/prettier-plugin-sort-imports.
+
 ### Order Groups (top to bottom)
 
-1. **Node built-in modules** - `fs`, `path`, `http`, etc.
-2. **External packages** - npm/yarn dependencies
-3. **Internal packages** - `@company/*` or workspace packages
-4. **Parent imports** - `../` paths
-5. **Sibling imports** - `./` paths
-6. **Style imports** - CSS/SCSS files
+1. **Vue framework** - `vue`, `vue-router`, `pinia`, `@vue/*` packages
+2. **Third-party & Node modules** - All other external dependencies and Node built-ins
+3. **Local imports** - `@/` paths, parent (`../`), and sibling (`./`) imports
+4. **Style imports** - CSS/SCSS files
 
 ### Rules
 
-- **Blank lines**: Between groups 2→3 and 5→6 only
-- **No blank lines**: Within groups 1+2, 3+4+5, and 6
+- **Blank lines** between groups 2→3 and 3→4
 - **Alphabetical order** within each group
-- Use `import type` for type-only imports
-- Group type imports separately or inline with related imports
-
-### Example (the comments are there for showcase purposes only)
-
-```typescript
-// Node built-ins
-import fs from 'fs'
-import path from 'path'
-// External packages
-import express from 'express'
-import { z } from 'zod'
-
-// Internal packages
-import { Logger } from '@/utils/Logger'
-import { UserService } from '@/services/UserService'
-// Parent imports
-import { SharedHelper } from '../shared/helper'
-// Sibling imports
-import { validateInput } from './validators'
-import type { UserDTO } from './types'
-
-// Styles
-import './styles.css'
-```
+- Type imports are mixed with regular imports
 
 # important-instruction-reminders
 
