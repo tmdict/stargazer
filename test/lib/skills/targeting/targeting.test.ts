@@ -4,6 +4,8 @@ import { getSymmetricalHexId } from '../../../../src/lib/skills/utils/symmetry'
 import { Hex } from '../../../../src/lib/hex'
 import { FULL_GRID } from '../../../../src/lib/types/grid'
 import { Team } from '../../../../src/lib/types/team'
+import { State } from '../../../../src/lib/types/state'
+import type { GridTile, Grid } from '../../../../src/lib/grid'
 import { readFileSync, readdirSync, statSync } from 'fs'
 import { join, basename, dirname } from 'path'
 import { fileURLToPath } from 'url'
@@ -183,26 +185,36 @@ function runSpiralSearch(config: SpiralSearchConfig): SpiralSearchResult {
       return { hex: hexCoordinates.get(id) }
     },
     getAllTiles: () => {
-      const tiles: any[] = []
+      const tiles: GridTile[] = []
       for (const [id, hex] of hexCoordinates.entries()) {
         if (targetTiles.includes(id)) {
-          tiles.push({ hex, characterId: id, team: targetTeam })
+          tiles.push({
+            hex,
+            state: targetTeam === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY,
+            characterId: id,
+            team: targetTeam,
+          })
         } else {
-          tiles.push({ hex })
+          tiles.push({ hex, state: State.DEFAULT })
         }
       }
       return tiles
     },
     getTilesWithCharacters: () => {
-      const tiles: any[] = []
+      const tiles: GridTile[] = []
       for (const [id, hex] of hexCoordinates.entries()) {
         if (targetTiles.includes(id)) {
-          tiles.push({ hex, characterId: id, team: targetTeam })
+          tiles.push({
+            hex,
+            state: targetTeam === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY,
+            characterId: id,
+            team: targetTeam,
+          })
         }
       }
       return tiles
     },
-  } as any
+  } as unknown as Grid
 
   const result = spiralSearchFromTile(mockGrid, centerTile, targetTeam, casterTeam)
 
@@ -222,7 +234,7 @@ describe('Targeting Tests', () => {
 
     // Test spiral search for each test case
     testFiles.forEach((testFile) => {
-      describe(testFile.path || testFile.file, () => {
+      describe(`${testFile.path || testFile.file || 'Unknown test file'}`, () => {
         testFile.testCases.forEach((testCase) => {
           it(`Spiral from tile ${testCase.symmetricalTile}`, () => {
             // First verify the symmetrical tile calculation matches expected
