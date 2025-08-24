@@ -4,7 +4,7 @@ import { useI18nStore } from '../../stores/i18n'
 
 const i18n = useI18nStore()
 
-const props = defineProps<{
+defineProps<{
   selectedTeam: Team
   showCounts?: boolean
   allyCount?: number
