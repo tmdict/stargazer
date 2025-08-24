@@ -216,15 +216,14 @@ function runSpiralSearch(config: SpiralSearchConfig): SpiralSearchResult {
   }
 }
 
-
 describe('Targeting Tests', () => {
   describe('Symmetrical targeting', () => {
     const testFiles = loadAllTests()
 
     // Test spiral search for each test case
-    testFiles.forEach(testFile => {
+    testFiles.forEach((testFile) => {
       describe(testFile.path || testFile.file, () => {
-        testFile.testCases.forEach(testCase => {
+        testFile.testCases.forEach((testCase) => {
           it(`Spiral from tile ${testCase.symmetricalTile}`, () => {
             // First verify the symmetrical tile calculation matches expected
             const calculatedSymmetrical = getSymmetricalHexId(testCase.casterTile)
