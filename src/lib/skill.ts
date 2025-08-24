@@ -19,7 +19,15 @@ export interface SkillContext {
 export interface SkillTargetInfo {
   targetHexId: number | null
   targetCharacterId: number | null
-  metadata?: Record<string, any>
+  metadata?: {
+    allyHexId?: number
+    enemyHexId?: number
+    sourceHexId?: number
+    distance?: number
+    examinedTiles?: number[]
+    symmetricalHexId?: number
+    isSymmetricalTarget?: boolean
+  }
 }
 
 export interface Skill {
