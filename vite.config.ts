@@ -24,24 +24,24 @@ export default defineConfig({
       // Get skill IDs from the single source of truth
       const skillIds = [...DOCUMENTED_SKILLS]
       const locales = ['en', 'zh']
-      
+
       const routes: string[] = [
         '/', // Include home but won't be pre-rendered (no static content)
         '/share', // Include share for direct URL navigation
       ]
-      
+
       // Add about pages
-      locales.forEach(locale => {
+      locales.forEach((locale) => {
         routes.push(`/${locale}/about`)
       })
-      
+
       // Add skill pages
-      locales.forEach(locale => {
-        skillIds.forEach(skillId => {
+      locales.forEach((locale) => {
+        skillIds.forEach((skillId) => {
           routes.push(`/${locale}/skill/${skillId}`)
         })
       })
-      
+
       return routes
     },
     onPageRendered: (route: string, html: string) => {

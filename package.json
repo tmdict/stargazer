@@ -11,8 +11,8 @@
     "preview": "vite preview",
     "type-check": "vue-tsc --build",
     "format": "prettier --write src/ docs/ test/",
-    "test": "node --import tsx --test test/**/*.test.ts",
-    "test:targeting": "tsx test/lib/skills/targeting/targeting.test.ts"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "html-to-image": "^1.11.13",
@@ -34,6 +34,7 @@
     "vite-plugin-vue-devtools": "^7.7.7",
     "vite-ssg": "^28.1.0",
     "vite-ssg-sitemap": "^0.10.0",
+    "vitest": "^3.2.4",
     "vue-tsc": "^2.2.10"
   }
 }
