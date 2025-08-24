@@ -4,17 +4,9 @@ import { ref, computed } from 'vue'
 import type { Locale, LocaleDictionary } from '../lib/types/i18n'
 import { loadAllLocales } from '../utils/dataLoader'
 
-// Re-export types for convenience
-export type { Locale, LocaleData, LocaleDictionary } from '../lib/types/i18n'
-
 // Constants
-const LOCALE_STORAGE_KEY = 'stargazer.locale' as const
-const VALID_LOCALES: readonly Locale[] = ['en', 'zh'] as const
-
-// Helper function to validate locale
-const isValidLocale = (value: unknown): value is Locale => {
-  return VALID_LOCALES.includes(value as Locale)
-}
+const LOCALE_STORAGE_KEY = 'stargazer.locale'
+const VALID_LOCALES = ['en', 'zh']
 
 export const useI18nStore = defineStore('i18n', () => {
   // State
@@ -59,8 +51,8 @@ export const useI18nStore = defineStore('i18n', () => {
     // Load saved locale from localStorage with error handling
     try {
       const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
-      if (isValidLocale(savedLocale)) {
-        currentLocale.value = savedLocale
+      if (savedLocale && VALID_LOCALES.includes(savedLocale)) {
+        currentLocale.value = savedLocale as Locale
       }
     } catch (e) {
       // If localStorage is not available (private browsing, disabled, etc.),
@@ -72,9 +64,9 @@ export const useI18nStore = defineStore('i18n', () => {
     // Check for locale query parameter and override if valid
     const urlParams = new URLSearchParams(window.location.search)
     const localeParam = urlParams.get('l')
-    if (isValidLocale(localeParam)) {
+    if (localeParam && VALID_LOCALES.includes(localeParam)) {
       // Use setLocale to update both currentLocale and localStorage
-      setLocale(localeParam)
+      setLocale(localeParam as Locale)
     } else {
       // Set the HTML lang attribute for the initial locale
       document.documentElement.lang = currentLocale.value
