@@ -23,11 +23,11 @@ const i18n = useI18nStore()
 // Filter characters to only show those with skills
 const skillCharacters = computed(() => {
   return props.characters
-    .filter((char) => DOCUMENTED_SKILLS.includes(char.name as any))
+    .filter((char) => DOCUMENTED_SKILLS.includes(char.name))
     .sort((a, b) => {
       // Sort by the order in DOCUMENTED_SKILLS array
-      const aIndex = DOCUMENTED_SKILLS.indexOf(a.name as any)
-      const bIndex = DOCUMENTED_SKILLS.indexOf(b.name as any)
+      const aIndex = DOCUMENTED_SKILLS.indexOf(a.name)
+      const bIndex = DOCUMENTED_SKILLS.indexOf(b.name)
       return aIndex - bIndex
     })
 })

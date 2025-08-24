@@ -19,6 +19,7 @@ import CharacterSelectionModal from '../CharacterSelectionModal.vue'
 import GridTiles from './GridTiles.vue'
 import PathfindingDebug from '../debug/PathfindingDebug.vue'
 import SkillTargeting from '../SkillTargeting.vue'
+import type DebugGrid from '../debug/DebugGrid.vue'
 
 interface Props {
   // Data props
@@ -39,7 +40,7 @@ interface Props {
   verticalScaleComp: number
   defaultSvgHeight: number
   // Debug props
-  debugGridRef: any
+  debugGridRef?: InstanceType<typeof DebugGrid> | null
   // Interaction control
   readonly?: boolean
 }
