@@ -114,9 +114,6 @@ gridEvents.on('hex:click', (hex: Hex) => {
       if (svgElement && perspectiveContainer) {
         const hexPos = gridStore.layout.hexToPixel(hex)
 
-        // Get the bounding rect of the perspective container to get accurate screen position
-        const containerRect = perspectiveContainer.getBoundingClientRect()
-
         // Create SVG point for the hex position
         const pt = svgElement.createSVGPoint()
         pt.x = hexPos.x

@@ -23,11 +23,6 @@ const skillStore = useSkillStore()
 // Character visibility toggles for debug lines
 const hiddenCharacters = ref<Set<number>>(new Set())
 
-// Helper function to extract image name from path
-const getImageName = (imageSrc: string): string => {
-  return extractFileName(imageSrc)
-}
-
 // Helper function to get character name by ID
 const getCharacterName = (characterId: number): string => {
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'

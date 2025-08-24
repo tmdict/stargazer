@@ -14,7 +14,7 @@ export const elijahLailahSkill: Skill = {
   companionRange: 1, // Lailah has range of 1
 
   onActivate(context: SkillContext): void {
-    const { grid, team, characterId, skillManager, hexId } = context
+    const { grid, team, characterId, skillManager } = context
     const companionId = 10000 + characterId // 10068 for Elijah & Lailah
 
     // Find a random available tile for the companion
@@ -59,7 +59,7 @@ export const elijahLailahSkill: Skill = {
   },
 
   onDeactivate(context: SkillContext): void {
-    const { grid, team, characterId, skillManager, hexId } = context
+    const { grid, team, characterId, skillManager } = context
 
     // Get all companions for this character on this team
     const companions = grid.getCompanions(characterId, team)

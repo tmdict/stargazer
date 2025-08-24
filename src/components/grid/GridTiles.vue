@@ -86,15 +86,6 @@ const paintedHexes = ref(new Set<number>()) // Tracks painted hexes to avoid dup
 let lastPaintTime = 0
 const PAINT_THROTTLE_MS = 50 // Performance: throttle painting to every 50ms
 
-// Watch for changes in position-based hex detection
-watch(hoveredHexId, (newHexId) => {
-  if (isDragging.value && newHexId !== null) {
-    // Trigger drop validation for the detected hex
-    const hex = gridStore.getHexById(newHexId)
-    // We could emit drag over events here if needed
-  }
-})
-
 const gridTransform = computed(() => {
   const transforms: string[] = []
   if (props.rotation !== 0) {

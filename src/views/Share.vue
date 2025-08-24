@@ -86,7 +86,7 @@ const restoreStateFromUrl = () => {
       const companions: typeof urlState.c = []
 
       urlState.c.forEach((entry) => {
-        const [hexId, characterId, team] = entry
+        const characterId = entry[1]
         if (characterId >= 10000) {
           companions.push(entry)
         } else {

@@ -15,7 +15,7 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
-  // @ts-ignore - vite-ssg extends config at runtime
+  // @ts-expect-error - vite-ssg extends config at runtime
   ssgOptions: {
     entry: 'src/main.ssg.ts', // Use SSG-specific entry
     script: 'async',

@@ -144,6 +144,7 @@ export class SkillManager {
       skill.onActivate(context)
       return true
     } catch (error) {
+      console.error('Skill activation failed:', error)
       // Rollback tracking on failure
       delete this.activeSkills[skillKey]
       return false

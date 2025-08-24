@@ -1,6 +1,6 @@
 /** * Home.vue - Main application layout */
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { getMapNames } from '../lib/maps'

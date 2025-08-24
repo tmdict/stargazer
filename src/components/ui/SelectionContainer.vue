@@ -13,7 +13,7 @@ interface Props {
   showFilters?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   showCounts: false,
   allyCount: 0,
   enemyCount: 0,
