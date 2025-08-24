@@ -37,7 +37,9 @@ const getTooltipText = computed(() => {
 
 const handleMouseEnter = (option: string, event: MouseEvent) => {
   hoveredOption.value = option
-  hoveredElement.value = event.currentTarget as HTMLElement
+  if (event.currentTarget instanceof HTMLElement) {
+    hoveredElement.value = event.currentTarget
+  }
 }
 
 const handleMouseLeave = () => {

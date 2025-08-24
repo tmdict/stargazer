@@ -52,8 +52,8 @@ i18nStore.initialize()
 // Restore state from URL
 const restoreStateFromUrl = () => {
   try {
-    const encoded = route.query.g as string
-    if (!encoded) {
+    const encoded = route.query.g
+    if (typeof encoded !== 'string' || !encoded) {
       return false
     }
 

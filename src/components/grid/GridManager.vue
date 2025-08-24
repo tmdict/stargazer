@@ -109,8 +109,8 @@ gridEvents.on('hex:click', (hex: Hex) => {
     ) {
       // Calculate position for modal based on hex position
       // Need to account for perspective transform which is applied to the parent container
-      const svgElement = document.querySelector('.grid-tiles') as SVGSVGElement
-      const perspectiveContainer = document.querySelector('.perspective-container') as HTMLElement
+      const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
+      const perspectiveContainer = document.querySelector<HTMLElement>('.perspective-container')
 
       if (svgElement && perspectiveContainer) {
         const hexPos = gridStore.layout.hexToPixel(hex)
@@ -152,7 +152,7 @@ const closeCharacterModal = () => {
  */
 const findHexUnderMouse = (x: number, y: number): number | null => {
   // Get the SVG element to convert screen coordinates to SVG coordinates
-  const svgElement = document.querySelector('.grid-tiles') as SVGSVGElement
+  const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
   if (!svgElement) return null
 
   // Create SVG point for coordinate conversion
