@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 import type { CharacterType } from '../lib/types/character'
 import { useSelectionState } from '../composables/useSelectionState'
-import Character from './Character.vue'
+import CharacterIcon from './CharacterIcon.vue'
 import CharacterFilters from './CharacterFilters.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 
@@ -105,7 +105,7 @@ const removeCharacterFromGrid = (characterId: number) => {
 
     <!-- Characters Grid -->
     <div class="characters">
-      <Character
+      <CharacterIcon
         v-for="character in filteredAndSortedCharacters"
         :key="character.id"
         :character="{ ...character, team: selectedTeam }"
