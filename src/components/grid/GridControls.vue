@@ -26,28 +26,28 @@ const emit = defineEmits<{
 }>()
 
 const handleDebugChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  emit('update:showDebug', target.checked)
+  if (!(event.target instanceof HTMLInputElement)) return
+  emit('update:showDebug', event.target.checked)
 }
 
 const handleArrowsChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  emit('update:showArrows', target.checked)
+  if (!(event.target instanceof HTMLInputElement)) return
+  emit('update:showArrows', event.target.checked)
 }
 
 const handleHexIdsChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  emit('update:showHexIds', target.checked)
+  if (!(event.target instanceof HTMLInputElement)) return
+  emit('update:showHexIds', event.target.checked)
 }
 
 const handlePerspectiveChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  emit('update:showPerspective', !target.checked) // Invert logic: checked = flat = showPerspective false
+  if (!(event.target instanceof HTMLInputElement)) return
+  emit('update:showPerspective', !event.target.checked) // Invert logic: checked = flat = showPerspective false
 }
 
 const handleSkillsChange = (event: Event) => {
-  const target = event.target as HTMLInputElement
-  emit('update:showSkills', target.checked)
+  if (!(event.target instanceof HTMLInputElement)) return
+  emit('update:showSkills', event.target.checked)
 }
 
 const handleCopyLink = () => {
