@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
-import type { CharacterType } from '../../lib/types/character'
-import { State } from '../../lib/types/state'
+
 import type DebugGrid from '../debug/DebugGrid.vue'
 import GridManager from './GridManager.vue'
+import type { CharacterType } from '../../lib/types/character'
+import { State } from '../../lib/types/state'
 
 interface Props {
   // Data props

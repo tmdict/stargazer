@@ -1,8 +1,8 @@
 import { ARENA_1 } from './arena/arena1'
-import { FULL_GRID, type GridPreset } from './types/grid'
 import { Hex } from './hex'
 import { clearPathfindingCache } from './pathfinding'
 import type { SkillManager } from './skill'
+import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 

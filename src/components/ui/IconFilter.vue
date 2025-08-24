@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
-import { useI18nStore } from '../../stores/i18n'
 import TooltipPopup from './TooltipPopup.vue'
+import { useI18nStore } from '../../stores/i18n'
 
 const i18n = useI18nStore()
 

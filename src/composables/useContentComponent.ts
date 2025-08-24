@@ -1,4 +1,4 @@
-import { markRaw, shallowRef, watchEffect, type Component, type Ref, unref } from 'vue'
+import { markRaw, shallowRef, unref, watchEffect, type Component, type Ref } from 'vue'
 
 interface ContentComponentOptions {
   type: 'skill' | 'about' | 'default'

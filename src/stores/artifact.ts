@@ -1,5 +1,5 @@
+import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { ref, readonly } from 'vue'
 
 import { Team } from '../lib/types/team'
 

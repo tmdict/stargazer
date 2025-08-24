@@ -1,5 +1,5 @@
 import type { GridTile } from '../lib/grid'
-import { encodeToBinary, decodeFromBinary, bytesToUrlSafe, urlSafeToBytes } from './binaryEncoder'
+import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
 import { serializeGridState, type GridState } from './gridStateSerializer'
 
 /* Encode grid state to compressed URL-safe string using binary encoding */

@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import '@/styles/modal.css'
 import IconClose from './IconClose.vue'
+
+import '@/styles/modal.css'
 
 interface Props {
   maxWidth?: string

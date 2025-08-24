@@ -2,9 +2,9 @@
 import { computed, onMounted, onUnmounted } from 'vue'
 
 import { useGridEvents } from '../composables/useGridEvents'
+import { getCharacterSkill } from '../lib/skill'
 import { useGridStore } from '../stores/grid'
 import { useSkillStore } from '../stores/skill'
-import { getCharacterSkill } from '../lib/skill'
 
 interface Props {
   showPerspective: boolean

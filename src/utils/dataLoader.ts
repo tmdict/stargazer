@@ -1,5 +1,5 @@
-import type { CharacterType } from '../lib/types/character'
 import type { ArtifactType } from '../lib/types/artifact'
+import type { CharacterType } from '../lib/types/character'
 import type { LocaleData, LocaleDictionary } from '../lib/types/i18n'
 
 export function extractFileName(path: string, removeExtension = true): string {

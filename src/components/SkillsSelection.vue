@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { useSelectionState } from '../composables/useSelectionState'
-import { DOCUMENTED_SKILLS } from '../lib/skill'
-import type { CharacterType } from '../lib/types/character'
-import { useI18nStore } from '../stores/i18n'
 import CharacterIcon from './CharacterIcon.vue'
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
+import { useSelectionState } from '../composables/useSelectionState'
+import { DOCUMENTED_SKILLS } from '../lib/skill'
+import type { CharacterType } from '../lib/types/character'
+import { useI18nStore } from '../stores/i18n'
 
 const props = defineProps<{
   characters: readonly CharacterType[]

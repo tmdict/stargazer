@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
-import type { CharacterType } from '../lib/types/character'
-import { useDragDrop } from '../composables/useDragDrop'
-import { useI18nStore } from '../stores/i18n'
-import { useTouchDetection } from '../composables/useTouchDetection'
 import TooltipPopup from './ui/TooltipPopup.vue'
+import { useDragDrop } from '../composables/useDragDrop'
+import { useTouchDetection } from '../composables/useTouchDetection'
+import type { CharacterType } from '../lib/types/character'
+import { useI18nStore } from '../stores/i18n'
 
 const props = defineProps<{
   character: CharacterType

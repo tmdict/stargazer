@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import type { CharacterType } from '../lib/types/character'
+import CharacterIcon from './CharacterIcon.vue'
 import type { Hex } from '../lib/hex'
+import type { CharacterType } from '../lib/types/character'
 import { State } from '../lib/types/state'
 import { Team } from '../lib/types/team'
 import { useCharacterStore } from '../stores/character'
 import { useGridStore } from '../stores/grid'
-import CharacterIcon from './CharacterIcon.vue'
 
 interface Props {
   hex: Hex

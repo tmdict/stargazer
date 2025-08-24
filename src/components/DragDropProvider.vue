@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { provide, onMounted, onUnmounted, ref, type Ref } from 'vue'
+import { onMounted, onUnmounted, provide, ref, type Ref } from 'vue'
 
 import { useDragDrop } from '../composables/useDragDrop'
 import type { CharacterType } from '../lib/types/character'

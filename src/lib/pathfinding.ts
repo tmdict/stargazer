@@ -1,6 +1,6 @@
 import type { GridTile } from './grid'
 import { Hex } from './hex'
-import { MemoCache, generatePathCacheKey, generateGridCacheKey } from './memoization'
+import { generateGridCacheKey, generatePathCacheKey, MemoCache } from './memoization'
 import { PriorityQueue } from './priorityQueue'
 import { areHexesInSameDiagonalRow } from './types/grid'
 import { State } from './types/state'

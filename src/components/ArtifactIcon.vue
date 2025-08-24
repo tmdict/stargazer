@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import TooltipPopup from './ui/TooltipPopup.vue'
+import { useTouchDetection } from '../composables/useTouchDetection'
 import type { ArtifactType } from '../lib/types/artifact'
 import { useI18nStore } from '../stores/i18n'
-import { useTouchDetection } from '../composables/useTouchDetection'
-import TooltipPopup from './ui/TooltipPopup.vue'
 
 const i18n = useI18nStore()
 

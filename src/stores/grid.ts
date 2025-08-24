@@ -1,11 +1,11 @@
+import { computed, reactive, readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
-import { ref, computed, readonly, reactive } from 'vue'
 
-import { FULL_GRID } from '../lib/types/grid'
 import { Grid, type GridTile } from '../lib/grid'
 import type { Hex } from '../lib/hex'
 import { Layout, POINTY } from '../lib/layout'
 import { getMapByKey, type MapConfig } from '../lib/maps'
+import { FULL_GRID } from '../lib/types/grid'
 import { State } from '../lib/types/state'
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop'

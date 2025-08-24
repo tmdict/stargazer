@@ -1,4 +1,5 @@
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
+
 import type { Breakpoint } from '../stores/grid'
 import { useGridStore } from '../stores/grid'
 

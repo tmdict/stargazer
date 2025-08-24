@@ -1,5 +1,4 @@
 import type { Grid } from './grid'
-import type { Team } from './types/team'
 import { dunlingrSkill } from './skills/dunlingr'
 import { elijahLailahSkill } from './skills/elijah-lailah'
 import { naraSkill } from './skills/nara'
@@ -7,6 +6,7 @@ import { phraestoSkill } from './skills/phraesto'
 import { reinierSkill } from './skills/reinier'
 import { silvinaSkill } from './skills/silvina'
 import { valaSkill } from './skills/vala'
+import type { Team } from './types/team'
 
 export interface SkillContext {
   grid: Grid

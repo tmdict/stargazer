@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { useI18nStore } from '../../stores/i18n'
-import IconLocaleZh from './IconLocaleZh.vue'
 import IconLocaleEn from './IconLocaleEn.vue'
+import IconLocaleZh from './IconLocaleZh.vue'
+import { useI18nStore } from '../../stores/i18n'
 
 const i18n = useI18nStore()
 </script>
