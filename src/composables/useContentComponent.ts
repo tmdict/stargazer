@@ -39,12 +39,12 @@ export function useContentComponent(options: ContentComponentOptions) {
     }
 
     // Try to get the component synchronously
-    let module = contentModules[buildPath(currentLocale)] as any
+    let module = contentModules[buildPath(currentLocale)] as { default: Component } | undefined
 
     // Fallback to English if not found
     if (!module && fallbackToEnglish && currentLocale !== 'en') {
       console.warn(`Content not found for ${currentName}.${currentLocale}, falling back to en`)
-      module = contentModules[buildPath('en')] as any
+      module = contentModules[buildPath('en')] as { default: Component } | undefined
     }
 
     // Set the component or null if not found

@@ -139,8 +139,8 @@ onUnmounted(() => {
 
           <!-- White shadow path for better visibility -->
           <path
-            v-if="getSkillArrowPath(targetInfo.metadata.sourceHexId, targetInfo.targetHexId)"
-            :d="getSkillArrowPath(targetInfo.metadata.sourceHexId, targetInfo.targetHexId)!"
+            v-if="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)"
+            :d="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)!"
             fill="none"
             stroke="white"
             :stroke-width="arrowStyle.strokeWidth + 4"
@@ -151,8 +151,8 @@ onUnmounted(() => {
 
           <!-- Curved dotted arrow path -->
           <path
-            v-if="getSkillArrowPath(targetInfo.metadata.sourceHexId, targetInfo.targetHexId)"
-            :d="getSkillArrowPath(targetInfo.metadata.sourceHexId, targetInfo.targetHexId)!"
+            v-if="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)"
+            :d="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)!"
             fill="none"
             :stroke="getTargetingColor(key)"
             :stroke-width="arrowStyle.strokeWidth"
