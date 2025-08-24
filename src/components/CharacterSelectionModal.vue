@@ -7,7 +7,7 @@ import { State } from '../lib/types/state'
 import { Team } from '../lib/types/team'
 import { useCharacterStore } from '../stores/character'
 import { useGridStore } from '../stores/grid'
-import Character from './Character.vue'
+import CharacterIcon from './CharacterIcon.vue'
 
 interface Props {
   hex: Hex
@@ -119,7 +119,7 @@ onUnmounted(() => {
         class="character-item"
         @click="handleCharacterClick(character)"
       >
-        <Character
+        <CharacterIcon
           :character="character"
           :characterImage="characterImages[character.name]"
           :icons="icons"

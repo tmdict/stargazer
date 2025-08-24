@@ -5,7 +5,7 @@ import { useSelectionState } from '../composables/useSelectionState'
 import { DOCUMENTED_SKILLS } from '../lib/skill'
 import type { CharacterType } from '../lib/types/character'
 import { useI18nStore } from '../stores/i18n'
-import Character from './Character.vue'
+import CharacterIcon from './CharacterIcon.vue'
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
@@ -88,7 +88,7 @@ const openDetailsModal = (character: CharacterType) => {
     <!-- Skills Characters Grid -->
     <div class="characters">
       <div v-for="character in skillCharacters" :key="character.id" class="character-wrapper">
-        <Character
+        <CharacterIcon
           :character="{ ...character, team: selectedTeam }"
           :characterImage="characterImages[character.name]"
           :icons
