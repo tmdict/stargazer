@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
 
-import { gridStyles, images } from './Reinier.data'
+import { gridStyles, images } from './ReinierSkill.data'
 
 setupContentMeta({
   title: '雷内亚 · 动态平衡',

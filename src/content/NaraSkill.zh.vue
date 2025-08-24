@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
 
-import { gridStyles, images } from './Nara.data'
+import { gridStyles, images } from './NaraSkill.data'
 
 setupContentMeta({
   title: '奈拉 · 铁索勾魂',

@@ -30,9 +30,9 @@ export function useContentComponent(options: ContentComponentOptions) {
     const buildPath = (lang: string) => {
       switch (type) {
         case 'skill':
-          return `/src/content/skills/${currentName}.${lang}.vue`
+          return `/src/content/${currentName}Skill.${lang}.vue`
         case 'about':
-          return `/src/content/About.${lang}.vue`
+          return `/src/content/AboutPage.${lang}.vue`
         default:
           return `/src/content/${currentName}.${lang}.vue`
       }

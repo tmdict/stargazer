@@ -3,8 +3,8 @@ import { computed, ref } from 'vue'
 
 import type { CharacterType } from '../lib/types/character'
 import { useSelectionState } from '../composables/useSelectionState'
-import CharacterIcon from './CharacterIcon.vue'
 import CharacterFilters from './CharacterFilters.vue'
+import CharacterIcon from './CharacterIcon.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 
 const props = defineProps<{
