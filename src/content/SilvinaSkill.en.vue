@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
 
-import { gridStyles, images } from './Silvina.data'
+import { gridStyles, images } from './SilvinaSkill.data'
 
 setupContentMeta({
   title: 'Silvina · First Strike',
