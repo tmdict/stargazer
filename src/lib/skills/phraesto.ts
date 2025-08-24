@@ -13,7 +13,7 @@ export const phraestoSkill: Skill = {
   companionColorModifier: '#c83232', // Red for shadow companion
 
   onActivate(context: SkillContext): void {
-    const { grid, team, characterId, skillManager, hexId } = context
+    const { grid, team, characterId, skillManager } = context
     const companionId = 10000 + characterId // 10050 for Phraesto
 
     // Find a random available tile for the companion
@@ -58,7 +58,7 @@ export const phraestoSkill: Skill = {
   },
 
   onDeactivate(context: SkillContext): void {
-    const { grid, team, characterId, skillManager, hexId } = context
+    const { grid, team, characterId, skillManager } = context
 
     // Get all companions for this character on this team
     const companions = grid.getCompanions(characterId, team)

@@ -38,6 +38,7 @@ function getAdjacentAllies(context: SkillContext): Array<{ hexId: number; positi
         })
       }
     } catch (error) {
+      console.error('Failed to get neighbor hex:', error)
       // Neighbor hex is outside grid boundaries, skip it
       return
     }

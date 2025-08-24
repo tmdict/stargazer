@@ -10,7 +10,7 @@ interface MapInfo {
 
 const i18n = useI18nStore()
 
-const props = defineProps<{
+defineProps<{
   activeTab: string
   availableMaps: MapInfo[]
   selectedMap: string
