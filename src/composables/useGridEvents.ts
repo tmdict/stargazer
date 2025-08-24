@@ -44,7 +44,9 @@ export const GridEventKey: InjectionKey<GridEventAPI> = Symbol('grid-events')
 export function createGridEvents(): GridEventAPI {
   const characterStore = useCharacterStore()
   const artifactStore = useArtifactStore()
-  const handlers = new Map<keyof GridEvents, Set<Function>>()
+  // Map of event names to their handler functions. Using unknown[] for args provides
+  // type safety while allowing handlers with different signatures to be stored together
+  const handlers = new Map<keyof GridEvents, Set<(...args: unknown[]) => void>>()
 
   const emit: GridEventAPI['emit'] = (event, ...args) => {
     const eventHandlers = handlers.get(event)
@@ -75,13 +77,13 @@ export function createGridEvents(): GridEventAPI {
     if (!handlers.has(event)) {
       handlers.set(event, new Set())
     }
-    handlers.get(event)!.add(handler)
+    handlers.get(event)!.add(handler as (...args: unknown[]) => void)
   }
 
   const off: GridEventAPI['off'] = (event, handler) => {
     const eventHandlers = handlers.get(event)
     if (eventHandlers) {
-      eventHandlers.delete(handler)
+      eventHandlers.delete(handler as (...args: unknown[]) => void)
     }
   }
 

@@ -65,12 +65,12 @@ const handleDragEnd = (event: DragEvent) => {
   endDrag(event)
 }
 
-const handleMouseDown = (_event: MouseEvent) => {
+const handleMouseDown = () => {
   isMouseDown.value = true
   startTime.value = Date.now()
 }
 
-const handleMouseUp = (_event: MouseEvent) => {
+const handleMouseUp = () => {
   if (!isMouseDown.value) return
 
   const endTime = Date.now()
