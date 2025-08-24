@@ -29,9 +29,11 @@ export function loadCharacters(): CharacterType[] {
     return charactersCache
   }
 
-  const characters = Object.values(
-    import.meta.glob('../data/character/*.json', { eager: true, import: 'default' }),
-  ) as CharacterType[]
+  const characterModules = import.meta.glob<CharacterType>('../data/character/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  const characters = Object.values(characterModules)
 
   charactersCache = characters
 
@@ -49,11 +51,11 @@ export function loadArtifacts(): ArtifactType[] {
     return artifactsCache
   }
 
-  const artifacts = (
-    Object.values(
-      import.meta.glob('../data/artifact/*.json', { eager: true, import: 'default' }),
-    ) as ArtifactType[]
-  ).sort((a, b) => a.name.localeCompare(b.name))
+  const artifactModules = import.meta.glob<ArtifactType>('../data/artifact/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  const artifacts = Object.values(artifactModules).sort((a, b) => a.name.localeCompare(b.name))
 
   artifactsCache = artifacts
   return artifacts
@@ -64,13 +66,12 @@ export function loadCharacterImages(): Record<string, string> {
     return characterImagesCache
   }
 
-  const images = loadAssetsDict(
-    import.meta.glob('../assets/images/character/*.png', {
-      query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
-      eager: true,
-      import: 'default',
-    }) as Record<string, string>,
-  )
+  const imageModules = import.meta.glob<string>('../assets/images/character/*.png', {
+    query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
+    eager: true,
+    import: 'default',
+  })
+  const images = loadAssetsDict(imageModules)
 
   characterImagesCache = images
   return images
@@ -81,13 +82,12 @@ export function loadArtifactImages(): Record<string, string> {
     return artifactImagesCache
   }
 
-  const images = loadAssetsDict(
-    import.meta.glob('../assets/images/artifact/*.png', {
-      query: { format: 'webp', quality: 80, w: 100 },
-      eager: true,
-      import: 'default',
-    }) as Record<string, string>,
-  )
+  const imageModules = import.meta.glob<string>('../assets/images/artifact/*.png', {
+    query: { format: 'webp', quality: 80, w: 100 },
+    eager: true,
+    import: 'default',
+  })
+  const images = loadAssetsDict(imageModules)
 
   artifactImagesCache = images
   return images
@@ -98,13 +98,12 @@ export function loadIcons(): Record<string, string> {
     return iconsCache
   }
 
-  const icons = loadAssetsDict(
-    import.meta.glob('../assets/images/icons/*.png', {
-      query: { format: 'webp', quality: 80, w: 100 },
-      eager: true,
-      import: 'default',
-    }) as Record<string, string>,
-  )
+  const iconModules = import.meta.glob<string>('../assets/images/icons/*.png', {
+    query: { format: 'webp', quality: 80, w: 100 },
+    eager: true,
+    import: 'default',
+  })
+  const icons = loadAssetsDict(iconModules)
 
   iconsCache = icons
   return icons
@@ -146,12 +145,15 @@ export function loadAppLocales(): Record<string, LocaleData> {
     return appLocalesCache
   }
 
-  const locales = import.meta.glob('../locales/app/*.json', { eager: true, import: 'default' })
+  const localeModules = import.meta.glob<LocaleData>('../locales/app/*.json', {
+    eager: true,
+    import: 'default',
+  })
   const result: Record<string, LocaleData> = {}
 
-  Object.entries(locales).forEach(([path, content]) => {
+  Object.entries(localeModules).forEach(([path, content]) => {
     const fileName = extractFileName(path)
-    result[fileName] = content as LocaleData
+    result[fileName] = content
   })
 
   appLocalesCache = result
@@ -163,15 +165,15 @@ export function loadCharacterLocales(): Record<string, LocaleData> {
     return characterLocalesCache
   }
 
-  const locales = import.meta.glob('../locales/character/*.json', {
+  const localeModules = import.meta.glob<LocaleData>('../locales/character/*.json', {
     eager: true,
     import: 'default',
   })
   const result: Record<string, LocaleData> = {}
 
-  Object.entries(locales).forEach(([path, content]) => {
+  Object.entries(localeModules).forEach(([path, content]) => {
     const fileName = extractFileName(path)
-    result[fileName] = content as LocaleData
+    result[fileName] = content
   })
 
   characterLocalesCache = result
@@ -183,12 +185,15 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
     return artifactLocalesCache
   }
 
-  const locales = import.meta.glob('../locales/artifact/*.json', { eager: true, import: 'default' })
+  const localeModules = import.meta.glob<LocaleData>('../locales/artifact/*.json', {
+    eager: true,
+    import: 'default',
+  })
   const result: Record<string, LocaleData> = {}
 
-  Object.entries(locales).forEach(([path, content]) => {
+  Object.entries(localeModules).forEach(([path, content]) => {
     const fileName = extractFileName(path)
-    result[fileName] = content as LocaleData
+    result[fileName] = content
   })
 
   artifactLocalesCache = result
@@ -200,12 +205,15 @@ export function loadGameLocales(): Record<string, LocaleData> {
     return gameLocalesCache
   }
 
-  const locales = import.meta.glob('../locales/game/*.json', { eager: true, import: 'default' })
+  const localeModules = import.meta.glob<LocaleData>('../locales/game/*.json', {
+    eager: true,
+    import: 'default',
+  })
   const result: Record<string, LocaleData> = {}
 
-  Object.entries(locales).forEach(([path, content]) => {
+  Object.entries(localeModules).forEach(([path, content]) => {
     const fileName = extractFileName(path)
-    result[fileName] = content as LocaleData
+    result[fileName] = content
   })
 
   gameLocalesCache = result
