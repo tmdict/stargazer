@@ -1,6 +1,6 @@
 import { inject, provide, type InjectionKey } from 'vue'
 
-import type { Hex } from '../lib/hex'
+import { Hex } from '../lib/hex'
 import { Team } from '../lib/types/team'
 import { useArtifactStore } from '../stores/artifact'
 import { useCharacterStore } from '../stores/character'
@@ -57,17 +57,30 @@ export function createGridEvents(): GridEventAPI {
     // Handle events directly in the store where appropriate
     switch (event) {
       case 'hex:click':
-        const hex = args[0] as Hex
+        const hex = args[0]
+        if (!(hex instanceof Hex)) {
+          console.error('Invalid hex argument for hex:click event')
+          break
+        }
         characterStore.handleHexClick(hex)
         break
 
       case 'character:remove':
-        const hexId = args[0] as number
+        const hexId = args[0]
+        if (typeof hexId !== 'number') {
+          console.error('Invalid hexId argument for character:remove event')
+          break
+        }
         characterStore.removeCharacterFromHex(hexId)
         break
 
       case 'artifact:remove':
-        const team = args[0] as Team
+        const team = args[0]
+        // Check if it's a valid Team enum value
+        if (team !== Team.ALLY && team !== Team.ENEMY) {
+          console.error('Invalid team argument for artifact:remove event')
+          break
+        }
         artifactStore.removeArtifact(team)
         break
     }
