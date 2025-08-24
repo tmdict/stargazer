@@ -65,7 +65,7 @@ const skillRegistry = new Map<number, Skill>([
 
 // List of skills with documentation pages
 // Update this when adding new skill documentation
-export const DOCUMENTED_SKILLS = ['silvina', 'nara', 'vala', 'reinier', 'dunlingr'] as const
+export const DOCUMENTED_SKILLS = ['silvina', 'nara', 'vala', 'reinier', 'dunlingr']
 
 export function getCharacterSkill(characterId: number): Skill | undefined {
   return skillRegistry.get(characterId)
