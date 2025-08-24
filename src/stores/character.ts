@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed } from 'vue'
 
-import type { Grid, GridTile } from '../lib/grid'
+import type { GridTile } from '../lib/grid'
 import * as character from '../lib/character'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
@@ -12,7 +12,7 @@ export const useCharacterStore = defineStore('character', () => {
   const skillStore = useSkillStore()
 
   // Get references to domain objects - keep private for internal use
-  const grid = gridStore._getGrid() as Grid
+  const grid = gridStore._getGrid()
   const skillManager = skillStore._getSkillManager()
 
   const charactersPlaced = computed(() => {

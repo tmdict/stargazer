@@ -153,6 +153,6 @@ export const useGridStore = defineStore('grid', () => {
     getHexScale,
 
     // Internal use by other stores
-    _getGrid: () => grid, // Direct access for character store
+    _getGrid: () => grid as Grid, // Direct access for character store
   }
 })

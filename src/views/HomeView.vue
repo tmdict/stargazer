@@ -142,7 +142,7 @@ const handleCopyImage = async () => {
     const { toPng } = await import('html-to-image')
 
     // Get the perspective container to capture all transforms
-    const containerElement = document.querySelector('.perspective-container') as HTMLElement
+    const containerElement = document.querySelector<HTMLElement>('.perspective-container')
     if (!containerElement) {
       console.error('Perspective container not found')
       error('Failed to copy image')
@@ -184,7 +184,7 @@ const handleDownload = async () => {
     const { toPng } = await import('html-to-image')
 
     // Get the perspective container to capture all transforms
-    const containerElement = document.querySelector('.perspective-container') as HTMLElement
+    const containerElement = document.querySelector<HTMLElement>('.perspective-container')
     if (!containerElement) {
       console.error('Perspective container not found')
       error('Failed to download grid')
