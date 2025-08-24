@@ -2,7 +2,7 @@
 import { ref, computed } from 'vue'
 
 import { useI18nStore } from '../../stores/i18n'
-import Tooltip from './Tooltip.vue'
+import TooltipPopup from './TooltipPopup.vue'
 
 const i18n = useI18nStore()
 
@@ -117,7 +117,7 @@ const handleMouseLeave = () => {
 
     <!-- Tooltip -->
     <Teleport to="body">
-      <Tooltip
+      <TooltipPopup
         v-if="hoveredOption && hoveredElement"
         :text="getTooltipText"
         :targetElement="hoveredElement"

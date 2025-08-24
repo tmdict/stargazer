@@ -8,7 +8,6 @@ import { useGameDataStore } from '../../stores/gameData'
 import { useGridStore } from '../../stores/grid'
 import { usePathfindingStore } from '../../stores/pathfinding'
 import { useSkillStore } from '../../stores/skill'
-import { extractFileName } from '../../utils/dataLoader'
 import { getStateName, getStateClass } from '../../utils/stateFormatting'
 import { getSymmetricalHexId } from '../../lib/skills/utils/symmetry'
 

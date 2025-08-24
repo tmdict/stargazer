@@ -44,12 +44,12 @@ Shared routes defined once and used by both modes:
 ```typescript
 // src/router/routes.ts
 export const routes: RouteRecordRaw[] = [
-  { path: '/', component: () => import('../views/Home.vue') },
-  { path: '/share', component: () => import('../views/Share.vue') },
-  { path: '/en/about', component: () => import('../views/About.vue') },
-  { path: '/zh/about', component: () => import('../views/About.vue') },
-  { path: '/en/skill/:name', component: () => import('../views/Skill.vue'), props: true },
-  { path: '/zh/skill/:name', component: () => import('../views/Skill.vue'), props: true },
+  { path: '/', component: () => import('../views/HomeView.vue') },
+  { path: '/share', component: () => import('../views/ShareView.vue') },
+  { path: '/en/about', component: () => import('../views/AboutView.vue') },
+  { path: '/zh/about', component: () => import('../views/AboutView.vue') },
+  { path: '/en/skill/:name', component: () => import('../views/SkillView.vue'), props: true },
+  { path: '/zh/skill/:name', component: () => import('../views/SkillView.vue'), props: true },
 ]
 ```
 

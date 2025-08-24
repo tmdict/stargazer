@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onUnmounted, watch, onBeforeUnmount, watchEffect } from 'vue'
+import { computed, ref, onMounted, onUnmounted, onBeforeUnmount, watchEffect } from 'vue'
 
 import type { Hex } from '../../lib/hex'
 import type { Layout } from '../../lib/layout'
