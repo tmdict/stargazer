@@ -35,7 +35,7 @@ const artifactDimensions = computed(() => {
 // Compute scaleY transform for artifacts in perspective mode
 const getArtifactStyles = () => {
   const { containerSize, borderWidth } = artifactDimensions.value
-  const styles: Record<string, any> = {
+  const styles: Record<string, string | number> = {
     width: `${containerSize}px`,
     height: `${containerSize}px`,
     borderWidth: `${borderWidth}px`,

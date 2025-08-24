@@ -2,15 +2,21 @@
 import { provide, onMounted, onUnmounted, ref, type Ref } from 'vue'
 
 import { useDragDrop } from '../composables/useDragDrop'
+import type { CharacterType } from '../lib/types/character'
 
 // Types for the drag/drop API
 export interface DragDropAPI {
   isDragging: Ref<boolean>
   hoveredHexId: Ref<number | null>
   dropHandled: Ref<boolean>
-  startDrag: (event: DragEvent, character: any, characterId: number, imageSrc?: string) => void
+  startDrag: (
+    event: DragEvent,
+    character: CharacterType,
+    characterId: number,
+    imageSrc?: string,
+  ) => void
   endDrag: (event: DragEvent) => void
-  handleDrop: (event: DragEvent) => { character: any; characterId: number } | null
+  handleDrop: (event: DragEvent) => { character: CharacterType; characterId: number } | null
   setHoveredHex: (hexId: number | null) => void
   setDropHandled: (handled: boolean) => void
   registerHexDetector: (detector: (x: number, y: number) => number | null) => void
