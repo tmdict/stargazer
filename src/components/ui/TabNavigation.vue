@@ -58,7 +58,7 @@ const handleMapChange = (mapKey: string) => {
 // Close dropdown when clicking outside
 const handleClickOutside = (event: MouseEvent) => {
   const dropdown = document.querySelector('.tab-dropdown')
-  if (dropdown && !dropdown.contains(event.target as Node)) {
+  if (dropdown && event.target instanceof Node && !dropdown.contains(event.target)) {
     showMapDropdown.value = false
   }
 }

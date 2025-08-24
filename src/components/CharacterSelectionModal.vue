@@ -83,7 +83,7 @@ const handleKeydown = (event: KeyboardEvent) => {
 }
 
 const handleClickOutside = (event: MouseEvent) => {
-  if (modalRef.value && !modalRef.value.contains(event.target as Node)) {
+  if (modalRef.value && event.target instanceof Node && !modalRef.value.contains(event.target)) {
     emit('close')
   }
 }
