@@ -4,9 +4,10 @@ import { computed } from 'vue'
 import { useGridStore } from '../../stores/grid'
 import { usePathfindingStore } from '../../stores/pathfinding'
 import { Team } from '../../lib/types/team'
+import type DebugGrid from './DebugGrid.vue'
 
 interface Props {
-  debugGridRef?: any
+  debugGridRef?: InstanceType<typeof DebugGrid> | null
 }
 
 const props = defineProps<Props>()
