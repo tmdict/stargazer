@@ -5,7 +5,7 @@ import type { CharacterType } from '../lib/types/character'
 import { useDragDrop } from '../composables/useDragDrop'
 import { useI18nStore } from '../stores/i18n'
 import { useTouchDetection } from '../composables/useTouchDetection'
-import Tooltip from './ui/Tooltip.vue'
+import TooltipPopup from './ui/TooltipPopup.vue'
 
 const props = defineProps<{
   character: CharacterType
@@ -129,7 +129,7 @@ const handleTouchStart = () => {
 
     <!-- Tooltip -->
     <Teleport to="body">
-      <Tooltip
+      <TooltipPopup
         v-if="showTooltip && characterElement"
         :targetElement="characterElement"
         :variant="showSimpleTooltip ? 'simple' : 'detailed'"
@@ -191,7 +191,7 @@ const handleTouchStart = () => {
             </div>
           </template>
         </template>
-      </Tooltip>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>

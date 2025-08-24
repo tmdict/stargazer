@@ -4,7 +4,7 @@ import { ref, computed } from 'vue'
 import type { ArtifactType } from '../lib/types/artifact'
 import { useI18nStore } from '../stores/i18n'
 import { useTouchDetection } from '../composables/useTouchDetection'
-import Tooltip from './ui/Tooltip.vue'
+import TooltipPopup from './ui/TooltipPopup.vue'
 
 const i18n = useI18nStore()
 
@@ -79,7 +79,7 @@ const handleTouchStart = () => {
 
     <!-- Tooltip -->
     <Teleport to="body">
-      <Tooltip
+      <TooltipPopup
         v-if="showTooltip && artifactElement"
         :targetElement="artifactElement"
         variant="detailed"
@@ -96,7 +96,7 @@ const handleTouchStart = () => {
             </div>
           </div>
         </template>
-      </Tooltip>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>

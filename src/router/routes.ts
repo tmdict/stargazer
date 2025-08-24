@@ -11,35 +11,35 @@ export const routes: RouteRecordRaw[] = [
   {
     path: '/',
     name: 'home',
-    component: () => import('../views/Home.vue'),
+    component: () => import('../views/HomeView.vue'),
   },
   {
     path: '/share',
     name: 'share',
-    component: () => import('../views/Share.vue'),
+    component: () => import('../views/ShareView.vue'),
   },
   // English routes
   {
     path: '/en/about',
     name: 'about-en',
-    component: () => import('../views/About.vue'),
+    component: () => import('../views/AboutView.vue'),
   },
   {
     path: '/en/skill/:name',
     name: 'skill-en',
-    component: () => import('../views/Skill.vue'),
+    component: () => import('../views/SkillView.vue'),
     props: true, // Pass route params as props for better testability
   },
   // Chinese routes
   {
     path: '/zh/about',
     name: 'about-zh',
-    component: () => import('../views/About.vue'),
+    component: () => import('../views/AboutView.vue'),
   },
   {
     path: '/zh/skill/:name',
     name: 'skill-zh',
-    component: () => import('../views/Skill.vue'),
+    component: () => import('../views/SkillView.vue'),
     props: true, // Pass route params as props for better testability
   },
 ]
