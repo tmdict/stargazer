@@ -102,7 +102,7 @@ const handleMouseLeave = () => {
         v-for="option in options"
         :key="option"
         :class="['icon-option', { active: modelValue === option }]"
-        @click="modelValue = option"
+        @click="modelValue = modelValue === option ? '' : option"
         @mouseenter="handleMouseEnter(option, $event)"
         @mouseleave="handleMouseLeave"
       >
@@ -159,12 +159,12 @@ const handleMouseLeave = () => {
 }
 
 .icon-option:hover {
-  border-color: #ccc;
+  border-color: var(--color-primary-hover);
   transform: scale(1.05);
 }
 
 .icon-option.active {
-  border-color: #999;
+  border-color: #aaa;
 }
 
 .clear-option {
@@ -173,13 +173,12 @@ const handleMouseLeave = () => {
 
 .clear-option:hover {
   color: var(--color-primary);
-  border-color: #ccc;
+  border-color: var(--color-primary-hover);
 }
 
 .clear-option.active {
   color: var(--color-primary);
-  border-color: #999;
-  background-color: var(--color-primary-light);
+  border-color: var(--color-primary);
 }
 
 .all-icon {
