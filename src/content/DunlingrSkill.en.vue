@@ -4,7 +4,7 @@ import { setupContentMeta } from '@/utils/contentMeta'
 setupContentMeta({
   title: 'Dunlingr · Bell of Order',
   description:
-    "Dunlingr's Bell of Order skill targets the ally furthest from his current position at the start of the battle. Depending on which mode the Bell is set to, the following effects will apply to all characters on the field other than the targeted ally",
+    'Dunlingr summons the Bell of Order, which targets the ally furthest from his current position at the start of the battle. Depending on which mode the Bell is set to, the following effects will apply to all characters on the field other than the targeted ally',
   url: 'skill/dunlingr',
   locale: 'en',
   keywords: ['Dunlingr', '顿里尔'],
@@ -13,11 +13,11 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>Dunlingr · Bell of Order</h1>
+    <h1>Dunlingr · Echo of Silence</h1>
     <p>
-      Dunlingr's Bell of Order skill targets the ally furthest from his current position at the
-      start of the battle. Depending on which mode the Bell is set to, the following effects will
-      apply to all characters on the field other than the targeted ally:
+      Dunlingr summons the Bell of Order before a battle starts, which targets the ally furthest
+      from his current position. Depending on which mode the Bell is set to, the following effects
+      will apply to all characters on the field other than the targeted ally:
     </p>
     <ul>
       <li>Spellbind: Unable to cast Ultimate.</li>

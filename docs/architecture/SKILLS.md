@@ -216,11 +216,7 @@ To add documentation pages for a skill:
    // List of skills with documentation pages
    // Update this when adding new skill documentation
    export const DOCUMENTED_SKILLS = [
-     'silvina',
-     'nara',
-     'vala',
-     'reinier',
-     'dunlingr',
+     // ... existing skills ...
      'newskill', // Add your new skill here
    ] as const
    ```
