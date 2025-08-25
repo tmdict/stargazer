@@ -94,6 +94,7 @@ const openDetailsModal = (character: CharacterType) => {
           :icons
           :isDraggable
           :isPlaced="isCharacterPlaced(character.id)"
+          :hideInfo="true"
           @character-click="handleCharacterClick"
         />
         <button
@@ -148,6 +149,7 @@ const openDetailsModal = (character: CharacterType) => {
   justify-content: center;
   gap: 4px;
   width: 75px;
+  margin-top: 6px;
   padding: 4px 8px;
   background: var(--color-primary);
   color: white;
