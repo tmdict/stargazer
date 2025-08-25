@@ -11,6 +11,7 @@ export interface TargetCandidate {
 export enum TargetingMethod {
   CLOSEST,
   FURTHEST,
+  REARMOST, // Scans hex IDs based on team: ally scans 45→1, enemy scans 1→45
 }
 
 export interface TargetingOptions {
@@ -186,6 +187,53 @@ export function findTarget(
       sourceHexId: hexId,
       distance: winner.distances.get(referenceHexId),
       examinedTiles,
+    },
+  }
+}
+
+/**
+ * Find the rearmost target based on hex ID scanning order.
+ *
+ * Rearmost is determined by position in the grid:
+ * - Ally team targeting enemies: Scans hex IDs from 45 down to 1 (largest to smallest)
+ *   This targets enemies furthest back (row 15 first, then 14, etc.)
+ * - Enemy team targeting allies: Scans hex IDs from 1 up to 45 (smallest to largest)
+ *   This targets allies furthest back (row 1 first, then 2, etc.)
+ *
+ * Within the same diagonal row, higher hex IDs are considered "further back"
+ * for the enemy side, and lower hex IDs are "further back" for the ally side.
+ */
+export function findRearmostTarget(
+  context: SkillContext,
+  targetTeam: Team,
+): SkillTargetInfo | null {
+  const { grid, team, hexId } = context
+
+  // Get all candidates on the target team
+  const candidates = getTeamCharacters(grid, targetTeam)
+  if (candidates.length === 0) return null
+
+  // Optimize by finding max/min hex ID directly instead of scanning all tiles
+  let rearmostCandidate: TargetCandidate
+  if (team === Team.ALLY) {
+    // Ally → Enemy: largest hex ID is rearmost
+    rearmostCandidate = candidates.reduce((max, current) =>
+      current.hexId > max.hexId ? current : max,
+    )
+  } else {
+    // Enemy → Ally: smallest hex ID is rearmost
+    rearmostCandidate = candidates.reduce((min, current) =>
+      current.hexId < min.hexId ? current : min,
+    )
+  }
+
+  return {
+    targetHexId: rearmostCandidate.hexId,
+    targetCharacterId: rearmostCandidate.characterId,
+    metadata: {
+      sourceHexId: hexId,
+      examinedTiles: candidates.map((c) => c.hexId),
+      isRearmostTarget: true,
     },
   }
 }

@@ -12,10 +12,10 @@ The targeting system uses a functional composition approach with reusable utilit
 ┌─────────────────┐
 │  Skill Files    │
 │                 │
-│ dunlingr.ts     │
+│ silvina.ts      │
 │ vala.ts         │──────┐
-│ silvina.ts      │      │
-│ nara.ts         │      │
+│ reinier.ts      │      │
+│ ...             │      │
 └─────────────────┘      │
                          ▼
               ┌─────────────────────────┐
@@ -42,6 +42,7 @@ The targeting system uses a functional composition approach with reusable utilit
 
 - **CLOSEST**: Find nearest target (used by Nara/Silvina from symmetrical point)
 - **FURTHEST**: Find furthest target (used by Dunlingr/Vala)
+- **REARMOST**: Find rearmost target based on hex ID scanning (used by Bonnie)
 
 ### Tie-Breaking Strategy
 
