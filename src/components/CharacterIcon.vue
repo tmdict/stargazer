@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import CharacterInfoIcons from './CharacterInfoIcons.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '../composables/useDragDrop'
 import { useTouchDetection } from '../composables/useTouchDetection'
@@ -14,6 +15,7 @@ const props = defineProps<{
   isDraggable?: boolean
   isPlaced?: boolean
   showSimpleTooltip?: boolean
+  hideInfo?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -122,10 +124,7 @@ const handleTouchStart = () => {
     >
       <img :src="characterImage" :alt="character.name" class="portrait" />
     </div>
-    <div class="character-info">
-      <img :src="icons[`faction-${character.faction}`]" :alt="character.faction" class="icon" />
-      <img :src="icons[`class-${character.class}`]" :alt="character.class" class="icon" />
-    </div>
+    <CharacterInfoIcons v-if="!hideInfo" :character="character" :icons="icons" />
 
     <!-- Tooltip -->
     <Teleport to="body">
@@ -252,20 +251,6 @@ const handleTouchStart = () => {
   box-shadow: 0 0 0 5px #c05b4d;
 }
 
-.character-info {
-  display: flex;
-  justify-content: center;
-  gap: 0.5rem;
-  padding-top: 0.4rem;
-}
-
-.character-info img {
-  width: 24px;
-  height: 24px;
-  border: 1px solid #484848;
-  border-radius: 50%;
-}
-
 /* Simple tooltip - just name */
 .simple-tooltip {
   font-size: 14px;
@@ -341,11 +326,6 @@ const handleTouchStart = () => {
     width: 70px;
     height: 70px;
   }
-
-  .character-info img {
-    width: 20px;
-    height: 20px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -367,16 +347,6 @@ const handleTouchStart = () => {
   .portrait {
     width: 55px;
     height: 55px;
-  }
-
-  .character-info {
-    gap: 0.25rem;
-    padding-top: 0.25rem;
-  }
-
-  .character-info img {
-    width: 18px;
-    height: 18px;
   }
 }
 </style>
