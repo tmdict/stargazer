@@ -1,4 +1,5 @@
 import type { Grid } from './grid'
+import { bonnieSkill } from './skills/bonnie'
 import { dunlingrSkill } from './skills/dunlingr'
 import { elijahLailahSkill } from './skills/elijah-lailah'
 import { naraSkill } from './skills/nara'
@@ -27,6 +28,7 @@ export interface SkillTargetInfo {
     examinedTiles?: number[]
     symmetricalHexId?: number
     isSymmetricalTarget?: boolean
+    isRearmostTarget?: boolean
   }
 }
 
@@ -56,16 +58,17 @@ const skillRegistry = new Map<number, Skill>([
   [elijahLailahSkill.characterId, elijahLailahSkill],
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
-  [naraSkill.characterId, naraSkill],
   [valaSkill.characterId, valaSkill],
   [dunlingrSkill.characterId, dunlingrSkill],
+  [naraSkill.characterId, naraSkill],
+  [bonnieSkill.characterId, bonnieSkill],
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
 ])
 
 // List of skills with documentation pages
 // Update this when adding new skill documentation
-export const DOCUMENTED_SKILLS = ['silvina', 'nara', 'vala', 'reinier', 'dunlingr']
+export const DOCUMENTED_SKILLS = ['silvina', 'vala', 'reinier', 'dunlingr', 'nara', 'bonnie']
 
 export function getCharacterSkill(characterId: number): Skill | undefined {
   return skillRegistry.get(characterId)
