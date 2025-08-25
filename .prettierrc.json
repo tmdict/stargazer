@@ -16,6 +16,5 @@
     "^[./]",
     "",
     "\\.css$"
-  ],
-  "importOrderSortSpecifiers": true
+  ]
 }
