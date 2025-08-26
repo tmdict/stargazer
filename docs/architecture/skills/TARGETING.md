@@ -103,7 +103,6 @@ Key features:
 To add a new targeting skill:
 
 1. **Determine targeting pattern**:
-
    - Same team or opposing team?
    - Closest or furthest?
    - Special requirements (symmetrical, adjacent, etc.)?
