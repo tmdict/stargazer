@@ -9,7 +9,6 @@ import { State } from '../../lib/types/state'
 interface Props {
   // Data props
   characters: readonly CharacterType[]
-  icons?: Readonly<Record<string, string>>
   // Display toggle props
   showArrows: boolean
   showHexIds: boolean
@@ -51,7 +50,6 @@ const verticalScaleComp = computed(() =>
     >
       <GridManager
         :characters
-        :icons
         :show-arrows
         :show-hex-ids
         :show-debug

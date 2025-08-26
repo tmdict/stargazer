@@ -6,7 +6,6 @@ import type { CharacterType } from '../lib/types/character'
 
 interface Props {
   characters: readonly CharacterType[]
-  icons: Readonly<Record<string, string>>
   factionFilter: string
   classFilter: string
   damageFilter: string
@@ -43,21 +42,18 @@ const damageOptions = computed(() => {
     <div class="filters-row">
       <IconFilter
         iconPrefix="faction"
-        :icons
         :options="factionOptions"
         :modelValue="factionFilter"
         @update:modelValue="$emit('update:factionFilter', $event)"
       />
       <IconFilter
         iconPrefix="class"
-        :icons
         :options="classOptions"
         :modelValue="classFilter"
         @update:modelValue="$emit('update:classFilter', $event)"
       />
       <IconFilter
         iconPrefix="damage"
-        :icons
         :options="damageOptions"
         :modelValue="damageFilter"
         @update:modelValue="$emit('update:damageFilter', $event)"

@@ -11,7 +11,6 @@ import { useI18nStore } from '../stores/i18n'
 
 const props = defineProps<{
   character: CharacterType
-  icons: { [key: string]: string }
   isDraggable?: boolean
   isPlaced?: boolean
   showSimpleTooltip?: boolean
@@ -54,7 +53,7 @@ const formattedCharacterName = computed(() => {
 })
 
 const damageIcon = computed(() => {
-  return props.icons[`damage-${props.character.damage}`] || ''
+  return gameDataStore.getIcon(`damage-${props.character.damage}`)
 })
 
 const handleDragStart = (event: DragEvent) => {
@@ -117,7 +116,7 @@ const handleTouchStart = () => {
       class="character-display"
       :class="{ draggable: isDraggable, placed: isPlaced }"
       :style="{
-        background: `url(${icons[`bg-${character.level}`]}) center/cover`,
+        background: `url(${gameDataStore.getIcon(`bg-${character.level}`)}) center/cover`,
       }"
       :draggable="isDraggable"
       @dragstart="handleDragStart"
@@ -134,7 +133,7 @@ const handleTouchStart = () => {
         class="portrait"
       />
     </div>
-    <CharacterInfoIcons v-if="!hideInfo" :character="character" :icons="icons" />
+    <CharacterInfoIcons v-if="!hideInfo" :character="character" />
 
     <!-- Tooltip -->
     <Teleport to="body">
@@ -159,7 +158,7 @@ const handleTouchStart = () => {
             <div class="tooltip-content">
               <div class="tooltip-row">
                 <img
-                  :src="icons[`faction-${character.faction}`]"
+                  :src="gameDataStore.getIcon(`faction-${character.faction}`)"
                   :alt="character.faction"
                   class="tooltip-icon"
                 />
@@ -169,7 +168,7 @@ const handleTouchStart = () => {
 
               <div class="tooltip-row">
                 <img
-                  :src="icons[`class-${character.class}`]"
+                  :src="gameDataStore.getIcon(`class-${character.class}`)"
                   :alt="character.class"
                   class="tooltip-icon"
                 />
