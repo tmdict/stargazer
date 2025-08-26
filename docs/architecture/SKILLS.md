@@ -205,7 +205,6 @@ const skillRegistry = new Map<number, Skill>([
 To add documentation pages for a skill:
 
 1. **Create content files** in `/src/content/skills/`:
-
    - `SkillName.en.vue` - English documentation content
    - `SkillName.zh.vue` - Chinese documentation content
    - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
