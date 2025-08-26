@@ -112,14 +112,16 @@ export class Grid {
 
   // Hex & Tile Access Methods
 
-  setState(hex: Hex, state: State): void {
+  setState(hex: Hex, state: State): boolean {
     if (!Object.values(State).includes(state)) {
-      return // Invalid state, silently ignore
+      return false // Invalid state
     }
     const tile = this.getTile(hex)
     if (tile) {
       tile.state = state
+      return true
     }
+    return false
   }
 
   keys(): Hex[] {
@@ -189,12 +191,13 @@ export class Grid {
     return this.maxTeamSizes.get(team) || 5
   }
 
-  setMaxTeamSize(team: Team, size: number): void {
+  setMaxTeamSize(team: Team, size: number): boolean {
     const maxPossibleSize = this.getAllTiles().length
     if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
-      return // Invalid input, silently ignore
+      return false // Invalid input
     }
     this.maxTeamSizes.set(team, size)
+    return true
   }
 
   canPlaceCharacter(characterId: number, team: Team): boolean {
@@ -241,7 +244,7 @@ export class Grid {
     return true
   }
 
-  removeCharacter(hexId: number, skipCacheInvalidation: boolean = false): void {
+  removeCharacter(hexId: number, skipCacheInvalidation: boolean = false): boolean {
     const tile = this.getTileById(hexId)
     if (tile.characterId) {
       const characterId = tile.characterId
@@ -252,7 +255,9 @@ export class Grid {
 
       // Handle cache invalidation with batching support
       this.handleCacheInvalidation(skipCacheInvalidation)
+      return true
     }
+    return false
   }
 
   clearAllCharacters(): boolean {
@@ -439,73 +444,6 @@ export class Grid {
         this.companionLinks.delete(key)
       }
     }
-  }
-
-  removeLinkedCharacters(characterId: number, team?: Team): void {
-    const isCompanion = this.isCompanionId(characterId)
-
-    // If team not provided, try to find it
-    if (team === undefined) {
-      const charHex = this.findCharacterHex(characterId)
-      team = charHex !== null ? this.getCharacterTeam(charHex) : undefined
-    }
-
-    if (isCompanion) {
-      // Find main character and remove all linked
-      const mainId = this.getMainCharacterId(characterId)
-
-      // If we don't know the team, we can't proceed safely
-      if (team === undefined) {
-        return
-      }
-
-      // Get companions for this specific team
-      const companions = this.getCompanions(mainId, team)
-
-      // Remove main character (look for it on the companion's team)
-      const mainHex = this.findCharacterHex(mainId, team)
-      if (mainHex !== null) {
-        this.removeCharacter(mainHex, true)
-      }
-
-      // Remove all companions
-      companions.forEach((companionId) => {
-        const companionHex = this.findCharacterHex(companionId, team)
-        if (companionHex !== null) {
-          this.removeCharacter(companionHex, true)
-        }
-      })
-
-      // Clear companion links for this team
-      this.clearCompanionLinks(mainId, team)
-    } else {
-      // This is a main character - remove it and all companions for this team
-      const companions = team
-        ? this.getCompanions(characterId, team)
-        : this.getCompanions(characterId)
-
-      // Remove main character
-      const mainHex = this.findCharacterHex(characterId, team)
-      if (mainHex !== null) {
-        this.removeCharacter(mainHex, true)
-      }
-
-      // Remove all companions
-      companions.forEach((companionId) => {
-        const companionHex = this.findCharacterHex(companionId, team)
-        if (companionHex !== null) {
-          this.removeCharacter(companionHex, true)
-        }
-      })
-
-      // Clear companion links for this team
-      if (team) {
-        this.clearCompanionLinks(characterId, team)
-      }
-    }
-
-    // Clear pathfinding cache after all removals (respect batching)
-    this.handleCacheInvalidation(false) // false = don't skip cache invalidation
   }
 
   findCharacterHex(characterId: number, team?: Team): number | null {

@@ -511,38 +511,6 @@ describe('Grid', () => {
       expect(grid.getCompanions(100).size).toBe(0)
     })
 
-    it('should remove linked characters', () => {
-      // Place main and companions
-      grid.placeCharacter(1, 100, Team.ALLY)
-      grid.placeCharacter(2, 10100, Team.ALLY)
-      grid.placeCharacter(3, 10101, Team.ALLY)
-      grid.addCompanionLink(100, 10100, Team.ALLY)
-      grid.addCompanionLink(100, 10101, Team.ALLY)
-
-      grid.removeLinkedCharacters(100, Team.ALLY)
-
-      expect(grid.getCharacter(1)).toBeUndefined()
-      expect(grid.getCharacter(2)).toBeUndefined()
-      expect(grid.getCharacter(3)).toBeUndefined()
-      expect(grid.getCompanions(100, Team.ALLY).size).toBe(0)
-    })
-
-    it('should remove linked characters when removing companion', () => {
-      // Place main and companions
-      grid.placeCharacter(1, 100, Team.ALLY)
-      grid.placeCharacter(2, 10100, Team.ALLY)
-      grid.placeCharacter(3, 10101, Team.ALLY)
-      grid.addCompanionLink(100, 10100, Team.ALLY)
-      grid.addCompanionLink(100, 10101, Team.ALLY)
-
-      // Remove via companion ID
-      grid.removeLinkedCharacters(10100, Team.ALLY)
-
-      expect(grid.getCharacter(1)).toBeUndefined()
-      expect(grid.getCharacter(2)).toBeUndefined()
-      expect(grid.getCharacter(3)).toBeUndefined()
-      expect(grid.getCompanions(100, Team.ALLY).size).toBe(0)
-    })
   })
 
   describe('transaction support', () => {
@@ -579,8 +547,8 @@ describe('Grid', () => {
 
       const operations = [
         () => {
-          grid.removeCharacter(1, true)
-          return true
+          const removed = grid.removeCharacter(1, true)
+          return removed
         },
         () => {
           // This will fail
@@ -611,8 +579,8 @@ describe('Grid', () => {
           return true
         },
         () => {
-          grid.removeCharacter(1, true)
-          return true
+          const removed = grid.removeCharacter(1, true)
+          return removed
         },
       ]
 
@@ -704,6 +672,42 @@ describe('Grid', () => {
 
       expect(grid.getTeamCharacters(Team.ALLY).size).toBe(0)
       expect(grid.getTeamCharacters(Team.ENEMY).size).toBe(0)
+    })
+  })
+
+  describe('boolean return values', () => {
+    beforeEach(() => {
+      grid = new Grid()
+    })
+
+
+    it('should return false when removing from hex without character', () => {
+      const result = grid.removeCharacter(10)
+      expect(result).toBe(false)
+    })
+
+    it('should return true when setState succeeds', () => {
+      const hex = grid.getHexById(1)
+      const result = grid.setState(hex, State.BLOCKED)
+      expect(result).toBe(true)
+      expect(grid.getTile(hex).state).toBe(State.BLOCKED)
+    })
+
+    it('should return false when setState fails with invalid state', () => {
+      const hex = grid.getHexById(1)
+      const result = grid.setState(hex, 999 as State)
+      expect(result).toBe(false)
+    })
+
+    it('should return true when setMaxTeamSize succeeds', () => {
+      const result = grid.setMaxTeamSize(Team.ALLY, 10)
+      expect(result).toBe(true)
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(10)
+    })
+
+    it('should return false when setMaxTeamSize fails', () => {
+      const result = grid.setMaxTeamSize(Team.ALLY, -1)
+      expect(result).toBe(false)
     })
   })
 
