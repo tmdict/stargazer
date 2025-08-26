@@ -200,9 +200,10 @@ const handleDownload = async () => {
 
     // Create download link
     const now = new Date()
-    const dateStr = now.toISOString().split('T')[0].replace(/-/g, '')
+    // '_unknown_': fallback for invalid date and time
+    const dateStr = (now.toISOString().split('T')[0] ?? '_unknown_').replace(/-/g, '')
     const timeStr =
-      now.toTimeString().split(' ')[0].replace(/:/g, '') +
+      (now.toTimeString().split(' ')[0] ?? '_unknown_').replace(/:/g, '') +
       now.getMilliseconds().toString().padStart(3, '0')
     const link = document.createElement('a')
     link.download = `stargazer-${dateStr}-${timeStr}.png`
@@ -287,23 +288,15 @@ const handleClearMap = () => {
             <!-- Tab Content -->
             <!-- Characters Tab -->
             <div v-show="activeTab === 'characters'" class="tab-panel">
-              <CharacterSelection
-                :characters="gameDataStore.characters"
-                :isDraggable="true"
-              />
+              <CharacterSelection :characters="gameDataStore.characters" :isDraggable="true" />
             </div>
             <!-- Artifacts Tab -->
             <div v-show="activeTab === 'artifacts'" class="tab-panel">
-              <ArtifactSelection
-                :artifacts="gameDataStore.artifacts"
-              />
+              <ArtifactSelection :artifacts="gameDataStore.artifacts" />
             </div>
             <!-- Skills Tab -->
             <div v-show="activeTab === 'skills'" class="tab-panel">
-              <SkillsSelection
-                :characters="gameDataStore.characters"
-                :isDraggable="true"
-              />
+              <SkillsSelection :characters="gameDataStore.characters" :isDraggable="true" />
             </div>
             <!-- Map Editor Tab -->
             <div v-show="activeTab === 'mapEditor'" class="tab-panel">
