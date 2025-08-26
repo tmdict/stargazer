@@ -90,6 +90,19 @@ export const useGameDataStore = defineStore('gameData', () => {
     return artifacts.value.find((artifact) => artifact.id === artifactId)
   }
 
+  // Safe accessors for images and icons
+  const getCharacterImage = (name: string): string => {
+    return characterImages.value[name] ?? ''
+  }
+
+  const getArtifactImage = (name: string): string => {
+    return artifactImages.value[name] ?? ''
+  }
+
+  const getIcon = (key: string): string => {
+    return icons.value[key] ?? ''
+  }
+
   return {
     // State (readonly)
     characters: readonly(characters),
@@ -106,6 +119,9 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterById,
     getCharacterNameById,
     getArtifactById,
+    getCharacterImage,
+    getArtifactImage,
+    getIcon,
 
     // Expose for other stores
     characterRanges: readonly(characterRanges),

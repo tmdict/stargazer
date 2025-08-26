@@ -6,11 +6,11 @@ import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '../composables/useDragDrop'
 import { useTouchDetection } from '../composables/useTouchDetection'
 import type { CharacterType } from '../lib/types/character'
+import { useGameDataStore } from '../stores/gameData'
 import { useI18nStore } from '../stores/i18n'
 
 const props = defineProps<{
   character: CharacterType
-  characterImage: string
   icons: { [key: string]: string }
   isDraggable?: boolean
   isPlaced?: boolean
@@ -22,6 +22,7 @@ const emit = defineEmits<{
   characterClick: [character: CharacterType]
 }>()
 
+const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
 const { isTouchDevice } = useTouchDetection()
@@ -59,7 +60,12 @@ const damageIcon = computed(() => {
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
   showTooltip.value = false
-  startDrag(event, props.character, props.character.id, props.characterImage)
+  startDrag(
+    event,
+    props.character,
+    props.character.id,
+    gameDataStore.getCharacterImage(props.character.name),
+  )
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -122,7 +128,11 @@ const handleTouchStart = () => {
       @mouseleave="handleMouseLeave"
       @touchstart="handleTouchStart"
     >
-      <img :src="characterImage" :alt="character.name" class="portrait" />
+      <img
+        :src="gameDataStore.getCharacterImage(character.name)"
+        :alt="character.name"
+        class="portrait"
+      />
     </div>
     <CharacterInfoIcons v-if="!hideInfo" :character="character" :icons="icons" />
 
