@@ -104,7 +104,12 @@ const restoreStateFromUrl = () => {
       })
 
       // For companions, move them to their correct positions
-      companions.forEach(([targetHexId, companionId, team]) => {
+      companions.forEach((entry) => {
+        const targetHexId = entry[0] ?? -1 // -1: invalid target hex ID
+        const companionId = entry[1] ?? -1 // -1: invalid companion ID
+        const team = entry[2] ?? -1 // -1: invalid team
+        if (targetHexId === -1 || companionId === -1 || team === -1) return // Skip invalid entries
+
         const tiles = gridStore.getAllTiles
         const currentHex = tiles.find(
           (tile) => tile.characterId === companionId && tile.team === team,
@@ -124,7 +129,8 @@ const restoreStateFromUrl = () => {
 
     // Restore artifacts
     if (urlState.a) {
-      const [allyArtifact, enemyArtifact] = urlState.a
+      const allyArtifact = urlState.a[0] ?? null // null: no ally artifact
+      const enemyArtifact = urlState.a[1] ?? null // null: no enemy artifact
       if (allyArtifact !== null) {
         artifactStore.placeArtifact(allyArtifact, Team.ALLY)
       }

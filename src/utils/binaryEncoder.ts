@@ -172,9 +172,10 @@ export function encodeToBinary(state: GridState): Uint8Array {
 
   // Write artifacts
   if (hasArtifacts && state.a) {
-    const [ally, enemy] = state.a
-    writer.writeBits(ally || 0, ARTIFACT_BITS) // Ally artifact
-    writer.writeBits(enemy || 0, ARTIFACT_BITS) // Enemy artifact
+    const ally = state.a[0] ?? 0 // 0: no ally artifact
+    const enemy = state.a[1] ?? 0 // 0: no enemy artifact
+    writer.writeBits(ally, ARTIFACT_BITS) // Ally artifact
+    writer.writeBits(enemy, ARTIFACT_BITS) // Enemy artifact
   }
 
   return writer.getBytes()
