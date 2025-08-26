@@ -90,7 +90,11 @@ class BitReader {
         throw new Error('Unexpected end of data')
       }
 
-      const bit = (this.bytes[byteIndex] >> bitIndex) & 1
+      const byte = this.bytes[byteIndex]
+      if (byte === undefined) {
+        throw new Error('Unexpected end of data')
+      }
+      const bit = (byte >> bitIndex) & 1
       value |= bit << i
     }
     this.position += bitCount
@@ -145,7 +149,11 @@ export function encodeToBinary(state: GridState): Uint8Array {
 
   // Write tiles
   if (state.t) {
-    for (const [hexId, stateValue] of state.t) {
+    for (const entry of state.t) {
+      const hexId = entry[0] ?? -1 // -1: invalid hex ID
+      const stateValue = entry[1] ?? 0 // 0: empty state
+      if (hexId === -1) continue // Skip invalid entries
+
       writer.writeBits(hexId, HEX_ID_BITS) // Hex ID
       writer.writeBits(stateValue, TILE_STATE_BITS) // State
     }
@@ -153,7 +161,12 @@ export function encodeToBinary(state: GridState): Uint8Array {
 
   // Write characters with fixed 14-bit encoding
   if (state.c) {
-    for (const [hexId, charId, team] of state.c) {
+    for (const entry of state.c) {
+      const hexId = entry[0] ?? -1 // -1: invalid hex ID
+      const charId = entry[1] ?? -1 // -1: invalid character ID
+      const team = entry[2] ?? -1 // -1: invalid team
+      if (hexId === -1 || charId === -1 || team === -1) continue // Skip invalid entries
+
       // Validate character ID fits within our encoding limit
       if (charId > MAX_CHARACTER_ID) {
         console.warn(
