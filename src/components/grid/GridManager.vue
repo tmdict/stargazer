@@ -189,7 +189,14 @@ const isPointInPolygon = (
   for (let i = 0, j = n - 1; i < n; j = i++) {
     const vertexI = vertices[i]
     const vertexJ = vertices[j]
-    if (!vertexI || !vertexJ) continue // Skip if vertices are undefined
+    if (!vertexI || !vertexJ) {
+      console.warn('GridManager: Skipping undefined vertices in point-in-polygon check', {
+        i,
+        j,
+        verticesLength: vertices.length,
+      })
+      continue // Skip if vertices are undefined
+    }
 
     const xi = vertexI.x
     const yi = vertexI.y

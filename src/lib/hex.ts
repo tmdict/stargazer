@@ -61,7 +61,13 @@ export class Hex {
       new Hex(-1, 0, 1), // 4: left
       new Hex(0, -1, 1), // 5: top-left
     ]
-    return this.add(directions[direction % 6])
+    const directionIndex = direction % 6
+    const directionHex = directions[directionIndex]
+    if (!directionHex) {
+      console.error('hex: Invalid direction index', { direction, directionIndex })
+      return this // Return current hex as fallback
+    }
+    return this.add(directionHex)
   }
 
   /**

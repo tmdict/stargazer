@@ -429,14 +429,37 @@ function applyTieBreakingRules(
   }
 
   if (candidates.length === 1) {
-    return candidates[0]
+    const first = candidates[0]
+    if (!first) {
+      console.error('pathfinding: Single candidate array has undefined first element', {
+        candidatesLength: candidates.length,
+      })
+      throw new Error('Invalid candidate array')
+    }
+    return first
   }
 
-  let bestTarget = currentBest || candidates[0]
+  const firstCandidate = candidates[0]
+  if (!firstCandidate) {
+    console.error('pathfinding: Candidates array has undefined first element', {
+      candidatesLength: candidates.length,
+    })
+    throw new Error('Empty candidates array')
+  }
+  let bestTarget = currentBest || firstCandidate
   const startIndex = currentBest ? 0 : 1
 
   for (let i = startIndex; i < candidates.length; i++) {
     const candidate = candidates[i]
+    if (!candidate || !bestTarget) {
+      console.warn('pathfinding: Skipping undefined candidate or bestTarget in tie-breaking', {
+        i,
+        candidateUndefined: !candidate,
+        bestTargetUndefined: !bestTarget,
+      })
+      continue // Skip undefined entries
+    }
+
     const candidateIsVertical = isVerticallyAligned(sourceHex, candidate.hex)
     const bestIsVertical = isVerticallyAligned(sourceHex, bestTarget.hex)
 

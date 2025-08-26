@@ -38,6 +38,10 @@ export class PriorityQueue<T> {
       this.bubbleDown(0)
     }
 
+    if (!min) {
+      console.error('priorityQueue: Attempting to dequeue from empty queue')
+      throw new Error('Cannot dequeue from empty queue')
+    }
     return min.item
   }
 
@@ -54,8 +58,17 @@ export class PriorityQueue<T> {
       return
     }
 
-    const oldPriority = this.heap[index].priority
-    this.heap[index].priority = newPriority
+    const heapItem = this.heap[index]
+    if (!heapItem) {
+      console.warn('priorityQueue: Heap item at index is undefined in updatePriority', {
+        index,
+        heapLength: this.heap.length,
+      })
+      return
+    }
+
+    const oldPriority = heapItem.priority
+    heapItem.priority = newPriority
 
     // Restore heap property
     if (newPriority < oldPriority) {
@@ -77,12 +90,32 @@ export class PriorityQueue<T> {
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2)
 
-      if (this.heap[index].priority >= this.heap[parentIndex].priority) {
+      const current = this.heap[index]
+      const parent = this.heap[parentIndex]
+      if (!current || !parent) {
+        console.warn('priorityQueue: Undefined heap elements in bubbleUp', {
+          index,
+          parentIndex,
+          heapLength: this.heap.length,
+        })
+        break
+      }
+
+      if (current.priority >= parent.priority) {
         break
       }
 
       // Swap with parent
-      ;[this.heap[index], this.heap[parentIndex]] = [this.heap[parentIndex], this.heap[index]]
+      const temp = this.heap[index]
+      if (!temp) {
+        console.warn('priorityQueue: Temp element undefined during swap in bubbleUp', {
+          index,
+          heapLength: this.heap.length,
+        })
+        break
+      }
+      this.heap[index] = parent
+      this.heap[parentIndex] = temp
       index = parentIndex
     }
   }
@@ -93,25 +126,47 @@ export class PriorityQueue<T> {
       const rightChild = 2 * index + 2
       let smallest = index
 
-      if (
-        leftChild < this.heap.length &&
-        this.heap[leftChild].priority < this.heap[smallest].priority
-      ) {
+      const current = this.heap[index]
+      const leftItem = this.heap[leftChild]
+      const rightItem = this.heap[rightChild]
+      const smallestItem = this.heap[smallest]
+
+      if (!current || !smallestItem) {
+        console.warn('priorityQueue: Undefined heap elements in bubbleDown', {
+          index,
+          smallest,
+          heapLength: this.heap.length,
+        })
+        break
+      }
+
+      if (leftChild < this.heap.length && leftItem && leftItem.priority < smallestItem.priority) {
         smallest = leftChild
       }
 
       if (
         rightChild < this.heap.length &&
-        this.heap[rightChild].priority < this.heap[smallest].priority
+        rightItem &&
+        rightItem.priority < this.heap[smallest]!.priority
       ) {
         smallest = rightChild
       }
 
-      if (smallest === index)
-        break
+      if (smallest === index) break
 
-        // Swap with smallest child
-      ;[this.heap[index], this.heap[smallest]] = [this.heap[smallest], this.heap[index]]
+      // Swap with smallest child
+      const temp = this.heap[index]
+      const smallestChild = this.heap[smallest]
+      if (!temp || !smallestChild) {
+        console.warn('priorityQueue: Elements undefined during swap in bubbleDown', {
+          index,
+          smallest,
+          heapLength: this.heap.length,
+        })
+        break
+      }
+      this.heap[index] = smallestChild
+      this.heap[smallest] = temp
       index = smallest
     }
   }

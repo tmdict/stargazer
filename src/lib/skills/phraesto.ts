@@ -28,7 +28,15 @@ export const phraestoSkill: Skill = {
     }
 
     // Pick a random available tile
-    const randomTile = availableTiles[Math.floor(Math.random() * availableTiles.length)]
+    const randomIndex = Math.floor(Math.random() * availableTiles.length)
+    const randomTile = availableTiles[randomIndex]
+    if (!randomTile) {
+      console.error('phraesto: No random tile found despite non-empty array', {
+        randomIndex,
+        availableTilesLength: availableTiles.length,
+      })
+      return // Skip companion placement
+    }
     const companionHexId = randomTile.hex.getId()
 
     // Increase team size by 1 to accommodate the companion

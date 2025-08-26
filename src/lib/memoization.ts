@@ -45,7 +45,13 @@ export class MemoCache<K, V> {
     // Evict LRU item if at capacity
     if (this.cache.size >= this.maxSize && this.accessOrder.length > 0) {
       const lru = this.accessOrder[0]
-      this.delete(lru)
+      if (lru !== undefined) {
+        this.delete(lru)
+      } else {
+        console.warn('memoization: LRU key is undefined despite non-empty accessOrder', {
+          accessOrderLength: this.accessOrder.length,
+        })
+      }
     }
 
     // Add new entry

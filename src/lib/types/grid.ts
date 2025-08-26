@@ -48,7 +48,8 @@ export const DIAGONAL_ROWS: readonly number[][] = [
  */
 export function getDiagonalRowNumber(hexId: number): number {
   for (let rowIndex = 0; rowIndex < DIAGONAL_ROWS.length; rowIndex++) {
-    if (DIAGONAL_ROWS[rowIndex].includes(hexId)) {
+    const row = DIAGONAL_ROWS[rowIndex]
+    if (row && row.includes(hexId)) {
       return rowIndex + 1 // Row numbers start at 1
     }
   }

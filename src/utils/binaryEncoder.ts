@@ -152,7 +152,10 @@ export function encodeToBinary(state: GridState): Uint8Array {
     for (const entry of state.t) {
       const hexId = entry[0] ?? -1 // -1: invalid hex ID
       const stateValue = entry[1] ?? 0 // 0: empty state
-      if (hexId === -1) continue // Skip invalid entries
+      if (hexId === -1) {
+        console.warn('binaryEncoder: Skipping invalid tile entry with undefined hexId', entry)
+        continue // Skip invalid entries
+      }
 
       writer.writeBits(hexId, HEX_ID_BITS) // Hex ID
       writer.writeBits(stateValue, TILE_STATE_BITS) // State
@@ -165,7 +168,15 @@ export function encodeToBinary(state: GridState): Uint8Array {
       const hexId = entry[0] ?? -1 // -1: invalid hex ID
       const charId = entry[1] ?? -1 // -1: invalid character ID
       const team = entry[2] ?? -1 // -1: invalid team
-      if (hexId === -1 || charId === -1 || team === -1) continue // Skip invalid entries
+      if (hexId === -1 || charId === -1 || team === -1) {
+        console.warn('binaryEncoder: Skipping character entry with invalid data', {
+          hexId,
+          charId,
+          team,
+          entry,
+        })
+        continue // Skip invalid entries
+      }
 
       // Validate character ID fits within our encoding limit
       if (charId > MAX_CHARACTER_ID) {

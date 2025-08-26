@@ -128,23 +128,32 @@ function applyHexIdTieBreaker(
   if (sortedCandidates.length === 0) return null
 
   // Get all candidates at the best distance
-  const bestDistance = sortedCandidates[0].distances.get(referenceHexId) ?? 0
+  const firstCandidate = sortedCandidates[0]
+  if (!firstCandidate) {
+    console.warn('targeting: First candidate is undefined in resolveTies', {
+      sortedCandidatesLength: sortedCandidates.length,
+    })
+    return null
+  }
+  const bestDistance = firstCandidate.distances.get(referenceHexId) ?? 0
   const tiedCandidates = sortedCandidates.filter(
     (c) => (c.distances.get(referenceHexId) ?? 0) === bestDistance,
   )
 
   if (tiedCandidates.length === 1) {
-    return tiedCandidates[0]
+    const first = tiedCandidates[0]
+    return first ?? null
   }
 
   // Apply team-aware hex ID tie-breaking
-  return tiedCandidates.sort((a, b) => {
+  const sorted = tiedCandidates.sort((a, b) => {
     if (casterTeam === Team.ALLY) {
       return a.hexId - b.hexId // Lower hex ID wins for ally team
     } else {
       return b.hexId - a.hexId // Higher hex ID wins for enemy team
     }
-  })[0]
+  })
+  return sorted[0] ?? null
 }
 
 /**
