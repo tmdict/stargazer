@@ -187,10 +187,14 @@ const isPointInPolygon = (
   const n = vertices.length
 
   for (let i = 0, j = n - 1; i < n; j = i++) {
-    const xi = vertices[i].x
-    const yi = vertices[i].y
-    const xj = vertices[j].x
-    const yj = vertices[j].y
+    const vertexI = vertices[i]
+    const vertexJ = vertices[j]
+    if (!vertexI || !vertexJ) continue // Skip if vertices are undefined
+
+    const xi = vertexI.x
+    const yi = vertexI.y
+    const xj = vertexJ.x
+    const yj = vertexJ.y
 
     if (yi > point.y !== yj > point.y && point.x < ((xj - xi) * (point.y - yi)) / (yj - yi) + xi) {
       inside = !inside

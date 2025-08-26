@@ -52,7 +52,11 @@ const handleMouseLeave = () => {
 
 <template>
   <div class="character-info">
-    <img :src="gameDataStore.getIcon(`faction-${character.faction}`)" :alt="character.faction" class="icon" />
+    <img
+      :src="gameDataStore.getIcon(`faction-${character.faction}`)"
+      :alt="character.faction"
+      class="icon"
+    />
     <button
       v-if="hasDocumentedSkill"
       ref="buttonElement"
@@ -64,7 +68,11 @@ const handleMouseLeave = () => {
       <IconInfo class="icon skill-info-icon" />
     </button>
     <div v-else class="icon-spacer hide-on-mobile" />
-    <img :src="gameDataStore.getIcon(`class-${character.class}`)" :alt="character.class" class="icon" />
+    <img
+      :src="gameDataStore.getIcon(`class-${character.class}`)"
+      :alt="character.class"
+      class="icon"
+    />
   </div>
 
   <!-- Skill Modal -->

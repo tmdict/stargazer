@@ -117,11 +117,7 @@ onUnmounted(() => {
         class="character-item"
         @click="handleCharacterClick(character)"
       >
-        <CharacterIcon
-          :character="character"
-          :isDraggable="false"
-          :showSimpleTooltip="true"
-        />
+        <CharacterIcon :character="character" :isDraggable="false" :showSimpleTooltip="true" />
       </div>
       <div v-if="availableCharacters.length === 0" class="no-characters">
         No available characters
