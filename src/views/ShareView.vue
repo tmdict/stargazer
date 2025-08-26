@@ -7,17 +7,13 @@ import GridContainer from '../components/grid/GridContainer.vue'
 import IconClose from '../components/ui/IconClose.vue'
 import ToastContainer from '../components/ui/ToastContainer.vue'
 import { useBreakpoint } from '../composables/useBreakpoint'
-import { useStateReset } from '../composables/useStateReset'
 import { useToast } from '../composables/useToast'
-import { Team } from '../lib/types/team'
-import { useArtifactStore } from '../stores/artifact'
-import { useCharacterStore } from '../stores/character'
 import { useGameDataStore } from '../stores/gameData'
 import { useGridStore } from '../stores/grid'
 import { useI18nStore } from '../stores/i18n'
 import { useSkillStore } from '../stores/skill'
-import { unpackDisplayFlags } from '../utils/gridStateSerializer'
-import { decodeGridStateFromUrl } from '../utils/urlStateManager'
+import { useUrlStateStore } from '../stores/urlState'
+import { getEncodedStateFromRoute } from '../utils/urlStateManager'
 
 import '@/styles/modal.css'
 
@@ -25,10 +21,8 @@ import '@/styles/modal.css'
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
-const artifactStore = useArtifactStore()
-const characterStore = useCharacterStore()
 const skillStore = useSkillStore()
-const { clearAllState } = useStateReset()
+const urlStateStore = useUrlStateStore()
 const { success } = useToast()
 const route = useRoute()
 
@@ -52,131 +46,27 @@ i18nStore.initialize()
 
 // Restore state from URL
 const restoreStateFromUrl = () => {
-  try {
-    const encoded = route.query.g
-    if (typeof encoded !== 'string' || !encoded) {
-      return false
+  const encoded = getEncodedStateFromRoute(route.query)
+  const result = urlStateStore.restoreFromEncodedState(encoded)
+
+  if (result.success) {
+    // Store the encoded state for generating home link
+    if (encoded) {
+      encodedState.value = encoded
     }
 
-    encodedState.value = encoded
-
-    const urlState = decodeGridStateFromUrl(encoded)
-    if (!urlState) {
-      return false
-    }
-
-    // Clear existing state first
-    clearAllState()
-
-    // Restore tile states
-    if (urlState.t) {
-      urlState.t.forEach((entry) => {
-        const hexId = entry[0] ?? -1 // -1: invalid hex ID
-        const state = entry[1] ?? 0 // 0: empty state
-        if (hexId === -1) {
-          console.warn('ShareView: Skipping invalid tile entry with undefined hexId', entry)
-          return // Skip invalid entries
-        }
-
-        try {
-          const hex = gridStore.getHexById(hexId)
-          gridStore.setState(hex, state)
-        } catch (error) {
-          console.warn(`Failed to restore tile state for hex ${hexId}:`, error)
-        }
-      })
-    }
-
-    // Restore character placements
-    if (urlState.c) {
-      // Separate main characters from companions
-      const mainCharacters: typeof urlState.c = []
-      const companions: typeof urlState.c = []
-
-      urlState.c.forEach((entry) => {
-        const characterId = entry[1] ?? -1 // -1: invalid character ID
-        if (characterId === -1) {
-          console.warn('ShareView: Skipping character entry with invalid characterId', entry)
-          return // Skip invalid entries
-        }
-        if (characterId >= 10000) {
-          companions.push(entry)
-        } else {
-          mainCharacters.push(entry)
-        }
-      })
-
-      // Place main characters first (this will create companions via skills)
-      mainCharacters.forEach((entry) => {
-        const hexId = entry[0] ?? -1 // -1: invalid hex ID
-        const characterId = entry[1] ?? -1 // -1: invalid character ID
-        const team = entry[2] ?? -1 // -1: invalid team
-        if (hexId === -1 || characterId === -1 || team === -1) {
-          console.warn('ShareView: Skipping main character entry with invalid data', {
-            hexId,
-            characterId,
-            team,
-            entry,
-          })
-          return // Skip invalid entries
-        }
-
-        const placementSuccess = characterStore.placeCharacterOnHex(hexId, characterId, team)
-        if (!placementSuccess) {
-          console.warn(`Failed to place character ID ${characterId} on hex ${hexId}`)
-        }
-      })
-
-      // For companions, move them to their correct positions
-      companions.forEach((entry) => {
-        const targetHexId = entry[0] ?? -1 // -1: invalid target hex ID
-        const companionId = entry[1] ?? -1 // -1: invalid companion ID
-        const team = entry[2] ?? -1 // -1: invalid team
-        if (targetHexId === -1 || companionId === -1 || team === -1) return // Skip invalid entries
-
-        const tiles = gridStore.getAllTiles
-        const currentHex = tiles.find(
-          (tile) => tile.characterId === companionId && tile.team === team,
-        )
-
-        if (currentHex) {
-          const currentHexId = currentHex.hex.getId()
-          const moveSuccess = characterStore.moveCharacter(currentHexId, targetHexId, companionId)
-          if (!moveSuccess) {
-            console.warn(
-              `Failed to move companion ID ${companionId} from hex ${currentHexId} to ${targetHexId}`,
-            )
-          }
-        }
-      })
-    }
-
-    // Restore artifacts
-    if (urlState.a) {
-      const allyArtifact = urlState.a[0] ?? null // null: no ally artifact
-      const enemyArtifact = urlState.a[1] ?? null // null: no enemy artifact
-      if (allyArtifact !== null) {
-        artifactStore.placeArtifact(allyArtifact, Team.ALLY)
-      }
-      if (enemyArtifact !== null) {
-        artifactStore.placeArtifact(enemyArtifact, Team.ENEMY)
-      }
-    }
-
-    // Restore display flags if present
-    const displayFlags = unpackDisplayFlags(urlState.d)
-    if (displayFlags) {
-      showHexIds.value = displayFlags.showHexIds ?? false
-      showArrows.value = displayFlags.showArrows ?? false
-      showPerspective.value = displayFlags.showPerspective ?? true
-      showSkills.value = displayFlags.showSkills ?? true
+    // Apply display flags if present
+    if (result.displayFlags) {
+      showHexIds.value = result.displayFlags.showHexIds ?? false
+      showArrows.value = result.displayFlags.showArrows ?? false
+      showPerspective.value = result.displayFlags.showPerspective ?? true
+      showSkills.value = result.displayFlags.showSkills ?? true
     }
 
     return true
-  } catch (err) {
-    console.error('Failed to restore state from URL:', err)
-    return false
   }
+
+  return false
 }
 
 // Check for valid grid state on mount
