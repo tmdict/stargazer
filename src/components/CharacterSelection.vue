@@ -9,7 +9,6 @@ import type { CharacterType } from '../lib/types/character'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  characterImages: Readonly<Record<string, string>>
   icons: Readonly<Record<string, string>>
   isDraggable?: boolean
 }>()
@@ -109,7 +108,6 @@ const removeCharacterFromGrid = (characterId: number) => {
         v-for="character in filteredAndSortedCharacters"
         :key="character.id"
         :character="{ ...character, team: selectedTeam }"
-        :characterImage="characterImages[character.name]"
         :icons
         :isDraggable
         :isPlaced="isCharacterPlaced(character.id)"

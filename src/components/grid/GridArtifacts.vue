@@ -9,7 +9,6 @@ import { useGridStore } from '../../stores/grid'
 const props = defineProps<{
   allyArtifactId?: number | null
   enemyArtifactId?: number | null
-  artifactImages: Record<string, string>
   showPerspective?: boolean
   scaleY?: number
   readonly?: boolean
@@ -110,7 +109,7 @@ const handleArtifactClick = (team: Team) => {
       @click="!readonly && handleArtifactClick(Team.ALLY)"
     >
       <img
-        :src="artifactImages[allyArtifactName]"
+        :src="gameDataStore.getArtifactImage(allyArtifactName)"
         :alt="allyArtifactName"
         class="artifact-image"
         :style="getImageStyles"
@@ -126,7 +125,7 @@ const handleArtifactClick = (team: Team) => {
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
     >
       <img
-        :src="artifactImages[enemyArtifactName]"
+        :src="gameDataStore.getArtifactImage(enemyArtifactName)"
         :alt="enemyArtifactName"
         class="artifact-image"
         :style="getImageStyles"

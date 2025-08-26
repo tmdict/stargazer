@@ -12,7 +12,6 @@ import { useI18nStore } from '../stores/i18n'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  characterImages: Readonly<Record<string, string>>
   icons: Readonly<Record<string, string>>
   isDraggable?: boolean
 }>()
@@ -90,7 +89,6 @@ const openDetailsModal = (character: CharacterType) => {
       <div v-for="character in skillCharacters" :key="character.id" class="character-wrapper">
         <CharacterIcon
           :character="{ ...character, team: selectedTeam }"
-          :characterImage="characterImages[character.name]"
           :icons
           :isDraggable
           :isPlaced="isCharacterPlaced(character.id)"

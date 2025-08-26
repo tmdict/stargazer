@@ -9,7 +9,6 @@ import { Team } from '../lib/types/team'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]
-  artifactImages: Readonly<Record<string, string>>
   icons: Readonly<Record<string, string>>
 }>()
 
@@ -46,7 +45,6 @@ const sortedArtifacts = computed(() => {
       <div v-for="artifact in sortedArtifacts" :key="artifact.id" class="artifact-profile">
         <ArtifactIcon
           :artifact="artifact"
-          :artifactImage="artifactImages[artifact.name]"
           :isPlaced="isArtifactPlaced(artifact.id)"
           @artifact-click="handleArtifactClick"
         />

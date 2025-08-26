@@ -10,7 +10,6 @@ import { useGridStore } from '../../stores/grid'
 import { useSkillStore } from '../../stores/skill'
 
 interface Props {
-  characterImages: Readonly<Record<string, string>>
   characters: readonly CharacterType[]
   showPerspective: boolean
   scaleY: number
@@ -126,7 +125,12 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   const characterWithSource = { ...character, id: characterId, sourceHexId: hexId }
   const characterName = gameDataStore.getCharacterNameById(actualId) || ''
 
-  startDrag(event, characterWithSource, characterId, props.characterImages[characterName || ''])
+  startDrag(
+    event,
+    characterWithSource,
+    characterId,
+    gameDataStore.getCharacterImage(characterName || ''),
+  )
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -156,7 +160,7 @@ const handleClick = (hexId: number) => {
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />
         <img
-          :src="characterImages[getCharacterName(characterId)]"
+          :src="gameDataStore.getCharacterImage(getCharacterName(characterId))"
           :alt="getCharacterName(characterId)"
           class="character-image"
           :style="getSkillBorderStyle(characterId, hexId)"

@@ -23,8 +23,6 @@ import { useMapEditorStore } from '../../stores/mapEditor'
 interface Props {
   // Data props
   characters: readonly CharacterType[]
-  characterImages: Readonly<Record<string, string>>
-  artifactImages: Readonly<Record<string, string>>
   icons?: Readonly<Record<string, string>>
   // Display toggle props
   showArrows: boolean
@@ -300,7 +298,6 @@ defineExpose({
     <GridArtifacts
       :allyArtifactId="artifactStore.allyArtifactId"
       :enemyArtifactId="artifactStore.enemyArtifactId"
-      :artifactImages
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
       :readonly
@@ -308,7 +305,6 @@ defineExpose({
 
     <!-- Character layer (above artifacts) -->
     <GridCharacters
-      :character-images="characterImages"
       :characters
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
@@ -349,7 +345,6 @@ defineExpose({
       v-if="showCharacterModal && modalHex && props.icons"
       :hex="modalHex"
       :characters="props.characters"
-      :characterImages="props.characterImages"
       :icons="props.icons"
       :position="modalPosition"
       @close="closeCharacterModal"
