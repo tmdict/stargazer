@@ -52,8 +52,8 @@ export class PathfindingCache {
   private closestAllyCache = new MemoCache<string, Map<number, TargetInfo>>(100)
 
   // Path cache operations
-  getPath(key: string): Hex[] | null | undefined {
-    return this.pathCache.get(key)
+  getPath(key: string): Hex[] | null {
+    return this.pathCache.get(key) ?? null
   }
 
   setPath(key: string, value: Hex[] | null): void {
@@ -61,8 +61,8 @@ export class PathfindingCache {
   }
 
   // Effective distance cache operations
-  getEffectiveDistance(key: string): DistanceResult | undefined {
-    return this.effectiveDistanceCache.get(key)
+  getEffectiveDistance(key: string): DistanceResult | null {
+    return this.effectiveDistanceCache.get(key) ?? null
   }
 
   setEffectiveDistance(key: string, value: DistanceResult): void {
@@ -70,8 +70,8 @@ export class PathfindingCache {
   }
 
   // Closest enemy cache operations
-  getClosestEnemyMap(key: string): Map<number, TargetInfo> | undefined {
-    return this.closestEnemyCache.get(key)
+  getClosestEnemyMap(key: string): Map<number, TargetInfo> | null {
+    return this.closestEnemyCache.get(key) ?? null
   }
 
   setClosestEnemyMap(key: string, value: Map<number, TargetInfo>): void {
@@ -79,8 +79,8 @@ export class PathfindingCache {
   }
 
   // Closest ally cache operations
-  getClosestAllyMap(key: string): Map<number, TargetInfo> | undefined {
-    return this.closestAllyCache.get(key)
+  getClosestAllyMap(key: string): Map<number, TargetInfo> | null {
+    return this.closestAllyCache.get(key) ?? null
   }
 
   setClosestAllyMap(key: string, value: Map<number, TargetInfo>): void {
