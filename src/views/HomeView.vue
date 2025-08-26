@@ -90,17 +90,20 @@ i18nStore.initialize()
 // After data is loaded, try to restore state from URL
 if (gameDataStore.dataLoaded) {
   const encodedState = getEncodedStateFromUrl()
-  const result = urlStateStore.restoreFromEncodedState(encodedState)
+  if (encodedState) {
+    // Only try to restore if there's a query param
+    const result = urlStateStore.restoreFromEncodedState(encodedState)
 
-  if (result.success && result.displayFlags) {
-    // Apply display flags from URL
-    showHexIds.value = result.displayFlags.showHexIds ?? false
-    showArrows.value = result.displayFlags.showArrows ?? false
-    showPerspective.value = result.displayFlags.showPerspective ?? true
-    showSkills.value = result.displayFlags.showSkills ?? true
-    success('Grid loaded from URL!')
-  } else if (result && !result.success && result.error) {
-    error('Invalid URL - using default grid')
+    if (result.success && result.displayFlags) {
+      // Apply display flags from URL
+      showHexIds.value = result.displayFlags.showHexIds ?? false
+      showArrows.value = result.displayFlags.showArrows ?? false
+      showPerspective.value = result.displayFlags.showPerspective ?? true
+      showSkills.value = result.displayFlags.showSkills ?? true
+      success('Grid loaded from URL!')
+    } else {
+      error('Invalid URL - using default grid')
+    }
   }
 }
 

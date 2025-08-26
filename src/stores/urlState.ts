@@ -52,6 +52,26 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
   // Apply grid state to stores (private helper)
   const applyGridState = (gridState: GridState): void => {
+    // Helper functions to safely extract validated entries
+    const getValidatedTileEntry = (entry: number[]): { hexId: number; state: number } | null => {
+      const hexId = entry[0]
+      const state = entry[1]
+
+      if (hexId === undefined || state === undefined) return null
+      return { hexId, state }
+    }
+
+    const getValidatedCharacterEntry = (
+      entry: number[],
+    ): { hexId: number; characterId: number; team: number } | null => {
+      const hexId = entry[0]
+      const characterId = entry[1]
+      const team = entry[2]
+
+      if (hexId === undefined || characterId === undefined || team === undefined) return null
+      return { hexId, characterId, team }
+    }
+
     // Clear existing state first using shared utility
     // This resets all tiles to DEFAULT, clears characters and artifacts
     clearAllState()
@@ -59,15 +79,14 @@ export const useUrlStateStore = defineStore('urlState', () => {
     // Restore tile states from compact format: [hexId, state]
     if (gridState.t) {
       gridState.t.forEach((entry) => {
-        const hexId = entry[0] ?? -1 // -1: invalid hex ID
-        const state = entry[1] ?? 0 // 0: default state
-        if (hexId === -1) return // Skip invalid entries
+        const validated = getValidatedTileEntry(entry)
+        if (!validated) return // Skip if can't verify the entry
 
         try {
-          const hex = gridStore.getHexById(hexId)
-          gridStore.setState(hex, state)
+          const hex = gridStore.getHexById(validated.hexId)
+          gridStore.setState(hex, validated.state)
         } catch (error) {
-          console.warn(`Failed to restore tile state for hex ${hexId}:`, error)
+          console.warn(`Failed to restore tile state for hex ${validated.hexId}:`, error)
         }
       })
     }
@@ -79,8 +98,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
       const companions: typeof gridState.c = []
 
       gridState.c.forEach((entry) => {
-        const characterId = entry[1] ?? -1 // -1: invalid character ID
-        if (characterId === -1) return // Skip invalid entries
+        const characterId = entry[1]
+        if (characterId === undefined) return
 
         if (characterId >= 10000) {
           companions.push(entry)
@@ -91,43 +110,49 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
       // Place main characters first (this will create companions via skills)
       mainCharacters.forEach((entry) => {
-        const hexId = entry[0] ?? -1 // -1: invalid hex ID
-        const characterId = entry[1] ?? -1 // -1: invalid character ID
-        const team = entry[2] ?? -1 // -1: invalid team
-        if (hexId === -1 || characterId === -1 || team === -1) return // Skip invalid entries
+        const validated = getValidatedCharacterEntry(entry)
+        if (!validated) return
 
-        const placementSuccess = characterStore.placeCharacterOnHex(hexId, characterId, team)
+        const placementSuccess = characterStore.placeCharacterOnHex(
+          validated.hexId,
+          validated.characterId,
+          validated.team,
+        )
         if (!placementSuccess) {
-          console.warn(`Failed to place character ID ${characterId} on hex ${hexId}`)
+          console.warn(
+            `Failed to place character ID ${validated.characterId} on hex ${validated.hexId}`,
+          )
         }
       })
 
       // For companions, we need to move them to their correct positions
       // The skill will have created them at random positions, but we need them at specific hexes
       companions.forEach((entry) => {
-        const targetHexId = entry[0] ?? -1 // -1: invalid target hex ID
-        const companionId = entry[1] ?? -1 // -1: invalid companion ID
-        const team = entry[2] ?? -1 // -1: invalid team
-        if (targetHexId === -1 || companionId === -1 || team === -1) return // Skip invalid entries
+        const validated = getValidatedCharacterEntry(entry)
+        if (!validated) return
 
         // Find where the companion was auto-placed
         const tiles = gridStore.getAllTiles
         const currentHex = tiles.find(
-          (tile) => tile.characterId === companionId && tile.team === team,
+          (tile) => tile.characterId === validated.characterId && tile.team === validated.team,
         )
 
         if (currentHex) {
           const currentHexId = currentHex.hex.getId()
           // Move the companion to the correct position
-          const moveSuccess = characterStore.moveCharacter(currentHexId, targetHexId, companionId)
+          const moveSuccess = characterStore.moveCharacter(
+            currentHexId,
+            validated.hexId,
+            validated.characterId,
+          )
           if (!moveSuccess) {
             console.warn(
-              `Failed to move companion ID ${companionId} from hex ${currentHexId} to ${targetHexId}`,
+              `Failed to move companion ID ${validated.characterId} from hex ${currentHexId} to ${validated.hexId}`,
             )
           }
         } else {
           console.warn(
-            `Companion ID ${companionId} was not created by skill - this shouldn't happen`,
+            `Companion ID ${validated.characterId} was not created by skill - this shouldn't happen`,
           )
         }
       })

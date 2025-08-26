@@ -11,28 +11,26 @@ The URL serialization system enables sharing game state through compact URLs usi
 3. **Fixed Format**: Simple, stable binary format without versioning overhead
 4. **Fast Encoding**: O(n) performance with millisecond execution
 5. **Robust Decoding**: Graceful handling of invalid or partial state
+6. **Input Validation**: Pre-encoding validation ensures data integrity
+7. **Error Resilience**: Graceful degradation with clear error messages
 
 ## Core Components
 
-### URL State Manager (`/src/utils/urlStateManager.ts`)
+### URL State Management (`/src/utils/urlStateManager.ts`, `/src/stores/urlState.ts`)
 
-High-level API for URL generation and parsing with grid state.
+Handles URL generation, parsing, and state restoration through a unified API:
 
-### URL State Store (`/src/stores/urlState.ts`)
-
-State restoration orchestration through Pinia store:
-
-```typescript
-interface UrlRestoreResult {
-  success: boolean
-  displayFlags?: DisplayFlags
-  error?: string
-}
-```
+- **`generateShareableUrl()`**: Creates shareable URLs with compressed state
+- **`restoreFromEncodedState()`**: Restores grid from URL parameters
+- **`updateUrlWithGridState()`**: Updates browser URL without navigation
 
 ### Binary Encoder (`/src/utils/binaryEncoder.ts`)
 
-Handles bit-level operations for compact encoding.
+Performs bit-level encoding/decoding with built-in validation:
+
+- **`validateGridState()`**: Pre-filters invalid entries
+- **`encodeToBinary()`**: Compresses state to binary format
+- **`decodeFromBinary()`**: Restores state with error handling
 
 ### Grid State Serializer (`/src/utils/gridStateSerializer.ts`)
 
@@ -47,44 +45,9 @@ interface GridState {
 }
 ```
 
-## Encoding Strategy
+## Binary Encoding
 
-### Bit Allocation
-
-- **Hex States**: 3 bits (8 possible states)
-- **Character IDs**: 14 bits (supports IDs 0-16,383)
-- **Team Assignment**: 1 bit (ALLY/ENEMY)
-- **Artifacts**: 3 bits each (supports 7 artifact types)
-- **Display Flags**: 4 bits (Grid Info, Targeting, Perspective, Skills)
-
-### Extended Header Mode
-
-Extended mode is triggered for:
-
-- More than 7 tiles or characters
-- Display flags present
-
-```typescript
-// Extended flags byte when bit 7 set:
-// Bit 0: Needs extended counts
-// Bits 1-4: Display flags (showHexIds, showArrows, showPerspective, showSkills)
-// Bits 5-7: Reserved
-```
-
-### Display Flags
-
-View preferences preserved in URLs:
-
-- **Grid Info**: Hex ID display toggle (bit 0)
-- **Targeting**: Arrow visualization toggle (bit 1)
-- **Flat**: Perspective mode toggle (bit 2)
-- **Skills**: Skill targeting display toggle (bit 3)
-
-Bit-packed into 4 bits within extended header.
-
-## Serialization Format
-
-### Header Byte Structure
+### Format Structure
 
 ```
 [Header: 8 bits]
@@ -93,129 +56,88 @@ Bit-packed into 4 bits within extended header.
   - Bit 6: Has artifacts flag
   - Bit 7: Extended mode flag
 
-[Extended Header (if bit 7 set)]
-  - Extended flags byte (8 bits)
-  - Additional tile count (if needed)
-  - Additional character count (if needed)
+[Extended Header (if bit 7 set): 8+ bits]
+  - Bit 0: Needs extended counts
+  - Bits 1-4: Display flags (Grid Info, Targeting, Flat, Skills)
+  - Bits 5-7: Reserved
+  - Additional tile count byte (if bit 0 set)
+  - Additional character count byte (if bit 0 set)
 
 [Tiles: 9 bits each]
-  - Hex ID (6 bits)
-  - State (3 bits)
+  - Hex ID (6 bits): Range 1-63
+  - State (3 bits): Range 0-7
 
 [Characters: 21 bits each]
-  - Hex ID (6 bits)
-  - Character ID (14 bits)
-  - Team (1 bit)
+  - Hex ID (6 bits): Range 1-63
+  - Character ID (14 bits): Range 1-16383
+  - Team (1 bit): 1=ALLY, 2=ENEMY
 
-[Artifacts (if present): 6 bits]
-  - Ally artifact (3 bits)
-  - Enemy artifact (3 bits)
+[Artifacts (if header bit 6 set): 6 bits]
+  - Ally artifact (3 bits): Range 0-7
+  - Enemy artifact (3 bits): Range 0-7
 ```
 
 Only non-default hex states are stored, significantly reducing size.
 
-## URL Generation Process
+### Validation & Limits
 
-1. Collect non-default hex states
-2. Gather character placements and display flags
-3. Binary encode with variable-length IDs
-4. Base64-like encode to URL-safe string
-5. Append as query parameter
+Before encoding, `validateGridState()` filters invalid entries:
 
-Example: `https://<url>>/?g=AQIDBAUGBwgJCg`
+- **Hex IDs**: Must be 1-63 (6-bit limit)
+- **Tile States**: Must be 0-7 (3-bit limit)
+- **Character IDs**: Must be 1-16383 (14-bit limit)
+- **Team Values**: Must be 1 (ALLY) or 2 (ENEMY)
+- **Maximum Counts**: 262 tiles or characters (7 in header + 255 in extended)
 
-## Share Page Integration
+Invalid entries are filtered with console warnings, ensuring header counts match actual data written and preventing encoding/decoding mismatches.
 
-The URL serialization system powers the Share page feature, enabling read-only grid viewing through direct links.
+### Extended Mode
 
-### Share URL Format
+Extended mode activates when:
 
-```
-https://<url>/share?g=<encoded-state>
-```
+- More than 7 tile entries (modified hexes) OR more than 7 character entries
+- Display flags are explicitly provided (even if all false)
 
-### Share Page Behavior
+Display flags are only stored when explicitly provided (`d !== undefined`), preserving `d=0` when intentionally set but omitting from output when not provided for URL optimization.
 
-- **Read-only Mode**: Grid is displayed but not interactable (no dragging, clicking, or state changes)
-- **Full State Preservation**: All display settings (perspective, arrows, hex IDs, skills) are maintained
-- **Responsive Design**: Grid adapts to screen size without forcing perspective flattening on mobile
-- **Modal Presentation**: Dark overlay background with centered grid container
-- **Navigation**: Clicking outside the grid or using browser back returns to main page with state preserved
+## URL Operations
 
-### Share Link Generation
+### Encoding Process
 
-The Link button in GridControls generates share URLs:
+1. Collect non-default hex states and character placements
+2. Validate entries with `validateGridState()` (filters invalid data)
+3. Serialize to GridState format via `serializeGridState()`
+4. Binary encode with bit packing via `encodeToBinary()`
+5. Convert to URL-safe string via `bytesToUrlSafe()`
+6. Append as query parameter: `?g=<encoded>`
 
-1. Serializes current grid state
-2. Creates `/share?g=<encoded>` URL
-3. Copies to clipboard with toast notification
-4. Redirects to Share page for preview
+Example: `https://<url>/?g=AQIDBAUGBwgJCg`
 
-## State Restoration API
+### Decoding Process
 
-### Restoration Flow
-
-The URL state restoration is unified through the `urlState` store, providing consistent behavior across all views:
+1. Extract encoded string from URL parameter
+2. Convert from URL-safe format via `urlSafeToBytes()`
+3. Decode binary data via `decodeFromBinary()`
+4. Apply state through `restoreFromEncodedState()`:
 
 ```typescript
-import { useUrlStateStore } from '../stores/urlState'
-import { getEncodedStateFromRoute, getEncodedStateFromUrl } from '../utils/urlStateManager'
-
 const urlStateStore = useUrlStateStore()
-
-// From current browser URL
-const encodedState = getEncodedStateFromUrl()
+const encodedState = getEncodedStateFromUrl() // or getEncodedStateFromRoute(route.query)
 const result = urlStateStore.restoreFromEncodedState(encodedState)
 
-// From Vue Router query
-const encodedState = getEncodedStateFromRoute(route.query)
-const result = urlStateStore.restoreFromEncodedState(encodedState)
-
-// Handle results
 if (result.success) {
-  // State restored successfully
-  if (result.displayFlags) {
-    // Apply display flags to UI
-  }
+  // State restored, apply display flags if present
 } else {
   // Handle error: result.error contains details
 }
 ```
 
-### Character Placement Strategy
+### Character Restoration
 
-#### Standard Characters (ID < 10000)
+- **Standard characters (ID < 10000)**: Direct placement
+- **Companions (ID ≥ 10000)**: Two-phase - place mains first (triggers skills), then reposition companions
 
-Direct placement for regular character IDs.
-
-#### Companion Characters (ID ≥ 10000)
-
-Two-phase restoration for companions:
-
-1. **Place main characters** - triggers skill activation and companion creation
-2. **Reposition companions** - move from auto-generated positions to saved positions
-
-This respects skill-based companion creation while preserving exact layouts.
-
-**Note**: Character IDs are currently limited to 16,383 (14-bit encoding). This supports approximately 6,383 main characters with their companions.
-
-## Grid Export
-
-### Image Export
-
-PNG generation from grid visualization:
-
-```typescript
-const dataUrl = await toPng(element, {
-  quality: 1.0,
-  pixelRatio: 2,
-  backgroundColor: 'transparent',
-})
-```
-
-### Clipboard Integration
-
-Direct copy to clipboard for easy sharing.
+**Note**: Character IDs are currently limited to 16,383 (14-bit encoding). This supports approximately 6,383 main characters with their companions. IDs exceeding this limit are filtered during validation.
 
 ## Related Documentation
 
