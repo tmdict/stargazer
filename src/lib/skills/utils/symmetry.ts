@@ -19,23 +19,54 @@ function buildSymmetryMap(): void {
     const sourceArray = DIAGONAL_ROWS[row]
     const targetArray = DIAGONAL_ROWS[targetRow]
 
+    if (!sourceArray || !targetArray) {
+      console.warn('symmetry: Skipping undefined diagonal arrays in buildSymmetryMap', {
+        row,
+        targetRow,
+        sourceArrayExists: !!sourceArray,
+        targetArrayExists: !!targetArray,
+      })
+      continue
+    }
+
     // Mirror across diagonal: same position in mirrored row
     // First maps to first, last maps to last (not reversed)
     for (let pos = 0; pos < sourceArray.length; pos++) {
-      if (pos < targetArray.length) {
-        const sourceId = sourceArray[pos]
-        const targetId = targetArray[pos] // Same position, not reversed
+      if (pos >= targetArray.length) break // Bounds check
 
-        SYMMETRY_MAP.set(sourceId, targetId)
-        SYMMETRY_MAP.set(targetId, sourceId) // Bidirectional
+      const sourceId = sourceArray[pos]
+      const targetId = targetArray[pos] // Same position, not reversed
+
+      if (sourceId === undefined || targetId === undefined) {
+        console.warn('symmetry: Skipping undefined hex IDs', {
+          pos,
+          row,
+          targetRow,
+          sourceId,
+          targetId,
+        })
+        continue
       }
+
+      SYMMETRY_MAP.set(sourceId, targetId)
+      SYMMETRY_MAP.set(targetId, sourceId) // Bidirectional
     }
   }
 
   // Middle diagonal maps to itself
   const middleDiagonal = DIAGONAL_ROWS[middleRow]
+  if (!middleDiagonal) {
+    console.error('symmetry: Middle diagonal array is undefined', {
+      middleRow,
+      diagonalRowsLength: DIAGONAL_ROWS.length,
+    })
+    return
+  }
+
   for (const hexId of middleDiagonal) {
-    SYMMETRY_MAP.set(hexId, hexId)
+    if (hexId !== undefined) {
+      SYMMETRY_MAP.set(hexId, hexId)
+    }
   }
 }
 

@@ -12,8 +12,18 @@ function iniGrid(preset: GridPreset): Hex[] {
 
   for (let rowIndex = 0; rowIndex < preset.hex.length; rowIndex++) {
     const row = preset.hex[rowIndex]
-    const r = rowIndex - centerRowIndex
     const offset = preset.qOffset[rowIndex]
+
+    if (!row || offset === undefined) {
+      console.warn('grid: Skipping invalid row/offset in createHexesFromPreset', {
+        rowIndex,
+        rowExists: !!row,
+        offset,
+      })
+      continue
+    }
+
+    const r = rowIndex - centerRowIndex
 
     for (let i = 0; i < row.length; i++) {
       const q = offset + i
@@ -355,6 +365,14 @@ export class Grid {
     // Select random tile from available options
     const randomIndex = Math.floor(Math.random() * availableTiles.length)
     const selectedTile = availableTiles[randomIndex]
+
+    if (!selectedTile) {
+      console.error('grid: Selected tile is undefined despite non-empty availableTiles array', {
+        randomIndex,
+        availableTilesLength: availableTiles.length,
+      })
+      return false
+    }
 
     // Place character using existing validated method
     return this.placeCharacter(selectedTile.hex.getId(), characterId, team)
