@@ -90,6 +90,11 @@ export const useI18nStore = defineStore('i18n', () => {
       }
 
       const [category, name] = parts
+      if (!category || !name) {
+        console.warn('i18n: Invalid translation key parts', { key, category, name })
+        return key
+      }
+
       const categoryTranslations = translations.value[category]
 
       if (!categoryTranslations) {
@@ -121,6 +126,15 @@ export const useI18nStore = defineStore('i18n', () => {
       }
 
       const [category, name] = parts
+      if (!category || !name) {
+        console.warn('i18n: Invalid translation key parts in hasTranslation', {
+          key,
+          category,
+          name,
+        })
+        return false
+      }
+
       const categoryTranslations = translations.value[category]
 
       return !!(

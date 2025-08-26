@@ -68,9 +68,16 @@ function parseSkillKey(key: string): { characterId: number; team: string } | nul
   const parts = key.split('-')
   if (parts.length !== 2) return null
 
+  const charIdStr = parts[0] ?? ''
+  const teamStr = parts[1] ?? ''
+  if (!charIdStr || !teamStr) {
+    console.warn('SkillTargeting: Invalid skill key parts', { key, charIdStr, teamStr })
+    return null
+  }
+
   return {
-    characterId: parseInt(parts[0]),
-    team: parts[1],
+    characterId: parseInt(charIdStr),
+    team: teamStr,
   }
 }
 

@@ -73,7 +73,10 @@ const restoreStateFromUrl = () => {
       urlState.t.forEach((entry) => {
         const hexId = entry[0] ?? -1 // -1: invalid hex ID
         const state = entry[1] ?? 0 // 0: empty state
-        if (hexId === -1) return // Skip invalid entries
+        if (hexId === -1) {
+          console.warn('ShareView: Skipping invalid tile entry with undefined hexId', entry)
+          return // Skip invalid entries
+        }
 
         try {
           const hex = gridStore.getHexById(hexId)
@@ -92,7 +95,10 @@ const restoreStateFromUrl = () => {
 
       urlState.c.forEach((entry) => {
         const characterId = entry[1] ?? -1 // -1: invalid character ID
-        if (characterId === -1) return // Skip invalid entries
+        if (characterId === -1) {
+          console.warn('ShareView: Skipping character entry with invalid characterId', entry)
+          return // Skip invalid entries
+        }
         if (characterId >= 10000) {
           companions.push(entry)
         } else {
@@ -105,7 +111,15 @@ const restoreStateFromUrl = () => {
         const hexId = entry[0] ?? -1 // -1: invalid hex ID
         const characterId = entry[1] ?? -1 // -1: invalid character ID
         const team = entry[2] ?? -1 // -1: invalid team
-        if (hexId === -1 || characterId === -1 || team === -1) return // Skip invalid entries
+        if (hexId === -1 || characterId === -1 || team === -1) {
+          console.warn('ShareView: Skipping main character entry with invalid data', {
+            hexId,
+            characterId,
+            team,
+            entry,
+          })
+          return // Skip invalid entries
+        }
 
         const placementSuccess = characterStore.placeCharacterOnHex(hexId, characterId, team)
         if (!placementSuccess) {
