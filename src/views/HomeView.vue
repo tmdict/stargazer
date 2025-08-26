@@ -239,7 +239,6 @@ const handleClearMap = () => {
             <!-- Grid Manager Component -->
             <GridContainer
               :characters="gameDataStore.characters"
-              :icons="gameDataStore.icons"
               :show-arrows="showArrows"
               :show-hex-ids="showHexIds"
               :show-debug="showDebug"
@@ -290,7 +289,6 @@ const handleClearMap = () => {
             <div v-show="activeTab === 'characters'" class="tab-panel">
               <CharacterSelection
                 :characters="gameDataStore.characters"
-                :icons="gameDataStore.icons"
                 :isDraggable="true"
               />
             </div>
@@ -298,14 +296,12 @@ const handleClearMap = () => {
             <div v-show="activeTab === 'artifacts'" class="tab-panel">
               <ArtifactSelection
                 :artifacts="gameDataStore.artifacts"
-                :icons="gameDataStore.icons"
               />
             </div>
             <!-- Skills Tab -->
             <div v-show="activeTab === 'skills'" class="tab-panel">
               <SkillsSelection
                 :characters="gameDataStore.characters"
-                :icons="gameDataStore.icons"
                 :isDraggable="true"
               />
             </div>

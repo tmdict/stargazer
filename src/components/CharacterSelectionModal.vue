@@ -12,7 +12,6 @@ import { useGridStore } from '../stores/grid'
 interface Props {
   hex: Hex
   characters: readonly CharacterType[]
-  icons: Readonly<Record<string, string>>
   position: { x: number; y: number }
 }
 
@@ -120,7 +119,6 @@ onUnmounted(() => {
       >
         <CharacterIcon
           :character="character"
-          :icons="icons"
           :isDraggable="false"
           :showSimpleTooltip="true"
         />

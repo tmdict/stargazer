@@ -9,7 +9,6 @@ import { Team } from '../lib/types/team'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]
-  icons: Readonly<Record<string, string>>
 }>()
 
 const { selectedTeam, artifactStore } = useSelectionState()
