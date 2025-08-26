@@ -38,9 +38,6 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * - Bit 20: Team (1 bit)
  *
  * Note: Character IDs are currently limited to 16383 (14 bits).
- * If future expansion is needed beyond this limit, a new encoding
- * format with a flag bit can be introduced while maintaining
- * backward compatibility.
  *
  * Artifacts (6 bits):
  * - Bits 0-2: Ally artifact (3 bits, 0 = null, 1-7 = artifact ID)
