@@ -7,6 +7,16 @@ export class Hex {
   readonly s: number
   id: number
 
+  // Static direction vectors for neighbor calculations
+  private static readonly DIRECTIONS: readonly Hex[] = [
+    new Hex(1, -1, 0), // 0: top-right
+    new Hex(1, 0, -1), // 1: right
+    new Hex(0, 1, -1), // 2: bottom-right
+    new Hex(-1, 1, 0), // 3: bottom-left
+    new Hex(-1, 0, 1), // 4: left
+    new Hex(0, -1, 1), // 5: top-left
+  ]
+
   constructor(q: number, r: number, s: number, id: number = -1) {
     if (q + r + s !== 0) {
       throw new Error(`q=${q} + r=${r} + s=${s} must be 0`)
@@ -52,21 +62,9 @@ export class Hex {
   }
 
   neighbor(direction: number): Hex {
-    // Direction indices 0-5 clockwise from top-right
-    const directions = [
-      new Hex(1, -1, 0), // 0: top-right
-      new Hex(1, 0, -1), // 1: right
-      new Hex(0, 1, -1), // 2: bottom-right
-      new Hex(-1, 1, 0), // 3: bottom-left
-      new Hex(-1, 0, 1), // 4: left
-      new Hex(0, -1, 1), // 5: top-left
-    ]
-    const directionIndex = direction % 6
-    const directionHex = directions[directionIndex]
-    if (!directionHex) {
-      console.error('hex: Invalid direction index', { direction, directionIndex })
-      return this // Return current hex as fallback
-    }
+    // Properly handle negative numbers with modulo
+    const directionIndex = ((direction % 6) + 6) % 6
+    const directionHex = Hex.DIRECTIONS[directionIndex]!
     return this.add(directionHex)
   }
 
@@ -92,16 +90,7 @@ export class Hex {
     r: number,
     s: number,
   ): Array<{ q: number; r: number; s: number }> {
-    const directions = [
-      { q: 1, r: -1, s: 0 }, // top-right
-      { q: 1, r: 0, s: -1 }, // right
-      { q: 0, r: 1, s: -1 }, // bottom-right
-      { q: -1, r: 1, s: 0 }, // bottom-left
-      { q: -1, r: 0, s: 1 }, // left
-      { q: 0, r: -1, s: 1 }, // top-left
-    ]
-
-    return directions.map((dir) => ({
+    return Hex.DIRECTIONS.map((dir) => ({
       q: q + dir.q,
       r: r + dir.r,
       s: s + dir.s,
