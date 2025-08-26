@@ -6,7 +6,7 @@ export function useRouteLocale() {
 
   const locale = computed(() => {
     const match = route.path.match(/^\/(en|zh)\//)
-    return match ? match[1] : 'en'
+    return match?.[1] ?? 'en'  // 'en': default locale for missing/invalid routes
   })
 
   return locale

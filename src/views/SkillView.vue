@@ -17,7 +17,7 @@ const route = useRoute()
 const locale = useRouteLocale()
 
 // Use the prop if provided, otherwise fall back to route params
-const skillName = computed(() => props.name || (route.params.name as string))
+const skillName = computed(() => props.name || (route.params.name as string) || 'undefined')
 
 // Normalize skill name with proper casing for filename
 const normalizedSkillName = computed(() => {
@@ -30,7 +30,7 @@ const normalizedSkillName = computed(() => {
     nameMap[skill] = skill.charAt(0).toUpperCase() + skill.slice(1)
   })
 
-  return nameMap[name] || name
+  return nameMap[name] || name || 'undefined' // 'undefined': fallback for missing skill names
 })
 
 // Pass the computed ref directly so it's reactive
