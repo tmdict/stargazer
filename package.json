@@ -25,24 +25,24 @@
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.6.2",
     "@tsconfig/node22": "^22.0.2",
-    "@types/node": "^22.15.32",
+    "@types/node": "^24.3.0",
     "@vitejs/plugin-vue": "^6.0.0",
     "@vitest/eslint-plugin": "^1.3.4",
     "@vue/eslint-config-prettier": "^10.2.0",
     "@vue/eslint-config-typescript": "^14.6.0",
-    "@vue/tsconfig": "^0.7.0",
+    "@vue/tsconfig": "^0.8.1",
     "eslint": "^9.34.0",
-    "eslint-plugin-vue": "~10.3.0",
+    "eslint-plugin-vue": "^10.4.0",
     "npm-run-all2": "^8.0.4",
-    "prettier": "3.5.3",
+    "prettier": "^3.6.2",
     "tsx": "^4.20.3",
-    "typescript": "~5.8.0",
+    "typescript": "^5.9.2",
     "vite": "^7.0.0",
-    "vite-imagetools": "^7.1.0",
-    "vite-plugin-vue-devtools": "^7.7.7",
+    "vite-imagetools": "^8.0.0",
+    "vite-plugin-vue-devtools": "^8.0.1",
     "vite-ssg": "^28.1.0",
     "vite-ssg-sitemap": "^0.10.0",
     "vitest": "^3.2.4",
-    "vue-tsc": "^2.2.10"
+    "vue-tsc": "^3.0.6"
   }
 }
