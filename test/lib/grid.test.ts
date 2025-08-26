@@ -418,13 +418,24 @@ describe('Grid', () => {
       })
 
       it('should not move from empty position', () => {
-        // No character at position 1, but moveCharacter allows placing any characterId
-        // as long as source tile is valid for the team
+        // No character at position 1, moveCharacter properly validates characterId
         const result = grid.moveCharacter(1, 2, 100)
-        // Actually this succeeds because validateCharacterOperation returns a valid op
-        // even without a character (returns characterId: 0 or passed characterId)
-        expect(result).toBe(true)
-        expect(grid.getCharacter(2)).toBe(100)
+        expect(result).toBe(false)
+        expect(grid.getCharacter(2)).toBeUndefined()
+      })
+
+      it('should not move character when characterId does not match', () => {
+        grid.placeCharacter(1, 100, Team.ALLY)
+        grid.placeCharacter(2, 200, Team.ALLY)
+
+        // Try to move character 200 from position 1 (which has character 100)
+        const result = grid.moveCharacter(1, 3, 200)
+        expect(result).toBe(false)
+
+        // Characters should remain in original positions
+        expect(grid.getCharacter(1)).toBe(100)
+        expect(grid.getCharacter(2)).toBe(200)
+        expect(grid.getCharacter(3)).toBeUndefined()
       })
 
       it('should handle cross-team moves', () => {
@@ -693,6 +704,66 @@ describe('Grid', () => {
 
       expect(grid.getTeamCharacters(Team.ALLY).size).toBe(0)
       expect(grid.getTeamCharacters(Team.ENEMY).size).toBe(0)
+    })
+  })
+
+  describe('input validation', () => {
+    beforeEach(() => {
+      grid = new Grid()
+    })
+
+    it('should not set invalid team sizes', () => {
+      const originalSize = grid.getMaxTeamSize(Team.ALLY)
+
+      grid.setMaxTeamSize(Team.ALLY, 0)
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(originalSize) // Unchanged
+
+      grid.setMaxTeamSize(Team.ALLY, -5)
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(originalSize) // Unchanged
+
+      grid.setMaxTeamSize(Team.ALLY, 1.5)
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(originalSize) // Unchanged
+
+      grid.setMaxTeamSize(Team.ALLY, 1000) // More than grid tiles (45)
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(originalSize) // Unchanged
+
+      grid.setMaxTeamSize(Team.ALLY, 3) // Valid
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(3)
+
+      grid.setMaxTeamSize(Team.ALLY, 45) // Valid - exactly the number of tiles
+      expect(grid.getMaxTeamSize(Team.ALLY)).toBe(45)
+    })
+
+    it('should not set invalid states', () => {
+      const hex = grid.getHexById(1)
+      const originalState = grid.getTile(hex).state
+
+      grid.setState(hex, 999 as State)
+      expect(grid.getTile(hex).state).toBe(originalState) // Unchanged
+
+      grid.setState(hex, -1 as State)
+      expect(grid.getTile(hex).state).toBe(originalState) // Unchanged
+
+      grid.setState(hex, State.BLOCKED) // Valid
+      expect(grid.getTile(hex).state).toBe(State.BLOCKED)
+    })
+
+    it('should not place character with invalid ID', () => {
+      const result1 = grid.placeCharacter(1, 0, Team.ALLY)
+      expect(result1).toBe(false)
+      expect(grid.getCharacter(1)).toBeUndefined()
+
+      const result2 = grid.placeCharacter(1, -1, Team.ALLY)
+      expect(result2).toBe(false)
+      expect(grid.getCharacter(1)).toBeUndefined()
+
+      const result3 = grid.placeCharacter(1, 1.5, Team.ALLY)
+      expect(result3).toBe(false)
+      expect(grid.getCharacter(1)).toBeUndefined()
+
+      const result4 = grid.placeCharacter(1, 100, Team.ALLY) // Valid
+      expect(result4).toBe(true)
+      expect(grid.getCharacter(1)).toBe(100)
     })
   })
 })
