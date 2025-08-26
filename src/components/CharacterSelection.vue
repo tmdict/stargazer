@@ -123,8 +123,8 @@ const removeCharacterFromGrid = (characterId: number) => {
 .character-selection {
   display: flex;
   flex-direction: column;
-  min-height: 656px;
-  max-height: 656px;
+  min-height: 652px;
+  max-height: 652px;
   overflow-y: auto;
 }
 
