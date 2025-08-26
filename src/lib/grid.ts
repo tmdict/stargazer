@@ -113,6 +113,9 @@ export class Grid {
   // Hex & Tile Access Methods
 
   setState(hex: Hex, state: State): void {
+    if (!Object.values(State).includes(state)) {
+      return // Invalid state, silently ignore
+    }
     const tile = this.getTile(hex)
     if (tile) {
       tile.state = state
@@ -187,6 +190,10 @@ export class Grid {
   }
 
   setMaxTeamSize(team: Team, size: number): void {
+    const maxPossibleSize = this.getAllTiles().length
+    if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
+      return // Invalid input, silently ignore
+    }
     this.maxTeamSizes.set(team, size)
   }
 
@@ -214,6 +221,9 @@ export class Grid {
     team: Team = Team.ALLY,
     skipCacheInvalidation: boolean = false,
   ): boolean {
+    // Input validation
+    if (!Number.isInteger(characterId) || characterId <= 0) return false
+
     if (!this.canPlaceCharacterOnTile(hexId, team)) return false
     if (!this.canPlaceCharacter(characterId, team)) return false
 
@@ -338,6 +348,10 @@ export class Grid {
   moveCharacter(fromHexId: number, toHexId: number, characterId: number): boolean {
     // Basic validation
     if (fromHexId === toHexId) return false
+
+    // Validate that the character at fromHexId matches the characterId parameter
+    const actualCharacterId = this.getCharacter(fromHexId)
+    if (actualCharacterId !== characterId) return false
 
     // Validate source position
     const fromOp = this.validateCharacterOperation(fromHexId)
