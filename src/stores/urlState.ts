@@ -36,7 +36,11 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
       // Restore tile states from compact format: [hexId, state]
       if (urlState.t) {
-        urlState.t.forEach(([hexId, state]) => {
+        urlState.t.forEach((entry) => {
+          const hexId = entry[0] ?? -1 // -1: invalid hex ID
+          const state = entry[1] ?? 0 // 0: default state
+          if (hexId === -1) return // Skip invalid entries
+
           try {
             const hex = gridStore.getHexById(hexId)
             gridStore.setState(hex, state)
@@ -53,7 +57,9 @@ export const useUrlStateStore = defineStore('urlState', () => {
         const companions: typeof urlState.c = []
 
         urlState.c.forEach((entry) => {
-          const characterId = entry[1]
+          const characterId = entry[1] ?? -1 // -1: invalid character ID
+          if (characterId === -1) return // Skip invalid entries
+
           if (characterId >= 10000) {
             companions.push(entry)
           } else {
@@ -62,7 +68,12 @@ export const useUrlStateStore = defineStore('urlState', () => {
         })
 
         // Place main characters first (this will create companions via skills)
-        mainCharacters.forEach(([hexId, characterId, team]) => {
+        mainCharacters.forEach((entry) => {
+          const hexId = entry[0] ?? -1 // -1: invalid hex ID
+          const characterId = entry[1] ?? -1 // -1: invalid character ID
+          const team = entry[2] ?? -1 // -1: invalid team
+          if (hexId === -1 || characterId === -1 || team === -1) return // Skip invalid entries
+
           const placementSuccess = characterStore.placeCharacterOnHex(hexId, characterId, team)
           if (!placementSuccess) {
             console.warn(`Failed to place character ID ${characterId} on hex ${hexId}`)
@@ -72,7 +83,12 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
         // For companions, we need to move them to their correct positions
         // The skill will have created them at random positions, but we need them at specific hexes
-        companions.forEach(([targetHexId, companionId, team]) => {
+        companions.forEach((entry) => {
+          const targetHexId = entry[0] ?? -1 // -1: invalid target hex ID
+          const companionId = entry[1] ?? -1 // -1: invalid companion ID
+          const team = entry[2] ?? -1 // -1: invalid team
+          if (targetHexId === -1 || companionId === -1 || team === -1) return // Skip invalid entries
+
           // Find where the companion was auto-placed
           const tiles = gridStore.getAllTiles
           const currentHex = tiles.find(
@@ -98,7 +114,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
       // Restore artifacts from compact format: [ally, enemy]
       if (urlState.a) {
-        const [allyArtifact, enemyArtifact] = urlState.a
+        const allyArtifact = urlState.a[0] ?? null // null: no ally artifact
+        const enemyArtifact = urlState.a[1] ?? null // null: no enemy artifact
         if (allyArtifact !== null) {
           artifactStore.placeArtifact(allyArtifact, Team.ALLY)
         }
