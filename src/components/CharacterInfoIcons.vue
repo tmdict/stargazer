@@ -19,7 +19,7 @@ const i18n = useI18nStore()
 
 const hasDocumentedSkill = computed(() => {
   const skill = getCharacterSkill(props.character.id)
-  return !!(skill && DOCUMENTED_SKILLS.includes(skill.id as any))
+  return !!(skill && DOCUMENTED_SKILLS.includes(skill.id))
 })
 
 // Skill modal state

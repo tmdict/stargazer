@@ -13,7 +13,7 @@ interface Props {
   iconPrefix: string // e.g., 'class', 'faction', 'damage'
 }
 
-const props = defineProps<Props>()
+defineProps<Props>()
 const modelValue = defineModel<string>({ required: true })
 
 const getIconPath = (iconPrefix: string, option: string): string => {
