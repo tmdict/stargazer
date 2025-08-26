@@ -58,7 +58,7 @@ export function getEncodedStateFromUrl(): string | null {
 }
 
 /* Get encoded state from Vue Router query object */
-export function getEncodedStateFromRoute(query: any): string | null {
+export function getEncodedStateFromRoute(query: { g?: string | string[] | null }): string | null {
   return typeof query.g === 'string' ? query.g : null
 }
 
