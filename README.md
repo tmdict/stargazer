@@ -27,26 +27,25 @@ Open http://localhost:5173
 ## Commands
 
 ```bash
-npm run dev         # Development server
-npm run build       # Production build (with pre-rendering)
-npm run build:spa   # Traditional SPA build (no pre-rendering)
-npm run type-check  # TypeScript validation
-npm run format      # Code formatting
+npm run dev         # Start development server
+npm run build       # Production build
+npm run test        # Run tests
 ```
+
+See [Contributing](./docs/CONTRIBUTING.md) for all available commands.
 
 ## Project Structure
 
 ```
-src/
-├── lib/            # Domain logic (framework-agnostic)
-├── stores/         # State management (Pinia)
-├── components/     # Vue components
-├── content/        # Content components (i18n)
-├── composables/    # Vue composition functions
-├── data/           # Character/artifact data
-├── assets/         # Images and styles
-├── styles/         # Global styles
-└── utils/          # Helper functions
+├── src/                # Source code
+│   ├── lib/            # Domain logic
+│   ├── stores/         # State management
+│   ├── components/     # Vue components
+│   ├── views/          # Page views
+│   ├── data/           # Static data
+│   └── assets/         # Images & styles
+├── test/               # Test files
+└── docs/               # Documentation
 ```
 
 ## Documentation
