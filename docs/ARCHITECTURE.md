@@ -73,16 +73,21 @@ Multi-layer architecture separates visual rendering from event detection. Invisi
 
 ## Architectural Layers
 
-### Domain Layer (`/src/lib/`)
+### UI Layer (`/src/components/`)
 
-Pure TypeScript game logic, completely framework-agnostic. Can be tested in isolation or ported to different frameworks.
+Vue components with single responsibilities. Multi-layer rendering solves SVG limitations.
 
-**Key Components:**
+### Composables Layer (`/src/composables/`)
 
-- `Grid`: Hexagonal grid with transaction support
-- `Pathfinding`: A\* and BFS algorithms with caching
-- `Character`: Placement and team management
-- `Skills`: Ability system with visual effects
+Shared reactive state and reusable Vue logic. Composables can call stores (one-way dependency) but stores must not call composables to prevent circular dependencies.
+
+**Key Composables:**
+
+- `useStateReset`: Cross-store orchestration for clearing state
+- `useSelectionState`: Shared team selection state
+- `useDragDrop`: Global drag state management
+- `useGridEvents`: Event system using provide/inject pattern
+- `useBreakpoint`: Responsive breakpoint detection
 
 ### State Layer (`/src/stores/`)
 
@@ -94,21 +99,16 @@ Thin reactive wrappers around domain objects using Pinia. Bridges framework-agno
 - `CharacterStore`: Character selection and placement
 - `GameDataStore`: Character definitions and ranges
 
-### UI Layer (`/src/components/`)
+### Domain Layer (`/src/lib/`)
 
-Vue components with single responsibilities. Multi-layer rendering solves SVG limitations.
+Pure TypeScript game logic, completely framework-agnostic. Can be tested in isolation or ported to different frameworks.
 
-### Composables Layer (`/src/composables/`)
+**Key Components:**
 
-Vue 3 composition functions that encapsulate reusable logic. These provide shared functionality across components while maintaining reactivity.
-
-**Key Composables:**
-
-- `useRouteLocale`: Extracts locale from current route path
-- `useContentComponent`: Dynamically loads content components based on locale
-- `useDragDrop`: Handles drag-and-drop interactions with custom preview
-- `useArenaSwitcher`: Manages arena selection and transitions
-- `useBreakpoint`: Responsive breakpoint detection with optional mobile perspective control
+- `Grid`: Hexagonal grid with transaction support
+- `Pathfinding`: A\* and BFS algorithms with caching
+- `Character`: Placement and team management
+- `Skills`: Ability system with visual effects
 
 ### Content Layer (`/src/content/`)
 

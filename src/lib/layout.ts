@@ -2,6 +2,10 @@ import { Hex } from './hex'
 
 const SQRT3 = Math.sqrt(3)
 
+// Constants for arrow path calculation
+const MAX_GRID_HALF_WIDTH = 200 // Approximate half-width of the grid
+const BASE_CURVATURE_FACTOR = 0.15 // Base curve amount as fraction of length
+
 // Orientation matrices for hex-to-pixel and pixel-to-hex conversion
 export interface Orientation {
   f0: number // forward transform matrix (2x2)
@@ -131,6 +135,13 @@ export class Layout {
     const dy = endCenter.y - startCenter.y
     const length = Math.sqrt(dx * dx + dy * dy)
 
+    // Handle zero-length case (same hex)
+    if (length === 0) {
+      // Create a small loop path
+      const offset = characterRadius || 10
+      return `M ${startCenter.x} ${startCenter.y - offset} Q ${startCenter.x + offset} ${startCenter.y} ${startCenter.x} ${startCenter.y + offset}`
+    }
+
     // Normalize direction vector
     const dirX = dx / length
     const dirY = dy / length
@@ -186,10 +197,9 @@ export class Layout {
 
     // Calculate curve intensity based on distance from center
     // Arrows closer to center have less curve, arrows at edges have more
-    const maxDistance = 200 // Approximate half-width of the grid
     const distanceFromCenter = Math.abs(relativeX)
-    const curveFactor = Math.min(distanceFromCenter / maxDistance, 1) // 0 to 1
-    const baseCurvature = length * 0.15 // Base curve amount
+    const curveFactor = Math.min(distanceFromCenter / MAX_GRID_HALF_WIDTH, 1) // 0 to 1
+    const baseCurvature = length * BASE_CURVATURE_FACTOR // Base curve amount
 
     // Apply different curvature multipliers for enemy arrows (invertCurve = true)
     // Enemy arrows curve 1.5x more than ally arrows to prevent overlap

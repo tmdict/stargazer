@@ -71,9 +71,11 @@ Development always runs in SPA mode for hot module replacement.
 
 ## Architecture
 
-- **Domain Layer** (`lib/`): Pure TypeScript, no framework dependencies
-- **State Layer** (`stores/`): Reactive wrappers using Pinia
 - **UI Layer** (`components/`): Vue 3 components with Composition API
+- **Composables** (`composables/`): Shared reactive state and Vue logic
+- **State Layer** (`stores/`): Reactive wrappers using Pinia
+- **Domain Layer** (`lib/`): Pure TypeScript, no framework dependencies
+- **Dependency Flow**: Components → Composables → Stores → Domain (one-way)
 
 See [Architecture Overview](./ARCHITECTURE.md) for details.
 
