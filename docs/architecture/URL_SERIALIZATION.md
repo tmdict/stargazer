@@ -18,16 +18,21 @@ The URL serialization system enables sharing game state through compact URLs usi
 
 High-level API for URL generation and parsing with grid state.
 
-### Binary Encoder (`/src/utils/binaryEncoder.ts`)
+### URL State Store (`/src/stores/urlState.ts`)
 
-Handles bit-level operations for compact encoding:
+State restoration orchestration through Pinia store:
 
 ```typescript
-class BitWriter {
-  writeBits(value: number, bits: number): void
-  getBytes(): Uint8Array
+interface UrlRestoreResult {
+  success: boolean
+  displayFlags?: DisplayFlags
+  error?: string
 }
 ```
+
+### Binary Encoder (`/src/utils/binaryEncoder.ts`)
+
+Handles bit-level operations for compact encoding.
 
 ### Grid State Serializer (`/src/utils/gridStateSerializer.ts`)
 
@@ -65,6 +70,17 @@ Extended mode is triggered for:
 // Bits 1-4: Display flags (showHexIds, showArrows, showPerspective, showSkills)
 // Bits 5-7: Reserved
 ```
+
+### Display Flags
+
+View preferences preserved in URLs:
+
+- **Grid Info**: Hex ID display toggle (bit 0)
+- **Targeting**: Arrow visualization toggle (bit 1)
+- **Flat**: Perspective mode toggle (bit 2)
+- **Skills**: Skill targeting display toggle (bit 3)
+
+Bit-packed into 4 bits within extended header.
 
 ## Serialization Format
 
@@ -135,18 +151,49 @@ The Link button in GridControls generates share URLs:
 3. Copies to clipboard with toast notification
 4. Redirects to Share page for preview
 
-## Decoding Process
+## State Restoration API
 
-### Standard Characters
+### Restoration Flow
 
-Direct placement for regular character IDs (< 10000).
+The URL state restoration is unified through the `urlState` store, providing consistent behavior across all views:
 
-### Companion Characters
+```typescript
+import { useUrlStateStore } from '../stores/urlState'
+import { getEncodedStateFromRoute, getEncodedStateFromUrl } from '../utils/urlStateManager'
 
-Two-phase restoration for companions (ID ≥ 10000):
+const urlStateStore = useUrlStateStore()
 
-1. **Place main characters** - triggers skill activation
-2. **Reposition companions** - move from random to saved positions
+// From current browser URL
+const encodedState = getEncodedStateFromUrl()
+const result = urlStateStore.restoreFromEncodedState(encodedState)
+
+// From Vue Router query
+const encodedState = getEncodedStateFromRoute(route.query)
+const result = urlStateStore.restoreFromEncodedState(encodedState)
+
+// Handle results
+if (result.success) {
+  // State restored successfully
+  if (result.displayFlags) {
+    // Apply display flags to UI
+  }
+} else {
+  // Handle error: result.error contains details
+}
+```
+
+### Character Placement Strategy
+
+#### Standard Characters (ID < 10000)
+
+Direct placement for regular character IDs.
+
+#### Companion Characters (ID ≥ 10000)
+
+Two-phase restoration for companions:
+
+1. **Place main characters** - triggers skill activation and companion creation
+2. **Reposition companions** - move from auto-generated positions to saved positions
 
 This respects skill-based companion creation while preserving exact layouts.
 
@@ -169,31 +216,6 @@ const dataUrl = await toPng(element, {
 ### Clipboard Integration
 
 Direct copy to clipboard for easy sharing.
-
-## Performance Characteristics
-
-- **Compression**: Fixed 21-bit encoding for all characters
-- **All characters**: 21 bits each (supports IDs 0-16,383)
-- **URL Length**: Shorter for most real-world cases (IDs > 127)
-- **Encoding Speed**: Milliseconds for typical grids
-- **Memory**: Temporary buffers only, streaming encoding
-
-## Security
-
-- **Input Validation**: Bounds checking and type verification
-- **Data Integrity**: State consistency validation
-- **Safe Defaults**: Graceful handling of invalid data
-
-## Display Flags
-
-View preferences preserved in URLs:
-
-- **Grid Info**: Hex ID display toggle (bit 0)
-- **Targeting**: Arrow visualization toggle (bit 1)
-- **Flat**: Perspective mode toggle (bit 2)
-- **Skills**: Skill targeting display toggle (bit 3)
-
-Bit-packed into 4 bits within extended header.
 
 ## Related Documentation
 

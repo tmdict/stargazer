@@ -24,7 +24,7 @@ import { useI18nStore } from '../stores/i18n'
 import { useMapEditorStore } from '../stores/mapEditor'
 import { useSkillStore } from '../stores/skill'
 import { useUrlStateStore } from '../stores/urlState'
-import { generateShareableUrl } from '../utils/urlStateManager'
+import { generateShareableUrl, getEncodedStateFromUrl } from '../utils/urlStateManager'
 
 // Perspective Mode Configuration
 const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
@@ -89,13 +89,18 @@ gameDataStore.initializeData()
 i18nStore.initialize()
 // After data is loaded, try to restore state from URL
 if (gameDataStore.dataLoaded) {
-  const displayFlags = urlStateStore.restoreStateFromUrl()
-  // Apply display flags from URL if they exist
-  if (displayFlags) {
-    showHexIds.value = displayFlags.showHexIds ?? false
-    showArrows.value = displayFlags.showArrows ?? false
-    showPerspective.value = displayFlags.showPerspective ?? true
-    showSkills.value = displayFlags.showSkills ?? true
+  const encodedState = getEncodedStateFromUrl()
+  const result = urlStateStore.restoreFromEncodedState(encodedState)
+
+  if (result.success && result.displayFlags) {
+    // Apply display flags from URL
+    showHexIds.value = result.displayFlags.showHexIds ?? false
+    showArrows.value = result.displayFlags.showArrows ?? false
+    showPerspective.value = result.displayFlags.showPerspective ?? true
+    showSkills.value = result.displayFlags.showSkills ?? true
+    success('Grid loaded from URL!')
+  } else if (result && !result.success && result.error) {
+    error('Invalid URL - using default grid')
   }
 }
 

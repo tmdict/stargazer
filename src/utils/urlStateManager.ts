@@ -51,16 +51,15 @@ export function generateShareableUrl(
   return `${baseUrl}?g=${encodedState}`
 }
 
-/* Get grid state from current URL */
-export function getGridStateFromCurrentUrl(): GridState | null {
+/* Get encoded state from current URL */
+export function getEncodedStateFromUrl(): string | null {
   const urlParams = new URLSearchParams(window.location.search)
-  const queryState = urlParams.get('g')
+  return urlParams.get('g')
+}
 
-  if (!queryState) {
-    return null
-  }
-
-  return decodeGridStateFromUrl(queryState)
+/* Get encoded state from Vue Router query object */
+export function getEncodedStateFromRoute(query: any): string | null {
+  return typeof query.g === 'string' ? query.g : null
 }
 
 /* Update URL with current grid state (uses replaceState to avoid new history entries) */
