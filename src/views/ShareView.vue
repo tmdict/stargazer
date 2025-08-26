@@ -70,7 +70,11 @@ const restoreStateFromUrl = () => {
 
     // Restore tile states
     if (urlState.t) {
-      urlState.t.forEach(([hexId, state]) => {
+      urlState.t.forEach((entry) => {
+        const hexId = entry[0] ?? -1 // -1: invalid hex ID
+        const state = entry[1] ?? 0 // 0: empty state
+        if (hexId === -1) return // Skip invalid entries
+
         try {
           const hex = gridStore.getHexById(hexId)
           gridStore.setState(hex, state)
@@ -87,7 +91,8 @@ const restoreStateFromUrl = () => {
       const companions: typeof urlState.c = []
 
       urlState.c.forEach((entry) => {
-        const characterId = entry[1]
+        const characterId = entry[1] ?? -1 // -1: invalid character ID
+        if (characterId === -1) return // Skip invalid entries
         if (characterId >= 10000) {
           companions.push(entry)
         } else {
@@ -96,7 +101,12 @@ const restoreStateFromUrl = () => {
       })
 
       // Place main characters first (this will create companions via skills)
-      mainCharacters.forEach(([hexId, characterId, team]) => {
+      mainCharacters.forEach((entry) => {
+        const hexId = entry[0] ?? -1 // -1: invalid hex ID
+        const characterId = entry[1] ?? -1 // -1: invalid character ID
+        const team = entry[2] ?? -1 // -1: invalid team
+        if (hexId === -1 || characterId === -1 || team === -1) return // Skip invalid entries
+
         const placementSuccess = characterStore.placeCharacterOnHex(hexId, characterId, team)
         if (!placementSuccess) {
           console.warn(`Failed to place character ID ${characterId} on hex ${hexId}`)
