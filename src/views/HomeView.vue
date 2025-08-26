@@ -200,10 +200,10 @@ const handleDownload = async () => {
 
     // Create download link
     const now = new Date()
-    // '_unknown_': fallback for invalid date and time
-    const dateStr = (now.toISOString().split('T')[0] ?? '_unknown_').replace(/-/g, '')
+    // 'undefined': fallback for invalid date and time
+    const dateStr = (now.toISOString().split('T')[0] ?? 'undefined').replace(/-/g, '')
     const timeStr =
-      (now.toTimeString().split(' ')[0] ?? '_unknown_').replace(/:/g, '') +
+      (now.toTimeString().split(' ')[0] ?? 'undefined').replace(/:/g, '') +
       now.getMilliseconds().toString().padStart(3, '0')
     const link = document.createElement('a')
     link.download = `stargazer-${dateStr}-${timeStr}.png`
