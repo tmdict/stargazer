@@ -2,14 +2,15 @@
 import { computed, ref } from 'vue'
 
 import TooltipPopup from './TooltipPopup.vue'
+import { useGameDataStore } from '../../stores/gameData'
 import { useI18nStore } from '../../stores/i18n'
 
+const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 interface Props {
   options: string[]
   iconPrefix: string // e.g., 'class', 'faction', 'damage'
-  icons: Readonly<Record<string, string>>
 }
 
 const props = defineProps<Props>()
@@ -17,7 +18,7 @@ const modelValue = defineModel<string>({ required: true })
 
 const getIconPath = (iconPrefix: string, option: string): string => {
   const iconKey = `${iconPrefix}-${option}`
-  return props.icons[iconKey] || ''
+  return gameDataStore.getIcon(iconKey)
 }
 
 // Tooltip state

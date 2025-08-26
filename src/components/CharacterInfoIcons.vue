@@ -6,14 +6,15 @@ import IconInfo from './ui/IconInfo.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { DOCUMENTED_SKILLS, getCharacterSkill } from '../lib/skill'
 import type { CharacterType } from '../lib/types/character'
+import { useGameDataStore } from '../stores/gameData'
 import { useI18nStore } from '../stores/i18n'
 
 interface Props {
   character: CharacterType
-  icons: { [key: string]: string }
 }
 
 const props = defineProps<Props>()
+const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 const hasDocumentedSkill = computed(() => {
@@ -51,7 +52,7 @@ const handleMouseLeave = () => {
 
 <template>
   <div class="character-info">
-    <img :src="icons[`faction-${character.faction}`]" :alt="character.faction" class="icon" />
+    <img :src="gameDataStore.getIcon(`faction-${character.faction}`)" :alt="character.faction" class="icon" />
     <button
       v-if="hasDocumentedSkill"
       ref="buttonElement"
@@ -63,7 +64,7 @@ const handleMouseLeave = () => {
       <IconInfo class="icon skill-info-icon" />
     </button>
     <div v-else class="icon-spacer hide-on-mobile" />
-    <img :src="icons[`class-${character.class}`]" :alt="character.class" class="icon" />
+    <img :src="gameDataStore.getIcon(`class-${character.class}`)" :alt="character.class" class="icon" />
   </div>
 
   <!-- Skill Modal -->

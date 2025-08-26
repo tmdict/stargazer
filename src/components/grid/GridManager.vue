@@ -23,7 +23,6 @@ import { useMapEditorStore } from '../../stores/mapEditor'
 interface Props {
   // Data props
   characters: readonly CharacterType[]
-  icons?: Readonly<Record<string, string>>
   // Display toggle props
   showArrows: boolean
   showHexIds: boolean
@@ -342,10 +341,9 @@ defineExpose({
   <!-- Character Selection Modal - Outside of map container to avoid transform issues -->
   <Teleport to="body">
     <CharacterSelectionModal
-      v-if="showCharacterModal && modalHex && props.icons"
+      v-if="showCharacterModal && modalHex"
       :hex="modalHex"
       :characters="props.characters"
-      :icons="props.icons"
       :position="modalPosition"
       @close="closeCharacterModal"
     />

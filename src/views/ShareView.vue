@@ -197,9 +197,6 @@ const homeLink = computed(() => {
       <DragDropProvider>
         <GridContainer
           :characters="gameDataStore.characters"
-          :character-images="gameDataStore.characterImages"
-          :artifact-images="gameDataStore.artifactImages"
-          :icons="gameDataStore.icons"
           :show-arrows
           :show-hex-ids
           :show-debug="false"
