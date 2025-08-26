@@ -3,8 +3,10 @@ import { computed, ref } from 'vue'
 
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
+import TooltipPopup from './ui/TooltipPopup.vue'
 import { DOCUMENTED_SKILLS, getCharacterSkill } from '../lib/skill'
 import type { CharacterType } from '../lib/types/character'
+import { useI18nStore } from '../stores/i18n'
 
 interface Props {
   character: CharacterType
@@ -12,6 +14,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const i18n = useI18nStore()
 
 const hasDocumentedSkill = computed(() => {
   const skill = getCharacterSkill(props.character.id)
@@ -22,18 +25,41 @@ const hasDocumentedSkill = computed(() => {
 const showSkillModal = ref(false)
 const selectedSkillName = ref('')
 
+// Tooltip state
+const showTooltip = ref(false)
+const buttonElement = ref<HTMLElement>()
+
 const openSkillModal = () => {
   // Capitalize first letter for proper filename
   selectedSkillName.value =
     props.character.name.charAt(0).toUpperCase() + props.character.name.slice(1)
   showSkillModal.value = true
 }
+
+const handleMouseEnter = (event: MouseEvent) => {
+  if (event.currentTarget instanceof HTMLElement) {
+    buttonElement.value = event.currentTarget
+  }
+  showTooltip.value = true
+}
+
+const handleMouseLeave = () => {
+  showTooltip.value = false
+  buttonElement.value = undefined
+}
 </script>
 
 <template>
   <div class="character-info">
     <img :src="icons[`faction-${character.faction}`]" :alt="character.faction" class="icon" />
-    <button v-if="hasDocumentedSkill" @click="openSkillModal" class="skill-button hide-on-mobile">
+    <button
+      v-if="hasDocumentedSkill"
+      ref="buttonElement"
+      @click="openSkillModal"
+      @mouseenter="handleMouseEnter"
+      @mouseleave="handleMouseLeave"
+      class="skill-button hide-on-mobile"
+    >
       <IconInfo class="icon skill-info-icon" />
     </button>
     <div v-else class="icon-spacer hide-on-mobile" />
@@ -46,6 +72,16 @@ const openSkillModal = () => {
     :skillName="selectedSkillName"
     @close="showSkillModal = false"
   />
+
+  <!-- Tooltip -->
+  <Teleport to="body">
+    <TooltipPopup
+      v-if="showTooltip && buttonElement"
+      :targetElement="buttonElement"
+      :text="i18n.t('app.info')"
+      variant="simple"
+    />
+  </Teleport>
 </template>
 
 <style scoped>

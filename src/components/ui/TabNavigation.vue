@@ -145,6 +145,7 @@ onUnmounted(() => {
   overflow: visible;
   border: 2px solid var(--color-border-primary);
   border-bottom: none;
+  min-height: 54px;
 }
 
 .tab-btn:first-child {
@@ -162,12 +163,6 @@ onUnmounted(() => {
   transition: all var(--transition-fast);
   border-right: 1px solid var(--color-border-primary);
   position: relative;
-}
-
-@media (min-width: 1281px) {
-  .tab-btn {
-    font-size: 0.9rem;
-  }
 }
 
 .tab-btn:last-child {
@@ -251,6 +246,12 @@ onUnmounted(() => {
 .dropdown-item.selected {
   background: var(--color-primary);
   color: white;
+}
+
+@media (min-width: 1281px) {
+  .tab-btn {
+    font-size: 0.9rem;
+  }
 }
 
 @media (max-width: 768px) {
