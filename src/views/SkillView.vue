@@ -44,9 +44,36 @@ const { ContentComponent } = useContentComponent({
 <template>
   <PageContainer maxWidth="800px">
     <component v-if="ContentComponent" :is="ContentComponent" />
-    <div v-else>
+    <div v-else class="skill-not-found">
       <h1>Skill Not Found</h1>
       <p>The skill "{{ skillName }}" was not found.</p>
+      <img src="../assets/rowan.gif" alt="logo" class="rowan-gif" />
     </div>
   </PageContainer>
 </template>
+
+<style scoped>
+.skill-not-found {
+  text-align: center;
+  padding: 60px 40px;
+}
+
+.skill-not-found h1 {
+  margin-bottom: 16px;
+  color: var(--color-heading);
+}
+
+.skill-not-found p {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  margin: 0 0 24px 0;
+}
+
+.rowan-gif {
+  display: inline-block;
+  width: 120px;
+  height: auto;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+</style>
