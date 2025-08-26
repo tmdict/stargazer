@@ -23,40 +23,50 @@ Open http://localhost:5173 in your browser.
 npm run dev         # Development server
 npm run build       # Production build (SSG - pre-renders content pages)
 npm run build:spa   # Traditional SPA build (no pre-rendering)
-npm run build:ssg   # Explicit SSG build (same as build)
-npm run type-check  # TypeScript validation
-npm run format      # Code formatting
 npm run preview     # Preview production build
+npm run type-check  # TypeScript validation
+npm run format      # Code formatting (Prettier)
+npm run lint        # ESLint checks
+npm run lint:fix    # ESLint with auto-fix
+npm run test        # Run tests
+npm run test:watch  # Run tests in watch mode
 ```
 
 Always run `type-check` and `build` before committing.
 
-**Note:** Development mode always runs as SPA for hot reloading. Pre-rendering only happens during production builds.
+## Build Modes
+
+The application supports two build modes:
+
+- **SSG Mode** (`npm run build`): Pre-renders content pages at build time for SEO and performance. The interactive game remains client-side.
+- **SPA Mode** (`npm run build:spa`): Traditional single-page application without pre-rendering.
+
+Development always runs in SPA mode for hot module replacement.
 
 ## Project Structure
 
 ```
-src/
-├── lib/            # Domain logic (framework-agnostic)
-│   ├── types/      # Type definitions
-│   ├── skills/     # Skill implementations
-│   └── arena/      # Map configurations
-├── stores/         # Pinia state management
-├── components/     # Vue UI components
-├── content/        # Content components (localized, pre-rendered)
-│   ├── skills/     # Skill descriptions (en/zh)
-│   └── About.*.vue # About page content
-├── composables/    # Vue composition functions
-├── utils/          # Helper utilities
-├── views/          # Page-level components
-├── router/         # Vue Router configuration
-│   ├── index.ts    # Router setup
-│   └── routes.ts   # Shared route definitions
-├── data/           # Static JSON data
-├── assets/         # Images and styles
-├── styles/         # Global CSS styles
-├── main.ts         # SPA entry point
-└── main.ssg.ts     # SSG entry point (pre-rendering)
+├── src/                # Source code
+│   ├── lib/            # Domain logic (framework-agnostic)
+│   │   ├── types/      # Type definitions
+│   │   ├── skills/     # Skill implementations
+│   │   └── arena/      # Map configurations
+│   ├── stores/         # Pinia state management
+│   ├── components/     # Vue UI components
+│   ├── content/        # Content components (localized, pre-rendered)
+│   ├── composables/    # Vue composition functions
+│   ├── utils/          # Helper utilities
+│   ├── views/          # Page-level components
+│   ├── router/         # Vue Router configuration
+│   ├── data/           # Static JSON data (characters, artifacts)
+│   ├── locales/        # i18n translations
+│   ├── assets/         # Images and styles
+│   ├── styles/         # Global CSS styles
+│   ├── main.ts         # SPA entry point
+│   └── main.ssg.ts     # SSG entry point (pre-rendering)
+└── test/               # Test files
+    ├── lib/            # Domain logic tests
+    └── utils/          # Utility tests
 ```
 
 ## Architecture
@@ -81,12 +91,6 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 1. Add JSON: `src/data/characters/[name].json`
 2. Add image: `src/assets/images/characters/[name].webp`
 3. Character automatically appears in roster
-
-### Adding Skill Content
-
-1. Create content files: `src/content/skills/SkillName.en.vue` and `SkillName.zh.vue`
-2. For shared data (like grid styles), create: `src/content/skills/SkillName.data.ts`
-3. Content is automatically loaded by the `useContentComponent` composable
 
 ### Modifying Grid Logic
 
