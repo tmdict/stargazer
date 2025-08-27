@@ -27,7 +27,10 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     }
 
     // Set the new state
-    gridStore.setState(hex, state)
+    if (!gridStore.setState(hex, state)) {
+      console.warn(`Failed to set state ${state} for hex at position (${hex.q}, ${hex.r})`)
+      return false
+    }
     return true
   }
 
@@ -44,7 +47,9 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
 
     // Reset all hexes to specified state
     for (const hex of gridStore.hexes) {
-      gridStore.setState(hex, state)
+      if (!gridStore.setState(hex, state)) {
+        console.warn(`Failed to reset hex at position (${hex.q}, ${hex.r}) to state ${state}`)
+      }
     }
   }
 
@@ -64,7 +69,9 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     mapConfig.grid.forEach((mapState) => {
       mapState.hex.forEach((hexId) => {
         const hex = gridStore.getHexById(hexId)
-        gridStore.setState(hex, mapState.type)
+        if (!gridStore.setState(hex, mapState.type)) {
+          console.warn(`Failed to restore map state ${mapState.type} for hex ${hexId}`)
+        }
       })
     })
   }

@@ -41,13 +41,18 @@ export const phraestoSkill: Skill = {
 
     // Increase team size by 1 to accommodate the companion
     const currentSize = grid.getMaxTeamSize(team)
-    grid.setMaxTeamSize(team, currentSize + 1)
+    if (!grid.setMaxTeamSize(team, currentSize + 1)) {
+      console.warn(`phraesto: Failed to increase team size for ${team}`)
+      return // Skip companion placement
+    }
 
     // Place the companion
     const placed = grid.placeCharacter(companionHexId, companionId, team, true)
     if (!placed) {
       // Rollback team size if placement failed
-      grid.setMaxTeamSize(team, currentSize)
+      if (!grid.setMaxTeamSize(team, currentSize)) {
+        console.error(`phraesto: Critical - Failed to rollback team size for ${team}`)
+      }
       throw new Error('Failed to place companion')
     }
 
@@ -88,6 +93,8 @@ export const phraestoSkill: Skill = {
 
     // Decrease team size back to normal
     const currentSize = grid.getMaxTeamSize(team)
-    grid.setMaxTeamSize(team, Math.max(5, currentSize - 1))
+    if (!grid.setMaxTeamSize(team, Math.max(5, currentSize - 1))) {
+      console.warn(`phraesto: Failed to restore team size for ${team}`)
+    }
   },
 }
