@@ -1,7 +1,7 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import * as character from '../lib/character'
+import * as transactions from '../lib/transactions'
 import type { GridTile } from '../lib/grid'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
@@ -55,24 +55,24 @@ export const useCharacterStore = defineStore('character', () => {
     hexId: number,
     characterId: number,
     team: Team = Team.ALLY,
-  ): boolean => character.placeCharacter(grid, skillManager, hexId, characterId, team)
+  ): boolean => transactions.executePlaceCharacter(grid, skillManager, hexId, characterId, team)
 
   const removeCharacterFromHex = (hexId: number): boolean =>
-    character.removeCharacter(grid, skillManager, hexId)
+    transactions.executeRemoveCharacter(grid, skillManager, hexId)
 
-  const clearAllCharacters = (): boolean => character.clearAllCharacters(grid, skillManager)
+  const clearAllCharacters = (): boolean => transactions.executeClearAllCharacters(grid, skillManager)
 
   const swapCharacters = (fromHexId: number, toHexId: number): boolean =>
-    character.swapCharacters(grid, skillManager, fromHexId, toHexId)
+    transactions.executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
 
   const moveCharacter = (fromHexId: number, toHexId: number, characterId: number): boolean =>
-    character.moveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+    transactions.executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
 
   const autoPlaceCharacter = (characterId: number, team: Team): boolean =>
-    character.autoPlaceCharacter(grid, skillManager, characterId, team)
+    transactions.executeAutoPlaceCharacter(grid, skillManager, characterId, team)
 
   const handleHexClick = (hex: import('../lib/hex').Hex): boolean =>
-    character.handleHexClick(grid, skillManager, hex.getId())
+    transactions.executeHandleHexClick(grid, skillManager, hex.getId())
 
   return {
     // Reactive state
