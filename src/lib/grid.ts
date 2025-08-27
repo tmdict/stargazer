@@ -1,4 +1,5 @@
 import { ARENA_1 } from './arena/arena1'
+import { getTilesWithCharacters as getTilesWithCharactersImpl } from './character'
 import { Hex } from './hex'
 import type { SkillManager } from './skill'
 import { executeTransaction, handleCacheInvalidation } from './transactions/transaction'
@@ -123,43 +124,6 @@ export class Grid {
 
   // Character Operations
 
-  // Character Queries
-  getCharacter(hexId: number): number | undefined {
-    return this.getTileById(hexId).characterId
-  }
-
-  hasCharacter(hexId: number): boolean {
-    return this.getTileById(hexId).characterId !== undefined
-  }
-
-  getCharacterTeam(hexId: number): Team | undefined {
-    return this.getTileById(hexId).team
-  }
-
-  getCharacterCount(): number {
-    let count = 0
-    for (const entry of this.storage.values()) {
-      if (entry.characterId) {
-        count++
-      }
-    }
-    return count
-  }
-
-  getCharacterPlacements(): Map<number, number> {
-    const placements = new Map<number, number>()
-    for (const entry of this.storage.values()) {
-      if (entry.characterId) {
-        placements.set(entry.hex.getId(), entry.characterId)
-      }
-    }
-    return placements
-  }
-
-  getTilesWithCharacters(): GridTile[] {
-    return this.getAllTiles().filter((tile) => tile.characterId !== undefined)
-  }
-
   getAllAvailableTilesForTeam(team: Team): GridTile[] {
     return Array.from(this.storage.values()).filter(
       (tile) => this.canPlaceCharacterOnTile(tile.hex.getId(), team) && !tile.characterId,
@@ -169,15 +133,6 @@ export class Grid {
   getTeamFromTileState(state: State): Team | null {
     if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
     if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
-    return null
-  }
-
-  findCharacterHex(characterId: number, team: Team): number | null {
-    for (const entry of this.storage.values()) {
-      if (entry.characterId === characterId && entry.team === team) {
-        return entry.hex.getId()
-      }
-    }
     return null
   }
 
@@ -234,7 +189,7 @@ export class Grid {
 
   clearAllCharacters(): boolean {
     // Collect all current placements for potential rollback
-    const currentPlacements = this.getTilesWithCharacters().map((tile) => ({
+    const currentPlacements = getTilesWithCharactersImpl(this).map((tile) => ({
       hexId: tile.hex.getId(),
       characterId: tile.characterId!,
       team: tile.team!,

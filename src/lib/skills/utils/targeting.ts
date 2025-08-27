@@ -1,3 +1,4 @@
+import { getTilesWithCharacters } from '../../character'
 import type { Grid } from '../../grid'
 import type { SkillContext, SkillTargetInfo } from '../../skill'
 import { Team } from '../../types/team'
@@ -28,7 +29,7 @@ export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
 
   // Use Grid's optimized getTilesWithCharacters() instead of getAllTiles()
-  const tilesWithCharacters = grid.getTilesWithCharacters()
+  const tilesWithCharacters = getTilesWithCharacters(grid)
 
   for (const tile of tilesWithCharacters) {
     if (tile.team === team) {

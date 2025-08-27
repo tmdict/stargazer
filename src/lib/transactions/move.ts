@@ -1,3 +1,4 @@
+import { getCharacter, getCharacterTeam } from '../character'
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
@@ -17,11 +18,11 @@ export function executeMoveCharacter(
   if (fromHexId == toHexId) return false
 
   // Validate character ID matches
-  const actualCharacterId = grid.getCharacter(fromHexId)
+  const actualCharacterId = getCharacter(grid, fromHexId)
   if (actualCharacterId != characterId) return false
 
   // Get character team info
-  const fromTeam = grid.getCharacterTeam(fromHexId)
+  const fromTeam = getCharacterTeam(grid, fromHexId)
   if (!fromTeam) return false
 
   // Determine target team from destination tile

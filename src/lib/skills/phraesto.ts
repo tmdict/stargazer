@@ -1,3 +1,4 @@
+import { findCharacterHex } from '../character'
 import type { Skill, SkillContext } from '../skill'
 import { State } from '../types/state'
 import { Team } from '../types/team'
@@ -81,7 +82,7 @@ export const phraestoSkill: Skill = {
 
     // Remove companions and their color modifiers
     companions.forEach((companionId) => {
-      const companionHex = grid.findCharacterHex(companionId, team)
+      const companionHex = findCharacterHex(grid, companionId, team)
       if (companionHex !== null) {
         skillManager.removeCharacterColorModifier(companionId, team)
         if (!grid.removeCharacter(companionHex, true)) {

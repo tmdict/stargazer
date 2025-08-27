@@ -1,3 +1,4 @@
+import { getCharacter, getCharacterTeam } from '../character'
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
@@ -16,10 +17,10 @@ export function executeSwapCharacters(
   if (fromHexId == toHexId) return false
 
   // Get character and team info
-  const fromChar = grid.getCharacter(fromHexId)
-  const toChar = grid.getCharacter(toHexId)
-  const fromTeam = grid.getCharacterTeam(fromHexId)
-  const toTeam = grid.getCharacterTeam(toHexId)
+  const fromChar = getCharacter(grid, fromHexId)
+  const toChar = getCharacter(grid, toHexId)
+  const fromTeam = getCharacterTeam(grid, fromHexId)
+  const toTeam = getCharacterTeam(grid, toHexId)
 
   // Validate all required data exists
   if (!fromChar || !toChar || !fromTeam || !toTeam) return false

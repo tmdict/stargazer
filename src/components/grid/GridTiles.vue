@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } f
 
 import { useDragDrop } from '../../composables/useDragDrop'
 import { useGridEvents } from '../../composables/useGridEvents'
+import { hasCharacter } from '../../lib/character'
 import type { Hex } from '../../lib/hex'
 import type { Layout } from '../../lib/layout'
 import { State } from '../../lib/types/state'
@@ -275,7 +276,7 @@ const handleHexDrop = (event: DragEvent, hex: Hex) => {
       const targetHexId = hex.getId()
 
       // Swap if target is occupied, otherwise move
-      if (gridStore.grid.hasCharacter(targetHexId)) {
+      if (hasCharacter(gridStore._getGrid(), targetHexId)) {
         characterStore.swapCharacters(sourceHexId, targetHexId)
       } else {
         // Empty target - regular move
@@ -312,7 +313,7 @@ const handleHexDrop = (event: DragEvent, hex: Hex) => {
 
 const getHexDropClass = (hex: Hex) => {
   const hexId = hex.getId()
-  const isOccupied = gridStore.grid.hasCharacter(hexId)
+  const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
   // Use position-based hover detection instead of SVG event-based detection
   const isDragHover = isDragging.value && hoveredHexId.value === hexId
 
@@ -354,7 +355,7 @@ const getHexDropClass = (hex: Hex) => {
 }
 
 const isElevated = (hex: Hex) => {
-  return gridStore.grid.hasCharacter(hex.getId())
+  return hasCharacter(gridStore._getGrid(), hex.getId())
 }
 
 // Get stroke style for tiles - includes skill tile color modifiers
@@ -370,7 +371,7 @@ const getHexStroke = (hex: Hex) => {
   }
 
   // Default stroke colors
-  const isOccupied = gridStore.grid.hasCharacter(hexId)
+  const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
   return isOccupied ? '#999' : props.hexStrokeColor
 }
 
@@ -387,7 +388,7 @@ const getHexStrokeWidth = (hex: Hex) => {
     }
   }
 
-  const isOccupied = gridStore.grid.hasCharacter(hexId)
+  const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
   return isOccupied ? Math.max(2, 3 * scale) : scaledStrokeWidth.value
 }
 
