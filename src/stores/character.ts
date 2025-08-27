@@ -1,6 +1,12 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
+import {
+  getCharacterCount,
+  getCharacterPlacements,
+  getTilesWithCharacters,
+  hasCharacter,
+} from '../lib/character'
 import type { GridTile } from '../lib/grid'
 import type { Hex } from '../lib/hex'
 import { executeMoveCharacter } from '../lib/transactions/move'
@@ -20,11 +26,11 @@ export const useCharacterStore = defineStore('character', () => {
   const skillManager = skillStore._getSkillManager()
 
   const charactersPlaced = computed(() => {
-    return grid.getCharacterCount()
+    return getCharacterCount(grid)
   })
 
   const characterPlacements = computed(() => {
-    return grid.getCharacterPlacements()
+    return getCharacterPlacements(grid)
   })
 
   const placedCharactersList = computed(() => {
@@ -50,8 +56,8 @@ export const useCharacterStore = defineStore('character', () => {
   const maxTeamSizeEnemy = computed(() => grid.getMaxTeamSize(Team.ENEMY))
 
   // This one stays as a function since it's rarely called
-  const getTilesWithCharacters = (): GridTile[] => {
-    return grid.getTilesWithCharacters()
+  const getTilesWithCharactersStore = (): GridTile[] => {
+    return getTilesWithCharacters(grid)
   }
 
   // Character management actions - delegate to character manager
@@ -77,7 +83,7 @@ export const useCharacterStore = defineStore('character', () => {
 
   const handleHexClick = (hex: Hex): boolean => {
     const hexId = hex.getId()
-    if (grid.hasCharacter(hexId)) {
+    if (hasCharacter(grid, hexId)) {
       return executeRemoveCharacter(grid, skillManager, hexId)
     }
     return false
@@ -99,7 +105,7 @@ export const useCharacterStore = defineStore('character', () => {
     clearAllCharacters,
     moveCharacter,
     swapCharacters,
-    getTilesWithCharacters,
+    getTilesWithCharacters: getTilesWithCharactersStore,
     autoPlaceCharacter,
     handleHexClick,
   }

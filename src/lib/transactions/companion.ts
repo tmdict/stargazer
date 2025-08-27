@@ -1,3 +1,4 @@
+import { findCharacterHex } from '../character'
 import type { Grid } from '../grid'
 import { getCharacterSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
@@ -19,7 +20,7 @@ export function storeCompanionPositions(
   const companions = grid.getCompanions(characterId, team)
 
   companions.forEach((companionId) => {
-    const hexId = grid.findCharacterHex(companionId, team)
+    const hexId = findCharacterHex(grid, companionId, team)
     if (hexId !== null) {
       positions.push({
         companionId,
@@ -43,7 +44,7 @@ export function restoreCompanions(
   companionPositions
     .filter((pos) => pos.mainCharId === mainCharId)
     .forEach(({ companionId, hexId: originalHexId, team }) => {
-      const currentHexId = grid.findCharacterHex(companionId, team)
+      const currentHexId = findCharacterHex(grid, companionId, team)
       if (currentHexId !== null && currentHexId !== originalHexId) {
         // Remove from current position
         if (!grid.removeCharacter(currentHexId, true)) {
