@@ -85,7 +85,11 @@ export const elijahLailahSkill: Skill = {
       const companionHex = grid.findCharacterHex(companionId, team)
       if (companionHex !== null) {
         skillManager.removeCharacterColorModifier(companionId, team)
-        grid.removeCharacter(companionHex, true)
+        if (!grid.removeCharacter(companionHex, true)) {
+          console.warn(
+            `elijah-lailah: Failed to remove companion ${companionId} from hex ${companionHex}`,
+          )
+        }
       }
     })
 

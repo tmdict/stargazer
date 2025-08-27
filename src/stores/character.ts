@@ -57,7 +57,7 @@ export const useCharacterStore = defineStore('character', () => {
     team: Team = Team.ALLY,
   ): boolean => character.placeCharacter(grid, skillManager, hexId, characterId, team)
 
-  const removeCharacterFromHex = (hexId: number) =>
+  const removeCharacterFromHex = (hexId: number): boolean =>
     character.removeCharacter(grid, skillManager, hexId)
 
   const clearAllCharacters = (): boolean => character.clearAllCharacters(grid, skillManager)
