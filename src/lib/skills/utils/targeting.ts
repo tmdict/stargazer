@@ -1,4 +1,4 @@
-import { getTilesWithCharacters } from '../../character'
+import { getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
 import type { SkillContext, SkillTargetInfo } from '../../skill'
 import { Team } from '../../types/team'

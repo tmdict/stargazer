@@ -3,7 +3,7 @@ import { computed, inject } from 'vue'
 
 import type { DragDropAPI } from '../DragDropProvider.vue'
 import { useGridEvents } from '../../composables/useGridEvents'
-import { getCharacterTeam } from '../../lib/character'
+import { getCharacterTeam } from '../../lib/characters/character'
 import type { CharacterType } from '../../lib/types/character'
 import { useCharacterStore } from '../../stores/character'
 import { useGameDataStore } from '../../stores/gameData'

@@ -1,7 +1,7 @@
-import { findCharacterHex } from '../character'
 import type { Grid } from '../grid'
 import { getCharacterSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
+import { findCharacterHex } from './character'
 import { performPlace } from './place'
 import { performRemove } from './remove'
 

@@ -1,3 +1,6 @@
+import type { Grid } from '../grid'
+import { hasSkill, SkillManager } from '../skill'
+import { Team } from '../types/team'
 import {
   clearCharacterFromTile,
   findCharacterHex,
@@ -7,10 +10,7 @@ import {
   getTilesWithCharacters,
   hasCharacter,
   removeCharacterFromTeam,
-} from '../character'
-import type { Grid } from '../grid'
-import { hasSkill, SkillManager } from '../skill'
-import { Team } from '../types/team'
+} from './character'
 import { getMainCharacterId, isCompanionId } from './companion'
 import { performPlace } from './place'
 import { executeTransaction, handleCacheInvalidation } from './transaction'

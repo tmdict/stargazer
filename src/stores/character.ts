@@ -8,13 +8,13 @@ import {
   getTeamCharacters,
   getTilesWithCharacters,
   hasCharacter,
-} from '../lib/character'
+} from '../lib/characters/character'
+import { executeMoveCharacter } from '../lib/characters/move'
+import { executeAutoPlaceCharacter, executePlaceCharacter } from '../lib/characters/place'
+import { executeClearAllCharacters, executeRemoveCharacter } from '../lib/characters/remove'
+import { executeSwapCharacters } from '../lib/characters/swap'
 import type { GridTile } from '../lib/grid'
 import type { Hex } from '../lib/hex'
-import { executeMoveCharacter } from '../lib/transactions/move'
-import { executeAutoPlaceCharacter, executePlaceCharacter } from '../lib/transactions/place'
-import { executeClearAllCharacters, executeRemoveCharacter } from '../lib/transactions/remove'
-import { executeSwapCharacters } from '../lib/transactions/swap'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
 import { useSkillStore } from './skill'
