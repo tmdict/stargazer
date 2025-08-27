@@ -1,4 +1,4 @@
-import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
+import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findTarget, getOpposingTeam, TargetingMethod } from './utils/targeting'
 
 // Calculate the furthest opposing target from Vala's position

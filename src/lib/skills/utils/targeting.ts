@@ -1,7 +1,7 @@
 import { getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
-import type { SkillContext, SkillTargetInfo } from '../../skill'
 import { Team } from '../../types/team'
+import type { SkillContext, SkillTargetInfo } from '../skill'
 
 export interface TargetCandidate {
   hexId: number

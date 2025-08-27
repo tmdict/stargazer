@@ -1,4 +1,4 @@
-import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
+import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findTarget, TargetingMethod } from './utils/targeting'
 
 // Calculate the furthest same-team target from Dunlingr's position

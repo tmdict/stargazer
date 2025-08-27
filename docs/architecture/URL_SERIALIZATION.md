@@ -138,9 +138,3 @@ if (result.success) {
 - **Companions (ID ≥ 10000)**: Two-phase - place mains first (triggers skills), then reposition companions
 
 **Note**: Character IDs are currently limited to 16,383 (14-bit encoding). This supports approximately 6,383 main characters with their companions. IDs exceeding this limit are filtered during validation.
-
-## Related Documentation
-
-- [`/docs/architecture/GRID.md`](./GRID.md) - Grid state being serialized
-- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Companion character system
-- [`/docs/architecture/MAP_EDITOR.md`](./MAP_EDITOR.md) - Map sharing features

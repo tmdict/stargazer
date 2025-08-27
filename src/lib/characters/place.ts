@@ -1,5 +1,5 @@
 import type { Grid } from '../grid'
-import { hasSkill, SkillManager } from '../skill'
+import { hasSkill, SkillManager } from '../skills/skill'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import {

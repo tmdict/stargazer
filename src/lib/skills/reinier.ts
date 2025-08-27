@@ -1,5 +1,5 @@
-import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
 import { Team } from '../types/team'
+import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { getSymmetricalHexId } from './utils/symmetry'
 
 /**
