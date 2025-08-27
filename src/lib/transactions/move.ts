@@ -2,7 +2,7 @@ import { getCharacter, getCharacterTeam, getTeamFromTileState } from '../charact
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
-import { restoreCompanions, storeCompanionPositions } from './companion'
+import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
 import { performPlace } from './place'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
@@ -37,7 +37,7 @@ export function executeMoveCharacter(
   const changingTeams = fromTeam != toTeam
 
   // Companion validation - companions can't change teams
-  if (grid.isCompanionId(characterId) && changingTeams) {
+  if (isCompanionId(grid, characterId) && changingTeams) {
     return false
   }
 
