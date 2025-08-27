@@ -3,6 +3,7 @@ import {
   findCharacterHex,
   getCharacter,
   getCharacterTeam,
+  getTeamCharacters,
   getTilesWithCharacters,
   hasCharacter,
   removeCharacterFromTeam,
@@ -10,6 +11,7 @@ import {
 import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
+import { getMainCharacterId, isCompanionId } from './companion'
 import { performPlace } from './place'
 import { executeTransaction, handleCacheInvalidation } from './transaction'
 
@@ -26,8 +28,8 @@ export function executeRemoveCharacter(
   if (!characterId || !team) return true
 
   // Check if this is a companion - if so, we need to remove both companion and main character
-  if (grid.isCompanionId(characterId)) {
-    const mainCharId = grid.getMainCharacterId(characterId)
+  if (isCompanionId(grid, characterId)) {
+    const mainCharId = getMainCharacterId(grid, characterId)
 
     // Find the main character's hex on the same team as the companion
     const mainHexId = findCharacterHex(grid, mainCharId, team)
@@ -125,8 +127,8 @@ export function performClearAll(grid: Grid): boolean {
             clearCharacterFromTile(tile)
           }
         }
-        grid.getTeamCharacters(Team.ALLY).clear()
-        grid.getTeamCharacters(Team.ENEMY).clear()
+        getTeamCharacters(grid, Team.ALLY).clear()
+        getTeamCharacters(grid, Team.ENEMY).clear()
         return true
       },
     ],

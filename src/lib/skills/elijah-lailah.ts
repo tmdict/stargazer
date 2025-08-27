@@ -1,5 +1,6 @@
-import { findCharacterHex } from '../character'
+import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../character'
 import type { Skill, SkillContext } from '../skill'
+import { addCompanionLink, clearCompanionLinks, getCompanions } from '../transactions/companion'
 import { performPlace } from '../transactions/place'
 import { performRemove } from '../transactions/remove'
 import { State } from '../types/state'
@@ -44,8 +45,8 @@ export const elijahLailahSkill: Skill = {
     const companionHexId = randomTile.hex.getId()
 
     // Increase team size by 1 to accommodate the companion
-    const currentSize = grid.getMaxTeamSize(team)
-    if (!grid.setMaxTeamSize(team, currentSize + 1)) {
+    const currentSize = getMaxTeamSize(grid, team)
+    if (!setMaxTeamSize(grid, team, currentSize + 1)) {
       console.warn(`elijah-lailah: Failed to increase team size for ${team}`)
       return // Skip companion placement
     }
@@ -54,14 +55,14 @@ export const elijahLailahSkill: Skill = {
     const placed = performPlace(grid, companionHexId, companionId, team, true)
     if (!placed) {
       // Rollback team size if placement failed
-      if (!grid.setMaxTeamSize(team, currentSize)) {
+      if (!setMaxTeamSize(grid, team, currentSize)) {
         console.error(`elijah-lailah: Critical - Failed to rollback team size for ${team}`)
       }
       throw new Error('Failed to place companion')
     }
 
     // Link the companion to the main character
-    grid.addCompanionLink(characterId, companionId, team)
+    addCompanionLink(grid, characterId, companionId, team)
 
     // Register color modifiers
     // Main character gets the main color
@@ -78,7 +79,7 @@ export const elijahLailahSkill: Skill = {
     const { grid, team, characterId, skillManager } = context
 
     // Get all companions for this character on this team
-    const companions = grid.getCompanions(characterId, team)
+    const companions = getCompanions(grid, characterId, team)
 
     // Remove color modifiers
     skillManager.removeCharacterColorModifier(characterId, team) // Remove main character modifier
@@ -97,11 +98,11 @@ export const elijahLailahSkill: Skill = {
     })
 
     // Clear companion links for this team
-    grid.clearCompanionLinks(characterId, team)
+    clearCompanionLinks(grid, characterId, team)
 
     // Decrease team size back to normal
-    const currentSize = grid.getMaxTeamSize(team)
-    if (!grid.setMaxTeamSize(team, Math.max(5, currentSize - 1))) {
+    const currentSize = getMaxTeamSize(grid, team)
+    if (!setMaxTeamSize(grid, team, Math.max(5, currentSize - 1))) {
       console.warn(`elijah-lailah: Failed to restore team size for ${team}`)
     }
   },

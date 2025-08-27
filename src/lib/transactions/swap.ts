@@ -1,8 +1,8 @@
-import { getCharacter, getCharacterTeam } from '../character'
+import { getCharacter, getCharacterTeam, isCharacterOnTeam } from '../character'
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
-import { restoreCompanions, storeCompanionPositions } from './companion'
+import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
 import { performPlace } from './place'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
@@ -30,7 +30,7 @@ export function executeSwapCharacters(
   if (!fromChar || !toChar || !fromTeam || !toTeam) return false
 
   // Companions can only be swapped within the same team
-  if ((grid.isCompanionId(fromChar) || grid.isCompanionId(toChar)) && fromTeam !== toTeam) {
+  if ((isCompanionId(grid, fromChar) || isCompanionId(grid, toChar)) && fromTeam !== toTeam) {
     return false
   }
 
@@ -133,7 +133,7 @@ function performCrossTeamSwap(
   toTeam: Team,
 ): boolean {
   // Check if swap would create duplicates
-  if (grid.isCharacterOnTeam(fromChar, toTeam) || grid.isCharacterOnTeam(toChar, fromTeam)) {
+  if (isCharacterOnTeam(grid, fromChar, toTeam) || isCharacterOnTeam(grid, toChar, fromTeam)) {
     return false
   }
 

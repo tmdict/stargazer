@@ -12,6 +12,58 @@ export interface CompanionPosition {
   mainCharId: number
 }
 
+// Companion system helpers
+
+export function isCompanionId(grid: Grid, characterId: number): boolean {
+  return characterId >= grid.companionIdOffset
+}
+
+export function getMainCharacterId(grid: Grid, companionId: number): number {
+  if (!isCompanionId(grid, companionId)) {
+    return companionId // Already a main character
+  }
+  return companionId % grid.companionIdOffset
+}
+
+export function getCompanions(grid: Grid, mainCharacterId: number, team: Team): Set<number> {
+  const key = `${mainCharacterId}-${team}`
+  return grid.companionLinks.get(key) || new Set()
+}
+
+export function addCompanionLink(
+  grid: Grid,
+  mainId: number,
+  companionId: number,
+  team: Team,
+): void {
+  const key = `${mainId}-${team}`
+  if (!grid.companionLinks.has(key)) {
+    grid.companionLinks.set(key, new Set())
+  }
+  grid.companionLinks.get(key)!.add(companionId)
+}
+
+export function removeCompanionLink(
+  grid: Grid,
+  mainId: number,
+  companionId: number,
+  team: Team,
+): void {
+  const key = `${mainId}-${team}`
+  const companions = grid.companionLinks.get(key)
+  if (companions) {
+    companions.delete(companionId)
+    if (companions.size === 0) {
+      grid.companionLinks.delete(key)
+    }
+  }
+}
+
+export function clearCompanionLinks(grid: Grid, mainCharacterId: number, team: Team): void {
+  const key = `${mainCharacterId}-${team}`
+  grid.companionLinks.delete(key)
+}
+
 // Stores companion positions before skill deactivation
 export function storeCompanionPositions(
   grid: Grid,
@@ -19,7 +71,7 @@ export function storeCompanionPositions(
   team: Team,
 ): CompanionPosition[] {
   const positions: CompanionPosition[] = []
-  const companions = grid.getCompanions(characterId, team)
+  const companions = getCompanions(grid, characterId, team)
 
   companions.forEach((companionId) => {
     const hexId = findCharacterHex(grid, companionId, team)

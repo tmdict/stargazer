@@ -4,6 +4,8 @@ import { defineStore } from 'pinia'
 import {
   getCharacterCount,
   getCharacterPlacements,
+  getMaxTeamSize,
+  getTeamCharacters,
   getTilesWithCharacters,
   hasCharacter,
 } from '../lib/character'
@@ -39,21 +41,21 @@ export const useCharacterStore = defineStore('character', () => {
 
   // Separate computed for team counts to avoid full traversal
   const teamCharacterCounts = computed(() => {
-    const allyCount = grid.getTeamCharacters(Team.ALLY).size
-    const enemyCount = grid.getTeamCharacters(Team.ENEMY).size
+    const allyCount = getTeamCharacters(grid, Team.ALLY).size
+    const enemyCount = getTeamCharacters(grid, Team.ENEMY).size
     return { ally: allyCount, enemy: enemyCount }
   })
 
   const availableAlly = computed(() => {
-    return grid.getMaxTeamSize(Team.ALLY) - teamCharacterCounts.value.ally
+    return getMaxTeamSize(grid, Team.ALLY) - teamCharacterCounts.value.ally
   })
 
   const availableEnemy = computed(() => {
-    return grid.getMaxTeamSize(Team.ENEMY) - teamCharacterCounts.value.enemy
+    return getMaxTeamSize(grid, Team.ENEMY) - teamCharacterCounts.value.enemy
   })
 
-  const maxTeamSizeAlly = computed(() => grid.getMaxTeamSize(Team.ALLY))
-  const maxTeamSizeEnemy = computed(() => grid.getMaxTeamSize(Team.ENEMY))
+  const maxTeamSizeAlly = computed(() => getMaxTeamSize(grid, Team.ALLY))
+  const maxTeamSizeEnemy = computed(() => getMaxTeamSize(grid, Team.ENEMY))
 
   // This one stays as a function since it's rarely called
   const getTilesWithCharactersStore = (): GridTile[] => {

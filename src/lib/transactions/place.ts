@@ -2,6 +2,7 @@ import {
   canPlaceCharacterOnTeam,
   canPlaceCharacterOnTile,
   getAllAvailableTilesForTeam,
+  getTeamCharacters,
   hasCharacter,
   removeCharacterFromTeam,
 } from '../character'
@@ -9,6 +10,7 @@ import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
 import { State } from '../types/state'
 import { Team } from '../types/team'
+import { isCompanionId } from './companion'
 import { performRemove } from './remove'
 import { executeTransaction, handleCacheInvalidation } from './transaction'
 
@@ -22,7 +24,7 @@ export function executePlaceCharacter(
   team: Team = Team.ALLY,
 ): boolean {
   // Companions cannot be placed directly (only created via skills)
-  if (grid.isCompanionId(characterId)) {
+  if (isCompanionId(grid, characterId)) {
     return false
   }
 
@@ -151,7 +153,7 @@ export function performPlace(
   tile.characterId = characterId
   tile.team = team
   tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-  grid.getTeamCharacters(team)?.add(characterId)
+  getTeamCharacters(grid, team).add(characterId)
 
   // Handle cache invalidation with batching support
   handleCacheInvalidation(skipCacheInvalidation, grid.skillManager, grid)
