@@ -1,8 +1,8 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import * as transactions from '../lib/transactions'
 import type { GridTile } from '../lib/grid'
+import * as transactions from '../lib/transactions'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
 import { useSkillStore } from './skill'
@@ -60,7 +60,8 @@ export const useCharacterStore = defineStore('character', () => {
   const removeCharacterFromHex = (hexId: number): boolean =>
     transactions.executeRemoveCharacter(grid, skillManager, hexId)
 
-  const clearAllCharacters = (): boolean => transactions.executeClearAllCharacters(grid, skillManager)
+  const clearAllCharacters = (): boolean =>
+    transactions.executeClearAllCharacters(grid, skillManager)
 
   const swapCharacters = (fromHexId: number, toHexId: number): boolean =>
     transactions.executeSwapCharacters(grid, skillManager, fromHexId, toHexId)

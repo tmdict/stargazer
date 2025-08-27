@@ -237,15 +237,31 @@ function performCrossTeamSwap(
         skillsDeactivated = true
         return true
       },
-      // Step 2: Perform the swap
-      () => grid.swapCharacters(fromHexId, toHexId),
-      // Step 3: Reactivate skills at new positions
+      // Step 2: Perform the swap using atomic helper
+      // For cross-team swap, characters switch teams:
+      // - fromChar moves to toHexId and JOINS toTeam
+      // - toChar moves to fromHexId and JOINS fromTeam
+      () =>
+        performAtomicSwap(
+          grid,
+          fromHexId,
+          toHexId,
+          fromChar,
+          toChar,
+          fromTeam, // toChar placed at fromHexId with fromTeam (switches to fromTeam)
+          toTeam, // fromChar placed at toHexId with toTeam (switches to toTeam)
+          fromTeam, // Original teams for rollback
+          toTeam,
+        ),
+      // Step 3: Reactivate skills at new positions with NEW teams
       () => {
+        // fromChar has moved to toHexId and joined toTeam
         if (hasSkill(fromChar)) {
           if (!skillManager.activateCharacterSkill(fromChar, toHexId, toTeam, grid)) {
             return false
           }
         }
+        // toChar has moved to fromHexId and joined fromTeam
         if (hasSkill(toChar)) {
           if (!skillManager.activateCharacterSkill(toChar, fromHexId, fromTeam, grid)) {
             return false
@@ -288,17 +304,67 @@ function performCrossTeamSwap(
   return result
 }
 
+// Private helper that performs the atomic swap operation
+function performAtomicSwap(
+  grid: Grid,
+  fromHexId: number,
+  toHexId: number,
+  fromChar: number,
+  toChar: number,
+  fromTargetTeam: Team,
+  toTargetTeam: Team,
+  fromOriginalTeam: Team,
+  toOriginalTeam: Team,
+): boolean {
+  // Execute swap as transaction
+  const result = executeTransaction(
+    // Operations to execute
+    [
+      () => {
+        return grid.removeCharacter(fromHexId, true)
+      },
+      () => {
+        return grid.removeCharacter(toHexId, true)
+      },
+      () => {
+        return grid.placeCharacter(fromHexId, toChar, fromTargetTeam, true)
+      },
+      () => {
+        return grid.placeCharacter(toHexId, fromChar, toTargetTeam, true)
+      },
+    ],
+    // Rollback operations
+    [
+      () => {
+        grid.placeCharacter(fromHexId, fromChar, fromOriginalTeam, true)
+      },
+      () => {
+        grid.placeCharacter(toHexId, toChar, toOriginalTeam, true)
+      },
+    ],
+  )
+
+  return result
+}
+
 export function executeSwapCharacters(
   grid: Grid,
   skillManager: SkillManager,
   fromHexId: number,
   toHexId: number,
 ): boolean {
+  // 1. Perform all validations
+
+  // Basic validation
+  if (fromHexId == toHexId) return false
+
+  // Get character and team info
   const fromChar = grid.getCharacter(fromHexId)
   const toChar = grid.getCharacter(toHexId)
   const fromTeam = grid.getCharacterTeam(fromHexId)
   const toTeam = grid.getCharacterTeam(toHexId)
 
+  // Validate all required data exists
   if (!fromChar || !toChar || !fromTeam || !toTeam) return false
 
   // Companions can only be swapped within the same team
@@ -306,22 +372,36 @@ export function executeSwapCharacters(
     return false
   }
 
-  // Same team swap - no skill handling needed
-  if (fromTeam === toTeam) {
-    return grid.swapCharacters(fromHexId, toHexId)
-  }
+  // 2. Determine swap type and execute
 
-  // Cross-team swap - check if skill handling is needed
+  const isSameTeam = fromTeam == toTeam
   const fromHasSkill = hasSkill(fromChar)
   const toHasSkill = hasSkill(toChar)
+  const needsSkillHandling = !isSameTeam && (fromHasSkill || toHasSkill)
 
-  // If neither character has skills, we can use Grid's direct swap
-  // The Grid will handle duplicate validation internally
-  if (!fromHasSkill && !toHasSkill) {
-    return grid.swapCharacters(fromHexId, toHexId)
+  // 2a. Simple swap (same team or cross-team with no skills)
+  if (isSameTeam || !needsSkillHandling) {
+    const result = performAtomicSwap(
+      grid,
+      fromHexId,
+      toHexId,
+      fromChar,
+      toChar,
+      fromTeam,
+      toTeam,
+      fromTeam,
+      toTeam,
+    )
+
+    // Trigger skill updates after successful transaction
+    if (result && grid.skillManager) {
+      grid.skillManager.updateActiveSkills(grid)
+    }
+
+    return result
   }
 
-  // At least one character has skills - use special handling
+  // 2b. Cross-team swap with skills involved
   return performCrossTeamSwap(
     grid,
     skillManager,
