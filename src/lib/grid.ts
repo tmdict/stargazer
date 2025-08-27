@@ -303,58 +303,6 @@ export class Grid {
   }
 
   // Character Movement
-  swapCharacters(fromHexId: number, toHexId: number): boolean {
-    // Basic validation
-    if (fromHexId === toHexId) return false
-
-    // Validate both positions have characters
-    const fromOp = this.validateCharacterOperation(fromHexId, true)
-    const toOp = this.validateCharacterOperation(toHexId, true)
-
-    if (!fromOp || !toOp) return false
-
-    // Determine target teams from tile states
-    const fromTargetTeam = this.getTeamFromTileState(this.getTileById(fromHexId).state)
-    const toTargetTeam = this.getTeamFromTileState(this.getTileById(toHexId).state)
-
-    if (!fromTargetTeam || !toTargetTeam) return false
-
-    // Execute swap as transaction
-    const result = executeTransaction(
-      // Operations to execute
-      [
-        () => {
-          return this.removeCharacter(fromHexId, true)
-        },
-        () => {
-          return this.removeCharacter(toHexId, true)
-        },
-        () => {
-          return this.placeCharacter(fromHexId, toOp.characterId, fromTargetTeam, true)
-        },
-        () => {
-          return this.placeCharacter(toHexId, fromOp.characterId, toTargetTeam, true)
-        },
-      ],
-      // Rollback operations
-      [
-        () => {
-          this.placeCharacter(fromHexId, fromOp.characterId, fromOp.team, true)
-        },
-        () => {
-          this.placeCharacter(toHexId, toOp.characterId, toOp.team, true)
-        },
-      ],
-    )
-
-    // Trigger skill updates after successful transaction
-    if (result && this.skillManager) {
-      this.skillManager.updateActiveSkills(this)
-    }
-
-    return result
-  }
-
   moveCharacter(fromHexId: number, toHexId: number, characterId: number): boolean {
     // Basic validation
     if (fromHexId === toHexId) return false
