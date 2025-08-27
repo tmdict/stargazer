@@ -36,8 +36,8 @@ export const useGridStore = defineStore('grid', () => {
   })
 
   // Core grid operations
-  const setState = (hex: Hex, state: State): void => {
-    grid.setState(hex, state)
+  const setState = (hex: Hex, state: State): boolean => {
+    return grid.setState(hex, state)
   }
 
   const getState = (hex: Hex): State => {
