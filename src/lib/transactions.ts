@@ -594,14 +594,3 @@ export function executeAutoPlaceCharacter(
 
   return true
 }
-
-export function executeHandleHexClick(
-  grid: Grid,
-  skillManager: SkillManager,
-  hexId: number,
-): boolean {
-  if (grid.hasCharacter(hexId)) {
-    return executeRemoveCharacter(grid, skillManager, hexId)
-  }
-  return false
-}
