@@ -1,8 +1,9 @@
-import { getCharacter, getCharacterTeam } from '../character'
+import { getCharacter, getCharacterTeam, getTeamFromTileState } from '../character'
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
 import { restoreCompanions, storeCompanionPositions } from './companion'
+import { performPlace } from './place'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
 
@@ -30,7 +31,7 @@ export function executeMoveCharacter(
 
   // Determine target team from destination tile
   const toTile = grid.getTileById(toHexId)
-  const toTeam = grid.getTeamFromTileState(toTile.state)
+  const toTeam = getTeamFromTileState(toTile.state)
   if (!toTeam) return false
 
   const changingTeams = fromTeam != toTeam
@@ -86,9 +87,9 @@ function performMove(
   return executeTransaction(
     [
       () => performRemove(grid, fromHexId, true),
-      () => grid.placeCharacter(toHexId, characterId, targetTeam, true),
+      () => performPlace(grid, toHexId, characterId, targetTeam, true),
     ],
-    [() => grid.placeCharacter(fromHexId, characterId, originalTeam, true)],
+    [() => performPlace(grid, fromHexId, characterId, originalTeam, true)],
   )
 }
 
@@ -122,7 +123,7 @@ function performCrossTeamMove(
     [
       // Rollback
       () => {
-        grid.placeCharacter(fromHexId, characterId, originalTeam, true)
+        performPlace(grid, fromHexId, characterId, originalTeam, true)
         if (skillDeactivated && hasSkill(characterId)) {
           skillManager.activateCharacterSkill(characterId, fromHexId, originalTeam, grid)
           if (hasCompanionSkill(characterId)) {

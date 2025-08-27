@@ -1,5 +1,6 @@
 import { findCharacterHex } from '../character'
 import type { Skill, SkillContext } from '../skill'
+import { performPlace } from '../transactions/place'
 import { performRemove } from '../transactions/remove'
 import { State } from '../types/state'
 import { Team } from '../types/team'
@@ -50,7 +51,7 @@ export const elijahLailahSkill: Skill = {
     }
 
     // Place the companion
-    const placed = grid.placeCharacter(companionHexId, companionId, team, true)
+    const placed = performPlace(grid, companionHexId, companionId, team, true)
     if (!placed) {
       // Rollback team size if placement failed
       if (!grid.setMaxTeamSize(team, currentSize)) {

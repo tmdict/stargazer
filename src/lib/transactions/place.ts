@@ -1,9 +1,16 @@
-import { hasCharacter } from '../character'
+import {
+  canPlaceCharacterOnTeam,
+  canPlaceCharacterOnTile,
+  getAllAvailableTilesForTeam,
+  hasCharacter,
+  removeCharacterFromTeam,
+} from '../character'
 import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
+import { State } from '../types/state'
 import { Team } from '../types/team'
 import { performRemove } from './remove'
-import { executeTransaction } from './transaction'
+import { executeTransaction, handleCacheInvalidation } from './transaction'
 
 // High-level operations
 
@@ -25,7 +32,7 @@ export function executePlaceCharacter(
     [
       // Place character
       () => {
-        placed = grid.placeCharacter(hexId, characterId, team, true)
+        placed = performPlace(grid, hexId, characterId, team, true)
         return placed
       },
       // Activate skill if character has one
@@ -61,10 +68,10 @@ export function executeAutoPlaceCharacter(
   team: Team,
 ): boolean {
   // Validate character can be placed
-  if (!grid.canPlaceCharacterOnTeam(characterId, team)) return false
+  if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
 
   // Get all available tiles for this team
-  const availableTiles = grid.getAllAvailableTilesForTeam(team)
+  const availableTiles = getAllAvailableTilesForTeam(grid, team)
   if (availableTiles.length == 0) return false
 
   // Sort by hex ID descending (largest first) for deterministic randomness
@@ -88,7 +95,7 @@ export function executeAutoPlaceCharacter(
   const hexId = selectedTile.hex.getId()
 
   // Place character
-  const placed = grid.placeCharacter(hexId, characterId, team, true)
+  const placed = performPlace(grid, hexId, characterId, team, true)
   if (!placed) return false
 
   // Activate skill if character has one
@@ -110,6 +117,44 @@ export function executeAutoPlaceCharacter(
   if (grid.skillManager) {
     grid.skillManager.updateActiveSkills(grid)
   }
+
+  return true
+}
+
+// Atomic operations
+
+// Performs atomic character placement
+export function performPlace(
+  grid: Grid,
+  hexId: number,
+  characterId: number,
+  team: Team = Team.ALLY,
+  skipCacheInvalidation: boolean = false,
+): boolean {
+  // Input validation
+  if (!Number.isInteger(characterId) || characterId <= 0) return false
+
+  if (!canPlaceCharacterOnTile(grid, hexId, team)) return false
+  if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
+
+  const tile = grid.getTileById(hexId)
+
+  if (tile.characterId) {
+    if (!tile.team) {
+      console.error(`Tile has characterId ${tile.characterId} but no team`)
+      return false
+    }
+    removeCharacterFromTeam(grid, tile.characterId, tile.team)
+  }
+
+  // Set character on tile (merged from setCharacterOnTile)
+  tile.characterId = characterId
+  tile.team = team
+  tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
+  grid.getTeamCharacters(team)?.add(characterId)
+
+  // Handle cache invalidation with batching support
+  handleCacheInvalidation(skipCacheInvalidation, grid.skillManager, grid)
 
   return true
 }

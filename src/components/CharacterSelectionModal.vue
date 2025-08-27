@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
+import { canPlaceCharacterOnTeam } from '../lib/character'
 import type { Hex } from '../lib/hex'
 import type { CharacterType } from '../lib/types/character'
 import { State } from '../lib/types/state'
@@ -60,7 +61,7 @@ const availableCharacters = computed(() => {
 const handleCharacterClick = (character: CharacterType) => {
   if (!team.value) return
 
-  if (!gridStore.grid.canPlaceCharacterOnTeam(character.id, team.value)) {
+  if (!canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, team.value)) {
     return
   }
 
