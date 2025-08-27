@@ -1,4 +1,4 @@
-import { findCharacterHex } from './character'
+import { findCharacterHex } from './characters/character'
 import type { Grid } from './grid'
 import { bonnieSkill } from './skills/bonnie'
 import { dunlingrSkill } from './skills/dunlingr'

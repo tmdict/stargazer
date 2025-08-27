@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } f
 
 import { useDragDrop } from '../../composables/useDragDrop'
 import { useGridEvents } from '../../composables/useGridEvents'
-import { canPlaceCharacterOnTeam, hasCharacter } from '../../lib/character'
+import { canPlaceCharacterOnTeam, hasCharacter } from '../../lib/characters/character'
 import type { Hex } from '../../lib/hex'
 import type { Layout } from '../../lib/layout'
 import { State } from '../../lib/types/state'

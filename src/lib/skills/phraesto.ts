@@ -1,8 +1,8 @@
-import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../character'
+import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../characters/character'
+import { addCompanionLink, clearCompanionLinks, getCompanions } from '../characters/companion'
+import { performPlace } from '../characters/place'
+import { performRemove } from '../characters/remove'
 import type { Skill, SkillContext } from '../skill'
-import { addCompanionLink, clearCompanionLinks, getCompanions } from '../transactions/companion'
-import { performPlace } from '../transactions/place'
-import { performRemove } from '../transactions/remove'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 

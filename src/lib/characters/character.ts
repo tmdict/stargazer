@@ -1,6 +1,6 @@
-import type { Grid, GridTile } from './grid'
-import { State } from './types/state'
-import { Team } from './types/team'
+import type { Grid, GridTile } from '../grid'
+import { State } from '../types/state'
+import { Team } from '../types/team'
 
 // Character queries
 
