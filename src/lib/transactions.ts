@@ -8,6 +8,8 @@ import { Team } from './types/team'
  * All functions handle atomic operations with transactions
  */
 
+/* Main Transaction Functions */
+
 export function executePlaceCharacter(
   grid: Grid,
   skillManager: SkillManager,
@@ -108,300 +110,6 @@ export function executeClearAllCharacters(grid: Grid, skillManager: SkillManager
 
   // Clear all characters (uses existing transaction internally)
   return grid.clearAllCharacters()
-}
-
-// Helper type for companion position tracking
-interface CompanionPosition {
-  companionId: number
-  hexId: number
-  team: Team
-  mainCharId: number
-}
-
-// Helper to check if cross-team swap would create duplicate characters
-function wouldCreateDuplicate(
-  grid: Grid,
-  fromChar: number,
-  toChar: number,
-  fromTeam: Team,
-  toTeam: Team,
-): boolean {
-  const fromTeamChars = grid.getTeamCharacters(fromTeam)
-  const toTeamChars = grid.getTeamCharacters(toTeam)
-
-  // Check if placing fromChar on toTeam would violate duplicate constraint
-  if (toTeamChars.has(fromChar)) {
-    return true
-  }
-
-  // Check if placing toChar on fromTeam would violate duplicate constraint
-  if (fromTeamChars.has(toChar)) {
-    return true
-  }
-
-  return false
-}
-
-// Helper to store companion positions before skill deactivation
-function storeCompanionPositions(grid: Grid, characterId: number, team: Team): CompanionPosition[] {
-  const positions: CompanionPosition[] = []
-  const companions = grid.getCompanions(characterId, team)
-
-  companions.forEach((companionId) => {
-    const hexId = grid.findCharacterHex(companionId, team)
-    if (hexId !== null) {
-      positions.push({
-        companionId,
-        hexId,
-        team,
-        mainCharId: characterId,
-      })
-    }
-  })
-
-  return positions
-}
-
-// Helper to restore companions to original positions
-function restoreCompanions(
-  grid: Grid,
-  skillManager: SkillManager,
-  mainCharId: number,
-  companionPositions: CompanionPosition[],
-): void {
-  companionPositions
-    .filter((pos) => pos.mainCharId === mainCharId)
-    .forEach(({ companionId, hexId: originalHexId, team }) => {
-      const currentHexId = grid.findCharacterHex(companionId, team)
-      if (currentHexId !== null && currentHexId !== originalHexId) {
-        // Remove from current position
-        if (!grid.removeCharacter(currentHexId, true)) {
-          console.warn(
-            `Failed to remove companion ${companionId} from hex ${currentHexId} during restoration`,
-          )
-        }
-        // Place at original position
-        grid.placeCharacter(originalHexId, companionId, team, true)
-        // Re-add color modifier (use companion color for companions)
-        const skill = getCharacterSkill(mainCharId)
-        if (skill?.companionColorModifier) {
-          skillManager.addCharacterColorModifier(companionId, team, skill.companionColorModifier)
-        }
-      }
-    })
-}
-
-// Helper to perform cross-team character swap with skill handling
-function performCrossTeamSwap(
-  grid: Grid,
-  skillManager: SkillManager,
-  fromHexId: number,
-  toHexId: number,
-  fromChar: number,
-  toChar: number,
-  fromTeam: Team,
-  toTeam: Team,
-): boolean {
-  // Check if swap would create duplicates
-  if (wouldCreateDuplicate(grid, fromChar, toChar, fromTeam, toTeam)) {
-    return false
-  }
-
-  const fromHasSkill = skillManager.hasActiveSkill(fromChar, fromTeam)
-  const toHasSkill = skillManager.hasActiveSkill(toChar, toTeam)
-
-  // Store companion positions before deactivation (only for characters with skills)
-  const companionPositions: CompanionPosition[] = []
-  if (fromHasSkill) {
-    companionPositions.push(...storeCompanionPositions(grid, fromChar, fromTeam))
-  }
-  if (toHasSkill) {
-    companionPositions.push(...storeCompanionPositions(grid, toChar, toTeam))
-  }
-
-  let skillsDeactivated = false
-
-  const result = executeTransaction(
-    [
-      // Step 1: Deactivate skills if needed
-      () => {
-        if (fromHasSkill) {
-          skillManager.deactivateCharacterSkill(fromChar, fromHexId, fromTeam, grid)
-        }
-        if (toHasSkill) {
-          skillManager.deactivateCharacterSkill(toChar, toHexId, toTeam, grid)
-        }
-        skillsDeactivated = true
-        return true
-      },
-      // Step 2: Perform the swap using atomic helper
-      // For cross-team swap, characters switch teams:
-      // - fromChar moves to toHexId and JOINS toTeam
-      // - toChar moves to fromHexId and JOINS fromTeam
-      () =>
-        performAtomicSwap(
-          grid,
-          fromHexId,
-          toHexId,
-          fromChar,
-          toChar,
-          fromTeam, // toChar placed at fromHexId with fromTeam (switches to fromTeam)
-          toTeam, // fromChar placed at toHexId with toTeam (switches to toTeam)
-          fromTeam, // Original teams for rollback
-          toTeam,
-        ),
-      // Step 3: Reactivate skills at new positions with NEW teams
-      () => {
-        // fromChar has moved to toHexId and joined toTeam
-        if (hasSkill(fromChar)) {
-          if (!skillManager.activateCharacterSkill(fromChar, toHexId, toTeam, grid)) {
-            return false
-          }
-        }
-        // toChar has moved to fromHexId and joined fromTeam
-        if (hasSkill(toChar)) {
-          if (!skillManager.activateCharacterSkill(toChar, fromHexId, fromTeam, grid)) {
-            return false
-          }
-        }
-        return true
-      },
-    ],
-    [
-      // Rollback: Reactivate original skills if something failed
-      () => {
-        if (!skillsDeactivated) return
-
-        // Handle fromChar skill reactivation
-        if (fromHasSkill) {
-          skillManager.activateCharacterSkill(fromChar, fromHexId, fromTeam, grid)
-          // Special handling for companion skills to restore companion positions
-          if (hasCompanionSkill(fromChar)) {
-            restoreCompanions(grid, skillManager, fromChar, companionPositions)
-          }
-        }
-
-        // Handle toChar skill reactivation
-        if (toHasSkill) {
-          skillManager.activateCharacterSkill(toChar, toHexId, toTeam, grid)
-          // Special handling for companion skills to restore companion positions
-          if (hasCompanionSkill(toChar)) {
-            restoreCompanions(grid, skillManager, toChar, companionPositions)
-          }
-        }
-      },
-    ],
-  )
-
-  // Trigger skill updates after successful transaction
-  if (result && grid.skillManager) {
-    grid.skillManager.updateActiveSkills(grid)
-  }
-
-  return result
-}
-
-// Private helper that performs the atomic swap operation
-function performAtomicSwap(
-  grid: Grid,
-  fromHexId: number,
-  toHexId: number,
-  fromChar: number,
-  toChar: number,
-  fromTargetTeam: Team,
-  toTargetTeam: Team,
-  fromOriginalTeam: Team,
-  toOriginalTeam: Team,
-): boolean {
-  // Execute swap as transaction
-  const result = executeTransaction(
-    // Operations to execute
-    [
-      () => {
-        return grid.removeCharacter(fromHexId, true)
-      },
-      () => {
-        return grid.removeCharacter(toHexId, true)
-      },
-      () => {
-        return grid.placeCharacter(fromHexId, toChar, fromTargetTeam, true)
-      },
-      () => {
-        return grid.placeCharacter(toHexId, fromChar, toTargetTeam, true)
-      },
-    ],
-    // Rollback operations
-    [
-      () => {
-        grid.placeCharacter(fromHexId, fromChar, fromOriginalTeam, true)
-      },
-      () => {
-        grid.placeCharacter(toHexId, toChar, toOriginalTeam, true)
-      },
-    ],
-  )
-
-  return result
-}
-
-// Helper for simple move operations (same team or no skills)
-function performAtomicMove(
-  grid: Grid,
-  fromHexId: number,
-  toHexId: number,
-  characterId: number,
-  targetTeam: Team,
-  originalTeam: Team,
-): boolean {
-  return executeTransaction(
-    [
-      () => grid.removeCharacter(fromHexId, true),
-      () => grid.placeCharacter(toHexId, characterId, targetTeam, true),
-    ],
-    [() => grid.placeCharacter(fromHexId, characterId, originalTeam, true)],
-  )
-}
-
-// Helper for cross-team moves with skills
-function performCrossTeamMove(
-  grid: Grid,
-  skillManager: SkillManager,
-  fromHexId: number,
-  toHexId: number,
-  characterId: number,
-  targetTeam: Team,
-  originalTeam: Team,
-): boolean {
-  let companionPositions: CompanionPosition[] = []
-  let skillDeactivated = false
-
-  return executeTransaction(
-    [
-      // Step 1: Store companions and deactivate skill
-      () => {
-        companionPositions = storeCompanionPositions(grid, characterId, originalTeam)
-        skillManager.deactivateCharacterSkill(characterId, fromHexId, originalTeam, grid)
-        skillDeactivated = true
-        return true
-      },
-      // Step 2: Execute the move
-      () => performAtomicMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam),
-      // Step 3: Activate skill at new position with new team
-      () => skillManager.activateCharacterSkill(characterId, toHexId, targetTeam, grid),
-    ],
-    [
-      // Rollback
-      () => {
-        grid.placeCharacter(fromHexId, characterId, originalTeam, true)
-        if (skillDeactivated && hasSkill(characterId)) {
-          skillManager.activateCharacterSkill(characterId, fromHexId, originalTeam, grid)
-          if (hasCompanionSkill(characterId)) {
-            restoreCompanions(grid, skillManager, characterId, companionPositions)
-          }
-        }
-      },
-    ],
-  )
 }
 
 export function executeSwapCharacters(
@@ -593,4 +301,307 @@ export function executeAutoPlaceCharacter(
   }
 
   return true
+}
+
+/* Internal Types & Interfaces */
+
+interface CompanionPosition {
+  companionId: number
+  hexId: number
+  team: Team
+  mainCharId: number
+}
+
+/* Atomic Operation Helpers */
+
+// Performs atomic swap of two characters
+function performAtomicSwap(
+  grid: Grid,
+  fromHexId: number,
+  toHexId: number,
+  fromChar: number,
+  toChar: number,
+  fromTargetTeam: Team,
+  toTargetTeam: Team,
+  fromOriginalTeam: Team,
+  toOriginalTeam: Team,
+): boolean {
+  // Execute swap as transaction
+  const result = executeTransaction(
+    // Operations to execute
+    [
+      () => {
+        return grid.removeCharacter(fromHexId, true)
+      },
+      () => {
+        return grid.removeCharacter(toHexId, true)
+      },
+      () => {
+        return grid.placeCharacter(fromHexId, toChar, fromTargetTeam, true)
+      },
+      () => {
+        return grid.placeCharacter(toHexId, fromChar, toTargetTeam, true)
+      },
+    ],
+    // Rollback operations
+    [
+      () => {
+        grid.placeCharacter(fromHexId, fromChar, fromOriginalTeam, true)
+      },
+      () => {
+        grid.placeCharacter(toHexId, toChar, toOriginalTeam, true)
+      },
+    ],
+  )
+
+  return result
+}
+
+// Performs atomic move of a single character
+function performAtomicMove(
+  grid: Grid,
+  fromHexId: number,
+  toHexId: number,
+  characterId: number,
+  targetTeam: Team,
+  originalTeam: Team,
+): boolean {
+  return executeTransaction(
+    [
+      () => grid.removeCharacter(fromHexId, true),
+      () => grid.placeCharacter(toHexId, characterId, targetTeam, true),
+    ],
+    [() => grid.placeCharacter(fromHexId, characterId, originalTeam, true)],
+  )
+}
+
+/* Complex Operation Helpers (with skills) */
+
+// Performs cross-team character swap with skill handling
+function performCrossTeamSwap(
+  grid: Grid,
+  skillManager: SkillManager,
+  fromHexId: number,
+  toHexId: number,
+  fromChar: number,
+  toChar: number,
+  fromTeam: Team,
+  toTeam: Team,
+): boolean {
+  // Check if swap would create duplicates
+  if (wouldCreateDuplicate(grid, fromChar, toChar, fromTeam, toTeam)) {
+    return false
+  }
+
+  const fromHasSkill = skillManager.hasActiveSkill(fromChar, fromTeam)
+  const toHasSkill = skillManager.hasActiveSkill(toChar, toTeam)
+
+  // Store companion positions before deactivation (only for characters with skills)
+  const companionPositions: CompanionPosition[] = []
+  if (fromHasSkill) {
+    companionPositions.push(...storeCompanionPositions(grid, fromChar, fromTeam))
+  }
+  if (toHasSkill) {
+    companionPositions.push(...storeCompanionPositions(grid, toChar, toTeam))
+  }
+
+  let skillsDeactivated = false
+
+  const result = executeTransaction(
+    [
+      // Step 1: Deactivate skills if needed
+      () => {
+        if (fromHasSkill) {
+          skillManager.deactivateCharacterSkill(fromChar, fromHexId, fromTeam, grid)
+        }
+        if (toHasSkill) {
+          skillManager.deactivateCharacterSkill(toChar, toHexId, toTeam, grid)
+        }
+        skillsDeactivated = true
+        return true
+      },
+      // Step 2: Perform the swap using atomic helper
+      // For cross-team swap, characters switch teams:
+      // - fromChar moves to toHexId and JOINS toTeam
+      // - toChar moves to fromHexId and JOINS fromTeam
+      () =>
+        performAtomicSwap(
+          grid,
+          fromHexId,
+          toHexId,
+          fromChar,
+          toChar,
+          fromTeam, // toChar placed at fromHexId with fromTeam (switches to fromTeam)
+          toTeam, // fromChar placed at toHexId with toTeam (switches to toTeam)
+          fromTeam, // Original teams for rollback
+          toTeam,
+        ),
+      // Step 3: Reactivate skills at new positions with NEW teams
+      () => {
+        // fromChar has moved to toHexId and joined toTeam
+        if (hasSkill(fromChar)) {
+          if (!skillManager.activateCharacterSkill(fromChar, toHexId, toTeam, grid)) {
+            return false
+          }
+        }
+        // toChar has moved to fromHexId and joined fromTeam
+        if (hasSkill(toChar)) {
+          if (!skillManager.activateCharacterSkill(toChar, fromHexId, fromTeam, grid)) {
+            return false
+          }
+        }
+        return true
+      },
+    ],
+    [
+      // Rollback: Reactivate original skills if something failed
+      () => {
+        if (!skillsDeactivated) return
+
+        // Handle fromChar skill reactivation
+        if (fromHasSkill) {
+          skillManager.activateCharacterSkill(fromChar, fromHexId, fromTeam, grid)
+          // Special handling for companion skills to restore companion positions
+          if (hasCompanionSkill(fromChar)) {
+            restoreCompanions(grid, skillManager, fromChar, companionPositions)
+          }
+        }
+
+        // Handle toChar skill reactivation
+        if (toHasSkill) {
+          skillManager.activateCharacterSkill(toChar, toHexId, toTeam, grid)
+          // Special handling for companion skills to restore companion positions
+          if (hasCompanionSkill(toChar)) {
+            restoreCompanions(grid, skillManager, toChar, companionPositions)
+          }
+        }
+      },
+    ],
+  )
+
+  // Trigger skill updates after successful transaction
+  if (result && grid.skillManager) {
+    grid.skillManager.updateActiveSkills(grid)
+  }
+
+  return result
+}
+
+// Performs cross-team move with skill handling
+function performCrossTeamMove(
+  grid: Grid,
+  skillManager: SkillManager,
+  fromHexId: number,
+  toHexId: number,
+  characterId: number,
+  targetTeam: Team,
+  originalTeam: Team,
+): boolean {
+  let companionPositions: CompanionPosition[] = []
+  let skillDeactivated = false
+
+  return executeTransaction(
+    [
+      // Step 1: Store companions and deactivate skill
+      () => {
+        companionPositions = storeCompanionPositions(grid, characterId, originalTeam)
+        skillManager.deactivateCharacterSkill(characterId, fromHexId, originalTeam, grid)
+        skillDeactivated = true
+        return true
+      },
+      // Step 2: Execute the move
+      () => performAtomicMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam),
+      // Step 3: Activate skill at new position with new team
+      () => skillManager.activateCharacterSkill(characterId, toHexId, targetTeam, grid),
+    ],
+    [
+      // Rollback
+      () => {
+        grid.placeCharacter(fromHexId, characterId, originalTeam, true)
+        if (skillDeactivated && hasSkill(characterId)) {
+          skillManager.activateCharacterSkill(characterId, fromHexId, originalTeam, grid)
+          if (hasCompanionSkill(characterId)) {
+            restoreCompanions(grid, skillManager, characterId, companionPositions)
+          }
+        }
+      },
+    ],
+  )
+}
+
+/* Companion Management Helpers */
+
+// Stores companion positions before skill deactivation
+function storeCompanionPositions(grid: Grid, characterId: number, team: Team): CompanionPosition[] {
+  const positions: CompanionPosition[] = []
+  const companions = grid.getCompanions(characterId, team)
+
+  companions.forEach((companionId) => {
+    const hexId = grid.findCharacterHex(companionId, team)
+    if (hexId !== null) {
+      positions.push({
+        companionId,
+        hexId,
+        team,
+        mainCharId: characterId,
+      })
+    }
+  })
+
+  return positions
+}
+
+// Restores companions to original positions
+function restoreCompanions(
+  grid: Grid,
+  skillManager: SkillManager,
+  mainCharId: number,
+  companionPositions: CompanionPosition[],
+): void {
+  companionPositions
+    .filter((pos) => pos.mainCharId === mainCharId)
+    .forEach(({ companionId, hexId: originalHexId, team }) => {
+      const currentHexId = grid.findCharacterHex(companionId, team)
+      if (currentHexId !== null && currentHexId !== originalHexId) {
+        // Remove from current position
+        if (!grid.removeCharacter(currentHexId, true)) {
+          console.warn(
+            `Failed to remove companion ${companionId} from hex ${currentHexId} during restoration`,
+          )
+        }
+        // Place at original position
+        grid.placeCharacter(originalHexId, companionId, team, true)
+        // Re-add color modifier (use companion color for companions)
+        const skill = getCharacterSkill(mainCharId)
+        if (skill?.companionColorModifier) {
+          skillManager.addCharacterColorModifier(companionId, team, skill.companionColorModifier)
+        }
+      }
+    })
+}
+
+/* Validation Helpers */
+
+// Checks if cross-team swap would create duplicate characters
+function wouldCreateDuplicate(
+  grid: Grid,
+  fromChar: number,
+  toChar: number,
+  fromTeam: Team,
+  toTeam: Team,
+): boolean {
+  const fromTeamChars = grid.getTeamCharacters(fromTeam)
+  const toTeamChars = grid.getTeamCharacters(toTeam)
+
+  // Check if placing fromChar on toTeam would violate duplicate constraint
+  if (toTeamChars.has(fromChar)) {
+    return true
+  }
+
+  // Check if placing toChar on fromTeam would violate duplicate constraint
+  if (fromTeamChars.has(toChar)) {
+    return true
+  }
+
+  return false
 }
