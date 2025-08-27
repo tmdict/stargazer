@@ -1,4 +1,4 @@
-import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
+import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { getSymmetricalHexId } from './utils/symmetry'
 import { getOpposingTeam, spiralSearchFromTile } from './utils/targeting'
 

@@ -1,5 +1,5 @@
 import type { Grid } from '../grid'
-import { getCharacterSkill, SkillManager } from '../skill'
+import { getCharacterSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
 import { findCharacterHex } from './character'
 import { performPlace } from './place'

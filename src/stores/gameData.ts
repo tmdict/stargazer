@@ -1,7 +1,7 @@
 import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { getCharacterSkill } from '../lib/skill'
+import { getCharacterSkill } from '../lib/skills/skill'
 import type { ArtifactType } from '../lib/types/artifact'
 import type { CharacterType } from '../lib/types/character'
 import { loadAllData } from '../utils/dataLoader'

@@ -1,6 +1,6 @@
 import { ARENA_1 } from './arena/arena1'
 import { Hex } from './hex'
-import type { SkillManager } from './skill'
+import type { SkillManager } from './skills/skill'
 import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'

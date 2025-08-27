@@ -1,6 +1,6 @@
 import type { Grid } from '../grid'
 import { clearPathfindingCache } from '../pathfinding'
-import type { SkillManager } from '../skill'
+import type { SkillManager } from '../skills/skill'
 
 /**
  * Transaction utilities for atomic operations with rollback support

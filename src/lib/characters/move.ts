@@ -1,5 +1,5 @@
 import type { Grid } from '../grid'
-import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
+import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
 import { getCharacter, getCharacterTeam, getTeamFromTileState } from './character'
 import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'

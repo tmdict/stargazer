@@ -36,7 +36,7 @@ Stargazer is an AFK Journey arena simulator built with Vue 3 and TypeScript. The
 │  ┌─────────────────────────────────────────────────────┐    │
 │  │            Domain Logic (Business Layer)            │    │
 │  │                                                     │    │
-│  │   Grid │ Character │ Pathfinding │ Skills │ Hex     │    │
+│  │   Grid │ Characters │ Pathfinding │ Skills │ Hex    │    │
 │  └──────────────────────┬──────────────────────────────┘    │
 │                         │                                   │
 ├─────────────────────────┼───────────────────────────────────┤
@@ -51,9 +51,9 @@ Stargazer is an AFK Journey arena simulator built with Vue 3 and TypeScript. The
 
 ## Core Systems
 
-### Grid & Character System
+### Grid & Characters System
 
-Manages hexagonal tiles, character positions, and state transitions with atomic transactions. Integrates automatic skill activation and companion management.
+Separates spatial operations (Grid) from entity management (Characters folder). Grid handles hexagonal tiles and state, while Characters manages placement, removal, movement, and team operations with automatic skill integration.
 
 ### Pathfinding System
 
@@ -105,9 +105,13 @@ Pure TypeScript game logic, completely framework-agnostic. Can be tested in isol
 
 **Key Components:**
 
-- `Grid`: Hexagonal grid with transaction support
+- `Grid`: Hexagonal grid with public state properties (122 lines)
+- `Characters/`: Character operations folder
+  - `character.ts`: Queries, team management, tile helpers
+  - `place.ts`, `remove.ts`, `move.ts`, `swap.ts`: Complex operations with skills
+  - `companion.ts`: Companion system helpers
+  - `transaction.ts`: Atomic operation utilities
 - `Pathfinding`: A\* and BFS algorithms with caching
-- `Character`: Placement and team management
 - `Skills`: Ability system with visual effects
 
 ### Content Layer (`/src/content/`)
