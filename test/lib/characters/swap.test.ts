@@ -246,11 +246,9 @@ describe('swap.ts', () => {
       const result = executeSwapCharacters(grid, skillManager, 1, 4)
 
       expect(result).toBe(false)
-      // NOTE: Current implementation doesn't fully rollback the swap when skill activation fails
-      // This may be a bug in the actual implementation
-      // For now, test reflects actual behavior: swap happens but operation fails
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.getTileById(4).characterId).toBe(100)
+      // After fix: Characters should remain at original positions after rollback
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(4).characterId).toBe(200)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
     })
