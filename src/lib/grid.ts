@@ -167,6 +167,12 @@ export class Grid {
     return this.getAllTiles().filter((tile) => tile.characterId !== undefined)
   }
 
+  getAllAvailableTilesForTeam(team: Team): GridTile[] {
+    return Array.from(this.storage.values()).filter(
+      (tile) => this.canPlaceCharacterOnTile(tile.hex.getId(), team) && !tile.characterId,
+    )
+  }
+
   findCharacterHex(characterId: number, team: Team): number | null {
     for (const entry of this.storage.values()) {
       if (entry.characterId === characterId && entry.team === team) {
@@ -273,33 +279,6 @@ export class Grid {
     }
 
     return result
-  }
-
-  autoPlaceCharacter(characterId: number, team: Team): boolean {
-    // Validate character can be placed
-    if (!this.canPlaceCharacter(characterId, team)) return false
-
-    // Get all available tiles for this team
-    const availableTiles = this.getAllAvailableTilesForTeam(team)
-    if (availableTiles.length === 0) return false
-
-    // Sort by hex ID descending (largest first) for deterministic randomness
-    availableTiles.sort((a, b) => b.hex.getId() - a.hex.getId())
-
-    // Select random tile from available options
-    const randomIndex = Math.floor(Math.random() * availableTiles.length)
-    const selectedTile = availableTiles[randomIndex]
-
-    if (!selectedTile) {
-      console.error('grid: Selected tile is undefined despite non-empty availableTiles array', {
-        randomIndex,
-        availableTilesLength: availableTiles.length,
-      })
-      return false
-    }
-
-    // Place character using existing validated method
-    return this.placeCharacter(selectedTile.hex.getId(), characterId, team)
   }
 
   // Character Movement
@@ -473,11 +452,6 @@ export class Grid {
     return null
   }
 
-  private getAllAvailableTilesForTeam(team: Team): GridTile[] {
-    return Array.from(this.storage.values()).filter(
-      (tile) => this.canPlaceCharacterOnTile(tile.hex.getId(), team) && !tile.characterId,
-    )
-  }
 
   private validateCharacterOperation(
     hexId: number,
