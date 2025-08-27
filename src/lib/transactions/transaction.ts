@@ -1,6 +1,6 @@
-import type { Grid } from './grid'
-import { clearPathfindingCache } from './pathfinding'
-import type { SkillManager } from './skill'
+import type { Grid } from '../grid'
+import { clearPathfindingCache } from '../pathfinding'
+import type { SkillManager } from '../skill'
 
 /**
  * Transaction utilities for atomic operations with rollback support
@@ -25,11 +25,20 @@ export function executeTransaction(
   batchingCacheClears = true
   pendingCacheClears = false
 
-  // Execute all operations
-  const results = operations.map((op) => op())
+  // Execute operations sequentially, stopping on first failure
+  let failedAtIndex = -1
+  for (let i = 0; i < operations.length; i++) {
+    const op = operations[i]
+    if (!op) continue // Skip undefined operations
+    const result = op()
+    if (!result) {
+      failedAtIndex = i
+      break
+    }
+  }
 
   // Check if any failed
-  if (results.some((result) => !result)) {
+  if (failedAtIndex >= 0) {
     // Rollback all operations
     rollbackOperations.forEach((rollback) => rollback())
     batchingCacheClears = false

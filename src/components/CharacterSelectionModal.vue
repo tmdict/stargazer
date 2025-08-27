@@ -60,7 +60,7 @@ const availableCharacters = computed(() => {
 const handleCharacterClick = (character: CharacterType) => {
   if (!team.value) return
 
-  if (!gridStore.grid.canPlaceCharacter(character.id, team.value)) {
+  if (!gridStore.grid.canPlaceCharacterOnTeam(character.id, team.value)) {
     return
   }
 

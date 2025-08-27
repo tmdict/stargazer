@@ -260,7 +260,7 @@ const triggerHexDrop = (event: DragEvent, hex: Hex) => {
       }
 
       // Check if the team has space for this character
-      if (!gridStore.grid.canPlaceCharacter(characterId, team)) {
+      if (!gridStore.grid.canPlaceCharacterOnTeam(characterId, team)) {
         return
       }
 

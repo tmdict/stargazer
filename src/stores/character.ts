@@ -3,7 +3,10 @@ import { defineStore } from 'pinia'
 
 import type { GridTile } from '../lib/grid'
 import type { Hex } from '../lib/hex'
-import * as transactions from '../lib/transactions'
+import { executeMoveCharacter } from '../lib/transactions/move'
+import { executeAutoPlaceCharacter, executePlaceCharacter } from '../lib/transactions/place'
+import { executeClearAllCharacters, executeRemoveCharacter } from '../lib/transactions/remove'
+import { executeSwapCharacters } from '../lib/transactions/swap'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
 import { useSkillStore } from './skill'
@@ -56,27 +59,26 @@ export const useCharacterStore = defineStore('character', () => {
     hexId: number,
     characterId: number,
     team: Team = Team.ALLY,
-  ): boolean => transactions.executePlaceCharacter(grid, skillManager, hexId, characterId, team)
+  ): boolean => executePlaceCharacter(grid, skillManager, hexId, characterId, team)
 
   const removeCharacterFromHex = (hexId: number): boolean =>
-    transactions.executeRemoveCharacter(grid, skillManager, hexId)
+    executeRemoveCharacter(grid, skillManager, hexId)
 
-  const clearAllCharacters = (): boolean =>
-    transactions.executeClearAllCharacters(grid, skillManager)
+  const clearAllCharacters = (): boolean => executeClearAllCharacters(grid, skillManager)
 
   const swapCharacters = (fromHexId: number, toHexId: number): boolean =>
-    transactions.executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
+    executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
 
   const moveCharacter = (fromHexId: number, toHexId: number, characterId: number): boolean =>
-    transactions.executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+    executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
 
   const autoPlaceCharacter = (characterId: number, team: Team): boolean =>
-    transactions.executeAutoPlaceCharacter(grid, skillManager, characterId, team)
+    executeAutoPlaceCharacter(grid, skillManager, characterId, team)
 
   const handleHexClick = (hex: Hex): boolean => {
     const hexId = hex.getId()
     if (grid.hasCharacter(hexId)) {
-      return transactions.executeRemoveCharacter(grid, skillManager, hexId)
+      return executeRemoveCharacter(grid, skillManager, hexId)
     }
     return false
   }
