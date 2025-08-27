@@ -44,26 +44,26 @@ export interface GridTile {
 
 export class Grid {
   private storage: Map<string, GridTile>
-  private teamCharacters: Map<Team, Set<number>> = new Map([
+
+  // Team management - now public for character.ts
+  teamCharacters: Map<Team, Set<number>> = new Map([
     [Team.ALLY, new Set()],
     [Team.ENEMY, new Set()],
   ])
-  private maxTeamSizes: Map<Team, number> = new Map([
+  maxTeamSizes: Map<Team, number> = new Map([
     [Team.ALLY, 5],
     [Team.ENEMY, 5],
   ])
 
-  // Companion support
-  private companionIdOffset = 10000
+  // Companion support - now public for companion.ts
+  companionIdOffset = 10000
   // Changed to include team in the key: "mainId-team" -> Set of companions
-  private companionLinks: Map<string, Set<number>> = new Map()
+  companionLinks: Map<string, Set<number>> = new Map()
 
   // Skill manager reference for triggering skill updates
   skillManager?: SkillManager
 
   readonly gridPreset: GridPreset
-
-  // Core Grid Operations
 
   constructor(layout = FULL_GRID, map = ARENA_1) {
     this.gridPreset = layout
@@ -118,78 +118,5 @@ export class Grid {
       return true
     }
     return false
-  }
-
-  // Character Operations
-
-
-  // Team Management
-
-  getMaxTeamSize(team: Team): number {
-    return this.maxTeamSizes.get(team) || 5
-  }
-
-  setMaxTeamSize(team: Team, size: number): boolean {
-    const maxPossibleSize = this.getAllTiles().length
-    if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
-      return false // Invalid input
-    }
-    this.maxTeamSizes.set(team, size)
-    return true
-  }
-
-
-  getTeamCharacters(team: Team): Set<number> {
-    return this.teamCharacters.get(team) || new Set()
-  }
-
-  isCharacterOnTeam(characterId: number, team: Team): boolean {
-    return this.teamCharacters.get(team)?.has(characterId) || false
-  }
-
-  getAvailableTeamSize(team: Team): number {
-    return this.getMaxTeamSize(team) - (this.teamCharacters.get(team)?.size || 0)
-  }
-
-  // Companion System
-
-  isCompanionId(characterId: number): boolean {
-    return characterId >= this.companionIdOffset
-  }
-
-  getMainCharacterId(companionId: number): number {
-    if (!this.isCompanionId(companionId)) {
-      return companionId // Already a main character
-    }
-    return companionId % this.companionIdOffset
-  }
-
-  getCompanions(mainCharacterId: number, team: Team): Set<number> {
-    const key = `${mainCharacterId}-${team}`
-    return this.companionLinks.get(key) || new Set()
-  }
-
-  addCompanionLink(mainId: number, companionId: number, team: Team): void {
-    const key = `${mainId}-${team}`
-    if (!this.companionLinks.has(key)) {
-      this.companionLinks.set(key, new Set())
-    }
-    this.companionLinks.get(key)!.add(companionId)
-  }
-
-  removeCompanionLink(mainId: number, companionId: number, team: Team): void {
-    const key = `${mainId}-${team}`
-    const companions = this.companionLinks.get(key)
-    if (companions) {
-      companions.delete(companionId)
-      if (companions.size === 0) {
-        this.companionLinks.delete(key)
-      }
-    }
-  }
-
-  clearCompanionLinks(mainCharacterId: number, team: Team): void {
-    const key = `${mainCharacterId}-${team}`
-    this.companionLinks.delete(key)
   }
 }

@@ -340,7 +340,11 @@ const getHexDropClass = (hex: Hex) => {
         validDropZone = true
       } else {
         // Character selection: check team capacity
-        validDropZone = canPlaceCharacterOnTeam(gridStore._getGrid(), draggedCharacter.value.id, tileTeam)
+        validDropZone = canPlaceCharacterOnTeam(
+          gridStore._getGrid(),
+          draggedCharacter.value.id,
+          tileTeam,
+        )
       }
     }
   }

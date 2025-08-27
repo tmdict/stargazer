@@ -2,7 +2,7 @@ import type { Grid, GridTile } from './grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 
-// Character Queries
+// Character queries
 
 export function getCharacter(grid: Grid, hexId: number): number | undefined {
   return grid.getTileById(hexId).characterId
@@ -14,6 +14,15 @@ export function hasCharacter(grid: Grid, hexId: number): boolean {
 
 export function getCharacterTeam(grid: Grid, hexId: number): Team | undefined {
   return grid.getTileById(hexId).team
+}
+
+export function findCharacterHex(grid: Grid, characterId: number, team: Team): number | null {
+  for (const tile of grid.getAllTiles()) {
+    if (tile.characterId === characterId && tile.team === team) {
+      return tile.hex.getId()
+    }
+  }
+  return null
 }
 
 export function getCharacterCount(grid: Grid): number {
@@ -40,38 +49,37 @@ export function getTilesWithCharacters(grid: Grid): GridTile[] {
   return grid.getAllTiles().filter((tile) => tile.characterId !== undefined)
 }
 
-export function findCharacterHex(grid: Grid, characterId: number, team: Team): number | null {
-  for (const tile of grid.getAllTiles()) {
-    if (tile.characterId === characterId && tile.team === team) {
-      return tile.hex.getId()
-    }
+// Team management
+
+export function getMaxTeamSize(grid: Grid, team: Team): number {
+  return grid.maxTeamSizes.get(team) || 5
+}
+
+export function setMaxTeamSize(grid: Grid, team: Team, size: number): boolean {
+  const maxPossibleSize = grid.getAllTiles().length
+  if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
+    return false // Invalid input
   }
-  return null
+  grid.maxTeamSizes.set(team, size)
+  return true
 }
 
-// Team and tile helpers
-
-export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] {
-  const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-  const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-  return grid
-    .getAllTiles()
-    .filter(
-      (tile) =>
-        (tile.state === availableState || tile.state === occupiedState) && !tile.characterId,
-    )
+export function getTeamCharacters(grid: Grid, team: Team): Set<number> {
+  return grid.teamCharacters.get(team) || new Set()
 }
 
-export function getTeamFromTileState(state: State): Team | null {
-  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
-  if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
-  return null
+export function isCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
+  return grid.teamCharacters.get(team)?.has(characterId) || false
+}
+
+export function getAvailableTeamSize(grid: Grid, team: Team): number {
+  return getMaxTeamSize(grid, team) - (grid.teamCharacters.get(team)?.size || 0)
 }
 
 export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
-  const available = grid.getAvailableTeamSize(team)
+  const available = getAvailableTeamSize(grid, team)
   if (available <= 0) return false
-  return !grid.isCharacterOnTeam(characterId, team)
+  return !isCharacterOnTeam(grid, characterId, team)
 }
 
 export function canPlaceCharacterOnTile(grid: Grid, hexId: number, team: Team): boolean {
@@ -83,10 +91,27 @@ export function canPlaceCharacterOnTile(grid: Grid, hexId: number, team: Team): 
   return state === availableState || state === occupiedState
 }
 
-// Character modification helpers
-
 export function removeCharacterFromTeam(grid: Grid, characterId: number, team: Team): void {
-  grid.getTeamCharacters(team).delete(characterId)
+  grid.teamCharacters.get(team)?.delete(characterId)
+}
+
+// Tile helpers
+
+export function getTeamFromTileState(state: State): Team | null {
+  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
+  if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
+  return null
+}
+
+export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] {
+  const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+  const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
+  return grid
+    .getAllTiles()
+    .filter(
+      (tile) =>
+        (tile.state === availableState || tile.state === occupiedState) && !tile.characterId,
+    )
 }
 
 export function clearCharacterFromTile(tile: GridTile): void {
