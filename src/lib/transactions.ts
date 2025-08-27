@@ -5,11 +5,9 @@ import { State } from './types/state'
 import { Team } from './types/team'
 
 /**
- * Character manager - functional approach with skill integration
- * All functions handle atomic operations with proper transaction boundaries
+ * Complex character operations with skill integration
+ * All functions handle atomic operations with transactions
  */
-
-// Core character operations with skill integration
 
 export function executePlaceCharacter(
   grid: Grid,
@@ -507,17 +505,36 @@ export function executeAutoPlaceCharacter(
   characterId: number,
   team: Team,
 ): boolean {
-  // Use grid's auto-placement
-  const placed = grid.autoPlaceCharacter(characterId, team)
+  // Validate character can be placed
+  if (!grid.canPlaceCharacter(characterId, team)) return false
+
+  // Get all available tiles for this team
+  const availableTiles = grid.getAllAvailableTilesForTeam(team)
+  if (availableTiles.length == 0) return false
+
+  // Sort by hex ID descending (largest first) for deterministic randomness
+  availableTiles.sort((a, b) => b.hex.getId() - a.hex.getId())
+
+  // Select random tile from available options
+  const randomIndex = Math.floor(Math.random() * availableTiles.length)
+  const selectedTile = availableTiles[randomIndex]
+
+  if (!selectedTile) {
+    console.error('executeAutoPlaceCharacter: Selected tile is undefined despite non-empty availableTiles array', {
+      randomIndex,
+      availableTilesLength: availableTiles.length,
+    })
+    return false
+  }
+
+  const hexId = selectedTile.hex.getId()
+
+  // Place character
+  const placed = grid.placeCharacter(hexId, characterId, team, true)
   if (!placed) return false
 
-  // Find where it was placed - must match both character ID AND team
-  const tile = grid
-    .getTilesWithCharacters()
-    .find((t) => t.characterId === characterId && t.team === team)
-
-  if (tile && hasSkill(characterId)) {
-    const hexId = tile.hex.getId()
+  // Activate skill if character has one
+  if (hasSkill(characterId)) {
     const activated = skillManager.activateCharacterSkill(characterId, hexId, team, grid)
 
     if (!activated) {
@@ -529,6 +546,11 @@ export function executeAutoPlaceCharacter(
       }
       return false
     }
+  }
+
+  // Trigger skill updates after successful placement
+  if (grid.skillManager) {
+    grid.skillManager.updateActiveSkills(grid)
   }
 
   return true
