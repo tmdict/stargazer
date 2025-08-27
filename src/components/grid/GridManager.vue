@@ -11,7 +11,7 @@ import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
 import GridTiles from './GridTiles.vue'
 import { provideGridEvents } from '../../composables/useGridEvents'
-import { hasCharacter } from '../../lib/character'
+import { canPlaceCharacterOnTeam, hasCharacter } from '../../lib/character'
 import type { Hex } from '../../lib/hex'
 import type { CharacterType } from '../../lib/types/character'
 import { State } from '../../lib/types/state'
@@ -261,7 +261,7 @@ const triggerHexDrop = (event: DragEvent, hex: Hex) => {
       }
 
       // Check if the team has space for this character
-      if (!gridStore.grid.canPlaceCharacterOnTeam(characterId, team)) {
+      if (!canPlaceCharacterOnTeam(gridStore._getGrid(), characterId, team)) {
         return
       }
 

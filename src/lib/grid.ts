@@ -1,8 +1,6 @@
 import { ARENA_1 } from './arena/arena1'
 import { Hex } from './hex'
 import type { SkillManager } from './skill'
-import { removeCharacterFromTeam } from './transactions/remove'
-import { handleCacheInvalidation } from './transactions/transaction'
 import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
@@ -124,48 +122,6 @@ export class Grid {
 
   // Character Operations
 
-  getAllAvailableTilesForTeam(team: Team): GridTile[] {
-    return Array.from(this.storage.values()).filter(
-      (tile) => this.canPlaceCharacterOnTile(tile.hex.getId(), team) && !tile.characterId,
-    )
-  }
-
-  getTeamFromTileState(state: State): Team | null {
-    if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
-    if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
-    return null
-  }
-
-  // Character Placement
-  placeCharacter(
-    hexId: number,
-    characterId: number,
-    team: Team = Team.ALLY,
-    skipCacheInvalidation: boolean = false,
-  ): boolean {
-    // Input validation
-    if (!Number.isInteger(characterId) || characterId <= 0) return false
-
-    if (!this.canPlaceCharacterOnTile(hexId, team)) return false
-    if (!this.canPlaceCharacterOnTeam(characterId, team)) return false
-
-    const tile = this.getTileById(hexId)
-
-    if (tile.characterId) {
-      if (!tile.team) {
-        console.error(`Tile has characterId ${tile.characterId} but no team`)
-        return false
-      }
-      removeCharacterFromTeam(this, tile.characterId, tile.team)
-    }
-
-    this.setCharacterOnTile(tile, characterId, team)
-
-    // Handle cache invalidation with batching support
-    handleCacheInvalidation(skipCacheInvalidation, this.skillManager, this)
-
-    return true
-  }
 
   // Team Management
 
@@ -182,20 +138,6 @@ export class Grid {
     return true
   }
 
-  canPlaceCharacterOnTeam(characterId: number, team: Team): boolean {
-    const available = this.getAvailableTeamSize(team)
-    if (available <= 0) return false
-    return !this.isCharacterOnTeam(characterId, team)
-  }
-
-  canPlaceCharacterOnTile(hexId: number, team: Team): boolean {
-    const tile = this.getTileById(hexId)
-    const state = tile.state
-    const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-    const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-
-    return state === availableState || state === occupiedState
-  }
 
   getTeamCharacters(team: Team): Set<number> {
     return this.teamCharacters.get(team) || new Set()
@@ -249,13 +191,5 @@ export class Grid {
   clearCompanionLinks(mainCharacterId: number, team: Team): void {
     const key = `${mainCharacterId}-${team}`
     this.companionLinks.delete(key)
-  }
-
-  // Internal Helper Method (used by transactions)
-  setCharacterOnTile(tile: GridTile, characterId: number, team: Team): void {
-    tile.characterId = characterId
-    tile.team = team
-    tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-    this.teamCharacters.get(team)?.add(characterId)
   }
 }
