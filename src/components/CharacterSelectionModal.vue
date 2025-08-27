@@ -2,7 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
-import { canPlaceCharacterOnTeam } from '../lib/character'
+import { canPlaceCharacterOnTeam } from '../lib/characters/character'
 import type { Hex } from '../lib/hex'
 import type { CharacterType } from '../lib/types/character'
 import { State } from '../lib/types/state'

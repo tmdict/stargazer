@@ -1,3 +1,7 @@
+import type { Grid } from '../grid'
+import { hasSkill, SkillManager } from '../skill'
+import { State } from '../types/state'
+import { Team } from '../types/team'
 import {
   canPlaceCharacterOnTeam,
   canPlaceCharacterOnTile,
@@ -5,11 +9,7 @@ import {
   getTeamCharacters,
   hasCharacter,
   removeCharacterFromTeam,
-} from '../character'
-import type { Grid } from '../grid'
-import { hasSkill, SkillManager } from '../skill'
-import { State } from '../types/state'
-import { Team } from '../types/team'
+} from './character'
 import { isCompanionId } from './companion'
 import { performRemove } from './remove'
 import { executeTransaction, handleCacheInvalidation } from './transaction'
