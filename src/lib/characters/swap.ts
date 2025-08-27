@@ -79,6 +79,11 @@ export function executeSwapCharacters(
 // Atomic operations
 
 // Performs atomic swap of two characters
+// Parameters:
+// - fromTargetTeam: The team that toChar will join when placed at fromHexId
+// - toTargetTeam: The team that fromChar will join when placed at toHexId
+// - fromOriginalTeam: The original team of fromChar (for rollback)
+// - toOriginalTeam: The original team of toChar (for rollback)
 function performSwap(
   grid: Grid,
   fromHexId: number,
@@ -150,6 +155,7 @@ function performCrossTeamSwap(
   }
 
   let skillsDeactivated = false
+  let swapPerformed = false
 
   const result = executeTransaction(
     [
@@ -168,8 +174,8 @@ function performCrossTeamSwap(
       // For cross-team swap, characters switch teams:
       // - fromChar moves to toHexId and JOINS toTeam
       // - toChar moves to fromHexId and JOINS fromTeam
-      () =>
-        performSwap(
+      () => {
+        const swapResult = performSwap(
           grid,
           fromHexId,
           toHexId,
@@ -179,7 +185,12 @@ function performCrossTeamSwap(
           toTeam, // fromChar placed at toHexId with toTeam (switches to toTeam)
           fromTeam, // Original teams for rollback
           toTeam,
-        ),
+        )
+        if (swapResult) {
+          swapPerformed = true
+        }
+        return swapResult
+      },
       // Step 3: Reactivate skills at new positions with NEW teams
       () => {
         // fromChar has moved to toHexId and joined toTeam
@@ -198,8 +209,24 @@ function performCrossTeamSwap(
       },
     ],
     [
-      // Rollback: Reactivate original skills if something failed
+      // Rollback: First reverse the swap if it was performed, then reactivate original skills
       () => {
+        // If swap was performed but skill activation failed, we need to reverse the swap
+        if (swapPerformed) {
+          // Manually reverse the swap back to original positions and teams
+          performSwap(
+            grid,
+            fromHexId,
+            toHexId,
+            toChar,     // Swap them back
+            fromChar,   // Swap them back
+            fromTeam,   // Original teams
+            toTeam,     // Original teams
+            fromTeam,   // Keep original teams for any nested rollback
+            toTeam,
+          )
+        }
+
         if (!skillsDeactivated) return
 
         // Handle fromChar skill reactivation
