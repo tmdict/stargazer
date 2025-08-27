@@ -41,7 +41,9 @@ export function placeCharacter(
       // Rollback: remove character if it was placed
       () => {
         if (placed && grid.hasCharacter(hexId)) {
-          grid.removeCharacter(hexId, true)
+          if (!grid.removeCharacter(hexId, true)) {
+            console.warn(`Failed to rollback character placement at hex ${hexId}`)
+          }
         }
       },
     ],
@@ -66,8 +68,7 @@ export function removeCharacter(grid: Grid, skillManager: SkillManager, hexId: n
       return removeCharacter(grid, skillManager, mainHexId)
     } else {
       // Main character not found, just remove the companion directly
-      grid.removeCharacter(hexId, true)
-      return true
+      return grid.removeCharacter(hexId, true)
     }
   }
 
@@ -81,14 +82,15 @@ export function removeCharacter(grid: Grid, skillManager: SkillManager, hexId: n
   }
 
   // Remove character(s) - skill may have already removed them
+  let removed = true
   if (grid.hasCharacter(hexId)) {
-    grid.removeCharacter(hexId, true)
+    removed = grid.removeCharacter(hexId, true)
   }
 
   // Update all active skills to recalculate targets after removal
   skillManager.updateActiveSkills(grid)
 
-  return true
+  return removed
 }
 
 export function clearAllCharacters(grid: Grid, skillManager: SkillManager): boolean {
@@ -164,7 +166,11 @@ function restoreCompanions(
       const currentHexId = grid.findCharacterHex(companionId, team)
       if (currentHexId !== null && currentHexId !== originalHexId) {
         // Remove from current position
-        grid.removeCharacter(currentHexId, true)
+        if (!grid.removeCharacter(currentHexId, true)) {
+          console.warn(
+            `Failed to remove companion ${companionId} from hex ${currentHexId} during restoration`,
+          )
+        }
         // Place at original position
         grid.placeCharacter(originalHexId, companionId, team, true)
         // Re-add color modifier (use companion color for companions)
@@ -410,7 +416,11 @@ export function autoPlaceCharacter(
 
     if (!activated) {
       // Clean up on skill failure
-      grid.removeCharacter(hexId, true)
+      if (!grid.removeCharacter(hexId, true)) {
+        console.warn(
+          `Failed to remove character ${characterId} from hex ${hexId} after skill activation failure`,
+        )
+      }
       return false
     }
   }
