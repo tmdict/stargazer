@@ -1,5 +1,6 @@
 import type { Grid } from './grid'
 import { getCharacterSkill, hasCompanionSkill, hasSkill, SkillManager } from './skill'
+import { executeTransaction } from './transaction'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -24,7 +25,7 @@ export function placeCharacter(
 
   let placed = false
 
-  return grid.executeTransaction(
+  const result = executeTransaction(
     [
       // Place character
       () => {
@@ -48,6 +49,13 @@ export function placeCharacter(
       },
     ],
   )
+
+  // Trigger skill updates after successful transaction
+  if (result && grid.skillManager) {
+    grid.skillManager.updateActiveSkills(grid)
+  }
+
+  return result
 }
 
 export function removeCharacter(grid: Grid, skillManager: SkillManager, hexId: number): boolean {
@@ -212,7 +220,7 @@ function performCrossTeamSwap(
 
   let skillsDeactivated = false
 
-  return grid.executeTransaction(
+  const result = executeTransaction(
     [
       // Step 1: Deactivate skills if needed
       () => {
@@ -267,6 +275,13 @@ function performCrossTeamSwap(
       },
     ],
   )
+
+  // Trigger skill updates after successful transaction
+  if (result && grid.skillManager) {
+    grid.skillManager.updateActiveSkills(grid)
+  }
+
+  return result
 }
 
 export function swapCharacters(
@@ -355,7 +370,7 @@ export function moveCharacter(
   let moved = false
 
   // Execute as a transaction
-  return grid.executeTransaction(
+  const result = executeTransaction(
     [
       // Step 1: Deactivate skill if needed
       () => {
@@ -393,6 +408,13 @@ export function moveCharacter(
       },
     ],
   )
+
+  // Trigger skill updates after successful transaction
+  if (result && grid.skillManager) {
+    grid.skillManager.updateActiveSkills(grid)
+  }
+
+  return result
 }
 
 export function autoPlaceCharacter(

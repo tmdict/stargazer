@@ -1,7 +1,7 @@
 import { ARENA_1 } from './arena/arena1'
 import { Hex } from './hex'
-import { clearPathfindingCache } from './pathfinding'
 import type { SkillManager } from './skill'
+import { executeTransaction, handleCacheInvalidation } from './transaction'
 import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
@@ -65,10 +65,6 @@ export class Grid {
   private companionIdOffset = 10000
   // Changed to include team in the key: "mainId-team" -> Set of companions
   private companionLinks: Map<string, Set<number>> = new Map()
-
-  // Cache invalidation batching support
-  private batchingCacheClears = false
-  private pendingCacheClears = false
 
   // Skill manager reference for triggering skill updates
   skillManager?: SkillManager
@@ -206,7 +202,7 @@ export class Grid {
     this.setCharacterOnTile(tile, characterId, team)
 
     // Handle cache invalidation with batching support
-    this.handleCacheInvalidation(skipCacheInvalidation)
+    handleCacheInvalidation(skipCacheInvalidation, this.skillManager, this)
 
     return true
   }
@@ -225,7 +221,7 @@ export class Grid {
       this.clearCharacterFromTile(tile, hexId)
 
       // Handle cache invalidation with batching support
-      this.handleCacheInvalidation(skipCacheInvalidation)
+      handleCacheInvalidation(skipCacheInvalidation, this.skillManager, this)
       return true
     }
     return false
@@ -241,12 +237,12 @@ export class Grid {
 
     // If no characters to clear, return success immediately
     if (currentPlacements.length === 0) {
-      this.handleCacheInvalidation(false) // Don't skip, but respect batching
+      handleCacheInvalidation(false, this.skillManager, this) // Don't skip, but respect batching
       return true
     }
 
     // Use transaction pattern for atomic clear operation
-    return this.executeTransaction(
+    const result = executeTransaction(
       // Operations to execute
       [
         () => {
@@ -270,6 +266,13 @@ export class Grid {
         },
       ],
     )
+
+    // Trigger skill updates after successful transaction
+    if (result && this.skillManager) {
+      this.skillManager.updateActiveSkills(this)
+    }
+
+    return result
   }
 
   autoPlaceCharacter(characterId: number, team: Team): boolean {
@@ -317,7 +320,7 @@ export class Grid {
     if (!fromTargetTeam || !toTargetTeam) return false
 
     // Execute swap as transaction
-    return this.executeTransaction(
+    const result = executeTransaction(
       // Operations to execute
       [
         () => {
@@ -343,6 +346,13 @@ export class Grid {
         },
       ],
     )
+
+    // Trigger skill updates after successful transaction
+    if (result && this.skillManager) {
+      this.skillManager.updateActiveSkills(this)
+    }
+
+    return result
   }
 
   moveCharacter(fromHexId: number, toHexId: number, characterId: number): boolean {
@@ -446,54 +456,7 @@ export class Grid {
     this.companionLinks.delete(key)
   }
 
-  // Transaction & Cache Management
-
-  /**
-   * Execute a transaction with automatic rollback on failure.
-   *
-   * @param operations Array of operations that return boolean (true = success)
-   * @param rollbackOperations Array of rollback operations to execute on failure
-   * @returns true if all operations succeeded, false otherwise
-   */
-  executeTransaction(
-    operations: (() => boolean)[],
-    rollbackOperations: (() => void)[] = [],
-  ): boolean {
-    // Start batching - no cache clears during transaction
-    this.batchingCacheClears = true
-    this.pendingCacheClears = false
-
-    // Execute all operations
-    const results = operations.map((op) => op())
-
-    // Check if any failed
-    if (results.some((result) => !result)) {
-      // Rollback all operations
-      rollbackOperations.forEach((rollback) => rollback())
-      this.batchingCacheClears = false
-
-      // Clear cache once after rollback (if any operations were attempted)
-      if (this.pendingCacheClears) {
-        clearPathfindingCache()
-      }
-      return false
-    }
-
-    // Success - stop batching
-    this.batchingCacheClears = false
-
-    // Clear cache ONCE after all operations complete successfully
-    if (this.pendingCacheClears) {
-      clearPathfindingCache()
-    }
-
-    // Trigger skill updates for any active skills
-    if (this.skillManager) {
-      this.skillManager.updateActiveSkills(this)
-    }
-
-    return true
-  }
+  // Helper Methods
 
   private performMove(
     fromHexId: number,
@@ -502,7 +465,7 @@ export class Grid {
     targetTeam: Team,
     originalTeam: Team,
   ): boolean {
-    return this.executeTransaction(
+    const result = executeTransaction(
       // Operations to execute
       [
         () => {
@@ -513,21 +476,13 @@ export class Grid {
       // Rollback operations
       [() => this.placeCharacter(fromHexId, characterId, originalTeam, true)],
     )
-  }
 
-  // Helper method for cache invalidation logic
-  private handleCacheInvalidation(skipCacheInvalidation: boolean): void {
-    if (skipCacheInvalidation) return
-
-    if (this.batchingCacheClears) {
-      this.pendingCacheClears = true
-    } else {
-      clearPathfindingCache()
-      // Trigger skill updates immediately when not batching
-      if (this.skillManager) {
-        this.skillManager.updateActiveSkills(this)
-      }
+    // Trigger skill updates after successful transaction
+    if (result && this.skillManager) {
+      this.skillManager.updateActiveSkills(this)
     }
+
+    return result
   }
 
   // Private Helper Methods
