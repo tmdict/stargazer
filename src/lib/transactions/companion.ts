@@ -2,6 +2,7 @@ import { findCharacterHex } from '../character'
 import type { Grid } from '../grid'
 import { getCharacterSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
+import { performPlace } from './place'
 import { performRemove } from './remove'
 
 export interface CompanionPosition {
@@ -54,7 +55,7 @@ export function restoreCompanions(
           )
         }
         // Place at original position
-        grid.placeCharacter(originalHexId, companionId, team, true)
+        performPlace(grid, originalHexId, companionId, team, true)
         // Re-add color modifier (use companion color for companions)
         const skill = getCharacterSkill(mainCharId)
         if (skill?.companionColorModifier) {

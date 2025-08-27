@@ -3,6 +3,7 @@ import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
 import { restoreCompanions, storeCompanionPositions } from './companion'
+import { performPlace } from './place'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
 
@@ -100,19 +101,19 @@ function performSwap(
         return performRemove(grid, toHexId, true)
       },
       () => {
-        return grid.placeCharacter(fromHexId, toChar, fromTargetTeam, true)
+        return performPlace(grid, fromHexId, toChar, fromTargetTeam, true)
       },
       () => {
-        return grid.placeCharacter(toHexId, fromChar, toTargetTeam, true)
+        return performPlace(grid, toHexId, fromChar, toTargetTeam, true)
       },
     ],
     // Rollback operations
     [
       () => {
-        grid.placeCharacter(fromHexId, fromChar, fromOriginalTeam, true)
+        performPlace(grid, fromHexId, fromChar, fromOriginalTeam, true)
       },
       () => {
-        grid.placeCharacter(toHexId, toChar, toOriginalTeam, true)
+        performPlace(grid, toHexId, toChar, toOriginalTeam, true)
       },
     ],
   )

@@ -1,14 +1,16 @@
 import {
+  clearCharacterFromTile,
   findCharacterHex,
   getCharacter,
   getCharacterTeam,
   getTilesWithCharacters,
   hasCharacter,
+  removeCharacterFromTeam,
 } from '../character'
-import type { Grid, GridTile } from '../grid'
+import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
-import { State } from '../types/state'
 import { Team } from '../types/team'
+import { performPlace } from './place'
 import { executeTransaction, handleCacheInvalidation } from './transaction'
 
 // High-level operations
@@ -132,7 +134,7 @@ export function performClearAll(grid: Grid): boolean {
     [
       () => {
         currentPlacements.forEach((placement) => {
-          grid.placeCharacter(placement.hexId, placement.characterId, placement.team, true)
+          performPlace(grid, placement.hexId, placement.characterId, placement.team, true)
         })
       },
     ],
@@ -144,30 +146,4 @@ export function performClearAll(grid: Grid): boolean {
   }
 
   return result
-}
-
-// Helper functions
-
-// Remove character from team tracking
-export function removeCharacterFromTeam(grid: Grid, characterId: number, team: Team): void {
-  grid.getTeamCharacters(team).delete(characterId)
-}
-
-// Clear character from tile and restore original state
-export function clearCharacterFromTile(tile: GridTile): void {
-  const currentState = tile.state
-
-  // Delete character data
-  delete tile.characterId
-  delete tile.team
-
-  // Restore original tile state based on current state
-  if (currentState === State.OCCUPIED_ALLY) {
-    tile.state = State.AVAILABLE_ALLY
-  } else if (currentState === State.OCCUPIED_ENEMY) {
-    tile.state = State.AVAILABLE_ENEMY
-  } else {
-    // Keep current state if it wasn't an occupied state
-    tile.state = currentState
-  }
 }

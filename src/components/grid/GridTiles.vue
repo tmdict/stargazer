@@ -3,7 +3,7 @@ import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } f
 
 import { useDragDrop } from '../../composables/useDragDrop'
 import { useGridEvents } from '../../composables/useGridEvents'
-import { hasCharacter } from '../../lib/character'
+import { canPlaceCharacterOnTeam, hasCharacter } from '../../lib/character'
 import type { Hex } from '../../lib/hex'
 import type { Layout } from '../../lib/layout'
 import { State } from '../../lib/types/state'
@@ -299,7 +299,7 @@ const handleHexDrop = (event: DragEvent, hex: Hex) => {
       }
 
       // Validate team capacity
-      if (!gridStore.grid.canPlaceCharacterOnTeam(characterId, team)) {
+      if (!canPlaceCharacterOnTeam(gridStore._getGrid(), characterId, team)) {
         return
       }
 
@@ -340,7 +340,7 @@ const getHexDropClass = (hex: Hex) => {
         validDropZone = true
       } else {
         // Character selection: check team capacity
-        validDropZone = gridStore.grid.canPlaceCharacterOnTeam(draggedCharacter.value.id, tileTeam)
+        validDropZone = canPlaceCharacterOnTeam(gridStore._getGrid(), draggedCharacter.value.id, tileTeam)
       }
     }
   }
