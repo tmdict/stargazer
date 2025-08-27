@@ -1,3 +1,4 @@
+import { hasCharacter } from '../character'
 import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
@@ -33,7 +34,7 @@ export function executePlaceCharacter(
     [
       // Rollback: remove character if it was placed
       () => {
-        if (placed && grid.hasCharacter(hexId)) {
+        if (placed && hasCharacter(grid, hexId)) {
           if (!grid.removeCharacter(hexId, true)) {
             console.warn(`Failed to rollback character placement at hex ${hexId}`)
           }

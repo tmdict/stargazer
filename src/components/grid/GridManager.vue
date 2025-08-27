@@ -11,6 +11,7 @@ import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
 import GridTiles from './GridTiles.vue'
 import { provideGridEvents } from '../../composables/useGridEvents'
+import { hasCharacter } from '../../lib/character'
 import type { Hex } from '../../lib/hex'
 import type { CharacterType } from '../../lib/types/character'
 import { State } from '../../lib/types/state'
@@ -237,7 +238,7 @@ const triggerHexDrop = (event: DragEvent, hex: Hex) => {
       const targetHexId = hex.getId()
 
       // Check if target hex is occupied - if so, swap characters
-      if (gridStore.grid.hasCharacter(targetHexId)) {
+      if (hasCharacter(gridStore._getGrid(), targetHexId)) {
         characterStore.swapCharacters(sourceHexId, targetHexId)
       } else {
         // Target hex is empty, use regular move

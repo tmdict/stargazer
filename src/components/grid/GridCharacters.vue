@@ -3,6 +3,7 @@ import { computed, inject } from 'vue'
 
 import type { DragDropAPI } from '../DragDropProvider.vue'
 import { useGridEvents } from '../../composables/useGridEvents'
+import { getCharacterTeam } from '../../lib/character'
 import type { CharacterType } from '../../lib/types/character'
 import { useCharacterStore } from '../../stores/character'
 import { useGameDataStore } from '../../stores/gameData'
@@ -74,7 +75,7 @@ const characterDimensions = computed(() => {
 })
 
 const getSkillBorderStyle = (characterId: number, hexId: number) => {
-  const team = gridStore.grid.getCharacterTeam(hexId)
+  const team = getCharacterTeam(gridStore._getGrid(), hexId)
   if (!team) return {}
 
   // Check if this character has a color modifier (either main character with skill or companion)

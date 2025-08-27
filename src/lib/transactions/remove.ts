@@ -1,3 +1,4 @@
+import { findCharacterHex, getCharacter, getCharacterTeam, hasCharacter } from '../character'
 import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
 
@@ -6,8 +7,8 @@ export function executeRemoveCharacter(
   skillManager: SkillManager,
   hexId: number,
 ): boolean {
-  const characterId = grid.getCharacter(hexId)
-  const team = grid.getCharacterTeam(hexId)
+  const characterId = getCharacter(grid, hexId)
+  const team = getCharacterTeam(grid, hexId)
 
   if (!characterId || !team) return true
 
@@ -16,7 +17,7 @@ export function executeRemoveCharacter(
     const mainCharId = grid.getMainCharacterId(characterId)
 
     // Find the main character's hex on the same team as the companion
-    const mainHexId = grid.findCharacterHex(mainCharId, team)
+    const mainHexId = findCharacterHex(grid, mainCharId, team)
 
     if (mainHexId !== null) {
       // Remove the main character, which will trigger skill deactivation and remove the companion
@@ -38,7 +39,7 @@ export function executeRemoveCharacter(
 
   // Remove character(s) - skill may have already removed them
   let removed = true
-  if (grid.hasCharacter(hexId)) {
+  if (hasCharacter(grid, hexId)) {
     removed = grid.removeCharacter(hexId, true)
   }
 

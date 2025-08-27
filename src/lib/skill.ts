@@ -1,3 +1,4 @@
+import { findCharacterHex } from './character'
 import type { Grid } from './grid'
 import { bonnieSkill } from './skills/bonnie'
 import { dunlingrSkill } from './skills/dunlingr'
@@ -301,7 +302,7 @@ export class SkillManager {
       const skill = getCharacterSkill(info.characterId)
 
       // Find the character's current position
-      const currentHexId = grid.findCharacterHex(info.characterId, info.team)
+      const currentHexId = findCharacterHex(grid, info.characterId, info.team)
       if (!currentHexId) {
         // Character no longer on grid, deactivate skill
         delete this.activeSkills[key]
