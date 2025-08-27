@@ -1,7 +1,6 @@
 import type { Grid } from './grid'
 import { getCharacterSkill, hasCompanionSkill, hasSkill, SkillManager } from './skill'
 import { executeTransaction } from './transaction'
-import { State } from './types/state'
 import { Team } from './types/team'
 
 /**
@@ -345,6 +344,66 @@ function performAtomicSwap(
   return result
 }
 
+// Helper for simple move operations (same team or no skills)
+function performAtomicMove(
+  grid: Grid,
+  fromHexId: number,
+  toHexId: number,
+  characterId: number,
+  targetTeam: Team,
+  originalTeam: Team,
+): boolean {
+  return executeTransaction(
+    [
+      () => grid.removeCharacter(fromHexId, true),
+      () => grid.placeCharacter(toHexId, characterId, targetTeam, true),
+    ],
+    [() => grid.placeCharacter(fromHexId, characterId, originalTeam, true)],
+  )
+}
+
+// Helper for cross-team moves with skills
+function performCrossTeamMove(
+  grid: Grid,
+  skillManager: SkillManager,
+  fromHexId: number,
+  toHexId: number,
+  characterId: number,
+  targetTeam: Team,
+  originalTeam: Team,
+): boolean {
+  let companionPositions: CompanionPosition[] = []
+  let skillDeactivated = false
+
+  return executeTransaction(
+    [
+      // Step 1: Store companions and deactivate skill
+      () => {
+        companionPositions = storeCompanionPositions(grid, characterId, originalTeam)
+        skillManager.deactivateCharacterSkill(characterId, fromHexId, originalTeam, grid)
+        skillDeactivated = true
+        return true
+      },
+      // Step 2: Execute the move
+      () => performAtomicMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam),
+      // Step 3: Activate skill at new position with new team
+      () => skillManager.activateCharacterSkill(characterId, toHexId, targetTeam, grid),
+    ],
+    [
+      // Rollback
+      () => {
+        grid.placeCharacter(fromHexId, characterId, originalTeam, true)
+        if (skillDeactivated && hasSkill(characterId)) {
+          skillManager.activateCharacterSkill(characterId, fromHexId, originalTeam, grid)
+          if (hasCompanionSkill(characterId)) {
+            restoreCompanions(grid, skillManager, characterId, companionPositions)
+          }
+        }
+      },
+    ],
+  )
+}
+
 export function executeSwapCharacters(
   grid: Grid,
   skillManager: SkillManager,
@@ -419,83 +478,60 @@ export function executeMoveCharacter(
   toHexId: number,
   characterId: number,
 ): boolean {
+  // 1. Perform all validations
+
+  // Basic validation
+  if (fromHexId == toHexId) return false
+
+  // Validate character ID matches
+  const actualCharacterId = grid.getCharacter(fromHexId)
+  if (actualCharacterId != characterId) return false
+
+  // Get character team info
   const fromTeam = grid.getCharacterTeam(fromHexId)
   if (!fromTeam) return false
 
-  // Determine target team from tile state
+  // Determine target team from destination tile
   const toTile = grid.getTileById(toHexId)
-  const toTeam = getTeamFromTileState(toTile.state)
+  const toTeam = grid.getTeamFromTileState(toTile.state)
   if (!toTeam) return false
 
-  const changingTeams = fromTeam !== toTeam
+  const changingTeams = fromTeam != toTeam
 
-  // Companions cannot be moved to opposite team
+  // Companion validation - companions can't change teams
   if (grid.isCompanionId(characterId) && changingTeams) {
     return false
   }
 
-  // If not changing teams, use simple move
-  if (!changingTeams) {
-    return grid.moveCharacter(fromHexId, toHexId, characterId)
+  // 2. Determine move type and execute
+
+  const hasCharacterSkill = hasSkill(characterId)
+  const needsSkillHandling = changingTeams && hasCharacterSkill
+
+  // 2a. Simple move (same team OR cross-team with no skills)
+  if (!needsSkillHandling) {
+    const result = performAtomicMove(grid, fromHexId, toHexId, characterId, toTeam, fromTeam)
+
+    if (result && grid.skillManager) {
+      grid.skillManager.updateActiveSkills(grid)
+    }
+    return result
   }
 
-  // For cross-team moves with skills, we need proper transaction handling
-  const hasActiveSkill = skillManager.hasActiveSkill(characterId, fromTeam)
-
-  // Store companion positions before deactivation (for rollback if needed)
-  let companionPositions: CompanionPosition[] = []
-  if (hasActiveSkill && hasSkill(characterId)) {
-    companionPositions = storeCompanionPositions(grid, characterId, fromTeam)
-  }
-
-  let skillDeactivated = false
-  let moved = false
-
-  // Execute as a transaction
-  const result = executeTransaction(
-    [
-      // Step 1: Deactivate skill if needed
-      () => {
-        if (hasActiveSkill) {
-          skillManager.deactivateCharacterSkill(characterId, fromHexId, fromTeam, grid)
-          skillDeactivated = true
-        }
-        return true
-      },
-      // Step 2: Attempt the move
-      () => {
-        moved = grid.moveCharacter(fromHexId, toHexId, characterId)
-        return moved
-      },
-      // Step 3: Reactivate skill at new position if move succeeded
-      () => {
-        if (moved && hasSkill(characterId)) {
-          return skillManager.activateCharacterSkill(characterId, toHexId, toTeam, grid)
-        }
-        return true
-      },
-    ],
-    [
-      // Rollback: Restore skill if it was deactivated
-      () => {
-        if (skillDeactivated && !moved) {
-          // Reactivate the skill at original position
-          skillManager.activateCharacterSkill(characterId, fromHexId, fromTeam, grid)
-
-          // Special handling for companion skills to restore companion positions
-          if (hasCompanionSkill(characterId)) {
-            restoreCompanions(grid, skillManager, characterId, companionPositions)
-          }
-        }
-      },
-    ],
+  // 2b. Cross-team move with skills
+  const result = performCrossTeamMove(
+    grid,
+    skillManager,
+    fromHexId,
+    toHexId,
+    characterId,
+    toTeam,
+    fromTeam,
   )
 
-  // Trigger skill updates after successful transaction
   if (result && grid.skillManager) {
     grid.skillManager.updateActiveSkills(grid)
   }
-
   return result
 }
 
@@ -520,10 +556,13 @@ export function executeAutoPlaceCharacter(
   const selectedTile = availableTiles[randomIndex]
 
   if (!selectedTile) {
-    console.error('executeAutoPlaceCharacter: Selected tile is undefined despite non-empty availableTiles array', {
-      randomIndex,
-      availableTilesLength: availableTiles.length,
-    })
+    console.error(
+      'executeAutoPlaceCharacter: Selected tile is undefined despite non-empty availableTiles array',
+      {
+        randomIndex,
+        availableTilesLength: availableTiles.length,
+      },
+    )
     return false
   }
 
@@ -565,11 +604,4 @@ export function executeHandleHexClick(
     return executeRemoveCharacter(grid, skillManager, hexId)
   }
   return false
-}
-
-// Helper function to determine team from tile state
-function getTeamFromTileState(state: State): Team | null {
-  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
-  if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
-  return null
 }

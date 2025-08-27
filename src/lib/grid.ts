@@ -43,13 +43,6 @@ export interface GridTile {
   team?: Team
 }
 
-// Character operation interface for transaction management
-interface CharacterOperation {
-  hexId: number
-  characterId: number
-  team: Team
-}
-
 export class Grid {
   private storage: Map<string, GridTile>
   private teamCharacters: Map<Team, Set<number>> = new Map([
@@ -173,6 +166,12 @@ export class Grid {
     )
   }
 
+  getTeamFromTileState(state: State): Team | null {
+    if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
+    if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
+    return null
+  }
+
   findCharacterHex(characterId: number, team: Team): number | null {
     for (const entry of this.storage.values()) {
       if (entry.characterId === characterId && entry.team === team) {
@@ -281,27 +280,6 @@ export class Grid {
     return result
   }
 
-  // Character Movement
-  moveCharacter(fromHexId: number, toHexId: number, characterId: number): boolean {
-    // Basic validation
-    if (fromHexId === toHexId) return false
-
-    // Validate that the character at fromHexId matches the characterId parameter
-    const actualCharacterId = this.getCharacter(fromHexId)
-    if (actualCharacterId !== characterId) return false
-
-    // Validate source position
-    const fromOp = this.validateCharacterOperation(fromHexId)
-    if (!fromOp) return false
-
-    // Determine target team
-    const targetTeam = this.getTeamFromTileState(this.getTileById(toHexId).state)
-    if (!targetTeam) return false
-
-    // Execute move using unified transaction logic
-    return this.performMove(fromHexId, toHexId, characterId, targetTeam, fromOp.team)
-  }
-
   // Team Management
 
   getMaxTeamSize(team: Team): number {
@@ -383,35 +361,6 @@ export class Grid {
     this.companionLinks.delete(key)
   }
 
-  // Helper Methods
-
-  private performMove(
-    fromHexId: number,
-    toHexId: number,
-    characterId: number,
-    targetTeam: Team,
-    originalTeam: Team,
-  ): boolean {
-    const result = executeTransaction(
-      // Operations to execute
-      [
-        () => {
-          return this.removeCharacter(fromHexId, true)
-        },
-        () => this.placeCharacter(toHexId, characterId, targetTeam, true),
-      ],
-      // Rollback operations
-      [() => this.placeCharacter(fromHexId, characterId, originalTeam, true)],
-    )
-
-    // Trigger skill updates after successful transaction
-    if (result && this.skillManager) {
-      this.skillManager.updateActiveSkills(this)
-    }
-
-    return result
-  }
-
   // Private Helper Methods
   private removeCharacterFromTeam(characterId: number, team: Team): void {
     this.teamCharacters.get(team)?.delete(characterId)
@@ -441,33 +390,5 @@ export class Grid {
     }
 
     return currentState
-  }
-
-  private getTeamFromTileState(state: State): Team | null {
-    if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) {
-      return Team.ALLY
-    } else if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) {
-      return Team.ENEMY
-    }
-    return null
-  }
-
-
-  private validateCharacterOperation(
-    hexId: number,
-    requireCharacter: boolean = false,
-  ): CharacterOperation | null {
-    const characterId = this.getCharacter(hexId)
-    const team = this.getCharacterTeam(hexId)
-
-    if (requireCharacter && (!characterId || team === undefined)) {
-      return null
-    }
-
-    return {
-      hexId,
-      characterId: characterId || 0,
-      team: team ?? Team.ALLY,
-    }
   }
 }
