@@ -1,8 +1,8 @@
 import { ARENA_1 } from './arena/arena1'
-import { getTilesWithCharacters as getTilesWithCharactersImpl } from './character'
 import { Hex } from './hex'
 import type { SkillManager } from './skill'
-import { executeTransaction, handleCacheInvalidation } from './transactions/transaction'
+import { removeCharacterFromTeam } from './transactions/remove'
+import { handleCacheInvalidation } from './transactions/transaction'
 import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
@@ -156,7 +156,7 @@ export class Grid {
         console.error(`Tile has characterId ${tile.characterId} but no team`)
         return false
       }
-      this.removeCharacterFromTeam(tile.characterId, tile.team)
+      removeCharacterFromTeam(this, tile.characterId, tile.team)
     }
 
     this.setCharacterOnTile(tile, characterId, team)
@@ -165,74 +165,6 @@ export class Grid {
     handleCacheInvalidation(skipCacheInvalidation, this.skillManager, this)
 
     return true
-  }
-
-  removeCharacter(hexId: number, skipCacheInvalidation: boolean = false): boolean {
-    const tile = this.getTileById(hexId)
-    if (tile.characterId) {
-      if (!tile.team) {
-        console.error(`Tile at hex ${hexId} has characterId ${tile.characterId} but no team`)
-        return false
-      }
-      const characterId = tile.characterId
-      const team = tile.team
-
-      this.removeCharacterFromTeam(characterId, team)
-      this.clearCharacterFromTile(tile, hexId)
-
-      // Handle cache invalidation with batching support
-      handleCacheInvalidation(skipCacheInvalidation, this.skillManager, this)
-      return true
-    }
-    return false
-  }
-
-  clearAllCharacters(): boolean {
-    // Collect all current placements for potential rollback
-    const currentPlacements = getTilesWithCharactersImpl(this).map((tile) => ({
-      hexId: tile.hex.getId(),
-      characterId: tile.characterId!,
-      team: tile.team!,
-    }))
-
-    // If no characters to clear, return success immediately
-    if (currentPlacements.length === 0) {
-      handleCacheInvalidation(false, this.skillManager, this) // Don't skip, but respect batching
-      return true
-    }
-
-    // Use transaction pattern for atomic clear operation
-    const result = executeTransaction(
-      // Operations to execute
-      [
-        () => {
-          // Clear all character data
-          for (const entry of this.storage.values()) {
-            if (entry.characterId) {
-              this.clearCharacterFromTile(entry, entry.hex.getId())
-            }
-          }
-          this.teamCharacters.get(Team.ALLY)?.clear()
-          this.teamCharacters.get(Team.ENEMY)?.clear()
-          return true
-        },
-      ],
-      // Rollback operations - restore all characters
-      [
-        () => {
-          currentPlacements.forEach((placement) => {
-            this.placeCharacter(placement.hexId, placement.characterId, placement.team, true)
-          })
-        },
-      ],
-    )
-
-    // Trigger skill updates after successful transaction
-    if (result && this.skillManager) {
-      this.skillManager.updateActiveSkills(this)
-    }
-
-    return result
   }
 
   // Team Management
@@ -319,34 +251,11 @@ export class Grid {
     this.companionLinks.delete(key)
   }
 
-  // Private Helper Methods
-  private removeCharacterFromTeam(characterId: number, team: Team): void {
-    this.teamCharacters.get(team)?.delete(characterId)
-  }
-
-  private setCharacterOnTile(tile: GridTile, characterId: number, team: Team): void {
+  // Internal Helper Method (used by transactions)
+  setCharacterOnTile(tile: GridTile, characterId: number, team: Team): void {
     tile.characterId = characterId
     tile.team = team
     tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
     this.teamCharacters.get(team)?.add(characterId)
-  }
-
-  private clearCharacterFromTile(tile: GridTile, hexId: number): void {
-    delete tile.characterId
-    delete tile.team
-    tile.state = this.getOriginalTileState(hexId)
-  }
-
-  private getOriginalTileState(hexId: number): State {
-    const tile = this.getTileById(hexId)
-    const currentState = tile.state
-
-    if (currentState === State.OCCUPIED_ALLY) {
-      return State.AVAILABLE_ALLY
-    } else if (currentState === State.OCCUPIED_ENEMY) {
-      return State.AVAILABLE_ENEMY
-    }
-
-    return currentState
   }
 }

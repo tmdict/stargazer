@@ -2,6 +2,7 @@ import { findCharacterHex } from '../character'
 import type { Grid } from '../grid'
 import { getCharacterSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
+import { performRemove } from './remove'
 
 export interface CompanionPosition {
   companionId: number
@@ -47,7 +48,7 @@ export function restoreCompanions(
       const currentHexId = findCharacterHex(grid, companionId, team)
       if (currentHexId !== null && currentHexId !== originalHexId) {
         // Remove from current position
-        if (!grid.removeCharacter(currentHexId, true)) {
+        if (!performRemove(grid, currentHexId, true)) {
           console.warn(
             `Failed to remove companion ${companionId} from hex ${currentHexId} during restoration`,
           )
