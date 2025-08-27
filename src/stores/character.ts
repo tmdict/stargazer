@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import type { GridTile } from '../lib/grid'
+import type { Hex } from '../lib/hex'
 import * as transactions from '../lib/transactions'
 import { Team } from '../lib/types/team'
 import { useGridStore } from './grid'
@@ -72,8 +73,13 @@ export const useCharacterStore = defineStore('character', () => {
   const autoPlaceCharacter = (characterId: number, team: Team): boolean =>
     transactions.executeAutoPlaceCharacter(grid, skillManager, characterId, team)
 
-  const handleHexClick = (hex: import('../lib/hex').Hex): boolean =>
-    transactions.executeHandleHexClick(grid, skillManager, hex.getId())
+  const handleHexClick = (hex: Hex): boolean => {
+    const hexId = hex.getId()
+    if (grid.hasCharacter(hexId)) {
+      return transactions.executeRemoveCharacter(grid, skillManager, hexId)
+    }
+    return false
+  }
 
   return {
     // Reactive state
