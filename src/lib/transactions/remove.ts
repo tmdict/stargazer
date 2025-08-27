@@ -1,6 +1,17 @@
-import { findCharacterHex, getCharacter, getCharacterTeam, hasCharacter } from '../character'
-import type { Grid } from '../grid'
+import {
+  findCharacterHex,
+  getCharacter,
+  getCharacterTeam,
+  getTilesWithCharacters,
+  hasCharacter,
+} from '../character'
+import type { Grid, GridTile } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
+import { State } from '../types/state'
+import { Team } from '../types/team'
+import { executeTransaction, handleCacheInvalidation } from './transaction'
+
+// High-level operations
 
 export function executeRemoveCharacter(
   grid: Grid,
@@ -24,7 +35,7 @@ export function executeRemoveCharacter(
       return executeRemoveCharacter(grid, skillManager, mainHexId)
     } else {
       // Main character not found, just remove the companion directly
-      return grid.removeCharacter(hexId, true)
+      return performRemove(grid, hexId, true)
     }
   }
 
@@ -40,7 +51,7 @@ export function executeRemoveCharacter(
   // Remove character(s) - skill may have already removed them
   let removed = true
   if (hasCharacter(grid, hexId)) {
-    removed = grid.removeCharacter(hexId, true)
+    removed = performRemove(grid, hexId, true)
   }
 
   // Update all active skills to recalculate targets after removal
@@ -53,6 +64,110 @@ export function executeClearAllCharacters(grid: Grid, skillManager: SkillManager
   // Deactivate all skills first
   skillManager.deactivateAllSkills(grid)
 
-  // Clear all characters (uses existing transaction internally)
-  return grid.clearAllCharacters()
+  // Clear all characters
+  return performClearAll(grid)
+}
+
+// Atomic operations
+
+// Performs atomic character removal
+export function performRemove(
+  grid: Grid,
+  hexId: number,
+  skipCacheInvalidation: boolean = false,
+): boolean {
+  const tile = grid.getTileById(hexId)
+  if (tile.characterId) {
+    if (!tile.team) {
+      console.error(`Tile at hex ${hexId} has characterId ${tile.characterId} but no team`)
+      return false
+    }
+    const characterId = tile.characterId
+    const team = tile.team
+
+    // Remove character from team tracking
+    removeCharacterFromTeam(grid, characterId, team)
+    // Clear character from tile
+    clearCharacterFromTile(tile)
+
+    // Handle cache invalidation with batching support
+    handleCacheInvalidation(skipCacheInvalidation, grid.skillManager, grid)
+    return true
+  }
+  return false
+}
+
+// Performs atomic clear of all characters
+export function performClearAll(grid: Grid): boolean {
+  // Collect all current placements for potential rollback
+  const currentPlacements = getTilesWithCharacters(grid).map((tile) => ({
+    hexId: tile.hex.getId(),
+    characterId: tile.characterId!,
+    team: tile.team!,
+  }))
+
+  // If no characters to clear, return success immediately
+  if (currentPlacements.length === 0) {
+    handleCacheInvalidation(false, grid.skillManager, grid)
+    return true
+  }
+
+  // Use transaction pattern for atomic clear operation
+  const result = executeTransaction(
+    // Operations to execute
+    [
+      () => {
+        // Clear all character data
+        for (const tile of grid.getAllTiles()) {
+          if (tile.characterId) {
+            clearCharacterFromTile(tile)
+          }
+        }
+        grid.getTeamCharacters(Team.ALLY).clear()
+        grid.getTeamCharacters(Team.ENEMY).clear()
+        return true
+      },
+    ],
+    // Rollback operations - restore all characters
+    [
+      () => {
+        currentPlacements.forEach((placement) => {
+          grid.placeCharacter(placement.hexId, placement.characterId, placement.team, true)
+        })
+      },
+    ],
+  )
+
+  // Trigger skill updates after successful transaction
+  if (result && grid.skillManager) {
+    grid.skillManager.updateActiveSkills(grid)
+  }
+
+  return result
+}
+
+// Helper functions
+
+// Remove character from team tracking
+export function removeCharacterFromTeam(grid: Grid, characterId: number, team: Team): void {
+  grid.getTeamCharacters(team).delete(characterId)
+}
+
+// Clear character from tile and restore original state
+export function clearCharacterFromTile(tile: GridTile): void {
+  const currentState = tile.state
+
+  // Delete character data
+  delete tile.characterId
+  delete tile.team
+
+  // Restore original tile state based on current state
+  if (currentState === State.OCCUPIED_ALLY) {
+    tile.state = State.AVAILABLE_ALLY
+  } else if (currentState === State.OCCUPIED_ENEMY) {
+    tile.state = State.AVAILABLE_ENEMY
+  } else {
+    // Keep current state if it wasn't an occupied state
+    tile.state = currentState
+  }
 }

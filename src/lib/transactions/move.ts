@@ -3,7 +3,10 @@ import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
 import { restoreCompanions, storeCompanionPositions } from './companion'
+import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
+
+// High-level operations
 
 export function executeMoveCharacter(
   grid: Grid,
@@ -44,7 +47,7 @@ export function executeMoveCharacter(
 
   // 2a. Simple move (same team OR cross-team with no skills)
   if (!needsSkillHandling) {
-    const result = performAtomicMove(grid, fromHexId, toHexId, characterId, toTeam, fromTeam)
+    const result = performMove(grid, fromHexId, toHexId, characterId, toTeam, fromTeam)
 
     if (result && grid.skillManager) {
       grid.skillManager.updateActiveSkills(grid)
@@ -69,8 +72,10 @@ export function executeMoveCharacter(
   return result
 }
 
+// Atomic operations
+
 // Performs atomic move of a single character
-function performAtomicMove(
+function performMove(
   grid: Grid,
   fromHexId: number,
   toHexId: number,
@@ -80,7 +85,7 @@ function performAtomicMove(
 ): boolean {
   return executeTransaction(
     [
-      () => grid.removeCharacter(fromHexId, true),
+      () => performRemove(grid, fromHexId, true),
       () => grid.placeCharacter(toHexId, characterId, targetTeam, true),
     ],
     [() => grid.placeCharacter(fromHexId, characterId, originalTeam, true)],
@@ -110,7 +115,7 @@ function performCrossTeamMove(
         return true
       },
       // Step 2: Execute the move
-      () => performAtomicMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam),
+      () => performMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam),
       // Step 3: Activate skill at new position with new team
       () => skillManager.activateCharacterSkill(characterId, toHexId, targetTeam, grid),
     ],

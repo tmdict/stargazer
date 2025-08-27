@@ -2,7 +2,10 @@ import { hasCharacter } from '../character'
 import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
+import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
+
+// High-level operations
 
 export function executePlaceCharacter(
   grid: Grid,
@@ -35,7 +38,7 @@ export function executePlaceCharacter(
       // Rollback: remove character if it was placed
       () => {
         if (placed && hasCharacter(grid, hexId)) {
-          if (!grid.removeCharacter(hexId, true)) {
+          if (!performRemove(grid, hexId, true)) {
             console.warn(`Failed to rollback character placement at hex ${hexId}`)
           }
         }
@@ -94,7 +97,7 @@ export function executeAutoPlaceCharacter(
 
     if (!activated) {
       // Clean up on skill failure
-      if (!grid.removeCharacter(hexId, true)) {
+      if (!performRemove(grid, hexId, true)) {
         console.warn(
           `Failed to remove character ${characterId} from hex ${hexId} after skill activation failure`,
         )

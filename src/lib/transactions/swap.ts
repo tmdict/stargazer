@@ -3,7 +3,10 @@ import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skill'
 import { Team } from '../types/team'
 import { restoreCompanions, storeCompanionPositions } from './companion'
+import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
+
+// High-level operations
 
 export function executeSwapCharacters(
   grid: Grid,
@@ -39,7 +42,7 @@ export function executeSwapCharacters(
 
   // 2a. Simple swap (same team or cross-team with no skills)
   if (isSameTeam || !needsSkillHandling) {
-    const result = performAtomicSwap(
+    const result = performSwap(
       grid,
       fromHexId,
       toHexId,
@@ -72,8 +75,10 @@ export function executeSwapCharacters(
   )
 }
 
+// Atomic operations
+
 // Performs atomic swap of two characters
-function performAtomicSwap(
+function performSwap(
   grid: Grid,
   fromHexId: number,
   toHexId: number,
@@ -89,10 +94,10 @@ function performAtomicSwap(
     // Operations to execute
     [
       () => {
-        return grid.removeCharacter(fromHexId, true)
+        return performRemove(grid, fromHexId, true)
       },
       () => {
-        return grid.removeCharacter(toHexId, true)
+        return performRemove(grid, toHexId, true)
       },
       () => {
         return grid.placeCharacter(fromHexId, toChar, fromTargetTeam, true)
@@ -163,7 +168,7 @@ function performCrossTeamSwap(
       // - fromChar moves to toHexId and JOINS toTeam
       // - toChar moves to fromHexId and JOINS fromTeam
       () =>
-        performAtomicSwap(
+        performSwap(
           grid,
           fromHexId,
           toHexId,

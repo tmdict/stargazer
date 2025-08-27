@@ -1,5 +1,6 @@
 import { findCharacterHex } from '../character'
 import type { Skill, SkillContext } from '../skill'
+import { performRemove } from '../transactions/remove'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 
@@ -86,7 +87,7 @@ export const elijahLailahSkill: Skill = {
       const companionHex = findCharacterHex(grid, companionId, team)
       if (companionHex !== null) {
         skillManager.removeCharacterColorModifier(companionId, team)
-        if (!grid.removeCharacter(companionHex, true)) {
+        if (!performRemove(grid, companionHex, true)) {
           console.warn(
             `elijah-lailah: Failed to remove companion ${companionId} from hex ${companionHex}`,
           )
