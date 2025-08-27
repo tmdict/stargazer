@@ -36,6 +36,8 @@ export function executeRemoveCharacter(
 
     if (mainHexId !== null) {
       // Remove the main character, which will trigger skill deactivation and remove the companion
+      // Note: Intentionally propagate the result of the recursive call - if removing the main
+      // character fails for any reason, this operation should also be considered failed
       return executeRemoveCharacter(grid, skillManager, mainHexId)
     } else {
       // Main character not found, just remove the companion directly
