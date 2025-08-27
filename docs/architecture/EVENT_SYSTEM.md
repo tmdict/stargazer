@@ -100,14 +100,3 @@ switch (event) {
     break
 }
 ```
-
-## Performance Considerations
-
-- **Handler Management**: Uses Map and Set for efficient handler storage
-- **Memory Cleanup**: Always remove listeners in `onUnmounted`
-- **Direct Actions**: Store integration avoids event cascades
-
-## Related Documentation
-
-- [`/docs/architecture/GRID.md`](./GRID.md) - Grid system using events
-- [`/docs/architecture/DRAG_AND_DROP.md`](./DRAG_AND_DROP.md) - Drag events integration

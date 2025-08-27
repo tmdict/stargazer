@@ -15,62 +15,82 @@ The grid system provides the spatial foundation for the game, managing hexagonal
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Components    │────▶│  Store Layer     │────▶│Domain Layer │
-│                 │     │                  │     │             │
-│ - GridTiles     │     │ - Grid Store     │     │ - Grid      │
-│ - GridManager   │     │ - Character Store│     │ - Character │
-│ - DragDrop      │     │ - Reactive state │     │   Manager   │
-└─────────────────┘     └──────────────────┘     └──────┬──────┘
-                                                        │
-                        ┌───────────────────────────────┼────────────┐
-                        ▼                               ▼            ▼
-                ┌─────────────┐                ┌─────────────┐  ┌──────────┐
-                │    Teams    │                │  Companions │  │  Skills  │
-                │             │                │             │  │          │
-                │ - Capacity  │                │ - Linking   │  │ - Auto   │
-                │ - Tracking  │                │ - Cleanup   │  │  activate│
-                └─────────────┘                └─────────────┘  └──────────┘
+┌─────────────────┐     ┌──────────────────┐
+│   Components    │────▶│  Store Layer     │
+│                 │     │                  │
+│ - GridTiles     │     │ - Grid Store     │
+│ - GridManager   │     │ - Character Store│
+│ - DragDrop      │     │ - Reactive state │
+└─────────────────┘     └────────┬─────────┘
+                                 │
+┌────────────────────────────────▼───────────────────────┐
+│                          Characters                    │
+│                                                        │
+│  • Character Queries      • Placement Operations       │
+│  • Team Management        • Removal Operations         │
+│  • Companion System       • Movement Operations        │
+│  • Tile Helpers           • Swap Operations            │
+│  • Transactions           • Skill Integration          │
+└─────────────────────────┬──────────────────────────────┘
+                          │
+         ┌────────────────┼───────────────────┐
+         │                │                   │
+┌────────▼──────┐ ┌───────▼───────────┐ ┌─────▼──────────┐
+│     Grid      │ │      Skills       │ │  Pathfinding   │
+│               │ │                   │ │                │
+│ Spatial State │ │ Skill Registry    │ │ A* Search      │
+│ Hex Tiles     │ │ Lifecycle Mgmt    │ │ BFS Search     │
+│ Team Tracking │ │ Visual Modifiers  │ │ Distance Calc  │
+│ Public Props  │ │ Activation System │ │ Target Finding │
+│               │ │                   │ │                │
+└───────────────┘ └───────────────────┘ └────────────────┘
 ```
 
 ## Core Components
 
 ### Grid Class (`/src/lib/grid.ts`)
 
-The central state manager for tile and character data:
+Pure spatial grid and state management:
 
 ```typescript
 class Grid {
   private storage: Map<string, GridTile>
-  private teamCharacters: Map<Team, Set<number>>
-  private companionLinks: Map<string, Set<number>>
 
-  // Core operations
-  placeCharacter(hexId, characterId, team): boolean
-  removeCharacter(hexId): void
-  swapCharacters(fromHexId, toHexId): boolean
-  executeTransaction(operations, rollbacks): boolean
+  // Public for direct access by characters/
+  teamCharacters: Map<Team, Set<number>>
+  maxTeamSizes: Map<Team, number>
+  companionIdOffset = 10000
+  companionLinks: Map<string, Set<number>>
+
+  // Spatial operations only
+  getTile(hex: Hex): GridTile
+  setState(hex: Hex, state: State): boolean
 }
 ```
 
-### Character Manager (`/src/lib/character.ts`)
+### Characters (`/src/lib/characters/`)
 
-Functional API that integrates skills with grid operations:
+Modular operations with direct Grid state access:
 
 ```typescript
-// All operations handle skills automatically
-placeCharacter(grid, skillManager, hexId, characterId, team)
-removeCharacter(grid, skillManager, hexId)
-swapCharacters(grid, skillManager, fromHexId, toHexId)
-moveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+// character.ts - Queries and team management
+getCharacter(grid: Grid, hexId: number): number | undefined
+getMaxTeamSize(grid: Grid, team: Team): number
+getTeamFromTileState(state: State): Team | null
+
+// place.ts, remove.ts, move.ts, swap.ts - Complex operations
+executePlaceCharacter(grid, skillManager, hexId, characterId, team)
+executeRemoveCharacter(grid, skillManager, hexId)
+executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
 ```
 
 Key features:
 
-- **Automatic skill activation** on character placement
-- **Skill deactivation** before removal with cleanup
-- **Cross-team movement** with skill state transitions
-- **Companion handling** for linked characters
+- **Direct state manipulation** via Grid's public properties
+- **Skill integration** in all complex operations
+- **Atomic transactions** with automatic rollback
+- **Companion support** via companion.ts helpers
 
 ### Tile System
 
@@ -92,14 +112,14 @@ Tile states:
 
 ## Character Operations
 
-### Placement
+### Placement (`/src/lib/characters/place.ts`)
 
 Character placement with skill integration:
 
 ```typescript
-function placeCharacter(grid, skillManager, hexId, characterId, team) {
-  return grid.executeTransaction([
-    () => grid.placeCharacter(hexId, characterId, team, true),
+function executePlaceCharacter(grid, skillManager, hexId, characterId, team) {
+  return executeTransaction([
+    () => performPlace(grid, hexId, characterId, team, true),
     () => {
       if (!hasSkill(characterId)) return true
       return skillManager.activateCharacterSkill(characterId, hexId, team, grid)
@@ -117,11 +137,11 @@ Validates:
 
 ### Movement & Swapping
 
-- **Within team**: Direct grid movement
-- **Cross-team**: Deactivate skill → move → reactivate skill
-- **Swapping**: Atomic exchange with skill handling for affected characters
+- **Move (`move.ts`)**: Handles same-team and cross-team movements
+- **Swap (`swap.ts`)**: Atomic character exchange with skill transitions
+- **Cross-team logic**: Deactivate → perform operation → reactivate skills
 
-### Removal
+### Removal (`/src/lib/characters/remove.ts`)
 
 Cascading removal for linked characters:
 
@@ -133,15 +153,19 @@ Cascading removal for linked characters:
 
 ## Team & Companion Systems
 
-### Team Management
+### Team Management (`/src/lib/characters/character.ts`)
 
-Teams tracked separately for performance:
+Direct access to Grid's public properties:
 
 ```typescript
-private teamCharacters: Map<Team, Set<number>> = new Map([
-  [Team.ALLY, new Set()],
-  [Team.ENEMY, new Set()],
-])
+// Grid exposes these publicly
+grid.teamCharacters: Map<Team, Set<number>>
+grid.maxTeamSizes: Map<Team, number>
+
+// character.ts provides functional API
+getMaxTeamSize(grid: Grid, team: Team): number
+getTeamCharacters(grid: Grid, team: Team): Set<number>
+canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean
 ```
 
 Features:
@@ -150,13 +174,26 @@ Features:
 - **Capacity**: Default 5, expandable by skills
 - **Duplicate Prevention**: Same character cannot exist twice on one team
 
-### Companion System
+### Companion System (`/src/lib/characters/companion.ts`)
 
-Grid supports skill-created linked characters. See [`/docs/architecture/SKILLS.md`](./SKILLS.md) for implementation details.
+Helpers for skill-created linked characters:
 
-## Transaction System
+```typescript
+// Grid exposes these publicly
+grid.companionIdOffset = 10000
+grid.companionLinks: Map<string, Set<number>>
 
-Complex operations use transactions for atomicity:
+// companion.ts provides functional API
+isCompanionId(grid: Grid, characterId: number): boolean
+getCompanions(grid: Grid, mainCharacterId: number, team: Team): Set<number>
+addCompanionLink(grid: Grid, mainId: number, companionId: number, team: Team): void
+```
+
+See [`/docs/architecture/SKILLS.md`](./SKILLS.md) for skill integration details.
+
+## Transaction System (`/src/lib/characters/transaction.ts`)
+
+Atomic operations with automatic rollback:
 
 ```typescript
 executeTransaction(
@@ -222,46 +259,3 @@ Key features:
 - **Non-interactive**: Display-only, no drag & drop functionality
 - **SSG-friendly**: Avoids hydration mismatches by using props for static content
 - **Flexible styling**: Supports highlights, numeric labels, and character placement
-
-## Integration Points
-
-### Drag & Drop
-
-- Character data includes `sourceHexId` for tracking
-- Validation through `canPlaceCharacter()`
-- Visual feedback via tile states
-
-### Pathfinding
-
-- Blocked tiles for obstacles
-- Character positions for targeting
-- Team information for friend/foe detection
-- Character ranges from gameData store
-
-### Skills
-
-- Automatic activation/deactivation
-- Companion placement and linking
-- Team capacity modifications
-- Visual color modifiers
-
-### URL Serialization
-
-- Compact binary format for sharing
-- Preserves all placements and teams
-- Maintains companion relationships
-
-## Performance Considerations
-
-- **Map storage**: O(1) tile access by coordinate key
-- **Set-based teams**: O(1) membership checks
-- **Cache batching**: Single pathfinding cache clear per transaction (not per operation)
-- **Pre-allocated rollbacks**: Minimal allocation during operations
-- **Granular reactive state**: Character store uses separate computed properties to minimize recalculations
-
-## Related Documentation
-
-- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Skill system and visual effects
-- [`/docs/architecture/PATHFINDING.md`](./PATHFINDING.md) - Pathfinding algorithms
-- [`/docs/architecture/DRAG_AND_DROP.md`](./DRAG_AND_DROP.md) - Drag and drop system
-- [`Hexagonal Grids`](https://www.redblobgames.com/grids/hexagons/) - Reference guide for this implementation

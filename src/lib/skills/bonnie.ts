@@ -1,4 +1,4 @@
-import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
+import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findRearmostTarget, getOpposingTeam } from './utils/targeting'
 
 /**

@@ -15,27 +15,28 @@ The skill system enables characters to have unique abilities that activate when 
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Components    │────▶│ Character Store  │────▶│  Character  │
-│                 │     │                  │     │   Manager   │
-│ GridCharacters  │     │ - Reactive state │     │             │
-│ DragDrop, etc.  │     │ - Actions        │     │ Functional  │
-└─────────────────┘     └──────────────────┘     │    API      │
-         │                                       └──────┬──────┘
-         │                                              │
-         ▼                                              ▼
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│  Skill Store    │────▶│  SkillManager    │────▶│    Grid     │
-│                 │     │                  │     │             │
-│ - Color mods    │     │ - Active skills  │     │ - State     │
-│ - Reactive      │     │ - Lifecycle      │     │ - Trans-    │
-└─────────────────┘     └──────────────────┘     │   actions   │
-                                                 └─────────────┘
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│   Components    │────▶│ Character Store  │────▶│  Characters     │
+│                 │     │                  │     │                 │
+│ GridCharacters  │     │ - Reactive state │     │ - Entities      │
+│ DragDrop, etc.  │     │ - Actions        │     │ - Transactions  │
+└─────────────────┘     └──────────────────┘     └────────┬────────┘
+         │                                                │
+         │                                                │
+         │                                                │
+         ▼                                                ▼
+┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
+│  Skill Store    │────▶│  Skills          │────▶│    Grid         │
+│                 │     │                  │     │                 │
+│ - Color mods    │     │ - Skill Registry │     │ - Public props  │
+│ - Reactive      │     │ - Lifecycle      │     │ - Spatial ops   │
+└─────────────────┘     └──────────────────┘     └─────────────────┘
+
 ```
 
 ### Core Components
 
-#### 1. Skill Interface (`/src/lib/skill.ts`)
+#### 1. Skill Interface (`/src/lib/skills/skill.ts`)
 
 Skills are self-contained units that:
 
@@ -69,7 +70,7 @@ interface SkillContext {
 }
 ```
 
-#### 2. SkillManager (`/src/lib/skill.ts`)
+#### 2. SkillManager (`/src/lib/skills/skill.ts`)
 
 The SkillManager tracks active skills and visual modifiers:
 
@@ -85,16 +86,16 @@ Key methods:
 - `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
 - `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
 
-#### 3. Character Manager (`/src/lib/character.ts`)
+#### 3. Characters Operations (`/src/lib/characters/`)
 
-Provides a functional API layer that integrates skills with character operations:
+Modular operations that integrate skills with character actions:
 
 ```typescript
-// All character operations now trigger appropriate skill lifecycle
-placeCharacter(grid, skillManager, hexId, characterId, team)
-removeCharacter(grid, skillManager, hexId)
-swapCharacters(grid, skillManager, fromHexId, toHexId)
-moveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+// Operations in separate files for better organization
+executePlaceCharacter(grid, skillManager, hexId, characterId, team) // place.ts
+executeRemoveCharacter(grid, skillManager, hexId) // remove.ts
+executeSwapCharacters(grid, skillManager, fromHexId, toHexId) // swap.ts
+executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId) // move.ts
 ```
 
 Features:
@@ -174,10 +175,10 @@ export const mySkill: Skill = {
 }
 ```
 
-2. **Register in skill registry** (`/src/lib/skill.ts`):
+2. **Register in skill registry** (`/src/lib/skills/skill.ts`):
 
 ```typescript
-import { mySkill } from './skills/mySkill'
+import { mySkill } from './mySkill'
 
 const skillRegistry = new Map<number, Skill>([
   // Companion skills
@@ -209,7 +210,7 @@ To add documentation pages for a skill:
    - `SkillName.zh.vue` - Chinese documentation content
    - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
 
-2. **Update DOCUMENTED_SKILLS** in `/src/lib/skill.ts`:
+2. **Update DOCUMENTED_SKILLS** in `/src/lib/skills/skill.ts`:
    - Add the skill name to the `DOCUMENTED_SKILLS` array (near the skillRegistry):
    ```typescript
    // List of skills with documentation pages
@@ -226,16 +227,3 @@ This single update ensures:
 - Skill.vue properly normalizes the skill name for routing
 - vite.config.ts includes it for static site generation
 - All skill documentation references use this single source of truth
-
-## Performance Considerations
-
-- **Lazy activation**: Skills only initialize when characters placed
-- **Transaction atomicity**: Multi-step operations rollback on failure
-- **Reactive updates**: Vue integration for efficient rendering
-- **Memory efficiency**: Cleanup on deactivation prevents leaks
-
-## Related Documentation
-
-- [`/docs/architecture/GRID.md`](./GRID.md) - Grid & character management system
-- [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) - Companion skill implementation
-- [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) - Targeting skill implementation

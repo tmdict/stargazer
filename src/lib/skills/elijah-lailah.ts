@@ -2,9 +2,9 @@ import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../characters/
 import { addCompanionLink, clearCompanionLinks, getCompanions } from '../characters/companion'
 import { performPlace } from '../characters/place'
 import { performRemove } from '../characters/remove'
-import type { Skill, SkillContext } from '../skill'
 import { State } from '../types/state'
 import { Team } from '../types/team'
+import type { Skill, SkillContext } from './skill'
 
 export const elijahLailahSkill: Skill = {
   id: 'elijah-lailah',
