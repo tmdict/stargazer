@@ -73,24 +73,9 @@ export class Grid {
   // Skill manager reference for triggering skill updates
   skillManager?: SkillManager
 
-  // Helper method for cache invalidation logic
-  private handleCacheInvalidation(skipCacheInvalidation: boolean): void {
-    if (skipCacheInvalidation) return
-
-    if (this.batchingCacheClears) {
-      this.pendingCacheClears = true
-    } else {
-      clearPathfindingCache()
-      // Trigger skill updates immediately when not batching
-      if (this.skillManager) {
-        this.skillManager.updateActiveSkills(this)
-      }
-    }
-  }
-
   readonly gridPreset: GridPreset
 
-  // Constructor & Basic Setup
+  // Core Grid Operations
 
   constructor(layout = FULL_GRID, map = ARENA_1) {
     this.gridPreset = layout
@@ -108,20 +93,6 @@ export class Grid {
 
   private static key(hex: Hex): string {
     return `${hex.q},${hex.r},${hex.s}`
-  }
-
-  // Hex & Tile Access Methods
-
-  setState(hex: Hex, state: State): boolean {
-    if (!Object.values(State).includes(state)) {
-      return false // Invalid state
-    }
-    const tile = this.getTile(hex)
-    if (tile) {
-      tile.state = state
-      return true
-    }
-    return false
   }
 
   keys(): Hex[] {
@@ -149,12 +120,21 @@ export class Grid {
     return Array.from(this.storage.values())
   }
 
-  getTilesWithCharacters(): GridTile[] {
-    return this.getAllTiles().filter((tile) => tile.characterId !== undefined)
+  setState(hex: Hex, state: State): boolean {
+    if (!Object.values(State).includes(state)) {
+      return false // Invalid state
+    }
+    const tile = this.getTile(hex)
+    if (tile) {
+      tile.state = state
+      return true
+    }
+    return false
   }
 
-  // Character Query Methods
+  // Character Operations
 
+  // Character Queries
   getCharacter(hexId: number): number | undefined {
     return this.getTileById(hexId).characterId
   }
@@ -187,37 +167,20 @@ export class Grid {
     return placements
   }
 
-  getMaxTeamSize(team: Team): number {
-    return this.maxTeamSizes.get(team) || 5
+  getTilesWithCharacters(): GridTile[] {
+    return this.getAllTiles().filter((tile) => tile.characterId !== undefined)
   }
 
-  setMaxTeamSize(team: Team, size: number): boolean {
-    const maxPossibleSize = this.getAllTiles().length
-    if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
-      return false // Invalid input
+  findCharacterHex(characterId: number, team: Team): number | null {
+    for (const entry of this.storage.values()) {
+      if (entry.characterId === characterId && entry.team === team) {
+        return entry.hex.getId()
+      }
     }
-    this.maxTeamSizes.set(team, size)
-    return true
+    return null
   }
 
-  canPlaceCharacter(characterId: number, team: Team): boolean {
-    const available = this.getAvailableForTeam(team)
-    const hasCharacter = this.teamCharacters.get(team)?.has(characterId)
-    if (available <= 0) return false
-    return !hasCharacter
-  }
-
-  canPlaceCharacterOnTile(hexId: number, team: Team): boolean {
-    const tile = this.getTileById(hexId)
-    const state = tile.state
-    const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-    const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-
-    return state === availableState || state === occupiedState
-  }
-
-  // Character Placement Methods
-
+  // Character Placement
   placeCharacter(
     hexId: number,
     characterId: number,
@@ -233,6 +196,10 @@ export class Grid {
     const tile = this.getTileById(hexId)
 
     if (tile.characterId) {
+      if (!tile.team) {
+        console.error(`Tile has characterId ${tile.characterId} but no team`)
+        return false
+      }
       this.removeCharacterFromTeam(tile.characterId, tile.team)
     }
 
@@ -247,6 +214,10 @@ export class Grid {
   removeCharacter(hexId: number, skipCacheInvalidation: boolean = false): boolean {
     const tile = this.getTileById(hexId)
     if (tile.characterId) {
+      if (!tile.team) {
+        console.error(`Tile at hex ${hexId} has characterId ${tile.characterId} but no team`)
+        return false
+      }
       const characterId = tile.characterId
       const team = tile.team
 
@@ -301,8 +272,34 @@ export class Grid {
     )
   }
 
-  // Complex Character Operations
+  autoPlaceCharacter(characterId: number, team: Team): boolean {
+    // Validate character can be placed
+    if (!this.canPlaceCharacter(characterId, team)) return false
 
+    // Get all available tiles for this team
+    const availableTiles = this.getAllAvailableTilesForTeam(team)
+    if (availableTiles.length === 0) return false
+
+    // Sort by hex ID descending (largest first) for deterministic randomness
+    availableTiles.sort((a, b) => b.hex.getId() - a.hex.getId())
+
+    // Select random tile from available options
+    const randomIndex = Math.floor(Math.random() * availableTiles.length)
+    const selectedTile = availableTiles[randomIndex]
+
+    if (!selectedTile) {
+      console.error('grid: Selected tile is undefined despite non-empty availableTiles array', {
+        randomIndex,
+        availableTilesLength: availableTiles.length,
+      })
+      return false
+    }
+
+    // Place character using existing validated method
+    return this.placeCharacter(selectedTile.hex.getId(), characterId, team)
+  }
+
+  // Character Movement
   swapCharacters(fromHexId: number, toHexId: number): boolean {
     // Basic validation
     if (fromHexId === toHexId) return false
@@ -324,12 +321,10 @@ export class Grid {
       // Operations to execute
       [
         () => {
-          this.removeCharacter(fromHexId, true)
-          return true
+          return this.removeCharacter(fromHexId, true)
         },
         () => {
-          this.removeCharacter(toHexId, true)
-          return true
+          return this.removeCharacter(toHexId, true)
         },
         () => {
           return this.placeCharacter(fromHexId, toOp.characterId, fromTargetTeam, true)
@@ -370,34 +365,46 @@ export class Grid {
     return this.performMove(fromHexId, toHexId, characterId, targetTeam, fromOp.team)
   }
 
-  autoPlaceCharacter(characterId: number, team: Team): boolean {
-    // Validate character can be placed
-    if (!this.canPlaceCharacter(characterId, team)) return false
+  // Team Management
 
-    // Get all available tiles for this team
-    const availableTiles = this.getAllAvailableTilesForTeam(team)
-    if (availableTiles.length === 0) return false
-
-    // Sort by hex ID descending (largest first) for deterministic randomness
-    availableTiles.sort((a, b) => b.hex.getId() - a.hex.getId())
-
-    // Select random tile from available options
-    const randomIndex = Math.floor(Math.random() * availableTiles.length)
-    const selectedTile = availableTiles[randomIndex]
-
-    if (!selectedTile) {
-      console.error('grid: Selected tile is undefined despite non-empty availableTiles array', {
-        randomIndex,
-        availableTilesLength: availableTiles.length,
-      })
-      return false
-    }
-
-    // Place character using existing validated method
-    return this.placeCharacter(selectedTile.hex.getId(), characterId, team)
+  getMaxTeamSize(team: Team): number {
+    return this.maxTeamSizes.get(team) || 5
   }
 
-  // Companion Support Methods
+  setMaxTeamSize(team: Team, size: number): boolean {
+    const maxPossibleSize = this.getAllTiles().length
+    if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
+      return false // Invalid input
+    }
+    this.maxTeamSizes.set(team, size)
+    return true
+  }
+
+  canPlaceCharacter(characterId: number, team: Team): boolean {
+    const available = this.getAvailableForTeam(team)
+    const hasCharacter = this.teamCharacters.get(team)?.has(characterId)
+    if (available <= 0) return false
+    return !hasCharacter
+  }
+
+  canPlaceCharacterOnTile(hexId: number, team: Team): boolean {
+    const tile = this.getTileById(hexId)
+    const state = tile.state
+    const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+    const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
+
+    return state === availableState || state === occupiedState
+  }
+
+  getTeamCharacters(team: Team): Set<number> {
+    return this.teamCharacters.get(team) || new Set()
+  }
+
+  getAvailableForTeam(team: Team): number {
+    return this.getMaxTeamSize(team) - (this.teamCharacters.get(team)?.size || 0)
+  }
+
+  // Companion System
 
   isCompanionId(characterId: number): boolean {
     return characterId >= this.companionIdOffset
@@ -410,21 +417,9 @@ export class Grid {
     return companionId % this.companionIdOffset
   }
 
-  getCompanions(mainCharacterId: number, team?: Team): Set<number> {
-    // If team is provided, get companions for that specific team
-    if (team !== undefined) {
-      const key = `${mainCharacterId}-${team}`
-      return this.companionLinks.get(key) || new Set()
-    }
-
-    // If no team provided, get companions from all teams
-    const allCompanions = new Set<number>()
-    for (const [key, companions] of this.companionLinks.entries()) {
-      if (key.startsWith(`${mainCharacterId}-`)) {
-        companions.forEach((c) => allCompanions.add(c))
-      }
-    }
-    return allCompanions
+  getCompanions(mainCharacterId: number, team: Team): Set<number> {
+    const key = `${mainCharacterId}-${team}`
+    return this.companionLinks.get(key) || new Set()
   }
 
   addCompanionLink(mainId: number, companionId: number, team: Team): void {
@@ -446,110 +441,12 @@ export class Grid {
     }
   }
 
-  findCharacterHex(characterId: number, team?: Team): number | null {
-    for (const entry of this.storage.values()) {
-      if (entry.characterId === characterId) {
-        // If team is specified, only return if it matches
-        if (team !== undefined && entry.team !== team) {
-          continue
-        }
-        return entry.hex.getId()
-      }
-    }
-    return null
+  clearCompanionLinks(mainCharacterId: number, team: Team): void {
+    const key = `${mainCharacterId}-${team}`
+    this.companionLinks.delete(key)
   }
 
-  clearCompanionLinks(mainCharacterId: number, team?: Team): void {
-    if (team !== undefined) {
-      // Clear for specific team
-      const key = `${mainCharacterId}-${team}`
-      this.companionLinks.delete(key)
-    } else {
-      // Clear for all teams
-      const keysToDelete = []
-      for (const key of this.companionLinks.keys()) {
-        if (key.startsWith(`${mainCharacterId}-`)) {
-          keysToDelete.push(key)
-        }
-      }
-      keysToDelete.forEach((key) => this.companionLinks.delete(key))
-    }
-  }
-
-  getTeamCharacters(team: Team): Set<number> {
-    return this.teamCharacters.get(team) || new Set()
-  }
-
-  // Private Helper Methods
-
-  getAvailableForTeam(team: Team): number {
-    return this.getMaxTeamSize(team) - (this.teamCharacters.get(team)?.size || 0)
-  }
-
-  private getOriginalTileState(hexId: number): State {
-    const tile = this.getTileById(hexId)
-    const currentState = tile.state
-
-    if (currentState === State.OCCUPIED_ALLY) {
-      return State.AVAILABLE_ALLY
-    } else if (currentState === State.OCCUPIED_ENEMY) {
-      return State.AVAILABLE_ENEMY
-    }
-
-    return currentState
-  }
-
-  private removeCharacterFromTeam(characterId: number, team: Team | undefined): void {
-    if (team !== undefined) {
-      this.teamCharacters.get(team)?.delete(characterId)
-    }
-  }
-
-  private setCharacterOnTile(tile: GridTile, characterId: number, team: Team): void {
-    tile.characterId = characterId
-    tile.team = team
-    tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-    this.teamCharacters.get(team)?.add(characterId)
-  }
-
-  private clearCharacterFromTile(tile: GridTile, hexId: number): void {
-    delete tile.characterId
-    delete tile.team
-    tile.state = this.getOriginalTileState(hexId)
-  }
-
-  private getTeamFromTileState(state: State): Team | null {
-    if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) {
-      return Team.ALLY
-    } else if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) {
-      return Team.ENEMY
-    }
-    return null
-  }
-
-  private getAllAvailableTilesForTeam(team: Team): GridTile[] {
-    return Array.from(this.storage.values()).filter(
-      (tile) => this.canPlaceCharacterOnTile(tile.hex.getId(), team) && !tile.characterId,
-    )
-  }
-
-  private validateCharacterOperation(
-    hexId: number,
-    requireCharacter: boolean = false,
-  ): CharacterOperation | null {
-    const characterId = this.getCharacter(hexId)
-    const team = this.getCharacterTeam(hexId)
-
-    if (requireCharacter && (!characterId || team === undefined)) {
-      return null
-    }
-
-    return {
-      hexId,
-      characterId: characterId || 0,
-      team: team ?? Team.ALLY,
-    }
-  }
+  // Transaction & Cache Management
 
   /**
    * Execute a transaction with automatic rollback on failure.
@@ -609,13 +506,91 @@ export class Grid {
       // Operations to execute
       [
         () => {
-          this.removeCharacter(fromHexId, true)
-          return true
+          return this.removeCharacter(fromHexId, true)
         },
         () => this.placeCharacter(toHexId, characterId, targetTeam, true),
       ],
       // Rollback operations
       [() => this.placeCharacter(fromHexId, characterId, originalTeam, true)],
     )
+  }
+
+  // Helper method for cache invalidation logic
+  private handleCacheInvalidation(skipCacheInvalidation: boolean): void {
+    if (skipCacheInvalidation) return
+
+    if (this.batchingCacheClears) {
+      this.pendingCacheClears = true
+    } else {
+      clearPathfindingCache()
+      // Trigger skill updates immediately when not batching
+      if (this.skillManager) {
+        this.skillManager.updateActiveSkills(this)
+      }
+    }
+  }
+
+  // Private Helper Methods
+  private removeCharacterFromTeam(characterId: number, team: Team): void {
+    this.teamCharacters.get(team)?.delete(characterId)
+  }
+
+  private setCharacterOnTile(tile: GridTile, characterId: number, team: Team): void {
+    tile.characterId = characterId
+    tile.team = team
+    tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
+    this.teamCharacters.get(team)?.add(characterId)
+  }
+
+  private clearCharacterFromTile(tile: GridTile, hexId: number): void {
+    delete tile.characterId
+    delete tile.team
+    tile.state = this.getOriginalTileState(hexId)
+  }
+
+  private getOriginalTileState(hexId: number): State {
+    const tile = this.getTileById(hexId)
+    const currentState = tile.state
+
+    if (currentState === State.OCCUPIED_ALLY) {
+      return State.AVAILABLE_ALLY
+    } else if (currentState === State.OCCUPIED_ENEMY) {
+      return State.AVAILABLE_ENEMY
+    }
+
+    return currentState
+  }
+
+  private getTeamFromTileState(state: State): Team | null {
+    if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) {
+      return Team.ALLY
+    } else if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) {
+      return Team.ENEMY
+    }
+    return null
+  }
+
+  private getAllAvailableTilesForTeam(team: Team): GridTile[] {
+    return Array.from(this.storage.values()).filter(
+      (tile) => this.canPlaceCharacterOnTile(tile.hex.getId(), team) && !tile.characterId,
+    )
+  }
+
+  private validateCharacterOperation(
+    hexId: number,
+    requireCharacter: boolean = false,
+  ): CharacterOperation | null {
+    const characterId = this.getCharacter(hexId)
+    const team = this.getCharacterTeam(hexId)
+
+    if (requireCharacter && (!characterId || team === undefined)) {
+      return null
+    }
+
+    return {
+      hexId,
+      characterId: characterId || 0,
+      team: team ?? Team.ALLY,
+    }
   }
 }
