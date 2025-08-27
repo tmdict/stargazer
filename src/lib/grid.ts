@@ -1,7 +1,7 @@
 import { ARENA_1 } from './arena/arena1'
 import { Hex } from './hex'
 import type { SkillManager } from './skill'
-import { executeTransaction, handleCacheInvalidation } from './transaction'
+import { executeTransaction, handleCacheInvalidation } from './transactions/transaction'
 import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
@@ -192,7 +192,7 @@ export class Grid {
     if (!Number.isInteger(characterId) || characterId <= 0) return false
 
     if (!this.canPlaceCharacterOnTile(hexId, team)) return false
-    if (!this.canPlaceCharacter(characterId, team)) return false
+    if (!this.canPlaceCharacterOnTeam(characterId, team)) return false
 
     const tile = this.getTileById(hexId)
 
@@ -295,11 +295,10 @@ export class Grid {
     return true
   }
 
-  canPlaceCharacter(characterId: number, team: Team): boolean {
-    const available = this.getAvailableForTeam(team)
-    const hasCharacter = this.teamCharacters.get(team)?.has(characterId)
+  canPlaceCharacterOnTeam(characterId: number, team: Team): boolean {
+    const available = this.getAvailableTeamSize(team)
     if (available <= 0) return false
-    return !hasCharacter
+    return !this.isCharacterOnTeam(characterId, team)
   }
 
   canPlaceCharacterOnTile(hexId: number, team: Team): boolean {
@@ -315,7 +314,11 @@ export class Grid {
     return this.teamCharacters.get(team) || new Set()
   }
 
-  getAvailableForTeam(team: Team): number {
+  isCharacterOnTeam(characterId: number, team: Team): boolean {
+    return this.teamCharacters.get(team)?.has(characterId) || false
+  }
+
+  getAvailableTeamSize(team: Team): number {
     return this.getMaxTeamSize(team) - (this.teamCharacters.get(team)?.size || 0)
   }
 
