@@ -143,6 +143,19 @@ const handleClick = (hexId: number) => {
     gridEvents.emit('character:remove', hexId)
   }
 }
+
+// Handle mouse hover to trigger tile hover effect
+const handleMouseEnter = (hexId: number) => {
+  if (!props.readonly) {
+    gridEvents.emit('character:mouseenter', hexId)
+  }
+}
+
+const handleMouseLeave = (hexId: number) => {
+  if (!props.readonly) {
+    gridEvents.emit('character:mouseleave', hexId)
+  }
+}
 </script>
 
 <template>
@@ -157,6 +170,8 @@ const handleClick = (hexId: number) => {
       @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
       @dragend="!readonly && handleDragEnd($event)"
       @click="!readonly && handleClick(hexId)"
+      @mouseenter="handleMouseEnter(hexId)"
+      @mouseleave="handleMouseLeave(hexId)"
     >
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />

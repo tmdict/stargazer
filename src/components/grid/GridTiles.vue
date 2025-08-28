@@ -417,12 +417,33 @@ const handleDragEnded = () => {
   // No longer needed - position-based system handles cleanup
 }
 
+// Handle hover events from character layer
+const handleCharacterHoverEnter = (hexId: number) => {
+  if (!blockHover.value && !props.readonly) {
+    hoveredHex.value = hexId
+  }
+}
+
+const handleCharacterHoverLeave = (hexId: number) => {
+  if (hoveredHex.value === hexId && !props.readonly) {
+    hoveredHex.value = null
+  }
+}
+
 onMounted(() => {
   document.addEventListener('drag-ended', handleDragEnded)
+
+  // Listen for character hover events
+  gridEvents.on('character:mouseenter', handleCharacterHoverEnter)
+  gridEvents.on('character:mouseleave', handleCharacterHoverLeave)
 })
 
 onUnmounted(() => {
   document.removeEventListener('drag-ended', handleDragEnded)
+
+  // Clean up event listeners
+  gridEvents.off('character:mouseenter', handleCharacterHoverEnter)
+  gridEvents.off('character:mouseleave', handleCharacterHoverLeave)
 })
 </script>
 
@@ -619,8 +640,9 @@ onUnmounted(() => {
   filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
 }
 
-/* Regular hover (when not dragging) */
-.grid-event-layer.drop-target:not(.occupied):not(.drag-hover).hover polygon {
+/* Regular hover (when not dragging) for tiles and tiles with characters */
+.grid-event-layer.drop-target:not(.occupied):not(.drag-hover).hover polygon,
+.grid-event-layer.drop-target.occupied:not(.drag-hover).hover polygon {
   fill: rgba(240, 248, 240, 0.3);
   stroke: #36958e;
   stroke-width: 3;
