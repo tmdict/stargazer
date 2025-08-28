@@ -11,7 +11,11 @@ import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
 import GridTiles from './GridTiles.vue'
 import { provideGridEvents } from '../../composables/useGridEvents'
-import { canPlaceCharacterOnTeam, hasCharacter } from '../../lib/characters/character'
+import {
+  canPlaceCharacterOnTeam,
+  getAvailableTeamSize,
+  hasCharacter,
+} from '../../lib/characters/character'
 import type { Hex } from '../../lib/hex'
 import type { CharacterType } from '../../lib/types/character'
 import { State } from '../../lib/types/state'
@@ -104,6 +108,16 @@ gridEvents.on('hex:click', (hex: Hex) => {
       state === State.OCCUPIED_ALLY ||
       state === State.OCCUPIED_ENEMY
     ) {
+      // Determine the team for this tile
+      const tileTeam =
+        state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY ? Team.ALLY : Team.ENEMY
+
+      // Check if the team has space for more characters
+      if (getAvailableTeamSize(gridStore._getGrid(), tileTeam) <= 0) {
+        // Team is full, don't show the modal
+        return
+      }
+
       // Calculate position for modal based on hex position
       // Need to account for perspective transform which is applied to the parent container
       const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')

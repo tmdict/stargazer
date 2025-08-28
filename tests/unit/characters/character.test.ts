@@ -12,13 +12,16 @@ import {
   getCharacterPlacements,
   getCharacterTeam,
   getMaxTeamSize,
+  getOpposingTeam,
   getTeamCharacters,
   getTeamFromTileState,
   getTilesWithCharacters,
+  getTilesWithCharactersByTeam,
   hasCharacter,
   isCharacterOnTeam,
   removeCharacterFromTeam,
   setMaxTeamSize,
+  tileHasCharacter,
 } from '../../../src/lib/characters/character'
 import { Grid } from '../../../src/lib/grid'
 import type { GridPreset } from '../../../src/lib/types/grid'
@@ -128,6 +131,17 @@ describe('character.ts', () => {
       expect(charIds).toContain(100)
       expect(charIds).toContain(200)
     })
+
+    it('should identify tiles with characters', () => {
+      const tile = grid.getTileById(1)
+      expect(tileHasCharacter(tile)).toBe(false)
+
+      tile.characterId = 100
+      expect(tileHasCharacter(tile)).toBe(true)
+
+      tile.characterId = undefined
+      expect(tileHasCharacter(tile)).toBe(false)
+    })
   })
 
   describe('Team management', () => {
@@ -200,6 +214,30 @@ describe('character.ts', () => {
       tile1.characterId = 100
       const updatedAllyTiles = getAllAvailableTilesForTeam(grid, Team.ALLY)
       expect(updatedAllyTiles).toHaveLength(1)
+    })
+
+    it('should return opposing team', () => {
+      expect(getOpposingTeam(Team.ALLY)).toBe(Team.ENEMY)
+      expect(getOpposingTeam(Team.ENEMY)).toBe(Team.ALLY)
+    })
+
+    it('should filter tiles with characters by team', () => {
+      // Place characters on different teams
+      const tile1 = grid.getTileById(1)
+      tile1.characterId = 100
+      tile1.team = Team.ALLY
+
+      const tile3 = grid.getTileById(3)
+      tile3.characterId = 200
+      tile3.team = Team.ENEMY
+
+      const allyTiles = getTilesWithCharactersByTeam(grid, Team.ALLY)
+      expect(allyTiles).toHaveLength(1)
+      expect(allyTiles[0].characterId).toBe(100)
+
+      const enemyTiles = getTilesWithCharactersByTeam(grid, Team.ENEMY)
+      expect(enemyTiles).toHaveLength(1)
+      expect(enemyTiles[0].characterId).toBe(200)
     })
   })
 

@@ -9,7 +9,11 @@ export function getCharacter(grid: Grid, hexId: number): number | undefined {
 }
 
 export function hasCharacter(grid: Grid, hexId: number): boolean {
-  return grid.getTileById(hexId).characterId !== undefined
+  return getCharacter(grid, hexId) !== undefined
+}
+
+export function tileHasCharacter(tile: GridTile): boolean {
+  return tile.characterId !== undefined
 }
 
 export function getCharacterTeam(grid: Grid, hexId: number): Team | undefined {
@@ -28,7 +32,7 @@ export function findCharacterHex(grid: Grid, characterId: number, team: Team): n
 export function getCharacterCount(grid: Grid): number {
   let count = 0
   for (const tile of grid.getAllTiles()) {
-    if (tile.characterId) {
+    if (tileHasCharacter(tile)) {
       count++
     }
   }
@@ -38,18 +42,26 @@ export function getCharacterCount(grid: Grid): number {
 export function getCharacterPlacements(grid: Grid): Map<number, number> {
   const placements = new Map<number, number>()
   for (const tile of grid.getAllTiles()) {
-    if (tile.characterId) {
-      placements.set(tile.hex.getId(), tile.characterId)
+    if (tileHasCharacter(tile)) {
+      placements.set(tile.hex.getId(), tile.characterId!)
     }
   }
   return placements
 }
 
 export function getTilesWithCharacters(grid: Grid): GridTile[] {
-  return grid.getAllTiles().filter((tile) => tile.characterId !== undefined)
+  return grid.getAllTiles().filter(tileHasCharacter)
+}
+
+export function getTilesWithCharactersByTeam(grid: Grid, team: Team): GridTile[] {
+  return getTilesWithCharacters(grid).filter((tile) => tile.team === team)
 }
 
 // Team management
+
+export function getOpposingTeam(team: Team): Team {
+  return team === Team.ALLY ? Team.ENEMY : Team.ALLY
+}
 
 export function getMaxTeamSize(grid: Grid, team: Team): number {
   return grid.maxTeamSizes.get(team) || 5
@@ -73,7 +85,7 @@ export function isCharacterOnTeam(grid: Grid, characterId: number, team: Team): 
 }
 
 export function getAvailableTeamSize(grid: Grid, team: Team): number {
-  return getMaxTeamSize(grid, team) - (grid.teamCharacters.get(team)?.size || 0)
+  return getMaxTeamSize(grid, team) - getTeamCharacters(grid, team).size
 }
 
 export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
@@ -110,7 +122,7 @@ export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] 
     .getAllTiles()
     .filter(
       (tile) =>
-        (tile.state === availableState || tile.state === occupiedState) && !tile.characterId,
+        (tile.state === availableState || tile.state === occupiedState) && !tileHasCharacter(tile),
     )
 }
 
