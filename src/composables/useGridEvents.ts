@@ -18,6 +18,8 @@ export interface GridEvents {
   'character:dragStart': (hexId: number, characterId: number) => void
   'character:placed': (hexId: number, characterId: number) => void
   'character:removed': (hexId: number) => void
+  'character:mouseenter': (hexId: number) => void
+  'character:mouseleave': (hexId: number) => void
 
   // Grid updates
   'grid:updated': () => void
