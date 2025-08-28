@@ -1,5 +1,6 @@
+import { getOpposingTeam } from '../characters/character'
 import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findRearmostTarget, getOpposingTeam } from './utils/targeting'
+import { findRearmostTarget } from './utils/targeting'
 
 /**
  * Targets the rearmost character on the opposing team.

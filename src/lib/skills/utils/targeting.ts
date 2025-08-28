@@ -1,4 +1,4 @@
-import { getTilesWithCharacters } from '../../characters/character'
+import { getOpposingTeam, getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
@@ -23,9 +23,9 @@ export interface TargetingOptions {
 }
 
 /**
- * Get all characters for a given team
+ * Get all target candidates for a given team
  */
-export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
+export function getTeamTargetCandidates(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
 
   // Use Grid's optimized getTilesWithCharacters() instead of getAllTiles()
@@ -48,8 +48,7 @@ export function getTeamCharacters(grid: Grid, team: Team): TargetCandidate[] {
  * Get all opposing team characters for a given team
  */
 export function getOpposingCharacters(grid: Grid, team: Team): TargetCandidate[] {
-  const opposingTeam = team === Team.ALLY ? Team.ENEMY : Team.ALLY
-  return getTeamCharacters(grid, opposingTeam)
+  return getTeamTargetCandidates(grid, getOpposingTeam(team))
 }
 
 /**
@@ -72,13 +71,6 @@ export function calculateDistances(
 }
 
 /**
- * Helper function to get the opposing team
- */
-export function getOpposingTeam(team: Team): Team {
-  return team === Team.ALLY ? Team.ENEMY : Team.ALLY
-}
-
-/**
  * Get candidates with optional exclusion
  */
 export function getCandidates(
@@ -86,7 +78,7 @@ export function getCandidates(
   targetTeam: Team,
   excludeCharacterId?: number,
 ): TargetCandidate[] {
-  const candidates = getTeamCharacters(grid, targetTeam)
+  const candidates = getTeamTargetCandidates(grid, targetTeam)
 
   // Filter out excluded character if specified
   if (excludeCharacterId !== undefined) {
@@ -220,7 +212,7 @@ export function findRearmostTarget(
   const { grid, team, hexId } = context
 
   // Get all candidates on the target team
-  const candidates = getTeamCharacters(grid, targetTeam)
+  const candidates = getTeamTargetCandidates(grid, targetTeam)
   if (candidates.length === 0) return null
 
   // Optimize by finding max/min hex ID directly instead of scanning all tiles
@@ -268,7 +260,7 @@ export function spiralSearchFromTile(
   const centerHex = grid.getHexById(centerHexId)
   if (!centerHex) return null
 
-  const candidates = getTeamCharacters(grid, targetTeam)
+  const candidates = getTeamTargetCandidates(grid, targetTeam)
   if (candidates.length === 0) return null
 
   // Create lookup structures for efficient checking
