@@ -74,7 +74,7 @@ describe('transaction.ts', () => {
 
       it('should skip undefined operations', () => {
         const op1 = vi.fn(() => true)
-        const op2 = undefined as any
+        const op2 = undefined as unknown as () => boolean
         const op3 = vi.fn(() => true)
 
         const result = executeTransaction([op1, op2, op3])

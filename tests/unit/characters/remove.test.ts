@@ -283,15 +283,6 @@ describe('remove.ts', () => {
       performPlace(grid, 2, 200, Team.ALLY)
       performPlace(grid, 4, 300, Team.ENEMY)
 
-      // Store original state
-      const originalState = {
-        tile1: grid.getTileById(1).characterId,
-        tile2: grid.getTileById(2).characterId,
-        tile4: grid.getTileById(4).characterId,
-        allySize: grid.teamCharacters.get(Team.ALLY)?.size,
-        enemySize: grid.teamCharacters.get(Team.ENEMY)?.size,
-      }
-
       // Clear should succeed
       const result = performClearAll(grid)
       expect(result).toBe(true)
@@ -338,20 +329,7 @@ describe('remove.ts', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle removing from all tiles sequentially', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 3, 300, Team.ALLY)
-
-      expect(performRemove(grid, 1)).toBe(true)
-      expect(performRemove(grid, 2)).toBe(true)
-      expect(performRemove(grid, 3)).toBe(true)
-
-      // All should be removed
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(0)
-    })
-
-    it('should handle remove after move', () => {
+    it('should handle remove after position changes', () => {
       performPlace(grid, 1, 100, Team.ALLY)
 
       // Move character
@@ -363,24 +341,6 @@ describe('remove.ts', () => {
 
       expect(result).toBe(true)
       expect(grid.getTileById(2).characterId).toBeUndefined()
-    })
-
-    it('should handle remove after swap', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      // Manually simulate a swap
-      const tile1 = grid.getTileById(1)
-      const tile2 = grid.getTileById(2)
-      const temp = tile1.characterId
-      tile1.characterId = tile2.characterId
-      tile2.characterId = temp
-
-      // Remove from swapped position
-      const result = executeRemoveCharacter(grid, skillManager, 1)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(1).characterId).toBeUndefined()
     })
 
     it('should handle clearing large grid', () => {

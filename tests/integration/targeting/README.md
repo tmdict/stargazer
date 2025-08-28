@@ -6,13 +6,13 @@ This directory contains comprehensive tests for the skill targeting system utili
 
 ```
 targeting/
-├── README.md           # This file
-├── targeting.test.ts   # Main test runner for all targeting tests
-└── symmetrical/        # Test data for symmetrical targeting
-    ├── control/        # Control test cases
-    ├── arena1/         # Arena 1 test cases
-    ├── arena3/         # Arena 3 test cases
-    └── arena4/         # Arena 4 test cases
+├── README.md             # This file
+├── targeting.test.ts     # Main test runner for all targeting tests
+└── symmetricalSpiral/    # Test data for symmetrical targeting
+    ├── control/          # Control test cases
+    ├── arena1/           # Arena 1 test cases
+    ├── arena3/           # Arena 3 test cases
+    └── arena4/           # Arena 4 test cases
 ```
 
 ## Test Coverage

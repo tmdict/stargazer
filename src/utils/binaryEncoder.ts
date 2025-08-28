@@ -52,11 +52,16 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * @returns A new grid state with only valid entries
  */
 export function validateGridState(state: GridState): GridState {
+  // Handle null, undefined, or non-object inputs
+  if (!state || typeof state !== 'object' || Array.isArray(state)) {
+    return {}
+  }
+
   const validated: GridState = {}
 
   // Validate tile entries: hexId must be 1-63, state must be 0-7
   // We filter out invalid entries to ensure the count matches actual data written
-  if (state.t) {
+  if (state.t && Array.isArray(state.t)) {
     const validTiles = state.t.filter((entry) => {
       const [hexId, tileState] = entry
       const isValid =
@@ -78,7 +83,7 @@ export function validateGridState(state: GridState): GridState {
 
   // Validate character entries: hexId 1-63, charId 1-16383, team 1-2
   // This ensures character IDs fit in 14 bits and teams in 1 bit
-  if (state.c) {
+  if (state.c && Array.isArray(state.c)) {
     const validChars = state.c.filter((entry) => {
       const [hexId, charId, team] = entry
       const isValid =
@@ -104,8 +109,8 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
-  // Artifacts: keep as-is (null or 0-7 range is handled during encoding)
-  if (state.a !== undefined) {
+  // Artifacts: must be array with exactly 2 elements
+  if (state.a && Array.isArray(state.a) && state.a.length === 2) {
     validated.a = state.a
   }
 
