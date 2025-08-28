@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { getOpposingTeam } from '../../../../src/lib/characters/character'
 import { Grid } from '../../../../src/lib/grid'
 import type { SkillContext } from '../../../../src/lib/skills/skill'
 import { SkillManager } from '../../../../src/lib/skills/skill'
@@ -9,8 +10,7 @@ import {
   findTarget,
   getCandidates,
   getOpposingCharacters,
-  getOpposingTeam,
-  getTeamCharacters,
+  getTeamTargetCandidates,
   spiralSearchFromTile,
   TargetingMethod,
   type TargetCandidate,
@@ -49,7 +49,7 @@ describe('targeting', () => {
       expect(getOpposingTeam(Team.ENEMY)).toBe(Team.ALLY)
     })
 
-    it('retrieves team characters', () => {
+    it('retrieves team target candidates', () => {
       // Place characters
       const tile1 = grid.getTileById(1)
       tile1.characterId = 100
@@ -63,12 +63,12 @@ describe('targeting', () => {
       tile3.characterId = 200
       tile3.team = Team.ENEMY
 
-      const allyChars = getTeamCharacters(grid, Team.ALLY)
+      const allyChars = getTeamTargetCandidates(grid, Team.ALLY)
       expect(allyChars).toHaveLength(2)
       const allyCharIds = allyChars.map((c) => c.characterId).sort()
       expect(allyCharIds).toEqual([100, 101])
 
-      const enemyChars = getTeamCharacters(grid, Team.ENEMY)
+      const enemyChars = getTeamTargetCandidates(grid, Team.ENEMY)
       expect(enemyChars).toHaveLength(1)
       expect(enemyChars[0]?.characterId).toBe(200)
     })

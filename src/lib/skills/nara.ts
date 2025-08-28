@@ -1,6 +1,7 @@
+import { getOpposingTeam } from '../characters/character'
 import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { getSymmetricalHexId } from './utils/symmetry'
-import { getOpposingTeam, spiralSearchFromTile } from './utils/targeting'
+import { spiralSearchFromTile } from './utils/targeting'
 
 /**
  * Calculate the target for skill.
