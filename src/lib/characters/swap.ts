@@ -80,20 +80,20 @@ export function executeSwapCharacters(
 
 // Performs atomic swap of two characters
 // Parameters:
-// - fromTargetTeam: The team that toChar will join when placed at fromHexId
-// - toTargetTeam: The team that fromChar will join when placed at toHexId
-// - fromOriginalTeam: The original team of fromChar (for rollback)
-// - toOriginalTeam: The original team of toChar (for rollback)
+// - toCharDestTeam: The team that toChar will join when placed at fromHexId
+// - fromCharDestTeam: The team that fromChar will join when placed at toHexId
+// - fromCharOriginalTeam: The original team of fromChar (for rollback)
+// - toCharOriginalTeam: The original team of toChar (for rollback)
 function performSwap(
   grid: Grid,
   fromHexId: number,
   toHexId: number,
   fromChar: number,
   toChar: number,
-  fromTargetTeam: Team,
-  toTargetTeam: Team,
-  fromOriginalTeam: Team,
-  toOriginalTeam: Team,
+  toCharDestTeam: Team,
+  fromCharDestTeam: Team,
+  fromCharOriginalTeam: Team,
+  toCharOriginalTeam: Team,
 ): boolean {
   // Execute swap as transaction
   const result = executeTransaction(
@@ -106,19 +106,19 @@ function performSwap(
         return performRemove(grid, toHexId, true)
       },
       () => {
-        return performPlace(grid, fromHexId, toChar, fromTargetTeam, true)
+        return performPlace(grid, fromHexId, toChar, toCharDestTeam, true)
       },
       () => {
-        return performPlace(grid, toHexId, fromChar, toTargetTeam, true)
+        return performPlace(grid, toHexId, fromChar, fromCharDestTeam, true)
       },
     ],
     // Rollback operations
     [
       () => {
-        performPlace(grid, fromHexId, fromChar, fromOriginalTeam, true)
+        performPlace(grid, fromHexId, fromChar, fromCharOriginalTeam, true)
       },
       () => {
-        performPlace(grid, toHexId, toChar, toOriginalTeam, true)
+        performPlace(grid, toHexId, toChar, toCharOriginalTeam, true)
       },
     ],
   )
@@ -218,11 +218,11 @@ function performCrossTeamSwap(
             grid,
             fromHexId,
             toHexId,
-            toChar,     // Swap them back
-            fromChar,   // Swap them back
-            fromTeam,   // Original teams
-            toTeam,     // Original teams
-            fromTeam,   // Keep original teams for any nested rollback
+            toChar, // Swap them back
+            fromChar, // Swap them back
+            fromTeam, // Original teams
+            toTeam, // Original teams
+            fromTeam, // Keep original teams for any nested rollback
             toTeam,
           )
         }

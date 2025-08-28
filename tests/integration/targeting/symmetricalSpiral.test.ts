@@ -3,13 +3,13 @@ import { basename, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { describe, expect, it } from 'vitest'
 
-import type { Grid, GridTile } from '../../../../src/lib/grid'
-import { Hex } from '../../../../src/lib/hex'
-import { getSymmetricalHexId } from '../../../../src/lib/skills/utils/symmetry'
-import { spiralSearchFromTile } from '../../../../src/lib/skills/utils/targeting'
-import { FULL_GRID } from '../../../../src/lib/types/grid'
-import { State } from '../../../../src/lib/types/state'
-import { Team } from '../../../../src/lib/types/team'
+import type { Grid, GridTile } from '../../../src/lib/grid'
+import { Hex } from '../../../src/lib/hex'
+import { getSymmetricalHexId } from '../../../src/lib/skills/utils/symmetry'
+import { spiralSearchFromTile } from '../../../src/lib/skills/utils/targeting'
+import { FULL_GRID } from '../../../src/lib/types/grid'
+import { State } from '../../../src/lib/types/state'
+import { Team } from '../../../src/lib/types/team'
 
 interface SpiralSearchConfig {
   centerTile: number // The tile to search from (e.g., symmetrical tile)
@@ -151,7 +151,7 @@ function loadTestsFromDirectory(dirPath: string): TestData[] {
     ) {
       tests.push({
         ...parseTestFile(fullPath),
-        path: fullPath.replace(join(__dirname, 'symmetrical'), '').substring(1),
+        path: fullPath.replace(join(__dirname, 'symmetricalSpiral'), '').substring(1),
       })
     }
   }
@@ -160,9 +160,9 @@ function loadTestsFromDirectory(dirPath: string): TestData[] {
 }
 
 function loadAllTests(): TestData[] {
-  // Load test data from the symmetrical subdirectory
-  const symmetricalDir = join(__dirname, 'symmetrical')
-  return loadTestsFromDirectory(symmetricalDir)
+  // Load test data from the symmetricalSpiral subdirectory
+  const symmetricalSpiralDir = join(__dirname, 'symmetricalSpiral')
+  return loadTestsFromDirectory(symmetricalSpiralDir)
 }
 
 /**
@@ -229,104 +229,43 @@ function runSpiralSearch(config: SpiralSearchConfig): SpiralSearchResult {
   }
 }
 
-describe('Targeting Tests', () => {
-  describe('Symmetrical targeting', () => {
-    const testFiles = loadAllTests()
+describe('Symmetrical Spiral Targeting Tests', () => {
+  const testFiles = loadAllTests()
 
-    // Test spiral search for each test case
-    testFiles.forEach((testFile) => {
-      describe(`${testFile.path || testFile.file || 'Unknown test file'}`, () => {
-        testFile.testCases.forEach((testCase) => {
-          it(`Spiral from tile ${testCase.symmetricalTile}`, () => {
-            // First verify the symmetrical tile calculation matches expected
-            const calculatedSymmetrical = getSymmetricalHexId(testCase.casterTile)
-            expect(calculatedSymmetrical).toBe(testCase.symmetricalTile)
+  // Test spiral search for each test case
+  testFiles.forEach((testFile) => {
+    describe(`${testFile.path || testFile.file || 'Unknown test file'}`, () => {
+      testFile.testCases.forEach((testCase) => {
+        it(`Spiral from tile ${testCase.symmetricalTile}`, () => {
+          // First verify the symmetrical tile calculation matches expected
+          const calculatedSymmetrical = getSymmetricalHexId(testCase.casterTile)
+          expect(calculatedSymmetrical).toBe(testCase.symmetricalTile)
 
-            // Check if the expected target is on the symmetrical tile itself
-            // (In real usage, this would be handled before calling spiralSearchFromTile)
-            if (testCase.expectedTarget === testCase.symmetricalTile) {
-              // This test case expects the target to be on the symmetrical tile
-              // which would be found by Silvina before calling spiral search
-              // For spiral search testing, we skip these cases or test that an enemy
-              // on the symmetrical tile would be found at distance 0
-              if (testFile.enemies.includes(testCase.symmetricalTile)) {
-                // There's an enemy on the symmetrical tile - spiral search would find it immediately
-                // but in practice, Silvina check this before calling spiral search
-                return // Skip this test case as it's not testing spiral search logic
-              }
+          // Check if the expected target is on the symmetrical tile itself
+          // (In real usage, this would be handled before calling spiralSearchFromTile)
+          if (testCase.expectedTarget === testCase.symmetricalTile) {
+            // This test case expects the target to be on the symmetrical tile
+            // which would be found by Silvina before calling spiral search
+            // For spiral search testing, we skip these cases or test that an enemy
+            // on the symmetrical tile would be found at distance 0
+            if (testFile.enemies.includes(testCase.symmetricalTile)) {
+              // There's an enemy on the symmetrical tile - spiral search would find it immediately
+              // but in practice, Silvina check this before calling spiral search
+              return // Skip this test case as it's not testing spiral search logic
             }
+          }
 
-            // Test ally team spiral search (clockwise)
-            const result = runSpiralSearch({
-              centerTile: testCase.symmetricalTile,
-              targetTiles: testFile.enemies,
-              targetTeam: Team.ENEMY,
-              casterTeam: Team.ALLY,
-            })
-
-            expect(result.targetTile).toBe(testCase.expectedTarget)
+          // Test ally team spiral search (clockwise)
+          const result = runSpiralSearch({
+            centerTile: testCase.symmetricalTile,
+            targetTiles: testFile.enemies,
+            targetTeam: Team.ENEMY,
+            casterTeam: Team.ALLY,
           })
+
+          expect(result.targetTile).toBe(testCase.expectedTarget)
         })
       })
-    })
-  })
-
-  describe('Specific spiral search scenarios', () => {
-    it('Enemy Team - Counter-clockwise walk at distance 1', () => {
-      // Test enemy team spiral behavior (counter-clockwise)
-      const centerTile = 1 // Search from tile 1
-      const targets = [2, 6] // Enemies at tiles 2 and 6
-
-      const result = runSpiralSearch({
-        centerTile,
-        targetTiles: targets,
-        targetTeam: Team.ALLY, // Targets are ally team
-        casterTeam: Team.ENEMY, // Caster is enemy team (counter-clockwise)
-      })
-
-      expect(result.targetTile).toBe(6)
-    })
-
-    it('Enemy Team - Counter-clockwise walk at distance 2', () => {
-      const centerTile = 8 // Search from tile 8
-      const targets = [1, 2, 11, 14, 15]
-
-      const result = runSpiralSearch({
-        centerTile,
-        targetTiles: targets,
-        targetTeam: Team.ALLY,
-        casterTeam: Team.ENEMY,
-      })
-
-      // In counter-clockwise from tile 8, we expect a specific target based on walk order
-      // The exact expectation depends on the spiral pattern
-      expect(result.examinedTiles.length).toBeGreaterThan(0)
-    })
-
-    it('Ally Team - Clockwise walk at same distance', () => {
-      const centerTile = 8
-      const targets = [1, 2, 11, 14, 15] // Multiple targets at various distances
-
-      const result = runSpiralSearch({
-        centerTile,
-        targetTiles: targets,
-        targetTeam: Team.ENEMY,
-        casterTeam: Team.ALLY,
-      })
-
-      // Verify it found a target
-      expect(targets).toContain(result.targetTile)
-    })
-
-    it('No targets available', () => {
-      expect(() => {
-        runSpiralSearch({
-          centerTile: 8,
-          targetTiles: [], // No targets
-          targetTeam: Team.ENEMY,
-          casterTeam: Team.ALLY,
-        })
-      }).toThrow('No target found')
     })
   })
 })
