@@ -54,9 +54,9 @@ export const useGameDataStore = defineStore('gameData', () => {
 
   // Helper to get character range by ID
   const getCharacterRange = (characterId: number): number => {
-    // Check if this is a companion ID (10000+)
+    // Check if this is a companion ID (10000+ or 20000+)
     if (characterId >= 10000) {
-      const mainCharacterId = characterId - 10000
+      const mainCharacterId = characterId % 10000
       const skill = getCharacterSkill(mainCharacterId)
 
       // If the skill defines a companion range, use that
