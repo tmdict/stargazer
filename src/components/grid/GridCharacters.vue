@@ -35,7 +35,17 @@ if (!dragDropAPI) {
 const { startDrag, endDrag } = dragDropAPI
 
 // Get character data
-const getCharacterName = (characterId: number): string => {
+const getCharacterName = (characterId: number, hexId: number): string => {
+  // Check if this character has a custom image modifier
+  const team = getCharacterTeam(gridStore._getGrid(), hexId)
+  if (team) {
+    const customImageName = skillStore.getImageModifierForCharacter(characterId, team)
+    if (customImageName) {
+      return customImageName
+    }
+  }
+
+  // Otherwise use the default character name
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
 
@@ -124,14 +134,9 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   // Add sourceHexId to differentiate from character selection drags
   // For companions, we pass the companion ID so the system knows it's a companion
   const characterWithSource = { ...character, id: characterId, sourceHexId: hexId }
-  const characterName = gameDataStore.getCharacterNameById(actualId) || ''
+  const characterName = getCharacterName(characterId, hexId)
 
-  startDrag(
-    event,
-    characterWithSource,
-    characterId,
-    gameDataStore.getCharacterImage(characterName || ''),
-  )
+  startDrag(event, characterWithSource, characterId, gameDataStore.getCharacterImage(characterName))
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -176,8 +181,8 @@ const handleMouseLeave = (hexId: number) => {
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />
         <img
-          :src="gameDataStore.getCharacterImage(getCharacterName(characterId))"
-          :alt="getCharacterName(characterId)"
+          :src="gameDataStore.getCharacterImage(getCharacterName(characterId, hexId))"
+          :alt="getCharacterName(characterId, hexId)"
           class="character-image"
           :style="getSkillBorderStyle(characterId, hexId)"
         />

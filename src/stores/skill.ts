@@ -13,6 +13,11 @@ export const useSkillStore = defineStore('skill', () => {
     return skillManager.getColorModifiersByCharacterAndTeam()
   })
 
+  // Computed image modifiers from skill manager
+  const imageModifiersByCharacterAndTeam = computed(() => {
+    return skillManager.getImageModifiersByCharacterAndTeam()
+  })
+
   // Computed tile color modifiers from skill manager
   const tileColorModifiers = computed(() => {
     // Access version to trigger reactivity when modifiers change
@@ -25,6 +30,13 @@ export const useSkillStore = defineStore('skill', () => {
     const key = `${characterId}-${team}`
     const color = colorModifiersByCharacterAndTeam.value.get(key)
     return color
+  }
+
+  // Helper to get image modifier for a character
+  const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined => {
+    const key = `${characterId}-${team}`
+    const imageName = imageModifiersByCharacterAndTeam.value.get(key)
+    return imageName
   }
 
   // Helper to get tile color modifier for a specific hex
@@ -46,8 +58,10 @@ export const useSkillStore = defineStore('skill', () => {
 
   return {
     colorModifiersByCharacterAndTeam,
+    imageModifiersByCharacterAndTeam,
     tileColorModifiers,
     getColorModifierForCharacter,
+    getImageModifierForCharacter,
     getTileColorModifier,
     getAllSkillTargets,
     getActiveSkillInfo,
