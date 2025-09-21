@@ -50,7 +50,7 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 }
 
 const getCharacterLevel = (characterId: number): 's' | 'a' => {
-  // Handle companion IDs (10000+)
+  // Handle companion IDs (10000+ or 20000+)
   const actualId = characterId >= 10000 ? characterId % 10000 : characterId
   const character = props.characters.find((c) => c.id === actualId)
   return (character?.level as 's' | 'a') || 'a'
