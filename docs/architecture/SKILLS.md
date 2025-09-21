@@ -53,6 +53,7 @@ interface Skill {
   colorModifier?: string // Border color for visual effects
   targetingColorModifier?: string // Arrow color for targeting skills
   companionColorModifier?: string // Border color for companions
+  companionImageModifier?: string // Custom profile image for companions
   tileColorModifier?: string // Tile border color for tile effects
   companionRange?: number // Override range for companions
 
@@ -113,8 +114,9 @@ Spawn linked characters that share fate with their main unit:
 
 - **Linked lifecycle**: Main and companion removed together
 - **Team capacity**: Increases beyond standard limit
-- **Visual differentiation**: Custom border colors
+- **Visual differentiation**: Custom border colors or profile images
 - **Range independence**: Companions can have different ranges
+- **Multiple companions**: Support for spawning multiple companion units
 
 See [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) for implementation details.
 
@@ -154,6 +156,7 @@ export const mySkill: Skill = {
   colorModifier: '#hexcolor', // optional - character border
   targetingColorModifier: '#hexcolor', // optional - arrow color
   companionColorModifier: '#hexcolor', // optional - companion border
+  companionImageModifier: 'image-name', // optional - companion profile image
   tileColorModifier: '#hexcolor', // optional - tile border
   companionRange: 2, // optional - companion range override
 

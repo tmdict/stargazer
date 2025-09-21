@@ -84,7 +84,7 @@ export function hasSkill(characterId: number): boolean {
 
 export function hasCompanionSkill(characterId: number): boolean {
   const skill = getCharacterSkill(characterId)
-  return skill?.companionColorModifier !== undefined
+  return skill?.companionColorModifier !== undefined || skill?.companionImageModifier !== undefined
 }
 
 // SkillManager class for managing active skills
