@@ -113,6 +113,10 @@ export function restoreCompanions(
         if (skill?.companionColorModifier) {
           skillManager.addCharacterColorModifier(companionId, team, skill.companionColorModifier)
         }
+        // Re-add image modifier if skill has one
+        if (skill?.companionImageModifier) {
+          skillManager.addCharacterImageModifier(companionId, team, skill.companionImageModifier)
+        }
       }
     })
 }

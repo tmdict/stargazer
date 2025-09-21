@@ -15,7 +15,7 @@ export const elijahLailahSkill: Skill = {
 
   colorModifier: '#6ca3a0', // Light blue for main unit (Elijah)
   companionColorModifier: '#cd7169', // Light pink for companion unit (Lailah)
-  companionRange: 1, // Lailah has range of 1
+  companionRange: 1, // Companion attack range
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context
