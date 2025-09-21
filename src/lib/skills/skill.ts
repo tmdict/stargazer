@@ -9,6 +9,7 @@ import { phraestoSkill } from './phraesto'
 import { reinierSkill } from './reinier'
 import { silvinaSkill } from './silvina'
 import { valaSkill } from './vala'
+import { zanieSkill } from './zanie'
 
 export interface SkillContext {
   grid: Grid
@@ -39,6 +40,7 @@ export interface Skill {
   name: string
   description: string
   colorModifier?: string // Border color for visual effects (main unit)
+  companionImageModifier?: string // Custom image for companion units
   companionColorModifier?: string // Border color for companion units
   targetingColorModifier?: string // Arrow color for targeting skills
   tileColorModifier?: string // Tile color for targeting skills
@@ -57,6 +59,7 @@ const skillRegistry = new Map<number, Skill>([
   // Companion skills
   [phraestoSkill.characterId, phraestoSkill],
   [elijahLailahSkill.characterId, elijahLailahSkill],
+  [zanieSkill.characterId, zanieSkill],
   // Targeting skills
   [silvinaSkill.characterId, silvinaSkill],
   [valaSkill.characterId, valaSkill],
@@ -92,6 +95,9 @@ export class SkillManager {
   // Track color modifiers for specific characters (for companions)
   // Key is "characterId-team" to support same companion ID on different teams
   private characterColorModifiers: Record<string, string> = {}
+  // Track image modifiers for specific characters (for companions with custom images)
+  // Key is "characterId-team" to support same companion ID on different teams
+  private characterImageModifiers: Record<string, string> = {}
   // Track color modifiers for specific tiles
   private tileColorModifiers: Map<number, string> = new Map()
   // Track skill targeting information
@@ -200,6 +206,7 @@ export class SkillManager {
   reset(): void {
     this.activeSkills = {}
     this.characterColorModifiers = {}
+    this.characterImageModifiers = {}
     this.tileColorModifiers.clear()
     this.skillTargets.clear()
     this.targetVersion++ // Trigger reactivity to clear UI
@@ -220,6 +227,27 @@ export class SkillManager {
   // Clear all character color modifiers
   clearCharacterColorModifiers(): void {
     this.characterColorModifiers = {}
+  }
+
+  // Add image modifier for a specific character (used by skills for companions)
+  addCharacterImageModifier(characterId: number, team: Team, imageName: string): void {
+    const key = this.getSkillKey(characterId, team)
+    this.characterImageModifiers[key] = imageName
+  }
+
+  // Remove image modifier for a specific character
+  removeCharacterImageModifier(characterId: number, team: Team): void {
+    const key = this.getSkillKey(characterId, team)
+    delete this.characterImageModifiers[key]
+  }
+
+  // Get all character image modifiers (exposed for UI reactivity)
+  getImageModifiersByCharacterAndTeam(): Map<string, string> {
+    const modifiers = new Map<string, string>()
+    for (const [key, imageName] of Object.entries(this.characterImageModifiers)) {
+      modifiers.set(key, imageName)
+    }
+    return modifiers
   }
 
   // Add color modifier for a specific tile
