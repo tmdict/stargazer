@@ -1,0 +1,10 @@
+{
+  "id": 90,
+  "name": "ravion",
+  "level": "s",
+  "faction": "wilder",
+  "class": "rogue",
+  "damage": "physical",
+  "range": 4,
+  "season": 4
+}
