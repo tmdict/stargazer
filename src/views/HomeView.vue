@@ -14,6 +14,7 @@ import SkillsSelection from '../components/SkillsSelection.vue'
 import TabNavigation from '../components/ui/TabNavigation.vue'
 import ToastContainer from '../components/ui/ToastContainer.vue'
 import { useBreakpoint } from '../composables/useBreakpoint'
+import { useGridExport } from '../composables/useGridExport'
 import { useToast } from '../composables/useToast'
 import { getMapNames } from '../lib/maps'
 import { State } from '../lib/types/state'
@@ -41,6 +42,7 @@ const skillStore = useSkillStore()
 const { success, error } = useToast()
 const router = useRouter()
 const { showPerspective } = useBreakpoint()
+const { copyToClipboard, downloadAsImage } = useGridExport()
 
 // Connect grid and skill manager
 gridStore._getGrid().skillManager = skillStore._getSkillManager()
@@ -145,88 +147,17 @@ const handleCopyLink = async () => {
 }
 
 const handleCopyImage = async () => {
-  try {
-    // Import html-to-image dynamically
-    const { toPng } = await import('html-to-image')
-
-    // Get the perspective container to capture all transforms
-    const containerElement = document.querySelector<HTMLElement>('.perspective-container')
-    if (!containerElement) {
-      console.error('Perspective container not found')
-      error('Failed to copy image')
-      return
-    }
-
-    // Generate PNG from the perspective container (includes all transforms)
-    const dataUrl = await toPng(containerElement, {
-      quality: 1.0,
-      pixelRatio: 2, // Higher quality export
-      backgroundColor: 'transparent', // Transparent background
-    })
-
-    // Convert data URL to blob
-    const response = await fetch(dataUrl)
-    const blob = await response.blob()
-
-    // Copy to clipboard using Clipboard API
-    if (navigator.clipboard && window.ClipboardItem) {
-      await navigator.clipboard.write([
-        new ClipboardItem({
-          'image/png': blob,
-        }),
-      ])
-      success('Copied to clipboard!')
-    } else {
-      // Fallback: show message for manual copy
-      error('Clipboard not supported')
-    }
-  } catch (err) {
-    console.error('Failed to copy grid image:', err)
-    error('Failed to copy image')
-  }
+  await copyToClipboard({
+    showPerspective: showPerspective.value,
+    perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
+  })
 }
 
 const handleDownload = async () => {
-  try {
-    // Import html-to-image dynamically
-    const { toPng } = await import('html-to-image')
-
-    // Get the perspective container to capture all transforms
-    const containerElement = document.querySelector<HTMLElement>('.perspective-container')
-    if (!containerElement) {
-      console.error('Perspective container not found')
-      error('Failed to download grid')
-      return
-    }
-
-    // Generate PNG from the perspective container (includes all transforms)
-    const dataUrl = await toPng(containerElement, {
-      quality: 1.0,
-      pixelRatio: 2, // Higher quality export
-      backgroundColor: 'transparent', // Transparent background
-    })
-
-    // Create download link
-    const now = new Date()
-    // 'undefined': fallback for invalid date and time
-    const dateStr = (now.toISOString().split('T')[0] ?? 'undefined').replace(/-/g, '')
-    const timeStr =
-      (now.toTimeString().split(' ')[0] ?? 'undefined').replace(/:/g, '') +
-      now.getMilliseconds().toString().padStart(3, '0')
-    const link = document.createElement('a')
-    link.download = `stargazer-${dateStr}-${timeStr}.png`
-    link.href = dataUrl
-
-    // Trigger download
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-
-    success('Grid downloaded!')
-  } catch (err) {
-    console.error('Failed to export grid:', err)
-    error('Download failed')
-  }
+  await downloadAsImage({
+    showPerspective: showPerspective.value,
+    perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
+  })
 }
 
 const handleMapEditorStateSelected = (state: State) => {
