@@ -29,7 +29,11 @@ const handleArtifactClick = (artifact: ArtifactType) => {
 }
 
 const isArtifactPlaced = (artifactId: number): boolean => {
-  return artifactStore.allyArtifactId === artifactId || artifactStore.enemyArtifactId === artifactId
+  if (selectedTeam.value === Team.ALLY) {
+    return artifactStore.allyArtifactId === artifactId
+  } else {
+    return artifactStore.enemyArtifactId === artifactId
+  }
 }
 
 const sortedArtifacts = computed(() => {
