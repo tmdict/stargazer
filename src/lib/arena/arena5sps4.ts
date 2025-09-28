@@ -1,8 +1,8 @@
 import { State } from '../types/state'
 
-export const ARENA_6 = {
-  id: 6,
-  name: 'V SP',
+export const ARENA_5_SP_S4 = {
+  id: 7,
+  name: 'SP (S4)',
   grid: [
     { type: State.AVAILABLE_ALLY, hex: [1, 2, 3, 4, 6, 8] },
     {
