@@ -47,7 +47,7 @@ const STATE_FORMATS: Record<State, StateFormat> = {
   [State.BLOCKED_BREAKABLE]: {
     name: 'Blocked (Breakable)',
     cssClass: 'state-blocked-breakable',
-    fillColor: '#d9d5cd',
+    fillColor: '#e1ddd7',
     strokeColor: '#000',
   },
 }
@@ -59,6 +59,6 @@ export const getStateName = (state: State): string => getStateFormat(state).name
 
 export const getStateClass = (state: State): string => getStateFormat(state).cssClass
 
-export const getHexFillColor = (state: State): string => getStateFormat(state).fillColor
+export const getTileFillColor = (state: State): string => getStateFormat(state).fillColor
 
-export const getHexStrokeColor = (state: State): string => getStateFormat(state).strokeColor
+export const getTileStrokeColor = (state: State): string => getStateFormat(state).strokeColor
