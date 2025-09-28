@@ -1,14 +1,9 @@
-/** * MapEditor Component * * Provides UI for editing hex tile states on the grid. * * Features: * -
-State selection with visual previews * - Clear map button to reset all tiles to DEFAULT and remove
-all characters * - Painting over any tile removes characters and replaces state entirely * - Emits
-events for state selection and map clearing * * Usage: Only active when 'mapEditor' tab is selected
-*/
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
 import { State } from '../lib/types/state'
 import { useI18nStore } from '../stores/i18n'
-import { getHexFillColor } from '../utils/stateFormatting'
+import { getTileFillColor } from '../utils/tileStateFormatting'
 
 const i18n = useI18nStore()
 
@@ -62,7 +57,7 @@ const handleClearMap = () => {
           <svg width="60" height="60" viewBox="0 0 60 60">
             <polygon
               points="30,7 46,15 46,37 30,45 14,37 14,15"
-              :fill="getHexFillColor(option.state)"
+              :fill="getTileFillColor(option.state)"
               stroke="#888888"
               stroke-width="2"
             />
