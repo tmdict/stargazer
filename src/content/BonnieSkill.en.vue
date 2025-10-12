@@ -4,7 +4,7 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './BonnieSkill.data'
 
 setupContentMeta({
-  title: "Bonnie · Decay's Reach",
+  title: 'Bonnie · Skills',
   description:
     "Bonnie's Decay's Reach skill targets the rearmost character on the opposing team. The rearmost enemy is determined by their position in the hexagonal grid, prioritizing those furthest back in their formation.",
   url: 'skill/bonnie',
@@ -15,13 +15,15 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>Bonnie · Decay's Reach</h1>
+    <h1>Bonnie</h1>
+
+    <h2>Decay's Reach</h2>
     <p>
       When a battle starts, Bonnie casts the Aging magic on the rearmost enemy, dealing damage and
       inflicting DoT (damage over time).
     </p>
 
-    <h2>How It Works</h2>
+    <h3>How It Works</h3>
     <p>
       The grid is organized into horizontal rows, with row 15 (hexes 44, 45) being the rearmost
       position for the enemy team, and row 1 (hexes 1, 2) being the rearmost for the ally team.

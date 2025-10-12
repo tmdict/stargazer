@@ -4,7 +4,7 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './SilvinaSkill.data'
 
 setupContentMeta({
-  title: 'Silvina · First Strike',
+  title: 'Silvina · Skills',
   description:
     'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts.',
   url: 'skill/silvina',
@@ -15,13 +15,15 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>Silvina · First Strike</h1>
+    <h1>Silvina</h1>
+
+    <h2>First Strike</h2>
     <p>
       Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches
       an attack when a battle starts.
     </p>
 
-    <h2>How It Works</h2>
+    <h3>How It Works</h3>
     <p>
       Silvina first checks her symmetrical tile (the mirror position across the grid's center). If
       an enemy is there, they become the target.
