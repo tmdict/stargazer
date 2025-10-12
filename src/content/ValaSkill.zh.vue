@@ -2,7 +2,7 @@
 import { setupContentMeta } from '@/utils/contentMeta'
 
 setupContentMeta({
-  title: '维拉 · 行动预告',
+  title: '维拉 · 技能',
   description:
     '在战斗开始前指定一个敌方角色。在战斗中，维拉会优先攻击被标记的敌人，并且每次攻击时会吸收能量。',
   url: 'skill/vala',
@@ -13,12 +13,14 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>维拉 · 行动预告</h1>
+    <h1>维拉</h1>
+
+    <h2>行动预告</h2>
     <p>
       在战斗开始前指定一个敌方角色。在战斗中，维拉会优先攻击被标记的敌人，并且每次攻击时会吸收能量。
     </p>
 
-    <h2>详细信息</h2>
+    <h3>详细信息</h3>
     <p>维拉会自动识别并标记距离她当前格子最远的敌方角色。</p>
     <p>距离计算使用六边形网格距离来确定最远的敌人。</p>
     <p>当多个敌人距离相等时：</p>

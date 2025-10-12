@@ -4,7 +4,7 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './ReinierSkill.data'
 
 setupContentMeta({
-  title: 'Reinier · Dynamic Balance',
+  title: 'Reinier · Skills',
   description:
     "Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a symmetrical position at the start of the battle. After the battle starts, the connected ally and enemy's positions are swapped, the ally receives a buff and the enemy receives a debuff.",
   url: 'skill/reinier',
@@ -15,14 +15,16 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>Reinier · Dynamic Balance</h1>
+    <h1>Reinier</h1>
+
+    <h2>Dynamic Balance</h2>
     <p>
       Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a
       symmetrical position at the start of the battle. After the battle starts, the connected ally
       and enemy's positions are swapped, the ally receives a buff and the enemy receives a debuff.
     </p>
 
-    <h2>How It Works</h2>
+    <h3>How It Works</h3>
     <p>
       Reinier identifies symmetrical hex pairs where one contains an ally and the other contains an
       enemy.
