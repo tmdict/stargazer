@@ -4,7 +4,7 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './BonnieSkill.data'
 
 setupContentMeta({
-  title: '波妮 · 黯影衰朽',
+  title: '波妮 · 技能',
   description: '战斗开始时，波妮对最靠后的敌人施加“衰老”魔法。对其造成伤害和DoT（持续伤害）。',
   url: 'skill/bonnie',
   locale: 'zh',
@@ -14,10 +14,12 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>波妮 · 黯影衰朽</h1>
+    <h1>波妮</h1>
+
+    <h2>黯影衰朽</h2>
     <p>战斗开始时，波妮对最靠后的敌人施加“衰老”魔法。对其造成伤害和DoT（持续伤害）。</p>
 
-    <h2>技能机制</h2>
+    <h3>技能机制</h3>
     <p>
       网格被组织成水平行，第15行（格子44、45）是敌方队伍的最后排，第1行（格子1、2）是友方队伍的最后排。
     </p>

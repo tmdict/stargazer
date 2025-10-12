@@ -2,7 +2,7 @@
 import { setupContentMeta } from '@/utils/contentMeta'
 
 setupContentMeta({
-  title: 'Vala · Notice Beforehand',
+  title: 'Vala · Skills',
   description:
     "Vala's Notice Beforehand skill targets the enemy furthest from her current position at the start of the battle. During battle Vala will attacks the Noticed enemy in priority, and absorb energy for each hit.",
   url: 'skill/vala',
@@ -13,14 +13,16 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>Vala · Notice Beforehand</h1>
+    <h1>Vala</h1>
+
+    <h2>Notice Beforehand</h2>
     <p>
       Vala's Notice Beforehand skill targets the enemy furthest from her current position at the
       start of the battle. During battle Vala will attacks the Noticed enemy in priority, and absorb
       energy for each hit.
     </p>
 
-    <h2>How It Works</h2>
+    <h3>How It Works</h3>
     <p>
       Vala automatically identifies and targets an opposing team's character that is furthest away
       from her current tile.

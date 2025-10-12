@@ -4,7 +4,7 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './NaraSkill.data'
 
 setupContentMeta({
-  title: 'Nara · Phantom Chains',
+  title: 'Nara · Skills',
   description:
     "Nara pulls a distant enemy hero toward her when there are no enemies within her normal attack range. This skill won't defeat the enemy and prioritizes attacking the closest symmetrical enemy hero.",
   url: 'skill/nara',
@@ -15,14 +15,16 @@ setupContentMeta({
 
 <template>
   <article>
-    <h1>Nara · Phantom Chains</h1>
+    <h1>Nara</h1>
+
+    <h2>Phantom Chains</h2>
     <p>
       Nara pulls a distant enemy hero toward her when there are no enemies within her normal attack
       range. This skill won't defeat the enemy and prioritizes attacking the closest symmetrical
       enemy hero.
     </p>
 
-    <h2>How It Works</h2>
+    <h3>How It Works</h3>
     <p>
       Nara first checks her symmetrical tile (the mirror position across the grid's center). If an
       enemy is there, they become the target.
