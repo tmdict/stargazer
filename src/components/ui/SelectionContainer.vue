@@ -22,8 +22,17 @@ withDefaults(defineProps<Props>(), {
   showFilters: false,
 })
 
+const emit = defineEmits<{
+  'clear-filters': []
+}>()
+
 const { selectedTeam, characterStore, artifactStore, handleTeamChange, handleClearAll } =
   useSelectionState()
+
+const handleClearClick = () => {
+  handleClearAll() // Clear characters/artifacts from grid
+  emit('clear-filters') // Tell parent to clear filters
+}
 </script>
 
 <template>
@@ -39,7 +48,7 @@ const { selectedTeam, characterStore, artifactStore, handleTeamChange, handleCle
           :maxEnemyCount
           @team-change="handleTeamChange"
         />
-        <ClearButton @click="handleClearAll" />
+        <ClearButton @click="handleClearClick" />
         <slot name="filters" v-if="showFilters" />
       </div>
     </div>

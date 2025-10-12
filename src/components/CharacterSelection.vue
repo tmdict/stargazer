@@ -98,6 +98,13 @@ const handleTagToggle = (tagName: string) => {
     selectedTagNames.value.push(tagName)
   }
 }
+
+const handleClearFilters = () => {
+  factionFilter.value = ''
+  classFilter.value = ''
+  damageFilter.value = ''
+  selectedTagNames.value = []
+}
 </script>
 
 <template>
@@ -109,6 +116,7 @@ const handleTagToggle = (tagName: string) => {
     :maxAllyCount="characterStore.maxTeamSizeAlly"
     :maxEnemyCount="characterStore.maxTeamSizeEnemy"
     :showFilters="true"
+    @clear-filters="handleClearFilters"
   >
     <!-- Character Filters in Controls Row -->
     <template #filters>
