@@ -7,6 +7,7 @@ import TagsDisplay from './TagsDisplay.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '../composables/useSelectionState'
 import type { CharacterType } from '../lib/types/character'
+import { loadTags } from '../utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -19,6 +20,7 @@ const { selectedTeam, characterStore } = useSelectionState()
 const factionFilter = ref('')
 const classFilter = ref('')
 const damageFilter = ref('')
+const selectedTagNames = ref<string[]>([])
 
 // Filtered and sorted characters
 const filteredAndSortedCharacters = computed(() => {
@@ -33,6 +35,15 @@ const filteredAndSortedCharacters = computed(() => {
   }
   if (damageFilter.value) {
     filtered = filtered.filter((char) => char.damage === damageFilter.value)
+  }
+
+  // Apply tag filters
+  if (selectedTagNames.value.length > 0) {
+    const allTags = loadTags()
+    const selectedTags = allTags.filter((tag) => selectedTagNames.value.includes(tag.name))
+    const characterNamesInSelectedTags = new Set(selectedTags.flatMap((tag) => tag.characters))
+
+    filtered = filtered.filter((char) => characterNamesInSelectedTags.has(char.name))
   }
 
   // Sort filtered results
@@ -76,6 +87,17 @@ const removeCharacterFromGrid = (characterId: number) => {
     characterStore.removeCharacterFromHex(characterTile.hex.getId())
   }
 }
+
+const handleTagToggle = (tagName: string) => {
+  const index = selectedTagNames.value.indexOf(tagName)
+  if (index > -1) {
+    // Tag is selected, remove it
+    selectedTagNames.value.splice(index, 1)
+  } else {
+    // Tag is not selected, add it
+    selectedTagNames.value.push(tagName)
+  }
+}
 </script>
 
 <template>
@@ -102,7 +124,7 @@ const removeCharacterFromGrid = (characterId: number) => {
     </template>
 
     <!-- Tags Display -->
-    <TagsDisplay />
+    <TagsDisplay :selectedTagNames @tag-toggle="handleTagToggle" />
 
     <!-- Characters Grid -->
     <div class="characters">
