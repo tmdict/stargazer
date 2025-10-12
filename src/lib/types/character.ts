@@ -12,3 +12,8 @@ export interface CharacterType {
   sourceHexId?: number // Optional property for tracking drag source
   team?: Team // Team assignment for placement
 }
+
+export interface TagType {
+  name: string
+  characters: string[]
+}

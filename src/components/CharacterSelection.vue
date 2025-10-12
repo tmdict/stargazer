@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import CharacterFilters from './CharacterFilters.vue'
 import CharacterIcon from './CharacterIcon.vue'
+import TagsDisplay from './TagsDisplay.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '../composables/useSelectionState'
 import type { CharacterType } from '../lib/types/character'
@@ -99,6 +100,9 @@ const removeCharacterFromGrid = (characterId: number) => {
         @update:damageFilter="damageFilter = $event"
       />
     </template>
+
+    <!-- Tags Display -->
+    <TagsDisplay />
 
     <!-- Characters Grid -->
     <div class="characters">
