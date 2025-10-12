@@ -5,6 +5,14 @@ import type { TagType } from '../lib/types/character'
 import { useI18nStore } from '../stores/i18n'
 import { loadTags } from '../utils/dataLoader'
 
+const props = defineProps<{
+  selectedTagNames: string[]
+}>()
+
+const emit = defineEmits<{
+  'tag-toggle': [tagName: string]
+}>()
+
 const i18n = useI18nStore()
 
 const tags = computed<TagType[]>(() => {
@@ -14,12 +22,26 @@ const tags = computed<TagType[]>(() => {
 const getTagLabel = (tagName: string): string => {
   return i18n.t(`app.${tagName}`)
 }
+
+const isTagSelected = (tagName: string): boolean => {
+  return props.selectedTagNames.includes(tagName)
+}
+
+const handleTagClick = (tagName: string) => {
+  emit('tag-toggle', tagName)
+}
 </script>
 
 <template>
   <div class="tags-display">
     <div class="tags-container">
-      <div v-for="tag in tags" :key="tag.name" class="tag-pill">
+      <div
+        v-for="tag in tags"
+        :key="tag.name"
+        class="tag-pill"
+        :class="{ selected: isTagSelected(tag.name) }"
+        @click="handleTagClick(tag.name)"
+      >
         {{ getTagLabel(tag.name) }}
       </div>
     </div>
@@ -52,13 +74,18 @@ const getTagLabel = (tagName: string): string => {
   color: var(--color-text-secondary);
   white-space: nowrap;
   transition: all var(--transition-fast);
-  cursor: default;
+  cursor: pointer;
 }
 
 .tag-pill:hover {
   background: var(--color-bg-secondary);
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.tag-pill.selected {
+  background: var(--color-bg-secondary);
+  border-color: var(--color-primary);
 }
 
 @media (max-width: 768px) {
