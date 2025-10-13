@@ -182,6 +182,10 @@ const handleDownload = () => {
   border-color: var(--color-primary-hover);
 }
 
+.action-btn:active {
+  transform: scale(0.95);
+}
+
 /* Checkbox inside toggle buttons */
 .grid-toggle-checkbox {
   width: 0.9rem;
