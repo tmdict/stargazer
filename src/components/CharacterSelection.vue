@@ -20,7 +20,7 @@ const { selectedTeam, characterStore } = useSelectionState()
 const factionFilter = ref('')
 const classFilter = ref('')
 const damageFilter = ref('')
-const selectedTagNames = ref<string[]>([])
+const selectedTagNames = ref<string | null>(null)
 
 // Filtered and sorted characters
 const filteredAndSortedCharacters = computed(() => {
@@ -38,12 +38,13 @@ const filteredAndSortedCharacters = computed(() => {
   }
 
   // Apply tag filters
-  if (selectedTagNames.value.length > 0) {
+  if (selectedTagNames.value) {
     const allTags = loadTags()
-    const selectedTags = allTags.filter((tag) => selectedTagNames.value.includes(tag.name))
-    const characterNamesInSelectedTags = new Set(selectedTags.flatMap((tag) => tag.characters))
-
-    filtered = filtered.filter((char) => characterNamesInSelectedTags.has(char.name))
+    const selectedTag = allTags.find((tag) => tag.name === selectedTagNames.value)
+    if (selectedTag) {
+      const characterNamesInSelectedTag = new Set(selectedTag.characters)
+      filtered = filtered.filter((char) => characterNamesInSelectedTag.has(char.name))
+    }
   }
 
   // Sort filtered results
@@ -89,21 +90,15 @@ const removeCharacterFromGrid = (characterId: number) => {
 }
 
 const handleTagToggle = (tagName: string) => {
-  const index = selectedTagNames.value.indexOf(tagName)
-  if (index > -1) {
-    // Tag is selected, remove it
-    selectedTagNames.value.splice(index, 1)
-  } else {
-    // Tag is not selected, add it
-    selectedTagNames.value.push(tagName)
-  }
+  // Toggle: deselect if already selected, otherwise select the clicked tag
+  selectedTagNames.value = selectedTagNames.value === tagName ? null : tagName
 }
 
 const handleClearFilters = () => {
   factionFilter.value = ''
   classFilter.value = ''
   damageFilter.value = ''
-  selectedTagNames.value = []
+  selectedTagNames.value = null
 }
 </script>
 

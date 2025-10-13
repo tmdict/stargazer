@@ -6,7 +6,7 @@ import { useI18nStore } from '../stores/i18n'
 import { loadTags } from '../utils/dataLoader'
 
 const props = defineProps<{
-  selectedTagNames: string[]
+  selectedTagNames: string | null
 }>()
 
 const emit = defineEmits<{
@@ -24,7 +24,7 @@ const getTagLabel = (tagName: string): string => {
 }
 
 const isTagSelected = (tagName: string): boolean => {
-  return props.selectedTagNames.includes(tagName)
+  return props.selectedTagNames === tagName
 }
 
 const handleTagClick = (tagName: string) => {
