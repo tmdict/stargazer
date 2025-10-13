@@ -151,7 +151,7 @@ const handleMouseLeave = () => {
   justify-content: center;
   width: 36px;
   height: 36px;
-  border: 4px solid white;
+  border: 4px solid #fff;
   border-radius: 50%;
   background-color: transparent;
   cursor: pointer;
@@ -162,6 +162,10 @@ const handleMouseLeave = () => {
 .icon-option:hover {
   border-color: var(--color-primary-hover);
   transform: scale(1.05);
+}
+
+.icon-option:active {
+  transform: scale(0.95);
 }
 
 .icon-option.active {
