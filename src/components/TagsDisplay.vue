@@ -83,6 +83,12 @@ const handleTagClick = (tagName: string) => {
   color: var(--color-primary);
 }
 
+.tag-pill:active,
+.tag-pill.selected:active {
+  transform: scale(0.95);
+  background: var(--color-bg-primary);
+}
+
 .tag-pill.selected {
   background: var(--color-bg-secondary);
   border-color: var(--color-primary);

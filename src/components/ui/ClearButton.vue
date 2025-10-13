@@ -35,6 +35,10 @@ const handleClick = () => {
   border-color: var(--color-danger-hover);
 }
 
+.clear-all-btn:active {
+  transform: scale(0.95);
+}
+
 @media (max-width: 768px) {
   .clear-all-btn {
     padding: var(--spacing-sm) var(--spacing-md);
