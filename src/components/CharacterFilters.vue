@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import IconFilter from './ui/IconFilter.vue'
+import FilterIcons from './ui/FilterIcons.vue'
 import type { CharacterType } from '../lib/types/character'
 
 interface Props {
@@ -40,19 +40,19 @@ const damageOptions = computed(() => {
 <template>
   <div class="character-filters">
     <div class="filters-row">
-      <IconFilter
+      <FilterIcons
         iconPrefix="faction"
         :options="factionOptions"
         :modelValue="factionFilter"
         @update:modelValue="$emit('update:factionFilter', $event)"
       />
-      <IconFilter
+      <FilterIcons
         iconPrefix="class"
         :options="classOptions"
         :modelValue="classFilter"
         @update:modelValue="$emit('update:classFilter', $event)"
       />
-      <IconFilter
+      <FilterIcons
         iconPrefix="damage"
         :options="damageOptions"
         :modelValue="damageFilter"
