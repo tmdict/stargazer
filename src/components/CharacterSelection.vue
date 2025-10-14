@@ -89,11 +89,6 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 }
 
-const handleTagToggle = (tagName: string) => {
-  // Toggle: deselect if already selected, otherwise select the clicked tag
-  selectedTagNames.value = selectedTagNames.value === tagName ? null : tagName
-}
-
 const handleClearFilters = () => {
   factionFilter.value = ''
   classFilter.value = ''
@@ -127,7 +122,7 @@ const handleClearFilters = () => {
     </template>
 
     <!-- Tags Display -->
-    <TagsDisplay :selectedTagNames @tag-toggle="handleTagToggle" />
+    <TagsDisplay v-model="selectedTagNames" />
 
     <!-- Characters Grid -->
     <div class="characters">
