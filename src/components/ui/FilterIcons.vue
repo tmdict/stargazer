@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import IconFilterAll from './IconFilterAll.vue'
 import TooltipPopup from './TooltipPopup.vue'
 import { useGameDataStore } from '../../stores/gameData'
 import { useI18nStore } from '../../stores/i18n'
@@ -59,43 +60,7 @@ const handleMouseLeave = () => {
         @mouseenter="handleMouseEnter('show-all', $event)"
         @mouseleave="handleMouseLeave"
       >
-        <svg viewBox="0 0 24 24" class="all-icon">
-          <!-- Asterisk with 6 rays for more elegance -->
-          <g transform="translate(12, 12)">
-            <!-- Vertical line -->
-            <line
-              x1="0"
-              y1="-5.5"
-              x2="0"
-              y2="5.5"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <!-- 60 degree line -->
-            <line
-              x1="-4.76"
-              y1="-2.75"
-              x2="4.76"
-              y2="2.75"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <!-- 120 degree line -->
-            <line
-              x1="-4.76"
-              y1="2.75"
-              x2="4.76"
-              y2="-2.75"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-            />
-            <!-- Optional: Add a small center dot for style -->
-            <circle cx="0" cy="0" r="1.2" fill="currentColor" />
-          </g>
-        </svg>
+        <IconFilterAll :size="20" />
       </button>
 
       <!-- Icon options -->
@@ -184,11 +149,6 @@ const handleMouseLeave = () => {
 .clear-option.active {
   color: var(--color-primary);
   border-color: var(--color-primary);
-}
-
-.all-icon {
-  width: 20px;
-  height: 20px;
 }
 
 .filter-icon {
