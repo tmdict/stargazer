@@ -56,6 +56,7 @@ const handlePillClick = (pillName: string) => {
   border-radius: 20px;
   font-size: 0.85rem;
   font-weight: 600;
+  line-height: 1.6;
   color: var(--color-text-secondary);
   white-space: nowrap;
   transition: all var(--transition-fast);
