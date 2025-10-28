@@ -5,7 +5,7 @@ import { gridStyles, images } from './SilvinaSkill.data'
 
 setupContentMeta({
   title: '西尔维娜 · 技能',
-  description: '战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人。',
+  description: '战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人，造成300%伤害。',
   url: 'skill/silvina',
   locale: 'zh',
   keywords: ['Silvina', '西尔维娜'],
@@ -17,9 +17,12 @@ setupContentMeta({
     <h1>西尔维娜</h1>
 
     <h2>先发制人</h2>
-    <p>战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人。</p>
+
+    <strong>[ 技能1 ]</strong>
+    <p>战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人，造成300%伤害。</p>
 
     <h3>技能机制</h3>
+
     <p>西尔维娜首先检查她的对称格子（网格的镜像位置）。如果那里有敌人，则选择为目标。</p>
     <p>如果对称格子是空的，西尔维娜会以顺时针螺旋模式搜索离该位置最近的敌人：</p>
     <ul>

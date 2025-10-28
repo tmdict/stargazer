@@ -6,7 +6,6 @@ import PageContainer from '@/components/ui/PageContainer.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
-import { formatToCamelCase } from '@/utils/nameFormatting'
 
 interface Props {
   name?: string
@@ -20,24 +19,19 @@ const locale = useRouteLocale()
 // Use the prop if provided, otherwise fall back to route params
 const skillName = computed(() => props.name || (route.params.name as string) || 'undefined')
 
-// Normalize skill name with proper casing for filename
-const normalizedSkillName = computed(() => {
+// Validate the skill exists and pass it directly (in kebab-case)
+const validatedSkillName = computed(() => {
   const name = skillName.value?.toLowerCase()
   if (!name) return ''
 
-  // Build name map from DOCUMENTED_SKILLS
-  const nameMap: Record<string, string> = {}
-  DOCUMENTED_SKILLS.forEach((skill) => {
-    nameMap[skill] = formatToCamelCase(skill)
-  })
-
-  return nameMap[name] || name || 'undefined' // 'undefined': fallback for missing skill names
+  // Check if it's a valid documented skill
+  return DOCUMENTED_SKILLS.includes(name) ? name : 'undefined'
 })
 
-// Pass the computed ref directly so it's reactive
+// Pass the original kebab-case name
 const { ContentComponent } = useContentComponent({
   type: 'skill',
-  name: normalizedSkillName,
+  name: validatedSkillName,
   locale,
 })
 </script>

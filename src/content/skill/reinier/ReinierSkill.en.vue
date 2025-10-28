@@ -6,7 +6,7 @@ import { gridStyles, images } from './ReinierSkill.data'
 setupContentMeta({
   title: 'Reinier · Skills',
   description:
-    "Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a symmetrical position at the start of the battle. After the battle starts, the connected ally and enemy's positions are swapped, the ally receives a buff and the enemy receives a debuff.",
+    "When a battle starts, Reinier switches an adjacent ally's position with an enemy if they're in symmetrical positions. Whenever the enemy takes damage, the ally restores HP equal to 45% of the enemy's taken damage till a battle ends.",
   url: 'skill/reinier',
   locale: 'en',
   keywords: ['Reinier', '雷内亚'],
@@ -18,13 +18,28 @@ setupContentMeta({
     <h1>Reinier</h1>
 
     <h2>Dynamic Balance</h2>
+
+    <strong>[ Skill 1 ]</strong>
     <p>
-      Reinier prioritizes connecting an adjacent ally's position with an enemy hero if they're in a
-      symmetrical position at the start of the battle. After the battle starts, the connected ally
-      and enemy's positions are swapped, the ally receives a buff and the enemy receives a debuff.
+      When a battle starts, Reinier switches an adjacent ally's position with an enemy if they're in
+      symmetrical positions. Whenever the enemy takes damage, the ally restores HP equal to 45% of
+      the enemy's taken damage till a battle ends.
+    </p>
+
+    <strong>[ Hero Focus ]</strong>
+    <p>
+      Reinier's Dynamic Balance increases the target's ATK by 7% when cast on an ally or reduces the
+      target ATK by 7% when cast on an enemy.
+    </p>
+
+    <strong>[ EX Skill ]</strong>
+    <p>
+      Reinier deals 200% damage to the enemy and knocks them down when casting Dynamic Balance,
+      increasing their damage taken by 25% till the battle ends.
     </p>
 
     <h3>How It Works</h3>
+
     <p>
       Reinier identifies symmetrical hex pairs where one contains an ally and the other contains an
       enemy.

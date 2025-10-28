@@ -6,7 +6,7 @@ import { gridStyles, images } from './NaraSkill.data'
 setupContentMeta({
   title: 'Nara · Skills',
   description:
-    "Nara pulls a distant enemy hero toward her when there are no enemies within her normal attack range. This skill won't defeat the enemy and prioritizes attacking the closest symmetrical enemy hero.",
+    "Nara pulls a distant enemy hero toward her when there are no enemy heroes within her normal attack range. The target loses 4% HP for every tile they are pulled, up to 250% of Nara's ATK. This skill won't defeat the enemy and prioritizes attacking the closest enemy in a symmetrical position.",
   url: 'skill/nara',
   locale: 'en',
   keywords: ['Nara', '奈拉'],
@@ -18,13 +18,17 @@ setupContentMeta({
     <h1>Nara</h1>
 
     <h2>Phantom Chains</h2>
+
+    <strong>[ Skill 1 ]</strong>
     <p>
-      Nara pulls a distant enemy hero toward her when there are no enemies within her normal attack
-      range. This skill won't defeat the enemy and prioritizes attacking the closest symmetrical
-      enemy hero.
+      Nara pulls a distant enemy hero toward her when there are no enemy heroes within her normal
+      attack range. The target loses 4% HP for every tile they are pulled, up to 250% of Nara's ATK.
+      This skill won't defeat the enemy and prioritizes attacking the closest enemy in a symmetrical
+      position.
     </p>
 
     <h3>How It Works</h3>
+
     <p>
       Nara first checks her symmetrical tile (the mirror position across the grid's center). If an
       enemy is there, they become the target.
