@@ -6,7 +6,7 @@ import { gridStyles, images } from './SilvinaSkill.data'
 setupContentMeta({
   title: 'Silvina · Skills',
   description:
-    'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts.',
+    'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts, dealing 300% damage.',
   url: 'skill/silvina',
   locale: 'en',
   keywords: ['Silvina', '西尔维娜'],
@@ -18,12 +18,15 @@ setupContentMeta({
     <h1>Silvina</h1>
 
     <h2>First Strike</h2>
+
+    <strong>[ Skill 1 ]</strong>
     <p>
       Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches
-      an attack when a battle starts.
+      an attack when a battle starts, dealing 300% damage.
     </p>
 
     <h3>How It Works</h3>
+
     <p>
       Silvina first checks her symmetrical tile (the mirror position across the grid's center). If
       an enemy is there, they become the target.

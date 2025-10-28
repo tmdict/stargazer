@@ -112,6 +112,11 @@
   color: #fff;
 }
 
+.content h3 {
+  margin-top: 28px;
+  font-size: 18px;
+}
+
 .content p {
   margin: 12px 0;
   line-height: 1.6;

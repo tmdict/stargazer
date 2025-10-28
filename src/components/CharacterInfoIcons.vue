@@ -8,7 +8,6 @@ import type { CharacterType } from '@/lib/types/character'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { formatToCamelCase } from '@/utils/nameFormatting'
 
 interface Props {
   character: CharacterType
@@ -31,8 +30,7 @@ const showTooltip = ref(false)
 const buttonElement = ref<HTMLElement>()
 
 const openSkillModal = () => {
-  // Convert to CamelCase for proper filename
-  selectedSkillName.value = formatToCamelCase(props.character.name)
+  selectedSkillName.value = props.character.name
   showSkillModal.value = true
 }
 
