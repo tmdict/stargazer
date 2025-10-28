@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useDragDrop } from '../composables/useDragDrop'
-import { useGameDataStore } from '../stores/gameData'
+import { useDragDrop } from '@/composables/useDragDrop'
+import { useGameDataStore } from '@/stores/gameData'
 
 const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = useDragDrop()
 const gameData = useGameDataStore()

@@ -2,10 +2,10 @@
 import { computed, ref } from 'vue'
 
 import TooltipPopup from './ui/TooltipPopup.vue'
-import { useTouchDetection } from '../composables/useTouchDetection'
-import type { ArtifactType } from '../lib/types/artifact'
-import { useGameDataStore } from '../stores/gameData'
-import { useI18nStore } from '../stores/i18n'
+import { useTouchDetection } from '@/composables/useTouchDetection'
+import type { ArtifactType } from '@/lib/types/artifact'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()

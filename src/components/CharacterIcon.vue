@@ -3,11 +3,11 @@ import { computed, ref } from 'vue'
 
 import CharacterInfoIcons from './CharacterInfoIcons.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
-import { useDragDrop } from '../composables/useDragDrop'
-import { useTouchDetection } from '../composables/useTouchDetection'
-import type { CharacterType } from '../lib/types/character'
-import { useGameDataStore } from '../stores/gameData'
-import { useI18nStore } from '../stores/i18n'
+import { useDragDrop } from '@/composables/useDragDrop'
+import { useTouchDetection } from '@/composables/useTouchDetection'
+import type { CharacterType } from '@/lib/types/character'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   character: CharacterType

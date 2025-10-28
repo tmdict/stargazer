@@ -2,9 +2,9 @@
 import { computed } from 'vue'
 
 import type DebugGrid from './DebugGrid.vue'
-import { Team } from '../../lib/types/team'
-import { useGridStore } from '../../stores/grid'
-import { usePathfindingStore } from '../../stores/pathfinding'
+import { Team } from '@/lib/types/team'
+import { useGridStore } from '@/stores/grid'
+import { usePathfindingStore } from '@/stores/pathfinding'
 
 interface Props {
   debugGridRef?: InstanceType<typeof DebugGrid> | null

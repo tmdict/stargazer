@@ -47,7 +47,7 @@ const { ContentComponent } = useContentComponent({
     <div v-else class="skill-not-found">
       <h1>Skill Not Found</h1>
       <p>The skill "{{ skillName }}" was not found.</p>
-      <img src="../assets/rowan.gif" alt="logo" class="rowan-gif" />
+      <img src="@/assets/rowan.gif" alt="logo" class="rowan-gif" />
     </div>
   </PageContainer>
 </template>
