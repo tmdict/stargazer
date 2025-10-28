@@ -8,6 +8,7 @@ import { useTouchDetection } from '@/composables/useTouchDetection'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { formatDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   character: CharacterType
@@ -46,10 +47,7 @@ const formattedCharacterName = computed(() => {
     return translated
   }
   // Fallback to formatted name
-  return props.character.name
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  return formatDisplayName(props.character.name)
 })
 
 const damageIcon = computed(() => {
