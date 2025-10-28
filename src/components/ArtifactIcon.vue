@@ -6,6 +6,7 @@ import { useTouchDetection } from '@/composables/useTouchDetection'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { formatDisplayName } from '@/utils/nameFormatting'
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
@@ -36,10 +37,7 @@ const formattedArtifactName = computed(() => {
     return translated
   }
   // Fallback to formatted name
-  return props.artifact.name
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
+  return formatDisplayName(props.artifact.name)
 })
 
 const handleClick = () => {
