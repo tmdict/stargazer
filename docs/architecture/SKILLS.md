@@ -213,15 +213,15 @@ To add documentation pages for a skill:
    - `SkillName.zh.vue` - Chinese documentation content
    - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
 
-2. **Update DOCUMENTED_SKILLS** in `/src/lib/skills/skill.ts`:
-   - Add the skill name to the `DOCUMENTED_SKILLS` array (near the skillRegistry):
+2. **Update DOCUMENTED_SKILLS** in `/src/lib/types/skills.ts`:
+   - Add the skill name to the `DOCUMENTED_SKILLS` array:
    ```typescript
    // List of skills with documentation pages
    // Update this when adding new skill documentation
    export const DOCUMENTED_SKILLS = [
      // ... existing skills ...
      'newskill', // Add your new skill here
-   ] as const
+   ]
    ```
 
 This single update ensures:

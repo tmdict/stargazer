@@ -5,7 +5,7 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
-import { DOCUMENTED_SKILLS } from './src/lib/skills/skill'
+import { DOCUMENTED_SKILLS } from './src/lib/types/skills'
 
 // https://vite.dev/config/
 export default defineConfig({
