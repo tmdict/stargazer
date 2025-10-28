@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { getSymmetricalHexId, isOnMiddleDiagonal } from '../../../../src/lib/skills/utils/symmetry'
-import { DIAGONAL_ROWS } from '../../../../src/lib/types/grid'
+import { getSymmetricalHexId, isOnMiddleDiagonal } from '@/lib/skills/utils/symmetry'
+import { DIAGONAL_ROWS } from '@/lib/types/grid'
 
 describe('symmetry', () => {
   describe('getSymmetricalHexId', () => {

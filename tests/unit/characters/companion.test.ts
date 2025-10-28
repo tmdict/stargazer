@@ -10,12 +10,12 @@ import {
   restoreCompanions,
   storeCompanionPositions,
   type CompanionPosition,
-} from '../../../src/lib/characters/companion'
-import { Grid } from '../../../src/lib/grid'
-import { SkillManager } from '../../../src/lib/skills/skill'
-import type { GridPreset } from '../../../src/lib/types/grid'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
+} from '@/lib/characters/companion'
+import { Grid } from '@/lib/grid'
+import { SkillManager } from '@/lib/skills/skill'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Test grid setup
 const TEST_GRID: GridPreset = {

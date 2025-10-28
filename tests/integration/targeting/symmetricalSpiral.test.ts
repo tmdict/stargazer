@@ -3,13 +3,13 @@ import { basename, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { describe, expect, it } from 'vitest'
 
-import type { Grid, GridTile } from '../../../src/lib/grid'
-import { Hex } from '../../../src/lib/hex'
-import { getSymmetricalHexId } from '../../../src/lib/skills/utils/symmetry'
-import { spiralSearchFromTile } from '../../../src/lib/skills/utils/targeting'
-import { FULL_GRID } from '../../../src/lib/types/grid'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
+import type { Grid, GridTile } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
+import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
+import { spiralSearchFromTile } from '@/lib/skills/utils/targeting'
+import { FULL_GRID } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 interface SpiralSearchConfig {
   centerTile: number // The tile to search from (e.g., symmetrical tile)

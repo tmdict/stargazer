@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import type { GridTile } from '../../../src/lib/grid'
-import { Hex } from '../../../src/lib/hex'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
-import { serializeGridState, unpackDisplayFlags } from '../../../src/utils/gridStateSerializer'
+import type { GridTile } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import { serializeGridState, unpackDisplayFlags } from '@/utils/gridStateSerializer'
 
 // Helper function to create mock grid tiles
 function createMockTile(

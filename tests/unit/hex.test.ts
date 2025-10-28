@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { Hex } from '../../src/lib/hex'
+import { Hex } from '@/lib/hex'
 
 describe('Hex', () => {
   describe('constructor', () => {
