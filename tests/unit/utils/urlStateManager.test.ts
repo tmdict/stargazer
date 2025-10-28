@@ -1,17 +1,17 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import type { GridTile } from '../../../src/lib/grid'
-import { Hex } from '../../../src/lib/hex'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
-import type { GridState } from '../../../src/utils/gridStateSerializer'
+import type { GridTile } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import type { GridState } from '@/utils/gridStateSerializer'
 import {
   decodeGridStateFromUrl,
   encodeGridStateToUrl,
   generateShareableUrl,
   getEncodedStateFromRoute,
   getEncodedStateFromUrl,
-} from '../../../src/utils/urlStateManager'
+} from '@/utils/urlStateManager'
 
 // Helper function to create mock grid tiles
 function createMockTile(

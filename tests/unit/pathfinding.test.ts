@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { Grid } from '../../src/lib/grid'
-import { Hex } from '../../src/lib/hex'
+import { Grid } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
 import {
   calculateEffectiveDistance,
   calculateRangedMovementDistance,
@@ -12,10 +12,10 @@ import {
   findPathDistance,
   getClosestTargetMap,
   isVerticallyAligned,
-} from '../../src/lib/pathfinding'
-import type { GridPreset } from '../../src/lib/types/grid'
-import { State } from '../../src/lib/types/state'
-import { Team } from '../../src/lib/types/team'
+} from '@/lib/pathfinding'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Simple test grid
 const TEST_GRID: GridPreset = {

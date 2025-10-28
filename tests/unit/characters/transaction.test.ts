@@ -1,15 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  executeTransaction,
-  handleCacheInvalidation,
-} from '../../../src/lib/characters/transaction'
-import { Grid } from '../../../src/lib/grid'
-import * as pathfinding from '../../../src/lib/pathfinding'
-import type { SkillManager } from '../../../src/lib/skills/skill'
+import { executeTransaction, handleCacheInvalidation } from '@/lib/characters/transaction'
+import { Grid } from '@/lib/grid'
+import * as pathfinding from '@/lib/pathfinding'
+import type { SkillManager } from '@/lib/skills/skill'
 
 // Mock the pathfinding module
-vi.mock('../../../src/lib/pathfinding', () => ({
+vi.mock('@/lib/pathfinding', () => ({
   clearPathfindingCache: vi.fn(),
 }))
 

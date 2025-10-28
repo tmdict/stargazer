@@ -1,21 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { performPlace } from '../../../src/lib/characters/place'
+import { performPlace } from '@/lib/characters/place'
 import {
   executeClearAllCharacters,
   executeRemoveCharacter,
   performClearAll,
   performRemove,
-} from '../../../src/lib/characters/remove'
-import { Grid } from '../../../src/lib/grid'
+} from '@/lib/characters/remove'
+import { Grid } from '@/lib/grid'
 // Import skill functions for mocking
-import { hasSkill, SkillManager } from '../../../src/lib/skills/skill'
-import type { GridPreset } from '../../../src/lib/types/grid'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
+import { hasSkill, SkillManager } from '@/lib/skills/skill'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Mock skill-related functions
-vi.mock('../../../src/lib/skills/skill', () => ({
+vi.mock('@/lib/skills/skill', () => ({
   hasSkill: vi.fn(),
   SkillManager: vi.fn(),
 }))

@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { type GridTile } from '../../src/lib/grid'
-import { Hex } from '../../src/lib/hex'
-import { generateGridCacheKey, generatePathCacheKey, MemoCache } from '../../src/lib/memoization'
-import { State } from '../../src/lib/types/state'
-import { Team } from '../../src/lib/types/team'
+import { type GridTile } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
+import { generateGridCacheKey, generatePathCacheKey, MemoCache } from '@/lib/memoization'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Helper to create mock tiles
 function createMockTile(hexId: number, characterId?: number, team?: Team): GridTile {

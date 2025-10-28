@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { Hex } from '../../src/lib/hex'
-import { FLAT, Layout, POINTY, type Point } from '../../src/lib/layout'
+import { Hex } from '@/lib/hex'
+import { FLAT, Layout, POINTY, type Point } from '@/lib/layout'
 
 describe('Layout', () => {
   const SQRT3 = Math.sqrt(3)

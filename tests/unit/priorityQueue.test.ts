@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { PriorityQueue } from '../../src/lib/priorityQueue'
+import { PriorityQueue } from '@/lib/priorityQueue'
 
 describe('PriorityQueue', () => {
   let queue: PriorityQueue<number>

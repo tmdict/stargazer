@@ -4,16 +4,16 @@ import {
   executeAutoPlaceCharacter,
   executePlaceCharacter,
   performPlace,
-} from '../../../src/lib/characters/place'
-import { Grid } from '../../../src/lib/grid'
+} from '@/lib/characters/place'
+import { Grid } from '@/lib/grid'
 // Import hasSkill directly for mocking
-import { hasSkill, SkillManager } from '../../../src/lib/skills/skill'
-import type { GridPreset } from '../../../src/lib/types/grid'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
+import { hasSkill, SkillManager } from '@/lib/skills/skill'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Mock hasSkill to control skill behavior
-vi.mock('../../../src/lib/skills/skill', () => ({
+vi.mock('@/lib/skills/skill', () => ({
   hasSkill: vi.fn(),
   SkillManager: vi.fn(),
 }))

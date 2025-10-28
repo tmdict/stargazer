@@ -6,8 +6,8 @@ import {
   encodeToBinary,
   urlSafeToBytes,
   validateGridState,
-} from '../../../src/utils/binaryEncoder'
-import type { GridState } from '../../../src/utils/gridStateSerializer'
+} from '@/utils/binaryEncoder'
+import type { GridState } from '@/utils/gridStateSerializer'
 
 describe('binaryEncoder', () => {
   describe('encodeToBinary and decodeFromBinary', () => {

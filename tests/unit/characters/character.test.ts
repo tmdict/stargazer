@@ -22,11 +22,11 @@ import {
   removeCharacterFromTeam,
   setMaxTeamSize,
   tileHasCharacter,
-} from '../../../src/lib/characters/character'
-import { Grid } from '../../../src/lib/grid'
-import type { GridPreset } from '../../../src/lib/types/grid'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
+} from '@/lib/characters/character'
+import { Grid } from '@/lib/grid'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Create a simple test grid preset
 const TEST_GRID: GridPreset = {

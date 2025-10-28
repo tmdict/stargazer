@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { Grid } from '../../../src/lib/grid'
-import { getCharacterSkill, hasSkill, SkillManager } from '../../../src/lib/skills/skill'
-import type { GridPreset } from '../../../src/lib/types/grid'
-import { State } from '../../../src/lib/types/state'
-import { Team } from '../../../src/lib/types/team'
+import { Grid } from '@/lib/grid'
+import { getCharacterSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Test grid setup
 const TEST_GRID: GridPreset = {
