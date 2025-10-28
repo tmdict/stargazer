@@ -1,4 +1,4 @@
-import { State } from '../lib/types/state'
+import { State } from '@/lib/types/state'
 
 interface StateFormat {
   name: string

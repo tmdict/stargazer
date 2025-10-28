@@ -1,7 +1,7 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 
-import type { Breakpoint } from '../stores/grid'
-import { useGridStore } from '../stores/grid'
+import type { Breakpoint } from '@/stores/grid'
+import { useGridStore } from '@/stores/grid'
 
 // Breakpoint thresholds
 const MOBILE_BREAKPOINT = 480

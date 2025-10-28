@@ -1,9 +1,9 @@
 import { inject, provide, type InjectionKey } from 'vue'
 
-import { Hex } from '../lib/hex'
-import { Team } from '../lib/types/team'
-import { useArtifactStore } from '../stores/artifact'
-import { useCharacterStore } from '../stores/character'
+import { Hex } from '@/lib/hex'
+import { Team } from '@/lib/types/team'
+import { useArtifactStore } from '@/stores/artifact'
+import { useCharacterStore } from '@/stores/character'
 
 /**
  * Grid event types with namespacing

@@ -1,9 +1,9 @@
 import { defineStore } from 'pinia'
 
-import { useStateReset } from '../composables/useStateReset'
-import { Team } from '../lib/types/team'
-import { unpackDisplayFlags, type GridState } from '../utils/gridStateSerializer'
-import { decodeGridStateFromUrl } from '../utils/urlStateManager'
+import { useStateReset } from '@/composables/useStateReset'
+import { Team } from '@/lib/types/team'
+import { unpackDisplayFlags, type GridState } from '@/utils/gridStateSerializer'
+import { decodeGridStateFromUrl } from '@/utils/urlStateManager'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'

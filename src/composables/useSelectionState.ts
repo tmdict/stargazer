@@ -1,8 +1,8 @@
 import { ref } from 'vue'
 
-import { Team } from '../lib/types/team'
-import { useArtifactStore } from '../stores/artifact'
-import { useCharacterStore } from '../stores/character'
+import { Team } from '@/lib/types/team'
+import { useArtifactStore } from '@/stores/artifact'
+import { useCharacterStore } from '@/stores/character'
 
 // Shared state across all components
 const selectedTeam = ref<Team>(Team.ALLY)

@@ -1,4 +1,4 @@
-import type { GridTile } from '../lib/grid'
+import type { GridTile } from '@/lib/grid'
 
 /* Ultra-compact format for URL serialization - the ONLY format we support */
 export interface GridState {

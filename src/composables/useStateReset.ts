@@ -1,7 +1,7 @@
-import { State } from '../lib/types/state'
-import { useArtifactStore } from '../stores/artifact'
-import { useCharacterStore } from '../stores/character'
-import { useGridStore } from '../stores/grid'
+import { State } from '@/lib/types/state'
+import { useArtifactStore } from '@/stores/artifact'
+import { useCharacterStore } from '@/stores/character'
+import { useGridStore } from '@/stores/grid'
 
 /**
  * Shared utility for resetting application state

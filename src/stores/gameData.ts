@@ -1,10 +1,10 @@
 import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { getCharacterSkill } from '../lib/skills/skill'
-import type { ArtifactType } from '../lib/types/artifact'
-import type { CharacterType } from '../lib/types/character'
-import { loadAllData } from '../utils/dataLoader'
+import { getCharacterSkill } from '@/lib/skills/skill'
+import type { ArtifactType } from '@/lib/types/artifact'
+import type { CharacterType } from '@/lib/types/character'
+import { loadAllData } from '@/utils/dataLoader'
 
 export const useGameDataStore = defineStore('gameData', () => {
   // Data state

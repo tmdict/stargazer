@@ -1,7 +1,7 @@
 import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { Team } from '../lib/types/team'
+import { Team } from '@/lib/types/team'
 
 export const useArtifactStore = defineStore('artifact', () => {
   // Artifact tracking using numeric IDs
