@@ -4,11 +4,11 @@ import { computed, ref } from 'vue'
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
-import { getCharacterSkill } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { formatToCamelCase } from '@/utils/nameFormatting'
 
 interface Props {
   character: CharacterType
@@ -19,8 +19,7 @@ const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 const hasDocumentedSkill = computed(() => {
-  const skill = getCharacterSkill(props.character.id)
-  return !!(skill && DOCUMENTED_SKILLS.includes(skill.id))
+  return DOCUMENTED_SKILLS.includes(props.character.name)
 })
 
 // Skill modal state
@@ -32,9 +31,8 @@ const showTooltip = ref(false)
 const buttonElement = ref<HTMLElement>()
 
 const openSkillModal = () => {
-  // Capitalize first letter for proper filename
-  selectedSkillName.value =
-    props.character.name.charAt(0).toUpperCase() + props.character.name.slice(1)
+  // Convert to CamelCase for proper filename
+  selectedSkillName.value = formatToCamelCase(props.character.name)
   showSkillModal.value = true
 }
 

@@ -6,6 +6,7 @@ import PageContainer from '@/components/ui/PageContainer.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
+import { formatToCamelCase } from '@/utils/nameFormatting'
 
 interface Props {
   name?: string
@@ -27,7 +28,7 @@ const normalizedSkillName = computed(() => {
   // Build name map from DOCUMENTED_SKILLS
   const nameMap: Record<string, string> = {}
   DOCUMENTED_SKILLS.forEach((skill) => {
-    nameMap[skill] = skill.charAt(0).toUpperCase() + skill.slice(1)
+    nameMap[skill] = formatToCamelCase(skill)
   })
 
   return nameMap[name] || name || 'undefined' // 'undefined': fallback for missing skill names

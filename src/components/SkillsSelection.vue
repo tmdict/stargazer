@@ -9,6 +9,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import type { CharacterType } from '@/lib/types/character'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
 import { useI18nStore } from '@/stores/i18n'
+import { formatToCamelCase } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -68,8 +69,8 @@ const showSkillModal = ref(false)
 const selectedSkillName = ref('')
 
 const openDetailsModal = (character: CharacterType) => {
-  // Capitalize first letter for proper filename
-  selectedSkillName.value = character.name.charAt(0).toUpperCase() + character.name.slice(1)
+  // Convert to CamelCase for proper filename
+  selectedSkillName.value = formatToCamelCase(character.name)
   showSkillModal.value = true
 }
 </script>
