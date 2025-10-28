@@ -3,8 +3,8 @@ import { computed, ref } from 'vue'
 
 import IconFilterAll from './IconFilterAll.vue'
 import TooltipPopup from './TooltipPopup.vue'
-import { useGameDataStore } from '../../stores/gameData'
-import { useI18nStore } from '../../stores/i18n'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()

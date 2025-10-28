@@ -2,18 +2,18 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import DragDropProvider from '../components/DragDropProvider.vue'
-import GridContainer from '../components/grid/GridContainer.vue'
-import IconClose from '../components/ui/IconClose.vue'
-import ToastContainer from '../components/ui/ToastContainer.vue'
-import { useBreakpoint } from '../composables/useBreakpoint'
-import { useToast } from '../composables/useToast'
-import { useGameDataStore } from '../stores/gameData'
-import { useGridStore } from '../stores/grid'
-import { useI18nStore } from '../stores/i18n'
-import { useSkillStore } from '../stores/skill'
-import { useUrlStateStore } from '../stores/urlState'
-import { getEncodedStateFromRoute } from '../utils/urlStateManager'
+import DragDropProvider from '@/components/DragDropProvider.vue'
+import GridContainer from '@/components/grid/GridContainer.vue'
+import IconClose from '@/components/ui/IconClose.vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
+import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useToast } from '@/composables/useToast'
+import { useGameDataStore } from '@/stores/gameData'
+import { useGridStore } from '@/stores/grid'
+import { useI18nStore } from '@/stores/i18n'
+import { useSkillStore } from '@/stores/skill'
+import { useUrlStateStore } from '@/stores/urlState'
+import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
 import '@/styles/modal.css'
 
@@ -131,7 +131,7 @@ const homeLink = computed(() => {
     <div v-else class="empty-state">
       <p>{{ emptyMessage }}</p>
       <a href="/" class="rowan-link" aria-label="Stargazer" title="Stargazer">
-        <img src="../assets/rowan.gif" alt="logo" class="rowan-gif" />
+        <img src="@/assets/rowan.gif" alt="logo" class="rowan-gif" />
       </a>
     </div>
   </div>

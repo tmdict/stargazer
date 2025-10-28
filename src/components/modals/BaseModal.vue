@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
-import IconClose from '../ui/IconClose.vue'
-import IconLink from '../ui/IconLink.vue'
+import IconClose from '@/components/ui/IconClose.vue'
+import IconLink from '@/components/ui/IconLink.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 import '@/styles/modal.css'
