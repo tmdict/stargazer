@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 
-import { useStateReset } from '../composables/useStateReset'
-import { State } from '../lib/types/state'
+import { useStateReset } from '@/composables/useStateReset'
+import { State } from '@/lib/types/state'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
 

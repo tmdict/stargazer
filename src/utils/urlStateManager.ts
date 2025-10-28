@@ -1,4 +1,4 @@
-import type { GridTile } from '../lib/grid'
+import type { GridTile } from '@/lib/grid'
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
 import { serializeGridState, type GridState } from './gridStateSerializer'
 
