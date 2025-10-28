@@ -1,8 +1,8 @@
 import { computed, reactive } from 'vue'
 import { defineStore } from 'pinia'
 
-import { SkillManager } from '../lib/skills/skill'
-import type { Team } from '../lib/types/team'
+import { SkillManager } from '@/lib/skills/skill'
+import type { Team } from '@/lib/types/team'
 
 export const useSkillStore = defineStore('skill', () => {
   // Create reactive skill manager instance

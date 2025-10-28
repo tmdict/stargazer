@@ -1,8 +1,8 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import type { Locale, LocaleDictionary } from '../lib/types/i18n'
-import { loadAllLocales } from '../utils/dataLoader'
+import type { Locale, LocaleDictionary } from '@/lib/types/i18n'
+import { loadAllLocales } from '@/utils/dataLoader'
 
 // Constants
 const LOCALE_STORAGE_KEY = 'stargazer.locale'

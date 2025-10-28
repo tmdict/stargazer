@@ -2,14 +2,14 @@
 import { onMounted, onUnmounted, ref } from 'vue'
 import { RouterView } from 'vue-router'
 
-import DragPreview from './components/DragPreview.vue'
-import AboutModal from './components/modals/AboutModal.vue'
-import IconGitHub from './components/ui/IconGitHub.vue'
-import IconInfo from './components/ui/IconInfo.vue'
-import LanguageToggle from './components/ui/LanguageToggle.vue'
+import DragPreview from '@/components/DragPreview.vue'
+import AboutModal from '@/components/modals/AboutModal.vue'
+import IconGitHub from '@/components/ui/IconGitHub.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import LanguageToggle from '@/components/ui/LanguageToggle.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
-import { useI18nStore } from './stores/i18n'
+import { useI18nStore } from '@/stores/i18n'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)

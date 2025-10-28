@@ -7,8 +7,8 @@
 
 import { ref } from 'vue'
 
-import type { CharacterType } from '../lib/types/character'
-import { useGridStore } from '../stores/grid'
+import type { CharacterType } from '@/lib/types/character'
+import { useGridStore } from '@/stores/grid'
 
 // MIME type for character drag data - prevents conflicts with other drag operations
 const CHARACTER_MIME_TYPE = 'application/character'

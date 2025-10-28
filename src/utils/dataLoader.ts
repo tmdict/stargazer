@@ -1,6 +1,6 @@
-import type { ArtifactType } from '../lib/types/artifact'
-import type { CharacterType, TagType } from '../lib/types/character'
-import type { LocaleData, LocaleDictionary } from '../lib/types/i18n'
+import type { ArtifactType } from '@/lib/types/artifact'
+import type { CharacterType, TagType } from '@/lib/types/character'
+import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
 
 export function extractFileName(path: string, removeExtension = true): string {
   const fileName = path.split('/').pop() || 'Unknown'
@@ -30,7 +30,7 @@ export function loadCharacters(): CharacterType[] {
     return charactersCache
   }
 
-  const characterModules = import.meta.glob<CharacterType>('../data/character/*.json', {
+  const characterModules = import.meta.glob<CharacterType>('@/data/character/*.json', {
     eager: true,
     import: 'default',
   })
@@ -52,7 +52,7 @@ export function loadArtifacts(): ArtifactType[] {
     return artifactsCache
   }
 
-  const artifactModules = import.meta.glob<ArtifactType>('../data/artifact/*.json', {
+  const artifactModules = import.meta.glob<ArtifactType>('@/data/artifact/*.json', {
     eager: true,
     import: 'default',
   })
@@ -67,7 +67,7 @@ export function loadTags(): TagType[] {
     return tagsCache
   }
 
-  const tagModules = import.meta.glob<TagType>('../data/tags/*.json', {
+  const tagModules = import.meta.glob<TagType>('@/data/tags/*.json', {
     eager: true,
     import: 'default',
   })
@@ -82,7 +82,7 @@ export function loadCharacterImages(): Record<string, string> {
     return characterImagesCache
   }
 
-  const imageModules = import.meta.glob<string>('../assets/images/character/*.png', {
+  const imageModules = import.meta.glob<string>('@/assets/images/character/*.png', {
     query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
     eager: true,
     import: 'default',
@@ -98,7 +98,7 @@ export function loadArtifactImages(): Record<string, string> {
     return artifactImagesCache
   }
 
-  const imageModules = import.meta.glob<string>('../assets/images/artifact/*.png', {
+  const imageModules = import.meta.glob<string>('@/assets/images/artifact/*.png', {
     query: { format: 'webp', quality: 80, w: 100 },
     eager: true,
     import: 'default',
@@ -114,7 +114,7 @@ export function loadIcons(): Record<string, string> {
     return iconsCache
   }
 
-  const iconModules = import.meta.glob<string>('../assets/images/icons/*.png', {
+  const iconModules = import.meta.glob<string>('@/assets/images/icons/*.png', {
     query: { format: 'webp', quality: 80, w: 100 },
     eager: true,
     import: 'default',
@@ -161,7 +161,7 @@ export function loadAppLocales(): Record<string, LocaleData> {
     return appLocalesCache
   }
 
-  const localeModules = import.meta.glob<LocaleData>('../locales/app/*.json', {
+  const localeModules = import.meta.glob<LocaleData>('@/locales/app/*.json', {
     eager: true,
     import: 'default',
   })
@@ -181,7 +181,7 @@ export function loadCharacterLocales(): Record<string, LocaleData> {
     return characterLocalesCache
   }
 
-  const localeModules = import.meta.glob<LocaleData>('../locales/character/*.json', {
+  const localeModules = import.meta.glob<LocaleData>('@/locales/character/*.json', {
     eager: true,
     import: 'default',
   })
@@ -201,7 +201,7 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
     return artifactLocalesCache
   }
 
-  const localeModules = import.meta.glob<LocaleData>('../locales/artifact/*.json', {
+  const localeModules = import.meta.glob<LocaleData>('@/locales/artifact/*.json', {
     eager: true,
     import: 'default',
   })
@@ -221,7 +221,7 @@ export function loadGameLocales(): Record<string, LocaleData> {
     return gameLocalesCache
   }
 
-  const localeModules = import.meta.glob<LocaleData>('../locales/game/*.json', {
+  const localeModules = import.meta.glob<LocaleData>('@/locales/game/*.json', {
     eager: true,
     import: 'default',
   })

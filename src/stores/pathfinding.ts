@@ -1,14 +1,14 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import type { Hex } from '../lib/hex'
+import type { Hex } from '@/lib/hex'
 import {
   defaultCanTraverse,
   findClosestTarget,
   findPathAStar,
   getClosestTargetMap,
-} from '../lib/pathfinding'
-import { Team } from '../lib/types/team'
+} from '@/lib/pathfinding'
+import { Team } from '@/lib/types/team'
 import { useCharacterStore } from './character'
 import { useGameDataStore } from './gameData'
 import { useGridStore } from './grid'
