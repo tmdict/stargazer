@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, inject } from 'vue'
 
-import type { DragDropAPI } from '../DragDropProvider.vue'
-import { useGridEvents } from '../../composables/useGridEvents'
-import { getCharacterTeam } from '../../lib/characters/character'
-import type { CharacterType } from '../../lib/types/character'
-import { useCharacterStore } from '../../stores/character'
-import { useGameDataStore } from '../../stores/gameData'
-import { useGridStore } from '../../stores/grid'
-import { useSkillStore } from '../../stores/skill'
+import type { DragDropAPI } from '@/components/DragDropProvider.vue'
+import { useGridEvents } from '@/composables/useGridEvents'
+import { getCharacterTeam } from '@/lib/characters/character'
+import type { CharacterType } from '@/lib/types/character'
+import { useCharacterStore } from '@/stores/character'
+import { useGameDataStore } from '@/stores/gameData'
+import { useGridStore } from '@/stores/grid'
+import { useSkillStore } from '@/stores/skill'
 
 interface Props {
   characters: readonly CharacterType[]

@@ -4,11 +4,11 @@ import { computed, ref } from 'vue'
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
-import { getCharacterSkill } from '../lib/skills/skill'
-import type { CharacterType } from '../lib/types/character'
-import { DOCUMENTED_SKILLS } from '../lib/types/skills'
-import { useGameDataStore } from '../stores/gameData'
-import { useI18nStore } from '../stores/i18n'
+import { getCharacterSkill } from '@/lib/skills/skill'
+import type { CharacterType } from '@/lib/types/character'
+import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 
 interface Props {
   character: CharacterType

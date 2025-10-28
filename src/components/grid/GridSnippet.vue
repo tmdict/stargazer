@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { ARENA_1 } from '../../lib/arena/arena1'
-import { Grid, type GridTile } from '../../lib/grid'
-import { Hex } from '../../lib/hex'
-import { Layout, POINTY } from '../../lib/layout'
-import { FULL_GRID } from '../../lib/types/grid'
-import { State } from '../../lib/types/state'
+import { ARENA_1 } from '@/lib/arena/arena1'
+import { Grid, type GridTile } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
+import { Layout, POINTY } from '@/lib/layout'
+import { FULL_GRID } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
 
 interface GridStyleConfig {
   numericLabel?: Record<number, number>

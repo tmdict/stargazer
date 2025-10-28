@@ -2,8 +2,8 @@
 import { computed } from 'vue'
 
 import GridArrow from './GridArrow.vue'
-import { useGridStore } from '../../stores/grid'
-import { usePathfindingStore } from '../../stores/pathfinding'
+import { useGridStore } from '@/stores/grid'
+import { usePathfindingStore } from '@/stores/pathfinding'
 
 interface Props {
   showArrows: boolean

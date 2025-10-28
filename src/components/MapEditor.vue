@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { State } from '../lib/types/state'
-import { useI18nStore } from '../stores/i18n'
-import { getTileFillColor } from '../utils/tileStateFormatting'
+import { State } from '@/lib/types/state'
+import { useI18nStore } from '@/stores/i18n'
+import { getTileFillColor } from '@/utils/tileStateFormatting'
 
 const i18n = useI18nStore()
 

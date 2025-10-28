@@ -5,9 +5,9 @@ import CharacterFilters from './CharacterFilters.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import TagsDisplay from './TagsDisplay.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
-import { useSelectionState } from '../composables/useSelectionState'
-import type { CharacterType } from '../lib/types/character'
-import { loadTags } from '../utils/dataLoader'
+import { useSelectionState } from '@/composables/useSelectionState'
+import type { CharacterType } from '@/lib/types/character'
+import { loadTags } from '@/utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]

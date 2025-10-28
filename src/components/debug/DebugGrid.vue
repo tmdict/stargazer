@@ -1,15 +1,15 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import { getSymmetricalHexId } from '../../lib/skills/utils/symmetry'
-import { Team } from '../../lib/types/team'
-import { useArtifactStore } from '../../stores/artifact'
-import { useCharacterStore } from '../../stores/character'
-import { useGameDataStore } from '../../stores/gameData'
-import { useGridStore } from '../../stores/grid'
-import { usePathfindingStore } from '../../stores/pathfinding'
-import { useSkillStore } from '../../stores/skill'
-import { getStateClass, getStateName } from '../../utils/tileStateFormatting'
+import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
+import { Team } from '@/lib/types/team'
+import { useArtifactStore } from '@/stores/artifact'
+import { useCharacterStore } from '@/stores/character'
+import { useGameDataStore } from '@/stores/gameData'
+import { useGridStore } from '@/stores/grid'
+import { usePathfindingStore } from '@/stores/pathfinding'
+import { useSkillStore } from '@/stores/skill'
+import { getStateClass, getStateName } from '@/utils/tileStateFormatting'
 
 // Access Pinia stores
 const gridStore = useGridStore()

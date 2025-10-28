@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import FilterIcons from './ui/FilterIcons.vue'
-import type { CharacterType } from '../lib/types/character'
+import type { CharacterType } from '@/lib/types/character'
 
 interface Props {
   characters: readonly CharacterType[]

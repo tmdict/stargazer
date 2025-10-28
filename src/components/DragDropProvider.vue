@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, provide, ref, type Ref } from 'vue'
 
-import { useDragDrop } from '../composables/useDragDrop'
-import type { CharacterType } from '../lib/types/character'
+import { useDragDrop } from '@/composables/useDragDrop'
+import type { CharacterType } from '@/lib/types/character'
 
 // Types for the drag/drop API
 export interface DragDropAPI {

@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
-import { useGridEvents } from '../composables/useGridEvents'
-import { getCharacterSkill } from '../lib/skills/skill'
-import { useGridStore } from '../stores/grid'
-import { useSkillStore } from '../stores/skill'
+import { useGridEvents } from '@/composables/useGridEvents'
+import { getCharacterSkill } from '@/lib/skills/skill'
+import { useGridStore } from '@/stores/grid'
+import { useSkillStore } from '@/stores/skill'
 
 interface Props {
   showPerspective: boolean

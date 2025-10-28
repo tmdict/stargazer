@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Team } from '../../lib/types/team'
-import { useI18nStore } from '../../stores/i18n'
+import { Team } from '@/lib/types/team'
+import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useGridStore } from '../../stores/grid'
+import { useGridStore } from '@/stores/grid'
 
 interface Props {
   startHexId: number

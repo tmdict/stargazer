@@ -1,18 +1,18 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 
-import { useDragDrop } from '../../composables/useDragDrop'
-import { useGridEvents } from '../../composables/useGridEvents'
-import { canPlaceCharacterOnTeam, hasCharacter } from '../../lib/characters/character'
-import type { Hex } from '../../lib/hex'
-import type { Layout } from '../../lib/layout'
-import { State } from '../../lib/types/state'
-import { Team } from '../../lib/types/team'
-import { useCharacterStore } from '../../stores/character'
-import { useGridStore } from '../../stores/grid'
-import { useMapEditorStore } from '../../stores/mapEditor'
-import { useSkillStore } from '../../stores/skill'
-import { getTileFillColor } from '../../utils/tileStateFormatting'
+import { useDragDrop } from '@/composables/useDragDrop'
+import { useGridEvents } from '@/composables/useGridEvents'
+import { canPlaceCharacterOnTeam, hasCharacter } from '@/lib/characters/character'
+import type { Hex } from '@/lib/hex'
+import type { Layout } from '@/lib/layout'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import { useCharacterStore } from '@/stores/character'
+import { useGridStore } from '@/stores/grid'
+import { useMapEditorStore } from '@/stores/mapEditor'
+import { useSkillStore } from '@/stores/skill'
+import { getTileFillColor } from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
