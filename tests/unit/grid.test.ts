@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { Grid } from '../../src/lib/grid'
-import { Hex } from '../../src/lib/hex'
-import type { SkillManager } from '../../src/lib/skills/skill'
-import { FULL_GRID, type GridPreset } from '../../src/lib/types/grid'
-import { State } from '../../src/lib/types/state'
-import { Team } from '../../src/lib/types/team'
+import { Grid } from '@/lib/grid'
+import { Hex } from '@/lib/hex'
+import type { SkillManager } from '@/lib/skills/skill'
+import { FULL_GRID, type GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Create a simple test grid preset
 const TEST_GRID: GridPreset = {

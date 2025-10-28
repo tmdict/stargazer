@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { getOpposingTeam } from '../../../../src/lib/characters/character'
-import { Grid } from '../../../../src/lib/grid'
-import type { SkillContext } from '../../../../src/lib/skills/skill'
-import { SkillManager } from '../../../../src/lib/skills/skill'
+import { getOpposingTeam } from '@/lib/characters/character'
+import { Grid } from '@/lib/grid'
+import type { SkillContext } from '@/lib/skills/skill'
+import { SkillManager } from '@/lib/skills/skill'
 import {
   calculateDistances,
   findRearmostTarget,
@@ -15,10 +15,10 @@ import {
   TargetingMethod,
   type TargetCandidate,
   type TargetingOptions,
-} from '../../../../src/lib/skills/utils/targeting'
-import type { GridPreset } from '../../../../src/lib/types/grid'
-import { State } from '../../../../src/lib/types/state'
-import { Team } from '../../../../src/lib/types/team'
+} from '@/lib/skills/utils/targeting'
+import type { GridPreset } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 // Test grid setup - larger grid for better testing
 const TEST_GRID: GridPreset = {
