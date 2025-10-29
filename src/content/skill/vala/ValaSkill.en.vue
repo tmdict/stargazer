@@ -15,9 +15,9 @@ setupContentMeta({
   <article>
     <h1>Vala</h1>
 
-    <h2>Notice Beforehand</h2>
+    <h2>Targeting Mechanics</h2>
 
-    <strong>[ Skill 1 ]</strong>
+    <h3>Skill</h3>
     <p>
       Vala sends a notice to mark the farthest enemy when a battle starts. She prioritizes attacking
       the noticed enemy, absorbing 90 Energy for each hit.
