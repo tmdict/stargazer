@@ -62,6 +62,8 @@ export const useI18nStore = defineStore('i18n', () => {
     }
 
     // Check for locale query parameter and override if valid
+    // Note: Using URLSearchParams instead of route.query because this runs during
+    // store initialization before Vue Router is mounted
     const urlParams = new URLSearchParams(window.location.search)
     const localeParam = urlParams.get('l')
     if (localeParam && VALID_LOCALES.includes(localeParam)) {
