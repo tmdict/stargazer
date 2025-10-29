@@ -17,9 +17,9 @@ setupContentMeta({
   <article>
     <h1>Bonnie</h1>
 
-    <h2>Decay's Reach</h2>
+    <h2>Targeting Mechanics</h2>
 
-    <strong>[ Skill 1 ]</strong>
+    <h3>Skill</h3>
     <p>
       When a battle starts, Bonnie casts the Aging magic on the rearmost enemy, dealing 150% damage
       and reducing their Haste by 30 until the battle ends. Bonnie prioritizes attacking this target

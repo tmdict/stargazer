@@ -4,21 +4,21 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './SilvinaSkill.data'
 
 setupContentMeta({
-  title: '西尔维娜 · 技能',
+  title: '西尔维娜 (苍白) · 技能',
   description: '战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人，造成300%伤害。',
   url: 'skill/silvina',
   locale: 'zh',
-  keywords: ['Silvina', '西尔维娜'],
+  keywords: ['Silvina', '西尔维娜', '苍白'],
 })
 </script>
 
 <template>
   <article>
-    <h1>西尔维娜</h1>
+    <h1>西尔维娜 (苍白)</h1>
 
-    <h2>先发制人</h2>
+    <h2>特殊目标机制</h2>
 
-    <strong>[ 技能1 ]</strong>
+    <h3>技能</h3>
     <p>战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人，造成300%伤害。</p>
 
     <h3>技能机制</h3>

@@ -4,22 +4,22 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './NaraSkill.data'
 
 setupContentMeta({
-  title: '奈拉 · 技能',
+  title: '奈拉 (钩子) · 技能',
   description:
     '自身普通攻击范围内没有敌方英雄时，将远处的一名敌方英雄钩到自己面前。目标英雄在被钩的过程中，每被拖拽1格的距离便会流失3.5%的当前生命值，最高不超过自身攻击力的250%。该效果不会导致目标英雄被击败，且本技能优先选择最接近对称位置的敌方英雄。',
   url: 'skill/nara',
   locale: 'zh',
-  keywords: ['Nara', '奈拉'],
+  keywords: ['Nara', '奈拉', '钩子'],
 })
 </script>
 
 <template>
   <article>
-    <h1>奈拉</h1>
+    <h1>奈拉 (钩子)</h1>
 
-    <h2>铁索勾魂</h2>
+    <h2>特殊目标机制</h2>
 
-    <strong>[ 技能1 ]</strong>
+    <h3>技能</h3>
     <p>
       自身普通攻击范围内没有敌方英雄时，将远处的一名敌方英雄钩到自己面前。目标英雄在被钩的过程中，每被拖拽1格的距离便会流失3.5%的当前生命值，最高不超过自身攻击力的250%。该效果不会导致目标英雄被击败，且本技能优先选择最接近对称位置的敌方英雄。
     </p>

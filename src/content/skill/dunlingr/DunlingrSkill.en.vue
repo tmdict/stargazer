@@ -7,7 +7,7 @@ setupContentMeta({
     "Dunlingr designates the Bell of Order as either Spellbind or Curelock before a battle starts, setting the stage for the battle's order.",
   url: 'skill/dunlingr',
   locale: 'en',
-  keywords: ['Dunlingr', '顿里尔'],
+  keywords: ['Dunlingr', '顿里尔', '钟神'],
 })
 </script>
 
@@ -15,9 +15,9 @@ setupContentMeta({
   <article>
     <h1>Dunlingr</h1>
 
-    <h2>Echo of Silence</h2>
+    <h2>Ultimate Negation</h2>
 
-    <strong>[ Ultimate Negation ]</strong>
+    <h3>Ultimate</h3>
     <p>
       Dunlingr designates the Bell of Order as either Spellbind or Curelock before a battle starts,
       setting the stage for the battle's order.
@@ -27,15 +27,14 @@ setupContentMeta({
       <li>Curelock: Unable to recover HP for others.</li>
     </ul>
 
-    <strong>[ Passive ]</strong>
     <p>
-      Dunlingr summons the Bell of Order when a battle starts and keeps it on the battlefield for
-      12s.
+      <strong>Passive.</strong> Dunlingr summons the Bell of Order when a battle starts and keeps it
+      on the battlefield for 12s.
     </p>
 
-    <h2>Clemency Chime</h2>
+    <h2>Targeting Mechanics</h2>
 
-    <strong>[ EX Skill ]</strong>
+    <h3>EX Skill</h3>
     <p>
       Dunlingr protects the farthest non-summoned ally, ensuring they are not affected by his order
       until the ally is defeated.
