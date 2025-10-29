@@ -1,7 +1,7 @@
 /** * Home.vue - Main application layout */
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 import ArtifactSelection from '@/components/ArtifactSelection.vue'
 import CharacterSelection from '@/components/CharacterSelection.vue'
@@ -41,6 +41,7 @@ const mapEditorStore = useMapEditorStore()
 const skillStore = useSkillStore()
 const { success, error } = useToast()
 const router = useRouter()
+const route = useRoute()
 const { showPerspective } = useBreakpoint()
 const { copyToClipboard, downloadAsImage } = useGridExport()
 
@@ -48,7 +49,20 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // Tab state management
-const activeTab = ref('characters')
+// Valid tabs that can be set via query param
+const validTabs = ['characters', 'artifacts', 'skills', 'mapEditor'] as const
+type ValidTab = (typeof validTabs)[number]
+
+// Initialize active tab from query param 't' if present and valid
+const getInitialTab = (): string => {
+  const tabParam = route.query.t as string | undefined
+  if (tabParam && validTabs.includes(tabParam as ValidTab)) {
+    return tabParam
+  }
+  return 'characters'
+}
+
+const activeTab = ref(getInitialTab())
 const showDebug = ref(false)
 
 // Map management
@@ -69,6 +83,15 @@ const selectedMapEditorState = ref<State>(State.DEFAULT)
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
 
+  // Update URL with new tab query parameter
+  // Use replace to avoid creating browser history entries for tab switches
+  router.replace({
+    query: {
+      ...route.query,
+      t: tab,
+    },
+  })
+
   // When entering Map Editor mode, hide details to prevent flashing
   if (tab === 'mapEditor') {
     showArrows.value = false
@@ -85,6 +108,22 @@ const handleMapChange = (mapKey: string) => {
     gridStore._getGrid().skillManager = skillStore._getSkillManager()
   }
 }
+
+// Watch for route query changes (browser back/forward navigation)
+watch(
+  () => route.query.t,
+  (newTab) => {
+    if (newTab && validTabs.includes(newTab as ValidTab)) {
+      activeTab.value = newTab as string
+
+      // Apply special behavior for map editor
+      if (newTab === 'mapEditor') {
+        showArrows.value = false
+        showHexIds.value = false
+      }
+    }
+  },
+)
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
