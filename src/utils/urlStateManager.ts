@@ -51,13 +51,17 @@ export function generateShareableUrl(
   return `${baseUrl}?g=${encodedState}`
 }
 
-/* Get encoded state from current URL */
+/* Get encoded state from current URL
+ * Direct URL parsing - used when Vue Router isn't available (e.g., initial page load in HomeView)
+ * Uses URLSearchParams to read directly from window.location.search */
 export function getEncodedStateFromUrl(): string | null {
   const urlParams = new URLSearchParams(window.location.search)
   return urlParams.get('g')
 }
 
-/* Get encoded state from Vue Router query object */
+/* Get encoded state from Vue Router query object
+ * Vue Router query parsing - used when working with route.query object (e.g., ShareView)
+ * Handles Vue Router's query format which can be string, string[], or null */
 export function getEncodedStateFromRoute(query: { g?: string | string[] | null }): string | null {
   return typeof query.g === 'string' ? query.g : null
 }

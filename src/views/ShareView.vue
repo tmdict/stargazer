@@ -83,7 +83,7 @@ onMounted(() => {
 
 // Empty state message
 const emptyMessage = computed(() => {
-  const queryParam = route.query.g
+  const queryParam = getEncodedStateFromRoute(route.query)
   if (!queryParam) {
     return 'No grid data provided'
   }
