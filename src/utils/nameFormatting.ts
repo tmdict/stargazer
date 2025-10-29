@@ -1,6 +1,6 @@
 /**
  * Convert dash-separated names to display format with spaces
- * e.g., 'foo-bar' → 'Foo Bar'
+ * e.g., 'lily-may' -> 'Lily May'
  */
 export function formatDisplayName(name: string): string {
   return name
@@ -11,7 +11,7 @@ export function formatDisplayName(name: string): string {
 
 /**
  * Convert dash-separated names to CamelCase for file names
- * e.g., 'foo-bar' → 'FooBar'
+ * e.g., 'lily-may' -> 'LilyMay'
  */
 export function formatToCamelCase(name: string): string {
   return name
