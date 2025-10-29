@@ -9,7 +9,7 @@ setupContentMeta({
     "Nara pulls a distant enemy hero toward her when there are no enemy heroes within her normal attack range. The target loses 4% HP for every tile they are pulled, up to 250% of Nara's ATK. This skill won't defeat the enemy and prioritizes attacking the closest enemy in a symmetrical position.",
   url: 'skill/nara',
   locale: 'en',
-  keywords: ['Nara', '奈拉'],
+  keywords: ['Nara', '奈拉', '钩子'],
 })
 </script>
 
@@ -17,9 +17,9 @@ setupContentMeta({
   <article>
     <h1>Nara</h1>
 
-    <h2>Phantom Chains</h2>
+    <h2>Targeting Mechanics</h2>
 
-    <strong>[ Skill 1 ]</strong>
+    <h3>Skill</h3>
     <p>
       Nara pulls a distant enemy hero toward her when there are no enemy heroes within her normal
       attack range. The target loses 4% HP for every tile they are pulled, up to 250% of Nara's ATK.

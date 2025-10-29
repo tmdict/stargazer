@@ -4,30 +4,30 @@ import { setupContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './ReinierSkill.data'
 
 setupContentMeta({
-  title: '雷内亚 · 技能',
+  title: '雷内亚 (四手) · 技能',
   description:
     '战斗开始时，若自身1格范围内存在一名友军与敌军的位置处于对称关系，雷内亚将会释放本技能使双方互换位置，优先以自身身后的友军作为目标。该敌军每次受到伤害时，该友军恢复等同于伤害量45%的生命值，持续到战斗结束。',
   url: 'skill/reinier',
   locale: 'zh',
-  keywords: ['Reinier', '雷内亚'],
+  keywords: ['Reinier', '雷内亚', '四手'],
 })
 </script>
 
 <template>
   <article>
-    <h1>雷内亚</h1>
+    <h1>雷内亚 (四手)</h1>
 
-    <h2>动态平衡</h2>
+    <h2>特殊目标机制</h2>
 
-    <strong>[ 技能1 ]</strong>
+    <h3>技能</h3>
     <p>
       战斗开始时，若自身1格范围内存在一名友军与敌军的位置处于对称关系，雷内亚将会释放本技能使双方互换位置，优先以自身身后的友军作为目标。该敌军每次受到伤害时，该友军恢复等同于伤害量45%的生命值，持续到战斗结束。
     </p>
 
-    <strong>[ 英雄专精 ]</strong>
+    <h3>英雄专精</h3>
     <p>“动态平衡”互换的友军攻击力提升7%，互换的敌军攻击力降低7%。</p>
 
-    <strong>[ EX技能 ]</strong>
+    <h3>专武技能</h3>
     <p>释放“动态平衡”时，还会对该敌人造成200%伤害并击倒，使其受到伤害提高25%，持续到战斗结束。</p>
 
     <h3>技能机制</h3>
