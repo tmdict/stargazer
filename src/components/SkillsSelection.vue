@@ -3,12 +3,14 @@ import { computed, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
 import SkillModal from './modals/SkillModal.vue'
+import TagsDisplay from './TagsDisplay.vue'
 import IconInfo from './ui/IconInfo.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { CharacterType } from '@/lib/types/character'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
 import { useI18nStore } from '@/stores/i18n'
+import { loadTags } from '@/utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -18,16 +20,29 @@ const props = defineProps<{
 const { selectedTeam, characterStore } = useSelectionState()
 const i18n = useI18nStore()
 
+// Filter state
+const selectedTagNames = ref<string | null>(null)
+
 // Filter characters to only show those with skills
 const skillCharacters = computed(() => {
-  return props.characters
-    .filter((char) => DOCUMENTED_SKILLS.includes(char.name))
-    .sort((a, b) => {
-      // Sort by the order in DOCUMENTED_SKILLS array
-      const aIndex = DOCUMENTED_SKILLS.indexOf(a.name)
-      const bIndex = DOCUMENTED_SKILLS.indexOf(b.name)
-      return aIndex - bIndex
-    })
+  let filtered = props.characters.filter((char) => DOCUMENTED_SKILLS.includes(char.name))
+
+  // Apply tag filters
+  if (selectedTagNames.value) {
+    const allTags = loadTags()
+    const selectedTag = allTags.find((tag) => tag.name === selectedTagNames.value)
+    if (selectedTag) {
+      const characterNamesInSelectedTag = new Set(selectedTag.characters)
+      filtered = filtered.filter((char) => characterNamesInSelectedTag.has(char.name))
+    }
+  }
+
+  // Sort by the order in DOCUMENTED_SKILLS array
+  return filtered.sort((a, b) => {
+    const aIndex = DOCUMENTED_SKILLS.indexOf(a.name)
+    const bIndex = DOCUMENTED_SKILLS.indexOf(b.name)
+    return aIndex - bIndex
+  })
 })
 
 const isCharacterPlaced = (characterId: number): boolean => {
@@ -63,6 +78,10 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 }
 
+const clearFilters = () => {
+  selectedTagNames.value = null
+}
+
 // Modal state - single modal for all skills
 const showSkillModal = ref(false)
 const selectedSkillName = ref('')
@@ -81,7 +100,15 @@ const openDetailsModal = (character: CharacterType) => {
     :enemyCount="characterStore.availableEnemy"
     :maxAllyCount="characterStore.maxTeamSizeAlly"
     :maxEnemyCount="characterStore.maxTeamSizeEnemy"
+    :showFilters="true"
+    @clear-filters="clearFilters"
   >
+    <!-- Filters slot (empty for now, but here for consistency) -->
+    <template #filters></template>
+
+    <!-- Tags Display -->
+    <TagsDisplay v-model="selectedTagNames" />
+
     <!-- Skills Characters Grid -->
     <div class="characters">
       <div v-for="character in skillCharacters" :key="character.id" class="character-wrapper">
