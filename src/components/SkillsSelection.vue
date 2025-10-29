@@ -103,9 +103,6 @@ const openDetailsModal = (character: CharacterType) => {
     :showFilters="true"
     @clear-filters="clearFilters"
   >
-    <!-- Filters slot (empty for now, but here for consistency) -->
-    <template #filters></template>
-
     <!-- Tags Display -->
     <TagsDisplay v-model="selectedTagNames" />
 
