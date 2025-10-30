@@ -5,7 +5,7 @@
   "faction": "lightbearer",
   "class": "support",
   "damage": "physical",
-  "range": 20,
   "energy": 600,
+  "range": 20,
   "season": 2
 }

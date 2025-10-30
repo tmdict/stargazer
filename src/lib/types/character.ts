@@ -7,8 +7,8 @@ export interface CharacterType {
   faction: string
   class: string
   damage: string
-  range: number
   energy: number
+  range: number
   season: number
   sourceHexId?: number // Optional property for tracking drag source
   team?: Team // Team assignment for placement

@@ -5,7 +5,7 @@
   "faction": "mauler",
   "class": "marksman",
   "damage": "physical",
-  "range": 7,
   "energy": 0,
+  "range": 7,
   "season": 5
 }

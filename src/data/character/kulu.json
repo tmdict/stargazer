@@ -5,7 +5,7 @@
   "faction": "hypogean",
   "class": "marksman",
   "damage": "physical",
-  "range": 6,
   "energy": 300,
+  "range": 6,
   "season": 4
 }

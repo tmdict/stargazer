@@ -54,6 +54,10 @@ const damageIcon = computed(() => {
   return gameDataStore.getIcon(`damage-${props.character.damage}`)
 })
 
+const energyIcon = computed(() => {
+  return gameDataStore.getIcon('initial-energy')
+})
+
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
   showTooltip.value = false
@@ -178,7 +182,7 @@ const handleTouchStart = () => {
                 <img
                   v-if="damageIcon"
                   :src="damageIcon"
-                  :alt="character.damage"
+                  :alt="String(character.damage)"
                   class="tooltip-icon"
                 />
                 <span class="tooltip-label">{{ i18n.t('game.damage') }}:</span>
@@ -186,13 +190,19 @@ const handleTouchStart = () => {
               </div>
 
               <div class="tooltip-row">
-                <span class="tooltip-label">{{ i18n.t('game.range') }}:</span>
-                <span class="tooltip-value">{{ character.range }}</span>
+                <img
+                  v-if="energyIcon"
+                  :src="energyIcon"
+                  :alt="String(character.energy)"
+                  class="tooltip-icon energy-icon"
+                />
+                <span class="tooltip-label">{{ i18n.t('game.energy') }}:</span>
+                <span class="tooltip-value">{{ character.energy }}</span>
               </div>
 
               <div class="tooltip-row">
-                <span class="tooltip-label">{{ i18n.t('game.energy') }}:</span>
-                <span class="tooltip-value">{{ character.energy }}</span>
+                <span class="tooltip-label">{{ i18n.t('game.range') }}:</span>
+                <span class="tooltip-value">{{ character.range }}</span>
               </div>
 
               <div class="tooltip-row">
@@ -306,6 +316,10 @@ const handleTouchStart = () => {
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.2);
   flex-shrink: 0;
+}
+
+.tooltip-icon.energy-icon {
+  filter: brightness(1.5);
 }
 
 .tooltip-label {

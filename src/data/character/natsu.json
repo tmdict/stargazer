@@ -5,7 +5,7 @@
   "faction": "dimensional",
   "class": "warrior",
   "damage": "physical",
-  "range": 1,
   "energy": 500,
+  "range": 1,
   "season": 3
 }

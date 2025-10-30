@@ -5,7 +5,7 @@
   "faction": "wilder",
   "class": "rogue",
   "damage": "magic",
-  "range": 1,
   "energy": 200,
+  "range": 1,
   "season": 0
 }

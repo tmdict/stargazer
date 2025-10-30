@@ -5,7 +5,7 @@
   "faction": "lightbearer",
   "class": "mage",
   "damage": "magic",
-  "range": 3,
   "energy": 0,
+  "range": 3,
   "season": 0
 }
