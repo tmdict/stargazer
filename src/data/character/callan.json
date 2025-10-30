@@ -5,7 +5,7 @@
   "faction": "graveborn",
   "class": "tank",
   "damage": "physical",
-  "range": 1,
   "energy": 0,
+  "range": 1,
   "season": 3
 }

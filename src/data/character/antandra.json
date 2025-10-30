@@ -5,7 +5,7 @@
   "faction": "mauler",
   "class": "tank",
   "damage": "physical",
-  "range": 1,
   "energy": 300,
+  "range": 1,
   "season": 0
 }

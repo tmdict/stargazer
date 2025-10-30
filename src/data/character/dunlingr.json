@@ -5,7 +5,7 @@
   "faction": "celestial",
   "class": "tank",
   "damage": "magic",
-  "range": 1,
   "energy": 0,
+  "range": 1,
   "season": 2
 }
