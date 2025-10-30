@@ -6,5 +6,6 @@
   "class": "marksman",
   "damage": "magic",
   "range": 7,
+  "energy": 0,
   "season": 2
 }

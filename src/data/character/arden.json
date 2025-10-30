@@ -6,5 +6,6 @@
   "class": "mage",
   "damage": "magic",
   "range": 5,
+  "energy": 200,
   "season": 0
 }

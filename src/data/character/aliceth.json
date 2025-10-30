@@ -6,5 +6,6 @@
   "class": "marksman",
   "damage": "physical",
   "range": 8,
+  "energy": 0,
   "season": 5
 }
