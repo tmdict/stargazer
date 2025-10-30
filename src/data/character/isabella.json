@@ -5,7 +5,7 @@
   "faction": "graveborn",
   "class": "support",
   "damage": "magic",
-  "range": 5,
   "energy": 0,
+  "range": 5,
   "season": 5
 }

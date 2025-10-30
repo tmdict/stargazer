@@ -5,7 +5,7 @@
   "faction": "celestial",
   "class": "warrior",
   "damage": "physical",
-  "range": 1,
   "energy": 0,
+  "range": 1,
   "season": 4
 }
