@@ -6,5 +6,6 @@
   "class": "warrior",
   "damage": "physical",
   "range": 10,
+  "energy": 0,
   "season": 0
 }

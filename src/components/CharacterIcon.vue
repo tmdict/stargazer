@@ -191,6 +191,11 @@ const handleTouchStart = () => {
               </div>
 
               <div class="tooltip-row">
+                <span class="tooltip-label">{{ i18n.t('game.energy') }}:</span>
+                <span class="tooltip-value">{{ character.energy }}</span>
+              </div>
+
+              <div class="tooltip-row">
                 <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
                 <span class="tooltip-value">{{ character.season }}</span>
               </div>
