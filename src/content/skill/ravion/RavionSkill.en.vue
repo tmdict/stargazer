@@ -28,7 +28,7 @@ setupContentMeta({
     <h3>Enhance Force</h3>
     <p>
       When an ally accepts the Objective from Ravion, they increase their ATK by 15% and become
-      unaffected These effects last for 5s.
+      unaffected. These effects last for 5s.
     </p>
   </article>
 </template>
