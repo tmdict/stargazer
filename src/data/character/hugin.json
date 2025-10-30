@@ -6,5 +6,6 @@
   "class": "support",
   "damage": "physical",
   "range": 20,
+  "energy": 600,
   "season": 2
 }

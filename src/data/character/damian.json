@@ -6,5 +6,6 @@
   "class": "tank",
   "damage": "magic",
   "range": 20,
+  "energy": 200,
   "season": 0
 }

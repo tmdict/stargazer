@@ -6,5 +6,6 @@
   "class": "support",
   "damage": "magic",
   "range": 3,
+  "energy": 400,
   "season": 0
 }

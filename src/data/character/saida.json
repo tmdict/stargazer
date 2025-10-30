@@ -6,5 +6,6 @@
   "class": "rogue",
   "damage": "magic",
   "range": 1,
+  "energy": 600,
   "season": 4
 }

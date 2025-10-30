@@ -25,5 +25,21 @@ setupContentMeta({
       causing the enemy to lose 700 Energy. Afterward, she exits the Defensive and unaffected
       States.
     </p>
+
+    <h3>How It Works</h3>
+
+    <p>When battle starts:</p>
+
+    <ul>
+      <li>
+        If Lily May is defending and there are multiple targets to interrupt, she prioritizes the
+        front-most enemy.
+      </li>
+      <li>
+        If Lily May is attacking and there are multiple targets to interrupt, she prioritizes the
+        rear-most enemy.
+      </li>
+      <li>If Lily May does not have target to interrupt, she will use Rainstorm Ballet instead.</li>
+    </ul>
   </article>
 </template>

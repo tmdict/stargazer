@@ -9,6 +9,7 @@ export const DOCUMENTED_SKILLS = [
   'eironn',
   'faramor',
   'fay',
+  'hammie',
   'hugin',
   'isabella',
   'lily-may',
