@@ -1,6 +1,7 @@
 // List of skills with documentation pages
 // Update this when adding new skill documentation
 export const DOCUMENTED_SKILLS = [
+  'aliceth',
   'bonnie',
   'bryon',
   'damian',
@@ -9,9 +10,11 @@ export const DOCUMENTED_SKILLS = [
   'faramor',
   'fay',
   'hugin',
+  'isabella',
   'lily-may',
   'lyca',
   'nara',
+  'mehira',
   'niru',
   'pandora',
   'parisa',
