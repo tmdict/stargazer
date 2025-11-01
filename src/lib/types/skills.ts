@@ -7,6 +7,7 @@ export const DOCUMENTED_SKILLS = [
   'damian',
   'dunlingr',
   'eironn',
+  'elijah-lailah',
   'faramor',
   'fay',
   'hammie',
@@ -21,8 +22,10 @@ export const DOCUMENTED_SKILLS = [
   'parisa',
   'ravion',
   'reinier',
+  'rowan',
   'scarlita',
   'silvina',
+  'thador',
   'vala',
   'zandrok',
 ]
