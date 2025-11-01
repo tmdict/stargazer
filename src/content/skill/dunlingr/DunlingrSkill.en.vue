@@ -34,6 +34,15 @@ setupContentMeta({
         it on the battlefield for [[12]]s.
       </p>
 
+      <h2>Non-Permanent Buff</h2>
+
+      <h3>Enhance Force</h3>
+      <p>
+        Upon casting Echo of Silence, Dunlingr grants all allies [[50]] ATK SPD for [[6]]s if the
+        order is set to Spellbind, or provides them with [[25]] Life Drain for [[6]]s if the order
+        is set to Curelock.
+      </p>
+
       <h2>Targeting Mechanics</h2>
 
       <h3>EX Skill</h3>
