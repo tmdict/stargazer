@@ -59,7 +59,6 @@ export default defineConfig({
         hostname: 'https://stargazer.tmdict.com',
         changefreq: 'weekly',
         priority: 0.8,
-        readable: true,
         generateRobotsTxt: true,
       })
     },
