@@ -434,7 +434,7 @@ defineExpose({
 }
 
 .hex-id {
-  font-weight: bold;
+  font-weight: 700;
   color: var(--color-text-primary);
   font-size: 0.9rem;
 }
@@ -521,7 +521,7 @@ defineExpose({
   border-radius: var(--radius-small);
   cursor: pointer;
   font-size: 1rem;
-  font-weight: bold;
+  font-weight: 700;
   line-height: 1;
   min-width: 24px;
   height: 24px;
@@ -572,7 +572,7 @@ defineExpose({
 }
 
 .team-label {
-  font-weight: bold;
+  font-weight: 700;
   font-size: 0.9rem;
   color: #333;
   min-width: 130px;
@@ -595,7 +595,7 @@ defineExpose({
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;
-  font-weight: bold;
+  font-weight: 700;
   line-height: 1;
   min-width: 24px;
   height: 24px;
@@ -645,7 +645,7 @@ defineExpose({
 
 .skill-label {
   font-size: 0.8rem;
-  font-weight: bold;
+  font-weight: 700;
   color: #2c5aa0;
 }
 
