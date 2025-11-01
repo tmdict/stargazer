@@ -1,4 +1,14 @@
 {
   "name": "special-target",
-  "characters": ["aliceth", "bonnie", "dunlingr", "isabella", "nara", "reinier", "silvina", "vala"]
+  "characters": [
+    "aliceth",
+    "bonnie",
+    "dunlingr",
+    "isabella",
+    "nara",
+    "pandora",
+    "reinier",
+    "silvina",
+    "vala"
+  ]
 }

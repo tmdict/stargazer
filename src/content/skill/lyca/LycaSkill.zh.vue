@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
 
 setupContentMeta({
@@ -12,14 +13,16 @@ setupContentMeta({
 </script>
 
 <template>
-  <article>
-    <h1>莱卡 (兔弓)</h1>
+  <StyledText>
+    <article>
+      <h1>莱卡 (兔弓)</h1>
 
-    <h2>非永久增益</h2>
+      <h2>充能 · 非永久增益</h2>
 
-    <h3>技能</h3>
-    <p>
-      星辰降下祝福，为所有友军提升25点攻击速度，持续6秒。战斗开始时会立即使用一次，额外使每名友军回复120点能量。
-    </p>
-  </article>
+      <h3>技能</h3>
+      <p>
+        星辰降下祝福，为所有友军提升[[25]]点攻击速度，持续[[6]]秒。战斗开始时会立即使用一次，额外使每名友军回复[[120]]点能量。
+      </p>
+    </article>
+  </StyledText>
 </template>

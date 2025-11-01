@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
 
 setupContentMeta({
@@ -11,12 +12,17 @@ setupContentMeta({
 </script>
 
 <template>
-  <article>
-    <h1>Hammie</h1>
+  <StyledText>
+    <article>
+      <h1>Hammie</h1>
 
-    <h2>Non-Permanent Buff</h2>
+      <h2>Non-Permanent Buff</h2>
 
-    <h3>Skill</h3>
-    <p>Hammie heals the weakest ally for 160% HP and increases their ATK by 10% for 5s.</p>
-  </article>
+      <h3>Skill</h3>
+      <p>
+        Hammie heals the [[weakest]] ally for [[160%]] HP and increases their ATK by [[10%]] for
+        [[5]]s.
+      </p>
+    </article>
+  </StyledText>
 </template>
