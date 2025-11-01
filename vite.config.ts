@@ -57,7 +57,7 @@ export default defineConfig({
     onFinished() {
       generateSitemap({
         hostname: 'https://stargazer.tmdict.com',
-        changefreq: 'weekly',
+        changefreq: 'monthly',
         priority: 0.8,
         generateRobotsTxt: true,
       })
