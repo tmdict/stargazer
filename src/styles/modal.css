@@ -159,6 +159,10 @@
   font-weight: 600;
 }
 
+.content .skill-highlight {
+  color: #5fc4bb;
+}
+
 /* Responsive styles */
 @media (max-width: 768px) {
   .overlay {
