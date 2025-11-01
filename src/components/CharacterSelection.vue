@@ -132,6 +132,7 @@ const handleClearFilters = () => {
         :character="{ ...character, team: selectedTeam }"
         :isDraggable
         :isPlaced="isCharacterPlaced(character.id)"
+        :selected-filter="selectedTagNames"
         @character-click="handleCharacterClick"
       />
     </div>

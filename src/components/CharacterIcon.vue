@@ -16,6 +16,7 @@ const props = defineProps<{
   isPlaced?: boolean
   showSimpleTooltip?: boolean
   hideInfo?: boolean
+  selectedFilter?: string | null
 }>()
 
 const emit = defineEmits<{
@@ -56,6 +57,11 @@ const damageIcon = computed(() => {
 
 const energyIcon = computed(() => {
   return gameDataStore.getIcon('initial-energy')
+})
+
+// Show energy when energy filters are active
+const showEnergy = computed(() => {
+  return props.selectedFilter === 'initial-energy' || props.selectedFilter === 'initial-energy-300'
 })
 
 const handleDragStart = (event: DragEvent) => {
@@ -136,6 +142,12 @@ const handleTouchStart = () => {
       />
     </div>
     <CharacterInfoIcons v-if="!hideInfo" :character="character" />
+
+    <!-- Energy Display -->
+    <div v-if="showEnergy" class="character-energy">
+      <img :src="energyIcon" alt="Energy" class="energy-icon" />
+      <span class="energy-value">{{ character.energy }}</span>
+    </div>
 
     <!-- Tooltip -->
     <Teleport to="body">
@@ -336,6 +348,26 @@ const handleTouchStart = () => {
 /* Special styling for rows without icons */
 .tooltip-row:not(:has(.tooltip-icon)) .tooltip-label {
   margin-left: 28px; /* 20px icon + 8px gap */
+}
+
+/* Energy Display */
+.character-energy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  margin-top: 0.25rem;
+  padding-right: 0.8rem;
+  font-size: 0.875rem;
+}
+
+.character-energy .energy-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.character-energy .energy-value {
+  font-weight: 600;
 }
 
 @media (max-width: 768px) {

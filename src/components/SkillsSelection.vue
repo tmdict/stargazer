@@ -114,6 +114,7 @@ const openDetailsModal = (character: CharacterType) => {
           :isDraggable
           :isPlaced="isCharacterPlaced(character.id)"
           :hideInfo="true"
+          :selected-filter="selectedTagNames"
           @character-click="handleCharacterClick"
         />
         <button
