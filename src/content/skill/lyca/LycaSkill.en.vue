@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>Lyca</h1>
 
-      <h2>Energy Recharge · Non-Permanent Buff</h2>
+      <h2>Non-Permanent Buff · Energy Recharge</h2>
 
       <h3>Skill</h3>
       <p>
@@ -25,6 +25,9 @@ setupContentMeta({
         This effect is triggered immediately when a battle starts and grants all allies [[120]]
         Energy.
       </p>
+
+      <h3>Enhance Force</h3>
+      <p><strong>Level 2:</strong> Lyca gains [[300]] extra Initial Energy.</p>
     </article>
   </StyledText>
 </template>
