@@ -4,6 +4,7 @@ import type { Team } from '../types/team'
 import { bonnieSkill } from './bonnie'
 import { dunlingrSkill } from './dunlingr'
 import { elijahLailahSkill } from './elijah-lailah'
+import { isabellaSkill } from './isabella'
 import { naraSkill } from './nara'
 import { phraestoSkill } from './phraesto'
 import { reinierSkill } from './reinier'
@@ -31,6 +32,7 @@ export interface SkillTargetInfo {
     symmetricalHexId?: number
     isSymmetricalTarget?: boolean
     isRearmostTarget?: boolean
+    isFrontmostTarget?: boolean
   }
 }
 
@@ -66,6 +68,7 @@ const skillRegistry = new Map<number, Skill>([
   [dunlingrSkill.characterId, dunlingrSkill],
   [naraSkill.characterId, naraSkill],
   [bonnieSkill.characterId, bonnieSkill],
+  [isabellaSkill.characterId, isabellaSkill],
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
 ])

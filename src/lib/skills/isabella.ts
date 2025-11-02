@@ -1,21 +1,24 @@
-import { getOpposingTeam } from '../characters/character'
 import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findRearmostTarget } from './utils/targeting'
+import { findTarget, TargetingMethod } from './utils/targeting'
 
 /**
- * Targets the rearmost character on the opposing team.
+ * Calculate the frontmost ally for Isabella to target
  */
-export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-  const opposingTeam = getOpposingTeam(context.team)
-  return findRearmostTarget(context, opposingTeam)
+function calculateTarget(context: SkillContext): SkillTargetInfo | null {
+  // Target the frontmost ally on the same team using the standardized targeting function
+  return findTarget(context, {
+    targetTeam: context.team,
+    excludeSelf: true,
+    targetingMethod: TargetingMethod.FRONTMOST,
+  })
 }
 
-export const bonnieSkill: Skill = {
-  id: 'bonnie',
-  characterId: 66,
-  name: "Decay's Reach",
-  description: 'Targets the rearmost character on the opposing team.',
-  targetingColorModifier: '#98be5d', // Green color for targeting arrow
+export const isabellaSkill: Skill = {
+  id: 'isabella',
+  characterId: 93,
+  name: 'Grimoire Pact',
+  description: 'Targets the frontmost allied character as her companion.',
+  targetingColorModifier: '#6d9c86', // Green color for targeting arrow
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
