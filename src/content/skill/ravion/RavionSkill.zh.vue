@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
+import { gridStyles, images } from './RavionSkill.data'
 
 setupContentMeta({
   title: '沙利叶 · 技能',
@@ -26,6 +28,29 @@ setupContentMeta({
 
       <h3>觉醒之力</h3>
       <p>队友在接受任务牌时获得[[15%]]攻击力提升和[[霸体]]，持续[[5]]秒。</p>
+
+      <h2>特殊目标机制</h2>
+
+      <h3>技能机制</h3>
+      <p>
+        网格被组织成水平行，第15行（格子44、45）是敌方队伍的最后排，第1行（格子1、2）是友方队伍的最后排。
+      </p>
+      <p>
+        在同一行内，靠左（较高ID）的格子在敌方一侧被认为“更靠后”，而靠右（较低ID）的格子在友方一侧被认为“更靠后”。
+      </p>
+      <p>最后排角色是根据他们在地图上的位置确定的：</p>
+      <ul>
+        <li>
+          <strong>友方沙利叶：</strong
+          >从最后排开始扫描队友位置，从右到左（最低格子ID到最高），瞄准找到的前两个队友。
+        </li>
+        <li>
+          <strong>敌方沙利叶：</strong
+          >以相反顺序扫描敌人位置，从左到右（最高格子ID到最低），瞄准找到的前两个敌人。
+        </li>
+      </ul>
+
+      <GridSnippet :grid-style="gridStyles.main" :images />
     </article>
   </StyledText>
 </template>
