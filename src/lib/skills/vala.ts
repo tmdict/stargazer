@@ -15,7 +15,7 @@ export const valaSkill: Skill = {
   characterId: 46,
   name: 'Assassin',
   description:
-    'Targets the character on the opposing team that is furthest from the current tile of Vala.',
+    'Targets the enemy character on the opposing team that is furthest from the current tile of Vala.',
   targetingColorModifier: '#9661f1',
 
   onActivate(context: SkillContext): void {

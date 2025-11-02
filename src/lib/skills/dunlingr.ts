@@ -15,7 +15,7 @@ export const dunlingrSkill: Skill = {
   characterId: 57,
   name: 'Bell of Order',
   description:
-    'Targets the character on the same team that is furthest from the current tile of Dunlingr.',
+    'Targets the ally character on the same team that is furthest from the current tile of Dunlingr.',
   targetingColorModifier: '#ffa000',
 
   onActivate(context: SkillContext): void {

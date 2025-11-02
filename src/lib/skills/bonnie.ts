@@ -14,7 +14,7 @@ export const bonnieSkill: Skill = {
   id: 'bonnie',
   characterId: 66,
   name: "Decay's Reach",
-  description: 'Targets the rearmost character on the opposing team.',
+  description: 'Targets the rearmost enemy character on the opposing team.',
   targetingColorModifier: '#98be5d',
 
   onActivate(context: SkillContext): void {
