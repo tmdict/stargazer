@@ -15,7 +15,7 @@ export const bonnieSkill: Skill = {
   characterId: 66,
   name: "Decay's Reach",
   description: 'Targets the rearmost character on the opposing team.',
-  targetingColorModifier: '#98be5d', // Green color for targeting arrow
+  targetingColorModifier: '#98be5d',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context

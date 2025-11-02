@@ -41,7 +41,7 @@ export const naraSkill: Skill = {
   name: 'Phantom Chains',
   description:
     'Targets the character on the opposing team on a symmetrical tile to Nara. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
-  targetingColorModifier: '#98be5d', // Green color for targeting arrow
+  targetingColorModifier: '#98be5d',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context

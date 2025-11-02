@@ -178,7 +178,7 @@ export const reinierSkill: Skill = {
   name: 'Dynamic Balance',
   description:
     'Targets an adjacent ally position with an enemy hero if both the ally and enemy are placed on a symmetrical tile.',
-  tileColorModifier: '#ad51cb', // Purple tile border
+  tileColorModifier: '#ad51cb',
 
   onActivate(context: SkillContext): void {
     updateSkillTargets(context)
