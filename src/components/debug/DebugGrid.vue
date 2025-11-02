@@ -1,6 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
+import type { GridTile } from '@/lib/grid'
+import { getCharacterSkill } from '@/lib/skills/skill'
+import type { SkillTargetInfo } from '@/lib/skills/skill'
 import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
@@ -50,6 +53,101 @@ const shouldShowDebugLines = (hexId: number): boolean => {
   return !hiddenCharacters.value.has(hexId)
 }
 
+// Helper to get skill targets for a character
+const getSkillTargetsForCharacter = (
+  characterId: number,
+  team: Team,
+): Array<{ key: string; target: SkillTargetInfo }> => {
+  const targets: Array<{ key: string; target: SkillTargetInfo }> = []
+  const allTargets = skillStore.getAllSkillTargets
+
+  // Check for standard key format
+  const standardKey = `${characterId}-${team}`
+  if (allTargets.has(standardKey)) {
+    targets.push({ key: standardKey, target: allTargets.get(standardKey)! })
+  }
+
+  // Check for multi-target keys (e.g., 90.1, 90.2 for Ravion)
+  for (const [key, target] of allTargets) {
+    if (key.startsWith(`${characterId}.`) && key.endsWith(`-${team}`)) {
+      targets.push({ key, target })
+    }
+  }
+
+  return targets
+}
+
+// Helper to format target label based on team context
+const getTargetLabel = (
+  targetHexId: number | null,
+  sourceTeam: Team | null | undefined,
+): string => {
+  if (targetHexId === null) return 'No target'
+  const targetTile = gridStore.grid.getTileById(targetHexId)
+  if (!targetTile || !sourceTeam) return `Hex ${targetHexId}`
+
+  if (targetTile.team === sourceTeam) {
+    return `Ally Hex ${targetHexId}`
+  } else if (targetTile.team && targetTile.team !== sourceTeam) {
+    return `Enemy Hex ${targetHexId}`
+  }
+  return `Hex ${targetHexId}`
+}
+
+// Helper to get metadata descriptor
+const getMetadataDescriptor = (metadata: SkillTargetInfo['metadata']): string | null => {
+  if (!metadata) return null
+
+  // Priority order for descriptors
+  if (metadata.isSymmetricalTarget === true) return 'symmetrical'
+  if (metadata.isSymmetricalTarget === false) return 'spiral fallback'
+  if (metadata.isFrontmostTarget) return 'frontmost'
+  if (metadata.isRearmostTarget) return 'rearmost'
+  if (metadata.distance !== undefined) return `distance: ${metadata.distance}`
+
+  return null
+}
+
+// Computed property for active skill configs
+const activeSkillConfigs = computed(() => {
+  const configs: Array<{
+    tile: GridTile
+    characterId: number
+    skillName: string
+    characterName: string
+    targets: Array<{ key: string; target: SkillTargetInfo; index?: number }>
+    showSymmetry: boolean
+  }> = []
+
+  // Get all tiles with characters that have skills
+  for (const tile of characterStore.getTilesWithCharacters()) {
+    if (!tile.characterId || !tile.team) continue
+
+    const skill = getCharacterSkill(tile.characterId)
+    if (!skill) continue
+
+    const targets = getSkillTargetsForCharacter(tile.characterId, tile.team)
+    if (targets.length === 0) continue
+
+    // Add index for multi-target display (e.g., "1st rearmost", "2nd rearmost")
+    const indexedTargets = targets.map((t, index) => ({
+      ...t,
+      index: targets.length > 1 ? index : undefined,
+    }))
+
+    configs.push({
+      tile,
+      characterId: tile.characterId,
+      skillName: skill.name || 'Unknown Skill',
+      characterName: getCharacterName(tile.characterId),
+      targets: indexedTargets,
+      showSymmetry: [39, 58].includes(tile.characterId), // Silvina, Nara
+    })
+  }
+
+  return configs
+})
+
 // Expose functions for PathfindingDebug component
 defineExpose({
   shouldShowDebugLines,
@@ -88,165 +186,63 @@ defineExpose({
                 {{ getStateName(tile.state) }}
               </span>
             </div>
-            <!-- Show skill targeting info for Silvina -->
-            <div v-if="tile.characterId === 39 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: First Strike (Silvina)</span>
-              <span class="symmetry-info"
-                >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
-              >
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
-                    <span v-else>(spiral search)</span>
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Reinier -->
-            <div v-if="tile.characterId === 31 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Dynamic Balance (Reinier)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <span v-if="key === `${tile.characterId}-${tile.team}`" class="skill-target">
-                  <template
-                    v-if="targetInfo.metadata?.allyHexId && targetInfo.metadata?.enemyHexId"
-                  >
-                    → Targeting Ally Hex {{ targetInfo.metadata.allyHexId }}, Enemy Hex
-                    {{ targetInfo.metadata.enemyHexId }}
-                    <span>(symmetrical pair)</span>
-                  </template>
-                </span>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Vala -->
-            <div v-if="tile.characterId === 46 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Assassin (Vala)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.distance"
-                      >(distance: {{ targetInfo.metadata.distance }})</span
-                    >
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Dunlingr -->
-            <div v-if="tile.characterId === 57 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Assassin (Dunlingr)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Ally Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.distance"
-                      >(distance: {{ targetInfo.metadata.distance }})</span
-                    >
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Nara -->
-            <div v-if="tile.characterId === 58 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Phantom Chains (Nara)</span>
-              <span class="symmetry-info"
-                >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
-              >
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.isSymmetricalTarget">(symmetrical)</span>
-                    <span v-else>(spiral search)</span>
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Bonnie -->
-            <div v-if="tile.characterId === 66 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Decay's Reach (Bonnie)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.isRearmostTarget">(rearmost)</span>
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Isabella -->
-            <div v-if="tile.characterId === 93 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Grimoire Pact (Isabella)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Ally Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.isFrontmostTarget">(frontmost ally)</span>
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Pandora -->
-            <div v-if="tile.characterId === 85 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Boxed Blessing (Pandora)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <template v-if="key === `${tile.characterId}-${tile.team}`">
-                  <span class="skill-target">
-                    → Targeting Ally Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.isRearmostTarget">(rearmost ally)</span>
-                  </span>
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
-                </template>
-              </template>
-            </div>
-            <!-- Show skill targeting info for Ravion (2 targets) -->
-            <div v-if="tile.characterId === 90 && tile.team" class="skill-info">
-              <span class="skill-label">Skill: Designated Duty (Ravion)</span>
-              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
-                <!-- Check for both indexed keys (90.1 and 90.2) -->
-                <template
-                  v-if="key.startsWith(`${tile.characterId}.`) && key.endsWith(`-${tile.team}`)"
+            <!-- Dynamic skill targeting info - works for all characters with skills -->
+            <template v-for="config in activeSkillConfigs" :key="config.characterId">
+              <div v-if="config.tile === tile" class="skill-info">
+                <span class="skill-label"
+                  >Skill: {{ config.skillName }} ({{ config.characterName }})</span
                 >
-                  <span class="skill-target">
-                    → Targeting Ally Hex {{ targetInfo.targetHexId }}
-                    <span v-if="targetInfo.metadata?.isRearmostTarget">
-                      ({{ key.includes('.1') ? '1st' : '2nd' }} rearmost)
+                <!-- Show symmetry info for characters that use it -->
+                <span v-if="config.showSymmetry" class="symmetry-info"
+                  >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
+                >
+                <!-- Handle Reinier's special dual target display -->
+                <template v-if="config.characterId === 31">
+                  <template v-for="targetData in config.targets" :key="targetData.key">
+                    <span
+                      v-if="
+                        targetData.target.metadata?.allyHexId &&
+                        targetData.target.metadata?.enemyHexId
+                      "
+                      class="skill-target"
+                    >
+                      → Targeting Ally Hex {{ targetData.target.metadata.allyHexId }}, Enemy Hex
+                      {{ targetData.target.metadata.enemyHexId }}
+                      <span>(symmetrical pair)</span>
                     </span>
-                  </span>
+                  </template>
                 </template>
-              </template>
-              <template
-                v-for="[key, targetInfo] in skillStore.getAllSkillTargets"
-                :key="`exam-${key}`"
-              >
-                <template v-if="key === `${tile.characterId}.1-${tile.team}`">
-                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
-                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
-                  </span>
+                <!-- Handle all other characters -->
+                <template v-else>
+                  <template v-for="targetData in config.targets" :key="targetData.key">
+                    <span class="skill-target">
+                      → Targeting {{ getTargetLabel(targetData.target.targetHexId, tile.team) }}
+                      <!-- Show metadata descriptor -->
+                      <span v-if="getMetadataDescriptor(targetData.target.metadata)">
+                        <template v-if="targetData.index !== undefined">
+                          ({{
+                            targetData.index === 0 ? '1st' : targetData.index === 1 ? '2nd' : '3rd'
+                          }}
+                          {{ getMetadataDescriptor(targetData.target.metadata) }})
+                        </template>
+                        <template v-else>
+                          ({{ getMetadataDescriptor(targetData.target.metadata) }})
+                        </template>
+                      </span>
+                    </span>
+                    <!-- Show examined tiles (only once for multi-target skills) -->
+                    <span
+                      v-if="
+                        targetData.target.metadata?.examinedTiles && (targetData.index ?? 0) === 0
+                      "
+                      class="examined-tiles"
+                    >
+                      Examined tiles: {{ targetData.target.metadata.examinedTiles.join(', ') }}
+                    </span>
+                  </template>
                 </template>
-              </template>
-            </div>
+              </div>
+            </template>
             <!-- Show closest enemy info for Ally characters -->
             <div
               v-if="
