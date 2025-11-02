@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
+import { gridStyles, images } from './IsabellaSkill.data'
 
 setupContentMeta({
   title: 'Isabella · Skills',
@@ -41,6 +43,29 @@ setupContentMeta({
         up to 3 times. Note that stat boosts granted by Isabella's spell notes themselves do not
         trigger additional stacks of spell notes.
       </p>
+
+      <h3>How It Works</h3>
+      <p>
+        The grid is organized into horizontal rows, with row 15 (hexes 44, 45) being the rearmost
+        position for the enemy team, and row 1 (hexes 1, 2) being the rearmost for the ally team.
+      </p>
+      <p>
+        Within the same row, leftmost (higher hex IDs) tiles are considered "closest" to the enemy
+        side, while rightmost (lower hex IDs) tiles are "further back" on the ally side.
+      </p>
+      <p>The frontmost character is determined by their position on the hexagonal grid:</p>
+      <ul>
+        <li>
+          <strong>Ally Team Isabella:</strong> Scans ally positions starting from the frontmost row,
+          from left to right (highest tile ID to lowest), targeting the first ally found.
+        </li>
+        <li>
+          <strong>Enemy Team Isabella:</strong> Scans enemy positions in reverse orer, from right to
+          left (lowest tile ID to highest), targeting the first ally found.
+        </li>
+      </ul>
+
+      <GridSnippet :grid-style="gridStyles.main" :images />
     </article>
   </StyledText>
 </template>
