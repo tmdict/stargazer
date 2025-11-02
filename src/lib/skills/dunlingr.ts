@@ -1,7 +1,7 @@
 import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findTarget, TargetingMethod } from './utils/targeting'
 
-// Calculate the furthest same-team target from Dunlingr's position
+// Calculate the furthest same-team target from current position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return findTarget(context, {
     targetTeam: context.team, // Same team

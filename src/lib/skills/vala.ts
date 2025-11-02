@@ -2,7 +2,7 @@ import { getOpposingTeam } from '../characters/character'
 import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findTarget, TargetingMethod } from './utils/targeting'
 
-// Calculate the furthest opposing target from Vala's position
+// Calculate the furthest opposing target from current position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return findTarget(context, {
     targetTeam: getOpposingTeam(context.team), // Opposing team

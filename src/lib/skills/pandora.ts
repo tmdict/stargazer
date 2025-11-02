@@ -2,7 +2,7 @@ import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findTarget, TargetingMethod } from './utils/targeting'
 
 /**
- * Calculate the rearmost ally for Pandora to target
+ * Calculate the rearmost ally to target
  */
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   // Target the rearmost ally on the same team using the standardized targeting function
