@@ -12,9 +12,8 @@ export const zanieSkill: Skill = {
   name: 'Turret',
   description:
     'Places 2 turrets on the map, increasing team capacity by 2. If either Zanie or her turrets are removed, all are removed. Each turret has a range of 3',
-
-  companionImageModifier: 'zanie-turret', // Custom companion image
-  companionRange: 3, // Companion attack range
+  companionImageModifier: 'zanie-turret',
+  companionRange: 3,
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context

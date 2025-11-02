@@ -205,6 +205,21 @@ defineExpose({
                 </template>
               </template>
             </div>
+            <!-- Show skill targeting info for Pandora -->
+            <div v-if="tile.characterId === 85 && tile.team" class="skill-info">
+              <span class="skill-label">Skill: Boxed Blessing (Pandora)</span>
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
+                <template v-if="key === `${tile.characterId}-${tile.team}`">
+                  <span class="skill-target">
+                    → Targeting Ally Hex {{ targetInfo.targetHexId }}
+                    <span v-if="targetInfo.metadata?.isRearmostTarget">(rearmost ally)</span>
+                  </span>
+                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
+                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
+                  </span>
+                </template>
+              </template>
+            </div>
             <!-- Show closest enemy info for Ally characters -->
             <div
               v-if="

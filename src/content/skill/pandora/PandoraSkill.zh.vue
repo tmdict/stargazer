@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
+import { gridStyles, images } from './PandoraSkill.data'
 
 setupContentMeta({
   title: '潘多拉 · 技能',
@@ -26,6 +28,27 @@ setupContentMeta({
       <p>
         被动地，潘多拉每次释放普通攻击以外的技能时，为从魔盒中放出的友军恢复[[290%]]生命值和[[90]]点能量。
       </p>
+
+      <h3>技能机制</h3>
+      <p>
+        网格被组织成水平行，第15行（格子44、45）是敌方队伍的最后排，第1行（格子1、2）是友方队伍的最后排。
+      </p>
+      <p>
+        在同一行内，靠左（较高ID）的格子在敌方一侧被认为“更靠后”，而靠右（较低ID）的格子在友方一侧被认为“更靠后”。
+      </p>
+      <p>最后排角色是根据他们在地图上的位置确定的：</p>
+      <ul>
+        <li>
+          <strong>友方潘多拉：</strong
+          >从最后排开始扫描队友位置，从右到左（最低格子ID到最高），瞄准找到的第一个队友。
+        </li>
+        <li>
+          <strong>敌方潘多拉：</strong
+          >以相反顺序扫描敌人位置，从左到右（最高格子ID到最低），瞄准找到的第一个敌人。
+        </li>
+      </ul>
+
+      <GridSnippet :grid-style="gridStyles.main" :images />
     </article>
   </StyledText>
 </template>

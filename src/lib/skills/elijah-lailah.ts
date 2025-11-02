@@ -12,10 +12,9 @@ export const elijahLailahSkill: Skill = {
   name: 'Twins',
   description:
     'Elijah and Lailah appear as separate units on the map, increasing team capacity by 1. If either Elijah or Lailah is removed, both are removed. Lailah has a range of 1',
-
-  colorModifier: '#6ca3a0', // Light blue for main unit (Elijah)
-  companionColorModifier: '#cd7169', // Light pink for companion unit (Lailah)
-  companionRange: 1, // Companion attack range
+  colorModifier: '#6ca3a0',
+  companionColorModifier: '#cd7169',
+  companionRange: 1,
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context
