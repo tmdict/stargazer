@@ -35,7 +35,7 @@ export const ravionSkill: Skill = {
   id: 'ravion',
   characterId: 90,
   name: 'Designated Duty',
-  description: 'Targets the 2 rearmost allies on the same team.',
+  description: 'Targets the 2 rearmost ally characters on the same team.',
   targetingColorModifier: '#6d9c86',
 
   /**

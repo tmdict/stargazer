@@ -40,7 +40,7 @@ export const silvinaSkill: Skill = {
   characterId: 39,
   name: 'First Strike',
   description:
-    'Targets the character on the opposing team on a symmetrical tile to Silvina. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
+    'Targets the enemy character on the opposing team on a symmetrical tile to Silvina. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
   targetingColorModifier: '#6d9c86',
 
   onActivate(context: SkillContext): void {

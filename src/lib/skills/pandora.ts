@@ -17,7 +17,7 @@ export const pandoraSkill: Skill = {
   id: 'pandora',
   characterId: 85,
   name: 'Boxed Blessing',
-  description: 'Targets the rearmost character on the same team.',
+  description: 'Targets the rearmost ally character on the same team.',
   targetingColorModifier: '#9661f1',
 
   onActivate(context: SkillContext): void {
