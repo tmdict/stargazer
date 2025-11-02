@@ -7,7 +7,7 @@ This directory contains comprehensive tests for the skill targeting system utili
 ```
 targeting/
 ├── README.md             # This file
-├── targeting.test.ts     # Main test runner for all targeting tests
+├── *.test.ts    # Main test runner for tests
 └── symmetricalSpiral/    # Test data for symmetrical targeting
     ├── control/          # Control test cases
     ├── arena1/           # Arena 1 test cases
@@ -17,11 +17,7 @@ targeting/
 
 ## Test Coverage
 
-The tests simulate the complete symmetrical targeting flow used by characters like Silvina to find the nearest enemy from their symmetrical position:
-
-1. Calculate the symmetrical tile from the caster's position
-2. Check if an enemy is on the symmetrical tile (handled by character logic)
-3. If not, perform spiral search from the symmetrical tile to find the nearest enemy
+The tests simulate various complex targeting test scenarios, such as the symmetrical targeting flow.
 
 ## Running Tests
 

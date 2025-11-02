@@ -33,6 +33,8 @@ setupContentMeta({
         [[90]] Energy to the ally she released from her box.
       </p>
 
+      <h2>Targeting Mechanics</h2>
+
       <h3>How It Works</h3>
       <p>
         The grid is organized into horizontal rows, with row 15 (hexes 44, 45) being the rearmost
