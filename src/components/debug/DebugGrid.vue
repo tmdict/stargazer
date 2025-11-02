@@ -220,6 +220,33 @@ defineExpose({
                 </template>
               </template>
             </div>
+            <!-- Show skill targeting info for Ravion (2 targets) -->
+            <div v-if="tile.characterId === 90 && tile.team" class="skill-info">
+              <span class="skill-label">Skill: Designated Duty (Ravion)</span>
+              <template v-for="[key, targetInfo] in skillStore.getAllSkillTargets" :key="key">
+                <!-- Check for both indexed keys (90.1 and 90.2) -->
+                <template
+                  v-if="key.startsWith(`${tile.characterId}.`) && key.endsWith(`-${tile.team}`)"
+                >
+                  <span class="skill-target">
+                    → Targeting Ally Hex {{ targetInfo.targetHexId }}
+                    <span v-if="targetInfo.metadata?.isRearmostTarget">
+                      ({{ key.includes('.1') ? '1st' : '2nd' }} rearmost)
+                    </span>
+                  </span>
+                </template>
+              </template>
+              <template
+                v-for="[key, targetInfo] in skillStore.getAllSkillTargets"
+                :key="`exam-${key}`"
+              >
+                <template v-if="key === `${tile.characterId}.1-${tile.team}`">
+                  <span v-if="targetInfo.metadata?.examinedTiles" class="examined-tiles">
+                    Examined tiles: {{ targetInfo.metadata.examinedTiles.join(', ') }}
+                  </span>
+                </template>
+              </template>
+            </div>
             <!-- Show closest enemy info for Ally characters -->
             <div
               v-if="
