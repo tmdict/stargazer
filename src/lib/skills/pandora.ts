@@ -1,21 +1,24 @@
-import { getOpposingTeam } from '../characters/character'
 import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findRearmostTarget } from './utils/targeting'
+import { findTarget, TargetingMethod } from './utils/targeting'
 
 /**
- * Targets the rearmost character on the opposing team.
+ * Calculate the rearmost ally for Pandora to target
  */
-export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-  const opposingTeam = getOpposingTeam(context.team)
-  return findRearmostTarget(context, opposingTeam)
+function calculateTarget(context: SkillContext): SkillTargetInfo | null {
+  // Target the rearmost ally on the same team using the standardized targeting function
+  return findTarget(context, {
+    targetTeam: context.team,
+    excludeSelf: true,
+    targetingMethod: TargetingMethod.REARMOST,
+  })
 }
 
-export const bonnieSkill: Skill = {
-  id: 'bonnie',
-  characterId: 66,
-  name: "Decay's Reach",
-  description: 'Targets the rearmost character on the opposing team.',
-  targetingColorModifier: '#98be5d',
+export const pandoraSkill: Skill = {
+  id: 'pandora',
+  characterId: 85,
+  name: 'Boxed Blessing',
+  description: 'Targets the rearmost character on the same team.',
+  targetingColorModifier: '#9661f1',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context

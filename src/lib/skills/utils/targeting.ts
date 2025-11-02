@@ -159,7 +159,7 @@ export function findTarget(
 ): SkillTargetInfo | null {
   // Handle special targeting methods that don't use distance-based sorting
   if (options.targetingMethod === TargetingMethod.REARMOST) {
-    return findRearmostTarget(context, options.targetTeam)
+    return findRearmostTarget(context, options.targetTeam, options.excludeSelf ?? false)
   }
 
   if (options.targetingMethod === TargetingMethod.FRONTMOST) {
@@ -204,36 +204,44 @@ export function findTarget(
 }
 
 /**
- * Find the rearmost target based on hex ID scanning order.
+ * Find the rearmost target based on hex ID positions.
  *
- * Rearmost is determined by position in the grid:
- * - Ally team targeting enemies: Scans hex IDs from 45 down to 1 (largest to smallest)
- *   This targets enemies furthest back (row 15 first, then 14, etc.)
- * - Enemy team targeting allies: Scans hex IDs from 1 up to 45 (smallest to largest)
- *   This targets allies furthest back (row 1 first, then 2, etc.)
+ * Rearmost is determined by the target team's position in the grid:
+ * - When targeting enemies (regardless of caster): largest hex ID is rearmost
+ * - When targeting allies (regardless of caster): smallest hex ID is rearmost
  *
- * Within the same diagonal row, higher hex IDs are considered "further back"
- * for the enemy side, and lower hex IDs are "further back" for the ally side.
+ * This ensures consistent behavior whether it's:
+ * - Ally targeting rearmost enemy
+ * - Ally targeting rearmost ally
+ * - An enemy targeting rearmost ally or enemy
  */
 export function findRearmostTarget(
   context: SkillContext,
   targetTeam: Team,
+  excludeSelf: boolean = false,
 ): SkillTargetInfo | null {
-  const { grid, team, hexId } = context
+  const { grid, team, hexId, characterId } = context
 
   // Get all candidates on the target team
-  const candidates = getTeamTargetCandidates(grid, targetTeam)
+  let candidates = getTeamTargetCandidates(grid, targetTeam)
+
+  // Exclude self if requested and targeting the same team
+  if (excludeSelf && targetTeam === team) {
+    candidates = candidates.filter((c) => c.characterId !== characterId)
+  }
+
   if (candidates.length === 0) return null
 
   // Optimize by finding max/min hex ID directly instead of scanning all tiles
+  // The logic is based on which team we're TARGETING, not which team is casting
   let rearmostCandidate: TargetCandidate
-  if (team === Team.ALLY) {
-    // Ally → Enemy: largest hex ID is rearmost
+  if (targetTeam === Team.ENEMY) {
+    // Targeting enemies: largest hex ID is rearmost (furthest from allies)
     rearmostCandidate = candidates.reduce((max, current) =>
       current.hexId > max.hexId ? current : max,
     )
   } else {
-    // Enemy → Ally: smallest hex ID is rearmost
+    // Targeting allies: smallest hex ID is rearmost (furthest from enemies)
     rearmostCandidate = candidates.reduce((min, current) =>
       current.hexId < min.hexId ? current : min,
     )
@@ -251,15 +259,14 @@ export function findRearmostTarget(
 }
 
 /**
- * Find the frontmost target based on hex ID scanning order.
+ * Find the frontmost target based on hex ID positions.
  *
- * Frontmost is determined by position in the grid:
- * - When targeting allies on the same team:
- *   - Ally team: Scans for largest hex ID (closest to enemy, furthest forward)
- *   - Enemy team: Scans for smallest hex ID (closest to ally, furthest forward)
+ * Frontmost is determined by the target team's position in the grid:
+ * - When targeting enemies (regardless of caster): smallest hex ID is frontmost
+ * - When targeting allies (regardless of caster): largest hex ID is frontmost
  *
  * This is the opposite of rearmost targeting - it finds characters at the "front"
- * of their formation. Excludes self from targeting.
+ * of their formation. Always excludes self when targeting the same team.
  */
 export function findFrontmostTarget(
   context: SkillContext,
@@ -277,17 +284,17 @@ export function findFrontmostTarget(
 
   if (candidates.length === 0) return null
 
-  // Find frontmost based on team orientation
+  // Find frontmost based on which team we're TARGETING, not which team is casting
   let frontmostCandidate: TargetCandidate
-  if (team === Team.ALLY) {
-    // Ally team: largest hex ID is frontmost (closest to enemy)
-    frontmostCandidate = candidates.reduce((max, current) =>
-      current.hexId > max.hexId ? current : max,
-    )
-  } else {
-    // Enemy team: smallest hex ID is frontmost (closest to ally)
+  if (targetTeam === Team.ENEMY) {
+    // Targeting enemies: smallest hex ID is frontmost (closest to allies)
     frontmostCandidate = candidates.reduce((min, current) =>
       current.hexId < min.hexId ? current : min,
+    )
+  } else {
+    // Targeting allies: largest hex ID is frontmost (closest to enemies)
+    frontmostCandidate = candidates.reduce((max, current) =>
+      current.hexId > max.hexId ? current : max,
     )
   }
 

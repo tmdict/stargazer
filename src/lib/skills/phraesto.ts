@@ -14,7 +14,7 @@ export const phraestoSkill: Skill = {
     'Creates a shadow companion Phraesto, increasing team capacity by 1. If either Phraesto is removed, both are removed.',
 
   colorModifier: '#ffffff',
-  companionColorModifier: '#c83232', // Red for shadow companion
+  companionColorModifier: '#c83232',
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context

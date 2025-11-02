@@ -6,6 +6,7 @@ import { dunlingrSkill } from './dunlingr'
 import { elijahLailahSkill } from './elijah-lailah'
 import { isabellaSkill } from './isabella'
 import { naraSkill } from './nara'
+import { pandoraSkill } from './pandora'
 import { phraestoSkill } from './phraesto'
 import { reinierSkill } from './reinier'
 import { silvinaSkill } from './silvina'
@@ -69,6 +70,7 @@ const skillRegistry = new Map<number, Skill>([
   [naraSkill.characterId, naraSkill],
   [bonnieSkill.characterId, bonnieSkill],
   [isabellaSkill.characterId, isabellaSkill],
+  [pandoraSkill.characterId, pandoraSkill],
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
 ])

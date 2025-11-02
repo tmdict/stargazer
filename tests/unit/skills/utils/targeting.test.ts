@@ -279,8 +279,8 @@ describe('targeting', () => {
       const result = findTarget(context, options)
 
       expect(result).not.toBeNull()
-      // Ally targeting enemy: largest hex ID is frontmost
-      expect(result?.targetHexId).toBe(13)
+      // When targeting enemies: smallest hex ID is frontmost
+      expect(result?.targetHexId).toBe(10)
       expect(result?.metadata?.isFrontmostTarget).toBe(true)
     })
 
@@ -315,6 +315,43 @@ describe('targeting', () => {
       // Should find hex 3 (frontmost, excluding self at hex 1)
       expect(result?.targetHexId).toBe(3)
       expect(result?.targetCharacterId).toBe(103)
+    })
+
+    it('finds rearmost ally with self-exclusion', () => {
+      // Add more allies for this test
+      const tile2 = grid.getTileById(2)
+      tile2.characterId = 102
+      tile2.team = Team.ALLY
+
+      const tile3 = grid.getTileById(3)
+      tile3.characterId = 103
+      tile3.team = Team.ALLY
+
+      const tile4 = grid.getTileById(4)
+      tile4.characterId = 104
+      tile4.team = Team.ALLY
+
+      // Setup ally at position 3 targeting rearmost ally
+      const allyContext = {
+        ...context,
+        hexId: 3,
+        team: Team.ALLY,
+        characterId: 103,
+      }
+
+      const options: TargetingOptions = {
+        targetTeam: Team.ALLY,
+        targetingMethod: TargetingMethod.REARMOST,
+        excludeSelf: true,
+      }
+
+      const result = findTarget(allyContext, options)
+
+      expect(result).not.toBeNull()
+      // Should find hex 1 (rearmost ally, excluding self at hex 3)
+      expect(result?.targetHexId).toBe(1)
+      expect(result?.targetCharacterId).toBe(100)
+      expect(result?.metadata?.isRearmostTarget).toBe(true)
     })
 
     it('applies ally team hex ID tiebreaker', () => {
@@ -393,7 +430,7 @@ describe('targeting', () => {
       tile13.team = Team.ENEMY
     })
 
-    it('finds rearmost enemy for ally team', () => {
+    it('finds rearmost enemy (largest hex ID) when targeting enemies', () => {
       const context: SkillContext = {
         grid,
         hexId: 1,
@@ -405,12 +442,12 @@ describe('targeting', () => {
       const result = findRearmostTarget(context, Team.ENEMY)
 
       expect(result).not.toBeNull()
-      // Ally targeting enemy: largest hex ID is rearmost
+      // When targeting enemies: largest hex ID is rearmost
       expect(result?.targetHexId).toBe(13)
       expect(result?.metadata?.isRearmostTarget).toBe(true)
     })
 
-    it('finds rearmost ally for enemy team', () => {
+    it('finds rearmost ally (smallest hex ID) when targeting allies', () => {
       const context: SkillContext = {
         grid,
         hexId: 11,
@@ -422,7 +459,7 @@ describe('targeting', () => {
       const result = findRearmostTarget(context, Team.ALLY)
 
       expect(result).not.toBeNull()
-      // Enemy targeting ally: smallest hex ID is rearmost
+      // When targeting allies: smallest hex ID is rearmost
       expect(result?.targetHexId).toBe(1)
       expect(result?.metadata?.isRearmostTarget).toBe(true)
     })
@@ -442,6 +479,83 @@ describe('targeting', () => {
 
       const result = findRearmostTarget(context, Team.ENEMY)
       expect(result).toBeNull()
+    })
+
+    it('should exclude self when excludeSelf is true and targeting same team', () => {
+      // Setup more allies for this test
+      const tile2 = grid.getTileById(2)
+      tile2.characterId = 102
+      tile2.team = Team.ALLY
+
+      const tile4 = grid.getTileById(4)
+      tile4.characterId = 104
+      tile4.team = Team.ALLY
+
+      const tile5 = grid.getTileById(5)
+      tile5.characterId = 105
+      tile5.team = Team.ALLY
+
+      // Ally at hex 4 targeting rearmost ally, excluding self
+      const allyContext: SkillContext = {
+        grid,
+        hexId: 4,
+        team: Team.ALLY,
+        characterId: 104,
+        skillManager: {} as SkillManager,
+      }
+
+      // Without exclusion - should target hex 1 (rearmost ally)
+      const resultWithoutExclusion = findRearmostTarget(allyContext, Team.ALLY, false)
+      expect(resultWithoutExclusion?.targetHexId).toBe(1)
+      expect(resultWithoutExclusion?.targetCharacterId).toBe(100)
+      expect(resultWithoutExclusion?.metadata?.sourceHexId).toBe(4)
+      expect(resultWithoutExclusion?.metadata?.isRearmostTarget).toBe(true)
+      expect(resultWithoutExclusion?.metadata?.examinedTiles).toContain(1)
+      expect(resultWithoutExclusion?.metadata?.examinedTiles).toContain(3)
+
+      // With self exclusion - should skip self at hex 4 and target hex 1 (rearmost ally)
+      const resultWithExclusion = findRearmostTarget(allyContext, Team.ALLY, true)
+      expect(resultWithExclusion?.targetHexId).toBe(1)
+      expect(resultWithExclusion?.targetCharacterId).toBe(100)
+      expect(resultWithExclusion?.metadata?.sourceHexId).toBe(4)
+      expect(resultWithExclusion?.metadata?.isRearmostTarget).toBe(true)
+
+      // Test when self is at rearmost position
+      const rearmostContext: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      const resultWithSelfAtRear = findRearmostTarget(rearmostContext, Team.ALLY, true)
+      expect(resultWithSelfAtRear?.targetHexId).toBe(2) // Next rearmost after 1
+      expect(resultWithSelfAtRear?.targetCharacterId).toBe(102)
+      expect(resultWithSelfAtRear?.metadata?.sourceHexId).toBe(1)
+      expect(resultWithSelfAtRear?.metadata?.isRearmostTarget).toBe(true)
+    })
+
+    it('should not exclude self when targeting different team even with excludeSelf true', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 3,
+        team: Team.ALLY,
+        characterId: 101,
+        skillManager: {} as SkillManager,
+      }
+
+      // Ally targeting enemies with excludeSelf should not matter
+      const result = findRearmostTarget(context, Team.ENEMY, true)
+      expect(result).toEqual({
+        targetHexId: 13,
+        targetCharacterId: 201,
+        metadata: {
+          sourceHexId: 3,
+          examinedTiles: [11, 13],
+          isRearmostTarget: true,
+        },
+      })
     })
   })
 
@@ -465,7 +579,7 @@ describe('targeting', () => {
       tile13.team = Team.ENEMY
     })
 
-    it('finds frontmost ally for ally team (excluding self)', () => {
+    it('finds frontmost ally (largest hex ID) when targeting allies (excluding self)', () => {
       const context: SkillContext = {
         grid,
         hexId: 1,
@@ -477,13 +591,13 @@ describe('targeting', () => {
       const result = findFrontmostTarget(context, Team.ALLY)
 
       expect(result).not.toBeNull()
-      // Ally targeting ally: largest hex ID is frontmost (excluding self)
+      // When targeting allies: largest hex ID is frontmost (excluding self)
       expect(result?.targetHexId).toBe(3)
       expect(result?.targetCharacterId).toBe(101)
       expect(result?.metadata?.isFrontmostTarget).toBe(true)
     })
 
-    it('finds frontmost enemy for enemy team (excluding self)', () => {
+    it('finds frontmost enemy (smallest hex ID) when targeting enemies (excluding self)', () => {
       const context: SkillContext = {
         grid,
         hexId: 13,
@@ -495,13 +609,13 @@ describe('targeting', () => {
       const result = findFrontmostTarget(context, Team.ENEMY)
 
       expect(result).not.toBeNull()
-      // Enemy targeting enemy: smallest hex ID is frontmost (excluding self)
+      // When targeting enemies: smallest hex ID is frontmost (excluding self)
       expect(result?.targetHexId).toBe(11)
       expect(result?.targetCharacterId).toBe(200)
       expect(result?.metadata?.isFrontmostTarget).toBe(true)
     })
 
-    it('finds frontmost enemy when ally targets enemies', () => {
+    it('finds frontmost enemy (smallest hex ID) when ally targets enemies', () => {
       const context: SkillContext = {
         grid,
         hexId: 1,
@@ -513,12 +627,12 @@ describe('targeting', () => {
       const result = findFrontmostTarget(context, Team.ENEMY)
 
       expect(result).not.toBeNull()
-      // Ally targeting enemy: largest hex ID is frontmost
-      expect(result?.targetHexId).toBe(13)
-      expect(result?.targetCharacterId).toBe(201)
+      // When targeting enemies: smallest hex ID is frontmost
+      expect(result?.targetHexId).toBe(11)
+      expect(result?.targetCharacterId).toBe(200)
     })
 
-    it('finds frontmost ally when enemy targets allies', () => {
+    it('finds frontmost ally (largest hex ID) when enemy targets allies', () => {
       const context: SkillContext = {
         grid,
         hexId: 11,
@@ -530,9 +644,9 @@ describe('targeting', () => {
       const result = findFrontmostTarget(context, Team.ALLY)
 
       expect(result).not.toBeNull()
-      // Enemy targeting ally: smallest hex ID is frontmost
-      expect(result?.targetHexId).toBe(1)
-      expect(result?.targetCharacterId).toBe(100)
+      // When targeting allies: largest hex ID is frontmost
+      expect(result?.targetHexId).toBe(3)
+      expect(result?.targetCharacterId).toBe(101)
     })
 
     it('excludes self when targeting same team', () => {

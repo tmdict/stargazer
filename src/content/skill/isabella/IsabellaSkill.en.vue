@@ -50,8 +50,9 @@ setupContentMeta({
         position for the enemy team, and row 1 (hexes 1, 2) being the rearmost for the ally team.
       </p>
       <p>
-        Within the same row, leftmost (higher hex IDs) tiles are considered "closest" to the enemy
-        side, while rightmost (lower hex IDs) tiles are "further back" on the ally side.
+        Within the same row, leftmost (higher hex IDs) tiles are considered "further in front" on
+        the ally side, while rightmost (lower hex IDs) tiles are "further in front" on the enemy
+        side.
       </p>
       <p>The frontmost character is determined by their position on the hexagonal grid:</p>
       <ul>

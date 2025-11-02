@@ -17,8 +17,8 @@ export const isabellaSkill: Skill = {
   id: 'isabella',
   characterId: 93,
   name: 'Grimoire Pact',
-  description: 'Targets the frontmost allied character as her companion.',
-  targetingColorModifier: '#6d9c86', // Green color for targeting arrow
+  description: 'Targets the frontmost character on the same team.',
+  targetingColorModifier: '#6d9c86',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
