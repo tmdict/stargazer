@@ -2,7 +2,7 @@ import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { findTarget, TargetingMethod } from './utils/targeting'
 
 /**
- * Calculate the frontmost ally for Isabella to target
+ * Calculate the frontmost ally to target
  */
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   // Target the frontmost ally on the same team using the standardized targeting function
