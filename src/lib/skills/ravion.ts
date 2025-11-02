@@ -2,7 +2,7 @@ import type { Skill, SkillContext, SkillTargetInfo } from './skill'
 import { getCandidates } from './utils/targeting'
 
 /**
- * Calculate the 2 rearmost allies for Ravion to target
+ * Calculate the 2 rearmost allies to target
  * Returns an array of up to 2 targets, sorted by hex ID (rearmost first)
  */
 function calculateTargets(context: SkillContext): SkillTargetInfo[] {
