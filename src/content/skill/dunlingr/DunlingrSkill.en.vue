@@ -43,7 +43,6 @@ setupContentMeta({
       </p>
 
       <h3>How It Works</h3>
-
       <p>
         Dunlingr automatically identifies and targets a character on his own team that is furthest
         away from his current tile.

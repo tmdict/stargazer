@@ -6,6 +6,7 @@ import type { SkillContext } from '@/lib/skills/skill'
 import { SkillManager } from '@/lib/skills/skill'
 import {
   calculateDistances,
+  findFrontmostTarget,
   findRearmostTarget,
   findTarget,
   getCandidates,
@@ -245,6 +246,77 @@ describe('targeting', () => {
       expect(result).toBeNull()
     })
 
+    it('finds rearmost target using REARMOST method', () => {
+      // Add more enemies for better test
+      const tile13 = grid.getTileById(13)
+      tile13.characterId = 202
+      tile13.team = Team.ENEMY
+
+      const options: TargetingOptions = {
+        targetTeam: Team.ENEMY,
+        targetingMethod: TargetingMethod.REARMOST,
+      }
+
+      const result = findTarget(context, options)
+
+      expect(result).not.toBeNull()
+      // Ally targeting enemy: largest hex ID is rearmost
+      expect(result?.targetHexId).toBe(13)
+      expect(result?.metadata?.isRearmostTarget).toBe(true)
+    })
+
+    it('finds frontmost target using FRONTMOST method', () => {
+      // Add more enemies for better test
+      const tile13 = grid.getTileById(13)
+      tile13.characterId = 202
+      tile13.team = Team.ENEMY
+
+      const options: TargetingOptions = {
+        targetTeam: Team.ENEMY,
+        targetingMethod: TargetingMethod.FRONTMOST,
+      }
+
+      const result = findTarget(context, options)
+
+      expect(result).not.toBeNull()
+      // Ally targeting enemy: largest hex ID is frontmost
+      expect(result?.targetHexId).toBe(13)
+      expect(result?.metadata?.isFrontmostTarget).toBe(true)
+    })
+
+    it('finds frontmost ally using FRONTMOST method (excluding self)', () => {
+      // Add ally teammates
+      const tile2 = grid.getTileById(2)
+      tile2.characterId = 102
+      tile2.team = Team.ALLY
+
+      const tile3 = grid.getTileById(3)
+      tile3.characterId = 103
+      tile3.team = Team.ALLY
+
+      // Context from hex 1
+      const allyContext: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      const options: TargetingOptions = {
+        targetTeam: Team.ALLY,
+        targetingMethod: TargetingMethod.FRONTMOST,
+        excludeSelf: true,
+      }
+
+      const result = findTarget(allyContext, options)
+
+      expect(result).not.toBeNull()
+      // Should find hex 3 (frontmost, excluding self at hex 1)
+      expect(result?.targetHexId).toBe(3)
+      expect(result?.targetCharacterId).toBe(103)
+    })
+
     it('applies ally team hex ID tiebreaker', () => {
       // Setup equidistant targets
       const tile4 = grid.getTileById(4)
@@ -370,6 +442,148 @@ describe('targeting', () => {
 
       const result = findRearmostTarget(context, Team.ENEMY)
       expect(result).toBeNull()
+    })
+  })
+
+  describe('findFrontmostTarget', () => {
+    beforeEach(() => {
+      // Setup characters
+      const tile1 = grid.getTileById(1)
+      tile1.characterId = 100
+      tile1.team = Team.ALLY
+
+      const tile3 = grid.getTileById(3)
+      tile3.characterId = 101
+      tile3.team = Team.ALLY
+
+      const tile11 = grid.getTileById(11)
+      tile11.characterId = 200
+      tile11.team = Team.ENEMY
+
+      const tile13 = grid.getTileById(13)
+      tile13.characterId = 201
+      tile13.team = Team.ENEMY
+    })
+
+    it('finds frontmost ally for ally team (excluding self)', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = findFrontmostTarget(context, Team.ALLY)
+
+      expect(result).not.toBeNull()
+      // Ally targeting ally: largest hex ID is frontmost (excluding self)
+      expect(result?.targetHexId).toBe(3)
+      expect(result?.targetCharacterId).toBe(101)
+      expect(result?.metadata?.isFrontmostTarget).toBe(true)
+    })
+
+    it('finds frontmost enemy for enemy team (excluding self)', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 13,
+        team: Team.ENEMY,
+        characterId: 201,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = findFrontmostTarget(context, Team.ENEMY)
+
+      expect(result).not.toBeNull()
+      // Enemy targeting enemy: smallest hex ID is frontmost (excluding self)
+      expect(result?.targetHexId).toBe(11)
+      expect(result?.targetCharacterId).toBe(200)
+      expect(result?.metadata?.isFrontmostTarget).toBe(true)
+    })
+
+    it('finds frontmost enemy when ally targets enemies', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = findFrontmostTarget(context, Team.ENEMY)
+
+      expect(result).not.toBeNull()
+      // Ally targeting enemy: largest hex ID is frontmost
+      expect(result?.targetHexId).toBe(13)
+      expect(result?.targetCharacterId).toBe(201)
+    })
+
+    it('finds frontmost ally when enemy targets allies', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 11,
+        team: Team.ENEMY,
+        characterId: 200,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = findFrontmostTarget(context, Team.ALLY)
+
+      expect(result).not.toBeNull()
+      // Enemy targeting ally: smallest hex ID is frontmost
+      expect(result?.targetHexId).toBe(1)
+      expect(result?.targetCharacterId).toBe(100)
+    })
+
+    it('excludes self when targeting same team', () => {
+      // Only one ally exists
+      grid.getTileById(3).characterId = undefined
+      grid.getTileById(3).team = undefined
+
+      const context: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = findFrontmostTarget(context, Team.ALLY)
+      // Should return null since self is the only ally
+      expect(result).toBeNull()
+    })
+
+    it('returns null when no targets exist', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      // Remove all enemies
+      grid.getTileById(11).characterId = undefined
+      grid.getTileById(13).characterId = undefined
+
+      const result = findFrontmostTarget(context, Team.ENEMY)
+      expect(result).toBeNull()
+    })
+
+    it('returns metadata with examined tiles', () => {
+      const context: SkillContext = {
+        grid,
+        hexId: 1,
+        team: Team.ALLY,
+        characterId: 100,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = findFrontmostTarget(context, Team.ENEMY)
+
+      expect(result?.metadata?.examinedTiles).toBeDefined()
+      expect(result?.metadata?.examinedTiles).toContain(11)
+      expect(result?.metadata?.examinedTiles).toContain(13)
     })
   })
 
