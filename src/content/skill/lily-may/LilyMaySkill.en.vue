@@ -29,9 +29,7 @@ setupContentMeta({
       </p>
 
       <h3>How It Works</h3>
-
       <p>When battle starts:</p>
-
       <ul>
         <li>
           If Lily May is defending and there are multiple targets to interrupt, she prioritizes the

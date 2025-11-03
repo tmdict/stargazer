@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
+import { gridStyles, images } from './AlicethSkill.data'
 
 setupContentMeta({
   title: 'Aliceth · Skills',
@@ -33,6 +35,42 @@ setupContentMeta({
         When a battle starts, Aliceth places her Mark of Judgment on the farthest enemy. She and
         allies with Brightfeather both prioritize attacking the marked enemy, and their attacks
         against that enemy gain an extra [[35]] Penetration.
+      </p>
+
+      <h3>How It Works</h3>
+      <p>
+        Aliceth first checks for ally characters in the same row as her. When multiple ally
+        characters are in the same row, Aliceth will prioritize the character further to the left
+        (higher hex IDs).
+      </p>
+      <p>
+        When no ally character is found in the same row, Aliceth will search for characters on tiles
+        adjacent to her tile, expanding outward:
+      </p>
+      <ul>
+        <li>
+          <strong>Ring 1:</strong> 6 tiles immediately adjacent, starting from frontmost row to
+          rearmost row, and left to right.
+        </li>
+        <li>
+          <strong>Ring 2:</strong> 12 tiles at distance 2, starting from frontmost row to rearmost
+          row, and left to right.
+        </li>
+        <li>And so on...</li>
+      </ul>
+      <p>
+        Another way to visualize this: Aliceth scans from the tiles adjacent to her, expanding
+        outward from the highest hex ID to the lowest ID, targeting the first ally character found.
+      </p>
+
+      <div style="text-align: center">
+        <GridSnippet :grid-style="gridStyles.main" :images layout="inline" />
+        <GridSnippet :grid-style="gridStyles.rowScan" :images layout="inline" />
+      </div>
+
+      <p>
+        When Aliceth is on the enemy team, this behavior is flipped, with Aliceth scanning from
+        right (lower hex ID) to left (higher hex ID).
       </p>
     </article>
   </StyledText>

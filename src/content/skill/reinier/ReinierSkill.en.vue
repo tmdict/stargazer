@@ -45,7 +45,6 @@ setupContentMeta({
       </p>
 
       <h3>How It Works</h3>
-
       <p>
         Reinier identifies symmetrical hex pairs where one contains an ally and the other contains
         an enemy.

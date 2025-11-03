@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupContentMeta } from '@/utils/contentMeta'
+import { gridStyles, images } from './AlicethSkill.data'
 
 setupContentMeta({
   title: '亚莉克希 (弓神) · 技能',
@@ -25,6 +27,29 @@ setupContentMeta({
       </p>
       <p>
         战斗开始时，亚莉克希使用“辉煌圣瞳”锁定场上最远的敌人，使自身和“光翼”权能的友军优先对其进行攻击，并且对这名敌人造成的伤害额外提升[[35]]点穿透。
+      </p>
+
+      <h3>技能机制</h3>
+      <p>
+        亚莉克希首先检查与她同排的友方角色。当同排有多个友方角色时，亚莉克希会优先选择位置更靠左的角色（较高ID的格子）。
+      </p>
+      <p>当同排没有友方角色时，亚莉克希会搜索与她相邻格子上的角色，并向外扩展：</p>
+      <ul>
+        <li><strong>第1环：</strong>紧邻的6个格子，从最前排到最后排，从左到右。</li>
+        <li><strong>第2环：</strong>距离为2的12个格子，从最前排到最后排，从左到右。</li>
+        <li>以此类推...</li>
+      </ul>
+      <p>
+        另一种理解方式：亚莉克希从与她相邻的格子开始扫描，向外扩展，按照从最高格子ID到最低ID的顺序，锁定找到的第一个队友。
+      </p>
+
+      <div style="text-align: center">
+        <GridSnippet :grid-style="gridStyles.main" :images layout="inline" />
+        <GridSnippet :grid-style="gridStyles.rowScan" :images layout="inline" />
+      </div>
+
+      <p>
+        敌方亚莉克希锁定队友时，此行为会被翻转（180°旋转）。亚莉克希会从右侧（较低ID）扫描到左侧（较高ID）。
       </p>
     </article>
   </StyledText>

@@ -26,7 +26,6 @@ setupContentMeta({
       </p>
 
       <h3>How It Works</h3>
-
       <p>
         Vala automatically identifies and targets an opposing team's character that is furthest away
         from her current tile.
