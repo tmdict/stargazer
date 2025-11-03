@@ -30,12 +30,14 @@ interface Props {
   height?: number
   hexSize?: number
   images?: Record<string, string>
+  layout?: 'default' | 'inline'
 }
 
 const props = withDefaults(defineProps<Props>(), {
   width: 300,
   height: 300,
   hexSize: 18,
+  layout: 'default',
 })
 
 // Create grid for snippet
@@ -181,7 +183,7 @@ const imaginaryHexes = computed(() => {
 </script>
 
 <template>
-  <div class="grid-snippet">
+  <div :class="['grid-snippet', `layout-${layout}`]">
     <svg :width :height :viewBox="`0 0 ${width} ${height}`">
       <!-- Define clip paths for each hex -->
       <defs>
@@ -268,11 +270,20 @@ const imaginaryHexes = computed(() => {
 
 <style scoped>
 .grid-snippet {
-  margin: 20px 0;
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+.grid-snippet.layout-default {
+  margin: 20px 0;
   padding: 10px 0;
+}
+
+.grid-snippet.layout-inline {
+  display: inline-flex;
+  margin: 10px;
+  padding: 0;
 }
 
 .grid-snippet svg {

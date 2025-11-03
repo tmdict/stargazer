@@ -28,7 +28,6 @@ setupContentMeta({
         <li>Spellbind: Unable to cast Ultimate.</li>
         <li>Curelock: Unable to recover HP for others.</li>
       </ul>
-
       <p>
         <strong>Passive.</strong> Dunlingr summons the Bell of Order when a battle starts and keeps
         it on the battlefield for [[12]]s.
