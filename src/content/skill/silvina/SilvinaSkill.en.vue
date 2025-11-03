@@ -28,7 +28,6 @@ setupContentMeta({
       </p>
 
       <h3>How It Works</h3>
-
       <p>
         Silvina first checks her symmetrical tile (the mirror position across the grid's center). If
         an enemy is there, they become the target.
