@@ -10,7 +10,7 @@
     "build:spa": "npm run type-check && vite build",
     "preview": "vite preview",
     "type-check": "vue-tsc --build",
-    "format": "prettier --write src/ docs/ tests/",
+    "format": "prettier --write --list-different src/ docs/ tests/",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
