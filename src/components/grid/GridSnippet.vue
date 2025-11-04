@@ -173,7 +173,7 @@ const imaginaryHexes = computed(() => {
         center,
         points,
         label: config.label,
-        fillColor: config.fillColor || 'rgba(150, 100, 255, 0.25)',
+        fillColor: config.fillColor || 'rgba(255, 255, 255, 0.05)',
         strokeColor: config.strokeColor || 'rgba(255, 255, 255, 0.4)',
         strokeDasharray: config.strokeDasharray || '3,2',
       }

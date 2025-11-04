@@ -1,0 +1,38 @@
+{
+  "testName": "Arena 1 Test 4",
+  "testSetup": {
+    "arena": "I",
+    "team": "Ally",
+    "positions": [4, 6, 7, 12, 13, 16]
+  },
+  "testCases": [
+    {
+      "characterTile": 1,
+      "expectedTarget": 6
+    },
+    {
+      "characterTile": 2,
+      "expectedTarget": 7
+    },
+    {
+      "characterTile": 3,
+      "expectedTarget": 4
+    },
+    {
+      "characterTile": 5,
+      "expectedTarget": 4
+    },
+    {
+      "characterTile": 8,
+      "expectedTarget": 12
+    },
+    {
+      "characterTile": 9,
+      "expectedTarget": 16
+    },
+    {
+      "characterTile": 10,
+      "expectedTarget": 13
+    }
+  ]
+}

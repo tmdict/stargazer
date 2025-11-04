@@ -40,9 +40,10 @@ setupContentMeta({
       <h3>How It Works</h3>
       <p>
         Aliceth first checks for ally characters in the same row as her. When multiple ally
-        characters are in the same row, Aliceth will prioritize the character further to the left
-        (higher hex IDs).
+        characters are in the same row, Aliceth will target the character closer to her, and when
+        both are at the same distance, prioritizing the one further to the left (higher hex ID).
       </p>
+
       <p>
         When no ally character is found in the same row, Aliceth will search for characters on tiles
         adjacent to her tile, expanding outward:
@@ -60,8 +61,8 @@ setupContentMeta({
       </ul>
 
       <div style="text-align: center">
-        <GridSnippet :grid-style="gridStyles.main" :images layout="inline" />
-        <GridSnippet :grid-style="gridStyles.rowScan" :images layout="inline" />
+        <GridSnippet :grid-style="gridStyles.rowScan1" :images layout="inline" />
+        <GridSnippet :grid-style="gridStyles.rowScan2" :images layout="inline" />
       </div>
 
       <p>
