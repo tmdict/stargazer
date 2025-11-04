@@ -1,0 +1,60 @@
+{
+  "testName": "Arena 3 Test 2",
+  "testSetup": {
+    "arena": "III",
+    "team": "Enemy",
+    "positions": [25, 32, 33, 41, 44]
+  },
+  "testCases": [
+    {
+      "characterTile": 1,
+      "symmetricalTile": 44,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 2,
+      "symmetricalTile": 45,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 4,
+      "symmetricalTile": 42,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 5,
+      "symmetricalTile": 43,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 7,
+      "symmetricalTile": 40,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 9,
+      "symmetricalTile": 37,
+      "expectedTarget": 33
+    },
+    {
+      "characterTile": 13,
+      "symmetricalTile": 34,
+      "expectedTarget": 33
+    },
+    {
+      "characterTile": 14,
+      "symmetricalTile": 35,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 16,
+      "symmetricalTile": 30,
+      "expectedTarget": 33
+    },
+    {
+      "characterTile": 21,
+      "symmetricalTile": 28,
+      "expectedTarget": 33
+    }
+  ]
+}

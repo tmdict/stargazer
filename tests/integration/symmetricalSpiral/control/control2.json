@@ -1,0 +1,76 @@
+{
+  "testName": "Arena 1 Control 2",
+  "testSetup": {
+    "arena": "I",
+    "team": "Enemy",
+    "positions": [37, 40, 42],
+    "notes": "Three-way tie test with enemies at 37, 40 & 42"
+  },
+  "testCases": [
+    {
+      "characterTile": 1,
+      "symmetricalTile": 44,
+      "expectedTarget": 42
+    },
+    {
+      "characterTile": 2,
+      "symmetricalTile": 45,
+      "expectedTarget": 42
+    },
+    {
+      "characterTile": 3,
+      "symmetricalTile": 41,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 4,
+      "symmetricalTile": 42,
+      "expectedTarget": 42
+    },
+    {
+      "characterTile": 5,
+      "symmetricalTile": 43,
+      "expectedTarget": 40
+    },
+    {
+      "characterTile": 6,
+      "symmetricalTile": 39,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 7,
+      "symmetricalTile": 40,
+      "expectedTarget": 40
+    },
+    {
+      "characterTile": 8,
+      "symmetricalTile": 36,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 9,
+      "symmetricalTile": 37,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 10,
+      "symmetricalTile": 38,
+      "expectedTarget": 40
+    },
+    {
+      "characterTile": 12,
+      "symmetricalTile": 33,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 13,
+      "symmetricalTile": 34,
+      "expectedTarget": 40
+    },
+    {
+      "characterTile": 16,
+      "symmetricalTile": 30,
+      "expectedTarget": 37
+    }
+  ]
+}

@@ -1,0 +1,55 @@
+{
+  "testName": "Arena 4 Test 1",
+  "testSetup": {
+    "arena": "IV",
+    "team": "Enemy",
+    "positions": [37, 38, 40, 42, 43, 45]
+  },
+  "testCases": [
+    {
+      "characterTile": 1,
+      "symmetricalTile": 44,
+      "expectedTarget": 42
+    },
+    {
+      "characterTile": 3,
+      "symmetricalTile": 41,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 4,
+      "symmetricalTile": 42,
+      "expectedTarget": 42
+    },
+    {
+      "characterTile": 6,
+      "symmetricalTile": 39,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 8,
+      "symmetricalTile": 36,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 9,
+      "symmetricalTile": 37,
+      "expectedTarget": 37
+    },
+    {
+      "characterTile": 21,
+      "symmetricalTile": 28,
+      "expectedTarget": 38
+    },
+    {
+      "characterTile": 24,
+      "symmetricalTile": 24,
+      "expectedTarget": 38
+    },
+    {
+      "characterTile": 28,
+      "symmetricalTile": 21,
+      "expectedTarget": 38
+    }
+  ]
+}

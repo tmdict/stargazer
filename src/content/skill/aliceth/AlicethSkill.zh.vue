@@ -31,7 +31,7 @@ setupContentMeta({
 
       <h3>技能机制</h3>
       <p>
-        亚莉克希首先检查与她同排的友方角色。当同排有多个友方角色时，亚莉克希会优先选择位置更靠左的角色（较高ID的格子）。
+        亚莉克希首先检查与她同排的友方角色。当同排有多个友方角色时，亚莉克希会选择距离更近的队友，当距离相同时，优先选择位置更靠左的角色（较高ID的格子）。
       </p>
       <p>当同排没有友方角色时，亚莉克希会搜索与她相邻格子上的角色，并向外扩展：</p>
       <ul>
@@ -41,8 +41,8 @@ setupContentMeta({
       </ul>
 
       <div style="text-align: center">
-        <GridSnippet :grid-style="gridStyles.main" :images layout="inline" />
-        <GridSnippet :grid-style="gridStyles.rowScan" :images layout="inline" />
+        <GridSnippet :grid-style="gridStyles.rowScan1" :images layout="inline" />
+        <GridSnippet :grid-style="gridStyles.rowScan2" :images layout="inline" />
       </div>
 
       <p>
