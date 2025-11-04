@@ -58,16 +58,16 @@ setupContentMeta({
         </li>
         <li>And so on...</li>
       </ul>
-      <p>
-        Another way to visualize this: Aliceth scans from the tiles adjacent to her, expanding
-        outward from the highest hex ID to the lowest ID, targeting the first ally character found.
-      </p>
 
       <div style="text-align: center">
         <GridSnippet :grid-style="gridStyles.main" :images layout="inline" />
         <GridSnippet :grid-style="gridStyles.rowScan" :images layout="inline" />
       </div>
 
+      <p>
+        Another way to visualize this: Aliceth scans from the tiles adjacent to her, expanding
+        outward from the highest hex ID to the lowest ID, targeting the first ally character found.
+      </p>
       <p>
         When Aliceth is on the enemy team, this behavior is flipped, with Aliceth scanning from
         right (lower hex ID) to left (higher hex ID).

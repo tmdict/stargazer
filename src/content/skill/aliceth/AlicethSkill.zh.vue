@@ -39,15 +39,15 @@ setupContentMeta({
         <li><strong>第2环：</strong>距离为2的12个格子，从最前排到最后排，从左到右。</li>
         <li>以此类推...</li>
       </ul>
-      <p>
-        另一种理解方式：亚莉克希从与她相邻的格子开始扫描，向外扩展，按照从最高格子ID到最低ID的顺序，锁定找到的第一个队友。
-      </p>
 
       <div style="text-align: center">
         <GridSnippet :grid-style="gridStyles.main" :images layout="inline" />
         <GridSnippet :grid-style="gridStyles.rowScan" :images layout="inline" />
       </div>
 
+      <p>
+        另一种理解方式：亚莉克希从与她相邻的格子开始扫描，向外扩展，按照从最高格子ID到最低ID的顺序，锁定找到的第一个队友。
+      </p>
       <p>
         敌方亚莉克希锁定队友时，此行为会被翻转（180°旋转）。亚莉克希会从右侧（较低ID）扫描到左侧（较高ID）。
       </p>
