@@ -1,5 +1,6 @@
 import { getOpposingTeam, getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
+import { areHexesInSameDiagonalRow } from '../../types/grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 
@@ -398,6 +399,125 @@ export function spiralSearchFromTile(
           metadata: {
             symmetricalHexId: centerHexId,
             isSymmetricalTarget: false,
+            examinedTiles: [...examinedTiles],
+          },
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+/**
+ * Search for ally characters in the same diagonal row as the caster.
+ * Prioritizes by closest distance, then higher hex ID for ties.
+ */
+export function searchByRow(context: SkillContext, targetTeam: Team): SkillTargetInfo | null {
+  const { grid, hexId, characterId } = context
+
+  // Get all ally candidates
+  const candidates = getCandidates(grid, targetTeam, characterId)
+  if (candidates.length === 0) return null
+
+  // Filter to only those in the same diagonal row
+  const sameRowCandidates = candidates.filter((c) => areHexesInSameDiagonalRow(hexId, c.hexId))
+
+  if (sameRowCandidates.length === 0) return null
+
+  // Calculate distances for same-row candidates
+  calculateDistances(sameRowCandidates, [hexId], grid)
+
+  // Sort by distance (closest first), then by hex ID (higher first) for ties
+  sameRowCandidates.sort((a, b) => {
+    const distA = a.distances.get(hexId) ?? Infinity
+    const distB = b.distances.get(hexId) ?? Infinity
+
+    if (distA !== distB) {
+      return distA - distB // Closer distance wins
+    }
+
+    // Tie-break: higher hex ID wins (left-most)
+    return b.hexId - a.hexId
+  })
+
+  const target = sameRowCandidates[0]
+  if (!target) return null
+
+  return {
+    targetHexId: target.hexId,
+    targetCharacterId: target.characterId,
+    metadata: {
+      sourceHexId: hexId,
+      distance: target.distances.get(hexId),
+      isRowTarget: true,
+      examinedTiles: sameRowCandidates.map((c) => c.hexId),
+    },
+  }
+}
+
+/**
+ * Scan outward from the caster's position in rings, checking tiles by hex ID order.
+ * For ally team: scans from highest to lowest hex ID
+ * For enemy team: scans from lowest to highest hex ID
+ */
+export function rowScan(context: SkillContext, targetTeam: Team): SkillTargetInfo | null {
+  const { grid, hexId, characterId, team: casterTeam } = context
+
+  const centerHex = grid.getHexById(hexId)
+  if (!centerHex) return null
+
+  // Get all ally candidates
+  const candidates = getCandidates(grid, targetTeam, characterId)
+  if (candidates.length === 0) return null
+
+  // Create a set for quick lookup
+  const candidateSet = new Set(candidates.map((c) => c.hexId))
+  const candidateMap = new Map(candidates.map((c) => [c.hexId, c.characterId]))
+
+  const examinedTiles: number[] = []
+
+  // Find maximum distance to any candidate
+  let maxDistance = 0
+  for (const candidate of candidates) {
+    const candidateHex = grid.getHexById(candidate.hexId)
+    if (!candidateHex) continue
+    const distance = centerHex.distance(candidateHex)
+    if (distance > maxDistance) maxDistance = distance
+  }
+
+  // Search expanding rings from distance 1 outward
+  for (let distance = 1; distance <= maxDistance; distance++) {
+    const ringTiles: number[] = []
+    const allTiles = grid.getAllTiles()
+
+    // Collect all tile IDs at the current distance
+    for (const tile of allTiles) {
+      if (tile?.hex && centerHex.distance(tile.hex) === distance) {
+        ringTiles.push(tile.hex.getId())
+      }
+    }
+
+    // Sort tiles by hex ID based on caster team
+    // Ally team: highest to lowest (searching for allies from left to right)
+    // Enemy team: lowest to highest (flipped behavior)
+    if (casterTeam === Team.ALLY) {
+      ringTiles.sort((a, b) => b - a) // Descending (highest first)
+    } else {
+      ringTiles.sort((a, b) => a - b) // Ascending (lowest first)
+    }
+
+    // Check each tile in order for an ally
+    for (const tileId of ringTiles) {
+      examinedTiles.push(tileId)
+      if (candidateSet.has(tileId)) {
+        return {
+          targetHexId: tileId,
+          targetCharacterId: candidateMap.get(tileId)!,
+          metadata: {
+            sourceHexId: hexId,
+            distance,
+            isRowScanTarget: true,
             examinedTiles: [...examinedTiles],
           },
         }
