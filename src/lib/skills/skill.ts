@@ -1,6 +1,7 @@
 import { findCharacterHex } from '../characters/character'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
+import { alicethSkill } from './aliceth'
 import { bonnieSkill } from './bonnie'
 import { dunlingrSkill } from './dunlingr'
 import { elijahLailahSkill } from './elijah-lailah'
@@ -36,6 +37,8 @@ export interface SkillTargetInfo {
     isSymmetricalTarget?: boolean
     isRearmostTarget?: boolean
     isFrontmostTarget?: boolean
+    isRowTarget?: boolean
+    isRowScanTarget?: boolean
   }
 }
 
@@ -75,6 +78,7 @@ const skillRegistry = new Map<number, Skill>([
   [pandoraSkill.characterId, pandoraSkill],
   [ravionSkill.characterId, ravionSkill],
   [taleneSkill.characterId, taleneSkill],
+  [alicethSkill.characterId, alicethSkill],
   // Tile effect skills
   [reinierSkill.characterId, reinierSkill],
 ])
