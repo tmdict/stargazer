@@ -1,0 +1,43 @@
+{
+  "testName": "Arena 1 Test 2",
+  "testSetup": {
+    "arena": "I",
+    "team": "Ally",
+    "positions": [9, 10],
+    "notes": "Control test with allies at 9 & 10"
+  },
+  "testCases": [
+    {
+      "characterTile": 1,
+      "expectedTarget": 9
+    },
+    {
+      "characterTile": 2,
+      "expectedTarget": 10
+    },
+    {
+      "characterTile": 4,
+      "expectedTarget": 9
+    },
+    {
+      "characterTile": 5,
+      "expectedTarget": 10
+    },
+    {
+      "characterTile": 6,
+      "expectedTarget": 9
+    },
+    {
+      "characterTile": 7,
+      "expectedTarget": 10
+    },
+    {
+      "characterTile": 8,
+      "expectedTarget": 9
+    },
+    {
+      "characterTile": 13,
+      "expectedTarget": 10
+    }
+  ]
+}

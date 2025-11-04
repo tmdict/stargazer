@@ -1,0 +1,30 @@
+{
+  "testName": "Arena 5 Test 1",
+  "testSetup": {
+    "arena": "V",
+    "team": "Ally",
+    "positions": [1, 3]
+  },
+  "testCases": [
+    {
+      "characterTile": 5,
+      "expectedTarget": 3
+    },
+    {
+      "characterTile": 10,
+      "expectedTarget": 1
+    },
+    {
+      "characterTile": 14,
+      "expectedTarget": 1
+    },
+    {
+      "characterTile": 21,
+      "expectedTarget": 3
+    },
+    {
+      "characterTile": 16,
+      "expectedTarget": 3
+    }
+  ]
+}

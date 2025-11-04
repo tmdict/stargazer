@@ -1,28 +1,7 @@
 import alicethImage from '@/assets/images/character/aliceth.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
 
 export const gridStyles = {
-  main: {
-    numericLabel: {
-      1: 1,
-      2: 2,
-      3: 3,
-      4: 4,
-      5: 5,
-      6: 6,
-      7: 7,
-      8: 8,
-      10: 10,
-      12: 12,
-      13: 13,
-      16: 16,
-    },
-    highlight: [10],
-    highlight2: [8],
-    character: {
-      aliceth: 9,
-    },
-  },
-  rowScan: {
+  rowScan1: {
     numericLabel: {
       1: 17,
       2: 16,
@@ -48,13 +27,29 @@ export const gridStyles = {
     character: {
       aliceth: 9,
     },
-    imaginaryHexes: [
-      {
-        relativeToHex: 1,
-        direction: 'west' as const,
-        label: 18,
-      },
-    ],
+  },
+  rowScan2: {
+    numericLabel: {
+      9: 1,
+      10: 2,
+      15: 3,
+      12: 4,
+      11: 5,
+      6: 6,
+      3: 7,
+      22: 8,
+      19: 9,
+      18: 10,
+      16: 11,
+      4: 12,
+      1: 13,
+    },
+    highlight: [8, 9, 10],
+    highlight2: [3, 6, 11, 12, 15],
+    highlight3: [1, 4, 16, 18, 19, 22],
+    character: {
+      aliceth: 8,
+    },
   },
 }
 

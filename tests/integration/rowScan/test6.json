@@ -1,0 +1,27 @@
+{
+  "testName": "Arena 1 Test 6",
+  "testSetup": {
+    "arena": "I",
+    "team": "Ally",
+    "positions": [4, 6, 7, 12],
+    "notes": "Test 4 with tile 13, 16 empty"
+  },
+  "testCases": [
+    {
+      "characterTile": 9,
+      "expectedTarget": 12
+    },
+    {
+      "characterTile": 10,
+      "expectedTarget": 7
+    },
+    {
+      "characterTile": 13,
+      "expectedTarget": 12
+    },
+    {
+      "characterTile": 16,
+      "expectedTarget": 12
+    }
+  ]
+}

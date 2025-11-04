@@ -1,5 +1,5 @@
 import { readdirSync, readFileSync, statSync } from 'fs'
-import { basename, dirname, join } from 'path'
+import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { describe, expect, it } from 'vitest'
 
@@ -51,89 +51,29 @@ initializeHexGrid()
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
-interface TestData {
-  file: string
-  arena: string
-  notes: string
-  enemies: number[]
-  testCases: TestCase[]
+interface TestFile {
+  testName: string
+  testSetup: {
+    arena: string
+    team: string
+    positions: number[]
+    notes?: string
+  }
+  testCases: {
+    characterTile: number
+    symmetricalTile: number
+    expectedTarget: number
+  }[]
   path?: string
 }
 
-interface TestCase {
-  casterTile: number // The caster's position (for getting symmetrical tile)
-  symmetricalTile: number // The center tile for spiral search
-  expectedTarget: number // Expected target found by spiral search
-}
-
-function parseTestFile(filePath: string): TestData {
+function loadTestFile(filePath: string): TestFile {
   const content = readFileSync(filePath, 'utf-8')
-  const lines = content.split('\n')
-
-  const testData: TestData = {
-    file: basename(filePath),
-    arena: '',
-    notes: '',
-    enemies: [],
-    testCases: [],
-  }
-
-  let inEnemySection = false
-  let currentTestCase: Partial<TestCase> = {}
-
-  for (const line of lines) {
-    if (line.startsWith('arena:')) {
-      testData.arena = line.replace('arena:', '').trim()
-    }
-
-    if (line.startsWith('notes:')) {
-      testData.notes = line.replace('notes:', '').trim()
-    }
-
-    if (line.includes('Enemy Team Positions')) {
-      inEnemySection = true
-      continue
-    }
-
-    if (inEnemySection && line.startsWith('-')) {
-      const match = line.match(/Tile (\d+)/)
-      if (match) {
-        testData.enemies.push(parseInt(match[1]))
-      }
-    }
-
-    if (line.includes('Test Cases')) {
-      inEnemySection = false
-    }
-
-    // Parse test cases - adapt to use "character tile" as caster tile
-    if (line.startsWith('character tile:')) {
-      if (currentTestCase.casterTile) {
-        testData.testCases.push(currentTestCase as TestCase)
-      }
-      currentTestCase = {
-        casterTile: parseInt(line.replace('character tile:', '').trim()),
-      }
-    }
-
-    if (line.startsWith('symmetrical tile:')) {
-      currentTestCase.symmetricalTile = parseInt(line.replace('symmetrical tile:', '').trim())
-    }
-
-    if (line.startsWith('expected target:')) {
-      currentTestCase.expectedTarget = parseInt(line.replace('expected target:', '').trim())
-    }
-  }
-
-  if (currentTestCase.casterTile) {
-    testData.testCases.push(currentTestCase as TestCase)
-  }
-
-  return testData
+  return JSON.parse(content)
 }
 
-function loadTestsFromDirectory(dirPath: string): TestData[] {
-  const tests: TestData[] = []
+function loadTestsFromDirectory(dirPath: string): TestFile[] {
+  const tests: TestFile[] = []
   const files = readdirSync(dirPath)
 
   for (const file of files) {
@@ -142,27 +82,14 @@ function loadTestsFromDirectory(dirPath: string): TestData[] {
 
     if (stat.isDirectory()) {
       tests.push(...loadTestsFromDirectory(fullPath))
-    } else if (
-      file.endsWith('.md') &&
-      !file.includes('README') &&
-      !file.includes('FORMAT') &&
-      !file.includes('format') &&
-      !file.includes('RESULTS')
-    ) {
-      tests.push({
-        ...parseTestFile(fullPath),
-        path: fullPath.replace(join(__dirname, 'symmetricalSpiral'), '').substring(1),
-      })
+    } else if (file.endsWith('.json')) {
+      const testFile = loadTestFile(fullPath)
+      testFile.path = fullPath.replace(join(__dirname, 'symmetricalSpiral'), '').substring(1)
+      tests.push(testFile)
     }
   }
 
   return tests
-}
-
-function loadAllTests(): TestData[] {
-  // Load test data from the symmetricalSpiral subdirectory
-  const symmetricalSpiralDir = join(__dirname, 'symmetricalSpiral')
-  return loadTestsFromDirectory(symmetricalSpiralDir)
 }
 
 /**
@@ -230,15 +157,16 @@ function runSpiralSearch(config: SpiralSearchConfig): SpiralSearchResult {
 }
 
 describe('Symmetrical Spiral Targeting Tests', () => {
-  const testFiles = loadAllTests()
+  const symmetricalSpiralDir = join(__dirname, 'symmetricalSpiral')
+  const testFiles = loadTestsFromDirectory(symmetricalSpiralDir)
 
   // Test spiral search for each test case
   testFiles.forEach((testFile) => {
-    describe(`${testFile.path || testFile.file || 'Unknown test file'}`, () => {
+    describe(`${testFile.path || 'Unknown test file'}`, () => {
       testFile.testCases.forEach((testCase) => {
         it(`Spiral from tile ${testCase.symmetricalTile}`, () => {
           // First verify the symmetrical tile calculation matches expected
-          const calculatedSymmetrical = getSymmetricalHexId(testCase.casterTile)
+          const calculatedSymmetrical = getSymmetricalHexId(testCase.characterTile)
           expect(calculatedSymmetrical).toBe(testCase.symmetricalTile)
 
           // Check if the expected target is on the symmetrical tile itself
@@ -248,9 +176,9 @@ describe('Symmetrical Spiral Targeting Tests', () => {
             // which would be found by Silvina before calling spiral search
             // For spiral search testing, we skip these cases or test that an enemy
             // on the symmetrical tile would be found at distance 0
-            if (testFile.enemies.includes(testCase.symmetricalTile)) {
+            if (testFile.testSetup.positions.includes(testCase.symmetricalTile)) {
               // There's an enemy on the symmetrical tile - spiral search would find it immediately
-              // but in practice, Silvina check this before calling spiral search
+              // but in practice, Silvina checks this before calling spiral search
               return // Skip this test case as it's not testing spiral search logic
             }
           }
@@ -258,7 +186,7 @@ describe('Symmetrical Spiral Targeting Tests', () => {
           // Test ally team spiral search (clockwise)
           const result = runSpiralSearch({
             centerTile: testCase.symmetricalTile,
-            targetTiles: testFile.enemies,
+            targetTiles: testFile.testSetup.positions,
             targetTeam: Team.ENEMY,
             casterTeam: Team.ALLY,
           })

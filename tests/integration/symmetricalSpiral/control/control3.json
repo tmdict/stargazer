@@ -1,0 +1,76 @@
+{
+  "testName": "Arena 1 Control 3",
+  "testSetup": {
+    "arena": "I",
+    "team": "Enemy",
+    "positions": [38, 44],
+    "notes": "Reverse positions test with enemies at 38 & 44"
+  },
+  "testCases": [
+    {
+      "characterTile": 1,
+      "symmetricalTile": 44,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 2,
+      "symmetricalTile": 45,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 3,
+      "symmetricalTile": 41,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 4,
+      "symmetricalTile": 42,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 5,
+      "symmetricalTile": 43,
+      "expectedTarget": 38
+    },
+    {
+      "characterTile": 6,
+      "symmetricalTile": 39,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 7,
+      "symmetricalTile": 40,
+      "expectedTarget": 38
+    },
+    {
+      "characterTile": 8,
+      "symmetricalTile": 36,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 9,
+      "symmetricalTile": 37,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 10,
+      "symmetricalTile": 38,
+      "expectedTarget": 38
+    },
+    {
+      "characterTile": 12,
+      "symmetricalTile": 33,
+      "expectedTarget": 44
+    },
+    {
+      "characterTile": 13,
+      "symmetricalTile": 34,
+      "expectedTarget": 38
+    },
+    {
+      "characterTile": 16,
+      "symmetricalTile": 30,
+      "expectedTarget": 38
+    }
+  ]
+}
