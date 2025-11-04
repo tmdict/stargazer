@@ -16,7 +16,7 @@ interface GridStyleConfig {
   character?: Record<string, number>
   imaginaryHexes?: Array<{
     relativeToHex: number
-    direction: 'east' | 'west' | 'northeast' | 'northwest' | 'southeast' | 'southwest'
+    direction: 1 | 2 | 3 | 4 | 5 | 6 // Clockwise from top-right, starting at 1
     label?: string | number
     fillColor?: string
     strokeColor?: string
@@ -120,40 +120,40 @@ const imaginaryHexes = computed(() => {
       const baseHex = snippetGrid.value!.getHexById(config.relativeToHex)
       if (!baseHex) return null
 
-      // Calculate offset based on direction
+      // Calculate offset based on direction (clockwise from top-right)
       let qOffset = 0,
         rOffset = 0,
         sOffset = 0
       switch (config.direction) {
-        case 'east':
-          qOffset = 1
-          rOffset = 0
-          sOffset = -1
-          break
-        case 'west':
-          qOffset = -1
-          rOffset = 0
-          sOffset = 1
-          break
-        case 'northeast':
+        case 1: // Top-right
           qOffset = 1
           rOffset = -1
           sOffset = 0
           break
-        case 'northwest':
-          qOffset = 0
-          rOffset = -1
-          sOffset = 1
+        case 2: // Right
+          qOffset = 1
+          rOffset = 0
+          sOffset = -1
           break
-        case 'southeast':
+        case 3: // Bottom-right
           qOffset = 0
           rOffset = 1
           sOffset = -1
           break
-        case 'southwest':
+        case 4: // Bottom-left
           qOffset = -1
           rOffset = 1
           sOffset = 0
+          break
+        case 5: // Left
+          qOffset = -1
+          rOffset = 0
+          sOffset = 1
+          break
+        case 6: // Top-left
+          qOffset = 0
+          rOffset = -1
+          sOffset = 1
           break
       }
 

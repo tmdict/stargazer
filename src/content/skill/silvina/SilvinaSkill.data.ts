@@ -30,7 +30,7 @@ export const gridStyles = {
     imaginaryHexes: [
       {
         relativeToHex: 45,
-        direction: 'east' as const,
+        direction: 2 as const,
         label: 7,
       },
     ],
