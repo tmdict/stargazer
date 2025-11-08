@@ -1,0 +1,11 @@
+{
+  "id": 96,
+  "name": "shadewing",
+  "level": "a",
+  "faction": "graveborn",
+  "class": "rogue",
+  "damage": "magic",
+  "energy": 0,
+  "range": 1,
+  "season": 5
+}
