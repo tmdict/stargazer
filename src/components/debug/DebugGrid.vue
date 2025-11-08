@@ -61,17 +61,10 @@ const getSkillTargetsForCharacter = (
   const targets: Array<{ key: string; target: SkillTargetInfo }> = []
   const allTargets = skillStore.getAllSkillTargets
 
-  // Check for standard key format
+  // Check for standard key format (all skills now use this)
   const standardKey = `${characterId}-${team}`
   if (allTargets.has(standardKey)) {
     targets.push({ key: standardKey, target: allTargets.get(standardKey)! })
-  }
-
-  // Check for multi-target keys (e.g., 90.1, 90.2 for Ravion)
-  for (const [key, target] of allTargets) {
-    if (key.startsWith(`${characterId}.`) && key.endsWith(`-${team}`)) {
-      targets.push({ key, target })
-    }
   }
 
   return targets
@@ -115,7 +108,7 @@ const activeSkillConfigs = computed(() => {
     characterId: number
     skillName: string
     characterName: string
-    targets: Array<{ key: string; target: SkillTargetInfo; index?: number }>
+    targets: Array<{ key: string; target: SkillTargetInfo }>
     showSymmetry: boolean
   }> = []
 
@@ -129,18 +122,12 @@ const activeSkillConfigs = computed(() => {
     const targets = getSkillTargetsForCharacter(tile.characterId, tile.team)
     if (targets.length === 0) continue
 
-    // Add index for multi-target display (e.g., "1st rearmost", "2nd rearmost")
-    const indexedTargets = targets.map((t, index) => ({
-      ...t,
-      index: targets.length > 1 ? index : undefined,
-    }))
-
     configs.push({
       tile,
       characterId: tile.characterId,
       skillName: skill.name || 'Unknown Skill',
       characterName: getCharacterName(tile.characterId),
-      targets: indexedTargets,
+      targets: targets,
       showSymmetry: [39, 58].includes(tile.characterId), // Silvina, Nara
     })
   }
@@ -215,28 +202,36 @@ defineExpose({
                 <!-- Handle all other characters -->
                 <template v-else>
                   <template v-for="targetData in config.targets" :key="targetData.key">
-                    <span class="skill-target">
-                      → Targeting {{ getTargetLabel(targetData.target.targetHexId, tile.team) }}
-                      <!-- Show metadata descriptor -->
-                      <span v-if="getMetadataDescriptor(targetData.target.metadata)">
-                        <template v-if="targetData.index !== undefined">
-                          ({{
-                            targetData.index === 0 ? '1st' : targetData.index === 1 ? '2nd' : '3rd'
-                          }}
-                          {{ getMetadataDescriptor(targetData.target.metadata) }})
-                        </template>
-                        <template v-else>
-                          ({{ getMetadataDescriptor(targetData.target.metadata) }})
+                    <!-- Show arrows if present (new multi-target pattern) -->
+                    <template v-if="targetData.target.metadata?.arrows">
+                      <span class="skill-target">
+                        → Arrows ({{ targetData.target.metadata.arrows.length }}):
+                        <template
+                          v-for="(arrow, idx) in targetData.target.metadata.arrows"
+                          :key="idx"
+                        >
+                          <span class="arrow-info">
+                            Hex {{ arrow.toHexId }}
+                            <span v-if="arrow.type">({{ arrow.type }})</span>
+                            <span v-if="idx < targetData.target.metadata.arrows.length - 1"
+                              >,
+                            </span>
+                          </span>
                         </template>
                       </span>
-                    </span>
-                    <!-- Show examined tiles (only once for multi-target skills) -->
-                    <span
-                      v-if="
-                        targetData.target.metadata?.examinedTiles && (targetData.index ?? 0) === 0
-                      "
-                      class="examined-tiles"
-                    >
+                    </template>
+                    <!-- Show standard single target (for skills without arrows) -->
+                    <template v-else>
+                      <span class="skill-target">
+                        → Targeting {{ getTargetLabel(targetData.target.targetHexId, tile.team) }}
+                        <!-- Show metadata descriptor -->
+                        <span v-if="getMetadataDescriptor(targetData.target.metadata)">
+                          ({{ getMetadataDescriptor(targetData.target.metadata) }})
+                        </span>
+                      </span>
+                    </template>
+                    <!-- Show examined tiles -->
+                    <span v-if="targetData.target.metadata?.examinedTiles" class="examined-tiles">
                       Examined tiles: {{ targetData.target.metadata.examinedTiles.join(', ') }}
                     </span>
                   </template>
@@ -712,6 +707,11 @@ defineExpose({
   font-size: 0.75rem;
   color: #4a90e2;
   font-weight: 500;
+}
+
+.arrow-info {
+  font-weight: normal;
+  color: #5a9fd4;
 }
 
 .examined-tiles {

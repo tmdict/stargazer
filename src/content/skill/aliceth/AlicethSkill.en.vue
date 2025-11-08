@@ -37,7 +37,7 @@ setupContentMeta({
         against that enemy gain an extra [[35]] Penetration.
       </p>
 
-      <h3>How It Works</h3>
+      <h3>How It Works (Ally)</h3>
       <p>
         Aliceth first checks for ally characters in the same row as her. When multiple ally
         characters are in the same row, Aliceth will target the character closer to her, and when
@@ -73,6 +73,21 @@ setupContentMeta({
         When Aliceth is on the enemy team, this behavior is flipped, with Aliceth scanning from
         right (lower hex ID) to left (higher hex ID).
       </p>
+
+      <h3>How It Works (Enemy)</h3>
+      <p>
+        Aliceth automatically identifies and targets an opposing team's character that is furthest
+        away from her current tile.
+      </p>
+      <p>Distance calculation uses hexagonal grid distance to determine the furthest enemy.</p>
+      <p>When multiple enemies have the same distance:</p>
+      <ul>
+        <li><strong>Ally Team Aliceth:</strong> Prefers the enemy with the lower hex ID</li>
+        <li>
+          <strong>Enemy Team Aliceth:</strong> Prefers the enemy with the higher hex ID (180°
+          rotation)
+        </li>
+      </ul>
     </article>
   </StyledText>
 </template>
