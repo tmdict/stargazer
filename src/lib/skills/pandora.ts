@@ -25,11 +25,17 @@ export const pandoraSkill: Skill = {
 
     // Calculate initial target
     const targetInfo = calculateTarget(context)
-    if (targetInfo) {
-      // Add source hex to metadata
+    if (targetInfo && targetInfo.targetHexId) {
+      // Add arrow to metadata
       targetInfo.metadata = {
         ...targetInfo.metadata,
-        sourceHexId: hexId,
+        arrows: [
+          {
+            fromHexId: hexId,
+            toHexId: targetInfo.targetHexId,
+            type: 'ally',
+          },
+        ],
       }
       // Store the targeting state
       skillManager.setSkillTarget(characterId, team, targetInfo)
@@ -48,11 +54,17 @@ export const pandoraSkill: Skill = {
 
     // Recalculate target on any grid change
     const targetInfo = calculateTarget(context)
-    if (targetInfo) {
-      // Add source hex to metadata (hexId is now always current)
+    if (targetInfo && targetInfo.targetHexId) {
+      // Add arrow to metadata
       targetInfo.metadata = {
         ...targetInfo.metadata,
-        sourceHexId: hexId,
+        arrows: [
+          {
+            fromHexId: hexId,
+            toHexId: targetInfo.targetHexId,
+            type: 'ally',
+          },
+        ],
       }
       skillManager.setSkillTarget(characterId, team, targetInfo)
     } else {

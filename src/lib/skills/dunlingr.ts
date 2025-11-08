@@ -19,11 +19,22 @@ export const dunlingrSkill: Skill = {
   targetingColorModifier: '#ffa000',
 
   onActivate(context: SkillContext): void {
-    const { team, skillManager, characterId } = context
+    const { team, skillManager, characterId, hexId } = context
 
     // Calculate initial target
     const targetInfo = calculateTarget(context)
-    if (targetInfo) {
+    if (targetInfo && targetInfo.targetHexId) {
+      // Add arrow to metadata
+      targetInfo.metadata = {
+        ...targetInfo.metadata,
+        arrows: [
+          {
+            fromHexId: hexId,
+            toHexId: targetInfo.targetHexId,
+            type: 'ally',
+          },
+        ],
+      }
       // Store the targeting state
       skillManager.setSkillTarget(characterId, team, targetInfo)
     }
@@ -37,11 +48,22 @@ export const dunlingrSkill: Skill = {
   },
 
   onUpdate(context: SkillContext): void {
-    const { team, skillManager, characterId } = context
+    const { team, skillManager, characterId, hexId } = context
 
     // Recalculate target on any grid change
     const targetInfo = calculateTarget(context)
-    if (targetInfo) {
+    if (targetInfo && targetInfo.targetHexId) {
+      // Add arrow to metadata
+      targetInfo.metadata = {
+        ...targetInfo.metadata,
+        arrows: [
+          {
+            fromHexId: hexId,
+            toHexId: targetInfo.targetHexId,
+            type: 'ally',
+          },
+        ],
+      }
       skillManager.setSkillTarget(characterId, team, targetInfo)
     } else {
       skillManager.clearSkillTarget(characterId, team)

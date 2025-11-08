@@ -28,9 +28,16 @@ export interface SkillTargetInfo {
   targetHexId: number | null
   targetCharacterId: number | null
   metadata?: {
+    // Multi-arrow support for skills with multiple targets
+    arrows?: Array<{
+      fromHexId: number
+      toHexId: number
+      type?: 'ally' | 'enemy' // Semantic hint for arrow purpose
+    }>
+    // Fields for various skill metadata
+    sourceHexId?: number // Used by non-arrow skills
     allyHexId?: number
     enemyHexId?: number
-    sourceHexId?: number
     distance?: number
     examinedTiles?: number[]
     symmetricalHexId?: number
