@@ -19,9 +19,10 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const targets = sorted.slice(0, 2)
 
   // Build target info with multiple arrows
+  // Set targetHexId/targetCharacterId to null since actual targets are in arrows array
   const targetInfo: SkillTargetInfo = {
-    targetHexId: targets[0]?.hexId ?? null,
-    targetCharacterId: targets[0]?.characterId ?? null,
+    targetHexId: null,
+    targetCharacterId: null,
     metadata: {
       arrows: targets.map((target) => ({
         fromHexId: hexId,

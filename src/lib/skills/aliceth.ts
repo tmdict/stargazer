@@ -35,23 +35,26 @@ export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const allyTarget = calculateAllyTarget(context)
   const enemyTarget = calculateEnemyTarget(context)
 
-  // If no ally target, return null (no targeting at all)
-  if (!allyTarget) {
+  // If neither target exists, return null
+  if (!allyTarget && !enemyTarget) {
     return null
   }
 
   // Build the combined target info with arrows array
+  // Set targetHexId/targetCharacterId to null since actual targets are in arrows array
   const targetInfo: SkillTargetInfo = {
-    targetHexId: allyTarget.targetHexId,
-    targetCharacterId: allyTarget.targetCharacterId,
+    targetHexId: null,
+    targetCharacterId: null,
     metadata: {
-      ...allyTarget.metadata,
+      // Merge metadata from both targets if they exist
+      ...(allyTarget?.metadata || {}),
+      ...(enemyTarget?.metadata || {}),
       arrows: [],
     },
   }
 
-  // Add ally arrow
-  if (allyTarget.targetHexId) {
+  // Add ally arrow if ally target exists
+  if (allyTarget?.targetHexId) {
     targetInfo.metadata!.arrows!.push({
       fromHexId: context.hexId,
       toHexId: allyTarget.targetHexId,
