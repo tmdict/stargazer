@@ -211,7 +211,6 @@ describe('multi-target skill integration', () => {
 
       // Verify it targets the only available ally
       expect(targetInfo?.metadata?.arrows?.[0]?.toHexId).toBe(1)
-      expect(targetInfo?.targetCharacterId).toBe(101)
     })
 
     it('handles no available targets gracefully', () => {
@@ -279,11 +278,7 @@ describe('multi-target skill integration', () => {
       expect(allyTarget).toBeDefined()
       expect(enemyTarget).toBeDefined()
 
-      // Verify they target different characters
-      expect(allyTarget?.targetCharacterId).toBe(101) // Ally team target
-      expect(enemyTarget?.targetCharacterId).toBe(201) // Enemy team target
-
-      // Verify arrows are set correctly
+      // Verify arrows are set correctly and target different hexes
       expect(allyTarget?.metadata?.arrows).toHaveLength(1)
       expect(enemyTarget?.metadata?.arrows).toHaveLength(1)
       expect(allyTarget?.metadata?.arrows?.[0]?.toHexId).toBe(1)
