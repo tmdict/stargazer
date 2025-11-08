@@ -139,7 +139,7 @@ if (gameDataStore.dataLoaded) {
       // Apply display flags from URL
       showHexIds.value = result.displayFlags.showHexIds ?? false
       showArrows.value = result.displayFlags.showArrows ?? false
-      showPerspective.value = result.displayFlags.showPerspective ?? true
+      showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
       success('Grid loaded from URL!')
     } else {

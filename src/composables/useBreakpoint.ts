@@ -13,7 +13,7 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
 
   // Track current breakpoint
   const currentBreakpoint = ref<Breakpoint>('desktop')
-  const showPerspective = ref(true)
+  const showPerspective = ref(false)
 
   // Determine breakpoint from window width
   const getBreakpoint = (width: number): Breakpoint => {
