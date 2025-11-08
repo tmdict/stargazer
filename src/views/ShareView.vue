@@ -36,7 +36,7 @@ gridStore._getGrid().skillManager = skillStore._getSkillManager()
 const hasValidGrid = ref(false)
 const showArrows = ref(false)
 const showHexIds = ref(false)
-const showPerspective = ref(true)
+const showPerspective = ref(false) // Default to flat view
 const showSkills = ref(true)
 const encodedState = ref<string>('')
 
@@ -59,7 +59,7 @@ const restoreStateFromUrl = () => {
     if (result.displayFlags) {
       showHexIds.value = result.displayFlags.showHexIds ?? false
       showArrows.value = result.displayFlags.showArrows ?? false
-      showPerspective.value = result.displayFlags.showPerspective ?? true
+      showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
     }
 
