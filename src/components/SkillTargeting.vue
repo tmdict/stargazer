@@ -97,6 +97,35 @@ function getTargetingColor(key: string): string {
   return skill?.targetingColorModifier || '#36958e' // Default to green if not specified
 }
 
+// Compute all arrows to render from skill targets
+const arrowsToRender = computed(() => {
+  const arrows: Array<{
+    key: string
+    fromHexId: number
+    toHexId: number
+    color: string
+  }> = []
+
+  for (const [key, targetInfo] of skillTargets.value) {
+    if (!isTargetingSkill(key)) continue
+
+    // Check for arrows array in metadata
+    if (targetInfo.metadata?.arrows) {
+      const color = getTargetingColor(key)
+      targetInfo.metadata.arrows.forEach((arrow, idx) => {
+        arrows.push({
+          key: `${key}-arrow-${idx}`,
+          fromHexId: arrow.fromHexId,
+          toHexId: arrow.toHexId,
+          color,
+        })
+      })
+    }
+  }
+
+  return arrows
+})
+
 // Force update when grid changes
 function handleGridUpdate() {
   // Component will automatically re-render due to computed properties
@@ -117,22 +146,19 @@ onUnmounted(() => {
 
 <template>
   <svg
-    v-if="skillTargets.size > 0"
+    v-if="arrowsToRender.length > 0"
     class="skill-arrow-layer"
     :width="svgDimensions.width"
     :height="svgDimensions.height"
   >
     <g :transform="skillTransform">
-      <!-- Render skill targeting arrows -->
-      <template v-for="[key, targetInfo] in skillTargets" :key="key">
-        <!-- Skill targeting arrow -->
-        <g
-          v-if="isTargetingSkill(key) && targetInfo.metadata?.sourceHexId && targetInfo.targetHexId"
-        >
+      <!-- Render all skill targeting arrows -->
+      <template v-for="arrow in arrowsToRender" :key="arrow.key">
+        <g v-if="getSkillArrowPath(arrow.fromHexId, arrow.toHexId)">
           <!-- Arrow head definition -->
           <defs>
             <marker
-              :id="`skill-arrow-${key}`"
+              :id="`skill-arrow-${arrow.key}`"
               markerWidth="20"
               markerHeight="14"
               refX="16"
@@ -140,14 +166,13 @@ onUnmounted(() => {
               orient="auto"
               markerUnits="userSpaceOnUse"
             >
-              <polygon points="0 0, 20 7, 0 14" :fill="getTargetingColor(key)" />
+              <polygon points="0 0, 20 7, 0 14" :fill="arrow.color" />
             </marker>
           </defs>
 
           <!-- White shadow path for better visibility -->
           <path
-            v-if="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)"
-            :d="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)!"
+            :d="getSkillArrowPath(arrow.fromHexId, arrow.toHexId)!"
             fill="none"
             stroke="white"
             :stroke-width="arrowStyle.strokeWidth + 4"
@@ -158,13 +183,12 @@ onUnmounted(() => {
 
           <!-- Curved dotted arrow path -->
           <path
-            v-if="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)"
-            :d="getSkillArrowPath(targetInfo.metadata?.sourceHexId, targetInfo.targetHexId)!"
+            :d="getSkillArrowPath(arrow.fromHexId, arrow.toHexId)!"
             fill="none"
-            :stroke="getTargetingColor(key)"
+            :stroke="arrow.color"
             :stroke-width="arrowStyle.strokeWidth"
             :stroke-dasharray="arrowStyle.dashArray"
-            :marker-end="`url(#skill-arrow-${key})`"
+            :marker-end="`url(#skill-arrow-${arrow.key})`"
             opacity="0.8"
           />
         </g>

@@ -7,10 +7,8 @@ import { Team } from '@/lib/types/team'
 /**
  * Integration tests for multi-target skill functionality.
  *
- * Tests the pattern of using indexed character IDs (characterId + 0.1, 0.2, etc.)
- * to store multiple targets for a single skill. Currently only Ravion uses this
- * pattern, but tests are structured to be generic and reusable for future
- * multi-target skills.
+ * Tests skills that target multiple characters using the arrows array pattern.
+ * Ravion targets 2 rearmost allies, storing both arrows in a single SkillTargetInfo.
  */
 describe('multi-target skill integration', () => {
   let grid: Grid
@@ -21,8 +19,8 @@ describe('multi-target skill integration', () => {
     skillManager = new SkillManager()
   })
 
-  describe('indexed character ID pattern', () => {
-    it('stores and retrieves multiple targets using indexed character IDs', () => {
+  describe('arrows array pattern', () => {
+    it('stores multiple targets using arrows array', () => {
       // Use Ravion (ID: 90) as test case for multi-target functionality
       const ravionSkill = getCharacterSkill(90)
       if (!ravionSkill) {
@@ -52,21 +50,18 @@ describe('multi-target skill integration', () => {
       }
       ravionSkill.onActivate(context)
 
-      // Verify multiple targets stored with indexed keys
+      // Verify single skill target with multiple arrows
       const allTargets = skillManager.getAllSkillTargets()
-      const multiTargetKeys = Array.from(allTargets.keys()).filter((key) => key.includes('90.'))
+      const ravionKey = '90-1' // characterId-team format
+      const targetInfo = allTargets.get(ravionKey)
 
-      expect(multiTargetKeys).toHaveLength(2)
-      // Verify key format: characterId.index-team
-      expect(multiTargetKeys[0]).toMatch(/90\.\d+-1/) // Team.ALLY = 1
-      expect(multiTargetKeys[1]).toMatch(/90\.\d+-1/)
+      expect(targetInfo).toBeDefined()
+      expect(targetInfo?.metadata?.arrows).toBeDefined()
+      expect(targetInfo?.metadata?.arrows).toHaveLength(2)
 
-      // Verify different indexes
-      const indexes = multiTargetKeys.map((key) => {
-        const match = key.match(/90\.(\d+)-/)
-        return match ? parseInt(match[1]) : 0
-      })
-      expect(new Set(indexes).size).toBe(2) // Should have 2 unique indexes
+      // Verify arrows point to the 2 rearmost allies
+      const arrowTargets = targetInfo?.metadata?.arrows?.map((a) => a.toHexId).sort()
+      expect(arrowTargets).toEqual([1, 2])
     })
 
     it('correctly identifies all targets for a multi-target skill', () => {
@@ -92,23 +87,20 @@ describe('multi-target skill integration', () => {
       }
       skill.onActivate(context)
 
-      // Retrieve all targets for the skill
-      const allTargets = skillManager.getAllSkillTargets()
-      const skillTargets = Array.from(allTargets.entries())
-        .filter(([key]) => key.startsWith('90.'))
-        .map(([, target]) => target)
+      // Retrieve target info for the skill
+      const targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      expect(targetInfo).toBeDefined()
+      expect(targetInfo?.metadata?.arrows).toHaveLength(2)
 
-      expect(skillTargets).toHaveLength(2)
-
-      // Verify each target has valid data
-      skillTargets.forEach((target) => {
-        expect(target.targetHexId).toBeDefined()
-        expect(target.targetCharacterId).toBeDefined()
-        expect(target.metadata?.sourceHexId).toBe(5)
+      // Verify each arrow has valid data
+      targetInfo?.metadata?.arrows?.forEach((arrow) => {
+        expect(arrow.fromHexId).toBe(5)
+        expect(arrow.toHexId).toBeDefined()
+        expect(arrow.type).toBe('ally')
       })
 
       // Verify targets are the 2 rearmost allies (hex 1 and 2)
-      const targetHexIds = skillTargets.map((t) => t.targetHexId).sort()
+      const targetHexIds = targetInfo?.metadata?.arrows?.map((a) => a.toHexId).sort()
       expect(targetHexIds).toEqual([1, 2])
     })
   })
@@ -136,20 +128,17 @@ describe('multi-target skill integration', () => {
 
       skill.onActivate(context)
 
-      // Verify targets exist
-      let multiTargets = Array.from(skillManager.getAllSkillTargets().keys()).filter((key) =>
-        key.includes('90.'),
-      )
-      expect(multiTargets.length).toBeGreaterThan(0)
+      // Verify target exists
+      let targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      expect(targetInfo).toBeDefined()
+      expect(targetInfo?.metadata?.arrows).toHaveLength(2)
 
       // Deactivate
       skill.onDeactivate(context)
 
-      // Verify all targets cleared
-      multiTargets = Array.from(skillManager.getAllSkillTargets().keys()).filter((key) =>
-        key.includes('90.'),
-      )
-      expect(multiTargets).toHaveLength(0)
+      // Verify target cleared
+      targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      expect(targetInfo).toBeUndefined()
     })
 
     it('updates all targets when grid state changes', () => {
@@ -177,10 +166,8 @@ describe('multi-target skill integration', () => {
       skill.onActivate(context)
 
       // Initial targets should be hex 1 and 2
-      let targets = Array.from(skillManager.getAllSkillTargets().entries())
-        .filter(([key]) => key.includes('90.'))
-        .map(([, target]) => target.targetHexId)
-        .sort()
+      let targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      let targets = targetInfo?.metadata?.arrows?.map((a) => a.toHexId).sort()
       expect(targets).toEqual([1, 2])
 
       // Simulate grid change - remove ally at hex 1
@@ -191,10 +178,8 @@ describe('multi-target skill integration', () => {
       skill.onUpdate(context)
 
       // Targets should now be hex 2 and 3
-      targets = Array.from(skillManager.getAllSkillTargets().entries())
-        .filter(([key]) => key.includes('90.'))
-        .map(([, target]) => target.targetHexId)
-        .sort()
+      targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      targets = targetInfo?.metadata?.arrows?.map((a) => a.toHexId).sort()
       expect(targets).toEqual([2, 3])
     })
   })
@@ -219,16 +204,14 @@ describe('multi-target skill integration', () => {
       }
       skill.onActivate(context)
 
-      // Should only have 1 target
-      const multiTargets = Array.from(skillManager.getAllSkillTargets().keys()).filter((key) =>
-        key.includes('90.'),
-      )
-      expect(multiTargets).toHaveLength(1)
+      // Should have 1 arrow to the only available ally
+      const targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      expect(targetInfo).toBeDefined()
+      expect(targetInfo?.metadata?.arrows).toHaveLength(1)
 
       // Verify it targets the only available ally
-      const target = skillManager.getAllSkillTargets().get(multiTargets[0]!)
-      expect(target?.targetHexId).toBe(1)
-      expect(target?.targetCharacterId).toBe(101)
+      expect(targetInfo?.metadata?.arrows?.[0]?.toHexId).toBe(1)
+      expect(targetInfo?.targetCharacterId).toBe(101)
     })
 
     it('handles no available targets gracefully', () => {
@@ -249,10 +232,8 @@ describe('multi-target skill integration', () => {
       skill.onActivate(context)
 
       // Should have no targets
-      const multiTargets = Array.from(skillManager.getAllSkillTargets().keys()).filter((key) =>
-        key.includes('90.'),
-      )
-      expect(multiTargets).toHaveLength(0)
+      const targetInfo = skillManager.getAllSkillTargets().get('90-1')
+      expect(targetInfo).toBeUndefined()
     })
 
     it('maintains separate targets for different teams', () => {
@@ -292,22 +273,21 @@ describe('multi-target skill integration', () => {
       skill.onActivate(enemyContext)
 
       // Should have separate targets for each team
-      const allyTargets = Array.from(skillManager.getAllSkillTargets().keys()).filter(
-        (key) => key.includes('90.') && key.endsWith('-1'),
-      ) // Team.ALLY = 1
-      const enemyTargets = Array.from(skillManager.getAllSkillTargets().keys()).filter(
-        (key) => key.includes('90.') && key.endsWith('-2'),
-      ) // Team.ENEMY = 2
+      const allyTarget = skillManager.getAllSkillTargets().get('90-1') // Team.ALLY = 1
+      const enemyTarget = skillManager.getAllSkillTargets().get('90-2') // Team.ENEMY = 2
 
-      expect(allyTargets.length).toBeGreaterThan(0)
-      expect(enemyTargets.length).toBeGreaterThan(0)
+      expect(allyTarget).toBeDefined()
+      expect(enemyTarget).toBeDefined()
 
       // Verify they target different characters
-      const allyTarget = skillManager.getAllSkillTargets().get(allyTargets[0]!)
-      const enemyTarget = skillManager.getAllSkillTargets().get(enemyTargets[0]!)
-
       expect(allyTarget?.targetCharacterId).toBe(101) // Ally team target
       expect(enemyTarget?.targetCharacterId).toBe(201) // Enemy team target
+
+      // Verify arrows are set correctly
+      expect(allyTarget?.metadata?.arrows).toHaveLength(1)
+      expect(enemyTarget?.metadata?.arrows).toHaveLength(1)
+      expect(allyTarget?.metadata?.arrows?.[0]?.toHexId).toBe(1)
+      expect(enemyTarget?.metadata?.arrows?.[0]?.toHexId).toBe(11)
     })
   })
 })
