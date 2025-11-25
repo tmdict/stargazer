@@ -22,6 +22,7 @@ export const DOCUMENTED_SKILLS = [
   'niru',
   'pandora',
   'parisa',
+  'perseus',
   'ravion',
   'reinier',
   'rowan',
