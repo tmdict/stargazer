@@ -1,0 +1,11 @@
+{
+  "id": 97,
+  "name": "laios",
+  "level": "a",
+  "faction": "dimensional",
+  "class": "warrior",
+  "damage": "physical",
+  "energy": 600,
+  "range": 1,
+  "season": 5
+}

@@ -57,6 +57,12 @@ setupContentMeta({
         <a href="https://www.yaphalla.com/">Yaphalla</a>：阵型构建器、优先级列表构建器和数据库。
       </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>： AFKJ数据库和指南。</li>
+      <li>
+        图片素材来源于<a href="https://www.yaphalla.com/">Yaphalla</a>与<a
+          href="https://drive.google.com/drive/folders/1rDfDEFJWSASMfCDAuBosoyocN7UZZPoe"
+          >AFKJ UGC Asset Library</a
+        >。
+      </li>
     </ul>
   </article>
 </template>

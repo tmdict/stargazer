@@ -1,0 +1,11 @@
+{
+  "id": 98,
+  "name": "marcille",
+  "level": "s",
+  "faction": "dimensional",
+  "class": "mage",
+  "damage": "magic",
+  "energy": 400,
+  "range": 6,
+  "season": 5
+}
