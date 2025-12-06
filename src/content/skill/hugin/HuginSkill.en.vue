@@ -31,6 +31,12 @@ setupContentMeta({
         Hugin crafts a cogshield for the weakest ally, allowing them to block [[600%]] damage for
         [[8]]s.
       </p>
+      <p>
+        When a battle starts, Hugin etches a mechanical sigil [[one tile behind]] him, granting ally
+        on this tile an ATK bonus equal to [[14%]] of Hugin's base ATK. The buffed ally recovers an
+        extra [[75]] Energy whenever Hugin casts Titan's Aegis. This buff disappears when the ally
+        leaves the sigil.
+      </p>
 
       <h3>EX Skill</h3>
       <p>
