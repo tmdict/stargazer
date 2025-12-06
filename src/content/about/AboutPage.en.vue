@@ -62,6 +62,12 @@ setupContentMeta({
         builder, and database.
       </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ database and guides.</li>
+      <li>
+        Image assets courtesy of <a href="https://www.yaphalla.com/">Yaphalla</a> and
+        <a href="https://drive.google.com/drive/folders/1rDfDEFJWSASMfCDAuBosoyocN7UZZPoe"
+          >AFKJ UGC Asset Library</a
+        >.
+      </li>
     </ul>
   </article>
 </template>
