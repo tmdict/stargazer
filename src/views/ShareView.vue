@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
+import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
@@ -27,11 +28,8 @@ const { success } = useToast()
 const route = useRoute()
 
 // Set canonical link for share page
-onMounted(() => {
-  const canonical = document.querySelector('link[rel="canonical"]')
-  if (canonical) {
-    canonical.setAttribute('href', 'https://stargazer.tmdict.com/share')
-  }
+useHead({
+  link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/share' }],
 })
 
 // Use breakpoint for responsive grid sizing only (don't auto-flatten on mobile)
