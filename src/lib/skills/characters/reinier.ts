@@ -1,6 +1,7 @@
-import { Team } from '../types/team'
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { getSymmetricalHexId } from './utils/symmetry'
+import { Team } from '../../types/team'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { getSymmetricalHexId } from '../utils/symmetry'
 
 /**
  * Get adjacent allies to the given hex position
@@ -172,7 +173,7 @@ function updateSkillTargets(context: SkillContext): void {
   skillManager.setTileColorModifier(validPair.enemyHexId, reinierSkill.tileColorModifier!)
 }
 
-export const reinierSkill: Skill = {
+const reinierSkill: Skill = {
   id: 'reinier',
   characterId: 31,
   name: 'Dynamic Balance',
@@ -202,3 +203,5 @@ export const reinierSkill: Skill = {
     updateSkillTargets(context)
   },
 }
+
+registerSkill(reinierSkill)

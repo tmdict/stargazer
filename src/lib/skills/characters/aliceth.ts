@@ -1,6 +1,7 @@
-import { getOpposingTeam } from '../characters/character'
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findTarget, rowScan, searchByRow, TargetingMethod } from './utils/targeting'
+import { getOpposingTeam } from '../../characters/character'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { findTarget, rowScan, searchByRow, TargetingMethod } from '../utils/targeting'
 
 /**
  * Calculate the ally target for Aliceth's skill.
@@ -74,7 +75,7 @@ export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return targetInfo
 }
 
-export const alicethSkill: Skill = {
+const alicethSkill: Skill = {
   id: 'aliceth',
   characterId: 91,
   name: 'Guiding Light',
@@ -112,3 +113,5 @@ export const alicethSkill: Skill = {
     }
   },
 }
+
+registerSkill(alicethSkill)

@@ -1,22 +1,25 @@
-import { getOpposingTeam } from '../characters/character'
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findTarget, TargetingMethod } from './utils/targeting'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { findTarget, TargetingMethod } from '../utils/targeting'
 
-// Calculate the furthest opposing target from current position
+/**
+ * Calculate the frontmost ally to target
+ */
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
+  // Target the frontmost ally on the same team using the standardized targeting function
   return findTarget(context, {
-    targetTeam: getOpposingTeam(context.team), // Opposing team
-    targetingMethod: TargetingMethod.FURTHEST,
+    targetTeam: context.team,
+    excludeSelf: true,
+    targetingMethod: TargetingMethod.FRONTMOST,
   })
 }
 
-export const valaSkill: Skill = {
-  id: 'vala',
-  characterId: 46,
-  name: 'Assassin',
-  description:
-    'Targets the enemy character on the opposing team that is furthest from the current tile of Vala.',
-  targetingColorModifier: '#9661f1',
+const isabellaSkill: Skill = {
+  id: 'isabella',
+  characterId: 93,
+  name: 'Grimoire Pact',
+  description: 'Targets the frontmost ally character on the same team.',
+  targetingColorModifier: '#6d9c86',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
@@ -31,7 +34,7 @@ export const valaSkill: Skill = {
           {
             fromHexId: hexId,
             toHexId: targetInfo.targetHexId,
-            type: 'enemy',
+            type: 'ally',
           },
         ],
       }
@@ -60,7 +63,7 @@ export const valaSkill: Skill = {
           {
             fromHexId: hexId,
             toHexId: targetInfo.targetHexId,
-            type: 'enemy',
+            type: 'ally',
           },
         ],
       }
@@ -70,3 +73,5 @@ export const valaSkill: Skill = {
     }
   },
 }
+
+registerSkill(isabellaSkill)

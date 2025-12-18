@@ -1,24 +1,25 @@
-import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../characters/character'
-import { addCompanionLink, clearCompanionLinks, getCompanions } from '../characters/companion'
-import { performPlace } from '../characters/place'
-import { performRemove } from '../characters/remove'
-import { State } from '../types/state'
-import { Team } from '../types/team'
-import type { Skill, SkillContext } from './skill'
+import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../../characters/character'
+import { addCompanionLink, clearCompanionLinks, getCompanions } from '../../characters/companion'
+import { performPlace } from '../../characters/place'
+import { performRemove } from '../../characters/remove'
+import { State } from '../../types/state'
+import { Team } from '../../types/team'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext } from '../skill'
 
-export const phraestoSkill: Skill = {
-  id: 'phraesto',
-  characterId: 50,
-  name: 'Shadow Companion',
+const elijahLailahSkill: Skill = {
+  id: 'elijah-lailah',
+  characterId: 68,
+  name: 'Twins',
   description:
-    'Creates a shadow companion Phraesto, increasing team capacity by 1. If either Phraesto is removed, both are removed.',
-
-  colorModifier: '#ffffff',
-  companionColorModifier: '#c83232',
+    'Elijah and Lailah appear as separate units on the map, increasing team capacity by 1. If either Elijah or Lailah is removed, both are removed. Lailah has a range of 1',
+  colorModifier: '#51abcb',
+  companionColorModifier: '#cd7169',
+  companionRange: 1,
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context
-    const companionId = 10000 + characterId // 10050 for Phraesto
+    const companionId = 10000 + characterId // 10068 for Elijah & Lailah
 
     // Find a random available tile for the companion
     const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
@@ -35,7 +36,7 @@ export const phraestoSkill: Skill = {
     const randomIndex = Math.floor(Math.random() * availableTiles.length)
     const randomTile = availableTiles[randomIndex]
     if (!randomTile) {
-      console.error('phraesto: No random tile found despite non-empty array', {
+      console.error('elijah-lailah: No random tile found despite non-empty array', {
         randomIndex,
         availableTilesLength: availableTiles.length,
       })
@@ -46,7 +47,7 @@ export const phraestoSkill: Skill = {
     // Increase team size by 1 to accommodate the companion
     const currentSize = getMaxTeamSize(grid, team)
     if (!setMaxTeamSize(grid, team, currentSize + 1)) {
-      console.warn(`phraesto: Failed to increase team size for ${team}`)
+      console.warn(`elijah-lailah: Failed to increase team size for ${team}`)
       return // Skip companion placement
     }
 
@@ -55,7 +56,7 @@ export const phraestoSkill: Skill = {
     if (!placed) {
       // Rollback team size if placement failed
       if (!setMaxTeamSize(grid, team, currentSize)) {
-        console.error(`phraesto: Critical - Failed to rollback team size for ${team}`)
+        console.error(`elijah-lailah: Critical - Failed to rollback team size for ${team}`)
       }
       throw new Error('Failed to place companion')
     }
@@ -68,7 +69,7 @@ export const phraestoSkill: Skill = {
     if (this.colorModifier) {
       skillManager.addCharacterColorModifier(characterId, team, this.colorModifier)
     }
-    // Companion gets the companion color (same as main for Phraesto)
+    // Companion gets the companion color
     if (this.companionColorModifier) {
       skillManager.addCharacterColorModifier(companionId, team, this.companionColorModifier)
     }
@@ -90,7 +91,7 @@ export const phraestoSkill: Skill = {
         skillManager.removeCharacterColorModifier(companionId, team)
         if (!performRemove(grid, companionHex, true)) {
           console.warn(
-            `phraesto: Failed to remove companion ${companionId} from hex ${companionHex}`,
+            `elijah-lailah: Failed to remove companion ${companionId} from hex ${companionHex}`,
           )
         }
       }
@@ -102,7 +103,9 @@ export const phraestoSkill: Skill = {
     // Decrease team size back to normal
     const currentSize = getMaxTeamSize(grid, team)
     if (!setMaxTeamSize(grid, team, Math.max(5, currentSize - 1))) {
-      console.warn(`phraesto: Failed to restore team size for ${team}`)
+      console.warn(`elijah-lailah: Failed to restore team size for ${team}`)
     }
   },
 }
+
+registerSkill(elijahLailahSkill)

@@ -1,24 +1,23 @@
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findTarget, TargetingMethod } from './utils/targeting'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { findTarget, TargetingMethod } from '../utils/targeting'
 
-/**
- * Calculate the frontmost ally to target
- */
+// Calculate the furthest same-team target from current position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-  // Target the frontmost ally on the same team using the standardized targeting function
   return findTarget(context, {
-    targetTeam: context.team,
+    targetTeam: context.team, // Same team
     excludeSelf: true,
-    targetingMethod: TargetingMethod.FRONTMOST,
+    targetingMethod: TargetingMethod.FURTHEST,
   })
 }
 
-export const taleneSkill: Skill = {
-  id: 'talene',
-  characterId: 52,
-  name: 'Pyre of Renewal',
-  description: 'Targets the frontmost ally character on the same team.',
-  targetingColorModifier: '#c83232',
+const dunlingrSkill: Skill = {
+  id: 'dunlingr',
+  characterId: 57,
+  name: 'Bell of Order',
+  description:
+    'Targets the ally character on the same team that is furthest from the current tile of Dunlingr.',
+  targetingColorModifier: '#ffa000',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
@@ -72,3 +71,5 @@ export const taleneSkill: Skill = {
     }
   },
 }
+
+registerSkill(dunlingrSkill)

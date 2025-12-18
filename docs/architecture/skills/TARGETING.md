@@ -9,15 +9,16 @@ Automatically select and track enemy targets with colored arrows that update whe
 The targeting system uses a functional composition approach with reusable utilities:
 
 ```
-┌─────────────────┐
-│  Skill Files    │
-│                 │
-│ silvina.ts      │
-│ vala.ts         │──────┐
-│ reinier.ts      │      │
-│ ...             │      │
-└─────────────────┘      │
-                         ▼
+┌───────────────────────┐
+│  Skill Files          │
+│  /skills/characters/  │
+│                       │
+│ silvina.ts            │
+│ vala.ts               │───┐
+│ reinier.ts            │   │
+│ ...                   │   │
+└───────────────────────┘   │
+                            ▼
               ┌─────────────────────────┐
               │ utils/targeting.ts      │
               │                         │
@@ -26,14 +27,14 @@ The targeting system uses a functional composition approach with reusable utilit
               │ - getTeamCharacters()   │
               │ - calculateDistances()  │
               └─────────────────────────┘
-                         │
-                         ▼
-              ┌──────────────────┐
-              │ utils/symmetry.ts│
-              │                  │
-              │ Pre-computed hex │
-              │ symmetry map     │
-              └──────────────────┘
+                            │
+                            ▼
+                   ┌──────────────────┐
+                   │ utils/symmetry.ts│
+                   │                  │
+                   │ Pre-computed hex │
+                   │ symmetry map     │
+                   └──────────────────┘
 ```
 
 ## Implementation
