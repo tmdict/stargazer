@@ -1,7 +1,8 @@
-import { getOpposingTeam } from '../characters/character'
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { getSymmetricalHexId } from './utils/symmetry'
-import { spiralSearchFromTile } from './utils/targeting'
+import { getOpposingTeam } from '../../characters/character'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { getSymmetricalHexId } from '../utils/symmetry'
+import { spiralSearchFromTile } from '../utils/targeting'
 
 /**
  * Calculate the target for skill.
@@ -35,7 +36,7 @@ export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return spiralSearchFromTile(grid, symmetricalHexId, opposingTeam, team)
 }
 
-export const silvinaSkill: Skill = {
+const silvinaSkill: Skill = {
   id: 'silvina',
   characterId: 39,
   name: 'First Strike',
@@ -95,3 +96,5 @@ export const silvinaSkill: Skill = {
     }
   },
 }
+
+registerSkill(silvinaSkill)

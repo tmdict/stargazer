@@ -1,6 +1,7 @@
-import { getOpposingTeam } from '../characters/character'
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findRearmostTarget } from './utils/targeting'
+import { getOpposingTeam } from '../../characters/character'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { findRearmostTarget } from '../utils/targeting'
 
 /**
  * Targets the rearmost character on the opposing team.
@@ -10,7 +11,7 @@ export function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return findRearmostTarget(context, opposingTeam)
 }
 
-export const bonnieSkill: Skill = {
+const bonnieSkill: Skill = {
   id: 'bonnie',
   characterId: 66,
   name: "Decay's Reach",
@@ -69,3 +70,5 @@ export const bonnieSkill: Skill = {
     }
   },
 }
+
+registerSkill(bonnieSkill)

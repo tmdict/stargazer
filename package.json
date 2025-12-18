@@ -19,6 +19,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@unhead/vue": "^2.0.19",
     "html-to-image": "^1.11.13",
     "pinia": "^3.0.3",
     "vue": "^3.5.17"

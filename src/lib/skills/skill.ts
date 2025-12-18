@@ -1,20 +1,15 @@
 import { findCharacterHex } from '../characters/character'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
-import { alicethSkill } from './aliceth'
-import { bonnieSkill } from './bonnie'
-import { dunlingrSkill } from './dunlingr'
-import { elijahLailahSkill } from './elijah-lailah'
-import { isabellaSkill } from './isabella'
-import { naraSkill } from './nara'
-import { pandoraSkill } from './pandora'
-import { phraestoSkill } from './phraesto'
-import { ravionSkill } from './ravion'
-import { reinierSkill } from './reinier'
-import { silvinaSkill } from './silvina'
-import { taleneSkill } from './talene'
-import { valaSkill } from './vala'
-import { zanieSkill } from './zanie'
+import {
+  getCharacterSkill as getCharacterSkillFromRegistry,
+  hasCompanionSkill,
+  hasSkill,
+  registerSkill,
+} from './registry'
+
+// Re-export registry functions
+export { hasCompanionSkill, hasSkill, registerSkill }
 
 export interface SkillContext {
   grid: Grid
@@ -63,44 +58,12 @@ export interface Skill {
 
   onActivate(context: SkillContext): void
   onDeactivate(context: SkillContext): void
-
-  // Optional lifecycle method called when any character moves or grid state changes
-  // Useful for skills that need to recalculate targets or update visual indicators
   onUpdate?(context: SkillContext): void
 }
 
-// Skill registry
-const skillRegistry = new Map<number, Skill>([
-  // Companion skills
-  [phraestoSkill.characterId, phraestoSkill],
-  [elijahLailahSkill.characterId, elijahLailahSkill],
-  [zanieSkill.characterId, zanieSkill],
-  // Targeting skills
-  [silvinaSkill.characterId, silvinaSkill],
-  [valaSkill.characterId, valaSkill],
-  [dunlingrSkill.characterId, dunlingrSkill],
-  [naraSkill.characterId, naraSkill],
-  [bonnieSkill.characterId, bonnieSkill],
-  [isabellaSkill.characterId, isabellaSkill],
-  [pandoraSkill.characterId, pandoraSkill],
-  [ravionSkill.characterId, ravionSkill],
-  [taleneSkill.characterId, taleneSkill],
-  [alicethSkill.characterId, alicethSkill],
-  // Tile effect skills
-  [reinierSkill.characterId, reinierSkill],
-])
-
+// Typed wrapper for getCharacterSkill
 export function getCharacterSkill(characterId: number): Skill | undefined {
-  return skillRegistry.get(characterId)
-}
-
-export function hasSkill(characterId: number): boolean {
-  return skillRegistry.has(characterId)
-}
-
-export function hasCompanionSkill(characterId: number): boolean {
-  const skill = getCharacterSkill(characterId)
-  return skill?.companionColorModifier !== undefined || skill?.companionImageModifier !== undefined
+  return getCharacterSkillFromRegistry(characterId) as Skill | undefined
 }
 
 // SkillManager class for managing active skills
@@ -371,3 +334,7 @@ export class SkillManager {
     }
   }
 }
+
+// Auto-import all skill files to trigger self-registration
+// This must be at the bottom after registerSkill is defined
+import.meta.glob('./characters/*.ts', { eager: true })
