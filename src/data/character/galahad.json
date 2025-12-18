@@ -1,0 +1,11 @@
+{
+  "id": 99,
+  "name": "galahad",
+  "level": "s",
+  "faction": "mauler",
+  "class": "mage",
+  "damage": "magic",
+  "energy": 400,
+  "range": 10,
+  "season": 5
+}
