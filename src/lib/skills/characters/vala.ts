@@ -1,22 +1,23 @@
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findTarget, TargetingMethod } from './utils/targeting'
+import { getOpposingTeam } from '../../characters/character'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { findTarget, TargetingMethod } from '../utils/targeting'
 
-// Calculate the furthest same-team target from current position
+// Calculate the furthest opposing target from current position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return findTarget(context, {
-    targetTeam: context.team, // Same team
-    excludeSelf: true,
+    targetTeam: getOpposingTeam(context.team), // Opposing team
     targetingMethod: TargetingMethod.FURTHEST,
   })
 }
 
-export const dunlingrSkill: Skill = {
-  id: 'dunlingr',
-  characterId: 57,
-  name: 'Bell of Order',
+const valaSkill: Skill = {
+  id: 'vala',
+  characterId: 46,
+  name: 'Assassin',
   description:
-    'Targets the ally character on the same team that is furthest from the current tile of Dunlingr.',
-  targetingColorModifier: '#ffa000',
+    'Targets the enemy character on the opposing team that is furthest from the current tile of Vala.',
+  targetingColorModifier: '#9661f1',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
@@ -31,7 +32,7 @@ export const dunlingrSkill: Skill = {
           {
             fromHexId: hexId,
             toHexId: targetInfo.targetHexId,
-            type: 'ally',
+            type: 'enemy',
           },
         ],
       }
@@ -60,7 +61,7 @@ export const dunlingrSkill: Skill = {
           {
             fromHexId: hexId,
             toHexId: targetInfo.targetHexId,
-            type: 'ally',
+            type: 'enemy',
           },
         ],
       }
@@ -70,3 +71,5 @@ export const dunlingrSkill: Skill = {
     }
   },
 }
+
+registerSkill(valaSkill)

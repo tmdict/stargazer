@@ -1,12 +1,13 @@
-import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../characters/character'
-import { addCompanionLink, clearCompanionLinks, getCompanions } from '../characters/companion'
-import { performPlace } from '../characters/place'
-import { performRemove } from '../characters/remove'
-import { State } from '../types/state'
-import { Team } from '../types/team'
-import type { Skill, SkillContext } from './skill'
+import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../../characters/character'
+import { addCompanionLink, clearCompanionLinks, getCompanions } from '../../characters/companion'
+import { performPlace } from '../../characters/place'
+import { performRemove } from '../../characters/remove'
+import { State } from '../../types/state'
+import { Team } from '../../types/team'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext } from '../skill'
 
-export const zanieSkill: Skill = {
+const zanieSkill: Skill = {
   id: 'zanie',
   characterId: 89,
   name: 'Turret',
@@ -131,3 +132,5 @@ export const zanieSkill: Skill = {
     }
   },
 }
+
+registerSkill(zanieSkill)

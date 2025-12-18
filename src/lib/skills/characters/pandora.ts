@@ -1,24 +1,25 @@
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { findTarget, TargetingMethod } from './utils/targeting'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { findTarget, TargetingMethod } from '../utils/targeting'
 
 /**
- * Calculate the frontmost ally to target
+ * Calculate the rearmost ally to target
  */
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-  // Target the frontmost ally on the same team using the standardized targeting function
+  // Target the rearmost ally on the same team using the standardized targeting function
   return findTarget(context, {
     targetTeam: context.team,
     excludeSelf: true,
-    targetingMethod: TargetingMethod.FRONTMOST,
+    targetingMethod: TargetingMethod.REARMOST,
   })
 }
 
-export const isabellaSkill: Skill = {
-  id: 'isabella',
-  characterId: 93,
-  name: 'Grimoire Pact',
-  description: 'Targets the frontmost ally character on the same team.',
-  targetingColorModifier: '#6d9c86',
+const pandoraSkill: Skill = {
+  id: 'pandora',
+  characterId: 85,
+  name: 'Boxed Blessing',
+  description: 'Targets the rearmost ally character on the same team.',
+  targetingColorModifier: '#9661f1',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
@@ -72,3 +73,5 @@ export const isabellaSkill: Skill = {
     }
   },
 }
+
+registerSkill(pandoraSkill)

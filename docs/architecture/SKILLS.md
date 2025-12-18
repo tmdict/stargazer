@@ -43,6 +43,7 @@ Skills are self-contained units that:
 - Define their own activation/deactivation logic
 - Can modify grid state, spawn companions, or add visual effects
 - Receive a context object with all necessary dependencies
+- Self-register with the skill registry on import
 
 ```typescript
 interface Skill {
@@ -50,12 +51,12 @@ interface Skill {
   characterId: number
   name: string
   description: string
-  colorModifier?: string // Border color for visual effects
+  colorModifier?: string // Border color for visual effects (main unit)
+  companionImageModifier?: string // Custom image for companion units
+  companionColorModifier?: string // Border color for companion units
   targetingColorModifier?: string // Arrow color for targeting skills
-  companionColorModifier?: string // Border color for companions
-  companionImageModifier?: string // Custom profile image for companions
-  tileColorModifier?: string // Tile border color for tile effects
-  companionRange?: number // Override range for companions
+  tileColorModifier?: string // Tile color for targeting skills
+  companionRange?: number // Override range for companion units
 
   onActivate(context: SkillContext): void
   onDeactivate(context: SkillContext): void
@@ -71,7 +72,24 @@ interface SkillContext {
 }
 ```
 
-#### 2. SkillManager (`/src/lib/skills/skill.ts`)
+#### 2. Skill Registry (`/src/lib/skills/registry.ts`)
+
+The registry is a separate module that stores all registered skills. This separation enables:
+
+- **Auto-registration**: Skills self-register when imported, avoiding manual registry entries
+- **Simple lookup**: Fast characterId-based skill retrieval
+
+```typescript
+// Skills self-register by calling registerSkill()
+registerSkill(mySkill)
+
+// Lookup functions
+getCharacterSkill(characterId) // Returns skill or undefined
+hasSkill(characterId) // Check if character has a skill
+hasCompanionSkill(characterId) // Check if skill spawns companions
+```
+
+#### 3. SkillManager (`/src/lib/skills/skill.ts`)
 
 The SkillManager tracks active skills and visual modifiers:
 
@@ -87,7 +105,7 @@ Key methods:
 - `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
 - `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
 
-#### 3. Characters Operations (`/src/lib/characters/`)
+#### 4. Characters Operations (`/src/lib/characters/`)
 
 Modular operations that integrate skills with character actions:
 
@@ -145,60 +163,48 @@ Highlight multiple tiles based on game state:
 
 To add a new skill:
 
-1. **Create skill file** in `/src/lib/skills/`:
+1. **Create skill file** in `/src/lib/skills/characters/`:
 
 ```typescript
-export const mySkill: Skill = {
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext } from '../skill'
+
+const mySkill: Skill = {
   id: 'my-skill',
   characterId: 123,
   name: 'Skill Name',
   description: 'What it does',
   colorModifier: '#hexcolor', // optional - character border
-  targetingColorModifier: '#hexcolor', // optional - arrow color
-  companionColorModifier: '#hexcolor', // optional - companion border
   companionImageModifier: 'image-name', // optional - companion profile image
+  companionColorModifier: '#hexcolor', // optional - companion border
+  targetingColorModifier: '#hexcolor', // optional - arrow color
   tileColorModifier: '#hexcolor', // optional - tile border
   companionRange: 2, // optional - companion range override
 
-  onActivate(context) {
+  onActivate(context: SkillContext) {
     const { grid, team, characterId, skillManager } = context
 
     // Activation logic - spawn companions, set targets, etc.
     // Use skillManager.setTileColorModifier(hexId, color) for tiles
   },
 
-  onDeactivate(context) {
+  onDeactivate(context: SkillContext) {
     // Cleanup logic - remove companions, clear targets, etc.
     // Use skillManager.removeTileColorModifier(hexId) for tiles
   },
 
-  onUpdate(context) {
+  onUpdate(context: SkillContext) {
     // Optional - recalculate targets, update visuals, etc.
   },
 }
+
+// Self-register the skill - this is all that's needed!
+registerSkill(mySkill)
 ```
 
-2. **Register in skill registry** (`/src/lib/skills/skill.ts`):
+Skills placed in `/src/lib/skills/characters/` are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration.
 
-```typescript
-import { mySkill } from './mySkill'
-
-const skillRegistry = new Map<number, Skill>([
-  // Companion skills
-  [phraestoSkill.characterId, phraestoSkill],
-  // ...
-  // Targeting skills
-  [silvinaSkill.characterId, silvinaSkill],
-  // ...
-  // Tile effect skills
-  [reinierSkill.characterId, reinierSkill],
-  // ...
-  // Add new skills here
-  [mySkill.characterId, mySkill],
-])
-```
-
-3. **Test thoroughly** - Skills must handle:
+2. **Test thoroughly** - Skills must handle:
    - Activation failures (rollback state)
    - Clean deactivation
    - Team changes

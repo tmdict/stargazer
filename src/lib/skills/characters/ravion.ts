@@ -1,5 +1,6 @@
-import type { Skill, SkillContext, SkillTargetInfo } from './skill'
-import { getCandidates } from './utils/targeting'
+import { registerSkill } from '../registry'
+import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { getCandidates } from '../utils/targeting'
 
 /**
  * Calculate the target info with arrows to 2 rearmost allies
@@ -37,7 +38,7 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return targetInfo
 }
 
-export const ravionSkill: Skill = {
+const ravionSkill: Skill = {
   id: 'ravion',
   characterId: 90,
   name: 'Designated Duty',
@@ -73,3 +74,5 @@ export const ravionSkill: Skill = {
     }
   },
 }
+
+registerSkill(ravionSkill)
