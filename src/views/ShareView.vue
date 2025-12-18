@@ -26,6 +26,14 @@ const urlStateStore = useUrlStateStore()
 const { success } = useToast()
 const route = useRoute()
 
+// Set canonical link for share page
+onMounted(() => {
+  const canonical = document.querySelector('link[rel="canonical"]')
+  if (canonical) {
+    canonical.setAttribute('href', 'https://stargazer.tmdict.com/share')
+  }
+})
+
 // Use breakpoint for responsive grid sizing only (don't auto-flatten on mobile)
 useBreakpoint({ autoFlattenOnMobile: false })
 
