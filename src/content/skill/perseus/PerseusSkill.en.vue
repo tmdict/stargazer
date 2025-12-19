@@ -8,7 +8,7 @@ setupContentMeta({
     'Before Perseus takes heavy damage, the ground within 1 tile around him turns fertile. Allies standing on this fertile ground have their ATK increased by 14% and Phys & Magic DEF increased by 19%.',
   url: 'skill/perseus',
   locale: 'en',
-  keywords: ['Perseus', '珀尔修斯'],
+  keywords: ['Perseus', '珀尔修斯', '人皇'],
 })
 </script>
 
