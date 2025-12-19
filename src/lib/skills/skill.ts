@@ -58,6 +58,8 @@ export interface Skill {
 
   onActivate(context: SkillContext): void
   onDeactivate(context: SkillContext): void
+  // Optional lifecycle method called when any character moves or grid state changes
+  // Useful for skills that need to recalculate targets or update visual indicators
   onUpdate?(context: SkillContext): void
 }
 
