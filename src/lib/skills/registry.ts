@@ -1,6 +1,5 @@
-// Minimal skill interface for registry - just the fields needed for registration and lookup
-// Uses 'any' for context to allow the full Skill type with SkillContext to be registered
-export interface SkillBase {
+// Generic skill interface - Context is parameterized to avoid circular dep with SkillContext in skill.ts
+export interface SkillBase<Context = unknown> {
   id: string
   characterId: number
   name: string
@@ -11,23 +10,22 @@ export interface SkillBase {
   targetingColorModifier?: string
   tileColorModifier?: string
   companionRange?: number
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onActivate: (context: any) => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onDeactivate: (context: any) => void
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onUpdate?: (context: any) => void
+  onActivate: (context: Context) => void
+  onDeactivate: (context: Context) => void
+  onUpdate?: (context: Context) => void
 }
 
-// Skill registry - populated by self-registering skill modules
-const skillRegistry = new Map<number, SkillBase>()
+// Registry stores SkillBase<unknown>, typed wrappers in skill.ts provide type safety
+const skillRegistry = new Map<number, SkillBase<unknown>>()
 
-export function registerSkill(skill: SkillBase): void {
-  skillRegistry.set(skill.characterId, skill)
+export function registerSkill<Context>(skill: SkillBase<Context>): void {
+  skillRegistry.set(skill.characterId, skill as SkillBase<unknown>)
 }
 
-export function getCharacterSkill(characterId: number): SkillBase | undefined {
-  return skillRegistry.get(characterId)
+export function getCharacterSkill<Context = unknown>(
+  characterId: number,
+): SkillBase<Context> | undefined {
+  return skillRegistry.get(characterId) as SkillBase<Context> | undefined
 }
 
 export function hasSkill(characterId: number): boolean {

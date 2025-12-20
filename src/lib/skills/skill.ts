@@ -1,16 +1,18 @@
 import { findCharacterHex } from '../characters/character'
 import type { Grid } from '../grid'
 import type { Team } from '../types/team'
+// Underscore imports use SkillBase<unknown>, wrapped below with Skill = SkillBase<SkillContext>
 import {
-  getCharacterSkill as getCharacterSkillFromRegistry,
+  getCharacterSkill as _getCharacterSkill,
+  registerSkill as _registerSkill,
   hasCompanionSkill,
   hasSkill,
-  registerSkill,
+  type SkillBase,
 } from './registry'
 
-// Re-export registry functions
-export { hasCompanionSkill, hasSkill, registerSkill }
+export { hasCompanionSkill, hasSkill }
 
+// SkillContext defined here (not registry.ts) to avoid circular dep, as it references SkillManager
 export interface SkillContext {
   grid: Grid
   hexId: number
@@ -23,14 +25,12 @@ export interface SkillTargetInfo {
   targetHexId: number | null
   targetCharacterId: number | null
   metadata?: {
-    // Multi-arrow support for skills with multiple targets
     arrows?: Array<{
       fromHexId: number
       toHexId: number
-      type?: 'ally' | 'enemy' // Semantic hint for arrow purpose
+      type?: 'ally' | 'enemy'
     }>
-    // Fields for various skill metadata
-    sourceHexId?: number // Used by non-arrow skills
+    sourceHexId?: number
     allyHexId?: number
     enemyHexId?: number
     distance?: number
@@ -44,28 +44,16 @@ export interface SkillTargetInfo {
   }
 }
 
-export interface Skill {
-  id: string
-  characterId: number
-  name: string
-  description: string
-  colorModifier?: string // Border color for visual effects (main unit)
-  companionImageModifier?: string // Custom image for companion units
-  companionColorModifier?: string // Border color for companion units
-  targetingColorModifier?: string // Arrow color for targeting skills
-  tileColorModifier?: string // Tile color for targeting skills
-  companionRange?: number // Override range for companion units
+// Concrete skill type for character implementations
+export type Skill = SkillBase<SkillContext>
 
-  onActivate(context: SkillContext): void
-  onDeactivate(context: SkillContext): void
-  // Optional lifecycle method called when any character moves or grid state changes
-  // Useful for skills that need to recalculate targets or update visual indicators
-  onUpdate?(context: SkillContext): void
+// Typed wrappers binding SkillContext to generic registry functions
+export function getCharacterSkill(characterId: number): Skill | undefined {
+  return _getCharacterSkill<SkillContext>(characterId)
 }
 
-// Typed wrapper for getCharacterSkill
-export function getCharacterSkill(characterId: number): Skill | undefined {
-  return getCharacterSkillFromRegistry(characterId) as Skill | undefined
+export function registerSkill(skill: Skill): void {
+  _registerSkill(skill)
 }
 
 // SkillManager class for managing active skills
