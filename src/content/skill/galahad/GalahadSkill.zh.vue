@@ -47,6 +47,10 @@ setupContentMeta({
       <p>当加拉哈德处于敌方阵营时，则优先选择较高ID格子上的队友（180°旋转）。</p>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <p>
+        加拉哈德只会选择本体角色为目标，跳过召唤物和分身，例如蝎子的分身或双子的副体（粉色双子）。
+      </p>
     </article>
   </StyledText>
 </template>

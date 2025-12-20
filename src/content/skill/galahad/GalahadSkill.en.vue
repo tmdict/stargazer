@@ -46,7 +46,7 @@ setupContentMeta({
       <p>
         Galahad looks for ally characters on tiles adjacent to her, starting from tiles adjacent to
         her and expanding outwards, prioritizing characters in the back. When multiple characters
-        are in the same row, Galahad will prioritize the character to the right (lower hex ID).
+        are in the same row, Galahad will prioritize the character to the right (lower hex ID):
       </p>
       <ul>
         <li>
@@ -62,6 +62,11 @@ setupContentMeta({
       <p>When on enemy team, Galahad prioritize teammates with the higher hex ID (180° rotation)</p>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <p>
+        Galahad will only target main characters, skipping summons and clones such as Phraesto's
+        clone or Elijah & Lailah's Lailah (pink twin).
+      </p>
     </article>
   </StyledText>
 </template>
