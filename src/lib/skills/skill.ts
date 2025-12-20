@@ -53,7 +53,7 @@ export function getCharacterSkill(characterId: number): Skill | undefined {
 }
 
 export function registerSkill(skill: Skill): void {
-  _registerSkill(skill)
+  _registerSkill<SkillContext>(skill)
 }
 
 // SkillManager class for managing active skills
