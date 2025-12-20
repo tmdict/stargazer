@@ -10,6 +10,7 @@ export const DOCUMENTED_SKILLS = [
   'elijah-lailah',
   'faramor',
   'fay',
+  'galahad',
   'hammie',
   'hewynn',
   'hugin',
