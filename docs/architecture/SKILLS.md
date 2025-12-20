@@ -74,19 +74,23 @@ interface SkillContext {
 
 #### 2. Skill Registry (`/src/lib/skills/registry.ts`)
 
-The registry is a separate module that stores all registered skills. This separation enables:
-
-- **Auto-registration**: Skills self-register when imported, avoiding manual registry entries
-- **Simple lookup**: Fast characterId-based skill retrieval
+The registry stores skills using a generic `SkillBase<Context>` interface to avoid circular dependencies with `SkillContext`. The `skill.ts` module provides typed wrappers that bind `SkillContext` to the generic functions.
 
 ```typescript
-// Skills self-register by calling registerSkill()
-registerSkill(mySkill)
+// registry.ts - generic interface, stores SkillBase<unknown>
+interface SkillBase<Context = unknown> {
+  id: string
+  characterId: number
+  onActivate: (context: Context) => void
+  // ...
+}
 
-// Lookup functions
-getCharacterSkill(characterId) // Returns skill or undefined
-hasSkill(characterId) // Check if character has a skill
-hasCompanionSkill(characterId) // Check if skill spawns companions
+// skill.ts - concrete type and typed wrappers
+type Skill = SkillBase<SkillContext>
+registerSkill(skill: Skill)      // Typed wrapper
+getCharacterSkill(id): Skill     // Typed wrapper
+hasSkill(characterId)            // Direct re-export
+hasCompanionSkill(characterId)   // Direct re-export
 ```
 
 #### 3. SkillManager (`/src/lib/skills/skill.ts`)
@@ -166,8 +170,7 @@ To add a new skill:
 1. **Create skill file** in `/src/lib/skills/characters/`:
 
 ```typescript
-import { registerSkill } from '../registry'
-import { type Skill, type SkillContext } from '../skill'
+import { registerSkill, type Skill, type SkillContext } from '../skill'
 
 const mySkill: Skill = {
   id: 'my-skill',
