@@ -1,0 +1,11 @@
+{
+  "id": 101,
+  "name": "tilaya",
+  "level": "a",
+  "faction": "wilder",
+  "class": "warrior",
+  "damage": "physical",
+  "energy": 0,
+  "range": 1,
+  "season": 5
+}

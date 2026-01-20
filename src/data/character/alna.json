@@ -1,0 +1,11 @@
+{
+  "id": 100,
+  "name": "alna",
+  "level": "s",
+  "faction": "celestial",
+  "class": "tank",
+  "damage": "physical",
+  "energy": 0,
+  "range": 1,
+  "season": 5
+}

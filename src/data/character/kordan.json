@@ -1,0 +1,11 @@
+{
+  "id": 102,
+  "name": "kordan",
+  "level": "a",
+  "faction": "mauler",
+  "class": "warrior",
+  "damage": "physical",
+  "energy": 1000,
+  "range": 1,
+  "season": 5
+}
