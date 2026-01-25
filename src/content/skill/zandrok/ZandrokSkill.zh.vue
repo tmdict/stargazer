@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>赞东 (人马)</h1>
 
-      <h2>非永久增益</h2>
+      <h2>开局增益 · 非永久增益</h2>
 
       <h3>技能</h3>
       <p>

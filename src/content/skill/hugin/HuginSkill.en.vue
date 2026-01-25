@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>Hugin</h1>
 
-      <h2>Non-Permanent Buff</h2>
+      <h2>Instant Buff · Non-Permanent Buff</h2>
 
       <h3>Ultimate</h3>
       <p>
