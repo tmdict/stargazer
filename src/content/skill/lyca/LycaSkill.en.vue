@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>Lyca</h1>
 
-      <h2>Instant Buff · Non-Permanent Buff · Energy Recharge</h2>
+      <h2>Non-Permanent Buff (Instant) · Energy Recharge</h2>
 
       <h3>Skill</h3>
       <p>
