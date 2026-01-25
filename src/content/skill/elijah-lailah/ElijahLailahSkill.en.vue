@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>Elijah & Lailah</h1>
 
-      <h2>Energy Recharge</h2>
+      <h2>Instant Buff · Energy Recharge</h2>
 
       <h3>Skill</h3>
       <p>
