@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>伊莱亚和莱拉 (双子)</h1>
 
-      <h2>开局增益 · 充能</h2>
+      <h2>充能</h2>
 
       <h3>技能</h3>
       <p>

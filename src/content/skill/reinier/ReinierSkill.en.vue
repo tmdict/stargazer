@@ -19,7 +19,7 @@ setupContentMeta({
     <article>
       <h1>Reinier</h1>
 
-      <h2>Targeting Mechanics · Instant Buff</h2>
+      <h2>Targeting Mechanics</h2>
 
       <h3>Skill</h3>
       <p>

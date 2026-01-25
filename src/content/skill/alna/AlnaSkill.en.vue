@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>Alna</h1>
 
-      <h2>Instant Buff</h2>
+      <h2>Targeting Mechanics</h2>
 
       <h3>Skill</h3>
       <p>

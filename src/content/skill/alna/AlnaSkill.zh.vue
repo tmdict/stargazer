@@ -17,7 +17,7 @@ setupContentMeta({
     <article>
       <h1>阿尔娜 (冬喉)</h1>
 
-      <h2>开局增益</h2>
+      <h2>特殊目标机制</h2>
 
       <h3>技能</h3>
       <p>
