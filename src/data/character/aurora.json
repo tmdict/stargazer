@@ -1,0 +1,11 @@
+{
+  "id": 103,
+  "name": "aurora",
+  "level": "s",
+  "faction": "celestial",
+  "class": "mage",
+  "damage": "magic",
+  "energy": 0,
+  "range": 5,
+  "season": 6
+}

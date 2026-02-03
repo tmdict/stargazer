@@ -1,0 +1,11 @@
+{
+  "id": 104,
+  "name": "solise",
+  "level": "s",
+  "faction": "wilder",
+  "class": "support",
+  "damage": "magic",
+  "energy": 450,
+  "range": 6,
+  "season": 6
+}
