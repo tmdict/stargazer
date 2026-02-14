@@ -1,0 +1,11 @@
+{
+  "id": 105,
+  "name": "silven",
+  "level": "a",
+  "faction": "lightbearer",
+  "class": "marksman",
+  "damage": "magic",
+  "energy": 500,
+  "range": 7,
+  "season": 6
+}
