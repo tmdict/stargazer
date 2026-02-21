@@ -1,3 +1,4 @@
+import { readdirSync } from 'node:fs'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
@@ -5,7 +6,12 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
-import { DOCUMENTED_SKILLS } from './src/lib/types/skills'
+// Derive skill list from directory structure (Node context, no import.meta.glob)
+const skillContentDir = fileURLToPath(new URL('./src/content/skill', import.meta.url))
+const skillIds = readdirSync(skillContentDir, { withFileTypes: true })
+  .filter((d) => d.isDirectory())
+  .map((d) => d.name)
+  .sort()
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -21,8 +27,6 @@ export default defineConfig({
     script: 'async',
     formatting: 'minify',
     includedRoutes: () => {
-      // Get skill IDs from the single source of truth
-      const skillIds = [...DOCUMENTED_SKILLS]
       const locales = ['en', 'zh']
 
       const routes: string[] = [
