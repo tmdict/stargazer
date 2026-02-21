@@ -2,7 +2,7 @@ import { useHead } from '@unhead/vue'
 
 interface ContentMetaOptions {
   title: string
-  description: string
+  description?: string
   url: string
   locale: 'en' | 'zh'
   keywords?: string[]
@@ -34,10 +34,14 @@ export function setupContentMeta(options: ContentMetaOptions): void {
   useHead({
     title: title + ' | Stargazer',
     meta: [
-      { name: 'description', content: truncate(description) },
+      ...(description
+        ? [
+            { name: 'description', content: truncate(description) },
+            { property: 'og:description', content: truncate(description) },
+          ]
+        : []),
       { name: 'keywords', content: allKeywords.join(', ') },
       { property: 'og:title', content: title },
-      { property: 'og:description', content: truncate(description) },
       { property: 'og:url', content: `https://stargazer.tmdict.com/${locale}/${url}` },
     ],
     link: [{ rel: 'canonical', href: `https://stargazer.tmdict.com/${locale}/${url}` }],

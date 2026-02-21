@@ -25,6 +25,9 @@ setupContentMeta({
         standing on this fertile ground have their ATK increased by [[14%]] and Phys & Magic DEF
         increased by [[19%]].
       </p>
+
+      <strong>How It Works</strong>
+      <p>Tile positional buffs are considered temporary buffs.</p>
     </article>
   </StyledText>
 </template>

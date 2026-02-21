@@ -19,7 +19,15 @@ setupContentMeta({
     <article>
       <h1>Pandora</h1>
 
-      <h2>Energy Recharge · Non-Permanent Buff</h2>
+      <h2>Energy Recharge</h2>
+
+      <h3>Skill</h3>
+      <p>
+        <strong>Passive.</strong> Each time Pandora casts her skills, she restores [[290%]] HP and
+        [[90]] Energy to the ally she released from her box.
+      </p>
+
+      <h2>Non-Permanent Buff</h2>
 
       <h3>Skill</h3>
       <p>
@@ -27,10 +35,6 @@ setupContentMeta({
         [[invincible]] but unable to cast skills. After [[4]]s, the ally is released from the box.
         If Pandora is still alive when that happens, the ally gains [[1000]] Energy, as well as
         [[35%]] ATK for the next [[10]]s.
-      </p>
-      <p>
-        <strong>Passive.</strong> Each time Pandora casts her skills, she restores [[290%]] HP and
-        [[90]] Energy to the ally she released from her box.
       </p>
 
       <h2>Targeting Mechanics</h2>
