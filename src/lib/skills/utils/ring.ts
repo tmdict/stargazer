@@ -170,6 +170,7 @@ export function searchByRow(context: SkillContext, targetTeam: Team): SkillTarge
 export interface RowScanOptions {
   direction?: RowScanDirection
   excludeCompanions?: boolean
+  maxDistance?: number
 }
 
 export function rowScan(
@@ -204,6 +205,11 @@ export function rowScan(
     if (!candidateHex) continue
     const distance = centerHex.distance(candidateHex)
     if (distance > maxDistance) maxDistance = distance
+  }
+
+  // Cap at the configured maximum distance if specified
+  if (options.maxDistance !== undefined) {
+    maxDistance = Math.min(maxDistance, options.maxDistance)
   }
 
   // Search expanding rings from distance 1 outward

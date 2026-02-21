@@ -1,6 +1,8 @@
 <script setup lang="ts">
+import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
+import { gridStyles, images } from './FaramorSkill.data'
 
 setupSkillContentMeta('faramor', 'en')
 </script>
@@ -21,6 +23,16 @@ setupSkillContentMeta('faramor', 'en')
         <strong>Active.</strong> Faramor increases ATK by [[12%]] for [[10]]s for both himself and
         the hero he blesses, automatically reapplying the buff when it expires.
       </p>
+
+      <strong>How It Works</strong>
+      <p>
+        Faramor looks for ally characters on tiles adjacent to him, prioritizing characters in the
+        back. When multiple characters are in the same row, Faramor will prioritize the character to
+        the right (lower hex ID):
+      </p>
+      <p>When on enemy team, Faramor prioritize teammates with the higher hex ID (180° rotation)</p>
+
+      <GridSnippet :grid-style="gridStyles.main" :images />
     </article>
   </StyledText>
 </template>
