@@ -110,6 +110,9 @@ export const useDragDrop = () => {
     isDragging.value = false
     draggedCharacter.value = null
     draggedImageSrc.value = ''
+
+    // Capture drop target before clearing
+    const dropTargetHexId = hoveredHexId.value
     hoveredHexId.value = null
 
     // Reset visual feedback
@@ -121,8 +124,8 @@ export const useDragDrop = () => {
     document.removeEventListener('dragover', handleGlobalDragOver)
     document.removeEventListener('drag', handleGlobalDrag)
 
-    // Emit event to clear any hover states
-    document.dispatchEvent(new CustomEvent('drag-ended'))
+    // Emit event with drop target hex for hover state update
+    document.dispatchEvent(new CustomEvent('drag-ended', { detail: { hexId: dropTargetHexId } }))
   }
 
   // Handle drag over (required for drop to work)
