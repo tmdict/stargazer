@@ -19,7 +19,7 @@ const isabellaSkill: Skill = {
   characterId: 93,
   name: 'Grimoire Pact',
   description: 'Targets the frontmost ally character on the same team.',
-  targetingColorModifier: '#6d9c86',
+  targetingColorModifier: '#98be5d',
 
   onActivate(context: SkillContext): void {
     const { team, skillManager, characterId, hexId } = context
