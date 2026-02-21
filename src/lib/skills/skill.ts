@@ -67,8 +67,8 @@ export class SkillManager {
   // Track image modifiers for specific characters (for companions with custom images)
   // Key is "characterId-team" to support same companion ID on different teams
   private characterImageModifiers: Record<string, string> = {}
-  // Track color modifiers for specific tiles
-  private tileColorModifiers: Map<number, string> = new Map()
+  // Track color modifiers for specific tiles (supports multiple colors per tile)
+  private tileColorModifiers: Map<number, string[]> = new Map()
   // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Version counter to trigger reactivity
@@ -219,21 +219,37 @@ export class SkillManager {
     return modifiers
   }
 
-  // Add color modifier for a specific tile
+  // Add color modifier for a specific tile (supports multiple colors per tile)
   setTileColorModifier(hexId: number, color: string): void {
-    this.tileColorModifiers.set(hexId, color)
+    const existing = this.tileColorModifiers.get(hexId)
+    if (existing) {
+      if (!existing.includes(color)) {
+        existing.push(color)
+      }
+    } else {
+      this.tileColorModifiers.set(hexId, [color])
+    }
     this.targetVersion++ // Trigger reactivity
   }
 
-  // Remove color modifier for a specific tile
-  removeTileColorModifier(hexId: number): void {
-    this.tileColorModifiers.delete(hexId)
+  // Remove a specific color modifier from a tile
+  removeTileColorModifier(hexId: number, color: string): void {
+    const existing = this.tileColorModifiers.get(hexId)
+    if (!existing) return
+    const index = existing.indexOf(color)
+    if (index !== -1) {
+      existing.splice(index, 1)
+    }
+    if (existing.length === 0) {
+      this.tileColorModifiers.delete(hexId)
+    }
     this.targetVersion++ // Trigger reactivity
   }
 
-  // Get color modifier for a specific tile
-  getTileColorModifier(hexId: number): string | undefined {
-    return this.tileColorModifiers.get(hexId)
+  // Get color modifiers for a specific tile
+  getTileColorModifier(hexId: number): string[] | undefined {
+    const colors = this.tileColorModifiers.get(hexId)
+    return colors && colors.length > 0 ? colors : undefined
   }
 
   // Clear all tile color modifiers
@@ -243,7 +259,7 @@ export class SkillManager {
   }
 
   // Get all tile color modifiers
-  getTileColorModifiers(): Map<number, string> {
+  getTileColorModifiers(): Map<number, string[]> {
     return new Map(this.tileColorModifiers)
   }
 
