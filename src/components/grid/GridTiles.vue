@@ -79,6 +79,8 @@ const skillStore = useSkillStore()
 
 // Track which hex is currently being hovered (non-drag)
 const hoveredHex = ref<number | null>(null)
+// Hex to highlight after drag ends (set from drag-ended event)
+let pendingHoverHex: number | null = null
 
 // Map editor drag-to-paint state
 // Enables continuous painting while dragging mouse across hexes
@@ -171,16 +173,21 @@ const scaledStrokeWidth = computed(() => {
 let blockHoverTimeout: number | null = null
 watchEffect(() => {
   if (isDragging.value) {
-    // Currently dragging - block hover
+    // Currently dragging - block hover and clear stale state
     blockHover.value = true
+    hoveredHex.value = null
     if (blockHoverTimeout) {
       clearTimeout(blockHoverTimeout)
       blockHoverTimeout = null
     }
   } else if (blockHover.value) {
-    // Just stopped dragging - keep blocking for a bit
+    // Just stopped dragging - keep blocking for a bit, then restore hover
     blockHoverTimeout = window.setTimeout(() => {
       blockHover.value = false
+      if (pendingHoverHex !== null) {
+        hoveredHex.value = pendingHoverHex
+        pendingHoverHex = null
+      }
       blockHoverTimeout = null
     }, 100)
   }
@@ -427,9 +434,11 @@ const elevatedHexes = computed(() =>
 )
 const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
 
-// Hover state is now managed by position-based detection
-const handleDragEnded = () => {
-  // No longer needed - position-based system handles cleanup
+const handleDragEnded = (event: Event) => {
+  const detail = (event as CustomEvent).detail
+  if (detail?.hexId != null) {
+    pendingHoverHex = detail.hexId
+  }
 }
 
 // Handle hover events from character layer
