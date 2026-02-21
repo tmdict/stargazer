@@ -37,7 +37,7 @@ setupContentMeta({
         against that enemy gain an extra [[35]] Penetration.
       </p>
 
-      <h3>How It Works (Ally)</h3>
+      <strong>How It Works (Ally)</strong>
       <p>
         Aliceth first checks for ally characters in the same row as her. When multiple ally
         characters are in the same row, Aliceth will target the character closer to her, and when
@@ -74,7 +74,7 @@ setupContentMeta({
         right (lower hex ID) to left (higher hex ID).
       </p>
 
-      <h3>How It Works (Enemy)</h3>
+      <strong>How It Works (Enemy)</strong>
       <p>
         Aliceth automatically identifies and targets an opposing team's character that is furthest
         away from her current tile.

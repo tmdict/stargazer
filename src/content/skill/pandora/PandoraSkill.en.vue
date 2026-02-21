@@ -39,7 +39,7 @@ setupContentMeta({
 
       <h2>Targeting Mechanics</h2>
 
-      <h3>How It Works</h3>
+      <strong>How It Works</strong>
       <p>
         The grid is organized into horizontal rows, with row 15 (hexes 44, 45) being the rearmost
         position for the enemy team, and row 1 (hexes 1, 2) being the rearmost for the ally team.

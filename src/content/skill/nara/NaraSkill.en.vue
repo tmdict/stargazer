@@ -29,7 +29,7 @@ setupContentMeta({
         a [[symmetrical]] position.
       </p>
 
-      <h3>How It Works</h3>
+      <strong>How It Works</strong>
       <p>
         Nara first checks her symmetrical tile (the mirror position across the grid's center). If an
         enemy is there, they become the target.

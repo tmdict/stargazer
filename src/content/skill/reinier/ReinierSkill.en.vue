@@ -28,23 +28,7 @@ setupContentMeta({
         [[45%]] of the enemy's taken damage till a battle ends.
       </p>
 
-      <h3>Hero Focus</h3>
-      <p>
-        Reinier's Dynamic Balance increases the target's ATK by [[7%]] when cast on an ally or
-        reduces the target ATK by [[7%]] when cast on an enemy.
-      </p>
-
-      <h3>EX Skill</h3>
-      <p>
-        Reinier deals [[200%]] damage to the enemy and knocks them down when casting Dynamic
-        Balance, increasing their damage taken by [[25%]] till the battle ends.
-      </p>
-      <p>
-        <strong>Level 3:</strong> Reduces the position-switched ally's damage taken by [[25%]] till
-        the battle ends.
-      </p>
-
-      <h3>How It Works</h3>
+      <strong>How It Works</strong>
       <p>
         Reinier identifies symmetrical hex pairs where one contains an ally and the other contains
         an enemy.
@@ -64,6 +48,22 @@ setupContentMeta({
       </ul>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <h3>Hero Focus</h3>
+      <p>
+        Reinier's Dynamic Balance increases the target's ATK by [[7%]] when cast on an ally or
+        reduces the target ATK by [[7%]] when cast on an enemy.
+      </p>
+
+      <h3>EX Skill</h3>
+      <p>
+        Reinier deals [[200%]] damage to the enemy and knocks them down when casting Dynamic
+        Balance, increasing their damage taken by [[25%]] till the battle ends.
+      </p>
+      <p>
+        <strong>Level 3:</strong> Reduces the position-switched ally's damage taken by [[25%]] till
+        the battle ends.
+      </p>
     </article>
   </StyledText>
 </template>
