@@ -78,7 +78,7 @@ const daimonSkill: Skill = {
   name: 'Buddy Barrier',
   description:
     'Targets an ally on adjacent tiles behind him (lower hex ID for ally team, higher for enemy team). Prioritizes the tile directly behind first (lowest/highest hex ID), then the higher/lower of the two remaining tiles in the row behind.',
-  tileColorModifier: '#6d9c86',
+  tileColorModifier: '#98be5d',
 
   onActivate(context: SkillContext): void {
     updateSkillTargets(context)
