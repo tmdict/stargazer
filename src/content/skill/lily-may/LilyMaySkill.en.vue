@@ -28,7 +28,7 @@ setupContentMeta({
         and [[unaffected]] States.
       </p>
 
-      <h3>How It Works</h3>
+      <strong>How It Works</strong>
       <p>When battle starts:</p>
       <ul>
         <li>

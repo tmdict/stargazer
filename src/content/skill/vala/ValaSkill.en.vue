@@ -25,7 +25,7 @@ setupContentMeta({
         attacking the noticed enemy, absorbing [[90]] Energy for each hit.
       </p>
 
-      <h3>How It Works</h3>
+      <strong>How It Works</strong>
       <p>
         Vala automatically identifies and targets an opposing team's character that is furthest away
         from her current tile.
