@@ -7,5 +7,6 @@
   "damage": "magic",
   "energy": 200,
   "range": 6,
-  "season": 3
+  "season": 3,
+  "tags": ["energy-recharge", "initial-energy", "temp-buff"]
 }
