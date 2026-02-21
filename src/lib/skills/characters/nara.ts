@@ -1,8 +1,8 @@
 import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { spiralSearchFromTile } from '../utils/ring'
 import { getSymmetricalHexId } from '../utils/symmetry'
-import { spiralSearchFromTile } from '../utils/targeting'
 
 /**
  * Calculate the target for skill.
