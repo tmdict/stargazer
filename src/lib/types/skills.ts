@@ -1,47 +1,9 @@
-// List of skills with documentation pages
-// Update this when adding new skill documentation
-export const DOCUMENTED_SKILLS = [
-  'aliceth',
-  'alna',
-  'bonnie',
-  'bryon',
-  'cassadee',
-  'daimon',
-  'damian',
-  'dunlingr',
-  'eironn',
-  'elijah-lailah',
-  'faramor',
-  'fay',
-  'galahad',
-  'hammie',
-  'hewynn',
-  'hugin',
-  'isabella',
-  'koko',
-  'kordan',
-  'lily-may',
-  'lorsan',
-  'lyca',
-  'mehira',
-  'mikola',
-  'nara',
-  'niru',
-  'pandora',
-  'pang',
-  'parisa',
-  'perseus',
-  'ravion',
-  'reinier',
-  'rowan',
-  'scarlita',
-  'shakir',
-  'silvina',
-  'smokey-meerky',
-  'talene',
-  'thador',
-  'tilaya',
-  'vala',
-  'velara',
-  'zandrok',
-]
+// Derived from src/content/skill/ directories at build time via import.meta.glob
+const skillModules = import.meta.glob('@/content/skill/*/*.en.vue')
+
+export const DOCUMENTED_SKILLS = Object.keys(skillModules)
+  .map((path) => {
+    const parts = path.split('/')
+    return parts[parts.length - 2]!
+  })
+  .sort()
