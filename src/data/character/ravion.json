@@ -8,5 +8,5 @@
   "energy": 0,
   "range": 4,
   "season": 4,
-  "tags": ["instant-temp-buff", "special-target", "temp-buff"]
+  "tags": ["temp-buff-instant", "special-target", "temp-buff"]
 }
