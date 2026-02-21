@@ -39,8 +39,8 @@ export const useSkillStore = defineStore('skill', () => {
     return imageName
   }
 
-  // Helper to get tile color modifier for a specific hex
-  const getTileColorModifier = (hexId: number): string | undefined => {
+  // Helper to get tile color modifiers for a specific hex
+  const getTileColorModifier = (hexId: number): string[] | undefined => {
     return tileColorModifiers.value.get(hexId)
   }
 

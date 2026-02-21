@@ -362,19 +362,17 @@ const isElevated = (hex: Hex) => {
   return hasCharacter(gridStore._getGrid(), hex.getId())
 }
 
-// Get stroke style for tiles - includes skill tile color modifiers
+// Get stroke style for tiles - uses first skill color if available
 const getHexStroke = (hex: Hex) => {
   const hexId = hex.getId()
 
-  // Check for skill tile color modifier if skills are enabled
   if (props.showSkills) {
-    const tileColorModifier = skillStore.getTileColorModifier(hexId)
-    if (tileColorModifier) {
-      return tileColorModifier
+    const colors = skillStore.getTileColorModifier(hexId)
+    if (colors) {
+      return colors[0]
     }
   }
 
-  // Default stroke colors
   const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
   return isOccupied ? '#999' : props.hexStrokeColor
 }
@@ -383,12 +381,13 @@ const getHexStrokeWidth = (hex: Hex) => {
   const hexId = hex.getId()
   const scale = gridStore.getHexScale()
 
-  // Check if this tile has a skill color modifier
   if (props.showSkills) {
-    const tileColorModifier = skillStore.getTileColorModifier(hexId)
-    if (tileColorModifier) {
-      // Use a thicker stroke for skill-highlighted tiles
-      return Math.max(3, 4 * scale)
+    const colors = skillStore.getTileColorModifier(hexId)
+    if (colors) {
+      // Total width accommodates all concentric strokes
+      const baseWidth = Math.max(3, 4 * scale)
+      const step = Math.max(2, 3 * scale)
+      return baseWidth + (colors.length - 1) * step
     }
   }
 
@@ -396,11 +395,27 @@ const getHexStrokeWidth = (hex: Hex) => {
   return isOccupied ? Math.max(2, 3 * scale) : scaledStrokeWidth.value
 }
 
+// Get additional concentric stroke layers for multi-color tiles
+const getConcentricStrokes = (hex: Hex): Array<{ color: string; width: number }> => {
+  if (!props.showSkills) return []
+  const colors = skillStore.getTileColorModifier(hex.getId())
+  if (!colors || colors.length <= 1) return []
+
+  const scale = gridStore.getHexScale()
+  const baseWidth = Math.max(3, 4 * scale)
+  const step = Math.max(2, 3 * scale)
+
+  // Inner strokes rendered on top, each progressively thinner
+  return colors.slice(1).map((color, i) => ({
+    color,
+    width: baseWidth + (colors.length - 2 - i) * step,
+  }))
+}
+
 // Helper to check if a hex has a skill highlight
 const hasSkillHighlight = (hex: Hex) => {
   if (!props.showSkills) return false
-  const hexId = hex.getId()
-  return skillStore.getTileColorModifier(hexId) !== undefined
+  return skillStore.getTileColorModifier(hex.getId()) !== undefined
 }
 
 // Separate hexes into rendering layers for proper z-ordering
@@ -499,6 +514,7 @@ onUnmounted(() => {
           :key="`skill-${hex.getId()}`"
           class="grid-tile skill-highlighted"
         >
+          <!-- Outermost stroke (first color) -->
           <polygon
             :points="
               layout
@@ -509,6 +525,20 @@ onUnmounted(() => {
             :fill="getHexFill(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
+          />
+          <!-- Concentric inner strokes for additional colors -->
+          <polygon
+            v-for="(stroke, idx) in getConcentricStrokes(hex)"
+            :key="`stroke-${idx}`"
+            :points="
+              layout
+                .polygonCorners(hex)
+                .map((p) => `${p.x},${p.y}`)
+                .join(' ')
+            "
+            fill="none"
+            :stroke="stroke.color"
+            :stroke-width="stroke.width"
           />
         </g>
 

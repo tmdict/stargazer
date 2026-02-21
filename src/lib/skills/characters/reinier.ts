@@ -134,8 +134,8 @@ function updateSkillTargets(context: SkillContext): void {
   const previousTarget = skillManager.getSkillTarget(characterId, team)
   if (previousTarget?.metadata) {
     const { allyHexId: prevAlly, enemyHexId: prevEnemy } = previousTarget.metadata
-    if (prevAlly) skillManager.removeTileColorModifier(prevAlly)
-    if (prevEnemy) skillManager.removeTileColorModifier(prevEnemy)
+    if (prevAlly) skillManager.removeTileColorModifier(prevAlly, reinierSkill.tileColorModifier!)
+    if (prevEnemy) skillManager.removeTileColorModifier(prevEnemy, reinierSkill.tileColorModifier!)
   }
 
   // Find adjacent allies
@@ -192,8 +192,10 @@ const reinierSkill: Skill = {
     const currentTarget = skillManager.getSkillTarget(characterId, team)
     if (currentTarget?.metadata) {
       const { allyHexId, enemyHexId } = currentTarget.metadata
-      if (allyHexId) skillManager.removeTileColorModifier(allyHexId)
-      if (enemyHexId) skillManager.removeTileColorModifier(enemyHexId)
+      if (allyHexId)
+        skillManager.removeTileColorModifier(allyHexId, reinierSkill.tileColorModifier!)
+      if (enemyHexId)
+        skillManager.removeTileColorModifier(enemyHexId, reinierSkill.tileColorModifier!)
     }
 
     skillManager.clearSkillTarget(characterId, team)
