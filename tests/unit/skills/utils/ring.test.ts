@@ -110,7 +110,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ALLY, RowScanDirection.FRONTMOST)
+      const result = rowScan(context, Team.ALLY, { direction: RowScanDirection.FRONTMOST })
 
       expect(result).not.toBeNull()
       // FRONTMOST for ally: highest hex ID first → hex 8 before hex 6
@@ -135,7 +135,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ALLY, RowScanDirection.REARMOST)
+      const result = rowScan(context, Team.ALLY, { direction: RowScanDirection.REARMOST })
 
       expect(result).not.toBeNull()
       // REARMOST for ally: lowest hex ID first → hex 6 before hex 8
@@ -159,7 +159,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ENEMY, RowScanDirection.REARMOST)
+      const result = rowScan(context, Team.ENEMY, { direction: RowScanDirection.REARMOST })
 
       expect(result).not.toBeNull()
       // REARMOST for enemy: highest hex ID first → hex 13 before hex 11
@@ -183,7 +183,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ENEMY, RowScanDirection.FRONTMOST)
+      const result = rowScan(context, Team.ENEMY, { direction: RowScanDirection.FRONTMOST })
 
       expect(result).not.toBeNull()
       // FRONTMOST for enemy: lowest hex ID first → hex 11 before hex 13
@@ -208,7 +208,7 @@ describe('ring targeting', () => {
       }
 
       const defaultResult = rowScan(context, Team.ALLY)
-      const explicitResult = rowScan(context, Team.ALLY, RowScanDirection.FRONTMOST)
+      const explicitResult = rowScan(context, Team.ALLY, { direction: RowScanDirection.FRONTMOST })
 
       expect(defaultResult?.targetHexId).toBe(explicitResult?.targetHexId)
     })
@@ -222,7 +222,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ALLY, RowScanDirection.REARMOST)
+      const result = rowScan(context, Team.ALLY, { direction: RowScanDirection.REARMOST })
       expect(result).toBeNull()
     })
 
@@ -240,7 +240,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ALLY, RowScanDirection.REARMOST)
+      const result = rowScan(context, Team.ALLY, { direction: RowScanDirection.REARMOST })
       expect(result).toBeNull()
     })
 
@@ -258,7 +258,7 @@ describe('ring targeting', () => {
         skillManager: {} as SkillManager,
       }
 
-      const result = rowScan(context, Team.ALLY, RowScanDirection.REARMOST)
+      const result = rowScan(context, Team.ALLY, { direction: RowScanDirection.REARMOST })
 
       expect(result).not.toBeNull()
       expect(result?.targetHexId).toBe(5)

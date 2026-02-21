@@ -3,7 +3,10 @@ import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
 import { rowScan, RowScanDirection } from '../utils/ring'
 
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-  return rowScan(context, context.team, { direction: RowScanDirection.REARMOST })
+  return rowScan(context, context.team, {
+    direction: RowScanDirection.REARMOST,
+    excludeCompanions: true,
+  })
 }
 
 function updateSkillTargets(context: SkillContext): void {
@@ -14,26 +17,26 @@ function updateSkillTargets(context: SkillContext): void {
   if (previousTarget?.targetHexId) {
     skillManager.removeTileColorModifier(
       previousTarget.targetHexId,
-      cassadeeSkill.tileColorModifier!,
+      galahadSkill.tileColorModifier!,
     )
   }
 
   const targetInfo = calculateTarget(context)
   if (targetInfo?.targetHexId) {
     skillManager.setSkillTarget(characterId, team, targetInfo)
-    skillManager.setTileColorModifier(targetInfo.targetHexId, cassadeeSkill.tileColorModifier!)
+    skillManager.setTileColorModifier(targetInfo.targetHexId, galahadSkill.tileColorModifier!)
   } else {
     skillManager.clearSkillTarget(characterId, team)
   }
 }
 
-const cassadeeSkill: Skill = {
-  id: 'cassadee',
-  characterId: 10,
-  name: 'Tidal Strength',
+const galahadSkill: Skill = {
+  id: 'galahad',
+  characterId: 99,
+  name: 'Time Recast',
   description:
-    'Targets the nearest ally starting from tiles adjacent to her and expanding outwards, prioritizing characters in the back (lower hex ID for ally team, higher for enemy team).',
-  tileColorModifier: '#4fc3f7',
+    'Targets the nearest ally starting from tiles adjacent to her and expanding outwards, prioritizing characters in the back. Cannot target clones or summoned units.',
+  tileColorModifier: '#e57373',
 
   onActivate(context: SkillContext): void {
     updateSkillTargets(context)
@@ -46,7 +49,7 @@ const cassadeeSkill: Skill = {
     if (currentTarget?.targetHexId) {
       skillManager.removeTileColorModifier(
         currentTarget.targetHexId,
-        cassadeeSkill.tileColorModifier!,
+        galahadSkill.tileColorModifier!,
       )
     }
 
@@ -58,4 +61,4 @@ const cassadeeSkill: Skill = {
   },
 }
 
-registerSkill(cassadeeSkill)
+registerSkill(galahadSkill)
