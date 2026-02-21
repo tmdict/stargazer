@@ -7,5 +7,6 @@
   "damage": "physical",
   "energy": 300,
   "range": 6,
-  "season": 4
+  "season": 4,
+  "tags": ["initial-energy"]
 }

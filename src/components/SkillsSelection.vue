@@ -10,7 +10,6 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import type { CharacterType } from '@/lib/types/character'
 import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
 import { useI18nStore } from '@/stores/i18n'
-import { loadTags } from '@/utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -29,12 +28,7 @@ const skillCharacters = computed(() => {
 
   // Apply tag filters
   if (selectedTagNames.value) {
-    const allTags = loadTags()
-    const selectedTag = allTags.find((tag) => tag.name === selectedTagNames.value)
-    if (selectedTag) {
-      const characterNamesInSelectedTag = new Set(selectedTag.characters)
-      filtered = filtered.filter((char) => characterNamesInSelectedTag.has(char.name))
-    }
+    filtered = filtered.filter((char) => char.tags.includes(selectedTagNames.value!))
   }
 
   // Sort by the order in DOCUMENTED_SKILLS array
@@ -104,7 +98,7 @@ const openDetailsModal = (character: CharacterType) => {
     @clear-filters="clearFilters"
   >
     <!-- Tags Display -->
-    <TagsDisplay v-model="selectedTagNames" />
+    <TagsDisplay v-model="selectedTagNames" :characters />
 
     <!-- Skills Characters Grid -->
     <div class="characters">

@@ -7,5 +7,6 @@
   "damage": "magic",
   "energy": 400,
   "range": 6,
-  "season": 3
+  "season": 3,
+  "tags": ["initial-energy", "initial-energy-300"]
 }

@@ -7,5 +7,6 @@
   "damage": "physical",
   "energy": 0,
   "range": 8,
-  "season": 5
+  "season": 5,
+  "tags": ["special-target"]
 }

@@ -7,7 +7,6 @@ import TagsDisplay from './TagsDisplay.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { CharacterType } from '@/lib/types/character'
-import { loadTags } from '@/utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -39,12 +38,7 @@ const filteredAndSortedCharacters = computed(() => {
 
   // Apply tag filters
   if (selectedTagNames.value) {
-    const allTags = loadTags()
-    const selectedTag = allTags.find((tag) => tag.name === selectedTagNames.value)
-    if (selectedTag) {
-      const characterNamesInSelectedTag = new Set(selectedTag.characters)
-      filtered = filtered.filter((char) => characterNamesInSelectedTag.has(char.name))
-    }
+    filtered = filtered.filter((char) => char.tags.includes(selectedTagNames.value!))
   }
 
   // Sort filtered results
@@ -122,7 +116,7 @@ const handleClearFilters = () => {
     </template>
 
     <!-- Tags Display -->
-    <TagsDisplay v-model="selectedTagNames" />
+    <TagsDisplay v-model="selectedTagNames" :characters />
 
     <!-- Characters Grid -->
     <div class="characters">

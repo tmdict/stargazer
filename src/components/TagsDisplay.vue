@@ -3,24 +3,27 @@ import { computed } from 'vue'
 
 import FilterPills from './ui/FilterPills.vue'
 import type { FilterPill } from './ui/FilterPills.vue'
-import type { TagType } from '@/lib/types/character'
+import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
-import { loadTags } from '@/utils/dataLoader'
+
+const props = defineProps<{
+  characters: readonly CharacterType[]
+}>()
 
 // Using defineModel for v-model support
 const modelValue = defineModel<string | null>({ default: null })
 
 const i18n = useI18nStore()
 
-const tags = computed<TagType[]>(() => {
-  return loadTags()
-})
-
-// Transform tags to FilterPill format
+// Derive unique tag names from characters
 const tagPills = computed<FilterPill[]>(() => {
-  return tags.value.map((tag) => ({
-    name: tag.name,
-    label: i18n.t(`app.${tag.name}`),
+  const names = new Set<string>()
+  for (const char of props.characters) {
+    for (const tag of char.tags) names.add(tag)
+  }
+  return [...names].sort().map((name) => ({
+    name,
+    label: i18n.t(`app.${name}`),
   }))
 })
 </script>

@@ -1,5 +1,5 @@
 import type { ArtifactType } from '@/lib/types/artifact'
-import type { CharacterType, TagType } from '@/lib/types/character'
+import type { CharacterType } from '@/lib/types/character'
 import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
 
 export function extractFileName(path: string, removeExtension = true): string {
@@ -19,7 +19,6 @@ function loadAssetsDict<T>(assets: Record<string, T>): Record<string, T> {
 // Module-level cache for data
 let charactersCache: CharacterType[] | null = null
 let artifactsCache: ArtifactType[] | null = null
-let tagsCache: TagType[] | null = null
 let characterImagesCache: Record<string, string> | null = null
 let artifactImagesCache: Record<string, string> | null = null
 let iconsCache: Record<string, string> | null = null
@@ -60,21 +59,6 @@ export function loadArtifacts(): ArtifactType[] {
 
   artifactsCache = artifacts
   return artifacts
-}
-
-export function loadTags(): TagType[] {
-  if (tagsCache) {
-    return tagsCache
-  }
-
-  const tagModules = import.meta.glob<TagType>('@/data/tags/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const tags = Object.values(tagModules).sort((a, b) => a.name.localeCompare(b.name))
-
-  tagsCache = tags
-  return tags
 }
 
 export function loadCharacterImages(): Record<string, string> {
@@ -248,7 +232,6 @@ export function loadAllLocales(): LocaleDictionary {
 export function clearCache() {
   charactersCache = null
   artifactsCache = null
-  tagsCache = null
   characterImagesCache = null
   artifactImagesCache = null
   iconsCache = null
