@@ -28,9 +28,11 @@ setupSkillContentMeta('faramor', 'en')
       <p>
         Faramor looks for ally characters on tiles adjacent to him, prioritizing characters in the
         back. When multiple characters are in the same row, Faramor will prioritize the character to
-        the right (lower hex ID):
+        the right (lower hex ID).
       </p>
-      <p>When on enemy team, Faramor prioritize teammates with the higher hex ID (180° rotation)</p>
+      <p>
+        When on enemy team, Faramor prioritize teammates with the higher hex ID (180° rotation).
+      </p>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
     </article>
