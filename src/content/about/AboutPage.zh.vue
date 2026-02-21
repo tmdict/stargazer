@@ -3,8 +3,6 @@ import { setupContentMeta } from '@/utils/contentMeta'
 
 setupContentMeta({
   title: '关于',
-  description:
-    'Stargazer是一个剑与远征：启程（AFK Journey）竞技场模拟器和规划工具。此工具让玩家能更方便测试不同竞技场阵型和技能的机制，可视化他们的攻击范围，并与朋友或公会成员分享阵型和战术。',
   url: 'about',
   locale: 'zh',
 })
