@@ -41,7 +41,7 @@ setupSkillContentMeta('cassadee', 'en')
         <li>And so on...</li>
       </ul>
       <p>
-        When on enemy team, Cassadee prioritize teammates with the higher hex ID (180° rotation)
+        When on enemy team, Cassadee prioritize teammates with the higher hex ID (180° rotation).
       </p>
 
       <GridSnippet :grid-style="gridStyles.main" :images />

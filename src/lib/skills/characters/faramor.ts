@@ -33,7 +33,7 @@ function updateSkillTargets(context: SkillContext): void {
 const faramorSkill: Skill = {
   id: 'faramor',
   characterId: 75,
-  name: 'Stealth Attack',
+  name: 'Sacred Pledge',
   description:
     'Targets the nearest ally on tiles adjacent to him, prioritizing characters in the back (lower hex ID for ally team, higher for enemy team).',
   tileColorModifier: '#6d9c86',
