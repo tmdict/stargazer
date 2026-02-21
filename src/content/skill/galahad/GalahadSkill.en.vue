@@ -42,7 +42,7 @@ setupContentMeta({
         hero and cannot be targeted by enemies.
       </p>
 
-      <h3>How It Works</h3>
+      <strong>How It Works</strong>
       <p>
         Galahad looks for ally characters starting from tiles adjacent to her and expanding
         outwards, prioritizing characters in the back. When multiple characters are in the same row,
