@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Shakir · Skills',
-  description:
-    'Shakir generates a Lupine Aura in a range of 2-tile while in the wolf shape, dealing damage to all enemies within the frontal radius of the arc with normal attacks. Allies within the range of Lupine Aura reduce 20% taken damage and increase 10 Haste.',
-  url: 'skill/shakir',
-  locale: 'en',
-  keywords: ['Shakir', '沙奎尔', '狼人'],
-})
+setupSkillContentMeta('shakir', 'en')
 </script>
 
 <template>

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '卡卡 · 技能',
-  description:
-    '鼓舞自已和全体友军使他们获得暂时的45%伤害减免持续12秒并记录被减免的伤害值，在持续时间结束后这部分伤害值会一次性以真实伤害结算。在此期间，友军们还会获得30点生命取和10%攻击力加成。',
-  url: 'skill/koko',
-  locale: 'zh',
-  keywords: ['Koko', '卡卡'],
-})
+setupSkillContentMeta('koko', 'zh')
 </script>
 
 <template>

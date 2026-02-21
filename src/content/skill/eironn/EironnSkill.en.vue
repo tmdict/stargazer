@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Eironn · Skills',
-  description:
-    'Eironn casts Verdant Cyclone for the first time in each battle without consuming Energy, but the damage is reduced to 50% of the original.',
-  url: 'skill/eironn',
-  locale: 'en',
-  keywords: ['Eironn', '埃隆', '绿剑'],
-})
+setupSkillContentMeta('eironn', 'en')
 </script>
 
 <template>

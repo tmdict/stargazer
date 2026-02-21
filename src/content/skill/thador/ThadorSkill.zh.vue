@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '都铎 · 技能',
-  description: '备战时，选择身后一格的友军作为副手，自身存活时，副手获得15点暴击。',
-  url: 'skill/thador',
-  locale: 'zh',
-  keywords: ['Thador', '都铎'],
-})
+setupSkillContentMeta('thador', 'zh')
 </script>
 
 <template>

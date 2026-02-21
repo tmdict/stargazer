@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '赞东 (人马) · 技能',
-  description:
-    '战斗开始时，召唤5格宽度的自身虚影朝敌方阵营方向冲锋，破坏沿途的阻挡，对敌人造成10%伤害，并鼓舞沿途的所有友军。赞东和被鼓舞的其他友军分别永久提升50%和20%最大生命值（当前生命值保持不变），并在后续的8秒内提升40点生命汲取，20点急速与100%移动速度。',
-  url: 'skill/zandrok',
-  locale: 'zh',
-  keywords: ['Zandrok', '赞东', '人马'],
-})
+setupSkillContentMeta('zandrok', 'zh')
 </script>
 
 <template>

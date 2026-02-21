@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './BonnieSkill.data'
 
-setupContentMeta({
-  title: 'Bonnie · Skills',
-  description:
-    'When a battle starts, Bonnie casts the Aging magic on the rearmost enemy, dealing 150% damage and reducing their Haste by 30 until the battle ends. Bonnie prioritizes attacking this target afflicted by Aging.',
-  url: 'skill/bonnie',
-  locale: 'en',
-  keywords: ['Bonnie', '波妮'],
-})
+setupSkillContentMeta('bonnie', 'en')
 </script>
 
 <template>

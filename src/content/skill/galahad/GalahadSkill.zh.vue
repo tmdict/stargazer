@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './GalahadSkill.data'
 
-setupContentMeta({
-  title: '加拉哈德 (加拉) · 技能',
-  description:
-    '对最虚弱的友军施加巫术庇护，为其添加480%的护盾持续8秒，护盾在消失时对周围1格范围内的敌人造成240%伤害。',
-  url: 'skill/galahad',
-  locale: 'zh',
-  keywords: ['Galahad', '加拉哈德', '加拉'],
-})
+setupSkillContentMeta('galahad', 'zh')
 </script>
 
 <template>

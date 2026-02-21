@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './AlicethSkill.data'
 
-setupContentMeta({
-  title: 'Aliceth · Skills',
-  description:
-    'Passive. Aliceth grants an ally Brightfeather, prioritizing the nearest ally in her row. After that ally deals ranged damage 3 times, they unleash a feather for an additional strike, dealing 120% damage. This extra strike can trigger once every 0.5s.',
-  url: 'skill/aliceth',
-  locale: 'en',
-  keywords: ['Aliceth', '亚莉克希', '弓神'],
-})
+setupSkillContentMeta('aliceth', 'en')
 </script>
 
 <template>

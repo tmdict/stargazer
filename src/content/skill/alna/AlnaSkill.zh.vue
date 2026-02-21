@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '阿尔娜 (冬喉) · 技能',
-  description:
-    '布阵时与阿尔娜处于同排的一名友军将晋升为“凛冬战士”，“凛冬战士”免疫“凛冬战歌”带来的急速减益效果，并且永久提高15%生命上限。',
-  url: 'skill/alna',
-  locale: 'zh',
-  keywords: ['Alna', '阿尔娜', '冬喉'],
-})
+setupSkillContentMeta('alna', 'zh')
 </script>
 
 <template>

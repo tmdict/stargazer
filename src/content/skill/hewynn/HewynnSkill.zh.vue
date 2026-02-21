@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '伊温 (荷叶) · 技能',
-  description: '技能“焕然”生效时，还会使自标友车在6秒内提升30点急速。',
-  url: 'skill/hewynn',
-  locale: 'zh',
-  keywords: ['Hewynn', '伊温', '荷叶'],
-})
+setupSkillContentMeta('hewynn', 'zh')
 </script>
 
 <template>

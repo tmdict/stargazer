@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './RavionSkill.data'
 
-setupContentMeta({
-  title: '沙利叶 · 技能',
-  description:
-    '战斗开始时，为最靠后的2名友军发放任务牌，当其累计对敌人造成沙利叶初始攻击力2000%的伤害或参与击败敌人后，任务完成。完成任务的角色立刻恢复150能量并使自身获得沙利叶初始攻击力的12%，持续30秒。',
-  url: 'skill/ravion',
-  locale: 'zh',
-  keywords: ['Ravion', '沙利叶'],
-})
+setupSkillContentMeta('ravion', 'zh')
 </script>
 
 <template>

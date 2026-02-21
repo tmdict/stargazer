@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '阿熏和蒙蒙 (奶爸) · 技能',
-  description: '战斗开始后，在自己周围2格范围内制造并持续施法维持香薰。',
-  url: 'skill/smokey-meerky',
-  locale: 'zh',
-  keywords: ['Smokey & Meerky', '阿熏和蒙蒙', '奶爸'],
-})
+setupSkillContentMeta('smokey-meerky', 'zh')
 </script>
 
 <template>

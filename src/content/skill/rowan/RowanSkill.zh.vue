@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '罗万 (商人) · 技能',
-  description:
-    '战移动至多1格，并在抵达目的地后持续抛酒金币，使周围2格范围内的其他友军回复共250点能量。',
-  url: 'skill/rowan',
-  locale: 'zh',
-  keywords: ['Rowan', '罗万', '商人'],
-})
+setupSkillContentMeta('rowan', 'zh')
 </script>
 
 <template>

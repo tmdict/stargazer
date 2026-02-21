@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '呼金 · 技能',
-  description:
-    '主动释放时，为累计造成伤害最高的友军锻造机械齿轮，使其攻击力提升，提升值等同于呼金6%的基础攻击力，且急速提高80点，持续10秒。',
-  url: 'skill/hugin',
-  locale: 'zh',
-  keywords: ['Hugin', '呼金'],
-})
+setupSkillContentMeta('hugin', 'zh')
 </script>
 
 <template>
