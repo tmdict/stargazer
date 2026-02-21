@@ -6,12 +6,33 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
+// SSG Helpers
+
 // Derive skill list from directory structure (Node context, no import.meta.glob)
 const skillContentDir = fileURLToPath(new URL('./src/content/skill', import.meta.url))
 const skillIds = readdirSync(skillContentDir, { withFileTypes: true })
   .filter((d) => d.isDirectory())
   .map((d) => d.name)
   .sort()
+
+const locales = ['en', 'zh']
+
+/** Returns all routes to pre-render during SSG */
+function getSSGRoutes(): string[] {
+  const routes: string[] = [
+    '/', // Include home but won't be pre-rendered (no static content)
+    '/share', // Include share for direct URL navigation
+  ]
+
+  locales.forEach((locale) => {
+    routes.push(`/${locale}/about`)
+    skillIds.forEach((skillId) => {
+      routes.push(`/${locale}/skill/${skillId}`)
+    })
+  })
+
+  return routes
+}
 
 /** Extracts description from rendered page content's first 1-2 <p> tags */
 function extractContentDescription(html: string): string | null {
@@ -34,10 +55,36 @@ function extractContentDescription(html: string): string | null {
 
   if (!text) return null
 
-  return text.length <= 150
-    ? text
-    : (text.slice(0, text.lastIndexOf(' ', 150) || 150) + ' ...')
+  return text.length <= 150 ? text : text.slice(0, text.lastIndexOf(' ', 150) || 150) + ' ...'
 }
+
+/** Post-processes SSG-rendered pages: sets lang attribute and derives skill descriptions */
+function processRenderedPage(route: string, html: string): string {
+  const match = route.match(/^\/(en|zh)\//)
+  if (match) {
+    html = html.replace(/<html[^>]*>/, `<html lang="${match[1]}">`)
+  }
+
+  // Auto-derive description from content for skill pages
+  if (route.match(/^\/(en|zh)\/skill\//)) {
+    const description = extractContentDescription(html)
+    if (description) {
+      const escaped = description.replace(/"/g, '&quot;')
+      html = html.replace(
+        /<meta name="description" content="[^"]*">/,
+        `<meta name="description" content="${escaped}">`,
+      )
+      html = html.replace(
+        /<meta property="og:description" content="[^"]*">/,
+        `<meta property="og:description" content="${escaped}">`,
+      )
+    }
+  }
+
+  return html
+}
+
+// Vite Config
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -52,54 +99,8 @@ export default defineConfig({
     entry: 'src/main.ssg.ts', // Use SSG-specific entry
     script: 'async',
     formatting: 'minify',
-    includedRoutes: () => {
-      const locales = ['en', 'zh']
-
-      const routes: string[] = [
-        '/', // Include home but won't be pre-rendered (no static content)
-        '/share', // Include share for direct URL navigation
-      ]
-
-      // Add about pages
-      locales.forEach((locale) => {
-        routes.push(`/${locale}/about`)
-      })
-
-      // Add skill pages
-      locales.forEach((locale) => {
-        skillIds.forEach((skillId) => {
-          routes.push(`/${locale}/skill/${skillId}`)
-        })
-      })
-
-      return routes
-    },
-    onPageRendered: (route: string, html: string) => {
-      // Extract locale from route for proper lang attribute
-      const match = route.match(/^\/(en|zh)\//)
-      if (match) {
-        const locale = match[1]
-        html = html.replace(/<html[^>]*>/, `<html lang="${locale}">`)
-      }
-
-      // Auto-derive description from content for skill pages
-      if (route.match(/^\/(en|zh)\/skill\//)) {
-        const description = extractContentDescription(html)
-        if (description) {
-          const escaped = description.replace(/"/g, '&quot;')
-          html = html.replace(
-            /<meta name="description" content="[^"]*">/,
-            `<meta name="description" content="${escaped}">`,
-          )
-          html = html.replace(
-            /<meta property="og:description" content="[^"]*">/,
-            `<meta property="og:description" content="${escaped}">`,
-          )
-        }
-      }
-
-      return html
-    },
+    includedRoutes: getSSGRoutes,
+    onPageRendered: processRenderedPage,
     onFinished() {
       generateSitemap({
         hostname: 'https://stargazer.tmdict.com',
