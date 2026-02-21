@@ -1,16 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './SilvinaSkill.data'
 
-setupContentMeta({
-  title: '西尔维娜 (苍白) · 技能',
-  description: '战斗开始时，标记最靠近对称位置的敌人并闪现至附近，攻击该敌人，造成300%伤害。',
-  url: 'skill/silvina',
-  locale: 'zh',
-  keywords: ['Silvina', '西尔维娜', '苍白'],
-})
+setupSkillContentMeta('silvina', 'zh')
 </script>
 
 <template>

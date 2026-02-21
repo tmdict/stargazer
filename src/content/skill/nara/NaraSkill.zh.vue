@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './NaraSkill.data'
 
-setupContentMeta({
-  title: '奈拉 (钩子) · 技能',
-  description:
-    '自身普通攻击范围内没有敌方英雄时，将远处的一名敌方英雄钩到自己面前。目标英雄在被钩的过程中，每被拖拽1格的距离便会流失3.5%的当前生命值，最高不超过自身攻击力的250%。该效果不会导致目标英雄被击败，且本技能优先选择最接近对称位置的敌方英雄。',
-  url: 'skill/nara',
-  locale: 'zh',
-  keywords: ['Nara', '奈拉', '钩子'],
-})
+setupSkillContentMeta('nara', 'zh')
 </script>
 
 <template>

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Thador · Skills',
-  description:
-    'During battle preparation, Thador designates the ally placed 1 tile behind him as his lieutenant.',
-  url: 'skill/thador',
-  locale: 'en',
-  keywords: ['Thador', '都铎'],
-})
+setupSkillContentMeta('thador', 'en')
 </script>
 
 <template>

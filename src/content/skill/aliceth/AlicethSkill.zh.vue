@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './AlicethSkill.data'
 
-setupContentMeta({
-  title: '亚莉克希 (弓神) · 技能',
-  description:
-    '被动地，亚莉克希特“光翼”权能赋予一名友军，使其在对敌人造成3次远程伤害时发射1枚飞羽，对敌人造成120%伤害，每0.5秒至多触发一次。若拥有“光翼”权能的友军为远程角色还会额外提升5格普通攻击的攻击距离。亚莉克希优先选择同排最近的友军赋予权能。且这名友军会在被击败后失去权能。',
-  url: 'skill/aliceth',
-  locale: 'zh',
-  keywords: ['Aliceth', '亚莉克希', '弓神'],
-})
+setupSkillContentMeta('aliceth', 'zh')
 </script>
 
 <template>

@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './NaraSkill.data'
 
-setupContentMeta({
-  title: 'Nara · Skills',
-  description:
-    "Nara pulls a distant enemy hero toward her when there are no enemy heroes within her normal attack range. The target loses 3.5% HP for every tile they are pulled, up to 250% of Nara's ATK. This skill won't defeat the enemy and prioritizes attacking the closest enemy in a symmetrical position.",
-  url: 'skill/nara',
-  locale: 'en',
-  keywords: ['Nara', '奈拉', '钩子'],
-})
+setupSkillContentMeta('nara', 'en')
 </script>
 
 <template>

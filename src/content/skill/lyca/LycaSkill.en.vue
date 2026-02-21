@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Lyca · Skills',
-  description:
-    "Lyca bestows blessings of the stars, increasing all allies' ATK SPD by 25 for 6s. This effect is triggered immediately when a battle starts and grants all allies 120 Energy.",
-  url: 'skill/lyca',
-  locale: 'en',
-  keywords: ['Lyca', '莱卡', '兔弓'],
-})
+setupSkillContentMeta('lyca', 'en')
 </script>
 
 <template>

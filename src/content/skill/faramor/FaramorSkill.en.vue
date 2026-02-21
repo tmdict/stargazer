@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Faramor · Skills',
-  description:
-    'During battle preparation, Faramor can bless an adjacent allied hero, prioritizing those placed behind him.',
-  url: 'skill/faramor',
-  locale: 'en',
-  keywords: ['Faramor', '法拉莫尔', '白狼'],
-})
+setupSkillContentMeta('faramor', 'en')
 </script>
 
 <template>

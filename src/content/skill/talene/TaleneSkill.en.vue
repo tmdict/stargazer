@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './TaleneSkill.data'
 
-setupContentMeta({
-  title: 'Talene · Skills',
-  description:
-    "Talene grants Pyre of Renewal to the frontmost allied hero other than herself from the beginning of the battle until the end. Pyre of Renewal carrier will deal damage equal to 50% of their ATK per second to adjacent enemies and restore HP equal to 25% of their damage dealt. Every time the carrier is healed by an amount equal to 500% of their ATK, a kindling will be generated next to them to permanently enhance Talene's Pyre of Renewal, increasing its damage dealt by 50% for up to 3 stacks.",
-  url: 'skill/talene',
-  locale: 'en',
-  keywords: ['Talene', '塔琳', '凤凰'],
-})
+setupSkillContentMeta('talene', 'en')
 </script>
 
 <template>
