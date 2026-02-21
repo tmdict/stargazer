@@ -139,14 +139,54 @@ describe('skill', () => {
 
       it('manages tile color modifiers', () => {
         skillManager.setTileColorModifier(1, '#00ff00')
-        expect(skillManager.getTileColorModifier(1)).toBe('#00ff00')
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#00ff00'])
 
         skillManager.setTileColorModifier(2, '#0000ff')
         const allModifiers = skillManager.getTileColorModifiers()
         expect(allModifiers.size).toBe(2)
 
-        skillManager.removeTileColorModifier(1)
+        skillManager.removeTileColorModifier(1, '#00ff00')
         expect(skillManager.getTileColorModifier(1)).toBeUndefined()
+
+        skillManager.clearTileColorModifiers()
+        expect(skillManager.getTileColorModifiers().size).toBe(0)
+      })
+
+      it('supports multiple colors on the same tile', () => {
+        skillManager.setTileColorModifier(1, '#ff0000')
+        skillManager.setTileColorModifier(1, '#00ff00')
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000', '#00ff00'])
+
+        // Removing one color leaves the other
+        skillManager.removeTileColorModifier(1, '#ff0000')
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#00ff00'])
+
+        // Removing last color clears the entry
+        skillManager.removeTileColorModifier(1, '#00ff00')
+        expect(skillManager.getTileColorModifier(1)).toBeUndefined()
+      })
+
+      it('does not duplicate the same color on a tile', () => {
+        skillManager.setTileColorModifier(1, '#ff0000')
+        skillManager.setTileColorModifier(1, '#ff0000')
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
+      })
+
+      it('handles removing a color that is not on the tile', () => {
+        skillManager.setTileColorModifier(1, '#ff0000')
+        skillManager.removeTileColorModifier(1, '#00ff00')
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
+      })
+
+      it('handles removing from a non-existent tile', () => {
+        skillManager.removeTileColorModifier(99, '#ff0000')
+        expect(skillManager.getTileColorModifier(99)).toBeUndefined()
+      })
+
+      it('clears multi-color tiles with clearTileColorModifiers', () => {
+        skillManager.setTileColorModifier(1, '#ff0000')
+        skillManager.setTileColorModifier(1, '#00ff00')
+        skillManager.setTileColorModifier(2, '#0000ff')
 
         skillManager.clearTileColorModifiers()
         expect(skillManager.getTileColorModifiers().size).toBe(0)

@@ -12,7 +12,10 @@ function updateSkillTargets(context: SkillContext): void {
   // Clear previous tile modifier
   const previousTarget = skillManager.getSkillTarget(characterId, team)
   if (previousTarget?.targetHexId) {
-    skillManager.removeTileColorModifier(previousTarget.targetHexId)
+    skillManager.removeTileColorModifier(
+      previousTarget.targetHexId,
+      cassadeeSkill.tileColorModifier!,
+    )
   }
 
   const targetInfo = calculateTarget(context)
@@ -41,7 +44,10 @@ const cassadeeSkill: Skill = {
 
     const currentTarget = skillManager.getSkillTarget(characterId, team)
     if (currentTarget?.targetHexId) {
-      skillManager.removeTileColorModifier(currentTarget.targetHexId)
+      skillManager.removeTileColorModifier(
+        currentTarget.targetHexId,
+        cassadeeSkill.tileColorModifier!,
+      )
     }
 
     skillManager.clearSkillTarget(characterId, team)
