@@ -38,6 +38,9 @@ setupContentMeta({
         leaves the sigil.
       </p>
 
+      <strong>How It Works</strong>
+      <p>Tile positional buffs are considered temporary buffs.</p>
+
       <h3>EX Skill</h3>
       <p>
         Hugin crafts enhanced cogshields for the 2 weakest allies when casting Unstoppable!,
