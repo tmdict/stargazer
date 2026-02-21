@@ -3,7 +3,7 @@ import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
 import { rowScan, RowScanDirection } from '../utils/ring'
 
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-  return rowScan(context, context.team, RowScanDirection.REARMOST)
+  return rowScan(context, context.team, { direction: RowScanDirection.REARMOST })
 }
 
 function updateSkillTargets(context: SkillContext): void {
