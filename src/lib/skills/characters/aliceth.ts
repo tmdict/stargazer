@@ -1,7 +1,8 @@
 import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
-import { findTarget, rowScan, searchByRow, TargetingMethod } from '../utils/targeting'
+import { findTarget, TargetingMethod } from '../utils/distance'
+import { rowScan, searchByRow } from '../utils/ring'
 
 /**
  * Calculate the ally target for Aliceth's skill.

@@ -1,7 +1,7 @@
 import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
-import { findTarget, TargetingMethod } from '../utils/targeting'
+import { findTarget, TargetingMethod } from '../utils/distance'
 
 // Calculate the furthest opposing target from current position
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
