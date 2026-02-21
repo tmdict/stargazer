@@ -7,5 +7,6 @@
   "damage": "physical",
   "energy": 0,
   "range": 1,
-  "season": 1
+  "season": 1,
+  "tags": []
 }

@@ -7,5 +7,6 @@
   "damage": "physical",
   "energy": 600,
   "range": 20,
-  "season": 2
+  "season": 2,
+  "tags": ["initial-energy", "initial-energy-300", "instant-temp-buff", "temp-buff"]
 }

@@ -10,11 +10,7 @@ export interface CharacterType {
   energy: number
   range: number
   season: number
+  tags: readonly string[]
   sourceHexId?: number // Optional property for tracking drag source
   team?: Team // Team assignment for placement
-}
-
-export interface TagType {
-  name: string
-  characters: string[]
 }
