@@ -1,3 +1,4 @@
+import { isCompanionId } from '../../characters/companion'
 import type { Grid } from '../../grid'
 import { areHexesInSameDiagonalRow } from '../../types/grid'
 import { Team } from '../../types/team'
@@ -166,18 +167,28 @@ export function searchByRow(context: SkillContext, targetTeam: Team): SkillTarge
  * - FRONTMOST: Ally scans highest→lowest, Enemy scans lowest→highest
  * - REARMOST: Ally scans lowest→highest, Enemy scans highest→lowest
  */
+export interface RowScanOptions {
+  direction?: RowScanDirection
+  excludeCompanions?: boolean
+}
+
 export function rowScan(
   context: SkillContext,
   targetTeam: Team,
-  direction: RowScanDirection = RowScanDirection.FRONTMOST,
+  options: RowScanOptions = {},
 ): SkillTargetInfo | null {
   const { grid, hexId, characterId, team: casterTeam } = context
+  const direction = options.direction ?? RowScanDirection.FRONTMOST
 
   const centerHex = grid.getHexById(hexId)
   if (!centerHex) return null
 
   // Get all ally candidates
-  const candidates = getCandidates(grid, targetTeam, characterId)
+  let candidates = getCandidates(grid, targetTeam, characterId)
+
+  if (options.excludeCompanions) {
+    candidates = candidates.filter((c) => !isCompanionId(grid, c.characterId))
+  }
   if (candidates.length === 0) return null
 
   // Create a set for quick lookup
