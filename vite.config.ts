@@ -13,6 +13,32 @@ const skillIds = readdirSync(skillContentDir, { withFileTypes: true })
   .map((d) => d.name)
   .sort()
 
+/** Extracts description from rendered page content's first 1-2 <p> tags */
+function extractContentDescription(html: string): string | null {
+  const articleMatch = html.match(/<article>([\s\S]*?)<\/article>/)
+  if (!articleMatch) return null
+
+  const paragraphs = [...articleMatch[1].matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]
+  if (paragraphs.length === 0) return null
+
+  const text = paragraphs
+    .slice(0, 2)
+    .map((m) =>
+      m[1]
+        .replace(/<[^>]+>/g, '') // Strip HTML tags
+        .replace(/\[\[(.+?)\]\]/g, '$1') // Strip [[]] skill markers
+        .replace(/\s+/g, ' ')
+        .trim(),
+    )
+    .join(' ')
+
+  if (!text) return null
+
+  return text.length <= 150
+    ? text
+    : (text.slice(0, text.lastIndexOf(' ', 150) || 150) + ' ...')
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [vue(), vueDevTools(), imagetools()],
@@ -53,9 +79,25 @@ export default defineConfig({
       const match = route.match(/^\/(en|zh)\//)
       if (match) {
         const locale = match[1]
-        // Replace html lang attribute
-        return html.replace(/<html[^>]*>/, `<html lang="${locale}">`)
+        html = html.replace(/<html[^>]*>/, `<html lang="${locale}">`)
       }
+
+      // Auto-derive description from content for skill pages
+      if (route.match(/^\/(en|zh)\/skill\//)) {
+        const description = extractContentDescription(html)
+        if (description) {
+          const escaped = description.replace(/"/g, '&quot;')
+          html = html.replace(
+            /<meta name="description" content="[^"]*">/,
+            `<meta name="description" content="${escaped}">`,
+          )
+          html = html.replace(
+            /<meta property="og:description" content="[^"]*">/,
+            `<meta property="og:description" content="${escaped}">`,
+          )
+        }
+      }
+
       return html
     },
     onFinished() {
