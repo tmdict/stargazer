@@ -6,6 +6,7 @@ import { ARENA_5 } from './arena/arena5'
 import { ARENA_5_SP_S3 } from './arena/arena5sps3'
 import { ARENA_5_SP_S4 } from './arena/arena5sps4'
 import { ARENA_5_SP_S5 } from './arena/arena5sps5'
+import { ARENA_5_SP_S6 } from './arena/arena5sps6'
 import { State } from './types/state'
 
 export interface MapConfig {
@@ -23,9 +24,10 @@ export const MAPS: Record<string, MapConfig> = {
   arena3: ARENA_3,
   arena4: ARENA_4,
   arena5: ARENA_5,
-  arena6: ARENA_5_SP_S5,
+  arena6: ARENA_5_SP_S6,
   arena7: ARENA_5_SP_S3,
   arena8: ARENA_5_SP_S4,
+  arena9: ARENA_5_SP_S5,
 }
 
 export const getMapNames = (): Array<{ key: string; name: string }> => {
