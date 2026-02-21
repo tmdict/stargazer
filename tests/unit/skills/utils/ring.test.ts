@@ -264,5 +264,108 @@ describe('ring targeting', () => {
       expect(result?.targetHexId).toBe(5)
       expect(result?.metadata?.distance).toBe(2)
     })
+
+    it('maxDistance limits scan to specified ring', () => {
+      // Place ally at distance 1 and distance 2
+      const tile6 = grid.getTileById(6)
+      tile6.characterId = 101
+      tile6.team = Team.ALLY
+
+      const tile5 = grid.getTileById(5)
+      tile5.characterId = 102
+      tile5.team = Team.ALLY
+
+      const context: SkillContext = {
+        grid,
+        hexId: 7,
+        team: Team.ALLY,
+        characterId: 300,
+        skillManager: {} as SkillManager,
+      }
+
+      // With maxDistance 1, should only find hex 6 (distance 1), not hex 5 (distance 2)
+      const result = rowScan(context, Team.ALLY, {
+        direction: RowScanDirection.REARMOST,
+        maxDistance: 1,
+      })
+
+      expect(result).not.toBeNull()
+      expect(result?.targetHexId).toBe(6)
+      expect(result?.metadata?.distance).toBe(1)
+    })
+
+    it('maxDistance returns null when no candidates within range', () => {
+      // Place ally only at distance 2
+      const tile5 = grid.getTileById(5)
+      tile5.characterId = 101
+      tile5.team = Team.ALLY
+
+      const context: SkillContext = {
+        grid,
+        hexId: 7,
+        team: Team.ALLY,
+        characterId: 300,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = rowScan(context, Team.ALLY, {
+        direction: RowScanDirection.REARMOST,
+        maxDistance: 1,
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('excludeCompanions filters out companion characters', () => {
+      // Place a regular ally and a companion (ID >= 10000)
+      const tile6 = grid.getTileById(6)
+      tile6.characterId = 10050 // Companion ID
+      tile6.team = Team.ALLY
+
+      const tile8 = grid.getTileById(8)
+      tile8.characterId = 101 // Regular character
+      tile8.team = Team.ALLY
+
+      const context: SkillContext = {
+        grid,
+        hexId: 7,
+        team: Team.ALLY,
+        characterId: 300,
+        skillManager: {} as SkillManager,
+      }
+
+      // Without excludeCompanions, REARMOST picks lowest hex ID (6 = companion)
+      const withCompanions = rowScan(context, Team.ALLY, {
+        direction: RowScanDirection.REARMOST,
+      })
+      expect(withCompanions?.targetHexId).toBe(6)
+
+      // With excludeCompanions, companion is skipped, picks hex 8
+      const withoutCompanions = rowScan(context, Team.ALLY, {
+        direction: RowScanDirection.REARMOST,
+        excludeCompanions: true,
+      })
+      expect(withoutCompanions?.targetHexId).toBe(8)
+    })
+
+    it('excludeCompanions returns null when only companions exist', () => {
+      const tile6 = grid.getTileById(6)
+      tile6.characterId = 10050
+      tile6.team = Team.ALLY
+
+      const context: SkillContext = {
+        grid,
+        hexId: 7,
+        team: Team.ALLY,
+        characterId: 300,
+        skillManager: {} as SkillManager,
+      }
+
+      const result = rowScan(context, Team.ALLY, {
+        direction: RowScanDirection.REARMOST,
+        excludeCompanions: true,
+      })
+      expect(result).toBeNull()
+    })
   })
 })
