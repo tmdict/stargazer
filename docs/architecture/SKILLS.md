@@ -217,25 +217,9 @@ Skills placed in `/src/lib/skills/characters/` are automatically imported via Vi
 
 To add documentation pages for a skill:
 
-1. **Create content files** in `/src/content/skills/`:
+1. **Create a skill directory** at `/src/content/skill/{skill-name}/` with:
    - `SkillName.en.vue` - English documentation content
    - `SkillName.zh.vue` - Chinese documentation content
    - `SkillName.data.ts` - (Optional) Grid visualization data and images for displaying grid snippets on the skill page
 
-2. **Update DOCUMENTED_SKILLS** in `/src/lib/types/skills.ts`:
-   - Add the skill name to the `DOCUMENTED_SKILLS` array:
-   ```typescript
-   // List of skills with documentation pages
-   // Update this when adding new skill documentation
-   export const DOCUMENTED_SKILLS = [
-     // ... existing skills ...
-     'newskill', // Add your new skill here
-   ]
-   ```
-
-This single update ensures:
-
-- The skill appears in SkillsSelection.vue automatically
-- Skill.vue properly normalizes the skill name for routing
-- vite.config.ts includes it for static site generation
-- All skill documentation references use this single source of truth
+That's it — `DOCUMENTED_SKILLS` in `/src/lib/types/skills.ts` is automatically derived from the `/src/content/skill/` directory structure at build time via `import.meta.glob`. No manual list updates needed.
