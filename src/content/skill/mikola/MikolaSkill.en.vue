@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Mikola · Skills',
-  description:
-    'Mikola generates an Honor Arena spanning the battlefield when a battle starts, lasting until the battle ends. The side with more units within the arena will gain control of it after maintaining the advantage for 3s.',
-  url: 'skill/mikola',
-  locale: 'en',
-  keywords: ['Mikola', '曼卡拉', '猴女'],
-})
+setupSkillContentMeta('mikola', 'en')
 </script>
 
 <template>

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '达米安 (小羊) · 技能',
-  description:
-    '被动地，达米安在战斗中不会被攻击，战斗开始时会在布阵位置打造一辆玩具车，继承自身85%的生命值和100%的其他属性，随后自身退至场外，并会在场上其他友军全部被击败后撤离战场。',
-  url: 'skill/damian',
-  locale: 'zh',
-  keywords: ['Damian', '达米安', '小羊'],
-})
+setupSkillContentMeta('damian', 'zh')
 </script>
 
 <template>

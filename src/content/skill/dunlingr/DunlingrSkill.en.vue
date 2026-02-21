@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Dunlingr · Skills',
-  description:
-    "Dunlingr designates the Bell of Order as either Spellbind or Curelock before a battle starts, setting the stage for the battle's order.",
-  url: 'skill/dunlingr',
-  locale: 'en',
-  keywords: ['Dunlingr', '顿里尔', '钟神'],
-})
+setupSkillContentMeta('dunlingr', 'en')
 </script>
 
 <template>

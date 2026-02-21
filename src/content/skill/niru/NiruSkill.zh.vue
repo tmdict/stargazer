@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '尼汝 · 技能',
-  description:
-    '尼汝对1名友军释放咒语。这名友军受到最后一击后，不会被击败，生命值恢复至最大生命值的45%，并进入“灵魂形态”。“灵魂形态”下的角色可以继续照常战斗，但只能造成45%的伤害，每秒失去生命值，并且失去生命值的速度逐渐提升，直至耗尽后将被彻底击败。本技能优先选择最虚弱的友军作为目标。',
-  url: 'skill/niru',
-  locale: 'zh',
-  keywords: ['Niru', '尼汝'],
-})
+setupSkillContentMeta('niru', 'zh')
 </script>
 
 <template>

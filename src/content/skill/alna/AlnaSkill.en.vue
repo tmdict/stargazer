@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Alna · Skills',
-  description:
-    "During battle preparation, Alna selects an ally placed in the same row as herself to become the Winter Warrior. That ally is immune to Winter Anthem's Haste reduction effect, and their max HP is permanently increased by 15%.",
-  url: 'skill/alna',
-  locale: 'en',
-  keywords: ['Alna', '阿尔娜', '冬喉'],
-})
+setupSkillContentMeta('alna', 'en')
 </script>
 
 <template>

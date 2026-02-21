@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Hugin · Skills',
-  description:
-    "Hugin forges a Gear of Might for the ally dealing the highest cumulative damage, boosting their combat strength. The gear increases the ally's ATK by 6% of Hugin's base ATK and increases their Haste by 80 for 10s.",
-  url: 'skill/hugin',
-  locale: 'en',
-  keywords: ['Hugin', '呼金'],
-})
+setupSkillContentMeta('hugin', 'en')
 </script>
 
 <template>

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '埃隆 (绿剑) · 技能',
-  description:
-    '埃隆将双剑力量合二为一，选择一个地图格，吸引附近2格范围内敌人将其向中心聚拢，短暂延迟后产生爆炸，对2格范围内的敌人造成250%伤害，并定身3秒。',
-  url: 'skill/eironn',
-  locale: 'zh',
-  keywords: ['Eironn', '埃隆', '绿剑'],
-})
+setupSkillContentMeta('eironn', 'zh')
 </script>
 
 <template>

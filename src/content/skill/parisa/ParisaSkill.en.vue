@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Parisa · Skills',
-  description:
-    'Parisa increases ATK SPD by 22 and normal attack damage by 22% for 10s for herself and 1 nearest ally.',
-  url: 'skill/parisa',
-  locale: 'en',
-  keywords: ['Parisa', '帕瑞莎', '花女'],
-})
+setupSkillContentMeta('parisa', 'en')
 </script>
 
 <template>

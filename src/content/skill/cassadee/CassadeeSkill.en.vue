@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Tilaya · Skills',
-  url: 'skill/kordan',
-  locale: 'en',
-  keywords: ['Tilaya', '缇洛亚'],
-})
+setupSkillContentMeta('cassadee', 'en')
 </script>
 
 <template>

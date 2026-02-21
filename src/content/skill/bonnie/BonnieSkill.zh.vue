@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './BonnieSkill.data'
 
-setupContentMeta({
-  title: '波妮 · 技能',
-  description:
-    '战斗开始时，波妮对最靠后的敌人施加“衰老”魔法，对其造成150%伤害并使其降低30点急速，持续到战斗结束，波妮会优先攻击这名敌人。',
-  url: 'skill/bonnie',
-  locale: 'zh',
-  keywords: ['Bonnie', '波妮'],
-})
+setupSkillContentMeta('bonnie', 'zh')
 </script>
 
 <template>

@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './GalahadSkill.data'
 
-setupContentMeta({
-  title: 'Galahad · Skills',
-  description:
-    'Galahad casts a protection spell on the weakest ally, granting them a 480% shield that lasts for 8s. When the shield expires, it deals 240% damage to adjacent enemies.',
-  url: 'skill/galahad',
-  locale: 'en',
-  keywords: ['Galahad', '加拉哈德', '加拉'],
-})
+setupSkillContentMeta('galahad', 'en')
 </script>
 
 <template>

@@ -1,13 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Pang · Skills',
-  url: 'skill/pang',
-  locale: 'en',
-  keywords: ['Pang', '缇洛亚'],
-})
+setupSkillContentMeta('daimon', 'en')
 </script>
 
 <template>

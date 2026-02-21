@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './TaleneSkill.data'
 
-setupContentMeta({
-  title: '塔琳 (凤凰) · 技能',
-  description:
-    '战斗开始时，为除自己外布阵最靠前的友方英雄赋予“不灭凤焰”，持续至战斗结束。“不灭凤焰”的携带者每秒会对相邻的敌人造成自身攻击力50%的伤害，并为自身恢复伤害量25%的生命。每当受“不灭凤焰”的携带者累计获得相当于自身攻击力500%的治疗时，便会在身旁产生一枚火种并将其吸收，并永久强化“不灭凤焰”，使该技能造成的伤害提高50%，最多叠加3次。',
-  url: 'skill/talene',
-  locale: 'zh',
-  keywords: ['Talene', '塔琳', '凤凰'],
-})
+setupSkillContentMeta('talene', 'zh')
 </script>
 
 <template>

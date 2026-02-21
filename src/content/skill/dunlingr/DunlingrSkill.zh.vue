@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '顿里尔 (钟神) · 技能',
-  description: '战斗开始前，顿里尔可以指定本场战斗中秩序钟的形态为“禁咒”或“抑生”之一。',
-  url: 'skill/dunlingr',
-  locale: 'zh',
-  keywords: ['Dunlingr', '顿里尔', '钟神'],
-})
+setupSkillContentMeta('dunlingr', 'zh')
 </script>
 
 <template>

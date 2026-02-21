@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '伊莱亚和莱拉 (双子) · 技能',
-  description:
-    '布阵时，伊莱亚和莱拉之间会形成一道“星界牵绊”。若伊莱亚和莱拉刚好在同一条直线路径上，则还会与布阵在二人中间的所有友方英雄建立“星界牵绊”。',
-  url: 'skill/elijah-lailah',
-  locale: 'zh',
-  keywords: ['Elijah & Lailah', '伊莱亚和莱拉', '双子'],
-})
+setupSkillContentMeta('elijah-lailah', 'zh')
 </script>
 
 <template>

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '斯克嘉丽德 (神斧) · 技能',
-  description:
-    '处于空中时，斯克嘉莉德每次对最虚弱的非召唤物友军发动1次护佑，使目标获得持续3秒的护盾，护盾值为斯克嘉莉德15%。',
-  url: 'skill/scarlita',
-  locale: 'zh',
-  keywords: ['Scarlita', '斯克嘉丽德', '神斧'],
-})
+setupSkillContentMeta('scarlita', 'zh')
 </script>
 
 <template>

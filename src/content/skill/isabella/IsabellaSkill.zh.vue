@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './IsabellaSkill.data'
 
-setupContentMeta({
-  title: '伊莎贝拉 · 技能',
-  description:
-    '战斗开始时选择最靠前的一名友方英雄作为“友人”，“友人”被击败后会重新选择。当“友人”每受到一次攻击力、攻击速度、急速、护甲、魔抗或受愈属性提升效果时，伊莎贝拉将在书中永久记录一层该属性对应的“克文”，每种属性的克文最多记录3层，“克文”带来的属性提升不会被重复记录。',
-  url: 'skill/isabella',
-  locale: 'zh',
-  keywords: ['Isabella', '伊莎贝拉'],
-})
+setupSkillContentMeta('isabella', 'zh')
 </script>
 
 <template>

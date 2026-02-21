@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './RavionSkill.data'
 
-setupContentMeta({
-  title: 'Ravion · Skills',
-  description:
-    "When a battle starts, Ravion assigns an Objective to each of the 2 rearmost allies. Allies complete their objective by either dealing damage equal to 2000% of Ravion's initial ATK or assisting or defeating an enemy. Upon completion, the ally recovers 150 Energy and increases their ATK by 12% of Ravion's initial ATK for 30s.",
-  url: 'skill/ravion',
-  locale: 'en',
-  keywords: ['Ravion', '沙利叶'],
-})
+setupSkillContentMeta('ravion', 'en')
 </script>
 
 <template>

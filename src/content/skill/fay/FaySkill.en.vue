@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Fay · Skills',
-  description:
-    'Fay selects a direction and casts vitality magic to frontal allies within a 3-tile arc, restoring 300% HP and increasing their ATK by 12% for 8s.',
-  url: 'skill/fay',
-  locale: 'en',
-  keywords: ['Fay', '菲'],
-})
+setupSkillContentMeta('fay', 'en')
 </script>
 
 <template>

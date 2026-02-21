@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Bryon · Skills',
-  description:
-    'When a battle starts, Bryon gains 1000 Initial Energy and summons his falcon Elona.',
-  url: 'skill/bryon',
-  locale: 'en',
-  keywords: ['Bryon', '布莱恩', '鸟人'],
-})
+setupSkillContentMeta('bryon', 'en')
 </script>
 
 <template>

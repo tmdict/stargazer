@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '维拉 · 技能',
-  description:
-    '战斗开始时，对最远的敌人发出“预告”，自身会优先攻击“预告”的敌人，并且每次攻击时会吸收90点能量。',
-  url: 'skill/vala',
-  locale: 'zh',
-  keywords: ['Vala', '维拉'],
-})
+setupSkillContentMeta('vala', 'zh')
 </script>
 
 <template>

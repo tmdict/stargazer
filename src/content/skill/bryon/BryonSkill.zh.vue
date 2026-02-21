@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '布莱恩 (鸟人) · 技能',
-  description:
-    '被动地，布莱恩拥有1000点初始能量，战斗开始时会使得猎集艾洛娜飞至空中伺机待发。使用终极技能时，立即消耗300点能量，呼唤艾洛娜对布莱恩当前自标进行俯冲打击，造成320%伤害，随后使得艾洛娜在场上协同作战，每秒消耗能量，且消耗量会随时间逐渐提升，当能量耗尽或布莱恩被击败时，艾洛娜将会离开战场。',
-  url: 'skill/bryon',
-  locale: 'zh',
-  keywords: ['Bryon', '布莱恩', '鸟人'],
-})
+setupSkillContentMeta('bryon', 'zh')
 </script>
 
 <template>

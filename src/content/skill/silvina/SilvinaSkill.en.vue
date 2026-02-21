@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './SilvinaSkill.data'
 
-setupContentMeta({
-  title: 'Silvina · Skills',
-  description:
-    'Silvina marks the closest enemy in a symmetrical position, flashes next to them, and launches an attack when a battle starts, dealing 300% damage.',
-  url: 'skill/silvina',
-  locale: 'en',
-  keywords: ['Silvina', '西尔维娜', '苍白'],
-})
+setupSkillContentMeta('silvina', 'en')
 </script>
 
 <template>

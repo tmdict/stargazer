@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Smokey & Meerky · Skills',
-  description:
-    'Smokey & Meerky create an aroma within 2 tiles and keep it going through channeling when a battle starts.',
-  url: 'skill/smokey-meerky',
-  locale: 'en',
-  keywords: ['Smokey & Meerky', '阿熏和蒙蒙', '奶爸'],
-})
+setupSkillContentMeta('smokey-meerky', 'en')
 </script>
 
 <template>

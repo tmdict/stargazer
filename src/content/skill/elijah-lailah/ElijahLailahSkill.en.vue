@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Elijah & Lailah · Skills',
-  description:
-    'Elijah forms a Stellar Bond with Lailah when they align on the battlefield. Allied heroes placed in a straight path between the twins are also linked by Stellar Bond.',
-  url: 'skill/elijah-lailah',
-  locale: 'en',
-  keywords: ['Elijah & Lailah', '伊莱亚和莱拉', '双子'],
-})
+setupSkillContentMeta('elijah-lailah', 'en')
 </script>
 
 <template>

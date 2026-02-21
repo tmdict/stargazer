@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Vala · Skills',
-  description:
-    'Vala sends a notice to mark the farthest enemy when a battle starts. She prioritizes attacking the noticed enemy, absorbing 90 Energy for each hit.',
-  url: 'skill/vala',
-  locale: 'en',
-  keywords: ['Vala', '维拉'],
-})
+setupSkillContentMeta('vala', 'en')
 </script>
 
 <template>

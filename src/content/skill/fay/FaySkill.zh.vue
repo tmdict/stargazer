@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '菲 · 技能',
-  description:
-    '选择一个方向，为面前3格扇形范围内的友军恢复300%的生命值，并在该区域内施加元气魔法，使其中的友军提升12%攻击力，持续8秒。',
-  url: 'skill/fay',
-  locale: 'zh',
-  keywords: ['Fay', '菲'],
-})
+setupSkillContentMeta('fay', 'zh')
 </script>
 
 <template>

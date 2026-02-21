@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Lily May · Skills',
-  description:
-    "Lily May enters a Defensive State at the start of a battle. When a non-summoned enemy casts their Ultimate, Lily May becomes unaffected. She then leaps above the enemy and shoots a Quellbolt, dealing 200% damage and interrupting the enemy's Ultimate, while causing the enemy to lose 700 Energy. Afterward, she exits the Defensive and unaffected States.",
-  url: 'skill/lily-may',
-  locale: 'en',
-  keywords: ['Lily May', '五月'],
-})
+setupSkillContentMeta('lily-may', 'en')
 </script>
 
 <template>

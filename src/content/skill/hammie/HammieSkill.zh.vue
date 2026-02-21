@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: '漫漫 · 技能',
-  description: '为最虚弱的友军回复160%生命值，并为该友军提升10%攻击力，持续5秒。',
-  url: 'skill/hammie',
-  locale: 'zh',
-  keywords: ['Hammie', '漫漫'],
-})
+setupSkillContentMeta('hammie', 'zh')
 </script>
 
 <template>

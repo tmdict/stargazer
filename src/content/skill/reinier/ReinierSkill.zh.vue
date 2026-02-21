@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './ReinierSkill.data'
 
-setupContentMeta({
-  title: '雷内亚 (四手) · 技能',
-  description:
-    '战斗开始时，若自身1格范围内存在一名友军与敌军的位置处于对称关系，雷内亚将会释放本技能使双方互换位置，优先以自身身后的友军作为目标。该敌军每次受到伤害时，该友军恢复等同于伤害量45%的生命值，持续到战斗结束。',
-  url: 'skill/reinier',
-  locale: 'zh',
-  keywords: ['Reinier', '雷内亚', '四手'],
-})
+setupSkillContentMeta('reinier', 'zh')
 </script>
 
 <template>

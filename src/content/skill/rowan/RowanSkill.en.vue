@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Rowan · Skills',
-  description:
-    'Rowan moves up to  1 tile and throws coins upon reaching the destination, recovering 250 Energy for surrounding allies within 2 tiles.',
-  url: 'skill/rowan',
-  locale: 'en',
-  keywords: ['Rowan', '都铎'],
-})
+setupSkillContentMeta('rowan', 'en')
 </script>
 
 <template>

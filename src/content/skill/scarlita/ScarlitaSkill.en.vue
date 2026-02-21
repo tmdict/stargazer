@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Scarlita · Skills',
-  description:
-    "Scarlita sends the weakest non-summoned ally a blessing while in the air, granting them a shield equal to 15% of Scarlita's max HP for 3s.",
-  url: 'skill/scarlita',
-  locale: 'en',
-  keywords: ['Scarlita', '斯克嘉丽德', '神斧'],
-})
+setupSkillContentMeta('scarlita', 'en')
 </script>
 
 <template>

@@ -1,15 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Damian · Skills',
-  description:
-    'Damian cannot be attacked during the battle. He builds a toy chariot that inherits 85% of his HP and 100% of his other stats to take his place when a battle starts. He then stays out of the battlefield and will run away after all allies are defeated.',
-  url: 'skill/damian',
-  locale: 'en',
-  keywords: ['Damian', '达米安', '小羊'],
-})
+setupSkillContentMeta('damian', 'en')
 </script>
 
 <template>

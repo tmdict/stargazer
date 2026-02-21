@@ -1,17 +1,10 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { gridStyles, images } from './ReinierSkill.data'
 
-setupContentMeta({
-  title: 'Reinier · Skills',
-  description:
-    "When a battle starts, Reinier switches an adjacent ally's position with an enemy if they're in symmetrical positions. Whenever the enemy takes damage, the ally restores HP equal to 45% of the enemy's taken damage till a battle ends.",
-  url: 'skill/reinier',
-  locale: 'en',
-  keywords: ['Reinier', '雷内亚', '四手'],
-})
+setupSkillContentMeta('reinier', 'en')
 </script>
 
 <template>

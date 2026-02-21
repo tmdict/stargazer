@@ -1,14 +1,8 @@
 <script setup lang="ts">
 import StyledText from '@/components/StyledText.vue'
-import { setupContentMeta } from '@/utils/contentMeta'
+import { setupSkillContentMeta } from '@/utils/contentMeta'
 
-setupContentMeta({
-  title: 'Hewynn · Skills',
-  description: 'Hewynn also grants the healed ally 30 Haste for 6s when Revitalize is in effect.',
-  url: 'skill/hewynn',
-  locale: 'en',
-  keywords: ['Hewynn', '伊温', '荷叶'],
-})
+setupSkillContentMeta('hewynn', 'en')
 </script>
 
 <template>

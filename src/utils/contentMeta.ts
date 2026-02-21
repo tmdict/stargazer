@@ -1,5 +1,7 @@
 import { useHead } from '@unhead/vue'
 
+import { loadCharacterLocales } from '@/utils/dataLoader'
+
 interface ContentMetaOptions {
   title: string
   description?: string
@@ -45,5 +47,23 @@ export function setupContentMeta(options: ContentMetaOptions): void {
       { property: 'og:url', content: `https://stargazer.tmdict.com/${locale}/${url}` },
     ],
     link: [{ rel: 'canonical', href: `https://stargazer.tmdict.com/${locale}/${url}` }],
+  })
+}
+
+/** Sets up meta tags for skill content pages, deriving title/url/keywords from hero locale data */
+export function setupSkillContentMeta(
+  name: string,
+  locale: 'en' | 'zh',
+  description?: string,
+): void {
+  const nameLocale = loadCharacterLocales()[name]!
+  const title = locale === 'en' ? `${nameLocale.en} Skills` : `${nameLocale.zh} 技能`
+
+  setupContentMeta({
+    title,
+    description,
+    url: `skill/${name}`,
+    locale,
+    keywords: [nameLocale.en, nameLocale.zh],
   })
 }
