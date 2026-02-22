@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
-import { gridStyles, images } from './SilvinaSkill.data'
+import { gridStyles, images } from './Silvina.data'
 
 setupSkillContentMeta('silvina', 'zh')
 </script>

@@ -17,7 +17,7 @@ defineEmits<{
 const i18n = useI18nStore()
 
 const { ContentComponent } = useContentComponent({
-  type: 'about',
+  type: 'page',
   name: 'About',
   locale: computed(() => i18n.currentLocale),
 })

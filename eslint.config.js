@@ -24,5 +24,13 @@ export default defineConfigWithVueTs(
     ...pluginVitest.configs.recommended,
     files: ['test/**/*.test.ts'],
   },
+  {
+    // Content files are dynamically-loaded modules (via import.meta.glob),
+    // not reusable components referenced by name in templates
+    files: ['src/content/**/*.vue'],
+    rules: {
+      'vue/multi-word-component-names': 'off',
+    },
+  },
   skipFormatting,
 )
