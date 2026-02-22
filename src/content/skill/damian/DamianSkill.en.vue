@@ -10,7 +10,7 @@ setupSkillContentMeta('damian', 'en')
     <article>
       <h1>Damian</h1>
 
-      <h2>Non-Permanent Buff</h2>
+      <h2>Non-Permanent Buff · Summon</h2>
 
       <h3>Ultimate</h3>
       <p>

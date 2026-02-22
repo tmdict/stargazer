@@ -26,6 +26,13 @@ setupSkillContentMeta('daimon', 'zh')
       <p>当戴蒙处于敌方阵营时，则优先选择较低ID格子上的队友（180°旋转）。</p>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <h2>召唤</h2>
+
+      <h3>终极技能</h3>
+      <p>
+        被动地，战斗中守护灵会帮助戴蒙作战，守护灵无法被攻击，会自动攻击距离戴蒙最近的敌人，对目标造成[[90%]]伤害，戴蒙被击败后守护灵也会被击败。
+      </p>
     </article>
   </StyledText>
 </template>
