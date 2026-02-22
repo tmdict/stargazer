@@ -6,7 +6,7 @@ import { useRouteLocale } from '@/composables/useRouteLocale'
 const locale = useRouteLocale()
 
 const { ContentComponent } = useContentComponent({
-  type: 'about',
+  type: 'page',
   name: 'About',
   locale,
 })

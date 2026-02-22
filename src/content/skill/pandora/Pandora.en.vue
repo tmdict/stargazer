@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
-import { gridStyles, images } from './PandoraSkill.data'
+import { gridStyles, images } from './Pandora.data'
 
 setupSkillContentMeta('pandora', 'en')
 </script>

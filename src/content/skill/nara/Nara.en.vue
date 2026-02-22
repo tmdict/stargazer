@@ -2,32 +2,34 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
-import { gridStyles, images } from './SilvinaSkill.data'
+import { gridStyles, images } from './Nara.data'
 
-setupSkillContentMeta('silvina', 'en')
+setupSkillContentMeta('nara', 'en')
 </script>
 
 <template>
   <StyledText>
     <article>
-      <h1>Silvina</h1>
+      <h1>Nara</h1>
 
       <h2>Targeting Mechanics</h2>
 
       <h3>Skill</h3>
       <p>
-        Silvina marks the closest enemy in a [[symmetrical]] position, flashes next to them, and
-        launches an attack when a battle starts, dealing [[300%]] damage.
+        Nara pulls a distant enemy hero toward her when there are no enemy heroes within her normal
+        attack range. The target loses [[3.5%]] HP for every tile they are pulled, up to [[250%]] of
+        Nara's ATK. This skill won't defeat the enemy and prioritizes attacking the closest enemy in
+        a [[symmetrical]] position.
       </p>
 
       <strong>How It Works</strong>
       <p>
-        Silvina first checks her symmetrical tile (the mirror position across the grid's center). If
-        an enemy is there, they become the target.
+        Nara first checks her symmetrical tile (the mirror position across the grid's center). If an
+        enemy is there, they become the target.
       </p>
       <p>
-        If the symmetrical tile is empty, Silvina searches for the nearest enemy in a clockwise
-        spiral expanding from that tile's position:
+        If the symmetrical tile is empty, Nara searches for the nearest enemy in a clockwise spiral
+        expanding from that tile's position:
       </p>
       <ul>
         <li><strong>Ring 1:</strong> 6 tiles immediately adjacent</li>
@@ -41,7 +43,6 @@ setupSkillContentMeta('silvina', 'en')
         Ally (targeting enemy) walks clockwise from top-right, while Enemy (targeting ally) walks
         counter-clockwise from bottom-left (180° rotation).
       </p>
-      <p>(Credit: rkkñ for documenting Silvina's targeting mechanics)</p>
     </article>
   </StyledText>
 </template>
