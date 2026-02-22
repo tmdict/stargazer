@@ -36,9 +36,9 @@ setupSkillContentMeta('elijah-lailah', 'en')
 
       <h3>Ultimate</h3>
       <p>
-        Active. Elijah and Lailah perform an inspiring duo dance, increasing all allies' Haste by
-        [[60]] for [[7]]s. During the dance, allies linked through Stellar Bond become
-        [[unaffected]]. The skill can be cast as long as Elijah is able to use Ultimate.
+        <strong>Active.</strong> Elijah and Lailah perform an inspiring duo dance, increasing all
+        allies' Haste by [[60]] for [[7]]s. During the dance, allies linked through Stellar Bond
+        become [[unaffected]]. The skill can be cast as long as Elijah is able to use Ultimate.
       </p>
     </article>
   </StyledText>

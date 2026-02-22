@@ -14,10 +14,10 @@ setupSkillContentMeta('tilaya', 'en')
 
       <h3>Ultimate</h3>
       <p>
-        Passive. When a battle starts, Tilaya loses [[70%]] HP and gains Vine Ward, a shield that
-        blocks up to [[120%]] damage. Vine Ward automatically recovers [[10%]] shield value every
-        second and makes Tilaya [[unaffected]] while active. When Vine Ward breaks, it enters a
-        [[3]]-second cooldown, after which its shield value is restored to [[45%]].
+        <strong>Passive.</strong> When a battle starts, Tilaya loses [[70%]] HP and gains Vine Ward,
+        a shield that blocks up to [[120%]] damage. Vine Ward automatically recovers [[10%]] shield
+        value every second and makes Tilaya [[unaffected]] while active. When Vine Ward breaks, it
+        enters a [[3]]-second cooldown, after which its shield value is restored to [[45%]].
       </p>
 
       <h3>EX Skill</h3>

@@ -8,5 +8,5 @@
   "energy": 0,
   "range": 5,
   "season": 4,
-  "tags": ["energy-recharge", "special-target", "temp-buff"]
+  "tags": ["energy-recharge", "special-target", "summon", "temp-buff"]
 }

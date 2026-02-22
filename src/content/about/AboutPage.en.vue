@@ -60,7 +60,7 @@ setupContentMeta({
         builder, and database.
       </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ database and guides.</li>
-      <li>Special thanks to Milan for information on hero skills and temp buff mechanics.</li>
+      <li>Special thanks to Milan for information on hero skills and various mechanics.</li>
       <li>
         Image assets courtesy of <a href="https://www.yaphalla.com/">Yaphalla</a> and
         <a href="https://drive.google.com/drive/folders/1rDfDEFJWSASMfCDAuBosoyocN7UZZPoe"
