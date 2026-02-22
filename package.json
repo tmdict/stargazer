@@ -22,7 +22,8 @@
     "@unhead/vue": "^2.1.4",
     "html-to-image": "^1.11.13",
     "pinia": "^3.0.3",
-    "vue": "^3.5.28"
+    "vue": "^3.5.28",
+    "vue-router": "^5.0.3"
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
@@ -45,7 +46,6 @@
     "vite-ssg": "^28.3.0",
     "vite-ssg-sitemap": "^0.10.0",
     "vitest": "^4.0.3",
-    "vue-router": "^5.0.3",
     "vue-tsc": "^3.2.5"
   }
 }
