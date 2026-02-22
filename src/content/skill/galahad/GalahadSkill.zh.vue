@@ -49,6 +49,7 @@ setupSkillContentMeta('galahad', 'zh')
       <p>
         加拉哈德只会选择本体角色为目标，跳过召唤物和分身，例如蝎子的分身或双子的副体（粉色双子）。
       </p>
+      <p>加拉哈德的残影以及被标记的友方英雄的残影均视为召唤物。</p>
     </article>
   </StyledText>
 </template>
