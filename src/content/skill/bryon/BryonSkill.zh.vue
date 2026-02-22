@@ -10,7 +10,7 @@ setupSkillContentMeta('bryon', 'zh')
     <article>
       <h1>布莱恩 (鸟人)</h1>
 
-      <h2>开局开大招</h2>
+      <h2>开局开大招 · 召唤</h2>
 
       <h3>终极技能</h3>
       <p>

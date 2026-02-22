@@ -8,5 +8,5 @@
   "energy": 200,
   "range": 20,
   "season": 0,
-  "tags": ["initial-energy", "temp-buff"]
+  "tags": ["initial-energy", "summon", "temp-buff"]
 }

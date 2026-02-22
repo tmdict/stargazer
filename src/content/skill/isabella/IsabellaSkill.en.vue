@@ -12,7 +12,7 @@ setupSkillContentMeta('isabella', 'en')
     <article>
       <h1>Isabella</h1>
 
-      <h2>Non-Permanent Buff</h2>
+      <h2>Non-Permanent Buff · Targeting Mechanics</h2>
 
       <h3>Ultimate</h3>
       <p>
@@ -32,8 +32,6 @@ setupSkillContentMeta('isabella', 'en')
         <li>ATK, Phys DEF, and Magic DEF: +[[15%]] per stack.</li>
         <li>ATK SPD, Haste, and Vitality: +[[15]] per stack.</li>
       </ul>
-
-      <h2>Targeting Mechanics</h2>
 
       <strong>How It Works</strong>
       <p>

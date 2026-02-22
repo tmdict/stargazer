@@ -10,7 +10,7 @@ setupSkillContentMeta('bryon', 'en')
     <article>
       <h1>Bryon</h1>
 
-      <h2>Instant Ultimate</h2>
+      <h2>Instant Ultimate · Summon</h2>
 
       <h3>Ultimate</h3>
       <p>

@@ -16,9 +16,10 @@ setupSkillContentMeta('aliceth', 'en')
 
       <h3>Skill</h3>
       <p>
-        Passive. Aliceth grants an ally Brightfeather, prioritizing the nearest ally in her row.
-        After that ally deals ranged damage [[3]] times, they unleash a feather for an additional
-        strike, dealing [[120%]] damage. This extra strike can trigger once every [[0.5]]s.
+        <strong>Passive.</strong> Aliceth grants an ally Brightfeather, prioritizing the nearest
+        ally in her row. After that ally deals ranged damage [[3]] times, they unleash a feather for
+        an additional strike, dealing [[120%]] damage. This extra strike can trigger once every
+        [[0.5]]s.
       </p>
       <p>
         If the ally granted Brightfeather is a ranged unit, their normal attack range is increased

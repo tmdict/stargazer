@@ -12,7 +12,7 @@ setupSkillContentMeta('ravion', 'en')
     <article>
       <h1>Ravion</h1>
 
-      <h2>Non-Permanent Buff (Instant)</h2>
+      <h2>Non-Permanent Buff (Instant) · Targeting Mechanics</h2>
 
       <h3>Skill</h3>
       <p>
@@ -21,14 +21,6 @@ setupSkillContentMeta('ravion', 'en')
         initial ATK or [[assisting or defeating]] an enemy. Upon completion, the ally recovers
         [[150]] Energy and increases their ATK by [[12%]] of Ravion's initial ATK for [[30]]s.
       </p>
-
-      <h3>Enhance Force</h3>
-      <p>
-        When an ally accepts the Objective from Ravion, they increase their ATK by [[15%]] and
-        become [[unaffected]]. These effects last for [[5]]s.
-      </p>
-
-      <h2>Targeting Mechanics</h2>
 
       <strong>How It Works</strong>
       <p>
@@ -52,6 +44,12 @@ setupSkillContentMeta('ravion', 'en')
       </ul>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <h3>Enhance Force</h3>
+      <p>
+        When an ally accepts the Objective from Ravion, they increase their ATK by [[15%]] and
+        become [[unaffected]]. These effects last for [[5]]s.
+      </p>
     </article>
   </StyledText>
 </template>

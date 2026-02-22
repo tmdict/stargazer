@@ -10,7 +10,7 @@ setupSkillContentMeta('damian', 'zh')
     <article>
       <h1>达米安 (小羊)</h1>
 
-      <h2>非永久增益</h2>
+      <h2>非永久增益 · 召唤</h2>
 
       <h3>终极技能</h3>
       <p>

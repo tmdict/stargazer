@@ -21,7 +21,26 @@ setupSkillContentMeta('galahad', 'en')
         enemies.
       </p>
 
-      <h2>Targeting Mechanics</h2>
+      <h2>Summon · Targeting Mechanics</h2>
+
+      <h3>Ultimate</h3>
+      <p>
+        When Galahad casts her Ultimate, she consumes [[400]] Energy to deal [[340%]] damage to all
+        enemies. She then begins forming a 2-tile-radius magic circle centered on her position. The
+        circle remains active as long as Galahad stays at its center.
+      </p>
+      <p>
+        While the magic circle is forming, Galahad consumes [[60]] Energy every second to increase
+        the circle's forming progress by 10%. When the forming progress reaches 100%, she stops
+        consuming Energy and gains [[30]] Haste.
+      </p>
+      <p>
+        Enemies inside the magic circle lose [[10]] Haste and [[16%]] movement speed for every 10%
+        of the circle's forming progress, up to a max reduction of [[50]] Haste and [[80%]] movement
+        speed. While Galahad stays at the center of her circle, whenever she casts a skill, a shadow
+        of herself appears shortly after and casts the same skill. The shadow inherits [[60%]] of
+        Galahad's stats.
+      </p>
 
       <h3>EX Skill</h3>
       <p>

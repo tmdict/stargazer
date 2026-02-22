@@ -31,6 +31,15 @@ setupSkillContentMeta('daimon', 'en')
       <p>When on enemy team, Daimon prioritize teammates with the lower hex ID (180° rotation).</p>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <h2>Summon</h2>
+
+      <h3>Ultimate</h3>
+      <p>
+        <strong>Passive.</strong> Daimon's guardian spirit, Stitchy, fights alongside him in battle,
+        automatically attacking the enemy closest to Daimon for [[90%]] damage. Stitchy cannot be
+        targeted or attacked, and is defeated when Daimon is defeated.
+      </p>
     </article>
   </StyledText>
 </template>

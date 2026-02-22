@@ -20,7 +20,7 @@ setupSkillContentMeta('pandora', 'en')
         [[90]] Energy to the ally she released from her box.
       </p>
 
-      <h2>Non-Permanent Buff</h2>
+      <h2>Non-Permanent Buff · Targeting Mechanics</h2>
 
       <h3>Skill</h3>
       <p>
@@ -29,8 +29,6 @@ setupSkillContentMeta('pandora', 'en')
         If Pandora is still alive when that happens, the ally gains [[1000]] Energy, as well as
         [[35%]] ATK for the next [[10]]s.
       </p>
-
-      <h2>Targeting Mechanics</h2>
 
       <strong>How It Works</strong>
       <p>
@@ -54,6 +52,17 @@ setupSkillContentMeta('pandora', 'en')
       </ul>
 
       <GridSnippet :grid-style="gridStyles.main" :images />
+
+      <h2>Summon</h2>
+
+      <h3>EX Skill</h3>
+      <p>
+        After Pandora is defeated, the box stays on the battlefield. It's indestructible,
+        unaffected, and won't be prioritized as a target. It has an Energy cap of 1,000 and recovers
+        [[45]] Energy per second. At full Energy, the box unleashes Panic Projection again, but
+        without the HP loss effect. Every [[5]]s, it also casts Tainted Tribute on a random enemy
+        but inflicts only one random debuff.
+      </p>
     </article>
   </StyledText>
 </template>

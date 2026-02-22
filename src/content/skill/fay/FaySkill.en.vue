@@ -30,6 +30,12 @@ setupSkillContentMeta('fay', 'en')
         damage, reducing enemies' Magic DEF by [[10%]] and increasing allies' Magic DEF by [[10%]]
         for [[5]]s.
       </p>
+
+      <h3>EX Skill</h3>
+      <p>
+        Fay grants the buffs of Vibrant Dance and Healing Gemstones on the allied hero deployed [[1
+        tile in front]] when a battle starts.
+      </p>
     </article>
   </StyledText>
 </template>

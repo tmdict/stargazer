@@ -8,5 +8,5 @@
   "energy": 400,
   "range": 10,
   "season": 5,
-  "tags": ["initial-energy", "initial-energy-300", "special-target", "temp-buff"]
+  "tags": ["initial-energy", "initial-energy-300", "special-target", "summon", "temp-buff"]
 }

@@ -14,8 +14,8 @@ setupSkillContentMeta('pang', 'en')
 
       <h3>Skill</h3>
       <p>
-        Active. Pang channels his chi, gaining a [[340%]] Chi Barrier for [[9]]s. While the barrier
-        is active, Pang remains [[unaffected]].
+        <strong>Active.</strong> Pang channels his chi, gaining a [[340%]] Chi Barrier for [[9]]s.
+        While the barrier is active, Pang remains [[unaffected]].
       </p>
 
       <h3>EX Skill</h3>
