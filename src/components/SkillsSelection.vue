@@ -7,8 +7,8 @@ import TagsDisplay from './TagsDisplay.vue'
 import IconInfo from './ui/IconInfo.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { DOCUMENTED_SKILLS } from '@/content/skill'
 import type { CharacterType } from '@/lib/types/character'
-import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{

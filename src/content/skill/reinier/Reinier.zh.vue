@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import StyledText from '@/components/StyledText.vue'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
-import { gridStyles, images } from './ReinierSkill.data'
+import { gridStyles, images } from './Reinier.data'
 
 setupSkillContentMeta('reinier', 'zh')
 </script>

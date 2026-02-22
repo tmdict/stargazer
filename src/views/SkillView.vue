@@ -5,7 +5,7 @@ import { useRoute } from 'vue-router'
 import PageContainer from '@/components/ui/PageContainer.vue'
 import { useContentComponent } from '@/composables/useContentComponent'
 import { useRouteLocale } from '@/composables/useRouteLocale'
-import { DOCUMENTED_SKILLS } from '@/lib/types/skills'
+import { DOCUMENTED_SKILLS } from '@/content/skill'
 
 interface Props {
   name?: string
