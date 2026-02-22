@@ -79,6 +79,7 @@ setupSkillContentMeta('galahad', 'en')
         Galahad will only target main characters, skipping summons and clones such as Phraesto's
         clone or Elijah & Lailah's Lailah (pink twin).
       </p>
+      <p>Both Galahad's shadow, as well as the marked ally's shadow, are considered summons.</p>
     </article>
   </StyledText>
 </template>
