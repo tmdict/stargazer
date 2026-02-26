@@ -66,7 +66,7 @@ const activeTab = ref(getInitialTab())
 const showDebug = ref(false)
 
 // Map management
-const availableMaps = getMapNames()
+const availableMaps = getMapNames().filter((m) => m.key.startsWith('arena'))
 const selectedMap = ref('arena1')
 
 // Grid display toggles
@@ -207,6 +207,10 @@ const handleClearAllTiles = () => {
   mapEditorStore.clearAllHexStates()
 }
 
+const handleFlipMap = () => {
+  mapEditorStore.flipMap()
+}
+
 const handleResetMap = () => {
   mapEditorStore.resetToCurrentMap()
 }
@@ -285,6 +289,7 @@ const handleResetMap = () => {
               <MapEditor
                 @state-selected="handleMapEditorStateSelected"
                 @clear-all-tiles="handleClearAllTiles"
+                @flip-map="handleFlipMap"
                 @reset-map="handleResetMap"
                 @arena-selected="handleMapChange"
               />
