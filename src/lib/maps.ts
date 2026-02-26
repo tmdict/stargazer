@@ -1,16 +1,7 @@
-import { ARENA_1 } from './arena/arena1'
-import { ARENA_2 } from './arena/arena2'
-import { ARENA_3 } from './arena/arena3'
-import { ARENA_4 } from './arena/arena4'
-import { ARENA_5 } from './arena/arena5'
-import { ARENA_5_SP_S3 } from './arena/arena5sps3'
-import { ARENA_5_SP_S4 } from './arena/arena5sps4'
-import { ARENA_5_SP_S5 } from './arena/arena5sps5'
-import { ARENA_5_SP_S6 } from './arena/arena5sps6'
+import { loadArenas, type ArenaJson } from '@/utils/dataLoader'
 import { State } from './types/state'
 
 export interface MapConfig {
-  id: number
   name: string
   grid: Array<{
     type: State
@@ -18,17 +9,30 @@ export interface MapConfig {
   }>
 }
 
-export const MAPS: Record<string, MapConfig> = {
-  arena1: ARENA_1,
-  arena2: ARENA_2,
-  arena3: ARENA_3,
-  arena4: ARENA_4,
-  arena5: ARENA_5,
-  arena6: ARENA_5_SP_S6,
-  arena7: ARENA_5_SP_S3,
-  arena8: ARENA_5_SP_S4,
-  arena9: ARENA_5_SP_S5,
+// Maps JSON grid keys to hex tile states
+const STATE_MAP: Record<keyof ArenaJson['grid'], State> = {
+  ally: State.AVAILABLE_ALLY,
+  enemy: State.AVAILABLE_ENEMY,
+  blocked: State.BLOCKED,
+  breakable: State.BLOCKED_BREAKABLE,
 }
+
+function parseMapConfig(json: ArenaJson): MapConfig {
+  return {
+    name: json.name,
+    grid: Object.entries(json.grid).map(([key, hex]) => ({
+      type: STATE_MAP[key as keyof ArenaJson['grid']],
+      hex,
+    })),
+  }
+}
+
+// Auto-discovered from src/data/arena/*.json, keyed by filename
+export const MAPS: Record<string, MapConfig> = Object.fromEntries(
+  Object.entries(loadArenas()).map(([key, json]) => [key, parseMapConfig(json)]),
+)
+
+export const DEFAULT_MAP = MAPS['arena1']!
 
 export const getMapNames = (): Array<{ key: string; name: string }> => {
   return Object.entries(MAPS).map(([key, config]) => ({
