@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { ARENA_1 } from '@/lib/arena/arena1'
 import { Grid, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { Layout, POINTY } from '@/lib/layout'
-import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 
 interface GridStyleConfig {
@@ -42,7 +40,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 // Create grid for snippet
 const snippetGrid = computed(() => {
-  return new Grid(FULL_GRID, ARENA_1)
+  return new Grid()
 })
 
 // Layout for the snippet grid

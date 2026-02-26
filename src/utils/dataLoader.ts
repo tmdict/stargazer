@@ -2,6 +2,16 @@ import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
 
+export interface ArenaJson {
+  name: string
+  grid: {
+    ally: number[]
+    enemy: number[]
+    blocked: number[]
+    breakable: number[]
+  }
+}
+
 export function extractFileName(path: string, removeExtension = true): string {
   const fileName = path.split('/').pop() || 'Unknown'
   return removeExtension ? fileName.replace(/\.\w+$/, '') : fileName
@@ -23,6 +33,7 @@ let characterImagesCache: Record<string, string> | null = null
 let artifactImagesCache: Record<string, string> | null = null
 let iconsCache: Record<string, string> | null = null
 let characterRangesCache: Map<number, number> | null = null
+let arenasCache: Record<string, ArenaJson> | null = null
 
 export function loadCharacters(): CharacterType[] {
   if (charactersCache) {
@@ -93,6 +104,28 @@ export function loadArtifactImages(): Record<string, string> {
   return images
 }
 
+export function loadArenas(): Record<string, ArenaJson> {
+  if (arenasCache) {
+    return arenasCache
+  }
+
+  const arenaModules = import.meta.glob<ArenaJson>('@/data/arena/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  const result: Record<string, ArenaJson> = {}
+
+  Object.entries(arenaModules)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .forEach(([path, content]) => {
+      const fileName = extractFileName(path)
+      result[fileName] = content
+    })
+
+  arenasCache = result
+  return result
+}
+
 export function loadIcons(): Record<string, string> {
   if (iconsCache) {
     return iconsCache
@@ -120,6 +153,7 @@ export function getCharacterRanges(): Map<number, number> {
 export function loadAllData() {
   const characters = loadCharacters()
   const artifacts = loadArtifacts()
+  const arenas = loadArenas()
   const characterImages = loadCharacterImages()
   const artifactImages = loadArtifactImages()
   const icons = loadIcons()
@@ -127,6 +161,7 @@ export function loadAllData() {
   return {
     characters,
     artifacts,
+    arenas,
     characterImages,
     artifactImages,
     icons,
@@ -236,6 +271,7 @@ export function clearCache() {
   artifactImagesCache = null
   iconsCache = null
   characterRangesCache = null
+  arenasCache = null
   appLocalesCache = null
   characterLocalesCache = null
   artifactLocalesCache = null

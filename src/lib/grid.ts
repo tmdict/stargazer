@@ -1,5 +1,5 @@
-import { ARENA_1 } from './arena/arena1'
 import { Hex } from './hex'
+import { DEFAULT_MAP, type MapConfig } from './maps'
 import type { SkillManager } from './skills/skill'
 import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
@@ -65,7 +65,7 @@ export class Grid {
 
   readonly gridPreset: GridPreset
 
-  constructor(layout = FULL_GRID, map = ARENA_1) {
+  constructor(layout = FULL_GRID, map: MapConfig = DEFAULT_MAP) {
     this.gridPreset = layout
     this.storage = new Map()
     iniGrid(layout).forEach((hex) => {
