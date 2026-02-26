@@ -286,6 +286,7 @@ const handleResetMap = () => {
                 @state-selected="handleMapEditorStateSelected"
                 @clear-all-tiles="handleClearAllTiles"
                 @reset-map="handleResetMap"
+                @arena-selected="handleMapChange"
               />
             </div>
           </TabNavigation>

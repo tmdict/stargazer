@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
 import { getTileFillColor } from '@/utils/tileStateFormatting'
@@ -30,6 +31,7 @@ const emit = defineEmits<{
   stateSelected: [state: State]
   clearAllTiles: []
   resetMap: []
+  arenaSelected: [mapKey: string]
 }>()
 
 const selectState = (state: State) => {
@@ -43,6 +45,10 @@ const handleClearAllTiles = () => {
 
 const handleResetMap = () => {
   emit('resetMap')
+}
+
+const handleArenaSelected = (mapKey: string) => {
+  emit('arenaSelected', mapKey)
 }
 </script>
 
@@ -76,6 +82,8 @@ const handleResetMap = () => {
       <button class="clear-button" @click="handleClearAllTiles">{{ i18n.t('app.clear') }}</button>
       <button class="reset-button" @click="handleResetMap">{{ i18n.t('app.reset') }}</button>
     </div>
+
+    <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
   </div>
 </template>
 
