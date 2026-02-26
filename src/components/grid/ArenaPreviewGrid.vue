@@ -67,7 +67,7 @@ const handleArenaClick = (mapKey: string) => {
         :class="{ active: gridStore.currentMap === arena.key }"
         @click="handleArenaClick(arena.key)"
       >
-        <svg :width="SIZE" :height="SIZE" :viewBox="`0 0 ${SIZE} ${SIZE}`">
+        <svg class="arena-svg" :viewBox="`0 0 ${SIZE} ${SIZE}`">
           <polygon
             v-for="(tile, index) in arena.tiles"
             :key="index"
@@ -122,6 +122,11 @@ const handleArenaClick = (mapKey: string) => {
   box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.3);
 }
 
+.arena-svg {
+  width: 170px;
+  height: 170px;
+}
+
 .arena-name {
   font-weight: 600;
   color: #374151;
@@ -129,5 +134,16 @@ const handleArenaClick = (mapKey: string) => {
   text-align: center;
   line-height: 1.2;
   letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+  .arena-thumbnail {
+    width: calc(50% - 0.25rem);
+  }
+
+  .arena-svg {
+    width: 100%;
+    height: auto;
+  }
 }
 </style>
