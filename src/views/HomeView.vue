@@ -203,7 +203,11 @@ const handleMapEditorStateSelected = (state: State) => {
   selectedMapEditorState.value = state
 }
 
-const handleClearMap = () => {
+const handleClearAllTiles = () => {
+  mapEditorStore.clearAllHexStates()
+}
+
+const handleResetMap = () => {
   mapEditorStore.resetToCurrentMap()
 }
 </script>
@@ -280,7 +284,8 @@ const handleClearMap = () => {
             <div v-show="activeTab === 'mapEditor'" class="tab-panel">
               <MapEditor
                 @state-selected="handleMapEditorStateSelected"
-                @clear-map="handleClearMap"
+                @clear-all-tiles="handleClearAllTiles"
+                @reset-map="handleResetMap"
               />
             </div>
           </TabNavigation>
