@@ -54,8 +54,8 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     }
   }
 
-  const clearAllHexStates = () => {
-    resetAllHexesToState(State.DEFAULT)
+  const applyAllHexStates = (state: State) => {
+    resetAllHexesToState(state)
   }
 
   const resetToCurrentMap = () => {
@@ -96,7 +96,7 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
   return {
     // Actions
     setHexState,
-    clearAllHexStates,
+    applyAllHexStates,
     resetToCurrentMap,
     flipMap,
   }
