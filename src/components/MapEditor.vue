@@ -28,7 +28,8 @@ const getStateLabel = computed(() => (labelKey: string) => {
 
 const emit = defineEmits<{
   stateSelected: [state: State]
-  clearMap: []
+  clearAllTiles: []
+  resetMap: []
 }>()
 
 const selectState = (state: State) => {
@@ -36,8 +37,12 @@ const selectState = (state: State) => {
   emit('stateSelected', state)
 }
 
-const handleClearMap = () => {
-  emit('clearMap')
+const handleClearAllTiles = () => {
+  emit('clearAllTiles')
+}
+
+const handleResetMap = () => {
+  emit('resetMap')
 }
 </script>
 
@@ -68,7 +73,8 @@ const handleClearMap = () => {
     </div>
 
     <div class="map-editor-actions">
-      <button class="clear-button" @click="handleClearMap">{{ i18n.t('app.clear') }}</button>
+      <button class="clear-button" @click="handleClearAllTiles">{{ i18n.t('app.clear') }}</button>
+      <button class="reset-button" @click="handleResetMap">{{ i18n.t('app.reset') }}</button>
     </div>
   </div>
 </template>
@@ -140,13 +146,13 @@ const handleClearMap = () => {
 
 .map-editor-actions {
   display: flex;
-  gap: 0.5rem;
+  gap: 1rem;
   justify-content: center;
 }
 
-.clear-button {
+.clear-button,
+.reset-button {
   padding: 0.5rem 1.25rem;
-  background: #c05b4d;
   color: white;
   border: none;
   border-radius: 0.375rem;
@@ -156,7 +162,20 @@ const handleClearMap = () => {
   transition: all 0.2s;
 }
 
+.clear-button {
+  background: var(--color-primary);
+}
+
 .clear-button:hover {
+  background: var(--color-primary-hover);
+  transform: translateY(-1px);
+}
+
+.reset-button {
+  background: #c05b4d;
+}
+
+.reset-button:hover {
   background: #b91c1c;
   transform: translateY(-1px);
 }
