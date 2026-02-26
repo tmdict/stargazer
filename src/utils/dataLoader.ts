@@ -116,7 +116,7 @@ export function loadArenas(): Record<string, ArenaJson> {
   const result: Record<string, ArenaJson> = {}
 
   Object.entries(arenaModules)
-    .sort(([a], [b]) => a.localeCompare(b))
+    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
     .forEach(([path, content]) => {
       const fileName = extractFileName(path)
       result[fileName] = content
