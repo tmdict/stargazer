@@ -30,6 +30,7 @@ const getStateLabel = computed(() => (labelKey: string) => {
 const emit = defineEmits<{
   stateSelected: [state: State]
   clearAllTiles: []
+  flipMap: []
   resetMap: []
   arenaSelected: [mapKey: string]
 }>()
@@ -41,6 +42,10 @@ const selectState = (state: State) => {
 
 const handleClearAllTiles = () => {
   emit('clearAllTiles')
+}
+
+const handleFlipMap = () => {
+  emit('flipMap')
 }
 
 const handleResetMap = () => {
@@ -80,6 +85,7 @@ const handleArenaSelected = (mapKey: string) => {
 
     <div class="map-editor-actions">
       <button class="clear-button" @click="handleClearAllTiles">{{ i18n.t('app.clear') }}</button>
+      <button class="flip-button" @click="handleFlipMap">{{ i18n.t('app.flip') }}</button>
       <button class="reset-button" @click="handleResetMap">{{ i18n.t('app.reset') }}</button>
     </div>
 
@@ -99,6 +105,8 @@ const handleArenaSelected = (mapKey: string) => {
 .editor-description {
   margin-bottom: 1rem;
   text-align: center;
+  color: #6b7280;
+  letter-spacing: 0.02em;
 }
 
 .state-options {
@@ -159,6 +167,7 @@ const handleArenaSelected = (mapKey: string) => {
 }
 
 .clear-button,
+.flip-button,
 .reset-button {
   padding: 0.5rem 1.25rem;
   color: white;
@@ -170,11 +179,13 @@ const handleArenaSelected = (mapKey: string) => {
   transition: all 0.2s;
 }
 
-.clear-button {
+.clear-button,
+.flip-button {
   background: var(--color-primary);
 }
 
-.clear-button:hover {
+.clear-button:hover,
+.flip-button:hover {
   background: var(--color-primary-hover);
   transform: translateY(-1px);
 }
