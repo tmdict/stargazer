@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import { Grid } from '@/lib/grid'
 import { Layout, POINTY } from '@/lib/layout'
-import { getMapByKey, getMapNames, type MapConfig } from '@/lib/maps'
+import { getMapByKey, getMapNames } from '@/lib/maps'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { useGridStore } from '@/stores/grid'
@@ -32,7 +32,8 @@ const arenas = computed(() => {
         .join(' '),
       fill: getTileFill(tile.state),
     }))
-    return { key, name, tiles }
+    const labelKey = key.startsWith('preset') ? 'app.preset' : 'app.arena'
+    return { key, name, tiles, labelKey }
   })
 })
 
@@ -76,7 +77,7 @@ const handleArenaClick = (mapKey: string) => {
             stroke-width="1"
           />
         </svg>
-        <span class="arena-name">{{ `${i18n.t('app.arena')} ${arena.name}` }}</span>
+        <span class="arena-name">{{ `${i18n.t(arena.labelKey)} ${arena.name}` }}</span>
       </button>
     </div>
   </div>
