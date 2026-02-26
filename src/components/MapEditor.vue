@@ -2,6 +2,8 @@
 import { computed, ref } from 'vue'
 
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
+import IconFill from '@/components/ui/IconFill.vue'
+import IconFlip from '@/components/ui/IconFlip.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
 import { getTileFillColor } from '@/utils/tileStateFormatting'
@@ -29,7 +31,7 @@ const getStateLabel = computed(() => (labelKey: string) => {
 
 const emit = defineEmits<{
   stateSelected: [state: State]
-  clearAllTiles: []
+  applyAllTiles: [state: State]
   flipMap: []
   resetMap: []
   arenaSelected: [mapKey: string]
@@ -40,8 +42,8 @@ const selectState = (state: State) => {
   emit('stateSelected', state)
 }
 
-const handleClearAllTiles = () => {
-  emit('clearAllTiles')
+const handleApplyAllTiles = () => {
+  emit('applyAllTiles', selectedState.value)
 }
 
 const handleFlipMap = () => {
@@ -84,9 +86,13 @@ const handleArenaSelected = (mapKey: string) => {
     </div>
 
     <div class="map-editor-actions">
-      <button class="clear-button" @click="handleClearAllTiles">{{ i18n.t('app.clear') }}</button>
-      <button class="flip-button" @click="handleFlipMap">{{ i18n.t('app.flip') }}</button>
-      <button class="reset-button" @click="handleResetMap">{{ i18n.t('app.reset') }}</button>
+      <button class="fill-button" @click="handleApplyAllTiles">
+        <IconFill :size="14" /> {{ i18n.t('app.fill') }}
+      </button>
+      <button class="flip-button" @click="handleFlipMap">
+        <IconFlip :size="14" /> {{ i18n.t('app.flip') }}
+      </button>
+      <button class="clear-button" @click="handleResetMap">{{ i18n.t('app.clear') }}</button>
     </div>
 
     <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
@@ -166,36 +172,46 @@ const handleArenaSelected = (mapKey: string) => {
   justify-content: center;
 }
 
-.clear-button,
+.fill-button,
 .flip-button,
-.reset-button {
-  padding: 0.5rem 1.25rem;
-  color: white;
-  border: none;
-  border-radius: 0.375rem;
-  font-weight: 600;
-  font-size: 0.875rem;
+.clear-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   cursor: pointer;
-  transition: all 0.2s;
+  font-family: sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  user-select: none;
+  border: 2px solid;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-xs) var(--spacing-md);
+  transition: all var(--transition-fast);
+  min-height: 36px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: white;
 }
 
-.clear-button,
+.fill-button,
 .flip-button {
   background: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
-.clear-button:hover,
+.fill-button:hover,
 .flip-button:hover {
   background: var(--color-primary-hover);
-  transform: translateY(-1px);
+  border-color: var(--color-primary-hover);
 }
 
-.reset-button {
+.clear-button {
   background: #c05b4d;
+  border-color: #c05b4d;
 }
 
-.reset-button:hover {
+.clear-button:hover {
   background: #b91c1c;
-  transform: translateY(-1px);
+  border-color: #b91c1c;
 }
 </style>

@@ -203,8 +203,8 @@ const handleMapEditorStateSelected = (state: State) => {
   selectedMapEditorState.value = state
 }
 
-const handleClearAllTiles = () => {
-  mapEditorStore.clearAllHexStates()
+const handleApplyAllTiles = (state: State) => {
+  mapEditorStore.applyAllHexStates(state)
 }
 
 const handleFlipMap = () => {
@@ -288,7 +288,7 @@ const handleResetMap = () => {
             <div v-show="activeTab === 'mapEditor'" class="tab-panel">
               <MapEditor
                 @state-selected="handleMapEditorStateSelected"
-                @clear-all-tiles="handleClearAllTiles"
+                @apply-all-tiles="handleApplyAllTiles"
                 @flip-map="handleFlipMap"
                 @reset-map="handleResetMap"
                 @arena-selected="handleMapChange"
