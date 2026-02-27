@@ -79,9 +79,10 @@ const kuluSkill: Skill = {
   name: 'Demolition Zone',
   description:
     'Creates a demolition zone that blocks nearby tiles. Characters on affected tiles are removed. The zone is cleared when Kulu leaves the battlefield',
+  tileColorModifier: '#ad51cb',
 
   onActivate(context: SkillContext): void {
-    const { grid, hexId, team, characterId } = context
+    const { grid, hexId, team, characterId, skillManager } = context
     const affectedIds = getAllAffectedIds(team)
     const config = getAffectedConfig(team)
     const kuluOnAffectedTile = affectedIds.includes(hexId)
@@ -116,12 +117,14 @@ const kuluSkill: Skill = {
       removeCharacterFromAffectedTile(context, id, characterId)
     }
 
-    // Set affected tiles to BLOCKED / BREAKABLE
+    // Set affected tiles to BLOCKED / BREAKABLE with color border
     for (const id of config.blocked) {
       grid.setState(grid.getHexById(id), State.BLOCKED)
+      skillManager.setTileColorModifier(id, kuluSkill.tileColorModifier!)
     }
     for (const id of config.breakable) {
       grid.setState(grid.getHexById(id), State.BLOCKED_BREAKABLE)
+      skillManager.setTileColorModifier(id, kuluSkill.tileColorModifier!)
     }
 
     // Relocate kulu if she was on an affected tile
@@ -145,12 +148,13 @@ const kuluSkill: Skill = {
   },
 
   onDeactivate(context: SkillContext): void {
-    const { grid, team } = context
+    const { grid, team, skillManager } = context
     const saved = savedTileStates.get(team)
     if (!saved) return
 
-    // Restore all modified tiles to their original states
+    // Remove tile color modifiers and restore original states
     for (const [hexId, originalState] of saved) {
+      skillManager.removeTileColorModifier(hexId, kuluSkill.tileColorModifier!)
       grid.setState(grid.getHexById(hexId), originalState)
     }
 
