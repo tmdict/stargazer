@@ -1,0 +1,4 @@
+{
+  "en": "By default ally tiles (white) face top-right and enemy tiles (red) face bottom-left. However in some game modes, like Supreme Arena, ally tiles and enemy tiles are reversed, use this to flip ally and enemy tile colors to match the game mode",
+  "zh": "默认情况下，友方格子（白色）朝向右上方，敌方格子（红色）朝向左下方。在某些游戏模式（如巅峰竞技场）中，友方和敌方的方向是相反的，可使用此按钮切换友方/敌方格子颜色以匹配对应模式。"
+}

@@ -12,7 +12,7 @@ import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { useSkillStore } from '@/stores/skill'
-import { getTileFillColor } from '@/utils/tileStateFormatting'
+import { getInvertedState, getTileFillColor } from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
@@ -114,8 +114,8 @@ const textTransform = (hex: Hex) => {
 
 const getHexFill = (hex: Hex) => {
   const state = gridStore.grid.getTile(hex).state
-
-  return getTileFillColor(state) || props.hexFillColor
+  const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
+  return getTileFillColor(displayState) || props.hexFillColor
 }
 
 const shouldShowHexId = (hex: Hex) => {

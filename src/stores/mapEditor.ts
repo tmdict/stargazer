@@ -1,3 +1,4 @@
+import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { useStateReset } from '@/composables/useStateReset'
@@ -93,11 +94,21 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     }
   }
 
+  // Color inversion state (visual only, does not change tile data)
+  const isColorInverted = ref(false)
+
+  const toggleColorInvert = () => {
+    isColorInverted.value = !isColorInverted.value
+  }
+
   return {
+    // State
+    isColorInverted,
     // Actions
     setHexState,
     applyAllHexStates,
     resetToCurrentMap,
     flipMap,
+    toggleColorInvert,
   }
 })

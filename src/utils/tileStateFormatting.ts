@@ -62,3 +62,18 @@ export const getStateClass = (state: State): string => getStateFormat(state).css
 export const getTileFillColor = (state: State): string => getStateFormat(state).fillColor
 
 export const getTileStrokeColor = (state: State): string => getStateFormat(state).strokeColor
+
+export const getInvertedState = (state: State): State => {
+  switch (state) {
+    case State.AVAILABLE_ALLY:
+      return State.AVAILABLE_ENEMY
+    case State.AVAILABLE_ENEMY:
+      return State.AVAILABLE_ALLY
+    case State.OCCUPIED_ALLY:
+      return State.OCCUPIED_ENEMY
+    case State.OCCUPIED_ENEMY:
+      return State.OCCUPIED_ALLY
+    default:
+      return state
+  }
+}
