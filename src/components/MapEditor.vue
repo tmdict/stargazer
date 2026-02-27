@@ -265,7 +265,7 @@ const getPreviewFillColor = (state: State): string => {
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   transition: all var(--transition-fast);
-  min-height: 28px;
+  min-height: 36px;
   flex-shrink: 0;
   white-space: nowrap;
   color: white;
