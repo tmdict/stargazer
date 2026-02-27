@@ -214,4 +214,28 @@ const handleArenaSelected = (mapKey: string) => {
   background: #b91c1c;
   border-color: #b91c1c;
 }
+
+@media (max-width: 768px) {
+  .state-options {
+    gap: 0.35rem;
+    margin-bottom: 1rem;
+  }
+
+  .state-button {
+    gap: 0.25rem;
+    padding: 0.5rem;
+    min-width: 0;
+    max-width: none;
+    flex: 1 1 0;
+  }
+
+  .hex-preview svg {
+    width: 40px;
+    height: 40px;
+  }
+
+  .state-label {
+    font-size: 0.75rem;
+  }
+}
 </style>
