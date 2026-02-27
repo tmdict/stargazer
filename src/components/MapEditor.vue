@@ -4,11 +4,14 @@ import { computed, ref } from 'vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import IconFill from '@/components/ui/IconFill.vue'
 import IconFlip from '@/components/ui/IconFlip.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
-import { getTileFillColor } from '@/utils/tileStateFormatting'
+import { useMapEditorStore } from '@/stores/mapEditor'
+import { getInvertedState, getTileFillColor } from '@/utils/tileStateFormatting'
 
 const i18n = useI18nStore()
+const mapEditorStore = useMapEditorStore()
 
 const selectedState = ref<State>(State.DEFAULT)
 
@@ -57,6 +60,15 @@ const handleResetMap = () => {
 const handleArenaSelected = (mapKey: string) => {
   emit('arenaSelected', mapKey)
 }
+
+// Invert tooltip state
+const showInvertTooltip = ref(false)
+const invertButtonElement = ref<HTMLElement>()
+
+const getPreviewFillColor = (state: State): string => {
+  const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
+  return getTileFillColor(displayState)
+}
 </script>
 
 <template>
@@ -75,7 +87,7 @@ const handleArenaSelected = (mapKey: string) => {
           <svg width="60" height="60" viewBox="0 0 60 60">
             <polygon
               points="30,7 46,15 46,37 30,45 14,37 14,15"
-              :fill="getTileFillColor(option.state)"
+              :fill="getPreviewFillColor(option.state)"
               stroke="#888888"
               stroke-width="2"
             />
@@ -86,6 +98,20 @@ const handleArenaSelected = (mapKey: string) => {
     </div>
 
     <div class="map-editor-actions">
+      <label
+        ref="invertButtonElement"
+        class="invert-toggle"
+        @mouseenter="showInvertTooltip = true"
+        @mouseleave="showInvertTooltip = false"
+      >
+        <input
+          type="checkbox"
+          :checked="mapEditorStore.isColorInverted"
+          class="invert-checkbox"
+          @change="mapEditorStore.toggleColorInvert()"
+        />
+        <span class="invert-text">{{ i18n.t('app.invert') }}</span>
+      </label>
       <button class="fill-button" @click="handleApplyAllTiles">
         <IconFill :size="14" /> {{ i18n.t('app.fill') }}
       </button>
@@ -97,6 +123,19 @@ const handleArenaSelected = (mapKey: string) => {
 
     <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
   </div>
+
+  <Teleport to="body">
+    <TooltipPopup
+      v-if="showInvertTooltip && invertButtonElement"
+      :targetElement="invertButtonElement"
+      variant="detailed"
+      max-width="350px"
+    >
+      <template #content>
+        {{ i18n.t('app.invert-tooltip') }}
+      </template>
+    </TooltipPopup>
+  </Teleport>
 </template>
 
 <style scoped>
@@ -172,6 +211,45 @@ const handleArenaSelected = (mapKey: string) => {
   justify-content: center;
 }
 
+.invert-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  font-family: sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  user-select: none;
+  border: 2px solid;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-xs) var(--spacing-md);
+  transition: all var(--transition-fast);
+  min-height: 30px;
+  flex-shrink: 0;
+  white-space: nowrap;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-primary);
+  border-color: var(--color-border-primary);
+}
+
+.invert-toggle:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.invert-checkbox {
+  width: 0.9rem;
+  height: 0.9rem;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  margin: 0;
+}
+
+.invert-text {
+  font-weight: 600;
+}
+
 .fill-button,
 .flip-button,
 .clear-button {
@@ -187,7 +265,7 @@ const handleArenaSelected = (mapKey: string) => {
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   transition: all var(--transition-fast);
-  min-height: 36px;
+  min-height: 28px;
   flex-shrink: 0;
   white-space: nowrap;
   color: white;
