@@ -79,7 +79,7 @@ const kuluSkill: Skill = {
   name: 'Demolition Zone',
   description:
     'Creates a demolition zone that blocks nearby tiles. Characters on affected tiles are removed. The zone is cleared when Kulu leaves the battlefield',
-  tileColorModifier: '#ad51cb',
+  tileColorModifier: '#a47fb8',
 
   onActivate(context: SkillContext): void {
     const { grid, hexId, team, characterId, skillManager } = context
