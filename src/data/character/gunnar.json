@@ -1,0 +1,12 @@
+{
+  "id": 106,
+  "name": "gunnar",
+  "level": "s",
+  "faction": "hypogean",
+  "class": "tank",
+  "damage": "physical",
+  "energy": 0,
+  "range": 20,
+  "season": 6,
+  "tags": ["temp-buff-instant", "temp-buff"]
+}

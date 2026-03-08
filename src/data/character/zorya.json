@@ -1,0 +1,12 @@
+{
+  "id": 107,
+  "name": "zorya",
+  "level": "s",
+  "faction": "graveborn",
+  "class": "warrior",
+  "damage": "magic",
+  "energy": 0,
+  "range": 2,
+  "season": 6,
+  "tags": []
+}
