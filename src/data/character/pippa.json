@@ -1,0 +1,12 @@
+{
+  "id": 108,
+  "name": "pippa",
+  "level": "s",
+  "faction": "wilder",
+  "class": "mage",
+  "damage": "magic",
+  "energy": 300,
+  "range": 5,
+  "season": 6,
+  "tags": ["initial-energy"]
+}
