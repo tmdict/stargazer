@@ -30,6 +30,11 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/SkillView.vue'),
     props: true, // Pass route params as props for better testability
   },
+  {
+    path: '/wandwars',
+    name: 'wandwars',
+    component: () => import('@/views/WandWarsView.vue'),
+  },
   // Chinese routes
   {
     path: '/zh/about',
