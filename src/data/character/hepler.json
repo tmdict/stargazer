@@ -1,0 +1,12 @@
+{
+  "id": 110,
+  "name": "hepler",
+  "level": "s",
+  "faction": "mauler",
+  "class": "tank",
+  "damage": "physical",
+  "energy": 600,
+  "range": 1,
+  "season": 6,
+  "tags": ["initial-energy", "initial-energy-300", "temp-buff"]
+}
