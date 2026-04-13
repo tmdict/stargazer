@@ -166,8 +166,32 @@
 
       <!-- Recommendations while drafting -->
       <template v-else>
-        <div :class="['picking-indicator', currentPickSide]">
-          Recommending for <strong>{{ pickingSideLabel }}</strong> side
+        <div class="recommend-header">
+          <div :class="['picking-indicator', effectivePickSide]">
+            Recommending for <strong>{{ effectivePickSideLabel }}</strong> team
+          </div>
+          <div class="lock-toggle">
+            <button
+              :class="['lock-btn', { active: lockedSide === 'left' }]"
+              @click="toggleLock('left')"
+              title="Lock recommendations to Left team"
+            >
+              <svg v-if="lockedSide === 'left'" class="lock-icon" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"/>
+              </svg>
+              Left Team
+            </button>
+            <button
+              :class="['lock-btn', { active: lockedSide === 'right' }]"
+              @click="toggleLock('right')"
+              title="Lock recommendations to Right team"
+            >
+              <svg v-if="lockedSide === 'right'" class="lock-icon" viewBox="0 0 16 16" fill="currentColor">
+                <path d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"/>
+              </svg>
+              Right Team
+            </button>
+          </div>
         </div>
 
         <WandWarsTopTeams
@@ -345,24 +369,39 @@ function formatSymbol(record: RecordedMatch): string {
 
 const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
 
-const pickingSideLabel = computed(() => (props.currentPickSide === 'left' ? 'Left' : 'Right'))
+// Lock recommendations to a specific side (null = follow draft order)
+const lockedSide = ref<PickSide | null>(null)
 
-const myTeam = computed(() => {
-  if (!props.currentPickSide) return []
-  return props.pickState[props.currentPickSide].filter((h): h is string => h !== null)
+function toggleLock(side: PickSide) {
+  lockedSide.value = lockedSide.value === side ? null : side
+}
+
+// The effective side used for recommendations (locked or auto-detected)
+const effectivePickSide = computed<PickSide | null>(() =>
+  lockedSide.value ?? props.currentPickSide,
+)
+
+const effectivePickSideLabel = computed(() => {
+  if (!effectivePickSide.value) return ''
+  return effectivePickSide.value === 'left' ? 'Left' : 'Right'
 })
 
-const opponentSide = computed<PickSide>(() => (props.currentPickSide === 'left' ? 'right' : 'left'))
+const myTeam = computed(() => {
+  if (!effectivePickSide.value) return []
+  return props.pickState[effectivePickSide.value].filter((h): h is string => h !== null)
+})
+
+const opponentSide = computed<PickSide>(() => (effectivePickSide.value === 'left' ? 'right' : 'left'))
 
 const opponentTeam = computed(() => {
-  if (!props.currentPickSide) return []
+  if (!effectivePickSide.value) return []
   return props.pickState[opponentSide.value].filter((h): h is string => h !== null)
 })
 
-// Teammates already picked on the currently-picking side (for top teams)
+// Teammates already picked on the effective side (for top teams)
 const currentTeammates = computed(() => {
-  if (!props.currentPickSide) return []
-  return props.pickState[props.currentPickSide].filter((h): h is string => h !== null)
+  if (!effectivePickSide.value) return []
+  return props.pickState[effectivePickSide.value].filter((h): h is string => h !== null)
 })
 
 const allPickedHeroes = computed(() => [
@@ -452,6 +491,55 @@ const sortedPredictions = computed(() => {
   font-size: 0.65rem;
   font-weight: 700;
   margin-left: 4px;
+}
+
+.recommend-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.recommend-header .picking-indicator {
+  margin-bottom: 0;
+}
+
+.lock-toggle {
+  display: flex;
+  gap: 2px;
+  margin-right: var(--spacing-sm);
+}
+
+.lock-btn {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-small);
+  background: var(--color-bg-white);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.lock-btn:hover:not(.active) {
+  background: var(--color-bg-secondary);
+}
+
+.lock-btn.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.lock-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
 }
 
 .picking-indicator {
