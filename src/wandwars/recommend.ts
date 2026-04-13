@@ -1,12 +1,13 @@
 import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
+import { metaPickModel } from './metaPick'
 import { getUniqueHeroes, parseMatchData } from './parser'
 import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
 
 import rawData from './wandwars.data?raw'
 
-const models: RecommendationModel[] = [compositeModel, bradleyTerryModel]
+const models: RecommendationModel[] = [metaPickModel, compositeModel, bradleyTerryModel]
 
 let cachedMatches: MatchResult[] | null = null
 let cachedAnalysis: AnalysisData | null = null
@@ -64,4 +65,17 @@ export function getMatchupPrediction(
   if (!model) return null
 
   return model.predictMatchup(leftTeam, rightTeam, getAnalysis(), getMatches())
+}
+
+export function getAllMatchupPredictions(
+  leftTeam: string[],
+  rightTeam: string[],
+): { id: string; name: string; prediction: MatchupPrediction }[] {
+  const analysis = getAnalysis()
+  const matches = getMatches()
+  return models.map((model) => ({
+    id: model.id,
+    name: model.name,
+    prediction: model.predictMatchup(leftTeam, rightTeam, analysis, matches),
+  }))
 }

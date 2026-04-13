@@ -1,9 +1,5 @@
 <template>
   <div class="wandwars-page">
-    <header class="wandwars-header">
-      <h1>WandWars</h1>
-    </header>
-
     <div class="wandwars-layout">
       <div class="wandwars-left">
         <WandWarsPicker
@@ -57,7 +53,23 @@ const pickState = ref<PickState>({
 })
 
 const pickHistory = ref<{ side: PickSide; slot: number; hero: string }[]>([])
-const records = ref<RecordedMatch[]>([])
+
+const RECORDS_STORAGE_KEY = 'stargazer.wandwars.records'
+
+function loadRecords(): RecordedMatch[] {
+  try {
+    const stored = localStorage.getItem(RECORDS_STORAGE_KEY)
+    return stored ? JSON.parse(stored) : []
+  } catch {
+    return []
+  }
+}
+
+function saveRecords() {
+  localStorage.setItem(RECORDS_STORAGE_KEY, JSON.stringify(records.value))
+}
+
+const records = ref<RecordedMatch[]>(loadRecords())
 
 const matchData = computed(() => getMatchData())
 const analysisData = computed(() => getAnalysisData())
@@ -137,14 +149,17 @@ function handleReset() {
 
 function handleRecordMatch(record: RecordedMatch) {
   records.value.push(record)
+  saveRecords()
 }
 
 function handleDeleteRecord(index: number) {
   records.value.splice(index, 1)
+  saveRecords()
 }
 
 function handleClearRecords() {
   records.value = []
+  localStorage.removeItem(RECORDS_STORAGE_KEY)
 }
 
 function handleExport() {
@@ -167,20 +182,6 @@ function handleExport() {
   padding: var(--spacing-lg) var(--spacing-xl);
   min-height: 100vh;
   background: var(--color-bg-primary);
-}
-
-.wandwars-header {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-xl);
-  flex-wrap: wrap;
-}
-
-.wandwars-header h1 {
-  font-size: 1.5rem;
-  color: var(--color-text-primary);
-  margin: 0;
 }
 
 .wandwars-layout {

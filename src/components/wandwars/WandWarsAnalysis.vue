@@ -64,59 +64,63 @@
         Limited data ({{ matchData.length }} matches) — estimates may be unreliable. Prefer Hero Synergy tab.
       </div>
 
-      <!-- Matchup prediction when all 6 heroes are picked -->
-      <div v-if="matchupPrediction" class="matchup-section">
-        <div class="matchup-prediction">
+      <!-- Matchup predictions when all 6 heroes are picked -->
+      <div v-if="sortedPredictions.length > 0" class="matchup-section">
+        <!-- Primary prediction (active tab's model) -->
+        <div
+          v-for="(pred, idx) in sortedPredictions"
+          :key="pred.id"
+          :class="['matchup-prediction', { secondary: idx > 0 }]"
+        >
           <div class="matchup-header">
-            <h3 class="matchup-title">Matchup Prediction</h3>
+            <h3 class="matchup-title">{{ idx === 0 ? 'Matchup Prediction' : pred.name }}</h3>
             <span
-              :class="['confidence-badge', matchupPrediction.confidence]"
-              :title="confidenceDescriptions[matchupPrediction.confidence]"
+              :class="['confidence-badge', pred.prediction.confidence]"
+              :title="confidenceDescriptions[pred.prediction.confidence]"
             >
-              {{ matchupPrediction.confidence }} confidence
+              {{ pred.prediction.confidence }} confidence
             </span>
           </div>
           <div class="matchup-bars">
             <div class="matchup-side left">
               <span class="matchup-label">Left</span>
-              <span class="matchup-percent">{{ formatPercent(matchupPrediction.leftWinProbability) }}</span>
+              <span class="matchup-percent">{{ formatPercent(pred.prediction.leftWinProbability) }}</span>
             </div>
             <div class="matchup-bar-track">
               <div
                 class="matchup-bar-fill left"
-                :style="{ width: formatPercent(matchupPrediction.leftWinProbability) }"
+                :style="{ width: formatPercent(pred.prediction.leftWinProbability) }"
               />
             </div>
             <div class="matchup-side right">
-              <span class="matchup-percent">{{ formatPercent(matchupPrediction.rightWinProbability) }}</span>
+              <span class="matchup-percent">{{ formatPercent(pred.prediction.rightWinProbability) }}</span>
               <span class="matchup-label">Right</span>
             </div>
           </div>
-          <div class="matchup-verdict">
-            <template v-if="matchupPrediction.leftWinProbability > 0.55">
+          <div v-if="idx === 0" class="matchup-verdict">
+            <template v-if="pred.prediction.leftWinProbability > 0.55">
               <strong>Left</strong> team favored
             </template>
-            <template v-else-if="matchupPrediction.rightWinProbability > 0.55">
+            <template v-else-if="pred.prediction.rightWinProbability > 0.55">
               <strong>Right</strong> team favored
             </template>
             <template v-else>
               Close matchup — could go either way
             </template>
           </div>
-          <div v-if="matchupPrediction.relevantNotes.length > 0" class="matchup-notes">
+          <div v-if="idx === 0 && pred.prediction.relevantNotes.length > 0" class="matchup-notes">
             <div
-              v-for="(note, i) in matchupPrediction.relevantNotes.slice(0, 5)"
+              v-for="(note, i) in pred.prediction.relevantNotes.slice(0, 5)"
               :key="i"
               class="matchup-note"
-            >
-              {{ formatNoteText(note.text) }}
-            </div>
+              v-html="formatNoteHtml(note.text)"
+            />
           </div>
         </div>
 
         <!-- Quick record form -->
         <div class="record-form">
-          <h4 class="record-form-title">Record Result</h4>
+          <h4 class="record-form-title">Save Result</h4>
           <div class="result-buttons">
             <button
               :class="['result-btn', 'left', 'dominant', { active: resultKey === 'left-dominant' }]"
@@ -156,7 +160,7 @@
             placeholder="Optional notes... use {heroName} to reference heroes"
           />
           <button class="submit-btn" @click="handleRecordSubmit">
-            Record Match
+            Save Result
           </button>
           <button class="reset-btn" @click="emit('reset')">
             Reset Teams
@@ -194,7 +198,7 @@ import { computed, ref } from 'vue'
 
 import { BT_LOW_DATA_THRESHOLD } from '@/wandwars/constants'
 import { serializeMatches } from '@/wandwars/serializer'
-import { getMatchupPrediction, getRecommendations } from '@/wandwars/recommend'
+import { getAllMatchupPredictions, getRecommendations } from '@/wandwars/recommend'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
 
@@ -215,12 +219,13 @@ const emit = defineEmits<{
 }>()
 
 const tabs = [
-  { id: 'composite', label: 'Hero Synergy Model (Composite)' },
-  { id: 'bradley-terry', label: 'Total Team Power Model (B-T)' },
+  { id: 'meta-pick', label: 'Meta Pick' },
+  { id: 'composite', label: 'Hero Synergy (Composite Model)' },
+  { id: 'bradley-terry', label: 'Total Team Power (B-T Model)' },
   { id: 'records', label: 'Records' },
 ]
 
-const activeTab = ref('composite')
+const activeTab = ref('meta-pick')
 
 // Record form state
 const recordWinner = ref<'left' | 'right' | 'draw'>('left')
@@ -314,19 +319,28 @@ const rightTeam = computed(() =>
   props.pickState.right.filter((h): h is string => h !== null),
 )
 
-const matchupPrediction = computed(() => {
-  if (!allPicked.value || activeTab.value === 'records') return null
-  return getMatchupPrediction(activeTab.value, leftTeam.value, rightTeam.value)
+const allPredictions = computed(() => {
+  if (!allPicked.value) return []
+  return getAllMatchupPredictions(leftTeam.value, rightTeam.value)
+})
+
+// Active tab's prediction first, then others
+const sortedPredictions = computed(() => {
+  if (allPredictions.value.length === 0) return []
+  const active = allPredictions.value.find((p) => p.id === activeTab.value)
+  const others = allPredictions.value.filter((p) => p.id !== activeTab.value)
+  return active ? [active, ...others] : allPredictions.value
 })
 
 function formatPercent(value: number): string {
   return (value * 100).toFixed(1) + '%'
 }
 
-function formatNoteText(text: string): string {
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) =>
-    name.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
-  )
+function formatNoteHtml(text: string): string {
+  return text.replace(/\{([^}]+)\}/g, (_, name: string) => {
+    const formatted = name.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+    return `<strong class="hero-highlight">${formatted}</strong>`
+  })
 }
 </script>
 
@@ -440,6 +454,26 @@ function formatNoteText(text: string): string {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-medium);
   background: var(--color-bg-tertiary);
+}
+
+.matchup-prediction.secondary {
+  padding: var(--spacing-sm);
+  background: var(--color-bg-white);
+  border: 1px solid var(--color-border-light);
+  opacity: 0.85;
+}
+
+.matchup-prediction.secondary .matchup-title {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.matchup-prediction.secondary .matchup-percent {
+  font-size: 0.9rem;
+}
+
+.matchup-prediction.secondary .matchup-bar-track {
+  height: 8px;
 }
 
 .matchup-header {
@@ -556,6 +590,11 @@ function formatNoteText(text: string): string {
   color: var(--color-text-secondary);
   font-style: italic;
   line-height: 1.4;
+}
+
+.matchup-note :deep(.hero-highlight) {
+  color: var(--color-primary);
+  font-style: normal;
 }
 
 /* Quick record form */
