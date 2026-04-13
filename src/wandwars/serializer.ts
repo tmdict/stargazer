@@ -1,10 +1,5 @@
+import { getResultSymbol } from './formatting'
 import type { RecordedMatch } from './types'
-
-function getResultSymbol(winner: 'left' | 'right' | 'draw', dominant: boolean): string {
-  if (winner === 'draw') return '='
-  if (winner === 'left') return dominant ? '>>' : '>'
-  return dominant ? '<<' : '<'
-}
 
 export function serializeMatch(match: RecordedMatch): string {
   const left = match.left.join(',')
