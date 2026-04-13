@@ -40,7 +40,28 @@ function prepareMatches(matches: MatchResult[]): BTMatch[] {
   })
 }
 
-function fitParameters(btMatches: BTMatch[], allHeroes: string[]): Map<string, number> {
+// Regularization strength: acts as "virtual matches" pulling λ toward 1.0
+// Higher = stronger pull toward average. Scales inversely with hero match count.
+const REGULARIZATION_STRENGTH = 3.0
+
+/**
+ * Fit Bradley-Terry parameters with L2 regularization.
+ *
+ * Standard MM update: λ_new = totalWins / denomSum
+ *
+ * Regularized: adds virtual observations pulling λ toward 1.0.
+ * The regularization weight is inversely proportional to the hero's match count,
+ * so well-tested heroes are barely affected while rarely-seen heroes are pulled
+ * strongly toward average (λ = 1.0).
+ *
+ * This is the proper Bayesian approach: equivalent to a Gamma prior on λ
+ * centered at 1.0, with strength proportional to REGULARIZATION_STRENGTH.
+ */
+function fitParameters(
+  btMatches: BTMatch[],
+  allHeroes: string[],
+  heroMatchCounts: Map<string, number>,
+): Map<string, number> {
   const strengths = new Map<string, number>()
   for (const hero of allHeroes) {
     strengths.set(hero, 1.0)
@@ -74,11 +95,23 @@ function fitParameters(btMatches: BTMatch[], allHeroes: string[]): Map<string, n
         }
       }
 
+      // Regularization: add virtual observations pulling toward λ = 1.0
+      // Strength of pull is inversely proportional to match count
+      const matchCount = heroMatchCounts.get(hero) || 0
+      const regWeight = REGULARIZATION_STRENGTH / (1 + matchCount)
+      // Virtual wins at λ = 1.0: adds regWeight to numerator
+      totalWins += regWeight
+      // Virtual denominator contribution: regWeight / (λ_current + 1.0) ≈ regWeight / 2
+      // Using current strength for more accurate regularization
+      const currentStrength = strengths.get(hero) || 1.0
+      denomSum += regWeight / ((currentStrength + 1.0) / 2)
+
       const newVal = denomSum > 0 ? totalWins / denomSum : 1.0
       newStrengths.set(hero, newVal)
-      maxDelta = Math.max(maxDelta, Math.abs(newVal - (strengths.get(hero) || 1)))
+      maxDelta = Math.max(maxDelta, Math.abs(newVal - currentStrength))
     }
 
+    // Normalize so parameters average to 1.0
     const avg = [...newStrengths.values()].reduce((s, v) => s + v, 0) / newStrengths.size
     for (const [hero, val] of newStrengths) {
       strengths.set(hero, val / avg)
@@ -108,9 +141,17 @@ function computeAverageTeamStrength(strengths: Map<string, number>): number {
   return avg * 3
 }
 
+function buildMatchCountMap(analysisData: AnalysisData): Map<string, number> {
+  const counts = new Map<string, number>()
+  for (const hero of analysisData.allHeroes) {
+    counts.set(hero, analysisData.heroStats[hero]?.matches || 0)
+  }
+  return counts
+}
+
 export const bradleyTerryModel: RecommendationModel = {
   id: 'bradley-terry',
-  name: 'Bradley-Terry',
+  name: 'Total Team Power (B-T)',
 
   recommend(
     teammates: string[],
@@ -120,7 +161,8 @@ export const bradleyTerryModel: RecommendationModel = {
     matches: MatchResult[],
   ): Recommendation[] {
     const btMatches = prepareMatches(matches)
-    const strengths = fitParameters(btMatches, analysisData.allHeroes)
+    const matchCounts = buildMatchCountMap(analysisData)
+    const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
     const avgOpponentStrength = computeAverageTeamStrength(strengths)
 
     const recommendations: Recommendation[] = available.map((hero) => {
@@ -137,7 +179,14 @@ export const bradleyTerryModel: RecommendationModel = {
         hero,
         score: winProb,
         confidence: getHeroWilsonConfidence(analysisData.heroStats[hero]),
-        breakdown: { strength: strengths.get(hero) || 1.0, winProbability: winProb },
+        breakdown: {
+          strength: strengths.get(hero) || 1.0,
+          winProbability: winProb,
+          pickRate:
+            analysisData.totalMatches > 0
+              ? (analysisData.heroStats[hero]?.matches || 0) / analysisData.totalMatches
+              : 0,
+        },
         relevantNotes: getRelevantNotes(hero, matches),
       }
     })
@@ -152,7 +201,8 @@ export const bradleyTerryModel: RecommendationModel = {
     matches: MatchResult[],
   ): MatchupPrediction {
     const btMatches = prepareMatches(matches)
-    const strengths = fitParameters(btMatches, analysisData.allHeroes)
+    const matchCounts = buildMatchCountMap(analysisData)
+    const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
     const leftProb = predictWinProbability(leftTeam, rightTeam, strengths)
     const leftStrength = leftTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
     const rightStrength = rightTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)

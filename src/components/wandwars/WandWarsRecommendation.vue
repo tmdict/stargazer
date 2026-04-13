@@ -22,7 +22,7 @@
     </div>
 
     <div class="breakdown">
-      <template v-if="modelId === 'meta-pick'">
+      <template v-if="modelId === 'popular-pick'">
         <div class="breakdown-row">
           <span class="breakdown-label">Win Rate</span>
           <span class="breakdown-value">
@@ -45,13 +45,14 @@
           }}</span>
         </div>
         <div
-          v-for="pair in (recommendation.breakdown.pairDetails as any[] || [])"
+          v-for="pair in (recommendation.breakdown.pairDetails as any[]) || []"
           :key="pair.teammate"
           class="breakdown-row"
         >
           <span class="breakdown-label">w/ {{ formatName(pair.teammate) }}</span>
           <span class="breakdown-value">
-            <span class="pair-wins">{{ pair.wins }}W</span> / <span class="pair-losses">{{ pair.total - pair.wins }}L</span>
+            <span class="pair-wins">{{ pair.wins }}W</span> /
+            <span class="pair-losses">{{ pair.total - pair.wins }}L</span>
           </span>
         </div>
       </template>
@@ -90,7 +91,56 @@
             formatPercent(recommendation.breakdown.winProbability)
           }}</span>
         </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.pickRate)
+          }}</span>
+        </div>
       </template>
+    </div>
+
+    <div
+      v-if="
+        (counterIndicators && counterIndicators.length > 0) ||
+        (teamCounter && teamCounter.wins > teamCounter.losses)
+      "
+      class="counter-indicators"
+    >
+      <span v-for="ci in counterIndicators" :key="ci.opponent" :class="['counter-tag', ci.type]">
+        <svg
+          v-if="ci.type === 'counters'"
+          class="counter-icon"
+          viewBox="0 0 16 16"
+          fill="currentColor"
+        >
+          <path
+            d="M8 1L2 5v4c0 3.3 2.6 6.4 6 7 3.4-.6 6-3.7 6-7V5L8 1zm0 2.2L12 6v3c0 2.5-1.8 4.8-4 5.4V3.2z"
+          />
+        </svg>
+        <svg v-else class="counter-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path
+            d="M8 1L1 14h14L8 1zm0 3.5L12.5 13h-9L8 4.5zM7.25 7v3h1.5V7h-1.5zm0 4v1.5h1.5V11h-1.5z"
+          />
+        </svg>
+        <span class="counter-text">
+          {{ ci.type === 'counters' ? 'Strong against' : 'Weak against' }}
+          {{ formatName(ci.opponent) }}
+        </span>
+      </span>
+      <span
+        v-if="teamCounter && teamCounter.wins > teamCounter.losses"
+        class="counter-tag team-counter"
+      >
+        <svg class="counter-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0l2.5 5.3L16 6.2l-4 3.8 1 5.5L8 12.8l-5 2.7 1-5.5L0 6.2l5.5-.9L8 0z" />
+        </svg>
+        <span class="counter-text">
+          Potential team counter
+          <span class="pair-wins">{{ teamCounter.wins }}W</span> /
+          <span class="pair-losses">{{ teamCounter.losses }}L</span>
+        </span>
+      </span>
     </div>
 
     <div v-if="recommendation.relevantNotes.length > 0" class="notes">
@@ -116,11 +166,25 @@ import {
 } from '@/wandwars/formatting'
 import type { Recommendation } from '@/wandwars/types'
 
+export interface CounterIndicator {
+  opponent: string
+  type: 'counters' | 'countered'
+  score: number
+}
+
+export interface TeamCounterInfo {
+  wins: number
+  losses: number
+  total: number
+}
+
 const props = defineProps<{
   recommendation: Recommendation
   rank: number
   modelId: string
   characterImages: Record<string, string>
+  counterIndicators?: CounterIndicator[]
+  teamCounter?: TeamCounterInfo | null
 }>()
 
 const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidence]
@@ -264,6 +328,50 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
 
 .pair-losses {
   color: #c62828;
+}
+
+.counter-indicators {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--color-border-light);
+}
+
+.counter-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 8px;
+  border-radius: var(--radius-small);
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+.counter-tag.counters {
+  background: #e6f4ea;
+  color: #1e7e34;
+}
+
+.counter-tag.countered {
+  background: #fce4ec;
+  color: #c62828;
+}
+
+.counter-tag.team-counter {
+  background: #fef3cd;
+  color: #856404;
+}
+
+.counter-icon {
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+}
+
+.counter-text {
+  white-space: nowrap;
 }
 
 .context-hint {
