@@ -1,10 +1,17 @@
+import { BT_CONVERGENCE_TOLERANCE, BT_MAX_ITERATIONS, MAX_RECOMMENDATIONS } from './constants'
 import {
-  BT_CONVERGENCE_TOLERANCE,
-  BT_MAX_ITERATIONS,
-  MAX_RECOMMENDATIONS,
-} from './constants'
-import { getHeroWilsonConfidence, getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
-import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
+  getHeroWilsonConfidence,
+  getMatchupNotes,
+  getRelevantNotes,
+  getWorstConfidence,
+} from './modelUtils'
+import type {
+  AnalysisData,
+  MatchResult,
+  MatchupPrediction,
+  Recommendation,
+  RecommendationModel,
+} from './types'
 
 interface BTMatch {
   leftHeroes: string[]
@@ -33,10 +40,7 @@ function prepareMatches(matches: MatchResult[]): BTMatch[] {
   })
 }
 
-function fitParameters(
-  btMatches: BTMatch[],
-  allHeroes: string[],
-): Map<string, number> {
+function fitParameters(btMatches: BTMatch[], allHeroes: string[]): Map<string, number> {
   const strengths = new Map<string, number>()
   for (const hero of allHeroes) {
     strengths.set(hero, 1.0)
@@ -55,14 +59,8 @@ function fitParameters(
         const isRight = match.rightHeroes.includes(hero)
         if (!isLeft && !isRight) continue
 
-        const leftStrength = match.leftHeroes.reduce(
-          (sum, h) => sum + (strengths.get(h) || 1),
-          0,
-        )
-        const rightStrength = match.rightHeroes.reduce(
-          (sum, h) => sum + (strengths.get(h) || 1),
-          0,
-        )
+        const leftStrength = match.leftHeroes.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
+        const rightStrength = match.rightHeroes.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
         const totalStrength = leftStrength + rightStrength
         const matchWeight = match.leftWeight + match.rightWeight
 
@@ -131,9 +129,7 @@ export const bradleyTerryModel: RecommendationModel = {
       if (opponents.length > 0) {
         winProb = predictWinProbability(candidateTeam, opponents, strengths)
       } else {
-        const teamStrength = candidateTeam.reduce(
-          (sum, h) => sum + (strengths.get(h) || 1), 0,
-        )
+        const teamStrength = candidateTeam.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
         winProb = teamStrength / (teamStrength + avgOpponentStrength)
       }
 

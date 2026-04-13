@@ -22,10 +22,10 @@
 </template>
 
 <script setup lang="ts">
+import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
+import WandWarsPickSlots from './WandWarsPickSlots.vue'
 import type { CharacterType } from '@/lib/types/character'
 import type { PickSide, PickState } from '@/wandwars/types'
-import WandWarsPickSlots from './WandWarsPickSlots.vue'
-import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
 
 defineProps<{
   pickState: PickState

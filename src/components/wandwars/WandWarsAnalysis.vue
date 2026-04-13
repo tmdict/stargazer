@@ -18,11 +18,7 @@
     <div v-if="activeTab === 'records'" class="tab-content">
       <div v-if="records.length > 0" class="records-section">
         <div class="records-list">
-          <div
-            v-for="(record, i) in records"
-            :key="i"
-            class="record-entry"
-          >
+          <div v-for="(record, i) in records" :key="i" class="record-entry">
             <div class="record-row">
               <span class="record-teams">
                 {{ record.left.join(',') }}
@@ -41,12 +37,8 @@
           <button class="export-btn" @click="handleCopy">
             {{ copyLabel }}
           </button>
-          <button class="export-btn" @click="emit('export')">
-            Export .data
-          </button>
-          <button class="export-btn danger" @click="emit('clearRecords')">
-            Clear All
-          </button>
+          <button class="export-btn" @click="emit('export')">Export .data</button>
+          <button class="export-btn danger" @click="emit('clearRecords')">Clear All</button>
         </div>
       </div>
 
@@ -61,7 +53,8 @@
         v-if="activeTab === 'bradley-terry' && matchData.length < BT_LOW_DATA_THRESHOLD"
         class="warning-banner"
       >
-        Limited data ({{ matchData.length }} matches) — estimates may be unreliable. Prefer Hero Synergy tab.
+        Limited data ({{ matchData.length }} matches) — estimates may be unreliable. Prefer Hero
+        Synergy tab.
       </div>
 
       <!-- Matchup predictions when all 6 heroes are picked -->
@@ -84,7 +77,9 @@
           <div class="matchup-bars">
             <div class="matchup-side left">
               <span class="matchup-label">Left</span>
-              <span class="matchup-percent">{{ formatPercent(pred.prediction.leftWinProbability) }}</span>
+              <span class="matchup-percent">{{
+                formatPercent(pred.prediction.leftWinProbability)
+              }}</span>
             </div>
             <div class="matchup-bar-track">
               <div
@@ -93,7 +88,9 @@
               />
             </div>
             <div class="matchup-side right">
-              <span class="matchup-percent">{{ formatPercent(pred.prediction.rightWinProbability) }}</span>
+              <span class="matchup-percent">{{
+                formatPercent(pred.prediction.rightWinProbability)
+              }}</span>
               <span class="matchup-label">Right</span>
             </div>
           </div>
@@ -104,9 +101,7 @@
             <template v-else-if="pred.prediction.rightWinProbability > 0.55">
               <strong>Right</strong> team favored
             </template>
-            <template v-else>
-              Close matchup — could go either way
-            </template>
+            <template v-else> Close matchup — could go either way </template>
           </div>
           <div v-if="idx === 0 && pred.prediction.relevantNotes.length > 0" class="matchup-notes">
             <div
@@ -147,7 +142,12 @@
               Right Win
             </button>
             <button
-              :class="['result-btn', 'right', 'dominant', { active: resultKey === 'right-dominant' }]"
+              :class="[
+                'result-btn',
+                'right',
+                'dominant',
+                { active: resultKey === 'right-dominant' },
+              ]"
               @click="setResult('right', true)"
             >
               Right Win (Sweep)
@@ -159,12 +159,8 @@
             rows="2"
             placeholder="Optional notes... use {heroName} to reference heroes"
           />
-          <button class="submit-btn" @click="handleRecordSubmit">
-            Save Result
-          </button>
-          <button class="reset-btn" @click="emit('reset')">
-            Reset Teams
-          </button>
+          <button class="submit-btn" @click="handleRecordSubmit">Save Result</button>
+          <button class="reset-btn" @click="emit('reset')">Reset Teams</button>
         </div>
       </div>
 
@@ -196,12 +192,12 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import WandWarsRecommendation from './WandWarsRecommendation.vue'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
-import { serializeMatches } from '@/wandwars/serializer'
 import { getAllMatchupPredictions, getRecommendations } from '@/wandwars/recommend'
+import { serializeMatches } from '@/wandwars/serializer'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
-import WandWarsRecommendation from './WandWarsRecommendation.vue'
 
 const props = defineProps<{
   pickState: PickState
@@ -262,7 +258,9 @@ async function handleCopy() {
   const content = serializeMatches(props.records)
   await navigator.clipboard.writeText(content)
   copyLabel.value = 'Copied!'
-  setTimeout(() => { copyLabel.value = 'Copy Data' }, 2000)
+  setTimeout(() => {
+    copyLabel.value = 'Copy Data'
+  }, 2000)
 }
 
 function formatSymbol(record: RecordedMatch): string {
@@ -271,18 +269,14 @@ function formatSymbol(record: RecordedMatch): string {
 
 const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
 
-const pickingSideLabel = computed(() =>
-  props.currentPickSide === 'left' ? 'Left' : 'Right',
-)
+const pickingSideLabel = computed(() => (props.currentPickSide === 'left' ? 'Left' : 'Right'))
 
 const myTeam = computed(() => {
   if (!props.currentPickSide) return []
   return props.pickState[props.currentPickSide].filter((h): h is string => h !== null)
 })
 
-const opponentSide = computed<PickSide>(() =>
-  props.currentPickSide === 'left' ? 'right' : 'left',
-)
+const opponentSide = computed<PickSide>(() => (props.currentPickSide === 'left' ? 'right' : 'left'))
 
 const opponentTeam = computed(() => {
   if (!props.currentPickSide) return []
@@ -306,13 +300,9 @@ const recommendations = computed(() => {
   )
 })
 
-const leftTeam = computed(() =>
-  props.pickState.left.filter((h): h is string => h !== null),
-)
+const leftTeam = computed(() => props.pickState.left.filter((h): h is string => h !== null))
 
-const rightTeam = computed(() =>
-  props.pickState.right.filter((h): h is string => h !== null),
-)
+const rightTeam = computed(() => props.pickState.right.filter((h): h is string => h !== null))
 
 const allPredictions = computed(() => {
   if (!allPicked.value) return []
@@ -326,7 +316,6 @@ const sortedPredictions = computed(() => {
   const others = allPredictions.value.filter((p) => p.id !== activeTab.value)
   return active ? [active, ...others] : allPredictions.value
 })
-
 </script>
 
 <style scoped>
@@ -353,7 +342,9 @@ const sortedPredictions = computed(() => {
   font-size: 0.8rem;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
-  transition: color var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .tab-btn.active {
@@ -387,7 +378,9 @@ const sortedPredictions = computed(() => {
   font-size: 0.8rem;
   margin-bottom: var(--spacing-sm);
   text-align: center;
-  transition: background var(--transition-fast), border-color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    border-color var(--transition-fast);
 }
 
 .picking-indicator.left {
@@ -617,7 +610,9 @@ const sortedPredictions = computed(() => {
   font-size: 0.75rem;
   font-weight: 600;
   white-space: nowrap;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .result-btn.left.active {

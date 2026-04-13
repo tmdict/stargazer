@@ -1,3 +1,4 @@
+import { wilsonConfidence } from './confidence'
 import {
   MAX_RECOMMENDATIONS,
   SAMPLE_BONUS_FULL,
@@ -6,9 +7,14 @@ import {
   WEIGHT_COUNTER,
   WEIGHT_SYNERGY,
 } from './constants'
-import { wilsonConfidence } from './confidence'
 import { getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
-import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
+import type {
+  AnalysisData,
+  MatchResult,
+  MatchupPrediction,
+  Recommendation,
+  RecommendationModel,
+} from './types'
 
 function normalizeModifier(value: number): number {
   const clamped = Math.max(-0.5, Math.min(0.5, value))
@@ -70,7 +76,10 @@ function computeDynamicScore(
 ): number {
   const effectiveSynergyWeight = WEIGHT_SYNERGY * synStrength
   const effectiveCounterWeight = WEIGHT_COUNTER * ctrStrength
-  const effectiveBaseWeight = WEIGHT_BASE + (WEIGHT_SYNERGY - effectiveSynergyWeight) + (WEIGHT_COUNTER - effectiveCounterWeight)
+  const effectiveBaseWeight =
+    WEIGHT_BASE +
+    (WEIGHT_SYNERGY - effectiveSynergyWeight) +
+    (WEIGHT_COUNTER - effectiveCounterWeight)
 
   return (
     effectiveBaseWeight * baseWinRate +
@@ -93,9 +102,10 @@ function getHeroConfidence(
 
   const synStr = synergyDataStrength(candidate, teammates, data)
   const ctrStr = counterDataStrength(candidate, opponents, data)
-  const pairStrength = teammates.length > 0 || opponents.length > 0
-    ? (synStr + ctrStr) / (teammates.length > 0 && opponents.length > 0 ? 2 : 1)
-    : 1
+  const pairStrength =
+    teammates.length > 0 || opponents.length > 0
+      ? (synStr + ctrStr) / (teammates.length > 0 && opponents.length > 0 ? 2 : 1)
+      : 1
 
   if (pairStrength < 0.3 && (teammates.length > 0 || opponents.length > 0)) {
     return heroConf === 'high' ? 'medium' : 'low'
@@ -122,7 +132,14 @@ export const compositeModel: RecommendationModel = {
       const synStr = synergyDataStrength(hero, teammates, analysisData)
       const ctrStr = counterDataStrength(hero, opponents, analysisData)
       const heroMatches = analysisData.heroStats[hero]?.matches || 0
-      const score = computeDynamicScore(baseWinRate, rawSynergy, rawCounter, synStr, ctrStr, heroMatches)
+      const score = computeDynamicScore(
+        baseWinRate,
+        rawSynergy,
+        rawCounter,
+        synStr,
+        ctrStr,
+        heroMatches,
+      )
       const pickRate = analysisData.totalMatches > 0 ? heroMatches / analysisData.totalMatches : 0
 
       return {
@@ -163,15 +180,11 @@ export const compositeModel: RecommendationModel = {
     const total = leftScore + rightScore
     const leftProb = total > 0 ? leftScore / total : 0.5
 
-    const confidence = getWorstConfidence(
-      [...leftTeam, ...rightTeam],
-      analysisData,
-      (hero) => {
-        const opponents = leftTeam.includes(hero) ? rightTeam : leftTeam
-        const teammates = (leftTeam.includes(hero) ? leftTeam : rightTeam).filter((h) => h !== hero)
-        return getHeroConfidence(hero, teammates, opponents, analysisData)
-      },
-    )
+    const confidence = getWorstConfidence([...leftTeam, ...rightTeam], analysisData, (hero) => {
+      const opponents = leftTeam.includes(hero) ? rightTeam : leftTeam
+      const teammates = (leftTeam.includes(hero) ? leftTeam : rightTeam).filter((h) => h !== hero)
+      return getHeroConfidence(hero, teammates, opponents, analysisData)
+    })
 
     return {
       leftWinProbability: leftProb,

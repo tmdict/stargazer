@@ -1,10 +1,4 @@
-import type {
-  AnalysisData,
-  CounterMatrix,
-  HeroStats,
-  MatchResult,
-  SynergyMatrix,
-} from './types'
+import type { AnalysisData, CounterMatrix, HeroStats, MatchResult, SynergyMatrix } from './types'
 
 const BAYESIAN_PRIOR = 1.0
 

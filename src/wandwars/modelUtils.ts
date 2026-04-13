@@ -4,10 +4,7 @@ import type { AnalysisData, HeroStats, MatchNote, MatchResult } from './types'
 /**
  * Get notes where the candidate hero is referenced in {heroName} tags.
  */
-export function getRelevantNotes(
-  candidate: string,
-  matches: MatchResult[],
-): MatchNote[] {
+export function getRelevantNotes(candidate: string, matches: MatchResult[]): MatchNote[] {
   const notes: MatchNote[] = []
   for (const match of matches) {
     for (const note of match.notes) {
@@ -42,9 +39,7 @@ export function getMatchupNotes(
 /**
  * Wilson confidence for a hero's stats.
  */
-export function getHeroWilsonConfidence(
-  stats: HeroStats | undefined,
-): 'high' | 'medium' | 'low' {
+export function getHeroWilsonConfidence(stats: HeroStats | undefined): 'high' | 'medium' | 'low' {
   if (!stats || stats.matches === 0) return 'low'
   return wilsonConfidence(stats.wins + stats.draws * 0.5, stats.matches)
 }
@@ -57,9 +52,8 @@ export function getWorstConfidence(
   analysisData: AnalysisData,
   getConfidence?: (hero: string) => 'high' | 'medium' | 'low',
 ): 'high' | 'medium' | 'low' {
-  const getConf = getConfidence ?? ((hero: string) =>
-    getHeroWilsonConfidence(analysisData.heroStats[hero])
-  )
+  const getConf =
+    getConfidence ?? ((hero: string) => getHeroWilsonConfidence(analysisData.heroStats[hero]))
 
   let worst: 'high' | 'medium' | 'low' = 'high'
   for (const hero of heroes) {

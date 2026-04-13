@@ -7,10 +7,7 @@
  * - Medium: interval width < 0.5
  * - Low: wide interval or too few samples
  */
-export function wilsonConfidence(
-  successes: number,
-  total: number,
-): 'high' | 'medium' | 'low' {
+export function wilsonConfidence(successes: number, total: number): 'high' | 'medium' | 'low' {
   if (total < 3) return 'low'
 
   // z = 1.96 for 95% confidence interval
