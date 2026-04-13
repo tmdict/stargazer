@@ -107,7 +107,7 @@ const currentDraftIndex = computed(() => {
 function getNextDraftSlot(): { side: PickSide; slot: number } | null {
   const idx = currentDraftIndex.value
   if (idx >= DRAFT_ORDER.length) return null
-  return { side: DRAFT_ORDER[idx][0], slot: DRAFT_ORDER[idx][1] }
+  return { side: DRAFT_ORDER[idx]![0], slot: DRAFT_ORDER[idx]![1] }
 }
 
 const currentPickSide = computed<PickSide | null>(() => {

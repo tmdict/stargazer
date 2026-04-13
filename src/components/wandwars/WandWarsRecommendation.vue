@@ -26,26 +26,30 @@
         <div class="breakdown-row">
           <span class="breakdown-label">Win Rate</span>
           <span class="breakdown-value">
-            {{ formatPercent(recommendation.breakdown.winRate) }}
+            {{ formatPercent(recommendation.breakdown.winRate as number) }}
             <span
               v-if="
-                recommendation.breakdown.contextMatches > 0 &&
+                (recommendation.breakdown.contextMatches as number) > 0 &&
                 recommendation.breakdown.overallWinRate !== recommendation.breakdown.winRate
               "
               class="context-hint"
             >
-              ({{ formatPercent(recommendation.breakdown.overallWinRate) }} overall)
+              ({{ formatPercent(recommendation.breakdown.overallWinRate as number) }} overall)
             </span>
           </span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
-            formatPercent(recommendation.breakdown.pickRate)
+            formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
         </div>
         <div
-          v-for="pair in (recommendation.breakdown.pairDetails as any[]) || []"
+          v-for="pair in (recommendation.breakdown.pairDetails as {
+            teammate: string
+            wins: number
+            total: number
+          }[]) || []"
           :key="pair.teammate"
           class="breakdown-row"
         >
@@ -59,42 +63,46 @@
       <template v-else-if="modelId === 'composite'">
         <div class="breakdown-row">
           <span class="breakdown-label">Win Rate</span>
-          <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.base) }}</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.base as number)
+          }}</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Synergy</span>
-          <span :class="['breakdown-value', signClass(recommendation.breakdown.synergy)]">
-            {{ formatSigned(recommendation.breakdown.synergy) }}
+          <span :class="['breakdown-value', signClass(recommendation.breakdown.synergy as number)]">
+            {{ formatSigned(recommendation.breakdown.synergy as number) }}
           </span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Counter</span>
-          <span :class="['breakdown-value', signClass(recommendation.breakdown.counter)]">
-            {{ formatSigned(recommendation.breakdown.counter) }}
+          <span :class="['breakdown-value', signClass(recommendation.breakdown.counter as number)]">
+            {{ formatSigned(recommendation.breakdown.counter as number) }}
           </span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
-            formatPercent(recommendation.breakdown.pickRate)
+            formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
         </div>
       </template>
       <template v-else-if="modelId === 'bradley-terry'">
         <div class="breakdown-row">
           <span class="breakdown-label">Strength</span>
-          <span class="breakdown-value">{{ recommendation.breakdown.strength?.toFixed(2) }}</span>
+          <span class="breakdown-value">{{
+            (recommendation.breakdown.strength as number)?.toFixed(2)
+          }}</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Win Prob</span>
           <span class="breakdown-value">{{
-            formatPercent(recommendation.breakdown.winProbability)
+            formatPercent(recommendation.breakdown.winProbability as number)
           }}</span>
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
-            formatPercent(recommendation.breakdown.pickRate)
+            formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
         </div>
       </template>
