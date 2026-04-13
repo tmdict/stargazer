@@ -36,13 +36,13 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { getMatchData, getAnalysisData } from '@/wandwars/recommend'
-import { serializeMatches } from '@/wandwars/serializer'
-import { DRAFT_ORDER } from '@/wandwars/constants'
-import type { PickSide, PickState, RecordedMatch } from '@/wandwars/types'
-import { useGameDataStore } from '@/stores/gameData'
-import WandWarsPicker from '@/components/wandwars/WandWarsPicker.vue'
 import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
+import WandWarsPicker from '@/components/wandwars/WandWarsPicker.vue'
+import { useGameDataStore } from '@/stores/gameData'
+import { DRAFT_ORDER } from '@/wandwars/constants'
+import { getAnalysisData, getMatchData } from '@/wandwars/recommend'
+import { serializeMatches } from '@/wandwars/serializer'
+import type { PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeData()
@@ -87,15 +87,11 @@ const pickedHeroes = computed(() => {
   return picked
 })
 
-const availableHeroes = computed(() =>
-  allHeroes.value.filter((h) => !pickedHeroes.value.has(h)),
-)
+const availableHeroes = computed(() => allHeroes.value.filter((h) => !pickedHeroes.value.has(h)))
 
 const heroSet = computed(() => new Set(allHeroes.value))
 
-const characters = computed(() =>
-  gameDataStore.characters.filter((c) => heroSet.value.has(c.name)),
-)
+const characters = computed(() => gameDataStore.characters.filter((c) => heroSet.value.has(c.name)))
 
 const characterImages = computed(() => gameDataStore.characterImages)
 
@@ -131,9 +127,7 @@ function handleUnpickSlot(side: PickSide, slot: number) {
   const hero = pickState.value[side][slot]
   if (!hero) return
   pickState.value[side][slot] = null
-  pickHistory.value = pickHistory.value.filter(
-    (h) => !(h.side === side && h.slot === slot),
-  )
+  pickHistory.value = pickHistory.value.filter((h) => !(h.side === side && h.slot === slot))
 }
 
 function handleUndo() {

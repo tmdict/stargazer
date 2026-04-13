@@ -1,11 +1,16 @@
 import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
+import rawData from './data/wandwars.data?raw'
 import { metaPickModel } from './metaPick'
 import { getUniqueHeroes, parseMatchData } from './parser'
-import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
-
-import rawData from './data/wandwars.data?raw'
+import type {
+  AnalysisData,
+  MatchResult,
+  MatchupPrediction,
+  Recommendation,
+  RecommendationModel,
+} from './types'
 
 const models: RecommendationModel[] = [metaPickModel, compositeModel, bradleyTerryModel]
 

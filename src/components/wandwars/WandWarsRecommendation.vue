@@ -15,7 +15,9 @@
         <span :class="['confidence-badge', recommendation.confidence]" :title="confidenceTooltip">
           {{ recommendation.confidence }} confidence
         </span>
-        <span class="score"><span class="score-label">Score:</span> {{ formatScore(recommendation.score) }}</span>
+        <span class="score"
+          ><span class="score-label">Score:</span> {{ formatScore(recommendation.score) }}</span
+        >
       </div>
     </div>
 
@@ -26,7 +28,10 @@
           <span class="breakdown-value">
             {{ formatPercent(recommendation.breakdown.winRate) }}
             <span
-              v-if="recommendation.breakdown.contextMatches > 0 && recommendation.breakdown.overallWinRate !== recommendation.breakdown.winRate"
+              v-if="
+                recommendation.breakdown.contextMatches > 0 &&
+                recommendation.breakdown.overallWinRate !== recommendation.breakdown.winRate
+              "
               class="context-hint"
             >
               ({{ formatPercent(recommendation.breakdown.overallWinRate) }} overall)
@@ -35,11 +40,9 @@
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Pick Rate</span>
-          <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.pickRate) }}</span>
-        </div>
-        <div class="breakdown-row">
-          <span class="breakdown-label">Tier</span>
-          <span class="breakdown-value">{{ recommendation.breakdown.tier > 0.05 ? 'S' : recommendation.breakdown.tier > 0 ? 'A' : '—' }}</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.pickRate)
+          }}</span>
         </div>
       </template>
       <template v-else-if="modelId === 'composite'">
@@ -61,7 +64,9 @@
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Pick Rate</span>
-          <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.pickRate) }}</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.pickRate)
+          }}</span>
         </div>
       </template>
       <template v-else-if="modelId === 'bradley-terry'">
@@ -71,7 +76,9 @@
         </div>
         <div class="breakdown-row">
           <span class="breakdown-label">Win Prob</span>
-          <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.winProbability) }}</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.winProbability)
+          }}</span>
         </div>
       </template>
     </div>
@@ -89,7 +96,14 @@
 
 <script setup lang="ts">
 import { CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
-import { formatName, formatNoteHtml, formatPercent, formatScore, formatSigned, signClass } from '@/wandwars/formatting'
+import {
+  formatName,
+  formatNoteHtml,
+  formatPercent,
+  formatScore,
+  formatSigned,
+  signClass,
+} from '@/wandwars/formatting'
 import type { Recommendation } from '@/wandwars/types'
 
 const props = defineProps<{

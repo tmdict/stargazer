@@ -1,11 +1,7 @@
 <template>
   <div class="hero-grid-container">
     <div class="controls-row">
-      <FilterIcons
-        icon-prefix="faction"
-        :options="factionOptions"
-        v-model="factionFilter"
-      />
+      <FilterIcons icon-prefix="faction" :options="factionOptions" v-model="factionFilter" />
       <div class="actions">
         <slot name="actions" />
       </div>
@@ -122,7 +118,9 @@ function isAvailable(hero: string): boolean {
   border: none;
   background: none;
   cursor: pointer;
-  transition: transform var(--transition-fast), opacity var(--transition-fast);
+  transition:
+    transform var(--transition-fast),
+    opacity var(--transition-fast);
 }
 
 .hero-btn:hover:not(.unavailable) {

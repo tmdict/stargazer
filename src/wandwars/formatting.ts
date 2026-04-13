@@ -21,8 +21,9 @@ export function formatName(name: string): string {
 }
 
 export function formatNoteHtml(text: string): string {
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) =>
-    `<strong class="hero-highlight">${formatName(name)}</strong>`,
+  return text.replace(
+    /\{([^}]+)\}/g,
+    (_, name: string) => `<strong class="hero-highlight">${formatName(name)}</strong>`,
   )
 }
 
@@ -31,10 +32,7 @@ export function signClass(value: number | undefined): string {
   return value > 0 ? 'positive' : 'negative'
 }
 
-export function getResultSymbol(
-  winner: 'left' | 'right' | 'draw',
-  dominant: boolean,
-): string {
+export function getResultSymbol(winner: 'left' | 'right' | 'draw', dominant: boolean): string {
   if (winner === 'draw') return '='
   if (winner === 'left') return dominant ? '>>' : '>'
   return dominant ? '<<' : '<'

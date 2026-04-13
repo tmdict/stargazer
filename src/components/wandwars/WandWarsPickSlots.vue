@@ -1,6 +1,12 @@
 <template>
   <div class="pick-slots">
-    <div :class="['team', 'team-left', { 'active-side': currentPickSide === 'left' || currentPickSide === null }]">
+    <div
+      :class="[
+        'team',
+        'team-left',
+        { 'active-side': currentPickSide === 'left' || currentPickSide === null },
+      ]"
+    >
       <span class="side-indicator" :class="{ visible: currentPickSide === 'left' }">
         ▶ Picking
       </span>
@@ -24,7 +30,13 @@
 
     <span class="vs-label">vs</span>
 
-    <div :class="['team', 'team-right', { 'active-side': currentPickSide === 'right' || currentPickSide === null }]">
+    <div
+      :class="[
+        'team',
+        'team-right',
+        { 'active-side': currentPickSide === 'right' || currentPickSide === null },
+      ]"
+    >
       <span class="side-indicator enemy" :class="{ visible: currentPickSide === 'right' }">
         Picking ◀
       </span>
@@ -121,7 +133,9 @@ function getCharacter(name: string): CharacterType | undefined {
   justify-content: center;
   background: var(--color-bg-white);
   cursor: default;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  transition:
+    border-color var(--transition-fast),
+    box-shadow var(--transition-fast);
 }
 
 .pick-slot.enemy {
@@ -147,6 +161,7 @@ function getCharacter(name: string): CharacterType | undefined {
   font-size: 1rem;
   font-weight: bold;
   color: var(--color-text-secondary);
+  margin-top: var(--spacing-lg);
 }
 
 @media (max-width: 768px) {
