@@ -168,7 +168,7 @@ function computePairScore(
 
   // If 2 teammates, blend in trio record
   if (teammates.length === 2) {
-    const trio = trioRecord(candidate, teammates[0], teammates[1], matches)
+    const trio = trioRecord(candidate, teammates[0]!, teammates[1]!, matches)
     if (trio.total > 0) {
       // Weight trio at 40% of the pair component, individual pairs at 60%
       score = 0.6 * score + 0.4 * trio.winRate
@@ -192,7 +192,7 @@ export const popularPickModel: RecommendationModel = {
     const maxMatches = Math.max(...available.map((h) => analysisData.heroStats[h]?.matches || 0), 1)
 
     const teamCount = Math.min(teammates.length, 2) as 0 | 1 | 2
-    const w = WEIGHTS[teamCount]
+    const w = WEIGHTS[teamCount]!
 
     const recommendations: Recommendation[] = available.map((hero) => {
       const stats = analysisData.heroStats[hero]

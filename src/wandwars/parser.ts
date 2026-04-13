@@ -16,7 +16,7 @@ function parseNotes(raw: string): MatchNote[] {
   const heroPattern = /\{([^}]+)\}/g
   let match: RegExpExecArray | null
   while ((match = heroPattern.exec(text)) !== null) {
-    heroes.push(match[1])
+    if (match[1]) heroes.push(match[1])
   }
 
   return [{ text, heroes }]
@@ -34,7 +34,7 @@ export function parseMatchData(rawText: string): MatchResult[] {
   const warnings: string[] = []
 
   for (let i = 0; i < lines.length; i++) {
-    const line = lines[i].trim()
+    const line = lines[i]!.trim()
     if (!line) continue
 
     // Split notes from match data
@@ -75,7 +75,7 @@ export function parseMatchData(rawText: string): MatchResult[] {
       continue
     }
 
-    const { result, weight } = RESULT_SYMBOLS[resultSymbol]
+    const { result, weight } = RESULT_SYMBOLS[resultSymbol]!
     const notes = parseNotes(notesPart)
 
     results.push({ left, right, result, weight, notes })

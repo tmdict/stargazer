@@ -53,7 +53,7 @@ function computeHeroStats(matches: MatchResult[], allHeroes: string[]): Record<s
 
   // Apply Bayesian smoothing
   for (const hero of allHeroes) {
-    const s = stats[hero]
+    const s = stats[hero]!
     const totalWeighted = s.weightedWins + s.weightedLosses
     s.winRate = (s.weightedWins + BAYESIAN_PRIOR) / (totalWeighted + 2 * BAYESIAN_PRIOR)
   }
@@ -98,7 +98,7 @@ function computeSynergyMatrix(
   const matrix: SynergyMatrix = {}
 
   for (const [key, matchCount] of Object.entries(pairMatches)) {
-    const [a, b] = key.split(':')
+    const [a, b] = key.split(':') as [string, string]
     const weightedWins = pairWeightedWins[key] || 0
     const weightedTotal = pairWeightedTotal[key] || 0
     const losses = pairLosses[key] || 0
@@ -112,8 +112,8 @@ function computeSynergyMatrix(
 
     if (!matrix[a]) matrix[a] = {}
     if (!matrix[b]) matrix[b] = {}
-    matrix[a][b] = entry
-    matrix[b][a] = entry
+    matrix[a]![b] = entry
+    matrix[b]![a] = entry
   }
 
   return matrix
@@ -159,7 +159,7 @@ function computeCounterMatrix(
   const matrix: CounterMatrix = {}
 
   for (const [key, matchCount] of Object.entries(vsMatches)) {
-    const [hero, opponent] = key.split(':')
+    const [hero, opponent] = key.split(':') as [string, string]
     const weightedWins = vsWeightedWins[key] || 0
     const weightedTotal = vsWeightedTotal[key] || 0
     const wins = vsWins[key] || 0
@@ -171,7 +171,7 @@ function computeCounterMatrix(
     const score = vsWinRate - overallRate
 
     if (!matrix[hero]) matrix[hero] = {}
-    matrix[hero][opponent] = { matches: matchCount, wins, losses, score }
+    matrix[hero]![opponent] = { matches: matchCount, wins, losses, score }
   }
 
   return matrix
