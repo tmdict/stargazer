@@ -1,10 +1,9 @@
 import {
   BT_CONVERGENCE_TOLERANCE,
   BT_MAX_ITERATIONS,
-  CONFIDENCE_HIGH,
-  CONFIDENCE_MEDIUM,
   MAX_RECOMMENDATIONS,
 } from './constants'
+import { wilsonConfidence } from './confidence'
 import type { AnalysisData, MatchNote, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
 
 interface BTMatch {
@@ -15,14 +14,24 @@ interface BTMatch {
 }
 
 function prepareMatches(matches: MatchResult[]): BTMatch[] {
-  return matches
-    .filter((m) => m.result !== 'draw')
-    .map((m) => ({
+  return matches.map((m) => {
+    if (m.result === 'draw') {
+      // Treat draws as 0.5 wins for each side
+      const halfWeight = m.weight * 0.5
+      return {
+        leftHeroes: [...m.left],
+        rightHeroes: [...m.right],
+        leftWeight: halfWeight,
+        rightWeight: halfWeight,
+      }
+    }
+    return {
       leftHeroes: [...m.left],
       rightHeroes: [...m.right],
       leftWeight: m.result === 'left' ? m.weight : 0,
       rightWeight: m.result === 'right' ? m.weight : 0,
-    }))
+    }
+  })
 }
 
 function fitParameters(
@@ -56,14 +65,15 @@ function fitParameters(
           0,
         )
         const totalStrength = leftStrength + rightStrength
+        const matchWeight = match.leftWeight + match.rightWeight
 
         if (isLeft) {
           totalWins += match.leftWeight
-          denomSum += (match.leftWeight + match.rightWeight) / totalStrength
+          denomSum += matchWeight / totalStrength
         }
         if (isRight) {
           totalWins += match.rightWeight
-          denomSum += (match.leftWeight + match.rightWeight) / totalStrength
+          denomSum += matchWeight / totalStrength
         }
       }
 
@@ -113,6 +123,13 @@ function getRelevantNotes(
   return notes
 }
 
+function computeAverageTeamStrength(strengths: Map<string, number>): number {
+  const values = [...strengths.values()]
+  if (values.length === 0) return 3.0
+  const avg = values.reduce((s, v) => s + v, 0) / values.length
+  return avg * 3 // 3 heroes per team
+}
+
 export const bradleyTerryModel: RecommendationModel = {
   id: 'bradley-terry',
   name: 'Bradley-Terry',
@@ -126,34 +143,27 @@ export const bradleyTerryModel: RecommendationModel = {
   ): Recommendation[] {
     const btMatches = prepareMatches(matches)
     const strengths = fitParameters(btMatches, analysisData.allHeroes)
+    const avgOpponentStrength = computeAverageTeamStrength(strengths)
 
-    // Compute base win probability without candidate (if teammates exist)
-    // For scoring, we evaluate each candidate's marginal contribution
     const recommendations: Recommendation[] = available.map((hero) => {
       const candidateTeam = [...teammates, hero]
-      // If we know opponents, predict against them; otherwise just use strength
       let winProb: number
       if (opponents.length > 0) {
         winProb = predictWinProbability(candidateTeam, opponents, strengths)
       } else {
-        // No opponents known: use team strength as proportion of total
+        // No opponents known: compare against average team strength
         const teamStrength = candidateTeam.reduce(
           (sum, h) => sum + (strengths.get(h) || 1),
           0,
         )
-        // Normalize against average opponent team
-        const avgHeroStrength = 1.0 // strengths are normalized to avg 1.0
-        const avgOpponentStrength = avgHeroStrength * 3
         winProb = teamStrength / (teamStrength + avgOpponentStrength)
       }
 
       const heroStrength = strengths.get(hero) || 1.0
-      const heroMatches = analysisData.heroStats[hero]?.matches || 0
-
-      let confidence: 'high' | 'medium' | 'low'
-      if (heroMatches >= CONFIDENCE_HIGH) confidence = 'high'
-      else if (heroMatches >= CONFIDENCE_MEDIUM) confidence = 'medium'
-      else confidence = 'low'
+      const heroStats = analysisData.heroStats[hero]
+      const confidence = heroStats
+        ? wilsonConfidence(heroStats.wins + heroStats.draws * 0.5, heroStats.matches)
+        : 'low' as const
 
       return {
         hero,
@@ -183,16 +193,16 @@ export const bradleyTerryModel: RecommendationModel = {
     const leftStrength = leftTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
     const rightStrength = rightTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
 
-    // Confidence: minimum match count across all 6 heroes
-    let minMatches = Infinity
+    // Confidence: worst Wilson score across all 6 heroes
+    let worstConfidence: 'high' | 'medium' | 'low' = 'high'
     for (const hero of [...leftTeam, ...rightTeam]) {
-      const heroMatches = analysisData.heroStats[hero]?.matches || 0
-      minMatches = Math.min(minMatches, heroMatches)
+      const stats = analysisData.heroStats[hero]
+      const conf = stats
+        ? wilsonConfidence(stats.wins + stats.draws * 0.5, stats.matches)
+        : 'low' as const
+      if (conf === 'low') { worstConfidence = 'low'; break }
+      if (conf === 'medium' && worstConfidence === 'high') worstConfidence = 'medium'
     }
-    let confidence: 'high' | 'medium' | 'low'
-    if (minMatches >= CONFIDENCE_HIGH) confidence = 'high'
-    else if (minMatches >= CONFIDENCE_MEDIUM) confidence = 'medium'
-    else confidence = 'low'
 
     const allHeroSet = new Set([...leftTeam, ...rightTeam])
     const notes: MatchNote[] = []
@@ -207,7 +217,7 @@ export const bradleyTerryModel: RecommendationModel = {
     return {
       leftWinProbability: leftProb,
       rightWinProbability: 1 - leftProb,
-      confidence,
+      confidence: worstConfidence,
       breakdown: { leftStrength, rightStrength },
       relevantNotes: notes,
     }

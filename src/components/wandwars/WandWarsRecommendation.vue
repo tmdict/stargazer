@@ -10,17 +10,41 @@
       />
       <div class="hero-info">
         <span class="hero-name">{{ formatName(recommendation.hero) }}</span>
-        <span class="score">{{ formatScore(recommendation.score) }}</span>
       </div>
-      <span :class="['confidence-badge', recommendation.confidence]" :title="confidenceTooltip">
-        {{ recommendation.confidence }} confidence
-      </span>
+      <div class="score-confidence">
+        <span :class="['confidence-badge', recommendation.confidence]" :title="confidenceTooltip">
+          {{ recommendation.confidence }} confidence
+        </span>
+        <span class="score"><span class="score-label">Score:</span> {{ formatScore(recommendation.score) }}</span>
+      </div>
     </div>
 
     <div class="breakdown">
-      <template v-if="modelId === 'composite'">
+      <template v-if="modelId === 'meta-pick'">
         <div class="breakdown-row">
-          <span class="breakdown-label">Base</span>
+          <span class="breakdown-label">Win Rate</span>
+          <span class="breakdown-value">
+            {{ formatPercent(recommendation.breakdown.winRate) }}
+            <span
+              v-if="recommendation.breakdown.contextMatches > 0 && recommendation.breakdown.overallWinRate !== recommendation.breakdown.winRate"
+              class="context-hint"
+            >
+              ({{ formatPercent(recommendation.breakdown.overallWinRate) }} overall)
+            </span>
+          </span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.pickRate) }}</span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Tier</span>
+          <span class="breakdown-value">{{ recommendation.breakdown.tier > 0.05 ? 'S' : recommendation.breakdown.tier > 0 ? 'A' : '—' }}</span>
+        </div>
+      </template>
+      <template v-else-if="modelId === 'composite'">
+        <div class="breakdown-row">
+          <span class="breakdown-label">Win Rate</span>
           <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.base) }}</span>
         </div>
         <div class="breakdown-row">
@@ -34,6 +58,10 @@
           <span :class="['breakdown-value', signClass(recommendation.breakdown.counter)]">
             {{ formatSigned(recommendation.breakdown.counter) }}
           </span>
+        </div>
+        <div class="breakdown-row">
+          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-value">{{ formatPercent(recommendation.breakdown.pickRate) }}</span>
         </div>
       </template>
       <template v-else-if="modelId === 'bradley-terry'">
@@ -53,9 +81,8 @@
         v-for="(note, i) in recommendation.relevantNotes.slice(0, 2)"
         :key="i"
         class="note"
-      >
-        {{ formatNoteText(note.text) }}
-      </div>
+        v-html="formatNoteHtml(note.text)"
+      />
     </div>
   </div>
 </template>
@@ -85,8 +112,10 @@ function formatName(name: string): string {
     .join(' ')
 }
 
-function formatNoteText(text: string): string {
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) => formatName(name))
+function formatNoteHtml(text: string): string {
+  return text.replace(/\{([^}]+)\}/g, (_, name: string) =>
+    `<strong class="hero-highlight">${formatName(name)}</strong>`,
+  )
 }
 
 function formatScore(score: number): string {
@@ -156,14 +185,25 @@ function signClass(value: number | undefined): string {
   color: var(--color-text-primary);
 }
 
+.score-confidence {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .score {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--color-primary);
+  font-weight: 700;
+}
+
+.score-label {
+  color: var(--color-text-secondary);
   font-weight: 600;
 }
 
 .confidence-badge {
-  font-size: 0.7rem;
+  font-size: 0.6rem;
   padding: 3px 8px;
   border-radius: var(--radius-small);
   text-transform: uppercase;
@@ -229,5 +269,16 @@ function signClass(value: number | undefined): string {
   color: var(--color-text-secondary);
   font-style: italic;
   line-height: 1.4;
+}
+
+.context-hint {
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+  font-weight: 400;
+}
+
+.note :deep(.hero-highlight) {
+  color: var(--color-primary);
+  font-style: normal;
 }
 </style>
