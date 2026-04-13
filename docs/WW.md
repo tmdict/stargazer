@@ -32,14 +32,21 @@ tasi,dunlingr,daimon << kordan,zandrok,gerda
 
 ## 3. Architecture
 
-### File Structure
+### File Structure — WandWars Files
+
+All WandWars-specific files. To disable or remove the feature, delete these and revert the modified files listed below.
 
 ```
 src/
   wandwars/
     data/
-      wandwars.data           # Match data (gitignored)
-      .gitignore              # Ignores all files except itself
+      raw/
+        records.data          # Plain text match data (gitignored)
+      data                    # Base64+zlib encoded match data (committed)
+      .gitignore              # Ignores raw/ folder
+    scripts/
+      encode.ts               # Raw → encoded (node src/wandwars/scripts/encode.ts)
+      decode.ts               # Encoded → raw (node src/wandwars/scripts/decode.ts)
     types.ts                  # Domain types (MatchResult, Recommendation, etc.)
     parser.ts                 # Text file → MatchResult[]
     serializer.ts             # RecordedMatch[] → .data text for export
@@ -63,7 +70,19 @@ src/
       WandWarsAnalysis.vue        # Right panel: tabbed [Popular Pick][B-T][Composite][Records]
       WandWarsRecommendation.vue  # Recommendation card with breakdown, counters, team counter
       WandWarsTopTeams.vue        # Pinned top teams + suggested teams card
+docs/
+  WW.md                        # This document
 ```
+
+### Modified Files (non-WandWars)
+
+These existing files were modified to support the feature. Revert these changes to fully remove WandWars:
+
+| File | Change |
+|------|--------|
+| `src/router/routes.ts` | Added `/wandwars` route |
+| `package.json` | Added `ww:encode`, `ww:decode` scripts; modified `build` to run decode first |
+| `tsconfig.app.json` | Added `src/wandwars/scripts/*` to `exclude` |
 
 ### Route
 
@@ -73,15 +92,32 @@ src/
 
 No locale prefix, not SSG pre-rendered. No page title or back button — user navigates via site icon.
 
-### Data Loading
+### Data Pipeline
 
-Vite `?raw` import inlines `wandwars.data` into the JS bundle at build time. Analysis computed on first access, cached for session. Every rebuild picks up latest data.
+```
+records.data (raw, gitignored)
+    ↓ npm run ww:encode (zlib deflate + base64)
+data (encoded, committed to git)
+    ↓ npm run build (auto-decodes before build)
+records.data (decoded at build time)
+    ↓ Vite ?raw import
+JS bundle (inlined as string)
+```
+
+- **Local dev**: Edit `src/wandwars/data/raw/records.data` directly, Vite reads it via `?raw` import
+- **Adding data**: Edit raw file → `npm run ww:encode` → commit encoded `data` file
+- **Netlify build**: `npm run build` runs `decode.ts` first, then normal build
+- **Why encode?** Raw data is gitignored to keep match records private. Encoded file is committed but not human-readable (base64+zlib). ~63% smaller than raw.
 
 ### Component Reuse
 
 - **`CharacterIcon`** — pick slots with level background, tooltip on hover
 - **`FilterIcons`** — faction filtering in hero grid
 - **`gameDataStore`** — initialized on page load for character images, icons, and data
+
+### localStorage
+
+- Key: `stargazer.wandwars.records` — recorded match results. Remove this key to clean up browser storage when disabling the feature.
 
 ## 4. Domain Model
 
@@ -187,6 +223,25 @@ Counter score formula: `bayesianSmoothedVsWinRate - hero's overall winRate`
 ### Team Counter Detection
 
 When you have 2 teammates and opponent has 2+ heroes, checks if [your 2 + candidate] has beaten any team containing those opponent heroes in match data. Shows badge only when wins > losses. Works with partial opponent teams (doesn't require all 3 known) since your 3rd pick always happens before the opponent's 3rd.
+
+### Order Independence
+
+All team comparisons and lookups treat teams as **unordered sets**. `[A, B, C]` is identical to `[C, A, B]` everywhere:
+
+- **Membership checks**: `Array.includes()` and `Set.has()` — order irrelevant
+- **Team keys**: `.sort().join(',')` for deduplication in analysis, exact trios, and constructed teams
+- **Pair/counter lookups**: Synergy matrix uses sorted pair keys; counter matrix uses directional hero-vs-hero keys (not team order)
+- **Score computations**: Addition is commutative — summing synergy/counter/strength across teammates produces the same result regardless of iteration order
+- **Display ordering**: `orderedTeam()` reorders heroes for display only (picked heroes first), cosmetic — does not affect calculations
+
+### Side Lock
+
+Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to a specific side:
+
+- **Unlocked (default)**: Recommendations follow draft order automatically
+- **Locked**: Recommendations always compute for the locked side, regardless of whose turn it is. A closed padlock icon appears on the active button.
+- Affects: recommendation list, top teams, counter indicators, team counter — all use the locked side
+- Recommendations still update dynamically as the opponent picks (new counter data, hero exclusion)
 
 ## 6. Prediction Models
 
@@ -448,6 +503,8 @@ View-only list. Each record: match line + notes below. Three actions: **Copy Dat
 | Notes display             | Hero in `{}` required; ALL `{}` heroes for matchup; teal bold highlight     | Relevant, not noisy                                                  |
 | Draw handling (B-T)       | 0.5 wins each side                                                          | Preserves information                                                |
 | Counter weighting         | Match weights (1.5) in counter matrix                                       | Consistent with hero stats                                           |
+| Order independence        | All team comparisons use includes/Set/sorted keys                           | [A,B,C] = [C,A,B] everywhere; no order-dependent bugs               |
+| Side lock                 | Toggle buttons to lock recs to Left/Right team; padlock icon when active    | Focus on one side without draft order switching                      |
 | Record immutability       | Snapshot on submit; picker stays                                            | Faithful capture; no accidental edits                                |
 | Record storage            | `localStorage` + copy/export                                                | Persists; portable                                                   |
 | Portrait alignment        | `object-position: center 20%` / `margin-top: 6px`                           | Centers on face instead of top of head                               |

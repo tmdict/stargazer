@@ -1,7 +1,8 @@
 import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
-import rawData from './data/wandwars.data?raw'
+import encodedData from './data/data?raw'
+const rawData = atob(encodedData)
 import { getUniqueHeroes, parseMatchData } from './parser'
 import { popularPickModel } from './popularPick'
 import type {
