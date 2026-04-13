@@ -120,7 +120,7 @@ function getConstructedTeams(
   const results: TeamSuggestion[] = []
 
   if (teammates.length === 1) {
-    const hero = teammates[0]
+    const hero = teammates[0]!
     // Find all partners of hero, ranked by pair win rate
     const partners = findPairPartners(hero, matches)
     const rankedPartners = partners
@@ -168,21 +168,21 @@ function getConstructedTeams(
   if (teammates.length === 2) {
     // Find best third hero by pair records with each teammate independently
     const allPartners = new Set([
-      ...findPairPartners(teammates[0], matches),
-      ...findPairPartners(teammates[1], matches),
+      ...findPairPartners(teammates[0]!, matches),
+      ...findPairPartners(teammates[1]!, matches),
     ])
     // Remove existing teammates
-    allPartners.delete(teammates[0])
-    allPartners.delete(teammates[1])
+    allPartners.delete(teammates[0]!)
+    allPartners.delete(teammates[1]!)
 
     for (const third of allPartners) {
       const team = [...teammates, third].sort() as [string, string, string]
       const key = team.join(',')
       if (existingKeys.has(key)) continue
 
-      const pair1 = getPairRecord(teammates[0], third, matches)
-      const pair2 = getPairRecord(teammates[1], third, matches)
-      const pairBetween = getPairRecord(teammates[0], teammates[1], matches)
+      const pair1 = getPairRecord(teammates[0]!, third, matches)
+      const pair2 = getPairRecord(teammates[1]!, third, matches)
+      const pairBetween = getPairRecord(teammates[0]!, teammates[1]!, matches)
 
       const totalWins = pair1.wins + pair2.wins + pairBetween.wins
       const totalLosses = pair1.losses + pair2.losses + pairBetween.losses
@@ -191,7 +191,7 @@ function getConstructedTeams(
 
       existingKeys.add(key)
       results.push({
-        team: [teammates[0], teammates[1], third] as [string, string, string],
+        team: [teammates[0]!, teammates[1]!, third] as [string, string, string],
         wins: totalWins,
         losses: totalLosses,
         draws: 0,
