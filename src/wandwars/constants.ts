@@ -23,5 +23,10 @@ export const DRAFT_ORDER: [side: 'left' | 'right', slot: number][] = [
   ['right', 2], // Pick 6: Right picks 3rd
 ]
 
+// Sample size bonus: heroes with more appearances get a slight score boost
+// Ramps from 0 at 0 matches to SAMPLE_BONUS_MAX at SAMPLE_BONUS_FULL matches
+export const SAMPLE_BONUS_MAX = 0.05
+export const SAMPLE_BONUS_FULL = 20
+
 // Max recommendations to show
 export const MAX_RECOMMENDATIONS = 10
