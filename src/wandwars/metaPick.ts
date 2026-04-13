@@ -1,20 +1,14 @@
-import { MAX_RECOMMENDATIONS } from './constants'
-import { wilsonConfidence } from './confidence'
-import type { AnalysisData, MatchNote, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
+import { MAX_RECOMMENDATIONS, TIER_BONUS } from './constants'
+import { getHeroWilsonConfidence, getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
+import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
 
-// Tier bonuses: S-tier heroes get a small edge
-const TIER_BONUS: Record<string, number> = { s: 0.06, a: 0.03, rare: 0 }
-
-// Weights for the meta score
 const WEIGHT_WIN_RATE = 0.5
 const WEIGHT_PICK_RATE = 0.3
 const WEIGHT_TIER = 0.2
 
-// Minimum matches with teammates to use contextual win rate
 const CONTEXT_MIN_MATCHES = 3
 const BAYESIAN_PRIOR = 1.0
 
-// Load character data for tier info
 const characterModules = import.meta.glob<{ level: string; name: string }>(
   '@/data/character/*.json',
   { eager: true, import: 'default' },
@@ -26,27 +20,6 @@ for (const [path, data] of Object.entries(characterModules)) {
   heroTiers[name] = data.level
 }
 
-function getRelevantNotes(
-  candidate: string,
-  matches: MatchResult[],
-): MatchNote[] {
-  const notes: MatchNote[] = []
-  for (const match of matches) {
-    for (const note of match.notes) {
-      if (note.heroes.includes(candidate)) {
-        notes.push(note)
-      }
-    }
-  }
-  return notes
-}
-
-/**
- * Compute contextual win rate: the candidate's win rate in matches
- * where all current teammates are on the same team.
- * Falls back to overall win rate when insufficient contextual data.
- * Blends between contextual and overall based on sample size.
- */
 function contextualWinRate(
   candidate: string,
   teammates: string[],
@@ -62,7 +35,6 @@ function contextualWinRate(
   let contextTotal = 0
 
   for (const match of matches) {
-    // Check if candidate is in this match
     const onLeft = match.left.includes(candidate)
     const onRight = match.right.includes(candidate)
     if (!onLeft && !onRight) continue
@@ -72,20 +44,16 @@ function contextualWinRate(
     const candidateWon =
       (onLeft && match.result === 'left') || (onRight && match.result === 'right')
 
-    // Check teammates are on the same team
     if (teammates.length > 0 && !teammates.every((t) => candidateTeam.includes(t))) continue
-
-    // Check opponents are on the opposing team
     if (opponents.length > 0 && !opponents.every((o) => opposingTeam.includes(o))) continue
 
     contextTotal++
     if (candidateWon) contextWins += match.weight
-    else if (match.result !== 'draw') contextTotal += match.weight - 1 // account for weighted losses
+    else if (match.result !== 'draw') contextTotal += match.weight - 1
   }
 
   if (contextTotal < CONTEXT_MIN_MATCHES) {
-    // Not enough contextual data — blend toward overall
-    const blend = contextTotal / CONTEXT_MIN_MATCHES // 0-1
+    const blend = contextTotal / CONTEXT_MIN_MATCHES
     return {
       winRate: blend * ((contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR)) +
               (1 - blend) * overallWinRate,
@@ -93,9 +61,10 @@ function contextualWinRate(
     }
   }
 
-  // Enough data — use Bayesian-smoothed contextual rate
-  const contextRate = (contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR)
-  return { winRate: contextRate, contextMatches: contextTotal }
+  return {
+    winRate: (contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR),
+    contextMatches: contextTotal,
+  }
 }
 
 export const metaPickModel: RecommendationModel = {
@@ -123,7 +92,6 @@ export const metaPickModel: RecommendationModel = {
       const tier = heroTiers[hero] || 'a'
       const tierBonus = TIER_BONUS[tier] || 0
 
-      // Use contextual win rate when teammates/opponents are known
       const { winRate, contextMatches } = contextualWinRate(
         hero, teammates, opponents, matches, overallWinRate,
       )
@@ -133,21 +101,11 @@ export const metaPickModel: RecommendationModel = {
         WEIGHT_PICK_RATE * normalizedPickRate +
         WEIGHT_TIER * (0.5 + tierBonus)
 
-      const confidence = stats
-        ? wilsonConfidence(stats.wins + stats.draws * 0.5, stats.matches)
-        : 'low' as const
-
       return {
         hero,
         score,
-        confidence,
-        breakdown: {
-          winRate,
-          overallWinRate,
-          pickRate,
-          tier: tierBonus,
-          contextMatches,
-        },
+        confidence: getHeroWilsonConfidence(stats),
+        breakdown: { winRate, overallWinRate, pickRate, tier: tierBonus, contextMatches },
         relevantNotes: getRelevantNotes(hero, matches),
       }
     })
@@ -167,8 +125,7 @@ export const metaPickModel: RecommendationModel = {
         const overallWinRate = analysisData.heroStats[hero]?.winRate || 0.5
         const teammates = team.filter((h) => h !== hero)
         const { winRate } = contextualWinRate(hero, teammates, opponents, matches, overallWinRate)
-        const tier = heroTiers[hero] || 'a'
-        const tierBonus = TIER_BONUS[tier] || 0
+        const tierBonus = TIER_BONUS[heroTiers[hero] || 'a'] || 0
         total += winRate + tierBonus
       }
       return total
@@ -179,32 +136,12 @@ export const metaPickModel: RecommendationModel = {
     const total = leftScore + rightScore
     const leftProb = total > 0 ? leftScore / total : 0.5
 
-    let worstConfidence: 'high' | 'medium' | 'low' = 'high'
-    for (const hero of [...leftTeam, ...rightTeam]) {
-      const stats = analysisData.heroStats[hero]
-      const conf = stats
-        ? wilsonConfidence(stats.wins + stats.draws * 0.5, stats.matches)
-        : 'low' as const
-      if (conf === 'low') { worstConfidence = 'low'; break }
-      if (conf === 'medium' && worstConfidence === 'high') worstConfidence = 'medium'
-    }
-
-    const allHeroSet = new Set([...leftTeam, ...rightTeam])
-    const notes: MatchNote[] = []
-    for (const match of matches) {
-      for (const note of match.notes) {
-        if (note.heroes.length > 0 && note.heroes.every((h) => allHeroSet.has(h))) {
-          notes.push(note)
-        }
-      }
-    }
-
     return {
       leftWinProbability: leftProb,
       rightWinProbability: 1 - leftProb,
-      confidence: worstConfidence,
+      confidence: getWorstConfidence([...leftTeam, ...rightTeam], analysisData),
       breakdown: { leftScore, rightScore },
-      relevantNotes: notes,
+      relevantNotes: getMatchupNotes(leftTeam, rightTeam, matches),
     }
   },
 }

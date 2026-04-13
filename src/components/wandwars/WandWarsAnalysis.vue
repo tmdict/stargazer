@@ -196,7 +196,8 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import { BT_LOW_DATA_THRESHOLD } from '@/wandwars/constants'
+import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
+import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
 import { serializeMatches } from '@/wandwars/serializer'
 import { getAllMatchupPredictions, getRecommendations } from '@/wandwars/recommend'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
@@ -265,16 +266,10 @@ async function handleCopy() {
 }
 
 function formatSymbol(record: RecordedMatch): string {
-  if (record.winner === 'draw') return '='
-  if (record.winner === 'left') return record.dominant ? '>>' : '>'
-  return record.dominant ? '<<' : '<'
+  return getResultSymbol(record.winner, record.dominant)
 }
 
-const confidenceDescriptions: Record<string, string> = {
-  high: 'High confidence: 10+ relevant matches for all heroes',
-  medium: 'Medium confidence: 5-9 relevant matches',
-  low: 'Low confidence: <5 relevant matches for some heroes',
-}
+const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
 
 const pickingSideLabel = computed(() =>
   props.currentPickSide === 'left' ? 'Left' : 'Right',
@@ -332,16 +327,6 @@ const sortedPredictions = computed(() => {
   return active ? [active, ...others] : allPredictions.value
 })
 
-function formatPercent(value: number): string {
-  return (value * 100).toFixed(1) + '%'
-}
-
-function formatNoteHtml(text: string): string {
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) => {
-    const formatted = name.split('-').map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-    return `<strong class="hero-highlight">${formatted}</strong>`
-  })
-}
 </script>
 
 <style scoped>

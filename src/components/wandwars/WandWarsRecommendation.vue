@@ -88,6 +88,8 @@
 </template>
 
 <script setup lang="ts">
+import { CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
+import { formatName, formatNoteHtml, formatPercent, formatScore, formatSigned, signClass } from '@/wandwars/formatting'
 import type { Recommendation } from '@/wandwars/types'
 
 const props = defineProps<{
@@ -97,46 +99,7 @@ const props = defineProps<{
   characterImages: Record<string, string>
 }>()
 
-const confidenceDescriptions: Record<string, string> = {
-  high: 'High confidence: 10+ relevant matches',
-  medium: 'Medium confidence: 5-9 relevant matches',
-  low: 'Low confidence: <5 relevant matches',
-}
-
-const confidenceTooltip = confidenceDescriptions[props.recommendation.confidence]
-
-function formatName(name: string): string {
-  return name
-    .split('-')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
-}
-
-function formatNoteHtml(text: string): string {
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) =>
-    `<strong class="hero-highlight">${formatName(name)}</strong>`,
-  )
-}
-
-function formatScore(score: number): string {
-  return (score * 100).toFixed(1) + '%'
-}
-
-function formatPercent(value: number | undefined): string {
-  if (value === undefined) return '—'
-  return (value * 100).toFixed(1) + '%'
-}
-
-function formatSigned(value: number | undefined): string {
-  if (value === undefined) return '—'
-  const pct = (value * 100).toFixed(1)
-  return value >= 0 ? `+${pct}%` : `${pct}%`
-}
-
-function signClass(value: number | undefined): string {
-  if (value === undefined || value === 0) return ''
-  return value > 0 ? 'positive' : 'negative'
-}
+const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidence]
 </script>
 
 <style scoped>
