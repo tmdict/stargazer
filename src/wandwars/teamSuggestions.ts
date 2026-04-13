@@ -31,7 +31,8 @@ function getPairRecord(
       total++
       const isLeft = team === match.left
       if ((isLeft && match.result === 'left') || (!isLeft && match.result === 'right')) wins++
-      else if ((isLeft && match.result === 'right') || (!isLeft && match.result === 'left')) losses++
+      else if ((isLeft && match.result === 'right') || (!isLeft && match.result === 'left'))
+        losses++
     }
   }
 
@@ -46,10 +47,7 @@ function getPairRecord(
 /**
  * Find all unique heroes that have appeared on a team with a given hero.
  */
-function findPairPartners(
-  hero: string,
-  matches: MatchResult[],
-): string[] {
+function findPairPartners(hero: string, matches: MatchResult[]): string[] {
   const partners = new Set<string>()
   for (const match of matches) {
     for (const team of [match.left, match.right] as const) {
@@ -65,10 +63,7 @@ function findPairPartners(
 /**
  * Get exact trio records from match data.
  */
-function getExactTrios(
-  teammates: string[],
-  matches: MatchResult[],
-): TeamSuggestion[] {
+function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggestion[] {
   const teamRecords = new Map<string, TeamSuggestion>()
 
   for (const match of matches) {
@@ -93,8 +88,10 @@ function getExactTrios(
       record.total++
 
       const isLeft = team === match.left
-      if ((isLeft && match.result === 'left') || (!isLeft && match.result === 'right')) record.wins++
-      else if ((isLeft && match.result === 'right') || (!isLeft && match.result === 'left')) record.losses++
+      if ((isLeft && match.result === 'left') || (!isLeft && match.result === 'right'))
+        record.wins++
+      else if ((isLeft && match.result === 'right') || (!isLeft && match.result === 'left'))
+        record.losses++
       else record.draws++
     }
   }
@@ -102,7 +99,10 @@ function getExactTrios(
   const results: TeamSuggestion[] = []
   for (const record of teamRecords.values()) {
     record.winRate = (record.wins + PRIOR) / (record.total + 2 * PRIOR)
-    results.push(record)
+    // Only include teams with more wins than losses
+    if (record.wins > record.losses) {
+      results.push(record)
+    }
   }
 
   return results
@@ -130,8 +130,9 @@ function getConstructedTeams(
 
     for (const partner of rankedPartners) {
       // For each top partner, find best third by average pair win rate with both
-      const thirdCandidates = findPairPartners(partner.hero, matches)
-        .filter((h) => h !== hero && h !== partner.hero)
+      const thirdCandidates = findPairPartners(partner.hero, matches).filter(
+        (h) => h !== hero && h !== partner.hero,
+      )
 
       for (const third of thirdCandidates) {
         const team = [hero, partner.hero, third].sort() as [string, string, string]
@@ -201,8 +202,7 @@ function getConstructedTeams(
     }
   }
 
-  return results
-    .sort((a, b) => b.winRate - a.winRate || b.total - a.total)
+  return results.sort((a, b) => b.winRate - a.winRate || b.total - a.total)
 }
 
 export interface TopTeamsResult {
@@ -214,20 +214,35 @@ export interface TopTeamsResult {
  * Find top teams: up to 3 real teams from data, plus up to 3 constructed
  * teams from pair combinations. Returned separately.
  */
+/**
+ * Filter out teams containing any excluded hero (already picked by either side).
+ */
+function filterExcluded(teams: TeamSuggestion[], excludeHeroes: string[]): TeamSuggestion[] {
+  if (excludeHeroes.length === 0) return teams
+  const excluded = new Set(excludeHeroes)
+  return teams.filter((t) => !t.team.some((h) => excluded.has(h)))
+}
+
 export function getTopTeams(
   teammates: string[],
   matches: MatchResult[],
+  excludeHeroes: string[] = [],
 ): TopTeamsResult {
   if (teammates.length === 0) return { dataTeams: [], suggestedTeams: [] }
 
+  // Exclude heroes already picked (teammates are allowed since they're on the team)
+  const excludeOthers = excludeHeroes.filter((h) => !teammates.includes(h))
+
   const exact = getExactTrios(teammates, matches)
-  const dataTeams = exact
+  const dataTeams = filterExcluded(exact, excludeOthers)
     .sort((a, b) => b.winRate - a.winRate || b.total - a.total)
     .slice(0, MAX_SUGGESTIONS)
 
   const existingKeys = new Set(exact.map((t) => [...t.team].sort().join(',')))
-  const suggestedTeams = getConstructedTeams(teammates, matches, existingKeys)
-    .slice(0, MAX_SUGGESTIONS)
+  const suggestedTeams = filterExcluded(
+    getConstructedTeams(teammates, matches, existingKeys),
+    excludeOthers,
+  ).slice(0, MAX_SUGGESTIONS)
 
   return { dataTeams, suggestedTeams }
 }

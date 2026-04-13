@@ -4,14 +4,10 @@
     <div v-if="result.dataTeams.length > 0" class="team-section">
       <h4 class="section-title">Top Teams</h4>
       <div class="team-list">
-        <div
-          v-for="(team, i) in result.dataTeams"
-          :key="'d' + i"
-          class="team-row"
-        >
+        <div v-for="(team, i) in result.dataTeams" :key="'d' + i" class="team-row">
           <div class="team-heroes">
             <img
-              v-for="hero in team.team"
+              v-for="hero in orderedTeam(team.team)"
               :key="hero"
               :src="characterImages[hero]"
               :alt="hero"
@@ -40,7 +36,7 @@
         >
           <div class="team-heroes">
             <img
-              v-for="hero in team.team"
+              v-for="hero in orderedTeam(team.team)"
               :key="hero"
               :src="characterImages[hero]"
               :alt="hero"
@@ -63,11 +59,19 @@ import type { MatchResult } from '@/wandwars/types'
 
 const props = defineProps<{
   teammates: string[]
+  excludeHeroes: string[]
   matches: MatchResult[]
   characterImages: Record<string, string>
 }>()
 
-const result = computed(() => getTopTeams(props.teammates, props.matches))
+const result = computed(() => getTopTeams(props.teammates, props.matches, props.excludeHeroes))
+
+function orderedTeam(team: string[]): string[] {
+  // Picked heroes first (in pick order), then remaining heroes alphabetically
+  const picked = props.teammates.filter((t) => team.includes(t))
+  const rest = team.filter((h) => !props.teammates.includes(h)).sort()
+  return [...picked, ...rest]
+}
 </script>
 
 <style scoped>
@@ -113,8 +117,9 @@ const result = computed(() => getTopTeams(props.teammates, props.matches))
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-bg-light-gray);
   border-radius: var(--radius-small);
-  flex: 1;
+  flex: 1 1 0;
   min-width: 0;
+  max-width: calc(33.33% - var(--spacing-sm));
 }
 
 .team-row.constructed {
@@ -134,7 +139,6 @@ const result = computed(() => getTopTeams(props.teammates, props.matches))
   object-position: center 20%;
   border: 2px solid var(--color-bg-white);
 }
-
 
 .team-record {
   display: flex;

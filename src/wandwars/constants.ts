@@ -1,4 +1,4 @@
-// Composite scoring weights
+// Composite scoring weights (sum to 1.0)
 export const WEIGHT_BASE = 0.5
 export const WEIGHT_SYNERGY = 0.3
 export const WEIGHT_COUNTER = 0.2

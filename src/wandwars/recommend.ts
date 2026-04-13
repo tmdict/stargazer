@@ -2,8 +2,8 @@ import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
 import rawData from './data/wandwars.data?raw'
-import { metaPickModel } from './metaPick'
 import { getUniqueHeroes, parseMatchData } from './parser'
+import { popularPickModel } from './popularPick'
 import type {
   AnalysisData,
   MatchResult,
@@ -12,7 +12,7 @@ import type {
   RecommendationModel,
 } from './types'
 
-const models: RecommendationModel[] = [metaPickModel, compositeModel, bradleyTerryModel]
+const models: RecommendationModel[] = [popularPickModel, bradleyTerryModel, compositeModel]
 
 let cachedMatches: MatchResult[] | null = null
 let cachedAnalysis: AnalysisData | null = null

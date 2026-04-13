@@ -76,6 +76,7 @@ function computeDynamicScore(
 ): number {
   const effectiveSynergyWeight = WEIGHT_SYNERGY * synStrength
   const effectiveCounterWeight = WEIGHT_COUNTER * ctrStrength
+  // Redistribute unused synergy/counter weight to base win rate
   const effectiveBaseWeight =
     WEIGHT_BASE +
     (WEIGHT_SYNERGY - effectiveSynergyWeight) +
@@ -116,7 +117,7 @@ function getHeroConfidence(
 
 export const compositeModel: RecommendationModel = {
   id: 'composite',
-  name: 'Composite',
+  name: 'Hero Synergy (Composite)',
 
   recommend(
     teammates: string[],

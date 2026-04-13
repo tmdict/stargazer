@@ -44,15 +44,12 @@ function pairRecord(
     if (!onLeft && !onRight) continue
 
     total++
-    const won =
-      (onLeft && match.result === 'left') || (onRight && match.result === 'right')
+    const won = (onLeft && match.result === 'left') || (onRight && match.result === 'right')
     if (won) wins += match.weight
     else if (match.result !== 'draw') total += match.weight - 1
   }
 
-  const winRate = total > 0
-    ? (wins + BAYESIAN_PRIOR) / (total + 2 * BAYESIAN_PRIOR)
-    : 0.5
+  const winRate = total > 0 ? (wins + BAYESIAN_PRIOR) / (total + 2 * BAYESIAN_PRIOR) : 0.5
 
   return { wins: Math.round(wins), total, winRate }
 }
@@ -71,20 +68,23 @@ function trioRecord(
   let total = 0
 
   for (const match of matches) {
-    const onLeft = match.left.includes(candidate) && match.left.includes(teammate1) && match.left.includes(teammate2)
-    const onRight = match.right.includes(candidate) && match.right.includes(teammate1) && match.right.includes(teammate2)
+    const onLeft =
+      match.left.includes(candidate) &&
+      match.left.includes(teammate1) &&
+      match.left.includes(teammate2)
+    const onRight =
+      match.right.includes(candidate) &&
+      match.right.includes(teammate1) &&
+      match.right.includes(teammate2)
     if (!onLeft && !onRight) continue
 
     total++
-    const won =
-      (onLeft && match.result === 'left') || (onRight && match.result === 'right')
+    const won = (onLeft && match.result === 'left') || (onRight && match.result === 'right')
     if (won) wins += match.weight
     else if (match.result !== 'draw') total += match.weight - 1
   }
 
-  const winRate = total > 0
-    ? (wins + BAYESIAN_PRIOR) / (total + 2 * BAYESIAN_PRIOR)
-    : 0.5
+  const winRate = total > 0 ? (wins + BAYESIAN_PRIOR) / (total + 2 * BAYESIAN_PRIOR) : 0.5
 
   return { wins: Math.round(wins), total, winRate }
 }
@@ -178,9 +178,9 @@ function computePairScore(
   return { score, pairDetails }
 }
 
-export const metaPickModel: RecommendationModel = {
-  id: 'meta-pick',
-  name: 'Meta Pick',
+export const popularPickModel: RecommendationModel = {
+  id: 'popular-pick',
+  name: 'Popular Pick',
 
   recommend(
     teammates: string[],
@@ -189,10 +189,7 @@ export const metaPickModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): Recommendation[] {
-    const maxMatches = Math.max(
-      ...available.map((h) => analysisData.heroStats[h]?.matches || 0),
-      1,
-    )
+    const maxMatches = Math.max(...available.map((h) => analysisData.heroStats[h]?.matches || 0), 1)
 
     const teamCount = Math.min(teammates.length, 2) as 0 | 1 | 2
     const w = WEIGHTS[teamCount]
@@ -205,15 +202,16 @@ export const metaPickModel: RecommendationModel = {
       const normalizedPickRate = heroMatches / maxMatches
 
       const { winRate, contextMatches } = contextualWinRate(
-        hero, teammates, opponents, matches, overallWinRate,
+        hero,
+        teammates,
+        opponents,
+        matches,
+        overallWinRate,
       )
 
       const { score: pairScore, pairDetails } = computePairScore(hero, teammates, matches)
 
-      const score =
-        w.winRate * winRate +
-        w.pickRate * normalizedPickRate +
-        w.pair * pairScore
+      const score = w.winRate * winRate + w.pickRate * normalizedPickRate + w.pair * pairScore
 
       return {
         hero,

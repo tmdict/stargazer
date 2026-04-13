@@ -173,6 +173,7 @@
         <WandWarsTopTeams
           v-if="currentTeammates.length > 0"
           :teammates="currentTeammates"
+          :exclude-heroes="allPickedHeroes"
           :matches="matchData"
           :character-images="characterImages"
         />
@@ -189,6 +190,8 @@
             :rank="i + 1"
             :model-id="activeTab"
             :character-images="characterImages"
+            :counter-indicators="getCounterIndicators(rec.hero)"
+            :team-counter="getTeamCounter(rec.hero)"
           />
         </div>
       </template>
@@ -200,10 +203,16 @@
 import { computed, ref } from 'vue'
 
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
+import type { CounterIndicator, TeamCounterInfo } from './WandWarsRecommendation.vue'
 import WandWarsTopTeams from './WandWarsTopTeams.vue'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
-import { getAllMatchupPredictions, getRecommendations } from '@/wandwars/recommend'
+import {
+  getAllMatchupPredictions,
+  getAnalysisData,
+  getMatchData,
+  getRecommendations,
+} from '@/wandwars/recommend'
 import { serializeMatches } from '@/wandwars/serializer'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
@@ -224,13 +233,13 @@ const emit = defineEmits<{
 }>()
 
 const tabs = [
-  { id: 'meta-pick', label: 'Meta Pick' },
-  { id: 'composite', label: 'Hero Synergy (Composite Model)' },
+  { id: 'popular-pick', label: 'Popular Pick' },
   { id: 'bradley-terry', label: 'Total Team Power (B-T Model)' },
+  { id: 'composite', label: 'Hero Synergy (Composite Model)' },
   { id: 'records', label: 'Records' },
 ]
 
-const activeTab = ref('meta-pick')
+const activeTab = ref('popular-pick')
 
 // Record form state
 const recordWinner = ref<'left' | 'right' | 'draw'>('left')
@@ -269,6 +278,65 @@ async function handleCopy() {
   setTimeout(() => {
     copyLabel.value = 'Copy Data'
   }, 2000)
+}
+
+// Counter score threshold: > 0.1 = strong against, < -0.1 = weak against
+const COUNTER_THRESHOLD = 0.1
+
+/**
+ * Check if adding this candidate to the current teammates forms a team
+ * that has beaten teams containing the known opponents.
+ * Works with 2+ known opponents (doesn't require all 3).
+ */
+function getTeamCounter(hero: string): TeamCounterInfo | null {
+  const opponents = opponentTeam.value
+  const teammates = currentTeammates.value
+  if (opponents.length < 2 || teammates.length < 2) return null
+
+  const myTeam = [...teammates, hero]
+  const matches = getMatchData()
+
+  let wins = 0
+  let losses = 0
+  let total = 0
+
+  for (const match of matches) {
+    const leftSet = new Set(match.left)
+    const rightSet = new Set(match.right)
+
+    // My team on left, opponents' heroes all on right (opponent may have unknown 3rd)
+    const myOnLeft = myTeam.every((h) => leftSet.has(h)) && opponents.every((h) => rightSet.has(h))
+    // My team on right, opponents' heroes all on left
+    const myOnRight = myTeam.every((h) => rightSet.has(h)) && opponents.every((h) => leftSet.has(h))
+
+    if (!myOnLeft && !myOnRight) continue
+
+    total++
+    if (myOnLeft && match.result === 'left') wins++
+    else if (myOnLeft && match.result === 'right') losses++
+    else if (myOnRight && match.result === 'right') wins++
+    else if (myOnRight && match.result === 'left') losses++
+  }
+
+  if (total === 0) return null
+  return { wins, losses, total }
+}
+
+function getCounterIndicators(hero: string): CounterIndicator[] {
+  const analysis = getAnalysisData()
+  const opponents = opponentTeam.value
+  if (opponents.length === 0) return []
+
+  const indicators: CounterIndicator[] = []
+  for (const opp of opponents) {
+    const score = analysis.counterMatrix[hero]?.[opp]?.score ?? 0
+    if (score > COUNTER_THRESHOLD) {
+      indicators.push({ opponent: opp, type: 'counters', score })
+    } else if (score < -COUNTER_THRESHOLD) {
+      indicators.push({ opponent: opp, type: 'countered', score })
+    }
+  }
+  return indicators
 }
 
 function formatSymbol(record: RecordedMatch): string {
@@ -348,12 +416,12 @@ const sortedPredictions = computed(() => {
 }
 
 .tab-btn {
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   background: none;
   color: var(--color-text-secondary);
   cursor: pointer;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
   border-bottom: 2px solid transparent;
   margin-bottom: -2px;
   transition:
