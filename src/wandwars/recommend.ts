@@ -5,7 +5,7 @@ import { metaPickModel } from './metaPick'
 import { getUniqueHeroes, parseMatchData } from './parser'
 import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
 
-import rawData from './wandwars.data?raw'
+import rawData from './data/wandwars.data?raw'
 
 const models: RecommendationModel[] = [metaPickModel, compositeModel, bradleyTerryModel]
 
