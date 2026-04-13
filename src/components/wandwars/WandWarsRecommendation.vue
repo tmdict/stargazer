@@ -44,6 +44,16 @@
             formatPercent(recommendation.breakdown.pickRate)
           }}</span>
         </div>
+        <div
+          v-for="pair in (recommendation.breakdown.pairDetails as any[] || [])"
+          :key="pair.teammate"
+          class="breakdown-row"
+        >
+          <span class="breakdown-label">w/ {{ formatName(pair.teammate) }}</span>
+          <span class="breakdown-value">
+            <span class="pair-wins">{{ pair.wins }}W</span> / <span class="pair-losses">{{ pair.total - pair.wins }}L</span>
+          </span>
+        </div>
       </template>
       <template v-else-if="modelId === 'composite'">
         <div class="breakdown-row">
@@ -143,11 +153,11 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
 }
 
 .hero-portrait {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: var(--radius-round);
   object-fit: cover;
-  object-position: top;
+  object-position: center 20%;
 }
 
 .hero-info {
@@ -246,6 +256,14 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
   color: var(--color-text-secondary);
   font-style: italic;
   line-height: 1.4;
+}
+
+.pair-wins {
+  color: #1e7e34;
+}
+
+.pair-losses {
+  color: #c62828;
 }
 
 .context-hint {
