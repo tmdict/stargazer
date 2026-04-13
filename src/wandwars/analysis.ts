@@ -1,6 +1,6 @@
 import type { AnalysisData, CounterMatrix, HeroStats, MatchResult, SynergyMatrix } from './types'
 
-const BAYESIAN_PRIOR = 1.0
+const BAYESIAN_PRIOR = 3.0
 
 function computeHeroStats(matches: MatchResult[], allHeroes: string[]): Record<string, HeroStats> {
   const stats: Record<string, HeroStats> = {}
