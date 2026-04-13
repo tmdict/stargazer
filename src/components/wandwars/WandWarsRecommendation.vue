@@ -326,7 +326,6 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
 .note {
   font-size: 0.8rem;
   color: var(--color-text-secondary);
-  font-style: italic;
   line-height: 1.4;
 }
 
