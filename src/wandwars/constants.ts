@@ -14,9 +14,6 @@ export const CONFIDENCE_DESCRIPTIONS: Record<string, string> = {
   low: 'Low confidence: very few matches',
 }
 
-// Tier bonuses for Meta Pick model
-export const TIER_BONUS: Record<string, number> = { s: 0.06, a: 0.03, rare: 0 }
-
 // Bradley-Terry
 export const BT_MAX_ITERATIONS = 100
 export const BT_CONVERGENCE_TOLERANCE = 1e-6
@@ -37,4 +34,4 @@ export const SAMPLE_BONUS_MAX = 0.05
 export const SAMPLE_BONUS_FULL = 20
 
 // Max recommendations to show
-export const MAX_RECOMMENDATIONS = 10
+export const MAX_RECOMMENDATIONS = 30

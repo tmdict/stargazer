@@ -1,24 +1,23 @@
-import { MAX_RECOMMENDATIONS, TIER_BONUS } from './constants'
-import { getHeroWilsonConfidence, getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
-import type { AnalysisData, MatchResult, MatchupPrediction, Recommendation, RecommendationModel } from './types'
+import { MAX_RECOMMENDATIONS } from './constants'
+import {
+  getHeroWilsonConfidence,
+  getMatchupNotes,
+  getRelevantNotes,
+  getWorstConfidence,
+} from './modelUtils'
+import type {
+  AnalysisData,
+  MatchResult,
+  MatchupPrediction,
+  Recommendation,
+  RecommendationModel,
+} from './types'
 
-const WEIGHT_WIN_RATE = 0.5
-const WEIGHT_PICK_RATE = 0.3
-const WEIGHT_TIER = 0.2
+const WEIGHT_WIN_RATE = 0.6
+const WEIGHT_PICK_RATE = 0.4
 
 const CONTEXT_MIN_MATCHES = 3
 const BAYESIAN_PRIOR = 1.0
-
-const characterModules = import.meta.glob<{ level: string; name: string }>(
-  '@/data/character/*.json',
-  { eager: true, import: 'default' },
-)
-
-const heroTiers: Record<string, string> = {}
-for (const [path, data] of Object.entries(characterModules)) {
-  const name = path.split('/').pop()?.replace('.json', '') || ''
-  heroTiers[name] = data.level
-}
 
 function contextualWinRate(
   candidate: string,
@@ -55,8 +54,9 @@ function contextualWinRate(
   if (contextTotal < CONTEXT_MIN_MATCHES) {
     const blend = contextTotal / CONTEXT_MIN_MATCHES
     return {
-      winRate: blend * ((contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR)) +
-              (1 - blend) * overallWinRate,
+      winRate:
+        blend * ((contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR)) +
+        (1 - blend) * overallWinRate,
       contextMatches: contextTotal,
     }
   }
@@ -78,10 +78,7 @@ export const metaPickModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): Recommendation[] {
-    const maxMatches = Math.max(
-      ...available.map((h) => analysisData.heroStats[h]?.matches || 0),
-      1,
-    )
+    const maxMatches = Math.max(...available.map((h) => analysisData.heroStats[h]?.matches || 0), 1)
 
     const recommendations: Recommendation[] = available.map((hero) => {
       const stats = analysisData.heroStats[hero]
@@ -89,23 +86,22 @@ export const metaPickModel: RecommendationModel = {
       const heroMatches = stats?.matches || 0
       const pickRate = heroMatches / analysisData.totalMatches
       const normalizedPickRate = heroMatches / maxMatches
-      const tier = heroTiers[hero] || 'a'
-      const tierBonus = TIER_BONUS[tier] || 0
 
       const { winRate, contextMatches } = contextualWinRate(
-        hero, teammates, opponents, matches, overallWinRate,
+        hero,
+        teammates,
+        opponents,
+        matches,
+        overallWinRate,
       )
 
-      const score =
-        WEIGHT_WIN_RATE * winRate +
-        WEIGHT_PICK_RATE * normalizedPickRate +
-        WEIGHT_TIER * (0.5 + tierBonus)
+      const score = WEIGHT_WIN_RATE * winRate + WEIGHT_PICK_RATE * normalizedPickRate
 
       return {
         hero,
         score,
         confidence: getHeroWilsonConfidence(stats),
-        breakdown: { winRate, overallWinRate, pickRate, tier: tierBonus, contextMatches },
+        breakdown: { winRate, overallWinRate, pickRate, contextMatches },
         relevantNotes: getRelevantNotes(hero, matches),
       }
     })
@@ -125,8 +121,7 @@ export const metaPickModel: RecommendationModel = {
         const overallWinRate = analysisData.heroStats[hero]?.winRate || 0.5
         const teammates = team.filter((h) => h !== hero)
         const { winRate } = contextualWinRate(hero, teammates, opponents, matches, overallWinRate)
-        const tierBonus = TIER_BONUS[heroTiers[hero] || 'a'] || 0
-        total += winRate + tierBonus
+        total += winRate
       }
       return total
     }
