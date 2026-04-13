@@ -3,9 +3,19 @@ export const WEIGHT_BASE = 0.5
 export const WEIGHT_SYNERGY = 0.3
 export const WEIGHT_COUNTER = 0.2
 
-// Confidence thresholds
+// Confidence thresholds (used by Wilson score in confidence.ts)
 export const CONFIDENCE_HIGH = 10
 export const CONFIDENCE_MEDIUM = 5
+
+// Confidence tooltip descriptions
+export const CONFIDENCE_DESCRIPTIONS: Record<string, string> = {
+  high: 'High confidence: sufficient match data',
+  medium: 'Medium confidence: limited match data',
+  low: 'Low confidence: very few matches',
+}
+
+// Tier bonuses for Meta Pick model
+export const TIER_BONUS: Record<string, number> = { s: 0.06, a: 0.03, rare: 0 }
 
 // Bradley-Terry
 export const BT_MAX_ITERATIONS = 100
@@ -13,18 +23,16 @@ export const BT_CONVERGENCE_TOLERANCE = 1e-6
 export const BT_LOW_DATA_THRESHOLD = 200
 
 // Pick order for Predict mode (alternating draft)
-// Each entry: [side, slotIndex]
 export const DRAFT_ORDER: [side: 'left' | 'right', slot: number][] = [
-  ['left', 0], // Pick 1: Left picks 1st
-  ['right', 0], // Pick 2: Right picks 1st
-  ['right', 1], // Pick 3: Right picks 2nd
-  ['left', 1], // Pick 4: Left picks 2nd
-  ['left', 2], // Pick 5: Left picks 3rd
-  ['right', 2], // Pick 6: Right picks 3rd
+  ['left', 0],
+  ['right', 0],
+  ['right', 1],
+  ['left', 1],
+  ['left', 2],
+  ['right', 2],
 ]
 
-// Sample size bonus: heroes with more appearances get a slight score boost
-// Ramps from 0 at 0 matches to SAMPLE_BONUS_MAX at SAMPLE_BONUS_FULL matches
+// Sample size bonus
 export const SAMPLE_BONUS_MAX = 0.05
 export const SAMPLE_BONUS_FULL = 20
 
