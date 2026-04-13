@@ -170,6 +170,13 @@
           Recommending for <strong>{{ pickingSideLabel }}</strong> side
         </div>
 
+        <WandWarsTopTeams
+          v-if="currentTeammates.length > 0"
+          :teammates="currentTeammates"
+          :matches="matchData"
+          :character-images="characterImages"
+        />
+
         <div v-if="recommendations.length === 0" class="empty-state">
           Pick heroes to see recommendations.
         </div>
@@ -193,6 +200,7 @@
 import { computed, ref } from 'vue'
 
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
+import WandWarsTopTeams from './WandWarsTopTeams.vue'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
 import { getAllMatchupPredictions, getRecommendations } from '@/wandwars/recommend'
@@ -281,6 +289,12 @@ const opponentSide = computed<PickSide>(() => (props.currentPickSide === 'left' 
 const opponentTeam = computed(() => {
   if (!props.currentPickSide) return []
   return props.pickState[opponentSide.value].filter((h): h is string => h !== null)
+})
+
+// Teammates already picked on the currently-picking side (for top teams)
+const currentTeammates = computed(() => {
+  if (!props.currentPickSide) return []
+  return props.pickState[props.currentPickSide].filter((h): h is string => h !== null)
 })
 
 const allPickedHeroes = computed(() => [
