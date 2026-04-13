@@ -1,4 +1,4 @@
-# WandWars — Technical Design Document
+# WandWars
 
 > Living document for the WandWars feature. Updated as design evolves.
 
@@ -37,16 +37,20 @@ tasi,dunlingr,daimon << kordan,zandrok,gerda
 ```
 src/
   wandwars/
-    wandwars.data         # Match data
+    data/
+      wandwars.data       # Match data (gitignored)
     types.ts              # Domain types
     parser.ts             # Text file → MatchResult[]
     serializer.ts         # RecordedMatch[] → .data text (for export)
     analysis.ts           # Hero stats, synergy matrix, counter matrix
-    metaPick.ts           # Meta Pick model (win rate + pick rate + tier)
-    composite.ts          # Composite scoring model
-    bradleyTerry.ts       # Bradley-Terry model
-    recommend.ts          # Unified interface, data loading, caching
+    metaPick.ts           # Meta Pick model (win rate + pick rate + pair records)
+    composite.ts          # Composite scoring model (synergy + counter)
+    bradleyTerry.ts       # Bradley-Terry model (team power)
+    modelUtils.ts         # Shared model utilities (notes, confidence)
     confidence.ts         # Wilson score interval for confidence levels
+    formatting.ts         # Shared formatting (percent, names, notes HTML)
+    teamSuggestions.ts    # Top teams and constructed team suggestions
+    recommend.ts          # Unified interface, data loading, caching
     constants.ts          # Weights, thresholds, draft order
   views/
     WandWarsView.vue      # Standalone page (no PageContainer)
@@ -55,8 +59,9 @@ src/
       WandWarsPicker.vue          # Left column: slots + hero grid + undo/reset
       WandWarsPickSlots.vue       # 6 pick circles using CharacterIcon
       WandWarsHeroGrid.vue        # Hero grid with faction FilterIcons + undo/reset
-      WandWarsAnalysis.vue        # Right panel: tabbed [Hero Synergy][Team Power][Records]
+      WandWarsAnalysis.vue        # Right panel: tabbed [Meta Pick][Synergy][Power][Records]
       WandWarsRecommendation.vue  # Single recommendation card
+      WandWarsTopTeams.vue        # Pinned top teams + suggested teams card
 ```
 
 ### Route
@@ -143,29 +148,33 @@ All models implement a shared `RecommendationModel` interface with `recommend()`
 
 ### Model A: Meta Pick — "Meta Pick"
 
-A lightweight model designed to be useful even with very few matches. Ranks heroes by individual strength, popularity, and tier — with **contextual awareness** that adapts as teammates and opponents are picked.
+A lightweight model designed to be useful from day one. Ranks heroes by individual strength, popularity, and **pair win records** that progressively adapt as teammates are picked.
 
-**Three factors:**
+**Dynamic weights based on draft stage:**
 
-1. **Win Rate** (50%) — contextual win rate that dynamically adjusts based on current team:
-   - **No teammates/opponents picked**: Uses Bayesian-smoothed overall win rate
-   - **Teammates/opponents picked**: Filters to matches where the candidate appeared alongside your current teammates (and/or against current opponents). Uses the win rate from those filtered matches.
-   - **Blending**: With <3 contextual matches, blends between contextual and overall rates proportional to data availability. At 3+ contextual matches, uses fully contextual rate.
-   - When contextual rate differs from overall, both are shown: "62.5% (55.0% overall)"
-2. **Pick Rate** (30%) — how often the hero appears relative to the most-picked hero. Normalized to 0-1 so the most popular hero gets full credit.
-3. **Tier** (20%) — S-tier heroes get a +6% bonus, A-tier +3%. Provides a useful prior even before match data accumulates.
+| Draft stage | Win Rate | Pick Rate | Pair Records |
+|-------------|----------|-----------|--------------|
+| 1st pick (0 teammates) | 60% | 40% | — |
+| 2nd pick (1 teammate) | 35% | 20% | 45% |
+| 3rd pick (2 teammates) | 25% | 15% | 60% |
+
+**Factors:**
+
+1. **Win Rate** — contextual win rate that filters to matches where the candidate appeared alongside current teammates/opponents. Blends with overall win rate when contextual data is sparse (<3 matches). When contextual rate differs from overall, both are shown: "62.5% (55.0% overall)"
+2. **Pick Rate** — how often the hero appears relative to the most-picked hero (meta popularity signal)
+3. **Pair Records** — actual W/L record when paired with each current teammate. For 2 teammates, blends individual pair records (60%) with trio record (40%) if available. Displayed as "w/ Hero Name: 6W / 2L" with colored W/L.
 
 ```
-Score = 0.5 × contextualWinRate + 0.3 × normalizedPickRate + 0.2 × (0.5 + tierBonus)
+Score = winRateWeight × contextualWinRate + pickRateWeight × normalizedPickRate + pairWeight × pairScore
 ```
 
-**Breakdown displayed**: Win Rate % (with overall if different), Pick Rate %, Tier (S/A/—)
+**Breakdown displayed**: Win Rate % (with overall if different), Pick Rate %, pair W/L per teammate
 
-**When to use**: Early on with <100 matches, or when you want a quick "who's generally strong and tends to win alongside my current team?" Simpler than Composite — no explicit synergy/counter modeling, just filtered win rates.
+**When to use**: Default tab. Best for early data or when you want "who's generally strong and tends to win alongside my current team?" Uses observable co-occurrence rather than modeled interactions.
 
-**Key difference from Composite**: Meta Pick asks "what actually happens when these heroes appear together?" (observational). Composite asks "how much better/worse do they perform together than expected?" (analytical). Meta Pick is more intuitive; Composite isolates the interaction effect.
+**Key difference from Composite**: Meta Pick asks "what actually happens when these heroes appear together?" (observational). Composite asks "how much better/worse do they perform together than expected?" (analytical).
 
-**Matchup prediction**: Sums contextual win rate + tier bonus per hero for each team.
+**Matchup prediction**: Sums contextual win rate weighted by pair records for each team.
 
 ### Model B: Composite Scoring — "Hero Synergy"
 
@@ -285,11 +294,11 @@ Note: Bradley-Terry evaluates teams by summing individual hero strengths — it 
 
 | Aspect           | Meta Pick                               | Hero Synergy (Composite)                | Total Team Power (B-T)                             |
 | ---------------- | --------------------------------------- | --------------------------------------- | -------------------------------------------------- |
-| Min useful data  | ~5 matches                              | ~20 matches                             | ~200 matches                                       |
-| What it captures | Individual strength + popularity + tier | Hero strength + synergy + counter       | Hero strength only (additive)                      |
-| Strengths        | Works immediately; no pair data needed  | Interpretable; models team interactions | Statistically principled; calibrated probabilities |
-| Weaknesses       | Ignores team composition entirely       | Heuristic weights; needs pair data      | No synergy/counter; needs more data                |
-| Best for         | Very early data; quick "who's strong?"  | Understanding _why_; team-aware picks   | Larger datasets; accurate win probability          |
+| Min useful data  | ~5 matches                                              | ~20 matches                                      | ~200 matches                                       |
+| What it captures | Strength + popularity + pair win records                 | Hero strength + synergy + counter                | Hero strength only (additive)                      |
+| Strengths        | Works immediately; progressively team-aware via pairs    | Interpretable; models interactions analytically   | Statistically principled; calibrated probabilities |
+| Weaknesses       | No explicit synergy/counter modeling                     | Heuristic weights; needs pair data               | No synergy/counter; needs more data                |
+| Best for         | Default; observable "who wins together"                  | Understanding _why_; analytical team-aware picks  | Larger datasets; accurate win probability          |
 
 All models are always available. Meta Pick is the default tab and most useful early on. As data grows, Composite and B-T become more reliable. Users can compare tabs.
 
@@ -315,11 +324,11 @@ Both models recompute from scratch on every page load — no saved model files o
 
 | Matches | Meta Pick                                      | Composite                                          | Bradley-Terry                       |
 | ------- | ---------------------------------------------- | -------------------------------------------------- | ----------------------------------- |
-| 5-20    | Already useful; tier + early win rates         | Win Rate dominates; almost no pair data            | Too unstable                        |
-| 20-50   | Solid individual rankings                      | Synergy/counter starting to appear                 | Many heroes <3 appearances          |
-| 50-100  | Reliable; diminishing advantage over Composite | Common heroes reliable; popular pairs show synergy | Stabilizing for frequent heroes     |
-| 100-200 | Use as baseline comparison                     | Most heroes medium+ confidence; synergy fills in   | Reliable for top-picked heroes      |
-| 200-500 | Superseded by Composite/B-T                    | Rich synergy/counter; confidence mostly high       | Stable; team predictions calibrated |
+| 5-20    | Already useful; win rates + pick rates               | Win Rate dominates; almost no pair data            | Too unstable                        |
+| 20-50   | Pair records start appearing; team suggestions work  | Synergy/counter starting to appear                 | Many heroes <3 appearances          |
+| 50-100  | Rich pair data; strong team suggestions              | Common heroes reliable; popular pairs show synergy | Stabilizing for frequent heroes     |
+| 100-200 | Pair records very reliable; good alongside Composite | Most heroes medium+ confidence; synergy fills in   | Reliable for top-picked heroes      |
+| 200-500 | Complementary to Composite/B-T                       | Rich synergy/counter; confidence mostly high       | Stable; team predictions calibrated |
 | 500+    | Still useful as quick reference                | Diminishing returns per match                      | Could extend to pairwise terms      |
 
 ### Future: Neural Network (1000+ matches)
@@ -366,10 +375,15 @@ The Records tab shows a badge with the current count when records exist.
 └──────────────────────────┴───────────────────────────────┘
 ```
 
+**Top Teams card** (pinned above recommendations, visible on all model tabs when 1+ hero picked):
+- **Top Teams**: Up to 3 exact trios from match data with actual W/L record (green/red colored)
+- **Suggested Teams**: Up to 3 constructed trios from best pair combinations (dashed border, no W/L). Built by finding the strongest pair partners and combining them, even if the exact trio never appeared in data. Sorted by Bayesian-smoothed win rate.
+
 **Recommendation card layout:**
 
 - Rank number, hero portrait, hero name
 - Right side: **Confidence badge** (high/medium/low) + **Score** (the combined recommendation score). This is the number the list is sorted by.
+- **Breakdown** (Meta Pick): Win Rate % (with overall if different), Pick Rate %, pair W/L per teammate (green W / red L)
 - **Breakdown** (Composite): Win Rate %, Synergy ±%, Counter ±%, Pick Rate %
 - **Breakdown** (B-T): Strength (λ relative), Win Prob %
 - **Notes** — relevant match notes where this hero is referenced in `{}`, with hero names **highlighted in teal bold**
@@ -425,7 +439,7 @@ Future: if data reaches thousands, move computation to build-time JSON output.
 | Decision                  | Choice                                                                                  | Rationale                                                                |
 | ------------------------- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | Page style                | Standalone, full-width (max 1600px), responsive                                         | Two-column layout needs space; stacks at 768px                           |
-| Page structure            | Single page, no mode toggle; three tabs in right panel                                  | Simpler UX, everything in one place                                      |
+| Page structure            | Single page, no mode toggle; four tabs in right panel                                   | Simpler UX, everything in one place                                      |
 | Navigation                | No back button                                                                          | User navigates via site icon                                             |
 | Draft order               | L1→R1→R2→L2→L3→R3; auto-detected side                                                   | No manual toggle needed                                                  |
 | Pick order irrelevance    | Models evaluate unordered team sets                                                     | Draft order affects strategy, not team strength                          |
@@ -437,7 +451,10 @@ Future: if data reaches thousands, move computation to build-time JSON output.
 | Score display             | "Score: X%" next to confidence badge, right-aligned                                     | Prominent alongside confidence for at-a-glance ranking                   |
 | Composite breakdown       | Win Rate / Synergy / Counter                                                            | Three factors with intuitive names                                       |
 | B-T breakdown             | Strength / Win Prob                                                                     | Key model outputs                                                        |
-| Tab labels                | "Hero Synergy Model (Composite)" / "Total Team Power Model (B-T)"                       | Describes what each model does; technical name in parentheses            |
+| Tab labels                | "Meta Pick" / "Hero Synergy (Composite Model)" / "Total Team Power (B-T Model)"         | Describes what each model does; technical name in parentheses            |
+| Top Teams card            | Data-backed trios (W/L) + constructed trios (dashed, no W/L); pinned above recs          | Shows proven and suggested teams; Bayesian-sorted                        |
+| Meta Pick pair records    | Dynamic weights: 0→45→60% pair weight as teammates increase                              | Progressively team-aware; pair W/L shown with colored text               |
+| All-model matchup         | Active tab's prediction shown full, others shown compact below                           | Compare all models at a glance on any tab                                |
 | Confidence labels         | "high/medium/low confidence" with tooltip                                               | Clear meaning; tooltip explains match count thresholds                   |
 | Matchup prediction        | Win probability bar + confidence + verdict + record form                                | Seamless flow: predict → record                                          |
 | Matchup notes             | Only show when ALL `{}` heroes are in teams                                             | Prevents irrelevant notes                                                |

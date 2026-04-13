@@ -157,6 +157,7 @@ function isAvailable(hero: string): boolean {
   height: 80px;
   object-fit: cover;
   z-index: 1;
+  margin-top: 6px;
 }
 
 @media (max-width: 768px) {
