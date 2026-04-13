@@ -648,7 +648,6 @@ const sortedPredictions = computed(() => {
 .matchup-note {
   font-size: 0.85rem;
   color: var(--color-text-secondary);
-  font-style: italic;
   line-height: 1.4;
 }
 
@@ -817,7 +816,6 @@ const sortedPredictions = computed(() => {
   border-top: 1px solid var(--color-border-light);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
-  font-style: italic;
   line-height: 1.4;
 }
 
