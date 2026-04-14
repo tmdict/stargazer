@@ -138,9 +138,7 @@
                 class="hero-portrait"
               />
             </div>
-            <span class="counter-record">
-              {{ s.sweeps }} sweeps / {{ s.total }} wins
-            </span>
+            <span class="counter-record"> {{ s.sweeps }} sweeps / {{ s.total }} wins </span>
           </div>
         </div>
       </section>
@@ -193,9 +191,7 @@
                 class="hero-portrait"
               />
             </div>
-            <span class="counter-record">
-              {{ s.sweeps }} sweeps / {{ s.total }} wins
-            </span>
+            <span class="counter-record"> {{ s.sweeps }} sweeps / {{ s.total }} wins </span>
           </div>
         </div>
       </section>

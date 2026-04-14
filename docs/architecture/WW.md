@@ -362,24 +362,45 @@ Built from strongest pair combinations — surfaces combos even when exact trio 
 
 Picked heroes first (in pick order), then remaining alphabetically.
 
-## 7. Counter Indicators & Team Counter
+## 7. Recommendation Labels
+
+Each recommendation card can display up to three types of labels: a confidence badge, per-hero counter indicators, and a team counter badge.
+
+### Confidence Badge
+
+One badge per card, based on Wilson score 95% confidence interval width for the hero's win rate:
+
+| Label                 | Condition                        | Color  | Meaning                              |
+| --------------------- | -------------------------------- | ------ | ------------------------------------ |
+| **high confidence**   | CI width < 0.3 (~16+ matches)    | Green  | Tight statistical estimate           |
+| **medium confidence** | CI width 0.3–0.5 (~7-15 matches) | Yellow | Moderate estimate, more data helpful |
+| **low confidence**    | < 3 matches, or CI width ≥ 0.5   | Red    | Wide/unreliable estimate             |
+
+Wilson score is computed from `wins + draws*0.5` successes out of total matches. The CI width narrows with more matches and as win rate moves away from 50%.
 
 ### Per-Hero Counter Indicators
 
-Shown on all model tabs when opponents known. Uses Composite's counter matrix:
+Shown on all model tabs when opponents are known. Uses Composite's counter matrix:
 
-- **Shield (green) + "Strong against [Name]"** — counterScore > 0.1
-- **Warning (red) + "Weak against [Name]"** — counterScore < -0.1
-- Per-hero, not per-pair. Informational only.
+| Label                     | Icon         | Condition            | Meaning                                       |
+| ------------------------- | ------------ | -------------------- | --------------------------------------------- |
+| **Strong against [Name]** | Green shield | Counter score > 0.1  | Hero wins more than expected vs this opponent |
+| **Weak against [Name]**   | Red warning  | Counter score < -0.1 | Hero wins less than expected vs this opponent |
+
+Counter score = `bayesianSmoothedVsWinRate - hero's overall winRate`. Per-hero, not per-pair. Informational only — does not affect model scores.
 
 ### Team Counter Badge
 
-When you have 2 teammates and opponent has 2+ heroes:
+Shown when your side has 2 teammates and the opponent has 2+ heroes picked. Checks if [your 2 teammates + candidate] has a winning record against teams containing the known opponents. Only displayed when wins > losses.
 
-- **Star (yellow) + "Potential team counter XW / YL"**
-- Checks if [your 2 + candidate] has beaten any team containing the known opponents
-- Works with partial opponent teams (2 of 3 known) since your 3rd pick always precedes opponent's 3rd in draft order
-- Only shows when wins > losses
+| Label                              | Condition                        | Meaning                                                                                |
+| ---------------------------------- | -------------------------------- | -------------------------------------------------------------------------------------- |
+| **Potential team counter XW / YL** | Opponent has 2 heroes picked     | Partial opponent match — opponent's 3rd hero is unknown, so the matchup is approximate |
+| **Team counter XW / YL**           | Opponent has all 3 heroes picked | Exact opponent match — the full team composition is known                              |
+
+The "Team counter" label is most relevant for the right side's last pick (pick 6), since that's the only time all 3 opponent heroes are known before your pick. The "Potential team counter" appears at pick 5 (left's 3rd pick) when right has 2 heroes, or via side lock. Given the draft order (L→R→R→L→L→R), "Potential team counter" can only appear when recommending for the left side and "Team counter" can only appear when recommending for the right side.
+
+Team counter badges are displayed before per-hero counter indicators (strong/weak against) to give them higher visual precedence.
 
 ### Why "Strong/Weak against" not "Counters/Countered by"
 
@@ -404,7 +425,7 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 1. **Top Teams card** (1+ hero picked): data trios with W/L + constructed trios with dashed border
 2. **Side indicator**: "Recommending for [Left/Right] side" (teal/red)
-3. **Recommendation cards**: portrait, name, [confidence badge] [Score: X%], model breakdown, counter indicators (strong/weak/team counter), relevant notes (hero names in teal bold)
+3. **Recommendation cards**: portrait, name, [confidence badge] [Score: X%], model breakdown, counter indicators (team counter first, then strong/weak against), relevant notes (hero names in teal bold)
 
 #### All 6 Picked
 
@@ -433,13 +454,13 @@ Three category sub-tabs: **Units** | **Synergy** | **Teams**
 
 ## 9. Design Decisions
 
-| Decision                | Choice                                                     | Rationale                                                           |
-| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| Decision                | Choice                                                                     | Rationale                                                                          |
+| ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
 | Pick order irrelevance  | Models evaluate unordered team sets; draft position stats in Insights only | Order affects model strength, but positional win rates shown as read-only insights |
-| Bayesian prior          | 3.0 across all win rates                                   | Prior of 1.0 too weak (2W/0L = 75%); 3.0 brings it to 62.5%         |
-| B-T regularization      | L2 via virtual observations, not pick rate blending        | Proper Bayesian; handles small samples at parameter fitting level   |
-| Composite: no pick rate | Win Rate (0.5) + Synergy (0.3) + Counter (0.2)             | Keeps Composite focused on interactions; distinct from Popular Pick |
-| Counter indicators      | "Strong/Weak against" not "Counters/Countered by"          | Softer language avoids absolute claims with limited data            |
-| Label: "Popular Pick"   | Renamed from "Meta Pick"                                   | "Popular" doesn't conflict with weakness badges                     |
-| Pick slots responsive   | CSS container queries (not media queries)                  | Responds to column width, not viewport                              |
-| Record storage          | `localStorage` key `stargazer.wandwars.records`; immutable | Snapshots at submit time; copy/export for portability               |
+| Bayesian prior          | 3.0 across all win rates                                                   | Prior of 1.0 too weak (2W/0L = 75%); 3.0 brings it to 62.5%                        |
+| B-T regularization      | L2 via virtual observations, not pick rate blending                        | Proper Bayesian; handles small samples at parameter fitting level                  |
+| Composite: no pick rate | Win Rate (0.5) + Synergy (0.3) + Counter (0.2)                             | Keeps Composite focused on interactions; distinct from Popular Pick                |
+| Counter indicators      | "Strong/Weak against" not "Counters/Countered by"                          | Softer language avoids absolute claims with limited data                           |
+| Label: "Popular Pick"   | Renamed from "Meta Pick"                                                   | "Popular" doesn't conflict with weakness badges                                    |
+| Pick slots responsive   | CSS container queries (not media queries)                                  | Responds to column width, not viewport                                             |
+| Record storage          | `localStorage` key `stargazer.wandwars.records`; immutable                 | Snapshots at submit time; copy/export for portability                              |
