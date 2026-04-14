@@ -351,7 +351,7 @@ const sortedTeamRows = computed(() =>
 
 .section-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--color-text-secondary);
@@ -366,7 +366,7 @@ const sortedTeamRows = computed(() =>
 .hero-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
 }
 
 .hero-table th {
@@ -441,8 +441,8 @@ td.col-hero {
 }
 
 .table-portrait {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center 20%;
@@ -453,5 +453,20 @@ td.col-hero {
 .table-hero-name {
   font-weight: 600;
   color: var(--color-text-primary);
+}
+
+@media (max-width: 1200px) {
+  .section-title {
+    font-size: 1.05rem;
+  }
+
+  .hero-table {
+    font-size: 0.9rem;
+  }
+
+  .table-portrait {
+    width: 40px;
+    height: 40px;
+  }
 }
 </style>
