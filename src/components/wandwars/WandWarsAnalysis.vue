@@ -294,6 +294,7 @@
             :character-images="characterImages"
             :counter-indicators="getCounterIndicators(rec.hero)"
             :team-counter="getTeamCounter(rec.hero)"
+            :opponent-count="opponentTeam.length"
             :left-team="leftTeam"
             :right-team="rightTeam"
           />
