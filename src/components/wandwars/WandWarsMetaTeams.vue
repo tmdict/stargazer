@@ -113,10 +113,7 @@
                   <span class="wins">{{ pair.wins }}W</span> /
                   <span class="losses">{{ pair.losses }}L</span>
                 </td>
-                <td
-                  class="col-num"
-                  :style="{ color: synergyColor(pair.synergy), fontWeight: 600 }"
-                >
+                <td class="col-num" :style="{ color: synergyColor(pair.synergy), fontWeight: 600 }">
                   {{ formatSigned(pair.synergy) }}
                 </td>
               </tr>
@@ -457,5 +454,4 @@ td.col-hero {
   font-weight: 600;
   color: var(--color-text-primary);
 }
-
 </style>

@@ -252,13 +252,41 @@
           :character-images="characterImages"
         />
 
+        <div v-if="recommendations.length > 0" class="filters-row">
+          <FilterIcons
+            v-model="recFactionFilter"
+            icon-prefix="faction"
+            :options="factionOptions"
+            :size="28"
+            :show-tooltip="false"
+          />
+          <FilterIcons
+            v-model="recClassFilter"
+            icon-prefix="class"
+            :options="classOptions"
+            :size="28"
+            :show-tooltip="false"
+          />
+          <FilterIcons
+            v-model="recDamageFilter"
+            icon-prefix="damage"
+            :options="damageOptions"
+            :size="28"
+            :show-tooltip="false"
+          />
+        </div>
+
         <div v-if="recommendations.length === 0" class="empty-state">
           Pick heroes to see recommendations.
         </div>
 
+        <div v-else-if="filteredRecommendations.length === 0" class="empty-state">
+          No recommendations match the current filters.
+        </div>
+
         <div v-else class="recommendations">
           <WandWarsRecommendation
-            v-for="(rec, i) in recommendations"
+            v-for="(rec, i) in filteredRecommendations"
             :key="rec.hero"
             :recommendation="rec"
             :rank="i + 1"
@@ -291,8 +319,10 @@ import { computed, ref } from 'vue'
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
 import type { CounterIndicator, TeamCounterInfo } from './WandWarsRecommendation.vue'
 import WandWarsTopTeams from './WandWarsTopTeams.vue'
+import FilterIcons from '@/components/ui/FilterIcons.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useGameDataStore } from '@/stores/gameData'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
 import {
@@ -304,6 +334,8 @@ import {
 } from '@/wandwars/recommend'
 import { serializeMatches } from '@/wandwars/serializer'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
+
+const gameDataStore = useGameDataStore()
 
 const props = defineProps<{
   pickState: PickState
@@ -502,6 +534,40 @@ const recommendations = computed(() => {
   )
 })
 
+const recFactionFilter = ref('')
+const recClassFilter = ref('')
+const recDamageFilter = ref('')
+
+const factionOptions = computed(() =>
+  [...new Set(gameDataStore.characters.map((c) => c.faction))].sort(),
+)
+const classOptions = computed(() =>
+  [...new Set(gameDataStore.characters.map((c) => c.class))].sort(),
+)
+const damageOptions = computed(() =>
+  [...new Set(gameDataStore.characters.map((c) => c.damage))].sort(),
+)
+
+const characterMap = computed(() => {
+  const map = new Map<string, (typeof gameDataStore.characters)[number]>()
+  for (const c of gameDataStore.characters) map.set(c.name, c)
+  return map
+})
+
+const filteredRecommendations = computed(() => {
+  if (!recFactionFilter.value && !recClassFilter.value && !recDamageFilter.value) {
+    return recommendations.value
+  }
+  return recommendations.value.filter((rec) => {
+    const char = characterMap.value.get(rec.hero)
+    if (!char) return false
+    if (recFactionFilter.value && char.faction !== recFactionFilter.value) return false
+    if (recClassFilter.value && char.class !== recClassFilter.value) return false
+    if (recDamageFilter.value && char.damage !== recDamageFilter.value) return false
+    return true
+  })
+})
+
 const leftTeam = computed(() => props.pickState.left.filter((h): h is string => h !== null))
 
 const rightTeam = computed(() => props.pickState.right.filter((h): h is string => h !== null))
@@ -518,6 +584,13 @@ const aggregatePrediction = computed(() => {
 </script>
 
 <style scoped>
+.filters-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: end;
+  flex-wrap: wrap;
+}
+
 .analysis {
   background: var(--color-bg-white);
   border: 1px solid var(--color-border-primary);
@@ -659,6 +732,7 @@ const aggregatePrediction = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
   max-height: calc(100vh - 200px);
   overflow-y: auto;
 }
