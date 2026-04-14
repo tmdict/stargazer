@@ -106,6 +106,10 @@ onUnmounted(() => {
   color: #fff;
 }
 
+.tooltip :deep(*) {
+  color: inherit;
+}
+
 .tooltip-simple {
   border-radius: 6px;
   padding: 6px 12px;

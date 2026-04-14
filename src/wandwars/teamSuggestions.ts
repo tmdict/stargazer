@@ -11,7 +11,8 @@ export interface TeamSuggestion {
 }
 
 const MAX_SUGGESTIONS = 3
-const PRIOR = 1.0
+const PRIOR = 3.0
+const MIN_MATCHES = 2
 
 /**
  * Compute pair win record between two heroes on the same team.
@@ -99,8 +100,7 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
   const results: TeamSuggestion[] = []
   for (const record of teamRecords.values()) {
     record.winRate = (record.wins + PRIOR) / (record.total + 2 * PRIOR)
-    // Only include teams with more wins than losses
-    if (record.wins > record.losses) {
+    if (record.total >= MIN_MATCHES && record.wins > record.losses) {
       results.push(record)
     }
   }

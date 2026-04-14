@@ -3,11 +3,14 @@
     <div class="wandwars-layout">
       <div class="wandwars-left">
         <WandWarsPicker
+          v-model:active-tab="leftTab"
           :pick-state="pickState"
           :current-pick-side="currentPickSide"
           :characters="characters"
           :available-heroes="availableHeroes"
           :character-images="characterImages"
+          :match-data="matchData"
+          :analysis-data="analysisData"
           @pick-hero="handlePickHero"
           @unpick-slot="handleUnpickSlot"
           @reset="handleReset"
@@ -17,6 +20,7 @@
 
       <div class="wandwars-right">
         <WandWarsAnalysis
+          v-if="leftTab === 'draft'"
           :pick-state="pickState"
           :current-pick-side="currentPickSide"
           :match-data="matchData"
@@ -28,6 +32,13 @@
           @reset="handleReset"
           @export="handleExport"
         />
+        <WandWarsInsights
+          v-else
+          :category="leftTab"
+          :match-data="matchData"
+          :analysis-data="analysisData"
+          :character-images="characterImages"
+        />
       </div>
     </div>
   </div>
@@ -37,6 +48,7 @@
 import { computed, ref } from 'vue'
 
 import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
+import WandWarsInsights from '@/components/wandwars/WandWarsInsights.vue'
 import WandWarsPicker from '@/components/wandwars/WandWarsPicker.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { DRAFT_ORDER } from '@/wandwars/constants'
@@ -46,6 +58,8 @@ import type { PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeData()
+
+const leftTab = ref<'draft' | 'units' | 'teams' | 'synergy'>('draft')
 
 const pickState = ref<PickState>({
   left: [null, null, null],

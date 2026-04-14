@@ -47,42 +47,45 @@ src/
     scripts/
       encode.ts               # Raw → encoded (node src/wandwars/scripts/encode.ts)
       decode.ts               # Encoded → raw (node src/wandwars/scripts/decode.ts)
-    types.ts                  # Domain types (MatchResult, Recommendation, etc.)
+    types.ts                  # Domain types (MatchResult, Recommendation, TeamRecord, etc.)
     parser.ts                 # Text file → MatchResult[]
     serializer.ts             # RecordedMatch[] → .data text for export
-    analysis.ts               # Hero stats, synergy matrix, counter matrix (Bayesian prior 3.0)
+    analysis.ts               # Hero stats, synergy/counter matrices, computeTeamRecords()
     popularPick.ts            # Popular Pick model (popularity + pair records)
     composite.ts              # Composite model (synergy + counter, dynamic weights)
     bradleyTerry.ts           # Bradley-Terry model (regularized L2, team power)
     modelUtils.ts             # Shared: getRelevantNotes, getMatchupNotes, Wilson confidence
     confidence.ts             # Wilson score interval calculation
-    formatting.ts             # Shared: formatPercent, formatName, formatNoteHtml, getResultSymbol
+    formatting.ts             # Shared: formatPercent, formatName, formatSigned, formatNoteHtml, getResultSymbol
     teamSuggestions.ts        # Top teams (data-backed) + constructed team suggestions
     recommend.ts              # Unified interface, data loading, caching, all model predictions
-    constants.ts              # Weights, thresholds, draft order, confidence descriptions
+    constants.ts              # Weights, thresholds, draft order, meta analysis constants
   views/
     WandWarsView.vue          # Standalone page, state management, localStorage records
   components/
     wandwars/
       WandWarsPicker.vue          # Left column: pick slots + hero grid + undo/reset
-      WandWarsPickSlots.vue       # 6 pick circles using CharacterIcon, active-side indicator
+      WandWarsPickSlots.vue       # 6 pick circles, container-query responsive layout
       WandWarsHeroGrid.vue        # Hero grid with faction FilterIcons + undo/reset
       WandWarsAnalysis.vue        # Right panel: tabbed [Popular Pick][B-T][Composite][Records]
       WandWarsRecommendation.vue  # Recommendation card with breakdown, counters, team counter
       WandWarsTopTeams.vue        # Pinned top teams + suggested teams card
+      WandWarsMetaTeams.vue       # Meta tab: sortable tables for Units/Synergy/Teams
+      WandWarsInsights.vue        # Meta tab: insights, counter rows, dataset header
 docs/
-  WW.md                        # This document
+  architecture/
+    WW.md                      # This document
 ```
 
 ### Modified Files (non-WandWars)
 
 These existing files were modified to support the feature. Revert these changes to fully remove WandWars:
 
-| File | Change |
-|------|--------|
-| `src/router/routes.ts` | Added `/wandwars` route |
-| `package.json` | Added `ww:encode`, `ww:decode` scripts; modified `build` to run decode first |
-| `tsconfig.app.json` | Added `src/wandwars/scripts/*` to `exclude` |
+| File                   | Change                                                                       |
+| ---------------------- | ---------------------------------------------------------------------------- |
+| `src/router/routes.ts` | Added `/wandwars` route                                                      |
+| `package.json`         | Added `ww:encode`, `ww:decode` scripts; modified `build` to run decode first |
+| `tsconfig.app.json`    | Added `src/wandwars/scripts/*` to `exclude`                                  |
 
 ### Route
 
@@ -119,59 +122,7 @@ JS bundle (inlined as string)
 
 - Key: `stargazer.wandwars.records` — recorded match results. Remove this key to clean up browser storage when disabling the feature.
 
-## 4. Domain Model
-
-```typescript
-interface MatchResult {
-  left: [string, string, string]
-  right: [string, string, string]
-  result: 'left' | 'right' | 'draw'
-  weight: number // 1.0 or 1.5 (dominant)
-  notes: MatchNote[]
-}
-
-interface MatchNote {
-  text: string // raw text with {heroName} references
-  heroes: string[] // extracted hero names from {}
-}
-
-interface HeroStats {
-  name: string
-  matches: number
-  wins: number
-  losses: number
-  draws: number
-  weightedWins: number
-  weightedLosses: number
-  winRate: number // Bayesian-smoothed (prior 3.0)
-}
-
-interface Recommendation {
-  hero: string
-  score: number // 0-1, model-specific
-  confidence: 'high' | 'medium' | 'low'
-  breakdown: Record<string, number> // model-specific components
-  relevantNotes: MatchNote[] // notes where this hero appears in {}
-}
-
-interface MatchupPrediction {
-  leftWinProbability: number
-  rightWinProbability: number
-  confidence: 'high' | 'medium' | 'low'
-  breakdown: Record<string, number>
-  relevantNotes: MatchNote[] // only notes where ALL {} heroes present
-}
-
-interface RecordedMatch {
-  left: [string, string, string]
-  right: [string, string, string]
-  winner: 'left' | 'right' | 'draw'
-  dominant: boolean
-  notes: string
-}
-```
-
-## 5. Shared Statistical Foundations
+## 4. Shared Statistical Foundations
 
 ### Bayesian Prior (analysis.ts)
 
@@ -243,11 +194,11 @@ Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to
 - Affects: recommendation list, top teams, counter indicators, team counter — all use the locked side
 - Recommendations still update dynamically as the opponent picks (new counter data, hero exclusion)
 
-## 6. Prediction Models
+## 5. Prediction Models
 
 All models implement `RecommendationModel` with `recommend()` and `predictMatchup()`. They run independently in separate tabs. Pick order does not affect predictions — all models evaluate teams as unordered sets.
 
-Tab order: **Popular Pick** | **Total Team Power (B-T Model)** | **Hero Synergy (Composite Model)** | **Records**
+Tab order: **Popular Pick** | **Total Team Power (B-T Model)** | **Hero Synergy (Composite Model)** | **Records** | **Meta**
 
 ### Model A: Popular Pick (`popularPick.ts`)
 
@@ -380,7 +331,7 @@ All models recompute from scratch on every page load. Workflow: add matches to `
 
 Reserved as fourth model tab. 60-dim one-hot → Dense(64) → Dense(32) → Sigmoid. Train offline, run via ONNX Runtime Web. Not implemented.
 
-## 7. Top Teams & Suggestions (`teamSuggestions.ts`)
+## 6. Top Teams & Suggestions (`teamSuggestions.ts`)
 
 Pinned above recommendations on all model tabs when 1+ hero picked on current side.
 
@@ -411,7 +362,7 @@ Built from strongest pair combinations — surfaces combos even when exact trio 
 
 Picked heroes first (in pick order), then remaining alphabetically.
 
-## 8. Counter Indicators & Team Counter
+## 7. Counter Indicators & Team Counter
 
 ### Per-Hero Counter Indicators
 
@@ -434,20 +385,20 @@ When you have 2 teammates and opponent has 2+ heroes:
 
 The softer language avoids absolute claims with limited data. A hero ranked #1 by Popular Pick showing "Weak against Faramor" is not contradictory — it means "popular and strong, but has a matchup disadvantage against that specific opponent." Different axes, both useful.
 
-## 9. Page Layout
+## 8. Page Layout
 
 Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width responsive (max 1600px, stacks at 768px).
 
 ### Left Column
 
-- **Pick slots**: 6 `CharacterIcon` circles (70px), dashed border when empty (teal/red by team). Click to remove. Portrait images offset (`center 20%` / `margin-top: 6px`) to center on face.
+- **Pick slots**: 6 `CharacterIcon` circles (70px), dashed border when empty (teal/red by team). Click to remove. Portrait images offset (`center 20%` / `margin-top: 6px`) to center on face. Responsive via CSS container queries (wraps at 450px column width, `vs` label on its own line between stacked teams; smaller slots at 320px).
 - **Active side**: Full opacity + "▶ Picking" label during draft. Both full opacity when all 6 picked.
 - **Hero grid**: 70px circular portraits with level backgrounds. Sorted S→A→Rare, then faction, then name. Picked heroes dimmed.
 - **Controls row**: Faction `FilterIcons` + Undo/Reset buttons, padded to align with grid.
 
 ### Right Column — Tabs
 
-**Popular Pick** (default) | **Total Team Power (B-T Model)** | **Hero Synergy (Composite Model)** | **Records** (with count badge)
+**Popular Pick** (default) | **Total Team Power (B-T Model)** | **Hero Synergy (Composite Model)** | **Records** (with count badge) | **Meta**
 
 #### During Draft
 
@@ -464,48 +415,31 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 View-only list. Each record: match line + notes below. Three actions: **Copy Data** (clipboard, "Copied!" feedback) | **Export .data** (file) | **Clear All**.
 
-## 10. Record Storage
+#### Meta Tab
 
-`localStorage` key: `stargazer.wandwars.records`
+Aggregate statistics across all match data. Left column: sortable tables (`WandWarsMetaTeams`). Right column: insights and counter rows (`WandWarsInsights`).
 
-- Records are **immutable snapshots** — teams captured at submit time, not affected by subsequent picker changes
-- Persists across page reloads and tab switches
-- "Save Result" appends + saves to localStorage
-- "Clear All" removes localStorage key
-- "Copy Data" copies all in `.data` format for pasting into master data file
-- "Export .data" downloads as file
+Three category sub-tabs: **Units** | **Synergy** | **Teams**
 
-## 11. Design Decisions
+**Units table**: Sortable by Played, Win %, 1st Pick. Default sort: Played.
 
-| Decision                  | Choice                                                                      | Rationale                                                            |
-| ------------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| Page style                | Standalone, full-width (max 1600px), responsive                             | Two-column layout; stacks at 768px                                   |
-| Page structure            | Single page; four tabs                                                      | No mode switching needed                                             |
-| Tab order                 | Popular Pick → B-T → Composite → Records                                    | Simplest/most useful first                                           |
-| Draft order               | L1→R1→R2→L2→L3→R3; auto-detected side                                       | No manual toggle                                                     |
-| Pick order irrelevance    | Models evaluate unordered team sets                                         | Order affects strategy, not strength                                 |
-| Hero exclusion            | Picked heroes excluded from recs + team suggestions                         | Can't pick same hero twice                                           |
-| Bayesian prior            | 3.0 across all win rates                                                    | Aggressively pulls low-sample toward 50%; fades with growth          |
-| B-T regularization        | L2 via virtual observations, weight = 3.0/(1+matchCount)                    | Proper Bayesian; no pick rate hack                                   |
-| Composite: no pick rate   | Win Rate (0.5) + Synergy (0.3) + Counter (0.2)                              | Focused on interactions; distinct from Popular Pick                  |
-| Dynamic weights           | Synergy/counter scale by data availability; unused → Win Rate               | Prevents unreliable sparse data from dominating                      |
-| Score normalization       | Synergy/counter clamped [-0.5, +0.5] → shifted to [0, 1]                    | All components on same scale                                         |
-| Sample size bonus         | Up to +5% for 20+ appearances (Composite only)                              | Tie-breaker for well-tested heroes                                   |
-| Popular Pick pair records | Dynamic: 0→45→60% pair weight as teammates increase                         | Progressively team-aware                                             |
-| Top Teams filtering       | Exclude picked heroes; require wins > losses                                | Only actionable, winning teams                                       |
-| Constructed teams         | Built from pair records; dashed border, no W/L                              | Surfaces combos missed by limited data                               |
-| Team hero ordering        | Picked first (pick order), then remaining alphabetically                    | Intuitive "your picks + suggestion"                                  |
-| Counter indicators        | Green shield "Strong against" / Red warning "Weak against" (threshold ±0.1) | Informational; from Composite counter matrix; all tabs               |
-| Team counter              | Yellow star "Potential team counter" with W/L; 2+ known opponents           | Partial opponent match (draft order means opponent 3rd unknown)      |
-| Label: "Popular Pick"     | Renamed from "Meta Pick"                                                    | Clearer expectation; "popular" doesn't conflict with weakness badges |
-| Wilson confidence         | 95% CI width thresholds                                                     | Statistically grounded                                               |
-| All-model matchup         | Active tab full, others compact                                             | Compare at a glance                                                  |
-| Notes display             | Hero in `{}` required; ALL `{}` heroes for matchup; teal bold highlight     | Relevant, not noisy                                                  |
-| Draw handling (B-T)       | 0.5 wins each side                                                          | Preserves information                                                |
-| Counter weighting         | Match weights (1.5) in counter matrix                                       | Consistent with hero stats                                           |
-| Order independence        | All team comparisons use includes/Set/sorted keys                           | [A,B,C] = [C,A,B] everywhere; no order-dependent bugs               |
-| Side lock                 | Toggle buttons to lock recs to Left/Right team; padlock icon when active    | Focus on one side without draft order switching                      |
-| Record immutability       | Snapshot on submit; picker stays                                            | Faithful capture; no accidental edits                                |
-| Record storage            | `localStorage` + copy/export                                                | Persists; portable                                                   |
-| Portrait alignment        | `object-position: center 20%` / `margin-top: 6px`                           | Centers on face instead of top of head                               |
-| Hero grid sorting         | S-tier → A-tier → Rare, then faction, then name                             | Strong heroes surface first                                          |
+**Synergy table**: Sortable by Played, Win %, Record (W/L), Synergy. Minimum `META_MIN_PAIR_MATCHES` (3) matches. Default sort: Synergy (positive first, negative last). Info icon tooltip on Synergy header. Synergy score = `pair win rate - average of each hero's individual win rate`. Color-coded green/red.
+
+**Teams table**: Sortable by Played, Win %, Record (W/L). Minimum `META_MIN_TEAM_MATCHES` (2) matches. Default sort: Played. Uses shared `computeTeamRecords()`.
+
+**Right column insights**: Dataset header (match count, hero count, bias disclaimer) at top. Units: top hero counters as left-aligned counter rows. Synergy: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1). Teams: team counter matchups as counter rows.
+
+**Shared meta code**: `TeamRecord` in `types.ts`, `computeTeamRecords()` in `analysis.ts`, `META_*` constants in `constants.ts`, `formatSigned()` in `formatting.ts`.
+
+## 9. Design Decisions
+
+| Decision                | Choice                                                     | Rationale                                                           |
+| ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
+| Pick order irrelevance  | Models evaluate unordered team sets                        | Order affects strategy, not strength                                |
+| Bayesian prior          | 3.0 across all win rates                                   | Prior of 1.0 too weak (2W/0L = 75%); 3.0 brings it to 62.5%         |
+| B-T regularization      | L2 via virtual observations, not pick rate blending        | Proper Bayesian; handles small samples at parameter fitting level   |
+| Composite: no pick rate | Win Rate (0.5) + Synergy (0.3) + Counter (0.2)             | Keeps Composite focused on interactions; distinct from Popular Pick |
+| Counter indicators      | "Strong/Weak against" not "Counters/Countered by"          | Softer language avoids absolute claims with limited data            |
+| Label: "Popular Pick"   | Renamed from "Meta Pick"                                   | "Popular" doesn't conflict with weakness badges                     |
+| Pick slots responsive   | CSS container queries (not media queries)                  | Responds to column width, not viewport                              |
+| Record storage          | `localStorage` key `stargazer.wandwars.records`; immutable | Snapshots at submit time; copy/export for portability               |

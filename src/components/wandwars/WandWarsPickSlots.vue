@@ -1,59 +1,61 @@
 <template>
-  <div class="pick-slots">
-    <div
-      :class="[
-        'team',
-        'team-left',
-        { 'active-side': currentPickSide === 'left' || currentPickSide === null },
-      ]"
-    >
-      <span class="side-indicator" :class="{ visible: currentPickSide === 'left' }">
-        ▶ Picking
-      </span>
-      <div class="team-slots">
-        <div
-          v-for="(hero, i) in pickState.left"
-          :key="'l' + i"
-          :class="['pick-slot', { filled: !!hero }]"
-          @click="hero ? emit('unpickSlot', 'left', i) : undefined"
-        >
-          <CharacterIcon
-            v-if="hero && getCharacter(hero)"
-            :character="getCharacter(hero)!"
-            :hide-info="true"
-            :show-simple-tooltip="true"
-          />
-          <span v-else class="slot-label">L{{ i + 1 }}</span>
+  <div class="pick-slots-container">
+    <div class="pick-slots">
+      <div
+        :class="[
+          'team',
+          'team-left',
+          { 'active-side': currentPickSide === 'left' || currentPickSide === null },
+        ]"
+      >
+        <span class="side-indicator" :class="{ visible: currentPickSide === 'left' }">
+          ▶ Picking
+        </span>
+        <div class="team-slots">
+          <div
+            v-for="(hero, i) in pickState.left"
+            :key="'l' + i"
+            :class="['pick-slot', { filled: !!hero }]"
+            @click="hero ? emit('unpickSlot', 'left', i) : undefined"
+          >
+            <CharacterIcon
+              v-if="hero && getCharacter(hero)"
+              :character="getCharacter(hero)!"
+              :hide-info="true"
+              :show-simple-tooltip="true"
+            />
+            <span v-else class="slot-label">L{{ i + 1 }}</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <span class="vs-label">vs</span>
+      <span class="vs-label">vs</span>
 
-    <div
-      :class="[
-        'team',
-        'team-right',
-        { 'active-side': currentPickSide === 'right' || currentPickSide === null },
-      ]"
-    >
-      <span class="side-indicator enemy" :class="{ visible: currentPickSide === 'right' }">
-        Picking ◀
-      </span>
-      <div class="team-slots">
-        <div
-          v-for="(hero, i) in pickState.right"
-          :key="'r' + i"
-          :class="['pick-slot', 'enemy', { filled: !!hero }]"
-          @click="hero ? emit('unpickSlot', 'right', i) : undefined"
-        >
-          <CharacterIcon
-            v-if="hero && getCharacter(hero)"
-            :character="getCharacter(hero)!"
-            :hide-info="true"
-            :show-simple-tooltip="true"
-          />
-          <span v-else class="slot-label">R{{ i + 1 }}</span>
+      <div
+        :class="[
+          'team',
+          'team-right',
+          { 'active-side': currentPickSide === 'right' || currentPickSide === null },
+        ]"
+      >
+        <span class="side-indicator enemy" :class="{ visible: currentPickSide === 'right' }">
+          Picking ◀
+        </span>
+        <div class="team-slots">
+          <div
+            v-for="(hero, i) in pickState.right"
+            :key="'r' + i"
+            :class="['pick-slot', 'enemy', { filled: !!hero }]"
+            @click="hero ? emit('unpickSlot', 'right', i) : undefined"
+          >
+            <CharacterIcon
+              v-if="hero && getCharacter(hero)"
+              :character="getCharacter(hero)!"
+              :hide-info="true"
+              :show-simple-tooltip="true"
+            />
+            <span v-else class="slot-label">R{{ i + 1 }}</span>
+          </div>
         </div>
       </div>
     </div>
@@ -81,12 +83,16 @@ function getCharacter(name: string): CharacterType | undefined {
 </script>
 
 <style scoped>
+.pick-slots-container {
+  container-type: inline-size;
+  margin-bottom: var(--spacing-lg);
+}
+
 .pick-slots {
   display: flex;
   align-items: center;
   justify-content: center;
   gap: var(--spacing-lg);
-  margin-bottom: var(--spacing-lg);
 }
 
 .team {
@@ -164,14 +170,26 @@ function getCharacter(name: string): CharacterType | undefined {
   margin-top: var(--spacing-lg);
 }
 
-@media (max-width: 768px) {
+@container (max-width: 450px) {
+  .pick-slots {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--spacing-sm);
+  }
+
+  .vs-label {
+    width: 100%;
+    text-align: center;
+    margin-top: 0;
+  }
+
   .pick-slot {
     width: 60px;
     height: 60px;
   }
 }
 
-@media (max-width: 480px) {
+@container (max-width: 320px) {
   .pick-slot {
     width: 50px;
     height: 50px;

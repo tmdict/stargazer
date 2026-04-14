@@ -156,7 +156,7 @@
         v-for="(note, i) in recommendation.relevantNotes.slice(0, 2)"
         :key="i"
         class="note"
-        v-html="formatNoteHtml(note.text)"
+        v-html="formatNoteHtml(note.text, props.leftTeam ?? [], props.rightTeam ?? [])"
       />
     </div>
   </div>
@@ -193,6 +193,8 @@ const props = defineProps<{
   characterImages: Record<string, string>
   counterIndicators?: CounterIndicator[]
   teamCounter?: TeamCounterInfo | null
+  leftTeam?: string[]
+  rightTeam?: string[]
 }>()
 
 const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidence]
@@ -388,7 +390,14 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
 }
 
 .note :deep(.hero-highlight) {
-  color: var(--color-primary);
   font-style: normal;
+}
+
+.note :deep(.hero-highlight.team-left) {
+  color: var(--color-ally);
+}
+
+.note :deep(.hero-highlight.team-right) {
+  color: var(--color-enemy);
 }
 </style>

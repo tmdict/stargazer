@@ -35,3 +35,8 @@ export const SAMPLE_BONUS_FULL = 20
 
 // Max recommendations to show
 export const MAX_RECOMMENDATIONS = 30
+
+// Meta analysis thresholds
+export const META_BAYESIAN_PRIOR = 3.0
+export const META_MIN_TEAM_MATCHES = 2
+export const META_MIN_PAIR_MATCHES = 3
