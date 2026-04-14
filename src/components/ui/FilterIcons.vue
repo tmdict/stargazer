@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import IconFilterAll from './IconFilterAll.vue'
 import TooltipPopup from './TooltipPopup.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -12,10 +11,19 @@ const i18n = useI18nStore()
 interface Props {
   options: string[]
   iconPrefix: string // e.g., 'class', 'faction', 'damage'
+  size?: number // button size in px (default 36)
+  showTooltip?: boolean
 }
 
-defineProps<Props>()
+const props = withDefaults(defineProps<Props>(), {
+  size: 36,
+  showTooltip: true,
+})
 const modelValue = defineModel<string>({ required: true })
+
+const iconSize = computed(() => Math.round(props.size * 0.78))
+const factionIconSize = computed(() => Math.round(props.size * 0.89))
+const borderWidth = computed(() => (props.size >= 36 ? 4 : 3))
 
 const getIconPath = (iconPrefix: string, option: string): string => {
   const iconKey = `${iconPrefix}-${option}`
@@ -26,18 +34,8 @@ const getIconPath = (iconPrefix: string, option: string): string => {
 const hoveredOption = ref<string | null>(null)
 const hoveredElement = ref<HTMLElement | null>(null)
 
-const getTooltipText = computed(() => {
-  if (!hoveredOption.value) return ''
-
-  if (hoveredOption.value === 'show-all') {
-    return i18n.t('app.show-all')
-  }
-
-  // For faction, class, damage options, use game translations
-  return i18n.t(`game.${hoveredOption.value}`)
-})
-
 const handleMouseEnter = (option: string, event: MouseEvent) => {
+  if (!props.showTooltip) return
   hoveredOption.value = option
   if (event.currentTarget instanceof HTMLElement) {
     hoveredElement.value = event.currentTarget
@@ -45,6 +43,7 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
 }
 
 const handleMouseLeave = () => {
+  if (!props.showTooltip) return
   hoveredOption.value = null
   hoveredElement.value = null
 }
@@ -56,11 +55,12 @@ const handleMouseLeave = () => {
       <!-- Clear/None option -->
       <button
         :class="['icon-option', 'clear-option', { active: modelValue === '' }]"
+        :style="{ width: `${size}px`, height: `${size}px`, borderWidth: '0' }"
         @click="modelValue = ''"
-        @mouseenter="handleMouseEnter('show-all', $event)"
-        @mouseleave="handleMouseLeave"
       >
-        <IconFilterAll :size="20" />
+        <span class="clear-label" :style="{ fontSize: `${Math.round(size * 0.39)}px` }">{{
+          i18n.t('app.all')
+        }}</span>
       </button>
 
       <!-- Icon options -->
@@ -68,6 +68,7 @@ const handleMouseLeave = () => {
         v-for="option in options"
         :key="option"
         :class="['icon-option', { active: modelValue === option }]"
+        :style="{ width: `${size}px`, height: `${size}px`, borderWidth: `${borderWidth}px` }"
         @click="modelValue = modelValue === option ? '' : option"
         @mouseenter="handleMouseEnter(option, $event)"
         @mouseleave="handleMouseLeave"
@@ -75,10 +76,11 @@ const handleMouseLeave = () => {
         <img
           :src="getIconPath(iconPrefix, option)"
           :alt="option"
-          :class="[
-            'filter-icon',
-            { 'dark-bg': iconPrefix === 'damage', 'faction-icon': iconPrefix === 'faction' },
-          ]"
+          :class="['filter-icon', { 'dark-bg': iconPrefix === 'damage' }]"
+          :style="{
+            width: `${iconPrefix === 'faction' ? factionIconSize : iconSize}px`,
+            height: `${iconPrefix === 'faction' ? factionIconSize : iconSize}px`,
+          }"
         />
       </button>
     </div>
@@ -87,8 +89,8 @@ const handleMouseLeave = () => {
     <Teleport to="body">
       <TooltipPopup
         v-if="hoveredOption && hoveredElement"
-        :text="getTooltipText"
-        :targetElement="hoveredElement"
+        :text="i18n.t(`game.${hoveredOption}`)"
+        :target-element="hoveredElement"
         variant="simple"
       />
     </Teleport>
@@ -114,9 +116,7 @@ const handleMouseLeave = () => {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border: 4px solid #fff;
+  border: 4px solid transparent;
   border-radius: 50%;
   background-color: transparent;
   cursor: pointer;
@@ -125,8 +125,7 @@ const handleMouseLeave = () => {
 }
 
 .icon-option:hover {
-  border-color: var(--color-primary-hover);
-  transform: scale(1.05);
+  transform: scale(1.15);
 }
 
 .icon-option:active {
@@ -143,17 +142,19 @@ const handleMouseLeave = () => {
 
 .clear-option:hover {
   color: var(--color-primary);
-  border-color: var(--color-primary-hover);
 }
 
 .clear-option.active {
   color: var(--color-primary);
-  border-color: var(--color-primary);
+}
+
+.clear-label {
+  font-weight: 700;
+  line-height: 1;
+  user-select: none;
 }
 
 .filter-icon {
-  width: 28px;
-  height: 28px;
   object-fit: contain;
   border-radius: var(--radius-sm);
 }
@@ -162,27 +163,5 @@ const handleMouseLeave = () => {
   background-color: rgba(0, 0, 0, 0.6);
   padding: 2px;
   border-radius: 50%;
-}
-
-.filter-icon.faction-icon {
-  width: 32px;
-  height: 32px;
-}
-
-@media (max-width: 768px) {
-  .icon-option {
-    width: 32px;
-    height: 32px;
-  }
-
-  .filter-icon {
-    width: 24px;
-    height: 24px;
-  }
-
-  .filter-icon.faction-icon {
-    width: 28px;
-    height: 28px;
-  }
 }
 </style>

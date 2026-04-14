@@ -51,6 +51,7 @@ import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
 import WandWarsInsights from '@/components/wandwars/WandWarsInsights.vue'
 import WandWarsPicker from '@/components/wandwars/WandWarsPicker.vue'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { DRAFT_ORDER } from '@/wandwars/constants'
 import { getAnalysisData, getMatchData } from '@/wandwars/recommend'
 import { serializeMatches } from '@/wandwars/serializer'
@@ -58,6 +59,8 @@ import type { PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeData()
+
+useI18nStore().initialize()
 
 const leftTab = ref<'draft' | 'units' | 'teams' | 'synergy'>('draft')
 
