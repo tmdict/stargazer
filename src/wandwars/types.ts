@@ -94,6 +94,15 @@ export interface RecordedMatch {
   notes: string
 }
 
+export interface TeamRecord {
+  team: [string, string, string]
+  wins: number
+  losses: number
+  draws: number
+  total: number
+  winRate: number
+}
+
 export type PickSide = 'left' | 'right'
 export interface PickState {
   left: (string | null)[]

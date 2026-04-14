@@ -2,16 +2,18 @@ import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
 import encodedData from './data/data?raw'
-const rawData = atob(encodedData)
 import { getUniqueHeroes, parseMatchData } from './parser'
 import { popularPickModel } from './popularPick'
 import type {
   AnalysisData,
+  MatchNote,
   MatchResult,
   MatchupPrediction,
   Recommendation,
   RecommendationModel,
 } from './types'
+
+const rawData = atob(encodedData)
 
 const models: RecommendationModel[] = [popularPickModel, bradleyTerryModel, compositeModel]
 
@@ -73,10 +75,16 @@ export function getMatchupPrediction(
   return model.predictMatchup(leftTeam, rightTeam, getAnalysis(), getMatches())
 }
 
+export interface ModelPrediction {
+  id: string
+  name: string
+  prediction: MatchupPrediction
+}
+
 export function getAllMatchupPredictions(
   leftTeam: string[],
   rightTeam: string[],
-): { id: string; name: string; prediction: MatchupPrediction }[] {
+): ModelPrediction[] {
   const analysis = getAnalysis()
   const matches = getMatches()
   return models.map((model) => ({
@@ -84,4 +92,93 @@ export function getAllMatchupPredictions(
     name: model.name,
     prediction: model.predictMatchup(leftTeam, rightTeam, analysis, matches),
   }))
+}
+
+export interface AggregatePrediction {
+  leftWinProbability: number
+  rightWinProbability: number
+  confidence: 'high' | 'medium' | 'low'
+  relevantNotes: MatchNote[]
+  matchCount: number
+  heroCount: number
+}
+
+const CONFIDENCE_MULTIPLIERS: Record<string, number> = {
+  high: 1.0,
+  medium: 0.5,
+  low: 0.2,
+}
+
+const CONFIDENCE_ORDER: ('high' | 'medium' | 'low')[] = ['low', 'medium', 'high']
+
+function getAdaptiveWeights(matchCount: number): Record<string, number> {
+  if (matchCount < 20) {
+    return { 'popular-pick': 0.6, 'bradley-terry': 0.1, composite: 0.3 }
+  }
+  if (matchCount <= 100) {
+    const t = (matchCount - 20) / 80
+    return {
+      'popular-pick': 0.6 - 0.27 * t,
+      'bradley-terry': 0.1 + 0.23 * t,
+      composite: 0.3 + 0.03 * t,
+    }
+  }
+  const t = Math.min(1, (matchCount - 100) / 400)
+  return {
+    'popular-pick': 0.33 - 0.13 * t,
+    'bradley-terry': 0.33 + 0.07 * t,
+    composite: 0.33 + 0.07 * t,
+  }
+}
+
+export function getAggregatePrediction(predictions: ModelPrediction[]): AggregatePrediction {
+  const matches = getMatches()
+  const analysis = getAnalysis()
+  const matchCount = matches.length
+  const heroCount = analysis.allHeroes.length
+
+  const baseWeights = getAdaptiveWeights(matchCount)
+
+  let totalWeight = 0
+  const weights: Record<string, number> = {}
+  for (const pred of predictions) {
+    const w =
+      (baseWeights[pred.id] ?? 0.33) * (CONFIDENCE_MULTIPLIERS[pred.prediction.confidence] ?? 0.2)
+    weights[pred.id] = w
+    totalWeight += w
+  }
+
+  let leftWinProbability = 0
+  for (const pred of predictions) {
+    leftWinProbability += (weights[pred.id]! / totalWeight) * pred.prediction.leftWinProbability
+  }
+
+  const confidence = predictions.reduce(
+    (worst, pred) => {
+      return CONFIDENCE_ORDER.indexOf(pred.prediction.confidence) < CONFIDENCE_ORDER.indexOf(worst)
+        ? pred.prediction.confidence
+        : worst
+    },
+    'high' as 'high' | 'medium' | 'low',
+  )
+
+  const seenNotes = new Set<string>()
+  const relevantNotes: MatchNote[] = []
+  for (const pred of predictions) {
+    for (const note of pred.prediction.relevantNotes) {
+      if (!seenNotes.has(note.text)) {
+        seenNotes.add(note.text)
+        relevantNotes.push(note)
+      }
+    }
+  }
+
+  return {
+    leftWinProbability,
+    rightWinProbability: 1 - leftWinProbability,
+    confidence,
+    relevantNotes,
+    matchCount,
+    heroCount,
+  }
 }

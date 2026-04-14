@@ -58,15 +58,73 @@
       </div>
 
       <!-- Matchup predictions when all 6 heroes are picked -->
-      <div v-if="sortedPredictions.length > 0" class="matchup-section">
-        <!-- Primary prediction (active tab's model) -->
-        <div
-          v-for="(pred, idx) in sortedPredictions"
-          :key="pred.id"
-          :class="['matchup-prediction', { secondary: idx > 0 }]"
-        >
+      <div v-if="aggregatePrediction" class="matchup-section">
+        <!-- Aggregate prediction -->
+        <div class="matchup-prediction aggregate">
           <div class="matchup-header">
-            <h3 class="matchup-title">{{ idx === 0 ? 'Matchup Prediction' : pred.name }}</h3>
+            <h3 class="matchup-title">Matchup Prediction</h3>
+            <span
+              :class="['confidence-badge', aggregatePrediction.confidence]"
+              :title="confidenceDescriptions[aggregatePrediction.confidence]"
+            >
+              {{ aggregatePrediction.confidence }} confidence
+            </span>
+          </div>
+          <div class="matchup-bars">
+            <div class="matchup-side left">
+              <span class="matchup-label">Left</span>
+              <span class="matchup-percent">{{
+                formatPercent(aggregatePrediction.leftWinProbability)
+              }}</span>
+            </div>
+            <div class="matchup-bar-track">
+              <div
+                class="matchup-bar-fill left"
+                :style="{ width: formatPercent(aggregatePrediction.leftWinProbability) }"
+              />
+            </div>
+            <div class="matchup-side right">
+              <span class="matchup-percent">{{
+                formatPercent(aggregatePrediction.rightWinProbability)
+              }}</span>
+              <span class="matchup-label">Right</span>
+            </div>
+          </div>
+          <div class="matchup-verdict">
+            <template v-if="aggregatePrediction.leftWinProbability > 0.55">
+              <strong>Left</strong> team favored
+            </template>
+            <template v-else-if="aggregatePrediction.rightWinProbability > 0.55">
+              <strong>Right</strong> team favored
+            </template>
+            <template v-else> Close matchup — could go either way </template>
+          </div>
+          <div v-if="aggregatePrediction.relevantNotes.length > 0" class="matchup-notes">
+            <div
+              v-for="(note, i) in aggregatePrediction.relevantNotes.slice(0, 5)"
+              :key="i"
+              class="matchup-note"
+              v-html="formatNoteHtml(note.text, leftTeam, rightTeam)"
+            />
+          </div>
+          <div class="matchup-dataset-note">
+            Prediction from a dataset of {{ aggregatePrediction.matchCount }} matches involving
+            {{ aggregatePrediction.heroCount }} heroes
+          </div>
+        </div>
+
+        <!-- Individual model predictions -->
+        <div v-for="pred in allPredictions" :key="pred.id" class="matchup-prediction">
+          <div class="matchup-header">
+            <h3 class="matchup-title">
+              {{ pred.name }}
+            </h3>
+            <IconInfo
+              class="model-info-icon"
+              :size="14"
+              @mouseenter="showModelTooltip(pred.id, $event)"
+              @mouseleave="hideModelTooltip"
+            />
             <span
               :class="['confidence-badge', pred.prediction.confidence]"
               :title="confidenceDescriptions[pred.prediction.confidence]"
@@ -94,74 +152,52 @@
               <span class="matchup-label">Right</span>
             </div>
           </div>
-          <div v-if="idx === 0" class="matchup-verdict">
-            <template v-if="pred.prediction.leftWinProbability > 0.55">
-              <strong>Left</strong> team favored
-            </template>
-            <template v-else-if="pred.prediction.rightWinProbability > 0.55">
-              <strong>Right</strong> team favored
-            </template>
-            <template v-else> Close matchup — could go either way </template>
-          </div>
-          <div v-if="idx === 0 && pred.prediction.relevantNotes.length > 0" class="matchup-notes">
-            <div
-              v-for="(note, i) in pred.prediction.relevantNotes.slice(0, 5)"
-              :key="i"
-              class="matchup-note"
-              v-html="formatNoteHtml(note.text)"
-            />
-          </div>
         </div>
+      </div>
 
-        <!-- Quick record form -->
-        <div class="record-form">
-          <h4 class="record-form-title">Save Result</h4>
-          <div class="result-buttons">
-            <button
-              :class="['result-btn', 'left', 'dominant', { active: resultKey === 'left-dominant' }]"
-              @click="setResult('left', true)"
-            >
-              Left Win (Sweep)
-            </button>
-            <button
-              :class="['result-btn', 'left', { active: resultKey === 'left-normal' }]"
-              @click="setResult('left', false)"
-            >
-              Left Win
-            </button>
-            <button
-              :class="['result-btn', 'draw', { active: resultKey === 'draw' }]"
-              @click="setResult('draw', false)"
-            >
-              Draw
-            </button>
-            <button
-              :class="['result-btn', 'right', { active: resultKey === 'right-normal' }]"
-              @click="setResult('right', false)"
-            >
-              Right Win
-            </button>
-            <button
-              :class="[
-                'result-btn',
-                'right',
-                'dominant',
-                { active: resultKey === 'right-dominant' },
-              ]"
-              @click="setResult('right', true)"
-            >
-              Right Win (Sweep)
-            </button>
-          </div>
-          <textarea
-            v-model="recordNotes"
-            class="notes-input"
-            rows="2"
-            placeholder="Optional notes... use {heroName} to reference heroes"
-          />
-          <button class="submit-btn" @click="handleRecordSubmit">Save Result</button>
-          <button class="reset-btn" @click="emit('reset')">Reset Teams</button>
+      <!-- Quick record form -->
+      <div v-if="aggregatePrediction" class="record-form">
+        <h4 class="record-form-title">Record Match</h4>
+        <div class="result-buttons">
+          <button
+            :class="['result-btn', 'left', 'dominant', { active: resultKey === 'left-dominant' }]"
+            @click="setResult('left', true)"
+          >
+            Left Win (Sweep)
+          </button>
+          <button
+            :class="['result-btn', 'left', { active: resultKey === 'left-normal' }]"
+            @click="setResult('left', false)"
+          >
+            Left Win
+          </button>
+          <button
+            :class="['result-btn', 'draw', { active: resultKey === 'draw' }]"
+            @click="setResult('draw', false)"
+          >
+            Draw
+          </button>
+          <button
+            :class="['result-btn', 'right', { active: resultKey === 'right-normal' }]"
+            @click="setResult('right', false)"
+          >
+            Right Win
+          </button>
+          <button
+            :class="['result-btn', 'right', 'dominant', { active: resultKey === 'right-dominant' }]"
+            @click="setResult('right', true)"
+          >
+            Right Win (Sweep)
+          </button>
         </div>
+        <textarea
+          v-model="recordNotes"
+          class="notes-input"
+          rows="2"
+          placeholder="Optional notes... use {heroName} to reference heroes"
+        />
+        <button class="submit-btn" @click="handleRecordSubmit">Save Result</button>
+        <button class="reset-btn" @click="emit('reset')">Reset Teams</button>
       </div>
 
       <!-- Recommendations while drafting -->
@@ -176,8 +212,15 @@
               @click="toggleLock('left')"
               title="Lock recommendations to Left team"
             >
-              <svg v-if="lockedSide === 'left'" class="lock-icon" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"/>
+              <svg
+                v-if="lockedSide === 'left'"
+                class="lock-icon"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
+                />
               </svg>
               Left Team
             </button>
@@ -186,8 +229,15 @@
               @click="toggleLock('right')"
               title="Lock recommendations to Right team"
             >
-              <svg v-if="lockedSide === 'right'" class="lock-icon" viewBox="0 0 16 16" fill="currentColor">
-                <path d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"/>
+              <svg
+                v-if="lockedSide === 'right'"
+                class="lock-icon"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+              >
+                <path
+                  d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
+                />
               </svg>
               Right Team
             </button>
@@ -216,10 +266,22 @@
             :character-images="characterImages"
             :counter-indicators="getCounterIndicators(rec.hero)"
             :team-counter="getTeamCounter(rec.hero)"
+            :left-team="leftTeam"
+            :right-team="rightTeam"
           />
         </div>
       </template>
     </div>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="tooltipModelId && tooltipTarget"
+        :target-element="tooltipTarget"
+        variant="detailed"
+        :text="modelDescriptions[tooltipModelId]"
+        :max-width="'260px'"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -229,9 +291,12 @@ import { computed, ref } from 'vue'
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
 import type { CounterIndicator, TeamCounterInfo } from './WandWarsRecommendation.vue'
 import WandWarsTopTeams from './WandWarsTopTeams.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
 import {
+  getAggregatePrediction,
   getAllMatchupPredictions,
   getAnalysisData,
   getMatchData,
@@ -369,6 +434,28 @@ function formatSymbol(record: RecordedMatch): string {
 
 const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
 
+const modelDescriptions: Record<string, string> = {
+  'popular-pick':
+    'Ranks heroes by how often they appear and win. Factors in actual win/loss records with your teammates. Best for quick, intuitive picks.',
+  'bradley-terry':
+    "Estimates each hero's true strength using a statistical model. Predicts win probability by comparing total team power. Best for objective strength ranking.",
+  composite:
+    'Measures how well heroes perform together (synergy) and against specific opponents (counters). Best for drafting around team chemistry and counter-picks.',
+}
+
+const tooltipModelId = ref<string | null>(null)
+const tooltipTarget = ref<HTMLElement | null>(null)
+
+function showModelTooltip(modelId: string, event: MouseEvent) {
+  tooltipModelId.value = modelId
+  tooltipTarget.value = event.currentTarget as HTMLElement
+}
+
+function hideModelTooltip() {
+  tooltipModelId.value = null
+  tooltipTarget.value = null
+}
+
 // Lock recommendations to a specific side (null = follow draft order)
 const lockedSide = ref<PickSide | null>(null)
 
@@ -377,31 +464,25 @@ function toggleLock(side: PickSide) {
 }
 
 // The effective side used for recommendations (locked or auto-detected)
-const effectivePickSide = computed<PickSide | null>(() =>
-  lockedSide.value ?? props.currentPickSide,
-)
+const effectivePickSide = computed<PickSide | null>(() => lockedSide.value ?? props.currentPickSide)
 
 const effectivePickSideLabel = computed(() => {
   if (!effectivePickSide.value) return ''
   return effectivePickSide.value === 'left' ? 'Left' : 'Right'
 })
 
-const myTeam = computed(() => {
+const currentTeammates = computed(() => {
   if (!effectivePickSide.value) return []
   return props.pickState[effectivePickSide.value].filter((h): h is string => h !== null)
 })
 
-const opponentSide = computed<PickSide>(() => (effectivePickSide.value === 'left' ? 'right' : 'left'))
+const opponentSide = computed<PickSide>(() =>
+  effectivePickSide.value === 'left' ? 'right' : 'left',
+)
 
 const opponentTeam = computed(() => {
   if (!effectivePickSide.value) return []
   return props.pickState[opponentSide.value].filter((h): h is string => h !== null)
-})
-
-// Teammates already picked on the effective side (for top teams)
-const currentTeammates = computed(() => {
-  if (!effectivePickSide.value) return []
-  return props.pickState[effectivePickSide.value].filter((h): h is string => h !== null)
 })
 
 const allPickedHeroes = computed(() => [
@@ -415,7 +496,7 @@ const recommendations = computed(() => {
   if (allPicked.value) return []
   return getRecommendations(
     activeTab.value,
-    myTeam.value,
+    currentTeammates.value,
     opponentTeam.value,
     allPickedHeroes.value,
   )
@@ -430,12 +511,9 @@ const allPredictions = computed(() => {
   return getAllMatchupPredictions(leftTeam.value, rightTeam.value)
 })
 
-// Active tab's prediction first, then others
-const sortedPredictions = computed(() => {
-  if (allPredictions.value.length === 0) return []
-  const active = allPredictions.value.find((p) => p.id === activeTab.value)
-  const others = allPredictions.value.filter((p) => p.id !== activeTab.value)
-  return active ? [active, ...others] : allPredictions.value
+const aggregatePrediction = computed(() => {
+  if (allPredictions.value.length === 0) return null
+  return getAggregatePrediction(allPredictions.value)
 })
 </script>
 
@@ -523,7 +601,9 @@ const sortedPredictions = computed(() => {
   cursor: pointer;
   font-size: 0.75rem;
   font-weight: 600;
-  transition: background var(--transition-fast), color var(--transition-fast);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .lock-btn:hover:not(.active) {
@@ -598,30 +678,38 @@ const sortedPredictions = computed(() => {
 }
 
 .matchup-prediction {
-  padding: var(--spacing-md);
+  padding: var(--spacing-sm);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-medium);
+  background: var(--color-bg-white);
+}
+
+.matchup-prediction.aggregate {
+  padding: var(--spacing-md);
   background: var(--color-bg-tertiary);
 }
 
-.matchup-prediction.secondary {
-  padding: var(--spacing-sm);
-  background: var(--color-bg-white);
-  border: 1px solid var(--color-border-light);
-  opacity: 0.85;
-}
-
-.matchup-prediction.secondary .matchup-title {
-  font-size: 0.8rem;
+.model-info-icon {
+  width: 14px;
+  height: 14px;
   color: var(--color-text-secondary);
+  cursor: help;
+  flex-shrink: 0;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
 }
 
-.matchup-prediction.secondary .matchup-percent {
-  font-size: 0.9rem;
+.model-info-icon:hover {
+  opacity: 1;
 }
 
-.matchup-prediction.secondary .matchup-bar-track {
-  height: 8px;
+.matchup-dataset-note {
+  margin-top: var(--spacing-sm);
+  padding-top: var(--spacing-sm);
+  border-top: 1px solid var(--color-border-light);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-align: center;
 }
 
 .matchup-header {
@@ -740,8 +828,15 @@ const sortedPredictions = computed(() => {
 }
 
 .matchup-note :deep(.hero-highlight) {
-  color: var(--color-primary);
   font-style: normal;
+}
+
+.matchup-note :deep(.hero-highlight.team-left) {
+  color: var(--color-ally);
+}
+
+.matchup-note :deep(.hero-highlight.team-right) {
+  color: var(--color-enemy);
 }
 
 /* Quick record form */
@@ -749,6 +844,7 @@ const sortedPredictions = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
   padding: var(--spacing-md);
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-medium);
@@ -757,8 +853,9 @@ const sortedPredictions = computed(() => {
 
 .record-form-title {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 1rem;
   color: var(--color-text-primary);
+  text-align: center;
 }
 
 .result-buttons {
@@ -875,8 +972,6 @@ const sortedPredictions = computed(() => {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  max-height: 500px;
-  overflow-y: auto;
 }
 
 .record-entry {
