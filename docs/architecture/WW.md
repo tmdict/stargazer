@@ -20,7 +20,7 @@ leftHero1,leftHero2,leftHero3 <symbol> rightHero1,rightHero2,rightHero3;optional
 
 - `>` left wins, `<` right wins, `>>` / `<<` dominant win (weight 1.5), `=` draw
 - Hero names are kebab-case, matching `src/data/character/*.json`
-- Notes use `{heroName}` to reference specific heroes — displayed with hero names highlighted in teal bold
+- Notes use `{hero-name}` to reference specific heroes — displayed with hero names highlighted in teal bold
 - Data file is gitignored; inlined into JS bundle at build time via Vite `?raw` import
 
 Examples:
