@@ -123,6 +123,28 @@
         </div>
       </section>
 
+      <!-- Most Dominant Pairs (synergy only) -->
+      <section v-if="category === 'synergy' && sweepPairs.length > 0" class="section">
+        <h3 class="section-title">Most Dominant Pairs</h3>
+        <div class="counter-list">
+          <div v-for="(s, i) in sweepPairs" :key="'sp' + i" class="counter-row">
+            <div class="counter-group">
+              <img
+                v-for="hero in s.team"
+                :key="hero"
+                :src="characterImages[hero]"
+                :alt="hero"
+                :title="formatName(hero)"
+                class="hero-portrait"
+              />
+            </div>
+            <span class="counter-record">
+              {{ s.sweeps }} sweeps / {{ s.total }} wins
+            </span>
+          </div>
+        </div>
+      </section>
+
       <!-- Team Counters (teams only) -->
       <section v-if="category === 'teams' && dominantTeamMatchups.length > 0" class="section">
         <h3 class="section-title">Team Counters</h3>
@@ -152,6 +174,27 @@
             <span class="counter-record">
               <span class="wins">{{ m.wins }}W</span> /
               <span class="losses">{{ m.losses }}L</span>
+            </span>
+          </div>
+        </div>
+      </section>
+      <!-- Most Dominant Teams (teams only) -->
+      <section v-if="category === 'teams' && sweepTeams.length > 0" class="section">
+        <h3 class="section-title">Most Dominant Teams</h3>
+        <div class="counter-list">
+          <div v-for="(s, i) in sweepTeams" :key="'st' + i" class="counter-row">
+            <div class="counter-group">
+              <img
+                v-for="hero in s.team"
+                :key="hero"
+                :src="characterImages[hero]"
+                :alt="hero"
+                :title="formatName(hero)"
+                class="hero-portrait"
+              />
+            </div>
+            <span class="counter-record">
+              {{ s.sweeps }} sweeps / {{ s.total }} wins
             </span>
           </div>
         </div>
@@ -526,6 +569,54 @@ const dominantTeamMatchups = computed(() => {
     }
   }
   return results.sort((a, b) => b.wins - a.wins).slice(0, 20)
+})
+
+// Sweep stats: teams with most dominant wins
+interface SweepRecord {
+  team: string[]
+  sweeps: number
+  total: number
+}
+
+const sweepTeams = computed(() => {
+  const stats = new Map<string, { team: string[]; sweeps: number; total: number }>()
+  for (const match of props.matchData) {
+    if (match.result === 'draw') continue
+    const isSweep = match.weight > 1
+    const winner = match.result === 'left' ? match.left : match.right
+    const key = [...winner].sort().join(',')
+    if (!stats.has(key)) stats.set(key, { team: [...winner].sort(), sweeps: 0, total: 0 })
+    const s = stats.get(key)!
+    s.total++
+    if (isSweep) s.sweeps++
+  }
+  const results: SweepRecord[] = []
+  for (const s of stats.values()) {
+    if (s.sweeps >= 2) results.push(s)
+  }
+  return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total).slice(0, 10)
+})
+
+const sweepPairs = computed(() => {
+  const stats = new Map<string, { team: string[]; sweeps: number; total: number }>()
+  for (const match of props.matchData) {
+    if (match.result === 'draw') continue
+    const isSweep = match.weight > 1
+    const winner = match.result === 'left' ? match.left : match.right
+    const pairs = getPairs(winner)
+    for (const pair of pairs) {
+      const key = pair.join(',')
+      if (!stats.has(key)) stats.set(key, { team: pair, sweeps: 0, total: 0 })
+      const s = stats.get(key)!
+      s.total++
+      if (isSweep) s.sweeps++
+    }
+  }
+  const results: SweepRecord[] = []
+  for (const s of stats.values()) {
+    if (s.sweeps >= 2) results.push(s)
+  }
+  return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total).slice(0, 10)
 })
 
 function add(result: Insight[], category: InsightCategory, text: string) {
@@ -904,6 +995,28 @@ const insights = computed(() => {
     )
   }
 
+  // Most dominant team (most sweeps)
+  const topSweepTeam = sweepTeams.value[0]
+  if (topSweepTeam && topSweepTeam.sweeps >= 2) {
+    const t = topSweepTeam.team
+    add(
+      result,
+      'teams',
+      `{${t[0]}} + {${t[1]}} + {${t[2]}} is the most dominant team (${topSweepTeam.sweeps} sweeps out of ${topSweepTeam.total} wins)`,
+    )
+  }
+
+  // Total sweeps
+  const totalSweeps = props.matchData.filter((m) => m.weight > 1 && m.result !== 'draw').length
+  if (totalSweeps >= 3) {
+    const sweepRate = totalSweeps / props.matchData.filter((m) => m.result !== 'draw').length
+    add(
+      result,
+      'teams',
+      `${totalSweeps} matches ended in a sweep (${formatPercent(sweepRate)} of decisive matches)`,
+    )
+  }
+
   // Left vs right win rate
   const leftWins = props.matchData.filter((m) => m.result === 'left').length
   const rightWins = props.matchData.filter((m) => m.result === 'right').length
@@ -1071,6 +1184,37 @@ const insights = computed(() => {
     )
   }
 
+  // 11. Most dominant pair (most sweeps)
+  const topSweepPair = sweepPairs.value[0]
+  if (topSweepPair && topSweepPair.sweeps >= 2) {
+    const p = topSweepPair.team
+    add(
+      result,
+      'synergy',
+      `{${p[0]}} + {${p[1]}} is the most dominant pair (${topSweepPair.sweeps} sweeps out of ${topSweepPair.total} wins)`,
+    )
+  }
+
+  // --- Units: sweep insights ---
+
+  // Hero with most sweeps
+  const heroSweeps: Record<string, number> = {}
+  for (const match of props.matchData) {
+    if (match.result === 'draw' || match.weight <= 1) continue
+    const winner = match.result === 'left' ? match.left : match.right
+    for (const hero of winner) {
+      heroSweeps[hero] = (heroSweeps[hero] || 0) + 1
+    }
+  }
+  const topSweepHero = Object.entries(heroSweeps).sort(([, a], [, b]) => b - a)[0]
+  if (topSweepHero && topSweepHero[1] >= 3) {
+    add(
+      result,
+      'units',
+      `{${topSweepHero[0]}} is involved in the most sweeps (${topSweepHero[1]} dominant wins)`,
+    )
+  }
+
   return result
 })
 
@@ -1110,14 +1254,14 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   border-left: 3px solid var(--color-primary);
   border-radius: var(--radius-small);
   background: var(--color-bg-white);
-  font-size: 1.0rem;
+  font-size: 0.95rem;
   color: var(--color-text-primary);
-  line-height: 48px;
+  line-height: 40px;
 }
 
 .insight-card :deep(.insight-hero-img) {
-  width: 48px;
-  height: 48px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center 20%;
@@ -1278,16 +1422,6 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 @media (max-width: 1200px) {
   .section-title {
     font-size: 1.05rem;
-  }
-
-  .insight-card {
-    font-size: 0.95rem;
-    line-height: 40px;
-  }
-
-  .insight-card :deep(.insight-hero-img) {
-    width: 40px;
-    height: 40px;
   }
 
   .hero-portrait {
