@@ -427,7 +427,7 @@ Three category sub-tabs: **Units** | **Synergy** | **Teams**
 
 **Teams table**: Sortable by Usage, Win %, Record (W/L). Minimum `META_MIN_TEAM_MATCHES` (2) matches. Default sort: Usage. Uses shared `computeTeamRecords()`.
 
-**Right column insights**: Dataset header (match count, hero count, bias disclaimer) at top. Units: top hero counters as left-aligned counter rows. Synergy: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1). Teams: team counter matchups as counter rows.
+**Right column insights**: Dataset header (match count, hero count, bias disclaimer) at top. Units: Best Openers (heroes with highest Bayesian-smoothed win rate as left-team first pick) and Best Responses (right-team first pick that counters a specific left opener, shown as responder → opener with W/L and score out of 10). Synergy: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1). Teams: team counter matchups as counter rows.
 
 **Shared meta code**: `TeamRecord` in `types.ts`, `computeTeamRecords()` in `analysis.ts`, `META_*` constants in `constants.ts`, `formatSigned()` in `formatting.ts`.
 
@@ -435,7 +435,7 @@ Three category sub-tabs: **Units** | **Synergy** | **Teams**
 
 | Decision                | Choice                                                     | Rationale                                                           |
 | ----------------------- | ---------------------------------------------------------- | ------------------------------------------------------------------- |
-| Pick order irrelevance  | Models evaluate unordered team sets                        | Order affects strategy, not strength                                |
+| Pick order irrelevance  | Models evaluate unordered team sets; draft position stats in Insights only | Order affects model strength, but positional win rates shown as read-only insights |
 | Bayesian prior          | 3.0 across all win rates                                   | Prior of 1.0 too weak (2W/0L = 75%); 3.0 brings it to 62.5%         |
 | B-T regularization      | L2 via virtual observations, not pick rate blending        | Proper Bayesian; handles small samples at parameter fitting level   |
 | Composite: no pick rate | Win Rate (0.5) + Synergy (0.3) + Counter (0.2)             | Keeps Composite focused on interactions; distinct from Popular Pick |

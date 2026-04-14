@@ -1110,14 +1110,14 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   border-left: 3px solid var(--color-primary);
   border-radius: var(--radius-small);
   background: var(--color-bg-white);
-  font-size: 0.95rem;
+  font-size: 1.0rem;
   color: var(--color-text-primary);
-  line-height: 40px;
+  line-height: 48px;
 }
 
 .insight-card :deep(.insight-hero-img) {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center 20%;
@@ -1142,7 +1142,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 
 .section-title {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 700;
   text-transform: uppercase;
   color: var(--color-text-secondary);
@@ -1161,7 +1161,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   display: flex;
   flex-direction: column;
   align-items: center;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   font-weight: 600;
   color: var(--color-text-secondary);
   text-transform: uppercase;
@@ -1213,8 +1213,8 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 }
 
 .hero-portrait {
-  width: 40px;
-  height: 40px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   object-fit: cover;
   object-position: center 20%;
@@ -1223,7 +1223,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 }
 
 .counter-record {
-  font-size: 0.85rem;
+  font-size: 0.9rem;
   color: var(--color-text-secondary);
   white-space: nowrap;
   margin-left: auto;
@@ -1273,5 +1273,34 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   color: var(--color-text-secondary);
   font-style: italic;
   padding-bottom: var(--spacing-md);
+}
+
+@media (max-width: 1200px) {
+  .section-title {
+    font-size: 1.05rem;
+  }
+
+  .insight-card {
+    font-size: 0.95rem;
+    line-height: 40px;
+  }
+
+  .insight-card :deep(.insight-hero-img) {
+    width: 40px;
+    height: 40px;
+  }
+
+  .hero-portrait {
+    width: 40px;
+    height: 40px;
+  }
+
+  .counter-record {
+    font-size: 0.85rem;
+  }
+
+  .response-label {
+    font-size: 0.65rem;
+  }
 }
 </style>
