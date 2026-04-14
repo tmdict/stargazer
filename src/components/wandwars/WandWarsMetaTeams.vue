@@ -16,7 +16,7 @@
                   :class="['col-sortable', { active: heroSort === 'matches' }]"
                   @click="heroSort = 'matches'"
                 >
-                  Played
+                  Usage
                 </th>
                 <th
                   :class="['col-sortable', { active: heroSort === 'winRate' }]"
@@ -25,10 +25,14 @@
                   Win %
                 </th>
                 <th
+                  ref="openerHeaderEl"
                   :class="['col-sortable', { active: heroSort === 'firstPick' }]"
                   @click="heroSort = 'firstPick'"
+                  @mouseenter="showOpenerTooltip = true"
+                  @mouseleave="showOpenerTooltip = false"
                 >
-                  1st Pick
+                  Opener
+                  <IconInfo :size="14" class="synergy-info-icon" />
                 </th>
               </tr>
             </thead>
@@ -63,7 +67,7 @@
                   :class="['col-sortable', { active: pairSort === 'total' }]"
                   @click="pairSort = 'total'"
                 >
-                  Played
+                  Usage
                 </th>
                 <th
                   :class="['col-sortable', { active: pairSort === 'winRate' }]"
@@ -110,10 +114,8 @@
                   <span class="losses">{{ pair.losses }}L</span>
                 </td>
                 <td
-                  :class="[
-                    'col-num',
-                    pair.synergy > 0 ? 'positive' : pair.synergy < 0 ? 'negative' : '',
-                  ]"
+                  class="col-num"
+                  :style="{ color: synergyColor(pair.synergy), fontWeight: 600 }"
                 >
                   {{ formatSigned(pair.synergy) }}
                 </td>
@@ -134,7 +136,7 @@
                   :class="['col-sortable', { active: teamSort === 'total' }]"
                   @click="teamSort = 'total'"
                 >
-                  Played
+                  Usage
                 </th>
                 <th
                   :class="['col-sortable', { active: teamSort === 'winRate' }]"
@@ -175,6 +177,18 @@
 
     <Teleport to="body">
       <TooltipPopup
+        v-if="showOpenerTooltip && openerHeaderEl"
+        :target-element="openerHeaderEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Times picked as the very first hero in a match (left team, pick 1).
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
         v-if="showSynergyTooltip && synergyHeaderEl"
         :target-element="synergyHeaderEl"
         variant="detailed"
@@ -210,6 +224,8 @@ const props = defineProps<{
 
 const totalMatches = computed(() => props.matchData.length)
 
+const openerHeaderEl = ref<HTMLElement>()
+const showOpenerTooltip = ref(false)
 const synergyHeaderEl = ref<HTMLElement>()
 const showSynergyTooltip = ref(false)
 
@@ -228,10 +244,8 @@ const heroRows = computed(() => {
   const firstPickCounts: Record<string, number> = {}
 
   for (const match of props.matchData) {
-    const fp0 = match.left[0]
-    const fp1 = match.right[0]
-    if (fp0) firstPickCounts[fp0] = (firstPickCounts[fp0] || 0) + 1
-    if (fp1) firstPickCounts[fp1] = (firstPickCounts[fp1] || 0) + 1
+    const fp = match.left[0]
+    if (fp) firstPickCounts[fp] = (firstPickCounts[fp] || 0) + 1
   }
 
   return props.analysisData.allHeroes.map((name): HeroRow => {
@@ -296,6 +310,12 @@ const sortedPairRows = computed(() =>
     return b[pairSort.value] - a[pairSort.value]
   }),
 )
+
+function synergyColor(value: number): string {
+  if (value >= 0.1) return '#1e7e34'
+  if (value <= -0.1) return '#c62828'
+  return 'var(--color-text-secondary)'
+}
 
 const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
 
@@ -438,13 +458,4 @@ td.col-hero {
   color: var(--color-text-primary);
 }
 
-.positive {
-  color: #1e7e34;
-  font-weight: 600;
-}
-
-.negative {
-  color: #c62828;
-  font-weight: 600;
-}
 </style>

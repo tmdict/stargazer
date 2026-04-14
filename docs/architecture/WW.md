@@ -421,11 +421,11 @@ Aggregate statistics across all match data. Left column: sortable tables (`WandW
 
 Three category sub-tabs: **Units** | **Synergy** | **Teams**
 
-**Units table**: Sortable by Played, Win %, 1st Pick. Default sort: Played.
+**Units table**: Sortable by Usage, Win %, 1st Pick. Default sort: Usage.
 
-**Synergy table**: Sortable by Played, Win %, Record (W/L), Synergy. Minimum `META_MIN_PAIR_MATCHES` (3) matches. Default sort: Synergy (positive first, negative last). Info icon tooltip on Synergy header. Synergy score = `pair win rate - average of each hero's individual win rate`. Color-coded green/red.
+**Synergy table**: Sortable by Usage, Win %, Record (W/L), Synergy. Minimum `META_MIN_PAIR_MATCHES` (3) matches. Default sort: Synergy (positive first, negative last). Info icon tooltip on Synergy header. Synergy score = `pair win rate - average of each hero's individual win rate`. Color-coded green/red.
 
-**Teams table**: Sortable by Played, Win %, Record (W/L). Minimum `META_MIN_TEAM_MATCHES` (2) matches. Default sort: Played. Uses shared `computeTeamRecords()`.
+**Teams table**: Sortable by Usage, Win %, Record (W/L). Minimum `META_MIN_TEAM_MATCHES` (2) matches. Default sort: Usage. Uses shared `computeTeamRecords()`.
 
 **Right column insights**: Dataset header (match count, hero count, bias disclaimer) at top. Units: top hero counters as left-aligned counter rows. Synergy: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1). Teams: team counter matchups as counter rows.
 

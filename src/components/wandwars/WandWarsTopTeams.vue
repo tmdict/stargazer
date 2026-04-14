@@ -116,14 +116,13 @@ function orderedTeam(team: string[]): string[] {
   gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-sm);
   background: var(--color-bg-light-gray);
+  border: 1px solid #aaa;
   border-radius: var(--radius-small);
-  flex: 1 1 0;
-  min-width: 0;
-  max-width: calc(33.33% - var(--spacing-sm));
+  flex: 0 0 213px;
 }
 
 .team-row.constructed {
-  border: 1px dashed #aaa;
+  border-style: dashed;
 }
 
 .team-heroes {
@@ -147,6 +146,7 @@ function orderedTeam(team: string[]): string[] {
   font-size: 0.8rem;
   font-weight: 600;
   line-height: 1.3;
+  margin-right: var(--spacing-sm);
 }
 
 .team-wins {
