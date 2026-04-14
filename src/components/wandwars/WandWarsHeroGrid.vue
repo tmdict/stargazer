@@ -160,7 +160,7 @@ function isAvailable(hero: string): boolean {
   margin-top: 6px;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1200px) {
   .hero-portrait {
     width: 60px;
     height: 60px;
