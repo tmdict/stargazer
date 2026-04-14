@@ -115,6 +115,23 @@
       "
       class="counter-indicators"
     >
+      <span
+        v-if="teamCounter && teamCounter.wins > teamCounter.losses"
+        class="counter-tag team-counter"
+      >
+        <svg class="counter-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M8 0l2.5 5.3L16 6.2l-4 3.8 1 5.5L8 12.8l-5 2.7 1-5.5L0 6.2l5.5-.9L8 0z" />
+        </svg>
+        <span class="counter-text">
+          {{
+            opponentCount !== undefined && opponentCount >= 3
+              ? 'Team counter'
+              : 'Potential team counter'
+          }}
+          <span class="pair-wins">{{ teamCounter.wins }}W</span> /
+          <span class="pair-losses">{{ teamCounter.losses }}L</span>
+        </span>
+      </span>
       <span v-for="ci in counterIndicators" :key="ci.opponent" :class="['counter-tag', ci.type]">
         <svg
           v-if="ci.type === 'counters'"
@@ -134,19 +151,6 @@
         <span class="counter-text">
           {{ ci.type === 'counters' ? 'Strong against' : 'Weak against' }}
           {{ formatName(ci.opponent) }}
-        </span>
-      </span>
-      <span
-        v-if="teamCounter && teamCounter.wins > teamCounter.losses"
-        class="counter-tag team-counter"
-      >
-        <svg class="counter-icon" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M8 0l2.5 5.3L16 6.2l-4 3.8 1 5.5L8 12.8l-5 2.7 1-5.5L0 6.2l5.5-.9L8 0z" />
-        </svg>
-        <span class="counter-text">
-          Potential team counter
-          <span class="pair-wins">{{ teamCounter.wins }}W</span> /
-          <span class="pair-losses">{{ teamCounter.losses }}L</span>
         </span>
       </span>
     </div>
@@ -193,6 +197,7 @@ const props = defineProps<{
   characterImages: Record<string, string>
   counterIndicators?: CounterIndicator[]
   teamCounter?: TeamCounterInfo | null
+  opponentCount?: number
   leftTeam?: string[]
   rightTeam?: string[]
 }>()
