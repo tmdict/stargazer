@@ -23,27 +23,67 @@
         </div>
       </section>
 
-      <!-- Hero Counters (units only) -->
-      <section v-if="category === 'units' && heroCounters.length > 0" class="section">
-        <h3 class="section-title">Hero Counters</h3>
+      <!-- Best Openers (units only) -->
+      <section v-if="category === 'units' && bestOpeners.length > 0" class="section">
+        <h3
+          ref="openerTitleEl"
+          class="section-title"
+          @mouseenter="showOpenerTooltip = true"
+          @mouseleave="showOpenerTooltip = false"
+        >
+          Best Openers
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
         <div class="counter-list">
-          <div v-for="(c, i) in heroCounters" :key="'hc' + i" class="counter-row">
+          <div v-for="(o, i) in bestOpeners" :key="'op' + i" class="counter-row">
             <img
-              :src="characterImages[c.hero]"
-              :alt="c.hero"
-              :title="formatName(c.hero)"
-              class="hero-portrait"
-            />
-            <div class="vs-arrow"></div>
-            <img
-              :src="characterImages[c.opponent]"
-              :alt="c.opponent"
-              :title="formatName(c.opponent)"
+              :src="characterImages[o.hero]"
+              :alt="o.hero"
+              :title="formatName(o.hero)"
               class="hero-portrait"
             />
             <span class="counter-record">
-              <span class="wins">{{ c.wins }}W</span> /
-              <span class="losses">{{ c.losses }}L</span>
+              <span class="wins">{{ o.wins }}W</span> /
+              <span class="losses">{{ o.losses }}L</span>
+              <span class="win-rate">{{ (o.winRate * 10).toFixed(2) }}</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Best Responses (units only) -->
+      <section v-if="category === 'units' && bestResponses.length > 0" class="section">
+        <h3
+          ref="responseTitleEl"
+          class="section-title"
+          @mouseenter="showResponseTooltip = true"
+          @mouseleave="showResponseTooltip = false"
+        >
+          Best Responses
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(r, i) in bestResponses" :key="'rp' + i" class="counter-row">
+            <img
+              :src="characterImages[r.responder]"
+              :alt="r.responder"
+              :title="formatName(r.responder)"
+              class="hero-portrait"
+            />
+            <span class="response-label">
+              <span>counters</span>
+              <span class="response-arrow"></span>
+            </span>
+            <img
+              :src="characterImages[r.opener]"
+              :alt="r.opener"
+              :title="formatName(r.opener)"
+              class="hero-portrait"
+            />
+            <span class="counter-record">
+              <span class="wins">{{ r.wins }}W</span> /
+              <span class="losses">{{ r.losses }}L</span>
+              <span class="win-rate">{{ (r.winRate * 10).toFixed(2) }}</span>
             </span>
           </div>
         </div>
@@ -117,14 +157,49 @@
         </div>
       </section>
     </template>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="showOpenerTooltip && openerTitleEl"
+        :target-element="openerTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Heroes with the highest win rate when picked first by the left team (pick 1 of the
+            draft).
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showResponseTooltip && responseTitleEl"
+        :target-element="responseTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Best right-team first pick (pick 2) in response to a specific left-team opener. W/L is
+            from the responder's perspective.
+          </p>
+        </template>
+      </TooltipPopup>
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { computeTeamRecords } from '@/wandwars/analysis'
-import { META_MIN_PAIR_MATCHES, META_MIN_TEAM_MATCHES } from '@/wandwars/constants'
+import {
+  META_BAYESIAN_PRIOR,
+  META_MIN_PAIR_MATCHES,
+  META_MIN_TEAM_MATCHES,
+} from '@/wandwars/constants'
 import { formatInsightHtml, formatName, formatPercent } from '@/wandwars/formatting'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
 
@@ -144,6 +219,11 @@ const props = defineProps<{
 
 const totalMatches = computed(() => props.matchData.length)
 const heroCount = computed(() => props.analysisData.allHeroes.length)
+
+const showOpenerTooltip = ref(false)
+const openerTitleEl = ref<HTMLElement | null>(null)
+const showResponseTooltip = ref(false)
+const responseTitleEl = ref<HTMLElement | null>(null)
 
 const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
 
@@ -250,35 +330,61 @@ function getPairOpponentDiversity(
   return { opponents: oppTeams.size, wins }
 }
 
-interface HeroCounter {
+// Draft position: best openers (left first pick win rate)
+interface FirstPickStat {
   hero: string
-  opponent: string
   wins: number
   losses: number
-  score: number
+  winRate: number
 }
 
-const heroCounters = computed(() => {
-  const counterMatrix = props.analysisData.counterMatrix
-  const seen = new Set<string>()
-  const results: HeroCounter[] = []
-  for (const [hero, opponents] of Object.entries(counterMatrix)) {
-    for (const [opp, entry] of Object.entries(opponents)) {
-      const key = [hero, opp].sort().join(':')
-      if (seen.has(key)) continue
-      seen.add(key)
-      if (entry.matches >= 3 && entry.score > 0.1) {
-        results.push({
-          hero,
-          opponent: opp,
-          wins: entry.wins,
-          losses: entry.losses,
-          score: entry.score,
-        })
-      }
-    }
+const bestOpeners = computed(() => {
+  const stats = new Map<string, { wins: number; losses: number }>()
+  for (const match of props.matchData) {
+    const hero = match.left[0]
+    if (!stats.has(hero)) stats.set(hero, { wins: 0, losses: 0 })
+    const s = stats.get(hero)!
+    if (match.result === 'left') s.wins++
+    else if (match.result === 'right') s.losses++
   }
-  return results.sort((a, b) => b.score - a.score).slice(0, 20)
+  const results: FirstPickStat[] = []
+  for (const [hero, s] of stats) {
+    const total = s.wins + s.losses
+    if (total < 3) continue
+    const winRate = (s.wins + META_BAYESIAN_PRIOR) / (total + 2 * META_BAYESIAN_PRIOR)
+    results.push({ hero, wins: s.wins, losses: s.losses, winRate })
+  }
+  return results.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins).slice(0, 10)
+})
+
+// Draft position: best responses (right first pick given left first pick)
+interface FirstPickResponse {
+  opener: string
+  responder: string
+  wins: number
+  losses: number
+  winRate: number
+}
+
+const bestResponses = computed(() => {
+  const stats = new Map<string, { wins: number; losses: number }>()
+  for (const match of props.matchData) {
+    const key = `${match.left[0]}:${match.right[0]}`
+    if (!stats.has(key)) stats.set(key, { wins: 0, losses: 0 })
+    const s = stats.get(key)!
+    if (match.result === 'right') s.wins++
+    else if (match.result === 'left') s.losses++
+  }
+  const results: FirstPickResponse[] = []
+  for (const [key, s] of stats) {
+    const [opener, responder] = key.split(':') as [string, string]
+    const total = s.wins + s.losses
+    if (total < 2) continue
+    if (s.wins <= s.losses) continue
+    const winRate = (s.wins + META_BAYESIAN_PRIOR) / (total + 2 * META_BAYESIAN_PRIOR)
+    results.push({ opener, responder, wins: s.wins, losses: s.losses, winRate })
+  }
+  return results.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins).slice(0, 15)
 })
 
 function getPairs(team: [string, string, string]): [string, string][] {
@@ -1041,6 +1147,47 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   text-transform: uppercase;
   color: var(--color-text-secondary);
   letter-spacing: 0.05em;
+  display: flex;
+  align-items: center;
+}
+
+.section-info-icon {
+  opacity: 0.5;
+  margin-left: 4px;
+  cursor: pointer;
+}
+
+.response-label {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  line-height: 1.1;
+}
+
+.response-arrow {
+  display: flex;
+  align-items: center;
+}
+
+.response-arrow::before {
+  content: '';
+  display: block;
+  width: 20px;
+  height: 3px;
+  background: var(--color-primary);
+}
+
+.response-arrow::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border: 6px solid transparent;
+  border-left: 8px solid var(--color-primary);
 }
 
 /* Counter rows (shared by hero, pair, team counters) */
@@ -1113,6 +1260,11 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 .losses {
   color: #c62828;
   font-weight: 600;
+}
+
+.win-rate {
+  color: var(--color-text-secondary);
+  margin-left: var(--spacing-md);
 }
 
 .dataset-header {
