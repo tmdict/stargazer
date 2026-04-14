@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
-import CharacterFilters from './CharacterFilters.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import TagsDisplay from './TagsDisplay.vue'
+import FilterIcons from './ui/FilterIcons.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { CharacterType } from '@/lib/types/character'
@@ -20,6 +20,10 @@ const factionFilter = ref('')
 const classFilter = ref('')
 const damageFilter = ref('')
 const selectedTagNames = ref<string | null>(null)
+
+const factionOptions = computed(() => [...new Set(props.characters.map((c) => c.faction))].sort())
+const classOptions = computed(() => [...new Set(props.characters.map((c) => c.class))].sort())
+const damageOptions = computed(() => [...new Set(props.characters.map((c) => c.damage))].sort())
 
 // Filtered and sorted characters
 const filteredAndSortedCharacters = computed(() => {
@@ -104,15 +108,11 @@ const handleClearFilters = () => {
   >
     <!-- Character Filters in Controls Row -->
     <template #filters>
-      <CharacterFilters
-        :characters
-        :factionFilter
-        :classFilter
-        :damageFilter
-        @update:factionFilter="factionFilter = $event"
-        @update:classFilter="classFilter = $event"
-        @update:damageFilter="damageFilter = $event"
-      />
+      <div class="filters-row">
+        <FilterIcons v-model="factionFilter" icon-prefix="faction" :options="factionOptions" />
+        <FilterIcons v-model="classFilter" icon-prefix="class" :options="classOptions" />
+        <FilterIcons v-model="damageFilter" icon-prefix="damage" :options="damageOptions" />
+      </div>
     </template>
 
     <!-- Tags Display -->
@@ -134,6 +134,21 @@ const handleClearFilters = () => {
 </template>
 
 <style scoped>
+.filters-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .filters-row {
+    gap: var(--spacing-sm);
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .character-selection {
   display: flex;
   flex-direction: column;
