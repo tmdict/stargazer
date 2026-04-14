@@ -194,7 +194,7 @@
           v-model="recordNotes"
           class="notes-input"
           rows="2"
-          placeholder="Optional notes... use {heroName} to reference heroes"
+          placeholder="Optional notes... use {hero-name} to reference heroes"
         />
         <button class="submit-btn" @click="handleRecordSubmit">Save Result</button>
         <button class="reset-btn" @click="emit('reset')">Reset Teams</button>
@@ -257,21 +257,21 @@
             v-model="recFactionFilter"
             icon-prefix="faction"
             :options="factionOptions"
-            :size="28"
+            :size="32"
             :show-tooltip="false"
           />
           <FilterIcons
             v-model="recClassFilter"
             icon-prefix="class"
             :options="classOptions"
-            :size="28"
+            :size="32"
             :show-tooltip="false"
           />
           <FilterIcons
             v-model="recDamageFilter"
             icon-prefix="damage"
             :options="damageOptions"
-            :size="28"
+            :size="32"
             :show-tooltip="false"
           />
         </div>
