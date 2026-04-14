@@ -289,7 +289,6 @@ const handleTouchStart = () => {
 .simple-tooltip {
   font-size: 14px;
   font-weight: 600;
-  color: #fff;
   text-align: center;
   white-space: nowrap;
 }
@@ -305,7 +304,6 @@ const handleTouchStart = () => {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
   text-align: center;
 }
 
@@ -340,7 +338,6 @@ const handleTouchStart = () => {
 }
 
 .tooltip-value {
-  color: #fff;
   font-weight: 500;
   text-transform: capitalize;
 }

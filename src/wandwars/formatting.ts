@@ -20,11 +20,33 @@ export function formatName(name: string): string {
     .join(' ')
 }
 
-export function formatNoteHtml(text: string): string {
-  return text.replace(
-    /\{([^}]+)\}/g,
-    (_, name: string) => `<strong class="hero-highlight">${formatName(name)}</strong>`,
-  )
+export function formatNoteHtml(
+  text: string,
+  leftTeam: string[] = [],
+  rightTeam: string[] = [],
+): string {
+  const leftSet = new Set(leftTeam)
+  const rightSet = new Set(rightTeam)
+  return text.replace(/\{([^}]+)\}/g, (_, name: string) => {
+    let cls = 'hero-highlight'
+    if (leftSet.has(name)) cls += ' team-left'
+    else if (rightSet.has(name)) cls += ' team-right'
+    return `<strong class="${cls}">${formatName(name)}</strong>`
+  })
+}
+
+export function formatInsightHtml(
+  text: string,
+  characterImages: Record<string, string> = {},
+): string {
+  return text.replace(/\{([^}]+)\}/g, (_, name: string) => {
+    const imgSrc = characterImages[name]
+    const formattedName = formatName(name)
+    const imgTag = imgSrc
+      ? `<img src="${imgSrc}" alt="${formattedName}" class="insight-hero-img"/>`
+      : ''
+    return `${imgTag}<strong class="insight-hero-name">${formattedName}</strong>`
+  })
 }
 
 export function signClass(value: number | undefined): string {

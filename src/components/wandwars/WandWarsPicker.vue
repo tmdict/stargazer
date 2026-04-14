@@ -1,31 +1,53 @@
 <template>
   <div class="picker">
-    <WandWarsPickSlots
-      :pick-state="pickState"
-      :characters="characters"
-      :current-pick-side="currentPickSide"
-      @unpick-slot="(side, slot) => emit('unpickSlot', side, slot)"
-    />
+    <div class="picker-tabs">
+      <button
+        v-for="tab in pickerTabs"
+        :key="tab.id"
+        :class="['picker-tab', { active: activeTab === tab.id }]"
+        @click="activeTab = tab.id"
+      >
+        {{ tab.label }}
+      </button>
+    </div>
 
-    <WandWarsHeroGrid
-      :characters="characters"
-      :available-heroes="availableHeroes"
+    <template v-if="activeTab === 'draft'">
+      <WandWarsPickSlots
+        :pick-state="pickState"
+        :characters="characters"
+        :current-pick-side="currentPickSide"
+        @unpick-slot="(side, slot) => emit('unpickSlot', side, slot)"
+      />
+
+      <WandWarsHeroGrid
+        :characters="characters"
+        :available-heroes="availableHeroes"
+        :character-images="characterImages"
+        @pick-hero="(hero) => emit('pickHero', hero)"
+      >
+        <template #actions>
+          <button class="action-btn" @click="emit('undo')">Undo</button>
+          <button class="action-btn danger" @click="emit('reset')">Reset</button>
+        </template>
+      </WandWarsHeroGrid>
+    </template>
+
+    <WandWarsMetaTeams
+      v-else
+      :category="activeTab"
+      :match-data="matchData"
+      :analysis-data="analysisData"
       :character-images="characterImages"
-      @pick-hero="(hero) => emit('pickHero', hero)"
-    >
-      <template #actions>
-        <button class="action-btn" @click="emit('undo')">Undo</button>
-        <button class="action-btn danger" @click="emit('reset')">Reset</button>
-      </template>
-    </WandWarsHeroGrid>
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
+import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
 import WandWarsPickSlots from './WandWarsPickSlots.vue'
 import type { CharacterType } from '@/lib/types/character'
-import type { PickSide, PickState } from '@/wandwars/types'
+import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
 
 defineProps<{
   pickState: PickState
@@ -33,6 +55,8 @@ defineProps<{
   characters: readonly CharacterType[]
   availableHeroes: string[]
   characterImages: Record<string, string>
+  matchData: MatchResult[]
+  analysisData: AnalysisData
 }>()
 
 const emit = defineEmits<{
@@ -41,6 +65,17 @@ const emit = defineEmits<{
   reset: []
   undo: []
 }>()
+
+const pickerTabs = [
+  { id: 'draft' as const, label: 'Draft' },
+  { id: 'units' as const, label: 'Units' },
+  { id: 'teams' as const, label: 'Teams' },
+  { id: 'synergy' as const, label: 'Synergy' },
+]
+
+const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTab', {
+  default: 'draft',
+})
 </script>
 
 <style scoped>
@@ -49,6 +84,37 @@ const emit = defineEmits<{
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-large);
   padding: var(--spacing-lg);
+}
+
+.picker-tabs {
+  display: flex;
+  gap: 2px;
+  margin-bottom: var(--spacing-md);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.picker-tab {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.9rem;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast);
+}
+
+.picker-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.picker-tab:hover:not(.active) {
+  color: var(--color-text-primary);
 }
 
 .action-btn {

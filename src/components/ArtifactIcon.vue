@@ -164,7 +164,6 @@ const handleTouchStart = () => {
 .tooltip-name {
   font-size: 16px;
   font-weight: 600;
-  color: #fff;
   margin-bottom: 4px;
 }
 
@@ -190,7 +189,6 @@ const handleTouchStart = () => {
 .tooltip-value {
   font-size: 13px;
   font-weight: 500;
-  color: #fff;
   text-align: right;
 }
 </style>

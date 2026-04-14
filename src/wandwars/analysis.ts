@@ -1,6 +1,14 @@
-import type { AnalysisData, CounterMatrix, HeroStats, MatchResult, SynergyMatrix } from './types'
+import { META_BAYESIAN_PRIOR } from './constants'
+import type {
+  AnalysisData,
+  CounterMatrix,
+  HeroStats,
+  MatchResult,
+  SynergyMatrix,
+  TeamRecord,
+} from './types'
 
-const BAYESIAN_PRIOR = 3.0
+const BAYESIAN_PRIOR = META_BAYESIAN_PRIOR
 
 function computeHeroStats(matches: MatchResult[], allHeroes: string[]): Record<string, HeroStats> {
   const stats: Record<string, HeroStats> = {}
@@ -175,6 +183,39 @@ function computeCounterMatrix(
   }
 
   return matrix
+}
+
+export function computeTeamRecords(matches: MatchResult[]): TeamRecord[] {
+  const records = new Map<string, TeamRecord>()
+
+  for (const match of matches) {
+    for (const team of [match.left, match.right] as const) {
+      const key = [...team].sort().join(',')
+      if (!records.has(key)) {
+        records.set(key, {
+          team: [...team].sort() as [string, string, string],
+          wins: 0,
+          losses: 0,
+          draws: 0,
+          total: 0,
+          winRate: 0,
+        })
+      }
+      const rec = records.get(key)!
+      rec.total++
+      const isLeft = team === match.left
+      if ((isLeft && match.result === 'left') || (!isLeft && match.result === 'right')) rec.wins++
+      else if ((isLeft && match.result === 'right') || (!isLeft && match.result === 'left'))
+        rec.losses++
+      else rec.draws++
+    }
+  }
+
+  for (const rec of records.values()) {
+    rec.winRate = (rec.wins + BAYESIAN_PRIOR) / (rec.total + 2 * BAYESIAN_PRIOR)
+  }
+
+  return [...records.values()]
 }
 
 export function analyzeMatches(matches: MatchResult[], allHeroes: string[]): AnalysisData {
