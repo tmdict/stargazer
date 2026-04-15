@@ -1,7 +1,12 @@
 <template>
   <div class="hero-grid-container">
     <div class="controls-row">
-      <FilterIcons icon-prefix="faction" :options="factionOptions" v-model="factionFilter" />
+      <FilterIcons
+        icon-prefix="faction"
+        :options="factionOptions"
+        v-model="factionFilter"
+        active-border-color="var(--color-primary)"
+      />
       <div class="actions">
         <slot name="actions" />
       </div>

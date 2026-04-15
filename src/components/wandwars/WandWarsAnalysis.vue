@@ -259,6 +259,7 @@
             :options="factionOptions"
             :size="32"
             :show-tooltip="false"
+            active-border-color="var(--color-primary)"
           />
           <FilterIcons
             v-model="recClassFilter"
@@ -266,6 +267,7 @@
             :options="classOptions"
             :size="32"
             :show-tooltip="false"
+            active-border-color="var(--color-primary)"
           />
           <FilterIcons
             v-model="recDamageFilter"
@@ -273,6 +275,7 @@
             :options="damageOptions"
             :size="32"
             :show-tooltip="false"
+            active-border-color="var(--color-primary)"
           />
         </div>
 
