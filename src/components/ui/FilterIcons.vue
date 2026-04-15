@@ -13,11 +13,13 @@ interface Props {
   iconPrefix: string // e.g., 'class', 'faction', 'damage'
   size?: number // button size in px (default 36)
   showTooltip?: boolean
+  activeBorderColor?: string // CSS color for the selected icon's border
 }
 
 const props = withDefaults(defineProps<Props>(), {
   size: 36,
   showTooltip: true,
+  activeBorderColor: 'var(--color-bg-white)',
 })
 const modelValue = defineModel<string>({ required: true })
 
@@ -55,7 +57,12 @@ const handleMouseLeave = () => {
       <!-- Clear/None option -->
       <button
         :class="['icon-option', 'clear-option', { active: modelValue === '' }]"
-        :style="{ width: `${size}px`, height: `${size}px`, borderWidth: '0' }"
+        :style="{
+          width: `${size}px`,
+          height: `${size}px`,
+          borderWidth: modelValue === '' ? `${borderWidth}px 0` : '0',
+          '--active-border-color': activeBorderColor,
+        }"
         @click="modelValue = ''"
       >
         <span class="clear-label" :style="{ fontSize: `${Math.round(size * 0.39)}px` }">{{
@@ -68,7 +75,12 @@ const handleMouseLeave = () => {
         v-for="option in options"
         :key="option"
         :class="['icon-option', { active: modelValue === option }]"
-        :style="{ width: `${size}px`, height: `${size}px`, borderWidth: `${borderWidth}px` }"
+        :style="{
+          width: `${size}px`,
+          height: `${size}px`,
+          borderWidth: `${borderWidth}px`,
+          '--active-border-color': activeBorderColor,
+        }"
         @click="modelValue = modelValue === option ? '' : option"
         @mouseenter="handleMouseEnter(option, $event)"
         @mouseleave="handleMouseLeave"
@@ -133,7 +145,7 @@ const handleMouseLeave = () => {
 }
 
 .icon-option.active {
-  border-color: #aaa;
+  border-color: var(--active-border-color, var(--color-bg-white));
 }
 
 .clear-option {
@@ -146,6 +158,10 @@ const handleMouseLeave = () => {
 
 .clear-option.active {
   color: var(--color-primary);
+  border-style: solid;
+  border-top-color: transparent;
+  border-bottom-color: var(--active-border-color, var(--color-bg-white));
+  border-radius: 0;
 }
 
 .clear-label {
