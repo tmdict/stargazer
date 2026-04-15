@@ -18,7 +18,7 @@ Source: `src/wandwars/data/wandwars.data` (gitignored, growing dataset)
 leftHero1,leftHero2,leftHero3 <symbol> rightHero1,rightHero2,rightHero3;optional note
 ```
 
-- `>` left wins, `<` right wins, `>>` / `<<` dominant win (weight 1.5), `=` draw
+- `>` left wins, `<` right wins, `>>` / `<<` dominant/sweep win (weight 2.0), `=` draw
 - Hero names are kebab-case, matching `src/data/character/*.json`
 - Notes use `{hero-name}` to reference specific heroes — displayed with hero names highlighted in teal bold
 - Data file is gitignored; inlined into JS bundle at build time via Vite `?raw` import
@@ -171,6 +171,8 @@ These are **informational only** — they don't affect any model's score. They s
 
 Counter score formula: `bayesianSmoothedVsWinRate - hero's overall winRate`
 
+**Sweep weight rationale**: Sweep wins (`>>` / `<<`) are stored with `weight: 2.0` in the parser; regular wins get `weight: 1.0`. A sweep guarantees every hero on the winning team survived the match, so it's stronger evidence each of them contributed than a regular win (where a hero could have died early). This single parser-level weight propagates everywhere that multiplies by `match.weight`: `heroStats.winRate`, `synergyMatrix`, `counterMatrix`, Popular Pick pair records, and Bradley-Terry strength. The Bayesian prior (3.0) still dampens small-sample swings.
+
 ### Team Counter Detection
 
 When you have 2 teammates and opponent has 2+ heroes, checks if [your 2 + candidate] has beaten any team containing those opponent heroes in match data. Shows badge only when wins > losses. Works with partial opponent teams (doesn't require all 3 known) since your 3rd pick always happens before the opponent's 3rd.
@@ -198,7 +200,7 @@ Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to
 
 All models implement `RecommendationModel` with `recommend()` and `predictMatchup()`. They run independently in separate tabs. Pick order does not affect predictions — all models evaluate teams as unordered sets.
 
-Tab order: **Popular Pick** | **Total Team Power (B-T Model)** | **Hero Synergy (Composite Model)** | **Records** | **Meta**
+Tab order: **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Popular Pick** | **Records** | **Meta**. Ordered most-to-least accurate at mature (500+ match) datasets per the aggregate weights; individual match-prediction cards follow the same order.
 
 ### Model A: Popular Pick (`popularPick.ts`)
 
@@ -226,7 +228,7 @@ Tab order: **Popular Pick** | **Total Team Power (B-T Model)** | **Hero Synergy 
 
 ---
 
-### Model B: Bradley-Terry — "Total Team Power" (`bradleyTerry.ts`)
+### Model B: Bradley-Terry — "Team Power" (`bradleyTerry.ts`)
 
 **Philosophy**: Statistically principled strength estimation — "what is each hero's true power level?"
 
@@ -302,7 +304,7 @@ Up to +5% for heroes with 20+ appearances. Tie-breaker for well-tested heroes.
 
 ### Model Comparison
 
-| Aspect           | Popular Pick                       | Total Team Power (B-T)                             | Hero Synergy (Composite)                        |
+| Aspect           | Popular Pick                       | Team Power (Bradley-Terry)                         | Hero Synergy (Composite)                        |
 | ---------------- | ---------------------------------- | -------------------------------------------------- | ----------------------------------------------- |
 | Min useful data  | ~5 matches                         | ~20 matches (regularized)                          | ~20 matches                                     |
 | What it captures | Popularity + pair win records      | Individual hero strength (additive)                | Synergy + counter interactions                  |
@@ -419,7 +421,7 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 ### Right Column — Tabs
 
-**Popular Pick** (default) | **Total Team Power (B-T Model)** | **Hero Synergy (Composite Model)** | **Records** (with count badge) | **Meta**
+**Hero Synergy** (Composite, default) | **Team Power** (Bradley-Terry) | **Popular Pick** | **Records** (with count badge) | **Meta**
 
 #### During Draft
 
@@ -448,7 +450,19 @@ Three category sub-tabs: **Units** | **Synergy** | **Teams**
 
 **Teams table**: Sortable by Usage, Win %, Record (W/L). Minimum `META_MIN_TEAM_MATCHES` (2) matches. Default sort: Usage. Uses shared `computeTeamRecords()`.
 
-**Right column insights**: Dataset header (match count, hero count, bias disclaimer) at top. Units: Best Openers (heroes with highest Bayesian-smoothed win rate as left-team first pick) and Best Responses (right-team first pick that counters a specific left opener, shown as responder → opener with W/L and score out of 10). Synergy: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1). Teams: team counter matchups as counter rows.
+**Right column insights**: Dataset header (match count, hero count, bias disclaimer) at top. Units: Best Openers (heroes with highest Bayesian-smoothed win rate as left-team first pick) and Best Responses (right-team first pick that counters a specific left opener, shown as responder → opener with W/L and score out of 10 — a responder that counters multiple openers is consolidated into a single row). Synergy: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1). Teams: team counter matchups as counter rows.
+
+**Threshold-based sizing (no hard caps)**: Insight sections grow naturally as the dataset grows — there are no fixed `slice(0, N)` limits. Each section uses statistical thresholds so low-quality entries are filtered out:
+
+| Section                   | Thresholds                                                                                                                                                                        |
+| ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Best Openers              | ≥ 3 matches AND Bayesian win rate ≥ 0.55                                                                                                                                          |
+| Best Responses            | ≥ 2 matches AND wins > losses                                                                                                                                                     |
+| Pair Counters             | ≥ 2 wins AND wins > losses. Pair-vs-pair entries additionally require wins across ≥ 2 distinct opposing full teams, to suppress redundant slices of a single repeated 3v3 matchup |
+| Team Counters             | ≥ 2 wins AND winner's wins ≥ 2× losses in the head-to-head (e.g., 2-0, 4-1, 4-2 qualify; 3-2 does not)                                                                            |
+| Most Dominant Pairs/Teams | ≥ 2 dominant (sweep) wins                                                                                                                                                         |
+
+This replaces earlier hard caps (Best Openers 10, Best Responses 15, Pair Counters 20, Team Counters 20, Dominant Pairs/Teams 10 each).
 
 **Shared meta code**: `TeamRecord` in `types.ts`, `computeTeamRecords()` in `analysis.ts`, `META_*` constants in `constants.ts`, `formatSigned()` in `formatting.ts`.
 

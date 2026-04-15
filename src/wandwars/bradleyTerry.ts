@@ -1,4 +1,4 @@
-import { BT_CONVERGENCE_TOLERANCE, BT_MAX_ITERATIONS, MAX_RECOMMENDATIONS } from './constants'
+import { BT_CONVERGENCE_TOLERANCE, BT_MAX_ITERATIONS } from './constants'
 import {
   getHeroWilsonConfidence,
   getMatchupNotes,
@@ -151,7 +151,7 @@ function buildMatchCountMap(analysisData: AnalysisData): Map<string, number> {
 
 export const bradleyTerryModel: RecommendationModel = {
   id: 'bradley-terry',
-  name: 'Total Team Power (B-T)',
+  name: 'Team Power',
 
   recommend(
     teammates: string[],
@@ -191,7 +191,7 @@ export const bradleyTerryModel: RecommendationModel = {
       }
     })
 
-    return recommendations.sort((a, b) => b.score - a.score).slice(0, MAX_RECOMMENDATIONS)
+    return recommendations.sort((a, b) => b.score - a.score)
   },
 
   predictMatchup(

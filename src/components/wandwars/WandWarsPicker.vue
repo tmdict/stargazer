@@ -88,7 +88,7 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTa
 
 .picker-tabs {
   display: flex;
-  gap: 2px;
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--color-border-light);
 }

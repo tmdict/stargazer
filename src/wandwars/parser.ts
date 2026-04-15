@@ -1,9 +1,11 @@
 import type { MatchNote, MatchResult } from './types'
 
+// Sweep wins (>> / <<) weight 2.0: a sweep guarantees every surviving unit
+// contributed to the win, making it stronger evidence than a regular win (1.0).
 const RESULT_SYMBOLS: Record<string, { result: 'left' | 'right' | 'draw'; weight: number }> = {
-  '>>': { result: 'left', weight: 1.5 },
+  '>>': { result: 'left', weight: 2.0 },
   '>': { result: 'left', weight: 1.0 },
-  '<<': { result: 'right', weight: 1.5 },
+  '<<': { result: 'right', weight: 2.0 },
   '<': { result: 'right', weight: 1.0 },
   '=': { result: 'draw', weight: 1.0 },
 }
