@@ -14,24 +14,30 @@
                 <th class="col-hero">Hero</th>
                 <th
                   :class="['col-sortable', { active: heroSort === 'matches' }]"
-                  @click="heroSort = 'matches'"
+                  @click="toggleHeroSort('matches')"
                 >
-                  Usage
+                  Usage<span v-if="heroSort === 'matches'" class="sort-arrow">{{
+                    heroSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                 </th>
                 <th
                   :class="['col-sortable', { active: heroSort === 'winRate' }]"
-                  @click="heroSort = 'winRate'"
+                  @click="toggleHeroSort('winRate')"
                 >
-                  Win %
+                  Win %<span v-if="heroSort === 'winRate'" class="sort-arrow">{{
+                    heroSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                 </th>
                 <th
                   ref="openerHeaderEl"
                   :class="['col-sortable', { active: heroSort === 'firstPick' }]"
-                  @click="heroSort = 'firstPick'"
+                  @click="toggleHeroSort('firstPick')"
                   @mouseenter="showOpenerTooltip = true"
                   @mouseleave="showOpenerTooltip = false"
                 >
-                  Opener
+                  Opener<span v-if="heroSort === 'firstPick'" class="sort-arrow">{{
+                    heroSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                   <IconInfo :size="14" class="synergy-info-icon" />
                 </th>
               </tr>
@@ -65,25 +71,31 @@
                 <th>Pair</th>
                 <th
                   :class="['col-sortable', { active: pairSort === 'total' }]"
-                  @click="pairSort = 'total'"
+                  @click="togglePairSort('total')"
                 >
-                  Usage
+                  Usage<span v-if="pairSort === 'total'" class="sort-arrow">{{
+                    pairSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                 </th>
                 <th
                   :class="['col-sortable', { active: pairSort === 'winRate' }]"
-                  @click="pairSort = 'winRate'"
+                  @click="togglePairSort('winRate')"
                 >
-                  Win %
+                  Win %<span v-if="pairSort === 'winRate'" class="sort-arrow">{{
+                    pairSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                 </th>
                 <th class="col-static">Record</th>
                 <th
                   ref="synergyHeaderEl"
                   :class="['col-sortable', { active: pairSort === 'synergy' }]"
-                  @click="pairSort = 'synergy'"
+                  @click="togglePairSort('synergy')"
                   @mouseenter="showSynergyTooltip = true"
                   @mouseleave="showSynergyTooltip = false"
                 >
-                  Synergy
+                  Synergy<span v-if="pairSort === 'synergy'" class="sort-arrow">{{
+                    pairSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                   <IconInfo :size="14" class="synergy-info-icon" />
                 </th>
               </tr>
@@ -110,8 +122,10 @@
                 <td class="col-num">{{ pair.total }}</td>
                 <td class="col-num">{{ formatPercent(pair.winRate) }}</td>
                 <td class="col-num">
-                  <span class="wins">{{ pair.wins }}W</span> /
-                  <span class="losses">{{ pair.losses }}L</span>
+                  <span class="record-stack">
+                    <span class="wins">{{ pair.wins }}W</span>
+                    <span class="losses">{{ pair.losses }}L</span>
+                  </span>
                 </td>
                 <td class="col-num" :style="{ color: synergyColor(pair.synergy), fontWeight: 600 }">
                   {{ formatSigned(pair.synergy) }}
@@ -131,15 +145,19 @@
                 <th>Team</th>
                 <th
                   :class="['col-sortable', { active: teamSort === 'total' }]"
-                  @click="teamSort = 'total'"
+                  @click="toggleTeamSort('total')"
                 >
-                  Usage
+                  Usage<span v-if="teamSort === 'total'" class="sort-arrow">{{
+                    teamSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                 </th>
                 <th
                   :class="['col-sortable', { active: teamSort === 'winRate' }]"
-                  @click="teamSort = 'winRate'"
+                  @click="toggleTeamSort('winRate')"
                 >
-                  Win %
+                  Win %<span v-if="teamSort === 'winRate'" class="sort-arrow">{{
+                    teamSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
                 </th>
                 <th class="col-static">Record</th>
               </tr>
@@ -162,8 +180,10 @@
                 <td class="col-num">{{ team.total }}</td>
                 <td class="col-num">{{ formatPercent(team.winRate) }}</td>
                 <td class="col-num">
-                  <span class="wins">{{ team.wins }}W</span> /
-                  <span class="losses">{{ team.losses }}L</span>
+                  <span class="record-stack">
+                    <span class="wins">{{ team.wins }}W</span>
+                    <span class="losses">{{ team.losses }}L</span>
+                  </span>
                 </td>
               </tr>
             </tbody>
@@ -226,8 +246,20 @@ const showOpenerTooltip = ref(false)
 const synergyHeaderEl = ref<HTMLElement>()
 const showSynergyTooltip = ref(false)
 
+type SortDir = 'asc' | 'desc'
+
 type HeroSortKey = 'matches' | 'winRate' | 'firstPick'
 const heroSort = ref<HeroSortKey>('matches')
+const heroSortDir = ref<SortDir>('desc')
+
+function toggleHeroSort(key: HeroSortKey) {
+  if (heroSort.value === key) {
+    heroSortDir.value = heroSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    heroSort.value = key
+    heroSortDir.value = 'desc'
+  }
+}
 
 interface HeroRow {
   name: string
@@ -256,12 +288,23 @@ const heroRows = computed(() => {
   })
 })
 
-const sortedHeroRows = computed(() =>
-  [...heroRows.value].sort((a, b) => b[heroSort.value] - a[heroSort.value]),
-)
+const sortedHeroRows = computed(() => {
+  const sign = heroSortDir.value === 'desc' ? 1 : -1
+  return [...heroRows.value].sort((a, b) => sign * (b[heroSort.value] - a[heroSort.value]))
+})
 
 type PairSortKey = 'total' | 'winRate' | 'synergy'
 const pairSort = ref<PairSortKey>('synergy')
+const pairSortDir = ref<SortDir>('desc')
+
+function togglePairSort(key: PairSortKey) {
+  if (pairSort.value === key) {
+    pairSortDir.value = pairSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    pairSort.value = key
+    pairSortDir.value = 'desc'
+  }
+}
 
 interface PairRow {
   heroA: string
@@ -301,12 +344,13 @@ const allPairRows = computed(() => {
   return rows
 })
 
-const sortedPairRows = computed(() =>
-  [...allPairRows.value].sort((a, b) => {
-    if (pairSort.value === 'synergy') return b.synergy - a.synergy || b.total - a.total
-    return b[pairSort.value] - a[pairSort.value]
-  }),
-)
+const sortedPairRows = computed(() => {
+  const sign = pairSortDir.value === 'desc' ? 1 : -1
+  return [...allPairRows.value].sort((a, b) => {
+    if (pairSort.value === 'synergy') return sign * (b.synergy - a.synergy) || b.total - a.total
+    return sign * (b[pairSort.value] - a[pairSort.value])
+  })
+})
 
 function synergyColor(value: number): string {
   if (value >= 0.1) return '#1e7e34'
@@ -318,12 +362,23 @@ const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
 
 type TeamSortKey = 'total' | 'winRate'
 const teamSort = ref<TeamSortKey>('total')
+const teamSortDir = ref<SortDir>('desc')
 
-const sortedTeamRows = computed(() =>
-  allTeamRecords.value
+function toggleTeamSort(key: TeamSortKey) {
+  if (teamSort.value === key) {
+    teamSortDir.value = teamSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    teamSort.value = key
+    teamSortDir.value = 'desc'
+  }
+}
+
+const sortedTeamRows = computed(() => {
+  const sign = teamSortDir.value === 'desc' ? 1 : -1
+  return allTeamRecords.value
     .filter((t) => t.total >= META_MIN_TEAM_MATCHES)
-    .sort((a, b) => b[teamSort.value] - a[teamSort.value] || b.total - a.total),
-)
+    .sort((a, b) => sign * (b[teamSort.value] - a[teamSort.value]) || b.total - a.total)
+})
 </script>
 
 <style scoped>
@@ -421,6 +476,12 @@ td.col-hero {
   color: var(--color-primary);
 }
 
+.sort-arrow {
+  display: inline-block;
+  margin-left: 4px;
+  font-size: 0.7em;
+}
+
 .col-num {
   text-align: center;
   font-variant-numeric: tabular-nums;
@@ -438,6 +499,14 @@ td.col-hero {
 .losses {
   color: #c62828;
   font-weight: 600;
+}
+
+.record-stack {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1.1;
+  font-size: 0.75rem;
 }
 
 .table-portrait {

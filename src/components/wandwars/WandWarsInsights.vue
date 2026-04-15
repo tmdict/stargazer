@@ -74,29 +74,41 @@
               <span>counters</span>
               <span class="response-arrow"></span>
             </span>
-            <img
-              :src="characterImages[r.opener]"
-              :alt="r.opener"
-              :title="formatName(r.opener)"
-              class="hero-portrait"
-            />
-            <span class="counter-record">
-              <span class="wins">{{ r.wins }}W</span> /
-              <span class="losses">{{ r.losses }}L</span>
-              <span class="win-rate">{{ (r.winRate * 10).toFixed(2) }}</span>
-            </span>
+            <div class="response-targets">
+              <div v-for="c in r.counters" :key="c.opener" class="response-target">
+                <img
+                  :src="characterImages[c.opener]"
+                  :alt="c.opener"
+                  :title="formatName(c.opener)"
+                  class="hero-portrait"
+                />
+                <span class="response-target-record">
+                  <span class="wins">{{ c.wins }}W</span> /
+                  <span class="losses">{{ c.losses }}L</span>
+                  <span class="win-rate-inline">{{ (c.winRate * 10).toFixed(2) }}</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Synergy: Pair Counters -->
-      <section v-if="category === 'synergy' && allPairCounters.length > 0" class="section">
-        <h3 class="section-title">Pair Counters</h3>
+      <section v-if="category === 'synergy' && groupedPairCounters.length > 0" class="section">
+        <h3
+          ref="pairCounterTitleEl"
+          class="section-title"
+          @mouseenter="showPairCounterTooltip = true"
+          @mouseleave="showPairCounterTooltip = false"
+        >
+          Pair Counters
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
         <div class="counter-list">
-          <div v-for="(m, i) in allPairCounters" :key="'pc' + i" class="counter-row">
+          <div v-for="(g, i) in groupedPairCounters" :key="'pc' + i" class="counter-row">
             <div class="counter-group">
               <img
-                v-for="hero in m.pair"
+                v-for="hero in g.target"
                 :key="hero"
                 :src="characterImages[hero]"
                 :alt="hero"
@@ -104,28 +116,43 @@
                 class="hero-portrait"
               />
             </div>
-            <div class="vs-arrow"></div>
-            <div class="counter-group">
-              <img
-                v-for="hero in m.countered"
-                :key="hero"
-                :src="characterImages[hero]"
-                :alt="hero"
-                :title="formatName(hero)"
-                class="hero-portrait"
-              />
-            </div>
-            <span class="counter-record">
-              <span class="wins">{{ m.wins }}W</span> /
-              <span class="losses">{{ m.losses }}L</span>
+            <span class="response-label">
+              <span>countered by</span>
+              <span class="response-arrow reverse"></span>
             </span>
+            <div class="response-targets">
+              <div v-for="c in g.counters" :key="c.pair.join(',')" class="response-target">
+                <div class="counter-group">
+                  <img
+                    v-for="hero in c.pair"
+                    :key="hero"
+                    :src="characterImages[hero]"
+                    :alt="hero"
+                    :title="formatName(hero)"
+                    class="hero-portrait"
+                  />
+                </div>
+                <span class="response-target-record">
+                  <span class="wins">{{ c.wins }}W</span> /
+                  <span class="losses">{{ c.losses }}L</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
       <!-- Most Dominant Pairs (synergy only) -->
       <section v-if="category === 'synergy' && sweepPairs.length > 0" class="section">
-        <h3 class="section-title">Most Dominant Pairs</h3>
+        <h3
+          ref="dominantPairsTitleEl"
+          class="section-title"
+          @mouseenter="showDominantPairsTooltip = true"
+          @mouseleave="showDominantPairsTooltip = false"
+        >
+          Most Dominant Pairs
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
         <div class="counter-list">
           <div v-for="(s, i) in sweepPairs" :key="'sp' + i" class="counter-row">
             <div class="counter-group">
@@ -144,13 +171,21 @@
       </section>
 
       <!-- Team Counters (teams only) -->
-      <section v-if="category === 'teams' && dominantTeamMatchups.length > 0" class="section">
-        <h3 class="section-title">Team Counters</h3>
+      <section v-if="category === 'teams' && groupedTeamCounters.length > 0" class="section">
+        <h3
+          ref="teamCountersTitleEl"
+          class="section-title"
+          @mouseenter="showTeamCountersTooltip = true"
+          @mouseleave="showTeamCountersTooltip = false"
+        >
+          Team Counters
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
         <div class="counter-list">
-          <div v-for="(m, i) in dominantTeamMatchups" :key="'tc' + i" class="counter-row">
+          <div v-for="(g, i) in groupedTeamCounters" :key="'tc' + i" class="counter-row">
             <div class="counter-group">
               <img
-                v-for="hero in m.winner"
+                v-for="hero in g.winner"
                 :key="hero"
                 :src="characterImages[hero]"
                 :alt="hero"
@@ -158,27 +193,42 @@
                 class="hero-portrait"
               />
             </div>
-            <div class="vs-arrow"></div>
-            <div class="counter-group">
-              <img
-                v-for="hero in m.loser"
-                :key="hero"
-                :src="characterImages[hero]"
-                :alt="hero"
-                :title="formatName(hero)"
-                class="hero-portrait"
-              />
-            </div>
-            <span class="counter-record">
-              <span class="wins">{{ m.wins }}W</span> /
-              <span class="losses">{{ m.losses }}L</span>
+            <span class="response-label">
+              <span>counters</span>
+              <span class="response-arrow"></span>
             </span>
+            <div class="response-targets">
+              <div v-for="c in g.countered" :key="c.team.join(',')" class="response-target">
+                <div class="counter-group">
+                  <img
+                    v-for="hero in c.team"
+                    :key="hero"
+                    :src="characterImages[hero]"
+                    :alt="hero"
+                    :title="formatName(hero)"
+                    class="hero-portrait"
+                  />
+                </div>
+                <span class="response-target-record">
+                  <span class="wins">{{ c.wins }}W</span> /
+                  <span class="losses">{{ c.losses }}L</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
       </section>
       <!-- Most Dominant Teams (teams only) -->
       <section v-if="category === 'teams' && sweepTeams.length > 0" class="section">
-        <h3 class="section-title">Most Dominant Teams</h3>
+        <h3
+          ref="dominantTeamsTitleEl"
+          class="section-title"
+          @mouseenter="showDominantTeamsTooltip = true"
+          @mouseleave="showDominantTeamsTooltip = false"
+        >
+          Most Dominant Teams
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
         <div class="counter-list">
           <div v-for="(s, i) in sweepTeams" :key="'st' + i" class="counter-row">
             <div class="counter-group">
@@ -207,7 +257,7 @@
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
             Heroes with the highest win rate when picked first by the left team (pick 1 of the
-            draft).
+            draft). Included when hero has ≥ 3 opening matches AND Bayesian-smoothed win rate ≥ 55%.
           </p>
         </template>
       </TooltipPopup>
@@ -220,7 +270,62 @@
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
             Best right-team first pick (pick 2) in response to a specific left-team opener. W/L is
-            from the responder's perspective.
+            from the responder's perspective. Included when the matchup has ≥ 2 games AND the
+            responder has more wins than losses.
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showPairCounterTooltip && pairCounterTitleEl"
+        :target-element="pairCounterTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Pairs that consistently beat another pair or full team when they share a match. Included
+            when the winning pair has ≥ 2 wins AND more wins than losses. Pair-vs-pair entries
+            additionally require wins across ≥ 2 distinct opposing full teams, so they aren't just
+            slices of a single repeated 3v3 matchup.
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showDominantPairsTooltip && dominantPairsTitleEl"
+        :target-element="dominantPairsTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Pairs with the most dominant (sweep) wins. Included when the pair has ≥ 2 sweep wins.
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showTeamCountersTooltip && teamCountersTitleEl"
+        :target-element="teamCountersTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Team-vs-team matchups where one team decisively beats the other. Included when the
+            winning team has ≥ 2 wins AND at least twice as many wins as losses in their
+            head-to-head (e.g., 2-0, 4-1, 4-2 qualify; 3-2 does not).
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showDominantTeamsTooltip && dominantTeamsTitleEl"
+        :target-element="dominantTeamsTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+            Full 3-hero teams with the most dominant (sweep) wins. Included when the team has ≥ 2
+            sweep wins.
           </p>
         </template>
       </TooltipPopup>
@@ -263,6 +368,14 @@ const showOpenerTooltip = ref(false)
 const openerTitleEl = ref<HTMLElement | null>(null)
 const showResponseTooltip = ref(false)
 const responseTitleEl = ref<HTMLElement | null>(null)
+const showPairCounterTooltip = ref(false)
+const pairCounterTitleEl = ref<HTMLElement | null>(null)
+const showDominantPairsTooltip = ref(false)
+const dominantPairsTitleEl = ref<HTMLElement | null>(null)
+const showTeamCountersTooltip = ref(false)
+const teamCountersTitleEl = ref<HTMLElement | null>(null)
+const showDominantTeamsTooltip = ref(false)
+const dominantTeamsTitleEl = ref<HTMLElement | null>(null)
 
 const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
 
@@ -378,52 +491,86 @@ interface FirstPickStat {
 }
 
 const bestOpeners = computed(() => {
-  const stats = new Map<string, { wins: number; losses: number }>()
+  const stats = new Map<
+    string,
+    { wins: number; losses: number; weightedWins: number; weightedTotal: number }
+  >()
   for (const match of props.matchData) {
     const hero = match.left[0]
-    if (!stats.has(hero)) stats.set(hero, { wins: 0, losses: 0 })
+    if (!stats.has(hero)) stats.set(hero, { wins: 0, losses: 0, weightedWins: 0, weightedTotal: 0 })
     const s = stats.get(hero)!
-    if (match.result === 'left') s.wins++
-    else if (match.result === 'right') s.losses++
+    if (match.result === 'left') {
+      s.wins++
+      s.weightedWins += match.weight
+      s.weightedTotal += match.weight
+    } else if (match.result === 'right') {
+      s.losses++
+      s.weightedTotal += match.weight
+    }
   }
   const results: FirstPickStat[] = []
   for (const [hero, s] of stats) {
     const total = s.wins + s.losses
     if (total < 3) continue
-    const winRate = (s.wins + META_BAYESIAN_PRIOR) / (total + 2 * META_BAYESIAN_PRIOR)
+    const winRate =
+      (s.weightedWins + META_BAYESIAN_PRIOR) / (s.weightedTotal + 2 * META_BAYESIAN_PRIOR)
+    if (winRate < 0.55) continue
     results.push({ hero, wins: s.wins, losses: s.losses, winRate })
   }
-  return results.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins).slice(0, 10)
+  return results.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
 })
 
 // Draft position: best responses (right first pick given left first pick)
-interface FirstPickResponse {
+interface ResponseTarget {
   opener: string
-  responder: string
   wins: number
   losses: number
   winRate: number
 }
 
+interface ResponderGroup {
+  responder: string
+  counters: ResponseTarget[]
+  bestWinRate: number
+}
+
 const bestResponses = computed(() => {
-  const stats = new Map<string, { wins: number; losses: number }>()
+  const stats = new Map<
+    string,
+    { wins: number; losses: number; weightedWins: number; weightedTotal: number }
+  >()
   for (const match of props.matchData) {
     const key = `${match.left[0]}:${match.right[0]}`
-    if (!stats.has(key)) stats.set(key, { wins: 0, losses: 0 })
+    if (!stats.has(key)) stats.set(key, { wins: 0, losses: 0, weightedWins: 0, weightedTotal: 0 })
     const s = stats.get(key)!
-    if (match.result === 'right') s.wins++
-    else if (match.result === 'left') s.losses++
+    if (match.result === 'right') {
+      s.wins++
+      s.weightedWins += match.weight
+      s.weightedTotal += match.weight
+    } else if (match.result === 'left') {
+      s.losses++
+      s.weightedTotal += match.weight
+    }
   }
-  const results: FirstPickResponse[] = []
+  const byResponder = new Map<string, ResponseTarget[]>()
   for (const [key, s] of stats) {
     const [opener, responder] = key.split(':') as [string, string]
     const total = s.wins + s.losses
     if (total < 2) continue
     if (s.wins <= s.losses) continue
-    const winRate = (s.wins + META_BAYESIAN_PRIOR) / (total + 2 * META_BAYESIAN_PRIOR)
-    results.push({ opener, responder, wins: s.wins, losses: s.losses, winRate })
+    const winRate =
+      (s.weightedWins + META_BAYESIAN_PRIOR) / (s.weightedTotal + 2 * META_BAYESIAN_PRIOR)
+    if (!byResponder.has(responder)) byResponder.set(responder, [])
+    byResponder.get(responder)!.push({ opener, wins: s.wins, losses: s.losses, winRate })
   }
-  return results.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins).slice(0, 15)
+  const groups: ResponderGroup[] = []
+  for (const [responder, counters] of byResponder) {
+    counters.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
+    const best = counters[0]
+    if (!best) continue
+    groups.push({ responder, counters, bestWinRate: best.winRate })
+  }
+  return groups.sort((a, b) => b.bestWinRate - a.bestWinRate)
 })
 
 function getPairs(team: [string, string, string]): [string, string][] {
@@ -444,16 +591,30 @@ interface PairCounter {
 const allPairCounters = computed(() => {
   const results: PairCounter[] = []
 
-  // Pair vs Pair
+  // Pair vs Pair.
+  // Track the set of distinct full opponent teams each side beat — a pair-vs-pair
+  // entry is only meaningful when the winning pair has beaten multiple different
+  // full-team compositions. Otherwise, the entry is a redundant slice of a single
+  // pair-vs-team result and just clutters the list.
   const pairMap = new Map<
     string,
-    { a: [string, string]; b: [string, string]; aWins: number; bWins: number; total: number }
+    {
+      a: [string, string]
+      b: [string, string]
+      aWins: number
+      bWins: number
+      total: number
+      aOppTeams: Set<string>
+      bOppTeams: Set<string>
+    }
   >()
 
   for (const match of props.matchData) {
     if (match.result === 'draw') continue
     const leftPairs = getPairs(match.left)
     const rightPairs = getPairs(match.right)
+    const leftTeamKey = [...match.left].sort().join(',')
+    const rightTeamKey = [...match.right].sort().join(',')
 
     for (const lp of leftPairs) {
       for (const rp of rightPairs) {
@@ -469,6 +630,8 @@ const allPairCounters = computed(() => {
             aWins: 0,
             bWins: 0,
             total: 0,
+            aOppTeams: new Set(),
+            bOppTeams: new Set(),
           })
         }
 
@@ -476,17 +639,22 @@ const allPairCounters = computed(() => {
         rec.total++
         const leftWon = match.result === 'left'
         const leftIsA = lpKey < rpKey
-        if ((leftWon && leftIsA) || (!leftWon && !leftIsA)) rec.aWins++
-        else rec.bWins++
+        if ((leftWon && leftIsA) || (!leftWon && !leftIsA)) {
+          rec.aWins++
+          rec.aOppTeams.add(leftIsA ? rightTeamKey : leftTeamKey)
+        } else {
+          rec.bWins++
+          rec.bOppTeams.add(leftIsA ? leftTeamKey : rightTeamKey)
+        }
       }
     }
   }
 
   for (const m of pairMap.values()) {
     if (m.total < 2) continue
-    if (m.aWins > m.bWins && m.aWins >= 2) {
+    if (m.aWins > m.bWins && m.aWins >= 2 && m.aOppTeams.size >= 2) {
       results.push({ pair: m.a, countered: m.b, wins: m.aWins, losses: m.bWins })
-    } else if (m.bWins > m.aWins && m.bWins >= 2) {
+    } else if (m.bWins > m.aWins && m.bWins >= 2 && m.bOppTeams.size >= 2) {
       results.push({ pair: m.b, countered: m.a, wins: m.bWins, losses: m.aWins })
     }
   }
@@ -542,9 +710,35 @@ const allPairCounters = computed(() => {
     }
   }
 
-  return results
-    .sort((a, b) => b.countered.length - a.countered.length || b.wins - a.wins)
-    .slice(0, 20)
+  return results.sort((a, b) => b.countered.length - a.countered.length || b.wins - a.wins)
+})
+
+interface PairCounterGroup {
+  target: string[]
+  counters: Array<{ pair: string[]; wins: number; losses: number }>
+  totalWins: number
+}
+
+const groupedPairCounters = computed(() => {
+  const groups = new Map<string, PairCounterGroup>()
+  for (const entry of allPairCounters.value) {
+    const key = [...entry.countered].sort().join(',')
+    if (!groups.has(key)) {
+      groups.set(key, { target: entry.countered, counters: [], totalWins: 0 })
+    }
+    const g = groups.get(key)!
+    g.counters.push({ pair: entry.pair, wins: entry.wins, losses: entry.losses })
+    g.totalWins += entry.wins
+  }
+  for (const g of groups.values()) {
+    g.counters.sort((a, b) => b.wins - a.wins || a.losses - b.losses)
+  }
+  return [...groups.values()].sort(
+    (a, b) =>
+      b.target.length - a.target.length ||
+      b.counters.length - a.counters.length ||
+      b.totalWins - a.totalWins,
+  )
 })
 
 interface TeamCounterMatchup {
@@ -564,7 +758,32 @@ const dominantTeamMatchups = computed(() => {
       results.push({ winner: m.b, loser: m.a, wins: m.bWins, losses: m.aWins })
     }
   }
-  return results.sort((a, b) => b.wins - a.wins).slice(0, 20)
+  return results.sort((a, b) => b.wins - a.wins)
+})
+
+interface TeamCounterGroup {
+  winner: string[]
+  countered: Array<{ team: string[]; wins: number; losses: number }>
+  totalWins: number
+}
+
+const groupedTeamCounters = computed(() => {
+  const groups = new Map<string, TeamCounterGroup>()
+  for (const m of dominantTeamMatchups.value) {
+    const key = [...m.winner].sort().join(',')
+    if (!groups.has(key)) {
+      groups.set(key, { winner: m.winner, countered: [], totalWins: 0 })
+    }
+    const g = groups.get(key)!
+    g.countered.push({ team: m.loser, wins: m.wins, losses: m.losses })
+    g.totalWins += m.wins
+  }
+  for (const g of groups.values()) {
+    g.countered.sort((a, b) => b.wins - a.wins || a.losses - b.losses)
+  }
+  return [...groups.values()].sort(
+    (a, b) => b.countered.length - a.countered.length || b.totalWins - a.totalWins,
+  )
 })
 
 // Sweep stats: teams with most dominant wins
@@ -590,7 +809,7 @@ const sweepTeams = computed(() => {
   for (const s of stats.values()) {
     if (s.sweeps >= 2) results.push(s)
   }
-  return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total).slice(0, 10)
+  return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total)
 })
 
 const sweepPairs = computed(() => {
@@ -612,7 +831,7 @@ const sweepPairs = computed(() => {
   for (const s of stats.values()) {
     if (s.sweeps >= 2) results.push(s)
   }
-  return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total).slice(0, 10)
+  return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total)
 })
 
 function add(result: Insight[], category: InsightCategory, text: string) {
@@ -1306,6 +1525,9 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   color: var(--color-text-secondary);
   text-transform: uppercase;
   line-height: 1.1;
+  text-align: center;
+  margin: 0 var(--spacing-sm);
+  gap: 4px;
 }
 
 .response-arrow {
@@ -1316,8 +1538,8 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 .response-arrow::before {
   content: '';
   display: block;
-  width: 20px;
-  height: 3px;
+  width: 28px;
+  height: 4px;
   background: var(--color-primary);
 }
 
@@ -1326,8 +1548,17 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   display: block;
   width: 0;
   height: 0;
-  border: 6px solid transparent;
-  border-left: 8px solid var(--color-primary);
+  border: 8px solid transparent;
+  border-left: 10px solid var(--color-primary);
+}
+
+.response-arrow.reverse {
+  flex-direction: row-reverse;
+}
+
+.response-arrow.reverse::after {
+  border-left: 8px solid transparent;
+  border-right: 10px solid var(--color-primary);
 }
 
 /* Counter rows (shared by hero, pair, team counters) */
@@ -1366,7 +1597,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   font-size: 0.9rem;
   color: var(--color-text-secondary);
   white-space: nowrap;
-  margin-left: auto;
+  margin-left: var(--spacing-md);
 }
 
 .vs-arrow {
@@ -1378,8 +1609,8 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 .vs-arrow::before {
   content: '';
   display: block;
-  width: 20px;
-  height: 3px;
+  width: 28px;
+  height: 4px;
   background: var(--color-primary);
 }
 
@@ -1388,8 +1619,8 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   display: block;
   width: 0;
   height: 0;
-  border: 6px solid transparent;
-  border-left: 8px solid var(--color-primary);
+  border: 8px solid transparent;
+  border-left: 10px solid var(--color-primary);
 }
 
 .wins {
@@ -1405,6 +1636,35 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 .win-rate {
   color: var(--color-text-secondary);
   margin-left: var(--spacing-md);
+}
+
+.response-targets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md) var(--spacing-xl);
+  padding-left: var(--spacing-sm);
+}
+
+.response-target {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.response-target-record {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.response-target-record .win-rate-inline {
+  display: block;
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  margin-top: 1px;
 }
 
 .dataset-header {

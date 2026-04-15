@@ -15,7 +15,7 @@ import type {
 
 const rawData = atob(encodedData)
 
-const models: RecommendationModel[] = [popularPickModel, bradleyTerryModel, compositeModel]
+const models: RecommendationModel[] = [compositeModel, bradleyTerryModel, popularPickModel]
 
 let cachedMatches: MatchResult[] | null = null
 let cachedAnalysis: AnalysisData | null = null

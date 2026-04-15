@@ -1,4 +1,3 @@
-import { MAX_RECOMMENDATIONS } from './constants'
 import {
   getHeroWilsonConfidence,
   getMatchupNotes,
@@ -228,7 +227,7 @@ export const popularPickModel: RecommendationModel = {
       }
     })
 
-    return recommendations.sort((a, b) => b.score - a.score).slice(0, MAX_RECOMMENDATIONS)
+    return recommendations.sort((a, b) => b.score - a.score)
   },
 
   predictMatchup(

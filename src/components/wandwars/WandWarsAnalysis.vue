@@ -284,21 +284,38 @@
           No recommendations match the current filters.
         </div>
 
-        <div v-else class="recommendations">
-          <WandWarsRecommendation
-            v-for="(rec, i) in filteredRecommendations"
-            :key="rec.hero"
-            :recommendation="rec"
-            :rank="i + 1"
-            :model-id="activeTab"
-            :character-images="characterImages"
-            :counter-indicators="getCounterIndicators(rec.hero)"
-            :team-counter="getTeamCounter(rec.hero)"
-            :opponent-count="opponentTeam.length"
-            :left-team="leftTeam"
-            :right-team="rightTeam"
-          />
-        </div>
+        <template v-else>
+          <div class="rec-sort-row">
+            <span class="rec-sort-label">Sort by:</span>
+            <button
+              v-for="opt in sortOptions"
+              :key="opt.key"
+              :class="['rec-sort-btn', { active: recSortKey === opt.key }]"
+              @click="toggleRecSort(opt.key)"
+            >
+              {{ opt.label
+              }}<span v-if="recSortKey === opt.key" class="sort-arrow">{{
+                recSortDir === 'desc' ? '▼' : '▲'
+              }}</span>
+            </button>
+          </div>
+
+          <div class="recommendations">
+            <WandWarsRecommendation
+              v-for="rec in sortedFilteredRecommendations"
+              :key="rec.hero"
+              :recommendation="rec"
+              :model-id="activeTab"
+              :character-images="characterImages"
+              :counter-indicators="getCounterIndicators(rec.hero)"
+              :team-counter="getTeamCounter(rec.hero)"
+              :opponent-count="opponentTeam.length"
+              :left-team="leftTeam"
+              :right-team="rightTeam"
+              :sort-key="recSortKey"
+            />
+          </div>
+        </template>
       </template>
     </div>
 
@@ -315,7 +332,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
 import type { CounterIndicator, TeamCounterInfo } from './WandWarsRecommendation.vue'
@@ -355,13 +372,13 @@ const emit = defineEmits<{
 }>()
 
 const tabs = [
+  { id: 'composite', label: 'Hero Synergy' },
+  { id: 'bradley-terry', label: 'Team Power' },
   { id: 'popular-pick', label: 'Popular Pick' },
-  { id: 'bradley-terry', label: 'Total Team Power (B-T Model)' },
-  { id: 'composite', label: 'Hero Synergy (Composite Model)' },
   { id: 'records', label: 'Records' },
 ]
 
-const activeTab = ref('popular-pick')
+const activeTab = ref('composite')
 
 // Record form state
 const recordWinner = ref<'left' | 'right' | 'draw'>('left')
@@ -458,7 +475,12 @@ function getCounterIndicators(hero: string): CounterIndicator[] {
       indicators.push({ opponent: opp, type: 'countered', score })
     }
   }
-  return indicators
+  // Ordering: 'counters' (strong against) before 'countered' (weak against),
+  // then by descending score magnitude within each group.
+  return indicators.sort((a, b) => {
+    if (a.type !== b.type) return a.type === 'counters' ? -1 : 1
+    return Math.abs(b.score) - Math.abs(a.score)
+  })
 }
 
 function formatSymbol(record: RecordedMatch): string {
@@ -469,11 +491,11 @@ const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
 
 const modelDescriptions: Record<string, string> = {
   'popular-pick':
-    'Ranks heroes by how often they appear and win. Factors in actual win/loss records with your teammates. Best for quick, intuitive picks.',
+    'Popular Pick model. Ranks heroes by how often they appear and win. Factors in actual win/loss records with your teammates. Best for quick, intuitive picks.',
   'bradley-terry':
-    "Estimates each hero's true strength using a statistical model. Predicts win probability by comparing total team power. Best for objective strength ranking.",
+    "Bradley-Terry model. Estimates each hero's true strength statistically and predicts win probability by comparing total team power. Best for objective strength ranking.",
   composite:
-    'Measures how well heroes perform together (synergy) and against specific opponents (counters). Best for drafting around team chemistry and counter-picks.',
+    'Composite model. Measures how well heroes perform together (synergy) and against specific opponents (counters). Best for drafting around team chemistry and counter-picks.',
 }
 
 const tooltipModelId = ref<string | null>(null)
@@ -569,6 +591,66 @@ const filteredRecommendations = computed(() => {
   })
 })
 
+interface SortOption {
+  key: string
+  label: string
+}
+
+const sortOptions = computed<SortOption[]>(() => {
+  switch (activeTab.value) {
+    case 'popular-pick':
+      return [
+        { key: 'score', label: 'Score' },
+        { key: 'winRate', label: 'Win Rate' },
+        { key: 'pickRate', label: 'Pick Rate' },
+      ]
+    case 'composite':
+      return [
+        { key: 'score', label: 'Score' },
+        { key: 'base', label: 'Win Rate' },
+        { key: 'synergy', label: 'Synergy' },
+        { key: 'counter', label: 'Counter' },
+        { key: 'pickRate', label: 'Pick Rate' },
+      ]
+    case 'bradley-terry':
+      return [
+        { key: 'score', label: 'Score' },
+        { key: 'strength', label: 'Strength' },
+        { key: 'winProbability', label: 'Win Prob' },
+        { key: 'pickRate', label: 'Pick Rate' },
+      ]
+    default:
+      return [{ key: 'score', label: 'Score' }]
+  }
+})
+
+const recSortKey = ref<string>('score')
+const recSortDir = ref<'asc' | 'desc'>('desc')
+
+function toggleRecSort(key: string) {
+  if (recSortKey.value === key) {
+    recSortDir.value = recSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    recSortKey.value = key
+    recSortDir.value = 'desc'
+  }
+}
+
+watch(activeTab, () => {
+  recSortKey.value = 'score'
+  recSortDir.value = 'desc'
+})
+
+const sortedFilteredRecommendations = computed(() => {
+  const sign = recSortDir.value === 'desc' ? 1 : -1
+  const key = recSortKey.value
+  return [...filteredRecommendations.value].sort((a, b) => {
+    const av = key === 'score' ? a.score : ((a.breakdown[key] as number) ?? 0)
+    const bv = key === 'score' ? b.score : ((b.breakdown[key] as number) ?? 0)
+    return sign * (bv - av)
+  })
+})
+
 const leftTeam = computed(() => props.pickState.left.filter((h): h is string => h !== null))
 
 const rightTeam = computed(() => props.pickState.right.filter((h): h is string => h !== null))
@@ -592,6 +674,51 @@ const aggregatePrediction = computed(() => {
   flex-wrap: wrap;
 }
 
+.rec-sort-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  margin: var(--spacing-sm) 0;
+  padding: 0 0 var(--spacing-xs) var(--spacing-sm);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.rec-sort-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-right: var(--spacing-xs);
+}
+
+.rec-sort-btn {
+  padding: 2px var(--spacing-sm);
+  border: none;
+  background: none;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: var(--radius-small);
+  transition: color var(--transition-fast);
+}
+
+.rec-sort-btn:hover:not(.active) {
+  color: var(--color-text-primary);
+}
+
+.rec-sort-btn.active {
+  color: var(--color-primary);
+}
+
+.rec-sort-btn .sort-arrow {
+  display: inline-block;
+  margin-left: 3px;
+  font-size: 0.7em;
+}
+
 .analysis {
   background: var(--color-bg-white);
   border: 1px solid var(--color-border-primary);
@@ -601,7 +728,7 @@ const aggregatePrediction = computed(() => {
 
 .tabs {
   display: flex;
-  gap: 2px;
+  gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--color-border-light);
 }

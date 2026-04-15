@@ -33,9 +33,6 @@ export const DRAFT_ORDER: [side: 'left' | 'right', slot: number][] = [
 export const SAMPLE_BONUS_MAX = 0.05
 export const SAMPLE_BONUS_FULL = 20
 
-// Max recommendations to show
-export const MAX_RECOMMENDATIONS = 30
-
 // Meta analysis thresholds
 export const META_BAYESIAN_PRIOR = 3.0
 export const META_MIN_TEAM_MATCHES = 2

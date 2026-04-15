@@ -1,6 +1,5 @@
 import { wilsonConfidence } from './confidence'
 import {
-  MAX_RECOMMENDATIONS,
   SAMPLE_BONUS_FULL,
   SAMPLE_BONUS_MAX,
   WEIGHT_BASE,
@@ -117,7 +116,7 @@ function getHeroConfidence(
 
 export const compositeModel: RecommendationModel = {
   id: 'composite',
-  name: 'Hero Synergy (Composite)',
+  name: 'Hero Synergy',
 
   recommend(
     teammates: string[],
@@ -152,7 +151,7 @@ export const compositeModel: RecommendationModel = {
       }
     })
 
-    return recommendations.sort((a, b) => b.score - a.score).slice(0, MAX_RECOMMENDATIONS)
+    return recommendations.sort((a, b) => b.score - a.score)
   },
 
   predictMatchup(
