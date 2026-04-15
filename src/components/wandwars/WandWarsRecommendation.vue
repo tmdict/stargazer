@@ -1,7 +1,6 @@
 <template>
   <div :class="['recommendation-card', recommendation.confidence]">
     <div class="card-header">
-      <span class="rank">{{ rank }}</span>
       <img
         v-if="characterImages[recommendation.hero]"
         :src="characterImages[recommendation.hero]"
@@ -23,7 +22,7 @@
 
     <div class="breakdown">
       <template v-if="modelId === 'popular-pick'">
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'winRate' }]">
           <span class="breakdown-label">Win Rate</span>
           <span class="breakdown-value">
             {{ formatPercent(recommendation.breakdown.winRate as number) }}
@@ -38,7 +37,7 @@
             </span>
           </span>
         </div>
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
@@ -61,25 +60,25 @@
         </div>
       </template>
       <template v-else-if="modelId === 'composite'">
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'base' }]">
           <span class="breakdown-label">Win Rate</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.base as number)
           }}</span>
         </div>
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'synergy' }]">
           <span class="breakdown-label">Synergy</span>
           <span :class="['breakdown-value', signClass(recommendation.breakdown.synergy as number)]">
             {{ formatSigned(recommendation.breakdown.synergy as number) }}
           </span>
         </div>
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'counter' }]">
           <span class="breakdown-label">Counter</span>
           <span :class="['breakdown-value', signClass(recommendation.breakdown.counter as number)]">
             {{ formatSigned(recommendation.breakdown.counter as number) }}
           </span>
         </div>
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
@@ -87,19 +86,19 @@
         </div>
       </template>
       <template v-else-if="modelId === 'bradley-terry'">
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'strength' }]">
           <span class="breakdown-label">Strength</span>
           <span class="breakdown-value">{{
             (recommendation.breakdown.strength as number)?.toFixed(2)
           }}</span>
         </div>
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'winProbability' }]">
           <span class="breakdown-label">Win Prob</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.winProbability as number)
           }}</span>
         </div>
-        <div class="breakdown-row">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
@@ -192,7 +191,6 @@ export interface TeamCounterInfo {
 
 const props = defineProps<{
   recommendation: Recommendation
-  rank: number
   modelId: string
   characterImages: Record<string, string>
   counterIndicators?: CounterIndicator[]
@@ -200,6 +198,7 @@ const props = defineProps<{
   opponentCount?: number
   leftTeam?: string[]
   rightTeam?: string[]
+  sortKey?: string
 }>()
 
 const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidence]
@@ -222,13 +221,6 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
   display: flex;
   align-items: center;
   gap: var(--spacing-sm);
-}
-
-.rank {
-  font-weight: bold;
-  color: var(--color-text-secondary);
-  font-size: 1rem;
-  min-width: 20px;
 }
 
 .hero-portrait {
@@ -308,6 +300,11 @@ const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidenc
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   text-transform: uppercase;
+}
+
+.breakdown-row.sort-active .breakdown-label {
+  color: var(--color-primary);
+  font-weight: 700;
 }
 
 .breakdown-value {
