@@ -1,3 +1,4 @@
+import encodedData from '../data/data?raw'
 import { getUniqueHeroes, parseMatchData } from '../records/parser'
 import type {
   AnalysisData,
@@ -10,7 +11,6 @@ import type {
 import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
-import encodedData from './data/data?raw'
 import { popularPickModel } from './popularPick'
 
 const rawData = atob(encodedData)

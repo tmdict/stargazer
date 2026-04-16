@@ -36,6 +36,7 @@
           @clear-records="handleClearRecords"
           @reset="handleReset"
           @export="handleExport"
+          @import-records="handleImportRecords"
         />
         <WandWarsInsights
           v-else
@@ -186,6 +187,11 @@ function handleReset() {
 
 function handleRecordMatch(record: RecordedMatch) {
   records.value.push(record)
+  saveRecords()
+}
+
+function handleImportRecords(imported: RecordedMatch[]) {
+  records.value = imported
   saveRecords()
 }
 
