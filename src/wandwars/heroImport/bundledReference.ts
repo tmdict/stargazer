@@ -9,13 +9,7 @@
  */
 
 import { HERO_PORTRAIT_SIGNATURES } from './heroPortraitSignatures'
-
-function base64ToFloat32(b64: string): Float32Array {
-  const binary = atob(b64)
-  const bytes = new Uint8Array(binary.length)
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i)
-  return new Float32Array(bytes.buffer)
-}
+import { base64ToFloat32 } from './signatureCodec'
 
 let cache: Record<string, Float32Array> | null = null
 let override: Record<string, Float32Array> | null = null

@@ -54,7 +54,7 @@
 import { computed } from 'vue'
 
 import { formatName } from '@/wandwars/formatting'
-import { getTopTeams } from '@/wandwars/teamSuggestions'
+import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
 import type { MatchResult } from '@/wandwars/types'
 
 const props = defineProps<{

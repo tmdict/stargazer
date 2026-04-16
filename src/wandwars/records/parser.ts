@@ -1,4 +1,4 @@
-import type { MatchNote, MatchResult } from './types'
+import type { MatchNote, MatchResult } from '../types'
 
 // Sweep wins (>> / <<) weight 2.0: a sweep guarantees every surviving unit
 // contributed to the win, making it stronger evidence than a regular win (1.0).

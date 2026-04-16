@@ -22,7 +22,7 @@
             <div class="record-row">
               <span class="record-teams">
                 {{ record.left.join(',') }}
-                {{ formatSymbol(record) }}
+                {{ getResultSymbol(record.winner, record.dominant) }}
                 {{ record.right.join(',') }}
               </span>
               <button class="delete-btn" @click="emit('deleteRecord', i)">✕</button>
@@ -352,8 +352,8 @@ import {
   getAnalysisData,
   getMatchData,
   getRecommendations,
-} from '@/wandwars/recommend'
-import { serializeMatches } from '@/wandwars/serializer'
+} from '@/wandwars/prediction/recommend'
+import { serializeMatches } from '@/wandwars/records/serializer'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
 const gameDataStore = useGameDataStore()
@@ -485,10 +485,6 @@ function getCounterIndicators(hero: string): CounterIndicator[] {
     if (a.type !== b.type) return a.type === 'counters' ? -1 : 1
     return Math.abs(b.score) - Math.abs(a.score)
   })
-}
-
-function formatSymbol(record: RecordedMatch): string {
-  return getResultSymbol(record.winner, record.dominant)
 }
 
 const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS

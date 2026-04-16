@@ -1,4 +1,4 @@
-import type { MatchResult } from './types'
+import type { MatchResult } from '../types'
 
 export interface TeamSuggestion {
   team: [string, string, string]

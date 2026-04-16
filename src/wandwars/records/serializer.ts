@@ -1,5 +1,5 @@
-import { getResultSymbol } from './formatting'
-import type { RecordedMatch } from './types'
+import { getResultSymbol } from '../formatting'
+import type { RecordedMatch } from '../types'
 
 export function serializeMatch(match: RecordedMatch): string {
   const left = match.left.join(',')

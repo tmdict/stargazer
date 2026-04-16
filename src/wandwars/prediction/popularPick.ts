@@ -1,16 +1,16 @@
-import {
-  getHeroWilsonConfidence,
-  getMatchupNotes,
-  getRelevantNotes,
-  getWorstConfidence,
-} from './modelUtils'
 import type {
   AnalysisData,
   MatchResult,
   MatchupPrediction,
   Recommendation,
   RecommendationModel,
-} from './types'
+} from '../types'
+import {
+  getHeroWilsonConfidence,
+  getMatchupNotes,
+  getRelevantNotes,
+  getWorstConfidence,
+} from './modelUtils'
 
 // Weights shift as teammates are picked
 // 0 teammates: 60% win rate, 40% pick rate, 0% pair

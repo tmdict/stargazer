@@ -1,5 +1,20 @@
-import { computeSignature, signatureDistance } from './imageSignature'
-import { loadImage } from './phash'
+import {
+  POOL_DEFAULT_ACCEPT_THRESHOLD,
+  POOL_DEFAULT_COLS,
+  POOL_DEFAULT_INSET,
+  POOL_DEFAULT_OFFSET_RANGE,
+  POOL_DEFAULT_OFFSET_STEPS,
+  POOL_DEFAULT_ROWS,
+  POOL_GOLD_HUE_MAX,
+  POOL_GOLD_HUE_MIN,
+  POOL_GOLD_MIN_DELTA,
+  POOL_GOLD_MIN_VALUE,
+  POOL_GRID_CROP_PAD,
+  POOL_GRID_DENSITY_THRESHOLD,
+  POOL_GRID_MAX_WIDTH,
+  POOL_GRID_SMOOTH_FRACTION,
+} from '../constants'
+import { computeSignature, loadImage, signatureDistance } from './imageSignature'
 
 export interface PoolDetection {
   hero: string | null // null if no confident match
@@ -25,15 +40,15 @@ function isGoldPixel(r: number, g: number, b: number): boolean {
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const delta = max - min
-  if (max < 100) return false
-  if (delta < 30) return false
+  if (max < POOL_GOLD_MIN_VALUE) return false
+  if (delta < POOL_GOLD_MIN_DELTA) return false
   let hue: number
   if (max === r) hue = ((g - b) / delta) % 6
   else if (max === g) hue = (b - r) / delta + 2
   else hue = (r - g) / delta + 4
   hue *= 60
   if (hue < 0) hue += 360
-  return hue >= 25 && hue <= 55
+  return hue >= POOL_GOLD_HUE_MIN && hue <= POOL_GOLD_HUE_MAX
 }
 
 /**
@@ -47,8 +62,7 @@ export async function suggestGridCrop(source: File | HTMLImageElement): Promise<
   const img = source instanceof File ? await loadFile(source) : source
 
   // Downscale for speed; the crop is returned as ratios so resolution doesn't matter.
-  const MAX_W = 320
-  const scale = Math.min(1, MAX_W / img.naturalWidth)
+  const scale = Math.min(1, POOL_GRID_MAX_WIDTH / img.naturalWidth)
   const w = Math.max(1, Math.round(img.naturalWidth * scale))
   const h = Math.max(1, Math.round(img.naturalHeight * scale))
 
@@ -80,8 +94,8 @@ export async function suggestGridCrop(source: File | HTMLImageElement): Promise<
   }
 
   // Small padding outward so the crop includes the full outer card edge.
-  const padX = w * 0.01
-  const padY = h * 0.01
+  const padX = w * POOL_GRID_CROP_PAD
+  const padY = h * POOL_GRID_CROP_PAD
   const left = Math.max(0, colRange.start - padX) / w
   const right = Math.min(w, colRange.end + padX) / w
   const top = Math.max(0, rowRange.start - padY) / h
@@ -103,7 +117,7 @@ function largestDenseRange(
   const n = counts.length
   if (n === 0) return null
 
-  const window = Math.max(4, Math.round(n * 0.05))
+  const window = Math.max(4, Math.round(n * POOL_GRID_SMOOTH_FRACTION))
   const smoothed = new Array<number>(n).fill(0)
   let sum = 0
   for (let i = 0; i < n; i++) {
@@ -112,7 +126,7 @@ function largestDenseRange(
     smoothed[i] = sum / Math.min(window, i + 1)
   }
 
-  const threshold = 0.02 * perIndexSize
+  const threshold = POOL_GRID_DENSITY_THRESHOLD * perIndexSize
   let bestStart = -1
   let bestEnd = -1
   let curStart = -1
@@ -169,15 +183,12 @@ export interface DetectPoolOptions {
 }
 
 const DEFAULT_OPTIONS: Required<Omit<DetectPoolOptions, 'crop'>> = {
-  rows: 4,
-  cols: 5,
-  inset: 0.02,
-  // 1 - NCC: 0 = identical, ~1 = unrelated. A match above this is rejected.
-  acceptThreshold: 0.5,
-  // Try offsets up to ±10% of cell size in each direction. Absorbs grid
-  // alignment slop without needing a full global template search.
-  offsetRange: 0.1,
-  offsetSteps: 5,
+  rows: POOL_DEFAULT_ROWS,
+  cols: POOL_DEFAULT_COLS,
+  inset: POOL_DEFAULT_INSET,
+  acceptThreshold: POOL_DEFAULT_ACCEPT_THRESHOLD,
+  offsetRange: POOL_DEFAULT_OFFSET_RANGE,
+  offsetSteps: POOL_DEFAULT_OFFSET_STEPS,
 }
 
 /**

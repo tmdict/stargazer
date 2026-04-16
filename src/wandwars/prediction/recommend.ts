@@ -1,9 +1,4 @@
-import { analyzeMatches } from './analysis'
-import { bradleyTerryModel } from './bradleyTerry'
-import { compositeModel } from './composite'
-import encodedData from './data/data?raw'
-import { getUniqueHeroes, parseMatchData } from './parser'
-import { popularPickModel } from './popularPick'
+import { getUniqueHeroes, parseMatchData } from '../records/parser'
 import type {
   AnalysisData,
   MatchNote,
@@ -11,7 +6,12 @@ import type {
   MatchupPrediction,
   Recommendation,
   RecommendationModel,
-} from './types'
+} from '../types'
+import { analyzeMatches } from './analysis'
+import { bradleyTerryModel } from './bradleyTerry'
+import { compositeModel } from './composite'
+import encodedData from './data/data?raw'
+import { popularPickModel } from './popularPick'
 
 const rawData = atob(encodedData)
 

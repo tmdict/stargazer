@@ -42,6 +42,7 @@
 import { computed, ref } from 'vue'
 
 import FilterIcons from '@/components/ui/FilterIcons.vue'
+import { compareClass, compareFaction } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 
@@ -70,11 +71,10 @@ const filteredCharacters = computed(() => {
     filtered = filtered.filter((c) => c.faction === factionFilter.value)
   }
 
-  const levelOrder: Record<string, number> = { s: 0, a: 1, rare: 2 }
   return filtered.sort(
     (a, b) =>
-      (levelOrder[a.level] ?? 9) - (levelOrder[b.level] ?? 9) ||
-      a.faction.localeCompare(b.faction) ||
+      compareFaction(a.faction, b.faction) ||
+      compareClass(a.class, b.class) ||
       a.name.localeCompare(b.name),
   )
 })
