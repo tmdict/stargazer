@@ -18,6 +18,17 @@ const SIZE = 32
 export const SIGNATURE_LENGTH = SIZE * SIZE
 
 /**
+ * Load an image URL into an HTMLImageElement (awaited decode).
+ */
+export async function loadImage(src: string): Promise<HTMLImageElement> {
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.src = src
+  await img.decode()
+  return img
+}
+
+/**
  * Compute a normalized 32x32 circular-masked grayscale signature.
  */
 export function computeSignature(source: HTMLImageElement | HTMLCanvasElement): Float32Array {

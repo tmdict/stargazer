@@ -1,5 +1,5 @@
+import type { AnalysisData, HeroStats, MatchNote, MatchResult } from '../types'
 import { wilsonConfidence } from './confidence'
-import type { AnalysisData, HeroStats, MatchNote, MatchResult } from './types'
 
 /**
  * Get notes where the candidate hero is referenced in {heroName} tags.

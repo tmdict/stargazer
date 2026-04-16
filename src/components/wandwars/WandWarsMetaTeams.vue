@@ -227,9 +227,9 @@ import { computed, ref } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { computeTeamRecords } from '@/wandwars/analysis'
 import { META_MIN_PAIR_MATCHES, META_MIN_TEAM_MATCHES } from '@/wandwars/constants'
 import { formatName, formatPercent, formatSigned } from '@/wandwars/formatting'
+import { computeTeamRecords } from '@/wandwars/prediction/analysis'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
 
 const props = defineProps<{

@@ -1,19 +1,19 @@
-import { wilsonConfidence } from './confidence'
 import {
   SAMPLE_BONUS_FULL,
   SAMPLE_BONUS_MAX,
   WEIGHT_BASE,
   WEIGHT_COUNTER,
   WEIGHT_SYNERGY,
-} from './constants'
-import { getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
+} from '../constants'
 import type {
   AnalysisData,
   MatchResult,
   MatchupPrediction,
   Recommendation,
   RecommendationModel,
-} from './types'
+} from '../types'
+import { wilsonConfidence } from './confidence'
+import { getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
 
 function normalizeModifier(value: number): number {
   const clamped = Math.max(-0.5, Math.min(0.5, value))

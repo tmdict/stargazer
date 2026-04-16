@@ -6,6 +6,7 @@ import TagsDisplay from './TagsDisplay.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { compareClass, compareFaction } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
 
 const props = defineProps<{
@@ -48,8 +49,8 @@ const filteredAndSortedCharacters = computed(() => {
   // Sort filtered results
   return filtered.sort(
     (a, b) =>
-      a.faction.localeCompare(b.faction) ||
-      a.class.localeCompare(b.class) ||
+      compareFaction(a.faction, b.faction) ||
+      compareClass(a.class, b.class) ||
       a.name.localeCompare(b.name),
   )
 })
@@ -109,9 +110,24 @@ const handleClearFilters = () => {
     <!-- Character Filters in Controls Row -->
     <template #filters>
       <div class="filters-row">
-        <FilterIcons v-model="factionFilter" icon-prefix="faction" :options="factionOptions" />
-        <FilterIcons v-model="classFilter" icon-prefix="class" :options="classOptions" />
-        <FilterIcons v-model="damageFilter" icon-prefix="damage" :options="damageOptions" />
+        <FilterIcons
+          v-model="factionFilter"
+          icon-prefix="faction"
+          :options="factionOptions"
+          active-border-color="var(--color-primary)"
+        />
+        <FilterIcons
+          v-model="classFilter"
+          icon-prefix="class"
+          :options="classOptions"
+          active-border-color="var(--color-primary)"
+        />
+        <FilterIcons
+          v-model="damageFilter"
+          icon-prefix="damage"
+          :options="damageOptions"
+          active-border-color="var(--color-primary)"
+        />
       </div>
     </template>
 

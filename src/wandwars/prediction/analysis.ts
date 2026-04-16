@@ -1,4 +1,4 @@
-import { META_BAYESIAN_PRIOR } from './constants'
+import { META_BAYESIAN_PRIOR } from '../constants'
 import type {
   AnalysisData,
   CounterMatrix,
@@ -6,7 +6,7 @@ import type {
   MatchResult,
   SynergyMatrix,
   TeamRecord,
-} from './types'
+} from '../types'
 
 const BAYESIAN_PRIOR = META_BAYESIAN_PRIOR
 

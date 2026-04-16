@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 
 import TooltipPopup from './TooltipPopup.vue'
+import { CLASS_ORDER, compareByOrder, FACTION_ORDER } from '@/lib/filterOrder'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -26,6 +27,20 @@ const modelValue = defineModel<string>({ required: true })
 const iconSize = computed(() => Math.round(props.size * 0.78))
 const factionIconSize = computed(() => Math.round(props.size * 0.89))
 const borderWidth = computed(() => (props.size >= 36 ? 4 : 3))
+// "All" is a text button, not a portrait — keep its underline slimmer than
+// the icon borders so it reads as a delicate accent.
+const clearBorderWidth = computed(() => (props.size >= 36 ? 2 : 2))
+
+const PREFIX_ORDERS: Record<string, readonly string[]> = {
+  faction: FACTION_ORDER,
+  class: CLASS_ORDER,
+}
+
+const orderedOptions = computed(() => {
+  const order = PREFIX_ORDERS[props.iconPrefix]
+  if (!order) return props.options
+  return [...props.options].sort((a, b) => compareByOrder(a, b, order))
+})
 
 const getIconPath = (iconPrefix: string, option: string): string => {
   const iconKey = `${iconPrefix}-${option}`
@@ -60,7 +75,7 @@ const handleMouseLeave = () => {
         :style="{
           width: `${size}px`,
           height: `${size}px`,
-          borderWidth: modelValue === '' ? `${borderWidth}px 0` : '0',
+          borderWidth: modelValue === '' ? `${clearBorderWidth}px 0` : '0',
           '--active-border-color': activeBorderColor,
         }"
         @click="modelValue = ''"
@@ -72,7 +87,7 @@ const handleMouseLeave = () => {
 
       <!-- Icon options -->
       <button
-        v-for="option in options"
+        v-for="option in orderedOptions"
         :key="option"
         :class="['icon-option', { active: modelValue === option }]"
         :style="{
