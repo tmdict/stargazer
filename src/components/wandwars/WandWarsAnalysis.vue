@@ -364,6 +364,7 @@ const props = defineProps<{
   matchData: MatchResult[]
   characterImages: Record<string, string>
   records: RecordedMatch[]
+  poolFilter: string[] | null
 }>()
 
 const emit = defineEmits<{
@@ -552,12 +553,15 @@ const allPicked = computed(() => allPickedHeroes.value.length >= 6)
 
 const recommendations = computed(() => {
   if (allPicked.value) return []
-  return getRecommendations(
+  const recs = getRecommendations(
     activeTab.value,
     currentTeammates.value,
     opponentTeam.value,
     allPickedHeroes.value,
   )
+  if (!props.poolFilter) return recs
+  const poolSet = new Set(props.poolFilter)
+  return recs.filter((r) => poolSet.has(r.hero))
 })
 
 const recFactionFilter = ref('')
