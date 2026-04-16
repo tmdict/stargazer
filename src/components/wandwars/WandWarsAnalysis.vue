@@ -441,7 +441,7 @@
         <WandWarsTopTeams
           v-if="currentTeammates.length > 0"
           :teammates="currentTeammates"
-          :exclude-heroes="allPickedHeroes"
+          :exclude-heroes="topTeamsExcludeHeroes"
           :matches="matchData"
           :character-images="characterImages"
         />
@@ -830,6 +830,17 @@ const allPickedHeroes = computed(() => [
 ])
 
 const allPicked = computed(() => allPickedHeroes.value.length >= 6)
+
+// When a pool filter is active, also mark every non-pool hero as "excluded"
+// so Top Teams / Suggested Teams never suggest teams using heroes unavailable
+// in the current match.
+const topTeamsExcludeHeroes = computed(() => {
+  if (!props.poolFilter) return allPickedHeroes.value
+  const poolSet = new Set(props.poolFilter)
+  const analysis = getAnalysisData()
+  const outsidePool = analysis.allHeroes.filter((h) => !poolSet.has(h))
+  return [...allPickedHeroes.value, ...outsidePool]
+})
 
 const recommendations = computed(() => {
   if (allPicked.value) return []
