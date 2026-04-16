@@ -24,7 +24,7 @@
               :hide-info="true"
               :show-simple-tooltip="true"
             />
-            <span v-else class="slot-label">L{{ i + 1 }}</span>
+            <span v-else class="slot-label">{{ draftOrderFor('left', i) }}</span>
           </div>
         </div>
       </div>
@@ -54,7 +54,7 @@
               :hide-info="true"
               :show-simple-tooltip="true"
             />
-            <span v-else class="slot-label">R{{ i + 1 }}</span>
+            <span v-else class="slot-label">{{ draftOrderFor('right', i) }}</span>
           </div>
         </div>
       </div>
@@ -65,6 +65,7 @@
 <script setup lang="ts">
 import CharacterIcon from '@/components/CharacterIcon.vue'
 import type { CharacterType } from '@/lib/types/character'
+import { DRAFT_ORDER } from '@/wandwars/constants'
 import type { PickSide, PickState } from '@/wandwars/types'
 
 const props = defineProps<{
@@ -79,6 +80,11 @@ const emit = defineEmits<{
 
 function getCharacter(name: string): CharacterType | undefined {
   return props.characters.find((c) => c.name === name)
+}
+
+function draftOrderFor(side: PickSide, slot: number): number {
+  const idx = DRAFT_ORDER.findIndex(([s, n]) => s === side && n === slot)
+  return idx >= 0 ? idx + 1 : 0
 }
 </script>
 
@@ -159,7 +165,8 @@ function getCharacter(name: string): CharacterType | undefined {
 }
 
 .slot-label {
-  font-size: 0.75rem;
+  font-size: 1.4rem;
+  font-weight: 700;
   color: var(--color-text-secondary);
 }
 
