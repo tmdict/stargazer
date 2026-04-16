@@ -26,10 +26,61 @@
         @pick-hero="(hero) => emit('pickHero', hero)"
       >
         <template #actions>
+          <button class="action-btn" @click="showPoolImport = true">Import Pool</button>
           <button class="action-btn" @click="emit('undo')">Undo</button>
           <button class="action-btn danger" @click="emit('reset')">Reset</button>
         </template>
       </WandWarsHeroGrid>
+
+      <div v-if="showPoolImport" class="pool-modal" @click.self="showPoolImport = false">
+        <div class="pool-modal-panel">
+          <div class="pool-modal-header">
+            <span class="pool-modal-title">
+              Restrict to Pool
+              <IconInfo
+                ref="poolInfoEl"
+                :size="16"
+                class="pool-modal-info"
+                @mouseenter="showPoolInfo = true"
+                @mouseleave="showPoolInfo = false"
+              />
+            </span>
+            <span class="pool-modal-close" @click="showPoolImport = false">✕</span>
+          </div>
+          <WandWarsPoolImport
+            :character-images="characterImages"
+            :all-heroes="allHeroes"
+            @apply="handlePoolApply"
+            @cancel="showPoolImport = false"
+          />
+        </div>
+      </div>
+
+      <Teleport to="body">
+        <TooltipPopup
+          v-if="showPoolInfo && poolInfoEl?.$el"
+          :target-element="poolInfoEl.$el"
+          variant="detailed"
+          max-width="420px"
+        >
+          <template #content>
+            <div class="pool-info-tip">
+              <p>
+                Drop a screenshot of the game's 4×5 hero pool here and the app will recognize the 20
+                heroes and limit picks + recommendations to just those.
+              </p>
+              <p>
+                After upload, you can click any cell to fix a wrong guess. Then hit
+                <strong>Apply Pool Filter</strong>.
+              </p>
+              <p>
+                The two smaller buttons at the top are only needed if the game adds new heroes or
+                updates art — can be ignored in most cases.
+              </p>
+            </div>
+          </template>
+        </TooltipPopup>
+      </Teleport>
     </template>
 
     <WandWarsMetaTeams
@@ -43,9 +94,14 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+
 import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
 import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
 import WandWarsPickSlots from './WandWarsPickSlots.vue'
+import WandWarsPoolImport from './WandWarsPoolImport.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
 import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
 
@@ -53,10 +109,12 @@ defineProps<{
   pickState: PickState
   currentPickSide: PickSide | null
   characters: readonly CharacterType[]
+  allHeroes: string[]
   availableHeroes: string[]
   characterImages: Record<string, string>
   matchData: MatchResult[]
   analysisData: AnalysisData
+  poolFilter: string[] | null
 }>()
 
 const emit = defineEmits<{
@@ -64,7 +122,18 @@ const emit = defineEmits<{
   unpickSlot: [side: PickSide, slot: number]
   reset: []
   undo: []
+  setPool: [pool: string[]]
+  clearPool: []
 }>()
+
+const showPoolImport = ref(false)
+const showPoolInfo = ref(false)
+const poolInfoEl = ref<InstanceType<typeof IconInfo> | null>(null)
+
+function handlePoolApply(pool: string[]) {
+  emit('setPool', pool)
+  showPoolImport.value = false
+}
 
 const pickerTabs = [
   { id: 'draft' as const, label: 'Draft' },
@@ -114,6 +183,79 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTa
 }
 
 .picker-tab:hover:not(.active) {
+  color: var(--color-text-primary);
+}
+
+.pool-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: var(--spacing-md);
+}
+
+.pool-modal-panel {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-lg);
+  width: min(720px, 95vw);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.pool-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: 700;
+  font-size: 1.05rem;
+  line-height: 1;
+  margin-bottom: var(--spacing-md);
+}
+
+.pool-modal-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  line-height: 1;
+}
+
+.pool-modal-info {
+  opacity: 0.5;
+  cursor: help;
+}
+
+.pool-info-tip {
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.pool-info-tip p {
+  margin: 0 0 var(--spacing-xs);
+}
+
+.pool-info-tip ol {
+  margin: 0 0 var(--spacing-xs);
+  padding-left: 1.2em;
+}
+
+.pool-info-tip li {
+  margin-bottom: 2px;
+}
+
+.pool-modal-close {
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 1.05rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+}
+
+.pool-modal-close:hover {
   color: var(--color-text-primary);
 }
 

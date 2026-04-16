@@ -42,11 +42,13 @@ src/
     data/
       raw/
         records.data          # Plain text match data (gitignored)
+        portraits/            # Hero reference portraits (gitignored — local only)
       data                    # Base64+zlib encoded match data (committed)
       .gitignore              # Ignores raw/ folder
     scripts/
       encode.ts               # Raw → encoded (node src/wandwars/scripts/encode.ts)
       decode.ts               # Encoded → raw (node src/wandwars/scripts/decode.ts)
+      normalize-references.mjs # Crop/resize hero portraits to uniform 170×230 gold-bbox
     types.ts                  # Domain types (MatchResult, Recommendation, TeamRecord, etc.)
     parser.ts                 # Text file → MatchResult[]
     serializer.ts             # RecordedMatch[] → .data text for export
@@ -60,11 +62,18 @@ src/
     teamSuggestions.ts        # Top teams (data-backed) + constructed team suggestions
     recommend.ts              # Unified interface, data loading, caching, all model predictions
     constants.ts              # Weights, thresholds, draft order, meta analysis constants
+    imageSignature.ts         # Compute normalized 32×32 circular-masked grayscale signature + NCC distance
+    phash.ts                  # Image loading helper (hashImage/hammingDistance kept for reference)
+    poolDetect.ts             # Slice screenshot into 4×5 cells, match each to reference signatures
+    heroPortraitSignatures.ts # Auto-generated committed map of base64 signatures
+    heroPortraitSignatureBuilder.ts # Dev-time folder → signatures module (generate/download)
+    bundledReference.ts       # Load committed signatures; support in-memory override
   views/
     WandWarsView.vue          # Standalone page, state management, localStorage records
   components/
     wandwars/
-      WandWarsPicker.vue          # Left column: pick slots + hero grid + undo/reset
+      WandWarsPicker.vue          # Left column: pick slots + hero grid + undo/reset + pool import modal
+      WandWarsPoolImport.vue      # Upload screenshot → detect 20 heroes → apply as hero-pool filter
       WandWarsPickSlots.vue       # 6 pick circles, container-query responsive layout
       WandWarsHeroGrid.vue        # Hero grid with faction FilterIcons + undo/reset
       WandWarsAnalysis.vue        # Right panel: tabbed [Popular Pick][B-T][Composite][Records]
@@ -466,7 +475,51 @@ This replaces earlier hard caps (Best Openers 10, Best Responses 15, Pair Counte
 
 **Shared meta code**: `TeamRecord` in `types.ts`, `computeTeamRecords()` in `analysis.ts`, `META_*` constants in `constants.ts`, `formatSigned()` in `formatting.ts`.
 
-## 9. Design Decisions
+## 9. Pool Restriction (Screenshot Import)
+
+Opens from a "Restrict to Pool" button on the draft tab. Uploading a screenshot of the game's 4×5 hero pool restricts the picker grid and recommendations to just those 20 heroes — useful when the game hands you a limited pool per match.
+
+### Pipeline
+
+1. **Reference signatures** (precomputed, committed): each hero portrait is reduced to a 1024-float normalized 32×32 circular-masked grayscale fingerprint, base64-encoded into `heroPortraitSignatures.ts`. No PNG assets ship in the repo.
+2. **Screenshot ingest**: user drops or selects a PNG/JPG screenshot cropped to the 4×5 grid (no surrounding game UI).
+3. **Cell extraction**: image is sliced into `rows × cols = 4 × 5 = 20` cells by dividing the full image geometrically.
+4. **Local offset search**: for every cell, a 5×5 grid of offsets (±10% of cell size per axis) is tried — each offset produces a signature, and the offset with the best-matching reference is kept. This absorbs grid alignment slop without needing a global template search.
+5. **Matching**: each candidate signature compares against every reference via 1 − NCC (normalized cross correlation). Smaller distance = stronger match; `acceptThreshold` (0.5) rejects anything below confidence.
+6. **De-dupe**: if two cells both claim the same hero, the farther match loses its top pick and falls back to its best non-conflicting alternative.
+7. **Review UI**: the user sees each cell with its crop preview, a confidence badge (green < 0.2, amber ≤ 0.35, red above, dashed red for "unknown"), and a searchable picker to override any cell manually.
+8. **Apply**: the confirmed 20 heroes become the `poolFilter` on the WandWars view, narrowing `allHeroes`, picker availability, and recommendation candidates everywhere.
+
+### Signature generation (dev tool)
+
+Two buttons in the pool import modal, both reading an arbitrary user-picked folder of PNGs via `<input webkitdirectory>`:
+
+- **Generate Signatures**: compute signatures in the browser (same code path as runtime), serialize as a `Record<string, string>` (base64) module, and trigger a download of `heroPortraitSignatures.ts`. User replaces the committed file and commits.
+- **Upload Reference** (acts as session override): compute signatures and install them in memory via `setOverrideReference()`. Detection uses the uploaded set until the button is clicked again (now labelled **Revert to Default**) or the page is reloaded. Nothing is written to disk.
+
+Both flows share `buildSignaturesFromFiles()` in `heroPortraitSignatureBuilder.ts`; they diverge only in what they do with the result.
+
+### Reference portrait hygiene
+
+Portraits live locally under `src/wandwars/data/raw/portraits/` (gitignored). A Node script, `scripts/normalize-references.mjs`, does a one-shot pass:
+
+1. Detects the gold-border bounding box via HSV-threshold pixel scanning.
+2. Crops to that bbox.
+3. Resizes to uniform 170×230 (close to the card's natural ~0.72:1 aspect).
+4. Flattens transparency to a neutral grey so all references have identical corner pixels.
+
+After normalization, the reference set is uniform, so the perceptual signatures are directly comparable to each other and to screenshot cells.
+
+### Files
+
+- `imageSignature.ts` — `computeSignature()` + `signatureDistance()` (1 − NCC)
+- `poolDetect.ts` — `detectPool()` with offset search + de-dupe
+- `heroPortraitSignatures.ts` — auto-generated committed base64 map
+- `heroPortraitSignatureBuilder.ts` — folder → signatures (in-memory or downloadable module)
+- `bundledReference.ts` — loads committed signatures; supports runtime override
+- `components/wandwars/WandWarsPoolImport.vue` — the modal UI
+
+## 10. Design Decisions
 
 | Decision                | Choice                                                                     | Rationale                                                                          |
 | ----------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
