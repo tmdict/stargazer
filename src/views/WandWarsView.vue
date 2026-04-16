@@ -37,6 +37,7 @@
           @reset="handleReset"
           @export="handleExport"
           @import-records="handleImportRecords"
+          @update-record="handleUpdateRecord"
         />
         <WandWarsInsights
           v-else
@@ -192,6 +193,13 @@ function handleRecordMatch(record: RecordedMatch) {
 
 function handleImportRecords(imported: RecordedMatch[]) {
   records.value = imported
+  saveRecords()
+}
+
+function handleUpdateRecord(index: number, patch: Partial<RecordedMatch>) {
+  const existing = records.value[index]
+  if (!existing) return
+  records.value[index] = { ...existing, ...patch }
   saveRecords()
 }
 

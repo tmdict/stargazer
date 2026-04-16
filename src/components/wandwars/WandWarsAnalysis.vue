@@ -39,7 +39,103 @@
                   class="record-portrait"
                 />
               </div>
+              <div v-if="editingIndex === i" class="record-edit-result">
+                <button
+                  :class="[
+                    'edit-result-btn',
+                    'left',
+                    'dominant',
+                    { active: editResultKey === 'left-dominant' },
+                  ]"
+                  title="Left Sweep"
+                  @click="setEditResult('left', true)"
+                >
+                  <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
+                    <path
+                      d="M8 3L3 8l5 5M13 3L8 8l5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  :class="['edit-result-btn', 'left', { active: editResultKey === 'left-normal' }]"
+                  title="Left Win"
+                  @click="setEditResult('left', false)"
+                >
+                  <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
+                    <path
+                      d="M14 8H2M7 3L2 8l5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  :class="['edit-result-btn', 'draw', { active: editResultKey === 'draw' }]"
+                  title="Draw"
+                  @click="setEditResult('draw', false)"
+                >
+                  <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
+                    <path
+                      d="M3 6h10M3 10h10"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  :class="[
+                    'edit-result-btn',
+                    'right',
+                    { active: editResultKey === 'right-normal' },
+                  ]"
+                  title="Right Win"
+                  @click="setEditResult('right', false)"
+                >
+                  <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
+                    <path
+                      d="M2 8h12M9 3l5 5-5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  :class="[
+                    'edit-result-btn',
+                    'right',
+                    'dominant',
+                    { active: editResultKey === 'right-dominant' },
+                  ]"
+                  title="Right Sweep"
+                  @click="setEditResult('right', true)"
+                >
+                  <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
+                    <path
+                      d="M3 3l5 5-5 5M8 3l5 5-5 5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+              </div>
               <span
+                v-else
                 :class="[
                   'record-verb',
                   `kind-${recordVerbKind(record)}`,
@@ -62,10 +158,66 @@
                   class="record-portrait"
                 />
               </div>
-              <button class="delete-btn" @click="emit('deleteRecord', i)">✕</button>
+              <template v-if="editingIndex === i">
+                <button class="edit-action-btn" title="Save" @click="saveEdit(i)">
+                  <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
+                    <path
+                      d="M3 8l3 3 7-7"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button class="edit-action-btn cancel" title="Cancel" @click="cancelEdit">
+                  <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
+                    <path
+                      d="M4 4l8 8M12 4l-8 8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </template>
+              <template v-else>
+                <button class="edit-btn" title="Edit" @click="startEdit(i)">
+                  <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
+                    <path
+                      d="M11 2l3 3L5 14H2v-3L11 2zM10 3l3 3"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </button>
+                <button class="delete-btn" title="Delete" @click="emit('deleteRecord', i)">
+                  <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
+                    <path
+                      d="M4 4l8 8M12 4l-8 8"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                    />
+                  </svg>
+                </button>
+              </template>
             </div>
+            <textarea
+              v-if="editingIndex === i"
+              v-model="editNotes"
+              class="record-edit-notes"
+              rows="2"
+              placeholder="Optional notes… use {hero-name} to reference heroes"
+            />
             <div
-              v-if="record.notes"
+              v-else-if="record.notes"
               class="record-note"
               v-html="formatNoteHtml(record.notes, record.left, record.right)"
             />
@@ -417,10 +569,48 @@ const emit = defineEmits<{
   reset: []
   export: []
   importRecords: [records: RecordedMatch[]]
+  updateRecord: [index: number, patch: Partial<RecordedMatch>]
 }>()
 
 const importInput = ref<HTMLInputElement | null>(null)
 const importStatus = ref('')
+
+const editingIndex = ref<number | null>(null)
+const editWinner = ref<'left' | 'right' | 'draw'>('left')
+const editDominant = ref(false)
+const editNotes = ref('')
+
+const editResultKey = computed(() => {
+  if (editWinner.value === 'draw') return 'draw'
+  return `${editWinner.value}-${editDominant.value ? 'dominant' : 'normal'}`
+})
+
+function setEditResult(w: 'left' | 'right' | 'draw', d: boolean) {
+  editWinner.value = w
+  editDominant.value = d
+}
+
+function startEdit(i: number) {
+  const r = props.records[i]
+  if (!r) return
+  editingIndex.value = i
+  editWinner.value = r.winner
+  editDominant.value = r.winner !== 'draw' && r.dominant
+  editNotes.value = r.notes
+}
+
+function cancelEdit() {
+  editingIndex.value = null
+}
+
+function saveEdit(i: number) {
+  emit('updateRecord', i, {
+    winner: editWinner.value,
+    dominant: editWinner.value !== 'draw' && editDominant.value,
+    notes: editNotes.value.trim(),
+  })
+  editingIndex.value = null
+}
 
 function openImport() {
   importStatus.value = ''
@@ -1427,6 +1617,120 @@ const aggregatePrediction = computed(() => {
 
 .delete-btn:hover {
   background: rgba(192, 91, 77, 0.1);
+}
+
+.edit-btn {
+  background: none;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 4px;
+  border-radius: var(--radius-small);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.edit-btn:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+}
+
+.edit-action-btn {
+  background: none;
+  border: 1px solid var(--color-border-primary);
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-small);
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
+}
+
+.edit-action-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.edit-action-btn.cancel {
+  color: var(--color-text-secondary);
+}
+
+.edit-action-btn.cancel:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-primary);
+  border-color: var(--color-border-primary);
+}
+
+.record-edit-result {
+  display: flex;
+  gap: 2px;
+  margin: 0 var(--spacing-sm);
+}
+
+.edit-result-btn {
+  padding: 4px;
+  border: 1px solid var(--color-border-primary);
+  background: var(--color-bg-white);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-radius: var(--radius-small);
+  width: 30px;
+  height: 26px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.result-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.row-icon {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.edit-result-btn:hover:not(.active) {
+  background: var(--color-bg-secondary);
+}
+
+.edit-result-btn.left.active,
+.edit-result-btn.right.active {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+.edit-result-btn.left.dominant.active,
+.edit-result-btn.right.dominant.active {
+  background: #c62828;
+  color: white;
+  border-color: #c62828;
+}
+
+.edit-result-btn.draw.active {
+  background: var(--color-text-secondary);
+  color: white;
+  border-color: var(--color-text-secondary);
+}
+
+.record-edit-notes {
+  margin-top: var(--spacing-xs);
+  width: 100%;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-small);
+  font-family: inherit;
+  font-size: 0.85rem;
+  resize: vertical;
+  box-sizing: border-box;
 }
 
 .records-actions {
