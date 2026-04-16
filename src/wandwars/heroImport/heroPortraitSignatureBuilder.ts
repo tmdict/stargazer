@@ -12,8 +12,8 @@
  * they do with the resulting map.
  */
 
-import { computeSignature } from './imageSignature'
-import { loadImage } from './phash'
+import { computeSignature, loadImage } from './imageSignature'
+import { float32ToBase64 } from './signatureCodec'
 
 export function heroNameFromFilename(filename: string): string {
   const base = filename.split(/[/\\]/).pop() ?? filename
@@ -21,13 +21,6 @@ export function heroNameFromFilename(filename: string): string {
     .replace(/\.[^.]+$/, '')
     .toLowerCase()
     .trim()
-}
-
-function float32ToBase64(sig: Float32Array): string {
-  const bytes = new Uint8Array(sig.buffer, sig.byteOffset, sig.byteLength)
-  let binary = ''
-  for (let i = 0; i < bytes.length; i++) binary += String.fromCharCode(bytes[i]!)
-  return btoa(binary)
 }
 
 export interface BuildResult {

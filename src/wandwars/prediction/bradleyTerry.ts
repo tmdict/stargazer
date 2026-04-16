@@ -1,17 +1,17 @@
-import { BT_CONVERGENCE_TOLERANCE, BT_MAX_ITERATIONS } from './constants'
-import {
-  getHeroWilsonConfidence,
-  getMatchupNotes,
-  getRelevantNotes,
-  getWorstConfidence,
-} from './modelUtils'
+import { BT_CONVERGENCE_TOLERANCE, BT_MAX_ITERATIONS } from '../constants'
 import type {
   AnalysisData,
   MatchResult,
   MatchupPrediction,
   Recommendation,
   RecommendationModel,
-} from './types'
+} from '../types'
+import {
+  getHeroWilsonConfidence,
+  getMatchupNotes,
+  getRelevantNotes,
+  getWorstConfidence,
+} from './modelUtils'
 
 interface BTMatch {
   leftHeroes: string[]

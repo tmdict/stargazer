@@ -211,26 +211,26 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue'
 
+import { formatName } from '@/wandwars/formatting'
 import {
   getBundledReferenceCount,
   hasOverrideReference,
   invalidateBundledCache,
   loadBundledReferenceSignatures,
   setOverrideReference,
-} from '@/wandwars/bundledReference'
-import { formatName } from '@/wandwars/formatting'
+} from '@/wandwars/heroImport/bundledReference'
 import {
   buildSignaturesFromFiles,
   downloadSignaturesFile,
   serializeSignaturesModule,
-} from '@/wandwars/heroPortraitSignatureBuilder'
-import { loadImage } from '@/wandwars/phash'
+} from '@/wandwars/heroImport/heroPortraitSignatureBuilder'
+import { loadImage } from '@/wandwars/heroImport/imageSignature'
 import {
   detectPool,
   suggestGridCrop,
   type CropRect,
   type PoolDetection,
-} from '@/wandwars/poolDetect'
+} from '@/wandwars/heroImport/poolDetect'
 
 const props = defineProps<{
   characterImages: Record<string, string>
