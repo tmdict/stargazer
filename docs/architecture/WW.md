@@ -93,7 +93,7 @@ These existing files were modified to support the feature. Revert these changes 
 | File                   | Change                                                                       |
 | ---------------------- | ---------------------------------------------------------------------------- |
 | `src/router/routes.ts` | Added `/wandwars` route                                                      |
-| `package.json`         | Added `ww:encode`, `ww:decode` scripts; modified `build` to run decode first |
+| `package.json`         | Added `encode:ww`, `ww:decode` scripts; modified `build` to run decode first |
 | `tsconfig.app.json`    | Added `src/wandwars/scripts/*` to `exclude`                                  |
 
 ### Route
@@ -108,7 +108,7 @@ No locale prefix, not SSG pre-rendered. No page title or back button — user na
 
 ```
 records.data (raw, gitignored)
-    ↓ npm run ww:encode (zlib deflate + base64)
+    ↓ npm run encode:ww (zlib deflate + base64)
 data (encoded, committed to git)
     ↓ npm run build (auto-decodes before build)
 records.data (decoded at build time)
@@ -117,7 +117,7 @@ JS bundle (inlined as string)
 ```
 
 - **Local dev**: Edit `src/wandwars/data/raw/records.data` directly, Vite reads it via `?raw` import
-- **Adding data**: Edit raw file → `npm run ww:encode` → commit encoded `data` file
+- **Adding data**: Edit raw file → `npm run encode:ww` → commit encoded `data` file
 - **Netlify build**: `npm run build` runs `decode.ts` first, then normal build
 - **Why encode?** Raw data is gitignored to keep match records private. Encoded file is committed but not human-readable (base64+zlib). ~63% smaller than raw.
 

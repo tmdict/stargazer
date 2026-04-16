@@ -17,34 +17,76 @@
     <!-- Records tab -->
     <div v-if="activeTab === 'records'" class="tab-content">
       <div v-if="records.length > 0" class="records-section">
-        <div class="records-list">
-          <div v-for="(record, i) in records" :key="i" class="record-entry">
-            <div class="record-row">
-              <span class="record-teams">
-                {{ record.left.join(',') }}
-                {{ getResultSymbol(record.winner, record.dominant) }}
-                {{ record.right.join(',') }}
-              </span>
-              <button class="delete-btn" @click="emit('deleteRecord', i)">✕</button>
-            </div>
-            <div v-if="record.notes" class="record-notes-text">
-              {{ record.notes }}
-            </div>
-          </div>
-        </div>
-
         <div class="records-actions">
           <button class="export-btn" @click="handleCopy">
             {{ copyLabel }}
           </button>
+          <button class="export-btn" @click="openImport">Import .data</button>
           <button class="export-btn" @click="emit('export')">Export .data</button>
           <button class="export-btn danger" @click="emit('clearRecords')">Clear All</button>
+        </div>
+        <div v-if="importStatus" class="import-status">{{ importStatus }}</div>
+        <div class="records-list">
+          <div v-for="(record, i) in records" :key="i" class="record-entry">
+            <div class="record-row">
+              <div class="record-team">
+                <img
+                  v-for="hero in record.left"
+                  :key="hero"
+                  :src="characterImages[hero]"
+                  :alt="hero"
+                  :title="formatName(hero)"
+                  class="record-portrait"
+                />
+              </div>
+              <span
+                :class="[
+                  'record-verb',
+                  `kind-${recordVerbKind(record)}`,
+                  recordVerbDirClass(record),
+                ]"
+              >
+                <span>{{ recordVerbLabel(record) }}</span>
+                <span
+                  v-if="record.winner !== 'draw'"
+                  :class="['record-arrow', { reverse: record.winner === 'right' }]"
+                />
+              </span>
+              <div class="record-team">
+                <img
+                  v-for="hero in record.right"
+                  :key="hero"
+                  :src="characterImages[hero]"
+                  :alt="hero"
+                  :title="formatName(hero)"
+                  class="record-portrait"
+                />
+              </div>
+              <button class="delete-btn" @click="emit('deleteRecord', i)">✕</button>
+            </div>
+            <div
+              v-if="record.notes"
+              class="record-note"
+              v-html="formatNoteHtml(record.notes, record.left, record.right)"
+            />
+          </div>
         </div>
       </div>
 
       <div v-else class="empty-state">
         No matches recorded yet. Pick 6 heroes, see the prediction, then record the result.
+        <div class="empty-state-actions">
+          <button class="export-btn" @click="openImport">Import .data</button>
+        </div>
       </div>
+
+      <input
+        ref="importInput"
+        type="file"
+        accept=".data,text/plain"
+        class="hidden-import"
+        @change="handleImportFile"
+      />
     </div>
 
     <!-- Model tabs -->
@@ -345,7 +387,7 @@ import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
-import { formatNoteHtml, formatPercent, getResultSymbol } from '@/wandwars/formatting'
+import { formatName, formatNoteHtml, formatPercent } from '@/wandwars/formatting'
 import {
   getAggregatePrediction,
   getAllMatchupPredictions,
@@ -353,6 +395,7 @@ import {
   getMatchData,
   getRecommendations,
 } from '@/wandwars/prediction/recommend'
+import { parseMatchData } from '@/wandwars/records/parser'
 import { serializeMatches } from '@/wandwars/records/serializer'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
@@ -373,7 +416,42 @@ const emit = defineEmits<{
   clearRecords: []
   reset: []
   export: []
+  importRecords: [records: RecordedMatch[]]
 }>()
+
+const importInput = ref<HTMLInputElement | null>(null)
+const importStatus = ref('')
+
+function openImport() {
+  importStatus.value = ''
+  importInput.value?.click()
+}
+
+async function handleImportFile(event: Event) {
+  const file = (event.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  try {
+    const text = await file.text()
+    const parsed = parseMatchData(text)
+    if (parsed.length === 0) {
+      importStatus.value = 'No valid records found in that file.'
+      return
+    }
+    const imported: RecordedMatch[] = parsed.map((m) => ({
+      left: m.left,
+      right: m.right,
+      winner: m.result,
+      dominant: m.weight >= 1.5,
+      notes: m.notes[0]?.text ?? '',
+    }))
+    emit('importRecords', imported)
+    importStatus.value = `Imported ${imported.length} record${imported.length === 1 ? '' : 's'} (replaced existing).`
+  } catch (err) {
+    importStatus.value = `Import failed: ${String(err)}`
+  } finally {
+    if (importInput.value) importInput.value.value = ''
+  }
+}
 
 const tabs = [
   { id: 'composite', label: 'Hero Synergy' },
@@ -488,6 +566,22 @@ function getCounterIndicators(hero: string): CounterIndicator[] {
 }
 
 const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
+
+function recordVerbLabel(r: RecordedMatch): string {
+  if (r.winner === 'draw') return 'draw'
+  return r.dominant ? 'sweeps' : 'beats'
+}
+
+function recordVerbKind(r: RecordedMatch): 'beats' | 'sweeps' | 'draw' {
+  if (r.winner === 'draw') return 'draw'
+  return r.dominant ? 'sweeps' : 'beats'
+}
+
+function recordVerbDirClass(r: RecordedMatch): string {
+  if (r.winner === 'left') return 'dir-right'
+  if (r.winner === 'right') return 'dir-left'
+  return ''
+}
 
 const modelDescriptions: Record<string, string> = {
   'popular-pick':
@@ -1176,35 +1270,148 @@ const aggregatePrediction = computed(() => {
 .records-list {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--spacing-md);
 }
 
 .record-entry {
-  background: var(--color-bg-tertiary);
-  border-radius: var(--radius-small);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-medium);
   padding: var(--spacing-sm);
+  background: var(--color-bg-white);
+  transition: box-shadow var(--transition-fast);
+}
+
+.record-entry:hover {
+  box-shadow: var(--shadow-small);
 }
 
 .record-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-xs);
-  font-size: 0.8rem;
+  gap: var(--spacing-sm);
+  font-size: 0.85rem;
+  flex-wrap: wrap;
 }
 
-.record-teams {
+.record-team {
+  display: flex;
+  gap: 4px;
   flex: 1;
-  color: var(--color-text-primary);
-  font-family: monospace;
+  min-width: 0;
 }
 
-.record-notes-text {
+.record-team:last-of-type {
+  justify-content: flex-end;
+}
+
+.record-portrait {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: center 20%;
+  border: 1px solid var(--color-border-light);
+  flex-shrink: 0;
+}
+
+.record-verb {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin: 0 var(--spacing-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+  white-space: nowrap;
+}
+
+.record-verb.kind-sweeps {
+  color: #c62828;
+  font-weight: 700;
+}
+
+/* Nudge only the arrow so the arrowhead's extra visual weight on one side
+   doesn't feel off-center. Text labels stay on a common baseline across rows. */
+.record-verb.dir-right .record-arrow {
+  transform: translateX(-5px);
+}
+
+.record-verb.dir-left .record-arrow {
+  transform: translateX(5px);
+}
+
+.record-arrow {
+  display: flex;
+  align-items: center;
+  /* Balance the triangle on the right with empty space on the left so the
+     bar's midpoint lines up with the verb label above it. */
+  padding-left: 10px;
+}
+
+.record-arrow::before {
+  content: '';
+  display: block;
+  width: 56px;
+  height: 4px;
+  background: var(--color-primary);
+}
+
+.record-arrow::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 10px solid var(--color-primary);
+}
+
+.record-arrow.reverse {
+  flex-direction: row-reverse;
+  padding-left: 0;
+  padding-right: 10px;
+}
+
+.record-arrow.reverse::after {
+  border-left: none;
+  border-right: 10px solid var(--color-primary);
+}
+
+.record-verb.kind-sweeps .record-arrow::before {
+  background: #c62828;
+}
+
+.record-verb.kind-sweeps .record-arrow:not(.reverse)::after {
+  border-left-color: #c62828;
+}
+
+.record-verb.kind-sweeps .record-arrow.reverse::after {
+  border-right-color: #c62828;
+}
+
+.record-note {
   margin-top: var(--spacing-xs);
   padding-top: var(--spacing-xs);
   border-top: 1px solid var(--color-border-light);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
   line-height: 1.4;
+}
+
+.record-note :deep(.hero-highlight) {
+  font-style: normal;
+}
+
+.record-note :deep(.hero-highlight.team-left) {
+  color: var(--color-ally);
+}
+
+.record-note :deep(.hero-highlight.team-right) {
+  color: var(--color-enemy);
 }
 
 .delete-btn {
@@ -1225,7 +1432,24 @@ const aggregatePrediction = computed(() => {
 .records-actions {
   display: flex;
   gap: var(--spacing-sm);
-  margin-top: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+  flex-wrap: wrap;
+}
+
+.import-status {
+  margin-top: var(--spacing-xs);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.hidden-import {
+  display: none;
+}
+
+.empty-state-actions {
+  margin-top: var(--spacing-md);
+  display: flex;
+  justify-content: center;
 }
 
 .export-btn {
