@@ -7,14 +7,18 @@
           :pick-state="pickState"
           :current-pick-side="currentPickSide"
           :characters="characters"
+          :all-heroes="allHeroes"
           :available-heroes="availableHeroes"
           :character-images="characterImages"
           :match-data="matchData"
           :analysis-data="analysisData"
+          :pool-filter="poolFilter"
           @pick-hero="handlePickHero"
           @unpick-slot="handleUnpickSlot"
           @reset="handleReset"
           @undo="handleUndo"
+          @set-pool="handleSetPool"
+          @clear-pool="handleClearPool"
         />
       </div>
 
@@ -26,6 +30,7 @@
           :match-data="matchData"
           :character-images="characterImages"
           :records="records"
+          :pool-filter="poolFilter"
           @record-match="handleRecordMatch"
           @delete-record="handleDeleteRecord"
           @clear-records="handleClearRecords"
@@ -93,6 +98,14 @@ const analysisData = computed(() => getAnalysisData())
 
 const allHeroes = computed(() => analysisData.value.allHeroes)
 
+const poolFilter = ref<string[] | null>(null)
+
+const effectiveHeroes = computed(() => {
+  if (!poolFilter.value) return allHeroes.value
+  const poolSet = new Set(poolFilter.value)
+  return allHeroes.value.filter((h) => poolSet.has(h))
+})
+
 const pickedHeroes = computed(() => {
   const picked = new Set<string>()
   for (const hero of pickState.value.left) {
@@ -104,11 +117,23 @@ const pickedHeroes = computed(() => {
   return picked
 })
 
-const availableHeroes = computed(() => allHeroes.value.filter((h) => !pickedHeroes.value.has(h)))
+const availableHeroes = computed(() =>
+  effectiveHeroes.value.filter((h) => !pickedHeroes.value.has(h)),
+)
 
-const heroSet = computed(() => new Set(allHeroes.value))
+const effectiveHeroSet = computed(() => new Set(effectiveHeroes.value))
 
-const characters = computed(() => gameDataStore.characters.filter((c) => heroSet.value.has(c.name)))
+const characters = computed(() =>
+  gameDataStore.characters.filter((c) => effectiveHeroSet.value.has(c.name)),
+)
+
+function handleSetPool(pool: string[]) {
+  poolFilter.value = pool
+}
+
+function handleClearPool() {
+  poolFilter.value = null
+}
 
 const characterImages = computed(() => gameDataStore.characterImages)
 
@@ -156,6 +181,7 @@ function handleUndo() {
 function handleReset() {
   pickState.value = { left: [null, null, null], right: [null, null, null] }
   pickHistory.value = []
+  poolFilter.value = null
 }
 
 function handleRecordMatch(record: RecordedMatch) {
