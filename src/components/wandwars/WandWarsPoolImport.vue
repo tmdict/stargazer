@@ -81,9 +81,7 @@
         </template>
         <template v-else>
           <div class="drop-title">Upload pool screenshot</div>
-          <div class="drop-subtitle">
-            Drag a screenshot of the hero pool here, or click to browse.
-          </div>
+          <div class="drop-subtitle">Drag, paste (Ctrl+V / ⌘V), or click to browse.</div>
         </template>
       </div>
       <input
@@ -209,7 +207,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { formatName } from '@/wandwars/formatting'
 import {
@@ -471,8 +469,29 @@ function endDrag() {
   window.removeEventListener('touchend', endDrag)
 }
 
+function onPaste(event: ClipboardEvent) {
+  if (phase.value !== 'upload' || busy.value) return
+  const items = event.clipboardData?.items
+  if (!items) return
+  for (const item of Array.from(items)) {
+    if (item.type.startsWith('image/')) {
+      const file = item.getAsFile()
+      if (file) {
+        event.preventDefault()
+        loadScreenshot(file)
+        return
+      }
+    }
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('paste', onPaste)
+})
+
 onBeforeUnmount(() => {
   endDrag()
+  window.removeEventListener('paste', onPaste)
   if (uploadedSrc.value) URL.revokeObjectURL(uploadedSrc.value)
 })
 
