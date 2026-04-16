@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build:ssg",
-    "ww:encode": "node -e \"const fs=require('fs');fs.writeFileSync('src/wandwars/data/data',Buffer.from(fs.readFileSync('src/wandwars/data/raw/records.data','utf-8')).toString('base64'))\"",
+    "encode:ww": "node src/wandwars/scripts/encode.mjs",
     "build:ssg": "vite-ssg build",
     "build:spa": "npm run type-check && vite build",
     "preview": "vite preview",
