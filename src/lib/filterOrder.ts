@@ -1,7 +1,7 @@
 /**
  * Canonical display orders for faction and class, used by:
  * - `FilterIcons.vue` for the icon row
- * - Character grids in `CharacterSelection` and `WandWarsHeroGrid`
+ * - `compareFaction` for character grid sorting
  *
  * Anything not in the order list falls through to alphabetical at the end.
  */
@@ -36,8 +36,4 @@ export function compareByOrder(a: string, b: string, order: readonly string[]): 
 
 export function compareFaction(a: string, b: string): number {
   return compareByOrder(a, b, FACTION_ORDER)
-}
-
-export function compareClass(a: string, b: string): number {
-  return compareByOrder(a, b, CLASS_ORDER)
 }

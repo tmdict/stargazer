@@ -34,7 +34,6 @@
           @record-match="handleRecordMatch"
           @delete-record="handleDeleteRecord"
           @clear-records="handleClearRecords"
-          @reset="handleReset"
           @export="handleExport"
           @import-records="handleImportRecords"
           @update-record="handleUpdateRecord"
@@ -189,6 +188,7 @@ function handleReset() {
 function handleRecordMatch(record: RecordedMatch) {
   records.value.push(record)
   saveRecords()
+  handleReset()
 }
 
 function handleImportRecords(imported: RecordedMatch[]) {
