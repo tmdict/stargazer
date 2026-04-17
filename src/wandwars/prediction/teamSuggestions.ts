@@ -1,6 +1,11 @@
-import type { MatchResult } from '../types'
+import type { MatchResult, Recommendation } from '../types'
+import { adaptiveMLModel } from './adaptiveML'
+import { bradleyTerryModel } from './bradleyTerry'
+import { compositeModel } from './composite'
 import { heroNamesToIndices, nnForward } from './nn'
 import { NN_WEIGHTS } from './nnWeights'
+import { popularPickModel } from './popularPick'
+import { getAnalysisData, getMatchData } from './recommend'
 
 export interface TeamSuggestion {
   team: [string, string, string]
@@ -63,27 +68,10 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
   return results
 }
 
-/**
- * Compute the mean team embedding across all heroes, used as a fixed
- * "average opponent" for NN-scored team suggestions.
- */
-let cachedAvgOpponent: number[] | null = null
-function getAvgOpponentIndices(): number[] {
-  if (cachedAvgOpponent) return cachedAvgOpponent
-  const numHeroes = Object.keys(NN_WEIGHTS.heroIndex).length
-  // Use 3 copies of the mean embedding index — approximated by averaging
-  // predictions against a few spread-out trios
-  cachedAvgOpponent = Array.from({ length: numHeroes }, (_, i) => i)
-  return cachedAvgOpponent
-}
+// ---- NN-only scoring (for 1 teammate — full trio evaluation) ----
 
-/**
- * Score a trio using the NN against the average opponent pool.
- * Samples a few evenly-spaced opponent trios for a stable estimate.
- */
 function nnTeamScore(teamIndices: number[]): number {
-  const allIdx = getAvgOpponentIndices()
-  const n = allIdx.length
+  const n = Object.keys(NN_WEIGHTS.heroIndex).length
   const step = Math.max(1, Math.floor(n / 6))
   let total = 0
   let count = 0
@@ -91,7 +79,7 @@ function nnTeamScore(teamIndices: number[]): number {
     for (let b = a + 1; b < n && count < 30; b += step) {
       for (let c = b + 1; c < n && count < 30; c += step) {
         if (teamIndices.includes(a) || teamIndices.includes(b) || teamIndices.includes(c)) continue
-        total += nnForward(NN_WEIGHTS, teamIndices, [allIdx[a]!, allIdx[b]!, allIdx[c]!])
+        total += nnForward(NN_WEIGHTS, teamIndices, [a, b, c])
         count++
       }
     }
@@ -99,11 +87,80 @@ function nnTeamScore(teamIndices: number[]): number {
   return count > 0 ? total / count : 0.5
 }
 
+// ---- Aggregate scoring (for 2 teammates — all 4 models) ----
+
 /**
- * Construct teams scored by the Adaptive ML neural network.
- * Evaluates all possible trios containing the teammates — not limited
- * to heroes that have appeared together in data.
+ * Adaptive weights matching the aggregate match prediction weights from recommend.ts
  */
+function getModelWeights(matchCount: number): Record<string, number> {
+  if (matchCount < 20) {
+    return { 'popular-pick': 0.55, composite: 0.3, 'bradley-terry': 0.1, 'adaptive-ml': 0.05 }
+  }
+  if (matchCount <= 100) {
+    const t = (matchCount - 20) / 80
+    return {
+      'popular-pick': 0.55 - 0.2 * t,
+      composite: 0.3 - 0.05 * t,
+      'bradley-terry': 0.1 + 0.1 * t,
+      'adaptive-ml': 0.05 + 0.15 * t,
+    }
+  }
+  const t = Math.min(1, (matchCount - 100) / 400)
+  return {
+    'popular-pick': 0.35 - 0.1 * t,
+    composite: 0.25 - 0.05 * t,
+    'bradley-terry': 0.2 + 0.05 * t,
+    'adaptive-ml': 0.2 + 0.1 * t,
+  }
+}
+
+/**
+ * Score candidates using all 4 models aggregated, for the 2-teammate case.
+ * Each model scores all available heroes as the 3rd pick, then we aggregate.
+ */
+function aggregateThirdPickScores(
+  teammates: string[],
+  available: string[],
+): Map<string, number> {
+  const analysis = getAnalysisData()
+  const matches = getMatchData()
+  const weights = getModelWeights(matches.length)
+
+  const models = [
+    { id: 'popular-pick', model: popularPickModel },
+    { id: 'composite', model: compositeModel },
+    { id: 'bradley-terry', model: bradleyTerryModel },
+    { id: 'adaptive-ml', model: adaptiveMLModel },
+  ]
+
+  // Get recommendations from each model (opponents unknown)
+  const modelRecs: { id: string; recs: Map<string, number> }[] = []
+  for (const { id, model } of models) {
+    const recs = model.recommend(teammates, [], available, analysis, matches)
+    const scoreMap = new Map<string, number>()
+    for (const rec of recs) scoreMap.set(rec.hero, rec.score)
+    modelRecs.push({ id, recs: scoreMap })
+  }
+
+  // Aggregate scores per hero
+  const aggregated = new Map<string, number>()
+  let totalWeight = 0
+  for (const { id } of modelRecs) totalWeight += weights[id] || 0
+
+  for (const hero of available) {
+    let score = 0
+    for (const { id, recs } of modelRecs) {
+      const w = (weights[id] || 0) / totalWeight
+      score += w * (recs.get(hero) || 0.5)
+    }
+    aggregated.set(hero, score)
+  }
+
+  return aggregated
+}
+
+// ---- Constructed team generation ----
+
 function getConstructedTeams(
   teammates: string[],
   allHeroes: string[],
@@ -115,6 +172,7 @@ function getConstructedTeams(
   const results: TeamSuggestion[] = []
 
   if (teammates.length === 1) {
+    // 1 teammate: NN-only scoring (other models can't efficiently evaluate all pair combos)
     for (let i = 0; i < candidates.length; i++) {
       for (let j = i + 1; j < candidates.length; j++) {
         const team = [teammates[0]!, candidates[i]!, candidates[j]!].sort() as [
@@ -135,15 +193,15 @@ function getConstructedTeams(
   }
 
   if (teammates.length === 2) {
+    // 2 teammates: aggregate all 4 models for the 3rd pick
+    const scores = aggregateThirdPickScores(teammates, candidates)
+
     for (const third of candidates) {
       const team = [...teammates, third].sort() as [string, string, string]
       const key = team.join(',')
       if (existingKeys.has(key)) continue
 
-      const indices = heroNamesToIndices(team, NN_WEIGHTS.heroIndex)
-      if (indices.length !== 3) continue
-
-      const winRate = nnTeamScore(indices)
+      const winRate = scores.get(third) || 0.5
       results.push({ team, wins: 0, losses: 0, draws: 0, total: 0, winRate, constructed: true })
     }
   }
@@ -151,18 +209,13 @@ function getConstructedTeams(
   return results.sort((a, b) => b.winRate - a.winRate).slice(0, MAX_SUGGESTIONS)
 }
 
+// ---- Public API ----
+
 export interface TopTeamsResult {
   dataTeams: TeamSuggestion[]
   suggestedTeams: TeamSuggestion[]
 }
 
-/**
- * Find top teams: up to 3 real teams from data, plus up to 3 constructed
- * teams from pair combinations. Returned separately.
- */
-/**
- * Filter out teams containing any excluded hero (already picked by either side).
- */
 function filterExcluded(teams: TeamSuggestion[], excludeHeroes: string[]): TeamSuggestion[] {
   if (excludeHeroes.length === 0) return teams
   const excluded = new Set(excludeHeroes)
@@ -176,7 +229,6 @@ export function getTopTeams(
 ): TopTeamsResult {
   if (teammates.length === 0) return { dataTeams: [], suggestedTeams: [] }
 
-  // Exclude heroes already picked (teammates are allowed since they're on the team)
   const excludeOthers = excludeHeroes.filter((h) => !teammates.includes(h))
 
   const exact = getExactTrios(teammates, matches)

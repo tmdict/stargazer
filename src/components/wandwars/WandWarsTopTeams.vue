@@ -72,7 +72,7 @@
         v-if="showSuggestedTooltip && suggestedTitleEl"
         :target-element="suggestedTitleEl"
         variant="detailed"
-        text="Teams predicted to perform well by the Adaptive ML model, even if they've never played together. The percentage is the predicted win rate."
+        text="Teams predicted to perform well by combining all four prediction models. The percentage is the aggregated predicted win rate."
         max-width="240px"
       />
     </Teleport>
