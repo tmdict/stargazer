@@ -1515,7 +1515,12 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 .section-info-icon {
   opacity: 0.5;
   margin-left: 4px;
-  cursor: pointer;
+  cursor: help;
+  transition: opacity var(--transition-fast);
+}
+
+.section-info-icon:hover {
+  opacity: 1;
 }
 
 .response-label {

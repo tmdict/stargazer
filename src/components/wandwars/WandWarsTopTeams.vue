@@ -2,7 +2,15 @@
   <div v-if="result.dataTeams.length > 0 || result.suggestedTeams.length > 0" class="top-teams">
     <!-- Data-backed teams -->
     <div v-if="result.dataTeams.length > 0" class="team-section">
-      <h4 class="section-title">Top Teams</h4>
+      <h4
+        ref="dataTitleEl"
+        class="section-title"
+        @mouseenter="showDataTooltip = true"
+        @mouseleave="showDataTooltip = false"
+      >
+        Top Teams
+        <IconInfo :size="12" class="info-icon" />
+      </h4>
       <div class="team-list">
         <div v-for="(team, i) in result.dataTeams" :key="'d' + i" class="team-row">
           <div class="team-heroes">
@@ -26,14 +34,17 @@
 
     <!-- Constructed teams -->
     <div v-if="result.suggestedTeams.length > 0" class="team-section">
-      <h4 class="section-title suggested">Suggested Teams</h4>
+      <h4
+        ref="suggestedTitleEl"
+        class="section-title suggested"
+        @mouseenter="showSuggestedTooltip = true"
+        @mouseleave="showSuggestedTooltip = false"
+      >
+        Suggested Teams
+        <IconInfo :size="12" class="info-icon" />
+      </h4>
       <div class="team-list">
-        <div
-          v-for="(team, i) in result.suggestedTeams"
-          :key="'s' + i"
-          class="team-row constructed"
-          title="Suggested based on pair records"
-        >
+        <div v-for="(team, i) in result.suggestedTeams" :key="'s' + i" class="team-row constructed">
           <div class="team-heroes">
             <img
               v-for="hero in orderedTeam(team.team)"
@@ -44,16 +55,36 @@
               class="team-hero-img"
             />
           </div>
+          <span class="team-score">{{ formatPercent(team.winRate) }}</span>
         </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="showDataTooltip && dataTitleEl"
+        :target-element="dataTitleEl"
+        variant="detailed"
+        text="Teams that have actually played together in recorded matches, showing their real win/loss record."
+        max-width="240px"
+      />
+      <TooltipPopup
+        v-if="showSuggestedTooltip && suggestedTitleEl"
+        :target-element="suggestedTitleEl"
+        variant="detailed"
+        text="Teams predicted to perform well by the Adaptive ML model, even if they've never played together. The percentage is the predicted win rate."
+        max-width="240px"
+      />
+    </Teleport>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
-import { formatName } from '@/wandwars/formatting'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { formatName, formatPercent } from '@/wandwars/formatting'
 import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
 import type { MatchResult } from '@/wandwars/types'
 
@@ -65,6 +96,11 @@ const props = defineProps<{
 }>()
 
 const result = computed(() => getTopTeams(props.teammates, props.matches, props.excludeHeroes))
+
+const showDataTooltip = ref(false)
+const dataTitleEl = ref<HTMLElement | null>(null)
+const showSuggestedTooltip = ref(false)
+const suggestedTitleEl = ref<HTMLElement | null>(null)
 
 function orderedTeam(team: string[]): string[] {
   // Picked heroes first (in pick order), then remaining heroes alphabetically
@@ -97,10 +133,23 @@ function orderedTeam(team: string[]): string[] {
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: help;
 }
 
 .section-title.suggested {
   color: var(--color-primary);
+}
+
+.info-icon {
+  opacity: 0.5;
+  transition: opacity var(--transition-fast);
+}
+
+.section-title:hover .info-icon {
+  opacity: 1;
 }
 
 .team-list {
@@ -159,5 +208,12 @@ function orderedTeam(team: string[]): string[] {
 
 .team-draws {
   color: var(--color-text-secondary);
+}
+
+.team-score {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-right: var(--spacing-sm);
 }
 </style>
