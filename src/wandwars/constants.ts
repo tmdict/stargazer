@@ -51,6 +51,7 @@ export const POOL_GRID_MAX_WIDTH = 320 // downscale width for density scan
 export const POOL_GRID_SMOOTH_FRACTION = 0.05 // smoothing window as % of axis
 export const POOL_GRID_DENSITY_THRESHOLD = 0.02 // row/col "dense" cutoff
 export const POOL_GRID_CROP_PAD = 0.01 // padding added to detected crop edges
+export const POOL_GRID_EXPECTED_ASPECT = 0.9 // expected grid W/H for 5×4 portrait cards
 
 export const POOL_DEFAULT_ROWS = 4
 export const POOL_DEFAULT_COLS = 5
