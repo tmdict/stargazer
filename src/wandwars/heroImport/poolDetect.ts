@@ -11,6 +11,7 @@ import {
   POOL_GOLD_MIN_VALUE,
   POOL_GRID_CROP_PAD,
   POOL_GRID_DENSITY_THRESHOLD,
+  POOL_GRID_EXPECTED_ASPECT,
   POOL_GRID_MAX_WIDTH,
   POOL_GRID_SMOOTH_FRACTION,
 } from '../constants'
@@ -93,6 +94,36 @@ export async function suggestGridCrop(source: File | HTMLImageElement): Promise<
     return { x: 0, y: 0, w: 1, h: 1 }
   }
 
+  // If detected region is too tall for a 5×4 grid (e.g. team slots or timer
+  // included), trim vertically to the densest sub-range of expected height.
+  const dw = colRange.end - colRange.start
+  const dh = rowRange.end - rowRange.start
+  if (dh > 0 && dw / dh < POOL_GRID_EXPECTED_ASPECT * 0.75) {
+    const targetH = Math.min(Math.round((dw / POOL_GRID_EXPECTED_ASPECT) * 1.1), dh)
+    if (targetH < dh) {
+      let windowSum = 0
+      for (let y = rowRange.start; y < rowRange.start + targetH; y++) {
+        windowSum += rowGold[y]!
+      }
+      let bestSum = windowSum
+      let bestStart = rowRange.start
+      for (let s = rowRange.start + 1; s + targetH <= rowRange.end + 1; s++) {
+        windowSum += rowGold[s + targetH - 1]! - rowGold[s - 1]!
+        if (windowSum > bestSum) {
+          bestSum = windowSum
+          bestStart = s
+        }
+      }
+      rowRange.start = bestStart
+      rowRange.end = bestStart + targetH
+    }
+  }
+
+  // Trim low-density tails from both axes — the initial detection may
+  // overshoot past the grid edge where sparse gold pixels exist.
+  trimRangeEdges(rowGold, rowRange)
+  trimRangeEdges(colGold, colRange)
+
   // Small padding outward so the crop includes the full outer card edge.
   const padX = w * POOL_GRID_CROP_PAD
   const padY = h * POOL_GRID_CROP_PAD
@@ -147,6 +178,39 @@ function largestDenseRange(
   }
   if (bestStart < 0) return null
   return { start: bestStart, end: bestEnd }
+}
+
+/**
+ * Trim low-density tails from a detected range. Compares a 3-pixel average
+ * at each edge against 20% of the interior mean density — card borders are
+ * far denser than background, so this reliably stops at the grid edge.
+ */
+function trimRangeEdges(counts: number[], range: { start: number; end: number }): void {
+  const len = range.end - range.start
+  if (len < 8) return
+
+  // Interior mean (middle 60%)
+  const q1 = range.start + Math.round(len * 0.2)
+  const q3 = range.start + Math.round(len * 0.8)
+  let sum = 0
+  for (let i = q1; i <= q3; i++) sum += counts[i]!
+  const interiorMean = sum / (q3 - q1 + 1)
+  if (interiorMean <= 0) return
+
+  const threshold = interiorMean * 0.2
+
+  // Trim from end (3-pixel average smooths gaps between cards)
+  while (range.end - 2 > range.start) {
+    const avg = (counts[range.end]! + counts[range.end - 1]! + counts[range.end - 2]!) / 3
+    if (avg >= threshold) break
+    range.end--
+  }
+  // Trim from start
+  while (range.start + 2 < range.end) {
+    const avg = (counts[range.start]! + counts[range.start + 1]! + counts[range.start + 2]!) / 3
+    if (avg >= threshold) break
+    range.start++
+  }
 }
 
 export interface DetectPoolOptions {
