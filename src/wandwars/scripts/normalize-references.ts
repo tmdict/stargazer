@@ -1,20 +1,18 @@
 /**
  * Crop each hero reference PNG to the bounding box of its gold border,
- * then resize to a uniform 172x234. Writes to a sibling `wandwars_normalized/`
- * folder — review, then rename/replace `wandwars/` when satisfied.
+ * then resize to a uniform 170x230. Writes to a sibling `portraits_normalized/`
+ * folder — review, then rename/replace `portraits/` when satisfied.
  *
- * Usage: node src/wandwars/scripts/normalize-references.mjs
+ * Usage: npx tsx src/wandwars/scripts/normalize-references.ts
  * Requires: sharp (already installed)
  */
 
 import { mkdir, readdir } from 'node:fs/promises'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import sharp from 'sharp'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const INPUT_DIR = join(__dirname, '../data/raw/portraits')
-const OUTPUT_DIR = join(__dirname, '../data/raw/portraits_normalized')
+const INPUT_DIR = join(import.meta.dirname!, '../data/raw/portraits')
+const OUTPUT_DIR = join(import.meta.dirname!, '../data/raw/portraits_normalized')
 
 const TARGET_W = 170
 const TARGET_H = 230
@@ -24,23 +22,31 @@ const TARGET_H = 230
  * thresholds in HSV — orange-yellow with enough vibrance to exclude skin
  * tones and background beige.
  */
-function isGold(r, g, b) {
+function isGold(r: number, g: number, b: number): boolean {
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const delta = max - min
-  if (max < 100) return false // too dark
-  if (delta < 40) return false // not saturated enough
-  let hue
+  if (max < 100) return false
+  if (delta < 40) return false
+  let hue: number
   if (max === r) hue = ((g - b) / delta) % 6
   else if (max === g) hue = (b - r) / delta + 2
   else hue = (r - g) / delta + 4
   hue *= 60
   if (hue < 0) hue += 360
-  // Orange-through-yellow band
   return hue >= 25 && hue <= 55
 }
 
-async function findGoldBoundingBox(inputPath) {
+interface BBox {
+  left: number
+  top: number
+  width: number
+  height: number
+  sourceWidth: number
+  sourceHeight: number
+}
+
+async function findGoldBoundingBox(inputPath: string): Promise<BBox | null> {
   const { data, info } = await sharp(inputPath).raw().toBuffer({ resolveWithObject: true })
   const { width, height, channels } = info
 
@@ -52,10 +58,10 @@ async function findGoldBoundingBox(inputPath) {
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const idx = (y * width + x) * channels
-      const r = data[idx]
-      const g = data[idx + 1]
-      const b = data[idx + 2]
-      const a = channels >= 4 ? data[idx + 3] : 255
+      const r = data[idx]!
+      const g = data[idx + 1]!
+      const b = data[idx + 2]!
+      const a = channels >= 4 ? data[idx + 3]! : 255
       if (a < 128) continue
       if (!isGold(r, g, b)) continue
       if (x < minX) minX = x
@@ -76,23 +82,27 @@ async function findGoldBoundingBox(inputPath) {
   }
 }
 
-async function processFile(file) {
+interface ProcessResult {
+  file: string
+  skipped?: boolean
+  error?: string
+  source?: string
+  crop?: string
+  offset?: string
+}
+
+async function processFile(file: string): Promise<ProcessResult> {
   const input = join(INPUT_DIR, file)
   const output = join(OUTPUT_DIR, file)
 
   const bbox = await findGoldBoundingBox(input)
   if (!bbox) {
-    console.warn(`⚠ ${file}: no gold pixels detected — skipped`)
+    console.warn(`  ${file}: no gold pixels detected — skipped`)
     return { file, skipped: true }
   }
 
   await sharp(input)
-    .extract({
-      left: bbox.left,
-      top: bbox.top,
-      width: bbox.width,
-      height: bbox.height,
-    })
+    .extract({ left: bbox.left, top: bbox.top, width: bbox.width, height: bbox.height })
     .resize(TARGET_W, TARGET_H, { kernel: 'lanczos3' })
     .flatten({ background: '#808080' })
     .png()
@@ -111,17 +121,18 @@ async function main() {
   const files = (await readdir(INPUT_DIR)).filter((f) => f.toLowerCase().endsWith('.png'))
   console.log(`Processing ${files.length} images → ${OUTPUT_DIR}\n`)
 
-  const results = []
+  const results: ProcessResult[] = []
   for (const file of files) {
     try {
       const r = await processFile(file)
       results.push(r)
       if (!r.skipped) {
-        console.log(`✓ ${file.padEnd(28)} ${r.source} → crop ${r.crop} @ ${r.offset}`)
+        console.log(`  ${file.padEnd(28)} ${r.source} → crop ${r.crop} @ ${r.offset}`)
       }
     } catch (err) {
-      console.error(`✗ ${file}: ${err.message}`)
-      results.push({ file, error: err.message })
+      const msg = err instanceof Error ? err.message : String(err)
+      console.error(`  ${file}: ${msg}`)
+      results.push({ file, error: msg })
     }
   }
 
@@ -130,22 +141,19 @@ async function main() {
   const failed = results.filter((r) => r.error).length
   console.log(`\nDone: ${ok} normalized, ${skipped} skipped (no gold), ${failed} failed`)
 
-  // Flag any outliers whose crop size differs substantially from the rest —
-  // useful for spotting weird gold matches (e.g., a character with a lot of
-  // non-border yellow hair that tricks the detector).
-  const cropped = results.filter((r) => !r.skipped && !r.error)
+  const cropped = results.filter((r) => !r.skipped && !r.error && r.crop)
   if (cropped.length > 0) {
-    const widths = cropped.map((r) => parseInt(r.crop.split('x')[0], 10))
-    const heights = cropped.map((r) => parseInt(r.crop.split('x')[1], 10))
-    const median = (arr) => arr.slice().sort((a, b) => a - b)[Math.floor(arr.length / 2)]
+    const widths = cropped.map((r) => parseInt(r.crop!.split('x')[0]!, 10))
+    const heights = cropped.map((r) => parseInt(r.crop!.split('x')[1]!, 10))
+    const median = (arr: number[]) => arr.slice().sort((a, b) => a - b)[Math.floor(arr.length / 2)]!
     const mw = median(widths)
     const mh = median(heights)
     const outliers = cropped.filter((r) => {
-      const [w, h] = r.crop.split('x').map((n) => parseInt(n, 10))
-      return Math.abs(w - mw) > 8 || Math.abs(h - mh) > 12
+      const [w, h] = r.crop!.split('x').map((n) => parseInt(n, 10))
+      return Math.abs(w! - mw) > 8 || Math.abs(h! - mh) > 12
     })
     if (outliers.length > 0) {
-      console.log(`\n⚠ Outliers (crop size far from median ${mw}x${mh}):`)
+      console.log(`\nOutliers (crop size far from median ${mw}x${mh}):`)
       for (const o of outliers) {
         console.log(`  ${o.file.padEnd(28)} crop ${o.crop}`)
       }

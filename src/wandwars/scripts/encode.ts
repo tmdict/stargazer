@@ -4,16 +4,14 @@
  * (e.g. `milan.data`, `unii.data`) so contributors can name their uploads
  * after themselves; the final encoded output is agnostic of origin.
  *
- * Usage: node src/wandwars/scripts/encode.mjs
+ * Usage: npx tsx src/wandwars/scripts/encode.ts
  */
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const RAW_DIR = join(__dirname, '../data/raw')
-const OUT_FILE = join(__dirname, '../data/data')
+const RAW_DIR = join(import.meta.dirname!, '../data/raw')
+const OUT_FILE = join(import.meta.dirname!, '../data/data')
 
 const files = readdirSync(RAW_DIR)
   .filter((name) => name.toLowerCase().endsWith('.data'))
@@ -24,7 +22,7 @@ if (files.length === 0) {
   process.exit(1)
 }
 
-const chunks = []
+const chunks: string[] = []
 for (const name of files) {
   const content = readFileSync(join(RAW_DIR, name), 'utf-8')
   // Preserve each file's content; strip trailing whitespace and guarantee a
