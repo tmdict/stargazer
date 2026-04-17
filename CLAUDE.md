@@ -30,7 +30,7 @@ For comprehensive project documentation, see:
 - [Event System](./docs/architecture/EVENT_SYSTEM.md) - Component communication
 - [Map Editor](./docs/architecture/MAP_EDITOR.md) - Map creation tools
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Binary state sharing
-- [WandWars](./docs/architecture/WW.md) - 3v3 PvP draft analyzer
+- [WandWars](./docs/architecture/WAND_WARS.md) - 3v3 PvP draft analyzer
 
 ## BUILD COMMANDS
 

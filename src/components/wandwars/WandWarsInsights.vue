@@ -345,6 +345,8 @@ import {
 } from '@/wandwars/constants'
 import { formatInsightHtml, formatName, formatPercent } from '@/wandwars/formatting'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
+import { heroNamesToIndices, mostSimilarHeroes, nnForward } from '@/wandwars/prediction/nn'
+import { NN_WEIGHTS } from '@/wandwars/prediction/nnWeights'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
 
 type InsightCategory = 'units' | 'teams' | 'synergy'
@@ -1430,6 +1432,95 @@ const insights = computed(() => {
       'units',
       `{${topSweepHero[0]}} is involved in the most sweeps (${topSweepHero[1]} dominant wins)`,
     )
+  }
+
+  // --- ML Insights ---
+
+  // Units: similar heroes (top hero by usage → show most similar alternatives)
+  const topByUsage = allHeroes.sort((a, b) => b.matches - a.matches).slice(0, 5)
+  for (const hero of topByUsage) {
+    if (hero.matches < 10) continue
+    const similar = mostSimilarHeroes(NN_WEIGHTS, hero.name, 2)
+    if (similar.length >= 2 && similar[0]!.similarity > 0.7) {
+      add(
+        result,
+        'units',
+        `{${hero.name}} plays most similarly to {${similar[0]!.hero}} and {${similar[1]!.hero}} (based on learned patterns)`,
+      )
+      break // Only show one to avoid clutter
+    }
+  }
+
+  // Synergy: unexplored pair synergies (NN predicts well but little actual data)
+  const nnHeroes = Object.keys(NN_WEIGHTS.heroIndex)
+  const unexplored: { a: string; b: string; score: number }[] = []
+  const avgOpponentIdx = Array.from({ length: nnHeroes.length }, (_, i) => i)
+  const sampleStep = Math.max(1, Math.floor(nnHeroes.length / 5))
+  for (let i = 0; i < nnHeroes.length; i++) {
+    for (let j = i + 1; j < nnHeroes.length; j++) {
+      const a = nnHeroes[i]!
+      const b = nnHeroes[j]!
+      const pairData = matrix[a]?.[b]?.matches || 0
+      if (pairData >= 5) continue // already well-tested
+      // Quick NN score: average over a few random thirds
+      let total = 0
+      let count = 0
+      for (let k = 0; k < nnHeroes.length && count < 5; k += sampleStep) {
+        if (k === i || k === j) continue
+        const teamIdx = [NN_WEIGHTS.heroIndex[a]!, NN_WEIGHTS.heroIndex[b]!, k]
+        // Score against a spread of opponents
+        for (let oa = 0; oa < nnHeroes.length && count < 5; oa += sampleStep * 2) {
+          for (let ob = oa + 1; ob < nnHeroes.length && count < 5; ob += sampleStep * 2) {
+            for (let oc = ob + 1; oc < nnHeroes.length && count < 5; oc += sampleStep * 2) {
+              if ([oa, ob, oc].some((x) => teamIdx.includes(x))) continue
+              total += nnForward(NN_WEIGHTS, teamIdx, [oa, ob, oc])
+              count++
+            }
+          }
+        }
+      }
+      if (count > 0) {
+        unexplored.push({ a, b, score: total / count })
+      }
+    }
+  }
+  unexplored.sort((a, b) => b.score - a.score)
+  const topUnexplored = unexplored.slice(0, 2)
+  for (const pair of topUnexplored) {
+    if (pair.score > 0.55) {
+      const dataNote =
+        (matrix[pair.a]?.[pair.b]?.matches || 0) === 0
+          ? 'never played together'
+          : `only ${matrix[pair.a]?.[pair.b]?.matches} matches together`
+      add(
+        result,
+        'synergy',
+        `{${pair.a}} + {${pair.b}} may have untapped synergy — predicted ${formatPercent(pair.score)} win rate but ${dataNote}`,
+      )
+    }
+  }
+
+  // Teams: NN-predicted strongest trios (top 3 across all heroes)
+  // Use a fixed "average opponent" trio for fast ranking (one forward pass per trio)
+  const avgOppStep = Math.max(1, Math.floor(nnHeroes.length / 3))
+  const avgOpp = [0, avgOppStep, avgOppStep * 2]
+  const nnTopTeams: { team: [string, string, string]; score: number }[] = []
+  for (let i = 0; i < nnHeroes.length; i++) {
+    for (let j = i + 1; j < nnHeroes.length; j++) {
+      for (let k = j + 1; k < nnHeroes.length; k++) {
+        const teamIdx = [i, j, k]
+        if (avgOpp.some((x) => teamIdx.includes(x))) continue
+        const score = nnForward(NN_WEIGHTS, teamIdx, avgOpp)
+        nnTopTeams.push({
+          team: [nnHeroes[i]!, nnHeroes[j]!, nnHeroes[k]!],
+          score,
+        })
+      }
+    }
+  }
+  nnTopTeams.sort((a, b) => b.score - a.score)
+  for (const t of nnTopTeams.slice(0, 3)) {
+    add(result, 'teams', `{${t.team[0]}} + {${t.team[1]}} + {${t.team[2]}} — ML predicted top team`)
   }
 
   return result

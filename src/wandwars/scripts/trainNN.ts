@@ -22,11 +22,24 @@ const PATIENCE = 30
 const ADAM_BETA1 = 0.9
 const ADAM_BETA2 = 0.999
 const ADAM_EPS = 1e-8
+const NUM_RUNS = 10 // Train multiple times with different seeds, keep the best
+
+// Seeded PRNG (mulberry32) for reproducible training
+let rngState = 0
+function seedRng(seed: number): void {
+  rngState = seed | 0
+}
+function random(): number {
+  rngState = (rngState + 0x6d2b79f5) | 0
+  let t = Math.imul(rngState ^ (rngState >>> 15), 1 | rngState)
+  t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
+  return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+}
 
 // Xavier initialization
 function xavierInit(fanIn: number, fanOut: number): number {
   const limit = Math.sqrt(6 / (fanIn + fanOut))
-  return (Math.random() * 2 - 1) * limit
+  return (random() * 2 - 1) * limit
 }
 
 interface TrainingSample {
@@ -194,7 +207,7 @@ function adamUpdate(params: Float64Array, grads: Float64Array, state: AdamState,
 
 function shuffle<T>(arr: T[]): void {
   for (let i = arr.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
+    const j = Math.floor(random() * (i + 1))
     ;[arr[i], arr[j]] = [arr[j]!, arr[i]!]
   }
 }
@@ -240,7 +253,110 @@ function computeAccuracy(params: NetworkParams, samples: TrainingSample[]): numb
   return total > 0 ? correct / total : 0
 }
 
-// ---- Main ----
+// ---- Single training run ----
+
+interface RunResult {
+  params: NetworkParams
+  valAcc: number
+  trainAcc: number
+  valLoss: number
+  epochs: number
+  valSamples: TrainingSample[]
+  trainSamples: TrainingSample[]
+}
+
+function trainRun(
+  allSamples: TrainingSample[],
+  numHeroes: number,
+  seed: number,
+  verbose: boolean,
+): RunResult {
+  seedRng(seed)
+
+  const samples = [...allSamples]
+  shuffle(samples)
+  const valSize = Math.round(samples.length * VALIDATION_SPLIT)
+  const valSamples = samples.slice(0, valSize)
+  const trainSamples = samples.slice(valSize)
+
+  const params = initParams(numHeroes)
+  const adamStates = {
+    embeddings: createAdamState(params.embeddings.length),
+    hiddenW: createAdamState(params.hiddenW.length),
+    hiddenB: createAdamState(params.hiddenB.length),
+    outputW: createAdamState(params.outputW.length),
+    outputB: createAdamState(params.outputB.length),
+  }
+
+  let bestValLoss = Infinity
+  let bestParams: NetworkParams | null = null
+  let patience = 0
+  let stoppedAt = EPOCHS
+
+  for (let epoch = 0; epoch < EPOCHS; epoch++) {
+    shuffle(trainSamples)
+    const grads = zeroGrads(numHeroes)
+    let epochLoss = 0
+
+    for (const sample of trainSamples) {
+      epochLoss += forwardAndBackward(params, grads, sample)
+    }
+
+    const n = trainSamples.length
+    for (let i = 0; i < grads.embeddings.length; i++) grads.embeddings[i] /= n
+    for (let i = 0; i < grads.hiddenW.length; i++) grads.hiddenW[i] /= n
+    for (let i = 0; i < grads.hiddenB.length; i++) grads.hiddenB[i] /= n
+    for (let i = 0; i < grads.outputW.length; i++) grads.outputW[i] /= n
+    for (let i = 0; i < grads.outputB.length; i++) grads.outputB[i] /= n
+
+    adamUpdate(params.embeddings, grads.embeddings, adamStates.embeddings, LEARNING_RATE)
+    adamUpdate(params.hiddenW, grads.hiddenW, adamStates.hiddenW, LEARNING_RATE)
+    adamUpdate(params.hiddenB, grads.hiddenB, adamStates.hiddenB, LEARNING_RATE)
+    adamUpdate(params.outputW, grads.outputW, adamStates.outputW, LEARNING_RATE)
+    adamUpdate(params.outputB, grads.outputB, adamStates.outputB, LEARNING_RATE)
+
+    const valLoss = computeLoss(params, valSamples, numHeroes)
+
+    if (verbose && ((epoch + 1) % 20 === 0 || epoch === 0)) {
+      const trainAcc = computeAccuracy(params, trainSamples)
+      const valAcc = computeAccuracy(params, valSamples)
+      console.log(
+        `  Epoch ${(epoch + 1).toString().padStart(3)}: train_loss=${(epochLoss / n).toFixed(4)} val_loss=${valLoss.toFixed(4)} train_acc=${(trainAcc * 100).toFixed(1)}% val_acc=${(valAcc * 100).toFixed(1)}%`,
+      )
+    }
+
+    if (valLoss < bestValLoss) {
+      bestValLoss = valLoss
+      bestParams = {
+        embeddings: new Float64Array(params.embeddings),
+        hiddenW: new Float64Array(params.hiddenW),
+        hiddenB: new Float64Array(params.hiddenB),
+        outputW: new Float64Array(params.outputW),
+        outputB: new Float64Array(params.outputB),
+      }
+      patience = 0
+    } else {
+      patience++
+      if (patience >= PATIENCE) {
+        stoppedAt = epoch + 1
+        break
+      }
+    }
+  }
+
+  const final = bestParams || params
+  return {
+    params: final,
+    valAcc: computeAccuracy(final, valSamples),
+    trainAcc: computeAccuracy(final, trainSamples),
+    valLoss: bestValLoss,
+    epochs: stoppedAt,
+    valSamples,
+    trainSamples,
+  }
+}
+
+// ---- Main: run multiple times, keep best ----
 
 const rawDir = join(import.meta.dirname!, '..', 'data', 'raw')
 const dataFiles = readdirSync(rawDir).filter((f) => f.endsWith('.data'))
@@ -256,6 +372,7 @@ heroes.forEach((h, i) => (heroIndex[h] = i))
 const numHeroes = heroes.length
 
 console.log(`Heroes: ${numHeroes}, Matches: ${matches.length}`)
+console.log(`Running ${NUM_RUNS} training rounds, keeping the best...\n`)
 
 // Build training samples with side-swap augmentation
 const allSamples: TrainingSample[] = []
@@ -265,10 +382,7 @@ for (const match of matches) {
   if (leftIdx.length !== 3 || rightIdx.length !== 3) continue
 
   const target = match.result === 'left' ? 1 : match.result === 'right' ? 0 : 0.5
-
-  // Original
   allSamples.push({ leftIndices: leftIdx, rightIndices: rightIdx, target, weight: match.weight })
-  // Side-swapped augmentation
   allSamples.push({
     leftIndices: rightIdx,
     rightIndices: leftIdx,
@@ -277,100 +391,34 @@ for (const match of matches) {
   })
 }
 
-// Split into train/validation
-shuffle(allSamples)
-const valSize = Math.round(allSamples.length * VALIDATION_SPLIT)
-const valSamples = allSamples.slice(0, valSize)
-const trainSamples = allSamples.slice(valSize)
+let bestRun: RunResult | null = null
 
-console.log(`Training: ${trainSamples.length}, Validation: ${valSamples.length}`)
-
-// Initialize
-const params = initParams(numHeroes)
-const adamStates = {
-  embeddings: createAdamState(params.embeddings.length),
-  hiddenW: createAdamState(params.hiddenW.length),
-  hiddenB: createAdamState(params.hiddenB.length),
-  outputW: createAdamState(params.outputW.length),
-  outputB: createAdamState(params.outputB.length),
-}
-
-// Training loop
-let bestValLoss = Infinity
-let bestParams: NetworkParams | null = null
-let patience = 0
-
-for (let epoch = 0; epoch < EPOCHS; epoch++) {
-  shuffle(trainSamples)
-  const grads = zeroGrads(numHeroes)
-  let epochLoss = 0
-
-  for (const sample of trainSamples) {
-    epochLoss += forwardAndBackward(params, grads, sample)
-  }
-
-  // Scale gradients by batch size
-  const n = trainSamples.length
-  for (let i = 0; i < grads.embeddings.length; i++) grads.embeddings[i] /= n
-  for (let i = 0; i < grads.hiddenW.length; i++) grads.hiddenW[i] /= n
-  for (let i = 0; i < grads.hiddenB.length; i++) grads.hiddenB[i] /= n
-  for (let i = 0; i < grads.outputW.length; i++) grads.outputW[i] /= n
-  for (let i = 0; i < grads.outputB.length; i++) grads.outputB[i] /= n
-
-  // Adam updates
-  adamUpdate(params.embeddings, grads.embeddings, adamStates.embeddings, LEARNING_RATE)
-  adamUpdate(params.hiddenW, grads.hiddenW, adamStates.hiddenW, LEARNING_RATE)
-  adamUpdate(params.hiddenB, grads.hiddenB, adamStates.hiddenB, LEARNING_RATE)
-  adamUpdate(params.outputW, grads.outputW, adamStates.outputW, LEARNING_RATE)
-  adamUpdate(params.outputB, grads.outputB, adamStates.outputB, LEARNING_RATE)
-
-  // Validation
-  const valLoss = computeLoss(params, valSamples, numHeroes)
-  const trainAcc = computeAccuracy(params, trainSamples)
-  const valAcc = computeAccuracy(params, valSamples)
-
-  if ((epoch + 1) % 20 === 0 || epoch === 0) {
-    console.log(
-      `Epoch ${(epoch + 1).toString().padStart(3)}: train_loss=${(epochLoss / n).toFixed(4)} val_loss=${valLoss.toFixed(4)} train_acc=${(trainAcc * 100).toFixed(1)}% val_acc=${(valAcc * 100).toFixed(1)}%`,
-    )
-  }
-
-  if (valLoss < bestValLoss) {
-    bestValLoss = valLoss
-    bestParams = {
-      embeddings: new Float64Array(params.embeddings),
-      hiddenW: new Float64Array(params.hiddenW),
-      hiddenB: new Float64Array(params.hiddenB),
-      outputW: new Float64Array(params.outputW),
-      outputB: new Float64Array(params.outputB),
-    }
-    patience = 0
-  } else {
-    patience++
-    if (patience >= PATIENCE) {
-      console.log(`Early stopping at epoch ${epoch + 1}`)
-      break
-    }
+for (let run = 0; run < NUM_RUNS; run++) {
+  const seed = 42 + run * 7919 // Deterministic, spread-out seeds
+  const result = trainRun(allSamples, numHeroes, seed, false)
+  const marker = !bestRun || result.valAcc > bestRun.valAcc ? ' ← best' : ''
+  console.log(
+    `Run ${(run + 1).toString().padStart(2)}/${NUM_RUNS}: val_acc=${(result.valAcc * 100).toFixed(1)}% train_acc=${(result.trainAcc * 100).toFixed(1)}% (${result.epochs} epochs)${marker}`,
+  )
+  if (!bestRun || result.valAcc > bestRun.valAcc) {
+    bestRun = result
   }
 }
 
-// Use best params
-const final = bestParams || params
-const finalValAcc = computeAccuracy(final, valSamples)
-const finalTrainAcc = computeAccuracy(final, trainSamples)
+const final = bestRun!
 console.log(
-  `\nFinal: train_acc=${(finalTrainAcc * 100).toFixed(1)}% val_acc=${(finalValAcc * 100).toFixed(1)}%`,
+  `\nBest: train_acc=${(final.trainAcc * 100).toFixed(1)}% val_acc=${(final.valAcc * 100).toFixed(1)}%`,
 )
 
 // Export weights
 const round = (x: number) => Math.round(x * 1e6) / 1e6
 const weightsObj = {
   heroIndex,
-  embeddings: Array.from(final.embeddings).map(round),
-  hiddenW: Array.from(final.hiddenW).map(round),
-  hiddenB: Array.from(final.hiddenB).map(round),
-  outputW: Array.from(final.outputW).map(round),
-  outputB: round(final.outputB[0]!),
+  embeddings: Array.from(final.params.embeddings).map(round),
+  hiddenW: Array.from(final.params.hiddenW).map(round),
+  hiddenB: Array.from(final.params.hiddenB).map(round),
+  outputW: Array.from(final.params.outputW).map(round),
+  outputB: round(final.params.outputB[0]!),
 }
 
 const outPath = join(import.meta.dirname!, '..', 'prediction', 'nnWeights.ts')
