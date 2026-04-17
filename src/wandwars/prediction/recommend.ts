@@ -8,6 +8,7 @@ import type {
   Recommendation,
   RecommendationModel,
 } from '../types'
+import { adaptiveMLModel } from './adaptiveML'
 import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'
@@ -15,7 +16,12 @@ import { popularPickModel } from './popularPick'
 
 const rawData = atob(encodedData)
 
-const models: RecommendationModel[] = [popularPickModel, compositeModel, bradleyTerryModel]
+const models: RecommendationModel[] = [
+  popularPickModel,
+  compositeModel,
+  bradleyTerryModel,
+  adaptiveMLModel,
+]
 
 let cachedMatches: MatchResult[] | null = null
 let cachedAnalysis: AnalysisData | null = null
@@ -113,21 +119,24 @@ const CONFIDENCE_ORDER: ('high' | 'medium' | 'low')[] = ['low', 'medium', 'high'
 
 function getAdaptiveWeights(matchCount: number): Record<string, number> {
   if (matchCount < 20) {
-    return { 'popular-pick': 0.6, 'bradley-terry': 0.1, composite: 0.3 }
+    return { 'popular-pick': 0.55, composite: 0.3, 'bradley-terry': 0.1, 'adaptive-ml': 0.05 }
   }
   if (matchCount <= 100) {
     const t = (matchCount - 20) / 80
     return {
-      'popular-pick': 0.6 - 0.27 * t,
-      'bradley-terry': 0.1 + 0.23 * t,
-      composite: 0.3 + 0.03 * t,
+      'popular-pick': 0.55 - 0.22 * t,
+      composite: 0.3 + 0.0 * t,
+      'bradley-terry': 0.1 + 0.15 * t,
+      'adaptive-ml': 0.05 + 0.07 * t,
     }
   }
+  // 100+ matches: roughly equal, NN grows with more data
   const t = Math.min(1, (matchCount - 100) / 400)
   return {
     'popular-pick': 0.33 - 0.13 * t,
-    'bradley-terry': 0.33 + 0.07 * t,
-    composite: 0.33 + 0.07 * t,
+    composite: 0.3 + 0.0 * t,
+    'bradley-terry': 0.25 + 0.05 * t,
+    'adaptive-ml': 0.12 + 0.08 * t,
   }
 }
 
