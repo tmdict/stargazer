@@ -209,7 +209,7 @@ Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to
 
 All models implement `RecommendationModel` with `recommend()` and `predictMatchup()`. They run independently in separate tabs. Pick order does not affect predictions — all models evaluate teams as unordered sets.
 
-Tab order: **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Popular Pick** | **Records** | **Meta**. Ordered most-to-least accurate at mature (500+ match) datasets per the aggregate weights; individual match-prediction cards follow the same order.
+Tab order: **Popular Pick** (default) | **Team Power** (Bradley-Terry) | **Hero Synergy** (Composite) | **Records** | **Meta**. Individual match-prediction cards follow the same order.
 
 ### Model A: Popular Pick (`popularPick.ts`)
 
@@ -430,7 +430,7 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 ### Right Column — Tabs
 
-**Hero Synergy** (Composite, default) | **Team Power** (Bradley-Terry) | **Popular Pick** | **Records** (with count badge) | **Meta**
+**Popular Pick** (default) | **Team Power** (Bradley-Terry) | **Hero Synergy** (Composite) | **Records** (with count badge) | **Meta**
 
 #### During Draft
 
