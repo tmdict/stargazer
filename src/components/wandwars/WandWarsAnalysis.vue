@@ -995,7 +995,7 @@ const aggregatePrediction = computed(() => {
   align-items: center;
   gap: var(--spacing-xs);
   flex-wrap: wrap;
-  margin: var(--spacing-sm) 0;
+  margin: var(--spacing-lg) 0 var(--spacing-sm);
   padding: 0 0 var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--color-border-light);
 }
