@@ -644,13 +644,13 @@ async function handleImportFile(event: Event) {
 }
 
 const tabs = [
-  { id: 'composite', label: 'Hero Synergy' },
-  { id: 'bradley-terry', label: 'Team Power' },
   { id: 'popular-pick', label: 'Popular Pick' },
+  { id: 'bradley-terry', label: 'Team Power' },
+  { id: 'composite', label: 'Hero Synergy' },
   { id: 'records', label: 'Records' },
 ]
 
-const activeTab = ref('composite')
+const activeTab = ref('popular-pick')
 
 // Record form state
 const recordWinner = ref<'left' | 'right' | 'draw'>('left')
