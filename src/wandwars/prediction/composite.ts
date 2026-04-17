@@ -65,6 +65,20 @@ function sampleBonus(heroMatches: number): number {
   return SAMPLE_BONUS_MAX * Math.min(1, heroMatches / SAMPLE_BONUS_FULL)
 }
 
+/**
+ * Trio synergy bonus: when the candidate completes a 3-hero team that has
+ * enough match data, add a bonus/penalty based on how the trio performs
+ * beyond what pairwise synergy predicts.
+ */
+function computeTrioBonus(candidate: string, teammates: string[], data: AnalysisData): number {
+  if (teammates.length !== 2) return 0
+  const key = [candidate, ...teammates].sort().join(',')
+  const trio = data.trioMatrix[key]
+  if (!trio || trio.matches < 3) return 0
+  const strength = dataStrength(trio.matches)
+  return trio.score * strength
+}
+
 function computeDynamicScore(
   baseWinRate: number,
   rawSynergy: number,
@@ -72,6 +86,7 @@ function computeDynamicScore(
   synStrength: number,
   ctrStrength: number,
   heroMatches: number,
+  trioBonus: number = 0,
 ): number {
   const effectiveSynergyWeight = WEIGHT_SYNERGY * synStrength
   const effectiveCounterWeight = WEIGHT_COUNTER * ctrStrength
@@ -85,7 +100,8 @@ function computeDynamicScore(
     effectiveBaseWeight * baseWinRate +
     effectiveSynergyWeight * normalizeModifier(rawSynergy) +
     effectiveCounterWeight * normalizeModifier(rawCounter) +
-    sampleBonus(heroMatches)
+    sampleBonus(heroMatches) +
+    trioBonus
   )
 }
 
@@ -132,6 +148,7 @@ export const compositeModel: RecommendationModel = {
       const synStr = synergyDataStrength(hero, teammates, analysisData)
       const ctrStr = counterDataStrength(hero, opponents, analysisData)
       const heroMatches = analysisData.heroStats[hero]?.matches || 0
+      const trio = computeTrioBonus(hero, teammates, analysisData)
       const score = computeDynamicScore(
         baseWinRate,
         rawSynergy,
@@ -139,6 +156,7 @@ export const compositeModel: RecommendationModel = {
         synStr,
         ctrStr,
         heroMatches,
+        trio,
       )
       const pickRate = analysisData.totalMatches > 0 ? heroMatches / analysisData.totalMatches : 0
 
@@ -146,7 +164,13 @@ export const compositeModel: RecommendationModel = {
         hero,
         score,
         confidence: getHeroConfidence(hero, teammates, opponents, analysisData),
-        breakdown: { base: baseWinRate, synergy: rawSynergy, counter: rawCounter, pickRate },
+        breakdown: {
+          base: baseWinRate,
+          synergy: rawSynergy,
+          counter: rawCounter,
+          trio,
+          pickRate,
+        },
         relevantNotes: getRelevantNotes(hero, matches),
       }
     })
@@ -162,6 +186,11 @@ export const compositeModel: RecommendationModel = {
   ): MatchupPrediction {
     function teamScore(team: string[], opponents: string[]): number {
       let total = 0
+      // Compute trio bonus once for the team (not per-hero to avoid triple-counting)
+      const trioKey = [...team].sort().join(',')
+      const trioEntry = analysisData.trioMatrix[trioKey]
+      const trioVal =
+        trioEntry && trioEntry.matches >= 3 ? trioEntry.score * dataStrength(trioEntry.matches) : 0
       for (const hero of team) {
         const base = analysisData.heroStats[hero]?.winRate || 0.5
         const teammates = team.filter((h) => h !== hero)
@@ -172,6 +201,8 @@ export const compositeModel: RecommendationModel = {
         const heroMatches = analysisData.heroStats[hero]?.matches || 0
         total += computeDynamicScore(base, rawSynergy, rawCounter, synStr, ctrStr, heroMatches)
       }
+      // Add trio bonus once (not per hero)
+      total += trioVal
       return total
     }
 
