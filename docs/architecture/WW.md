@@ -151,7 +151,7 @@ Prior fades naturally as data grows. At 50+ matches per hero it's negligible. Ap
 
 **Why 3.0?** Prior of 1.0 was too weak — heroes with 2W/0L scored 75%, outranking well-tested heroes. Increasing to 3.0 brings that down to 62.5%, which is much closer to properly-tested heroes' rates.
 
-**Exception**: Popular Pick uses a local Bayesian prior of **1.0** for its own pair/trio/contextual win rate calculations (not the shared analysis). This makes its pair records more reactive to small samples — a deliberate trade-off for the model's "quick intuitive picks" philosophy.
+**Exception**: Popular Pick uses a local Bayesian prior of **1.0** for its own pair/trio/contextual win rate calculations (not the shared analysis). This keeps computed win rates closer to the raw W/L records shown to users — if a pair shows "5W / 2L", the 1.0 prior gives 66.7% vs 3.0 giving 61.5%.
 
 ### Wilson Score Confidence (confidence.ts)
 
