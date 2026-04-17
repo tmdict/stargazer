@@ -124,19 +124,19 @@ function getAdaptiveWeights(matchCount: number): Record<string, number> {
   if (matchCount <= 100) {
     const t = (matchCount - 20) / 80
     return {
-      'popular-pick': 0.55 - 0.22 * t,
-      composite: 0.3 + 0.0 * t,
-      'bradley-terry': 0.1 + 0.15 * t,
-      'adaptive-ml': 0.05 + 0.07 * t,
+      'popular-pick': 0.55 - 0.2 * t,
+      composite: 0.3 - 0.05 * t,
+      'bradley-terry': 0.1 + 0.1 * t,
+      'adaptive-ml': 0.05 + 0.15 * t,
     }
   }
-  // 100+ matches: roughly equal, NN grows with more data
+  // 100+ matches: weights shift toward models with better benchmark performance
   const t = Math.min(1, (matchCount - 100) / 400)
   return {
-    'popular-pick': 0.33 - 0.13 * t,
-    composite: 0.3 + 0.0 * t,
-    'bradley-terry': 0.25 + 0.05 * t,
-    'adaptive-ml': 0.12 + 0.08 * t,
+    'popular-pick': 0.35 - 0.1 * t,
+    composite: 0.25 - 0.05 * t,
+    'bradley-terry': 0.2 + 0.05 * t,
+    'adaptive-ml': 0.2 + 0.1 * t,
   }
 }
 

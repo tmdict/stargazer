@@ -21,7 +21,7 @@ leftHero1,leftHero2,leftHero3 <symbol> rightHero1,rightHero2,rightHero3;optional
 - `>` left wins, `<` right wins, `>>` / `<<` dominant/sweep win (weight 2.0), `=` draw
 - Hero names are kebab-case, matching `src/data/character/*.json`
 - Notes use `{hero-name}` to reference specific heroes — displayed with hero names highlighted in teal bold
-- Data file is gitignored; inlined into JS bundle at build time via Vite `?raw` import
+- Raw data files are gitignored; the encoded `data` file is committed and inlined into the JS bundle via Vite `?raw` import
 
 Examples:
 
@@ -43,7 +43,7 @@ src/
       raw/
         *.data                # Plain text match data files (gitignored)
         portraits/            # Hero reference portraits (gitignored — local only)
-      data                    # Base64+zlib encoded match data (committed)
+      data                    # Base64 encoded match data (committed)
       .gitignore              # Ignores raw/ folder
     scripts/
       encode.ts               # Raw → encoded (npm run encode:ww)
@@ -85,8 +85,8 @@ src/
       WandWarsAnalysis.vue        # Right panel: tabbed [Popular Pick][Composite][B-T][Adaptive ML][Records]
       WandWarsRecommendation.vue  # Recommendation card with breakdown, counters, team counter
       WandWarsTopTeams.vue        # Pinned top teams + suggested teams card
-      WandWarsMetaTeams.vue       # Meta tab: sortable tables for Units/Synergy/Teams
-      WandWarsInsights.vue        # Meta tab: insights, counter rows, dataset header
+      WandWarsMetaTeams.vue       # Meta view: sortable tables for Units/Synergy/Teams
+      WandWarsInsights.vue        # Meta view: insights, counter rows, dataset header
 docs/
   architecture/
     WW.md                      # This document
@@ -96,11 +96,11 @@ docs/
 
 These existing files were modified to support the feature. Revert these changes to fully remove WandWars:
 
-| File                   | Change                                                                      |
-| ---------------------- | --------------------------------------------------------------------------- |
-| `src/router/routes.ts` | Added `/wandwars` route                                                     |
-| `package.json`         | Added `encode:ww`, `train:ww` scripts; modified `build` to run decode first |
-| `tsconfig.app.json`    | Added `src/wandwars/scripts/*` to `exclude`                                 |
+| File                   | Change                                      |
+| ---------------------- | ------------------------------------------- |
+| `src/router/routes.ts` | Added `/wandwars` route                     |
+| `package.json`         | Added `encode:ww`, `train:ww` scripts       |
+| `tsconfig.app.json`    | Added `src/wandwars/scripts/*` to `exclude` |
 
 ### Route
 
@@ -114,18 +114,15 @@ No locale prefix, not SSG pre-rendered. No page title or back button — user na
 
 ```
 raw/*.data (raw, gitignored)
-    ↓ npm run encode:ww (concatenate + zlib deflate + base64)
+    ↓ npm run encode:ww (concatenate + base64)
 data (encoded, committed to git)
-    ↓ npm run build (auto-decodes before build)
-raw/*.data (decoded at build time)
     ↓ Vite ?raw import
-JS bundle (inlined as string)
+JS bundle (base64 string, decoded at runtime via atob)
 ```
 
-- **Local dev**: Edit files in `src/wandwars/data/raw/` directly, Vite reads them via `?raw` import
+- **Local dev**: Edit files in `src/wandwars/data/raw/` directly; run `npm run encode:ww` to update the encoded file
 - **Adding data**: Edit raw files → `npm run encode:ww` → commit encoded `data` file
-- **Netlify build**: `npm run build` runs `decode.ts` first, then normal build
-- **Why encode?** Raw data is gitignored to keep match records private. Encoded file is committed but not human-readable (base64+zlib). ~63% smaller than raw.
+- **Why encode?** Raw data is gitignored to keep match records private. Encoded file is committed but not human-readable (base64).
 
 ### Component Reuse
 
@@ -217,7 +214,7 @@ Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to
 
 All models implement `RecommendationModel` with `recommend()` and `predictMatchup()`. They run independently in separate tabs. Pick order does not affect predictions — all models evaluate teams as unordered sets.
 
-Tab order: **Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records** | **Meta**. Individual match-prediction cards follow the same order.
+Tab order: **Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records**. Individual match-prediction cards follow the same model order. (Meta is a separate left-column view, not a model tab.)
 
 ### Model A: Popular Pick (`popularPick.ts`)
 
@@ -335,33 +332,6 @@ This gives B-T synergy awareness with proper statistical grounding rather than h
 
 ---
 
-### Model Comparison
-
-| Aspect           | Popular Pick                       | Hero Synergy (Composite)                             | Team Power (Bradley-Terry)                          | Adaptive ML (Neural Network)                   |
-| ---------------- | ---------------------------------- | ---------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
-| Min useful data  | ~5 matches                         | ~20 matches                                          | ~20 matches (regularized)                           | ~500 matches (embedding quality)               |
-| What it captures | Popularity + pair win records      | Synergy + counter + trio interactions                | Individual hero strength + pair interactions        | Learned patterns (non-linear, automatic)       |
-| Small data       | Pick rate weight                   | Dynamic weights + Bayesian prior + sample bonus      | L2 regularization toward λ=1.0                      | Weight decay + early stopping                  |
-| Team awareness   | Pair records (observational)       | Pairwise synergy + counter + trio bonus (analytical) | Additive strengths + post-hoc pair residuals        | Implicit via learned embeddings                |
-| Strengths        | Works immediately; intuitive       | Explains _why_; captures team chemistry + trio data  | Statistically principled; duo-aware probabilities   | Discovers unknown patterns; improves with data |
-| Weaknesses       | No explicit interaction modeling   | Heuristic weights; needs pair data                   | Pair interactions are residuals, not jointly fitted | Black box; needs retraining for new data       |
-| Best for         | Default; "who's popular and wins?" | Team composition; draft counter-picks                | Objective strength ranking with duo chemistry       | Second opinion; ensemble diversity             |
-
-**Why no pick rate in Composite?** Adding pick rate made Composite overlap with Popular Pick without adding analytical value. The stronger Bayesian prior (3.0) + sample bonus + dynamic weight redistribution handles small-sample heroes without a popularity signal. Each model is now genuinely distinct.
-
-### How Models Update With New Data
-
-All models recompute from scratch on every page load. Workflow: add matches to raw data files → rebuild → everything recalculated.
-
-| Matches | Popular Pick                                  | Hero Synergy (Composite)                          | Bradley-Terry                             | Adaptive ML                           |
-| ------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- | ------------------------------------- |
-| 5-20    | Already useful; win rates + pick rates        | Win Rate dominates; sparse pair data              | Regularization dominates                  | Not useful; embeddings random         |
-| 20-50   | Pair records appearing; team suggestions work | Synergy/counter starting to appear                | Regularization fading; pair data sparse   | Not useful; heavy overfitting         |
-| 50-100  | Rich pair data; strong team suggestions       | Popular pairs show synergy                        | Reliable; pair interactions emerging      | Marginal; noisy embeddings            |
-| 100-200 | Very reliable pair records                    | Medium+ confidence; synergy fills in              | Stable; pair data growing                 | Starting to learn; frequent heroes OK |
-| 200-500 | Complementary to B-T/Composite                | Rich synergy/counter; trio data appearing         | Stable; pair interactions well-populated  | Competitive; embeddings stabilizing   |
-| 500+    | Quick reference + pair lookup                 | Rich trio data; three-way interactions measurable | Strong pair interactions; well-calibrated | Strong; discovers non-linear patterns |
-
 ### Model D: Adaptive ML — "Adaptive ML" (`adaptiveML.ts`)
 
 **Philosophy**: Learned pattern discovery — "what patterns exist in the data that hand-crafted models miss?"
@@ -372,7 +342,7 @@ Hero embeddings (87×16) → team sum → difference → Dense(16) → ReLU → 
 
 Each hero gets a 16-dimensional learned "profile" vector. Team representation = sum of hero embeddings. Prediction uses the difference between team embeddings, so swapping sides correctly flips the probability.
 
-~1,700 parameters total. Trained offline via `npm run train:ww`, weights committed as `nnWeights.ts`.
+~1,700 parameters total — conceptually a generalization of Bradley-Terry from 1-dim strength to 16-dim profiles. Implemented in pure TypeScript with no external ML libraries (zero bundle bloat). Trained offline via `npm run train:ww`, weights committed as `nnWeights.ts`.
 
 #### Training
 
@@ -403,13 +373,83 @@ Current architecture is constrained by data size (~1,700 params for ~2,000 augme
 - **Deeper network** (add a second hidden layer): enables more complex team interaction modeling beyond what a single layer can learn. Viable at ~3,000+ matches.
 - **Separate offense/defense embeddings**: a hero may contribute differently when on your team vs the opponent's. Doubles embedding params, so needs ~3,000+ matches.
 
+---
+
+### Model Comparison
+
+| Aspect           | Popular Pick                       | Hero Synergy (Composite)                             | Team Power (Bradley-Terry)                          | Adaptive ML (Neural Network)                   |
+| ---------------- | ---------------------------------- | ---------------------------------------------------- | --------------------------------------------------- | ---------------------------------------------- |
+| Min useful data  | ~5 matches                         | ~20 matches                                          | ~20 matches (regularized)                           | ~500 matches (embedding quality)               |
+| What it captures | Popularity + pair win records      | Synergy + counter + trio interactions                | Individual hero strength + pair interactions        | Learned patterns (non-linear, automatic)       |
+| Small data       | Pick rate weight                   | Dynamic weights + Bayesian prior + sample bonus      | L2 regularization toward λ=1.0                      | Weight decay + early stopping                  |
+| Team awareness   | Pair records (observational)       | Pairwise synergy + counter + trio bonus (analytical) | Additive strengths + post-hoc pair residuals        | Implicit via learned embeddings                |
+| Strengths        | Works immediately; intuitive       | Explains _why_; captures team chemistry + trio data  | Statistically principled; duo-aware probabilities   | Discovers unknown patterns; improves with data |
+| Weaknesses       | No explicit interaction modeling   | Heuristic weights; needs pair data                   | Pair interactions are residuals, not jointly fitted | Black box; needs retraining for new data       |
+| Best for         | Default; "who's popular and wins?" | Team composition; draft counter-picks                | Objective strength ranking with duo chemistry       | Second opinion; ensemble diversity             |
+
+**Why no pick rate in Composite?** Adding pick rate made Composite overlap with Popular Pick without adding analytical value. The stronger Bayesian prior (3.0) + sample bonus + dynamic weight redistribution handles small-sample heroes without a popularity signal. Each model is now genuinely distinct.
+
+### How Models Update With New Data
+
+Popular Pick, Hero Synergy, and Team Power recompute from scratch on every page load. Adaptive ML uses pre-trained weights and requires explicit retraining (`npm run train:ww`). Workflow: add matches → `npm run encode:ww` → `npm run train:ww` → commit.
+
+| Matches | Popular Pick                                  | Hero Synergy (Composite)                          | Bradley-Terry                             | Adaptive ML                           |
+| ------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- | ------------------------------------- |
+| 5-20    | Already useful; win rates + pick rates        | Win Rate dominates; sparse pair data              | Regularization dominates                  | Not useful; embeddings random         |
+| 20-50   | Pair records appearing; team suggestions work | Synergy/counter starting to appear                | Regularization fading; pair data sparse   | Not useful; heavy overfitting         |
+| 50-100  | Rich pair data; strong team suggestions       | Popular pairs show synergy                        | Reliable; pair interactions emerging      | Marginal; noisy embeddings            |
+| 100-200 | Very reliable pair records                    | Medium+ confidence; synergy fills in              | Stable; pair data growing                 | Starting to learn; frequent heroes OK |
+| 200-500 | Complementary to B-T/Composite                | Rich synergy/counter; trio data appearing         | Stable; pair interactions well-populated  | Competitive; embeddings stabilizing   |
+| 500+    | Quick reference + pair lookup                 | Rich trio data; three-way interactions measurable | Strong pair interactions; well-calibrated | Strong; discovers non-linear patterns |
+
+### Benchmark: 5-Fold Cross-Validation
+
+Periodic benchmark to measure prediction accuracy. Re-run as the dataset grows to track model performance and adjust aggregate weights.
+
+#### How to Reproduce
+
+Write a script that:
+
+1. Loads all raw match data, filters to decisive matches (excludes draws)
+2. Shuffles with a fixed seed (42) for reproducibility
+3. Splits into 5 folds of equal size
+4. For each fold: trains on 4 folds (+ draws), tests on the held-out fold
+5. For each test match: calls `predictMatchup()` on all models using training-only analysis data
+6. Measures: **accuracy** (did the favored team win?) and **Brier score** (calibration — lower is better)
+
+Note: Adaptive ML uses pre-trained weights from the full dataset (not retrained per fold), so its accuracy is slightly optimistic. The other three models are fully retrained per fold since they compute from scratch.
+
+#### Results — 2026-04-17 (1,006 matches, 87 heroes)
+
+| Model           | Accuracy  | Brier Score | Notes                                                           |
+| --------------- | --------- | ----------- | --------------------------------------------------------------- |
+| **Adaptive ML** | **61.5%** | **0.2319**  | Best accuracy and calibration                                   |
+| Popular Pick    | 59.4%     | 0.2415      | Improved from 58.5% after sweep weight bug fix                  |
+| Team Power      | 58.6%     | 0.2394      | Brier improved dramatically (was 0.2866) with pair interactions |
+| Hero Synergy    | 57.6%     | 0.2433      | Unchanged — trio bonus doesn't move the needle yet              |
+| _Baseline_      | _53.6%_   | —           | _Always predict left (first-pick advantage)_                    |
+
+**Brier score** measures probability calibration: if a model predicts 70% and the team wins 70% of the time, it's well-calibrated. Lower = better. A perfectly uncalibrated coin-flip model scores 0.25.
+
+#### Aggregate Weights (based on benchmark)
+
+Weights used in the combined match prediction, scaling by dataset size:
+
+| Match count | Popular Pick | Hero Synergy | Team Power | Adaptive ML |
+| ----------- | ------------ | ------------ | ---------- | ----------- |
+| < 20        | 55%          | 30%          | 10%        | 5%          |
+| 100         | 35%          | 25%          | 20%        | 20%         |
+| 500+        | 25%          | 20%          | 25%        | 30%         |
+
+At low data, Popular Pick dominates (works immediately). As data grows, weight shifts toward Adaptive ML and Team Power (better calibrated with sufficient data). Hero Synergy retains ~20% for interpretability — it's the only model that explains _why_ a pick is good.
+
 ## 6. Top Teams & Suggestions (`teamSuggestions.ts`)
 
 Pinned above recommendations on all model tabs when 1+ hero picked on current side.
 
 ### Data-Backed Teams ("Top Teams")
 
-Exact 3-hero compositions from match data:
+Exact 3-hero compositions from match data. Info tooltip on hover explains the section.
 
 - Contains all currently-picked teammates
 - Excludes teams with any already-picked hero (either side)
@@ -419,15 +459,13 @@ Exact 3-hero compositions from match data:
 
 ### Constructed Teams ("Suggested Teams")
 
-Built from strongest pair combinations — surfaces combos even when exact trio never appeared:
+Scored by the Adaptive ML neural network — can evaluate any hero combination, including trios that never appeared together in data. Info tooltip on hover explains the section.
 
-**With 1 teammate**: Find best pair partners → for each, find best third via pair records with both → estimate win rate from average of all three pair records.
+**With 1 teammate**: All possible trios from the available hero pool are scored. **With 2 teammates**: All possible completions are scored. Each trio is evaluated against a sample of ~30 opponent trios for a stable estimate.
 
-**With 2 teammates**: Find all heroes that paired with either → score by pair records with both → estimate from combined data.
-
-- Deduplicated against exact trios
-- Dashed border, no W/L (record is estimated)
-- Up to 3 shown, sorted by Bayesian win rate
+- Deduplicated against exact trios (won't repeat data-backed teams)
+- Dashed border, predicted win rate displayed (muted, to distinguish from real W/L records)
+- Up to 3 shown, sorted by NN-predicted win rate
 - Max width capped at 1/3 container (consistent sizing)
 
 ### Hero Ordering
@@ -491,11 +529,11 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 ### Right Column — Tabs
 
-**Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records** (with count badge) | **Meta**
+**Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records** (with count badge)
 
 #### During Draft
 
-1. **Top Teams card** (1+ hero picked): data trios with W/L + constructed trios with dashed border
+1. **Top Teams card** (1+ hero picked): data trios with W/L + suggested trios with dashed border and predicted win rate
 2. **Side indicator**: "Recommending for [Left/Right] side" (teal/red)
 3. **Recommendation cards**: portrait, name, [confidence badge] [Score: X%], model breakdown, counter indicators (team counter first, then strong/weak against), relevant notes (hero names in teal bold)
 
@@ -508,7 +546,7 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 View-only list. Each record: match line + notes below. Three actions: **Copy Data** (clipboard, "Copied!" feedback) | **Export .data** (file) | **Clear All**.
 
-#### Meta Tab
+#### Meta Tabs
 
 Aggregate statistics across all match data. Left column: sortable tables (`WandWarsMetaTeams`). Right column: insights and counter rows (`WandWarsInsights`).
 
@@ -531,8 +569,6 @@ Three category sub-tabs: **Units** | **Synergy** | **Teams**
 | Pair Counters             | ≥ 2 wins AND wins > losses. Pair-vs-pair entries additionally require wins across ≥ 2 distinct opposing full teams, to suppress redundant slices of a single repeated 3v3 matchup |
 | Team Counters             | ≥ 2 wins AND winner's wins ≥ 2× losses in the head-to-head (e.g., 2-0, 4-1, 4-2 qualify; 3-2 does not)                                                                            |
 | Most Dominant Pairs/Teams | ≥ 2 dominant (sweep) wins                                                                                                                                                         |
-
-This replaces earlier hard caps (Best Openers 10, Best Responses 15, Pair Counters 20, Team Counters 20, Dominant Pairs/Teams 10 each).
 
 **Shared meta code**: `TeamRecord` in `types.ts`, `computeTeamRecords()` in `analysis.ts`, `META_*` constants in `constants.ts`, `formatSigned()` in `formatting.ts`.
 
@@ -574,7 +610,7 @@ Both flows share `buildSignaturesFromFiles()` in `heroPortraitSignatureBuilder.t
 
 ### Reference portrait hygiene
 
-Portraits live locally under `src/wandwars/data/raw/portraits/` (gitignored). A Node script, `scripts/normalize-references.mjs`, does a one-shot pass:
+Portraits live locally under `src/wandwars/data/raw/portraits/` (gitignored). A script, `scripts/normalize-references.ts`, does a one-shot pass:
 
 1. Detects the gold-border bounding box via HSV-threshold pixel scanning.
 2. Crops to that bbox.
@@ -582,29 +618,3 @@ Portraits live locally under `src/wandwars/data/raw/portraits/` (gitignored). A 
 4. Flattens transparency to a neutral grey so all references have identical corner pixels.
 
 After normalization, the reference set is uniform, so the perceptual signatures are directly comparable to each other and to screenshot cells.
-
-### Files
-
-- `imageSignature.ts` — `computeSignature()` + `signatureDistance()` (1 − NCC)
-- `poolDetect.ts` — `detectPool()` with offset search + de-dupe
-- `heroPortraitSignatures.ts` — auto-generated committed base64 map
-- `heroPortraitSignatureBuilder.ts` — folder → signatures (in-memory or downloadable module)
-- `bundledReference.ts` — loads committed signatures; supports runtime override
-- `components/wandwars/WandWarsPoolImport.vue` — the modal UI
-
-## 10. Design Decisions
-
-| Decision                | Choice                                                                     | Rationale                                                                           |
-| ----------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Pick order irrelevance  | Models evaluate unordered team sets; draft position stats in Insights only | Order affects model strength, but positional win rates shown as read-only insights  |
-| Bayesian prior          | 3.0 in analysis layer; 1.0 in Popular Pick's own pair/trio rates           | Prior of 1.0 too weak for analysis (2W/0L = 75%); Pop Pick keeps 1.0 for reactivity |
-| B-T regularization      | L2 via virtual observations, not pick rate blending                        | Proper Bayesian; handles small samples at parameter fitting level                   |
-| B-T pair interactions   | Post-hoc residuals from additive model, not jointly fitted                 | Simpler; avoids negative parameters in MM algorithm; still captures duo chemistry   |
-| Composite: no pick rate | Win Rate (0.5) + Synergy (0.3) + Counter (0.2) + Trio bonus                | Keeps Composite focused on interactions; distinct from Popular Pick                 |
-| Composite: trio synergy | Additive bonus when trio has 3+ matches, scaled by data strength           | Captures three-way interactions that don't decompose into pairs                     |
-| Adaptive ML approach    | Pure TS training + inference, no external ML libraries                     | Tiny model (~1,700 params); raw matrix ops are fast; zero bundle bloat              |
-| Adaptive ML embeddings  | 16-dim per hero, team = sum, predict from difference                       | Side-symmetric; parameter-efficient; generalizes B-T from 1-dim to 16-dim           |
-| Counter indicators      | "Strong/Weak against" not "Counters/Countered by"                          | Softer language avoids absolute claims with limited data                            |
-| Label: "Popular Pick"   | Renamed from "Meta Pick"                                                   | "Popular" doesn't conflict with weakness badges                                     |
-| Pick slots responsive   | CSS container queries (not media queries)                                  | Responds to column width, not viewport                                              |
-| Record storage          | `localStorage` key `stargazer.wandwars.records`; immutable                 | Snapshots at submit time; copy/export for portability                               |

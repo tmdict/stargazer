@@ -466,6 +466,12 @@ td.col-hero {
   vertical-align: middle;
   opacity: 0.5;
   margin-left: 2px;
+  cursor: help;
+  transition: opacity var(--transition-fast);
+}
+
+.synergy-info-icon:hover {
+  opacity: 1;
 }
 
 .col-sortable:hover {

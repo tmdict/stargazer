@@ -1,4 +1,6 @@
 import type { MatchResult } from '../types'
+import { heroNamesToIndices, nnForward } from './nn'
+import { NN_WEIGHTS } from './nnWeights'
 
 export interface TeamSuggestion {
   team: [string, string, string]
@@ -13,53 +15,6 @@ export interface TeamSuggestion {
 const MAX_SUGGESTIONS = 3
 const PRIOR = 3.0
 const MIN_MATCHES = 2
-
-/**
- * Compute pair win record between two heroes on the same team.
- */
-function getPairRecord(
-  heroA: string,
-  heroB: string,
-  matches: MatchResult[],
-): { wins: number; losses: number; total: number; winRate: number } {
-  let wins = 0
-  let losses = 0
-  let total = 0
-
-  for (const match of matches) {
-    for (const team of [match.left, match.right] as const) {
-      if (!team.includes(heroA) || !team.includes(heroB)) continue
-      total++
-      const isLeft = team === match.left
-      if ((isLeft && match.result === 'left') || (!isLeft && match.result === 'right')) wins++
-      else if ((isLeft && match.result === 'right') || (!isLeft && match.result === 'left'))
-        losses++
-    }
-  }
-
-  return {
-    wins,
-    losses,
-    total,
-    winRate: (wins + PRIOR) / (total + 2 * PRIOR),
-  }
-}
-
-/**
- * Find all unique heroes that have appeared on a team with a given hero.
- */
-function findPairPartners(hero: string, matches: MatchResult[]): string[] {
-  const partners = new Set<string>()
-  for (const match of matches) {
-    for (const team of [match.left, match.right] as const) {
-      if (!team.includes(hero)) continue
-      for (const h of team) {
-        if (h !== hero) partners.add(h)
-      }
-    }
-  }
-  return [...partners]
-}
 
 /**
  * Get exact trio records from match data.
@@ -109,100 +64,91 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
 }
 
 /**
- * Construct teams from best pair combinations.
- * Uses individual pair records — does NOT require the trio to have appeared together.
+ * Compute the mean team embedding across all heroes, used as a fixed
+ * "average opponent" for NN-scored team suggestions.
+ */
+let cachedAvgOpponent: number[] | null = null
+function getAvgOpponentIndices(): number[] {
+  if (cachedAvgOpponent) return cachedAvgOpponent
+  const numHeroes = Object.keys(NN_WEIGHTS.heroIndex).length
+  // Use 3 copies of the mean embedding index — approximated by averaging
+  // predictions against a few spread-out trios
+  cachedAvgOpponent = Array.from({ length: numHeroes }, (_, i) => i)
+  return cachedAvgOpponent
+}
+
+/**
+ * Score a trio using the NN against the average opponent pool.
+ * Samples a few evenly-spaced opponent trios for a stable estimate.
+ */
+function nnTeamScore(teamIndices: number[]): number {
+  const allIdx = getAvgOpponentIndices()
+  const n = allIdx.length
+  const step = Math.max(1, Math.floor(n / 6))
+  let total = 0
+  let count = 0
+  for (let a = 0; a < n && count < 30; a += step) {
+    for (let b = a + 1; b < n && count < 30; b += step) {
+      for (let c = b + 1; c < n && count < 30; c += step) {
+        if (teamIndices.includes(a) || teamIndices.includes(b) || teamIndices.includes(c)) continue
+        total += nnForward(NN_WEIGHTS, teamIndices, [allIdx[a]!, allIdx[b]!, allIdx[c]!])
+        count++
+      }
+    }
+  }
+  return count > 0 ? total / count : 0.5
+}
+
+/**
+ * Construct teams scored by the Adaptive ML neural network.
+ * Evaluates all possible trios containing the teammates — not limited
+ * to heroes that have appeared together in data.
  */
 function getConstructedTeams(
   teammates: string[],
-  matches: MatchResult[],
+  allHeroes: string[],
   existingKeys: Set<string>,
+  excludeHeroes: string[],
 ): TeamSuggestion[] {
+  const excluded = new Set([...excludeHeroes, ...teammates])
+  const candidates = allHeroes.filter((h) => !excluded.has(h))
   const results: TeamSuggestion[] = []
 
   if (teammates.length === 1) {
-    const hero = teammates[0]!
-    // Find all partners of hero, ranked by pair win rate
-    const partners = findPairPartners(hero, matches)
-    const rankedPartners = partners
-      .map((p) => ({ hero: p, ...getPairRecord(hero, p, matches) }))
-      .sort((a, b) => b.winRate - a.winRate || b.total - a.total)
-      .slice(0, 8)
-
-    for (const partner of rankedPartners) {
-      // For each top partner, find best third by average pair win rate with both
-      const thirdCandidates = findPairPartners(partner.hero, matches).filter(
-        (h) => h !== hero && h !== partner.hero,
-      )
-
-      for (const third of thirdCandidates) {
-        const team = [hero, partner.hero, third].sort() as [string, string, string]
+    for (let i = 0; i < candidates.length; i++) {
+      for (let j = i + 1; j < candidates.length; j++) {
+        const team = [teammates[0]!, candidates[i]!, candidates[j]!].sort() as [
+          string,
+          string,
+          string,
+        ]
         const key = team.join(',')
         if (existingKeys.has(key)) continue
 
-        const pair1 = getPairRecord(hero, partner.hero, matches)
-        const pair2 = getPairRecord(hero, third, matches)
-        const pair3 = getPairRecord(partner.hero, third, matches)
+        const indices = heroNamesToIndices(team, NN_WEIGHTS.heroIndex)
+        if (indices.length !== 3) continue
 
-        // Need at least some pair data
-        if (pair2.total === 0 && pair3.total === 0) continue
-
-        const totalWins = pair1.wins + pair2.wins + pair3.wins
-        const totalLosses = pair1.losses + pair2.losses + pair3.losses
-        const totalMatches = pair1.total + pair2.total + pair3.total
-        const estimatedWinRate = (totalWins + PRIOR) / (totalMatches + 2 * PRIOR)
-
-        existingKeys.add(key)
-        results.push({
-          team: [hero, partner.hero, third] as [string, string, string],
-          wins: totalWins,
-          losses: totalLosses,
-          draws: 0,
-          total: totalMatches,
-          winRate: estimatedWinRate,
-          constructed: true,
-        })
+        const winRate = nnTeamScore(indices)
+        results.push({ team, wins: 0, losses: 0, draws: 0, total: 0, winRate, constructed: true })
       }
     }
   }
 
   if (teammates.length === 2) {
-    // Find best third hero by pair records with each teammate independently
-    const allPartners = new Set([
-      ...findPairPartners(teammates[0]!, matches),
-      ...findPairPartners(teammates[1]!, matches),
-    ])
-    // Remove existing teammates
-    allPartners.delete(teammates[0]!)
-    allPartners.delete(teammates[1]!)
-
-    for (const third of allPartners) {
+    for (const third of candidates) {
       const team = [...teammates, third].sort() as [string, string, string]
       const key = team.join(',')
       if (existingKeys.has(key)) continue
 
-      const pair1 = getPairRecord(teammates[0]!, third, matches)
-      const pair2 = getPairRecord(teammates[1]!, third, matches)
-      const pairBetween = getPairRecord(teammates[0]!, teammates[1]!, matches)
+      const indices = heroNamesToIndices(team, NN_WEIGHTS.heroIndex)
+      if (indices.length !== 3) continue
 
-      const totalWins = pair1.wins + pair2.wins + pairBetween.wins
-      const totalLosses = pair1.losses + pair2.losses + pairBetween.losses
-      const totalMatches = pair1.total + pair2.total + pairBetween.total
-      const estimatedWinRate = (totalWins + PRIOR) / (totalMatches + 2 * PRIOR)
-
-      existingKeys.add(key)
-      results.push({
-        team: [teammates[0]!, teammates[1]!, third] as [string, string, string],
-        wins: totalWins,
-        losses: totalLosses,
-        draws: 0,
-        total: totalMatches,
-        winRate: estimatedWinRate,
-        constructed: true,
-      })
+      const winRate = nnTeamScore(indices)
+      results.push({ team, wins: 0, losses: 0, draws: 0, total: 0, winRate, constructed: true })
     }
   }
 
-  return results.sort((a, b) => b.winRate - a.winRate || b.total - a.total)
+  return results.sort((a, b) => b.winRate - a.winRate).slice(0, MAX_SUGGESTIONS)
 }
 
 export interface TopTeamsResult {
@@ -239,10 +185,8 @@ export function getTopTeams(
     .slice(0, MAX_SUGGESTIONS)
 
   const existingKeys = new Set(exact.map((t) => [...t.team].sort().join(',')))
-  const suggestedTeams = filterExcluded(
-    getConstructedTeams(teammates, matches, existingKeys),
-    excludeOthers,
-  ).slice(0, MAX_SUGGESTIONS)
+  const allHeroes = Object.keys(NN_WEIGHTS.heroIndex)
+  const suggestedTeams = getConstructedTeams(teammates, allHeroes, existingKeys, excludeOthers)
 
   return { dataTeams, suggestedTeams }
 }

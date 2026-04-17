@@ -24,7 +24,7 @@ function sumEmbeddings(weights: NNWeights, heroIndices: number[]): number[] {
   const result = new Array<number>(EMB_DIM).fill(0)
   for (const idx of heroIndices) {
     const emb = getEmbedding(weights, idx)
-    for (let i = 0; i < EMB_DIM; i++) result[i] += emb[i]!
+    for (let i = 0; i < EMB_DIM; i++) result[i] = result[i]! + emb[i]!
   }
   return result
 }
@@ -81,9 +81,9 @@ export function meanEmbedding(weights: NNWeights): number[] {
   const result = new Array<number>(EMB_DIM).fill(0)
   for (let h = 0; h < numHeroes; h++) {
     const emb = getEmbedding(weights, h)
-    for (let i = 0; i < EMB_DIM; i++) result[i] += emb[i]!
+    for (let i = 0; i < EMB_DIM; i++) result[i] = result[i]! + emb[i]!
   }
-  for (let i = 0; i < EMB_DIM; i++) result[i] /= numHeroes
+  for (let i = 0; i < EMB_DIM; i++) result[i] = result[i]! / numHeroes
   return result
 }
 

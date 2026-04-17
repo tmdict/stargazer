@@ -1222,7 +1222,7 @@ const aggregatePrediction = computed(() => {
   color: var(--color-text-secondary);
   cursor: help;
   flex-shrink: 0;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity var(--transition-fast);
 }
 
@@ -1392,7 +1392,7 @@ const aggregatePrediction = computed(() => {
 .record-info-icon {
   color: var(--color-text-secondary);
   cursor: help;
-  opacity: 0.6;
+  opacity: 0.5;
   transition: opacity var(--transition-fast);
 }
 
