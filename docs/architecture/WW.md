@@ -425,7 +425,7 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 
 - **Pick slots**: 6 `CharacterIcon` circles (70px), dashed border when empty (teal/red by team). Click to remove. Portrait images offset (`center 20%` / `margin-top: 6px`) to center on face. Responsive via CSS container queries (wraps at 450px column width, `vs` label on its own line between stacked teams; smaller slots at 320px).
 - **Active side**: Full opacity + "▶ Picking" label during draft. Both full opacity when all 6 picked.
-- **Hero grid**: 70px circular portraits with level backgrounds. Sorted S→A→Rare, then faction, then name. Picked heroes dimmed.
+- **Hero grid**: 70px circular portraits with level backgrounds. Sorted by faction, then character id. Picked heroes dimmed.
 - **Controls row**: Faction `FilterIcons` + Undo/Reset buttons, padded to align with grid.
 
 ### Right Column — Tabs
@@ -441,7 +441,7 @@ Single-page. Left: hero picker. Right: tabbed analysis panel. Full-width respons
 #### All 6 Picked
 
 1. **All model predictions**: Active tab's model full (confidence, win probability bar, verdict, notes). Others compact below.
-2. **Save Result form**: 5 result buttons (Left Win Sweep / Left Win / Draw / Right Win / Right Win Sweep), notes textarea, "Save Result" + "Reset Teams" buttons.
+2. **Save Result form**: 5 result buttons (Left Win Sweep / Left Win / Draw / Right Win / Right Win Sweep), notes textarea, "Save Result" button. Teams auto-reset after saving. Info icon tooltip on "Record Match" title explains what sweeps mean.
 
 #### Records Tab
 
@@ -482,13 +482,25 @@ Opens from a "Restrict to Pool" button on the draft tab. Uploading a screenshot 
 ### Pipeline
 
 1. **Reference signatures** (precomputed, committed): each hero portrait is reduced to a 1024-float normalized 32×32 circular-masked grayscale fingerprint, base64-encoded into `heroPortraitSignatures.ts`. No PNG assets ship in the repo.
-2. **Screenshot ingest**: user drops or selects a PNG/JPG screenshot cropped to the 4×5 grid (no surrounding game UI).
-3. **Cell extraction**: image is sliced into `rows × cols = 4 × 5 = 20` cells by dividing the full image geometrically.
+2. **Screenshot ingest**: user drops or selects a PNG/JPG screenshot. Does not need to be pre-cropped — `suggestGridCrop()` auto-detects the 4×5 grid region (see Auto-Crop below). User can drag to adjust the crop before proceeding.
+3. **Cell extraction**: image is sliced into `rows × cols = 4 × 5 = 20` cells by dividing the cropped region geometrically.
 4. **Local offset search**: for every cell, a 5×5 grid of offsets (±10% of cell size per axis) is tried — each offset produces a signature, and the offset with the best-matching reference is kept. This absorbs grid alignment slop without needing a global template search.
 5. **Matching**: each candidate signature compares against every reference via 1 − NCC (normalized cross correlation). Smaller distance = stronger match; `acceptThreshold` (0.5) rejects anything below confidence.
 6. **De-dupe**: if two cells both claim the same hero, the farther match loses its top pick and falls back to its best non-conflicting alternative.
 7. **Review UI**: the user sees each cell with its crop preview, a confidence badge (green < 0.2, amber ≤ 0.35, red above, dashed red for "unknown"), and a searchable picker to override any cell manually.
 8. **Apply**: the confirmed 20 heroes become the `poolFilter` on the WandWars view, narrowing `allHeroes`, picker availability, and recommendation candidates everywhere.
+
+### Auto-Crop Detection (`suggestGridCrop`)
+
+Locates the 4×5 card grid inside an arbitrary screenshot that may include game UI (team slots, countdown timer, buttons).
+
+1. **Gold pixel density**: downscale to 320px width, scan every pixel for gold card-border color (HSV hue 25–55°, minimum brightness and saturation). Build per-row and per-column gold pixel counts.
+2. **Dense range detection**: `largestDenseRange()` finds the longest contiguous axis range where smoothed gold density exceeds a threshold (2% of axis width, 5% smoothing window).
+3. **Aspect ratio constraint**: if the detected region is too tall for a 5×4 grid (W/H < 0.675), compute the expected height from the width using the grid's natural aspect ratio (~0.9), then slide a window of that height to find the vertical sub-range with the highest gold density. This excludes team slots and timers above/below the grid.
+4. **Edge trimming**: trim low-density tails from all four edges. Compares a 3-pixel average at each edge against 20% of the interior mean density — card borders are far denser than background, so this reliably stops at the grid edge without overshooting.
+5. **Padding**: small outward buffer (1%) to include full outer card edges.
+
+User can always drag to redraw the crop manually if auto-detection is insufficient.
 
 ### Signature generation (dev tool)
 
