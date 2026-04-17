@@ -93,3 +93,40 @@ export function meanEmbedding(weights: NNWeights): number[] {
 export function heroNamesToIndices(names: string[], heroIndex: Record<string, number>): number[] {
   return names.map((n) => heroIndex[n] ?? -1).filter((i) => i >= 0)
 }
+
+/**
+ * Cosine similarity between two hero embeddings. Returns [-1, 1].
+ */
+export function embeddingSimilarity(weights: NNWeights, heroA: string, heroB: string): number {
+  const idxA = weights.heroIndex[heroA]
+  const idxB = weights.heroIndex[heroB]
+  if (idxA === undefined || idxB === undefined) return 0
+  const embA = getEmbedding(weights, idxA)
+  const embB = getEmbedding(weights, idxB)
+  let dot = 0
+  let magA = 0
+  let magB = 0
+  for (let i = 0; i < EMB_DIM; i++) {
+    dot += embA[i]! * embB[i]!
+    magA += embA[i]! * embA[i]!
+    magB += embB[i]! * embB[i]!
+  }
+  const denom = Math.sqrt(magA) * Math.sqrt(magB)
+  return denom > 0 ? dot / denom : 0
+}
+
+/**
+ * Find the most similar heroes to a given hero by embedding cosine similarity.
+ */
+export function mostSimilarHeroes(
+  weights: NNWeights,
+  hero: string,
+  topN: number = 3,
+): { hero: string; similarity: number }[] {
+  const allHeroes = Object.keys(weights.heroIndex)
+  return allHeroes
+    .filter((h) => h !== hero)
+    .map((h) => ({ hero: h, similarity: embeddingSimilarity(weights, hero, h) }))
+    .sort((a, b) => b.similarity - a.similarity)
+    .slice(0, topN)
+}

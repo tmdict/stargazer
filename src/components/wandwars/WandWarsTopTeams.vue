@@ -55,7 +55,7 @@
               class="team-hero-img"
             />
           </div>
-          <span class="team-score">{{ formatPercent(team.winRate) }}</span>
+          <span class="team-score">{{ Math.round(team.winRate * 100) }}%</span>
         </div>
       </div>
     </div>
@@ -84,7 +84,7 @@ import { computed, ref } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { formatName, formatPercent } from '@/wandwars/formatting'
+import { formatName } from '@/wandwars/formatting'
 import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
 import type { MatchResult } from '@/wandwars/types'
 
@@ -211,9 +211,9 @@ function orderedTeam(team: string[]): string[] {
 }
 
 .team-score {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   font-weight: 600;
   color: var(--color-text-secondary);
-  margin-right: var(--spacing-sm);
+  white-space: nowrap;
 }
 </style>
