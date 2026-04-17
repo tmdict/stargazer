@@ -320,11 +320,13 @@ Pinned above recommendations on all model tabs when 1+ hero picked on current si
 - Sorted by Bayesian-smoothed win rate
 - Up to 3 shown with actual W/L (green/red)
 
-### Suggested Teams (NN-Scored)
+### Suggested Teams (Model-Scored)
 
-Scored by the Adaptive ML neural network — can evaluate any hero combination, including trios that never appeared together in data. Info tooltip on hover explains the section.
+Scored by aggregating all four prediction models — can evaluate any hero combination, including trios that never appeared together in data. Info tooltip on hover explains the section.
 
-**With 1 teammate**: All possible trios from the available hero pool are scored. **With 2 teammates**: All possible completions are scored. Each trio is evaluated against a sample of ~30 opponent trios for a stable estimate.
+**With 2 teammates**: All possible 3rd picks are scored by all four models (Popular Pick, Hero Synergy, Team Power, Adaptive ML), aggregated using the same adaptive weights as the match prediction. Each model's `recommend()` scores the candidate independently, then scores are weighted and combined.
+
+**With 1 teammate**: All possible trios are scored by the Adaptive ML model only (other models can't efficiently evaluate all pair combinations). Each trio is evaluated against a sample of ~30 opponent trios for a stable estimate.
 
 - Deduplicated against exact trios (won't repeat data-backed teams)
 - Dashed border, predicted win rate displayed (muted, to distinguish from real W/L records)
