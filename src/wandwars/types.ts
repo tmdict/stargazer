@@ -44,10 +44,24 @@ export interface CounterEntry {
   score: number
 }
 
+export interface TrioEntry {
+  matches: number
+  wins: number
+  losses: number
+  winRate: number // Bayesian-smoothed
+  score: number // residual: trioWinRate - average pairwise prediction
+}
+
+export interface TrioMatrix {
+  /** Key: sorted trio joined with ',' */
+  [trioKey: string]: TrioEntry
+}
+
 export interface AnalysisData {
   heroStats: Record<string, HeroStats>
   synergyMatrix: SynergyMatrix
   counterMatrix: CounterMatrix
+  trioMatrix: TrioMatrix
   allHeroes: string[]
   totalMatches: number
 }

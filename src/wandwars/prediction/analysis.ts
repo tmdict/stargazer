@@ -6,6 +6,7 @@ import type {
   MatchResult,
   SynergyMatrix,
   TeamRecord,
+  TrioMatrix,
 } from '../types'
 
 const BAYESIAN_PRIOR = META_BAYESIAN_PRIOR
@@ -218,15 +219,83 @@ export function computeTeamRecords(matches: MatchResult[]): TeamRecord[] {
   return [...records.values()]
 }
 
+function computeTrioMatrix(
+  matches: MatchResult[],
+  synergyMatrix: SynergyMatrix,
+  heroStats: Record<string, HeroStats>,
+): TrioMatrix {
+  const trioMatches: Record<string, number> = {}
+  const trioWins: Record<string, number> = {}
+  const trioLosses: Record<string, number> = {}
+  const trioWeightedWins: Record<string, number> = {}
+  const trioWeightedTotal: Record<string, number> = {}
+
+  for (const match of matches) {
+    for (const team of [match.left, match.right] as const) {
+      const key = [...team].sort().join(',')
+      const isWin =
+        (team === match.left && match.result === 'left') ||
+        (team === match.right && match.result === 'right')
+      const isLoss =
+        (team === match.left && match.result === 'right') ||
+        (team === match.right && match.result === 'left')
+
+      trioMatches[key] = (trioMatches[key] || 0) + 1
+      trioWeightedTotal[key] = (trioWeightedTotal[key] || 0) + match.weight
+      if (isWin) {
+        trioWins[key] = (trioWins[key] || 0) + 1
+        trioWeightedWins[key] = (trioWeightedWins[key] || 0) + match.weight
+      }
+      if (isLoss) trioLosses[key] = (trioLosses[key] || 0) + 1
+    }
+  }
+
+  const matrix: TrioMatrix = {}
+
+  for (const [key, matchCount] of Object.entries(trioMatches)) {
+    const heroes = key.split(',') as [string, string, string]
+    const weightedWins = trioWeightedWins[key] || 0
+    const weightedTotal = trioWeightedTotal[key] || 0
+    const trioWinRate = (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR)
+
+    // Expected win rate from pairwise synergies + individual rates
+    let pairSum = 0
+    let pairCount = 0
+    for (let i = 0; i < 3; i++) {
+      for (let j = i + 1; j < 3; j++) {
+        const pairScore = synergyMatrix[heroes[i]!]?.[heroes[j]!]?.score || 0
+        const avgRate =
+          ((heroStats[heroes[i]!]?.winRate || 0.5) + (heroStats[heroes[j]!]?.winRate || 0.5)) / 2
+        pairSum += avgRate + pairScore
+        pairCount++
+      }
+    }
+    const expectedFromPairs = pairCount > 0 ? pairSum / pairCount : 0.5
+    const score = trioWinRate - expectedFromPairs
+
+    matrix[key] = {
+      matches: matchCount,
+      wins: trioWins[key] || 0,
+      losses: trioLosses[key] || 0,
+      winRate: trioWinRate,
+      score,
+    }
+  }
+
+  return matrix
+}
+
 export function analyzeMatches(matches: MatchResult[], allHeroes: string[]): AnalysisData {
   const heroStats = computeHeroStats(matches, allHeroes)
   const synergyMatrix = computeSynergyMatrix(matches, heroStats)
   const counterMatrix = computeCounterMatrix(matches, heroStats)
+  const trioMatrix = computeTrioMatrix(matches, synergyMatrix, heroStats)
 
   return {
     heroStats,
     synergyMatrix,
     counterMatrix,
+    trioMatrix,
     allHeroes,
     totalMatches: matches.length,
   }
