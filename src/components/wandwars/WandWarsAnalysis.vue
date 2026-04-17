@@ -351,7 +351,16 @@
 
       <!-- Quick record form -->
       <div v-if="aggregatePrediction" class="record-form">
-        <h4 class="record-form-title">Record Match</h4>
+        <h4 class="record-form-title">
+          Record Match
+          <IconInfo
+            ref="recordIconEl"
+            :size="14"
+            class="record-info-icon"
+            @mouseenter="showRecordTooltip = true"
+            @mouseleave="showRecordTooltip = false"
+          />
+        </h4>
         <div class="result-buttons">
           <button
             :class="['result-btn', 'left', 'dominant', { active: resultKey === 'left-dominant' }]"
@@ -391,7 +400,7 @@
           placeholder="Optional notes... use {hero-name} to reference heroes"
         />
         <button class="submit-btn" @click="handleRecordSubmit">Save Result</button>
-        <button class="reset-btn" @click="emit('reset')">Reset Teams</button>
+        <p class="record-tip">Teams will be reset after saving</p>
       </div>
 
       <!-- Recommendations while drafting -->
@@ -524,6 +533,13 @@
         :text="modelDescriptions[tooltipModelId]"
         :max-width="'260px'"
       />
+      <TooltipPopup
+        v-if="showRecordTooltip && recordTitleEl"
+        :target-element="recordTitleEl"
+        variant="detailed"
+        text="A sweep is a dominant win where no heroes were lost (3–0). Sweeps have a bigger impact on predictions than regular wins."
+        max-width="260px"
+      />
     </Teleport>
   </div>
 </template>
@@ -566,7 +582,6 @@ const emit = defineEmits<{
   recordMatch: [record: RecordedMatch]
   deleteRecord: [index: number]
   clearRecords: []
-  reset: []
   export: []
   importRecords: [records: RecordedMatch[]]
   updateRecord: [index: number, patch: Partial<RecordedMatch>]
@@ -784,6 +799,9 @@ const modelDescriptions: Record<string, string> = {
 
 const tooltipModelId = ref<string | null>(null)
 const tooltipTarget = ref<HTMLElement | null>(null)
+const showRecordTooltip = ref(false)
+const recordIconEl = ref<InstanceType<typeof IconInfo> | null>(null)
+const recordTitleEl = computed(() => recordIconEl.value?.$el as HTMLElement | undefined)
 
 function showModelTooltip(modelId: string, event: MouseEvent) {
   tooltipModelId.value = modelId
@@ -1356,6 +1374,21 @@ const aggregatePrediction = computed(() => {
   font-size: 1rem;
   color: var(--color-text-primary);
   text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.record-info-icon {
+  color: var(--color-text-secondary);
+  cursor: help;
+  opacity: 0.6;
+  transition: opacity var(--transition-fast);
+}
+
+.record-info-icon:hover {
+  opacity: 1;
 }
 
 .result-buttons {
@@ -1444,21 +1477,11 @@ const aggregatePrediction = computed(() => {
   background: var(--color-primary-hover);
 }
 
-.reset-btn {
-  padding: var(--spacing-md) var(--spacing-lg);
-  background: var(--color-bg-white);
-  color: var(--color-danger);
-  border: 1px solid var(--color-danger);
-  border-radius: var(--radius-medium);
-  cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
-  transition: background var(--transition-fast);
-}
-
-.reset-btn:hover {
-  background: var(--color-danger);
-  color: white;
+.record-tip {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-light);
+  text-align: center;
 }
 
 /* Records list */
