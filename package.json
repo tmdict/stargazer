@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build:ssg",
-    "encode:ww": "node src/wandwars/scripts/encode.mjs",
+    "encode:ww": "tsx src/wandwars/scripts/encode.ts",
+    "train:ww": "tsx src/wandwars/scripts/trainNN.ts",
     "build:ssg": "vite-ssg build",
     "build:spa": "npm run type-check && vite build",
     "preview": "vite preview",

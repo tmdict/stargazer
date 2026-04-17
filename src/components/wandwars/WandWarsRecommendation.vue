@@ -108,6 +108,20 @@
           }}</span>
         </div>
       </template>
+      <template v-else-if="modelId === 'adaptive-ml'">
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'winProbability' }]">
+          <span class="breakdown-label">Win Prob</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.winProbability as number)
+          }}</span>
+        </div>
+        <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
+          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-value">{{
+            formatPercent(recommendation.breakdown.pickRate as number)
+          }}</span>
+        </div>
+      </template>
     </div>
 
     <div

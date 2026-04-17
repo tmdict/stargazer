@@ -662,6 +662,7 @@ const tabs = [
   { id: 'popular-pick', label: 'Popular Pick' },
   { id: 'composite', label: 'Hero Synergy' },
   { id: 'bradley-terry', label: 'Team Power' },
+  { id: 'adaptive-ml', label: 'Adaptive ML' },
   { id: 'records', label: 'Records' },
 ]
 
@@ -795,6 +796,8 @@ const modelDescriptions: Record<string, string> = {
     'Composite model. Measures how well heroes perform together (synergy), against specific opponents (counters), and as a trio. Best for drafting around team chemistry and counter-picks.',
   'bradley-terry':
     "Bradley-Terry model. Rates each hero's strength and how well duos perform together beyond their individual ratings. Predicts win probability by comparing total team power. Best for objective strength ranking with duo chemistry.",
+  'adaptive-ml':
+    'Neural network model. Learns hidden patterns from match data that other models might miss. Each hero gets a learned profile, and team matchups are predicted from how those profiles combine. Improves as more data is added.',
 }
 
 const tooltipModelId = ref<string | null>(null)
@@ -932,6 +935,12 @@ const sortOptions = computed<SortOption[]>(() => {
       return [
         { key: 'score', label: 'Score' },
         { key: 'strength', label: 'Strength' },
+        { key: 'winProbability', label: 'Win Prob' },
+        { key: 'pickRate', label: 'Pick Rate' },
+      ]
+    case 'adaptive-ml':
+      return [
+        { key: 'score', label: 'Score' },
         { key: 'winProbability', label: 'Win Prob' },
         { key: 'pickRate', label: 'Pick Rate' },
       ]
