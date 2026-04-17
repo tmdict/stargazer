@@ -1232,17 +1232,19 @@ const insights = computed(() => {
     )
   }
 
-  // Left vs right win rate
+  // Left vs right win rate (first-pick advantage)
   const leftWins = props.matchData.filter((m) => m.result === 'left').length
   const rightWins = props.matchData.filter((m) => m.result === 'right').length
-  if (leftWins + rightWins >= 10) {
-    const leftRate = leftWins / (leftWins + rightWins)
-    if (Math.abs(leftRate - 0.5) > 0.05) {
-      const favored = leftRate > 0.5 ? 'left' : 'right'
+  const decisiveCount = leftWins + rightWins
+  if (decisiveCount >= 10) {
+    const leftRate = leftWins / decisiveCount
+    if (Math.abs(leftRate - 0.5) > 0.03) {
+      const favored = leftRate > 0.5 ? 'left (first pick)' : 'right'
+      const rate = leftRate > 0.5 ? leftRate : 1 - leftRate
       add(
         result,
         'teams',
-        `The ${favored} side wins more often (${leftWins} left vs ${rightWins} right wins)`,
+        `The ${favored} side has a win rate advantage: ${formatPercent(rate)} (${leftWins}W / ${rightWins}L)`,
       )
     }
   }

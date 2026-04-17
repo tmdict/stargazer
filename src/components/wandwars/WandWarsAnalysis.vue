@@ -660,8 +660,8 @@ async function handleImportFile(event: Event) {
 
 const tabs = [
   { id: 'popular-pick', label: 'Popular Pick' },
-  { id: 'bradley-terry', label: 'Team Power' },
   { id: 'composite', label: 'Hero Synergy' },
+  { id: 'bradley-terry', label: 'Team Power' },
   { id: 'records', label: 'Records' },
 ]
 
@@ -791,10 +791,10 @@ function recordVerbDirClass(r: RecordedMatch): string {
 const modelDescriptions: Record<string, string> = {
   'popular-pick':
     'Popular Pick model. Ranks heroes by how often they appear and win. Factors in actual win/loss records with your teammates. Best for quick, intuitive picks.',
-  'bradley-terry':
-    "Bradley-Terry model. Estimates each hero's true strength statistically and predicts win probability by comparing total team power. Best for objective strength ranking.",
   composite:
-    'Composite model. Measures how well heroes perform together (synergy) and against specific opponents (counters). Best for drafting around team chemistry and counter-picks.',
+    'Composite model. Measures how well heroes perform together (synergy), against specific opponents (counters), and as a trio. Best for drafting around team chemistry and counter-picks.',
+  'bradley-terry':
+    "Bradley-Terry model. Rates each hero's strength and how well duos perform together beyond their individual ratings. Predicts win probability by comparing total team power. Best for objective strength ranking with duo chemistry.",
 }
 
 const tooltipModelId = ref<string | null>(null)

@@ -123,15 +123,90 @@ function fitParameters(
   return strengths
 }
 
+// Pair interaction regularization: stronger than hero reg since pair data is sparser
+const PAIR_REGULARIZATION_STRENGTH = 5.0
+// Minimum pair matches before interaction contributes
+const PAIR_DATA_STRENGTH_FULL = 10
+
+/**
+ * Compute pair interaction scores as residuals from the additive model.
+ * For each hero pair that appears on the same team, compare their actual
+ * win rate to the B-T model's prediction — the difference is the synergy
+ * or clash that the additive model misses.
+ */
+function computePairInteractions(
+  btMatches: BTMatch[],
+  strengths: Map<string, number>,
+): Map<string, number> {
+  const pairActualWins = new Map<string, number>()
+  const pairExpectedWins = new Map<string, number>()
+  const pairTotalWeight = new Map<string, number>()
+
+  for (const match of btMatches) {
+    const leftS = match.leftHeroes.reduce((s, h) => s + (strengths.get(h) || 1), 0)
+    const rightS = match.rightHeroes.reduce((s, h) => s + (strengths.get(h) || 1), 0)
+    const totalS = leftS + rightS
+    if (totalS <= 0) continue
+
+    for (const [heroes, wins, prob] of [
+      [match.leftHeroes, match.leftWeight, leftS / totalS],
+      [match.rightHeroes, match.rightWeight, rightS / totalS],
+    ] as [string[], number, number][]) {
+      for (let i = 0; i < heroes.length; i++) {
+        for (let j = i + 1; j < heroes.length; j++) {
+          const key = [heroes[i]!, heroes[j]!].sort().join(',')
+          const w = match.leftWeight + match.rightWeight
+          pairActualWins.set(key, (pairActualWins.get(key) || 0) + wins)
+          pairExpectedWins.set(key, (pairExpectedWins.get(key) || 0) + w * prob)
+          pairTotalWeight.set(key, (pairTotalWeight.get(key) || 0) + w)
+        }
+      }
+    }
+  }
+
+  const interactions = new Map<string, number>()
+  for (const [key, totalWeight] of pairTotalWeight) {
+    const actual = pairActualWins.get(key) || 0
+    const expected = pairExpectedWins.get(key) || 0
+    const dataStr = Math.min(1, totalWeight / PAIR_DATA_STRENGTH_FULL)
+    const regWeight = PAIR_REGULARIZATION_STRENGTH / (1 + totalWeight)
+    // Residual: how much better (positive) or worse (negative) than expected
+    const residual = (actual - expected) / (totalWeight + regWeight)
+    // Clamp to ±5% per pair — 3 pairs per team means ±15% max team adjustment
+    const clamped = Math.max(-0.05, Math.min(0.05, residual * dataStr))
+    interactions.set(key, clamped)
+  }
+
+  return interactions
+}
+
+function teamPairAdjustment(team: string[], interactions: Map<string, number>): number {
+  let adj = 0
+  for (let i = 0; i < team.length; i++) {
+    for (let j = i + 1; j < team.length; j++) {
+      const key = [team[i]!, team[j]!].sort().join(',')
+      adj += interactions.get(key) || 0
+    }
+  }
+  return adj
+}
+
 function predictWinProbability(
   leftTeam: string[],
   rightTeam: string[],
   strengths: Map<string, number>,
+  interactions?: Map<string, number>,
 ): number {
   const leftStrength = leftTeam.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
   const rightStrength = rightTeam.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
   const total = leftStrength + rightStrength
-  return total > 0 ? leftStrength / total : 0.5
+  const baseProb = total > 0 ? leftStrength / total : 0.5
+
+  if (!interactions) return baseProb
+
+  const leftAdj = teamPairAdjustment(leftTeam, interactions)
+  const rightAdj = teamPairAdjustment(rightTeam, interactions)
+  return Math.max(0.02, Math.min(0.98, baseProb + leftAdj - rightAdj))
 }
 
 function computeAverageTeamStrength(strengths: Map<string, number>): number {
@@ -163,17 +238,23 @@ export const bradleyTerryModel: RecommendationModel = {
     const btMatches = prepareMatches(matches)
     const matchCounts = buildMatchCountMap(analysisData)
     const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
+    const interactions = computePairInteractions(btMatches, strengths)
     const avgOpponentStrength = computeAverageTeamStrength(strengths)
 
     const recommendations: Recommendation[] = available.map((hero) => {
       const candidateTeam = [...teammates, hero]
       let winProb: number
       if (opponents.length > 0) {
-        winProb = predictWinProbability(candidateTeam, opponents, strengths)
+        winProb = predictWinProbability(candidateTeam, opponents, strengths, interactions)
       } else {
         const teamStrength = candidateTeam.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
-        winProb = teamStrength / (teamStrength + avgOpponentStrength)
+        const baseProb = teamStrength / (teamStrength + avgOpponentStrength)
+        const adj = teamPairAdjustment(candidateTeam, interactions)
+        winProb = Math.max(0.02, Math.min(0.98, baseProb + adj))
       }
+
+      const pairAdj =
+        teammates.length > 0 ? teamPairAdjustment([...teammates, hero], interactions) : 0
 
       return {
         hero,
@@ -182,6 +263,7 @@ export const bradleyTerryModel: RecommendationModel = {
         breakdown: {
           strength: strengths.get(hero) || 1.0,
           winProbability: winProb,
+          pairSynergy: pairAdj,
           pickRate:
             analysisData.totalMatches > 0
               ? (analysisData.heroStats[hero]?.matches || 0) / analysisData.totalMatches
@@ -203,7 +285,8 @@ export const bradleyTerryModel: RecommendationModel = {
     const btMatches = prepareMatches(matches)
     const matchCounts = buildMatchCountMap(analysisData)
     const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
-    const leftProb = predictWinProbability(leftTeam, rightTeam, strengths)
+    const interactions = computePairInteractions(btMatches, strengths)
+    const leftProb = predictWinProbability(leftTeam, rightTeam, strengths, interactions)
     const leftStrength = leftTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
     const rightStrength = rightTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
 

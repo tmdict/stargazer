@@ -34,23 +34,29 @@ function pairRecord(
   teammate: string,
   matches: MatchResult[],
 ): { wins: number; total: number; winRate: number } {
-  let wins = 0
-  let total = 0
+  let weightedWins = 0
+  let weightedTotal = 0
+  let rawWins = 0
+  let rawTotal = 0
 
   for (const match of matches) {
     const onLeft = match.left.includes(candidate) && match.left.includes(teammate)
     const onRight = match.right.includes(candidate) && match.right.includes(teammate)
     if (!onLeft && !onRight) continue
 
-    total++
+    rawTotal++
+    weightedTotal += match.weight
     const won = (onLeft && match.result === 'left') || (onRight && match.result === 'right')
-    if (won) wins += match.weight
-    else if (match.result !== 'draw') total += match.weight - 1
+    if (won) {
+      rawWins++
+      weightedWins += match.weight
+    }
   }
 
-  const winRate = total > 0 ? (wins + BAYESIAN_PRIOR) / (total + 2 * BAYESIAN_PRIOR) : 0.5
+  const winRate =
+    weightedTotal > 0 ? (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR) : 0.5
 
-  return { wins: Math.round(wins), total, winRate }
+  return { wins: rawWins, total: rawTotal, winRate }
 }
 
 /**
@@ -63,8 +69,9 @@ function trioRecord(
   teammate2: string,
   matches: MatchResult[],
 ): { wins: number; total: number; winRate: number } {
-  let wins = 0
-  let total = 0
+  let weightedWins = 0
+  let weightedTotal = 0
+  let rawTotal = 0
 
   for (const match of matches) {
     const onLeft =
@@ -77,15 +84,16 @@ function trioRecord(
       match.right.includes(teammate2)
     if (!onLeft && !onRight) continue
 
-    total++
+    rawTotal++
+    weightedTotal += match.weight
     const won = (onLeft && match.result === 'left') || (onRight && match.result === 'right')
-    if (won) wins += match.weight
-    else if (match.result !== 'draw') total += match.weight - 1
+    if (won) weightedWins += match.weight
   }
 
-  const winRate = total > 0 ? (wins + BAYESIAN_PRIOR) / (total + 2 * BAYESIAN_PRIOR) : 0.5
+  const winRate =
+    weightedTotal > 0 ? (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR) : 0.5
 
-  return { wins: Math.round(wins), total, winRate }
+  return { wins: Math.round(weightedWins), total: rawTotal, winRate }
 }
 
 /**
@@ -103,8 +111,9 @@ function contextualWinRate(
     return { winRate: overallWinRate, contextMatches: 0 }
   }
 
-  let contextWins = 0
-  let contextTotal = 0
+  let weightedWins = 0
+  let weightedTotal = 0
+  let rawTotal = 0
 
   for (const match of matches) {
     const onLeft = match.left.includes(candidate)
@@ -119,24 +128,24 @@ function contextualWinRate(
     if (teammates.length > 0 && !teammates.every((t) => candidateTeam.includes(t))) continue
     if (opponents.length > 0 && !opponents.every((o) => opposingTeam.includes(o))) continue
 
-    contextTotal++
-    if (candidateWon) contextWins += match.weight
-    else if (match.result !== 'draw') contextTotal += match.weight - 1
+    rawTotal++
+    weightedTotal += match.weight
+    if (candidateWon) weightedWins += match.weight
   }
 
-  if (contextTotal < CONTEXT_MIN_MATCHES) {
-    const blend = contextTotal / CONTEXT_MIN_MATCHES
+  if (rawTotal < CONTEXT_MIN_MATCHES) {
+    const blend = rawTotal / CONTEXT_MIN_MATCHES
     return {
       winRate:
-        blend * ((contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR)) +
+        blend * ((weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR)) +
         (1 - blend) * overallWinRate,
-      contextMatches: contextTotal,
+      contextMatches: rawTotal,
     }
   }
 
   return {
-    winRate: (contextWins + BAYESIAN_PRIOR) / (contextTotal + 2 * BAYESIAN_PRIOR),
-    contextMatches: contextTotal,
+    winRate: (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR),
+    contextMatches: rawTotal,
   }
 }
 

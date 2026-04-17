@@ -26,15 +26,6 @@
           <span class="breakdown-label">Win Rate</span>
           <span class="breakdown-value">
             {{ formatPercent(recommendation.breakdown.winRate as number) }}
-            <span
-              v-if="
-                (recommendation.breakdown.contextMatches as number) > 0 &&
-                recommendation.breakdown.overallWinRate !== recommendation.breakdown.winRate
-              "
-              class="context-hint"
-            >
-              ({{ formatPercent(recommendation.breakdown.overallWinRate as number) }} overall)
-            </span>
           </span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
@@ -78,6 +69,12 @@
             {{ formatSigned(recommendation.breakdown.counter as number) }}
           </span>
         </div>
+        <div v-if="(recommendation.breakdown.trio as number) !== 0" class="breakdown-row">
+          <span class="breakdown-label">Trio</span>
+          <span :class="['breakdown-value', signClass(recommendation.breakdown.trio as number)]">
+            {{ formatSigned(recommendation.breakdown.trio as number) }}
+          </span>
+        </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
           <span class="breakdown-label">Pick Rate</span>
           <span class="breakdown-value">{{
@@ -96,6 +93,12 @@
           <span class="breakdown-label">Win Prob</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.winProbability as number)
+          }}</span>
+        </div>
+        <div v-if="(recommendation.breakdown.pairSynergy as number) !== 0" class="breakdown-row">
+          <span class="breakdown-label">Pair Synergy</span>
+          <span class="breakdown-value">{{
+            formatSigned(recommendation.breakdown.pairSynergy as number)
           }}</span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
