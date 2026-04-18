@@ -11,12 +11,13 @@
           <table class="hero-table">
             <thead>
               <tr>
-                <th class="col-hero">Hero</th>
+                <th class="col-hero">{{ i18n.t('wandwars.hero') }}</th>
                 <th
                   :class="['col-sortable', { active: heroSort === 'matches' }]"
                   @click="toggleHeroSort('matches')"
                 >
-                  Usage<span v-if="heroSort === 'matches'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.usage')
+                  }}<span v-if="heroSort === 'matches'" class="sort-arrow">{{
                     heroSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                 </th>
@@ -24,7 +25,8 @@
                   :class="['col-sortable', { active: heroSort === 'winRate' }]"
                   @click="toggleHeroSort('winRate')"
                 >
-                  Win %<span v-if="heroSort === 'winRate'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.win-pct')
+                  }}<span v-if="heroSort === 'winRate'" class="sort-arrow">{{
                     heroSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                 </th>
@@ -35,7 +37,8 @@
                   @mouseenter="showOpenerTooltip = true"
                   @mouseleave="showOpenerTooltip = false"
                 >
-                  Opener<span v-if="heroSort === 'firstPick'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.opener')
+                  }}<span v-if="heroSort === 'firstPick'" class="sort-arrow">{{
                     heroSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                   <IconInfo :size="14" class="synergy-info-icon" />
@@ -68,12 +71,13 @@
           <table class="hero-table">
             <thead>
               <tr>
-                <th>Pair</th>
+                <th>{{ i18n.t('wandwars.pair') }}</th>
                 <th
                   :class="['col-sortable', { active: pairSort === 'total' }]"
                   @click="togglePairSort('total')"
                 >
-                  Usage<span v-if="pairSort === 'total'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.usage')
+                  }}<span v-if="pairSort === 'total'" class="sort-arrow">{{
                     pairSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                 </th>
@@ -81,11 +85,12 @@
                   :class="['col-sortable', { active: pairSort === 'winRate' }]"
                   @click="togglePairSort('winRate')"
                 >
-                  Win %<span v-if="pairSort === 'winRate'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.win-pct')
+                  }}<span v-if="pairSort === 'winRate'" class="sort-arrow">{{
                     pairSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                 </th>
-                <th class="col-static">Record</th>
+                <th class="col-static">{{ i18n.t('wandwars.record') }}</th>
                 <th
                   ref="synergyHeaderEl"
                   :class="['col-sortable', { active: pairSort === 'synergy' }]"
@@ -93,7 +98,8 @@
                   @mouseenter="showSynergyTooltip = true"
                   @mouseleave="showSynergyTooltip = false"
                 >
-                  Synergy<span v-if="pairSort === 'synergy'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.synergy')
+                  }}<span v-if="pairSort === 'synergy'" class="sort-arrow">{{
                     pairSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                   <IconInfo :size="14" class="synergy-info-icon" />
@@ -142,12 +148,13 @@
           <table class="hero-table">
             <thead>
               <tr>
-                <th>Team</th>
+                <th>{{ i18n.t('wandwars.team-label') }}</th>
                 <th
                   :class="['col-sortable', { active: teamSort === 'total' }]"
                   @click="toggleTeamSort('total')"
                 >
-                  Usage<span v-if="teamSort === 'total'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.usage')
+                  }}<span v-if="teamSort === 'total'" class="sort-arrow">{{
                     teamSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                 </th>
@@ -155,11 +162,12 @@
                   :class="['col-sortable', { active: teamSort === 'winRate' }]"
                   @click="toggleTeamSort('winRate')"
                 >
-                  Win %<span v-if="teamSort === 'winRate'" class="sort-arrow">{{
+                  {{ i18n.t('wandwars.win-pct')
+                  }}<span v-if="teamSort === 'winRate'" class="sort-arrow">{{
                     teamSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
                 </th>
-                <th class="col-static">Record</th>
+                <th class="col-static">{{ i18n.t('wandwars.record') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -227,6 +235,7 @@ import { computed, ref } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useI18nStore } from '@/stores/i18n'
 import { META_MIN_PAIR_MATCHES, META_MIN_TEAM_MATCHES } from '@/wandwars/constants'
 import { formatName, formatPercent, formatSigned } from '@/wandwars/formatting'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
@@ -239,6 +248,7 @@ const props = defineProps<{
   characterImages: Record<string, string>
 }>()
 
+const i18n = useI18nStore()
 const totalMatches = computed(() => props.matchData.length)
 
 const openerHeaderEl = ref<HTMLElement>()

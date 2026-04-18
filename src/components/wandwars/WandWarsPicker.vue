@@ -26,9 +26,13 @@
         @pick-hero="(hero) => emit('pickHero', hero)"
       >
         <template #actions>
-          <button class="action-btn" @click="showPoolImport = true">Import Pool</button>
-          <button class="action-btn" @click="emit('undo')">Undo</button>
-          <button class="action-btn danger" @click="emit('reset')">Reset</button>
+          <button class="action-btn" @click="showPoolImport = true">
+            {{ i18n.t('wandwars.import-pool') }}
+          </button>
+          <button class="action-btn" @click="emit('undo')">{{ i18n.t('wandwars.undo') }}</button>
+          <button class="action-btn danger" @click="emit('reset')">
+            {{ i18n.t('wandwars.reset') }}
+          </button>
         </template>
       </WandWarsHeroGrid>
 
@@ -94,7 +98,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
 import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
@@ -103,6 +107,7 @@ import WandWarsPoolImport from './WandWarsPoolImport.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
+import { useI18nStore } from '@/stores/i18n'
 import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
 
 defineProps<{
@@ -135,12 +140,13 @@ function handlePoolApply(pool: string[]) {
   showPoolImport.value = false
 }
 
-const pickerTabs = [
-  { id: 'draft' as const, label: 'Draft' },
-  { id: 'units' as const, label: 'Units' },
-  { id: 'teams' as const, label: 'Teams' },
-  { id: 'synergy' as const, label: 'Synergy' },
-]
+const i18n = useI18nStore()
+const pickerTabs = computed(() => [
+  { id: 'draft' as const, label: i18n.t('wandwars.draft') },
+  { id: 'units' as const, label: i18n.t('wandwars.units') },
+  { id: 'teams' as const, label: i18n.t('wandwars.teams') },
+  { id: 'synergy' as const, label: i18n.t('wandwars.synergy') },
+])
 
 const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTab', {
   default: 'draft',

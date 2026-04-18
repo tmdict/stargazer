@@ -118,10 +118,7 @@ function getModelWeights(matchCount: number): Record<string, number> {
  * Score candidates using all 4 models aggregated, for the 2-teammate case.
  * Each model scores all available heroes as the 3rd pick, then we aggregate.
  */
-function aggregateThirdPickScores(
-  teammates: string[],
-  available: string[],
-): Map<string, number> {
+function aggregateThirdPickScores(teammates: string[], available: string[]): Map<string, number> {
   const analysis = getAnalysisData()
   const matches = getMatchData()
   const weights = getModelWeights(matches.length)

@@ -21,9 +21,15 @@
           <button class="export-btn" @click="handleCopy">
             {{ copyLabel }}
           </button>
-          <button class="export-btn" @click="openImport">Import .data</button>
-          <button class="export-btn" @click="emit('export')">Export .data</button>
-          <button class="export-btn danger" @click="emit('clearRecords')">Clear All</button>
+          <button class="export-btn" @click="openImport">
+            {{ i18n.t('wandwars.import-data') }}
+          </button>
+          <button class="export-btn" @click="emit('export')">
+            {{ i18n.t('wandwars.export-data') }}
+          </button>
+          <button class="export-btn danger" @click="emit('clearRecords')">
+            {{ i18n.t('wandwars.clear-all') }}
+          </button>
         </div>
         <div v-if="importStatus" class="import-status">{{ importStatus }}</div>
         <div class="records-list">
@@ -256,17 +262,17 @@
         <!-- Aggregate prediction -->
         <div class="matchup-prediction aggregate">
           <div class="matchup-header">
-            <h3 class="matchup-title">Matchup Prediction</h3>
+            <h3 class="matchup-title">{{ i18n.t('wandwars.matchup-prediction') }}</h3>
             <span
               :class="['confidence-badge', aggregatePrediction.confidence]"
               :title="confidenceDescriptions[aggregatePrediction.confidence]"
             >
-              {{ aggregatePrediction.confidence }} confidence
+              {{ i18n.t(`wandwars.${aggregatePrediction.confidence}-confidence`) }}
             </span>
           </div>
           <div class="matchup-bars">
             <div class="matchup-side left">
-              <span class="matchup-label">Left</span>
+              <span class="matchup-label">{{ i18n.t('wandwars.left') }}</span>
               <span class="matchup-percent">{{
                 formatPercent(aggregatePrediction.leftWinProbability)
               }}</span>
@@ -281,17 +287,17 @@
               <span class="matchup-percent">{{
                 formatPercent(aggregatePrediction.rightWinProbability)
               }}</span>
-              <span class="matchup-label">Right</span>
+              <span class="matchup-label">{{ i18n.t('wandwars.right') }}</span>
             </div>
           </div>
           <div class="matchup-verdict">
             <template v-if="aggregatePrediction.leftWinProbability > 0.55">
-              <strong>Left</strong> team favored
+              <strong>{{ i18n.t('wandwars.left') }}</strong> {{ i18n.t('wandwars.team-favored') }}
             </template>
             <template v-else-if="aggregatePrediction.rightWinProbability > 0.55">
-              <strong>Right</strong> team favored
+              <strong>{{ i18n.t('wandwars.right') }}</strong> {{ i18n.t('wandwars.team-favored') }}
             </template>
-            <template v-else> Close matchup — could go either way </template>
+            <template v-else>{{ i18n.t('wandwars.close-matchup') }}</template>
           </div>
           <div v-if="aggregatePrediction.relevantNotes.length > 0" class="matchup-notes">
             <div
@@ -328,7 +334,7 @@
           </div>
           <div class="matchup-bars">
             <div class="matchup-side left">
-              <span class="matchup-label">Left</span>
+              <span class="matchup-label">{{ i18n.t('wandwars.left') }}</span>
               <span class="matchup-percent">{{
                 formatPercent(pred.prediction.leftWinProbability)
               }}</span>
@@ -343,7 +349,7 @@
               <span class="matchup-percent">{{
                 formatPercent(pred.prediction.rightWinProbability)
               }}</span>
-              <span class="matchup-label">Right</span>
+              <span class="matchup-label">{{ i18n.t('wandwars.right') }}</span>
             </div>
           </div>
         </div>
@@ -352,7 +358,7 @@
       <!-- Quick record form -->
       <div v-if="aggregatePrediction" class="record-form">
         <h4 class="record-form-title">
-          Record Match
+          {{ i18n.t('wandwars.record-match') }}
           <IconInfo
             ref="recordIconEl"
             :size="14"
@@ -366,31 +372,31 @@
             :class="['result-btn', 'left', 'dominant', { active: resultKey === 'left-dominant' }]"
             @click="setResult('left', true)"
           >
-            Left Win (Sweep)
+            {{ i18n.t('wandwars.left-win-sweep') }}
           </button>
           <button
             :class="['result-btn', 'left', { active: resultKey === 'left-normal' }]"
             @click="setResult('left', false)"
           >
-            Left Win
+            {{ i18n.t('wandwars.left-win') }}
           </button>
           <button
             :class="['result-btn', 'draw', { active: resultKey === 'draw' }]"
             @click="setResult('draw', false)"
           >
-            Draw
+            {{ i18n.t('wandwars.draw') }}
           </button>
           <button
             :class="['result-btn', 'right', { active: resultKey === 'right-normal' }]"
             @click="setResult('right', false)"
           >
-            Right Win
+            {{ i18n.t('wandwars.right-win') }}
           </button>
           <button
             :class="['result-btn', 'right', 'dominant', { active: resultKey === 'right-dominant' }]"
             @click="setResult('right', true)"
           >
-            Right Win (Sweep)
+            {{ i18n.t('wandwars.right-win-sweep') }}
           </button>
         </div>
         <textarea
@@ -399,15 +405,17 @@
           rows="2"
           placeholder="Optional notes... use {hero-name} to reference heroes"
         />
-        <button class="submit-btn" @click="handleRecordSubmit">Save Result</button>
-        <p class="record-tip">Teams will be reset after saving</p>
+        <button class="submit-btn" @click="handleRecordSubmit">
+          {{ i18n.t('wandwars.save-result') }}
+        </button>
+        <p class="record-tip">{{ i18n.t('wandwars.reset-after-save') }}</p>
       </div>
 
       <!-- Recommendations while drafting -->
       <template v-else>
         <div class="recommend-header">
           <div :class="['picking-indicator', effectivePickSide]">
-            Recommending for <strong>{{ effectivePickSideLabel }}</strong> team
+            {{ i18n.t('wandwars.recommending-for') }} <strong>{{ effectivePickSideLabel }}</strong>
           </div>
           <div class="lock-toggle">
             <button
@@ -425,12 +433,12 @@
                   d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
                 />
               </svg>
-              Left Team
+              {{ i18n.t('wandwars.left-team') }}
             </button>
             <button
               :class="['lock-btn', { active: lockedSide === 'right' }]"
               @click="toggleLock('right')"
-              title="Lock recommendations to Right team"
+              :title="i18n.t('wandwars.right-team')"
             >
               <svg
                 v-if="lockedSide === 'right'"
@@ -442,7 +450,7 @@
                   d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
                 />
               </svg>
-              Right Team
+              {{ i18n.t('wandwars.right-team') }}
             </button>
           </div>
         </div>
@@ -483,16 +491,16 @@
         </div>
 
         <div v-if="recommendations.length === 0" class="empty-state">
-          Pick heroes to see recommendations.
+          {{ i18n.t('wandwars.pick-heroes-prompt') }}
         </div>
 
         <div v-else-if="filteredRecommendations.length === 0" class="empty-state">
-          No recommendations match the current filters.
+          {{ i18n.t('wandwars.no-recommendations') }}
         </div>
 
         <template v-else>
           <div class="rec-sort-row">
-            <span class="rec-sort-label">Sort by:</span>
+            <span class="rec-sort-label">{{ i18n.t('wandwars.sort-by') }}</span>
             <button
               v-for="opt in sortOptions"
               :key="opt.key"
@@ -554,6 +562,7 @@ import FilterIcons from '@/components/ui/FilterIcons.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatName, formatNoteHtml, formatPercent } from '@/wandwars/formatting'
 import {
@@ -568,6 +577,7 @@ import { serializeMatches } from '@/wandwars/records/serializer'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
 const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
 
 const props = defineProps<{
   pickState: PickState
@@ -658,13 +668,13 @@ async function handleImportFile(event: Event) {
   }
 }
 
-const tabs = [
-  { id: 'popular-pick', label: 'Popular Pick' },
-  { id: 'composite', label: 'Hero Synergy' },
-  { id: 'bradley-terry', label: 'Team Power' },
-  { id: 'adaptive-ml', label: 'Adaptive ML' },
-  { id: 'records', label: 'Records' },
-]
+const tabs = computed(() => [
+  { id: 'popular-pick', label: i18n.t('wandwars.popular-pick') },
+  { id: 'composite', label: i18n.t('wandwars.hero-synergy') },
+  { id: 'bradley-terry', label: i18n.t('wandwars.team-power') },
+  { id: 'adaptive-ml', label: i18n.t('wandwars.adaptive-ml') },
+  { id: 'records', label: i18n.t('wandwars.records') },
+])
 
 const activeTab = ref('popular-pick')
 
@@ -828,7 +838,7 @@ const effectivePickSide = computed<PickSide | null>(() => lockedSide.value ?? pr
 
 const effectivePickSideLabel = computed(() => {
   if (!effectivePickSide.value) return ''
-  return effectivePickSide.value === 'left' ? 'Left' : 'Right'
+  return effectivePickSide.value === 'left' ? i18n.t('wandwars.left') : i18n.t('wandwars.right')
 })
 
 const currentTeammates = computed(() => {
@@ -919,33 +929,33 @@ const sortOptions = computed<SortOption[]>(() => {
   switch (activeTab.value) {
     case 'popular-pick':
       return [
-        { key: 'score', label: 'Score' },
-        { key: 'winRate', label: 'Win Rate' },
-        { key: 'pickRate', label: 'Pick Rate' },
+        { key: 'score', label: i18n.t('wandwars.score') },
+        { key: 'winRate', label: i18n.t('wandwars.win-rate') },
+        { key: 'pickRate', label: i18n.t('wandwars.pick-rate') },
       ]
     case 'composite':
       return [
-        { key: 'score', label: 'Score' },
-        { key: 'base', label: 'Win Rate' },
-        { key: 'synergy', label: 'Synergy' },
-        { key: 'counter', label: 'Counter' },
-        { key: 'pickRate', label: 'Pick Rate' },
+        { key: 'score', label: i18n.t('wandwars.score') },
+        { key: 'base', label: i18n.t('wandwars.win-rate') },
+        { key: 'synergy', label: i18n.t('wandwars.synergy') },
+        { key: 'counter', label: i18n.t('wandwars.counter') },
+        { key: 'pickRate', label: i18n.t('wandwars.pick-rate') },
       ]
     case 'bradley-terry':
       return [
-        { key: 'score', label: 'Score' },
-        { key: 'strength', label: 'Strength' },
-        { key: 'winProbability', label: 'Win Prob' },
-        { key: 'pickRate', label: 'Pick Rate' },
+        { key: 'score', label: i18n.t('wandwars.score') },
+        { key: 'strength', label: i18n.t('wandwars.strength') },
+        { key: 'winProbability', label: i18n.t('wandwars.win-prob') },
+        { key: 'pickRate', label: i18n.t('wandwars.pick-rate') },
       ]
     case 'adaptive-ml':
       return [
-        { key: 'score', label: 'Score' },
-        { key: 'winProbability', label: 'Win Prob' },
-        { key: 'pickRate', label: 'Pick Rate' },
+        { key: 'score', label: i18n.t('wandwars.score') },
+        { key: 'winProbability', label: i18n.t('wandwars.win-prob') },
+        { key: 'pickRate', label: i18n.t('wandwars.pick-rate') },
       ]
     default:
-      return [{ key: 'score', label: 'Score' }]
+      return [{ key: 'score', label: i18n.t('wandwars.score') }]
   }
 })
 
