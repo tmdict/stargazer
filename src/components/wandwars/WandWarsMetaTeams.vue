@@ -553,4 +553,28 @@ td.col-hero {
     height: 40px;
   }
 }
+
+@media (max-width: 600px) {
+  .hero-table {
+    font-size: 0.85rem;
+  }
+
+  .hero-table th,
+  .hero-table td {
+    padding: var(--spacing-xs) var(--spacing-xs);
+  }
+
+  .table-portrait {
+    width: 32px;
+    height: 32px;
+  }
+
+  td.col-hero {
+    gap: var(--spacing-xs);
+  }
+
+  .table-hero-name {
+    display: none;
+  }
+}
 </style>
