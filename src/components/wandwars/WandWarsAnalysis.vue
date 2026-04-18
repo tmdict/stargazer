@@ -220,7 +220,7 @@
               v-model="editNotes"
               class="record-edit-notes"
               rows="2"
-              placeholder="Optional notes… use {hero-name} to reference heroes"
+              :placeholder="i18n.t('wandwars.messages/notes-placeholder')"
             />
             <div
               v-else-if="record.notes"
@@ -232,7 +232,7 @@
       </div>
 
       <div v-else class="empty-state">
-        No matches recorded yet. Pick 6 heroes, see the prediction, then record the result.
+        {{ i18n.t('wandwars.messages/no-matches-yet') }}
         <div class="empty-state-actions">
           <button class="export-btn" @click="openImport">Import .data</button>
         </div>
@@ -297,7 +297,7 @@
             <template v-else-if="aggregatePrediction.rightWinProbability > 0.55">
               <strong>{{ i18n.t('wandwars.right') }}</strong> {{ i18n.t('wandwars.team-favored') }}
             </template>
-            <template v-else>{{ i18n.t('wandwars.close-matchup') }}</template>
+            <template v-else>{{ i18n.t('wandwars.messages/close-matchup') }}</template>
           </div>
           <div v-if="aggregatePrediction.relevantNotes.length > 0" class="matchup-notes">
             <div
@@ -308,8 +308,12 @@
             />
           </div>
           <div class="matchup-dataset-note">
-            Prediction from a dataset of {{ aggregatePrediction.matchCount }} matches involving
-            {{ aggregatePrediction.heroCount }} heroes
+            {{
+              i18n
+                .t('wandwars.messages/prediction-dataset')
+                .replace('{matches}', String(aggregatePrediction.matchCount))
+                .replace('{heroes}', String(aggregatePrediction.heroCount))
+            }}
           </div>
         </div>
 
@@ -317,7 +321,7 @@
         <div v-for="pred in allPredictions" :key="pred.id" class="matchup-prediction">
           <div class="matchup-header">
             <h3 class="matchup-title">
-              {{ pred.name }}
+              {{ modelTabLabel(pred.id) }}
             </h3>
             <IconInfo
               class="model-info-icon"
@@ -329,7 +333,7 @@
               :class="['confidence-badge', pred.prediction.confidence]"
               :title="confidenceDescriptions[pred.prediction.confidence]"
             >
-              {{ pred.prediction.confidence }} confidence
+              {{ i18n.t(`wandwars.${pred.prediction.confidence}-confidence`) }}
             </span>
           </div>
           <div class="matchup-bars">
@@ -403,12 +407,12 @@
           v-model="recordNotes"
           class="notes-input"
           rows="2"
-          placeholder="Optional notes... use {hero-name} to reference heroes"
+          :placeholder="i18n.t('wandwars.messages/notes-placeholder')"
         />
         <button class="submit-btn" @click="handleRecordSubmit">
           {{ i18n.t('wandwars.save-result') }}
         </button>
-        <p class="record-tip">{{ i18n.t('wandwars.reset-after-save') }}</p>
+        <p class="record-tip">{{ i18n.t('wandwars.messages/reset-after-save') }}</p>
       </div>
 
       <!-- Recommendations while drafting -->
@@ -433,12 +437,12 @@
                   d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
                 />
               </svg>
-              {{ i18n.t('wandwars.left-team') }}
+              {{ joinLocale(i18n.t('wandwars.left'), i18n.t('wandwars.team')) }}
             </button>
             <button
               :class="['lock-btn', { active: lockedSide === 'right' }]"
               @click="toggleLock('right')"
-              :title="i18n.t('wandwars.right-team')"
+              :title="joinLocale(i18n.t('wandwars.right'), i18n.t('wandwars.team'))"
             >
               <svg
                 v-if="lockedSide === 'right'"
@@ -450,7 +454,7 @@
                   d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
                 />
               </svg>
-              {{ i18n.t('wandwars.right-team') }}
+              {{ joinLocale(i18n.t('wandwars.right'), i18n.t('wandwars.team')) }}
             </button>
           </div>
         </div>
@@ -491,11 +495,11 @@
         </div>
 
         <div v-if="recommendations.length === 0" class="empty-state">
-          {{ i18n.t('wandwars.pick-heroes-prompt') }}
+          {{ i18n.t('wandwars.messages/pick-heroes-prompt') }}
         </div>
 
         <div v-else-if="filteredRecommendations.length === 0" class="empty-state">
-          {{ i18n.t('wandwars.no-recommendations') }}
+          {{ i18n.t('wandwars.messages/no-recommendations') }}
         </div>
 
         <template v-else>
@@ -545,7 +549,7 @@
         v-if="showRecordTooltip && recordTitleEl"
         :target-element="recordTitleEl"
         variant="detailed"
-        text="A sweep is a dominant win where no heroes were lost (3–0). Sweeps have a bigger impact on predictions than regular wins."
+        :text="i18n.t('wandwars.messages/tooltip-sweep')"
         max-width="260px"
       />
     </Teleport>
@@ -564,7 +568,7 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
-import { formatName, formatNoteHtml, formatPercent } from '@/wandwars/formatting'
+import { formatName, formatNoteHtml, formatPercent, joinLocale } from '@/wandwars/formatting'
 import {
   getAggregatePrediction,
   getAllMatchupPredictions,
@@ -670,7 +674,7 @@ async function handleImportFile(event: Event) {
 
 const tabs = computed(() => [
   { id: 'popular-pick', label: i18n.t('wandwars.popular-pick') },
-  { id: 'composite', label: i18n.t('wandwars.hero-synergy') },
+  { id: 'composite', label: joinLocale(i18n.t('wandwars.hero'), i18n.t('wandwars.synergy')) },
   { id: 'bradley-terry', label: i18n.t('wandwars.team-power') },
   { id: 'adaptive-ml', label: i18n.t('wandwars.adaptive-ml') },
   { id: 'records', label: i18n.t('wandwars.records') },
@@ -706,14 +710,14 @@ function handleRecordSubmit() {
   recordNotes.value = ''
 }
 
-const copyLabel = ref('Copy Data')
+const copyLabel = ref(i18n.t('wandwars.copy-data'))
 
 async function handleCopy() {
   const content = serializeMatches(props.records)
   await navigator.clipboard.writeText(content)
-  copyLabel.value = 'Copied!'
+  copyLabel.value = i18n.t('wandwars.copied')
   setTimeout(() => {
-    copyLabel.value = 'Copy Data'
+    copyLabel.value = i18n.t('wandwars.copy-data')
   }, 2000)
 }
 
@@ -784,8 +788,8 @@ function getCounterIndicators(hero: string): CounterIndicator[] {
 const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
 
 function recordVerbLabel(r: RecordedMatch): string {
-  if (r.winner === 'draw') return 'draw'
-  return r.dominant ? 'sweeps' : 'beats'
+  if (r.winner === 'draw') return i18n.t('wandwars.draw')
+  return r.dominant ? i18n.t('wandwars.sweeps') : i18n.t('wandwars.beats')
 }
 
 function recordVerbKind(r: RecordedMatch): 'beats' | 'sweeps' | 'draw' {
@@ -799,15 +803,21 @@ function recordVerbDirClass(r: RecordedMatch): string {
   return ''
 }
 
-const modelDescriptions: Record<string, string> = {
-  'popular-pick':
-    'Popular Pick model. Ranks heroes by how often they appear and win. Factors in actual win/loss records with your teammates. Best for quick, intuitive picks.',
-  composite:
-    'Composite model. Measures how well heroes perform together (synergy), against specific opponents (counters), and as a trio. Best for drafting around team chemistry and counter-picks.',
-  'bradley-terry':
-    "Bradley-Terry model. Rates each hero's strength and how well duos perform together beyond their individual ratings. Predicts win probability by comparing total team power. Best for objective strength ranking with duo chemistry.",
-  'adaptive-ml':
-    'Neural network model. Learns hidden patterns from match data that other models might miss. Each hero gets a learned profile, and team matchups are predicted from how those profiles combine. Improves as more data is added.',
+const modelDescriptions = computed<Record<string, string>>(() => ({
+  'popular-pick': i18n.t('wandwars.messages/tooltip-model-popular-pick'),
+  composite: i18n.t('wandwars.messages/tooltip-model-composite'),
+  'bradley-terry': i18n.t('wandwars.messages/tooltip-model-bradley-terry'),
+  'adaptive-ml': i18n.t('wandwars.messages/tooltip-model-adaptive-ml'),
+}))
+
+function modelTabLabel(id: string): string {
+  if (id === 'composite') return joinLocale(i18n.t('wandwars.hero'), i18n.t('wandwars.synergy'))
+  const keys: Record<string, string> = {
+    'popular-pick': 'wandwars.popular-pick',
+    'bradley-terry': 'wandwars.team-power',
+    'adaptive-ml': 'wandwars.adaptive-ml',
+  }
+  return keys[id] ? i18n.t(keys[id]!) : id
 }
 
 const tooltipModelId = ref<string | null>(null)

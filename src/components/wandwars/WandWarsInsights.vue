@@ -1,13 +1,17 @@
 <template>
   <div class="insights-panel">
     <div v-if="totalMatches < 5" class="empty-state">
-      Not enough data yet. Record more matches to see insights.
+      {{ i18n.t('wandwars.messages/not-enough-data-insights') }}
     </div>
 
     <template v-else>
       <div class="dataset-header">
-        {{ totalMatches }} matches analyzed across {{ heroCount }} heroes. Auto-generated from match
-        data. Results may reflect sampling bias.
+        {{
+          i18n
+            .t('wandwars.messages/dataset-header')
+            .replace('{matches}', String(totalMatches))
+            .replace('{heroes}', String(heroCount))
+        }}
       </div>
 
       <!-- Insights always at top -->
@@ -101,7 +105,7 @@
           @mouseenter="showPairCounterTooltip = true"
           @mouseleave="showPairCounterTooltip = false"
         >
-          {{ i18n.t('wandwars.pair-counters') }}
+          {{ joinLocale(i18n.t('wandwars.pair'), i18n.t('wandwars.counters')) }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -165,7 +169,10 @@
                 class="hero-portrait"
               />
             </div>
-            <span class="counter-record"> {{ s.sweeps }} sweeps / {{ s.total }} wins </span>
+            <span class="counter-record">
+              {{ s.sweeps }} {{ i18n.t('wandwars.sweeps') }} / {{ s.total }}
+              {{ i18n.t('wandwars.wins') }}
+            </span>
           </div>
         </div>
       </section>
@@ -178,7 +185,7 @@
           @mouseenter="showTeamCountersTooltip = true"
           @mouseleave="showTeamCountersTooltip = false"
         >
-          {{ i18n.t('wandwars.team-counters') }}
+          {{ joinLocale(i18n.t('wandwars.team'), i18n.t('wandwars.counters')) }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -241,7 +248,10 @@
                 class="hero-portrait"
               />
             </div>
-            <span class="counter-record"> {{ s.sweeps }} sweeps / {{ s.total }} wins </span>
+            <span class="counter-record">
+              {{ s.sweeps }} {{ i18n.t('wandwars.sweeps') }} / {{ s.total }}
+              {{ i18n.t('wandwars.wins') }}
+            </span>
           </div>
         </div>
       </section>
@@ -256,8 +266,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Heroes with the highest win rate when picked first by the left team (pick 1 of the
-            draft). Included when hero has ≥ 3 opening matches AND Bayesian-smoothed win rate ≥ 55%.
+            {{ i18n.t('wandwars.messages/tooltip-best-openers') }}
           </p>
         </template>
       </TooltipPopup>
@@ -269,9 +278,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Best right-team first pick (pick 2) in response to a specific left-team opener. W/L is
-            from the responder's perspective. Included when the matchup has ≥ 2 games AND the
-            responder has more wins than losses.
+            {{ i18n.t('wandwars.messages/tooltip-best-responses') }}
           </p>
         </template>
       </TooltipPopup>
@@ -283,10 +290,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Pairs that consistently beat another pair or full team when they share a match. Included
-            when the winning pair has ≥ 2 wins AND more wins than losses. Pair-vs-pair entries
-            additionally require wins across ≥ 2 distinct opposing full teams, so they aren't just
-            slices of a single repeated 3v3 matchup.
+            {{ i18n.t('wandwars.messages/tooltip-pair-counters') }}
           </p>
         </template>
       </TooltipPopup>
@@ -298,7 +302,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Pairs with the most dominant (sweep) wins. Included when the pair has ≥ 2 sweep wins.
+            {{ i18n.t('wandwars.messages/tooltip-dominant-pairs') }}
           </p>
         </template>
       </TooltipPopup>
@@ -310,9 +314,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Team-vs-team matchups where one team decisively beats the other. Included when the
-            winning team has ≥ 2 wins AND at least twice as many wins as losses in their
-            head-to-head (e.g., 2-0, 4-1, 4-2 qualify; 3-2 does not).
+            {{ i18n.t('wandwars.messages/tooltip-team-counters') }}
           </p>
         </template>
       </TooltipPopup>
@@ -324,8 +326,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Full 3-hero teams with the most dominant (sweep) wins. Included when the team has ≥ 2
-            sweep wins.
+            {{ i18n.t('wandwars.messages/tooltip-dominant-teams') }}
           </p>
         </template>
       </TooltipPopup>
@@ -346,9 +347,9 @@ import {
   META_MIN_PAIR_MATCHES,
   META_MIN_TEAM_MATCHES,
 } from '@/wandwars/constants'
-import { formatInsightHtml, formatName, formatPercent } from '@/wandwars/formatting'
+import { formatInsightHtml, formatName, formatPercent, joinLocale } from '@/wandwars/formatting'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
-import { heroNamesToIndices, mostSimilarHeroes, nnForward } from '@/wandwars/prediction/nn'
+import { mostSimilarHeroes, nnForward } from '@/wandwars/prediction/nn'
 import { NN_WEIGHTS } from '@/wandwars/prediction/nnWeights'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
 
@@ -851,6 +852,15 @@ function add(result: Insight[], category: InsightCategory, text: string) {
   result.push({ text, category })
 }
 
+/** Translate an insight template, replacing {placeholders} with values */
+function ti(key: string, vars: Record<string, string | number> = {}): string {
+  let text = i18n.t(`wandwars.insights/${key}`)
+  for (const [k, v] of Object.entries(vars)) {
+    text = text.replace(`{${k}}`, String(v))
+  }
+  return text
+}
+
 const insights = computed(() => {
   const result: Insight[] = []
   const stats = props.analysisData.heroStats
@@ -866,7 +876,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${topHero.name}} is the most picked hero (${topHero.matches} matches, ${formatPercent(topHero.winRate)} win rate)`,
+      ti('most-picked', {
+        hero: `{${topHero.name}}`,
+        matches: topHero.matches,
+        winRate: formatPercent(topHero.winRate),
+      }),
     )
   }
 
@@ -876,7 +890,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${bestHero.name}} has the highest win rate at ${formatPercent(bestHero.winRate)} (${bestHero.matches} matches)`,
+      ti('highest-winrate', {
+        hero: `{${bestHero.name}}`,
+        winRate: formatPercent(bestHero.winRate),
+        matches: bestHero.matches,
+      }),
     )
   }
 
@@ -886,7 +904,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${worstHero.name}} has the lowest win rate at ${formatPercent(worstHero.winRate)} (${worstHero.matches} matches)`,
+      ti('lowest-winrate', {
+        hero: `{${worstHero.name}}`,
+        winRate: formatPercent(worstHero.winRate),
+        matches: worstHero.matches,
+      }),
     )
   }
 
@@ -901,7 +923,7 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${mostVersatile[0]}} is the most versatile, appearing in ${mostVersatile[1]} different team compositions`,
+      ti('most-versatile', { hero: `{${mostVersatile[0]}}`, count: mostVersatile[1] }),
     )
   }
 
@@ -913,7 +935,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${hiddenGem.name}} is a hidden gem \u2014 ${formatPercent(hiddenGem.winRate)} win rate despite only ${hiddenGem.matches} matches`,
+      ti('hidden-gem', {
+        hero: `{${hiddenGem.name}}`,
+        winRate: formatPercent(hiddenGem.winRate),
+        matches: hiddenGem.matches,
+      }),
     )
   }
 
@@ -934,7 +960,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${biggestRivalry.a}} and {${biggestRivalry.b}} are the biggest rivals (faced each other ${biggestRivalry.matches} times)`,
+      ti('biggest-rivals', {
+        heroA: `{${biggestRivalry.a}}`,
+        heroB: `{${biggestRivalry.b}}`,
+        matches: biggestRivalry.matches,
+      }),
     )
   }
 
@@ -945,7 +975,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${mostBalanced.name}} is the most balanced hero (${formatPercent(mostBalanced.winRate)} win rate over ${mostBalanced.matches} matches)`,
+      ti('most-balanced', {
+        hero: `{${mostBalanced.name}}`,
+        winRate: formatPercent(mostBalanced.winRate),
+        matches: mostBalanced.matches,
+      }),
     )
   }
 
@@ -955,7 +989,7 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${leastPicked.name}} is the least picked hero (only ${leastPicked.matches} matches)`,
+      ti('least-picked', { hero: `{${leastPicked.name}}`, matches: leastPicked.matches }),
     )
   }
 
@@ -965,7 +999,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${secondBest.name}} has the second highest win rate at ${formatPercent(secondBest.winRate)} (${secondBest.matches} matches)`,
+      ti('second-highest-winrate', {
+        hero: `{${secondBest.name}}`,
+        winRate: formatPercent(secondBest.winRate),
+        matches: secondBest.matches,
+      }),
     )
   }
 
@@ -980,7 +1018,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${mostWins.name}} has the most total wins (${mostWins.wins} wins across ${mostWins.matches} matches)`,
+      ti('most-wins', {
+        hero: `{${mostWins.name}}`,
+        wins: mostWins.wins,
+        matches: mostWins.matches,
+      }),
     )
   }
 
@@ -990,7 +1032,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${mostLosses.name}} has the most total losses (${mostLosses.losses} losses across ${mostLosses.matches} matches)`,
+      ti('most-losses', {
+        hero: `{${mostLosses.name}}`,
+        losses: mostLosses.losses,
+        matches: mostLosses.matches,
+      }),
     )
   }
 
@@ -1007,18 +1053,14 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${topFirstPick[0]}} is the most popular first pick (chosen first ${topFirstPick[1]} times)`,
+      ti('most-popular-first-pick', { hero: `{${topFirstPick[0]}}`, count: topFirstPick[1] }),
     )
   }
 
   // Hero with most draws
   const mostDraws = [...allHeroes].filter((h) => h.draws > 0).sort((a, b) => b.draws - a.draws)[0]
   if (mostDraws && mostDraws.draws >= 2) {
-    add(
-      result,
-      'units',
-      `{${mostDraws.name}} is involved in the most draws (${mostDraws.draws} draws)`,
-    )
+    add(result, 'units', ti('most-draws', { hero: `{${mostDraws.name}}`, count: mostDraws.draws }))
   }
 
   // Most countered hero (appears most in losing side of counter matchups)
@@ -1035,7 +1077,7 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${mostCountered[0]}} is countered by the most heroes (${mostCountered[1]} strong counters against it)`,
+      ti('most-countered', { hero: `{${mostCountered[0]}}`, count: mostCountered[1] }),
     )
   }
 
@@ -1050,11 +1092,7 @@ const insights = computed(() => {
   }
   const bestCounter = Object.entries(counterPowers).sort(([, a], [, b]) => b - a)[0]
   if (bestCounter && bestCounter[1] >= 2) {
-    add(
-      result,
-      'units',
-      `{${bestCounter[0]}} counters the most opponents (strong against ${bestCounter[1]} heroes)`,
-    )
+    add(result, 'units', ti('best-counter', { hero: `{${bestCounter[0]}}`, count: bestCounter[1] }))
   }
 
   // Win rate improving heroes (high win rate but low picks — underrated)
@@ -1066,7 +1104,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${h.name}} may be underrated \u2014 ${formatPercent(h.winRate)} win rate in ${h.matches} matches`,
+      ti('underrated', {
+        hero: `{${h.name}}`,
+        winRate: formatPercent(h.winRate),
+        matches: h.matches,
+      }),
     )
   }
 
@@ -1078,7 +1120,11 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${overrated.name}} may be overrated \u2014 picked often (${overrated.matches} matches) but only ${formatPercent(overrated.winRate)} win rate`,
+      ti('overrated', {
+        hero: `{${overrated.name}}`,
+        matches: overrated.matches,
+        winRate: formatPercent(overrated.winRate),
+      }),
     )
   }
 
@@ -1099,7 +1145,7 @@ const insights = computed(() => {
       add(
         result,
         'teams',
-        `{${hero}} appears in ${count} of the top ${topTeams.length} winning teams`,
+        ti('appears-in-top-teams', { hero: `{${hero}}`, count, total: topTeams.length }),
       )
     }
   }
@@ -1109,7 +1155,12 @@ const insights = computed(() => {
       add(
         result,
         'teams',
-        `{${team.team[0]}} + {${team.team[1]}} + {${team.team[2]}} is undefeated in ${team.total} matches`,
+        ti('team-undefeated', {
+          t0: `{${team.team[0]}}`,
+          t1: `{${team.team[1]}}`,
+          t2: `{${team.team[2]}}`,
+          matches: team.total,
+        }),
       )
     }
   }
@@ -1119,7 +1170,12 @@ const insights = computed(() => {
       add(
         result,
         'teams',
-        `{${team.team[0]}} + {${team.team[1]}} + {${team.team[2]}} is winless in ${team.total} matches`,
+        ti('team-winless', {
+          t0: `{${team.team[0]}}`,
+          t1: `{${team.team[1]}}`,
+          t2: `{${team.team[2]}}`,
+          matches: team.total,
+        }),
       )
     }
   }
@@ -1130,7 +1186,13 @@ const insights = computed(() => {
     add(
       result,
       'teams',
-      `{${mostPlayed.team[0]}} + {${mostPlayed.team[1]}} + {${mostPlayed.team[2]}} is the most played team (${mostPlayed.total} matches, ${formatPercent(mostPlayed.winRate)} win rate)`,
+      ti('team-most-played', {
+        t0: `{${mostPlayed.team[0]}}`,
+        t1: `{${mostPlayed.team[1]}}`,
+        t2: `{${mostPlayed.team[2]}}`,
+        matches: mostPlayed.total,
+        winRate: formatPercent(mostPlayed.winRate),
+      }),
     )
   }
 
@@ -1145,7 +1207,14 @@ const insights = computed(() => {
       add(
         result,
         'teams',
-        `{${bestTeam.team[0]}} + {${bestTeam.team[1]}} + {${bestTeam.team[2]}} has the best win rate (${formatPercent(bestTeam.winRate)}, ${bestTeam.wins}W/${bestTeam.losses}L)`,
+        ti('team-best-winrate', {
+          t0: `{${bestTeam.team[0]}}`,
+          t1: `{${bestTeam.team[1]}}`,
+          t2: `{${bestTeam.team[2]}}`,
+          winRate: formatPercent(bestTeam.winRate),
+          wins: bestTeam.wins,
+          losses: bestTeam.losses,
+        }),
       )
     }
   }
@@ -1158,7 +1227,14 @@ const insights = computed(() => {
     add(
       result,
       'teams',
-      `{${worstTeam.team[0]}} + {${worstTeam.team[1]}} + {${worstTeam.team[2]}} has the worst win rate (${formatPercent(worstTeam.winRate)}, ${worstTeam.wins}W/${worstTeam.losses}L)`,
+      ti('team-worst-winrate', {
+        t0: `{${worstTeam.team[0]}}`,
+        t1: `{${worstTeam.team[1]}}`,
+        t2: `{${worstTeam.team[2]}}`,
+        winRate: formatPercent(worstTeam.winRate),
+        wins: worstTeam.wins,
+        losses: worstTeam.losses,
+      }),
     )
   }
 
@@ -1168,7 +1244,12 @@ const insights = computed(() => {
       add(
         result,
         'teams',
-        `{${team.team[0]}} + {${team.team[1]}} + {${team.team[2]}} has drawn all ${team.total} matches`,
+        ti('team-all-draws', {
+          t0: `{${team.team[0]}}`,
+          t1: `{${team.team[1]}}`,
+          t2: `{${team.team[2]}}`,
+          matches: team.total,
+        }),
       )
     }
   }
@@ -1176,11 +1257,7 @@ const insights = computed(() => {
   // Total unique teams
   const uniqueTeams = allTeamRecords.value.length
   if (uniqueTeams >= 5) {
-    add(
-      result,
-      'teams',
-      `${uniqueTeams} unique team compositions have been played across ${totalMatches.value} matches`,
-    )
+    add(result, 'teams', ti('unique-teams', { count: uniqueTeams, matches: totalMatches.value }))
   }
 
   // Teams with close records
@@ -1189,7 +1266,14 @@ const insights = computed(() => {
       add(
         result,
         'teams',
-        `{${team.team[0]}} + {${team.team[1]}} + {${team.team[2]}} has the most even record (${team.wins}W/${team.losses}L in ${team.total} matches)`,
+        ti('team-even-record', {
+          t0: `{${team.team[0]}}`,
+          t1: `{${team.team[1]}}`,
+          t2: `{${team.team[2]}}`,
+          wins: team.wins,
+          losses: team.losses,
+          matches: team.total,
+        }),
       )
       break
     }
@@ -1209,7 +1293,7 @@ const insights = computed(() => {
     add(
       result,
       'teams',
-      `{${mostInLosingTeams[0]}} appears in ${mostInLosingTeams[1]} underperforming teams`,
+      ti('in-losing-teams', { hero: `{${mostInLosingTeams[0]}}`, count: mostInLosingTeams[1] }),
     )
   }
 
@@ -1219,7 +1303,11 @@ const insights = computed(() => {
     add(
       result,
       'teams',
-      `${drawCount} draws out of ${props.matchData.length} matches (${formatPercent(drawRate)} draw rate)`,
+      ti('draw-count', {
+        count: drawCount,
+        matches: props.matchData.length,
+        rate: formatPercent(drawRate),
+      }),
     )
   }
 
@@ -1230,7 +1318,13 @@ const insights = computed(() => {
     add(
       result,
       'teams',
-      `{${t[0]}} + {${t[1]}} + {${t[2]}} is the most dominant team (${topSweepTeam.sweeps} sweeps out of ${topSweepTeam.total} wins)`,
+      ti('team-most-dominant', {
+        t0: `{${t[0]}}`,
+        t1: `{${t[1]}}`,
+        t2: `{${t[2]}}`,
+        sweeps: topSweepTeam.sweeps,
+        total: topSweepTeam.total,
+      }),
     )
   }
 
@@ -1238,11 +1332,7 @@ const insights = computed(() => {
   const totalSweeps = props.matchData.filter((m) => m.weight > 1 && m.result !== 'draw').length
   if (totalSweeps >= 3) {
     const sweepRate = totalSweeps / props.matchData.filter((m) => m.result !== 'draw').length
-    add(
-      result,
-      'teams',
-      `${totalSweeps} matches ended in a sweep (${formatPercent(sweepRate)} of decisive matches)`,
-    )
+    add(result, 'teams', ti('sweep-count', { count: totalSweeps, rate: formatPercent(sweepRate) }))
   }
 
   // Left vs right win rate (first-pick advantage)
@@ -1252,12 +1342,12 @@ const insights = computed(() => {
   if (decisiveCount >= 10) {
     const leftRate = leftWins / decisiveCount
     if (Math.abs(leftRate - 0.5) > 0.03) {
-      const favored = leftRate > 0.5 ? 'left (first pick)' : 'right'
+      const favored = leftRate > 0.5 ? ti('left-first-pick') : i18n.t('wandwars.right')
       const rate = leftRate > 0.5 ? leftRate : 1 - leftRate
       add(
         result,
         'teams',
-        `The ${favored} side has a win rate advantage: ${formatPercent(rate)} (${leftWins}W / ${rightWins}L)`,
+        ti('side-advantage', { side: favored, rate: formatPercent(rate), leftWins, rightWins }),
       )
     }
   }
@@ -1299,13 +1389,24 @@ const insights = computed(() => {
       add(
         result,
         'synergy',
-        `{${topPair.heroA}} + {${topPair.heroB}} look strong together (${topPair.wins}W/${topPair.losses}L), but all wins are against the same team \u2014 may be a counter matchup rather than true synergy`,
+        ti('synergy-counter-warning', {
+          heroA: `{${topPair.heroA}}`,
+          heroB: `{${topPair.heroB}}`,
+          wins: topPair.wins,
+          losses: topPair.losses,
+        }),
       )
     } else {
       add(
         result,
         'synergy',
-        `{${topPair.heroA}} and {${topPair.heroB}} have the strongest synergy (+${(topPair.synergy * 100).toFixed(1)}%, ${topPair.wins}W/${topPair.losses}L together)`,
+        ti('strongest-synergy', {
+          heroA: `{${topPair.heroA}}`,
+          heroB: `{${topPair.heroB}}`,
+          score: (topPair.synergy * 100).toFixed(1),
+          wins: topPair.wins,
+          losses: topPair.losses,
+        }),
       )
     }
   }
@@ -1316,7 +1417,13 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${worstPair.a}} and {${worstPair.b}} have the weakest synergy (${(worstPair.score * 100).toFixed(1)}%, ${worstPair.wins}W/${worstPair.losses}L together)`,
+      ti('weakest-synergy', {
+        heroA: `{${worstPair.a}}`,
+        heroB: `{${worstPair.b}}`,
+        score: (worstPair.score * 100).toFixed(1),
+        wins: worstPair.wins,
+        losses: worstPair.losses,
+      }),
     )
   }
 
@@ -1326,7 +1433,13 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${mostPlayedPair.a}} + {${mostPlayedPair.b}} is the most played pair (${mostPlayedPair.matches} matches, ${mostPlayedPair.wins}W/${mostPlayedPair.losses}L)`,
+      ti('most-played-pair', {
+        heroA: `{${mostPlayedPair.a}}`,
+        heroB: `{${mostPlayedPair.b}}`,
+        matches: mostPlayedPair.matches,
+        wins: mostPlayedPair.wins,
+        losses: mostPlayedPair.losses,
+      }),
     )
   }
 
@@ -1341,7 +1454,7 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${bestPairHero[0]}} appears in ${bestPairHero[1]} of the strongest pairs \u2014 a strong team player`,
+      ti('best-team-player', { hero: `{${bestPairHero[0]}}`, count: bestPairHero[1] }),
     )
   }
 
@@ -1358,7 +1471,7 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${worstPairHero[0]}} appears in ${worstPairHero[1]} weak pairings \u2014 may clash with teammates`,
+      ti('worst-team-player', { hero: `{${worstPairHero[0]}}`, count: worstPairHero[1] }),
     )
   }
 
@@ -1369,7 +1482,11 @@ const insights = computed(() => {
       add(
         result,
         'synergy',
-        `{${pair.heroA}} + {${pair.heroB}} have beaten ${diversity.opponents} different teams \u2014 a reliable combo`,
+        ti('reliable-combo', {
+          heroA: `{${pair.heroA}}`,
+          heroB: `{${pair.heroB}}`,
+          count: diversity.opponents,
+        }),
       )
       break
     }
@@ -1383,7 +1500,7 @@ const insights = computed(() => {
       add(
         result,
         'synergy',
-        `{${pair.heroA}} + {${pair.heroB}}'s wins are all against the same opponent \u2014 synergy may be overstated`,
+        ti('synergy-overstated', { heroA: `{${pair.heroA}}`, heroB: `{${pair.heroB}}` }),
       )
       break
     }
@@ -1398,7 +1515,12 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${pair.a}} + {${pair.b}} are undefeated together (${pair.wins}W in ${pair.matches} matches)`,
+      ti('pair-undefeated', {
+        heroA: `{${pair.a}}`,
+        heroB: `{${pair.b}}`,
+        wins: pair.wins,
+        matches: pair.matches,
+      }),
     )
   }
 
@@ -1410,7 +1532,12 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${winlessPair.a}} + {${winlessPair.b}} are winless together (${winlessPair.losses}L in ${winlessPair.matches} matches)`,
+      ti('pair-winless', {
+        heroA: `{${winlessPair.a}}`,
+        heroB: `{${winlessPair.b}}`,
+        losses: winlessPair.losses,
+        matches: winlessPair.matches,
+      }),
     )
   }
 
@@ -1421,7 +1548,12 @@ const insights = computed(() => {
     add(
       result,
       'synergy',
-      `{${p[0]}} + {${p[1]}} is the most dominant pair (${topSweepPair.sweeps} sweeps out of ${topSweepPair.total} wins)`,
+      ti('pair-most-dominant', {
+        p0: `{${p[0]}}`,
+        p1: `{${p[1]}}`,
+        sweeps: topSweepPair.sweeps,
+        total: topSweepPair.total,
+      }),
     )
   }
 
@@ -1441,7 +1573,7 @@ const insights = computed(() => {
     add(
       result,
       'units',
-      `{${topSweepHero[0]}} is involved in the most sweeps (${topSweepHero[1]} dominant wins)`,
+      ti('most-sweeps-hero', { hero: `{${topSweepHero[0]}}`, count: topSweepHero[1] }),
     )
   }
 
@@ -1463,7 +1595,7 @@ const insights = computed(() => {
       [match.left, match.result === 'left'],
       [match.right, match.result === 'right'],
     ] as [readonly [string, string, string], boolean][]) {
-      const attrs = team.map((h) => attrMap[h]).filter(Boolean)
+      const attrs = team.map((h) => attrMap[h]).filter((a): a is CharacterType => !!a)
       if (attrs.length !== 3) continue
 
       // Damage type balance
@@ -1508,11 +1640,11 @@ const insights = computed(() => {
       const rate = w / total
       if (Math.abs(rate - 0.5) < 0.05) continue // not notable
       const target = category === 'class' ? 'units' : 'teams'
-      const verb = rate > 0.5 ? 'overperform' : 'underperform'
+      const verb = rate > 0.5 ? ti('overperform') : ti('underperform')
       add(
         result,
         target as InsightCategory,
-        `Teams with ${label} ${verb}: ${formatPercent(rate)} win rate (${total} teams)`,
+        ti('composition-pattern', { label, verb, rate: formatPercent(rate), count: total }),
       )
     }
   }
@@ -1528,7 +1660,11 @@ const insights = computed(() => {
       add(
         result,
         'units',
-        `{${hero.name}} plays most similarly to {${similar[0]!.hero}} and {${similar[1]!.hero}} (based on learned patterns)`,
+        ti('similar-heroes', {
+          hero: `{${hero.name}}`,
+          similar1: `{${similar[0]!.hero}}`,
+          similar2: `{${similar[1]!.hero}}`,
+        }),
       )
       break // Only show one to avoid clutter
     }
@@ -1537,7 +1673,6 @@ const insights = computed(() => {
   // Synergy: unexplored pair synergies (NN predicts well but little actual data)
   const nnHeroes = Object.keys(NN_WEIGHTS.heroIndex)
   const unexplored: { a: string; b: string; score: number }[] = []
-  const avgOpponentIdx = Array.from({ length: nnHeroes.length }, (_, i) => i)
   const sampleStep = Math.max(1, Math.floor(nnHeroes.length / 5))
   for (let i = 0; i < nnHeroes.length; i++) {
     for (let j = i + 1; j < nnHeroes.length; j++) {
@@ -1571,14 +1706,18 @@ const insights = computed(() => {
   const topUnexplored = unexplored.slice(0, 2)
   for (const pair of topUnexplored) {
     if (pair.score > 0.55) {
+      const pairMatches = matrix[pair.a]?.[pair.b]?.matches || 0
       const dataNote =
-        (matrix[pair.a]?.[pair.b]?.matches || 0) === 0
-          ? 'never played together'
-          : `only ${matrix[pair.a]?.[pair.b]?.matches} matches together`
+        pairMatches === 0 ? ti('never-played') : ti('few-matches', { matches: pairMatches })
       add(
         result,
         'synergy',
-        `{${pair.a}} + {${pair.b}} may have untapped synergy — predicted ${formatPercent(pair.score)} win rate but ${dataNote}`,
+        ti('unexplored-synergy', {
+          heroA: `{${pair.a}}`,
+          heroB: `{${pair.b}}`,
+          winRate: formatPercent(pair.score),
+          dataNote,
+        }),
       )
     }
   }
@@ -1603,7 +1742,11 @@ const insights = computed(() => {
   }
   nnTopTeams.sort((a, b) => b.score - a.score)
   for (const t of nnTopTeams.slice(0, 3)) {
-    add(result, 'teams', `{${t.team[0]}} + {${t.team[1]}} + {${t.team[2]}} — ML predicted top team`)
+    add(
+      result,
+      'teams',
+      ti('ml-top-team', { t0: `{${t.team[0]}}`, t1: `{${t.team[1]}}`, t2: `{${t.team[2]}}` }),
+    )
   }
 
   return result

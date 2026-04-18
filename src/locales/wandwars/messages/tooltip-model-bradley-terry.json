@@ -1,0 +1,4 @@
+{
+  "en": "Bradley-Terry model. Rates each hero's strength and how well duos perform together beyond their individual ratings. Predicts win probability by comparing total team power. Best for objective strength ranking with duo chemistry.",
+  "zh": "布拉德利-特里模型。评估每个英雄的实力以及双人组合超越个人评分的表现。通过比较团队总实力预测胜率。适合客观的实力排名和双人配合分析。"
+}

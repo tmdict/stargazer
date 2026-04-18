@@ -1,0 +1,4 @@
+{
+  "en": "The {side} side has a win rate advantage: {rate} ({leftWins}W / {rightWins}L)",
+  "zh": "{side}方拥有胜率优势：{rate}（{leftWins}胜 / {rightWins}负）"
+}

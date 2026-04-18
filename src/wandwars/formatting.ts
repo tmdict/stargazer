@@ -1,5 +1,17 @@
 import { useI18nStore } from '@/stores/i18n'
 
+/**
+ * Join translated words with a space for English, no space for Chinese.
+ */
+export function joinLocale(...parts: string[]): string {
+  try {
+    const i18n = useI18nStore()
+    return parts.join(i18n.currentLocale === 'zh' ? '' : ' ')
+  } catch {
+    return parts.join(' ')
+  }
+}
+
 export function formatPercent(value: number | undefined): string {
   if (value === undefined) return '—'
   return (value * 100).toFixed(1) + '%'

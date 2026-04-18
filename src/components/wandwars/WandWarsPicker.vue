@@ -40,7 +40,7 @@
         <div class="pool-modal-panel">
           <div class="pool-modal-header">
             <span class="pool-modal-title">
-              Restrict to Pool
+              {{ i18n.t('wandwars.restrict-to-pool') }}
               <IconInfo
                 ref="poolInfoEl"
                 :size="16"
@@ -69,17 +69,13 @@
         >
           <template #content>
             <div class="pool-info-tip">
-              <p>
-                Drop a screenshot of the game's 4×5 hero pool here and the app will recognize the 20
-                heroes and limit picks + recommendations to just those.
-              </p>
-              <p>
-                After upload, you can click any cell to fix a wrong guess. Then hit
-                <strong>Apply Pool Filter</strong>.
-              </p>
-              <p>
-                The two smaller buttons at the top are only needed if the game adds new heroes or
-                updates art — can be ignored in most cases.
+              <p
+                v-for="(paragraph, idx) in i18n
+                  .t('wandwars.messages/tooltip-pool-info')
+                  .split('\n\n')"
+                :key="idx"
+              >
+                {{ paragraph }}
               </p>
             </div>
           </template>

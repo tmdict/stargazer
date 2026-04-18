@@ -7,16 +7,28 @@
         @click="referenceOpen = !referenceOpen"
       >
         <span class="toggle-arrow">{{ referenceOpen ? '▾' : '▸' }}</span>
-        Reference options
-        <span v-if="usingOverride" class="override-tag">override active</span>
+        {{ i18n.t('wandwars.reference-options') }}
+        <span v-if="usingOverride" class="override-tag">{{
+          i18n.t('wandwars.override-active')
+        }}</span>
       </button>
       <div v-if="referenceOpen" class="reference-content">
         <div class="reference-status">
           <span class="status-ok">✓</span>
           <template v-if="usingOverride">
-            Using uploaded reference ({{ referenceCount }} heroes) — temporary, not saved
+            {{
+              i18n
+                .t('wandwars.messages/pool-ref-override')
+                .replace('{count}', String(referenceCount))
+            }}
           </template>
-          <template v-else> Using default reference ({{ referenceCount }} heroes) </template>
+          <template v-else>
+            {{
+              i18n
+                .t('wandwars.messages/pool-ref-default')
+                .replace('{count}', String(referenceCount))
+            }}
+          </template>
         </div>
         <div class="reference-actions">
           <button
@@ -25,7 +37,11 @@
             title="Pick a folder of hero portrait images; download a signatures file to commit."
             @click="openGenerateFolder"
           >
-            {{ builderBusy && builderMode === 'generate' ? 'Generating…' : 'Generate Signatures' }}
+            {{
+              builderBusy && builderMode === 'generate'
+                ? i18n.t('wandwars.generating')
+                : i18n.t('wandwars.generate-signatures')
+            }}
           </button>
           <button
             class="ref-btn"
@@ -39,10 +55,10 @@
           >
             {{
               builderBusy && builderMode === 'override'
-                ? 'Loading…'
+                ? i18n.t('wandwars.loading')
                 : usingOverride
-                  ? 'Revert to Default'
-                  : 'Upload Reference'
+                  ? i18n.t('wandwars.revert-to-default')
+                  : i18n.t('wandwars.upload-reference')
             }}
           </button>
         </div>
@@ -77,11 +93,11 @@
         @drop.prevent="handleDrop"
       >
         <template v-if="busy">
-          <div class="busy-indicator">Loading…</div>
+          <div class="busy-indicator">{{ i18n.t('wandwars.loading') }}</div>
         </template>
         <template v-else>
-          <div class="drop-title">Upload pool screenshot</div>
-          <div class="drop-subtitle">Drag, paste (Ctrl+V / ⌘V), or click to browse.</div>
+          <div class="drop-title">{{ i18n.t('wandwars.messages/pool-upload-title') }}</div>
+          <div class="drop-subtitle">{{ i18n.t('wandwars.messages/pool-upload-subtitle') }}</div>
         </template>
       </div>
       <input
@@ -95,8 +111,7 @@
 
     <template v-else-if="phase === 'crop'">
       <div class="crop-instructions">
-        Auto-detected grid outlined below. Drag inside to redraw, or click
-        <strong>Detect heroes</strong> to proceed.
+        {{ i18n.t('wandwars.messages/pool-crop-instructions') }}
       </div>
       <div
         ref="cropContainer"
@@ -136,19 +151,26 @@
         </div>
       </div>
       <div class="actions">
-        <button class="action-btn danger" @click="reset">Cancel</button>
-        <button class="action-btn" @click="resetCropToFull">Select all</button>
+        <button class="action-btn danger" @click="reset">{{ i18n.t('wandwars.cancel') }}</button>
+        <button class="action-btn" @click="resetCropToFull">
+          {{ i18n.t('wandwars.select-all') }}
+        </button>
         <button class="action-btn" :disabled="!canDetect || busy" @click="runDetection">
-          {{ busy ? 'Detecting…' : 'Detect heroes' }}
+          {{ busy ? i18n.t('wandwars.detecting') : i18n.t('wandwars.detect-heroes') }}
         </button>
       </div>
     </template>
 
     <template v-else-if="phase === 'review'">
       <div class="detections-header">
-        <div class="detections-title">Detected heroes — review and confirm</div>
+        <div class="detections-title">{{ i18n.t('wandwars.messages/pool-review-title') }}</div>
         <div class="detections-summary">
-          {{ confirmedCount }} / {{ detections.length }} recognized
+          {{
+            i18n
+              .t('wandwars.messages/pool-review-summary')
+              .replace('{confirmed}', String(confirmedCount))
+              .replace('{total}', String(detections.length))
+          }}
         </div>
       </div>
 
@@ -163,29 +185,33 @@
           <div class="cell-label">
             <img v-if="d.hero" :src="characterImages[d.hero]" :alt="d.hero" class="cell-portrait" />
             <span v-else class="cell-unknown">?</span>
-            <span class="cell-name">{{ d.hero ? formatName(d.hero) : 'Unknown' }}</span>
+            <span class="cell-name">{{
+              d.hero ? formatName(d.hero) : i18n.t('wandwars.unknown')
+            }}</span>
           </div>
         </div>
       </div>
 
       <div class="actions">
-        <button class="action-btn danger" @click="reset">Cancel</button>
-        <button class="action-btn" @click="backToCrop">Back to crop</button>
+        <button class="action-btn danger" @click="reset">{{ i18n.t('wandwars.cancel') }}</button>
+        <button class="action-btn" @click="backToCrop">
+          {{ i18n.t('wandwars.back-to-crop') }}
+        </button>
         <button class="action-btn" :disabled="confirmedCount < detections.length" @click="confirm">
-          Apply Pool Filter
+          {{ i18n.t('wandwars.apply-pool-filter') }}
         </button>
       </div>
 
       <div v-if="activePicker !== null" class="picker-overlay" @click.self="activePicker = null">
         <div class="picker-panel">
           <div class="picker-title">
-            Correct detection
+            {{ i18n.t('wandwars.correct-detection') }}
             <span class="picker-close" @click="activePicker = null">✕</span>
           </div>
           <input
             v-model="pickerQuery"
             type="text"
-            placeholder="Search hero…"
+            :placeholder="i18n.t('wandwars.search-hero')"
             class="picker-search"
             @keydown.esc="activePicker = null"
           />
@@ -209,6 +235,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
+import { useI18nStore } from '@/stores/i18n'
 import { formatName } from '@/wandwars/formatting'
 import {
   getBundledReferenceCount,
@@ -229,6 +256,8 @@ import {
   type CropRect,
   type PoolDetection,
 } from '@/wandwars/heroImport/poolDetect'
+
+const i18n = useI18nStore()
 
 const props = defineProps<{
   characterImages: Record<string, string>
@@ -302,12 +331,18 @@ async function handleGenerateFolder(event: Event) {
     const { signatures, skipped } = await buildSignaturesFromFiles(files)
     const count = Object.keys(signatures).length
     if (count === 0) {
-      builderStatus.value = 'No images found in that folder.'
+      builderStatus.value = i18n.t('wandwars.messages/builder-no-images')
       return
     }
     downloadSignaturesFile(serializeSignaturesModule(signatures))
-    const skippedMsg = skipped.length > 0 ? `, ${skipped.length} skipped` : ''
-    builderStatus.value = `Signatures generated for ${count} heroes${skippedMsg}.`
+    const skippedMsg =
+      skipped.length > 0
+        ? i18n.t('wandwars.messages/builder-skipped').replace('{count}', String(skipped.length))
+        : ''
+    builderStatus.value = i18n
+      .t('wandwars.messages/builder-generated')
+      .replace('{count}', String(count))
+      .replace('{skipped}', skippedMsg)
   } finally {
     builderBusy.value = false
     builderMode.value = null
@@ -324,15 +359,21 @@ async function handleOverrideFolder(event: Event) {
     const { signatures, skipped } = await buildSignaturesFromFiles(files)
     const count = Object.keys(signatures).length
     if (count === 0) {
-      builderStatus.value = 'No images found in that folder.'
+      builderStatus.value = i18n.t('wandwars.messages/builder-no-images')
       return
     }
     setOverrideReference(signatures)
     sigCache = null
     usingOverride.value = true
     referenceCount.value = count
-    const skippedMsg = skipped.length > 0 ? `, ${skipped.length} skipped` : ''
-    builderStatus.value = `Uploaded reference active — ${count} heroes${skippedMsg}. Lasts until you revert or reload.`
+    const skippedMsg =
+      skipped.length > 0
+        ? i18n.t('wandwars.messages/builder-skipped').replace('{count}', String(skipped.length))
+        : ''
+    builderStatus.value = i18n
+      .t('wandwars.messages/builder-override-active')
+      .replace('{count}', String(count))
+      .replace('{skipped}', skippedMsg)
   } finally {
     builderBusy.value = false
     builderMode.value = null

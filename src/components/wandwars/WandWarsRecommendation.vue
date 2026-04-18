@@ -142,7 +142,7 @@
         <span class="counter-text">
           {{
             opponentCount !== undefined && opponentCount >= 3
-              ? i18n.t('wandwars.team-counter')
+              ? joinLocale(i18n.t('wandwars.team'), i18n.t('wandwars.counter'))
               : i18n.t('wandwars.potential-team-counter')
           }}
           <span class="pair-wins">{{ teamCounter.wins }}W</span> /
@@ -196,6 +196,7 @@ import {
   formatPercent,
   formatScore,
   formatSigned,
+  joinLocale,
   signClass,
 } from '@/wandwars/formatting'
 import type { Recommendation } from '@/wandwars/types'

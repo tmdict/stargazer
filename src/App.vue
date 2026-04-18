@@ -156,6 +156,7 @@ nav ul li {
   letter-spacing: 0.05em;
   padding: 4px 10px;
   margin-right: -0.8rem;
+  margin-bottom: 0.2rem;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
 }
