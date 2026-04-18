@@ -39,8 +39,9 @@ const updatePosition = () => {
   const rect = props.targetElement.getBoundingClientRect()
   const tooltipRect = tooltipRef.value.getBoundingClientRect()
 
-  // Position above the element by default
-  let x = rect.left + rect.width / 2 - tooltipRect.width / 2
+  // Position above the element, aligned to left edge for wide elements
+  const isWide = rect.width > tooltipRect.width * 1.5
+  let x = isWide ? rect.left : rect.left + rect.width / 2 - tooltipRect.width / 2
   let y = rect.top - tooltipRect.height - props.offset
 
   // Adjust if tooltip goes off screen

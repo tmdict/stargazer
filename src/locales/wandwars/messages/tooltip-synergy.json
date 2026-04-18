@@ -1,0 +1,4 @@
+{
+  "en": "Pair win rate minus average of each hero's individual win rate. Positive means they win more together than expected.",
+  "zh": "组合胜率减去两个英雄各自胜率的平均值。正值表示他们在一起时胜率高于预期。"
+}

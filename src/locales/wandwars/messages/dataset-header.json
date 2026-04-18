@@ -1,0 +1,4 @@
+{
+  "en": "{matches} matches analyzed across {heroes} heroes. Auto-generated from match data. Results may reflect sampling bias.",
+  "zh": "分析了 {matches} 场比赛、{heroes} 位英雄的数据。自动生成，结果可能存在样本偏差。"
+}

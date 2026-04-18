@@ -1,4 +1,4 @@
-import type { MatchResult, Recommendation } from '../types'
+import type { MatchResult } from '../types'
 import { adaptiveMLModel } from './adaptiveML'
 import { bradleyTerryModel } from './bradleyTerry'
 import { compositeModel } from './composite'

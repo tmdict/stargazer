@@ -65,14 +65,14 @@
         v-if="showDataTooltip && dataTitleEl"
         :target-element="dataTitleEl"
         variant="detailed"
-        text="Teams that have actually played together in recorded matches, showing their real win/loss record."
+        :text="i18n.t('wandwars.messages/tooltip-top-teams')"
         max-width="240px"
       />
       <TooltipPopup
         v-if="showSuggestedTooltip && suggestedTitleEl"
         :target-element="suggestedTitleEl"
         variant="detailed"
-        text="Teams predicted to perform well by combining all four prediction models. The percentage is the aggregated predicted win rate."
+        :text="i18n.t('wandwars.messages/tooltip-suggested-teams')"
         max-width="240px"
       />
     </Teleport>

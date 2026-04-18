@@ -1,0 +1,4 @@
+{
+  "en": "{count} draws out of {matches} matches ({rate} draw rate)",
+  "zh": "{matches} 场比赛中 {count} 场平局（{rate} 平局率）"
+}
