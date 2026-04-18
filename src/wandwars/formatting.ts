@@ -1,3 +1,5 @@
+import { useI18nStore } from '@/stores/i18n'
+
 export function formatPercent(value: number | undefined): string {
   if (value === undefined) return '—'
   return (value * 100).toFixed(1) + '%'
@@ -13,7 +15,18 @@ export function formatSigned(value: number | undefined): string {
   return value >= 0 ? `+${pct}%` : `${pct}%`
 }
 
+/**
+ * Format a hero name using the current locale.
+ * Tries i18n character translation first, falls back to title-case formatting.
+ */
 export function formatName(name: string): string {
+  try {
+    const i18n = useI18nStore()
+    const translated = i18n.t(`character.${name}`)
+    if (translated !== `character.${name}`) return translated
+  } catch {
+    // i18n not available (e.g., in Node scripts or before store init)
+  }
   return name
     .split('-')
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1))

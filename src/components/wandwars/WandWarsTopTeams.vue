@@ -8,7 +8,7 @@
         @mouseenter="showDataTooltip = true"
         @mouseleave="showDataTooltip = false"
       >
-        Top Teams
+        {{ i18n.t('wandwars.top-teams') }}
         <IconInfo :size="12" class="info-icon" />
       </h4>
       <div class="team-list">
@@ -40,7 +40,7 @@
         @mouseenter="showSuggestedTooltip = true"
         @mouseleave="showSuggestedTooltip = false"
       >
-        Suggested Teams
+        {{ i18n.t('wandwars.suggested-teams') }}
         <IconInfo :size="12" class="info-icon" />
       </h4>
       <div class="team-list">
@@ -84,6 +84,7 @@ import { computed, ref } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useI18nStore } from '@/stores/i18n'
 import { formatName } from '@/wandwars/formatting'
 import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
 import type { MatchResult } from '@/wandwars/types'
@@ -95,6 +96,7 @@ const props = defineProps<{
   characterImages: Record<string, string>
 }>()
 
+const i18n = useI18nStore()
 const result = computed(() => getTopTeams(props.teammates, props.matches, props.excludeHeroes))
 
 const showDataTooltip = ref(false)
