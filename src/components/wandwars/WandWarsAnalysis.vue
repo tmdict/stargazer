@@ -234,7 +234,9 @@
       <div v-else class="empty-state">
         {{ i18n.t('wandwars.messages/no-matches-yet') }}
         <div class="empty-state-actions">
-          <button class="export-btn" @click="openImport">Import .data</button>
+          <button class="export-btn" @click="openImport">
+            {{ i18n.t('wandwars.import-data') }}
+          </button>
         </div>
       </div>
 
