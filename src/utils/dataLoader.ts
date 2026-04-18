@@ -261,15 +261,19 @@ export function loadWandWarsLocales(): Record<string, LocaleData> {
     return wandwarsLocalesCache
   }
 
-  const localeModules = import.meta.glob<LocaleData>('@/locales/wandwars/*.json', {
+  const localeModules = import.meta.glob<LocaleData>('@/locales/wandwars/**/*.json', {
     eager: true,
     import: 'default',
   })
   const result: Record<string, LocaleData> = {}
 
   Object.entries(localeModules).forEach(([path, content]) => {
+    // For files in subfolders (e.g., messages/), prefix the key
+    const parts = path.split('/')
+    const folder = parts[parts.length - 2]
     const fileName = extractFileName(path)
-    result[fileName] = content
+    const key = folder === 'wandwars' ? fileName : `${folder}/${fileName}`
+    result[key] = content
   })
 
   wandwarsLocalesCache = result

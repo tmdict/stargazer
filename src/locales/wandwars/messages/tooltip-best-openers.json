@@ -1,0 +1,4 @@
+{
+  "en": "Heroes with the highest win rate when picked first by the left team (pick 1 of the draft). Included when hero has ≥ 3 opening matches AND Bayesian-smoothed win rate ≥ 55%.",
+  "zh": "左方队伍第一手选择时胜率最高的英雄。需要 ≥ 3 场先手比赛且贝叶斯平滑胜率 ≥ 55%。"
+}

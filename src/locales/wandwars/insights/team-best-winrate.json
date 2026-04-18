@@ -1,0 +1,4 @@
+{
+  "en": "{t0} + {t1} + {t2} has the best win rate ({winRate}, {wins}W/{losses}L)",
+  "zh": "{t0} + {t1} + {t2} 拥有最高胜率（{winRate}，{wins}胜/{losses}负）"
+}

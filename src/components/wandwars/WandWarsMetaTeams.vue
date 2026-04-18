@@ -1,7 +1,7 @@
 <template>
   <div class="meta-teams">
     <div v-if="totalMatches < 5" class="empty-state">
-      Not enough data yet. Record more matches to see team analytics.
+      {{ i18n.t('wandwars.messages/not-enough-data-analytics') }}
     </div>
 
     <template v-else>
@@ -41,7 +41,7 @@
                   }}<span v-if="heroSort === 'firstPick'" class="sort-arrow">{{
                     heroSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
-                  <IconInfo :size="14" class="synergy-info-icon" />
+                  <IconInfo :size="14" class="header-info-icon" />
                 </th>
               </tr>
             </thead>
@@ -102,7 +102,7 @@
                   }}<span v-if="pairSort === 'synergy'" class="sort-arrow">{{
                     pairSortDir === 'desc' ? '▼' : '▲'
                   }}</span>
-                  <IconInfo :size="14" class="synergy-info-icon" />
+                  <IconInfo :size="14" class="header-info-icon" />
                 </th>
               </tr>
             </thead>
@@ -148,7 +148,7 @@
           <table class="hero-table">
             <thead>
               <tr>
-                <th>{{ i18n.t('wandwars.team-label') }}</th>
+                <th>{{ i18n.t('wandwars.team') }}</th>
                 <th
                   :class="['col-sortable', { active: teamSort === 'total' }]"
                   @click="toggleTeamSort('total')"
@@ -209,7 +209,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Times picked as the very first hero in a match (left team, pick 1).
+            {{ i18n.t('wandwars.messages/tooltip-opener') }}
           </p>
         </template>
       </TooltipPopup>
@@ -221,8 +221,7 @@
       >
         <template #content>
           <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
-            Pair win rate minus average of each hero's individual win rate. Positive means they win
-            more together than expected.
+            {{ i18n.t('wandwars.messages/tooltip-synergy') }}
           </p>
         </template>
       </TooltipPopup>
@@ -472,15 +471,15 @@ td.col-hero {
   transition: color var(--transition-fast);
 }
 
-.synergy-info-icon {
-  vertical-align: middle;
+.header-info-icon {
+  vertical-align: -2px;
   opacity: 0.5;
   margin-left: 2px;
   cursor: help;
   transition: opacity var(--transition-fast);
 }
 
-.synergy-info-icon:hover {
+.header-info-icon:hover {
   opacity: 1;
 }
 
