@@ -45,29 +45,32 @@ onUnmounted(() => {
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
       </a>
 
-      <ul class="menu">
-        <li>
-          <LanguageToggle class="icon-link" />
-        </li>
-        <li>
-          <a
-            href="https://github.com/tmdict/stargazer/"
-            class="icon-link"
-            :title="i18n.t('app.code')"
-          >
-            <IconGitHub :size="20" />
-          </a>
-        </li>
-        <li>
-          <button
-            @click="showAboutModal = true"
-            class="icon-link icon-button"
-            :title="i18n.t('app.about')"
-          >
-            <IconInfo />
-          </button>
-        </li>
-      </ul>
+      <div class="nav-right">
+        <a href="/wandwars" class="nav-text-link">{{ i18n.t('wandwars.wand-wars') }}</a>
+        <ul class="menu">
+          <li>
+            <LanguageToggle class="icon-link" />
+          </li>
+          <li>
+            <a
+              href="https://github.com/tmdict/stargazer/"
+              class="icon-link"
+              :title="i18n.t('app.code')"
+            >
+              <IconGitHub :size="20" />
+            </a>
+          </li>
+          <li>
+            <button
+              @click="showAboutModal = true"
+              class="icon-link icon-button"
+              :title="i18n.t('app.about')"
+            >
+              <IconInfo />
+            </button>
+          </li>
+        </ul>
+      </div>
     </nav>
   </header>
 
@@ -140,6 +143,28 @@ nav ul li {
   color: #f7d87c;
 }
 
+.nav-right {
+  display: flex;
+  align-items: center;
+}
+
+.nav-text-link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #ddd;
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  padding: 4px 10px;
+  margin-right: -0.8rem;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.nav-text-link:hover {
+  color: #f7d87c;
+  background: rgba(255, 255, 255, 0.18);
+}
+
 .icon-link {
   display: inline-flex;
   align-items: center;
@@ -172,6 +197,12 @@ nav ul li {
     font-size: 1rem;
     padding: 0.5rem;
   }
+
+  .nav-text-link {
+    font-size: 0.75rem;
+    padding: 3px 8px;
+    margin-bottom: -0.75rem;
+  }
 }
 
 @media (max-width: 480px) {
@@ -203,6 +234,13 @@ nav ul li {
 
   .logo:hover {
     transform: scale(1.1);
+  }
+
+  .nav-text-link {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    margin-right: -0.3rem;
+    margin-bottom: -0.1rem;
   }
 }
 </style>

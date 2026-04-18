@@ -12,10 +12,11 @@
       </div>
       <div class="score-confidence">
         <span :class="['confidence-badge', recommendation.confidence]" :title="confidenceTooltip">
-          {{ recommendation.confidence }} confidence
+          {{ i18n.t(`wandwars.${recommendation.confidence}-confidence`) }}
         </span>
         <span class="score"
-          ><span class="score-label">Score:</span> {{ formatScore(recommendation.score) }}</span
+          ><span class="score-label">{{ i18n.t('wandwars.score') }}:</span>
+          {{ formatScore(recommendation.score) }}</span
         >
       </div>
     </div>
@@ -23,13 +24,13 @@
     <div class="breakdown">
       <template v-if="modelId === 'popular-pick'">
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'winRate' }]">
-          <span class="breakdown-label">Win Rate</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.win-rate') }}</span>
           <span class="breakdown-value">
             {{ formatPercent(recommendation.breakdown.winRate as number) }}
           </span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
-          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.pick-rate') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
@@ -52,31 +53,31 @@
       </template>
       <template v-else-if="modelId === 'composite'">
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'base' }]">
-          <span class="breakdown-label">Win Rate</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.win-rate') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.base as number)
           }}</span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'synergy' }]">
-          <span class="breakdown-label">Synergy</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.synergy') }}</span>
           <span :class="['breakdown-value', signClass(recommendation.breakdown.synergy as number)]">
             {{ formatSigned(recommendation.breakdown.synergy as number) }}
           </span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'counter' }]">
-          <span class="breakdown-label">Counter</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.counter') }}</span>
           <span :class="['breakdown-value', signClass(recommendation.breakdown.counter as number)]">
             {{ formatSigned(recommendation.breakdown.counter as number) }}
           </span>
         </div>
         <div v-if="(recommendation.breakdown.trio as number) !== 0" class="breakdown-row">
-          <span class="breakdown-label">Trio</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.trio') }}</span>
           <span :class="['breakdown-value', signClass(recommendation.breakdown.trio as number)]">
             {{ formatSigned(recommendation.breakdown.trio as number) }}
           </span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
-          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.pick-rate') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
@@ -84,25 +85,25 @@
       </template>
       <template v-else-if="modelId === 'bradley-terry'">
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'strength' }]">
-          <span class="breakdown-label">Strength</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.strength') }}</span>
           <span class="breakdown-value">{{
             (recommendation.breakdown.strength as number)?.toFixed(2)
           }}</span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'winProbability' }]">
-          <span class="breakdown-label">Win Prob</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.win-prob') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.winProbability as number)
           }}</span>
         </div>
         <div v-if="(recommendation.breakdown.pairSynergy as number) !== 0" class="breakdown-row">
-          <span class="breakdown-label">Pair Synergy</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.pair-synergy') }}</span>
           <span class="breakdown-value">{{
             formatSigned(recommendation.breakdown.pairSynergy as number)
           }}</span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
-          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.pick-rate') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
@@ -110,13 +111,13 @@
       </template>
       <template v-else-if="modelId === 'adaptive-ml'">
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'winProbability' }]">
-          <span class="breakdown-label">Win Prob</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.win-prob') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.winProbability as number)
           }}</span>
         </div>
         <div :class="['breakdown-row', { 'sort-active': sortKey === 'pickRate' }]">
-          <span class="breakdown-label">Pick Rate</span>
+          <span class="breakdown-label">{{ i18n.t('wandwars.pick-rate') }}</span>
           <span class="breakdown-value">{{
             formatPercent(recommendation.breakdown.pickRate as number)
           }}</span>
@@ -141,8 +142,8 @@
         <span class="counter-text">
           {{
             opponentCount !== undefined && opponentCount >= 3
-              ? 'Team counter'
-              : 'Potential team counter'
+              ? i18n.t('wandwars.team-counter')
+              : i18n.t('wandwars.potential-team-counter')
           }}
           <span class="pair-wins">{{ teamCounter.wins }}W</span> /
           <span class="pair-losses">{{ teamCounter.losses }}L</span>
@@ -165,7 +166,11 @@
           />
         </svg>
         <span class="counter-text">
-          {{ ci.type === 'counters' ? 'Strong against' : 'Weak against' }}
+          {{
+            ci.type === 'counters'
+              ? i18n.t('wandwars.strong-against')
+              : i18n.t('wandwars.weak-against')
+          }}
           {{ formatName(ci.opponent) }}
         </span>
       </span>
@@ -183,6 +188,7 @@
 </template>
 
 <script setup lang="ts">
+import { useI18nStore } from '@/stores/i18n'
 import { CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import {
   formatName,
@@ -218,6 +224,7 @@ const props = defineProps<{
   sortKey?: string
 }>()
 
+const i18n = useI18nStore()
 const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidence]
 </script>
 

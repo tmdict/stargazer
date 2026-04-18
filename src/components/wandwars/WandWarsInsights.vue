@@ -12,7 +12,7 @@
 
       <!-- Insights always at top -->
       <section v-if="filteredInsights.length > 0" class="section">
-        <h3 class="section-title">Insights</h3>
+        <h3 class="section-title">{{ i18n.t('wandwars.insights') }}</h3>
         <div class="insights-list">
           <div
             v-for="(insight, i) in filteredInsights"
@@ -31,7 +31,7 @@
           @mouseenter="showOpenerTooltip = true"
           @mouseleave="showOpenerTooltip = false"
         >
-          Best Openers
+          {{ i18n.t('wandwars.best-openers') }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -59,7 +59,7 @@
           @mouseenter="showResponseTooltip = true"
           @mouseleave="showResponseTooltip = false"
         >
-          Best Responses
+          {{ i18n.t('wandwars.best-responses') }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -71,7 +71,7 @@
               class="hero-portrait"
             />
             <span class="response-label">
-              <span>counters</span>
+              <span>{{ i18n.t('wandwars.counters') }}</span>
               <span class="response-arrow"></span>
             </span>
             <div class="response-targets">
@@ -101,7 +101,7 @@
           @mouseenter="showPairCounterTooltip = true"
           @mouseleave="showPairCounterTooltip = false"
         >
-          Pair Counters
+          {{ i18n.t('wandwars.pair-counters') }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -117,7 +117,7 @@
               />
             </div>
             <span class="response-label">
-              <span>countered by</span>
+              <span>{{ i18n.t('wandwars.countered-by') }}</span>
               <span class="response-arrow reverse"></span>
             </span>
             <div class="response-targets">
@@ -150,7 +150,7 @@
           @mouseenter="showDominantPairsTooltip = true"
           @mouseleave="showDominantPairsTooltip = false"
         >
-          Most Dominant Pairs
+          {{ i18n.t('wandwars.most-dominant-pairs') }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -178,7 +178,7 @@
           @mouseenter="showTeamCountersTooltip = true"
           @mouseleave="showTeamCountersTooltip = false"
         >
-          Team Counters
+          {{ i18n.t('wandwars.team-counters') }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -194,7 +194,7 @@
               />
             </div>
             <span class="response-label">
-              <span>counters</span>
+              <span>{{ i18n.t('wandwars.counters') }}</span>
               <span class="response-arrow"></span>
             </span>
             <div class="response-targets">
@@ -226,7 +226,7 @@
           @mouseenter="showDominantTeamsTooltip = true"
           @mouseleave="showDominantTeamsTooltip = false"
         >
-          Most Dominant Teams
+          {{ i18n.t('wandwars.most-dominant-teams') }}
           <IconInfo :size="14" class="section-info-icon" />
         </h3>
         <div class="counter-list">
@@ -338,6 +338,9 @@ import { computed, ref } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import type { CharacterType } from '@/lib/types/character'
+import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import {
   META_BAYESIAN_PRIOR,
   META_MIN_PAIR_MATCHES,
@@ -362,6 +365,14 @@ const props = defineProps<{
   analysisData: AnalysisData
   characterImages: Record<string, string>
 }>()
+
+const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
+const heroAttrMap = computed(() => {
+  const map: Record<string, CharacterType> = {}
+  for (const c of gameDataStore.characters) map[c.name] = c
+  return map
+})
 
 const totalMatches = computed(() => props.matchData.length)
 const heroCount = computed(() => props.analysisData.allHeroes.length)
@@ -1432,6 +1443,78 @@ const insights = computed(() => {
       'units',
       `{${topSweepHero[0]}} is involved in the most sweeps (${topSweepHero[1]} dominant wins)`,
     )
+  }
+
+  // --- Composition Insights (hero attributes) ---
+
+  const decisive = props.matchData.filter((m) => m.result !== 'draw')
+  const attrMap = heroAttrMap.value
+
+  // Analyze team compositions by damage type, range, class, energy
+  const compStats: Record<string, Record<string, { w: number; l: number }>> = {
+    damage: {},
+    range: {},
+    class: {},
+    energy: {},
+  }
+
+  for (const match of decisive) {
+    for (const [team, isWinner] of [
+      [match.left, match.result === 'left'],
+      [match.right, match.result === 'right'],
+    ] as [readonly [string, string, string], boolean][]) {
+      const attrs = team.map((h) => attrMap[h]).filter(Boolean)
+      if (attrs.length !== 3) continue
+
+      // Damage type balance
+      const dmgTypes = new Set(attrs.map((a) => a.damage))
+      const dmgKey = dmgTypes.size === 1 ? `all ${attrs[0]!.damage}` : 'mixed damage'
+      if (!compStats.damage![dmgKey]) compStats.damage![dmgKey] = { w: 0, l: 0 }
+      compStats.damage![dmgKey]![isWinner ? 'w' : 'l']++
+
+      // Range balance
+      const allMelee = attrs.every((a) => a.range <= 1)
+      const allRanged = attrs.every((a) => a.range > 1)
+      const rangeKey = allMelee ? 'all melee' : allRanged ? 'all ranged' : 'mixed range'
+      if (!compStats.range![rangeKey]) compStats.range![rangeKey] = { w: 0, l: 0 }
+      compStats.range![rangeKey]![isWinner ? 'w' : 'l']++
+
+      // Class composition (most common class)
+      const classCounts: Record<string, number> = {}
+      for (const a of attrs) classCounts[a.class] = (classCounts[a.class] || 0) + 1
+      const maxClass = Object.entries(classCounts).sort(([, a], [, b]) => b - a)[0]!
+      if (maxClass[1] >= 2) {
+        const classKey = maxClass[1] === 3 ? `3x ${maxClass[0]}` : `2+ ${maxClass[0]}`
+        if (!compStats.class![classKey]) compStats.class![classKey] = { w: 0, l: 0 }
+        compStats.class![classKey]![isWinner ? 'w' : 'l']++
+      }
+
+      // Team energy
+      const avgEnergy = attrs.reduce((s, a) => s + a.energy, 0) / 3
+      const energyKey =
+        avgEnergy >= 500 ? 'high energy (500+)' : avgEnergy < 200 ? 'low energy (<200)' : null
+      if (energyKey) {
+        if (!compStats.energy![energyKey]) compStats.energy![energyKey] = { w: 0, l: 0 }
+        compStats.energy![energyKey]![isWinner ? 'w' : 'l']++
+      }
+    }
+  }
+
+  // Surface notable composition patterns
+  for (const [category, entries] of Object.entries(compStats)) {
+    for (const [label, { w, l }] of Object.entries(entries)) {
+      const total = w + l
+      if (total < 20) continue
+      const rate = w / total
+      if (Math.abs(rate - 0.5) < 0.05) continue // not notable
+      const target = category === 'class' ? 'units' : 'teams'
+      const verb = rate > 0.5 ? 'overperform' : 'underperform'
+      add(
+        result,
+        target as InsightCategory,
+        `Teams with ${label} ${verb}: ${formatPercent(rate)} win rate (${total} teams)`,
+      )
+    }
   }
 
   // --- ML Insights ---

@@ -9,7 +9,7 @@
         ]"
       >
         <span class="side-indicator" :class="{ visible: currentPickSide === 'left' }">
-          ▶ Picking
+          {{ i18n.t('wandwars.picking-left') }}
         </span>
         <div class="team-slots">
           <div
@@ -39,7 +39,7 @@
         ]"
       >
         <span class="side-indicator enemy" :class="{ visible: currentPickSide === 'right' }">
-          Picking ◀
+          {{ i18n.t('wandwars.picking-right') }}
         </span>
         <div class="team-slots">
           <div
@@ -65,8 +65,11 @@
 <script setup lang="ts">
 import CharacterIcon from '@/components/CharacterIcon.vue'
 import type { CharacterType } from '@/lib/types/character'
+import { useI18nStore } from '@/stores/i18n'
 import { DRAFT_ORDER } from '@/wandwars/constants'
 import type { PickSide, PickState } from '@/wandwars/types'
+
+const i18n = useI18nStore()
 
 const props = defineProps<{
   pickState: PickState

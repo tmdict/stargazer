@@ -435,11 +435,11 @@ At low data, Popular Pick dominates (works immediately). As data grows, weight s
 
 Three sub-tabs: **Units** | **Synergy** | **Teams**. Left column: sortable tables. Right column: auto-generated insights including ML-powered analysis from the Adaptive ML model's learned embeddings.
 
-**Units insights**: Best Openers (heroes with highest Bayesian-smoothed win rate as left-team first pick), Best Responses (right-team first pick that counters a specific left opener, shown as responder → opener with W/L and score out of 10 — a responder that counters multiple openers is consolidated into a single row), and **Similar Heroes** (top hero by usage → shows the most similar alternatives based on embedding cosine similarity).
+**Units insights**: Best Openers, Best Responses, **Similar Heroes** (embedding cosine similarity), and **Class composition** patterns (e.g., "Teams with 2+ tank overperform").
 
-**Synergy insights**: ~10 most impactful insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs cap 2, winless pair cap 1), and **Unexplored Synergies** (pairs the NN predicts will perform well but have < 5 actual matches — surfaces untested combinations worth trying).
+**Synergy insights**: ~10 most impactful pair insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs), and **Unexplored Synergies** (pairs the NN predicts will perform well but have < 5 actual matches).
 
-**Teams insights**: Team counter matchups as counter rows, sweep count, left/right side win rate advantage (shown when > 3% deviation from 50%), and **ML Top Teams** (the three strongest trios predicted by the neural network across the entire hero pool).
+**Teams insights**: Team counter matchups, sweep stats, side win rate advantage, **ML Top Teams** (strongest trios by neural network), and **Composition patterns** — damage type balance (all physical/magic/mixed), range balance (all melee/ranged/mixed), and energy level effects. Shown when > 5% deviation from 50% with 20+ teams.
 
 ## 9. Pool Restriction
 

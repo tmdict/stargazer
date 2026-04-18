@@ -174,6 +174,7 @@ let appLocalesCache: Record<string, LocaleData> | null = null
 let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
+let wandwarsLocalesCache: Record<string, LocaleData> | null = null
 
 export function loadAppLocales(): Record<string, LocaleData> {
   if (appLocalesCache) {
@@ -255,12 +256,33 @@ export function loadGameLocales(): Record<string, LocaleData> {
   return result
 }
 
+export function loadWandWarsLocales(): Record<string, LocaleData> {
+  if (wandwarsLocalesCache) {
+    return wandwarsLocalesCache
+  }
+
+  const localeModules = import.meta.glob<LocaleData>('@/locales/wandwars/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  const result: Record<string, LocaleData> = {}
+
+  Object.entries(localeModules).forEach(([path, content]) => {
+    const fileName = extractFileName(path)
+    result[fileName] = content
+  })
+
+  wandwarsLocalesCache = result
+  return result
+}
+
 export function loadAllLocales(): LocaleDictionary {
   return {
     app: loadAppLocales(),
     character: loadCharacterLocales(),
     artifact: loadArtifactLocales(),
     game: loadGameLocales(),
+    wandwars: loadWandWarsLocales(),
   }
 }
 
@@ -276,4 +298,5 @@ export function clearCache() {
   characterLocalesCache = null
   artifactLocalesCache = null
   gameLocalesCache = null
+  wandwarsLocalesCache = null
 }
