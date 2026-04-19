@@ -36,7 +36,7 @@ All WandWars code lives under `src/wandwars/` (domain logic), `src/components/wa
 
 **Data pipeline**: Raw `.data` files → `npm run encode:ww` (concatenate + base64) → `data` file committed → Vite `?raw` import → decoded at runtime via `atob`.
 
-**Adding data**: Edit raw files → `npm run encode:ww` → `npm run train:ww` → commit.
+**Adding data**: Edit raw files → `npm run encode:ww` → `npm run train:ww` → commit. `train:ww` runs the NN training **and** then the 5-fold benchmark + probability calibration fit as a single step (no separate `calibrate:ww`). Both `nnWeights.ts` and `calibrationData.ts` are regenerated and must be committed together.
 
 **localStorage**: `stargazer.wandwars.records` — recorded match results.
 
@@ -59,17 +59,56 @@ Prior fades naturally as data grows. At 50+ matches per hero it's negligible. Ap
 
 **Exception**: Popular Pick uses a local Bayesian prior of **1.0** for its own pair/trio/contextual win rate calculations (not the shared analysis). This keeps computed win rates closer to the raw W/L records shown to users — if a pair shows "5W / 2L", the 1.0 prior gives 66.7% vs 3.0 giving 61.5%.
 
-### Wilson Score Confidence (confidence.ts)
+### Two kinds of confidence badge
 
-All models use **Wilson score intervals** for confidence:
+WandWars shows two semantically different "high/medium/low" badges. They share visual styling but measure different things, and live in different places.
+
+**1. Match-prediction confidence** — on the aggregate and per-model matchup prediction cards. Reflects whether the final probability is trustworthy.
+
+- Based on two signals: **distance from 50%** of the calibrated probability and **stddev across the four models' calibrated probabilities** (agreement).
+- Thresholds are tuned offline by the benchmark script against held-out CV data so that "high confidence" predictions empirically hit ≥75% accuracy. Stored in `calibrationData.ts` as `CONFIDENCE_THRESHOLDS`.
+- Per-model badges (on the individual model cards) use distance-from-50% only — single-model predictions can't measure agreement.
+- Implemented in `recommend.ts`.
+
+**2. Hero data depth** — on per-hero recommendation cards while drafting. Reflects how many matches the hero has been in; unchanged from the original Wilson score.
 
 ```
-Wilson 95% CI width < 0.3 → High confidence
-Wilson 95% CI width < 0.5 → Medium confidence
-Otherwise (or <3 matches) → Low confidence
+Wilson 95% CI width < 0.3 → ample data (high)
+Wilson 95% CI width < 0.5 → moderate data (medium)
+Otherwise (or <3 matches) → sparse data (low)
 ```
 
-Accounts for both sample size and win rate variance. Displayed as "high/medium/low confidence" with tooltip.
+- Displayed under "Rich / Moderate / Sparse data" tooltip copy to distinguish from match-prediction confidence.
+- Still computed per-hero in `confidence.ts` via Wilson score on weighted wins, consumed by `modelUtils.ts`'s `getHeroWilsonConfidence`.
+
+The two badges were previously conflated under a single Wilson-score "confidence" label, which misled users into treating "high confidence" as a match-prediction reliability signal when it was really a data-depth signal.
+
+### Probability Calibration (calibration.ts + calibrationData.ts)
+
+Raw model probabilities are **miscalibrated** — a model saying "80% left wins" historically hit ~60%, inflating user expectations. Each model's output is mapped through a per-model calibration table before display.
+
+**How it's fit** (`scripts/benchmark.ts`):
+
+1. 5-fold CV on decisive matches (draws excluded from CV but kept in each fold's training data).
+2. Per fold: retrain the NN from scratch on 4 folds (honest NN calibration — the NN otherwise cheats by having seen the test matches during training), build `AnalysisData` from 4 folds, predict the held-out fold with all four models.
+3. Collect `(rawProb, actualOutcome)` pairs per model across all folds.
+4. Fit **isotonic regression** per model (≥ 300 samples) via Pool Adjacent Violators, downsampled to 12 lookup bins. Falls back to **Platt scaling** (2-param logistic) at 100–300 samples, or **identity** (no calibration) below 100.
+5. Tune `CONFIDENCE_THRESHOLDS` (distance, stddev) against the held-out aggregate predictions — grid-searches thresholds that give "high confidence" ≥ 75% accuracy and "medium confidence" ≥ 65% accuracy.
+6. Write `calibrationData.ts` with the calibration tables and tuned thresholds.
+
+**How it's applied** (`prediction/calibration.ts` + `prediction/recommend.ts`):
+
+- `calibrate(modelId, rawProb)` — piecewise-linear interp on the isotonic bins (or Platt logistic).
+- `recommend.ts:calibratedPrediction` wraps every model's `predictMatchup` output so the displayed `leftWinProbability` and per-model confidence badge reflect the calibrated value.
+- Aggregate prediction is a weighted average of the four calibrated probabilities. Its confidence badge uses distance-from-50% + cross-model stddev.
+
+**What calibration does NOT touch**:
+
+- Per-hero recommendation cards (`recommend()`) — scores are rankings, not matchup probabilities; calibration is monotonic so rankings would be unchanged anyway.
+- Breakdown fields inside recommendation cards (synergy %, λ, contextual win rate, etc.) — these are hero-level or component stats, not matchup predictions.
+- Pair/trio records, hero stats, counter matrix — analysis layer, untouched.
+
+**Regeneration**: fully automatic as part of `npm run train:ww`. The command first trains the NN on full data (and writes `nnWeights.ts`), then runs the benchmark + calibration fit (and writes `calibrationData.ts`). Both files must be committed together.
 
 ### Hero Exclusion
 
@@ -225,7 +264,7 @@ After fitting individual λ parameters, pair interaction scores are computed as 
 2. The residual (actual − expected) / total, scaled by `dataStrength(pairWeight / 10)`, captures synergy/clash the additive model misses
 3. Regularized with `pairRegWeight = 5.0 / (1 + pairTotalWeight)` — rare pairs are pulled toward 0 (no interaction)
 4. Each pair interaction clamped to ±5% — a full team (3 pairs) can adjust probability by at most ±15%, preventing pair data from overwhelming individual strength ratings
-5. Win probability is adjusted: `baseProb + leftPairAdj − rightPairAdj`, clamped to [0.02, 0.98]
+5. Win probability is adjusted: `baseProb + leftPairAdj − rightPairAdj`, clamped to [0.05, 0.95] (loosened from [0.02, 0.98] so the downstream calibration map has resolution near the extremes)
 
 This gives B-T synergy awareness with proper statistical grounding rather than heuristic weights.
 
@@ -299,14 +338,14 @@ Current architecture is constrained by data size (~1,700 params for ~2,000 augme
 
 Popular Pick, Hero Synergy, and Team Power recompute from scratch on every page load. Adaptive ML uses pre-trained weights and requires explicit retraining (`npm run train:ww`). Workflow: add matches → `npm run encode:ww` → `npm run train:ww` → commit.
 
-| Matches | Popular Pick                                  | Hero Synergy (Composite)                          | Bradley-Terry                             | Adaptive ML                           |
-| ------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- | ------------------------------------- |
-| 5-20    | Already useful; win rates + pick rates        | Win Rate dominates; sparse pair data              | Regularization dominates                  | Not useful; embeddings random         |
-| 20-50   | Pair records appearing; team suggestions work | Synergy/counter starting to appear                | Regularization fading; pair data sparse   | Not useful; heavy overfitting         |
-| 50-100  | Rich pair data; strong team suggestions       | Popular pairs show synergy                        | Reliable; pair interactions emerging      | Marginal; noisy embeddings            |
-| 100-200 | Very reliable pair records                    | Medium+ confidence; synergy fills in              | Stable; pair data growing                 | Starting to learn; frequent heroes OK |
-| 200-500 | Complementary to B-T/Composite                | Rich synergy/counter; trio data appearing         | Stable; pair interactions well-populated  | Competitive; embeddings stabilizing   |
-| 500+    | Quick reference + pair lookup                 | Rich trio data; three-way interactions measurable | Strong pair interactions; well-calibrated | Strong; discovers non-linear patterns |
+| Matches | Popular Pick                                  | Hero Synergy (Composite)                          | Bradley-Terry                             | Adaptive ML                                                  |
+| ------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
+| 5-20    | Already useful; win rates + pick rates        | Win Rate dominates; sparse pair data              | Regularization dominates                  | Not useful; embeddings random                                |
+| 20-50   | Pair records appearing; team suggestions work | Synergy/counter starting to appear                | Regularization fading; pair data sparse   | Not useful; heavy overfitting                                |
+| 50-100  | Rich pair data; strong team suggestions       | Popular pairs show synergy                        | Reliable; pair interactions emerging      | Marginal; noisy embeddings                                   |
+| 100-200 | Very reliable pair records                    | Medium+ confidence; synergy fills in              | Stable; pair data growing                 | Starting to learn; frequent heroes OK                        |
+| 200-500 | Complementary to B-T/Composite                | Rich synergy/counter; trio data appearing         | Stable; pair interactions well-populated  | Competitive; embeddings stabilizing                          |
+| 500+    | Quick reference + pair lookup                 | Rich trio data; three-way interactions measurable | Strong pair interactions; well-calibrated | May discover nonlinear patterns — not yet confirmed (see §7) |
 
 ## 6. Recommendations & Team Suggestions
 
@@ -337,17 +376,27 @@ Scored by aggregating all four prediction models — can evaluate any hero combi
 
 Picked heroes first (in pick order), then remaining alphabetically.
 
-### Confidence Badge
+### Confidence / Data Depth Badges
 
-One badge per recommendation card, based on Wilson score 95% confidence interval width for the hero's win rate:
+Two different badges, both rendered as high / medium / low chips — see Section 4 for the broader rationale.
 
-| Label                 | Condition                        | Color  | Meaning                              |
-| --------------------- | -------------------------------- | ------ | ------------------------------------ |
-| **high confidence**   | CI width < 0.3 (~16+ matches)    | Green  | Tight statistical estimate           |
-| **medium confidence** | CI width 0.3–0.5 (~7-15 matches) | Yellow | Moderate estimate, more data helpful |
-| **low confidence**    | < 3 matches, or CI width ≥ 0.5   | Red    | Wide/unreliable estimate             |
+**Recommendation cards (data depth)** — Wilson score 95% CI width on the hero's weighted win/loss record. Answers "how well do we know this hero?", not "how reliable is the prediction?". Tooltip: "Rich / Moderate / Sparse data".
 
-Wilson score is computed from `wins + draws*0.5` successes out of total matches. The CI width narrows with more matches and as win rate moves away from 50%.
+| Label      | Condition                        | Color  | Meaning                              |
+| ---------- | -------------------------------- | ------ | ------------------------------------ |
+| **high**   | CI width < 0.3 (~16+ matches)    | Green  | Tight statistical estimate           |
+| **medium** | CI width 0.3–0.5 (~7–15 matches) | Yellow | Moderate estimate, more data helpful |
+| **low**    | < 3 matches, or CI width ≥ 0.5   | Red    | Wide/unreliable estimate             |
+
+**Matchup prediction (prediction reliability)** — distance of the calibrated aggregate from 50%, plus across-model stddev. Thresholds tuned against held-out CV so "high" hits ≥ 75% accuracy. Tooltip: "High/medium/low confidence" framed as prediction reliability.
+
+| Label      | Condition (aggregate)                                               | Meaning                                   |
+| ---------- | ------------------------------------------------------------------- | ----------------------------------------- |
+| **high**   | \|p − 0.5\| ≥ `highDistance` AND stddev ≤ `highAgreementStddev`     | Calibrated prediction clear; models agree |
+| **medium** | \|p − 0.5\| ≥ `mediumDistance` AND stddev ≤ `mediumAgreementStddev` | Calibrated prediction moderate            |
+| **low**    | otherwise                                                           | Close to 50/50 or models disagree         |
+
+Per-model matchup cards use distance only (no agreement signal with one model).
 
 ### Per-Hero Counter Indicators
 
@@ -373,53 +422,70 @@ The "Team counter" label is most relevant for the right side's last pick (pick 6
 
 Team counter badges are displayed before per-hero counter indicators (strong/weak against) to give them higher visual precedence.
 
-## 7. Benchmark: 5-Fold Cross-Validation
+## 7. Benchmark + Calibration (5-Fold Cross-Validation)
 
-Periodic benchmark to measure prediction accuracy. Re-run as the dataset grows to track model performance and adjust aggregate weights.
+The benchmark runs **automatically** as part of `npm run train:ww` (second phase, after NN training). It drives two artifacts at once: a reproducible accuracy/Brier table and the per-model calibration tables plus confidence thresholds written to `calibrationData.ts`.
 
 ### What It Measures
 
 We pretend we don't know the outcome of some matches, ask each model to predict who wins, then check if it was right:
 
-1. Take all decisive matches (excluding draws), split into 5 equal groups
-2. For each group: hide it, train on the other 4 groups, predict the hidden matches
-3. After all 5 rounds, every match has been predicted exactly once on data the model hasn't seen
+1. Take all decisive matches (draws excluded from CV but kept in each fold's training data), shuffle with fixed seed 42, split into 5 equal folds.
+2. For each fold: hide it, build analysis + **retrain the NN from scratch** on the other 4 folds, predict the hidden matches.
+3. After all 5 rounds, every match has been predicted exactly once on data none of the models saw during training.
 
 This simulates real-world use — predicting a future match, not memorizing past ones.
 
 - **Accuracy**: did the favored team actually win?
 - **Brier score**: how confident was the prediction, and was that confidence justified? A model that says 90% and is right scores better than 55% and right, but 90% and _wrong_ gets heavily penalized. Lower = better. A coin-flip model scores 0.25.
 
-### How to Reproduce
+### Calibration Fit
 
-Write a script that:
+After collecting `(rawProb, actual)` pairs per model, the benchmark fits a calibration curve so displayed probabilities match empirical win rates:
 
-1. Loads all raw match data, filters to decisive matches (excludes draws)
-2. Shuffles with a fixed seed (42) for reproducibility
-3. Splits into 5 folds of equal size
-4. For each fold: trains on 4 folds (+ draws), tests on the held-out fold
-5. For each test match: calls `predictMatchup()` on all models using training-only analysis data
-6. Measures accuracy and Brier score
+- **Isotonic regression** (≥ 300 samples, default) via Pool Adjacent Violators, downsampled to 12 piecewise-linear bins. Non-parametric, monotonic.
+- **Platt scaling** (100–300 samples) as a fallback — a 2-parameter logistic fit; safer with small data.
+- **Identity** (< 100 samples) — no calibration; the pipeline refuses to fit with too little evidence.
 
-### Adaptive ML Caveat
+The resulting maps are written to `src/wandwars/prediction/calibrationData.ts` and applied at runtime via `calibrate(modelId, rawProb)` in `calibration.ts`. Confidence thresholds (`CONFIDENCE_THRESHOLDS`) are grid-searched on the calibrated held-out aggregate predictions so "high confidence" hits ≥ 75% accuracy and "medium" ≥ 65%.
 
-Adaptive ML uses pre-trained weights from the full dataset — not retrained per fold (training takes ~10s per fold, feasible but not done in the current benchmark). This means it has technically "seen" the test matches during training, inflating its score.
+### Honest NN Caveat (Resolved)
 
-The inflation is likely small: the NN learns 87 hero embedding vectors, not individual match outcomes. A single match nudges 6 embeddings by a tiny gradient. However, for rare heroes (< 10 matches), removing 20% of their data per fold could meaningfully change their embedding. Estimated true accuracy: ~59-60% (between the reported 61.5% and Popular Pick's 59.4%).
+Earlier benchmarks trained Adaptive ML once on the full dataset and then measured its accuracy on held-out folds — giving it an unfair advantage because the NN had seen every match during training. The current benchmark **retrains the NN from scratch per fold** (~0.1–0.3s per fold — fast because the net is tiny and early-stopping patience fires quickly). Adaptive ML's numbers dropped accordingly but are now comparable with the other three models.
 
-For a definitive comparison, retrain the NN per fold. The other three models are inherently fair — they recompute from scratch on each fold's training data.
+Bradley-Terry gets the same per-fold treatment: fit once on each fold's training data (~0.25s per fold) and reuse across all test-match predictions in that fold. An earlier iteration of the benchmark refit B-T inside `predictMatchup` on every call, doing ~1,125 refits per run; caching the fit dropped total `train:ww` time from ~100s to ~7s without changing any output.
 
-### Results — 2026-04-17 (1,006 matches, 87 heroes)
+**Lower number ≠ worse model.** The NN itself didn't change between the old and new benchmarks — only the evaluation did. The old 61.5% was a leaky measurement: the NN had already nudged each hero's embedding in the direction of the test matches before being asked to predict them. The new 55.2% reflects what actually happens in real use — predicting a match the model has never seen. 55.2% is the accuracy users will actually experience; 61.5% never described the real product, it described a flawed measurement.
 
-| Model           | Accuracy  | Brier Score | Notes                                                            |
-| --------------- | --------- | ----------- | ---------------------------------------------------------------- |
-| **Adaptive ML** | **61.5%** | **0.2319**  | Best accuracy and calibration (slightly optimistic — see caveat) |
-| Popular Pick    | 59.4%     | 0.2415      | Improved from 58.5% after sweep weight bug fix                   |
-| Team Power      | 58.6%     | 0.2394      | Brier improved dramatically (was 0.2866) with pair interactions  |
-| Hero Synergy    | 57.6%     | 0.2433      | Unchanged — trio bonus doesn't move the needle yet               |
-| _Baseline_      | _53.6%_   | —           | _Always predict left (first-pick advantage)_                     |
+Combined with probability calibration, the net effect is that predictions are **less flashy but more trustworthy**: the headline accuracy is lower, but when the UI says 70% the model has historically hit ~70% in that bucket (verified by the reliability diagram). For decision-making, a calibrated 70% beats an overconfident 82% every time.
 
-### Aggregate Weights (based on benchmark)
+### Results — 2026-04-18 (1,146 matches, 1,132 decisive, 87 heroes)
+
+| Model         | Accuracy  | Brier (raw) | Brier (calibrated) | Calibration    |
+| ------------- | --------- | ----------- | ------------------ | -------------- |
+| Popular Pick  | 57.9%     | 0.2418      | **0.2387 ↓**       | isotonic       |
+| Hero Synergy  | 59.0%     | 0.2431      | **0.2375 ↓**       | isotonic       |
+| Team Power    | 58.1%     | 0.2413      | **0.2393 ↓**       | isotonic       |
+| Adaptive ML   | 54.9%     | 0.2583      | **0.2480 ↓**       | isotonic       |
+| **Aggregate** | **58.0%** | —           | **0.2368**         | (blended)      |
+| _Baseline_    | _53.6%_   | —           | —                  | _predict left_ |
+
+Calibration lowered Brier score on all four models and the aggregate. Aggregate reliability post-calibration: most bins within ±5% of their predicted probability (see `benchmark.ts` reliability diagram output).
+
+Adaptive ML's apparent accuracy drop (from the earlier reported 61.5% to ~55%) is the honest cost of per-fold retraining — the NN is also trained on fewer samples per fold and runs only once with its default seed. Numbers fluctuate slightly (±1–2%) across `train:ww` runs due to NN training stochasticity even with deterministic seeds.
+
+### Confidence Thresholds (tuned on this dataset)
+
+From the 2026-04-18 run:
+
+| Badge  | Distance from 50% | Model stddev | Empirical accuracy | Coverage |
+| ------ | ----------------- | ------------ | ------------------ | -------- |
+| High   | ≥ 0.18            | ≤ 0.20       | 77.9%              | 9.2%     |
+| Medium | ≥ 0.08            | ≤ 0.20       | 66.3%              | 42.0%    |
+
+"Coverage" is the fraction of held-out matchups that qualify for the badge. Expect most matchups in the UI to show low/medium, with rare high — the inversion of the old behavior. Thresholds are re-tuned on every `train:ww` and will shift as the dataset grows.
+
+### Aggregate Weights (unchanged by calibration)
 
 Weights used in the combined match prediction, scaling by dataset size:
 
@@ -429,7 +495,30 @@ Weights used in the combined match prediction, scaling by dataset size:
 | 100         | 35%          | 25%          | 20%        | 20%         |
 | 500+        | 25%          | 20%          | 25%        | 30%         |
 
-At low data, Popular Pick dominates (works immediately). As data grows, weight shifts toward Adaptive ML and Team Power (better calibrated with sufficient data). Hero Synergy retains ~20% for interpretability — it's the only model that explains _why_ a pick is good.
+At low data, Popular Pick dominates (works immediately). As data grows, the weights shift toward Adaptive ML and Team Power on the _hypothesis_ that more data lets those models pull ahead — see "Will Adaptive ML pull ahead at scale?" below for whether that's actually holding up. Hero Synergy retains ~20% for interpretability — it's the only model that explains _why_ a pick is good. Calibration is per-model, so weighting the aggregate gives a properly-calibrated blend regardless of which model is leading.
+
+### Will Adaptive ML pull ahead at scale?
+
+The weights above assume the NN eventually outperforms the hand-crafted models. That was the design bet, grounded in ML theory — a flexible model with 16-dim learned embeddings _should_ discover nonlinear hero interactions and multi-way patterns that Bradley-Terry's additive strengths and Composite's pairwise synergy can't capture.
+
+**But the current benchmark does not support this.** At 1,146 matches:
+
+| Model           | Accuracy  | Gap vs baseline (53.6%) |
+| --------------- | --------- | ----------------------- |
+| Hero Synergy    | 59.1%     | +5.5%                   |
+| Popular Pick    | 59.0%     | +5.4%                   |
+| Team Power      | 58.6%     | +5.0%                   |
+| **Adaptive ML** | **55.2%** | **+1.6%**               |
+
+Adaptive ML is the **worst** of the four, barely above a "always predict left" coin-flip. With ~1,700 parameters against ~2,000 augmented samples (and only one seed per fold), it's right at the data-starvation edge.
+
+Three honest scenarios as data grows:
+
+1. **NN crosses over (the bet):** more matches → embeddings stabilize → Adaptive ML beats the 59% ceiling of the statistical models. Expected if there are nonlinear patterns left to extract beyond what pairwise synergy + Bradley-Terry captures.
+2. **Everyone plateaus together** around 60–65%: the game has irreducible noise (RNG, skill, meta shifts) that caps all models. The NN's extra capacity doesn't help because there's no more signal to extract.
+3. **NN stays behind:** the hand-crafted priors (Bayesian smoothing, L2-regularized strength, pairwise synergy) turn out to be well-matched to this problem, and the NN's flexibility is mostly fitting noise.
+
+We can't tell which is happening yet. **Every `train:ww` run prints the gap — watch whether Adaptive ML closes on the other three as data grows.** If the gap closes meaningfully over the next 500–1,000 matches, scenario 1. If it doesn't, revisit the "Future Improvements" bullets in §5 (bigger embeddings, deeper network, separate offense/defense embeddings) before concluding scenario 3. If the gap closes but everyone plateaus, adjust the aggregate weights to reflect reality rather than the original hypothesis.
 
 ## 8. Meta Insights
 

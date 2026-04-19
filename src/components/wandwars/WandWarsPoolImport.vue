@@ -298,19 +298,39 @@ const canDetect = computed(() => {
 const referenceCount = ref(getBundledReferenceCount())
 const usingOverride = ref(hasOverrideReference())
 const builderBusy = ref(false)
-const builderStatus = ref('')
+// Store builder status as semantic state so language switches re-render reactively.
+type BuilderStatusState =
+  | { kind: 'none' }
+  | { kind: 'no-images' }
+  | { kind: 'generated'; count: number; skipped: number }
+  | { kind: 'override-active'; count: number; skipped: number }
+const builderStatusState = ref<BuilderStatusState>({ kind: 'none' })
+const builderStatus = computed(() => {
+  const s = builderStatusState.value
+  if (s.kind === 'none') return ''
+  if (s.kind === 'no-images') return i18n.t('wandwars.messages/builder-no-images')
+  const skippedMsg =
+    s.skipped > 0
+      ? i18n.t('wandwars.messages/builder-skipped').replace('{count}', String(s.skipped))
+      : ''
+  const key =
+    s.kind === 'generated'
+      ? 'wandwars.messages/builder-generated'
+      : 'wandwars.messages/builder-override-active'
+  return i18n.t(key).replace('{count}', String(s.count)).replace('{skipped}', skippedMsg)
+})
 const builderMode = ref<'generate' | 'override' | null>(null)
 const generateInput = ref<HTMLInputElement | null>(null)
 const overrideInput = ref<HTMLInputElement | null>(null)
 const referenceOpen = ref(false)
 
 function openGenerateFolder() {
-  builderStatus.value = ''
+  builderStatusState.value = { kind: 'none' }
   generateInput.value?.click()
 }
 
 function handleOverrideToggle() {
-  builderStatus.value = ''
+  builderStatusState.value = { kind: 'none' }
   if (usingOverride.value) {
     setOverrideReference(null)
     invalidateBundledCache()
@@ -331,18 +351,11 @@ async function handleGenerateFolder(event: Event) {
     const { signatures, skipped } = await buildSignaturesFromFiles(files)
     const count = Object.keys(signatures).length
     if (count === 0) {
-      builderStatus.value = i18n.t('wandwars.messages/builder-no-images')
+      builderStatusState.value = { kind: 'no-images' }
       return
     }
     downloadSignaturesFile(serializeSignaturesModule(signatures))
-    const skippedMsg =
-      skipped.length > 0
-        ? i18n.t('wandwars.messages/builder-skipped').replace('{count}', String(skipped.length))
-        : ''
-    builderStatus.value = i18n
-      .t('wandwars.messages/builder-generated')
-      .replace('{count}', String(count))
-      .replace('{skipped}', skippedMsg)
+    builderStatusState.value = { kind: 'generated', count, skipped: skipped.length }
   } finally {
     builderBusy.value = false
     builderMode.value = null
@@ -359,21 +372,14 @@ async function handleOverrideFolder(event: Event) {
     const { signatures, skipped } = await buildSignaturesFromFiles(files)
     const count = Object.keys(signatures).length
     if (count === 0) {
-      builderStatus.value = i18n.t('wandwars.messages/builder-no-images')
+      builderStatusState.value = { kind: 'no-images' }
       return
     }
     setOverrideReference(signatures)
     sigCache = null
     usingOverride.value = true
     referenceCount.value = count
-    const skippedMsg =
-      skipped.length > 0
-        ? i18n.t('wandwars.messages/builder-skipped').replace('{count}', String(skipped.length))
-        : ''
-    builderStatus.value = i18n
-      .t('wandwars.messages/builder-override-active')
-      .replace('{count}', String(count))
-      .replace('{skipped}', skippedMsg)
+    builderStatusState.value = { kind: 'override-active', count, skipped: skipped.length }
   } finally {
     builderBusy.value = false
     builderMode.value = null

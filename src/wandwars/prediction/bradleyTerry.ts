@@ -206,7 +206,7 @@ function predictWinProbability(
 
   const leftAdj = teamPairAdjustment(leftTeam, interactions)
   const rightAdj = teamPairAdjustment(rightTeam, interactions)
-  return Math.max(0.02, Math.min(0.98, baseProb + leftAdj - rightAdj))
+  return Math.max(0.05, Math.min(0.95, baseProb + leftAdj - rightAdj))
 }
 
 function computeAverageTeamStrength(strengths: Map<string, number>): number {
@@ -224,6 +224,33 @@ function buildMatchCountMap(analysisData: AnalysisData): Map<string, number> {
   return counts
 }
 
+export interface BradleyTerryFit {
+  strengths: Map<string, number>
+  interactions: Map<string, number>
+  predict(leftTeam: string[], rightTeam: string[]): number
+}
+
+/**
+ * Fit Bradley-Terry strengths + pair interaction residuals for a given match
+ * set and analysis snapshot. Returns a reusable fit that can be called many
+ * times without refitting — used by the benchmark to cache per-fold fits,
+ * and by the production model paths below.
+ */
+export function fitBradleyTerry(
+  matches: MatchResult[],
+  analysisData: AnalysisData,
+): BradleyTerryFit {
+  const btMatches = prepareMatches(matches)
+  const matchCounts = buildMatchCountMap(analysisData)
+  const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
+  const interactions = computePairInteractions(btMatches, strengths)
+  return {
+    strengths,
+    interactions,
+    predict: (left, right) => predictWinProbability(left, right, strengths, interactions),
+  }
+}
+
 export const bradleyTerryModel: RecommendationModel = {
   id: 'bradley-terry',
   name: 'Team Power',
@@ -235,22 +262,19 @@ export const bradleyTerryModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): Recommendation[] {
-    const btMatches = prepareMatches(matches)
-    const matchCounts = buildMatchCountMap(analysisData)
-    const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
-    const interactions = computePairInteractions(btMatches, strengths)
+    const { strengths, interactions, predict } = fitBradleyTerry(matches, analysisData)
     const avgOpponentStrength = computeAverageTeamStrength(strengths)
 
     const recommendations: Recommendation[] = available.map((hero) => {
       const candidateTeam = [...teammates, hero]
       let winProb: number
       if (opponents.length > 0) {
-        winProb = predictWinProbability(candidateTeam, opponents, strengths, interactions)
+        winProb = predict(candidateTeam, opponents)
       } else {
         const teamStrength = candidateTeam.reduce((sum, h) => sum + (strengths.get(h) || 1), 0)
         const baseProb = teamStrength / (teamStrength + avgOpponentStrength)
         const adj = teamPairAdjustment(candidateTeam, interactions)
-        winProb = Math.max(0.02, Math.min(0.98, baseProb + adj))
+        winProb = Math.max(0.05, Math.min(0.95, baseProb + adj))
       }
 
       const pairAdj =
@@ -282,11 +306,8 @@ export const bradleyTerryModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): MatchupPrediction {
-    const btMatches = prepareMatches(matches)
-    const matchCounts = buildMatchCountMap(analysisData)
-    const strengths = fitParameters(btMatches, analysisData.allHeroes, matchCounts)
-    const interactions = computePairInteractions(btMatches, strengths)
-    const leftProb = predictWinProbability(leftTeam, rightTeam, strengths, interactions)
+    const { strengths, predict } = fitBradleyTerry(matches, analysisData)
+    const leftProb = predict(leftTeam, rightTeam)
     const leftStrength = leftTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
     const rightStrength = rightTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
 

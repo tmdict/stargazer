@@ -7,11 +7,21 @@ export const WEIGHT_COUNTER = 0.2
 export const CONFIDENCE_HIGH = 10
 export const CONFIDENCE_MEDIUM = 5
 
-// Confidence tooltip descriptions
-export const CONFIDENCE_DESCRIPTIONS: Record<string, string> = {
-  high: 'High confidence: sufficient match data',
-  medium: 'Medium confidence: limited match data',
-  low: 'Low confidence: very few matches',
+// Match-prediction confidence (for aggregate + per-model matchup badges).
+// Reflects how trustworthy the final probability is, based on the calibrated
+// prediction's distance from 50% and across-model agreement.
+export const PREDICTION_CONFIDENCE_DESCRIPTIONS: Record<string, string> = {
+  high: 'High confidence: calibrated prediction clearly favors one side, and models agree',
+  medium: 'Medium confidence: calibrated prediction moderately favors one side',
+  low: 'Low confidence: close to 50/50 or models disagree',
+}
+
+// Hero data depth (used on recommendation cards). Reflects how much match data
+// we have on the hero — not how reliable any specific prediction is.
+export const DATA_DEPTH_DESCRIPTIONS: Record<string, string> = {
+  high: 'Rich data: hero has been in many matches',
+  medium: 'Moderate data: hero has some match history',
+  low: 'Sparse data: hero has few recorded matches',
 }
 
 // Bradley-Terry

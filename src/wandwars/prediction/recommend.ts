@@ -11,6 +11,8 @@ import type {
 import { adaptiveMLModel } from './adaptiveML'
 import { analyzeMatches } from './analysis'
 import { bradleyTerryModel } from './bradleyTerry'
+import { calibrate } from './calibration'
+import { CONFIDENCE_THRESHOLDS } from './calibrationData'
 import { compositeModel } from './composite'
 import { popularPickModel } from './popularPick'
 
@@ -70,6 +72,19 @@ export function getRecommendations(
   return model.recommend(teammates, opponents, available, analysis, matches)
 }
 
+/** Wrap a raw MatchupPrediction's probabilities through the per-model calibration map. */
+function calibratedPrediction(modelId: string, raw: MatchupPrediction): MatchupPrediction {
+  const calLeft = calibrate(modelId, raw.leftWinProbability)
+  return {
+    ...raw,
+    leftWinProbability: calLeft,
+    rightWinProbability: 1 - calLeft,
+    // Replace the hero-depth Wilson badge with a prediction-level badge:
+    // distance of the calibrated probability from 50%.
+    confidence: perModelConfidence(calLeft),
+  }
+}
+
 export function getMatchupPrediction(
   modelId: string,
   leftTeam: string[],
@@ -77,14 +92,16 @@ export function getMatchupPrediction(
 ): MatchupPrediction | null {
   const model = models.find((m) => m.id === modelId)
   if (!model) return null
-
-  return model.predictMatchup(leftTeam, rightTeam, getAnalysis(), getMatches())
+  const raw = model.predictMatchup(leftTeam, rightTeam, getAnalysis(), getMatches())
+  return calibratedPrediction(modelId, raw)
 }
 
 export interface ModelPrediction {
   id: string
   name: string
   prediction: MatchupPrediction
+  /** Raw pre-calibration probability (kept for diagnostics). */
+  rawLeftWinProbability: number
 }
 
 export function getAllMatchupPredictions(
@@ -93,29 +110,27 @@ export function getAllMatchupPredictions(
 ): ModelPrediction[] {
   const analysis = getAnalysis()
   const matches = getMatches()
-  return models.map((model) => ({
-    id: model.id,
-    name: model.name,
-    prediction: model.predictMatchup(leftTeam, rightTeam, analysis, matches),
-  }))
+  return models.map((model) => {
+    const raw = model.predictMatchup(leftTeam, rightTeam, analysis, matches)
+    return {
+      id: model.id,
+      name: model.name,
+      prediction: calibratedPrediction(model.id, raw),
+      rawLeftWinProbability: raw.leftWinProbability,
+    }
+  })
 }
 
 export interface AggregatePrediction {
   leftWinProbability: number
   rightWinProbability: number
   confidence: 'high' | 'medium' | 'low'
+  /** Stddev across per-model calibrated probabilities — proxy for model agreement. */
+  modelAgreementStddev: number
   relevantNotes: MatchNote[]
   matchCount: number
   heroCount: number
 }
-
-const CONFIDENCE_MULTIPLIERS: Record<string, number> = {
-  high: 1.0,
-  medium: 0.5,
-  low: 0.2,
-}
-
-const CONFIDENCE_ORDER: ('high' | 'medium' | 'low')[] = ['low', 'medium', 'high']
 
 function getAdaptiveWeights(matchCount: number): Record<string, number> {
   if (matchCount < 20) {
@@ -140,6 +155,39 @@ function getAdaptiveWeights(matchCount: number): Record<string, number> {
   }
 }
 
+/**
+ * Match-prediction confidence: based on distance from 50% (meaningful prediction)
+ * and across-model stddev (model agreement). Thresholds fit against held-out
+ * benchmark data in `calibrationData.ts`.
+ */
+function matchPredictionConfidence(
+  calibratedProb: number,
+  modelProbs: number[],
+): { confidence: 'high' | 'medium' | 'low'; stddev: number } {
+  const distance = Math.abs(calibratedProb - 0.5)
+  const mean = modelProbs.reduce((s, p) => s + p, 0) / modelProbs.length
+  const variance = modelProbs.reduce((s, p) => s + (p - mean) * (p - mean), 0) / modelProbs.length
+  const stddev = Math.sqrt(variance)
+
+  const t = CONFIDENCE_THRESHOLDS
+  if (distance >= t.highDistance && stddev <= t.highAgreementStddev) {
+    return { confidence: 'high', stddev }
+  }
+  if (distance >= t.mediumDistance && stddev <= t.mediumAgreementStddev) {
+    return { confidence: 'medium', stddev }
+  }
+  return { confidence: 'low', stddev }
+}
+
+/** Single-model badge: distance-from-50% only (no agreement signal). */
+function perModelConfidence(calibratedProb: number): 'high' | 'medium' | 'low' {
+  const distance = Math.abs(calibratedProb - 0.5)
+  const t = CONFIDENCE_THRESHOLDS
+  if (distance >= t.highDistance) return 'high'
+  if (distance >= t.mediumDistance) return 'medium'
+  return 'low'
+}
+
 export function getAggregatePrediction(predictions: ModelPrediction[]): AggregatePrediction {
   const matches = getMatches()
   const analysis = getAnalysis()
@@ -151,25 +199,20 @@ export function getAggregatePrediction(predictions: ModelPrediction[]): Aggregat
   let totalWeight = 0
   const weights: Record<string, number> = {}
   for (const pred of predictions) {
-    const w =
-      (baseWeights[pred.id] ?? 0.33) * (CONFIDENCE_MULTIPLIERS[pred.prediction.confidence] ?? 0.2)
+    const w = baseWeights[pred.id] ?? 0.25
     weights[pred.id] = w
     totalWeight += w
   }
 
+  const modelProbs: number[] = []
   let leftWinProbability = 0
   for (const pred of predictions) {
-    leftWinProbability += (weights[pred.id]! / totalWeight) * pred.prediction.leftWinProbability
+    const p = pred.prediction.leftWinProbability
+    modelProbs.push(p)
+    leftWinProbability += (weights[pred.id]! / totalWeight) * p
   }
 
-  const confidence = predictions.reduce(
-    (worst, pred) => {
-      return CONFIDENCE_ORDER.indexOf(pred.prediction.confidence) < CONFIDENCE_ORDER.indexOf(worst)
-        ? pred.prediction.confidence
-        : worst
-    },
-    'high' as 'high' | 'medium' | 'low',
-  )
+  const { confidence, stddev } = matchPredictionConfidence(leftWinProbability, modelProbs)
 
   const seenNotes = new Set<string>()
   const relevantNotes: MatchNote[] = []
@@ -186,6 +229,7 @@ export function getAggregatePrediction(predictions: ModelPrediction[]): Aggregat
     leftWinProbability,
     rightWinProbability: 1 - leftWinProbability,
     confidence,
+    modelAgreementStddev: stddev,
     relevantNotes,
     matchCount,
     heroCount,

@@ -569,7 +569,7 @@ import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { BT_LOW_DATA_THRESHOLD, CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
+import { BT_LOW_DATA_THRESHOLD, PREDICTION_CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
 import { formatName, formatNoteHtml, formatPercent, joinLocale } from '@/wandwars/formatting'
 import {
   getAggregatePrediction,
@@ -604,7 +604,27 @@ const emit = defineEmits<{
 }>()
 
 const importInput = ref<HTMLInputElement | null>(null)
-const importStatus = ref('')
+
+// Store status as semantic state so language switches re-render reactively.
+type ImportStatusState =
+  | { kind: 'none' }
+  | { kind: 'no-records' }
+  | { kind: 'imported'; count: number }
+  | { kind: 'failed'; error: string }
+const importStatusState = ref<ImportStatusState>({ kind: 'none' })
+const importStatus = computed(() => {
+  const s = importStatusState.value
+  if (s.kind === 'none') return ''
+  if (s.kind === 'no-records') return i18n.t('wandwars.messages/import-no-records')
+  if (s.kind === 'imported') {
+    const key =
+      s.count === 1
+        ? 'wandwars.messages/imported-record-singular'
+        : 'wandwars.messages/imported-records'
+    return i18n.t(key).replace('{count}', String(s.count))
+  }
+  return i18n.t('wandwars.messages/import-failed').replace('{error}', s.error)
+})
 
 const editingIndex = ref<number | null>(null)
 const editWinner = ref<'left' | 'right' | 'draw'>('left')
@@ -644,7 +664,7 @@ function saveEdit(i: number) {
 }
 
 function openImport() {
-  importStatus.value = ''
+  importStatusState.value = { kind: 'none' }
   importInput.value?.click()
 }
 
@@ -655,7 +675,7 @@ async function handleImportFile(event: Event) {
     const text = await file.text()
     const parsed = parseMatchData(text)
     if (parsed.length === 0) {
-      importStatus.value = 'No valid records found in that file.'
+      importStatusState.value = { kind: 'no-records' }
       return
     }
     const imported: RecordedMatch[] = parsed.map((m) => ({
@@ -666,9 +686,9 @@ async function handleImportFile(event: Event) {
       notes: m.notes[0]?.text ?? '',
     }))
     emit('importRecords', imported)
-    importStatus.value = `Imported ${imported.length} record${imported.length === 1 ? '' : 's'} (replaced existing).`
+    importStatusState.value = { kind: 'imported', count: imported.length }
   } catch (err) {
-    importStatus.value = `Import failed: ${String(err)}`
+    importStatusState.value = { kind: 'failed', error: String(err) }
   } finally {
     if (importInput.value) importInput.value.value = ''
   }
@@ -712,14 +732,17 @@ function handleRecordSubmit() {
   recordNotes.value = ''
 }
 
-const copyLabel = ref(i18n.t('wandwars.copy-data'))
+const showCopiedFlash = ref(false)
+const copyLabel = computed(() =>
+  showCopiedFlash.value ? i18n.t('wandwars.copied') : i18n.t('wandwars.copy-data'),
+)
 
 async function handleCopy() {
   const content = serializeMatches(props.records)
   await navigator.clipboard.writeText(content)
-  copyLabel.value = i18n.t('wandwars.copied')
+  showCopiedFlash.value = true
   setTimeout(() => {
-    copyLabel.value = i18n.t('wandwars.copy-data')
+    showCopiedFlash.value = false
   }, 2000)
 }
 
@@ -787,7 +810,7 @@ function getCounterIndicators(hero: string): CounterIndicator[] {
   })
 }
 
-const confidenceDescriptions = CONFIDENCE_DESCRIPTIONS
+const confidenceDescriptions = PREDICTION_CONFIDENCE_DESCRIPTIONS
 
 function recordVerbLabel(r: RecordedMatch): string {
   if (r.winner === 'draw') return i18n.t('wandwars.draw')
