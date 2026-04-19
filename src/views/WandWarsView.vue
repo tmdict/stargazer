@@ -242,21 +242,22 @@ function handleExport() {
   align-items: start;
 }
 
-/* Bound the right column: floor so flow transitions (match prediction →
-   drafting after submitting a record) don't squish it, ceiling at ~1200px
-   (or viewport + 200px on short viewports so the panel doesn't feel cramped
-   on laptops). Inner panel scrolls within this cap. */
+/* Fix the right column at ~1200px (or viewport + 200px on short viewports).
+   min == max means it doesn't shrink when the left column changes size
+   (e.g. pool-filter screenshot trims the picker). The :has override below
+   releases this when the match prediction view is active. */
 .wandwars-right {
-  min-height: 500px;
+  min-height: min(1200px, calc(100vh + 200px));
   max-height: min(1200px, calc(100vh + 200px));
   display: flex;
   flex-direction: column;
 }
 
-/* When the match prediction view is showing (all 6 heroes picked), let the
-   column grow to fit everything — matchup + per-model cards + record form
-   should all be visible without an inner scrollbar. */
+/* When the match prediction view is showing (all 6 heroes picked), size
+   the column to its content — no fixed height, no inner scrollbar, no
+   trailing whitespace below the record form. */
 .wandwars-right:has(.matchup-section) {
+  min-height: 0;
   max-height: none;
 }
 
