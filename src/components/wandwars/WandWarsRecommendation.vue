@@ -12,7 +12,7 @@
       </div>
       <div class="score-confidence">
         <span :class="['confidence-badge', recommendation.confidence]" :title="confidenceTooltip">
-          {{ i18n.t(`wandwars.${recommendation.confidence}-confidence`) }}
+          {{ i18n.t(`wandwars.${dataDepthLabel}`) }}
         </span>
         <span class="score"
           ><span class="score-label">{{ i18n.t('wandwars.score') }}:</span>
@@ -189,7 +189,7 @@
 
 <script setup lang="ts">
 import { useI18nStore } from '@/stores/i18n'
-import { CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
+import { DATA_DEPTH_DESCRIPTIONS } from '@/wandwars/constants'
 import {
   formatName,
   formatNoteHtml,
@@ -226,7 +226,13 @@ const props = defineProps<{
 }>()
 
 const i18n = useI18nStore()
-const confidenceTooltip = CONFIDENCE_DESCRIPTIONS[props.recommendation.confidence]
+const confidenceTooltip = DATA_DEPTH_DESCRIPTIONS[props.recommendation.confidence]
+const DATA_DEPTH_LABEL_KEYS: Record<string, string> = {
+  high: 'rich-data',
+  medium: 'moderate-data',
+  low: 'sparse-data',
+}
+const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data'
 </script>
 
 <style scoped>
