@@ -1,7 +1,7 @@
 /**
  * Train the Adaptive ML neural network and then fit probability calibration.
  *
- * Usage: npm run train:ww
+ * Usage: npm run ww:train
  *
  * Steps:
  *   1. Train NN on full dataset (10 seeds, keep best by val accuracy), export
