@@ -1,6 +1,6 @@
 import type { AnalysisData, MatchResult } from '../types'
 import { adaptiveMLModel, predictVsAverage as nnPredictVsAverage } from './adaptiveML'
-import { bradleyTerryModel, fitBradleyTerry, type BradleyTerryFit } from './bradleyTerry'
+import { bradleyTerryModel, getCachedBradleyTerryFit, type BradleyTerryFit } from './bradleyTerry'
 import { compositeModel } from './composite'
 import { NN_WEIGHTS } from './nnWeights'
 import { popularPickModel } from './popularPick'
@@ -230,7 +230,7 @@ function getConstructedTeams(
     const analysis = getAnalysisData()
     const matches = getMatchData()
     const weights = getModelWeights(matches.length)
-    const btFit = fitBradleyTerry(matches, analysis)
+    const btFit = getCachedBradleyTerryFit(matches, analysis)
     const avgStrength =
       [...btFit.strengths.values()].reduce((s, v) => s + v, 0) / btFit.strengths.size
     const avgOppStrength = avgStrength * 3

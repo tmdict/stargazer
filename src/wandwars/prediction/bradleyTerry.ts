@@ -235,6 +235,11 @@ export interface BradleyTerryFit {
  * set and analysis snapshot. Returns a reusable fit that can be called many
  * times without refitting — used by the benchmark to cache per-fold fits,
  * and by the production model paths below.
+ *
+ * For the production app, prefer `getCachedBradleyTerryFit` — the fit is
+ * deterministic for given match data, so refitting on every hero pick is
+ * wasted work. The benchmark deliberately calls this function directly to
+ * keep per-fold fits independent.
  */
 export function fitBradleyTerry(
   matches: MatchResult[],
@@ -251,6 +256,33 @@ export function fitBradleyTerry(
   }
 }
 
+// ---- Session-scoped cache ----
+// Match data is static for the lifetime of a browser session (inlined at
+// build time, recorded matches live separately in localStorage), so one fit
+// is reusable across every call site. Reference identity on `matches` is a
+// sufficient invalidation key — if the array reference ever changes (new
+// data bundled in a fresh build, HMR reload, future "include recorded
+// matches" feature), the next caller refits automatically.
+
+let cachedFit: BradleyTerryFit | null = null
+let cachedMatchesRef: MatchResult[] | null = null
+
+export function getCachedBradleyTerryFit(
+  matches: MatchResult[],
+  analysisData: AnalysisData,
+): BradleyTerryFit {
+  if (cachedFit && cachedMatchesRef === matches) return cachedFit
+  cachedFit = fitBradleyTerry(matches, analysisData)
+  cachedMatchesRef = matches
+  return cachedFit
+}
+
+/** Force the next caller to refit. Reserved for future "merge recorded matches" features. */
+export function invalidateBradleyTerryCache(): void {
+  cachedFit = null
+  cachedMatchesRef = null
+}
+
 export const bradleyTerryModel: RecommendationModel = {
   id: 'bradley-terry',
   name: 'Team Power',
@@ -262,7 +294,7 @@ export const bradleyTerryModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): Recommendation[] {
-    const { strengths, interactions, predict } = fitBradleyTerry(matches, analysisData)
+    const { strengths, interactions, predict } = getCachedBradleyTerryFit(matches, analysisData)
     const avgOpponentStrength = computeAverageTeamStrength(strengths)
 
     const recommendations: Recommendation[] = available.map((hero) => {
@@ -306,7 +338,7 @@ export const bradleyTerryModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): MatchupPrediction {
-    const { strengths, predict } = fitBradleyTerry(matches, analysisData)
+    const { strengths, predict } = getCachedBradleyTerryFit(matches, analysisData)
     const leftProb = predict(leftTeam, rightTeam)
     const leftStrength = leftTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
     const rightStrength = rightTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
