@@ -75,10 +75,12 @@ WandWars shows two semantically different "high/medium/low" badges. They share v
 **2. Hero data depth** — on per-hero recommendation cards while drafting. Reflects how many matches the hero has been in; unchanged from the original Wilson score.
 
 ```
-Wilson 95% CI width < 0.3 → ample data (high)
-Wilson 95% CI width < 0.5 → moderate data (medium)
+Wilson 95% CI width < 0.20 → rich data (high,   ~36+ matches near 50% WR)
+Wilson 95% CI width < 0.35 → moderate data (medium, ~12–15 matches)
 Otherwise (or <3 matches) → sparse data (low)
 ```
+
+Tightened from 0.3/0.5 at ~1,250 matches because the looser thresholds meant nearly every hero read as "rich data" — the badge had lost its power to distinguish well-measured from less-measured heroes. Wilson's absolute interpretation is dataset-size-independent; the distribution of heroes across the three bands is what shifts as data grows. Revisit thresholds at major dataset doublings (e.g. ~5,000 matches).
 
 - Displayed under "Rich / Moderate / Sparse data" tooltip copy to distinguish from match-prediction confidence.
 - Still computed per-hero in `confidence.ts` via Wilson score on weighted wins, consumed by `modelUtils.ts`'s `getHeroWilsonConfidence`.
@@ -393,11 +395,11 @@ Two different badges, both rendered as high / medium / low chips — see Section
 
 **Recommendation cards (data depth)** — Wilson score 95% CI width on the hero's weighted win/loss record. Answers "how well do we know this hero?", not "how reliable is the prediction?". Tooltip: "Rich / Moderate / Sparse data".
 
-| Label      | Condition                        | Color  | Meaning                              |
-| ---------- | -------------------------------- | ------ | ------------------------------------ |
-| **high**   | CI width < 0.3 (~16+ matches)    | Green  | Tight statistical estimate           |
-| **medium** | CI width 0.3–0.5 (~7–15 matches) | Yellow | Moderate estimate, more data helpful |
-| **low**    | < 3 matches, or CI width ≥ 0.5   | Red    | Wide/unreliable estimate             |
+| Label      | Condition                           | Color  | Meaning                              |
+| ---------- | ----------------------------------- | ------ | ------------------------------------ |
+| **high**   | CI width < 0.20 (~36+ matches)      | Green  | Tight statistical estimate           |
+| **medium** | CI width 0.20–0.35 (~12–15 matches) | Yellow | Moderate estimate, more data helpful |
+| **low**    | < 3 matches, or CI width ≥ 0.35     | Red    | Wide/unreliable estimate             |
 
 **Matchup prediction (prediction reliability)** — distance of the calibrated aggregate from 50%, plus across-model stddev. Thresholds tuned against held-out CV so "high" hits ≥ 75% accuracy. Tooltip: "High/medium/low confidence" framed as prediction reliability.
 
