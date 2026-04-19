@@ -29,8 +29,12 @@ function predictWinProb(leftHeroes: string[], rightHeroes: string[]): number {
   return nnForward(NN_WEIGHTS, leftIdx, rightIdx)
 }
 
-/** Average team embedding used as baseline when opponents are unknown */
-function predictVsAverage(teamHeroes: string[]): number {
+/**
+ * Average team embedding used as baseline when opponents are unknown.
+ * Exported so team-suggestion code can score trios without needing a
+ * specific opponent. Uses coarse sampling (~50 generic opponent trios).
+ */
+export function predictVsAverage(teamHeroes: string[]): number {
   const teamIdx = heroNamesToIndices(teamHeroes, NN_WEIGHTS.heroIndex)
   if (teamIdx.length === 0) return 0.5
 

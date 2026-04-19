@@ -365,7 +365,16 @@ Scored by aggregating all four prediction models — can evaluate any hero combi
 
 **With 2 teammates**: All possible 3rd picks are scored by all four models (Popular Pick, Hero Synergy, Team Power, Adaptive ML), aggregated using the same adaptive weights as the match prediction. Each model's `recommend()` scores the candidate independently, then scores are weighted and combined.
 
-**With 1 teammate**: All possible trios are scored by the Adaptive ML model only (other models can't efficiently evaluate all pair combinations). Each trio is evaluated against a sample of ~30 opponent trios for a stable estimate.
+**With 1 teammate**: All (teammate, i, j) trios are enumerated and each one is scored by all four models via dedicated "team quality" functions in `teamSuggestions.ts`:
+
+- **Popular Pick** — avg individual win rate + avg pair win rate (from `synergyMatrix` pair records).
+- **Hero Synergy (Composite)** — avg Bayesian win rate + pairwise synergy + trio bonus (when the trio has ≥ 3 matches).
+- **Team Power (Bradley-Terry)** — `Σλ(team) / (Σλ(team) + avgOpp)` plus pair interaction residuals, using a single fold-cached B-T fit.
+- **Adaptive ML** — `predictVsAverage(team)`: NN forward pass against ~50 sampled generic opponent trios.
+
+Scores are combined with the same adaptive weights as the 2-teammate case. Enumerating ~3–5k trios (for 1 known teammate among ~87 heroes) stays well under 100ms because every scorer is O(1) lookups or a single forward pass — no per-trio model refits.
+
+Previously the 1-teammate case used NN only, which was problematic given the NN's current CV accuracy. The ensemble approach closes that gap.
 
 - Deduplicated against exact trios (won't repeat data-backed teams)
 - Dashed border, predicted win rate displayed (muted, to distinguish from real W/L records)
@@ -485,17 +494,19 @@ From the 2026-04-18 run:
 
 "Coverage" is the fraction of held-out matchups that qualify for the badge. Expect most matchups in the UI to show low/medium, with rare high — the inversion of the old behavior. Thresholds are re-tuned on every `train:ww` and will shift as the dataset grows.
 
-### Aggregate Weights (unchanged by calibration)
+### Aggregate Weights (tuned against calibrated benchmark)
 
 Weights used in the combined match prediction, scaling by dataset size:
 
 | Match count | Popular Pick | Hero Synergy | Team Power | Adaptive ML |
 | ----------- | ------------ | ------------ | ---------- | ----------- |
 | < 20        | 55%          | 30%          | 10%        | 5%          |
-| 100         | 35%          | 25%          | 20%        | 20%         |
-| 500+        | 25%          | 20%          | 25%        | 30%         |
+| 100         | 30%          | 30%          | 25%        | 15%         |
+| 500+        | 25%          | 30%          | 25%        | 20%         |
 
-At low data, Popular Pick dominates (works immediately). As data grows, the weights shift toward Adaptive ML and Team Power on the _hypothesis_ that more data lets those models pull ahead — see "Will Adaptive ML pull ahead at scale?" below for whether that's actually holding up. Hero Synergy retains ~20% for interpretability — it's the only model that explains _why_ a pick is good. Calibration is per-model, so weighting the aggregate gives a properly-calibrated blend regardless of which model is leading.
+At low data, Popular Pick dominates (works immediately). As data grows, weight shifts toward Hero Synergy and Team Power — the two models currently leading the calibrated CV benchmark. Adaptive ML gets meaningful ensemble weight at scale but not the largest share; see "Will Adaptive ML pull ahead at scale?" below for when to revisit. Calibration is per-model, so weighting the aggregate gives a properly-calibrated blend regardless of which model is leading.
+
+These weights are mirrored in `teamSuggestions.ts` (Suggested Teams scoring) — keep the two tables in sync.
 
 ### Will Adaptive ML pull ahead at scale?
 

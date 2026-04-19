@@ -1,8 +1,7 @@
-import type { MatchResult } from '../types'
-import { adaptiveMLModel } from './adaptiveML'
-import { bradleyTerryModel } from './bradleyTerry'
+import type { AnalysisData, MatchResult } from '../types'
+import { adaptiveMLModel, predictVsAverage as nnPredictVsAverage } from './adaptiveML'
+import { bradleyTerryModel, fitBradleyTerry, type BradleyTerryFit } from './bradleyTerry'
 import { compositeModel } from './composite'
-import { heroNamesToIndices, nnForward } from './nn'
 import { NN_WEIGHTS } from './nnWeights'
 import { popularPickModel } from './popularPick'
 import { getAnalysisData, getMatchData } from './recommend'
@@ -68,29 +67,9 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
   return results
 }
 
-// ---- NN-only scoring (for 1 teammate — full trio evaluation) ----
-
-function nnTeamScore(teamIndices: number[]): number {
-  const n = Object.keys(NN_WEIGHTS.heroIndex).length
-  const step = Math.max(1, Math.floor(n / 6))
-  let total = 0
-  let count = 0
-  for (let a = 0; a < n && count < 30; a += step) {
-    for (let b = a + 1; b < n && count < 30; b += step) {
-      for (let c = b + 1; c < n && count < 30; c += step) {
-        if (teamIndices.includes(a) || teamIndices.includes(b) || teamIndices.includes(c)) continue
-        total += nnForward(NN_WEIGHTS, teamIndices, [a, b, c])
-        count++
-      }
-    }
-  }
-  return count > 0 ? total / count : 0.5
-}
-
-// ---- Aggregate scoring (for 2 teammates — all 4 models) ----
-
 /**
- * Adaptive weights matching the aggregate match prediction weights from recommend.ts
+ * Adaptive weights matching the aggregate match prediction weights from recommend.ts.
+ * Keep these in sync with `getAdaptiveWeights` there.
  */
 function getModelWeights(matchCount: number): Record<string, number> {
   if (matchCount < 20) {
@@ -99,19 +78,94 @@ function getModelWeights(matchCount: number): Record<string, number> {
   if (matchCount <= 100) {
     const t = (matchCount - 20) / 80
     return {
-      'popular-pick': 0.55 - 0.2 * t,
-      composite: 0.3 - 0.05 * t,
-      'bradley-terry': 0.1 + 0.1 * t,
-      'adaptive-ml': 0.05 + 0.15 * t,
+      'popular-pick': 0.55 - 0.25 * t,
+      composite: 0.3,
+      'bradley-terry': 0.1 + 0.15 * t,
+      'adaptive-ml': 0.05 + 0.1 * t,
     }
   }
   const t = Math.min(1, (matchCount - 100) / 400)
   return {
-    'popular-pick': 0.35 - 0.1 * t,
-    composite: 0.25 - 0.05 * t,
-    'bradley-terry': 0.2 + 0.05 * t,
-    'adaptive-ml': 0.2 + 0.1 * t,
+    'popular-pick': 0.3 - 0.05 * t,
+    composite: 0.3,
+    'bradley-terry': 0.25,
+    'adaptive-ml': 0.15 + 0.05 * t,
   }
+}
+
+// ---- Per-model "team quality" scoring for the 1-teammate case ----
+// Each function returns a [0, 1] probability that [a, b, c] is a strong trio
+// against a generic opponent. Used only when we need to enumerate all
+// (i, j) pairs completing a single known teammate — `predictMatchup`
+// requires a specific opponent and `recommend` can't efficiently score all
+// 2-hero extensions at once.
+
+function bradleyTerryTeamQuality(
+  team: [string, string, string],
+  fit: BradleyTerryFit,
+  avgOppStrength: number,
+): number {
+  const strength = team.reduce((s, h) => s + (fit.strengths.get(h) || 1), 0)
+  const base = strength / (strength + avgOppStrength)
+  // Pair-interaction adjustments (same residuals used in predictMatchup)
+  let pairAdj = 0
+  for (let i = 0; i < team.length; i++) {
+    for (let j = i + 1; j < team.length; j++) {
+      const key = [team[i]!, team[j]!].sort().join(',')
+      pairAdj += fit.interactions.get(key) || 0
+    }
+  }
+  return Math.max(0.05, Math.min(0.95, base + pairAdj))
+}
+
+function compositeTeamQuality(team: [string, string, string], analysis: AnalysisData): number {
+  // Average individual Bayesian-smoothed win rate + pairwise synergy + trio bonus
+  let base = 0
+  for (const h of team) base += analysis.heroStats[h]?.winRate ?? 0.5
+  base /= 3
+
+  let synergy = 0
+  for (let i = 0; i < team.length; i++) {
+    for (let j = i + 1; j < team.length; j++) {
+      synergy += analysis.synergyMatrix[team[i]!]?.[team[j]!]?.score ?? 0
+    }
+  }
+
+  const trioKey = [...team].sort().join(',')
+  const trio = analysis.trioMatrix[trioKey]
+  const trioBonus = trio && trio.matches >= 3 ? trio.score : 0
+
+  // Clamp to [0.05, 0.95] to match other models' ranges.
+  return Math.max(0.05, Math.min(0.95, base + synergy / 3 + trioBonus))
+}
+
+function popularPickTeamQuality(team: [string, string, string], analysis: AnalysisData): number {
+  // Average individual win rate + average pairwise win rate (from synergy
+  // matrix's pair records — same underlying pair stats, just reused here).
+  let indiv = 0
+  for (const h of team) indiv += analysis.heroStats[h]?.winRate ?? 0.5
+  indiv /= 3
+
+  let pairTotal = 0
+  let pairCount = 0
+  for (let i = 0; i < team.length; i++) {
+    for (let j = i + 1; j < team.length; j++) {
+      const entry = analysis.synergyMatrix[team[i]!]?.[team[j]!]
+      if (!entry || entry.matches === 0) continue
+      // Convert synergy score (delta from avg individual rate) back to
+      // absolute pair win rate by adding the pair's individual avg.
+      const pairIndivAvg =
+        ((analysis.heroStats[team[i]!]?.winRate ?? 0.5) +
+          (analysis.heroStats[team[j]!]?.winRate ?? 0.5)) /
+        2
+      pairTotal += pairIndivAvg + entry.score
+      pairCount++
+    }
+  }
+
+  if (pairCount === 0) return indiv
+  const pairAvg = pairTotal / pairCount
+  return 0.4 * indiv + 0.6 * pairAvg
 }
 
 /**
@@ -169,7 +223,24 @@ function getConstructedTeams(
   const results: TeamSuggestion[] = []
 
   if (teammates.length === 1) {
-    // 1 teammate: NN-only scoring (other models can't efficiently evaluate all pair combos)
+    // Score each candidate trio (teammate, i, j) via all 4 models, aggregated
+    // using the same weights as the match prediction. Per-model scorers are
+    // cheap (O(1) pair/trio lookups or a single forward pass) so enumerating
+    // ~3–5k trios stays well under 100ms.
+    const analysis = getAnalysisData()
+    const matches = getMatchData()
+    const weights = getModelWeights(matches.length)
+    const btFit = fitBradleyTerry(matches, analysis)
+    const avgStrength =
+      [...btFit.strengths.values()].reduce((s, v) => s + v, 0) / btFit.strengths.size
+    const avgOppStrength = avgStrength * 3
+
+    const totalWeight =
+      (weights['popular-pick'] || 0) +
+      (weights['composite'] || 0) +
+      (weights['bradley-terry'] || 0) +
+      (weights['adaptive-ml'] || 0)
+
     for (let i = 0; i < candidates.length; i++) {
       for (let j = i + 1; j < candidates.length; j++) {
         const team = [teammates[0]!, candidates[i]!, candidates[j]!].sort() as [
@@ -180,10 +251,18 @@ function getConstructedTeams(
         const key = team.join(',')
         if (existingKeys.has(key)) continue
 
-        const indices = heroNamesToIndices(team, NN_WEIGHTS.heroIndex)
-        if (indices.length !== 3) continue
+        const ppScore = popularPickTeamQuality(team, analysis)
+        const compositeScore = compositeTeamQuality(team, analysis)
+        const btScore = bradleyTerryTeamQuality(team, btFit, avgOppStrength)
+        const nnScore = nnPredictVsAverage(team)
 
-        const winRate = nnTeamScore(indices)
+        const winRate =
+          ((weights['popular-pick'] || 0) * ppScore +
+            (weights['composite'] || 0) * compositeScore +
+            (weights['bradley-terry'] || 0) * btScore +
+            (weights['adaptive-ml'] || 0) * nnScore) /
+          totalWeight
+
         results.push({ team, wins: 0, losses: 0, draws: 0, total: 0, winRate, constructed: true })
       }
     }

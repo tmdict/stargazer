@@ -242,6 +242,29 @@ function handleExport() {
   align-items: start;
 }
 
+/* Bound the right column: floor so flow transitions (match prediction →
+   drafting after submitting a record) don't squish it, ceiling at ~1200px
+   (or viewport + 200px on short viewports so the panel doesn't feel cramped
+   on laptops). Inner panel scrolls within this cap. */
+.wandwars-right {
+  min-height: 500px;
+  max-height: min(1200px, calc(100vh + 200px));
+  display: flex;
+  flex-direction: column;
+}
+
+/* When the match prediction view is showing (all 6 heroes picked), let the
+   column grow to fit everything — matchup + per-model cards + record form
+   should all be visible without an inner scrollbar. */
+.wandwars-right:has(.matchup-section) {
+  max-height: none;
+}
+
+.wandwars-right > * {
+  flex: 1;
+  min-height: 0;
+}
+
 @media (max-width: 768px) {
   .wandwars-page {
     padding: var(--spacing-md);
@@ -249,6 +272,11 @@ function handleExport() {
 
   .wandwars-layout {
     grid-template-columns: 1fr;
+  }
+
+  .wandwars-right {
+    min-height: auto;
+    max-height: none;
   }
 }
 </style>

@@ -133,25 +133,32 @@ export interface AggregatePrediction {
 }
 
 function getAdaptiveWeights(matchCount: number): Record<string, number> {
+  // Weights reflect measured CV performance at current dataset size (~1,100
+  // matches). Hero Synergy and Team Power lead; Adaptive ML gets ensemble
+  // weight but not majority weight. Re-evaluate after every `train:ww` run
+  // when the gap between models shifts meaningfully.
   if (matchCount < 20) {
     return { 'popular-pick': 0.55, composite: 0.3, 'bradley-terry': 0.1, 'adaptive-ml': 0.05 }
   }
   if (matchCount <= 100) {
+    // 20 → 100: ramp Popular Pick down, Team Power up, Adaptive ML up
+    // toward the mid-range balance. Hero Synergy holds at 30%.
     const t = (matchCount - 20) / 80
     return {
-      'popular-pick': 0.55 - 0.2 * t,
-      composite: 0.3 - 0.05 * t,
-      'bradley-terry': 0.1 + 0.1 * t,
-      'adaptive-ml': 0.05 + 0.15 * t,
+      'popular-pick': 0.55 - 0.25 * t,
+      composite: 0.3,
+      'bradley-terry': 0.1 + 0.15 * t,
+      'adaptive-ml': 0.05 + 0.1 * t,
     }
   }
-  // 100+ matches: weights shift toward models with better benchmark performance
+  // 100 → 500+: Hero Synergy and Team Power hold, Popular Pick softens,
+  // Adaptive ML earns a modest bump for ensemble diversity.
   const t = Math.min(1, (matchCount - 100) / 400)
   return {
-    'popular-pick': 0.35 - 0.1 * t,
-    composite: 0.25 - 0.05 * t,
-    'bradley-terry': 0.2 + 0.05 * t,
-    'adaptive-ml': 0.2 + 0.1 * t,
+    'popular-pick': 0.3 - 0.05 * t,
+    composite: 0.3,
+    'bradley-terry': 0.25,
+    'adaptive-ml': 0.15 + 0.05 * t,
   }
 }
 
