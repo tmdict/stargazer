@@ -1557,17 +1557,35 @@ const aggregatePrediction = computed(() => {
   text-align: center;
 }
 
-/* Records list */
+/* Records list — action buttons + import status stay pinned at the top,
+   only the list itself scrolls. Moves the overflow boundary from
+   .tab-content to .records-list when the records tab is active. */
+.tab-content:has(.records-section) {
+  overflow-y: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
 .records-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-sm);
+  flex: 1;
+  min-height: 0;
+}
+
+.records-actions,
+.import-status {
+  flex-shrink: 0;
 }
 
 .records-list {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .record-entry {

@@ -45,8 +45,74 @@ export const SAMPLE_BONUS_FULL = 20
 
 // Meta analysis thresholds
 export const META_BAYESIAN_PRIOR = 3.0
-export const META_MIN_TEAM_MATCHES = 2
-export const META_MIN_PAIR_MATCHES = 3
+
+/**
+ * Minimum match count to surface a pair-level insight (synergy, counter,
+ * undefeated pair, etc.). sqrt-scaled with the dataset — at ~1,250 matches
+ * this returns 9, at 5,000 it's 18. Grows slowly so we never demand absurd
+ * evidence, but filters out noisy 3-occurrence patterns when the dataset
+ * is large enough that many more candidate pairs exist.
+ *
+ * | matches | returns |
+ * | 500     | 6       |
+ * | 1,250   | 9       |
+ * | 2,500   | 13      |
+ * | 5,000   | 18      |
+ * | 10,000  | 25      |
+ */
+export function metaMinPairMatches(totalMatches: number): number {
+  return Math.max(3, Math.ceil(Math.sqrt(totalMatches) / 4))
+}
+
+/**
+ * Minimum match count to surface a team-level (full-trio) callout insight.
+ * Exact-trio repeats are inherently rare (with 87 heroes there are ~107k
+ * possible trios), so this stays fairly permissive to surface anything.
+ *
+ * | matches | returns |
+ * | 500     | 2       |
+ * | 1,250   | 3       |
+ * | 2,500   | 4       |
+ * | 5,000   | 5       |
+ * | 10,000  | 7       |
+ */
+export function metaMinTeamMatches(totalMatches: number): number {
+  return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 16))
+}
+
+/**
+ * Even more permissive team threshold — used by the Meta Teams sortable
+ * table, which is a browse/scan UI rather than a curated insight. At
+ * typical dataset sizes this floors at 2; grows very slowly so the table
+ * always has rows.
+ *
+ * | matches | returns |
+ * | 500     | 2       |
+ * | 1,250   | 2       |
+ * | 2,500   | 3       |
+ * | 5,000   | 3       |
+ * | 10,000  | 5       |
+ */
+export function metaMinTeamMatchesTable(totalMatches: number): number {
+  return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 24))
+}
+
+/**
+ * Sweep-count threshold for the "Most Dominant Pairs" insight. Sweeps are
+ * ~half of all wins so the divisor is larger than the general pair-matches
+ * one. Scales with dataset so the highlighted pairs stay genuinely
+ * dominant as data grows rather than being 2-sweep coincidences.
+ *
+ * | matches | returns |
+ * | 500     | 3       |
+ * | 1,250   | 4       |
+ * | 2,500   | 5       |
+ * | 5,000   | 8       |
+ * | 10,000  | 10      |
+ */
+export function metaMinPairSweeps(totalMatches: number): number {
+  return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 10))
+}
 
 // Pool-screenshot detection (poolDetect.ts).
 // `GOLD_*` tune the HSV filter that picks out card borders. `GRID_*` govern
