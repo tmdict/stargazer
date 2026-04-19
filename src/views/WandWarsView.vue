@@ -261,6 +261,20 @@ function handleExport() {
   max-height: none;
 }
 
+/* Meta insights pages (Units / Teams / Synergy) have variable-length
+   section lists and their own internal layout; don't apply the fixed-size
+   + inner-scroll treatment meant for the drafting view. Let the column
+   size to content. */
+.wandwars-right:has(.insights-panel) {
+  min-height: 0;
+  max-height: none;
+}
+
+.wandwars-right:has(.insights-panel) > * {
+  flex: initial;
+  min-height: initial;
+}
+
 .wandwars-right > * {
   flex: 1;
   min-height: 0;

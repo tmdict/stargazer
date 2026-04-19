@@ -344,8 +344,9 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import {
   META_BAYESIAN_PRIOR,
-  META_MIN_PAIR_MATCHES,
-  META_MIN_TEAM_MATCHES,
+  metaMinPairMatches,
+  metaMinPairSweeps,
+  metaMinTeamMatches,
 } from '@/wandwars/constants'
 import { formatInsightHtml, formatName, formatPercent, joinLocale } from '@/wandwars/formatting'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
@@ -393,12 +394,13 @@ const dominantTeamsTitleEl = ref<HTMLElement | null>(null)
 
 const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
 
-const topWinningTeams = computed(() =>
-  allTeamRecords.value
-    .filter((t) => t.total >= META_MIN_TEAM_MATCHES && t.wins > t.losses)
+const topWinningTeams = computed(() => {
+  const threshold = metaMinTeamMatches(totalMatches.value)
+  return allTeamRecords.value
+    .filter((t) => t.total >= threshold && t.wins > t.losses)
     .sort((a, b) => b.winRate - a.winRate || b.total - a.total)
-    .slice(0, 5),
-)
+    .slice(0, 5)
+})
 
 interface PairRecord {
   heroA: string
@@ -412,6 +414,7 @@ interface PairRecord {
 const strongestPairs = computed(() => {
   const pairs: PairRecord[] = []
   const matrix = props.analysisData.synergyMatrix
+  const pairThreshold = metaMinPairMatches(totalMatches.value)
 
   const seen = new Set<string>()
   for (const [heroA, partners] of Object.entries(matrix)) {
@@ -419,7 +422,7 @@ const strongestPairs = computed(() => {
       const key = [heroA, heroB].sort().join(':')
       if (seen.has(key)) continue
       seen.add(key)
-      if (entry.matches < META_MIN_PAIR_MATCHES) continue
+      if (entry.matches < pairThreshold) continue
       pairs.push({
         heroA: heroA < heroB ? heroA : heroB,
         heroB: heroA < heroB ? heroB : heroA,
@@ -841,9 +844,10 @@ const sweepPairs = computed(() => {
       if (isSweep) s.sweeps++
     }
   }
+  const minSweeps = metaMinPairSweeps(totalMatches.value)
   const results: SweepRecord[] = []
   for (const s of stats.values()) {
-    if (s.sweeps >= 2) results.push(s)
+    if (s.sweeps >= minSweeps) results.push(s)
   }
   return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total)
 })
@@ -867,6 +871,12 @@ const insights = computed(() => {
   const allHeroes = Object.values(stats)
   const matrix = props.analysisData.synergyMatrix
   const counterMatrix = props.analysisData.counterMatrix
+
+  // Dataset-scaled thresholds — grow with dataset size to keep noise out of
+  // the UI as we collect more matches. See `metaMinPairMatches` /
+  // `metaMinTeamMatches` in `constants.ts` for the sqrt scaling table.
+  const pairMin = metaMinPairMatches(totalMatches.value)
+  const teamMin = metaMinTeamMatches(totalMatches.value)
 
   // --- Units ---
 
@@ -956,7 +966,7 @@ const insights = computed(() => {
       }
     }
   }
-  if (biggestRivalry && biggestRivalry.matches >= 5) {
+  if (biggestRivalry && biggestRivalry.matches >= pairMin) {
     add(
       result,
       'units',
@@ -1067,7 +1077,7 @@ const insights = computed(() => {
   const counterVictims: Record<string, number> = {}
   for (const [, opponents] of Object.entries(counterMatrix)) {
     for (const [opp, entry] of Object.entries(opponents)) {
-      if (entry.matches >= 3 && entry.score > 0.1) {
+      if (entry.matches >= pairMin && entry.score > 0.1) {
         counterVictims[opp] = (counterVictims[opp] || 0) + 1
       }
     }
@@ -1085,7 +1095,7 @@ const insights = computed(() => {
   const counterPowers: Record<string, number> = {}
   for (const [hero, opponents] of Object.entries(counterMatrix)) {
     for (const [, entry] of Object.entries(opponents)) {
-      if (entry.matches >= 3 && entry.score > 0.1) {
+      if (entry.matches >= pairMin && entry.score > 0.1) {
         counterPowers[hero] = (counterPowers[hero] || 0) + 1
       }
     }
@@ -1151,7 +1161,7 @@ const insights = computed(() => {
   }
 
   for (const team of allTeamRecords.value) {
-    if (team.total >= 3 && team.losses === 0) {
+    if (team.total >= teamMin && team.losses === 0) {
       add(
         result,
         'teams',
@@ -1166,7 +1176,7 @@ const insights = computed(() => {
   }
 
   for (const team of allTeamRecords.value) {
-    if (team.total >= 3 && team.wins === 0) {
+    if (team.total >= teamMin && team.wins === 0) {
       add(
         result,
         'teams',
@@ -1182,7 +1192,7 @@ const insights = computed(() => {
 
   // Most played team
   const mostPlayed = [...allTeamRecords.value].sort((a, b) => b.total - a.total)[0]
-  if (mostPlayed && mostPlayed.total >= 3) {
+  if (mostPlayed && mostPlayed.total >= teamMin) {
     add(
       result,
       'teams',
@@ -1198,9 +1208,9 @@ const insights = computed(() => {
 
   // Best win rate team
   const bestTeam = [...allTeamRecords.value]
-    .filter((t) => t.total >= META_MIN_TEAM_MATCHES)
+    .filter((t) => t.total >= teamMin)
     .sort((a, b) => b.winRate - a.winRate)[0]
-  if (bestTeam && bestTeam.total >= 2) {
+  if (bestTeam && bestTeam.total >= teamMin) {
     const key = bestTeam.team.join(',')
     const mpKey = mostPlayed?.team.join(',')
     if (key !== mpKey) {
@@ -1221,9 +1231,9 @@ const insights = computed(() => {
 
   // Worst win rate team
   const worstTeam = [...allTeamRecords.value]
-    .filter((t) => t.total >= META_MIN_TEAM_MATCHES)
+    .filter((t) => t.total >= teamMin)
     .sort((a, b) => a.winRate - b.winRate)[0]
-  if (worstTeam && worstTeam.total >= 2 && worstTeam.winRate < 0.4) {
+  if (worstTeam && worstTeam.total >= teamMin && worstTeam.winRate < 0.4) {
     add(
       result,
       'teams',
@@ -1240,7 +1250,7 @@ const insights = computed(() => {
 
   // Teams with all draws
   for (const team of allTeamRecords.value) {
-    if (team.total >= 2 && team.draws === team.total) {
+    if (team.total >= teamMin && team.draws === team.total) {
       add(
         result,
         'teams',
@@ -1260,9 +1270,14 @@ const insights = computed(() => {
     add(result, 'teams', ti('unique-teams', { count: uniqueTeams, matches: totalMatches.value }))
   }
 
-  // Teams with close records
+  // Teams with close records — needs at least 4 matches for "2W/2L balanced"
+  // to be meaningful; also enforce team minimum for scale consistency.
   for (const team of allTeamRecords.value) {
-    if (team.total >= 4 && Math.abs(team.wins - team.losses) <= 1 && team.wins >= 2) {
+    if (
+      team.total >= Math.max(4, teamMin) &&
+      Math.abs(team.wins - team.losses) <= 1 &&
+      team.wins >= 2
+    ) {
       add(
         result,
         'teams',
@@ -1282,7 +1297,7 @@ const insights = computed(() => {
   // Hero that appears in the most losing teams
   const losingTeamHeroCounts: Record<string, number> = {}
   for (const team of allTeamRecords.value) {
-    if (team.total >= 2 && team.winRate < 0.4) {
+    if (team.total >= teamMin && team.winRate < 0.4) {
       for (const hero of team.team) {
         losingTeamHeroCounts[hero] = (losingTeamHeroCounts[hero] || 0) + 1
       }
@@ -1368,7 +1383,7 @@ const insights = computed(() => {
       const key = [heroA, heroB].sort().join(':')
       if (seenPairs.has(key)) continue
       seenPairs.add(key)
-      if (entry.matches >= 3) {
+      if (entry.matches >= pairMin) {
         allSynergyPairs.push({
           a: heroA < heroB ? heroA : heroB,
           b: heroA < heroB ? heroB : heroA,
@@ -1427,9 +1442,9 @@ const insights = computed(() => {
     )
   }
 
-  // 3. Most played pair
+  // 3. Most played pair — already filtered by pairMin upstream
   const mostPlayedPair = [...allSynergyPairs].sort((a, b) => b.matches - a.matches)[0]
-  if (mostPlayedPair && mostPlayedPair.matches >= 4) {
+  if (mostPlayedPair) {
     add(
       result,
       'synergy',
@@ -1506,9 +1521,10 @@ const insights = computed(() => {
     }
   }
 
-  // 8-9. Undefeated pairs (cap at 2)
+  // 8-9. Undefeated pairs (cap at 2) — pairs in allSynergyPairs already meet
+  // pairMin, so the filter here is just the "zero losses" part.
   const undefeatedPairs = allSynergyPairs
-    .filter((p) => p.matches >= 3 && p.losses === 0)
+    .filter((p) => p.losses === 0)
     .sort((a, b) => b.matches - a.matches)
     .slice(0, 2)
   for (const pair of undefeatedPairs) {
@@ -1524,9 +1540,9 @@ const insights = computed(() => {
     )
   }
 
-  // 10. Winless pair (cap at 1)
+  // 10. Winless pair (cap at 1) — same deal as undefeated, pairMin already enforced
   const winlessPair = allSynergyPairs
-    .filter((p) => p.matches >= 3 && p.wins === 0)
+    .filter((p) => p.wins === 0)
     .sort((a, b) => b.matches - a.matches)[0]
   if (winlessPair) {
     add(
@@ -1745,7 +1761,11 @@ const insights = computed(() => {
     add(
       result,
       'teams',
-      ti('ml-top-team', { t0: `{${t.team[0]}}`, t1: `{${t.team[1]}}`, t2: `{${t.team[2]}}` }),
+      ti('predicted-top-team', {
+        t0: `{${t.team[0]}}`,
+        t1: `{${t.team[1]}}`,
+        t2: `{${t.team[2]}}`,
+      }),
     )
   }
 
