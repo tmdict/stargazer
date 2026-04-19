@@ -135,7 +135,7 @@ export interface AggregatePrediction {
 function getAdaptiveWeights(matchCount: number): Record<string, number> {
   // Weights reflect measured CV performance at current dataset size (~1,100
   // matches). Hero Synergy and Team Power lead; Adaptive ML gets ensemble
-  // weight but not majority weight. Re-evaluate after every `train:ww` run
+  // weight but not majority weight. Re-evaluate after every `ww:train` run
   // when the gap between models shifts meaningfully.
   if (matchCount < 20) {
     return { 'popular-pick': 0.55, composite: 0.3, 'bradley-terry': 0.1, 'adaptive-ml': 0.05 }
