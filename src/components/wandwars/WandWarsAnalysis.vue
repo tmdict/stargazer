@@ -1094,6 +1094,27 @@ const aggregatePrediction = computed(() => {
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-large);
   padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tab-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+/* Match-prediction view should flow naturally — matchup cards + record
+   form stay fully visible, no inner scrollbar. Paired with the column
+   max-height release in WandWarsView.vue via :has(.matchup-section). */
+.analysis:has(.matchup-section) {
+  overflow: visible;
+}
+
+.analysis:has(.matchup-section) .tab-content {
+  overflow-y: visible;
 }
 
 .tabs {
@@ -1231,8 +1252,6 @@ const aggregatePrediction = computed(() => {
   flex-direction: column;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-sm);
-  max-height: calc(100vh - 200px);
-  overflow-y: auto;
 }
 
 .empty-state {
