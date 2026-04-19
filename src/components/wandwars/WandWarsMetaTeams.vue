@@ -235,7 +235,7 @@ import { computed, ref } from 'vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useI18nStore } from '@/stores/i18n'
-import { META_MIN_PAIR_MATCHES, META_MIN_TEAM_MATCHES } from '@/wandwars/constants'
+import { metaMinPairMatches, metaMinTeamMatchesTable } from '@/wandwars/constants'
 import { formatName, formatPercent, formatSigned } from '@/wandwars/formatting'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
@@ -329,13 +329,14 @@ const allPairRows = computed(() => {
   const matrix = props.analysisData.synergyMatrix
   const rows: PairRow[] = []
   const seen = new Set<string>()
+  const pairThreshold = metaMinPairMatches(props.matchData.length)
 
   for (const [heroA, partners] of Object.entries(matrix)) {
     for (const [heroB, entry] of Object.entries(partners)) {
       const key = [heroA, heroB].sort().join(':')
       if (seen.has(key)) continue
       seen.add(key)
-      if (entry.matches < META_MIN_PAIR_MATCHES) continue
+      if (entry.matches < pairThreshold) continue
       const wins = entry.wins
       const losses = entry.losses
       const total = entry.matches
@@ -384,8 +385,9 @@ function toggleTeamSort(key: TeamSortKey) {
 
 const sortedTeamRows = computed(() => {
   const sign = teamSortDir.value === 'desc' ? 1 : -1
+  const teamThreshold = metaMinTeamMatchesTable(props.matchData.length)
   return allTeamRecords.value
-    .filter((t) => t.total >= META_MIN_TEAM_MATCHES)
+    .filter((t) => t.total >= teamThreshold)
     .sort((a, b) => sign * (b[teamSort.value] - a[teamSort.value]) || b.total - a.total)
 })
 </script>
