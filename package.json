@@ -6,8 +6,6 @@
   "scripts": {
     "dev": "vite",
     "build": "run-p type-check build:ssg",
-    "encode:ww": "tsx src/wandwars/scripts/encode.ts",
-    "train:ww": "tsx src/wandwars/scripts/trainNN.ts",
     "build:ssg": "vite-ssg build",
     "build:spa": "npm run type-check && vite build",
     "preview": "vite preview",
@@ -18,7 +16,10 @@
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:it": "vitest run tests/integration",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "ww:encode": "tsx src/wandwars/scripts/encode.ts",
+    "ww:train": "tsx src/wandwars/scripts/trainNN.ts",
+    "ww:validate": "tsx src/wandwars/scripts/validateData.ts"
   },
   "dependencies": {
     "@unhead/vue": "^2.1.4",

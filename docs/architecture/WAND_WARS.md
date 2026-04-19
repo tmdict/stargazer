@@ -34,9 +34,11 @@ tasi,dunlingr,daimon << kordan,zandrok,gerda
 
 All WandWars code lives under `src/wandwars/` (domain logic), `src/components/wandwars/` (UI), and `src/views/WandWarsView.vue` (page). Route: `/wandwars` (no locale prefix, not SSG pre-rendered).
 
-**Data pipeline**: Raw `.data` files → `npm run encode:ww` (concatenate + base64) → `data` file committed → Vite `?raw` import → decoded at runtime via `atob`.
+**Data pipeline**: Raw `.data` files → `npm run ww:encode` (concatenate + base64) → `data` file committed → Vite `?raw` import → decoded at runtime via `atob`.
 
-**Adding data**: Edit raw files → `npm run encode:ww` → `npm run train:ww` → commit. `train:ww` runs the NN training **and** then the 5-fold benchmark + probability calibration fit as a single step (no separate `calibrate:ww`). Both `nnWeights.ts` and `calibrationData.ts` are regenerated and must be committed together.
+**Adding data**: Edit raw files → (optional) `npm run ww:validate <file>.data` to sanity-check before merging → `npm run ww:encode` → `npm run ww:train` → commit. `ww:train` runs the NN training **and** then the 5-fold benchmark + probability calibration fit as a single step (no separate calibrate step). Both `nnWeights.ts` and `calibrationData.ts` are regenerated and must be committed together.
+
+`ww:validate` is a pre-merge sanity check for a new raw file: parses it against the existing baseline, flags unknown heroes, reports distribution drift (left-win rate, sweep rate, draws), lists per-hero win-rate shifts, and runs a held-out prediction check to compare its predictability against 5-fold CV accuracy. Optional but useful for catching typos or mislabeled matches before training.
 
 **localStorage**: `stargazer.wandwars.records` — recorded match results.
 
@@ -108,7 +110,7 @@ Raw model probabilities are **miscalibrated** — a model saying "80% left wins"
 - Breakdown fields inside recommendation cards (synergy %, λ, contextual win rate, etc.) — these are hero-level or component stats, not matchup predictions.
 - Pair/trio records, hero stats, counter matrix — analysis layer, untouched.
 
-**Regeneration**: fully automatic as part of `npm run train:ww`. The command first trains the NN on full data (and writes `nnWeights.ts`), then runs the benchmark + calibration fit (and writes `calibrationData.ts`). Both files must be committed together.
+**Regeneration**: fully automatic as part of `npm run ww:train`. The command first trains the NN on full data (and writes `nnWeights.ts`), then runs the benchmark + calibration fit (and writes `calibrationData.ts`). Both files must be committed together.
 
 ### Hero Exclusion
 
@@ -287,7 +289,7 @@ Hero embeddings (87×16) → team sum → difference → Dense(16) → ReLU → 
 
 Each hero gets a 16-dimensional learned "profile" vector. Team representation = sum of hero embeddings. Prediction uses the difference between team embeddings, so swapping sides correctly flips the probability.
 
-~1,700 parameters total — conceptually a generalization of Bradley-Terry from 1-dim strength to 16-dim profiles. Implemented in pure TypeScript with no external ML libraries (zero bundle bloat). Trained offline via `npm run train:ww`, weights committed as `nnWeights.ts`.
+~1,700 parameters total — conceptually a generalization of Bradley-Terry from 1-dim strength to 16-dim profiles. Implemented in pure TypeScript with no external ML libraries (zero bundle bloat). Trained offline via `npm run ww:train`, weights committed as `nnWeights.ts`.
 
 #### Training
 
@@ -308,7 +310,7 @@ When opponents are unknown during drafting, the model averages predictions again
 
 #### Retraining
 
-Run `npm run train:ww` after adding new match data. The script runs 10 training rounds with different deterministic seeds, selects the best by validation accuracy, and exports those weights to `nnWeights.ts`. Deterministic — same data always produces the same result. Commit the updated weights file.
+Run `npm run ww:train` after adding new match data. The script runs 10 training rounds with different deterministic seeds, selects the best by validation accuracy, and exports those weights to `nnWeights.ts`. Deterministic — same data always produces the same result. Commit the updated weights file.
 
 #### Future Improvements (2,000+ matches)
 
@@ -336,7 +338,7 @@ Current architecture is constrained by data size (~1,700 params for ~2,000 augme
 
 ### How Models Update With New Data
 
-Popular Pick, Hero Synergy, and Team Power recompute from scratch on every page load. Adaptive ML uses pre-trained weights and requires explicit retraining (`npm run train:ww`). Workflow: add matches → `npm run encode:ww` → `npm run train:ww` → commit.
+Popular Pick, Hero Synergy, and Team Power recompute from scratch on every page load. Adaptive ML uses pre-trained weights and requires explicit retraining (`npm run ww:train`). Workflow: add matches → `npm run ww:encode` → `npm run ww:train` → commit.
 
 | Matches | Popular Pick                                  | Hero Synergy (Composite)                          | Bradley-Terry                             | Adaptive ML                                                  |
 | ------- | --------------------------------------------- | ------------------------------------------------- | ----------------------------------------- | ------------------------------------------------------------ |
@@ -433,7 +435,7 @@ Team counter badges are displayed before per-hero counter indicators (strong/wea
 
 ## 7. Benchmark + Calibration (5-Fold Cross-Validation)
 
-The benchmark runs **automatically** as part of `npm run train:ww` (second phase, after NN training). It drives two artifacts at once: a reproducible accuracy/Brier table and the per-model calibration tables plus confidence thresholds written to `calibrationData.ts`.
+The benchmark runs **automatically** as part of `npm run ww:train` (second phase, after NN training). It drives two artifacts at once: a reproducible accuracy/Brier table and the per-model calibration tables plus confidence thresholds written to `calibrationData.ts`.
 
 ### What It Measures
 
@@ -462,7 +464,7 @@ The resulting maps are written to `src/wandwars/prediction/calibrationData.ts` a
 
 Earlier benchmarks trained Adaptive ML once on the full dataset and then measured its accuracy on held-out folds — giving it an unfair advantage because the NN had seen every match during training. The current benchmark **retrains the NN from scratch per fold** (~0.1–0.3s per fold — fast because the net is tiny and early-stopping patience fires quickly). Adaptive ML's numbers dropped accordingly but are now comparable with the other three models.
 
-Bradley-Terry gets the same per-fold treatment: fit once on each fold's training data (~0.25s per fold) and reuse across all test-match predictions in that fold. An earlier iteration of the benchmark refit B-T inside `predictMatchup` on every call, doing ~1,125 refits per run; caching the fit dropped total `train:ww` time from ~100s to ~7s without changing any output.
+Bradley-Terry gets the same per-fold treatment: fit once on each fold's training data (~0.25s per fold) and reuse across all test-match predictions in that fold. An earlier iteration of the benchmark refit B-T inside `predictMatchup` on every call, doing ~1,125 refits per run; caching the fit dropped total `ww:train` time from ~100s to ~7s without changing any output.
 
 **Lower number ≠ worse model.** The NN itself didn't change between the old and new benchmarks — only the evaluation did. The old 61.5% was a leaky measurement: the NN had already nudged each hero's embedding in the direction of the test matches before being asked to predict them. The new 55.2% reflects what actually happens in real use — predicting a match the model has never seen. 55.2% is the accuracy users will actually experience; 61.5% never described the real product, it described a flawed measurement.
 
@@ -481,7 +483,7 @@ Combined with probability calibration, the net effect is that predictions are **
 
 Calibration lowered Brier score on all four models and the aggregate. Aggregate reliability post-calibration: most bins within ±5% of their predicted probability (see `benchmark.ts` reliability diagram output).
 
-Adaptive ML's apparent accuracy drop (from the earlier reported 61.5% to ~55%) is the honest cost of per-fold retraining — the NN is also trained on fewer samples per fold and runs only once with its default seed. Numbers fluctuate slightly (±1–2%) across `train:ww` runs due to NN training stochasticity even with deterministic seeds.
+Adaptive ML's apparent accuracy drop (from the earlier reported 61.5% to ~55%) is the honest cost of per-fold retraining — the NN is also trained on fewer samples per fold and runs only once with its default seed. Numbers fluctuate slightly (±1–2%) across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
 
 ### Confidence Thresholds (tuned on this dataset)
 
@@ -492,7 +494,7 @@ From the 2026-04-18 run:
 | High   | ≥ 0.18            | ≤ 0.20       | 77.9%              | 9.2%     |
 | Medium | ≥ 0.08            | ≤ 0.20       | 66.3%              | 42.0%    |
 
-"Coverage" is the fraction of held-out matchups that qualify for the badge. Expect most matchups in the UI to show low/medium, with rare high — the inversion of the old behavior. Thresholds are re-tuned on every `train:ww` and will shift as the dataset grows.
+"Coverage" is the fraction of held-out matchups that qualify for the badge. Expect most matchups in the UI to show low/medium, with rare high — the inversion of the old behavior. Thresholds are re-tuned on every `ww:train` and will shift as the dataset grows.
 
 ### Aggregate Weights (tuned against calibrated benchmark)
 
@@ -529,7 +531,7 @@ Three honest scenarios as data grows:
 2. **Everyone plateaus together** around 60–65%: the game has irreducible noise (RNG, skill, meta shifts) that caps all models. The NN's extra capacity doesn't help because there's no more signal to extract.
 3. **NN stays behind:** the hand-crafted priors (Bayesian smoothing, L2-regularized strength, pairwise synergy) turn out to be well-matched to this problem, and the NN's flexibility is mostly fitting noise.
 
-We can't tell which is happening yet. **Every `train:ww` run prints the gap — watch whether Adaptive ML closes on the other three as data grows.** If the gap closes meaningfully over the next 500–1,000 matches, scenario 1. If it doesn't, revisit the "Future Improvements" bullets in §5 (bigger embeddings, deeper network, separate offense/defense embeddings) before concluding scenario 3. If the gap closes but everyone plateaus, adjust the aggregate weights to reflect reality rather than the original hypothesis.
+We can't tell which is happening yet. **Every `ww:train` run prints the gap — watch whether Adaptive ML closes on the other three as data grows.** If the gap closes meaningfully over the next 500–1,000 matches, scenario 1. If it doesn't, revisit the "Future Improvements" bullets in §5 (bigger embeddings, deeper network, separate offense/defense embeddings) before concluding scenario 3. If the gap closes but everyone plateaus, adjust the aggregate weights to reflect reality rather than the original hypothesis.
 
 ## 8. Meta Insights
 
