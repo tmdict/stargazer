@@ -150,8 +150,6 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTa
 </script>
 
 <style scoped>
-/* .picker card chrome moved to shared .ww-card in base.css */
-
 .picker-tabs {
   display: flex;
   gap: var(--spacing-sm);
