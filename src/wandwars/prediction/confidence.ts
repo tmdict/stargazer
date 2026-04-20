@@ -3,15 +3,14 @@
  * Returns a confidence level based on the width of the 95% confidence interval.
  *
  * Narrower interval = more confident in the estimate.
- * - High ("rich data"):   interval width < 0.20 (tight estimate, ~36+ matches near 50%)
- * - Medium ("moderate"):  interval width < 0.35 (~12–15 matches near 50%)
+ * - High ("rich data"):   interval width < 0.20 (~36+ matches near 50% WR)
+ * - Medium ("moderate"):  interval width < 0.35 (~12–15 matches near 50% WR)
  * - Low ("sparse"):       wide interval or too few samples
  *
- * Thresholds were tightened from 0.3/0.5 at ~1,250 matches because the
- * looser bar made nearly every hero read "rich". Revisit and tighten again
- * at major dataset doublings (e.g. ~5,000 matches) — the absolute Wilson
- * interpretation doesn't change with dataset size, but the distribution of
- * heroes across the bands does.
+ * Wilson is absolute — these thresholds don't change with dataset size, but
+ * the distribution of heroes across the three bands does. Revisit thresholds
+ * at major dataset doublings (e.g. ~5,000 matches) if most heroes drift into
+ * a single band.
  */
 const HIGH_WIDTH = 0.2
 const MEDIUM_WIDTH = 0.35

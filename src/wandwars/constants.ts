@@ -128,9 +128,7 @@ export function metaMinPairSweeps(totalMatches: number): number {
 /**
  * Adaptive aggregate-model weights, scaled by dataset size. Used by both
  * the match-prediction aggregate (`recommend.ts`) and the Suggested Teams
- * scoring (`teamSuggestions.ts`). Keep this single source of truth — the
- * two call sites used to duplicate the ramp and drifted whenever one was
- * updated but not the other.
+ * scoring (`teamSuggestions.ts`).
  *
  * Low data → Popular Pick dominates (works from day one).
  * 100+ matches → Hero Synergy + Team Power hold; Adaptive ML grows modestly.

@@ -1785,8 +1785,6 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 </script>
 
 <style scoped>
-/* .insights-panel card chrome moved to shared .ww-card in base.css;
-   only the flex layout for the inner section list stays component-local. */
 .insights-panel {
   display: flex;
   flex-direction: column;
