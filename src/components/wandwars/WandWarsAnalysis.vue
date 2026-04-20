@@ -1089,9 +1089,8 @@ const aggregatePrediction = computed(() => {
   font-size: 0.7em;
 }
 
-/* .analysis card chrome moved to shared .ww-card in base.css.
-   Flex/overflow rules below govern the pinned-tabs + scrollable
-   tab-content layout and stay component-local. */
+/* Flex layout for pinned tabs + scrollable tab-content.
+   Card chrome comes from the shared .ww-card class (base.css). */
 .analysis {
   display: flex;
   flex-direction: column;

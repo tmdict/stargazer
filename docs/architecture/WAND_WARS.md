@@ -72,7 +72,7 @@ WandWars shows two semantically different "high/medium/low" badges. They share v
 - Per-model badges (on the individual model cards) use distance-from-50% only — single-model predictions can't measure agreement.
 - Implemented in `recommend.ts`.
 
-**2. Hero data depth** — on per-hero recommendation cards while drafting. Reflects how many matches the hero has been in; unchanged from the original Wilson score.
+**2. Hero data depth** — on per-hero recommendation cards while drafting. Reflects how many matches the hero has been in, using a Wilson 95% CI width on the hero's weighted win/loss record.
 
 ```
 Wilson 95% CI width < 0.20 → rich data (high,   ~36+ matches near 50% WR)
@@ -80,16 +80,14 @@ Wilson 95% CI width < 0.35 → moderate data (medium, ~12–15 matches)
 Otherwise (or <3 matches) → sparse data (low)
 ```
 
-Tightened from 0.3/0.5 at ~1,250 matches because the looser thresholds meant nearly every hero read as "rich data" — the badge had lost its power to distinguish well-measured from less-measured heroes. Wilson's absolute interpretation is dataset-size-independent; the distribution of heroes across the three bands is what shifts as data grows. Revisit thresholds at major dataset doublings (e.g. ~5,000 matches).
+Wilson is absolute — these thresholds don't change with dataset size, but the distribution of heroes across the three bands does. Revisit thresholds at major dataset doublings (e.g. ~5,000 matches) if most heroes drift into a single band.
 
 - Displayed under "Rich / Moderate / Sparse data" tooltip copy to distinguish from match-prediction confidence.
-- Still computed per-hero in `confidence.ts` via Wilson score on weighted wins, consumed by `modelUtils.ts`'s `getHeroWilsonConfidence`.
-
-The two badges were previously conflated under a single Wilson-score "confidence" label, which misled users into treating "high confidence" as a match-prediction reliability signal when it was really a data-depth signal.
+- Computed per-hero in `confidence.ts` via Wilson score on weighted wins, consumed by `modelUtils.ts`'s `getHeroWilsonConfidence`.
 
 ### Probability Calibration (calibration.ts + calibrationData.ts)
 
-Raw model probabilities are **miscalibrated** — a model saying "80% left wins" historically hit ~60%, inflating user expectations. Each model's output is mapped through a per-model calibration table before display.
+Raw model probabilities are **miscalibrated** — without calibration, a model saying "80% left wins" hits ~60% empirically. Each model's output is mapped through a per-model calibration table before display.
 
 **How it's fit** (`scripts/benchmark.ts`):
 
@@ -378,8 +376,6 @@ Scored by aggregating all four prediction models — can evaluate any hero combi
 
 Scores are combined with the same adaptive weights as the 2-teammate case. Enumerating ~3–5k trios (for 1 known teammate among ~87 heroes) stays well under 100ms because every scorer is O(1) lookups or a single forward pass — no per-trio model refits.
 
-Previously the 1-teammate case used NN only, which was problematic given the NN's current CV accuracy. The ensemble approach closes that gap.
-
 - Deduplicated against exact trios (won't repeat data-backed teams)
 - Dashed border, predicted win rate displayed (muted, to distinguish from real W/L records)
 - Up to 3 shown, sorted by NN-predicted win rate
@@ -462,15 +458,13 @@ After collecting `(rawProb, actual)` pairs per model, the benchmark fits a calib
 
 The resulting maps are written to `src/wandwars/prediction/calibrationData.ts` and applied at runtime via `calibrate(modelId, rawProb)` in `calibration.ts`. Confidence thresholds (`CONFIDENCE_THRESHOLDS`) are grid-searched on the calibrated held-out aggregate predictions so "high confidence" hits ≥ 75% accuracy and "medium" ≥ 65%.
 
-### Honest NN Caveat (Resolved)
+### Honest Per-Fold Training
 
-Earlier benchmarks trained Adaptive ML once on the full dataset and then measured its accuracy on held-out folds — giving it an unfair advantage because the NN had seen every match during training. The current benchmark **retrains the NN from scratch per fold** (~0.1–0.3s per fold — fast because the net is tiny and early-stopping patience fires quickly). Adaptive ML's numbers dropped accordingly but are now comparable with the other three models.
+Adaptive ML is retrained from scratch on each fold's training data (~0.1–0.3s per fold — fast because the net is tiny and early-stopping patience fires quickly). Without per-fold retraining, the NN would have seen the test matches during training, inflating its measured accuracy.
 
-Bradley-Terry gets the same per-fold treatment: fit once on each fold's training data (~0.25s per fold) and reuse across all test-match predictions in that fold. An earlier iteration of the benchmark refit B-T inside `predictMatchup` on every call, doing ~1,125 refits per run; caching the fit dropped total `ww:train` time from ~100s to ~7s without changing any output.
+Bradley-Terry gets the same per-fold treatment: fit once per fold (~0.25s) on training-only data and reused across all that fold's test-match predictions — one fit instead of one per `predictMatchup` call.
 
-**Lower number ≠ worse model.** The NN itself didn't change between the old and new benchmarks — only the evaluation did. The old 61.5% was a leaky measurement: the NN had already nudged each hero's embedding in the direction of the test matches before being asked to predict them. The new 55.2% reflects what actually happens in real use — predicting a match the model has never seen. 55.2% is the accuracy users will actually experience; 61.5% never described the real product, it described a flawed measurement.
-
-Combined with probability calibration, the net effect is that predictions are **less flashy but more trustworthy**: the headline accuracy is lower, but when the UI says 70% the model has historically hit ~70% in that bucket (verified by the reliability diagram). For decision-making, a calibrated 70% beats an overconfident 82% every time.
+**Lower headline accuracy ≠ worse model.** Honest CV on this dataset puts Adaptive ML near 55% (vs. 58–59% for the hand-crafted models), but those numbers reflect what users actually experience — no leakage, no inflation. Combined with probability calibration, predictions are **less flashy but more trustworthy**: when the UI says 70%, the model has historically hit ~70% in that bucket (verified by the reliability diagram). A calibrated 70% beats an overconfident 82% every time.
 
 ### Results — 2026-04-18 (1,146 matches, 1,132 decisive, 87 heroes)
 
@@ -485,7 +479,7 @@ Combined with probability calibration, the net effect is that predictions are **
 
 Calibration lowered Brier score on all four models and the aggregate. Aggregate reliability post-calibration: most bins within ±5% of their predicted probability (see `benchmark.ts` reliability diagram output).
 
-Adaptive ML's apparent accuracy drop (from the earlier reported 61.5% to ~55%) is the honest cost of per-fold retraining — the NN is also trained on fewer samples per fold and runs only once with its default seed. Numbers fluctuate slightly (±1–2%) across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
+Adaptive ML sits near 55% in honest CV — trained on only 80% of the data per fold with a single seed, so it lands lower than the hand-crafted models. Numbers fluctuate ±1–2% across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
 
 ### Confidence Thresholds (tuned on this dataset)
 
@@ -496,7 +490,7 @@ From the 2026-04-18 run:
 | High   | ≥ 0.18            | ≤ 0.20       | 77.9%              | 9.2%     |
 | Medium | ≥ 0.08            | ≤ 0.20       | 66.3%              | 42.0%    |
 
-"Coverage" is the fraction of held-out matchups that qualify for the badge. Expect most matchups in the UI to show low/medium, with rare high — the inversion of the old behavior. Thresholds are re-tuned on every `ww:train` and will shift as the dataset grows.
+"Coverage" is the fraction of held-out matchups that qualify for the badge. Most matchups in the UI show low/medium, with rare high — keeping the "high confidence" signal meaningful. Thresholds are re-tuned on every `ww:train` and will shift as the dataset grows.
 
 ### Aggregate Weights (tuned against calibrated benchmark)
 
