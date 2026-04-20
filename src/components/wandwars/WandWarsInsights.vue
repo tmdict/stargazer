@@ -1777,7 +1777,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 
 <style scoped>
 .insights-panel {
-  background: var(--color-bg-white);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-large);
   padding: var(--spacing-lg);
@@ -1833,7 +1833,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  background: #ebebee;
+  background: var(--color-bg-light-gray);
   padding: var(--spacing-md);
   border-radius: var(--radius-medium);
 }

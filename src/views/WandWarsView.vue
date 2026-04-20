@@ -232,7 +232,11 @@ function handleExport() {
   margin: 0 auto;
   padding: var(--spacing-lg) var(--spacing-xl);
   min-height: 100vh;
-  background: var(--color-bg-primary);
+  /* Match the main app's backdrop — same dark chrome color used by
+     <body> and #app in base.css. Picker/analysis/insights sit on top
+     as elevated cards. To revert to the single-card look, swap this
+     for: background: var(--color-bg-primary); */
+  background: #20232a;
 }
 
 .wandwars-layout {

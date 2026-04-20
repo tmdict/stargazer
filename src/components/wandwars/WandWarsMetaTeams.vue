@@ -410,7 +410,7 @@ const sortedTeamRows = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
-  background: #ebebee;
+  background: var(--color-bg-light-gray);
   padding: var(--spacing-md);
   border-radius: var(--radius-medium);
 }
