@@ -257,23 +257,19 @@ function handleExport() {
   flex-direction: column;
 }
 
-/* When the match prediction view is showing (all 6 heroes picked), size
-   the column to its content — no fixed height, no inner scrollbar, no
-   trailing whitespace below the record form. */
-.wandwars-right:has(.matchup-section) {
-  min-height: 0;
-  max-height: none;
-}
-
-/* Meta insights pages (Units / Teams / Synergy) have variable-length
-   section lists and their own internal layout; don't apply the fixed-size
-   + inner-scroll treatment meant for the drafting view. Let the column
-   size to content. */
+/* Release the column's fixed-height cap in layouts that size to content:
+   - `.matchup-section` → full match prediction view (all 6 picked) where
+     the matchup cards + record form should flow without an inner scrollbar
+   - `.insights-panel` → meta pages (Units / Teams / Synergy) with their
+     own variable-length section layout */
+.wandwars-right:has(.matchup-section),
 .wandwars-right:has(.insights-panel) {
   min-height: 0;
   max-height: none;
 }
 
+/* Insights panel owns its own flex/overflow rules — don't force child to
+   stretch-fill like the drafting analysis panel does. */
 .wandwars-right:has(.insights-panel) > * {
   flex: initial;
   min-height: initial;
