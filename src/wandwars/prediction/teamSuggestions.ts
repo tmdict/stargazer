@@ -1,3 +1,4 @@
+import { getAdaptiveAggregateWeights } from '../constants'
 import type { AnalysisData, MatchResult } from '../types'
 import { adaptiveMLModel, predictVsAverage as nnPredictVsAverage } from './adaptiveML'
 import { bradleyTerryModel, getCachedBradleyTerryFit, type BradleyTerryFit } from './bradleyTerry'
@@ -65,32 +66,6 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
   }
 
   return results
-}
-
-/**
- * Adaptive weights matching the aggregate match prediction weights from recommend.ts.
- * Keep these in sync with `getAdaptiveWeights` there.
- */
-function getModelWeights(matchCount: number): Record<string, number> {
-  if (matchCount < 20) {
-    return { 'popular-pick': 0.55, composite: 0.3, 'bradley-terry': 0.1, 'adaptive-ml': 0.05 }
-  }
-  if (matchCount <= 100) {
-    const t = (matchCount - 20) / 80
-    return {
-      'popular-pick': 0.55 - 0.25 * t,
-      composite: 0.3,
-      'bradley-terry': 0.1 + 0.15 * t,
-      'adaptive-ml': 0.05 + 0.1 * t,
-    }
-  }
-  const t = Math.min(1, (matchCount - 100) / 400)
-  return {
-    'popular-pick': 0.3 - 0.05 * t,
-    composite: 0.3,
-    'bradley-terry': 0.25,
-    'adaptive-ml': 0.15 + 0.05 * t,
-  }
 }
 
 // ---- Per-model "team quality" scoring for the 1-teammate case ----
@@ -175,7 +150,7 @@ function popularPickTeamQuality(team: [string, string, string], analysis: Analys
 function aggregateThirdPickScores(teammates: string[], available: string[]): Map<string, number> {
   const analysis = getAnalysisData()
   const matches = getMatchData()
-  const weights = getModelWeights(matches.length)
+  const weights = getAdaptiveAggregateWeights(matches.length)
 
   const models = [
     { id: 'popular-pick', model: popularPickModel },
@@ -229,7 +204,7 @@ function getConstructedTeams(
     // ~3–5k trios stays well under 100ms.
     const analysis = getAnalysisData()
     const matches = getMatchData()
-    const weights = getModelWeights(matches.length)
+    const weights = getAdaptiveAggregateWeights(matches.length)
     const btFit = getCachedBradleyTerryFit(matches, analysis)
     const avgStrength =
       [...btFit.strengths.values()].reduce((s, v) => s + v, 0) / btFit.strengths.size

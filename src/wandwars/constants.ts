@@ -46,6 +46,17 @@ export const SAMPLE_BONUS_FULL = 20
 // Meta analysis thresholds
 export const META_BAYESIAN_PRIOR = 3.0
 
+/** Win-rate threshold for "notably strong" hero / pair / predicted-team insights. */
+export const INSIGHT_NOTABLE_WINRATE = 0.55
+/** Max deviation from 50% for a win rate to count as "balanced". */
+export const INSIGHT_BALANCED_TOLERANCE = 0.03
+/** Min deviation from 50% for composition-pattern insights (class, damage type, range) to surface. */
+export const INSIGHT_NOTABLE_DEVIATION = 0.05
+/** Pair synergy score threshold — positive for "strong synergy", negated for "strong clash". */
+export const INSIGHT_SYNERGY_NOTABLE = 0.05
+/** Pair synergy score threshold for softer "clashing pair" callouts. */
+export const INSIGHT_SYNERGY_CLASH = 0.03
+
 /**
  * Minimum match count to surface a pair-level insight (synergy, counter,
  * undefeated pair, etc.). sqrt-scaled with the dataset — at ~1,250 matches
@@ -112,6 +123,39 @@ export function metaMinTeamMatchesTable(totalMatches: number): number {
  */
 export function metaMinPairSweeps(totalMatches: number): number {
   return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 10))
+}
+
+/**
+ * Adaptive aggregate-model weights, scaled by dataset size. Used by both
+ * the match-prediction aggregate (`recommend.ts`) and the Suggested Teams
+ * scoring (`teamSuggestions.ts`). Keep this single source of truth — the
+ * two call sites used to duplicate the ramp and drifted whenever one was
+ * updated but not the other.
+ *
+ * Low data → Popular Pick dominates (works from day one).
+ * 100+ matches → Hero Synergy + Team Power hold; Adaptive ML grows modestly.
+ * See docs/architecture/WAND_WARS.md §7 "Aggregate Weights" for the table.
+ */
+export function getAdaptiveAggregateWeights(matchCount: number): Record<string, number> {
+  if (matchCount < 20) {
+    return { 'popular-pick': 0.55, composite: 0.3, 'bradley-terry': 0.1, 'adaptive-ml': 0.05 }
+  }
+  if (matchCount <= 100) {
+    const t = (matchCount - 20) / 80
+    return {
+      'popular-pick': 0.55 - 0.25 * t,
+      composite: 0.3,
+      'bradley-terry': 0.1 + 0.15 * t,
+      'adaptive-ml': 0.05 + 0.1 * t,
+    }
+  }
+  const t = Math.min(1, (matchCount - 100) / 400)
+  return {
+    'popular-pick': 0.3 - 0.05 * t,
+    composite: 0.3,
+    'bradley-terry': 0.25,
+    'adaptive-ml': 0.15 + 0.05 * t,
+  }
 }
 
 // Pool-screenshot detection (poolDetect.ts).

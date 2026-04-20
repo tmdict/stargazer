@@ -1,5 +1,5 @@
 <template>
-  <div class="insights-panel">
+  <div class="insights-panel ww-card">
     <div v-if="totalMatches < 5" class="empty-state">
       {{ i18n.t('wandwars.messages/not-enough-data-insights') }}
     </div>
@@ -343,6 +343,11 @@ import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import {
+  INSIGHT_BALANCED_TOLERANCE,
+  INSIGHT_NOTABLE_DEVIATION,
+  INSIGHT_NOTABLE_WINRATE,
+  INSIGHT_SYNERGY_CLASH,
+  INSIGHT_SYNERGY_NOTABLE,
   META_BAYESIAN_PRIOR,
   metaMinPairMatches,
   metaMinPairSweeps,
@@ -531,7 +536,7 @@ const bestOpeners = computed(() => {
     if (total < 3) continue
     const winRate =
       (s.weightedWins + META_BAYESIAN_PRIOR) / (s.weightedTotal + 2 * META_BAYESIAN_PRIOR)
-    if (winRate < 0.55) continue
+    if (winRate < INSIGHT_NOTABLE_WINRATE) continue
     results.push({ hero, wins: s.wins, losses: s.losses, winRate })
   }
   return results.sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
@@ -939,7 +944,7 @@ const insights = computed(() => {
 
   const avgMatches = allHeroes.reduce((sum, h) => sum + h.matches, 0) / allHeroes.length
   const hiddenGem = [...reliableHeroes]
-    .filter((h) => h.matches < avgMatches * 0.7 && h.winRate > 0.55)
+    .filter((h) => h.matches < avgMatches * 0.7 && h.winRate > INSIGHT_NOTABLE_WINRATE)
     .sort((a, b) => b.winRate - a.winRate)[0]
   if (hiddenGem) {
     add(
@@ -981,7 +986,7 @@ const insights = computed(() => {
   const mostBalanced = [...reliableHeroes]
     .filter((h) => h.matches >= 8)
     .sort((a, b) => Math.abs(a.winRate - 0.5) - Math.abs(b.winRate - 0.5))[0]
-  if (mostBalanced && Math.abs(mostBalanced.winRate - 0.5) < 0.03) {
+  if (mostBalanced && Math.abs(mostBalanced.winRate - 0.5) < INSIGHT_BALANCED_TOLERANCE) {
     add(
       result,
       'units',
@@ -1005,7 +1010,11 @@ const insights = computed(() => {
 
   // Second best/worst win rates
   const secondBest = [...reliableHeroes].sort((a, b) => b.winRate - a.winRate)[1]
-  if (secondBest && secondBest.name !== topHero?.name && secondBest.winRate > 0.55) {
+  if (
+    secondBest &&
+    secondBest.name !== topHero?.name &&
+    secondBest.winRate > INSIGHT_NOTABLE_WINRATE
+  ) {
     add(
       result,
       'units',
@@ -1356,7 +1365,7 @@ const insights = computed(() => {
   const decisiveCount = leftWins + rightWins
   if (decisiveCount >= 10) {
     const leftRate = leftWins / decisiveCount
-    if (Math.abs(leftRate - 0.5) > 0.03) {
+    if (Math.abs(leftRate - 0.5) > INSIGHT_BALANCED_TOLERANCE) {
       const favored = leftRate > 0.5 ? ti('left-first-pick') : i18n.t('wandwars.right')
       const rate = leftRate > 0.5 ? leftRate : 1 - leftRate
       add(
@@ -1398,7 +1407,7 @@ const insights = computed(() => {
 
   // 1. Strongest synergy pair
   const topPair = strongestPairs.value[0]
-  if (topPair && topPair.synergy > 0.05) {
+  if (topPair && topPair.synergy > INSIGHT_SYNERGY_NOTABLE) {
     const diversity = getPairOpponentDiversity(topPair.heroA, topPair.heroB)
     if (diversity.wins >= 3 && diversity.opponents <= 1) {
       add(
@@ -1428,7 +1437,7 @@ const insights = computed(() => {
 
   // 2. Weakest synergy pair
   const worstPair = [...allSynergyPairs].sort((a, b) => a.score - b.score)[0]
-  if (worstPair && worstPair.score < -0.05) {
+  if (worstPair && worstPair.score < -INSIGHT_SYNERGY_NOTABLE) {
     add(
       result,
       'synergy',
@@ -1476,7 +1485,7 @@ const insights = computed(() => {
   // 5. Worst team player (hero in most weak pairs)
   const heroWeakPairCounts: Record<string, number> = {}
   for (const pair of allSynergyPairs) {
-    if (pair.score < -0.03) {
+    if (pair.score < -INSIGHT_SYNERGY_CLASH) {
       heroWeakPairCounts[pair.a] = (heroWeakPairCounts[pair.a] || 0) + 1
       heroWeakPairCounts[pair.b] = (heroWeakPairCounts[pair.b] || 0) + 1
     }
@@ -1509,7 +1518,7 @@ const insights = computed(() => {
 
   // 7. Concentrated synergy warning (cap at 1)
   for (const pair of strongestPairs.value.slice(1, 6)) {
-    if (pair.synergy <= 0.03) continue
+    if (pair.synergy <= INSIGHT_SYNERGY_CLASH) continue
     const diversity = getPairOpponentDiversity(pair.heroA, pair.heroB)
     if (diversity.wins >= 3 && diversity.opponents <= 1) {
       add(
@@ -1654,7 +1663,7 @@ const insights = computed(() => {
       const total = w + l
       if (total < 20) continue
       const rate = w / total
-      if (Math.abs(rate - 0.5) < 0.05) continue // not notable
+      if (Math.abs(rate - 0.5) < INSIGHT_NOTABLE_DEVIATION) continue // not notable
       const target = category === 'class' ? 'units' : 'teams'
       const verb = rate > 0.5 ? ti('overperform') : ti('underperform')
       add(
@@ -1721,7 +1730,7 @@ const insights = computed(() => {
   unexplored.sort((a, b) => b.score - a.score)
   const topUnexplored = unexplored.slice(0, 2)
   for (const pair of topUnexplored) {
-    if (pair.score > 0.55) {
+    if (pair.score > INSIGHT_NOTABLE_WINRATE) {
       const pairMatches = matrix[pair.a]?.[pair.b]?.matches || 0
       const dataNote =
         pairMatches === 0 ? ti('never-played') : ti('few-matches', { matches: pairMatches })
@@ -1776,11 +1785,9 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 </script>
 
 <style scoped>
+/* .insights-panel card chrome moved to shared .ww-card in base.css;
+   only the flex layout for the inner section list stays component-local. */
 .insights-panel {
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-large);
-  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
