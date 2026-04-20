@@ -9,6 +9,14 @@
   --color-ally: #36958e;
   --color-enemy: #c82333;
 
+  /* Status colors (win rates, confidence badges, counter indicators, etc.) */
+  --color-success: #1e7e34;
+  --color-success-bg: #e6f4ea;
+  --color-warning: #f9a825;
+  --color-warning-bg: #fff8e1;
+  --color-error: #c62828;
+  --color-error-bg: #fce4ec;
+
   /* Background Colors */
   --color-bg-primary: #f7f2ec;
   --color-bg-secondary: #ebe6db;

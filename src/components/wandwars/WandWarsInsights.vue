@@ -265,7 +265,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-best-openers') }}
           </p>
         </template>
@@ -277,7 +277,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-best-responses') }}
           </p>
         </template>
@@ -289,7 +289,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-pair-counters') }}
           </p>
         </template>
@@ -301,7 +301,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-dominant-pairs') }}
           </p>
         </template>
@@ -313,7 +313,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-team-counters') }}
           </p>
         </template>
@@ -325,7 +325,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-dominant-teams') }}
           </p>
         </template>
@@ -1973,12 +1973,12 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 }
 
 .wins {
-  color: #1e7e34;
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .losses {
-  color: #c62828;
+  color: var(--color-error);
   font-weight: 600;
 }
 
@@ -2024,7 +2024,7 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
   padding-bottom: var(--spacing-md);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .section-title {
     font-size: 1.05rem;
   }
