@@ -31,8 +31,25 @@ const NN_FOLD_SEED_BASE = 1000
 const MIN_ISOTONIC_SAMPLES = 300
 const MIN_CALIBRATION_SAMPLES = 100
 const TARGET_BINS = 12
-const HIGH_TARGET_ACC = 0.75 // "high confidence" predictions should hit >= this in CV
+
+/**
+ * Tiered accuracy targets for the "high confidence" badge, tried in order.
+ * Each tier has a minimum coverage floor — if no (distance, stddev) bucket
+ * hits the target accuracy with at least that coverage, we fall through to
+ * the next tier. If all tiers fail, the badge is disabled for this run.
+ *
+ * This keeps "high" rare-and-meaningful: we prefer strict accuracy when data
+ * supports it, gracefully degrade to slightly lower accuracy when it doesn't,
+ * and disable the badge entirely rather than let it fire on low-accuracy
+ * predictions users would stop trusting.
+ */
+const HIGH_TIERS: { acc: number; minCoverage: number }[] = [
+  { acc: 0.75, minCoverage: 0.05 },
+  { acc: 0.72, minCoverage: 0.05 },
+  { acc: 0.7, minCoverage: 0.03 },
+]
 const MEDIUM_TARGET_ACC = 0.65
+const MEDIUM_MIN_COVERAGE = 0.1
 
 // ---- seeded RNG for fold shuffling (independent of trainNNCore's RNG) ----
 function seededRandom(seed: number): () => number {
@@ -196,13 +213,20 @@ interface ConfidenceTuning {
 }
 
 /**
- * Tune distance/agreement thresholds so "high" predictions hit >= HIGH_TARGET_ACC
- * on held-out data, using aggregate model predictions as the calibration set.
+ * Tune distance/agreement thresholds for the high and medium confidence
+ * badges against held-out aggregate predictions.
+ *
+ * "High" walks through HIGH_TIERS (descending accuracy targets) and picks
+ * the first tier where some (distance, stddev) bucket clears both the
+ * accuracy target AND the tier's minimum coverage floor. Within a passing
+ * tier, prefer higher coverage so more legitimate-high predictions fire.
+ * If no tier passes, high is disabled (unreachable default thresholds).
+ *
+ * "Medium" is a single tier: MEDIUM_TARGET_ACC with MEDIUM_MIN_COVERAGE.
  */
 function tuneConfidenceThresholds(
   aggregatePairs: { prob: number; stddev: number; actual: number }[],
 ): ConfidenceTuning {
-  // Grid search distance thresholds, pick smallest that hits target accuracy
   const distanceGrid = [0.05, 0.08, 0.1, 0.12, 0.15, 0.18, 0.2, 0.25]
   const stddevGrid = [0.05, 0.08, 0.1, 0.12, 0.15, 0.2]
 
@@ -225,51 +249,62 @@ function tuneConfidenceThresholds(
     }
   }
 
-  // Pick the permissive-est thresholds that still clear HIGH_TARGET_ACC.
-  // Prefer higher coverage (more greens) among those that pass.
-  let best: {
+  interface Found {
     dist: number
     std: number
     acc: number
     coverage: number
-  } = { dist: 0.2, std: 0.08, acc: 0, coverage: 0 }
-  for (const d of distanceGrid) {
-    for (const s of stddevGrid) {
-      const r = bucketAcc(d, s)
-      if (r.n < 20) continue // not enough data to trust
-      if (r.acc >= HIGH_TARGET_ACC && r.coverage > best.coverage) {
-        best = { dist: d, std: s, acc: r.acc, coverage: r.coverage }
-      }
-    }
   }
 
-  // Tune medium thresholds similarly
-  let bestMedium: {
-    dist: number
-    std: number
-    acc: number
-    coverage: number
-  } = { dist: 0.05, std: 0.15, acc: 0, coverage: 0 }
-  for (const d of distanceGrid) {
-    for (const s of stddevGrid) {
-      if (d >= best.dist && s <= best.std) continue // already "high"
-      const r = bucketAcc(d, s)
-      if (r.n < 20) continue
-      if (r.acc >= MEDIUM_TARGET_ACC && r.coverage > bestMedium.coverage) {
-        bestMedium = { dist: d, std: s, acc: r.acc, coverage: r.coverage }
+  function pickBest(
+    targetAcc: number,
+    minCoverage: number,
+    excludeStricterThan?: Found,
+  ): Found | null {
+    let found: Found | null = null
+    for (const d of distanceGrid) {
+      for (const s of stddevGrid) {
+        // When tuning medium: skip combos the high tier already owns (stricter in both dims)
+        if (excludeStricterThan && d >= excludeStricterThan.dist && s <= excludeStricterThan.std) {
+          continue
+        }
+        const r = bucketAcc(d, s)
+        if (r.n < 20) continue
+        if (r.acc < targetAcc || r.coverage < minCoverage) continue
+        if (!found || r.coverage > found.coverage) {
+          found = { dist: d, std: s, acc: r.acc, coverage: r.coverage }
+        }
       }
     }
+    return found
   }
+
+  // Walk through high tiers until one produces a passing bucket.
+  let highPicked: Found | null = null
+  for (const tier of HIGH_TIERS) {
+    highPicked = pickBest(tier.acc, tier.minCoverage)
+    if (highPicked) break
+  }
+
+  // Disabled state: unreachable defaults so no prediction meets "high".
+  const high: Found = highPicked ?? { dist: 0.25, std: 0.05, acc: 0, coverage: 0 }
+
+  // Medium: single tier, excluding what the high tier already owns.
+  const medium: Found = pickBest(
+    MEDIUM_TARGET_ACC,
+    MEDIUM_MIN_COVERAGE,
+    highPicked ?? undefined,
+  ) ?? { dist: 0.05, std: 0.15, acc: 0, coverage: 0 }
 
   return {
-    highDistance: best.dist,
-    mediumDistance: bestMedium.dist,
-    highAgreementStddev: best.std,
-    mediumAgreementStddev: bestMedium.std,
-    highAccuracy: best.acc,
-    mediumAccuracy: bestMedium.acc,
-    highCoverage: best.coverage,
-    mediumCoverage: bestMedium.coverage,
+    highDistance: high.dist,
+    mediumDistance: medium.dist,
+    highAgreementStddev: high.std,
+    mediumAgreementStddev: medium.std,
+    highAccuracy: high.acc,
+    mediumAccuracy: medium.acc,
+    highCoverage: high.coverage,
+    mediumCoverage: medium.coverage,
   }
 }
 
@@ -507,12 +542,24 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
   // ---- Print confidence threshold tuning ----
 
   console.log(`\n----- Confidence thresholds (tuned against CV aggregate) -----`)
-  console.log(
-    `High:   |p-0.5| >= ${tuning.highDistance.toFixed(2)}  AND  stddev <= ${tuning.highAgreementStddev.toFixed(2)}  →  ${(tuning.highAccuracy * 100).toFixed(1)}% acc, ${(tuning.highCoverage * 100).toFixed(1)}% coverage`,
-  )
-  console.log(
-    `Medium: |p-0.5| >= ${tuning.mediumDistance.toFixed(2)}  AND  stddev <= ${tuning.mediumAgreementStddev.toFixed(2)}  →  ${(tuning.mediumAccuracy * 100).toFixed(1)}% acc, ${(tuning.mediumCoverage * 100).toFixed(1)}% coverage`,
-  )
+  if (tuning.highCoverage === 0) {
+    console.log(
+      `High:   DISABLED — no (distance, stddev) bucket cleared any of the tiered accuracy targets`,
+    )
+    console.log(`          with the required coverage floor. Users won't see the high badge until`)
+    console.log(`          calibration improves or HIGH_TIERS is loosened in benchmark.ts.`)
+  } else {
+    console.log(
+      `High:   |p-0.5| >= ${tuning.highDistance.toFixed(2)}  AND  stddev <= ${tuning.highAgreementStddev.toFixed(2)}  →  ${(tuning.highAccuracy * 100).toFixed(1)}% acc, ${(tuning.highCoverage * 100).toFixed(1)}% coverage`,
+    )
+  }
+  if (tuning.mediumCoverage === 0) {
+    console.log(`Medium: DISABLED — below MEDIUM_MIN_COVERAGE floor`)
+  } else {
+    console.log(
+      `Medium: |p-0.5| >= ${tuning.mediumDistance.toFixed(2)}  AND  stddev <= ${tuning.mediumAgreementStddev.toFixed(2)}  →  ${(tuning.mediumAccuracy * 100).toFixed(1)}% acc, ${(tuning.mediumCoverage * 100).toFixed(1)}% coverage`,
+    )
+  }
 
   // ---- Write calibrationData.ts ----
 
