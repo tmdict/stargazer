@@ -133,7 +133,7 @@
                     <span class="losses">{{ pair.losses }}L</span>
                   </span>
                 </td>
-                <td class="col-num" :style="{ color: synergyColor(pair.synergy), fontWeight: 600 }">
+                <td class="col-num col-synergy" :style="{ color: synergyColor(pair.synergy) }">
                   {{ formatSigned(pair.synergy) }}
                 </td>
               </tr>
@@ -208,7 +208,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-opener') }}
           </p>
         </template>
@@ -220,7 +220,7 @@
         max-width="280px"
       >
         <template #content>
-          <p style="margin: 0; font-size: 0.85rem; line-height: 1.4">
+          <p class="ww-tooltip-text">
             {{ i18n.t('wandwars.messages/tooltip-synergy') }}
           </p>
         </template>
@@ -363,8 +363,8 @@ const sortedPairRows = computed(() => {
 })
 
 function synergyColor(value: number): string {
-  if (value >= 0.1) return '#1e7e34'
-  if (value <= -0.1) return '#c62828'
+  if (value >= 0.1) return 'var(--color-success)'
+  if (value <= -0.1) return 'var(--color-error)'
   return 'var(--color-text-secondary)'
 }
 
@@ -504,17 +504,21 @@ td.col-hero {
   font-variant-numeric: tabular-nums;
 }
 
+.col-synergy {
+  font-weight: 600;
+}
+
 .col-static {
   text-align: center;
 }
 
 .wins {
-  color: #1e7e34;
+  color: var(--color-success);
   font-weight: 600;
 }
 
 .losses {
-  color: #c62828;
+  color: var(--color-error);
   font-weight: 600;
 }
 
@@ -541,7 +545,7 @@ td.col-hero {
   color: var(--color-text-primary);
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .section-title {
     font-size: 1.05rem;
   }
@@ -556,7 +560,7 @@ td.col-hero {
   }
 }
 
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .hero-table {
     font-size: 0.85rem;
   }

@@ -141,7 +141,7 @@ function isAvailable(hero: string): boolean {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 0 4px #fff;
+  box-shadow: 0 0 0 4px var(--color-bg-white);
 }
 
 .hero-portrait::before {
@@ -149,7 +149,7 @@ function isAvailable(hero: string): boolean {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  background: #fff4;
+  background: rgba(255, 255, 255, 0.27);
 }
 
 .portrait-img {
@@ -160,7 +160,7 @@ function isAvailable(hero: string): boolean {
   margin-top: 6px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 1280px) {
   .hero-portrait {
     width: 60px;
     height: 60px;
@@ -181,7 +181,7 @@ function isAvailable(hero: string): boolean {
   .hero-portrait {
     width: 50px;
     height: 50px;
-    box-shadow: 0 0 0 3px #fff;
+    box-shadow: 0 0 0 3px var(--color-bg-white);
   }
 
   .portrait-img {

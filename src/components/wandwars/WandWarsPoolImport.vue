@@ -705,7 +705,7 @@ function reset() {
 }
 
 .status-ok {
-  color: #1e7e34;
+  color: var(--color-success);
   font-weight: 700;
 }
 
@@ -743,8 +743,8 @@ function reset() {
 }
 
 .ref-btn.danger:hover {
-  background: #c62828;
-  border-color: #c62828;
+  background: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .train-status {
@@ -900,7 +900,7 @@ function reset() {
 }
 
 .cell.high {
-  border-color: #1e7e34;
+  border-color: var(--color-success);
 }
 
 .cell.medium {
@@ -908,11 +908,11 @@ function reset() {
 }
 
 .cell.low {
-  border-color: #c62828;
+  border-color: var(--color-error);
 }
 
 .cell.unknown {
-  border-color: #c62828;
+  border-color: var(--color-error);
   border-style: dashed;
 }
 
@@ -942,7 +942,7 @@ function reset() {
   width: 20px;
   height: 20px;
   border-radius: 50%;
-  background: #c62828;
+  background: var(--color-error);
   color: white;
   display: inline-flex;
   align-items: center;
@@ -988,8 +988,8 @@ function reset() {
 }
 
 .action-btn.danger:hover {
-  background: #c62828;
-  border-color: #c62828;
+  background: var(--color-error);
+  border-color: var(--color-error);
 }
 
 .picker-overlay {

@@ -299,18 +299,18 @@ const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ??
 }
 
 .confidence-badge.high {
-  background: #e6f4ea;
-  color: #1e7e34;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .confidence-badge.medium {
-  background: #fff8e1;
-  color: #f9a825;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .confidence-badge.low {
-  background: #fce4ec;
-  color: #c62828;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .breakdown {
@@ -345,11 +345,11 @@ const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ??
 }
 
 .breakdown-value.positive {
-  color: #1e7e34;
+  color: var(--color-success);
 }
 
 .breakdown-value.negative {
-  color: #c62828;
+  color: var(--color-error);
 }
 
 .notes {
@@ -365,11 +365,11 @@ const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ??
 }
 
 .pair-wins {
-  color: #1e7e34;
+  color: var(--color-success);
 }
 
 .pair-losses {
-  color: #c62828;
+  color: var(--color-error);
 }
 
 .counter-indicators {
@@ -392,13 +392,13 @@ const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ??
 }
 
 .counter-tag.counters {
-  background: #e6f4ea;
-  color: #1e7e34;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .counter-tag.countered {
-  background: #fce4ec;
-  color: #c62828;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .counter-tag.team-counter {

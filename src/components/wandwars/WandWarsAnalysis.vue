@@ -1236,8 +1236,8 @@ const aggregatePrediction = computed(() => {
 }
 
 .warning-banner {
-  background: #fff8e1;
-  border: 1px solid #f9a825;
+  background: var(--color-warning-bg);
+  border: 1px solid var(--color-warning);
   border-radius: var(--radius-small);
   padding: var(--spacing-sm);
   font-size: 0.75rem;
@@ -1323,18 +1323,18 @@ const aggregatePrediction = computed(() => {
 }
 
 .confidence-badge.high {
-  background: #e6f4ea;
-  color: #1e7e34;
+  background: var(--color-success-bg);
+  color: var(--color-success);
 }
 
 .confidence-badge.medium {
-  background: #fff8e1;
-  color: #f9a825;
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
 }
 
 .confidence-badge.low {
-  background: #fce4ec;
-  color: #c62828;
+  background: var(--color-error-bg);
+  color: var(--color-error);
 }
 
 .matchup-bars {
@@ -1643,7 +1643,7 @@ const aggregatePrediction = computed(() => {
 }
 
 .record-verb.kind-sweeps {
-  color: #c62828;
+  color: var(--color-error);
   font-weight: 700;
 }
 
@@ -1695,15 +1695,15 @@ const aggregatePrediction = computed(() => {
 }
 
 .record-verb.kind-sweeps .record-arrow::before {
-  background: #c62828;
+  background: var(--color-error);
 }
 
 .record-verb.kind-sweeps .record-arrow:not(.reverse)::after {
-  border-left-color: #c62828;
+  border-left-color: var(--color-error);
 }
 
 .record-verb.kind-sweeps .record-arrow.reverse::after {
-  border-right-color: #c62828;
+  border-right-color: var(--color-error);
 }
 
 .record-note {
@@ -1833,9 +1833,9 @@ const aggregatePrediction = computed(() => {
 
 .edit-result-btn.left.dominant.active,
 .edit-result-btn.right.dominant.active {
-  background: #c62828;
+  background: var(--color-error);
   color: white;
-  border-color: #c62828;
+  border-color: var(--color-error);
 }
 
 .edit-result-btn.draw.active {
