@@ -1,5 +1,5 @@
 <template>
-  <div class="analysis">
+  <div class="analysis ww-card">
     <div class="tabs">
       <button
         v-for="tab in tabs"
@@ -1089,11 +1089,10 @@ const aggregatePrediction = computed(() => {
   font-size: 0.7em;
 }
 
+/* .analysis card chrome moved to shared .ww-card in base.css.
+   Flex/overflow rules below govern the pinned-tabs + scrollable
+   tab-content layout and stay component-local. */
 .analysis {
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-border-primary);
-  border-radius: var(--radius-large);
-  padding: var(--spacing-lg);
   display: flex;
   flex-direction: column;
   min-height: 0;

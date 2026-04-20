@@ -192,3 +192,15 @@ main {
 .content {
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
+
+/* WandWars panel card — shared chrome for the picker/analysis/insights
+   column cards. Only covers the "card look" (background, border, radius,
+   padding). Components retain their own flex/overflow/min-height rules
+   since those govern internal layout (pinned tabs, scrollable lists,
+   matchup-section release, etc.). */
+.ww-card {
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-border-primary);
+  border-radius: var(--radius-large);
+  padding: var(--spacing-lg);
+}
