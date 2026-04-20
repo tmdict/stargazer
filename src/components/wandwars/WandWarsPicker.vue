@@ -151,7 +151,7 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTa
 
 <style scoped>
 .picker {
-  background: var(--color-bg-white);
+  background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-large);
   padding: var(--spacing-lg);
