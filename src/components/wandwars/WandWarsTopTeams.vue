@@ -201,11 +201,11 @@ function orderedTeam(team: string[]): string[] {
 }
 
 .team-wins {
-  color: #1e7e34;
+  color: var(--color-success);
 }
 
 .team-losses {
-  color: #c62828;
+  color: var(--color-error);
 }
 
 .team-draws {
