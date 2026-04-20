@@ -466,31 +466,48 @@ Bradley-Terry gets the same per-fold treatment: fit once per fold (~0.25s) on tr
 
 **Lower headline accuracy ≠ worse model.** Honest CV on this dataset puts Adaptive ML near 55% (vs. 58–59% for the hand-crafted models), but those numbers reflect what users actually experience — no leakage, no inflation. Combined with probability calibration, predictions are **less flashy but more trustworthy**: when the UI says 70%, the model has historically hit ~70% in that bucket (verified by the reliability diagram). A calibrated 70% beats an overconfident 82% every time.
 
-### Results — 2026-04-18 (1,146 matches, 1,132 decisive, 87 heroes)
+### Results — 2026-04-20 (1,465 matches, 1,438 decisive, 87 heroes)
 
 | Model         | Accuracy  | Brier (raw) | Brier (calibrated) | Calibration    |
 | ------------- | --------- | ----------- | ------------------ | -------------- |
-| Popular Pick  | 57.9%     | 0.2418      | **0.2387 ↓**       | isotonic       |
-| Hero Synergy  | 59.0%     | 0.2431      | **0.2375 ↓**       | isotonic       |
-| Team Power    | 58.1%     | 0.2413      | **0.2393 ↓**       | isotonic       |
-| Adaptive ML   | 54.9%     | 0.2583      | **0.2480 ↓**       | isotonic       |
-| **Aggregate** | **58.0%** | —           | **0.2368**         | (blended)      |
+| Popular Pick  | 57.0%     | 0.2446      | **0.2461 ↑**       | isotonic       |
+| Hero Synergy  | 59.5%     | 0.2436      | **0.2377 ↓**       | isotonic       |
+| Team Power    | 57.0%     | 0.2441      | **0.2429 ↓**       | isotonic       |
+| Adaptive ML   | 57.1%     | 0.2556      | **0.2429 ↓**       | isotonic       |
+| **Aggregate** | **57.6%** | —           | **0.2394**         | (blended)      |
 | _Baseline_    | _53.6%_   | —           | —                  | _predict left_ |
 
-Calibration lowered Brier score on all four models and the aggregate. Aggregate reliability post-calibration: most bins within ±5% of their predicted probability (see `benchmark.ts` reliability diagram output).
+Calibration lowered Brier on three of the four models and the aggregate. Aggregate reliability post-calibration: most bins within ±4% of their predicted probability (see `benchmark.ts` reliability diagram output).
 
-Adaptive ML sits near 55% in honest CV — trained on only 80% of the data per fold with a single seed, so it lands lower than the hand-crafted models. Numbers fluctuate ±1–2% across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
+**Adaptive ML closed the gap.** The NN jumped from ~55% to 57.1% as the dataset grew, now within a point of the hand-crafted models — the first sign of the "bet on the NN at scale" hypothesis paying out. Not decisively ahead yet; the three-way cluster at 57.0–57.1% and Hero Synergy alone at 59.5% suggests no single model dominates at this size.
+
+**Popular Pick's calibration regressed slightly** (0.2446 → 0.2461). A mild sign of isotonic-regression overfit on its CV output at this dataset size — the raw output was already reasonably calibrated for Popular Pick, and the isotonic fit added noise. Worth watching; if it persists across future runs, consider Platt fallback for Popular Pick even above 300 samples.
+
+Numbers fluctuate ±1–2% across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
 
 ### Confidence Thresholds (tuned on this dataset)
 
-From the 2026-04-18 run:
+From the 2026-04-20 run:
 
 | Badge  | Distance from 50% | Model stddev | Empirical accuracy | Coverage |
 | ------ | ----------------- | ------------ | ------------------ | -------- |
-| High   | ≥ 0.18            | ≤ 0.20       | 77.9%              | 9.2%     |
-| Medium | ≥ 0.08            | ≤ 0.20       | 66.3%              | 42.0%    |
+| High   | ≥ 0.20            | ≤ 0.15       | 70.1%              | 8.1%     |
+| Medium | ≥ 0.08            | ≤ 0.20       | 65.1%              | 40.8%    |
 
-"Coverage" is the fraction of held-out matchups that qualify for the badge. Most matchups in the UI show low/medium, with rare high — keeping the "high confidence" signal meaningful. Thresholds are re-tuned on every `ww:train` and will shift as the dataset grows.
+"Coverage" is the fraction of held-out matchups that qualify for the badge. High stays rare (~1 in 12 predictions) and empirically hits 70% — above medium's 65% and well above the 53.6% coin-flip baseline. Medium holds at ~65% accuracy with 40.8% coverage.
+
+### Tiered Tuning for the High Badge
+
+`benchmark.ts` walks through an ordered list of (accuracy target, minimum coverage floor) tiers and picks the first one where some (distance, stddev) bucket clears both the accuracy target and the coverage floor. If all tiers fail, **high is disabled entirely** for that run — badge never fires, UI collapses to low/medium. That's the explicit tradeoff: better to not show a "high confidence" badge than to show one backed by sub-70% accuracy.
+
+Current tiers (in `HIGH_TIERS` at the top of `benchmark.ts`):
+
+1. 75% accuracy, ≥ 5% coverage — preferred, only fires at higher dataset sizes
+2. 72% accuracy, ≥ 5% coverage — interim
+3. 70% accuracy, ≥ 3% coverage — current run's tier
+4. (none pass) — badge disabled
+
+Each run prints which tier won or whether high was disabled. Adjust the tier list if the data shifts — e.g., if `HIGH_TIERS[0]` consistently passes once you have 3,000+ matches, drop tier 3 so the bar stays high.
 
 ### Aggregate Weights (tuned against calibrated benchmark)
 
@@ -510,24 +527,24 @@ These weights are mirrored in `teamSuggestions.ts` (Suggested Teams scoring) —
 
 The weights above assume the NN eventually outperforms the hand-crafted models. That was the design bet, grounded in ML theory — a flexible model with 16-dim learned embeddings _should_ discover nonlinear hero interactions and multi-way patterns that Bradley-Terry's additive strengths and Composite's pairwise synergy can't capture.
 
-**But the current benchmark does not support this.** At 1,146 matches:
+**The gap is closing.** At 1,465 matches:
 
-| Model           | Accuracy  | Gap vs baseline (53.6%) |
-| --------------- | --------- | ----------------------- |
-| Hero Synergy    | 59.1%     | +5.5%                   |
-| Popular Pick    | 59.0%     | +5.4%                   |
-| Team Power      | 58.6%     | +5.0%                   |
-| **Adaptive ML** | **55.2%** | **+1.6%**               |
+| Model        | Accuracy | Gap vs baseline (53.6%) |
+| ------------ | -------- | ----------------------- |
+| Hero Synergy | 59.5%    | +5.9%                   |
+| Adaptive ML  | 57.1%    | +3.5%                   |
+| Popular Pick | 57.0%    | +3.4%                   |
+| Team Power   | 57.0%    | +3.4%                   |
 
-Adaptive ML is the **worst** of the four, barely above a "always predict left" coin-flip. With ~1,700 parameters against ~2,000 augmented samples (and only one seed per fold), it's right at the data-starvation edge.
+Adaptive ML has climbed from 55.2% at 1,146 matches → 57.1% at 1,465 matches (+1.9pp in ~300 matches), now effectively tied with Popular Pick and Team Power, and only ~2pp behind Hero Synergy. This is the first data point consistent with scenario 1 below — the NN benefiting from more data.
 
 Three honest scenarios as data grows:
 
-1. **NN crosses over (the bet):** more matches → embeddings stabilize → Adaptive ML beats the 59% ceiling of the statistical models. Expected if there are nonlinear patterns left to extract beyond what pairwise synergy + Bradley-Terry captures.
+1. **NN crosses over (the bet):** more matches → embeddings stabilize → Adaptive ML beats the ~59% ceiling of the statistical models. The current run's NN climb is early-but-consistent evidence this is what's happening.
 2. **Everyone plateaus together** around 60–65%: the game has irreducible noise (RNG, skill, meta shifts) that caps all models. The NN's extra capacity doesn't help because there's no more signal to extract.
 3. **NN stays behind:** the hand-crafted priors (Bayesian smoothing, L2-regularized strength, pairwise synergy) turn out to be well-matched to this problem, and the NN's flexibility is mostly fitting noise.
 
-We can't tell which is happening yet. **Every `ww:train` run prints the gap — watch whether Adaptive ML closes on the other three as data grows.** If the gap closes meaningfully over the next 500–1,000 matches, scenario 1. If it doesn't, revisit the "Future Improvements" bullets in §5 (bigger embeddings, deeper network, separate offense/defense embeddings) before concluding scenario 3. If the gap closes but everyone plateaus, adjust the aggregate weights to reflect reality rather than the original hypothesis.
+Scenario 1 is the one to watch for in the next 500–1,000 matches: if Adaptive ML overtakes Hero Synergy, that triggers a weight rebalance (NN gets the largest share at high data counts). If the gap stalls, this dataset size may be the NN's practical ceiling with a 16-dim embedding — revisit the "Future Improvements" bullets in §5 (larger embeddings, deeper network, separate offense/defense embeddings).
 
 ## 8. Meta Insights
 
