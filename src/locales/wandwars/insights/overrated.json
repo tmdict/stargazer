@@ -1,4 +1,4 @@
 {
-  "en": "{hero} may be overrated — picked often ({matches} matches) but only {winRate} win rate",
-  "zh": "{hero} 可能被高估 — 经常被选择（{matches} 场比赛）但胜率仅 {winRate}"
+  "en": "{hero} may be overrated - picked often ({matches} matches) but only {winRate} win rate",
+  "zh": "{hero} 可能被高估 - 经常被选择（{matches} 场比赛）但胜率仅 {winRate}"
 }

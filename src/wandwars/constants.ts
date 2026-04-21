@@ -3,19 +3,6 @@ export const WEIGHT_BASE = 0.5
 export const WEIGHT_SYNERGY = 0.3
 export const WEIGHT_COUNTER = 0.2
 
-// Confidence thresholds (used by Wilson score in confidence.ts)
-export const CONFIDENCE_HIGH = 10
-export const CONFIDENCE_MEDIUM = 5
-
-// Match-prediction confidence (for aggregate + per-model matchup badges).
-// Reflects how trustworthy the final probability is, based on the calibrated
-// prediction's distance from 50% and across-model agreement.
-export const PREDICTION_CONFIDENCE_DESCRIPTIONS: Record<string, string> = {
-  high: 'High confidence: calibrated prediction clearly favors one side, and models agree',
-  medium: 'Medium confidence: calibrated prediction moderately favors one side',
-  low: 'Low confidence: close to 50/50 or models disagree',
-}
-
 // Hero data depth (used on recommendation cards). Reflects how much match data
 // we have on the hero — not how reliable any specific prediction is.
 export const DATA_DEPTH_DESCRIPTIONS: Record<string, string> = {
