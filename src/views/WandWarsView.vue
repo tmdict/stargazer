@@ -1,61 +1,9 @@
-<template>
-  <div class="wandwars-page">
-    <div class="wandwars-layout">
-      <div class="wandwars-left">
-        <WandWarsPicker
-          v-model:active-tab="leftTab"
-          :pick-state="pickState"
-          :current-pick-side="currentPickSide"
-          :characters="characters"
-          :all-heroes="allHeroes"
-          :available-heroes="availableHeroes"
-          :character-images="characterImages"
-          :match-data="matchData"
-          :analysis-data="analysisData"
-          :pool-filter="poolFilter"
-          @pick-hero="handlePickHero"
-          @unpick-slot="handleUnpickSlot"
-          @reset="handleReset"
-          @undo="handleUndo"
-          @set-pool="handleSetPool"
-          @clear-pool="handleClearPool"
-        />
-      </div>
-
-      <div class="wandwars-right">
-        <WandWarsAnalysis
-          v-if="leftTab === 'draft'"
-          :pick-state="pickState"
-          :current-pick-side="currentPickSide"
-          :match-data="matchData"
-          :character-images="characterImages"
-          :records="records"
-          :pool-filter="poolFilter"
-          @record-match="handleRecordMatch"
-          @delete-record="handleDeleteRecord"
-          @clear-records="handleClearRecords"
-          @export="handleExport"
-          @import-records="handleImportRecords"
-          @update-record="handleUpdateRecord"
-        />
-        <WandWarsInsights
-          v-else
-          :category="leftTab"
-          :match-data="matchData"
-          :analysis-data="analysisData"
-          :character-images="characterImages"
-        />
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
 import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
 import WandWarsInsights from '@/components/wandwars/WandWarsInsights.vue'
-import WandWarsPicker from '@/components/wandwars/WandWarsPicker.vue'
+import WandWarsMain from '@/components/wandwars/WandWarsMain.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { DRAFT_ORDER } from '@/wandwars/constants'
@@ -68,7 +16,7 @@ gameDataStore.initializeData()
 
 useI18nStore().initialize()
 
-const leftTab = ref<'draft' | 'units' | 'teams' | 'synergy'>('draft')
+const mainTab = ref<'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'>('draft')
 
 const pickState = ref<PickState>({
   left: [null, null, null],
@@ -135,8 +83,6 @@ function handleSetPool(pool: string[]) {
 function handleClearPool() {
   poolFilter.value = null
 }
-
-const characterImages = computed(() => gameDataStore.characterImages)
 
 const currentDraftIndex = computed(() => {
   let index = 0
@@ -225,6 +171,56 @@ function handleExport() {
 }
 </script>
 
+<template>
+  <div class="wandwars-page">
+    <div class="wandwars-layout">
+      <WandWarsMain
+        v-model:active-tab="mainTab"
+        :pick-state="pickState"
+        :current-pick-side="currentPickSide"
+        :characters="characters"
+        :all-heroes="allHeroes"
+        :available-heroes="availableHeroes"
+        :character-images="gameDataStore.characterImages"
+        :match-data="matchData"
+        :analysis-data="analysisData"
+        :pool-filter="poolFilter"
+        @pick-hero="handlePickHero"
+        @unpick-slot="handleUnpickSlot"
+        @reset="handleReset"
+        @undo="handleUndo"
+        @set-pool="handleSetPool"
+        @clear-pool="handleClearPool"
+      />
+
+      <aside v-if="mainTab !== 'hero-adjustments'" class="wandwars-side">
+        <WandWarsAnalysis
+          v-if="mainTab === 'draft'"
+          :pick-state="pickState"
+          :current-pick-side="currentPickSide"
+          :match-data="matchData"
+          :character-images="gameDataStore.characterImages"
+          :records="records"
+          :pool-filter="poolFilter"
+          @record-match="handleRecordMatch"
+          @delete-record="handleDeleteRecord"
+          @clear-records="handleClearRecords"
+          @export="handleExport"
+          @import-records="handleImportRecords"
+          @update-record="handleUpdateRecord"
+        />
+        <WandWarsInsights
+          v-else
+          :category="mainTab"
+          :match-data="matchData"
+          :analysis-data="analysisData"
+          :character-images="gameDataStore.characterImages"
+        />
+      </aside>
+    </div>
+  </div>
+</template>
+
 <style scoped>
 .wandwars-page {
   width: 100%;
@@ -235,6 +231,9 @@ function handleExport() {
   background: #20232a;
 }
 
+/* Two-column layout (main + side) when the side panel is present; collapses
+   to a single full-width column automatically when the side panel is
+   absent (e.g. the Hero Adjustments tab). */
 .wandwars-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -242,36 +241,40 @@ function handleExport() {
   align-items: start;
 }
 
-/* Fix the right column at ~1200px (or viewport + 200px on short viewports).
-   min == max means it doesn't shrink when the left column changes size
-   (e.g. pool-filter screenshot trims the picker). The :has override below
-   releases this when the match prediction view is active. */
-.wandwars-right {
+.wandwars-layout:not(:has(.wandwars-side)) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+/* Cap the side panel at ~1200px (or viewport + 200px on short viewports).
+   min == max means it doesn't shrink when the main column resizes (e.g.
+   pool-filter screenshot trims the main panel). The :has overrides below
+   release the cap for content-sized layouts. */
+.wandwars-side {
   min-height: min(1200px, calc(100vh + 200px));
   max-height: min(1200px, calc(100vh + 200px));
   display: flex;
   flex-direction: column;
 }
 
-/* Release the column's fixed-height cap in layouts that size to content:
+/* Release the side panel's fixed-height cap for layouts that size to content:
    - `.matchup-section` → full match prediction view (all 6 picked) where
      the matchup cards + record form should flow without an inner scrollbar
    - `.insights-panel` → meta pages (Units / Teams / Synergy) with their
      own variable-length section layout */
-.wandwars-right:has(.matchup-section),
-.wandwars-right:has(.insights-panel) {
+.wandwars-side:has(.matchup-section),
+.wandwars-side:has(.insights-panel) {
   min-height: 0;
   max-height: none;
 }
 
 /* Insights panel owns its own flex/overflow rules — don't force child to
    stretch-fill like the drafting analysis panel does. */
-.wandwars-right:has(.insights-panel) > * {
+.wandwars-side:has(.insights-panel) > * {
   flex: initial;
   min-height: initial;
 }
 
-.wandwars-right > * {
+.wandwars-side > * {
   flex: 1;
   min-height: 0;
 }
@@ -285,7 +288,7 @@ function handleExport() {
     grid-template-columns: 1fr;
   }
 
-  .wandwars-right {
+  .wandwars-side {
     min-height: auto;
     max-height: none;
   }

@@ -1,339 +1,3 @@
-<template>
-  <div class="insights-panel ww-card">
-    <div v-if="totalMatches < 5" class="empty-state">
-      {{ i18n.t('wandwars.messages/not-enough-data-insights') }}
-    </div>
-
-    <template v-else>
-      <div class="dataset-header">
-        {{
-          i18n
-            .t('wandwars.messages/dataset-header')
-            .replace('{matches}', String(totalMatches))
-            .replace('{heroes}', String(heroCount))
-        }}
-      </div>
-
-      <!-- Insights always at top -->
-      <section v-if="filteredInsights.length > 0" class="section">
-        <h3 class="section-title">{{ i18n.t('wandwars.insights') }}</h3>
-        <div class="insights-list">
-          <div
-            v-for="(insight, i) in filteredInsights"
-            :key="i"
-            class="insight-card"
-            v-html="formatInsightHtml(insight.text, characterImages)"
-          />
-        </div>
-      </section>
-
-      <!-- Best Openers (units only) -->
-      <section v-if="category === 'units' && bestOpeners.length > 0" class="section">
-        <h3
-          ref="openerTitleEl"
-          class="section-title"
-          @mouseenter="showOpenerTooltip = true"
-          @mouseleave="showOpenerTooltip = false"
-        >
-          {{ i18n.t('wandwars.best-openers') }}
-          <IconInfo :size="14" class="section-info-icon" />
-        </h3>
-        <div class="counter-list">
-          <div v-for="(o, i) in bestOpeners" :key="'op' + i" class="counter-row">
-            <img
-              :src="characterImages[o.hero]"
-              :alt="o.hero"
-              :title="formatName(o.hero)"
-              class="hero-portrait"
-            />
-            <span class="counter-record">
-              <span class="wins">{{ o.wins }}W</span> /
-              <span class="losses">{{ o.losses }}L</span>
-              <span class="win-rate">{{ (o.winRate * 10).toFixed(2) }}</span>
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Best Responses (units only) -->
-      <section v-if="category === 'units' && bestResponses.length > 0" class="section">
-        <h3
-          ref="responseTitleEl"
-          class="section-title"
-          @mouseenter="showResponseTooltip = true"
-          @mouseleave="showResponseTooltip = false"
-        >
-          {{ i18n.t('wandwars.best-responses') }}
-          <IconInfo :size="14" class="section-info-icon" />
-        </h3>
-        <div class="counter-list">
-          <div v-for="(r, i) in bestResponses" :key="'rp' + i" class="counter-row">
-            <img
-              :src="characterImages[r.responder]"
-              :alt="r.responder"
-              :title="formatName(r.responder)"
-              class="hero-portrait"
-            />
-            <span class="response-label">
-              <span>{{ i18n.t('wandwars.counters') }}</span>
-              <span class="response-arrow"></span>
-            </span>
-            <div class="response-targets">
-              <div v-for="c in r.counters" :key="c.opener" class="response-target">
-                <img
-                  :src="characterImages[c.opener]"
-                  :alt="c.opener"
-                  :title="formatName(c.opener)"
-                  class="hero-portrait"
-                />
-                <span class="response-target-record">
-                  <span class="wins">{{ c.wins }}W</span> /
-                  <span class="losses">{{ c.losses }}L</span>
-                  <span class="win-rate-inline">{{ (c.winRate * 10).toFixed(2) }}</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Synergy: Pair Counters -->
-      <section v-if="category === 'synergy' && groupedPairCounters.length > 0" class="section">
-        <h3
-          ref="pairCounterTitleEl"
-          class="section-title"
-          @mouseenter="showPairCounterTooltip = true"
-          @mouseleave="showPairCounterTooltip = false"
-        >
-          {{ joinLocale(i18n.t('wandwars.pair'), i18n.t('wandwars.counters')) }}
-          <IconInfo :size="14" class="section-info-icon" />
-        </h3>
-        <div class="counter-list">
-          <div v-for="(g, i) in groupedPairCounters" :key="'pc' + i" class="counter-row">
-            <div class="counter-group">
-              <img
-                v-for="hero in g.target"
-                :key="hero"
-                :src="characterImages[hero]"
-                :alt="hero"
-                :title="formatName(hero)"
-                class="hero-portrait"
-              />
-            </div>
-            <span class="response-label">
-              <span>{{ i18n.t('wandwars.countered-by') }}</span>
-              <span class="response-arrow reverse"></span>
-            </span>
-            <div class="response-targets">
-              <div v-for="c in g.counters" :key="c.pair.join(',')" class="response-target">
-                <div class="counter-group">
-                  <img
-                    v-for="hero in c.pair"
-                    :key="hero"
-                    :src="characterImages[hero]"
-                    :alt="hero"
-                    :title="formatName(hero)"
-                    class="hero-portrait"
-                  />
-                </div>
-                <span class="response-target-record">
-                  <span class="wins">{{ c.wins }}W</span> /
-                  <span class="losses">{{ c.losses }}L</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Most Dominant Pairs (synergy only) -->
-      <section v-if="category === 'synergy' && sweepPairs.length > 0" class="section">
-        <h3
-          ref="dominantPairsTitleEl"
-          class="section-title"
-          @mouseenter="showDominantPairsTooltip = true"
-          @mouseleave="showDominantPairsTooltip = false"
-        >
-          {{ i18n.t('wandwars.most-dominant-pairs') }}
-          <IconInfo :size="14" class="section-info-icon" />
-        </h3>
-        <div class="counter-list">
-          <div v-for="(s, i) in sweepPairs" :key="'sp' + i" class="counter-row">
-            <div class="counter-group">
-              <img
-                v-for="hero in s.team"
-                :key="hero"
-                :src="characterImages[hero]"
-                :alt="hero"
-                :title="formatName(hero)"
-                class="hero-portrait"
-              />
-            </div>
-            <span class="counter-record">
-              {{ s.sweeps }} {{ i18n.t('wandwars.sweeps') }} / {{ s.total }}
-              {{ i18n.t('wandwars.wins') }}
-            </span>
-          </div>
-        </div>
-      </section>
-
-      <!-- Team Counters (teams only) -->
-      <section v-if="category === 'teams' && groupedTeamCounters.length > 0" class="section">
-        <h3
-          ref="teamCountersTitleEl"
-          class="section-title"
-          @mouseenter="showTeamCountersTooltip = true"
-          @mouseleave="showTeamCountersTooltip = false"
-        >
-          {{ joinLocale(i18n.t('wandwars.team'), i18n.t('wandwars.counters')) }}
-          <IconInfo :size="14" class="section-info-icon" />
-        </h3>
-        <div class="counter-list">
-          <div v-for="(g, i) in groupedTeamCounters" :key="'tc' + i" class="counter-row">
-            <div class="counter-group">
-              <img
-                v-for="hero in g.winner"
-                :key="hero"
-                :src="characterImages[hero]"
-                :alt="hero"
-                :title="formatName(hero)"
-                class="hero-portrait"
-              />
-            </div>
-            <span class="response-label">
-              <span>{{ i18n.t('wandwars.counters') }}</span>
-              <span class="response-arrow"></span>
-            </span>
-            <div class="response-targets">
-              <div v-for="c in g.countered" :key="c.team.join(',')" class="response-target">
-                <div class="counter-group">
-                  <img
-                    v-for="hero in c.team"
-                    :key="hero"
-                    :src="characterImages[hero]"
-                    :alt="hero"
-                    :title="formatName(hero)"
-                    class="hero-portrait"
-                  />
-                </div>
-                <span class="response-target-record">
-                  <span class="wins">{{ c.wins }}W</span> /
-                  <span class="losses">{{ c.losses }}L</span>
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-      <!-- Most Dominant Teams (teams only) -->
-      <section v-if="category === 'teams' && sweepTeams.length > 0" class="section">
-        <h3
-          ref="dominantTeamsTitleEl"
-          class="section-title"
-          @mouseenter="showDominantTeamsTooltip = true"
-          @mouseleave="showDominantTeamsTooltip = false"
-        >
-          {{ i18n.t('wandwars.most-dominant-teams') }}
-          <IconInfo :size="14" class="section-info-icon" />
-        </h3>
-        <div class="counter-list">
-          <div v-for="(s, i) in sweepTeams" :key="'st' + i" class="counter-row">
-            <div class="counter-group">
-              <img
-                v-for="hero in s.team"
-                :key="hero"
-                :src="characterImages[hero]"
-                :alt="hero"
-                :title="formatName(hero)"
-                class="hero-portrait"
-              />
-            </div>
-            <span class="counter-record">
-              {{ s.sweeps }} {{ i18n.t('wandwars.sweeps') }} / {{ s.total }}
-              {{ i18n.t('wandwars.wins') }}
-            </span>
-          </div>
-        </div>
-      </section>
-    </template>
-
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="showOpenerTooltip && openerTitleEl"
-        :target-element="openerTitleEl"
-        variant="detailed"
-        max-width="280px"
-      >
-        <template #content>
-          <p class="ww-tooltip-text">
-            {{ i18n.t('wandwars.messages/tooltip-best-openers') }}
-          </p>
-        </template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="showResponseTooltip && responseTitleEl"
-        :target-element="responseTitleEl"
-        variant="detailed"
-        max-width="280px"
-      >
-        <template #content>
-          <p class="ww-tooltip-text">
-            {{ i18n.t('wandwars.messages/tooltip-best-responses') }}
-          </p>
-        </template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="showPairCounterTooltip && pairCounterTitleEl"
-        :target-element="pairCounterTitleEl"
-        variant="detailed"
-        max-width="280px"
-      >
-        <template #content>
-          <p class="ww-tooltip-text">
-            {{ i18n.t('wandwars.messages/tooltip-pair-counters') }}
-          </p>
-        </template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="showDominantPairsTooltip && dominantPairsTitleEl"
-        :target-element="dominantPairsTitleEl"
-        variant="detailed"
-        max-width="280px"
-      >
-        <template #content>
-          <p class="ww-tooltip-text">
-            {{ i18n.t('wandwars.messages/tooltip-dominant-pairs') }}
-          </p>
-        </template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="showTeamCountersTooltip && teamCountersTitleEl"
-        :target-element="teamCountersTitleEl"
-        variant="detailed"
-        max-width="280px"
-      >
-        <template #content>
-          <p class="ww-tooltip-text">
-            {{ i18n.t('wandwars.messages/tooltip-team-counters') }}
-          </p>
-        </template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="showDominantTeamsTooltip && dominantTeamsTitleEl"
-        :target-element="dominantTeamsTitleEl"
-        variant="detailed"
-        max-width="280px"
-      >
-        <template #content>
-          <p class="ww-tooltip-text">
-            {{ i18n.t('wandwars.messages/tooltip-dominant-teams') }}
-          </p>
-        </template>
-      </TooltipPopup>
-    </Teleport>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
@@ -1783,6 +1447,342 @@ const insights = computed(() => {
 
 const filteredInsights = computed(() => insights.value.filter((i) => i.category === props.category))
 </script>
+
+<template>
+  <div class="insights-panel ww-card">
+    <div v-if="totalMatches < 5" class="empty-state">
+      {{ i18n.t('wandwars.messages/not-enough-data-insights') }}
+    </div>
+
+    <template v-else>
+      <div class="dataset-header">
+        {{
+          i18n
+            .t('wandwars.messages/dataset-header')
+            .replace('{matches}', String(totalMatches))
+            .replace('{heroes}', String(heroCount))
+        }}
+      </div>
+
+      <!-- Insights always at top -->
+      <section v-if="filteredInsights.length > 0" class="section">
+        <h3 class="section-title">{{ i18n.t('wandwars.insights') }}</h3>
+        <div class="insights-list">
+          <div
+            v-for="(insight, i) in filteredInsights"
+            :key="i"
+            class="insight-card"
+            v-html="formatInsightHtml(insight.text, characterImages)"
+          />
+        </div>
+      </section>
+
+      <!-- Best Openers (units only) -->
+      <section v-if="category === 'units' && bestOpeners.length > 0" class="section">
+        <h3
+          ref="openerTitleEl"
+          class="section-title"
+          @mouseenter="showOpenerTooltip = true"
+          @mouseleave="showOpenerTooltip = false"
+        >
+          {{ i18n.t('wandwars.best-openers') }}
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(o, i) in bestOpeners" :key="'op' + i" class="counter-row">
+            <img
+              :src="characterImages[o.hero]"
+              :alt="o.hero"
+              :title="formatName(o.hero)"
+              class="hero-portrait"
+            />
+            <span class="counter-record">
+              <span class="wins">{{ o.wins }}W</span> /
+              <span class="losses">{{ o.losses }}L</span>
+              <span class="win-rate">{{ (o.winRate * 10).toFixed(2) }}</span>
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Best Responses (units only) -->
+      <section v-if="category === 'units' && bestResponses.length > 0" class="section">
+        <h3
+          ref="responseTitleEl"
+          class="section-title"
+          @mouseenter="showResponseTooltip = true"
+          @mouseleave="showResponseTooltip = false"
+        >
+          {{ i18n.t('wandwars.best-responses') }}
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(r, i) in bestResponses" :key="'rp' + i" class="counter-row">
+            <img
+              :src="characterImages[r.responder]"
+              :alt="r.responder"
+              :title="formatName(r.responder)"
+              class="hero-portrait"
+            />
+            <span class="response-label">
+              <span>{{ i18n.t('wandwars.counters') }}</span>
+              <span class="response-arrow"></span>
+            </span>
+            <div class="response-targets">
+              <div v-for="c in r.counters" :key="c.opener" class="response-target">
+                <img
+                  :src="characterImages[c.opener]"
+                  :alt="c.opener"
+                  :title="formatName(c.opener)"
+                  class="hero-portrait"
+                />
+                <span class="response-target-record">
+                  <span class="wins">{{ c.wins }}W</span> /
+                  <span class="losses">{{ c.losses }}L</span>
+                  <span class="win-rate-inline">{{ (c.winRate * 10).toFixed(2) }}</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Synergy: Pair Counters -->
+      <section v-if="category === 'synergy' && groupedPairCounters.length > 0" class="section">
+        <h3
+          ref="pairCounterTitleEl"
+          class="section-title"
+          @mouseenter="showPairCounterTooltip = true"
+          @mouseleave="showPairCounterTooltip = false"
+        >
+          {{ joinLocale(i18n.t('wandwars.pair'), i18n.t('wandwars.counters')) }}
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(g, i) in groupedPairCounters" :key="'pc' + i" class="counter-row">
+            <div class="counter-group">
+              <img
+                v-for="hero in g.target"
+                :key="hero"
+                :src="characterImages[hero]"
+                :alt="hero"
+                :title="formatName(hero)"
+                class="hero-portrait"
+              />
+            </div>
+            <span class="response-label">
+              <span>{{ i18n.t('wandwars.countered-by') }}</span>
+              <span class="response-arrow reverse"></span>
+            </span>
+            <div class="response-targets">
+              <div v-for="c in g.counters" :key="c.pair.join(',')" class="response-target">
+                <div class="counter-group">
+                  <img
+                    v-for="hero in c.pair"
+                    :key="hero"
+                    :src="characterImages[hero]"
+                    :alt="hero"
+                    :title="formatName(hero)"
+                    class="hero-portrait"
+                  />
+                </div>
+                <span class="response-target-record">
+                  <span class="wins">{{ c.wins }}W</span> /
+                  <span class="losses">{{ c.losses }}L</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Most Dominant Pairs (synergy only) -->
+      <section v-if="category === 'synergy' && sweepPairs.length > 0" class="section">
+        <h3
+          ref="dominantPairsTitleEl"
+          class="section-title"
+          @mouseenter="showDominantPairsTooltip = true"
+          @mouseleave="showDominantPairsTooltip = false"
+        >
+          {{ i18n.t('wandwars.most-dominant-pairs') }}
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(s, i) in sweepPairs" :key="'sp' + i" class="counter-row">
+            <div class="counter-group">
+              <img
+                v-for="hero in s.team"
+                :key="hero"
+                :src="characterImages[hero]"
+                :alt="hero"
+                :title="formatName(hero)"
+                class="hero-portrait"
+              />
+            </div>
+            <span class="counter-record">
+              {{ s.sweeps }} {{ i18n.t('wandwars.sweeps') }} / {{ s.total }}
+              {{ i18n.t('wandwars.wins') }}
+            </span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Team Counters (teams only) -->
+      <section v-if="category === 'teams' && groupedTeamCounters.length > 0" class="section">
+        <h3
+          ref="teamCountersTitleEl"
+          class="section-title"
+          @mouseenter="showTeamCountersTooltip = true"
+          @mouseleave="showTeamCountersTooltip = false"
+        >
+          {{ joinLocale(i18n.t('wandwars.team'), i18n.t('wandwars.counters')) }}
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(g, i) in groupedTeamCounters" :key="'tc' + i" class="counter-row">
+            <div class="counter-group">
+              <img
+                v-for="hero in g.winner"
+                :key="hero"
+                :src="characterImages[hero]"
+                :alt="hero"
+                :title="formatName(hero)"
+                class="hero-portrait"
+              />
+            </div>
+            <span class="response-label">
+              <span>{{ i18n.t('wandwars.counters') }}</span>
+              <span class="response-arrow"></span>
+            </span>
+            <div class="response-targets">
+              <div v-for="c in g.countered" :key="c.team.join(',')" class="response-target">
+                <div class="counter-group">
+                  <img
+                    v-for="hero in c.team"
+                    :key="hero"
+                    :src="characterImages[hero]"
+                    :alt="hero"
+                    :title="formatName(hero)"
+                    class="hero-portrait"
+                  />
+                </div>
+                <span class="response-target-record">
+                  <span class="wins">{{ c.wins }}W</span> /
+                  <span class="losses">{{ c.losses }}L</span>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <!-- Most Dominant Teams (teams only) -->
+      <section v-if="category === 'teams' && sweepTeams.length > 0" class="section">
+        <h3
+          ref="dominantTeamsTitleEl"
+          class="section-title"
+          @mouseenter="showDominantTeamsTooltip = true"
+          @mouseleave="showDominantTeamsTooltip = false"
+        >
+          {{ i18n.t('wandwars.most-dominant-teams') }}
+          <IconInfo :size="14" class="section-info-icon" />
+        </h3>
+        <div class="counter-list">
+          <div v-for="(s, i) in sweepTeams" :key="'st' + i" class="counter-row">
+            <div class="counter-group">
+              <img
+                v-for="hero in s.team"
+                :key="hero"
+                :src="characterImages[hero]"
+                :alt="hero"
+                :title="formatName(hero)"
+                class="hero-portrait"
+              />
+            </div>
+            <span class="counter-record">
+              {{ s.sweeps }} {{ i18n.t('wandwars.sweeps') }} / {{ s.total }}
+              {{ i18n.t('wandwars.wins') }}
+            </span>
+          </div>
+        </div>
+      </section>
+    </template>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="showOpenerTooltip && openerTitleEl"
+        :target-element="openerTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p class="ww-tooltip-text">
+            {{ i18n.t('wandwars.messages/tooltip-best-openers') }}
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showResponseTooltip && responseTitleEl"
+        :target-element="responseTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p class="ww-tooltip-text">
+            {{ i18n.t('wandwars.messages/tooltip-best-responses') }}
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showPairCounterTooltip && pairCounterTitleEl"
+        :target-element="pairCounterTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p class="ww-tooltip-text">
+            {{ i18n.t('wandwars.messages/tooltip-pair-counters') }}
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showDominantPairsTooltip && dominantPairsTitleEl"
+        :target-element="dominantPairsTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p class="ww-tooltip-text">
+            {{ i18n.t('wandwars.messages/tooltip-dominant-pairs') }}
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showTeamCountersTooltip && teamCountersTitleEl"
+        :target-element="teamCountersTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p class="ww-tooltip-text">
+            {{ i18n.t('wandwars.messages/tooltip-team-counters') }}
+          </p>
+        </template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="showDominantTeamsTooltip && dominantTeamsTitleEl"
+        :target-element="dominantTeamsTitleEl"
+        variant="detailed"
+        max-width="280px"
+      >
+        <template #content>
+          <p class="ww-tooltip-text">
+            {{ i18n.t('wandwars.messages/tooltip-dominant-teams') }}
+          </p>
+        </template>
+      </TooltipPopup>
+    </Teleport>
+  </div>
+</template>
 
 <style scoped>
 .insights-panel {

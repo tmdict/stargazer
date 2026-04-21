@@ -1,3 +1,32 @@
+<script setup lang="ts">
+import CharacterIcon from '@/components/CharacterIcon.vue'
+import type { CharacterType } from '@/lib/types/character'
+import { useI18nStore } from '@/stores/i18n'
+import { DRAFT_ORDER } from '@/wandwars/constants'
+import type { PickSide, PickState } from '@/wandwars/types'
+
+const i18n = useI18nStore()
+
+const props = defineProps<{
+  pickState: PickState
+  characters: readonly CharacterType[]
+  currentPickSide?: PickSide | null
+}>()
+
+const emit = defineEmits<{
+  unpickSlot: [side: PickSide, slot: number]
+}>()
+
+function getCharacter(name: string): CharacterType | undefined {
+  return props.characters.find((c) => c.name === name)
+}
+
+function draftOrderFor(side: PickSide, slot: number): number {
+  const idx = DRAFT_ORDER.findIndex(([s, n]) => s === side && n === slot)
+  return idx >= 0 ? idx + 1 : 0
+}
+</script>
+
 <template>
   <div class="pick-slots-container">
     <div class="pick-slots">
@@ -61,35 +90,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import CharacterIcon from '@/components/CharacterIcon.vue'
-import type { CharacterType } from '@/lib/types/character'
-import { useI18nStore } from '@/stores/i18n'
-import { DRAFT_ORDER } from '@/wandwars/constants'
-import type { PickSide, PickState } from '@/wandwars/types'
-
-const i18n = useI18nStore()
-
-const props = defineProps<{
-  pickState: PickState
-  characters: readonly CharacterType[]
-  currentPickSide?: PickSide | null
-}>()
-
-const emit = defineEmits<{
-  unpickSlot: [side: PickSide, slot: number]
-}>()
-
-function getCharacter(name: string): CharacterType | undefined {
-  return props.characters.find((c) => c.name === name)
-}
-
-function draftOrderFor(side: PickSide, slot: number): number {
-  const idx = DRAFT_ORDER.findIndex(([s, n]) => s === side && n === slot)
-  return idx >= 0 ? idx + 1 : 0
-}
-</script>
 
 <style scoped>
 .pick-slots-container {

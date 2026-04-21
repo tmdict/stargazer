@@ -1,43 +1,3 @@
-<template>
-  <div class="hero-grid-container">
-    <div class="controls-row">
-      <FilterIcons
-        icon-prefix="faction"
-        :options="factionOptions"
-        v-model="factionFilter"
-        active-border-color="var(--color-primary)"
-      />
-      <div class="actions">
-        <slot name="actions" />
-      </div>
-    </div>
-
-    <div class="hero-grid">
-      <button
-        v-for="char in filteredCharacters"
-        :key="char.name"
-        :class="['hero-btn', { unavailable: !isAvailable(char.name) }]"
-        :disabled="!isAvailable(char.name)"
-        @click="emit('pickHero', char.name)"
-      >
-        <div
-          class="hero-portrait"
-          :style="{
-            background: `url(${getIcon(`bg-${char.level}`)}) center/cover`,
-          }"
-        >
-          <img
-            v-if="characterImages[char.name]"
-            :src="characterImages[char.name]"
-            :alt="char.name"
-            class="portrait-img"
-          />
-        </div>
-      </button>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
@@ -78,6 +38,46 @@ function isAvailable(hero: string): boolean {
   return props.availableHeroes.includes(hero)
 }
 </script>
+
+<template>
+  <div class="hero-grid-container">
+    <div class="controls-row">
+      <FilterIcons
+        icon-prefix="faction"
+        :options="factionOptions"
+        v-model="factionFilter"
+        active-border-color="var(--color-primary)"
+      />
+      <div class="actions">
+        <slot name="actions" />
+      </div>
+    </div>
+
+    <div class="hero-grid">
+      <button
+        v-for="char in filteredCharacters"
+        :key="char.name"
+        :class="['hero-btn', { unavailable: !isAvailable(char.name) }]"
+        :disabled="!isAvailable(char.name)"
+        @click="emit('pickHero', char.name)"
+      >
+        <div
+          class="hero-portrait"
+          :style="{
+            background: `url(${getIcon(`bg-${char.level}`)}) center/cover`,
+          }"
+        >
+          <img
+            v-if="characterImages[char.name]"
+            :src="characterImages[char.name]"
+            :alt="char.name"
+            class="portrait-img"
+          />
+        </div>
+      </button>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .hero-grid-container {

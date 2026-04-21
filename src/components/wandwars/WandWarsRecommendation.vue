@@ -1,3 +1,51 @@
+<script setup lang="ts">
+import { useI18nStore } from '@/stores/i18n'
+import { DATA_DEPTH_DESCRIPTIONS } from '@/wandwars/constants'
+import {
+  formatName,
+  formatNoteHtml,
+  formatPercent,
+  formatScore,
+  formatSigned,
+  joinLocale,
+  signClass,
+} from '@/wandwars/formatting'
+import type { Recommendation } from '@/wandwars/types'
+
+export interface CounterIndicator {
+  opponent: string
+  type: 'counters' | 'countered'
+  score: number
+}
+
+export interface TeamCounterInfo {
+  wins: number
+  losses: number
+  total: number
+}
+
+const props = defineProps<{
+  recommendation: Recommendation
+  modelId: string
+  characterImages: Record<string, string>
+  counterIndicators?: CounterIndicator[]
+  teamCounter?: TeamCounterInfo | null
+  opponentCount?: number
+  leftTeam?: string[]
+  rightTeam?: string[]
+  sortKey?: string
+}>()
+
+const i18n = useI18nStore()
+const confidenceTooltip = DATA_DEPTH_DESCRIPTIONS[props.recommendation.confidence]
+const DATA_DEPTH_LABEL_KEYS: Record<string, string> = {
+  high: 'rich-data',
+  medium: 'moderate-data',
+  low: 'sparse-data',
+}
+const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data'
+</script>
+
 <template>
   <div :class="['recommendation-card', recommendation.confidence]">
     <div class="card-header">
@@ -186,54 +234,6 @@
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { useI18nStore } from '@/stores/i18n'
-import { DATA_DEPTH_DESCRIPTIONS } from '@/wandwars/constants'
-import {
-  formatName,
-  formatNoteHtml,
-  formatPercent,
-  formatScore,
-  formatSigned,
-  joinLocale,
-  signClass,
-} from '@/wandwars/formatting'
-import type { Recommendation } from '@/wandwars/types'
-
-export interface CounterIndicator {
-  opponent: string
-  type: 'counters' | 'countered'
-  score: number
-}
-
-export interface TeamCounterInfo {
-  wins: number
-  losses: number
-  total: number
-}
-
-const props = defineProps<{
-  recommendation: Recommendation
-  modelId: string
-  characterImages: Record<string, string>
-  counterIndicators?: CounterIndicator[]
-  teamCounter?: TeamCounterInfo | null
-  opponentCount?: number
-  leftTeam?: string[]
-  rightTeam?: string[]
-  sortKey?: string
-}>()
-
-const i18n = useI18nStore()
-const confidenceTooltip = DATA_DEPTH_DESCRIPTIONS[props.recommendation.confidence]
-const DATA_DEPTH_LABEL_KEYS: Record<string, string> = {
-  high: 'rich-data',
-  medium: 'moderate-data',
-  low: 'sparse-data',
-}
-const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data'
-</script>
 
 <style scoped>
 .recommendation-card {

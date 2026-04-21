@@ -269,7 +269,7 @@ Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to
 
 All models implement `RecommendationModel` with `recommend()` and `predictMatchup()`. They run independently in separate tabs. Pick order does not affect predictions — all models evaluate teams as unordered sets.
 
-Tab order: **Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records**. Individual match-prediction cards follow the same model order. (Meta is a separate left-column view, not a model tab.)
+Tab order: **Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records**. Individual match-prediction cards follow the same model order. (Meta and Hero Adjustments are separate main-panel views, not model tabs.)
 
 ### Model A: Popular Pick (`popularPick.ts`)
 
@@ -709,7 +709,7 @@ Scenario 1 is the one to watch for in the next 500–1,000 matches: if Adaptive 
 
 ## 8. Meta Insights
 
-Three sub-tabs: **Units** | **Synergy** | **Teams**. Left column: sortable tables. Right column: auto-generated insights including ML-powered analysis from the Adaptive ML model's learned embeddings.
+Three sub-tabs: **Units** | **Synergy** | **Teams**. Main panel: sortable tables. Side panel: auto-generated insights including ML-powered analysis from the Adaptive ML model's learned embeddings.
 
 **Units insights**: Best Openers, Best Responses, **Similar Heroes** (embedding cosine similarity), and **Class composition** patterns (e.g., "Teams with 2+ tank overperform").
 
