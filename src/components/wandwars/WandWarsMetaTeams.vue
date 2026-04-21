@@ -1,3 +1,166 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useI18nStore } from '@/stores/i18n'
+import { metaMinPairMatches, metaMinTeamMatchesTable } from '@/wandwars/constants'
+import { formatName, formatPercent, formatSigned } from '@/wandwars/formatting'
+import { computeTeamRecords } from '@/wandwars/prediction/analysis'
+import type { AnalysisData, MatchResult } from '@/wandwars/types'
+
+const props = defineProps<{
+  category: 'units' | 'teams' | 'synergy'
+  matchData: MatchResult[]
+  analysisData: AnalysisData
+  characterImages: Record<string, string>
+}>()
+
+const i18n = useI18nStore()
+const totalMatches = computed(() => props.matchData.length)
+
+const openerHeaderEl = ref<HTMLElement>()
+const showOpenerTooltip = ref(false)
+const synergyHeaderEl = ref<HTMLElement>()
+const showSynergyTooltip = ref(false)
+
+type SortDir = 'asc' | 'desc'
+
+type HeroSortKey = 'matches' | 'winRate' | 'firstPick'
+const heroSort = ref<HeroSortKey>('matches')
+const heroSortDir = ref<SortDir>('desc')
+
+function toggleHeroSort(key: HeroSortKey) {
+  if (heroSort.value === key) {
+    heroSortDir.value = heroSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    heroSort.value = key
+    heroSortDir.value = 'desc'
+  }
+}
+
+interface HeroRow {
+  name: string
+  matches: number
+  winRate: number
+  firstPick: number
+}
+
+const heroRows = computed(() => {
+  const stats = props.analysisData.heroStats
+  const firstPickCounts: Record<string, number> = {}
+
+  for (const match of props.matchData) {
+    const fp = match.left[0]
+    if (fp) firstPickCounts[fp] = (firstPickCounts[fp] || 0) + 1
+  }
+
+  return props.analysisData.allHeroes.map((name): HeroRow => {
+    const s = stats[name]
+    return {
+      name,
+      matches: s?.matches ?? 0,
+      winRate: s?.winRate ?? 0,
+      firstPick: firstPickCounts[name] ?? 0,
+    }
+  })
+})
+
+const sortedHeroRows = computed(() => {
+  const sign = heroSortDir.value === 'desc' ? 1 : -1
+  return [...heroRows.value].sort((a, b) => sign * (b[heroSort.value] - a[heroSort.value]))
+})
+
+type PairSortKey = 'total' | 'winRate' | 'synergy'
+const pairSort = ref<PairSortKey>('synergy')
+const pairSortDir = ref<SortDir>('desc')
+
+function togglePairSort(key: PairSortKey) {
+  if (pairSort.value === key) {
+    pairSortDir.value = pairSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    pairSort.value = key
+    pairSortDir.value = 'desc'
+  }
+}
+
+interface PairRow {
+  heroA: string
+  heroB: string
+  wins: number
+  losses: number
+  total: number
+  winRate: number
+  synergy: number
+}
+
+const allPairRows = computed(() => {
+  const matrix = props.analysisData.synergyMatrix
+  const rows: PairRow[] = []
+  const seen = new Set<string>()
+  const pairThreshold = metaMinPairMatches(props.matchData.length)
+
+  for (const [heroA, partners] of Object.entries(matrix)) {
+    for (const [heroB, entry] of Object.entries(partners)) {
+      const key = [heroA, heroB].sort().join(':')
+      if (seen.has(key)) continue
+      seen.add(key)
+      if (entry.matches < pairThreshold) continue
+      const wins = entry.wins
+      const losses = entry.losses
+      const total = entry.matches
+      rows.push({
+        heroA: heroA < heroB ? heroA : heroB,
+        heroB: heroA < heroB ? heroB : heroA,
+        wins,
+        losses,
+        total,
+        winRate: total > 0 ? wins / total : 0,
+        synergy: entry.score,
+      })
+    }
+  }
+  return rows
+})
+
+const sortedPairRows = computed(() => {
+  const sign = pairSortDir.value === 'desc' ? 1 : -1
+  return [...allPairRows.value].sort((a, b) => {
+    if (pairSort.value === 'synergy') return sign * (b.synergy - a.synergy) || b.total - a.total
+    return sign * (b[pairSort.value] - a[pairSort.value])
+  })
+})
+
+function synergyColor(value: number): string {
+  if (value >= 0.1) return 'var(--color-success)'
+  if (value <= -0.1) return 'var(--color-error)'
+  return 'var(--color-text-secondary)'
+}
+
+const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
+
+type TeamSortKey = 'total' | 'winRate'
+const teamSort = ref<TeamSortKey>('total')
+const teamSortDir = ref<SortDir>('desc')
+
+function toggleTeamSort(key: TeamSortKey) {
+  if (teamSort.value === key) {
+    teamSortDir.value = teamSortDir.value === 'desc' ? 'asc' : 'desc'
+  } else {
+    teamSort.value = key
+    teamSortDir.value = 'desc'
+  }
+}
+
+const sortedTeamRows = computed(() => {
+  const sign = teamSortDir.value === 'desc' ? 1 : -1
+  const teamThreshold = metaMinTeamMatchesTable(props.matchData.length)
+  return allTeamRecords.value
+    .filter((t) => t.total >= teamThreshold)
+    .sort((a, b) => sign * (b[teamSort.value] - a[teamSort.value]) || b.total - a.total)
+})
+</script>
+
 <template>
   <div class="meta-teams">
     <div v-if="totalMatches < 5" class="empty-state">
@@ -228,169 +391,6 @@
     </Teleport>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-
-import IconInfo from '@/components/ui/IconInfo.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { useI18nStore } from '@/stores/i18n'
-import { metaMinPairMatches, metaMinTeamMatchesTable } from '@/wandwars/constants'
-import { formatName, formatPercent, formatSigned } from '@/wandwars/formatting'
-import { computeTeamRecords } from '@/wandwars/prediction/analysis'
-import type { AnalysisData, MatchResult } from '@/wandwars/types'
-
-const props = defineProps<{
-  category: 'units' | 'teams' | 'synergy'
-  matchData: MatchResult[]
-  analysisData: AnalysisData
-  characterImages: Record<string, string>
-}>()
-
-const i18n = useI18nStore()
-const totalMatches = computed(() => props.matchData.length)
-
-const openerHeaderEl = ref<HTMLElement>()
-const showOpenerTooltip = ref(false)
-const synergyHeaderEl = ref<HTMLElement>()
-const showSynergyTooltip = ref(false)
-
-type SortDir = 'asc' | 'desc'
-
-type HeroSortKey = 'matches' | 'winRate' | 'firstPick'
-const heroSort = ref<HeroSortKey>('matches')
-const heroSortDir = ref<SortDir>('desc')
-
-function toggleHeroSort(key: HeroSortKey) {
-  if (heroSort.value === key) {
-    heroSortDir.value = heroSortDir.value === 'desc' ? 'asc' : 'desc'
-  } else {
-    heroSort.value = key
-    heroSortDir.value = 'desc'
-  }
-}
-
-interface HeroRow {
-  name: string
-  matches: number
-  winRate: number
-  firstPick: number
-}
-
-const heroRows = computed(() => {
-  const stats = props.analysisData.heroStats
-  const firstPickCounts: Record<string, number> = {}
-
-  for (const match of props.matchData) {
-    const fp = match.left[0]
-    if (fp) firstPickCounts[fp] = (firstPickCounts[fp] || 0) + 1
-  }
-
-  return props.analysisData.allHeroes.map((name): HeroRow => {
-    const s = stats[name]
-    return {
-      name,
-      matches: s?.matches ?? 0,
-      winRate: s?.winRate ?? 0,
-      firstPick: firstPickCounts[name] ?? 0,
-    }
-  })
-})
-
-const sortedHeroRows = computed(() => {
-  const sign = heroSortDir.value === 'desc' ? 1 : -1
-  return [...heroRows.value].sort((a, b) => sign * (b[heroSort.value] - a[heroSort.value]))
-})
-
-type PairSortKey = 'total' | 'winRate' | 'synergy'
-const pairSort = ref<PairSortKey>('synergy')
-const pairSortDir = ref<SortDir>('desc')
-
-function togglePairSort(key: PairSortKey) {
-  if (pairSort.value === key) {
-    pairSortDir.value = pairSortDir.value === 'desc' ? 'asc' : 'desc'
-  } else {
-    pairSort.value = key
-    pairSortDir.value = 'desc'
-  }
-}
-
-interface PairRow {
-  heroA: string
-  heroB: string
-  wins: number
-  losses: number
-  total: number
-  winRate: number
-  synergy: number
-}
-
-const allPairRows = computed(() => {
-  const matrix = props.analysisData.synergyMatrix
-  const rows: PairRow[] = []
-  const seen = new Set<string>()
-  const pairThreshold = metaMinPairMatches(props.matchData.length)
-
-  for (const [heroA, partners] of Object.entries(matrix)) {
-    for (const [heroB, entry] of Object.entries(partners)) {
-      const key = [heroA, heroB].sort().join(':')
-      if (seen.has(key)) continue
-      seen.add(key)
-      if (entry.matches < pairThreshold) continue
-      const wins = entry.wins
-      const losses = entry.losses
-      const total = entry.matches
-      rows.push({
-        heroA: heroA < heroB ? heroA : heroB,
-        heroB: heroA < heroB ? heroB : heroA,
-        wins,
-        losses,
-        total,
-        winRate: total > 0 ? wins / total : 0,
-        synergy: entry.score,
-      })
-    }
-  }
-  return rows
-})
-
-const sortedPairRows = computed(() => {
-  const sign = pairSortDir.value === 'desc' ? 1 : -1
-  return [...allPairRows.value].sort((a, b) => {
-    if (pairSort.value === 'synergy') return sign * (b.synergy - a.synergy) || b.total - a.total
-    return sign * (b[pairSort.value] - a[pairSort.value])
-  })
-})
-
-function synergyColor(value: number): string {
-  if (value >= 0.1) return 'var(--color-success)'
-  if (value <= -0.1) return 'var(--color-error)'
-  return 'var(--color-text-secondary)'
-}
-
-const allTeamRecords = computed(() => computeTeamRecords(props.matchData))
-
-type TeamSortKey = 'total' | 'winRate'
-const teamSort = ref<TeamSortKey>('total')
-const teamSortDir = ref<SortDir>('desc')
-
-function toggleTeamSort(key: TeamSortKey) {
-  if (teamSort.value === key) {
-    teamSortDir.value = teamSortDir.value === 'desc' ? 'asc' : 'desc'
-  } else {
-    teamSort.value = key
-    teamSortDir.value = 'desc'
-  }
-}
-
-const sortedTeamRows = computed(() => {
-  const sign = teamSortDir.value === 'desc' ? 1 : -1
-  const teamThreshold = metaMinTeamMatchesTable(props.matchData.length)
-  return allTeamRecords.value
-    .filter((t) => t.total >= teamThreshold)
-    .sort((a, b) => sign * (b[teamSort.value] - a[teamSort.value]) || b.total - a.total)
-})
-</script>
 
 <style scoped>
 .meta-teams {
