@@ -1,10 +1,69 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+import WandWarsHeroAdjustments from './WandWarsHeroAdjustments.vue'
+import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
+import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
+import WandWarsPickSlots from './WandWarsPickSlots.vue'
+import WandWarsPoolImport from './WandWarsPoolImport.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import type { CharacterType } from '@/lib/types/character'
+import { useI18nStore } from '@/stores/i18n'
+import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
+
+defineProps<{
+  pickState: PickState
+  currentPickSide: PickSide | null
+  characters: readonly CharacterType[]
+  allHeroes: string[]
+  availableHeroes: string[]
+  characterImages: Record<string, string>
+  matchData: MatchResult[]
+  analysisData: AnalysisData
+  poolFilter: string[] | null
+}>()
+
+const emit = defineEmits<{
+  pickHero: [hero: string]
+  unpickSlot: [side: PickSide, slot: number]
+  reset: []
+  undo: []
+  setPool: [pool: string[]]
+  clearPool: []
+}>()
+
+const showPoolImport = ref(false)
+const showPoolInfo = ref(false)
+const poolInfoEl = ref<InstanceType<typeof IconInfo> | null>(null)
+
+function handlePoolApply(pool: string[]) {
+  emit('setPool', pool)
+  showPoolImport.value = false
+}
+
+const i18n = useI18nStore()
+const tabs = computed(() => [
+  { id: 'draft' as const, label: i18n.t('wandwars.draft') },
+  { id: 'units' as const, label: i18n.t('wandwars.units') },
+  { id: 'teams' as const, label: i18n.t('wandwars.teams') },
+  { id: 'synergy' as const, label: i18n.t('wandwars.synergy') },
+  { id: 'hero-adjustments' as const, label: i18n.t('wandwars.hero-adjustments') },
+])
+
+const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'>(
+  'activeTab',
+  { default: 'draft' },
+)
+</script>
+
 <template>
-  <div class="picker ww-card">
-    <div class="picker-tabs">
+  <section class="main-panel ww-card">
+    <div class="tabs">
       <button
-        v-for="tab in pickerTabs"
+        v-for="tab in tabs"
         :key="tab.id"
-        :class="['picker-tab', { active: activeTab === tab.id }]"
+        :class="['tab', { active: activeTab === tab.id }]"
         @click="activeTab = tab.id"
       >
         {{ tab.label }}
@@ -83,6 +142,11 @@
       </Teleport>
     </template>
 
+    <WandWarsHeroAdjustments
+      v-else-if="activeTab === 'hero-adjustments'"
+      :character-images="characterImages"
+    />
+
     <WandWarsMetaTeams
       v-else
       :category="activeTab"
@@ -90,74 +154,18 @@
       :analysis-data="analysisData"
       :character-images="characterImages"
     />
-  </div>
+  </section>
 </template>
 
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-
-import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
-import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
-import WandWarsPickSlots from './WandWarsPickSlots.vue'
-import WandWarsPoolImport from './WandWarsPoolImport.vue'
-import IconInfo from '@/components/ui/IconInfo.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import type { CharacterType } from '@/lib/types/character'
-import { useI18nStore } from '@/stores/i18n'
-import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
-
-defineProps<{
-  pickState: PickState
-  currentPickSide: PickSide | null
-  characters: readonly CharacterType[]
-  allHeroes: string[]
-  availableHeroes: string[]
-  characterImages: Record<string, string>
-  matchData: MatchResult[]
-  analysisData: AnalysisData
-  poolFilter: string[] | null
-}>()
-
-const emit = defineEmits<{
-  pickHero: [hero: string]
-  unpickSlot: [side: PickSide, slot: number]
-  reset: []
-  undo: []
-  setPool: [pool: string[]]
-  clearPool: []
-}>()
-
-const showPoolImport = ref(false)
-const showPoolInfo = ref(false)
-const poolInfoEl = ref<InstanceType<typeof IconInfo> | null>(null)
-
-function handlePoolApply(pool: string[]) {
-  emit('setPool', pool)
-  showPoolImport.value = false
-}
-
-const i18n = useI18nStore()
-const pickerTabs = computed(() => [
-  { id: 'draft' as const, label: i18n.t('wandwars.draft') },
-  { id: 'units' as const, label: i18n.t('wandwars.units') },
-  { id: 'teams' as const, label: i18n.t('wandwars.teams') },
-  { id: 'synergy' as const, label: i18n.t('wandwars.synergy') },
-])
-
-const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTab', {
-  default: 'draft',
-})
-</script>
-
 <style scoped>
-.picker-tabs {
+.tabs {
   display: flex;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--color-border-light);
 }
 
-.picker-tab {
+.tab {
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   background: none;
@@ -171,13 +179,13 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy'>('activeTa
     border-color var(--transition-fast);
 }
 
-.picker-tab.active {
+.tab.active {
   color: var(--color-primary);
   border-bottom-color: var(--color-primary);
   font-weight: 600;
 }
 
-.picker-tab:hover:not(.active) {
+.tab:hover:not(.active) {
   color: var(--color-text-primary);
 }
 

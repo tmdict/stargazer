@@ -1,3 +1,36 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+
+import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useI18nStore } from '@/stores/i18n'
+import { formatName } from '@/wandwars/formatting'
+import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
+import type { MatchResult } from '@/wandwars/types'
+
+const props = defineProps<{
+  teammates: string[]
+  excludeHeroes: string[]
+  matches: MatchResult[]
+  characterImages: Record<string, string>
+}>()
+
+const i18n = useI18nStore()
+const result = computed(() => getTopTeams(props.teammates, props.matches, props.excludeHeroes))
+
+const showDataTooltip = ref(false)
+const dataTitleEl = ref<HTMLElement | null>(null)
+const showSuggestedTooltip = ref(false)
+const suggestedTitleEl = ref<HTMLElement | null>(null)
+
+function orderedTeam(team: string[]): string[] {
+  // Picked heroes first (in pick order), then remaining heroes alphabetically
+  const picked = props.teammates.filter((t) => team.includes(t))
+  const rest = team.filter((h) => !props.teammates.includes(h)).sort()
+  return [...picked, ...rest]
+}
+</script>
+
 <template>
   <div v-if="result.dataTeams.length > 0 || result.suggestedTeams.length > 0" class="top-teams">
     <!-- Data-backed teams -->
@@ -78,39 +111,6 @@
     </Teleport>
   </div>
 </template>
-
-<script setup lang="ts">
-import { computed, ref } from 'vue'
-
-import IconInfo from '@/components/ui/IconInfo.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { useI18nStore } from '@/stores/i18n'
-import { formatName } from '@/wandwars/formatting'
-import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
-import type { MatchResult } from '@/wandwars/types'
-
-const props = defineProps<{
-  teammates: string[]
-  excludeHeroes: string[]
-  matches: MatchResult[]
-  characterImages: Record<string, string>
-}>()
-
-const i18n = useI18nStore()
-const result = computed(() => getTopTeams(props.teammates, props.matches, props.excludeHeroes))
-
-const showDataTooltip = ref(false)
-const dataTitleEl = ref<HTMLElement | null>(null)
-const showSuggestedTooltip = ref(false)
-const suggestedTitleEl = ref<HTMLElement | null>(null)
-
-function orderedTeam(team: string[]): string[] {
-  // Picked heroes first (in pick order), then remaining heroes alphabetically
-  const picked = props.teammates.filter((t) => team.includes(t))
-  const rest = team.filter((h) => !props.teammates.includes(h)).sort()
-  return [...picked, ...rest]
-}
-</script>
 
 <style scoped>
 .top-teams {

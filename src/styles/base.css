@@ -193,7 +193,7 @@ main {
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
 
-/* WandWars panel card — shared chrome for the picker/analysis/insights
+/* WandWars panel card — shared chrome for the main/analysis/insights
    column cards. Only covers the "card look" (background, border, radius,
    padding). Components retain their own flex/overflow/min-height rules
    since those govern internal layout (pinned tabs, scrollable lists,
