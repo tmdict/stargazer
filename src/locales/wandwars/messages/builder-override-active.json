@@ -1,4 +1,4 @@
 {
-  "en": "Uploaded reference active — {count} heroes{skipped}. Lasts until you revert or reload.",
-  "zh": "已上传参考生效 — {count} 位英雄{skipped}。恢复或刷新后失效。"
+  "en": "Uploaded reference active - {count} heroes{skipped}. Lasts until you revert or reload.",
+  "zh": "已上传参考生效 - {count} 位英雄{skipped}。恢复或刷新后失效。"
 }

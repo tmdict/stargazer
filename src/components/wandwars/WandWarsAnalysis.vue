@@ -267,7 +267,10 @@
             <h3 class="matchup-title">{{ i18n.t('wandwars.matchup-prediction') }}</h3>
             <span
               :class="['confidence-badge', aggregatePrediction.confidence]"
-              :title="confidenceDescriptions[aggregatePrediction.confidence]"
+              @mouseenter="
+                showConfidenceTooltip('aggregate', aggregatePrediction.confidence, $event)
+              "
+              @mouseleave="hideConfidenceTooltip"
             >
               {{ i18n.t(`wandwars.${aggregatePrediction.confidence}-confidence`) }}
             </span>
@@ -333,7 +336,10 @@
             />
             <span
               :class="['confidence-badge', pred.prediction.confidence]"
-              :title="confidenceDescriptions[pred.prediction.confidence]"
+              @mouseenter="
+                showConfidenceTooltip({ modelId: pred.id }, pred.prediction.confidence, $event)
+              "
+              @mouseleave="hideConfidenceTooltip"
             >
               {{ i18n.t(`wandwars.${pred.prediction.confidence}-confidence`) }}
             </span>
@@ -554,6 +560,16 @@
         :text="i18n.t('wandwars.messages/tooltip-sweep')"
         max-width="260px"
       />
+      <TooltipPopup
+        v-if="confidenceTooltipText && confidenceTooltipTarget"
+        :target-element="confidenceTooltipTarget"
+        variant="detailed"
+        max-width="300px"
+      >
+        <template #content>
+          <div class="confidence-tooltip">{{ confidenceTooltipText }}</div>
+        </template>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>
@@ -569,7 +585,7 @@ import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { BT_LOW_DATA_THRESHOLD, PREDICTION_CONFIDENCE_DESCRIPTIONS } from '@/wandwars/constants'
+import { BT_LOW_DATA_THRESHOLD } from '@/wandwars/constants'
 import { formatName, formatNoteHtml, formatPercent, joinLocale } from '@/wandwars/formatting'
 import {
   getAggregatePrediction,
@@ -730,6 +746,7 @@ function handleRecordSubmit() {
   recordWinner.value = 'left'
   recordDominant.value = false
   recordNotes.value = ''
+  activeTab.value = 'records'
 }
 
 const showCopiedFlash = ref(false)
@@ -810,7 +827,23 @@ function getCounterIndicators(hero: string): CounterIndicator[] {
   })
 }
 
-const confidenceDescriptions = PREDICTION_CONFIDENCE_DESCRIPTIONS
+const confidenceTooltipText = ref<string>('')
+const confidenceTooltipTarget = ref<HTMLElement | null>(null)
+
+function showConfidenceTooltip(
+  scope: 'aggregate' | { modelId: string },
+  level: 'high' | 'medium' | 'low',
+  event: MouseEvent,
+) {
+  const keyPrefix = scope === 'aggregate' ? 'aggregate' : scope.modelId
+  confidenceTooltipText.value = i18n.t(`wandwars.messages/confidence-${keyPrefix}-${level}`)
+  confidenceTooltipTarget.value = event.currentTarget as HTMLElement
+}
+
+function hideConfidenceTooltip() {
+  confidenceTooltipText.value = ''
+  confidenceTooltipTarget.value = null
+}
 
 function recordVerbLabel(r: RecordedMatch): string {
   if (r.winner === 'draw') return i18n.t('wandwars.draw')
@@ -1320,6 +1353,12 @@ const aggregatePrediction = computed(() => {
   padding: 3px 8px;
   border-radius: var(--radius-small);
   text-transform: uppercase;
+  cursor: help;
+}
+
+.confidence-tooltip {
+  line-height: 1.4;
+  font-size: 0.85rem;
 }
 
 .confidence-badge.high {

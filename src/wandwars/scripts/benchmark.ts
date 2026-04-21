@@ -17,10 +17,12 @@
 import { writeFileSync } from 'fs'
 import { join } from 'path'
 
+import { getAdaptiveAggregateWeights } from '../constants'
 import { analyzeMatches } from '../prediction/analysis'
 import { fitBradleyTerry } from '../prediction/bradleyTerry'
 import { isotonicApply, plattApply } from '../prediction/calibration'
 import { compositeModel } from '../prediction/composite'
+import { computeAllSelfConfidences } from '../prediction/modelConfidence'
 import { popularPickModel } from '../prediction/popularPick'
 import type { MatchResult, RecommendationModel } from '../types'
 import { buildSamples, forwardPredict, trainRun, type TrainingSample } from './trainNNCore'
@@ -33,23 +35,61 @@ const MIN_CALIBRATION_SAMPLES = 100
 const TARGET_BINS = 12
 
 /**
- * Tiered accuracy targets for the "high confidence" badge, tried in order.
- * Each tier has a minimum coverage floor — if no (distance, stddev) bucket
- * hits the target accuracy with at least that coverage, we fall through to
- * the next tier. If all tiers fail, the badge is disabled for this run.
+ * Confidence threshold tuning — data-driven, no hardcoded accuracy targets.
  *
- * This keeps "high" rare-and-meaningful: we prefer strict accuracy when data
- * supports it, gracefully degrade to slightly lower accuracy when it doesn't,
- * and disable the badge entirely rather than let it fire on low-accuracy
- * predictions users would stop trusting.
+ * The tuner picks cutoffs on each model's self-confidence distribution (and
+ * on `(stddev, avgSelfConf)` pairs for the aggregate) that satisfy three
+ * empirical criteria:
+ *
+ *   1. MEDIUM: prefer the cutoff whose LOW coverage is closest to
+ *      `TARGET_LOW_COVERAGE` among all cutoffs where the sub-bucket is
+ *      ≥ LOW_DROP_BELOW_MEDIUM less accurate than the above-bucket (the
+ *      "LOW is justified" check). Must also clear an absolute accuracy
+ *      floor and a minimum coverage floor.
+ *   2. HIGH: strictly tighter than MEDIUM's cutoff. Above-bucket accuracy
+ *      must clear `overall_acc + HIGH_LIFT_OVER_OVERALL` *and* MEDIUM's
+ *      own accuracy (so HIGH > MEDIUM > LOW ordering is preserved).
+ *      Coverage capped at HIGH_MAX_COVERAGE so HIGH stays genuinely rare.
+ *   3. Relabel: if LOW would be the majority (> LOW_INVERT_THRESHOLD) and
+ *      no HIGH bucket was found, but the above-bucket itself passes the
+ *      HIGH lift criterion, swap the framing: above → HIGH, below →
+ *      MEDIUM, no LOW. Covers signals that split bimodally (B-T's pair
+ *      residuals).
+ *
+ * Each band is disabled (HIGH → unreachable cutoff 1.01; LOW → collapsed
+ * MEDIUM cutoff 0) if no candidate satisfies its criterion. We'd rather
+ * skip a band than show one that's wrong 35% of the time.
+ *
+ * Only the *deltas* here are constants. Absolute accuracy bars self-adjust
+ * per run: HIGH target tracks realized overall accuracy, LOW target tracks
+ * realized MEDIUM accuracy. No manual retuning as the dataset grows.
  */
-const HIGH_TIERS: { acc: number; minCoverage: number }[] = [
-  { acc: 0.75, minCoverage: 0.05 },
-  { acc: 0.72, minCoverage: 0.05 },
-  { acc: 0.7, minCoverage: 0.03 },
-]
-const MEDIUM_TARGET_ACC = 0.65
-const MEDIUM_MIN_COVERAGE = 0.1
+const PER_MODEL_HIGH_LIFT_OVER_OVERALL = 0.02 // HIGH must beat overall by ≥ 2pp
+const PER_MODEL_LOW_DROP_BELOW_MEDIUM = 0.01 // LOW must fall ≥ 1pp below MEDIUM
+const PER_MODEL_HIGH_MIN_COVERAGE = 0.03
+const PER_MODEL_HIGH_MAX_COVERAGE = 0.15 // HIGH stays genuinely rare (< 15%)
+const PER_MODEL_MEDIUM_TARGET_ACC = 0.55
+const PER_MODEL_MEDIUM_MIN_COVERAGE = 0.3
+
+// Aggregate is already smoothing across models. Keep LOW drop small (1pp)
+// so the bottom warning tier enables at realistic data sizes. HIGH lift
+// matches per-model (2pp) — marginal 0.2pp-over-MEDIUM "HIGH" tiers are
+// within run-variance and would flicker on/off, so require the same
+// meaningful lift as individual models.
+const AGGREGATE_HIGH_LIFT_OVER_OVERALL = 0.02 // match per-model — HIGH must meaningfully beat overall
+const AGGREGATE_LOW_DROP_BELOW_MEDIUM = 0.01
+const AGGREGATE_HIGH_MIN_COVERAGE = 0.02
+const AGGREGATE_HIGH_MAX_COVERAGE = 0.15
+const AGGREGATE_MEDIUM_TARGET_ACC = 0.58
+const AGGREGATE_MEDIUM_MIN_COVERAGE = 0.3
+
+// UX preferences — applied on top of the statistical constraints above.
+// Every candidate cutoff considered already passed the statistical checks,
+// so the selected cutoff remains empirically justified.
+const TARGET_LOW_COVERAGE = 0.25 // preferred LOW coverage share
+const LOW_INVERT_THRESHOLD = 0.5 // above this, trigger HIGH+MEDIUM relabel
+
+const MODEL_IDS = ['popular-pick', 'composite', 'bradley-terry', 'adaptive-ml'] as const
 
 // ---- seeded RNG for fold shuffling (independent of trainNNCore's RNG) ----
 function seededRandom(seed: number): () => number {
@@ -201,110 +241,348 @@ function reliabilityDiagram(pairs: { x: number; y: number }[], numBins: number =
 
 // ---- Confidence threshold tuning ----
 
-interface ConfidenceTuning {
-  highDistance: number
-  mediumDistance: number
-  highAgreementStddev: number
-  mediumAgreementStddev: number
-  highAccuracy: number
-  mediumAccuracy: number
+interface PerModelTuned {
+  high: number // selfConf cutoff; 1.01 = disabled
+  medium: number // selfConf cutoff; 0 = always medium (no LOW)
+  highAcc: number
   highCoverage: number
+  mediumAcc: number
   mediumCoverage: number
+  lowAcc: number // realized accuracy of predictions with selfConf < medium
+  lowCoverage: number
+}
+
+interface AggregateTuned {
+  highStddev: number
+  highAvgSelfConf: number
+  mediumStddev: number
+  mediumAvgSelfConf: number
+  highAcc: number
+  highCoverage: number
+  mediumAcc: number
+  mediumCoverage: number
+  lowAcc: number
+  lowCoverage: number
 }
 
 /**
- * Tune distance/agreement thresholds for the high and medium confidence
- * badges against held-out aggregate predictions.
- *
- * "High" walks through HIGH_TIERS (descending accuracy targets) and picks
- * the first tier where some (distance, stddev) bucket clears both the
- * accuracy target AND the tier's minimum coverage floor. Within a passing
- * tier, prefer higher coverage so more legitimate-high predictions fire.
- * If no tier passes, high is disabled (unreachable default thresholds).
- *
- * "Medium" is a single tier: MEDIUM_TARGET_ACC with MEDIUM_MIN_COVERAGE.
+ * Grid of self-confidence cutoff candidates, descending. Each model publishes
+ * selfConf ∈ [0, 1]; we pick thresholds from this grid. Finer resolution at
+ * the top end (0.95 → 0.99) gives the HIGH picker more options to hit the
+ * ≤ 15% max-coverage cap — some signals (PP's avg pair match count, NN's
+ * avg pair co-occurrence) saturate near 1.0 so 0.95 alone would sweep up
+ * 30 %+ of predictions.
  */
-function tuneConfidenceThresholds(
-  aggregatePairs: { prob: number; stddev: number; actual: number }[],
-): ConfidenceTuning {
-  const distanceGrid = [0.05, 0.08, 0.1, 0.12, 0.15, 0.18, 0.2, 0.25]
-  const stddevGrid = [0.05, 0.08, 0.1, 0.12, 0.15, 0.2]
+const SELF_CONF_GRID = [
+  0.99, 0.98, 0.97, 0.96, 0.95, 0.9, 0.85, 0.8, 0.75, 0.7, 0.65, 0.6, 0.55, 0.5, 0.45, 0.4, 0.35,
+  0.3, 0.25, 0.2, 0.15, 0.1, 0.05,
+]
 
-  function matches(p: { prob: number; stddev: number }, distTh: number, stdTh: number): boolean {
-    return Math.abs(p.prob - 0.5) >= distTh && p.stddev <= stdTh
-  }
-
-  function bucketAcc(distTh: number, stdTh: number): { acc: number; coverage: number; n: number } {
-    const subset = aggregatePairs.filter((p) => p.actual !== 0.5 && matches(p, distTh, stdTh))
+/**
+ * Find per-model high/medium cutoffs on each model's own (selfConf, correct)
+ * distribution. For each candidate cutoff T, predictions with selfConf >= T
+ * form a bucket; we want the bucket's accuracy and coverage to clear the
+ * target + floor. Prefer the lowest T that still passes (more coverage).
+ */
+function tunePerModel(
+  pairs: { selfConf: number; actual: number; predicted: number }[],
+  overallAcc: number,
+): PerModelTuned {
+  /** Accuracy/coverage of predictions with selfConf >= cutoff. */
+  function bucketAbove(cutoff: number): { acc: number; coverage: number; n: number } {
+    const subset = pairs.filter((p) => p.actual !== 0.5 && p.selfConf >= cutoff)
     if (subset.length === 0) return { acc: 0, coverage: 0, n: 0 }
     let correct = 0
-    for (const p of subset) {
-      const pred = p.prob >= 0.5 ? 1 : 0
-      if (pred === p.actual) correct++
-    }
+    for (const p of subset) if (p.predicted === p.actual) correct++
     return {
       acc: correct / subset.length,
-      coverage: subset.length / aggregatePairs.length,
+      coverage: subset.length / pairs.length,
       n: subset.length,
     }
   }
 
-  interface Found {
-    dist: number
-    std: number
-    acc: number
-    coverage: number
+  /** Accuracy/coverage of predictions with selfConf < cutoff (the LOW bucket). */
+  function bucketBelow(cutoff: number): { acc: number; coverage: number; n: number } {
+    const subset = pairs.filter((p) => p.actual !== 0.5 && p.selfConf < cutoff)
+    if (subset.length === 0) return { acc: 0, coverage: 0, n: 0 }
+    let correct = 0
+    for (const p of subset) if (p.predicted === p.actual) correct++
+    return {
+      acc: correct / subset.length,
+      coverage: subset.length / pairs.length,
+      n: subset.length,
+    }
   }
 
-  function pickBest(
-    targetAcc: number,
-    minCoverage: number,
-    excludeStricterThan?: Found,
-  ): Found | null {
-    let found: Found | null = null
-    for (const d of distanceGrid) {
-      for (const s of stddevGrid) {
-        // When tuning medium: skip combos the high tier already owns (stricter in both dims)
-        if (excludeStricterThan && d >= excludeStricterThan.dist && s <= excludeStricterThan.std) {
-          continue
+  // MEDIUM tuning — among all cutoffs that (a) meet the accuracy floor and
+  // (b) have a statistically-justified LOW drop, pick the one whose LOW
+  // coverage is closest to TARGET_LOW_COVERAGE. This keeps LOW meaningful
+  // (neither vanishingly rare nor overwhelming) while staying empirically
+  // justified.
+  //
+  // If no cutoff satisfies (b), fall back to plain max-coverage — LOW just
+  // won't appear because the signal doesn't correlate with accuracy at the
+  // bottom. Never fabricate LOW.
+  let mediumPicked: {
+    cutoff: number
+    above: ReturnType<typeof bucketAbove>
+    below: ReturnType<typeof bucketBelow>
+  } | null = null
+  let mediumPickedDistance = Infinity
+  let mediumFallback: {
+    cutoff: number
+    above: ReturnType<typeof bucketAbove>
+    below: ReturnType<typeof bucketBelow>
+  } | null = null
+  for (const T of SELF_CONF_GRID) {
+    const above = bucketAbove(T)
+    const below = bucketBelow(T)
+    if (above.n < 20) continue
+    if (above.acc < PER_MODEL_MEDIUM_TARGET_ACC) continue
+    if (above.coverage < PER_MODEL_MEDIUM_MIN_COVERAGE) continue
+    // Track a fallback candidate in case the stricter LOW-drop check fails
+    if (!mediumFallback || above.coverage > mediumFallback.above.coverage) {
+      mediumFallback = { cutoff: T, above, below }
+    }
+    // Prefer cutoffs that justify LOW — below-bucket has ≥ drop threshold AND ≥ 20 samples
+    if (below.n >= 20 && above.acc - below.acc >= PER_MODEL_LOW_DROP_BELOW_MEDIUM) {
+      const distance = Math.abs(below.coverage - TARGET_LOW_COVERAGE)
+      if (distance < mediumPickedDistance) {
+        mediumPicked = { cutoff: T, above, below }
+        mediumPickedDistance = distance
+      }
+    }
+  }
+  const medium = mediumPicked ?? mediumFallback
+
+  // HIGH: target accuracy = overall held-out accuracy + lift delta. HIGH
+  // bucket must ALSO clear MEDIUM's accuracy so HIGH > MEDIUM > LOW is
+  // preserved (if MEDIUM's cutoff happens to lift its subset above the
+  // overall-based HIGH target, the acc-ordering guard keeps the ordering
+  // honest). If no bucket clears both, HIGH disables.
+  const highTargetAcc = overallAcc + PER_MODEL_HIGH_LIFT_OVER_OVERALL
+  const mediumAccGuard = medium?.above.acc ?? 0
+  let highPicked: { cutoff: number; acc: number; coverage: number } | null = null
+  for (const T of SELF_CONF_GRID) {
+    if (medium && T <= medium.cutoff) continue
+    const r = bucketAbove(T)
+    if (r.n < 20) continue
+    if (r.acc < highTargetAcc) continue
+    if (r.acc < mediumAccGuard) continue
+    if (r.coverage < PER_MODEL_HIGH_MIN_COVERAGE) continue
+    if (r.coverage > PER_MODEL_HIGH_MAX_COVERAGE) continue
+    if (!highPicked || r.acc > highPicked.acc) {
+      highPicked = { cutoff: T, acc: r.acc, coverage: r.coverage }
+    }
+  }
+
+  // Relabel: if the best MEDIUM+LOW split puts > LOW_INVERT_THRESHOLD of
+  // predictions in LOW AND the above-bucket passes HIGH's overall-acc +
+  // lift criterion, the signal is really identifying a reliable top subset.
+  // Swap framing: above → HIGH, below → MEDIUM, no LOW. Same statistically
+  // justified split, different labels.
+  if (
+    mediumPicked &&
+    !highPicked &&
+    mediumPicked.below.coverage > LOW_INVERT_THRESHOLD &&
+    mediumPicked.above.acc >= overallAcc + PER_MODEL_HIGH_LIFT_OVER_OVERALL
+  ) {
+    return {
+      high: mediumPicked.cutoff,
+      medium: 0,
+      highAcc: mediumPicked.above.acc,
+      highCoverage: mediumPicked.above.coverage,
+      mediumAcc: mediumPicked.below.acc,
+      mediumCoverage: mediumPicked.below.coverage,
+      lowAcc: 0,
+      lowCoverage: 0,
+    }
+  }
+
+  // Default framing — MEDIUM+LOW. Runtime MEDIUM cutoff only > 0 when LOW
+  // is empirically justified; otherwise 0 and no LOW shows. The fallback
+  // stats are diagnostic-only.
+  const runtimeMediumCutoff = mediumPicked?.cutoff ?? 0
+  return {
+    high: highPicked?.cutoff ?? 1.01,
+    medium: runtimeMediumCutoff,
+    highAcc: highPicked?.acc ?? 0,
+    highCoverage: highPicked?.coverage ?? 0,
+    mediumAcc: medium?.above.acc ?? 0,
+    mediumCoverage: medium?.above.coverage ?? 0,
+    lowAcc: medium?.below.acc ?? 0,
+    lowCoverage: medium?.below.coverage ?? 0,
+  }
+}
+
+/**
+ * Aggregate tuning: grid-search (weighted_stddev, avg_self_conf) pairs. A
+ * matchup clears "high" when stddev ≤ cutoffStddev AND avgSelfConf ≥ cutoff.
+ * Prefer permissive cutoffs that still meet target accuracy + coverage.
+ */
+function tuneAggregate(
+  pairs: { weightedStddev: number; avgSelfConf: number; actual: number; predicted: number }[],
+  overallAcc: number,
+): AggregateTuned {
+  // Extended top-end resolution (stddev 0.01–0.03, selfConf 0.8–0.9) lets
+  // the HIGH picker find very-tight-agreement / high-confidence subsets.
+  // Those stricter cutoffs still have to clear the lift + coverage floors;
+  // if no subset at the extreme end genuinely beats overall + 2pp AND
+  // MEDIUM's acc, HIGH stays disabled honestly.
+  const stddevGrid = [0.01, 0.02, 0.03, 0.05, 0.08, 0.1, 0.12, 0.15, 0.2]
+  const selfConfGrid = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4, 0.3, 0.2]
+
+  function bucket(stdT: number, confT: number): { acc: number; coverage: number; n: number } {
+    const subset = pairs.filter(
+      (p) => p.actual !== 0.5 && p.weightedStddev <= stdT && p.avgSelfConf >= confT,
+    )
+    if (subset.length === 0) return { acc: 0, coverage: 0, n: 0 }
+    let correct = 0
+    for (const p of subset) if (p.predicted === p.actual) correct++
+    return {
+      acc: correct / subset.length,
+      coverage: subset.length / pairs.length,
+      n: subset.length,
+    }
+  }
+
+  function pickBest(options: {
+    targetAcc: number
+    minCoverage: number
+    maxCoverage?: number
+    prefer: 'accuracy' | 'coverage'
+    strictlyTighterThan?: { std: number; conf: number }
+  }): { std: number; conf: number; acc: number; coverage: number } | null {
+    let found: { std: number; conf: number; acc: number; coverage: number } | null = null
+    for (const std of stddevGrid) {
+      for (const conf of selfConfGrid) {
+        // "strictlyTighterThan" ensures HIGH's cutoffs are at least as strict
+        // as MEDIUM's in both dims AND stricter in at least one — so every
+        // HIGH prediction also passes MEDIUM (HIGH ⊂ MEDIUM).
+        if (options.strictlyTighterThan) {
+          const t = options.strictlyTighterThan
+          if (std > t.std || conf < t.conf) continue
+          if (std === t.std && conf === t.conf) continue // must be stricter in ≥1 dim
         }
-        const r = bucketAcc(d, s)
+        const r = bucket(std, conf)
         if (r.n < 20) continue
-        if (r.acc < targetAcc || r.coverage < minCoverage) continue
-        if (!found || r.coverage > found.coverage) {
-          found = { dist: d, std: s, acc: r.acc, coverage: r.coverage }
-        }
+        if (r.acc < options.targetAcc || r.coverage < options.minCoverage) continue
+        if (options.maxCoverage !== undefined && r.coverage > options.maxCoverage) continue
+        const better =
+          !found ||
+          (options.prefer === 'accuracy' ? r.acc > found.acc : r.coverage > found.coverage)
+        if (better) found = { std, conf, acc: r.acc, coverage: r.coverage }
       }
     }
     return found
   }
 
-  // Walk through high tiers until one produces a passing bucket.
-  let highPicked: Found | null = null
-  for (const tier of HIGH_TIERS) {
-    highPicked = pickBest(tier.acc, tier.minCoverage)
-    if (highPicked) break
+  /** Accuracy/coverage of the complement bucket (predictions NOT in above). */
+  function complementBucket(
+    stdT: number,
+    confT: number,
+  ): { acc: number; coverage: number; n: number } {
+    const subset = pairs.filter(
+      (p) => p.actual !== 0.5 && !(p.weightedStddev <= stdT && p.avgSelfConf >= confT),
+    )
+    if (subset.length === 0) return { acc: 0, coverage: 0, n: 0 }
+    let correct = 0
+    for (const p of subset) if (p.predicted === p.actual) correct++
+    return {
+      acc: correct / subset.length,
+      coverage: subset.length / pairs.length,
+      n: subset.length,
+    }
   }
 
-  // Disabled state: unreachable defaults so no prediction meets "high".
-  const high: Found = highPicked ?? { dist: 0.25, std: 0.05, acc: 0, coverage: 0 }
+  // MEDIUM tuning — prefer max coverage that (a) meets accuracy floor,
+  // (b) below-bucket is meaningfully less accurate (justifies a LOW band).
+  // If no cutoff satisfies (b), fall back to plain max-coverage — LOW
+  // won't show because the signal doesn't correlate at the bottom.
+  let mediumPicked: {
+    std: number
+    conf: number
+    above: { acc: number; coverage: number; n: number }
+    below: { acc: number; coverage: number; n: number }
+  } | null = null
+  let mediumPickedDistance = Infinity
+  let mediumFallback: typeof mediumPicked = null
+  for (const std of stddevGrid) {
+    for (const conf of selfConfGrid) {
+      const above = bucket(std, conf)
+      const below = complementBucket(std, conf)
+      if (above.n < 20) continue
+      if (above.acc < AGGREGATE_MEDIUM_TARGET_ACC) continue
+      if (above.coverage < AGGREGATE_MEDIUM_MIN_COVERAGE) continue
+      if (!mediumFallback || above.coverage > mediumFallback.above.coverage) {
+        mediumFallback = { std, conf, above, below }
+      }
+      if (below.n >= 20 && above.acc - below.acc >= AGGREGATE_LOW_DROP_BELOW_MEDIUM) {
+        // Pick cutoff whose LOW coverage is closest to the target band.
+        const distance = Math.abs(below.coverage - TARGET_LOW_COVERAGE)
+        if (distance < mediumPickedDistance) {
+          mediumPicked = { std, conf, above, below }
+          mediumPickedDistance = distance
+        }
+      }
+    }
+  }
+  const medium = mediumPicked ?? mediumFallback
 
-  // Medium: single tier, excluding what the high tier already owns.
-  const medium: Found = pickBest(
-    MEDIUM_TARGET_ACC,
-    MEDIUM_MIN_COVERAGE,
-    highPicked ?? undefined,
-  ) ?? { dist: 0.05, std: 0.15, acc: 0, coverage: 0 }
+  // HIGH target = overall aggregate accuracy + lift. HIGH must also clear
+  // MEDIUM's accuracy to preserve HIGH > MEDIUM > LOW ordering. Strictly
+  // tighter than MEDIUM in the (stddev, selfConf) grid.
+  const highTargetAcc = Math.max(
+    overallAcc + AGGREGATE_HIGH_LIFT_OVER_OVERALL,
+    medium?.above.acc ?? 0,
+  )
+  const high = pickBest({
+    targetAcc: highTargetAcc,
+    minCoverage: AGGREGATE_HIGH_MIN_COVERAGE,
+    maxCoverage: AGGREGATE_HIGH_MAX_COVERAGE,
+    prefer: 'accuracy',
+    strictlyTighterThan: medium ? { std: medium.std, conf: medium.conf } : undefined,
+  })
 
+  // Relabel: if the best MEDIUM+LOW split puts > LOW_INVERT_THRESHOLD in
+  // LOW AND the above-bucket passes HIGH's overall-acc + lift criterion,
+  // relabel — above-bucket becomes HIGH, below-bucket becomes MEDIUM, no
+  // LOW. Same statistically justified split, different framing.
+  if (
+    mediumPicked &&
+    !high &&
+    mediumPicked.below.coverage > LOW_INVERT_THRESHOLD &&
+    mediumPicked.above.acc >= overallAcc + AGGREGATE_HIGH_LIFT_OVER_OVERALL
+  ) {
+    return {
+      highStddev: mediumPicked.std,
+      highAvgSelfConf: mediumPicked.conf,
+      mediumStddev: 1, // permissive — everything not HIGH becomes MEDIUM
+      mediumAvgSelfConf: 0,
+      highAcc: mediumPicked.above.acc,
+      highCoverage: mediumPicked.above.coverage,
+      mediumAcc: mediumPicked.below.acc,
+      mediumCoverage: mediumPicked.below.coverage,
+      lowAcc: 0,
+      lowCoverage: 0,
+    }
+  }
+
+  // Default framing — MEDIUM+LOW. Runtime MEDIUM thresholds only active
+  // when LOW is justified. Otherwise permissive (everything = MEDIUM).
+  const runtimeMediumStddev = mediumPicked?.std ?? 1
+  const runtimeMediumAvgSelfConf = mediumPicked?.conf ?? 0
   return {
-    highDistance: high.dist,
-    mediumDistance: medium.dist,
-    highAgreementStddev: high.std,
-    mediumAgreementStddev: medium.std,
-    highAccuracy: high.acc,
-    mediumAccuracy: medium.acc,
-    highCoverage: high.coverage,
-    mediumCoverage: medium.coverage,
+    highStddev: high?.std ?? 0,
+    highAvgSelfConf: high?.conf ?? 1.01,
+    mediumStddev: runtimeMediumStddev,
+    mediumAvgSelfConf: runtimeMediumAvgSelfConf,
+    highAcc: high?.acc ?? 0,
+    highCoverage: high?.coverage ?? 0,
+    mediumAcc: medium?.above.acc ?? 0,
+    mediumCoverage: medium?.above.coverage ?? 0,
+    lowAcc: medium?.below.acc ?? 0,
+    lowCoverage: medium?.below.coverage ?? 0,
   }
 }
 
@@ -341,8 +619,14 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     'adaptive-ml': [],
   }
 
-  // For aggregate agreement-based confidence tuning, save all 4 predictions per match
-  const aggregateData: { modelProbs: Record<string, number>; actual: number }[] = []
+  // Full per-match snapshot for aggregate + per-model tuning. Each entry
+  // carries every model's raw probability AND self-confidence signal for
+  // the held-out match, so the tuner can grid-search all four axes.
+  const aggregateData: {
+    modelProbs: Record<string, number>
+    modelSelfConf: Record<string, number>
+    actual: number
+  }[] = []
 
   for (let fold = 0; fold < NUM_FOLDS; fold++) {
     const start = fold * foldSize
@@ -408,7 +692,18 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
       rawPairs['adaptive-ml']!.push({ x: nnProb, y: actual })
       modelProbs['adaptive-ml'] = nnProb
 
-      aggregateData.push({ modelProbs, actual })
+      // Self-confidence: each model's own data-support signal for this
+      // matchup, computed against the fold's training-set analysis (so we
+      // don't leak test-set info into per-model confidence).
+      const modelSelfConf = computeAllSelfConfidences(
+        [...match.left],
+        [...match.right],
+        foldAnalysis,
+        trainMatches,
+        btFit,
+      )
+
+      aggregateData.push({ modelProbs, modelSelfConf, actual })
     }
 
     process.stdout.write(`${testMatches.length} predictions\n`)
@@ -465,14 +760,9 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     }
   }
 
-  // ---- Build aggregate calibrated predictions for confidence threshold tuning ----
-  // Use mid-dataset fixed weights for the aggregate (matches recommend.ts at ~100 matches).
-  const AGGREGATE_WEIGHTS: Record<string, number> = {
-    'popular-pick': 0.35,
-    composite: 0.25,
-    'bradley-terry': 0.2,
-    'adaptive-ml': 0.2,
-  }
+  // ---- Build aggregate predictions + per-model CV-tuning inputs ----
+  // Use dataset-scaled aggregate weights (same logic as recommend.ts).
+  const aggregateWeights = getAdaptiveAggregateWeights(allMatches.length)
 
   function applyCal(id: string, raw: number): number {
     const c = calibrations[id]!
@@ -481,26 +771,75 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     return raw
   }
 
+  // Per-match aggregate snapshot: weighted mean probability, credibility-
+  // weighted variance, weighted mean self-confidence. Mirrors recommend.ts'
+  // getAggregatePrediction so the tuned thresholds map directly to the
+  // runtime badge logic.
   const aggregatePairs = aggregateData.map((d) => {
-    const calibratedProbs: number[] = []
-    let weighted = 0
-    let totalW = 0
-    for (const [id, w] of Object.entries(AGGREGATE_WEIGHTS)) {
-      const cal = applyCal(id, d.modelProbs[id]!)
-      calibratedProbs.push(cal)
-      weighted += w * cal
-      totalW += w
+    const calProbs: Record<string, number> = {}
+    for (const id of MODEL_IDS) calProbs[id] = applyCal(id, d.modelProbs[id]!)
+
+    // Credibility weight = aggregateWeight × selfConfidence.
+    let totalCred = 0
+    const cred: Record<string, number> = {}
+    for (const id of MODEL_IDS) {
+      const c = (aggregateWeights[id] ?? 0.25) * d.modelSelfConf[id]!
+      cred[id] = c
+      totalCred += c
     }
-    const prob = weighted / totalW
-    const mean = calibratedProbs.reduce((s, p) => s + p, 0) / calibratedProbs.length
-    const variance =
-      calibratedProbs.reduce((s, p) => s + (p - mean) * (p - mean), 0) / calibratedProbs.length
-    const stddev = Math.sqrt(variance)
-    return { prob, stddev, actual: d.actual }
+    // Fallback if all selfConf are 0 (brand-new heroes) — avoid div-by-zero.
+    let totalW: number
+    const weights: Record<string, number> = {}
+    if (totalCred > 0) {
+      totalW = totalCred
+      Object.assign(weights, cred)
+    } else {
+      totalW = 0
+      for (const id of MODEL_IDS) {
+        const w = aggregateWeights[id] ?? 0.25
+        weights[id] = w
+        totalW += w
+      }
+    }
+
+    let prob = 0
+    for (const id of MODEL_IDS) prob += (weights[id]! / totalW) * calProbs[id]!
+
+    let variance = 0
+    for (const id of MODEL_IDS) variance += (weights[id]! / totalW) * (calProbs[id]! - prob) ** 2
+    const weightedStddev = Math.sqrt(variance)
+
+    let avgSelfConf = 0
+    for (const id of MODEL_IDS) avgSelfConf += (weights[id]! / totalW) * d.modelSelfConf[id]!
+
+    const predicted = prob >= 0.5 ? 1 : 0
+    return {
+      prob,
+      weightedStddev,
+      avgSelfConf,
+      actual: d.actual,
+      predicted,
+    }
   })
 
-  const tuning = tuneConfidenceThresholds(aggregatePairs)
+  // Per-model tuning inputs: (selfConf, actual, predicted) for each model.
+  const perModelTuned: Record<string, PerModelTuned> = {}
+  for (const id of MODEL_IDS) {
+    const pairs = aggregateData.map((d) => ({
+      selfConf: d.modelSelfConf[id]!,
+      actual: d.actual,
+      // For per-model tuning, predicted outcome is that model's own raw prob
+      // (calibrated — so tuning aligns with runtime behavior).
+      predicted: applyCal(id, d.modelProbs[id]!) >= 0.5 ? 1 : 0,
+    }))
+    const decisivePairs = pairs.filter((p) => p.actual !== 0.5)
+    const correct = decisivePairs.filter((p) => p.predicted === p.actual).length
+    const overallAcc = decisivePairs.length > 0 ? correct / decisivePairs.length : 0
+    perModelTuned[id] = tunePerModel(pairs, overallAcc)
+  }
+
   const aggAcc = accuracy(aggregatePairs.map((p) => ({ x: p.prob, y: p.actual })))
+  const aggregateTuned = tuneAggregate(aggregatePairs, aggAcc)
   const aggBrier = brierScore(aggregatePairs.map((p) => ({ x: p.prob, y: p.actual })))
 
   // ---- Print benchmark table ----
@@ -541,24 +880,79 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
 
   // ---- Print confidence threshold tuning ----
 
-  console.log(`\n----- Confidence thresholds (tuned against CV aggregate) -----`)
-  if (tuning.highCoverage === 0) {
-    console.log(
-      `High:   DISABLED — no (distance, stddev) bucket cleared any of the tiered accuracy targets`,
-    )
-    console.log(`          with the required coverage floor. Users won't see the high badge until`)
-    console.log(`          calibration improves or HIGH_TIERS is loosened in benchmark.ts.`)
+  console.log(`\n----- Per-model confidence thresholds (selfConf cutoffs) -----`)
+  for (const id of MODEL_IDS) {
+    const t = perModelTuned[id]!
+    console.log(`\n  ${id}:`)
+    // Relabel mode: HIGH enabled, MEDIUM cutoff collapsed to 0, no LOW.
+    // Signal identifies a reliable top subset rather than an unreliable tail.
+    const isRelabeled = t.high <= 1 && t.medium === 0 && t.mediumCoverage > 0
+    if (t.high > 1) {
+      console.log(`    HIGH:    disabled  (no bucket cleared overall + 2pp)`)
+    } else {
+      console.log(
+        `    HIGH:    selfConf ≥ ${t.high.toFixed(2)}   ${(t.highAcc * 100).toFixed(1)}% acc / ${(t.highCoverage * 100).toFixed(1)}% coverage`,
+      )
+    }
+    if (t.mediumCoverage === 0) {
+      console.log(`    MEDIUM:  disabled  (no bucket met target)`)
+    } else if (isRelabeled) {
+      console.log(
+        `    MEDIUM:  selfConf < ${t.high.toFixed(2)}   ${(t.mediumAcc * 100).toFixed(1)}% acc / ${(t.mediumCoverage * 100).toFixed(1)}% coverage   [relabeled — signal flags a reliable top subset, not an unreliable tail]`,
+      )
+    } else {
+      console.log(
+        `    MEDIUM:  selfConf ≥ ${t.medium.toFixed(2)}   ${(t.mediumAcc * 100).toFixed(1)}% acc / ${(t.mediumCoverage * 100).toFixed(1)}% coverage`,
+      )
+    }
+    // LOW only meaningful when MEDIUM cutoff > 0 AND below-bucket is measurable
+    if (t.medium > 0 && t.lowCoverage > 0) {
+      const drop = t.mediumAcc - t.lowAcc
+      const justified = drop >= PER_MODEL_LOW_DROP_BELOW_MEDIUM
+      const flag = justified ? 'justified' : 'not justified (drop < 1pp)'
+      console.log(
+        `    LOW:     selfConf < ${t.medium.toFixed(2)}   ${(t.lowAcc * 100).toFixed(1)}% acc / ${(t.lowCoverage * 100).toFixed(1)}% coverage   [drop ${(drop * 100).toFixed(1)}pp — ${flag}]`,
+      )
+    } else if (isRelabeled) {
+      console.log(`    LOW:     (disabled — relabeled framing; MEDIUM is the typical tier)`)
+    } else {
+      console.log(`    LOW:     (empty — MEDIUM includes all predictions)`)
+    }
+  }
+
+  console.log(`\n----- Aggregate confidence thresholds -----`)
+  const a = aggregateTuned
+  // Relabel mode: HIGH identifies a reliable top subset, MEDIUM is the complement, no LOW.
+  const aggIsRelabeled = a.highCoverage > 0 && a.mediumStddev === 1 && a.mediumAvgSelfConf === 0
+  if (a.highCoverage === 0) {
+    console.log(`    HIGH:    disabled  (no bucket cleared overall + 2pp)`)
   } else {
     console.log(
-      `High:   |p-0.5| >= ${tuning.highDistance.toFixed(2)}  AND  stddev <= ${tuning.highAgreementStddev.toFixed(2)}  →  ${(tuning.highAccuracy * 100).toFixed(1)}% acc, ${(tuning.highCoverage * 100).toFixed(1)}% coverage`,
+      `    HIGH:    weighted_stddev ≤ ${a.highStddev.toFixed(2)}  AND  avg_self_conf ≥ ${a.highAvgSelfConf.toFixed(2)}   ${(a.highAcc * 100).toFixed(1)}% acc / ${(a.highCoverage * 100).toFixed(1)}% coverage`,
     )
   }
-  if (tuning.mediumCoverage === 0) {
-    console.log(`Medium: DISABLED — below MEDIUM_MIN_COVERAGE floor`)
+  if (a.mediumCoverage === 0) {
+    console.log(`    MEDIUM:  disabled`)
+  } else if (aggIsRelabeled) {
+    console.log(
+      `    MEDIUM:  (complement of HIGH)             ${(a.mediumAcc * 100).toFixed(1)}% acc / ${(a.mediumCoverage * 100).toFixed(1)}% coverage   [relabeled — signal flags reliable top subset]`,
+    )
   } else {
     console.log(
-      `Medium: |p-0.5| >= ${tuning.mediumDistance.toFixed(2)}  AND  stddev <= ${tuning.mediumAgreementStddev.toFixed(2)}  →  ${(tuning.mediumAccuracy * 100).toFixed(1)}% acc, ${(tuning.mediumCoverage * 100).toFixed(1)}% coverage`,
+      `    MEDIUM:  weighted_stddev ≤ ${a.mediumStddev.toFixed(2)}  AND  avg_self_conf ≥ ${a.mediumAvgSelfConf.toFixed(2)}   ${(a.mediumAcc * 100).toFixed(1)}% acc / ${(a.mediumCoverage * 100).toFixed(1)}% coverage`,
     )
+  }
+  if (a.mediumCoverage > 0 && a.lowCoverage > 0) {
+    const drop = a.mediumAcc - a.lowAcc
+    const justified = drop >= AGGREGATE_LOW_DROP_BELOW_MEDIUM
+    const flag = justified ? 'justified' : 'not justified (drop < 1pp)'
+    console.log(
+      `    LOW:     (complement of MEDIUM)             ${(a.lowAcc * 100).toFixed(1)}% acc / ${(a.lowCoverage * 100).toFixed(1)}% coverage   [drop ${(drop * 100).toFixed(1)}pp — ${flag}]`,
+    )
+  } else if (aggIsRelabeled) {
+    console.log(`    LOW:     (disabled — relabeled framing; MEDIUM is the typical tier)`)
+  } else {
+    console.log(`    LOW:     (empty — MEDIUM covers everything)`)
   }
 
   // ---- Write calibrationData.ts ----
@@ -585,11 +979,19 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     calObj[id] = obj
   }
 
+  const perModelThresholdsObj: Record<string, { high: number; medium: number }> = {}
+  for (const id of MODEL_IDS) {
+    const t = perModelTuned[id]!
+    perModelThresholdsObj[id] = { high: round(t.high), medium: round(t.medium) }
+  }
   const thresholdsObj = {
-    highDistance: round(tuning.highDistance),
-    mediumDistance: round(tuning.mediumDistance),
-    highAgreementStddev: round(tuning.highAgreementStddev),
-    mediumAgreementStddev: round(tuning.mediumAgreementStddev),
+    perModel: perModelThresholdsObj,
+    aggregate: {
+      highStddev: round(aggregateTuned.highStddev),
+      highAvgSelfConf: round(aggregateTuned.highAvgSelfConf),
+      mediumStddev: round(aggregateTuned.mediumStddev),
+      mediumAvgSelfConf: round(aggregateTuned.mediumAvgSelfConf),
+    },
   }
 
   const outPath = join(import.meta.dirname!, '..', 'prediction', 'calibrationData.ts')
@@ -613,11 +1015,34 @@ export interface Calibration {
   samples?: number
 }
 
+/**
+ * Per-model self-confidence thresholds. Each model publishes a signal in
+ * [0, 1] (see \`modelConfidence.ts\`); these cutoffs are tuned per-model
+ * against held-out accuracy.
+ */
+export interface PerModelThresholds {
+  high: number
+  medium: number
+}
+
+/**
+ * Aggregate thresholds combine two signals:
+ *   - weightedStddev: credibility-weighted variance across the 4 model
+ *     probabilities (low stddev = models agree, weighted by per-model
+ *     self-confidence so sparse-data outliers count less)
+ *   - avgSelfConf: weighted mean of per-model self-confidences
+ * High = both pass high cutoffs. Medium = both pass medium cutoffs. Low = else.
+ */
+export interface AggregateThresholds {
+  highStddev: number
+  highAvgSelfConf: number
+  mediumStddev: number
+  mediumAvgSelfConf: number
+}
+
 export interface ConfidenceThresholds {
-  highDistance: number
-  mediumDistance: number
-  highAgreementStddev: number
-  mediumAgreementStddev: number
+  perModel: Record<string, PerModelThresholds>
+  aggregate: AggregateThresholds
 }
 
 export const CONFIDENCE_THRESHOLDS: ConfidenceThresholds = ${JSON.stringify(thresholdsObj, null, 2)}

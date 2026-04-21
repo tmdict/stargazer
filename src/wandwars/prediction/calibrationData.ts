@@ -18,245 +18,288 @@ export interface Calibration {
   samples?: number
 }
 
+/**
+ * Per-model self-confidence thresholds. Each model publishes a signal in
+ * [0, 1] (see `modelConfidence.ts`); these cutoffs are tuned per-model
+ * against held-out accuracy.
+ */
+export interface PerModelThresholds {
+  high: number
+  medium: number
+}
+
+/**
+ * Aggregate thresholds combine two signals:
+ *   - weightedStddev: credibility-weighted variance across the 4 model
+ *     probabilities (low stddev = models agree, weighted by per-model
+ *     self-confidence so sparse-data outliers count less)
+ *   - avgSelfConf: weighted mean of per-model self-confidences
+ * High = both pass high cutoffs. Medium = both pass medium cutoffs. Low = else.
+ */
+export interface AggregateThresholds {
+  highStddev: number
+  highAvgSelfConf: number
+  mediumStddev: number
+  mediumAvgSelfConf: number
+}
+
 export interface ConfidenceThresholds {
-  highDistance: number
-  mediumDistance: number
-  highAgreementStddev: number
-  mediumAgreementStddev: number
+  perModel: Record<string, PerModelThresholds>
+  aggregate: AggregateThresholds
 }
 
 export const CONFIDENCE_THRESHOLDS: ConfidenceThresholds = {
-  highDistance: 0.18,
-  mediumDistance: 0.08,
-  highAgreementStddev: 0.2,
-  mediumAgreementStddev: 0.2,
+  perModel: {
+    'popular-pick': {
+      high: 1.01,
+      medium: 0.55,
+    },
+    composite: {
+      high: 0.9,
+      medium: 0.55,
+    },
+    'bradley-terry': {
+      high: 0.35,
+      medium: 0.2,
+    },
+    'adaptive-ml': {
+      high: 1.01,
+      medium: 0.99,
+    },
+  },
+  aggregate: {
+    highStddev: 0.02,
+    highAvgSelfConf: 0.7,
+    mediumStddev: 0.2,
+    mediumAvgSelfConf: 0.7,
+  },
 }
 
 export const CALIBRATION: Record<string, Calibration> = {
   'popular-pick': {
     method: 'isotonic',
-    brierRaw: 0.240896,
-    brierCalibrated: 0.239046,
-    accuracy: 0.590846,
-    samples: 1442,
+    brierRaw: 0.241387,
+    brierCalibrated: 0.23884,
+    accuracy: 0.59402,
+    samples: 1505,
     bins: [
       {
-        rawProb: 0.345879,
+        rawProb: 0.334639,
         calibratedProb: 0,
       },
       {
-        rawProb: 0.354016,
-        calibratedProb: 0,
-      },
-      {
-        rawProb: 0.359614,
-        calibratedProb: 0,
-      },
-      {
-        rawProb: 0.394724,
+        rawProb: 0.375597,
         calibratedProb: 0.333333,
       },
       {
-        rawProb: 0.413515,
-        calibratedProb: 0.380952,
+        rawProb: 0.394028,
+        calibratedProb: 0.333333,
       },
       {
-        rawProb: 0.466634,
-        calibratedProb: 0.429293,
+        rawProb: 0.423569,
+        calibratedProb: 0.391813,
       },
       {
-        rawProb: 0.49167,
-        calibratedProb: 0.535714,
+        rawProb: 0.443242,
+        calibratedProb: 0.4,
       },
       {
-        rawProb: 0.525321,
-        calibratedProb: 0.5625,
+        rawProb: 0.462235,
+        calibratedProb: 0.45679,
       },
       {
-        rawProb: 0.561954,
-        calibratedProb: 0.673077,
+        rawProb: 0.491504,
+        calibratedProb: 0.4625,
       },
       {
-        rawProb: 0.608564,
-        calibratedProb: 0.75,
+        rawProb: 0.496753,
+        calibratedProb: 0.5,
       },
       {
-        rawProb: 0.635506,
-        calibratedProb: 0.756757,
+        rawProb: 0.53281,
+        calibratedProb: 0.56962,
       },
       {
-        rawProb: 0.685485,
+        rawProb: 0.540391,
+        calibratedProb: 0.642857,
+      },
+      {
+        rawProb: 0.608102,
+        calibratedProb: 0.729167,
+      },
+      {
+        rawProb: 0.704532,
         calibratedProb: 1,
       },
     ],
   },
   composite: {
     method: 'isotonic',
-    brierRaw: 0.242156,
-    brierCalibrated: 0.233684,
-    accuracy: 0.601248,
-    samples: 1442,
+    brierRaw: 0.241768,
+    brierCalibrated: 0.233609,
+    accuracy: 0.600664,
+    samples: 1505,
     bins: [
       {
-        rawProb: 0.390347,
+        rawProb: 0.38288,
         calibratedProb: 0,
       },
       {
-        rawProb: 0.428096,
-        calibratedProb: 0.263158,
+        rawProb: 0.419805,
+        calibratedProb: 0.272727,
       },
       {
-        rawProb: 0.440708,
-        calibratedProb: 0.297297,
+        rawProb: 0.443079,
+        calibratedProb: 0.318681,
       },
       {
-        rawProb: 0.448544,
-        calibratedProb: 0.333333,
+        rawProb: 0.454212,
+        calibratedProb: 0.348837,
       },
       {
-        rawProb: 0.451254,
-        calibratedProb: 0.357143,
+        rawProb: 0.456766,
+        calibratedProb: 0.4,
       },
       {
-        rawProb: 0.464633,
-        calibratedProb: 0.413793,
+        rawProb: 0.463211,
+        calibratedProb: 0.435644,
       },
       {
-        rawProb: 0.481225,
-        calibratedProb: 0.446809,
+        rawProb: 0.491274,
+        calibratedProb: 0.5,
       },
       {
-        rawProb: 0.50392,
-        calibratedProb: 0.552083,
+        rawProb: 0.503481,
+        calibratedProb: 0.521127,
       },
       {
-        rawProb: 0.523369,
-        calibratedProb: 0.555556,
+        rawProb: 0.520444,
+        calibratedProb: 0.638158,
       },
       {
-        rawProb: 0.530746,
-        calibratedProb: 0.674419,
+        rawProb: 0.540182,
+        calibratedProb: 0.677305,
       },
       {
-        rawProb: 0.566494,
-        calibratedProb: 0.75,
+        rawProb: 0.559894,
+        calibratedProb: 0.711111,
       },
       {
-        rawProb: 0.623671,
-        calibratedProb: 1,
+        rawProb: 0.582041,
+        calibratedProb: 0.794118,
       },
     ],
   },
   'bradley-terry': {
     method: 'isotonic',
-    brierRaw: 0.238449,
-    brierCalibrated: 0.236862,
-    accuracy: 0.588766,
-    samples: 1442,
+    brierRaw: 0.238034,
+    brierCalibrated: 0.236222,
+    accuracy: 0.599336,
+    samples: 1505,
     bins: [
       {
-        rawProb: 0.109877,
-        calibratedProb: 0,
+        rawProb: 0.116174,
+        calibratedProb: 0.2,
       },
       {
-        rawProb: 0.203928,
-        calibratedProb: 0.310345,
+        rawProb: 0.350797,
+        calibratedProb: 0.375,
       },
       {
-        rawProb: 0.324974,
-        calibratedProb: 0.361111,
+        rawProb: 0.398611,
+        calibratedProb: 0.459574,
       },
       {
-        rawProb: 0.405517,
-        calibratedProb: 0.4,
+        rawProb: 0.48715,
+        calibratedProb: 0.5,
       },
       {
-        rawProb: 0.420415,
-        calibratedProb: 0.452055,
+        rawProb: 0.48906,
+        calibratedProb: 0.5,
       },
       {
-        rawProb: 0.43812,
-        calibratedProb: 0.472222,
+        rawProb: 0.548362,
+        calibratedProb: 0.582645,
       },
       {
-        rawProb: 0.611832,
-        calibratedProb: 0.617241,
+        rawProb: 0.680859,
+        calibratedProb: 0.708861,
       },
       {
-        rawProb: 0.663025,
-        calibratedProb: 0.666667,
+        rawProb: 0.816297,
+        calibratedProb: 0.75,
       },
       {
-        rawProb: 0.673204,
-        calibratedProb: 0.708333,
+        rawProb: 0.825349,
+        calibratedProb: 1,
       },
       {
-        rawProb: 0.797147,
-        calibratedProb: 0.769231,
+        rawProb: 0.835844,
+        calibratedProb: 1,
       },
       {
-        rawProb: 0.826301,
-        calibratedProb: 0.8,
+        rawProb: 0.861987,
+        calibratedProb: 1,
       },
       {
-        rawProb: 0.876672,
+        rawProb: 0.878149,
         calibratedProb: 1,
       },
     ],
   },
   'adaptive-ml': {
     method: 'isotonic',
-    brierRaw: 0.251197,
-    brierCalibrated: 0.242793,
-    accuracy: 0.556865,
-    samples: 1442,
+    brierRaw: 0.252628,
+    brierCalibrated: 0.243746,
+    accuracy: 0.568771,
+    samples: 1505,
     bins: [
       {
-        rawProb: 0.124263,
-        calibratedProb: 0.333333,
+        rawProb: 0.077393,
+        calibratedProb: 0,
       },
       {
-        rawProb: 0.209357,
-        calibratedProb: 0.339286,
+        rawProb: 0.083847,
+        calibratedProb: 0,
       },
       {
-        rawProb: 0.260828,
-        calibratedProb: 0.428571,
+        rawProb: 0.123838,
+        calibratedProb: 0.285714,
       },
       {
-        rawProb: 0.402751,
-        calibratedProb: 0.454545,
+        rawProb: 0.290828,
+        calibratedProb: 0.431507,
       },
       {
-        rawProb: 0.548158,
-        calibratedProb: 0.5625,
+        rawProb: 0.392174,
+        calibratedProb: 0.479245,
       },
       {
-        rawProb: 0.642073,
-        calibratedProb: 0.580122,
+        rawProb: 0.463282,
+        calibratedProb: 0.489933,
       },
       {
-        rawProb: 0.806281,
-        calibratedProb: 0.695652,
+        rawProb: 0.537047,
+        calibratedProb: 0.583333,
       },
       {
-        rawProb: 0.884138,
+        rawProb: 0.614192,
+        calibratedProb: 0.59448,
+      },
+      {
+        rawProb: 0.719917,
+        calibratedProb: 0.633333,
+      },
+      {
+        rawProb: 0.904141,
+        calibratedProb: 0.75,
+      },
+      {
+        rawProb: 0.922868,
         calibratedProb: 1,
       },
       {
-        rawProb: 0.888783,
-        calibratedProb: 1,
-      },
-      {
-        rawProb: 0.894994,
-        calibratedProb: 1,
-      },
-      {
-        rawProb: 0.904115,
-        calibratedProb: 1,
-      },
-      {
-        rawProb: 0.92427,
+        rawProb: 0.955119,
         calibratedProb: 1,
       },
     ],

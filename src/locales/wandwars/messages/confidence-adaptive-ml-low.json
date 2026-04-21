@@ -1,0 +1,4 @@
+{
+  "en": "Some of these hero pairings rarely appear together in training, so the neural network is extrapolating more than usual.",
+  "zh": "部分英雄配对在训练数据中很少一起出现，神经网络需要进行较多的外推。"
+}

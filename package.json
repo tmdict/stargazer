@@ -13,6 +13,7 @@
     "format": "prettier --write --list-different src/ docs/ tests/",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
+    "prep": "run-s format type-check lint",
     "test": "vitest run",
     "test:unit": "vitest run tests/unit",
     "test:it": "vitest run tests/integration",

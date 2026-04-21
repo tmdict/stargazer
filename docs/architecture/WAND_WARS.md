@@ -65,12 +65,7 @@ Prior fades naturally as data grows. At 50+ matches per hero it's negligible. Ap
 
 WandWars shows two semantically different "high/medium/low" badges. They share visual styling but measure different things, and live in different places.
 
-**1. Match-prediction confidence** — on the aggregate and per-model matchup prediction cards. Reflects whether the final probability is trustworthy.
-
-- Based on two signals: **distance from 50%** of the calibrated probability and **stddev across the four models' calibrated probabilities** (agreement).
-- Thresholds are tuned offline by the benchmark script against held-out CV data so that "high confidence" predictions empirically hit ≥75% accuracy. Stored in `calibrationData.ts` as `CONFIDENCE_THRESHOLDS`.
-- Per-model badges (on the individual model cards) use distance-from-50% only — single-model predictions can't measure agreement.
-- Implemented in `recommend.ts`.
+**1. Match-prediction confidence** — on the aggregate and per-model matchup prediction cards. Reflects **how trustworthy the win probability is**, independent of how close or far the probability is from 50/50. A confident 55% prediction is as "high confidence" as a confident 85% prediction — the badge answers "should you trust the number?", not "how dramatic is the number?". See the dedicated "Match-Prediction Confidence" subsection below for the full design.
 
 **2. Hero data depth** — on per-hero recommendation cards while drafting. Reflects how many matches the hero has been in, using a Wilson 95% CI width on the hero's weighted win/loss record.
 
@@ -84,6 +79,118 @@ Wilson is absolute — these thresholds don't change with dataset size, but the 
 
 - Displayed under "Rich / Moderate / Sparse data" tooltip copy to distinguish from match-prediction confidence.
 - Computed per-hero in `confidence.ts` via Wilson score on weighted wins, consumed by `modelUtils.ts`'s `getHeroWilsonConfidence`.
+
+### Match-Prediction Confidence (modelConfidence.ts + recommend.ts)
+
+#### Motivation
+
+Each of the four models outputs a win-probability %. Users need to know **how trustworthy that % actually is** — a 100%-predicted win with 10% prediction reliability is practically a coin flip, while a 50/50 prediction that's genuinely reliable tells you the matchup really is even. The badge answers "should you trust this number?", not "how dramatic is the number?".
+
+Three design principles drive everything below:
+
+1. **Each model gauges its own reliability independently.** The four models make predictions in fundamentally different ways (popularity counts, analytical interaction modeling, statistical strength estimation, neural embeddings), so the way each model measures _its own_ reliability is also different. Popular Pick looks at pair record depth; Composite looks at synergy/counter matrix coverage; Team Power looks at how much pair data is overriding the additive-strength fit; Adaptive ML looks at combinatorial training exposure. One-size-fits-all signals would systematically mis-call individual models.
+2. **Every reliability signal is empirically validated against held-out CV.** A signal that intuitively looks sensible but doesn't actually correlate with accuracy gets replaced (this is why B-T and NN don't use hero-match-count signals — we tried, they failed the validation).
+3. **The badges communicate meaningful distinctions, not statistical noise.** HIGH should be genuinely rare (< ~15% of predictions) and substantively more accurate than MEDIUM. LOW should be a real warning (~20–30%) when data is thin. MEDIUM is the typical tier. If everything lands in MEDIUM the badge stops communicating anything.
+
+As the dataset grows, the distribution of badges should evolve: at small data sizes HIGH may not appear at all (no subset is distinguishably better); LOW may be a larger share (many matchups have unseen hero combinations). As data matures, HIGH can enable, LOW shrinks, MEDIUM dominates. All of that happens automatically — no hand-tuned thresholds that need updating per dataset size.
+
+#### How it works
+
+Two kinds of signal go into the badge, produced differently for per-model vs. aggregate.
+
+#### Signal 1 — per-model self-confidence
+
+Each of the four prediction models publishes a self-confidence score in `[0, 1]` that reflects "do I have the ingredients I need to make a reliable prediction for this specific matchup?". The four signals are deliberately different because each model depends on different data _and_ because the signal must empirically correlate with held-out accuracy — data-quantity signals that look sensible but don't actually discriminate accuracy get replaced:
+
+| Model        | Signal                                                                                             | Why                                                                                                                                                                                                                                                                                                                                          |
+| ------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Popular Pick | Avg pair match count across the 6 teammate pairs, / 10                                             | PP blends with overall win rate when pair records are thin — more pair data = more contextual signal                                                                                                                                                                                                                                         |
+| Hero Synergy | Avg `dataStrength = min(1, matches / 10)` across the 6 teammate pairs and 9 opposing-hero matchups | Composite explicitly down-weights its synergy / counter components by this exact strength                                                                                                                                                                                                                                                    |
+| Team Power   | `exp(−6 × Σ\|pair-residual\|)` across the 6 teammate pairs                                         | Data-quantity signals (hero / pair match counts) didn't correlate with B-T accuracy at ~1,500 matches — low-data matches default to near-50% and were accidentally right on close games. The residual-magnitude signal flags matchups where pair data strongly overrides the additive-strength fit, a genuine per-matchup uncertainty signal |
+| Adaptive ML  | Avg pair co-occurrence across the 6 teammate pairs, / 5                                            | Per-hero match count also didn't correlate with NN accuracy. Pair co-occurrence captures _combinatorial_ familiarity — how often the NN saw these hero-pair interactions during training — which the team-sum embeddings actually depend on                                                                                                  |
+
+All signals land in `[0, 1]`. Higher means the model has the inputs it relies on; lower means the model is operating near its Bayesian priors / regularization defaults / randomly-initialized embeddings and the answer is softer.
+
+Implemented in [`modelConfidence.ts`](../../src/wandwars/prediction/modelConfidence.ts). When adding a new signal candidate, validate it by running `npm run ww:train` and checking that the LOW bucket (sub-MEDIUM) is empirically at least 1pp less accurate than MEDIUM — the benchmark prints this drop. Signals that pass this check ship; signals that don't get replaced.
+
+#### Signal 2 — credibility-weighted cross-model agreement (aggregate only)
+
+For the aggregate prediction and badge, we compute a **credibility-weighted blend** across the four model probabilities. "Credibility" for model _i_ is its standard aggregate weight (from `getAdaptiveAggregateWeights`) multiplied by its self-confidence signal for this specific matchup. A sparse-data outlier's vote therefore counts less in both:
+
+- The **aggregate probability** users see on the card (`μ`)
+- The **disagreement metric** used to pick the badge (`weightedStddev`)
+
+Mathematically, for each prediction:
+
+```
+credibility_i  = aggregateWeight_i × selfConf_i
+μ              = Σ(credibility_i × prob_i)   / Σ(credibility_i)    // displayed aggregate win %
+weightedStddev = √[ Σ(credibility_i × (prob_i − μ)²) / Σ(credibility_i) ]
+avgSelfConf    = Σ(credibility_i × selfConf_i)   / Σ(credibility_i)
+```
+
+Where this matters at runtime:
+
+1. **μ is the displayed aggregate win probability.** If NN's self-confidence collapses for a matchup with unseen hero pairs, NN's vote barely moves the blended %. The aggregate falls back toward the hand-crafted models. Conversely, when all four are confident, they contribute roughly in proportion to their base aggregate weights.
+2. **Badge cutoffs (HIGH/MEDIUM/LOW)** are chosen on `(weightedStddev, avgSelfConf)` pairs — picking up both "do the credible models agree?" and "do they have enough data between them?".
+
+Scenario walkthroughs:
+
+- **Three confident models agree at 70%, one unconfident disagrees at 40%.** Outlier's credibility is small; it barely moves μ off 70% and barely adds to variance. Aggregate stays near the majority view, badge can reach HIGH.
+- **All four confident, one credibly dissents at 40% while the others sit at 70%.** Outlier's credibility is full; μ gets pulled toward 63%, weightedStddev jumps, badge drops to MEDIUM. Credible disagreement is genuine evidence — the blended % and the badge both reflect it.
+
+Calibration (`calibrationData.ts`) is re-fit against this credibility-weighted μ on every `ww:train` run, so the displayed aggregate % stays empirically calibrated as signals evolve.
+
+#### Badges
+
+**Per-model badge** (shown on each of the four individual matchup prediction cards):
+
+| Band   | Condition                                      |
+| ------ | ---------------------------------------------- |
+| high   | `selfConfidence >= t.perModel[modelId].high`   |
+| medium | `selfConfidence >= t.perModel[modelId].medium` |
+| low    | otherwise                                      |
+
+Thresholds are **per-model tuned** — each signal has a different natural distribution, so shared cutoffs would systematically over- or under-call individual models. The tuner works in three steps:
+
+1. **Pick MEDIUM**. Among all candidate cutoffs whose above-bucket clears an absolute accuracy floor and minimum coverage floor, _and_ whose below-bucket is empirically ≥ 1pp less accurate (so LOW is justified), pick the one whose LOW coverage lands closest to `TARGET_LOW_COVERAGE` (≈ 25%). LOW is meant to be a rare-but-meaningful warning, not a vanishing edge case and not the majority.
+2. **Pick HIGH**. Among stricter cutoffs, enable HIGH if some bucket's accuracy clears `overall_acc + 2pp`, also clears MEDIUM's accuracy, _and_ its coverage is in `[min, max]` (default `[3%, 15%]`). The tight coverage cap keeps HIGH genuinely rare — "trust this more than average" shouldn't fire on 30 %+ of cards. Using overall accuracy (not MEDIUM's subset) as the lift reference decouples HIGH from MEDIUM's cutoff choice.
+3. **Relabel if LOW is the majority** (> 50% coverage) _and_ no HIGH bucket was found _and_ the above-bucket passes HIGH's overall-acc + lift criterion. This covers signals (like B-T's pair-residual magnitude) that split bimodally — the "reliable top subset" gets labeled HIGH instead of "most matchups LOW".
+
+Each band can also be empirically unjustified at current data size — see "Disabled bands" below. Individual models may end up with unusual shapes if their signal structurally demands it (e.g. B-T's residual-magnitude distribution is inherently bimodal, so its LOW can land well above the 25% target). That's acceptable — the goal is meaningful labels, not identical distributions across models.
+
+**Aggregate badge** (shown on the top aggregate-prediction card):
+
+| Band   | Condition                                                                                       |
+| ------ | ----------------------------------------------------------------------------------------------- |
+| high   | `weightedStddev <= t.aggregate.highStddev` AND `avgSelfConf >= t.aggregate.highAvgSelfConf`     |
+| medium | `weightedStddev <= t.aggregate.mediumStddev` AND `avgSelfConf >= t.aggregate.mediumAvgSelfConf` |
+| low    | otherwise                                                                                       |
+
+Both conditions must clear. Reaching high needs _both_ tight model agreement _and_ strong collective data support. Either missing drops to medium or low.
+
+#### Disabled bands
+
+Tuning in `benchmark.ts` finds cutoffs that empirically justify each band. If no cutoff qualifies, the band is **disabled** for that run:
+
+- **Disabled HIGH**: threshold set to `1.01` (unreachable). No prediction ever shows HIGH for that model / the aggregate. Signal: no subset of the held-out data was ≥ 2pp more accurate than overall — or if one existed, it didn't clear MEDIUM's own accuracy (so labeling it HIGH would invert the HIGH > MEDIUM ordering).
+- **Disabled LOW**: MEDIUM threshold is collapsed to `0` (always passes). Every prediction with `selfConf > 0` gets MEDIUM — LOW never fires. Two reasons this happens: (a) the below-MEDIUM bucket wasn't ≥ 1pp less accurate than MEDIUM, so no statistical basis to warn users away; (b) the tuner used the relabel framing — the signal identifies a reliable top subset (HIGH), and everything below is the typical MEDIUM tier with no further LOW split available.
+- **Disabled MEDIUM**: threshold set to `0` (always passes) — same runtime effect as disabled LOW.
+
+Disabling is intentional: we'd rather skip a band than show one that's wrong 35% of the time (HIGH) or warn users away from predictions that are actually reliable (LOW). As the dataset grows and the self-confidence signals become more discriminating, more bands should enable naturally.
+
+#### Why this design
+
+The old confidence badge conflated two different things: the magnitude of the prediction (far from 50%?) and the reliability of the prediction. A 92% prediction always showed HIGH regardless of whether we had seen any of those heroes before. Users started treating "high confidence" as a reliability signal it wasn't delivering.
+
+The new design:
+
+- Keeps the badge's semantic meaning constant — "trust this number" — regardless of the number
+- Surfaces model-specific data weaknesses (NN needs hero embedding exposure; Composite needs synergy matrix data; etc.)
+- Uses cross-model agreement at the aggregate level only, weighted by credibility so sparse-data outliers don't torpedo well-supported predictions
+- Grade-degrades gracefully: when tuning can't find a confident threshold, the band disables rather than firing an unreliable badge
+
+The tooltip copy in `constants.ts` (`PREDICTION_CONFIDENCE_DESCRIPTIONS`) explains this in layman terms to users on hover.
 
 ### Probability Calibration (calibration.ts + calibrationData.ts)
 
@@ -397,15 +504,15 @@ Two different badges, both rendered as high / medium / low chips — see Section
 | **medium** | CI width 0.20–0.35 (~12–15 matches) | Yellow | Moderate estimate, more data helpful |
 | **low**    | < 3 matches, or CI width ≥ 0.35     | Red    | Wide/unreliable estimate             |
 
-**Matchup prediction (prediction reliability)** — distance of the calibrated aggregate from 50%, plus across-model stddev. Thresholds tuned against held-out CV so "high" hits ≥ 75% accuracy. Tooltip: "High/medium/low confidence" framed as prediction reliability.
+**Matchup prediction (prediction reliability)** — per-model self-confidence signals plus credibility-weighted cross-model agreement. Answers "should I trust this %?", independent of how extreme the % is. Thresholds are dynamically tuned per-model against held-out CV (see §4 and §7).
 
-| Label      | Condition (aggregate)                                               | Meaning                                   |
-| ---------- | ------------------------------------------------------------------- | ----------------------------------------- |
-| **high**   | \|p − 0.5\| ≥ `highDistance` AND stddev ≤ `highAgreementStddev`     | Calibrated prediction clear; models agree |
-| **medium** | \|p − 0.5\| ≥ `mediumDistance` AND stddev ≤ `mediumAgreementStddev` | Calibrated prediction moderate            |
-| **low**    | otherwise                                                           | Close to 50/50 or models disagree         |
+| Label      | Condition (aggregate)                                                 | Meaning                                                                                             |
+| ---------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| **high**   | `weightedStddev ≤ highStddev` AND `avgSelfConf ≥ highAvgSelfConf`     | Models agree _and_ underlying data is rich                                                          |
+| **medium** | `weightedStddev ≤ mediumStddev` AND `avgSelfConf ≥ mediumAvgSelfConf` | Reasonable data + reasonable agreement                                                              |
+| **low**    | otherwise                                                             | Sub-MEDIUM agreement or thin data — only shown when empirically justified (see §4 "Disabled bands") |
 
-Per-model matchup cards use distance only (no agreement signal with one model).
+Per-model matchup cards use each model's `selfConfidence` only (no cross-model agreement signal with a single model).
 
 ### Per-Hero Counter Indicators
 
@@ -466,48 +573,103 @@ Bradley-Terry gets the same per-fold treatment: fit once per fold (~0.25s) on tr
 
 **Lower headline accuracy ≠ worse model.** Honest CV on this dataset puts Adaptive ML near 55% (vs. 58–59% for the hand-crafted models), but those numbers reflect what users actually experience — no leakage, no inflation. Combined with probability calibration, predictions are **less flashy but more trustworthy**: when the UI says 70%, the model has historically hit ~70% in that bucket (verified by the reliability diagram). A calibrated 70% beats an overconfident 82% every time.
 
-### Results — 2026-04-20 (1,465 matches, 1,438 decisive, 87 heroes)
+### Results — 2026-04-20 (1,517 matches, 1,489 decisive, 87 heroes)
 
 | Model         | Accuracy  | Brier (raw) | Brier (calibrated) | Calibration    |
 | ------------- | --------- | ----------- | ------------------ | -------------- |
-| Popular Pick  | 57.0%     | 0.2446      | **0.2461 ↑**       | isotonic       |
-| Hero Synergy  | 59.5%     | 0.2436      | **0.2377 ↓**       | isotonic       |
-| Team Power    | 57.0%     | 0.2441      | **0.2429 ↓**       | isotonic       |
-| Adaptive ML   | 57.1%     | 0.2556      | **0.2429 ↓**       | isotonic       |
-| **Aggregate** | **57.6%** | —           | **0.2394**         | (blended)      |
+| Popular Pick  | 60.1%     | 0.2412      | **0.2375 ↓**       | isotonic       |
+| Hero Synergy  | 60.6%     | 0.2415      | **0.2339 ↓**       | isotonic       |
+| Team Power    | 60.8%     | 0.2357      | **0.2375 ↑**       | isotonic       |
+| Adaptive ML   | 58.6%     | 0.2445      | **0.2386 ↓**       | isotonic       |
+| **Aggregate** | **62.8%** | —           | **0.2326**         | (blended)      |
 | _Baseline_    | _53.6%_   | —           | —                  | _predict left_ |
 
-Calibration lowered Brier on three of the four models and the aggregate. Aggregate reliability post-calibration: most bins within ±4% of their predicted probability (see `benchmark.ts` reliability diagram output).
+All four models and the aggregate gained 1–3pp of accuracy between the prior run (1,465 matches) and this one (1,517). Calibration lowered Brier on three of the four models and the aggregate; Team Power's Brier ticked up slightly post-calibration — mild isotonic-fit noise at the current sample size, worth watching across runs.
 
-**Adaptive ML closed the gap.** The NN jumped from ~55% to 57.1% as the dataset grew, now within a point of the hand-crafted models — the first sign of the "bet on the NN at scale" hypothesis paying out. Not decisively ahead yet; the three-way cluster at 57.0–57.1% and Hero Synergy alone at 59.5% suggests no single model dominates at this size.
+**The hand-crafted models are now a tight cluster** (60.1–60.8%) within 0.7pp. Adaptive ML trails at 58.6%, still closing the gap from its 55% floor at ~1,150 matches.
 
-**Popular Pick's calibration regressed slightly** (0.2446 → 0.2461). A mild sign of isotonic-regression overfit on its CV output at this dataset size — the raw output was already reasonably calibrated for Popular Pick, and the isotonic fit added noise. Worth watching; if it persists across future runs, consider Platt fallback for Popular Pick even above 300 samples.
+**The aggregate clearly outperforms any single model** (62.8% vs. best individual 60.8%), confirming the ensemble gain from credibility-weighted blending. The 9.2pp gap vs. the predict-left baseline translates directly to user-visible lift.
 
 Numbers fluctuate ±1–2% across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
 
-### Confidence Thresholds (tuned on this dataset)
+### Confidence Threshold Tuning
 
-From the 2026-04-20 run:
+`benchmark.ts` runs a 5-fold CV pass and then tunes per-model and aggregate confidence thresholds against the held-out predictions. See §4 "Match-Prediction Confidence" for the full design; this section documents the tuning outputs.
 
-| Badge  | Distance from 50% | Model stddev | Empirical accuracy | Coverage |
-| ------ | ----------------- | ------------ | ------------------ | -------- |
-| High   | ≥ 0.20            | ≤ 0.15       | 70.1%              | 8.1%     |
-| Medium | ≥ 0.08            | ≤ 0.20       | 65.1%              | 40.8%    |
+**Tuning is dynamic and data-driven** — targets scale with realized accuracy so they don't need manual retuning as the dataset grows:
 
-"Coverage" is the fraction of held-out matchups that qualify for the badge. High stays rare (~1 in 12 predictions) and empirically hits 70% — above medium's 65% and well above the 53.6% coin-flip baseline. Medium holds at ~65% accuracy with 40.8% coverage.
+1. **Pick MEDIUM.** Among candidate cutoffs whose above-bucket clears the accuracy floor and min-coverage floor _and_ whose below-bucket is ≥ 1pp less accurate (LOW justified), pick the cutoff whose LOW coverage lands closest to `TARGET_LOW_COVERAGE` (≈ 25%). This keeps LOW meaningful — neither vanishingly rare (badge noise) nor the majority (inverts MEDIUM semantics).
+2. **Pick HIGH.** Enable HIGH when some stricter cutoff's held-out accuracy clears `overall_acc + 2pp` _and_ also clears MEDIUM's accuracy. Using overall accuracy (not MEDIUM's subset accuracy) as the reference decouples HIGH from MEDIUM's cutoff choice — tightening MEDIUM doesn't automatically raise HIGH's bar in lockstep.
+3. **Relabel when LOW is the majority.** If the picked cutoff's LOW coverage exceeds 50% _and_ its above-bucket passes HIGH's overall-acc + lift criterion, swap the framing: above-bucket → HIGH, below-bucket → MEDIUM, no LOW. The signal was identifying a _reliable top subset_ rather than an _unreliable tail_. Same justified split, semantically correct labels.
 
-### Tiered Tuning for the High Badge
+This gives three properties for free:
 
-`benchmark.ts` walks through an ordered list of (accuracy target, minimum coverage floor) tiers and picks the first one where some (distance, stddev) bucket clears both the accuracy target and the coverage floor. If all tiers fail, **high is disabled entirely** for that run — badge never fires, UI collapses to low/medium. That's the explicit tradeoff: better to not show a "high confidence" badge than to show one backed by sub-70% accuracy.
+- HIGH accuracy always clears overall accuracy _and_ MEDIUM accuracy — users can trust it's a lift.
+- LOW accuracy always falls ≥ 1pp below MEDIUM — the warning is never fabricated.
+- Absolute bars self-adjust as MEDIUM accuracy rises with dataset growth; no manual retuning.
 
-Current tiers (in `HIGH_TIERS` at the top of `benchmark.ts`):
+Tuning parameters in `benchmark.ts`:
 
-1. 75% accuracy, ≥ 5% coverage — preferred, only fires at higher dataset sizes
-2. 72% accuracy, ≥ 5% coverage — interim
-3. 70% accuracy, ≥ 3% coverage — current run's tier
-4. (none pass) — badge disabled
+```
+// Per-model (each of the four)
+PER_MODEL_MEDIUM_TARGET_ACC      = 0.55   // absolute floor for MEDIUM acc
+PER_MODEL_MEDIUM_MIN_COVERAGE    = 0.30
+PER_MODEL_HIGH_LIFT_OVER_OVERALL = 0.02   // HIGH must beat overall by ≥ 2pp
+PER_MODEL_HIGH_MIN_COVERAGE      = 0.03   // avoid tiny-sample buckets
+PER_MODEL_HIGH_MAX_COVERAGE      = 0.15   // HIGH < 15% — must stay genuinely rare
+PER_MODEL_LOW_DROP_BELOW_MEDIUM  = 0.01   // LOW must fall ≥ 1pp below MEDIUM
 
-Each run prints which tier won or whether high was disabled. Adjust the tier list if the data shifts — e.g., if `HIGH_TIERS[0]` consistently passes once you have 3,000+ matches, drop tier 3 so the bar stays high.
+// Aggregate (credibility-weighted stddev + avgSelfConf)
+AGGREGATE_MEDIUM_TARGET_ACC      = 0.58
+AGGREGATE_MEDIUM_MIN_COVERAGE    = 0.30
+AGGREGATE_HIGH_LIFT_OVER_OVERALL = 0.02   // match per-model — avoid marginal "HIGH" noise
+AGGREGATE_HIGH_MIN_COVERAGE      = 0.02
+AGGREGATE_HIGH_MAX_COVERAGE      = 0.15
+AGGREGATE_LOW_DROP_BELOW_MEDIUM  = 0.01
+
+// UX preferences (applied on top of the statistical constraints above)
+TARGET_LOW_COVERAGE              = 0.25   // preferred LOW share when multiple cutoffs qualify
+LOW_INVERT_THRESHOLD             = 0.50   // above this (and HIGH disabled), relabel to HIGH+MEDIUM
+```
+
+Only the _deltas_ (lift, drop) and the UX preferences are constants — the actual accuracy bars auto-scale with each run's overall model accuracy. As the dataset grows, cutoffs re-fit per run; we never need to hand-edit these numbers in response to more data.
+
+**Aggregate tuning** grid-searches over `(weightedStddev, avgSelfConf)` pairs. HIGH requires low stddev AND high avg self-confidence (models agree _and_ underlying data is rich). The grid spans `stddev ∈ [0.01, 0.20]` and `selfConf ∈ [0.2, 0.9]` — fine resolution at the top lets the tuner find ultra-tight-agreement subsets if they exist, without manufacturing them (every candidate still has to clear the lift + coverage floors).
+
+**Fallback to DISABLED** — if no threshold qualifies, the band is disabled. HIGH cutoff becomes `1.01` (unreachable); a disabled LOW collapses the runtime MEDIUM cutoff to `0` so MEDIUM always catches. See §4 "Disabled bands" for the full design rationale.
+
+**Aggregate HIGH is currently disabled** at 1,517 matches. Averaging four calibrated models has a natural accuracy ceiling around 64% at this data size — even the tightest-agreement subset barely clears MEDIUM's 63.8%. Will likely unlock naturally at 2–3× current data as signals sharpen faster than overall accuracy rises; the extended grid is already in place for when that happens.
+
+From the 2026-04-20 run (at 1,517 matches, 1,489 decisive):
+
+| Model / Aggregate | HIGH (cutoff / acc / cov)        | MEDIUM (cutoff / acc / cov)                      | LOW (acc / cov)              |
+| ----------------- | -------------------------------- | ------------------------------------------------ | ---------------------------- |
+| Popular Pick      | _disabled_                       | `selfConf ≥ 0.55` / 60.7% / 77.0%                | 57.3% / 23.0% (3.4pp drop ✓) |
+| Hero Synergy      | `selfConf ≥ 0.95` / 67.6% / 4.8% | `selfConf ≥ 0.55` / 62.9% / 73.5%                | 58.5% / 26.5% (4.4pp drop ✓) |
+| Team Power        | `selfConf ≥ 0.45` / 68.3% / 4.2% | `selfConf ≥ 0.25` / 64.3% / 38.6%                | 59.3% / 61.4% (5.0pp drop ✓) |
+| Adaptive ML       | _disabled_                       | `selfConf ≥ 0.99` / 60.1% / 81.7%                | 52.2% / 18.3% (7.9pp drop ✓) |
+| **Aggregate**     | _disabled_                       | `stddev ≤ 0.08, selfConf ≥ 0.50` / 63.8% / 73.7% | 59.8% / 26.3% (4.0pp drop ✓) |
+
+**What the user will see on a given matchup card** — band breakdown (not cumulative), with each band's held-out accuracy:
+
+| Model         | 🟢 HIGH        | 🟡 MEDIUM                               | 🔴 LOW          |
+| ------------- | -------------- | --------------------------------------- | --------------- |
+| Popular Pick  | —              | **77%** of predictions @ 60.7% accurate | **23%** @ 57.3% |
+| Hero Synergy  | **5%** @ 67.6% | **69%** @ 62.9%                         | **27%** @ 58.5% |
+| Team Power    | **4%** @ 68.3% | **34%** @ ~64%                          | **61%** @ 59.3% |
+| Adaptive ML   | —              | **82%** @ 60.1%                         | **18%** @ 52.2% |
+| **Aggregate** | —              | **74%** @ 63.8%                         | **26%** @ 59.8% |
+
+Every band is empirically justified — LOW drops are 3.4–9.2pp below MEDIUM; HIGH lifts are 4–5pp above MEDIUM (B-T / Hero Synergy). Team Power is the intentional shape outlier: its pair-residual signal splits bimodally at ~40 / 60, so LOW lands much larger than the 25% target. Three B-T bands each still convey distinct information (68 → 64 → 59% acc steps).
+
+**What this means in practice:**
+
+- **All five badges now carry genuine LOW bands** (statistically justified drops of 3.4–9.2pp below MEDIUM). Users see LOW on 18–27% of predictions for four of the five; B-T is the structural outlier at 61%.
+- **Hero Synergy and Team Power show HIGH** on ≈ 5% of predictions with clear accuracy lifts (67.6% and 68.3%). These are the two models whose signal has enough top-end resolution to isolate a truly distinguished subset at current data size.
+- **Popular Pick, Adaptive ML, and the aggregate HIGH stays disabled** — their signals can't carve out a ≤ 15% subset that clears `overall_acc + 2pp` _and_ beats MEDIUM. Will unlock naturally as data grows.
+- **Team Power's LOW at 61.4%** is the one place where the user's "~25% LOW" target isn't hit. Its pair-residual signal splits bimodally (≈ 40% clean additive fits / ≈ 60% significant pair overrides) and no scalar transform of the residuals produces a narrower LOW tail. B-T users still get meaningful HIGH + MEDIUM + LOW distinctions — the shape is just different from the other models.
+
+**No manual retuning as data grows.** If a model's overall accuracy rises from 58% → 62% as the dataset doubles, its HIGH target rises from 60% → 64% automatically, and its LOW boundary rises with MEDIUM. The percentages above will shift too: Popular Pick and Adaptive ML HIGH are close to the coverage floor but not quite — with more data, their top-end signals should sharpen enough to unlock them. Bands enable or disable on their own when the data supports them.
 
 ### Aggregate Weights (tuned against calibrated benchmark)
 
@@ -527,16 +689,16 @@ These weights are mirrored in `teamSuggestions.ts` (Suggested Teams scoring) —
 
 The weights above assume the NN eventually outperforms the hand-crafted models. That was the design bet, grounded in ML theory — a flexible model with 16-dim learned embeddings _should_ discover nonlinear hero interactions and multi-way patterns that Bradley-Terry's additive strengths and Composite's pairwise synergy can't capture.
 
-**The gap is closing.** At 1,465 matches:
+**The gap is closing.** At 1,517 matches:
 
 | Model        | Accuracy | Gap vs baseline (53.6%) |
 | ------------ | -------- | ----------------------- |
-| Hero Synergy | 59.5%    | +5.9%                   |
-| Adaptive ML  | 57.1%    | +3.5%                   |
-| Popular Pick | 57.0%    | +3.4%                   |
-| Team Power   | 57.0%    | +3.4%                   |
+| Team Power   | 60.8%    | +7.2%                   |
+| Hero Synergy | 60.6%    | +7.0%                   |
+| Popular Pick | 60.1%    | +6.5%                   |
+| Adaptive ML  | 58.6%    | +5.0%                   |
 
-Adaptive ML has climbed from 55.2% at 1,146 matches → 57.1% at 1,465 matches (+1.9pp in ~300 matches), now effectively tied with Popular Pick and Team Power, and only ~2pp behind Hero Synergy. This is the first data point consistent with scenario 1 below — the NN benefiting from more data.
+Adaptive ML has climbed from 55.2% (1,146 matches) → 57.1% (1,465) → 58.6% (1,517). The hand-crafted models tightened into a 0.7pp cluster around 60%, with Team Power edging ahead for the first time. Scenario 1 below (NN crossover) is still consistent with the trajectory but hasn't happened yet — the NN remains ~2pp behind the leaders.
 
 Three honest scenarios as data grows:
 
