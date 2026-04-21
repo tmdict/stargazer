@@ -11,10 +11,11 @@ import type {
 } from '../types'
 import { adaptiveMLModel } from './adaptiveML'
 import { analyzeMatches } from './analysis'
-import { bradleyTerryModel } from './bradleyTerry'
+import { bradleyTerryModel, getCachedBradleyTerryFit } from './bradleyTerry'
 import { calibrate } from './calibration'
 import { CONFIDENCE_THRESHOLDS } from './calibrationData'
 import { compositeModel } from './composite'
+import { computeAllSelfConfidences } from './modelConfidence'
 import { popularPickModel } from './popularPick'
 
 const rawData = atob(encodedData)
@@ -73,16 +74,23 @@ export function getRecommendations(
   return model.recommend(teammates, opponents, available, analysis, matches)
 }
 
-/** Wrap a raw MatchupPrediction's probabilities through the per-model calibration map. */
-function calibratedPrediction(modelId: string, raw: MatchupPrediction): MatchupPrediction {
+/**
+ * Wrap a raw MatchupPrediction's probabilities through the per-model
+ * calibration map. The model's confidence badge is replaced by a reliability
+ * badge derived from this model's own self-confidence signal (how well-
+ * supported is this model's answer for THIS specific matchup).
+ */
+function calibratedPrediction(
+  modelId: string,
+  raw: MatchupPrediction,
+  selfConfidence: number,
+): MatchupPrediction {
   const calLeft = calibrate(modelId, raw.leftWinProbability)
   return {
     ...raw,
     leftWinProbability: calLeft,
     rightWinProbability: 1 - calLeft,
-    // Replace the hero-depth Wilson badge with a prediction-level badge:
-    // distance of the calibrated probability from 50%.
-    confidence: perModelConfidence(calLeft),
+    confidence: perModelConfidence(modelId, selfConfidence),
   }
 }
 
@@ -93,8 +101,12 @@ export function getMatchupPrediction(
 ): MatchupPrediction | null {
   const model = models.find((m) => m.id === modelId)
   if (!model) return null
-  const raw = model.predictMatchup(leftTeam, rightTeam, getAnalysis(), getMatches())
-  return calibratedPrediction(modelId, raw)
+  const analysis = getAnalysis()
+  const matches = getMatches()
+  const btFit = getCachedBradleyTerryFit(matches, analysis)
+  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, matches, btFit)
+  const raw = model.predictMatchup(leftTeam, rightTeam, analysis, matches)
+  return calibratedPrediction(modelId, raw, selfConf[modelId] ?? 0)
 }
 
 export interface ModelPrediction {
@@ -103,6 +115,8 @@ export interface ModelPrediction {
   prediction: MatchupPrediction
   /** Raw pre-calibration probability (kept for diagnostics). */
   rawLeftWinProbability: number
+  /** Per-model self-confidence [0, 1] — how well the data supports this model's answer. */
+  selfConfidence: number
 }
 
 export function getAllMatchupPredictions(
@@ -111,13 +125,17 @@ export function getAllMatchupPredictions(
 ): ModelPrediction[] {
   const analysis = getAnalysis()
   const matches = getMatches()
+  const btFit = getCachedBradleyTerryFit(matches, analysis)
+  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, matches, btFit)
   return models.map((model) => {
     const raw = model.predictMatchup(leftTeam, rightTeam, analysis, matches)
+    const sc = selfConf[model.id] ?? 0
     return {
       id: model.id,
       name: model.name,
-      prediction: calibratedPrediction(model.id, raw),
+      prediction: calibratedPrediction(model.id, raw, sc),
       rawLeftWinProbability: raw.leftWinProbability,
+      selfConfidence: sc,
     }
   })
 }
@@ -126,43 +144,51 @@ export interface AggregatePrediction {
   leftWinProbability: number
   rightWinProbability: number
   confidence: 'high' | 'medium' | 'low'
-  /** Stddev across per-model calibrated probabilities — proxy for model agreement. */
-  modelAgreementStddev: number
+  /**
+   * Credibility-weighted stddev across model probabilities. Each model's
+   * contribution to disagreement is weighted by its aggregate share × its
+   * own self-confidence — so a sparse-data outlier counts less.
+   */
+  weightedStddev: number
+  /** Weighted mean of per-model self-confidences. */
+  avgSelfConfidence: number
   relevantNotes: MatchNote[]
   matchCount: number
   heroCount: number
 }
 
 /**
- * Match-prediction confidence: based on distance from 50% (meaningful prediction)
- * and across-model stddev (model agreement). Thresholds fit against held-out
- * benchmark data in `calibrationData.ts`.
+ * Per-model confidence badge — reflects how well this model's data supports
+ * its answer for THIS specific matchup (see `modelConfidence.ts`). Each
+ * model has its own thresholds because each measures a different signal.
  */
-function matchPredictionConfidence(
-  calibratedProb: number,
-  modelProbs: number[],
-): { confidence: 'high' | 'medium' | 'low'; stddev: number } {
-  const distance = Math.abs(calibratedProb - 0.5)
-  const mean = modelProbs.reduce((s, p) => s + p, 0) / modelProbs.length
-  const variance = modelProbs.reduce((s, p) => s + (p - mean) * (p - mean), 0) / modelProbs.length
-  const stddev = Math.sqrt(variance)
-
-  const t = CONFIDENCE_THRESHOLDS
-  if (distance >= t.highDistance && stddev <= t.highAgreementStddev) {
-    return { confidence: 'high', stddev }
-  }
-  if (distance >= t.mediumDistance && stddev <= t.mediumAgreementStddev) {
-    return { confidence: 'medium', stddev }
-  }
-  return { confidence: 'low', stddev }
+function perModelConfidence(modelId: string, selfConfidence: number): 'high' | 'medium' | 'low' {
+  const t = CONFIDENCE_THRESHOLDS.perModel[modelId]
+  if (!t) return 'low'
+  if (selfConfidence >= t.high) return 'high'
+  if (selfConfidence >= t.medium) return 'medium'
+  return 'low'
 }
 
-/** Single-model badge: distance-from-50% only (no agreement signal). */
-function perModelConfidence(calibratedProb: number): 'high' | 'medium' | 'low' {
-  const distance = Math.abs(calibratedProb - 0.5)
-  const t = CONFIDENCE_THRESHOLDS
-  if (distance >= t.highDistance) return 'high'
-  if (distance >= t.mediumDistance) return 'medium'
+/**
+ * Aggregate confidence — two signals:
+ *   1. Credibility-weighted variance of model probabilities. Models that
+ *      have low self-confidence or low aggregate weight contribute less to
+ *      the "disagreement" metric, so a sparse-data outlier doesn't torpedo
+ *      a prediction 3 high-confidence models are aligned on.
+ *   2. Weighted mean of per-model self-confidences. Captures how much
+ *      underlying data backs the matchup overall.
+ *
+ * High = both pass high cutoffs. Medium = both pass medium cutoffs. Low = either fails.
+ * Thresholds fit against held-out CV in `calibrationData.ts`.
+ */
+function aggregateConfidence(
+  weightedStddev: number,
+  avgSelfConfidence: number,
+): 'high' | 'medium' | 'low' {
+  const t = CONFIDENCE_THRESHOLDS.aggregate
+  if (weightedStddev <= t.highStddev && avgSelfConfidence >= t.highAvgSelfConf) return 'high'
+  if (weightedStddev <= t.mediumStddev && avgSelfConfidence >= t.mediumAvgSelfConf) return 'medium'
   return 'low'
 }
 
@@ -174,23 +200,57 @@ export function getAggregatePrediction(predictions: ModelPrediction[]): Aggregat
 
   const baseWeights = getAdaptiveAggregateWeights(matchCount)
 
-  let totalWeight = 0
-  const weights: Record<string, number> = {}
+  // Credibility weight = aggregate weight × self-confidence. Low-confidence
+  // models have their vote downweighted in both the probability blend and
+  // the disagreement metric.
+  let totalCredibility = 0
+  const credibility: Record<string, number> = {}
   for (const pred of predictions) {
-    const w = baseWeights[pred.id] ?? 0.25
-    weights[pred.id] = w
-    totalWeight += w
+    const aggWeight = baseWeights[pred.id] ?? 0.25
+    const cred = aggWeight * pred.selfConfidence
+    credibility[pred.id] = cred
+    totalCredibility += cred
   }
 
-  const modelProbs: number[] = []
+  // Fall back to plain aggregate weights if all self-confidences are 0
+  // (e.g., every hero has 0 matches in the analysis — unusual but possible
+  // for brand-new heroes). Prevents a division-by-zero collapse.
+  let totalWeight: number
+  const weights: Record<string, number> = {}
+  if (totalCredibility > 0) {
+    totalWeight = totalCredibility
+    Object.assign(weights, credibility)
+  } else {
+    totalWeight = 0
+    for (const pred of predictions) {
+      const w = baseWeights[pred.id] ?? 0.25
+      weights[pred.id] = w
+      totalWeight += w
+    }
+  }
+
+  // Weighted mean prediction
   let leftWinProbability = 0
   for (const pred of predictions) {
     const p = pred.prediction.leftWinProbability
-    modelProbs.push(p)
     leftWinProbability += (weights[pred.id]! / totalWeight) * p
   }
 
-  const { confidence, stddev } = matchPredictionConfidence(leftWinProbability, modelProbs)
+  // Weighted variance (around the weighted mean)
+  let variance = 0
+  for (const pred of predictions) {
+    const p = pred.prediction.leftWinProbability
+    variance += (weights[pred.id]! / totalWeight) * (p - leftWinProbability) ** 2
+  }
+  const weightedStddev = Math.sqrt(variance)
+
+  // Weighted mean self-confidence
+  let avgSelfConfidence = 0
+  for (const pred of predictions) {
+    avgSelfConfidence += (weights[pred.id]! / totalWeight) * pred.selfConfidence
+  }
+
+  const confidence = aggregateConfidence(weightedStddev, avgSelfConfidence)
 
   const seenNotes = new Set<string>()
   const relevantNotes: MatchNote[] = []
@@ -207,7 +267,8 @@ export function getAggregatePrediction(predictions: ModelPrediction[]): Aggregat
     leftWinProbability,
     rightWinProbability: 1 - leftWinProbability,
     confidence,
-    modelAgreementStddev: stddev,
+    weightedStddev,
+    avgSelfConfidence,
     relevantNotes,
     matchCount,
     heroCount,
