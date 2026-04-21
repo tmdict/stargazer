@@ -31,7 +31,11 @@ function parseHeroes(raw: string): [string, string, string] | null {
 }
 
 export function parseMatchData(rawText: string): MatchResult[] {
-  const lines = rawText.split('\n').filter((line) => line.trim())
+  // Skip blank lines and `// ...` comment markers (e.g. the file-name
+  // section headers inserted by `scripts/encode.ts`).
+  const lines = rawText
+    .split('\n')
+    .filter((line) => line.trim() && !line.trimStart().startsWith('//'))
   const results: MatchResult[] = []
   const warnings: string[] = []
 

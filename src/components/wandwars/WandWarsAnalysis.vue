@@ -1044,6 +1044,22 @@ watch(activeTab, () => {
   recSortDir.value = 'desc'
 })
 
+// When the 6th hero lands (draft just completed) and the user is sitting on
+// the Records tab, switch to the default tab so the match prediction card
+// is what they see. Only fires on the 5 → 6 transition so re-picks (e.g.
+// removing and re-selecting a hero) don't repeatedly override the user's
+// tab choice while the draft is already full.
+const totalPicks = computed(
+  () =>
+    props.pickState.left.filter((h) => h !== null).length +
+    props.pickState.right.filter((h) => h !== null).length,
+)
+watch(totalPicks, (newCount, oldCount) => {
+  if (newCount === 6 && oldCount === 5 && activeTab.value === 'records') {
+    activeTab.value = 'popular-pick'
+  }
+})
+
 const sortedFilteredRecommendations = computed(() => {
   const sign = recSortDir.value === 'desc' ? 1 : -1
   const key = recSortKey.value

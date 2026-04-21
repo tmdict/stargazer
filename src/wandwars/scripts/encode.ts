@@ -23,17 +23,22 @@ if (files.length === 0) {
 }
 
 const chunks: string[] = []
+const includedFiles: string[] = []
 for (const name of files) {
-  const content = readFileSync(join(RAW_DIR, name), 'utf-8')
-  // Preserve each file's content; strip trailing whitespace and guarantee a
-  // single trailing newline so concatenation doesn't merge the last line of
-  // one file with the first line of the next.
-  chunks.push(content.replace(/\s+$/, '') + '\n')
+  const content = readFileSync(join(RAW_DIR, name), 'utf-8').replace(/\s+$/, '')
+  if (!content) continue // skip files with no records (empty marker is noise)
+  // Prepend a `// <filename>` marker so origin is visible when the blob is
+  // decoded for debugging. `parser.ts` skips any line starting with `//`.
+  chunks.push(`// ${name}\n${content}\n`)
+  includedFiles.push(name)
 }
 
-const combined = chunks.join('')
+// Join with a blank line between sections for readability on decode.
+const combined = chunks.join('\n')
 writeFileSync(OUT_FILE, Buffer.from(combined, 'utf-8').toString('base64'))
 
-const lines = combined.split('\n').filter((l) => l.trim() && !l.startsWith('#')).length
-console.log(`Encoded ${files.length} file(s), ${lines} record(s) → ${OUT_FILE}`)
-for (const name of files) console.log(`  ${name}`)
+const lines = combined.split('\n').filter((l) => l.trim() && !l.startsWith('//')).length
+console.log(`Encoded ${includedFiles.length} file(s), ${lines} record(s) → ${OUT_FILE}`)
+for (const name of includedFiles) console.log(`  ${name}`)
+const skipped = files.filter((f) => !includedFiles.includes(f))
+if (skipped.length > 0) console.log(`Skipped (empty): ${skipped.join(', ')}`)
