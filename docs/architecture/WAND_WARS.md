@@ -138,6 +138,7 @@ Scenario walkthroughs:
 
 - **Three confident models agree at 70%, one unconfident disagrees at 40%.** Outlier's credibility is small; it barely moves μ off 70% and barely adds to variance. Aggregate stays near the majority view, badge can reach HIGH.
 - **All four confident, one credibly dissents at 40% while the others sit at 70%.** Outlier's credibility is full; μ gets pulled toward 63%, weightedStddev jumps, badge drops to MEDIUM. Credible disagreement is genuine evidence — the blended % and the badge both reflect it.
+- **All four per-model badges are MEDIUM but the aggregate shows HIGH.** Legitimate and designed-for. Each individual model has reasonable (but not exceptional) per-matchup data, so none hits its own HIGH threshold. But all four independently land on very similar win probabilities — the credibility-weighted stddev stays tiny and `avgSelfConf` is decent across the four. Four moderate votes converging on the same answer is stronger evidence than any single model's individual confidence. The aggregate HIGH badge is about trust in the blended %, not the %'s extremeness — a confident 48/52 is a valid HIGH.
 
 Calibration (`calibrationData.ts`) is re-fit against this credibility-weighted μ on every `ww:train` run, so the displayed aggregate % stays empirically calibrated as signals evolve.
 
@@ -638,36 +639,34 @@ Only the _deltas_ (lift, drop) and the UX preferences are constants — the actu
 
 **Fallback to DISABLED** — if no threshold qualifies, the band is disabled. HIGH cutoff becomes `1.01` (unreachable); a disabled LOW collapses the runtime MEDIUM cutoff to `0` so MEDIUM always catches. See §4 "Disabled bands" for the full design rationale.
 
-**Aggregate HIGH is currently disabled** at 1,517 matches. Averaging four calibrated models has a natural accuracy ceiling around 64% at this data size — even the tightest-agreement subset barely clears MEDIUM's 63.8%. Will likely unlock naturally at 2–3× current data as signals sharpen faster than overall accuracy rises; the extended grid is already in place for when that happens.
-
 From the 2026-04-20 run (at 1,517 matches, 1,489 decisive):
 
-| Model / Aggregate | HIGH (cutoff / acc / cov)        | MEDIUM (cutoff / acc / cov)                      | LOW (acc / cov)              |
-| ----------------- | -------------------------------- | ------------------------------------------------ | ---------------------------- |
-| Popular Pick      | _disabled_                       | `selfConf ≥ 0.55` / 60.7% / 77.0%                | 57.3% / 23.0% (3.4pp drop ✓) |
-| Hero Synergy      | `selfConf ≥ 0.95` / 67.6% / 4.8% | `selfConf ≥ 0.55` / 62.9% / 73.5%                | 58.5% / 26.5% (4.4pp drop ✓) |
-| Team Power        | `selfConf ≥ 0.45` / 68.3% / 4.2% | `selfConf ≥ 0.25` / 64.3% / 38.6%                | 59.3% / 61.4% (5.0pp drop ✓) |
-| Adaptive ML       | _disabled_                       | `selfConf ≥ 0.99` / 60.1% / 81.7%                | 52.2% / 18.3% (7.9pp drop ✓) |
-| **Aggregate**     | _disabled_                       | `stddev ≤ 0.08, selfConf ≥ 0.50` / 63.8% / 73.7% | 59.8% / 26.3% (4.0pp drop ✓) |
+| Model / Aggregate | HIGH (cutoff / acc / cov)                       | MEDIUM (cutoff / acc / cov)                      | LOW (acc / cov)              |
+| ----------------- | ----------------------------------------------- | ------------------------------------------------ | ---------------------------- |
+| Popular Pick      | _disabled_                                      | `selfConf ≥ 0.55` / 60.5% / 77.5%                | 57.4% / 22.5% (3.1pp drop ✓) |
+| Hero Synergy      | `selfConf ≥ 0.90` / 64.8% / 10.8%               | `selfConf ≥ 0.55` / 62.8% / 73.3%                | 57.5% / 26.7% (5.4pp drop ✓) |
+| Team Power        | `selfConf ≥ 0.35` / 64.5% / 14.2%               | `selfConf ≥ 0.20` / 62.2% / 74.6%                | 56.3% / 25.4% (5.9pp drop ✓) |
+| Adaptive ML       | _disabled_                                      | `selfConf ≥ 0.99` / 58.3% / 81.3%                | 51.6% / 18.7% (6.7pp drop ✓) |
+| **Aggregate**     | `stddev ≤ 0.02, selfConf ≥ 0.70` / 66.0% / 6.6% | `stddev ≤ 0.20, selfConf ≥ 0.70` / 61.1% / 68.5% | 57.6% / 31.5% (3.5pp drop ✓) |
 
 **What the user will see on a given matchup card** — band breakdown (not cumulative), with each band's held-out accuracy:
 
-| Model         | 🟢 HIGH        | 🟡 MEDIUM                               | 🔴 LOW          |
-| ------------- | -------------- | --------------------------------------- | --------------- |
-| Popular Pick  | —              | **77%** of predictions @ 60.7% accurate | **23%** @ 57.3% |
-| Hero Synergy  | **5%** @ 67.6% | **69%** @ 62.9%                         | **27%** @ 58.5% |
-| Team Power    | **4%** @ 68.3% | **34%** @ ~64%                          | **61%** @ 59.3% |
-| Adaptive ML   | —              | **82%** @ 60.1%                         | **18%** @ 52.2% |
-| **Aggregate** | —              | **74%** @ 63.8%                         | **26%** @ 59.8% |
+| Model         | 🟢 HIGH         | 🟡 MEDIUM                               | 🔴 LOW          |
+| ------------- | --------------- | --------------------------------------- | --------------- |
+| Popular Pick  | —               | **78%** of predictions @ 60.5% accurate | **22%** @ 57.4% |
+| Hero Synergy  | **11%** @ 64.8% | **62%** @ ~62.4%                        | **27%** @ 57.5% |
+| Team Power    | **14%** @ 64.5% | **60%** @ ~61.7%                        | **25%** @ 56.3% |
+| Adaptive ML   | —               | **81%** @ 58.3%                         | **19%** @ 51.6% |
+| **Aggregate** | **7%** @ 66.0%  | **62%** @ ~60.5%                        | **32%** @ 57.6% |
 
-Every band is empirically justified — LOW drops are 3.4–9.2pp below MEDIUM; HIGH lifts are 4–5pp above MEDIUM (B-T / Hero Synergy). Team Power is the intentional shape outlier: its pair-residual signal splits bimodally at ~40 / 60, so LOW lands much larger than the 25% target. Three B-T bands each still convey distinct information (68 → 64 → 59% acc steps).
+Every band is empirically justified — LOW drops are 3.1–6.7pp below MEDIUM; HIGH lifts are 2.0–4.9pp above MEDIUM (Hero Synergy 2.0pp, Team Power 2.3pp, Aggregate 4.9pp).
 
 **What this means in practice:**
 
-- **All five badges now carry genuine LOW bands** (statistically justified drops of 3.4–9.2pp below MEDIUM). Users see LOW on 18–27% of predictions for four of the five; B-T is the structural outlier at 61%.
-- **Hero Synergy and Team Power show HIGH** on ≈ 5% of predictions with clear accuracy lifts (67.6% and 68.3%). These are the two models whose signal has enough top-end resolution to isolate a truly distinguished subset at current data size.
-- **Popular Pick, Adaptive ML, and the aggregate HIGH stays disabled** — their signals can't carve out a ≤ 15% subset that clears `overall_acc + 2pp` _and_ beats MEDIUM. Will unlock naturally as data grows.
-- **Team Power's LOW at 61.4%** is the one place where the user's "~25% LOW" target isn't hit. Its pair-residual signal splits bimodally (≈ 40% clean additive fits / ≈ 60% significant pair overrides) and no scalar transform of the residuals produces a narrower LOW tail. B-T users still get meaningful HIGH + MEDIUM + LOW distinctions — the shape is just different from the other models.
+- **All five badges carry genuine LOW bands** (statistically justified drops of 3.1–6.7pp below MEDIUM). LOW coverage clusters around 19–32% — rare enough to feel meaningful, common enough to actually surface.
+- **Hero Synergy, Team Power, and the aggregate show HIGH** on 7–14% of predictions. Popular Pick and Adaptive ML HIGH stay disabled — their signals can't yet carve out a ≤ 15% subset that beats overall accuracy by 2pp _and_ MEDIUM's own accuracy. Will unlock naturally as data grows.
+- **The aggregate HIGH scenario is subtle but designed-for.** A matchup can produce all four per-model MEDIUM badges AND still land HIGH on the aggregate — this happens when the four models converge tightly on a similar win % even though none individually hit its HIGH threshold. The credibility-weighted stddev captures cross-model agreement, which is a signal no single model can see. Four models with reasonable data all agreeing that a matchup is (say) 48/52 is stronger evidence than any single confident model could provide. Note the HIGH badge describes trust in the number, not the number's extremeness — a confident 48/52 is a valid HIGH.
+- **Team Power's LOW coverage is bimodal across runs** — lands at either ~25% or ~60% depending on the exact dataset. B-T's fit itself is deterministic given data, but the tuner has two candidate cutoffs for B-T's MEDIUM that sit near a decision boundary: T≈0.20 produces LOW≈25% with a borderline drop check, while T≈0.25 produces LOW≈60% with a comfortable drop check. A small accuracy shift from new match records can tip which cutoffs pass, flipping B-T's shape. Either framing stays statistically justified (always passes the 1pp drop check at its chosen cutoff); the difference is which the tuner's "closest to 25% LOW coverage" preference can reach without breaking the statistical floor.
 
 **No manual retuning as data grows.** If a model's overall accuracy rises from 58% → 62% as the dataset doubles, its HIGH target rises from 60% → 64% automatically, and its LOW boundary rises with MEDIUM. The percentages above will shift too: Popular Pick and Adaptive ML HIGH are close to the coverage floor but not quite — with more data, their top-end signals should sharpen enough to unlock them. Bands enable or disable on their own when the data supports them.
 
