@@ -102,14 +102,35 @@ export function metaMinTeamMatchesTable(totalMatches: number): number {
  * dominant as data grows rather than being 2-sweep coincidences.
  *
  * | matches | returns |
+ * | ------- | ------- |
  * | 500     | 3       |
- * | 1,250   | 4       |
- * | 2,500   | 5       |
- * | 5,000   | 8       |
- * | 10,000  | 10      |
+ * | 1,250   | 5       |
+ * | 2,500   | 7       |
+ * | 5,000   | 9       |
+ * | 10,000  | 13      |
  */
 export function metaMinPairSweeps(totalMatches: number): number {
-  return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 10))
+  return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 8))
+}
+
+/**
+ * Win-count threshold for the "Pair Counters" section (pair-vs-pair and
+ * pair-vs-team). Each pair/team matchup is a narrow intersection of
+ * heroes, so sustained counter patterns against a specific opponent
+ * accumulate wins slowly — scaled with a gentler divisor than the
+ * sweep-count threshold.
+ *
+ * | matches | returns |
+ * | ------- | ------- |
+ * | 100     | 2       |
+ * | 500     | 2       |
+ * | 1,250   | 3       |
+ * | 2,500   | 4       |
+ * | 5,000   | 5       |
+ * | 10,000  | 7       |
+ */
+export function metaMinPairCounterWins(totalMatches: number): number {
+  return Math.max(2, Math.ceil(Math.sqrt(totalMatches) / 15))
 }
 
 /**

@@ -13,6 +13,7 @@ import {
   INSIGHT_SYNERGY_CLASH,
   INSIGHT_SYNERGY_NOTABLE,
   META_BAYESIAN_PRIOR,
+  metaMinPairCounterWins,
   metaMinPairMatches,
   metaMinPairSweeps,
   metaMinTeamMatches,
@@ -336,11 +337,12 @@ const allPairCounters = computed(() => {
     }
   }
 
+  const minWins = metaMinPairCounterWins(totalMatches.value)
   for (const m of pairMap.values()) {
     if (m.total < 2) continue
-    if (m.aWins > m.bWins && m.aWins >= 2 && m.aOppTeams.size >= 2) {
+    if (m.aWins > m.bWins && m.aWins >= minWins && m.aOppTeams.size >= 2) {
       results.push({ pair: m.a, countered: m.b, wins: m.aWins, losses: m.bWins })
-    } else if (m.bWins > m.aWins && m.bWins >= 2 && m.bOppTeams.size >= 2) {
+    } else if (m.bWins > m.aWins && m.bWins >= minWins && m.bOppTeams.size >= 2) {
       results.push({ pair: m.b, countered: m.a, wins: m.bWins, losses: m.aWins })
     }
   }
@@ -390,7 +392,7 @@ const allPairCounters = computed(() => {
   }
 
   for (const m of teamMap.values()) {
-    if (m.wins + m.losses < 2 || m.wins < 2) continue
+    if (m.wins + m.losses < 2 || m.wins < minWins) continue
     if (m.wins > m.losses) {
       results.push({ pair: m.pair, countered: m.team, wins: m.wins, losses: m.losses })
     }
