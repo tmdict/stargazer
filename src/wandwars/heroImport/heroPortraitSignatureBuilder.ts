@@ -15,7 +15,7 @@
 import { computeSignature, loadImage } from './imageSignature'
 import { float32ToBase64 } from './signatureCodec'
 
-export function heroNameFromFilename(filename: string): string {
+function heroNameFromFilename(filename: string): string {
   const base = filename.split(/[/\\]/).pop() ?? filename
   return base
     .replace(/\.[^.]+$/, '')
