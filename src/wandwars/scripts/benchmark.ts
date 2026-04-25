@@ -699,7 +699,6 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
         [...match.left],
         [...match.right],
         foldAnalysis,
-        trainMatches,
         btFit,
       )
 

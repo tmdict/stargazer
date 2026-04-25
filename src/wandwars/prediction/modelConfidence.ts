@@ -28,7 +28,7 @@
  * And by `benchmark.ts` for per-model + aggregate threshold tuning.
  */
 
-import type { AnalysisData, MatchResult } from '../types'
+import type { AnalysisData } from '../types'
 import type { BradleyTerryFit } from './bradleyTerry'
 
 // Normalization constants — each picked for the signal's natural scale at
@@ -178,12 +178,8 @@ export function computeAllSelfConfidences(
   leftTeam: string[],
   rightTeam: string[],
   analysis: AnalysisData,
-  matches: MatchResult[],
   btFit?: BradleyTerryFit,
 ): Record<string, number> {
-  // `matches` is reserved for future context-aware signals (e.g. PP
-  // contextMatches scan using the full match history).
-  void matches
   return {
     'popular-pick': popularPickSelfConfidence(leftTeam, rightTeam, analysis),
     composite: compositeSelfConfidence(leftTeam, rightTeam, analysis),

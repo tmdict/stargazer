@@ -33,11 +33,6 @@ export function getBundledReferenceCount(): number {
   return Object.keys(HERO_PORTRAIT_SIGNATURES).length
 }
 
-export function getBundledReferenceHeroes(): string[] {
-  if (override) return Object.keys(override)
-  return Object.keys(HERO_PORTRAIT_SIGNATURES)
-}
-
 /**
  * Replace the active reference set with a runtime-computed one. Pass null
  * to revert to the bundled signatures. Invalidates the decoded cache.

@@ -74,20 +74,6 @@ export function nnForward(
 }
 
 /**
- * Compute the mean hero embedding across all heroes (for unknown opponents baseline).
- */
-export function meanEmbedding(weights: NNWeights): number[] {
-  const numHeroes = Object.keys(weights.heroIndex).length
-  const result = new Array<number>(EMB_DIM).fill(0)
-  for (let h = 0; h < numHeroes; h++) {
-    const emb = getEmbedding(weights, h)
-    for (let i = 0; i < EMB_DIM; i++) result[i] = result[i]! + emb[i]!
-  }
-  for (let i = 0; i < EMB_DIM; i++) result[i] = result[i]! / numHeroes
-  return result
-}
-
-/**
  * Resolve hero names to index array. Unknown heroes get -1.
  */
 export function heroNamesToIndices(names: string[], heroIndex: Record<string, number>): number[] {
