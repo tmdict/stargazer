@@ -574,7 +574,28 @@ Bradley-Terry gets the same per-fold treatment: fit once per fold (~0.25s) on tr
 
 **Lower headline accuracy ≠ worse model.** Honest CV on this dataset puts Adaptive ML near 55% (vs. 58–59% for the hand-crafted models), but those numbers reflect what users actually experience — no leakage, no inflation. Combined with probability calibration, predictions are **less flashy but more trustworthy**: when the UI says 70%, the model has historically hit ~70% in that bucket (verified by the reliability diagram). A calibrated 70% beats an overconfident 82% every time.
 
-### Results — 2026-04-20 (1,517 matches, 1,489 decisive, 87 heroes)
+### Results — 2026-04-25 (final dataset: 1,737 matches, 1,706 decisive, 87 heroes)
+
+| Model         | Accuracy  | Brier (raw) | Brier (calibrated) | Calibration    |
+| ------------- | --------- | ----------- | ------------------ | -------------- |
+| Popular Pick  | 60.6%     | 0.2398      | **0.2351 ↓**       | isotonic       |
+| Hero Synergy  | 61.1%     | 0.2413      | **0.2353 ↓**       | isotonic       |
+| Team Power    | 60.4%     | 0.2355      | **0.2347 ↓**       | isotonic       |
+| Adaptive ML   | 58.9%     | 0.2453      | **0.2400 ↓**       | isotonic       |
+| **Aggregate** | **61.8%** | —           | **0.2320**         | (blended)      |
+| _Baseline_    | _53.2%_   | —           | —                  | _predict left_ |
+
+Calibration now lowered Brier on **all four** individual models and the aggregate — a cleaner result than the prior run (1,517 matches), where Team Power's post-calibration Brier had ticked up slightly from isotonic-fit noise. With ~200 more matches the isotonic fits stabilized.
+
+**The hand-crafted models stay tightly clustered** at 60.4–61.1% (within 0.7pp), with Hero Synergy edging into the lead and Team Power slipping marginally vs. the prior run. Adaptive ML continued its slow climb to 58.9% (from 58.6% at 1,517 → 57.1% at 1,465 → 55.2% at 1,146), but remains ~2pp behind the leading hand-crafted models.
+
+**The aggregate beats any single model** (61.8% vs. best individual 61.1%), confirming the ensemble gain from credibility-weighted blending. The 8.6pp gap vs. the predict-left baseline (53.2%) translates to user-visible lift. The aggregate dipped ~1pp from the prior run — well within the ±1–2% run-to-run NN training stochasticity, and the post-calibration Brier (0.2320 → 0.2320) is essentially unchanged, suggesting the aggregate's underlying prediction quality is stable while accuracy fluctuates around a decision boundary.
+
+Numbers fluctuate ±1–2% across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
+
+#### Prior run — 2026-04-20 (1,517 matches, 1,489 decisive, 87 heroes)
+
+Kept for comparison so the trajectory is visible at a glance.
 
 | Model         | Accuracy  | Brier (raw) | Brier (calibrated) | Calibration    |
 | ------------- | --------- | ----------- | ------------------ | -------------- |
@@ -585,13 +606,20 @@ Bradley-Terry gets the same per-fold treatment: fit once per fold (~0.25s) on tr
 | **Aggregate** | **62.8%** | —           | **0.2326**         | (blended)      |
 | _Baseline_    | _53.6%_   | —           | —                  | _predict left_ |
 
-All four models and the aggregate gained 1–3pp of accuracy between the prior run (1,465 matches) and this one (1,517). Calibration lowered Brier on three of the four models and the aggregate; Team Power's Brier ticked up slightly post-calibration — mild isotonic-fit noise at the current sample size, worth watching across runs.
+At that point all four models and the aggregate had gained 1–3pp of accuracy vs. the run before it (1,465 matches). The hand-crafted cluster sat at 60.1–60.8% within 0.7pp; Adaptive ML trailed at 58.6%. The aggregate's 62.8% was 9.2pp above the predict-left baseline. Team Power's calibrated Brier ticked up slightly (mild isotonic-fit noise that resolved with the additional ~200 matches in the final run).
 
-**The hand-crafted models are now a tight cluster** (60.1–60.8%) within 0.7pp. Adaptive ML trails at 58.6%, still closing the gap from its 55% floor at ~1,150 matches.
+#### Run-over-run summary
 
-**The aggregate clearly outperforms any single model** (62.8% vs. best individual 60.8%), confirming the ensemble gain from credibility-weighted blending. The 9.2pp gap vs. the predict-left baseline translates directly to user-visible lift.
+| Model        | 2026-04-20 (1,517) | 2026-04-25 (1,737) | Δ      |
+| ------------ | ------------------ | ------------------ | ------ |
+| Popular Pick | 60.1%              | 60.6%              | +0.5pp |
+| Hero Synergy | 60.6%              | 61.1%              | +0.5pp |
+| Team Power   | 60.8%              | 60.4%              | −0.4pp |
+| Adaptive ML  | 58.6%              | 58.9%              | +0.3pp |
+| Aggregate    | 62.8%              | 61.8%              | −1.0pp |
+| Baseline     | 53.6%              | 53.2%              | −0.4pp |
 
-Numbers fluctuate ±1–2% across `ww:train` runs due to NN training stochasticity even with deterministic seeds.
+Three of four individual models nudged up; Team Power slipped marginally and Hero Synergy retook its lead. The aggregate's 1pp dip is within run-to-run NN stochasticity (post-calibration Brier moved 0.2326 → 0.2320, essentially flat).
 
 ### Confidence Threshold Tuning
 
@@ -639,7 +667,41 @@ Only the _deltas_ (lift, drop) and the UX preferences are constants — the actu
 
 **Fallback to DISABLED** — if no threshold qualifies, the band is disabled. HIGH cutoff becomes `1.01` (unreachable); a disabled LOW collapses the runtime MEDIUM cutoff to `0` so MEDIUM always catches. See §4 "Disabled bands" for the full design rationale.
 
-From the 2026-04-20 run (at 1,517 matches, 1,489 decisive):
+From the 2026-04-25 final run (1,737 matches, 1,706 decisive):
+
+| Model / Aggregate | HIGH (cutoff / acc / cov)                        | MEDIUM (cutoff / acc / cov)                      | LOW (acc / cov)              |
+| ----------------- | ------------------------------------------------ | ------------------------------------------------ | ---------------------------- |
+| Popular Pick      | _disabled_                                       | `selfConf ≥ 0.65` / 61.9% / 75.0%                | 58.2% / 25.0% (3.7pp drop ✓) |
+| Hero Synergy      | `selfConf ≥ 0.97` / 65.1% / 4.9%                 | `selfConf ≥ 0.50` / 62.0% / 85.0%                | 59.8% / 15.0% (2.2pp drop ✓) |
+| Team Power        | `selfConf ≥ 0.40` / 67.4% / 5.4%                 | `selfConf ≥ 0.20` / 61.7% / 69.5%                | 58.2% / 30.5% (3.5pp drop ✓) |
+| Adaptive ML       | _disabled_                                       | `selfConf ≥ 0.80` / 59.6% / 92.7%                | 56.8% / 7.3% (2.8pp drop ✓)  |
+| **Aggregate**     | `stddev ≤ 0.03, selfConf ≥ 0.80` / 66.1% / 10.0% | `stddev ≤ 0.15, selfConf ≥ 0.70` / 62.1% / 76.6% | 61.0% / 23.4% (1.1pp drop ✓) |
+
+**What the user will see on a given matchup card** — band breakdown (not cumulative), with each band's held-out accuracy:
+
+| Model         | 🟢 HIGH         | 🟡 MEDIUM                               | 🔴 LOW          |
+| ------------- | --------------- | --------------------------------------- | --------------- |
+| Popular Pick  | —               | **75%** of predictions @ 61.9% accurate | **25%** @ 58.2% |
+| Hero Synergy  | **5%** @ 65.1%  | **80%** @ ~61.8%                        | **15%** @ 59.8% |
+| Team Power    | **5%** @ 67.4%  | **64%** @ ~61.2%                        | **31%** @ 58.2% |
+| Adaptive ML   | —               | **93%** @ 59.6%                         | **7%** @ 56.8%  |
+| **Aggregate** | **10%** @ 66.1% | **67%** @ ~61.5%                        | **23%** @ 61.0% |
+
+Every band is empirically justified — LOW drops are 1.1–3.7pp below MEDIUM; HIGH lifts are 3.1–5.7pp above MEDIUM (Hero Synergy 3.1pp, Team Power 5.7pp, Aggregate 4.0pp).
+
+**What this means in practice:**
+
+- **All five badges carry genuine LOW bands** (statistically justified drops of 1.1–3.7pp below MEDIUM). LOW coverage spans 7–31% — Adaptive ML's LOW shrank to 7% as its MEDIUM cutoff climbed to selfConf ≥ 0.80 (on this run, the bulk of its predictions land in the high-co-occurrence regime). Aggregate LOW is the smallest absolute drop (1.1pp) but the most consistent at ~23% coverage.
+- **Hero Synergy, Team Power, and the aggregate show HIGH** on 5–10% of predictions. Popular Pick and Adaptive ML HIGH stay disabled — neither can carve out a ≤ 15% subset that beats overall accuracy by 2pp _and_ MEDIUM's own accuracy. The disabled state matches the prior run; these signals' top-end discrimination needs more data to sharpen.
+- **HIGH cutoffs tightened on this run.** Hero Synergy moved from `selfConf ≥ 0.90` (10.8% coverage) → `selfConf ≥ 0.97` (4.9% coverage). Team Power moved from `selfConf ≥ 0.35` (14.2%) → `selfConf ≥ 0.40` (5.4%). Aggregate tightened from `(0.02, 0.70)` to `(0.03, 0.80)`. Smaller HIGH coverage but higher HIGH accuracy (Team Power HIGH lifted to 67.4%, the strongest individual-model HIGH ever recorded on this dataset). The tuner is being conservative as variance shrinks.
+- **The aggregate HIGH scenario is subtle but designed-for.** A matchup can produce all four per-model MEDIUM badges AND still land HIGH on the aggregate — this happens when the four models converge tightly on a similar win % even though none individually hit its HIGH threshold. The credibility-weighted stddev captures cross-model agreement, which is a signal no single model can see. Four models with reasonable data all agreeing that a matchup is (say) 48/52 is stronger evidence than any single confident model could provide. Note the HIGH badge describes trust in the number, not the number's extremeness — a confident 48/52 is a valid HIGH.
+- **Team Power's LOW coverage is bimodal across runs** — lands at either ~25% or ~60% depending on the exact dataset. This run landed at 30.5% (the low-coverage branch). B-T's fit itself is deterministic given data, but the tuner has two candidate cutoffs for B-T's MEDIUM that sit near a decision boundary: T≈0.20 produces LOW≈30% with a borderline drop check, while T≈0.25 produces LOW≈60% with a comfortable drop check. A small accuracy shift from new match records can tip which cutoffs pass, flipping B-T's shape. Either framing stays statistically justified (always passes the 1pp drop check at its chosen cutoff); the difference is which the tuner's "closest to 25% LOW coverage" preference can reach without breaking the statistical floor.
+
+**No manual retuning as data grows.** If a model's overall accuracy rises from 58% → 62% as the dataset doubles, its HIGH target rises from 60% → 64% automatically, and its LOW boundary rises with MEDIUM. The percentages above will shift too: Popular Pick and Adaptive ML HIGH are close to the coverage floor but not quite — with more data, their top-end signals should sharpen enough to unlock them. Bands enable or disable on their own when the data supports them.
+
+#### Prior run — 2026-04-20 thresholds (1,517 matches, 1,489 decisive)
+
+Kept for comparison.
 
 | Model / Aggregate | HIGH (cutoff / acc / cov)                       | MEDIUM (cutoff / acc / cov)                      | LOW (acc / cov)              |
 | ----------------- | ----------------------------------------------- | ------------------------------------------------ | ---------------------------- |
@@ -649,8 +711,6 @@ From the 2026-04-20 run (at 1,517 matches, 1,489 decisive):
 | Adaptive ML       | _disabled_                                      | `selfConf ≥ 0.99` / 58.3% / 81.3%                | 51.6% / 18.7% (6.7pp drop ✓) |
 | **Aggregate**     | `stddev ≤ 0.02, selfConf ≥ 0.70` / 66.0% / 6.6% | `stddev ≤ 0.20, selfConf ≥ 0.70` / 61.1% / 68.5% | 57.6% / 31.5% (3.5pp drop ✓) |
 
-**What the user will see on a given matchup card** — band breakdown (not cumulative), with each band's held-out accuracy:
-
 | Model         | 🟢 HIGH         | 🟡 MEDIUM                               | 🔴 LOW          |
 | ------------- | --------------- | --------------------------------------- | --------------- |
 | Popular Pick  | —               | **78%** of predictions @ 60.5% accurate | **22%** @ 57.4% |
@@ -659,16 +719,12 @@ From the 2026-04-20 run (at 1,517 matches, 1,489 decisive):
 | Adaptive ML   | —               | **81%** @ 58.3%                         | **19%** @ 51.6% |
 | **Aggregate** | **7%** @ 66.0%  | **62%** @ ~60.5%                        | **32%** @ 57.6% |
 
-Every band is empirically justified — LOW drops are 3.1–6.7pp below MEDIUM; HIGH lifts are 2.0–4.9pp above MEDIUM (Hero Synergy 2.0pp, Team Power 2.3pp, Aggregate 4.9pp).
+#### Threshold movement, 2026-04-20 → 2026-04-25
 
-**What this means in practice:**
-
-- **All five badges carry genuine LOW bands** (statistically justified drops of 3.1–6.7pp below MEDIUM). LOW coverage clusters around 19–32% — rare enough to feel meaningful, common enough to actually surface.
-- **Hero Synergy, Team Power, and the aggregate show HIGH** on 7–14% of predictions. Popular Pick and Adaptive ML HIGH stay disabled — their signals can't yet carve out a ≤ 15% subset that beats overall accuracy by 2pp _and_ MEDIUM's own accuracy. Will unlock naturally as data grows.
-- **The aggregate HIGH scenario is subtle but designed-for.** A matchup can produce all four per-model MEDIUM badges AND still land HIGH on the aggregate — this happens when the four models converge tightly on a similar win % even though none individually hit its HIGH threshold. The credibility-weighted stddev captures cross-model agreement, which is a signal no single model can see. Four models with reasonable data all agreeing that a matchup is (say) 48/52 is stronger evidence than any single confident model could provide. Note the HIGH badge describes trust in the number, not the number's extremeness — a confident 48/52 is a valid HIGH.
-- **Team Power's LOW coverage is bimodal across runs** — lands at either ~25% or ~60% depending on the exact dataset. B-T's fit itself is deterministic given data, but the tuner has two candidate cutoffs for B-T's MEDIUM that sit near a decision boundary: T≈0.20 produces LOW≈25% with a borderline drop check, while T≈0.25 produces LOW≈60% with a comfortable drop check. A small accuracy shift from new match records can tip which cutoffs pass, flipping B-T's shape. Either framing stays statistically justified (always passes the 1pp drop check at its chosen cutoff); the difference is which the tuner's "closest to 25% LOW coverage" preference can reach without breaking the statistical floor.
-
-**No manual retuning as data grows.** If a model's overall accuracy rises from 58% → 62% as the dataset doubles, its HIGH target rises from 60% → 64% automatically, and its LOW boundary rises with MEDIUM. The percentages above will shift too: Popular Pick and Adaptive ML HIGH are close to the coverage floor but not quite — with more data, their top-end signals should sharpen enough to unlock them. Bands enable or disable on their own when the data supports them.
+- **HIGH cutoffs tightened across the board.** Hero Synergy `selfConf ≥ 0.90` (10.8% cov) → `≥ 0.97` (4.9%). Team Power `≥ 0.35` (14.2%) → `≥ 0.40` (5.4%). Aggregate `(stddev ≤ 0.02, selfConf ≥ 0.70)` → `(≤ 0.03, ≥ 0.80)`. Smaller HIGH coverage in exchange for higher HIGH accuracy — Team Power HIGH lifted from 64.5% → 67.4%, the strongest individual-model HIGH on this dataset.
+- **MEDIUM cutoffs drifted up.** Popular Pick `≥ 0.55` → `≥ 0.65`. Hero Synergy `≥ 0.55` → `≥ 0.50` (loosened). Adaptive ML `≥ 0.99` → `≥ 0.80` (looser; LOW correspondingly shrank from 19% → 7%).
+- **LOW drops compressed.** Hero Synergy 5.4pp → 2.2pp. Team Power 5.9pp → 3.5pp. Adaptive ML 6.7pp → 2.8pp. Aggregate 3.5pp → 1.1pp. Still all justified (≥ 1pp), but the warning band is less dramatic now — consistent with the overall accuracy distribution tightening as data fills in.
+- **Disabled bands held steady.** Popular Pick HIGH and Adaptive ML HIGH stayed disabled across both runs.
 
 ### Aggregate Weights (tuned against calibrated benchmark)
 
@@ -688,24 +744,24 @@ These weights are mirrored in `teamSuggestions.ts` (Suggested Teams scoring) —
 
 The weights above assume the NN eventually outperforms the hand-crafted models. That was the design bet, grounded in ML theory — a flexible model with 16-dim learned embeddings _should_ discover nonlinear hero interactions and multi-way patterns that Bradley-Terry's additive strengths and Composite's pairwise synergy can't capture.
 
-**The gap is closing.** At 1,517 matches:
+**The gap is closing — slowly.** At 1,737 matches (final dataset):
 
-| Model        | Accuracy | Gap vs baseline (53.6%) |
+| Model        | Accuracy | Gap vs baseline (53.2%) |
 | ------------ | -------- | ----------------------- |
-| Team Power   | 60.8%    | +7.2%                   |
-| Hero Synergy | 60.6%    | +7.0%                   |
-| Popular Pick | 60.1%    | +6.5%                   |
-| Adaptive ML  | 58.6%    | +5.0%                   |
+| Hero Synergy | 61.1%    | +7.9%                   |
+| Popular Pick | 60.6%    | +7.4%                   |
+| Team Power   | 60.4%    | +7.2%                   |
+| Adaptive ML  | 58.9%    | +5.7%                   |
 
-Adaptive ML has climbed from 55.2% (1,146 matches) → 57.1% (1,465) → 58.6% (1,517). The hand-crafted models tightened into a 0.7pp cluster around 60%, with Team Power edging ahead for the first time. Scenario 1 below (NN crossover) is still consistent with the trajectory but hasn't happened yet — the NN remains ~2pp behind the leaders.
+Adaptive ML's trajectory: 55.2% (1,146 matches) → 57.1% (1,465) → 58.6% (1,517) → 58.9% (1,737). The early 2pp jumps slowed to a 0.3pp gain across the last ~220 matches, suggesting the NN may be approaching a soft ceiling for its current 16-dim embedding architecture on this dataset size. The hand-crafted leaders held a 60.4–61.1% cluster, with Hero Synergy retaking the top spot from Team Power. Scenario 1 below (NN crossover) hasn't happened — the NN closed roughly half the gap from its 55% floor but stayed ~2pp behind the leaders for two consecutive runs.
 
-Three honest scenarios as data grows:
+Three honest scenarios were on the table while the dataset was growing:
 
-1. **NN crosses over (the bet):** more matches → embeddings stabilize → Adaptive ML beats the ~59% ceiling of the statistical models. The current run's NN climb is early-but-consistent evidence this is what's happening.
+1. **NN crosses over (the bet):** more matches → embeddings stabilize → Adaptive ML beats the ~60% ceiling of the statistical models.
 2. **Everyone plateaus together** around 60–65%: the game has irreducible noise (RNG, skill, meta shifts) that caps all models. The NN's extra capacity doesn't help because there's no more signal to extract.
 3. **NN stays behind:** the hand-crafted priors (Bayesian smoothing, L2-regularized strength, pairwise synergy) turn out to be well-matched to this problem, and the NN's flexibility is mostly fitting noise.
 
-Scenario 1 is the one to watch for in the next 500–1,000 matches: if Adaptive ML overtakes Hero Synergy, that triggers a weight rebalance (NN gets the largest share at high data counts). If the gap stalls, this dataset size may be the NN's practical ceiling with a 16-dim embedding — revisit the "Future Improvements" bullets in §5 (larger embeddings, deeper network, separate offense/defense embeddings).
+**Verdict at dataset close (1,737 matches):** scenarios 2 and 3 are both consistent with the final results — the four models converged into a 58.9–61.1% band with Adaptive ML still trailing. The NN never crossed over. Whether that's because the dataset is signal-bounded (scenario 2) or because the hand-crafted priors are genuinely well-matched (scenario 3) can't be teased apart from this data alone. The aggregate weights below preserve the bet's structure (NN gets meaningful but not dominant share at high data counts), which remains the right call: NN provides ensemble diversity even when individually weaker, and credibility weighting downweights its vote on matchups where its self-confidence is low. If the dataset reopens, the "Future Improvements" bullets in §5 (larger embeddings, deeper network, separate offense/defense embeddings) become the relevant levers — adding capacity within the current 1.7k-match envelope would just overfit.
 
 ## 8. Meta Insights
 
