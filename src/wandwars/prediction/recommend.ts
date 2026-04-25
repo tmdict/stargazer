@@ -104,7 +104,7 @@ export function getMatchupPrediction(
   const analysis = getAnalysis()
   const matches = getMatches()
   const btFit = getCachedBradleyTerryFit(matches, analysis)
-  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, matches, btFit)
+  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, btFit)
   const raw = model.predictMatchup(leftTeam, rightTeam, analysis, matches)
   return calibratedPrediction(modelId, raw, selfConf[modelId] ?? 0)
 }
@@ -126,7 +126,7 @@ export function getAllMatchupPredictions(
   const analysis = getAnalysis()
   const matches = getMatches()
   const btFit = getCachedBradleyTerryFit(matches, analysis)
-  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, matches, btFit)
+  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, btFit)
   return models.map((model) => {
     const raw = model.predictMatchup(leftTeam, rightTeam, analysis, matches)
     const sc = selfConf[model.id] ?? 0
