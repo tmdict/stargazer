@@ -236,7 +236,7 @@ function handleExport() {
 .wandwars-layout {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--stack-gap);
   width: 100%;
 }
 

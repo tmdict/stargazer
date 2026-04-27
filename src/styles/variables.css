@@ -47,6 +47,10 @@
   --spacing-xl: 1.5rem;
   --spacing-2xl: 2rem;
 
+  /* Inter-section gap that tightens as viewports narrow. Pages opt in
+     via `gap: var(--stack-gap)` on their layout container. */
+  --stack-gap: var(--spacing-xl);
+
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-medium: 0.3s ease;
@@ -60,4 +64,22 @@
   --z-arrows: 5;
   --z-artifacts: 10;
   --z-dropdown: 9999;
+}
+
+@media (max-width: 1280px) {
+  :root {
+    --stack-gap: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 768px) {
+  :root {
+    --stack-gap: var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  :root {
+    --stack-gap: var(--spacing-xs);
+  }
 }
