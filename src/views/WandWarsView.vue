@@ -228,23 +228,16 @@ function handleExport() {
   background: #20232a;
 }
 
-/* Flex layout (one fixed column + one fluid) modeled on HomeView's
-   `.sections-container`. Note the fluid/fixed direction is reversed from
-   HomeView: WandWarsMain (left) is fluid, the aside (right) is the fixed
-   740px column — chosen because drafting and meta tables benefit from
-   horizontal room while analysis cards have natural max-widths. Stacked
-   single-column by default; two-column row at >=1200px. Hero Adjustments
-   (no `<aside>`) collapses automatically — the lone child fills the row. */
+/* WandWarsMain (left) is fluid; the aside (right) is fixed-width 740px.
+   Drafting and meta tables benefit from horizontal room; analysis cards
+   have natural max-widths. Stacks single-column below 1200px. The Hero
+   Adjustments tab hides the aside, leaving the lone fluid child to fill
+   the row. */
 .wandwars-layout {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xl);
   width: 100%;
-}
-
-.wandwars-side {
-  display: flex;
-  flex-direction: column;
 }
 
 @media (min-width: 1200px) {
@@ -253,27 +246,27 @@ function handleExport() {
     align-items: flex-start;
   }
 
-  /* Left column: fluid drafting / meta tables / hero adjustments. min-width: 0
-     prevents tables / tooltips / wide content from blowing out the flex item. */
+  /* min-width: 0 prevents tables / tooltips / wide content from blowing
+     out the flex item. */
   .wandwars-layout > .wandwars-main {
     flex: 1 1 auto;
     min-width: 0;
   }
 
-  /* Right column: fixed-width analysis / insights. Capped at viewport height
-     so long content (recommendation lists, records lists) doesn't drag the
-     page taller than the window. The :has() overrides below release the cap
-     for content-sized layouts. */
+  /* Capped at viewport height so long content (recommendation lists,
+     records lists) doesn't drag the page taller than the window. The
+     :has() overrides below release the cap for content-sized layouts. */
   .wandwars-layout > .wandwars-side {
+    display: flex;
+    flex-direction: column;
     flex: 0 0 740px;
     width: 740px;
     max-height: 100vh;
   }
 
-  /* Force the aside's direct child (.analysis root) to fill the column
-     height. This lets .analysis's internal .tab-content scroll handle long
-     lists (recommendations or records) internally — tabs stay pinned at
-     the top of the column instead of scrolling away. */
+  /* Fill the column height so the aside's child (.analysis) handles long
+     lists via its own internal .tab-content scroll — tabs stay pinned at
+     the top instead of scrolling away with the page. */
   .wandwars-layout > .wandwars-side > * {
     flex: 1;
     min-height: 0;
