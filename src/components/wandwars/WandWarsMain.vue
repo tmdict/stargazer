@@ -183,6 +183,12 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy' | 'hero-ad
 }
 
 @media (max-width: 768px) {
+  .tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
   .tab {
     padding: var(--spacing-sm);
     font-size: 0.85rem;
