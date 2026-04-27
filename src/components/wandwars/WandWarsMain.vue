@@ -160,12 +160,15 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy' | 'hero-ad
 <style scoped>
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
   margin-bottom: var(--spacing-md);
   border-bottom: 2px solid var(--color-border-light);
 }
 
 .tab {
+  flex: 0 0 auto;
+  white-space: nowrap;
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   background: none;
@@ -177,6 +180,13 @@ const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy' | 'hero-ad
   transition:
     color var(--transition-fast),
     border-color var(--transition-fast);
+}
+
+@media (max-width: 768px) {
+  .tab {
+    padding: var(--spacing-sm);
+    font-size: 0.85rem;
+  }
 }
 
 .tab.active {

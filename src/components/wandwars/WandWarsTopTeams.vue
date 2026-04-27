@@ -37,7 +37,7 @@ function orderedTeam(team: string[]): string[] {
     <div v-if="result.dataTeams.length > 0" class="team-section">
       <h4
         ref="dataTitleEl"
-        class="section-title"
+        class="top-teams-label"
         @mouseenter="showDataTooltip = true"
         @mouseleave="showDataTooltip = false"
       >
@@ -69,7 +69,7 @@ function orderedTeam(team: string[]): string[] {
     <div v-if="result.suggestedTeams.length > 0" class="team-section">
       <h4
         ref="suggestedTitleEl"
-        class="section-title suggested"
+        class="top-teams-label suggested"
         @mouseenter="showSuggestedTooltip = true"
         @mouseleave="showSuggestedTooltip = false"
       >
@@ -130,7 +130,7 @@ function orderedTeam(team: string[]): string[] {
   gap: var(--spacing-xs);
 }
 
-.section-title {
+.top-teams-label {
   margin: 0;
   font-size: 0.75rem;
   color: var(--color-text-secondary);
@@ -141,7 +141,7 @@ function orderedTeam(team: string[]): string[] {
   cursor: help;
 }
 
-.section-title.suggested {
+.top-teams-label.suggested {
   color: var(--color-primary);
 }
 
@@ -150,7 +150,7 @@ function orderedTeam(team: string[]): string[] {
   transition: opacity var(--transition-fast);
 }
 
-.section-title:hover .info-icon {
+.top-teams-label:hover .info-icon {
   opacity: 1;
 }
 
