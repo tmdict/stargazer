@@ -172,9 +172,10 @@ function handleExport() {
 </script>
 
 <template>
-  <div class="wandwars-page">
+  <main class="wandwars-page">
     <div class="wandwars-layout">
       <WandWarsMain
+        class="wandwars-main"
         v-model:active-tab="mainTab"
         :pick-state="pickState"
         :current-pick-side="currentPickSide"
@@ -218,79 +219,80 @@ function handleExport() {
         />
       </aside>
     </div>
-  </div>
+  </main>
 </template>
 
 <style scoped>
 .wandwars-page {
-  width: 100%;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: var(--spacing-lg) var(--spacing-xl);
   min-height: 100vh;
   background: #20232a;
 }
 
-/* Two-column layout (main + side) when the side panel is present; collapses
-   to a single full-width column automatically when the side panel is
-   absent (e.g. the Hero Adjustments tab). */
+/* Flex layout (one fixed column + one fluid) modeled on HomeView's
+   `.sections-container`. Note the fluid/fixed direction is reversed from
+   HomeView: WandWarsMain (left) is fluid, the aside (right) is the fixed
+   740px column — chosen because drafting and meta tables benefit from
+   horizontal room while analysis cards have natural max-widths. Stacked
+   single-column by default; two-column row at >=1200px. Hero Adjustments
+   (no `<aside>`) collapses automatically — the lone child fills the row. */
 .wandwars-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--spacing-xl);
-  align-items: start;
+  width: 100%;
 }
 
-.wandwars-layout:not(:has(.wandwars-side)) {
-  grid-template-columns: minmax(0, 1fr);
-}
-
-/* Cap the side panel at ~1200px (or viewport + 200px on short viewports).
-   min == max means it doesn't shrink when the main column resizes (e.g.
-   pool-filter screenshot trims the main panel). The :has overrides below
-   release the cap for content-sized layouts. */
 .wandwars-side {
-  min-height: min(1200px, calc(100vh + 200px));
-  max-height: min(1200px, calc(100vh + 200px));
   display: flex;
   flex-direction: column;
 }
 
-/* Release the side panel's fixed-height cap for layouts that size to content:
-   - `.matchup-section` → full match prediction view (all 6 picked) where
-     the matchup cards + record form should flow without an inner scrollbar
-   - `.insights-panel` → meta pages (Units / Teams / Synergy) with their
-     own variable-length section layout */
-.wandwars-side:has(.matchup-section),
-.wandwars-side:has(.insights-panel) {
-  min-height: 0;
-  max-height: none;
-}
-
-/* Insights panel owns its own flex/overflow rules — don't force child to
-   stretch-fill like the drafting analysis panel does. */
-.wandwars-side:has(.insights-panel) > * {
-  flex: initial;
-  min-height: initial;
-}
-
-.wandwars-side > * {
-  flex: 1;
-  min-height: 0;
-}
-
-@media (max-width: 768px) {
-  .wandwars-page {
-    padding: var(--spacing-md);
-  }
-
+@media (min-width: 1200px) {
   .wandwars-layout {
-    grid-template-columns: 1fr;
+    flex-direction: row;
+    align-items: flex-start;
   }
 
-  .wandwars-side {
-    min-height: auto;
+  /* Left column: fluid drafting / meta tables / hero adjustments. min-width: 0
+     prevents tables / tooltips / wide content from blowing out the flex item. */
+  .wandwars-layout > .wandwars-main {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  /* Right column: fixed-width analysis / insights. Capped at viewport height
+     so long content (recommendation lists, records lists) doesn't drag the
+     page taller than the window. The :has() overrides below release the cap
+     for content-sized layouts. */
+  .wandwars-layout > .wandwars-side {
+    flex: 0 0 740px;
+    width: 740px;
+    max-height: 100vh;
+  }
+
+  /* Force the aside's direct child (.analysis root) to fill the column
+     height. This lets .analysis's internal .tab-content scroll handle long
+     lists (recommendations or records) internally — tabs stay pinned at
+     the top of the column instead of scrolling away. */
+  .wandwars-layout > .wandwars-side > * {
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Release the cap when the aside hosts naturally-sized content:
+     - `.matchup-section` → full match prediction view (all 6 picked) so
+       the matchup cards + record form flow without an inner scrollbar
+     - `.insights-panel` → meta pages (Units / Teams / Synergy) own their
+       own variable-length section layout */
+  .wandwars-layout > .wandwars-side:has(.matchup-section),
+  .wandwars-layout > .wandwars-side:has(.insights-panel) {
     max-height: none;
+  }
+
+  .wandwars-layout > .wandwars-side:has(.matchup-section) > *,
+  .wandwars-layout > .wandwars-side:has(.insights-panel) > * {
+    flex: initial;
+    min-height: initial;
   }
 }
 </style>

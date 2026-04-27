@@ -1467,8 +1467,8 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
       </div>
 
       <!-- Insights always at top -->
-      <section v-if="filteredInsights.length > 0" class="section">
-        <h3 class="section-title">{{ i18n.t('wandwars.insights') }}</h3>
+      <section v-if="filteredInsights.length > 0" class="ww-section">
+        <h3 class="ww-section-title">{{ i18n.t('wandwars.insights') }}</h3>
         <div class="insights-list">
           <div
             v-for="(insight, i) in filteredInsights"
@@ -1480,10 +1480,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
       </section>
 
       <!-- Best Openers (units only) -->
-      <section v-if="category === 'units' && bestOpeners.length > 0" class="section">
+      <section v-if="category === 'units' && bestOpeners.length > 0" class="ww-section">
         <h3
           ref="openerTitleEl"
-          class="section-title"
+          class="ww-section-title"
           @mouseenter="showOpenerTooltip = true"
           @mouseleave="showOpenerTooltip = false"
         >
@@ -1508,10 +1508,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
       </section>
 
       <!-- Best Responses (units only) -->
-      <section v-if="category === 'units' && bestResponses.length > 0" class="section">
+      <section v-if="category === 'units' && bestResponses.length > 0" class="ww-section">
         <h3
           ref="responseTitleEl"
-          class="section-title"
+          class="ww-section-title"
           @mouseenter="showResponseTooltip = true"
           @mouseleave="showResponseTooltip = false"
         >
@@ -1550,10 +1550,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
       </section>
 
       <!-- Synergy: Pair Counters -->
-      <section v-if="category === 'synergy' && groupedPairCounters.length > 0" class="section">
+      <section v-if="category === 'synergy' && groupedPairCounters.length > 0" class="ww-section">
         <h3
           ref="pairCounterTitleEl"
-          class="section-title"
+          class="ww-section-title"
           @mouseenter="showPairCounterTooltip = true"
           @mouseleave="showPairCounterTooltip = false"
         >
@@ -1599,10 +1599,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
       </section>
 
       <!-- Most Dominant Pairs (synergy only) -->
-      <section v-if="category === 'synergy' && sweepPairs.length > 0" class="section">
+      <section v-if="category === 'synergy' && sweepPairs.length > 0" class="ww-section">
         <h3
           ref="dominantPairsTitleEl"
-          class="section-title"
+          class="ww-section-title"
           @mouseenter="showDominantPairsTooltip = true"
           @mouseleave="showDominantPairsTooltip = false"
         >
@@ -1630,10 +1630,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
       </section>
 
       <!-- Team Counters (teams only) -->
-      <section v-if="category === 'teams' && groupedTeamCounters.length > 0" class="section">
+      <section v-if="category === 'teams' && groupedTeamCounters.length > 0" class="ww-section">
         <h3
           ref="teamCountersTitleEl"
-          class="section-title"
+          class="ww-section-title"
           @mouseenter="showTeamCountersTooltip = true"
           @mouseleave="showTeamCountersTooltip = false"
         >
@@ -1678,10 +1678,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
         </div>
       </section>
       <!-- Most Dominant Teams (teams only) -->
-      <section v-if="category === 'teams' && sweepTeams.length > 0" class="section">
+      <section v-if="category === 'teams' && sweepTeams.length > 0" class="ww-section">
         <h3
           ref="dominantTeamsTitleEl"
-          class="section-title"
+          class="ww-section-title"
           @mouseenter="showDominantTeamsTooltip = true"
           @mouseleave="showDominantTeamsTooltip = false"
         >
@@ -1833,27 +1833,6 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 .insight-card :deep(.insight-hero-name) {
   font-weight: 600;
   color: var(--color-text-primary);
-}
-
-/* Sections */
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  background: var(--color-bg-light-gray);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-medium);
-}
-
-.section-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.05em;
-  display: flex;
-  align-items: center;
 }
 
 .section-info-icon {
@@ -2027,10 +2006,6 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
 }
 
 @media (max-width: 1280px) {
-  .section-title {
-    font-size: 1.05rem;
-  }
-
   .hero-portrait {
     width: 40px;
     height: 40px;

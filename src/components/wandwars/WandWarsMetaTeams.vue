@@ -169,7 +169,7 @@ const sortedTeamRows = computed(() => {
 
     <template v-else>
       <!-- Hero Table (units) -->
-      <section v-if="category === 'units'" class="section">
+      <section v-if="category === 'units'" class="ww-section">
         <div class="hero-table-wrap">
           <table class="hero-table">
             <thead>
@@ -229,7 +229,7 @@ const sortedTeamRows = computed(() => {
       </section>
 
       <!-- Pair Table (synergy) -->
-      <section v-if="category === 'synergy'" class="section">
+      <section v-if="category === 'synergy'" class="ww-section">
         <div class="hero-table-wrap">
           <table class="hero-table">
             <thead>
@@ -306,7 +306,7 @@ const sortedTeamRows = computed(() => {
       </section>
 
       <!-- Team Table (teams) -->
-      <section v-if="category === 'teams'" class="section">
+      <section v-if="category === 'teams'" class="ww-section">
         <div class="hero-table-wrap">
           <table class="hero-table">
             <thead>
@@ -404,24 +404,6 @@ const sortedTeamRows = computed(() => {
   color: var(--color-text-secondary);
   padding: var(--spacing-2xl);
   font-size: 1rem;
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  background: var(--color-bg-light-gray);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-medium);
-}
-
-.section-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.05em;
 }
 
 /* Hero table */
@@ -546,10 +528,6 @@ td.col-hero {
 }
 
 @media (max-width: 1280px) {
-  .section-title {
-    font-size: 1.05rem;
-  }
-
   .hero-table {
     font-size: 0.9rem;
   }

@@ -72,8 +72,8 @@ function formatStat(value: number): string {
 
 <template>
   <div class="adjustments-panel">
-    <section class="section">
-      <h3 class="section-title">{{ i18n.t('wandwars.hero-adjustments') }}</h3>
+    <section class="adjustments-section">
+      <h3 class="ww-section-title">{{ i18n.t('wandwars.hero-adjustments') }}</h3>
       <div class="filters-row">
         <FilterIcons
           v-model="factionFilter"
@@ -121,21 +121,12 @@ function formatStat(value: number): string {
   gap: var(--spacing-lg);
 }
 
-.section {
+.adjustments-section {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-md);
   padding: var(--spacing-md);
   border-radius: var(--radius-medium);
-}
-
-.section-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.05em;
 }
 
 .filters-row {
@@ -147,7 +138,7 @@ function formatStat(value: number): string {
 
 .card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: var(--spacing-sm);
 }
 
@@ -257,5 +248,21 @@ function formatStat(value: number): string {
 
 .stat-neg {
   color: var(--color-error);
+}
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-card {
+    flex-direction: column;
+  }
+
+  .hero-head {
+    flex: 0 0 auto;
+    border-right: none;
+    border-bottom: 1px solid var(--color-border-light);
+  }
 }
 </style>
