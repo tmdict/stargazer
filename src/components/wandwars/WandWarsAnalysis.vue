@@ -1172,6 +1172,8 @@ const aggregatePrediction = computed(() => {
 }
 
 .tab-btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
   padding: var(--spacing-sm) var(--spacing-md);
   border: none;
   background: none;
@@ -1183,6 +1185,18 @@ const aggregatePrediction = computed(() => {
   transition:
     color var(--transition-fast),
     border-color var(--transition-fast);
+}
+
+@media (max-width: 768px) {
+  .tabs {
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .tab-btn {
+    padding: var(--spacing-sm);
+    font-size: 0.85rem;
+  }
 }
 
 .tab-btn.active {

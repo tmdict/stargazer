@@ -205,6 +205,22 @@ main {
   padding: var(--spacing-lg);
 }
 
+@media (max-width: 768px) {
+  .ww-card {
+    border-radius: var(--radius-medium);
+    padding: var(--spacing-lg) var(--spacing-md);
+  }
+}
+
+@media (max-width: 480px) {
+  .ww-card {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    padding: var(--spacing-md) var(--spacing-sm);
+  }
+}
+
 /* WandWars sub-section chrome — used inside .ww-card panels for grouped
    blocks of content (Insights cards, Meta tab tables). Lighter than
    .ww-card; pairs with .ww-section-title. */
