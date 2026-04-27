@@ -177,14 +177,12 @@ main {
 
 @media (max-width: 768px) {
   .section {
-    margin-bottom: var(--spacing-md);
     border-radius: var(--radius-medium);
   }
 }
 
 @media (max-width: 480px) {
   .section {
-    margin-bottom: 4px;
     border-radius: 0;
   }
 }

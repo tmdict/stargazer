@@ -309,7 +309,7 @@ const handleResetMap = () => {
 .sections-container {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-xl);
+  gap: var(--stack-gap);
   width: 100%;
 }
 
@@ -345,17 +345,7 @@ const handleResetMap = () => {
   color: var(--color-text-muted);
 }
 
-@media (max-width: 1280px) {
-  .sections-container {
-    gap: var(--spacing-lg);
-  }
-}
-
 @media (max-width: 768px) {
-  .sections-container {
-    gap: 0;
-  }
-
   .tab-panel {
     padding: var(--spacing-lg) 0;
   }
