@@ -8,5 +8,11 @@
   "energy": 200,
   "range": 5,
   "season": 0,
-  "tags": ["energy-recharge", "initial-energy", "temp-buff-instant", "temp-buff"]
+  "tags": [
+    "energy-recharge",
+    "initial-energy",
+    "initial-energy-300",
+    "temp-buff-instant",
+    "temp-buff"
+  ]
 }

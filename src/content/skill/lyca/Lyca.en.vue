@@ -19,8 +19,14 @@ setupSkillContentMeta('lyca', 'en')
         Energy.
       </p>
 
+      <h2>Initial Energy > 300</h2>
+
       <h3>Enhance Force</h3>
-      <p><strong>Level 2:</strong> Lyca gains [[300]] extra Initial Energy.</p>
+      <p>
+        <strong>Level 2:</strong> Lyca gains [[300]] extra Initial Energy. She extends the duration
+        of Nebula Reflection from her Comet Archery by [[7]]s and makes each meteor summoned by
+        allied attacks deal extra damage equal to [[40%]] of her ATK.
+      </p>
     </article>
   </StyledText>
 </template>

@@ -27,6 +27,15 @@ setupSkillContentMeta('hodgkin', 'en')
         max HP to the adjacent enemies. This extra damage cannot exceed [[200%]] of Hodgkin's ATK.
         The targeted enemies also lose [[200]] Energy.
       </p>
+
+      <h2>Initial Energy > 300</h2>
+
+      <h3>Enhance Force</h3>
+      <p>
+        <strong>Level 2:</strong> Hodgkin gains [[400]] initial Energy. During Cannon Fire, for each
+        enemy hit by the cannon at least [[2]] times, he recovers [[150]] Energy and reduces that
+        enemy's Vitality by [[80]] for [[10]]s.
+      </p>
     </article>
   </StyledText>
 </template>
