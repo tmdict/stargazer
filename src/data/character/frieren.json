@@ -1,0 +1,12 @@
+{
+  "id": 111,
+  "name": "frieren",
+  "level": "s",
+  "faction": "dimensional",
+  "class": "mage",
+  "damage": "magic",
+  "energy": 350,
+  "range": 7,
+  "season": 6,
+  "tags": ["initial-energy", "initial-energy-300", "special-target"]
+}
