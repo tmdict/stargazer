@@ -5,7 +5,7 @@
   "faction": "lightbearer",
   "class": "mage",
   "damage": "magic",
-  "energy": 0,
+  "energy": [0],
   "range": 3,
   "season": 0,
   "tags": ["special-target"]

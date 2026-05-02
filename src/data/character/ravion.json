@@ -5,7 +5,7 @@
   "faction": "wilder",
   "class": "rogue",
   "damage": "physical",
-  "energy": 0,
+  "energy": [0],
   "range": 4,
   "season": 4,
   "tags": ["temp-buff-instant", "special-target", "temp-buff"]

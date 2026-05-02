@@ -5,7 +5,7 @@
   "faction": "lightbearer",
   "class": "support",
   "damage": "magic",
-  "energy": 0,
+  "energy": [0],
   "range": 3,
   "season": 0,
   "tags": ["temp-buff"]
