@@ -52,7 +52,7 @@ setupSkillContentMeta('dunlingr', 'en')
         </li>
       </ul>
 
-      <h2>Non-Permanent Buff</h2>
+      <h2>Energy Reduction · Non-Permanent Buff</h2>
 
       <h3>Enhance Force</h3>
       <p>
@@ -60,6 +60,19 @@ setupSkillContentMeta('dunlingr', 'en')
         order is set to Spellbind, or provides them with [[25]] Life Drain for [[6]]s if the order
         is set to Curelock.
       </p>
+      <p>
+        <strong>Level 2:</strong> If Dunlingr is alive, each time the order effect of his Bell ends
+        or its duration is refreshed, an extra effect will be triggered based on the Bell's active
+        order:
+      </p>
+      <ul>
+        <li>
+          Spellbind: Reduces all enemies' Energy by [[150]] and their Haste by [[10]] for [[8]]s.
+        </li>
+        <li>
+          Curelock: Reduces all enemies' HP by [[150%]] and their Vitality by [[50]] for [[8]]s.
+        </li>
+      </ul>
     </article>
   </StyledText>
 </template>

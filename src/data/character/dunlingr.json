@@ -8,5 +8,5 @@
   "energy": 0,
   "range": 1,
   "season": 2,
-  "tags": ["special-target", "temp-buff", "ult-negation"]
+  "tags": ["energy-reduction", "special-target", "temp-buff", "ult-negation"]
 }
