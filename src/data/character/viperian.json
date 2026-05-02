@@ -8,5 +8,5 @@
   "energy": 250,
   "range": 5,
   "season": 0,
-  "tags": []
+  "tags": ["energy-reduction"]
 }

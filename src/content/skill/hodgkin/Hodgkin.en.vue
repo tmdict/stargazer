@@ -10,7 +10,13 @@ setupSkillContentMeta('hodgkin', 'en')
     <article>
       <h1>Hodgkin</h1>
 
-      <h2>Summon</h2>
+      <h2>Energy Reduction · Summon</h2>
+
+      <h3>Skill</h3>
+      <p>
+        <strong>Passive.</strong> Hodgkin deals [[240%]] damage to enemies within a 2-tile arc and
+        steals [[70]] Energy from them.
+      </p>
 
       <h3>EX Skill</h3>
       <p>
@@ -19,6 +25,7 @@ setupSkillContentMeta('hodgkin', 'en')
         launch normal attacks. When a unit affected by voidbound magic is defeated, they trigger an
         explosion that deals damage equal to [[120%]] plus an extra [[10%]] of the defeated unit's
         max HP to the adjacent enemies. This extra damage cannot exceed [[200%]] of Hodgkin's ATK.
+        The targeted enemies also lose [[200]] Energy.
       </p>
     </article>
   </StyledText>

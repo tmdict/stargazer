@@ -23,6 +23,14 @@ setupSkillContentMeta('bryon', 'en')
         of Energy over time. When she runs out of Energy or Bryon is defeated, Elona leaves the
         battlefield.
       </p>
+
+      <h2>Energy Reduction</h2>
+
+      <h3>Skill</h3>
+      <p>
+        <strong>Passive.</strong> Bryon's normal attacks and skills deal damage [[2]] times,
+        absorbing targets' [[50]] Energy.
+      </p>
     </article>
   </StyledText>
 </template>

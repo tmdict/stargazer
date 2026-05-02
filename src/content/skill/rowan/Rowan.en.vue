@@ -24,6 +24,14 @@ setupSkillContentMeta('rowan', 'en')
         an ally within [[2]] tiles exceeds [[600]], they automatically use this potion to recover
         [[400]] Energy.
       </p>
+
+      <h2>Energy Reduction</h2>
+
+      <h3>Skill</h3>
+      <p>
+        Rowan calls on Bradduck to attack an enemy, dealing [[150%]] damage and absorbing [[70]]
+        Energy.
+      </p>
     </article>
   </StyledText>
 </template>
