@@ -10,12 +10,14 @@ setupSkillContentMeta('vala', 'en')
     <article>
       <h1>Vala</h1>
 
-      <h2>Targeting Mechanics</h2>
+      <h2>Energy Reduction · Targeting Mechanics</h2>
 
       <h3>Skill</h3>
       <p>
         Vala sends a notice to mark the farthest enemy when a battle starts. She prioritizes
-        attacking the noticed enemy, absorbing [[90]] Energy for each hit.
+        attacking the noticed enemy, absorbing [[90]] Energy for each hit. When the Noticed enemy is
+        defeated, Vala sends the Notice Beforehand to the farthest enemy if she is in Skyblaster
+        Mode or to the nearest enemy if she is in Sword Mode.
       </p>
 
       <strong>How It Works</strong>

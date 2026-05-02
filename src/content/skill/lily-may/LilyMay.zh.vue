@@ -10,7 +10,7 @@ setupSkillContentMeta('lily-may', 'zh')
     <article>
       <h1>五月</h1>
 
-      <h2>大招打断</h2>
+      <h2>削能 · 大招打断</h2>
 
       <h3>终极技能</h3>
       <p>

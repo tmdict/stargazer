@@ -8,5 +8,5 @@
   "energy": 300,
   "range": 5,
   "season": 6,
-  "tags": ["initial-energy"]
+  "tags": ["energy-reduction", "initial-energy"]
 }

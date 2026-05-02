@@ -8,5 +8,5 @@
   "energy": 400,
   "range": 1,
   "season": 0,
-  "tags": ["initial-energy", "initial-energy-300", "special-target"]
+  "tags": ["energy-reduction", "initial-energy", "initial-energy-300", "special-target"]
 }

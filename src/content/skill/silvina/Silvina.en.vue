@@ -12,6 +12,11 @@ setupSkillContentMeta('silvina', 'en')
     <article>
       <h1>Silvina</h1>
 
+      <h2>Energy Reduction</h2>
+
+      <h3>Ultimate</h3>
+      <p>Silvina deals [[300%]] damage to an enemy and reduces their Energy by [[200]].</p>
+
       <h2>Targeting Mechanics</h2>
 
       <h3>Skill</h3>
