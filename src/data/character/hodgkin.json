@@ -8,5 +8,5 @@
   "energy": 0,
   "range": 1,
   "season": 2,
-  "tags": ["energy-reduction", "summon"]
+  "tags": ["energy-reduction", "initial-energy", "initial-energy-300", "summon"]
 }
