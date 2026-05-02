@@ -5,7 +5,7 @@
   "faction": "lightbearer",
   "class": "rogue",
   "damage": "physical",
-  "energy": 300,
+  "energy": [300],
   "range": 1,
   "season": 2,
   "tags": ["initial-energy"]

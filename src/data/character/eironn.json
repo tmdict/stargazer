@@ -5,7 +5,7 @@
   "faction": "wilder",
   "class": "rogue",
   "damage": "magic",
-  "energy": 200,
+  "energy": [200],
   "range": 1,
   "season": 0,
   "tags": ["initial-energy", "instant-ult"]

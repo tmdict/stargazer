@@ -5,7 +5,7 @@
   "faction": "celestial",
   "class": "support",
   "damage": "magic",
-  "energy": 200,
+  "energy": [200],
   "range": 6,
   "season": 3,
   "tags": ["energy-recharge", "initial-energy", "temp-buff"]

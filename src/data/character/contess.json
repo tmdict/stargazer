@@ -5,7 +5,7 @@
   "faction": "hypogean",
   "class": "support",
   "damage": "magic",
-  "energy": 300,
+  "energy": [300],
   "range": 6,
   "season": 6,
   "tags": ["initial-energy", "ult-negation"]

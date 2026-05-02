@@ -7,7 +7,7 @@ export interface CharacterType {
   faction: string
   class: string
   damage: string
-  energy: number
+  energy: readonly number[]
   range: number
   season: number
   tags: readonly string[]

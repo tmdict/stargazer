@@ -5,7 +5,7 @@
   "faction": "mauler",
   "class": "support",
   "damage": "physical",
-  "energy": 0,
+  "energy": [0],
   "range": 4,
   "season": 0,
   "tags": ["temp-buff"]

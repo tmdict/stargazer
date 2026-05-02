@@ -5,7 +5,7 @@
   "faction": "wilder",
   "class": "marksman",
   "damage": "magic",
-  "energy": 1000,
+  "energy": [1000],
   "range": 5,
   "season": 0,
   "tags": ["energy-reduction", "initial-energy", "initial-energy-300", "instant-ult", "summon"]

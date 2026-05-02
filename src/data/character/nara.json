@@ -5,7 +5,7 @@
   "faction": "graveborn",
   "class": "rogue",
   "damage": "physical",
-  "energy": 750,
+  "energy": [750],
   "range": 1,
   "season": 2,
   "tags": ["special-target"]

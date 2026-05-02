@@ -1312,8 +1312,8 @@ const insights = computed(() => {
         compStats.class![classKey]![isWinner ? 'w' : 'l']++
       }
 
-      // Team energy
-      const avgEnergy = attrs.reduce((s, a) => s + a.energy, 0) / 3
+      // Team energy (sum each hero's base + skill-granted starting energy)
+      const avgEnergy = attrs.reduce((s, a) => s + a.energy.reduce((n, e) => n + e, 0), 0) / 3
       const energyKey =
         avgEnergy >= 500 ? 'high energy (500+)' : avgEnergy < 200 ? 'low energy (<200)' : null
       if (energyKey) {

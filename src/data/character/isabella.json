@@ -5,7 +5,7 @@
   "faction": "graveborn",
   "class": "support",
   "damage": "magic",
-  "energy": 0,
+  "energy": [0],
   "range": 5,
   "season": 5,
   "tags": ["special-target", "temp-buff"]
