@@ -5,7 +5,7 @@
   "faction": "celestial",
   "class": "marksman",
   "damage": "physical",
-  "energy": 0,
+  "energy": [0],
   "range": 8,
   "season": 5,
   "tags": ["special-target"]

@@ -5,7 +5,7 @@
   "faction": "mauler",
   "class": "warrior",
   "damage": "physical",
-  "energy": 1000,
+  "energy": [1000],
   "range": 1,
   "season": 5,
   "tags": ["initial-energy", "initial-energy-300", "instant-ult"]

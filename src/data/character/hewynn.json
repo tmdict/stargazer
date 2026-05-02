@@ -5,7 +5,7 @@
   "faction": "wilder",
   "class": "support",
   "damage": "magic",
-  "energy": 200,
+  "energy": [200],
   "range": 4,
   "season": 0,
   "tags": ["initial-energy", "temp-buff"]

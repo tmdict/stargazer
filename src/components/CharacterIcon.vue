@@ -64,6 +64,14 @@ const showEnergy = computed(() => {
   return props.selectedFilter === 'initial-energy' || props.selectedFilter === 'initial-energy-300'
 })
 
+// Format energy as "base (bonus)" when there are skill-applied bonuses, else just "base"
+const formattedEnergy = computed(() => {
+  const [base = 0, ...bonuses] = props.character.energy
+  if (bonuses.length === 0) return String(base)
+  const bonus = bonuses.reduce((sum, n) => sum + n, 0)
+  return `${base} (${bonus})`
+})
+
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
   showTooltip.value = false
@@ -146,7 +154,7 @@ const handleTouchStart = () => {
     <!-- Energy Display -->
     <div v-if="showEnergy" class="character-energy">
       <img :src="energyIcon" alt="Energy" class="energy-icon" />
-      <span class="energy-value">{{ character.energy }}</span>
+      <span class="energy-value">{{ formattedEnergy }}</span>
     </div>
 
     <!-- Tooltip -->
@@ -205,11 +213,11 @@ const handleTouchStart = () => {
                 <img
                   v-if="energyIcon"
                   :src="energyIcon"
-                  :alt="String(character.energy)"
+                  :alt="formattedEnergy"
                   class="tooltip-icon energy-icon"
                 />
                 <span class="tooltip-label">{{ i18n.t('game.energy') }}:</span>
-                <span class="tooltip-value">{{ character.energy }}</span>
+                <span class="tooltip-value">{{ formattedEnergy }}</span>
               </div>
 
               <div class="tooltip-row">
