@@ -46,12 +46,12 @@ setupSkillContentMeta('aliceth', 'zh')
       </p>
 
       <strong>技能机制（敌方）</strong>
-      <p>亚莉克希会自动识别并标记距离她当前格子最远的敌方角色。</p>
+      <p>亚莉克希会自动识别并锁定距离她所在格子最远的敌方角色。</p>
       <p>距离计算使用六边形网格距离来确定最远的敌人。</p>
       <p>当多个敌人距离相等时：</p>
       <ul>
-        <li><strong>友方亚莉克希：</strong>优先选择格子ID更低的敌人</li>
-        <li><strong>敌方亚莉克希：</strong>优先选择格子ID更高的敌人（180°旋转）</li>
+        <li><strong>友方亚莉克希：</strong>优先选择格子ID较小的敌人</li>
+        <li><strong>敌方亚莉克希：</strong>优先选择格子ID较大的敌人（180°旋转）</li>
       </ul>
     </article>
   </StyledText>
