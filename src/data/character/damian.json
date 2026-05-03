@@ -3,7 +3,7 @@
   "name": "damian",
   "level": "a",
   "faction": "wilder",
-  "class": "tank",
+  "class": "support",
   "damage": "magic",
   "energy": [200],
   "range": 20,

@@ -1,0 +1,12 @@
+{
+  "id": 113,
+  "name": "evie",
+  "level": "a",
+  "faction": "lightbearer",
+  "class": "support",
+  "damage": "magic",
+  "energy": [200],
+  "range": 20,
+  "season": 6,
+  "tags": ["initial-energy"]
+}

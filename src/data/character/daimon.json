@@ -3,7 +3,7 @@
   "name": "daimon",
   "level": "s",
   "faction": "graveborn",
-  "class": "rogue",
+  "class": "tank",
   "damage": "magic",
   "energy": [0],
   "range": 3,
