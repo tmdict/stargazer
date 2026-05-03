@@ -22,11 +22,22 @@ import { buildSamples, trainRun, type RunResult } from './trainNNCore'
 
 const NUM_RUNS = 10 // Training rounds with different seeds; keep best
 
-// Load all raw match data
+// Load all raw match data from every patch folder under raw/. Each file's
+// content is prefixed with a `// @patch <id>` directive so the parser tags
+// every match correctly (the encoder does the same; we re-emit here because
+// trainNN reads raw files directly, not the encoded blob).
 const rawDir = join(import.meta.dirname!, '..', 'data', 'raw')
-const dataFiles = readdirSync(rawDir).filter((f) => f.endsWith('.data'))
+const PATCH_DIR_RE = /^\d{6}_\d+(?:\.\d+)*$/
+
 let allRaw = ''
-for (const f of dataFiles) allRaw += readFileSync(join(rawDir, f), 'utf-8') + '\n'
+for (const entry of readdirSync(rawDir, { withFileTypes: true })) {
+  if (!entry.isDirectory() || !PATCH_DIR_RE.test(entry.name)) continue
+  for (const f of readdirSync(join(rawDir, entry.name))) {
+    if (!f.toLowerCase().endsWith('.data')) continue
+    allRaw += `// @patch ${entry.name} @data ${f}\n`
+    allRaw += readFileSync(join(rawDir, entry.name, f), 'utf-8') + '\n'
+  }
+}
 
 const matches = parseMatchData(allRaw)
 const heroes = getUniqueHeroes(matches)

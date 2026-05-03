@@ -835,8 +835,12 @@ const insights = computed(() => {
     }
   }
 
+  // A 3-0 record happens 12.5% of the time by chance at 50/50; 5-0 drops that
+  // to 3.1%, where "undefeated" actually means something.
+  const perfectTeamMin = Math.max(5, teamMin)
+
   for (const team of allTeamRecords.value) {
-    if (team.total >= teamMin && team.losses === 0) {
+    if (team.total >= perfectTeamMin && team.losses === 0) {
       add(
         result,
         'teams',
@@ -851,7 +855,7 @@ const insights = computed(() => {
   }
 
   for (const team of allTeamRecords.value) {
-    if (team.total >= teamMin && team.wins === 0) {
+    if (team.total >= perfectTeamMin && team.wins === 0) {
       add(
         result,
         'teams',
