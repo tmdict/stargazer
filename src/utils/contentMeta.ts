@@ -1,3 +1,4 @@
+import { inject, type InjectionKey } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import { loadCharacterLocales } from '@/utils/dataLoader'
@@ -9,16 +10,21 @@ interface ContentMetaOptions {
   keywords?: string[]
 }
 
+/** Provide(true) when rendering content inside a modal to suppress page-level meta writes. */
+export const ContentInModalKey: InjectionKey<boolean> = Symbol('ContentInModal')
+
 /**
  * Sets up meta tags for content pages during SSR
  * Centralizes the meta tag configuration for all content components
  */
 export function setupContentMeta(options: ContentMetaOptions): void {
   const { title, url, keywords, locale } = options
+  const isEmbedded = inject(ContentInModalKey, false)
 
-  // Set document language during runtime
+  // Set document language during runtime — skip when embedded so modal toggles
+  // don't leak into the host page's <html lang>
   if (!import.meta.env.SSR) {
-    document.documentElement.lang = locale
+    if (!isEmbedded) document.documentElement.lang = locale
     return
   }
 
