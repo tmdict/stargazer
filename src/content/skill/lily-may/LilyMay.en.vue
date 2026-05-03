@@ -10,7 +10,7 @@ setupSkillContentMeta('lily-may', 'en')
     <article>
       <h1>Lily May</h1>
 
-      <h2>Energy Reduction · Ultimate Negation</h2>
+      <h2>Ultimate Negation · Energy Reduction</h2>
 
       <h3>Ultimate</h3>
       <p>

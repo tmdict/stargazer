@@ -10,7 +10,7 @@ setupSkillContentMeta('hodgkin', 'en')
     <article>
       <h1>Hodgkin</h1>
 
-      <h2>Energy Reduction · Summon</h2>
+      <h2>Summon · Energy Reduction</h2>
 
       <h3>Skill</h3>
       <p>
