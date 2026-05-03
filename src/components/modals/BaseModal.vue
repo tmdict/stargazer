@@ -11,6 +11,7 @@ interface Props {
   show: boolean
   maxWidth?: string
   linkParam: string
+  localeOverride?: 'en' | 'zh'
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -24,9 +25,9 @@ const emit = defineEmits<{
 const modalRef = ref<HTMLElement>()
 const i18n = useI18nStore()
 
-// Compute the href for the link with locale
+// Compute the href for the link with locale (modal-local override wins over global)
 const linkHref = computed(() => {
-  const locale = i18n.currentLocale
+  const locale = props.localeOverride ?? i18n.currentLocale
   return props.linkParam === 'about' ? `/${locale}/about` : `/${locale}/skill/${props.linkParam}`
 })
 
@@ -59,6 +60,7 @@ onUnmounted(() => {
       <div v-if="show" class="overlayModal" @click="handleClickOutside">
         <div ref="modalRef" class="container" :style="{ maxWidth }" @click.stop>
           <div class="buttons">
+            <slot name="header-buttons" />
             <a
               :href="linkHref"
               class="button"
