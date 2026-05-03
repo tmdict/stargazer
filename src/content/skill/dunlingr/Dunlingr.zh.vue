@@ -34,7 +34,7 @@ setupSkillContentMeta('dunlingr', 'zh')
         <li><strong>敌方顿里尔：</strong>优先选择格子ID较大的敌人（180°旋转）</li>
       </ul>
 
-      <h2>削能 · 非永久增益</h2>
+      <h2>非永久增益 · 削能</h2>
 
       <h3>觉醒之力</h3>
       <p>

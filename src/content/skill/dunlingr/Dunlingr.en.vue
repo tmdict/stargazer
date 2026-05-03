@@ -52,7 +52,7 @@ setupSkillContentMeta('dunlingr', 'en')
         </li>
       </ul>
 
-      <h2>Energy Reduction · Non-Permanent Buff</h2>
+      <h2>Non-Permanent Buff · Energy Reduction</h2>
 
       <h3>Enhance Force</h3>
       <p>
