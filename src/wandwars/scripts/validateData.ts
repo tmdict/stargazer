@@ -26,17 +26,61 @@ import type { MatchResult } from '../types'
 
 const candidateArg = process.argv[2]
 if (!candidateArg) {
-  console.error('Usage: npm run ww:validate <filename>.data')
+  console.error(
+    'Usage: npm run ww:validate <patch>/<filename>.data  (or just <filename>.data to auto-locate)',
+  )
   process.exit(1)
 }
 
 const rawDir = join(import.meta.dirname!, '..', 'data', 'raw')
-const candidatePath = join(rawDir, candidateArg)
-const candidateRaw = readFileSync(candidatePath, 'utf-8')
+const PATCH_DIR_RE = /^\d{6}_\d+(?:\.\d+)*$/
 
-const baselineFiles = readdirSync(rawDir).filter((f) => f.endsWith('.data') && f !== candidateArg)
+// Walk every patch folder under rawDir, returning [patch, filename] pairs for every .data file.
+const allDataFiles: { patch: string; file: string }[] = []
+for (const entry of readdirSync(rawDir, { withFileTypes: true })) {
+  if (!entry.isDirectory() || !PATCH_DIR_RE.test(entry.name)) continue
+  for (const f of readdirSync(join(rawDir, entry.name))) {
+    if (f.toLowerCase().endsWith('.data')) allDataFiles.push({ patch: entry.name, file: f })
+  }
+}
+
+// Resolve the candidate: either `<patch>/<file>` (explicit) or `<file>` (auto-locate).
+function resolveCandidate(arg: string): { patch: string; file: string } {
+  if (arg.includes('/')) {
+    const [patch, file] = arg.split('/') as [string, string]
+    const hit = allDataFiles.find((d) => d.patch === patch && d.file === file)
+    if (!hit) {
+      console.error(`Candidate not found: ${arg}`)
+      process.exit(1)
+    }
+    return hit
+  }
+  const hits = allDataFiles.filter((d) => d.file === arg)
+  if (hits.length === 0) {
+    console.error(`Candidate not found in any patch folder: ${arg}`)
+    process.exit(1)
+  }
+  if (hits.length > 1) {
+    console.error(
+      `Candidate "${arg}" exists in multiple patches: ${hits.map((h) => h.patch).join(', ')}. ` +
+        `Disambiguate: npm run ww:validate <patch>/${arg}`,
+    )
+    process.exit(1)
+  }
+  return hits[0]!
+}
+
+const target = resolveCandidate(candidateArg)
+const candidatePath = join(rawDir, target.patch, target.file)
+// Re-emit the directive when reading so parser-driven patch tagging still works for a single file.
+const candidateRaw = `// @patch ${target.patch} @data ${target.file}\n${readFileSync(candidatePath, 'utf-8')}`
+
+// Baseline = every .data file except the candidate, with directive prefixes preserved.
 let baselineRaw = ''
-for (const f of baselineFiles) baselineRaw += readFileSync(join(rawDir, f), 'utf-8') + '\n'
+for (const { patch, file } of allDataFiles) {
+  if (patch === target.patch && file === target.file) continue
+  baselineRaw += `// @patch ${patch} @data ${file}\n${readFileSync(join(rawDir, patch, file), 'utf-8')}\n`
+}
 
 // ---- Parse both (capture parser warnings for the candidate only) ----
 
@@ -263,8 +307,14 @@ function pad(s: string, n: number): string {
 console.log(`\n===== Validation: ${candidateArg} =====\n`)
 console.log(verdictLine)
 console.log()
-console.log(`Baseline: ${baselineFiles.join(', ')} (${baseDist.n} matches)`)
-console.log(`Candidate: ${candidateArg} (${candDist.n} matches, ${candDist.decisive} decisive)`)
+const baselineLabel = allDataFiles
+  .filter((d) => !(d.patch === target.patch && d.file === target.file))
+  .map((d) => `${d.patch}/${d.file}`)
+  .join(', ')
+console.log(`Baseline: ${baselineLabel} (${baseDist.n} matches)`)
+console.log(
+  `Candidate: ${target.patch}/${target.file} (${candDist.n} matches, ${candDist.decisive} decisive)`,
+)
 console.log()
 
 // Parse + coverage

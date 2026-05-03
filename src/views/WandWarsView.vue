@@ -142,10 +142,10 @@ function handleImportRecords(imported: RecordedMatch[]) {
   saveRecords()
 }
 
-function handleUpdateRecord(index: number, patch: Partial<RecordedMatch>) {
+function handleUpdateRecord(index: number, changes: Partial<RecordedMatch>) {
   const existing = records.value[index]
   if (!existing) return
-  records.value[index] = { ...existing, ...patch }
+  records.value[index] = { ...existing, ...changes }
   saveRecords()
 }
 

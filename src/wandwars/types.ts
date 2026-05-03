@@ -9,6 +9,11 @@ export interface MatchResult {
   result: 'left' | 'right' | 'draw'
   weight: number
   notes: MatchNote[]
+  // Patch identifier (e.g. `202604_1.6.3`) attached by `parseMatchData` from
+  // the most-recent `// @patch <id>` directive in the source. The encoded blob
+  // always carries directives; matches without one are skipped with a warning.
+  // Reserved for future patch-aware analysis (see WAND_WARS.md §10).
+  patch: string
 }
 
 export interface HeroStats {
