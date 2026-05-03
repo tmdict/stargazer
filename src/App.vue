@@ -57,7 +57,7 @@ onUnmounted(() => {
               class="icon-link"
               :title="i18n.t('app.code')"
             >
-              <IconGitHub :size="20" />
+              <IconGitHub />
             </a>
           </li>
           <li>
