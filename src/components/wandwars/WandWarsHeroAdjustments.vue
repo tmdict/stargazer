@@ -43,8 +43,13 @@ const STAT_ORDER: { key: StatKey; field: keyof Omit<BuffRow, 'hero'> }[] = [
   { key: 'magic-def', field: 'magicDef' },
 ]
 
+// Latest patch's buffs. The schema is `{ patches: [{ id, buffs: [...] }, ...] }` —
+// we display the most recent entry. (Adding a patch picker would consume more entries.)
+const latestBuffs = (heroBuffs.patches[heroBuffs.patches.length - 1]?.buffs ??
+  []) as Partial<BuffRow>[]
+
 const allRows = computed<BuffRow[]>(() =>
-  (heroBuffs as Partial<BuffRow>[]).map((b) => ({
+  latestBuffs.map((b) => ({
     hero: b.hero ?? '',
     hp: b.hp ?? 0,
     atk: b.atk ?? 0,

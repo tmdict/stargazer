@@ -30,18 +30,36 @@ function parseHeroes(raw: string): [string, string, string] | null {
   return heroes as [string, string, string]
 }
 
+// Captures the value following `@patch ` on a directive line (whitespace-delimited).
+// Lines look like: `// @patch 202604_1.6.3 @data <filename>`
+const PATCH_DIRECTIVE_RE = /@patch\s+(\S+)/
+
+/**
+ * Parse encoded WandWars match data into structured `MatchResult` records.
+ *
+ * `rawText` is expected to begin with one or more `// @patch <id>` directive
+ * lines (emitted by `encode.ts`). The parser tracks the most-recent directive
+ * while walking lines so every match inherits the patch it was recorded under.
+ * Match lines encountered before any directive are skipped with a warning.
+ */
 export function parseMatchData(rawText: string): MatchResult[] {
-  // Skip blank lines and `// ...` comment markers (e.g. the file-name
-  // section headers inserted by `scripts/encode.ts`).
-  const lines = rawText
-    .split('\n')
-    .filter((line) => line.trim() && !line.trimStart().startsWith('//'))
+  const allLines = rawText.split('\n')
   const results: MatchResult[] = []
   const warnings: string[] = []
+  let currentPatch: string | undefined
 
-  for (let i = 0; i < lines.length; i++) {
-    const line = lines[i]!.trim()
-    if (!line) continue
+  for (let i = 0; i < allLines.length; i++) {
+    const raw = allLines[i]!
+    const trimmed = raw.trim()
+    if (!trimmed) continue
+
+    if (trimmed.startsWith('//')) {
+      const m = PATCH_DIRECTIVE_RE.exec(trimmed)
+      if (m) currentPatch = m[1]
+      continue
+    }
+
+    const line = trimmed
 
     // Split notes from match data
     const semicolonIdx = line.indexOf(';')
@@ -81,10 +99,15 @@ export function parseMatchData(rawText: string): MatchResult[] {
       continue
     }
 
+    if (!currentPatch) {
+      warnings.push(`Line ${i + 1}: No @patch directive seen before this match (skipped)`)
+      continue
+    }
+
     const { result, weight } = RESULT_SYMBOLS[resultSymbol]!
     const notes = parseNotes(notesPart)
 
-    results.push({ left, right, result, weight, notes })
+    results.push({ left, right, result, weight, notes, patch: currentPatch })
   }
 
   if (warnings.length > 0) {

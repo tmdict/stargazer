@@ -12,7 +12,20 @@ WandWars is a 3v3 PvP game event where two players alternate picking heroes, the
 
 ## 2. Data Format
 
-Source: `src/wandwars/data/raw/*.data` (gitignored, multiple data files)
+Source: `src/wandwars/data/raw/<patch>/*.data` (gitignored, multiple data files per patch folder)
+
+Patch folders follow the pattern `<YYYYMM>_<game-version>` — e.g. `202604_1.6.3` for the April 2026 event running on game version 1.6.3. Date-first means `readdirSync().sort()` yields chronological order without extra logic, and the underscore cleanly separates the date namespace from the dotted version.
+
+```
+src/wandwars/data/raw/
+├── portraits/                  ← reference portraits for pool-import (not patch-versioned)
+└── 202604_1.6.3/
+    ├── <contributor-a>.data
+    ├── <contributor-b>.data
+    └── <contributor-c>.data
+```
+
+Each match line:
 
 ```
 leftHero1,leftHero2,leftHero3 <symbol> rightHero1,rightHero2,rightHero3;optional note
@@ -30,15 +43,38 @@ natsu,silvina,faramor > tilaya,harak,kordan;{faramor} true damage counters {tila
 tasi,dunlingr,daimon << kordan,zandrok,gerda
 ```
 
+### Encoded blob format & patch directives
+
+`encode.ts` walks every `<patch>/` folder, concatenates each `.data` file, and emits a directive line before each file's matches:
+
+```
+// @patch 202604_1.6.3 @data <contributor-a>.data
+match1
+match2
+// @patch 202604_1.6.3 @data <contributor-b>.data
+match3
+
+// @patch 202607_1.6.4 @data <contributor-a>.data
+match4
+```
+
+Files within a patch are joined tight (no blank lines); a single blank line separates patches for human readability when the blob is decoded.
+
+The `// @patch <id>` portion is a **structured directive**, not a comment. `parseMatchData` (parser.ts) tracks the most-recent directive while walking lines and attaches `patch: string` to every subsequent `MatchResult` — required, not optional. Match lines encountered before any `@patch` directive are skipped with a warning (the encoder always emits one before the first match, so this only fires on malformed input). The `@data <filename>` portion is informational — preserved so contributor origin is visible when the blob is decoded for debugging, but not consumed by the parser.
+
+Why directives in a text blob (instead of a structured format like JSON-lines or a sidecar metadata file): the runtime browser only ever sees the encoded blob — folder structure isn't available — so patch identity has to ride along somehow. Directives keep the format plain-text and minimize encoder/parser complexity, at the cost of one documented convention. Same pattern as `# coding: utf-8` in Python or `// @ts-check` in TS.
+
+Currently no consumer reads `MatchResult.patch`; it's wired through for future patch-aware analysis (decay weighting, drift detection — see §10).
+
 ## 3. Architecture
 
 All WandWars code lives under `src/wandwars/` (domain logic), `src/components/wandwars/` (UI), and `src/views/WandWarsView.vue` (page). Route: `/wandwars` (no locale prefix, not SSG pre-rendered).
 
 **Data pipeline**: Raw `.data` files → `npm run ww:encode` (concatenate + base64) → `data` file committed → Vite `?raw` import → decoded at runtime via `atob`.
 
-**Adding data**: Edit raw files → (optional) `npm run ww:validate <file>.data` to sanity-check before merging → `npm run ww:encode` → `npm run ww:train` → commit. `ww:train` runs the NN training **and** then the 5-fold benchmark + probability calibration fit as a single step (no separate calibrate step). Both `nnWeights.ts` and `calibrationData.ts` are regenerated and must be committed together.
+**Adding data**: Drop new `.data` files into the appropriate patch folder (or create a new one — e.g. `src/wandwars/data/raw/202607_1.6.4/`) → (optional) `npm run ww:validate <file>.data` (or `<patch>/<file>.data` to disambiguate) to sanity-check before merging → `npm run ww:encode` → `npm run ww:train` → commit. `ww:train` runs the NN training **and** then the 5-fold benchmark + probability calibration fit as a single step (no separate calibrate step). Both `nnWeights.ts` and `calibrationData.ts` are regenerated and must be committed together.
 
-`ww:validate` is a pre-merge sanity check for a new raw file: parses it against the existing baseline, flags unknown heroes, reports distribution drift (left-win rate, sweep rate, draws), lists per-hero win-rate shifts, and runs a held-out prediction check to compare its predictability against 5-fold CV accuracy. Optional but useful for catching typos or mislabeled matches before training.
+`ww:validate` is a pre-merge sanity check for a new raw file: parses it against the existing baseline (everything else across all patch folders), flags unknown heroes, reports distribution drift (left-win rate, sweep rate, draws), lists per-hero win-rate shifts, and runs a held-out prediction check to compare its predictability against 5-fold CV accuracy. Auto-locates a candidate by filename when unambiguous; pass `<patch>/<file>` if the same filename exists in multiple patches. Optional but useful for catching typos or mislabeled matches before training.
 
 **localStorage**: `stargazer.wandwars.records` — recorded match results.
 
@@ -780,3 +816,86 @@ Upload a screenshot of the game's 4×5 hero pool to restrict picks and recommend
 **Pipeline**: Screenshot → `suggestGridCrop()` auto-detects the card grid via gold pixel density profiling (HSV hue 25-55°), with aspect ratio constraint for oversized regions and edge trimming for precision → user can adjust crop → cells extracted (4×5) with 5×5 offset search per cell → NCC matching against precomputed 32×32 grayscale signatures → de-dupe conflicts → user reviews with confidence badges → apply as pool filter.
 
 **Signatures**: Base64-encoded in `heroPortraitSignatures.ts`. Generated in-browser from reference portraits normalized via `scripts/normalize-references.ts` (gold-border crop → 170×230 resize → grey background flatten). Dev tools in the pool import modal for generating and uploading signature sets.
+
+## 10. Handling Balance Patches & Hero Rotations
+
+The game's developers have announced a future rotation system: hero pool, hero strength, maps, and global battlefield effects will periodically rotate. This puts WandWars in a **non-stationary environment** — historical match data ages over time, sometimes gracefully, sometimes catastrophically, depending on what changed. This section captures the strategy for handling drift without throwing away the dataset every patch.
+
+### Per-Model Patch Sensitivity
+
+| Model                    | What ages                                         | Refresh cost              |
+| ------------------------ | ------------------------------------------------- | ------------------------- |
+| Popular Pick             | Raw win rates, pair records                       | Free (recomputes on load) |
+| Hero Synergy (Composite) | Bayesian-smoothed rates; synergy/counter matrices | Free                      |
+| Team Power (B-T)         | Latent strength `λ`; pair residuals               | Free                      |
+| Adaptive ML (NN)         | 16-dim hero embeddings                            | Training run (`ww:train`) |
+
+**The data ages match-by-match, hero-by-hero — rarely all-good or all-bad.** A match between heroes whose stats and surrounding rules (map, battlefield effects) are untouched in a patch is still informative. A match where any participating hero was buffed/nerfed, or where the relevant map/effect changed, is partially or fully invalidated. The challenge is leveraging the still-valid signal without contamination from the stale parts.
+
+### Per-Match Patch Tagging (already in place)
+
+Every match is tagged with the patch it was recorded under via the folder-per-patch convention plus `// @patch <id>` directives in the encoded blob — see §2 for the format. `MatchResult.patch` is a required `string`, ready to be consumed by the strategies below. This was the prerequisite intervention; without per-match tags, time/version-aware retraining can't be applied retroactively.
+
+Note: tagging is currently scoped to the predictions/training path. User-recorded matches in localStorage (the Records UI) don't carry a patch field — they're display-and-export only and don't feed predictions today. If a future feature needs to surface or aggregate user records by patch, that's the time to extend the schema.
+
+### Adaptation Strategies (Priority Order)
+
+#### 1. Time/patch-decay weighting (high value, low effort)
+
+Multiply existing match weights in `analysis.ts` by a recency factor:
+
+```
+recencyWeight = exp(-Δ / τ)
+```
+
+`Δ` = "patches since match" (or days, or matches-ago). `τ` = half-life — pick so a match from one patch ago weighs ~50% as much as a current-patch match. Old data still informs sparse heroes; fresh data dominates well-tested ones. Applies for free to PP, Composite, B-T (which all aggregate via the `analysis.ts` weight pipeline). For the NN, multiply per-sample loss by the same weight in `ww:train`.
+
+Start conservative (long half-life, e.g. 2-3 patches) and tighten only when drift detection shows accuracy dropping. Over-decaying penalizes well-established heroes whose stats didn't change.
+
+#### 2. NN warm-starting (high value for the NN)
+
+When retraining post-patch, **initialize from the previous `nnWeights.ts` instead of random**. The 16-dim embeddings encode behavior largely still valid through balance numbers changes ("this hero is a tank with strong front-line synergy"). Warm-starting converges faster and survives small data injections more gracefully than from-scratch training. One-line change to the training script's init step.
+
+For larger reworks (a hero fundamentally redesigned), reset only that hero's embedding row while keeping the rest warm.
+
+#### 3. Drift detection via existing tooling
+
+`ww:validate` already flags distribution drift on a new `.data` file. Extend it to a post-patch sensor:
+
+- After a patch, score the previous-patch model on the first N new-patch matches → log accuracy / Brier / calibration delta vs the §7 benchmark expectation.
+- If accuracy drops > X% or calibration mass shifts > Y, surface a warning suggesting more aggressive decay or a forced retrain.
+
+The §7 5-fold benchmark becomes a live drift sensor instead of a one-shot validation tool.
+
+#### 4. Hero pool filtering vs training corpus
+
+Out-of-rotation heroes are filtered from **recommendation candidates** (don't recommend a hero the user can't pick), but their match history stays in the **training corpus** — pair/counter/synergy data still informs in-rotation heroes' embeddings and aggregates. Surface this distinction at `recommend.ts` output time, not at data-load time.
+
+#### Strategies considered but deferred
+
+| Approach                                           | Why deferred                                                                 |
+| -------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Per-patch ensemble (one model per patch)           | Splits already-thin data; complicates aggregation                            |
+| Patch as a learned feature/embedding               | Needs many patches' worth of data before the model learns drift directly     |
+| Hierarchical "stable + per-patch adjustment" model | Engineering complexity not justified at current scale                        |
+| Full Bayesian update from prior posteriors         | Conceptually right; existing 3.0 prior + decay weighting captures most of it |
+| Full reset per patch                               | Wastes still-valid signal from un-touched hero pairs and matchups            |
+
+### What Triggers a Retrain
+
+Once decay + warm-start are in place:
+
+| Patch type                                                | Action                                                                                                                               |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| Numerical rebalance (a few heroes tweaked)                | PP/Composite/B-T auto-recompute. NN can wait until next dataset addition; warm-start picks it up.                                    |
+| Single hero rework                                        | Reset that hero's NN embedding row; warm-start the rest. Pre-patch matches involving the reworked hero get reduced weight or filter. |
+| Map / battlefield effect change                           | Apply stronger decay (lower `τ`) for affected period. Run drift sensor on first ~50 new-patch matches.                               |
+| Pool rotation only (no balance changes)                   | Pure UI filter; no retrain.                                                                                                          |
+| Major rework (multiple heroes + new battlefield mechanic) | Forced retrain with fresh decay parameters; widen the Bayesian prior temporarily.                                                    |
+
+### What Not To Do
+
+- **Don't reset from scratch on every patch.** Most data ages gracefully; throwing it out wastes signal from un-touched matchups.
+- **Don't retrain the NN without warm-starting** unless an architecture change forces it. Random init discards still-valid embedding knowledge.
+- **Don't tune `τ` aggressively without evidence.** Let the drift sensor tell you when decay is too lax; over-decay is harder to detect because it just makes everything sparse and low-confidence.
+- **Don't filter out-of-rotation heroes' historical matches from training.** Their pair/counter data still shapes in-rotation heroes' embeddings.

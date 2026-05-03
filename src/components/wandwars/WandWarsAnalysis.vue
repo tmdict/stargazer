@@ -40,7 +40,7 @@ const emit = defineEmits<{
   clearRecords: []
   export: []
   importRecords: [records: RecordedMatch[]]
-  updateRecord: [index: number, patch: Partial<RecordedMatch>]
+  updateRecord: [index: number, changes: Partial<RecordedMatch>]
 }>()
 
 const importInput = ref<HTMLInputElement | null>(null)
