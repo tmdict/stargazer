@@ -64,13 +64,16 @@ const showEnergy = computed(() => {
   return props.selectedFilter === 'initial-energy' || props.selectedFilter === 'initial-energy-300'
 })
 
-// Format energy as "base (bonus)" when there are skill-applied bonuses, else just "base"
+// Tooltip: "base (bonus)" when skill grants extra starting energy; else just "base"
 const formattedEnergy = computed(() => {
   const [base = 0, ...bonuses] = props.character.energy
   if (bonuses.length === 0) return String(base)
   const bonus = bonuses.reduce((sum, n) => sum + n, 0)
   return `${base} (${bonus})`
 })
+
+// Under-icon badge: single summed value to keep the grid layout tight
+const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum + n, 0))
 
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
@@ -154,7 +157,7 @@ const handleTouchStart = () => {
     <!-- Energy Display -->
     <div v-if="showEnergy" class="character-energy">
       <img :src="energyIcon" alt="Energy" class="energy-icon" />
-      <span class="energy-value">{{ formattedEnergy }}</span>
+      <span class="energy-value">{{ totalEnergy }}</span>
     </div>
 
     <!-- Tooltip -->
