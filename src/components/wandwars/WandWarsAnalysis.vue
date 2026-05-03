@@ -113,7 +113,10 @@ async function handleImportFile(event: Event) {
   if (!file) return
   try {
     const text = await file.text()
-    const parsed = parseMatchData(text)
+    // Records UI import is display-only and doesn't feed predictions — empty
+    // fallback puts the parser in lenient mode so files without `@patch`
+    // directives still parse cleanly.
+    const parsed = parseMatchData(text, '')
     if (parsed.length === 0) {
       importStatusState.value = { kind: 'no-records' }
       return

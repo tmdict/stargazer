@@ -35,18 +35,25 @@ function parseHeroes(raw: string): [string, string, string] | null {
 const PATCH_DIRECTIVE_RE = /@patch\s+(\S+)/
 
 /**
- * Parse encoded WandWars match data into structured `MatchResult` records.
+ * Parse WandWars match data into structured `MatchResult` records.
  *
- * `rawText` is expected to begin with one or more `// @patch <id>` directive
- * lines (emitted by `encode.ts`). The parser tracks the most-recent directive
- * while walking lines so every match inherits the patch it was recorded under.
- * Match lines encountered before any directive are skipped with a warning.
+ * The parser tracks the most-recent `// @patch <id>` directive while walking
+ * lines so each match inherits the patch it was recorded under. Two modes:
+ *
+ *   - **Strict** (no `fallbackPatch` arg): match lines before any directive
+ *     are skipped with a warning. Used by the predictions/training path,
+ *     where the encoded blob always carries directives.
+ *
+ *   - **Lenient** (`fallbackPatch` provided): match lines before any directive
+ *     are tagged with the fallback. Used by the Records UI import path —
+ *     user-facing files have no patch context and don't need one (records
+ *     are display-only, never feed predictions).
  */
-export function parseMatchData(rawText: string): MatchResult[] {
+export function parseMatchData(rawText: string, fallbackPatch?: string): MatchResult[] {
   const allLines = rawText.split('\n')
   const results: MatchResult[] = []
   const warnings: string[] = []
-  let currentPatch: string | undefined
+  let currentPatch: string | undefined = fallbackPatch
 
   for (let i = 0; i < allLines.length; i++) {
     const raw = allLines[i]!
@@ -99,7 +106,7 @@ export function parseMatchData(rawText: string): MatchResult[] {
       continue
     }
 
-    if (!currentPatch) {
+    if (currentPatch === undefined) {
       warnings.push(`Line ${i + 1}: No @patch directive seen before this match (skipped)`)
       continue
     }
