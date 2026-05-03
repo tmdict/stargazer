@@ -60,7 +60,12 @@ match4
 
 Files within a patch are joined tight (no blank lines); a single blank line separates patches for human readability when the blob is decoded.
 
-The `// @patch <id>` portion is a **structured directive**, not a comment. `parseMatchData` (parser.ts) tracks the most-recent directive while walking lines and attaches `patch: string` to every subsequent `MatchResult` — required, not optional. Match lines encountered before any `@patch` directive are skipped with a warning (the encoder always emits one before the first match, so this only fires on malformed input). The `@data <filename>` portion is informational — preserved so contributor origin is visible when the blob is decoded for debugging, but not consumed by the parser.
+The `// @patch <id>` portion is a **structured directive**, not a comment. `parseMatchData` (parser.ts) tracks the most-recent directive while walking lines and attaches `patch: string` to every subsequent `MatchResult`. The `@data <filename>` portion is informational — preserved so contributor origin is visible when the blob is decoded for debugging, but not consumed by the parser.
+
+The parser has two modes selected by the optional `fallbackPatch` argument:
+
+- **Strict** (no fallback): match lines before any directive are skipped with a warning. Used by the predictions/training path, where the encoded blob always carries directives — this catches malformed input.
+- **Lenient** (fallback provided): match lines before any directive are tagged with the fallback. Used by the Records UI import path, where user files have no patch context and don't need one (records are display-only, never feed predictions).
 
 Why directives in a text blob (instead of a structured format like JSON-lines or a sidecar metadata file): the runtime browser only ever sees the encoded blob — folder structure isn't available — so patch identity has to ride along somehow. Directives keep the format plain-text and minimize encoder/parser complexity, at the cost of one documented convention. Same pattern as `# coding: utf-8` in Python or `// @ts-check` in TS.
 
