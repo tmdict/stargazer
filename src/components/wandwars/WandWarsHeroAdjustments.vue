@@ -107,7 +107,7 @@ function formatStat(value: number): string {
               :key="stat.key"
               :class="['stat-row', `stat-${stat.key}`]"
             >
-              <span class="stat-label">{{ i18n.t(`wandwars.${stat.key}`) }}</span>
+              <span class="stat-label">{{ i18n.t(`game.${stat.key}`) }}</span>
               <span :class="['stat-value', stat.value > 0 ? 'stat-pos' : 'stat-neg']">
                 {{ formatStat(stat.value) }}
               </span>
