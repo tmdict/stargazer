@@ -61,9 +61,9 @@ const importStatus = computed(() => {
       s.count === 1
         ? 'wandwars.messages/imported-record-singular'
         : 'wandwars.messages/imported-records'
-    return i18n.t(key).replace('{count}', String(s.count))
+    return i18n.t(key, { count: s.count })
   }
-  return i18n.t('wandwars.messages/import-failed').replace('{error}', s.error)
+  return i18n.t('wandwars.messages/import-failed', { error: s.error })
 })
 
 const editingIndex = ref<number | null>(null)
@@ -828,10 +828,10 @@ const aggregatePrediction = computed(() => {
           </div>
           <div class="matchup-dataset-note">
             {{
-              i18n
-                .t('wandwars.messages/prediction-dataset')
-                .replace('{matches}', String(aggregatePrediction.matchCount))
-                .replace('{heroes}', String(aggregatePrediction.heroCount))
+              i18n.t('wandwars.messages/prediction-dataset', {
+                matches: aggregatePrediction.matchCount,
+                heroes: aggregatePrediction.heroCount,
+              })
             }}
           </div>
         </div>
