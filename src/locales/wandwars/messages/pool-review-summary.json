@@ -1,1 +1,4 @@
-{ "en": "{confirmed} / {total} recognized", "zh": "{confirmed} / {total} 已识别" }
+{
+  "en": "{confirmed} / {total} recognized",
+  "zh": "{confirmed} / {total} 已识别"
+}
