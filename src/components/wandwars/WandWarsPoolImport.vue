@@ -76,14 +76,12 @@ const builderStatus = computed(() => {
   if (s.kind === 'none') return ''
   if (s.kind === 'no-images') return i18n.t('wandwars.messages/builder-no-images')
   const skippedMsg =
-    s.skipped > 0
-      ? i18n.t('wandwars.messages/builder-skipped').replace('{count}', String(s.skipped))
-      : ''
+    s.skipped > 0 ? i18n.t('wandwars.messages/builder-skipped', { count: s.skipped }) : ''
   const key =
     s.kind === 'generated'
       ? 'wandwars.messages/builder-generated'
       : 'wandwars.messages/builder-override-active'
-  return i18n.t(key).replace('{count}', String(s.count)).replace('{skipped}', skippedMsg)
+  return i18n.t(key, { count: s.count, skipped: skippedMsg })
 })
 const builderMode = ref<'generate' | 'override' | null>(null)
 const generateInput = ref<HTMLInputElement | null>(null)
@@ -379,18 +377,10 @@ function reset() {
         <div class="reference-status">
           <span class="status-ok">✓</span>
           <template v-if="usingOverride">
-            {{
-              i18n
-                .t('wandwars.messages/pool-ref-override')
-                .replace('{count}', String(referenceCount))
-            }}
+            {{ i18n.t('wandwars.messages/pool-ref-override', { count: referenceCount }) }}
           </template>
           <template v-else>
-            {{
-              i18n
-                .t('wandwars.messages/pool-ref-default')
-                .replace('{count}', String(referenceCount))
-            }}
+            {{ i18n.t('wandwars.messages/pool-ref-default', { count: referenceCount }) }}
           </template>
         </div>
         <div class="reference-actions">
@@ -529,10 +519,10 @@ function reset() {
         <div class="detections-title">{{ i18n.t('wandwars.messages/pool-review-title') }}</div>
         <div class="detections-summary">
           {{
-            i18n
-              .t('wandwars.messages/pool-review-summary')
-              .replace('{confirmed}', String(confirmedCount))
-              .replace('{total}', String(detections.length))
+            i18n.t('wandwars.messages/pool-review-summary', {
+              confirmed: confirmedCount,
+              total: detections.length,
+            })
           }}
         </div>
       </div>

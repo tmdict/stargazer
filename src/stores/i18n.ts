@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 
 import type { Locale, LocaleDictionary } from '@/lib/types/i18n'
 import { loadAllLocales } from '@/utils/dataLoader'
+import { interpolate } from '@/utils/interpolate'
 
 // Constants
 const LOCALE_STORAGE_KEY = 'stargazer.locale'
@@ -82,7 +83,7 @@ export const useI18nStore = defineStore('i18n', () => {
 
   // Getters
   const t = computed(() => {
-    return (key: string): string => {
+    return (key: string, vars?: Record<string, string | number>): string => {
       // Split key into category and name (e.g., "app.characters" -> ["app", "characters"])
       const parts = key.split('.')
 
@@ -115,7 +116,8 @@ export const useI18nStore = defineStore('i18n', () => {
         return key
       }
 
-      return translation[currentLocale.value] || key
+      const text = translation[currentLocale.value] || key
+      return vars ? interpolate(text, vars) : text
     }
   })
 

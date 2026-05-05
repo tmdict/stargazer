@@ -1,22 +1,13 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-const content = ref<HTMLElement>()
+import { highlightSkillText } from '@/utils/textHighlight'
 
-/**
- * Highlights text enclosed in [[brackets]] with a styled span
- * @param text - Text containing [[highlighted]] sections
- * @returns HTML string with highlighted spans
- */
-const highlight = (text: string): string =>
-  text.replace(/\[\[(.+?)\]\]/g, '<span class="skill-highlight">$1</span>')
+const content = ref<HTMLElement>()
 
 onMounted(() => {
   if (content.value) {
-    // Get the original HTML content
-    const originalHTML = content.value.innerHTML
-    // Apply highlighting transformation
-    content.value.innerHTML = highlight(originalHTML)
+    content.value.innerHTML = highlightSkillText(content.value.innerHTML)
   }
 })
 </script>
