@@ -7,6 +7,7 @@ import { PERCENT_STAT_KEYS, type ArtifactStatKey, type ArtifactType } from '@/li
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { formatDisplayName } from '@/utils/nameFormatting'
+import { highlightSkillText } from '@/utils/textHighlight'
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
@@ -52,12 +53,7 @@ const formattedStats = computed(() => {
 const effects = computed(() =>
   gameDataStore
     .getArtifactEffects(props.artifact.name)
-    .map((effect) =>
-      (effect[i18n.currentLocale] || effect.en).replace(
-        /\[\[(.+?)\]\]/g,
-        '<span class="skill-highlight">$1</span>',
-      ),
-    ),
+    .map((effect) => highlightSkillText(effect[i18n.currentLocale] || effect.en)),
 )
 
 const handleClick = () => {

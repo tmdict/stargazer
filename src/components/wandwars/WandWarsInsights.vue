@@ -1463,10 +1463,10 @@ const filteredInsights = computed(() => insights.value.filter((i) => i.category 
     <template v-else>
       <div class="dataset-header">
         {{
-          i18n
-            .t('wandwars.messages/dataset-header')
-            .replace('{matches}', String(totalMatches))
-            .replace('{heroes}', String(heroCount))
+          i18n.t('wandwars.messages/dataset-header', {
+            matches: totalMatches,
+            heroes: heroCount,
+          })
         }}
       </div>
 
