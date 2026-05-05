@@ -1,0 +1,14 @@
+[
+  {
+    "en": "Shoots a fireball at the [[weakest]] enemy every [[5]]s, dealing magic damage equal to [[20%]] of the [[Team ATK]].",
+    "zh": "每隔[[5]]秒，向[[最虚弱的]]1名敌方目标发射火球，对目标造成[[队伍攻击力]][[20%]]的魔法伤害。"
+  },
+  {
+    "en": "Increases damage to [[30%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[30%]]。"
+  },
+  {
+    "en": "Deals extra damage equal to [[4%]] of target's lost HP, capped at [[20%]] of [[Team ATK]].",
+    "zh": "该伤害还会附加目标已损失生命值[[4%]]的额外伤害，该伤害最高不超过[[队伍攻击力]]的[[20%]]。"
+  }
+]

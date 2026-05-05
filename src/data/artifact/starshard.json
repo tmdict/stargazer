@@ -1,5 +1,9 @@
 {
   "id": 2,
   "name": "starshard",
-  "season": 0
+  "season": 0,
+  "stats": {
+    "haste": 4.8,
+    "hp": 10.2
+  }
 }

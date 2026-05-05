@@ -1,5 +1,10 @@
 {
   "id": 1,
   "name": "awakening",
-  "season": 0
+  "season": 0,
+  "stats": {
+    "atk": 4.2,
+    "phys-def": 26.4,
+    "magic-def": 26.4
+  }
 }

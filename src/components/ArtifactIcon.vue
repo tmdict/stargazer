@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useTouchDetection } from '@/composables/useTouchDetection'
-import type { ArtifactType } from '@/lib/types/artifact'
+import { PERCENT_STAT_KEYS, type ArtifactStatKey, type ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { formatDisplayName } from '@/utils/nameFormatting'
@@ -39,6 +39,26 @@ const formattedArtifactName = computed(() => {
   // Fallback to formatted name
   return formatDisplayName(props.artifact.name)
 })
+
+const formattedStats = computed(() => {
+  return Object.entries(props.artifact.stats).flatMap(([key, value]) => {
+    if (value === undefined) return []
+    const k = key as ArtifactStatKey
+    const display = PERCENT_STAT_KEYS.has(k) ? `${value}%` : `${value}`
+    return [{ key: k, label: i18n.t(`game.${k}`), value: display }]
+  })
+})
+
+const effects = computed(() =>
+  gameDataStore
+    .getArtifactEffects(props.artifact.name)
+    .map((effect) =>
+      (effect[i18n.currentLocale] || effect.en).replace(
+        /\[\[(.+?)\]\]/g,
+        '<span class="skill-highlight">$1</span>',
+      ),
+    ),
+)
 
 const handleClick = () => {
   emit('artifactClick', props.artifact)
@@ -87,6 +107,8 @@ const handleTouchStart = () => {
         :targetElement="artifactElement"
         variant="detailed"
         :offset="10"
+        min-width="340px"
+        max-width="340px"
       >
         <template #content>
           <div class="tooltip-header">
@@ -97,7 +119,14 @@ const handleTouchStart = () => {
               <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
               <span class="tooltip-value">{{ artifact.season }}</span>
             </div>
+            <div v-for="stat in formattedStats" :key="stat.key" class="tooltip-row">
+              <span class="tooltip-label">{{ stat.label }}:</span>
+              <span class="tooltip-value">{{ stat.value }}</span>
+            </div>
           </div>
+          <ul v-if="effects.length" class="tooltip-effects">
+            <li v-for="(effect, idx) in effects" :key="idx" v-html="effect"></li>
+          </ul>
         </template>
       </TooltipPopup>
     </Teleport>
@@ -168,27 +197,41 @@ const handleTouchStart = () => {
 }
 
 .tooltip-info {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  column-gap: 16px;
+  row-gap: 6px;
+  font-size: 13px;
 }
 
 .tooltip-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
+  display: contents;
 }
 
 .tooltip-label {
-  font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
-  min-width: fit-content;
 }
 
 .tooltip-value {
-  font-size: 13px;
   font-weight: 500;
-  text-align: right;
+}
+
+.tooltip-effects {
+  margin: 10px 0 0;
+  padding: 8px 0 0 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.tooltip-effects li {
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.tooltip-effects :deep(.skill-highlight) {
+  color: #5fc4bb;
 }
 </style>

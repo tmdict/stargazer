@@ -34,6 +34,7 @@ let artifactImagesCache: Record<string, string> | null = null
 let iconsCache: Record<string, string> | null = null
 let characterRangesCache: Map<number, number> | null = null
 let arenasCache: Record<string, ArenaJson> | null = null
+let artifactEffectsCache: Record<string, LocaleData[]> | null = null
 
 export function loadCharacters(): CharacterType[] {
   if (charactersCache) {
@@ -126,6 +127,28 @@ export function loadArenas(): Record<string, ArenaJson> {
   return result
 }
 
+// Per-artifact effect descriptions, keyed by artifact name (matches the JSON filename).
+// Each entry is an ordered list of localized effect strings.
+export function loadArtifactEffects(): Record<string, LocaleData[]> {
+  if (artifactEffectsCache) {
+    return artifactEffectsCache
+  }
+
+  const effectModules = import.meta.glob<LocaleData[]>('@/locales/artifact/effects/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  const result: Record<string, LocaleData[]> = {}
+
+  Object.entries(effectModules).forEach(([path, content]) => {
+    const fileName = extractFileName(path)
+    result[fileName] = content
+  })
+
+  artifactEffectsCache = result
+  return result
+}
+
 export function loadIcons(): Record<string, string> {
   if (iconsCache) {
     return iconsCache
@@ -157,6 +180,7 @@ export function loadAllData() {
   const characterImages = loadCharacterImages()
   const artifactImages = loadArtifactImages()
   const icons = loadIcons()
+  const artifactEffects = loadArtifactEffects()
 
   return {
     characters,
@@ -165,6 +189,7 @@ export function loadAllData() {
     characterImages,
     artifactImages,
     icons,
+    artifactEffects,
     characterRanges: getCharacterRanges(),
   }
 }
@@ -303,4 +328,5 @@ export function clearCache() {
   artifactLocalesCache = null
   gameLocalesCache = null
   wandwarsLocalesCache = null
+  artifactEffectsCache = null
 }

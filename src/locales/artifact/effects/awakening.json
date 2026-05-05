@@ -1,0 +1,14 @@
+[
+  {
+    "en": "[[5]]s after the battle starts, summons Radiant Life to restore [[3]] [[weakest]] allied heroes' max HP by [[7%]] every [[10]]s.",
+    "zh": "从战斗开始第[[5]]秒起，每隔[[10]]秒，召唤生命之光，为[[最虚弱的]][[3]]名己方英雄回复[[7%]]最大生命值。"
+  },
+  {
+    "en": "Increases the healing amount to [[10%]] of max HP.",
+    "zh": "回复量提升至[[10%]]最大生命值。"
+  },
+  {
+    "en": "Increases the the number of allies receiving this buff to [[4]].",
+    "zh": "作用目标数量提升至[[4]]名。"
+  }
+]
