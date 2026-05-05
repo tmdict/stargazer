@@ -1,0 +1,14 @@
+[
+  {
+    "en": "At the start of a battle, the ATK SPD of [[1]] [[rearmost]] allied hero in the back is increased by [[80]] for [[15]]s. While the skill takes effect, the buffed allied hero gains control immunity.",
+    "zh": "战斗开始时，布阵在己方[[最靠后]]的[[1]]名友方英雄获得[[80]]点攻击速度提升，持续[[15]]秒。效果持续期间，该英雄免疫控制效果。"
+  },
+  {
+    "en": "Increases bonus ATK SPD to [[100]].",
+    "zh": "获得的攻击速度提升至[[100]]点。"
+  },
+  {
+    "en": "Increases effect duration to [[20]]s.",
+    "zh": "持续时间延长至[[20]]秒。"
+  }
+]

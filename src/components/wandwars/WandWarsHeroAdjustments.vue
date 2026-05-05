@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import FilterIcons from '@/components/ui/FilterIcons.vue'
 import heroBuffs from '@/data/wandwars/hero-buffs.json'
+import type { ArtifactStatKey } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { formatName } from '@/wandwars/formatting'
@@ -34,14 +35,13 @@ interface BuffRow {
   magicDef: number
 }
 
-type StatKey = 'hp' | 'atk' | 'phys-def' | 'magic-def'
-
-const STAT_ORDER: { key: StatKey; field: keyof Omit<BuffRow, 'hero'> }[] = [
-  { key: 'hp', field: 'hp' },
-  { key: 'atk', field: 'atk' },
-  { key: 'phys-def', field: 'physDef' },
-  { key: 'magic-def', field: 'magicDef' },
-]
+// Maps shared kebab-case stat keys to BuffRow's camelCase field names.
+const STAT_FIELDS: Partial<Record<ArtifactStatKey, keyof Omit<BuffRow, 'hero'>>> = {
+  hp: 'hp',
+  atk: 'atk',
+  'phys-def': 'physDef',
+  'magic-def': 'magicDef',
+}
 
 // Latest patch's buffs. The schema is `{ patches: [{ id, buffs: [...] }, ...] }` —
 // we display the most recent entry. (Adding a patch picker would consume more entries.)
@@ -63,10 +63,12 @@ const rows = computed<BuffRow[]>(() => {
   return allRows.value.filter((r) => factionByHero.value.get(r.hero) === factionFilter.value)
 })
 
-function visibleStats(row: BuffRow): { key: StatKey; value: number }[] {
-  return STAT_ORDER.map(({ key, field }) => ({ key, value: row[field] })).filter(
-    (s) => s.value !== 0,
-  )
+function visibleStats(row: BuffRow): { key: ArtifactStatKey; value: number }[] {
+  return Object.entries(STAT_FIELDS).flatMap(([key, field]) => {
+    if (!field) return []
+    const value = row[field]
+    return value !== 0 ? [{ key: key as ArtifactStatKey, value }] : []
+  })
 }
 
 function formatStat(value: number): string {

@@ -1,0 +1,14 @@
+[
+  {
+    "en": "Every [[4]] times allied heroes cast their Ultimate, a flame wave is unleashed on all enemies. The flame wave deals true damage equal to [[16%]] of the target's current HP and up to [[60%]] of Team ATK. The flame wave also reduces the target's ATK SPD by [[60]] for [[4]]s.",
+    "zh": "己方每累计释放[[4]]次终极技能，制造一道焰流攻击场上所有敌人，对其造成[[16%]]当前生命值的真实伤害，并使其攻击速度降低[[60]]点，持续[[4]]秒。本技能造成的伤害最高不超过[[队伍攻击力]]的[[60%]]。"
+  },
+  {
+    "en": "Increases damage to [[24%]] of the current HP, capped at [[90%]] of Team ATK.",
+    "zh": "伤害提高至[[24%]]当前生命值，最高不超过[[队伍攻击力]]的[[90%]]。"
+  },
+  {
+    "en": "Triggers after allies cast [[3]] Ultimates.",
+    "zh": "己方每累计释放[[3]]次终极技能，即可触发该效果。"
+  }
+]

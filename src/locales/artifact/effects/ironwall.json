@@ -1,0 +1,14 @@
+[
+  {
+    "en": "Blesses the [[frontmost]] allied hero at the start of a battle, increasing their Phys DEF and Magic DEF by [[15%]] and Energy on Hit by [[20]] for the rest of the battle. At the start of a battle and every [[12]]s thereafter, grants the blessed ally a shield by [[20%]] of their max HP for [[6]]s. The blessing effects can't be dispelled.",
+    "zh": "开局时，为布阵在己方[[最靠前]]的1名友方英雄施加祝福。被祝福的友方英雄在本场战斗剩余时间内提升[[15%]]护甲与魔抗和[[20]]点受击回能。开局时和后续每隔[[12]]秒，为被祝福的友方英雄增加相当于[[20%]]最大生命值的护盾，持续[[6]]秒。祝福效果无法被驱散。"
+  },
+  {
+    "en": "Increases the blessed allied hero's Phys DEF and Magic DEF by [[20%]].",
+    "zh": "被祝福的友方英雄获得的护甲与魔抗比例提高至[[20%]]。"
+  },
+  {
+    "en": "The blessing effect will be transferred to the [[frontmost]] surviving allied hero when the blessed hero is defeated. The blessing can only be transferred [[1]] time in each battle.",
+    "zh": "当被祝福的英雄被击败时，祝福效果将转移至[[最靠前]]的1名存活的友方英雄身上。每局对战最多转移[[1]]次。"
+  }
+]
