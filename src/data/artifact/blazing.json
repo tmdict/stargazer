@@ -1,5 +1,10 @@
 {
   "id": 4,
   "name": "blazing",
-  "season": 0
+  "season": 0,
+  "stats": {
+    "def-penetration": 7.8,
+    "phys-def": 13.8,
+    "magic-def": 13.8
+  }
 }
