@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import {
+  canPlaceCharacterOnTeam,
   getCharacterCount,
   getCharacterPlacements,
   getMaxTeamSize,
@@ -15,7 +16,9 @@ import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/charact
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import type { GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
+import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 import { useGridStore } from './grid'
 import { useSkillStore } from './skill'
 
@@ -83,6 +86,24 @@ export const useCharacterStore = defineStore('character', () => {
   const autoPlaceCharacter = (characterId: number, team: Team): boolean =>
     executeAutoPlaceCharacter(grid, skillManager, characterId, team)
 
+  // Dispatch a drop payload to the right placement primitive.
+  // Grid-source drops swap-or-move; selection drops validate team capacity then place.
+  const handleCharacterDrop = (
+    payload: { character: CharacterType; characterId: number },
+    targetHexId: number,
+  ): boolean => {
+    const { character, characterId } = payload
+    if (character.sourceHexId !== undefined) {
+      return hasCharacter(grid, targetHexId)
+        ? swapCharacters(character.sourceHexId, targetHexId)
+        : moveCharacter(character.sourceHexId, targetHexId, characterId)
+    }
+    const team = getTeamFromTileState(gridStore.getTile(targetHexId).state)
+    if (team === null) return false
+    if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
+    return placeCharacterOnHex(targetHexId, characterId, team)
+  }
+
   const handleHexClick = (hex: Hex): boolean => {
     const hexId = hex.getId()
     if (hasCharacter(grid, hexId)) {
@@ -110,5 +131,6 @@ export const useCharacterStore = defineStore('character', () => {
     getTilesWithCharacters: getTilesWithCharactersStore,
     autoPlaceCharacter,
     handleHexClick,
+    handleCharacterDrop,
   }
 })
