@@ -107,25 +107,29 @@ export const useDragDrop = () => {
 
   // Handle drag end
   const endDrag = (event: DragEvent) => {
-    isDragging.value = false
-    draggedCharacter.value = null
-    draggedImageSrc.value = ''
-
     // Capture drop target before clearing
     const dropTargetHexId = hoveredHexId.value
-    hoveredHexId.value = null
 
     // Reset visual feedback
     if (event.target instanceof HTMLElement) {
       event.target.style.opacity = '1'
     }
 
-    // Remove global event listeners
-    document.removeEventListener('dragover', handleGlobalDragOver)
-    document.removeEventListener('drag', handleGlobalDrag)
+    cleanupDragListeners()
 
     // Emit event with drop target hex for hover state update
     document.dispatchEvent(new CustomEvent('drag-ended', { detail: { hexId: dropTargetHexId } }))
+  }
+
+  // Idempotent listener removal + state reset. Safe to call from onUnmounted as a defensive
+  // measure when a drag is interrupted (browser swallows dragend, navigation mid-drag, etc.).
+  const cleanupDragListeners = () => {
+    isDragging.value = false
+    draggedCharacter.value = null
+    draggedImageSrc.value = ''
+    hoveredHexId.value = null
+    document.removeEventListener('dragover', handleGlobalDragOver)
+    document.removeEventListener('drag', handleGlobalDrag)
   }
 
   // Handle drag over (required for drop to work)
@@ -195,5 +199,6 @@ export const useDragDrop = () => {
     updateDragPosition,
     setHoveredHex,
     setDropHandled,
+    cleanupDragListeners,
   }
 }

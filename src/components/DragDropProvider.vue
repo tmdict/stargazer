@@ -33,6 +33,7 @@ const {
   handleDrop,
   dropHandled,
   setDropHandled,
+  cleanupDragListeners,
 } = useDragDrop()
 
 // Hex detector function - will be provided by GridManager
@@ -119,6 +120,9 @@ onUnmounted(() => {
   document.removeEventListener('drop', handleGlobalDrop)
   document.removeEventListener('dragover', handleGlobalDragOver)
   document.removeEventListener('mousemove', handleGlobalMouseMove)
+  // Defensive: tear down any per-drag listeners that may still be attached if a drag
+  // was interrupted (browser swallowed dragend, navigation mid-drag, etc.).
+  cleanupDragListeners()
 })
 </script>
 

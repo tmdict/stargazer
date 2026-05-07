@@ -243,20 +243,9 @@ describe('companion', () => {
 
     describe('restoreCompanions', () => {
       it('restores companions to original positions', () => {
-        // Set up companion positions
         const companionPositions: CompanionPosition[] = [
-          {
-            companionId: 10100,
-            hexId: 2,
-            team: Team.ALLY,
-            mainCharId: 100,
-          },
-          {
-            companionId: 10101,
-            hexId: 3,
-            team: Team.ALLY,
-            mainCharId: 100,
-          },
+          { companionId: 10100, hexId: 2, team: Team.ALLY, mainCharId: 100 },
+          { companionId: 10101, hexId: 3, team: Team.ALLY, mainCharId: 100 },
         ]
 
         // Place companions in wrong positions
@@ -268,39 +257,39 @@ describe('companion', () => {
         tile5.characterId = 10101
         tile5.team = Team.ALLY
 
-        // We can't mock module imports inside tests in vitest
-        // Just call the function and verify the result
         restoreCompanions(grid, skillManager, 100, companionPositions)
 
-        // The companions should be moved to their stored positions
-        // We can verify this by checking the grid state
+        // Companions are now at their stored positions
+        expect(grid.getTileById(2).characterId).toBe(10100)
+        expect(grid.getTileById(3).characterId).toBe(10101)
+        // And cleared from the wrong positions
+        expect(grid.getTileById(4).characterId).toBeUndefined()
+        expect(grid.getTileById(5).characterId).toBeUndefined()
       })
 
       it('only restores companions for specified main character', () => {
         const companionPositions: CompanionPosition[] = [
-          {
-            companionId: 10100,
-            hexId: 2,
-            team: Team.ALLY,
-            mainCharId: 100,
-          },
-          {
-            companionId: 10200,
-            hexId: 3,
-            team: Team.ALLY,
-            mainCharId: 200,
-          },
+          { companionId: 10100, hexId: 2, team: Team.ALLY, mainCharId: 100 },
+          { companionId: 10200, hexId: 3, team: Team.ALLY, mainCharId: 200 },
         ]
 
-        // Place companion 10100 in wrong position
+        // Both companions placed at wrong positions
         const tile4 = grid.getTileById(4)
         tile4.characterId = 10100
         tile4.team = Team.ALLY
 
+        const tile6 = grid.getTileById(6)
+        tile6.characterId = 10200
+        tile6.team = Team.ALLY
+
         restoreCompanions(grid, skillManager, 100, companionPositions)
 
-        // Only companion 10100 should be affected
-        // (Testing actual restoration would require mocking imports)
+        // 10100 (mainCharId 100) was restored
+        expect(grid.getTileById(2).characterId).toBe(10100)
+        expect(grid.getTileById(4).characterId).toBeUndefined()
+        // 10200 (mainCharId 200) was filtered out — still at its wrong position
+        expect(grid.getTileById(6).characterId).toBe(10200)
+        expect(grid.getTileById(3).characterId).toBeUndefined()
       })
 
       it('handles companions already in correct position', () => {

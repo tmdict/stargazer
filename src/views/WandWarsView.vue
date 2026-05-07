@@ -27,10 +27,29 @@ const pickHistory = ref<{ side: PickSide; slot: number; hero: string }[]>([])
 
 const RECORDS_STORAGE_KEY = 'stargazer.wandwars.records'
 
+function isRecordedMatch(value: unknown): value is RecordedMatch {
+  if (typeof value !== 'object' || value === null) return false
+  const r = value as Record<string, unknown>
+  return (
+    Array.isArray(r.left) &&
+    r.left.length === 3 &&
+    r.left.every((s) => typeof s === 'string') &&
+    Array.isArray(r.right) &&
+    r.right.length === 3 &&
+    r.right.every((s) => typeof s === 'string') &&
+    (r.winner === 'left' || r.winner === 'right' || r.winner === 'draw') &&
+    typeof r.dominant === 'boolean' &&
+    typeof r.notes === 'string'
+  )
+}
+
 function loadRecords(): RecordedMatch[] {
   try {
     const stored = localStorage.getItem(RECORDS_STORAGE_KEY)
-    return stored ? JSON.parse(stored) : []
+    if (!stored) return []
+    const parsed: unknown = JSON.parse(stored)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter(isRecordedMatch)
   } catch {
     return []
   }

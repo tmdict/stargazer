@@ -45,6 +45,18 @@ export function formatName(name: string): string {
     .join(' ')
 }
 
+// Escape HTML-significant characters so user-provided text rendered via v-html stays inert.
+// Tokens like `{hero}` survive because `{` and `}` are not escaped — the regex pass below
+// re-introduces controlled markup for those.
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
 export function formatNoteHtml(
   text: string,
   leftTeam: string[] = [],
@@ -52,7 +64,7 @@ export function formatNoteHtml(
 ): string {
   const leftSet = new Set(leftTeam)
   const rightSet = new Set(rightTeam)
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) => {
+  return escapeHtml(text).replace(/\{([^}]+)\}/g, (_, name: string) => {
     let cls = 'hero-highlight'
     if (leftSet.has(name)) cls += ' team-left'
     else if (rightSet.has(name)) cls += ' team-right'
@@ -64,7 +76,7 @@ export function formatInsightHtml(
   text: string,
   characterImages: Record<string, string> = {},
 ): string {
-  return text.replace(/\{([^}]+)\}/g, (_, name: string) => {
+  return escapeHtml(text).replace(/\{([^}]+)\}/g, (_, name: string) => {
     const imgSrc = characterImages[name]
     const formattedName = formatName(name)
     const imgTag = imgSrc
