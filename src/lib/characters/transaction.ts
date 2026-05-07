@@ -25,40 +25,50 @@ export function executeTransaction(
   batchingCacheClears = true
   pendingCacheClears = false
 
-  // Execute operations sequentially, stopping on first failure
+  // Execute operations sequentially, stopping on first failure (returned false OR thrown).
   let failedAtIndex = -1
-  for (let i = 0; i < operations.length; i++) {
-    const op = operations[i]
-    if (!op) continue // Skip undefined operations
-    const result = op()
-    if (!result) {
-      failedAtIndex = i
-      break
+  try {
+    for (let i = 0; i < operations.length; i++) {
+      const op = operations[i]
+      if (!op) continue // Skip undefined operations
+      try {
+        if (!op()) {
+          failedAtIndex = i
+          break
+        }
+      } catch (error) {
+        console.error(`Transaction operation ${i} threw:`, error)
+        failedAtIndex = i
+        break
+      }
     }
-  }
 
-  // Check if any failed
-  if (failedAtIndex >= 0) {
-    // Rollback all operations
-    rollbackOperations.forEach((rollback) => rollback())
+    if (failedAtIndex >= 0) {
+      // Rollback in LIFO order: undo the most recent operation first so its dependencies
+      // (earlier operations) are still in their applied state when their rollback runs.
+      // Each rollback is isolated so a thrower can't halt the chain.
+      for (let i = rollbackOperations.length - 1; i >= 0; i--) {
+        try {
+          rollbackOperations[i]?.()
+        } catch (error) {
+          console.error(`Transaction rollback ${i} threw:`, error)
+          // Continue with remaining rollbacks
+        }
+      }
+      return false
+    }
+
+    return true
+  } finally {
+    // Always reset the batching flag, even if a rollback threw, so subsequent
+    // transactions don't inherit a stuck batching state.
     batchingCacheClears = false
 
-    // Clear cache once after rollback (if any operations were attempted)
+    // Clear cache once after all operations (success or rollback) complete.
     if (pendingCacheClears) {
       clearPathfindingCache()
     }
-    return false
   }
-
-  // Success - stop batching
-  batchingCacheClears = false
-
-  // Clear cache ONCE after all operations complete successfully
-  if (pendingCacheClears) {
-    clearPathfindingCache()
-  }
-
-  return true
 }
 
 /**
