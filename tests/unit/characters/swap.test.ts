@@ -278,6 +278,49 @@ describe('swap.ts', () => {
       expect(result).toBe(false)
       expect(hasCompanionSkill).toHaveBeenCalled()
     })
+
+    it('should preserve grid integrity when skill activation fails mid-swap', () => {
+      // Cross-team swap with a companion skill: when re-activation fails partway,
+      // the rollback path must restore exactly the original placement — no orphan
+      // companions, no duplicates, no characters left at intermediate hexes.
+      vi.mocked(hasSkill).mockReturnValue(true)
+      vi.mocked(hasCompanionSkill).mockReturnValue(true)
+      skillManager.hasActiveSkill = vi.fn().mockReturnValue(true)
+      skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
+
+      const mainId = 100
+      const companionId = grid.companionIdOffset + mainId
+      const enemyId = 200
+
+      performPlace(grid, 1, mainId, Team.ALLY)
+      performPlace(grid, 2, companionId, Team.ALLY)
+      performPlace(grid, 4, enemyId, Team.ENEMY)
+      grid.companionLinks.set(`${mainId}-${Team.ALLY}`, new Set([companionId]))
+
+      const result = executeSwapCharacters(grid, skillManager, 1, 4)
+
+      expect(result).toBe(false)
+
+      // Main + opponent restored to original hexes / teams.
+      expect(grid.getTileById(1).characterId).toBe(mainId)
+      expect(grid.getTileById(1).team).toBe(Team.ALLY)
+      expect(grid.getTileById(4).characterId).toBe(enemyId)
+      expect(grid.getTileById(4).team).toBe(Team.ENEMY)
+
+      // Companion is still where it started (hex 2 / ALLY) and not duplicated elsewhere.
+      expect(grid.getTileById(2).characterId).toBe(companionId)
+      expect(grid.getTileById(2).team).toBe(Team.ALLY)
+      const companionLocations = [3, 5, 6, 7]
+        .map((id) => grid.getTileById(id))
+        .filter((t) => t.characterId === companionId)
+      expect(companionLocations).toHaveLength(0)
+
+      // Total character count unchanged: main + companion + enemy = 3.
+      const occupied = [1, 2, 3, 4, 5, 6, 7]
+        .map((id) => grid.getTileById(id))
+        .filter((t) => t.characterId !== undefined)
+      expect(occupied).toHaveLength(3)
+    })
   })
 
   describe('executeSwapCharacters - companion handling', () => {

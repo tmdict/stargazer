@@ -13,6 +13,11 @@ import { useGridStore } from '@/stores/grid'
 // MIME type for character drag data - prevents conflicts with other drag operations
 const CHARACTER_MIME_TYPE = 'application/character'
 
+interface CharacterDragPayload {
+  character: CharacterType
+  characterId: number
+}
+
 // Pre-load transparent drag image to avoid timing issues and eliminate browser drag visuals
 let transparentDragImage: HTMLImageElement | null = null
 if (!import.meta.env.SSR && typeof Image !== 'undefined') {
@@ -141,9 +146,7 @@ export const useDragDrop = () => {
   }
 
   // Handle drop
-  const handleDrop = (
-    event: DragEvent,
-  ): { character: CharacterType; characterId: number } | null => {
+  const handleDrop = (event: DragEvent): CharacterDragPayload | null => {
     event.preventDefault()
 
     if (!event.dataTransfer) {
@@ -157,7 +160,7 @@ export const useDragDrop = () => {
         return null
       }
 
-      const { character, characterId } = JSON.parse(dragData)
+      const { character, characterId } = JSON.parse(dragData) as CharacterDragPayload
       return { character, characterId: characterId || character.id }
     } catch (error) {
       console.error('Error parsing drag data:', error)
