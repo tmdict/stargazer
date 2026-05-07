@@ -7,12 +7,15 @@ import { canPlaceCharacterOnTeam, hasCharacter } from '@/lib/characters/characte
 import type { Hex } from '@/lib/hex'
 import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { useSkillStore } from '@/stores/skill'
-import { getInvertedState, getTileFillColor } from '@/utils/tileStateFormatting'
+import {
+  getInvertedState,
+  getTeamFromTileState,
+  getTileFillColor,
+} from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
@@ -269,52 +272,9 @@ const handleHexDrop = (event: DragEvent, hex: Hex) => {
   event.preventDefault()
 
   const dropResult = handleDrop(event)
-
-  // Hover state is managed by position-based detection
-
   if (dropResult) {
-    const { character, characterId } = dropResult
-
     setDropHandled(true) // Prevent duplicate processing
-
-    // Grid-to-grid character moves have sourceHexId from overlay drag handlers
-    if (character.sourceHexId !== undefined) {
-      const sourceHexId = character.sourceHexId
-      const targetHexId = hex.getId()
-
-      // Swap if target is occupied, otherwise move
-      if (hasCharacter(gridStore._getGrid(), targetHexId)) {
-        characterStore.swapCharacters(sourceHexId, targetHexId)
-      } else {
-        // Empty target - regular move
-        characterStore.moveCharacter(sourceHexId, targetHexId, characterId)
-      }
-    } else {
-      // Character selection placement
-      const hexId = hex.getId()
-      const tile = gridStore.getTile(hexId)
-      const state = tile.state
-
-      // Auto-assign team based on tile state
-      let team: Team
-      if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) {
-        team = Team.ALLY
-      } else if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) {
-        team = Team.ENEMY
-      } else {
-        return
-      }
-
-      // Validate team capacity
-      if (!canPlaceCharacterOnTeam(gridStore._getGrid(), characterId, team)) {
-        return
-      }
-
-      const success = characterStore.placeCharacterOnHex(hexId, characterId, team)
-      if (!success) {
-        return
-      }
-    }
+    characterStore.handleCharacterDrop(dropResult, hex.getId())
   }
 }
 
@@ -331,16 +291,8 @@ const getHexDropClass = (hex: Hex) => {
     const state = tile.state
 
     // Check if tile accepts characters
-    if (
-      state === State.AVAILABLE_ALLY ||
-      state === State.OCCUPIED_ALLY ||
-      state === State.AVAILABLE_ENEMY ||
-      state === State.OCCUPIED_ENEMY
-    ) {
-      // Get tile team for validation
-      const tileTeam =
-        state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY ? Team.ALLY : Team.ENEMY
-
+    const tileTeam = getTeamFromTileState(state)
+    if (tileTeam !== null) {
       // Grid moves: always allow (just repositioning existing characters)
       if (draggedCharacter.value.sourceHexId !== undefined) {
         // This is a character being moved from another hex on the grid
