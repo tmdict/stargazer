@@ -188,12 +188,8 @@ describe('pathfinding', () => {
 
       const result = calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse)
 
-      // If direct distance is > 1, we need to move
-      if (directDist > 1) {
-        expect(result.movementDistance).toBeGreaterThan(0)
-      } else {
-        expect(result.movementDistance).toBe(0)
-      }
+      // Movement is needed iff the goal is outside the range (1).
+      expect(result.movementDistance > 0).toBe(directDist > 1)
       expect(result.canReach).toBe(true)
     })
 
