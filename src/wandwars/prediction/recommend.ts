@@ -18,7 +18,10 @@ import { compositeModel } from './composite'
 import { computeAllSelfConfidences } from './modelConfidence'
 import { popularPickModel } from './popularPick'
 
-const rawData = atob(encodedData)
+// `atob` only exists in browser globals reliably. During SSG (Node), skip the decode
+// so this module can be imported by pre-rendered routes that don't actually render
+// WandWars UI. Downstream `parseMatchData('')` returns `[]` cleanly.
+const rawData = import.meta.env.SSR ? '' : atob(encodedData)
 
 const models: RecommendationModel[] = [
   popularPickModel,
