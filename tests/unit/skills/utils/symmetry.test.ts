@@ -25,13 +25,10 @@ describe('symmetry', () => {
 
     it('maps middle diagonal to itself', () => {
       // Row 8 (index 7) is the middle diagonal
-      const middleRow = DIAGONAL_ROWS[7]
-      if (middleRow) {
-        for (const hexId of middleRow) {
-          if (hexId !== undefined) {
-            expect(getSymmetricalHexId(hexId)).toBe(hexId)
-          }
-        }
+      const middleRow = DIAGONAL_ROWS[7] ?? []
+      expect(middleRow.length).toBeGreaterThan(0)
+      for (const hexId of middleRow) {
+        expect(getSymmetricalHexId(hexId)).toBe(hexId)
       }
     })
 
@@ -40,20 +37,17 @@ describe('symmetry', () => {
       const hexId = 1
       const symmetrical = getSymmetricalHexId(hexId)
       expect(symmetrical).toBeDefined()
-      if (symmetrical !== undefined) {
-        expect(getSymmetricalHexId(symmetrical)).toBe(hexId)
-      }
+      expect(getSymmetricalHexId(symmetrical!)).toBe(hexId)
     })
 
     it('maps hexes within same position in row', () => {
       // First position in row 2 maps to first position in row 14
       const row2First = DIAGONAL_ROWS[1]?.[0] // Hex 13
       const row14First = DIAGONAL_ROWS[13]?.[0] // Hex 44
-
-      if (row2First !== undefined && row14First !== undefined) {
-        expect(getSymmetricalHexId(row2First)).toBe(row14First)
-        expect(getSymmetricalHexId(row14First)).toBe(row2First)
-      }
+      expect(row2First).toBeDefined()
+      expect(row14First).toBeDefined()
+      expect(getSymmetricalHexId(row2First!)).toBe(row14First)
+      expect(getSymmetricalHexId(row14First!)).toBe(row2First)
     })
 
     it('handles all valid hex IDs', () => {
@@ -84,12 +78,10 @@ describe('symmetry', () => {
 
       for (const { rowIndex } of testRows) {
         const row = DIAGONAL_ROWS[rowIndex]
-        const targetRowIndex = 14 - rowIndex
-        const targetRow = DIAGONAL_ROWS[targetRowIndex]
-
-        if (row && targetRow) {
-          expect(row.length).toBe(targetRow.length)
-        }
+        const targetRow = DIAGONAL_ROWS[14 - rowIndex]
+        expect(row).toBeDefined()
+        expect(targetRow).toBeDefined()
+        expect(row!.length).toBe(targetRow!.length)
       }
     })
   })
@@ -97,42 +89,21 @@ describe('symmetry', () => {
   describe('isOnMiddleDiagonal', () => {
     it('correctly identifies middle diagonal hexes', () => {
       // Row 8 (index 7) is the middle diagonal
-      const middleRow = DIAGONAL_ROWS[7]
-      if (middleRow) {
-        for (const hexId of middleRow) {
-          if (hexId !== undefined) {
-            expect(isOnMiddleDiagonal(hexId)).toBe(true)
-          }
-        }
+      const middleRow = DIAGONAL_ROWS[7] ?? []
+      expect(middleRow.length).toBeGreaterThan(0)
+      for (const hexId of middleRow) {
+        expect(isOnMiddleDiagonal(hexId)).toBe(true)
       }
     })
 
     it('correctly identifies non-middle diagonal hexes', () => {
-      // Test hexes that are definitely not on middle diagonal
-      // We need to pick hexes we know aren't self-mapping
+      // isOnMiddleDiagonal(h) is equivalent to getSymmetricalHexId(h) === h.
       const hex1 = 1
-      const hex1Symmetrical = getSymmetricalHexId(hex1)
+      expect(isOnMiddleDiagonal(hex1)).toBe(getSymmetricalHexId(hex1) === hex1)
 
-      // If hex1 maps to itself, it's on middle diagonal
-      // If not, it shouldn't be on middle diagonal
-      if (hex1Symmetrical === hex1) {
-        // Hex 1 is on middle diagonal
-        expect(isOnMiddleDiagonal(hex1)).toBe(true)
-      } else {
-        // Hex 1 is not on middle diagonal
-        expect(isOnMiddleDiagonal(hex1)).toBe(false)
-      }
-
-      // Test a few hexes and verify consistency
+      // Verify the equivalence holds across the full grid.
       for (let hexId = 1; hexId <= 45; hexId++) {
-        const symmetrical = getSymmetricalHexId(hexId)
-        const onMiddle = isOnMiddleDiagonal(hexId)
-
-        if (symmetrical === hexId) {
-          expect(onMiddle).toBe(true)
-        } else {
-          expect(onMiddle).toBe(false)
-        }
+        expect(isOnMiddleDiagonal(hexId)).toBe(getSymmetricalHexId(hexId) === hexId)
       }
     })
 
@@ -169,14 +140,12 @@ describe('symmetry', () => {
     it('maintains symmetry invariants', () => {
       // For any hex not on middle diagonal:
       // distance from top = symmetrical hex's distance from bottom
-      const topRowHexes = DIAGONAL_ROWS[0] || []
-      const bottomRowHexes = DIAGONAL_ROWS[14] || []
+      const topRowHexes = DIAGONAL_ROWS[0] ?? []
+      const bottomRowHexes = DIAGONAL_ROWS[14] ?? []
+      expect(topRowHexes.length).toBeGreaterThan(0)
 
       for (const hexId of topRowHexes) {
-        if (hexId !== undefined) {
-          const symmetrical = getSymmetricalHexId(hexId)
-          expect(bottomRowHexes).toContain(symmetrical)
-        }
+        expect(bottomRowHexes).toContain(getSymmetricalHexId(hexId))
       }
     })
   })

@@ -201,108 +201,73 @@ let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
 let wandwarsLocalesCache: Record<string, LocaleData> | null = null
 
-export function loadAppLocales(): Record<string, LocaleData> {
-  if (appLocalesCache) {
-    return appLocalesCache
-  }
-
-  const localeModules = import.meta.glob<LocaleData>('@/locales/app/*.json', {
-    eager: true,
-    import: 'default',
-  })
+// Vite's import.meta.glob requires a string literal for the pattern, so the glob calls
+// can't be parameterized — but the post-processing (filename → key) can.
+function buildLocaleDict(
+  modules: Record<string, LocaleData>,
+  keyFn: (path: string) => string = extractFileName,
+): Record<string, LocaleData> {
   const result: Record<string, LocaleData> = {}
-
-  Object.entries(localeModules).forEach(([path, content]) => {
-    const fileName = extractFileName(path)
-    result[fileName] = content
-  })
-
-  appLocalesCache = result
+  for (const [path, content] of Object.entries(modules)) {
+    result[keyFn(path)] = content
+  }
   return result
+}
+
+export function loadAppLocales(): Record<string, LocaleData> {
+  if (appLocalesCache) return appLocalesCache
+  appLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/app/*.json', { eager: true, import: 'default' }),
+  )
+  return appLocalesCache
 }
 
 export function loadCharacterLocales(): Record<string, LocaleData> {
-  if (characterLocalesCache) {
-    return characterLocalesCache
-  }
-
-  const localeModules = import.meta.glob<LocaleData>('@/locales/character/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const result: Record<string, LocaleData> = {}
-
-  Object.entries(localeModules).forEach(([path, content]) => {
-    const fileName = extractFileName(path)
-    result[fileName] = content
-  })
-
-  characterLocalesCache = result
-  return result
+  if (characterLocalesCache) return characterLocalesCache
+  characterLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/character/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  )
+  return characterLocalesCache
 }
 
 export function loadArtifactLocales(): Record<string, LocaleData> {
-  if (artifactLocalesCache) {
-    return artifactLocalesCache
-  }
-
-  const localeModules = import.meta.glob<LocaleData>('@/locales/artifact/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const result: Record<string, LocaleData> = {}
-
-  Object.entries(localeModules).forEach(([path, content]) => {
-    const fileName = extractFileName(path)
-    result[fileName] = content
-  })
-
-  artifactLocalesCache = result
-  return result
+  if (artifactLocalesCache) return artifactLocalesCache
+  artifactLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/artifact/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  )
+  return artifactLocalesCache
 }
 
 export function loadGameLocales(): Record<string, LocaleData> {
-  if (gameLocalesCache) {
-    return gameLocalesCache
-  }
-
-  const localeModules = import.meta.glob<LocaleData>('@/locales/game/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const result: Record<string, LocaleData> = {}
-
-  Object.entries(localeModules).forEach(([path, content]) => {
-    const fileName = extractFileName(path)
-    result[fileName] = content
-  })
-
-  gameLocalesCache = result
-  return result
+  if (gameLocalesCache) return gameLocalesCache
+  gameLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/game/*.json', { eager: true, import: 'default' }),
+  )
+  return gameLocalesCache
 }
 
 export function loadWandWarsLocales(): Record<string, LocaleData> {
-  if (wandwarsLocalesCache) {
-    return wandwarsLocalesCache
-  }
-
-  const localeModules = import.meta.glob<LocaleData>('@/locales/wandwars/**/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const result: Record<string, LocaleData> = {}
-
-  Object.entries(localeModules).forEach(([path, content]) => {
-    // For files in subfolders (e.g., messages/), prefix the key
-    const parts = path.split('/')
-    const folder = parts[parts.length - 2]
-    const fileName = extractFileName(path)
-    const key = folder === 'wandwars' ? fileName : `${folder}/${fileName}`
-    result[key] = content
-  })
-
-  wandwarsLocalesCache = result
-  return result
+  if (wandwarsLocalesCache) return wandwarsLocalesCache
+  wandwarsLocalesCache = buildLocaleDict(
+    import.meta.glob<LocaleData>('@/locales/wandwars/**/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+    // Files in subfolders (e.g., messages/, insights/) are prefixed with the folder name.
+    (path) => {
+      const parts = path.split('/')
+      const folder = parts[parts.length - 2]
+      const fileName = extractFileName(path)
+      return folder === 'wandwars' ? fileName : `${folder}/${fileName}`
+    },
+  )
+  return wandwarsLocalesCache
 }
 
 export function loadAllLocales(): LocaleDictionary {

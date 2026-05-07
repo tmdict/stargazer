@@ -158,11 +158,6 @@ export const useI18nStore = defineStore('i18n', () => {
     try {
       translations.value = loadAllLocales()
       loaded.value = true
-
-      // Only initialize locale on client
-      if (!import.meta.env.SSR) {
-        initializeLocale()
-      }
     } catch (e) {
       error.value = e instanceof Error ? e.message : 'Failed to load translations'
       console.error('Failed to initialize i18n:', e)

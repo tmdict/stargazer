@@ -148,8 +148,12 @@ describe('binaryEncoder', () => {
         ['invalid header', new Uint8Array([0xff, 0xff])],
         ['truncated data', new Uint8Array([0x10])], // Header says there's data but none provided
       ])('handles %s gracefully', (_, invalidData) => {
+        // decodeFromBinary logs to console.error on failure; suppress for these expected-failure cases.
+        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
         const result = decodeFromBinary(invalidData)
         expect(result).toBeNull()
+        expect(consoleSpy).toHaveBeenCalled()
+        consoleSpy.mockRestore()
       })
     })
   })
