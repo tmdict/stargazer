@@ -1,4 +1,5 @@
 import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 interface StateFormat {
   name: string
@@ -62,6 +63,12 @@ export const getStateClass = (state: State): string => getStateFormat(state).css
 export const getTileFillColor = (state: State): string => getStateFormat(state).fillColor
 
 export const getTileStrokeColor = (state: State): string => getStateFormat(state).strokeColor
+
+export const getTeamFromTileState = (state: State): Team | null => {
+  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
+  if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
+  return null
+}
 
 export const getInvertedState = (state: State): State => {
   switch (state) {

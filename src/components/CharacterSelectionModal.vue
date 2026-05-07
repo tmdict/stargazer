@@ -5,10 +5,9 @@ import CharacterIcon from './CharacterIcon.vue'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
-import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
   hex: Hex
@@ -28,14 +27,7 @@ const modalRef = ref<HTMLElement>()
 
 const team = computed(() => {
   const tile = gridStore.getTile(props.hex.getId())
-  const state = tile.state
-
-  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) {
-    return Team.ALLY
-  } else if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) {
-    return Team.ENEMY
-  }
-  return null
+  return getTeamFromTileState(tile.state)
 })
 
 const availableCharacters = computed(() => {

@@ -11,19 +11,15 @@ import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
 import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
 import { provideGridEvents } from '@/composables/useGridEvents'
-import {
-  canPlaceCharacterOnTeam,
-  getAvailableTeamSize,
-  hasCharacter,
-} from '@/lib/characters/character'
+import { getAvailableTeamSize } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
 import { useMapEditorStore } from '@/stores/mapEditor'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
   // Data props
@@ -102,16 +98,8 @@ gridEvents.on('hex:click', (hex: Hex) => {
     const state = tile.state
 
     // Check if this is a tile that can accept characters
-    if (
-      state === State.AVAILABLE_ALLY ||
-      state === State.AVAILABLE_ENEMY ||
-      state === State.OCCUPIED_ALLY ||
-      state === State.OCCUPIED_ENEMY
-    ) {
-      // Determine the team for this tile
-      const tileTeam =
-        state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY ? Team.ALLY : Team.ENEMY
-
+    const tileTeam = getTeamFromTileState(state)
+    if (tileTeam !== null) {
       // Check if the team has space for more characters
       if (getAvailableTeamSize(gridStore._getGrid(), tileTeam) <= 0) {
         // Team is full, don't show the modal
@@ -229,61 +217,11 @@ const isPointInPolygon = (
 // Handle drops on detected hexes
 // This is called by DragDropProvider when a drop occurs outside a hex tile
 const handleDetectedHexDrop = (event: DragEvent) => {
-  if (hoveredHexId.value !== null && dropHandled.value === false) {
-    const hex = gridStore.getHexById(hoveredHexId.value)
-    triggerHexDrop(event, hex)
-  }
-}
-
-// Utility function to trigger drop logic programmatically
-const triggerHexDrop = (event: DragEvent, hex: Hex) => {
-  // Use the same drop logic as GridTiles.vue
+  if (hoveredHexId.value === null || dropHandled.value) return
   const dropResult = handleDrop(event)
-
   if (dropResult) {
-    const { character, characterId } = dropResult
-
-    // Mark drop as handled
     setDropHandled(true)
-
-    // Check if this is a character being moved from another hex (drag from grid)
-    if (character.sourceHexId !== undefined) {
-      const sourceHexId = character.sourceHexId
-      const targetHexId = hex.getId()
-
-      // Check if target hex is occupied - if so, swap characters
-      if (hasCharacter(gridStore._getGrid(), targetHexId)) {
-        characterStore.swapCharacters(sourceHexId, targetHexId)
-      } else {
-        // Target hex is empty, use regular move
-        characterStore.moveCharacter(sourceHexId, targetHexId, characterId)
-      }
-    } else {
-      // This is a new character placement from the character selection
-      const hexId = hex.getId()
-      const tile = gridStore.getTile(hexId)
-      const state = tile.state
-
-      // Determine the team based on tile state
-      let team: Team
-      if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) {
-        team = Team.ALLY
-      } else if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) {
-        team = Team.ENEMY
-      } else {
-        return
-      }
-
-      // Check if the team has space for this character
-      if (!canPlaceCharacterOnTeam(gridStore._getGrid(), characterId, team)) {
-        return
-      }
-
-      const success = characterStore.placeCharacterOnHex(hexId, characterId, team)
-      if (!success) {
-        return
-      }
-    }
+    characterStore.handleCharacterDrop(dropResult, hoveredHexId.value)
   }
 }
 
