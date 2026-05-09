@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import IconFill from '@/components/ui/IconFill.vue'
-import IconFlip from '@/components/ui/IconFlip.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
@@ -35,7 +34,6 @@ const getStateLabel = computed(() => (labelKey: string) => {
 const emit = defineEmits<{
   stateSelected: [state: State]
   applyAllTiles: [state: State]
-  flipMap: []
   resetMap: []
   arenaSelected: [mapKey: string]
 }>()
@@ -47,10 +45,6 @@ const selectState = (state: State) => {
 
 const handleApplyAllTiles = () => {
   emit('applyAllTiles', selectedState.value)
-}
-
-const handleFlipMap = () => {
-  emit('flipMap')
 }
 
 const handleResetMap = () => {
@@ -114,9 +108,6 @@ const getPreviewFillColor = (state: State): string => {
       </label>
       <button class="fill-button" @click="handleApplyAllTiles">
         <IconFill :size="14" /> {{ i18n.t('app.fill') }}
-      </button>
-      <button class="flip-button" @click="handleFlipMap">
-        <IconFlip :size="14" /> {{ i18n.t('app.flip') }}
       </button>
       <button class="clear-button" @click="handleResetMap">{{ i18n.t('app.clear') }}</button>
     </div>
@@ -251,7 +242,6 @@ const getPreviewFillColor = (state: State): string => {
 }
 
 .fill-button,
-.flip-button,
 .clear-button {
   display: flex;
   align-items: center;
@@ -271,14 +261,12 @@ const getPreviewFillColor = (state: State): string => {
   color: white;
 }
 
-.fill-button,
-.flip-button {
+.fill-button {
   background: var(--color-primary);
   border-color: var(--color-primary);
 }
 
-.fill-button:hover,
-.flip-button:hover {
+.fill-button:hover {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
 }
