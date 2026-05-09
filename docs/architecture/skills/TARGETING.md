@@ -95,28 +95,44 @@ onDeactivate: clearSkillTarget()
 Visual feedback options:
 
 - **Arrow color**: Via `targetingColorModifier` (e.g., Dunlingr, Aliceth)
-- **Tile border color**: Via `tileColorModifier` and `setTileColorModifier()` (e.g., Reinier, Cassadee)
+- **Tile border color**: Via `setTileColorModifier()` on the SkillManager (e.g., Reinier, Cassadee)
 
 ## Adding New Targeting Skills
 
-1. **Determine targeting pattern**:
-   - Distance-based? Use `findTarget()` from `distance.ts`
-   - Ring expansion? Use `rowScan()` or `spiralSearchFromTile()` from `ring.ts`
-   - Same diagonal row? Use `searchByRow()` from `ring.ts`
-   - Symmetrical tile? Use `getSymmetricalHexId()` from `symmetry.ts`
+1. **Pick a builder** from `src/lib/skills/utils/builders.ts`:
+   - `createTargetingSkill` — arrow-based skills (single or self-built multi-arrow)
+   - `createTileHighlightSkill` — single-tile highlights with previous-target cleanup
+   - Custom `registerSkill({...})` — only when neither lifecycle fits (e.g. multi-tile pairs like Reinier)
 
-2. **Use existing utilities**:
+2. **Pick a calculation utility** for `calculateTarget`:
+   - Distance-based? `findTarget()` from `distance.ts`
+   - Ring expansion? `rowScan()` or `spiralSearchFromTile()` from `ring.ts`
+   - Same diagonal row? `searchByRow()` from `ring.ts`
+   - Symmetrical tile? `getSymmetricalHexId()` from `symmetry.ts`
+
+3. **Wire it up**:
 
    ```typescript
-   function calculateTarget(context: SkillContext): SkillTargetInfo | null {
-     return findTarget(context, {
-       targetTeam: getOpposingTeam(context.team),
-       targetingMethod: TargetingMethod.CLOSEST,
-     })
-   }
+   registerSkill(
+     createTargetingSkill({
+       id: 'my-skill',
+       characterId: 123,
+       name: 'Skill Name',
+       description: '...',
+       color: '#hexcolor',
+       arrowType: 'enemy',
+       calculateTarget: (ctx) =>
+         findTarget(ctx, {
+           targetTeam: getOpposingTeam(ctx.team),
+           targetingMethod: TargetingMethod.CLOSEST,
+         }),
+     }),
+   )
    ```
 
-3. **Implement custom logic only if needed**:
-   - Complex multi-step targeting (like Reinier)
-   - Non-standard tie-breaking rules
-   - Special validation requirements
+4. **Drop down to a custom lifecycle only when needed**:
+   - Complex multi-step targeting (like Reinier — highlights ally + symmetrical enemy pair)
+   - Multi-tile zones with state changes (like Kulu — paints a demolition zone)
+   - Companion spawning (like Phraesto, Zanie)
+
+   In those cases, declare a local `const TILE_COLOR = '#xxx'` for any tile color and pass the skill object directly to `registerSkill({...})`. See [SKILLS.md](../SKILLS.md#pattern-3-custom-lifecycle-companions-multi-tile-zones-etc) for a full example.

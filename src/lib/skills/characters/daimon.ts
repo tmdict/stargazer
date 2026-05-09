@@ -1,6 +1,7 @@
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
-import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import type { SkillContext, SkillTargetInfo } from '../skill'
+import { createTileHighlightSkill } from '../utils/builders'
 import { getCandidates } from '../utils/targeting'
 
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
@@ -29,17 +30,14 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const priority: number[] = []
   if (behindHexIds.length > 0) priority.push(behindHexIds[0]!)
   if (behindHexIds.length === 3) {
-    // Of the remaining two, pick higher ID first (ally) or lower ID first (enemy)
     priority.push(behindHexIds[2]!)
     priority.push(behindHexIds[1]!)
   } else if (behindHexIds.length === 2) {
     priority.push(behindHexIds[1]!)
   }
 
-  // Build candidate lookup from allies on the grid
   const candidateMap = new Map(getCandidates(grid, team, characterId).map((c) => [c.hexId, c]))
 
-  // Check tiles in priority order, return first occupied
   for (const tileId of priority) {
     const candidate = candidateMap.get(tileId)
     if (candidate) {
@@ -54,53 +52,14 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return null
 }
 
-function updateSkillTargets(context: SkillContext): void {
-  const { skillManager, team, characterId } = context
-
-  // Clear previous tile modifier
-  const previousTarget = skillManager.getSkillTarget(characterId, team)
-  if (previousTarget?.targetHexId) {
-    skillManager.removeTileColorModifier(previousTarget.targetHexId, daimonSkill.tileColorModifier!)
-  }
-
-  const targetInfo = calculateTarget(context)
-  if (targetInfo?.targetHexId) {
-    skillManager.setSkillTarget(characterId, team, targetInfo)
-    skillManager.setTileColorModifier(targetInfo.targetHexId, daimonSkill.tileColorModifier!)
-  } else {
-    skillManager.clearSkillTarget(characterId, team)
-  }
-}
-
-const daimonSkill: Skill = {
-  id: 'daimon',
-  characterId: 81,
-  name: 'Buddy Barrier',
-  description:
-    'Targets an ally on adjacent tiles behind him (lower hex ID for ally team, higher for enemy team). Prioritizes the tile directly behind first (lowest/highest hex ID), then the higher/lower of the two remaining tiles in the row behind.',
-  tileColorModifier: '#98be5d',
-
-  onActivate(context: SkillContext): void {
-    updateSkillTargets(context)
-  },
-
-  onDeactivate(context: SkillContext): void {
-    const { team, skillManager, characterId } = context
-
-    const currentTarget = skillManager.getSkillTarget(characterId, team)
-    if (currentTarget?.targetHexId) {
-      skillManager.removeTileColorModifier(
-        currentTarget.targetHexId,
-        daimonSkill.tileColorModifier!,
-      )
-    }
-
-    skillManager.clearSkillTarget(characterId, team)
-  },
-
-  onUpdate(context: SkillContext): void {
-    updateSkillTargets(context)
-  },
-}
-
-registerSkill(daimonSkill)
+registerSkill(
+  createTileHighlightSkill({
+    id: 'daimon',
+    characterId: 81,
+    name: 'Buddy Barrier',
+    description:
+      'Targets an ally on adjacent tiles behind him (lower hex ID for ally team, higher for enemy team). Prioritizes the tile directly behind first (lowest/highest hex ID), then the higher/lower of the two remaining tiles in the row behind.',
+    tileColor: '#98be5d',
+    calculateTarget,
+  }),
+)

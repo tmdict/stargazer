@@ -1,7 +1,9 @@
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
-import { type Skill, type SkillContext, type SkillTargetInfo } from '../skill'
+import { type SkillContext, type SkillTargetInfo } from '../skill'
 import { getSymmetricalHexId } from '../utils/symmetry'
+
+const TILE_COLOR = '#ad51cb'
 
 /**
  * Get adjacent allies to the given hex position
@@ -134,8 +136,8 @@ function updateSkillTargets(context: SkillContext): void {
   const previousTarget = skillManager.getSkillTarget(characterId, team)
   if (previousTarget?.metadata) {
     const { allyHexId: prevAlly, enemyHexId: prevEnemy } = previousTarget.metadata
-    if (prevAlly) skillManager.removeTileColorModifier(prevAlly, reinierSkill.tileColorModifier!)
-    if (prevEnemy) skillManager.removeTileColorModifier(prevEnemy, reinierSkill.tileColorModifier!)
+    if (prevAlly) skillManager.removeTileColorModifier(prevAlly, TILE_COLOR)
+    if (prevEnemy) skillManager.removeTileColorModifier(prevEnemy, TILE_COLOR)
   }
 
   // Find adjacent allies
@@ -169,17 +171,16 @@ function updateSkillTargets(context: SkillContext): void {
   skillManager.setSkillTarget(characterId, team, targetInfo)
 
   // Set tile color modifiers for visual feedback
-  skillManager.setTileColorModifier(validPair.allyHexId, reinierSkill.tileColorModifier!)
-  skillManager.setTileColorModifier(validPair.enemyHexId, reinierSkill.tileColorModifier!)
+  skillManager.setTileColorModifier(validPair.allyHexId, TILE_COLOR)
+  skillManager.setTileColorModifier(validPair.enemyHexId, TILE_COLOR)
 }
 
-const reinierSkill: Skill = {
+registerSkill({
   id: 'reinier',
   characterId: 31,
   name: 'Dynamic Balance',
   description:
     'Targets an adjacent ally position with an enemy hero if both the ally and enemy are placed on a symmetrical tile.',
-  tileColorModifier: '#ad51cb',
 
   onActivate(context: SkillContext): void {
     updateSkillTargets(context)
@@ -192,10 +193,8 @@ const reinierSkill: Skill = {
     const currentTarget = skillManager.getSkillTarget(characterId, team)
     if (currentTarget?.metadata) {
       const { allyHexId, enemyHexId } = currentTarget.metadata
-      if (allyHexId)
-        skillManager.removeTileColorModifier(allyHexId, reinierSkill.tileColorModifier!)
-      if (enemyHexId)
-        skillManager.removeTileColorModifier(enemyHexId, reinierSkill.tileColorModifier!)
+      if (allyHexId) skillManager.removeTileColorModifier(allyHexId, TILE_COLOR)
+      if (enemyHexId) skillManager.removeTileColorModifier(enemyHexId, TILE_COLOR)
     }
 
     skillManager.clearSkillTarget(characterId, team)
@@ -204,6 +203,4 @@ const reinierSkill: Skill = {
   onUpdate(context: SkillContext): void {
     updateSkillTargets(context)
   },
-}
-
-registerSkill(reinierSkill)
+})

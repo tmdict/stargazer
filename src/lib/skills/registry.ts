@@ -8,7 +8,6 @@ export interface SkillBase<Context = unknown> {
   companionImageModifier?: string
   companionColorModifier?: string
   targetingColorModifier?: string
-  tileColorModifier?: string
   companionRange?: number
   onActivate: (context: Context) => void
   onDeactivate: (context: Context) => void

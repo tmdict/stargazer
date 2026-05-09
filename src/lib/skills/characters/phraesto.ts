@@ -5,9 +5,9 @@ import { performRemove } from '../../characters/remove'
 import { State } from '../../types/state'
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
-import { type Skill, type SkillContext } from '../skill'
+import { type SkillContext } from '../skill'
 
-const phraestoSkill: Skill = {
+registerSkill({
   id: 'phraesto',
   characterId: 50,
   name: 'Shadow Companion',
@@ -106,6 +106,4 @@ const phraestoSkill: Skill = {
       console.warn(`phraesto: Failed to restore team size for ${team}`)
     }
   },
-}
-
-registerSkill(phraestoSkill)
+})
