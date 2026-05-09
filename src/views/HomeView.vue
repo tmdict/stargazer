@@ -1,11 +1,11 @@
 /** * Home.vue - Main application layout */
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import ArtifactSelection from '@/components/ArtifactSelection.vue'
 import CharacterSelection from '@/components/CharacterSelection.vue'
-import DebugGrid from '@/components/debug/DebugGrid.vue'
+import DebugPanel from '@/components/debug/DebugPanel.vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
@@ -50,7 +50,7 @@ gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // Tab state management
 // Valid tabs that can be set via query param
-const validTabs = ['characters', 'artifacts', 'skills', 'mapEditor'] as const
+const validTabs = ['characters', 'artifacts', 'skills', 'mapEditor', 'debug'] as const
 type ValidTab = (typeof validTabs)[number]
 
 // Initialize active tab from query param 't' if present and valid
@@ -63,7 +63,11 @@ const getInitialTab = (): string => {
 }
 
 const activeTab = ref(getInitialTab())
-const showDebug = ref(false)
+
+// Debug visualization is active iff the user is on the Debug tab. Derived rather
+// than its own ref so tab is the single source of truth (browser refresh on the
+// Debug tab keeps debug on, switching away turns it off).
+const showDebug = computed(() => activeTab.value === 'debug')
 
 // Map management
 const availableMaps = getMapNames().filter((m) => m.key.startsWith('arena'))
@@ -76,21 +80,21 @@ const showSkills = ref(true)
 
 // Team view toggle (single source of truth lives in gridStore so layer components
 // reading viewBoxBounds/visibleHexes stay in sync). When team view turns on,
-// auto-uncheck skills/targeting/debug — they're disabled in the controls panel
+// auto-uncheck skills/targeting — they're disabled in the controls panel
 // while it's active and stay off when team view exits (manual re-enable).
+// (Debug is a tab, hidden while team view is active, so no reset needed for it.)
 watch(
   () => gridStore.teamView,
   (active) => {
     if (active) {
       showSkills.value = false
       showArrows.value = false
-      showDebug.value = false
     }
   },
 )
 
 // Debug grid ref
-const debugGridRef = ref<InstanceType<typeof DebugGrid> | null>(null)
+const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
 
 // Map editor state
 const selectedMapEditorState = ref<State>(State.DEFAULT)
@@ -100,6 +104,16 @@ const resetForMapEditor = () => {
   showArrows.value = false
   showHexIds.value = false
   gridStore.teamView = false
+}
+
+// Debug shows the full grid, so team view (which crops to ally tiles) doesn't apply.
+const resetForDebug = () => {
+  gridStore.teamView = false
+}
+
+const applyTabResets = (tab: string) => {
+  if (tab === 'mapEditor') resetForMapEditor()
+  else if (tab === 'debug') resetForDebug()
 }
 
 const handleTabChange = (tab: string) => {
@@ -114,7 +128,7 @@ const handleTabChange = (tab: string) => {
     },
   })
 
-  if (tab === 'mapEditor') resetForMapEditor()
+  applyTabResets(tab)
 }
 
 const handleMapChange = (mapKey: string) => {
@@ -134,7 +148,7 @@ watch(
     if (newTab && validTabs.includes(newTab as ValidTab)) {
       activeTab.value = newTab as string
 
-      if (newTab === 'mapEditor') resetForMapEditor()
+      applyTabResets(newTab as string)
     }
   },
 )
@@ -237,39 +251,29 @@ const handleResetMap = () => {
     <DragDropProvider>
       <div class="sections-container">
         <div class="section">
-          <!-- Grid and Debug Layout -->
-          <div class="grid-and-debug">
-            <!-- Grid Manager Component -->
-            <GridContainer
-              :characters="gameDataStore.characters"
-              :show-arrows="showArrows"
-              :show-hex-ids="showHexIds"
-              :show-debug="showDebug"
-              :show-skills="showSkills"
-              :is-map-editor-mode="activeTab === 'mapEditor'"
-              :selected-map-editor-state="selectedMapEditorState"
-              :show-perspective
-              :debugGridRef
-              :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
-              :default-svg-height="DEFAULT_SVG_HEIGHT"
-            />
-
-            <!-- Debug Panel (outside perspective transforms) -->
-            <div v-if="showDebug" class="debug-panel">
-              <DebugGrid ref="debugGridRef" />
-            </div>
-          </div>
+          <!-- Grid Manager Component -->
+          <GridContainer
+            :characters="gameDataStore.characters"
+            :show-arrows="showArrows"
+            :show-hex-ids="showHexIds"
+            :show-debug="showDebug"
+            :show-skills="showSkills"
+            :is-map-editor-mode="activeTab === 'mapEditor'"
+            :selected-map-editor-state="selectedMapEditorState"
+            :show-perspective
+            :debugPanelRef
+            :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
+            :default-svg-height="DEFAULT_SVG_HEIGHT"
+          />
 
           <!-- Grid Display Toggle -->
           <GridControls
-            :showDebug
             :showArrows
             :showHexIds
             :showPerspective
             :showSkills
             :teamView="gridStore.teamView"
-            :hideTeamView="activeTab === 'mapEditor'"
-            @update:showDebug="showDebug = $event"
+            :hideTeamView="activeTab === 'mapEditor' || activeTab === 'debug'"
             @update:showArrows="showArrows = $event"
             @update:showHexIds="showHexIds = $event"
             @update:showPerspective="showPerspective = $event"
@@ -313,6 +317,10 @@ const handleResetMap = () => {
                 @arena-selected="handleMapChange"
               />
             </div>
+            <!-- Debug Tab -->
+            <div v-show="activeTab === 'debug'" class="tab-panel">
+              <DebugPanel ref="debugPanelRef" />
+            </div>
           </TabNavigation>
         </div>
       </div>
@@ -350,15 +358,6 @@ const handleResetMap = () => {
   }
 }
 
-.grid-and-debug {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-2xl);
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
 .tab-panel {
   padding: var(--spacing-2xl);
   color: var(--color-text-muted);
@@ -373,19 +372,6 @@ const handleResetMap = () => {
 @media (max-width: 480px) {
   .tab-panel {
     padding: var(--spacing-sm) 0;
-  }
-}
-
-.debug-panel {
-  flex-shrink: 0;
-  width: 100%;
-  max-width: 860px;
-  margin-top: var(--spacing-xl);
-}
-
-@media (max-width: 1024px) {
-  .debug-panel {
-    max-width: 600px;
   }
 }
 </style>

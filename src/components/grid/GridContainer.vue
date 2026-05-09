@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 
 import GridManager from './GridManager.vue'
-import type DebugGrid from '@/components/debug/DebugGrid.vue'
+import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { useGridStore } from '@/stores/grid'
@@ -21,7 +21,7 @@ interface Props {
   // Perspective mode props
   showPerspective: boolean
   // Debug props
-  debugGridRef?: InstanceType<typeof DebugGrid> | null
+  debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Constants
   perspectiveVerticalCompression?: number
   defaultSvgHeight?: number
@@ -105,7 +105,7 @@ const shiftStyle = computed(() => {
             :is-map-editor-mode
             :selected-map-editor-state
             :showPerspective
-            :debugGridRef
+            :debugPanelRef
             :verticalScaleComp
             :defaultSvgHeight
             :readonly

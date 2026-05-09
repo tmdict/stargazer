@@ -7,18 +7,16 @@ import { useI18nStore } from '@/stores/i18n'
 const i18n = useI18nStore()
 
 defineProps<{
-  showDebug: boolean
   showArrows: boolean
   showHexIds: boolean
   showPerspective: boolean
   showSkills?: boolean
   teamView?: boolean
-  // When true, the Team View toggle is hidden (e.g. Map Editor tab).
+  // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
   hideTeamView?: boolean
 }>()
 
 const emit = defineEmits<{
-  'update:showDebug': [value: boolean]
   'update:showArrows': [value: boolean]
   'update:showHexIds': [value: boolean]
   'update:showPerspective': [value: boolean]
@@ -28,11 +26,6 @@ const emit = defineEmits<{
   copyImage: []
   download: []
 }>()
-
-const handleDebugChange = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) return
-  emit('update:showDebug', event.target.checked)
-}
 
 const handleArrowsChange = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) return
@@ -120,16 +113,6 @@ const handleDownload = () => {
         class="grid-toggle-checkbox"
       />
       <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
-    </label>
-    <label class="grid-toggle-btn" :class="{ disabled: teamView }">
-      <input
-        type="checkbox"
-        :checked="showDebug"
-        :disabled="teamView"
-        @change="handleDebugChange"
-        class="grid-toggle-checkbox"
-      />
-      <span class="grid-toggle-text">{{ i18n.t('app.debug') }}</span>
     </label>
 
     <!-- Action Buttons -->

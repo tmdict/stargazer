@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type DebugGrid from './DebugGrid.vue'
+import type DebugPanel from './DebugPanel.vue'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 import { usePathfindingStore } from '@/stores/pathfinding'
 
 interface Props {
-  debugGridRef?: InstanceType<typeof DebugGrid> | null
+  debugPanelRef?: InstanceType<typeof DebugPanel> | null
 }
 
 const props = defineProps<Props>()
@@ -31,11 +31,11 @@ const strokeProps = computed(() => {
 const pathElements = computed(() => {
   return pathfindingResults.value
     .filter((result) => {
-      // Filter based on debug grid visibility settings
-      if (props.debugGridRef?.shouldShowDebugLines) {
-        return props.debugGridRef.shouldShowDebugLines(result.fromHexId)
+      // Filter based on debug panel visibility settings
+      if (props.debugPanelRef?.shouldShowDebugLines) {
+        return props.debugPanelRef.shouldShowDebugLines(result.fromHexId)
       }
-      return true // Show all if no debug grid ref available
+      return true // Show all if no debug panel ref available
     })
     .map((result) => {
       const pathPoints = result.path
