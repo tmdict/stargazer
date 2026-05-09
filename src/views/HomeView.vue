@@ -237,10 +237,6 @@ const handleApplyAllTiles = (state: State) => {
   mapEditorStore.applyAllHexStates(state)
 }
 
-const handleFlipMap = () => {
-  mapEditorStore.flipMap()
-}
-
 const handleResetMap = () => {
   mapEditorStore.resetToCurrentMap()
 }
@@ -312,7 +308,6 @@ const handleResetMap = () => {
               <MapEditor
                 @state-selected="handleMapEditorStateSelected"
                 @apply-all-tiles="handleApplyAllTiles"
-                @flip-map="handleFlipMap"
                 @reset-map="handleResetMap"
                 @arena-selected="handleMapChange"
               />

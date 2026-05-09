@@ -10,6 +10,17 @@ import { State } from '@/lib/types/state'
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop'
 
+// Empirically-tuned multipliers on hexRadius for the team-view crop padding.
+// CHARACTER_TOP_PAD_MULTIPLIER covers the perspective-mode character sprite
+// stretch (`translateY(-70 * scale)` + `scaleY(~1.82)` on the character, plus
+// the parent perspective wrapper's `scaleY(0.55)`) with a small visual buffer
+// in the worst case (topmost ally hex at the r=-4 row, hex_center.y ≈ 60).
+// If GridCharacters' verticalOffset / scaleY logic changes, this needs
+// re-tuning — there isn't a clean closed-form derivation due to the compound
+// transforms.
+const CHARACTER_TOP_PAD_MULTIPLIER = 2.15
+const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
+
 export const useGridStore = defineStore('grid', () => {
   // Core grid instance - using reactive for automatic reactivity
   const grid = reactive(new Grid())
@@ -73,17 +84,17 @@ export const useGridStore = defineStore('grid', () => {
       }
     }
 
-    // Padding accounts for character sprites:
-    // - Flat mode: character is ~hex-sized, fits inside the hex; modest padding.
-    // - Perspective mode: characters get translateY(-70*scale) and scaleY(~1.82)
-    //   so they extend ~85px above the hex top at scale 1.0. Use a generous top
-    //   pad that covers both modes; in flat mode it just shows extra whitespace
-    //   that the perspective post-crop trims away.
-    const topPad = hexRadius * 2.6
-    const bottomPad = hexRadius * 0.6
+    // Padding accounts for character sprites — see the multiplier comments
+    // at module top for tuning rationale.
+    const topPad = hexRadius * CHARACTER_TOP_PAD_MULTIPLIER
+    const bottomPad = hexRadius * CHARACTER_BOTTOM_PAD_MULTIPLIER
 
-    const y = Math.max(0, minY - topPad)
-    const height = Math.min(fullHeight - y, maxY - minY + topPad + bottomPad)
+    // Allow y to go negative when minY < topPad: a negative y becomes positive
+    // top-padding inside the clip wrapper (via team-view-shift's `top: -y`),
+    // which keeps perspective-mode character sprites from clipping when the
+    // topmost ally hex sits near the SVG's y=0 edge.
+    const y = minY - topPad
+    const height = maxY - minY + topPad + bottomPad
 
     return { x: 0, y, width: fullWidth, height }
   })
