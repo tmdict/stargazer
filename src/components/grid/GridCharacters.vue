@@ -5,6 +5,7 @@ import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { getCharacterTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
+import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
@@ -161,12 +162,25 @@ const handleMouseLeave = (hexId: number) => {
     gridEvents.emit('character:mouseleave', hexId)
   }
 }
+
+// In team view, only render characters on the ally team.
+const visiblePlacements = computed(() => {
+  const all = characterStore.characterPlacements
+  if (!gridStore.teamView) return all
+  const filtered = new Map<number, number>()
+  for (const [hexId, characterId] of all) {
+    if (getCharacterTeam(gridStore._getGrid(), hexId) === Team.ALLY) {
+      filtered.set(hexId, characterId)
+    }
+  }
+  return filtered
+})
 </script>
 
 <template>
   <div class="character-layer">
     <div
-      v-for="[hexId, characterId] in characterStore.characterPlacements"
+      v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
       class="character"
       :class="{ 'map-editor-disabled': isMapEditorMode, readonly: readonly }"

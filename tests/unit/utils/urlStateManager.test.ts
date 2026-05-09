@@ -168,7 +168,21 @@ describe('urlStateManager', () => {
 
       const match = url.match(/\?g=(.+)$/)
       const decoded = decodeGridStateFromUrl(match![1])
-      expect(decoded?.d).toBe(0b0101)
+      expect(decoded?.d).toBe(0b00101)
+    })
+
+    it('round-trips teamView through generated URL', () => {
+      const tiles: GridTile[] = []
+      const url = generateShareableUrl(tiles, null, null, {
+        showHexIds: false,
+        showArrows: false,
+        showPerspective: false,
+        showSkills: false,
+        teamView: true,
+      })
+      const match = url.match(/\?g=(.+)$/)
+      const decoded = decodeGridStateFromUrl(match![1])
+      expect(decoded?.d).toBe(0b10000)
     })
 
     it('uses correct base URL from window.location', () => {

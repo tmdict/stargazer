@@ -15,6 +15,7 @@ interface UrlRestoreResult {
     showArrows?: boolean
     showPerspective?: boolean
     showSkills?: boolean
+    teamView?: boolean
   }
   error?: string
 }

@@ -74,11 +74,33 @@ const showArrows = ref(false)
 const showHexIds = ref(false)
 const showSkills = ref(true)
 
+// Team view toggle (single source of truth lives in gridStore so layer components
+// reading viewBoxBounds/visibleHexes stay in sync). When team view turns on,
+// auto-uncheck skills/targeting/debug — they're disabled in the controls panel
+// while it's active and stay off when team view exits (manual re-enable).
+watch(
+  () => gridStore.teamView,
+  (active) => {
+    if (active) {
+      showSkills.value = false
+      showArrows.value = false
+      showDebug.value = false
+    }
+  },
+)
+
 // Debug grid ref
 const debugGridRef = ref<InstanceType<typeof DebugGrid> | null>(null)
 
 // Map editor state
 const selectedMapEditorState = ref<State>(State.DEFAULT)
+
+// Map editor mode is incompatible with these display modes; force them off when entering.
+const resetForMapEditor = () => {
+  showArrows.value = false
+  showHexIds.value = false
+  gridStore.teamView = false
+}
 
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
@@ -92,11 +114,7 @@ const handleTabChange = (tab: string) => {
     },
   })
 
-  // When entering Map Editor mode, hide details to prevent flashing
-  if (tab === 'mapEditor') {
-    showArrows.value = false
-    showHexIds.value = false
-  }
+  if (tab === 'mapEditor') resetForMapEditor()
 }
 
 const handleMapChange = (mapKey: string) => {
@@ -116,11 +134,7 @@ watch(
     if (newTab && validTabs.includes(newTab as ValidTab)) {
       activeTab.value = newTab as string
 
-      // Apply special behavior for map editor
-      if (newTab === 'mapEditor') {
-        showArrows.value = false
-        showHexIds.value = false
-      }
+      if (newTab === 'mapEditor') resetForMapEditor()
     }
   },
 )
@@ -141,6 +155,7 @@ if (gameDataStore.dataLoaded) {
       showArrows.value = result.displayFlags.showArrows ?? false
       showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
+      gridStore.teamView = result.displayFlags.teamView ?? false
       success('Grid loaded from URL!')
     } else {
       error('Invalid URL - using default grid')
@@ -162,6 +177,7 @@ const handleCopyLink = async () => {
         showArrows: showArrows.value,
         showPerspective: showPerspective.value,
         showSkills: showSkills.value,
+        teamView: gridStore.teamView,
       },
     )
 
@@ -251,11 +267,14 @@ const handleResetMap = () => {
             :showHexIds
             :showPerspective
             :showSkills
+            :teamView="gridStore.teamView"
+            :hideTeamView="activeTab === 'mapEditor'"
             @update:showDebug="showDebug = $event"
             @update:showArrows="showArrows = $event"
             @update:showHexIds="showHexIds = $event"
             @update:showPerspective="showPerspective = $event"
             @update:showSkills="showSkills = $event"
+            @update:teamView="gridStore.teamView = $event"
             @copyLink="handleCopyLink"
             @copyImage="handleCopyImage"
             @download="handleDownload"

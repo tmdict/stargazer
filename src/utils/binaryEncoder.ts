@@ -22,8 +22,8 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * Extended header (if bit 7 is set):
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
- *   - Bits 1-4: Display flags (showHexIds, showArrows, showPerspective, showSkills)
- *   - Bits 5-7: Reserved (not currently used)
+ *   - Bits 1-5: Display flags (showHexIds, showArrows, showPerspective, showSkills, teamView)
+ *   - Bits 6-7: Reserved (not currently used)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -114,7 +114,7 @@ export function validateGridState(state: GridState): GridState {
     validated.a = state.a
   }
 
-  // Display flags: keep as-is (4-bit value is masked during encoding)
+  // Display flags: keep as-is (5-bit value is masked during encoding)
   if (state.d !== undefined) {
     validated.d = state.d
   }
@@ -211,16 +211,16 @@ export function encodeToBinary(state: GridState): Uint8Array {
   if (needsExtended) {
     // Extended flags byte layout:
     // Bit 0: needs extended counts (1 if >7 entries)
-    // Bits 1-4: display flags (4 bits for showHexIds, showArrows, showPerspective, showSkills)
-    // Bits 5-7: reserved for future use
+    // Bits 1-5: display flags (5 bits: showHexIds, showArrows, showPerspective, showSkills, teamView)
+    // Bits 6-7: reserved for future use
     let extendedFlags = 0
     if (needsExtendedCounts) {
       extendedFlags |= 0x01 // Bit 0: needs extended counts
     }
     if (hasDisplayFlags && validState.d !== undefined) {
-      // Pack display flags into bits 1-4
-      // Only the lower 4 bits of d are used (one bit per flag)
-      extendedFlags |= (validState.d & 0x0f) << 1
+      // Pack display flags into bits 1-5
+      // Only the lower 5 bits of d are used (one bit per flag)
+      extendedFlags |= (validState.d & 0x1f) << 1
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -301,10 +301,10 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const extendedFlags = reader.readBits(8)
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
 
-      // Extract display flags from bits 1-4
+      // Extract display flags from bits 1-5
       // IMPORTANT: Only set display flags if they were explicitly encoded
       // This fixes the bug where d=0 was incorrectly set when only extended counts were present
-      const displayFlagBits = (extendedFlags >> 1) & 0x0f
+      const displayFlagBits = (extendedFlags >> 1) & 0x1f
 
       // Display flags are present if:
       // 1. We have display flag bits set (non-zero), OR

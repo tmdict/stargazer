@@ -35,6 +35,59 @@ export const useGridStore = defineStore('grid', () => {
     return grid.keys()
   })
 
+  // Team view: when true, only ally tiles are rendered and the SVG is cropped to fit them.
+  const teamView = ref(false)
+
+  // Hexes visible under the current view mode. Mirrors `hexes` unless team view is on,
+  // in which case it narrows to all ally-state tiles (occupied + available).
+  const visibleHexes = computed(() => {
+    if (!teamView.value) return hexes.value
+    return grid
+      .getAllTiles()
+      .filter((tile) => tile.state === State.AVAILABLE_ALLY || tile.state === State.OCCUPIED_ALLY)
+      .map((tile) => tile.hex)
+  })
+
+  // Bounds of the rendered region in unscaled SVG coordinates.
+  // Always returns x = 0 and width = full grid width: cropping is vertical-only.
+  // Horizontal cropping would clip the ally artifact (anchored at the bottom-left
+  // of the full grid) and any other corner-anchored overlays.
+  // When team view is off (or no ally tiles exist), height is the full grid box too.
+  const viewBoxBounds = computed(() => {
+    const scale = hexSize.value.x / 40
+    const fullWidth = 600 * scale
+    const fullHeight = 600 * scale
+
+    if (!teamView.value || visibleHexes.value.length === 0) {
+      return { x: 0, y: 0, width: fullWidth, height: fullHeight }
+    }
+
+    const hexRadius = hexSize.value.x
+    let minY = Infinity
+    let maxY = -Infinity
+
+    for (const hex of visibleHexes.value) {
+      for (const c of layout.value.polygonCorners(hex)) {
+        if (c.y < minY) minY = c.y
+        if (c.y > maxY) maxY = c.y
+      }
+    }
+
+    // Padding accounts for character sprites:
+    // - Flat mode: character is ~hex-sized, fits inside the hex; modest padding.
+    // - Perspective mode: characters get translateY(-70*scale) and scaleY(~1.82)
+    //   so they extend ~85px above the hex top at scale 1.0. Use a generous top
+    //   pad that covers both modes; in flat mode it just shows extra whitespace
+    //   that the perspective post-crop trims away.
+    const topPad = hexRadius * 2.6
+    const bottomPad = hexRadius * 0.6
+
+    const y = Math.max(0, minY - topPad)
+    const height = Math.min(fullHeight - y, maxY - minY + topPad + bottomPad)
+
+    return { x: 0, y, width: fullWidth, height }
+  })
+
   // Core grid operations
   const setState = (hex: Hex, state: State): void => {
     grid.setState(hex, state)
@@ -137,6 +190,11 @@ export const useGridStore = defineStore('grid', () => {
     gridOrigin: readonly(gridOrigin),
     currentMap: readonly(currentMap),
     hexSize: readonly(hexSize),
+
+    // Team view state (writable; reflects which subset of tiles is rendered)
+    teamView,
+    visibleHexes,
+    viewBoxBounds,
 
     // Core grid operations
     setState,
