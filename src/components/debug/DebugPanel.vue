@@ -143,7 +143,7 @@ defineExpose({
 
 <template>
   <div class="grid-stats">
-    <h3>Debug Grid</h3>
+    <h3>Debug Info</h3>
     <p>
       Total Hexes: {{ gridStore.hexes.length }}; Characters Placed:
       {{ characterStore.charactersPlaced }}; Grid Origin: ({{ gridStore.gridOrigin.x }},
@@ -566,6 +566,7 @@ defineExpose({
   color: white;
   border: none;
   padding: var(--spacing-xs) var(--spacing-sm);
+  margin-right: var(--spacing-xs);
   border-radius: var(--radius-small);
   cursor: pointer;
   font-size: 1rem;
@@ -640,6 +641,7 @@ defineExpose({
   color: white;
   border: none;
   padding: 0.25rem 0.5rem;
+  margin-right: var(--spacing-xs);
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.9rem;

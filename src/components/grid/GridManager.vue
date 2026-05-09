@@ -6,7 +6,7 @@ import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
 import GridTiles from './GridTiles.vue'
 import CharacterSelectionModal from '@/components/CharacterSelectionModal.vue'
-import type DebugGrid from '@/components/debug/DebugGrid.vue'
+import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
 import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
@@ -37,7 +37,7 @@ interface Props {
   verticalScaleComp: number
   defaultSvgHeight: number
   // Debug props
-  debugGridRef?: InstanceType<typeof DebugGrid> | null
+  debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
   readonly?: boolean
 }
@@ -297,7 +297,7 @@ defineExpose({
       style="position: absolute; pointer-events: none"
     >
       <g>
-        <PathfindingDebug :debugGridRef="props.debugGridRef" />
+        <PathfindingDebug :debugPanelRef="props.debugPanelRef" />
       </g>
     </svg>
   </div>
