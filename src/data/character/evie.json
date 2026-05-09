@@ -8,5 +8,5 @@
   "energy": [200],
   "range": 20,
   "season": 6,
-  "tags": ["initial-energy"]
+  "tags": ["initial-energy", "temp-buff", "temp-buff-instant", "ult-negation"]
 }

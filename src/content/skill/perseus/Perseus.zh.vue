@@ -10,7 +10,7 @@ setupSkillContentMeta('perseus', 'zh')
     <article>
       <h1>珀尔修斯 (人皇)</h1>
 
-      <h2>非永久增益 (开局)</h2>
+      <h2>非永久增益 (瞬发)</h2>
 
       <h3>技能</h3>
       <p>
