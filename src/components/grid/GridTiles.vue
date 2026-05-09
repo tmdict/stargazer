@@ -606,39 +606,30 @@ onUnmounted(() => {
     stroke-width 0.2s ease;
 }
 
-/* Drag hover states - highest priority with !important */
+/* Hover overlay — single neutral tint that lightens any tile color.
+   Per-state stroke and drop-shadow below carry the validity signal. */
+.grid-event-layer.drop-target.drag-hover polygon,
+.grid-event-layer.drop-target:not(.drag-hover).hover polygon {
+  fill: rgba(255, 255, 255, 0.3);
+  stroke-width: 3;
+}
+
 .grid-event-layer.drop-target.drag-hover:not(.occupied):not(.invalid-drop) polygon {
-  fill: rgba(232, 245, 232, 0.3) !important;
-  stroke: #36958e !important;
-  stroke-width: 3 !important;
+  stroke: #36958e;
   filter: drop-shadow(0 0 8px rgba(76, 175, 80, 0.4));
 }
 
 .grid-event-layer.drop-target.drag-hover.occupied:not(.invalid-drop) polygon {
-  fill: rgba(255, 232, 232, 0.3) !important;
-  stroke: #ff9800 !important;
-  stroke-width: 3 !important;
+  stroke: #ff9800;
   filter: drop-shadow(0 0 8px rgba(255, 152, 0, 0.4));
 }
 
-/* Invalid drop zone styling */
 .grid-event-layer.drop-target.drag-hover.invalid-drop polygon {
-  fill: rgba(255, 193, 193, 0.3) !important;
-  stroke: #c05b4d !important;
-  stroke-width: 3 !important;
+  stroke: #c05b4d;
   filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
 }
 
-/* Regular hover (when not dragging) for tiles and tiles with characters */
-.grid-event-layer.drop-target:not(.occupied):not(.drag-hover).hover polygon,
-.grid-event-layer.drop-target.occupied:not(.drag-hover).hover polygon {
-  fill: rgba(240, 248, 240, 0.3);
+.grid-event-layer.drop-target:not(.drag-hover).hover polygon {
   stroke: #36958e;
-  stroke-width: 3;
-}
-
-/* Visual grid tiles remain clean without interaction styling */
-.grid-tile.hover polygon {
-  fill-opacity: 0.8;
 }
 </style>
