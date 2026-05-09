@@ -2,7 +2,6 @@ import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { useStateReset } from '@/composables/useStateReset'
-import { DIAGONAL_ROWS } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
@@ -61,22 +60,6 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     })
   }
 
-  const flipMap = () => {
-    clearCharacters()
-
-    // Snapshot all states before mutating
-    const snapshot = new Map(DIAGONAL_ROWS.flat().map((id) => [id, gridStore.getTile(id).state]))
-
-    // Swap tile states between mirrored rows: row 1 ↔ row 15, row 2 ↔ row 14, etc.
-    for (let i = 0; i < DIAGONAL_ROWS.length; i++) {
-      const row = DIAGONAL_ROWS[i]!
-      const mirrorRow = DIAGONAL_ROWS[DIAGONAL_ROWS.length - 1 - i]!
-      row.forEach((id, j) => {
-        gridStore.setState(gridStore.getHexById(id), snapshot.get(mirrorRow[j]!)!)
-      })
-    }
-  }
-
   // Color inversion state (visual only, does not change tile data)
   const isColorInverted = ref(false)
 
@@ -91,7 +74,6 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     setHexState,
     applyAllHexStates,
     resetToCurrentMap,
-    flipMap,
     toggleColorInvert,
   }
 })
