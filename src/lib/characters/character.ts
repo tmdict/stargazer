@@ -107,14 +107,6 @@ export function removeCharacterFromTeam(grid: Grid, characterId: number, team: T
   grid.teamCharacters.get(team)?.delete(characterId)
 }
 
-// Tile helpers
-
-export function getTeamFromTileState(state: State): Team | null {
-  if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
-  if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
-  return null
-}
-
 export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] {
   const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
   const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY

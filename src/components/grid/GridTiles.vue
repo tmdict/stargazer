@@ -209,11 +209,9 @@ const handleHexMouseEnter = (hex: Hex) => {
     const now = Date.now()
 
     if (!paintedHexes.value.has(hexId) && now - lastPaintTime >= PAINT_THROTTLE_MS) {
-      const success = mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
-      if (success) {
-        paintedHexes.value.add(hexId)
-        lastPaintTime = now
-      }
+      mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
+      paintedHexes.value.add(hexId)
+      lastPaintTime = now
     }
   }
 }

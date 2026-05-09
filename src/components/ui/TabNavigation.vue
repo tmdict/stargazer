@@ -22,7 +22,7 @@ const emit = defineEmits<{
 }>()
 
 const showMapDropdown = ref(false)
-let closeTimeout: number | null = null
+let closeTimeout: ReturnType<typeof setTimeout> | null = null
 
 const setActiveTab = (tab: string) => {
   emit('tabChange', tab)
@@ -43,11 +43,11 @@ const openMapDropdown = () => {
 }
 
 const closeMapDropdown = () => {
-  // Add a small delay before closing to allow mouse to cross the gap
+  // Small delay before closing to allow mouse to cross the gap
   closeTimeout = setTimeout(() => {
     showMapDropdown.value = false
     closeTimeout = null
-  }, 100) as unknown as number
+  }, 100)
 }
 
 const handleMapChange = (mapKey: string) => {
