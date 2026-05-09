@@ -24,32 +24,15 @@ import {
   tileHasCharacter,
 } from '@/lib/characters/character'
 import { Grid } from '@/lib/grid'
-import type { GridPreset } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-
-// Create a simple test grid preset
-const TEST_GRID: GridPreset = {
-  hex: [[3], [2, 4], [1, 5]],
-  qOffset: [0, -1, -1],
-}
-
-// Test arena that works with TEST_GRID
-const TEST_ARENA = {
-  id: 1,
-  name: 'Test',
-  grid: [
-    { type: State.AVAILABLE_ALLY, hex: [1, 2] },
-    { type: State.AVAILABLE_ENEMY, hex: [3, 4] },
-    { type: State.BLOCKED, hex: [5] },
-  ],
-}
+import { SMALL_BLOCKED_ARENA, SMALL_GRID } from '../fixtures/grid'
 
 describe('character.ts', () => {
   let grid: Grid
 
   beforeEach(() => {
-    grid = new Grid(TEST_GRID, TEST_ARENA)
+    grid = new Grid(SMALL_GRID, SMALL_BLOCKED_ARENA)
   })
 
   describe('Basic character operations', () => {

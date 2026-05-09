@@ -2,32 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
-import type { GridPreset } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-
-// Test grid setup
-const TEST_GRID: GridPreset = {
-  hex: [[3], [2, 4], [1, 5]],
-  qOffset: [0, -1, -1],
-}
-
-const TEST_ARENA = {
-  id: 1,
-  name: 'Test',
-  grid: [
-    { type: State.AVAILABLE_ALLY, hex: [1, 2] },
-    { type: State.AVAILABLE_ENEMY, hex: [4, 5] },
-    { type: State.DEFAULT, hex: [3] },
-  ],
-}
+import { SMALL_GRID, SMALL_OPEN_ARENA } from '../fixtures/grid'
 
 describe('skill', () => {
   let grid: Grid
   let skillManager: SkillManager
 
   beforeEach(() => {
-    grid = new Grid(TEST_GRID, TEST_ARENA)
+    grid = new Grid(SMALL_GRID, SMALL_OPEN_ARENA)
     skillManager = new SkillManager()
     // Reset mocks
     vi.clearAllMocks()
@@ -132,7 +116,6 @@ describe('skill', () => {
         expect(modifiers.size).toBeGreaterThan(0)
 
         skillManager.removeCharacterColorModifier(100, Team.ALLY)
-        skillManager.clearCharacterColorModifiers()
         const updated = skillManager.getColorModifiersByCharacterAndTeam()
         expect(updated.size).toBe(0)
       })
@@ -190,16 +173,6 @@ describe('skill', () => {
 
         skillManager.clearTileColorModifiers()
         expect(skillManager.getTileColorModifiers().size).toBe(0)
-      })
-
-      it('clears all character color modifiers', () => {
-        skillManager.addCharacterColorModifier(100, Team.ALLY, '#ff0000')
-        skillManager.addCharacterColorModifier(200, Team.ENEMY, '#00ff00')
-
-        skillManager.clearCharacterColorModifiers()
-
-        const modifiers = skillManager.getColorModifiersByCharacterAndTeam()
-        expect(modifiers.size).toBe(0)
       })
     })
 

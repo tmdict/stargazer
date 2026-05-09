@@ -193,11 +193,6 @@ export class SkillManager {
     delete this.characterColorModifiers[key]
   }
 
-  // Clear all character color modifiers
-  clearCharacterColorModifiers(): void {
-    this.characterColorModifiers = {}
-  }
-
   // Add image modifier for a specific character (used by skills for companions)
   addCharacterImageModifier(characterId: number, team: Team, imageName: string): void {
     const key = this.getSkillKey(characterId, team)
@@ -314,9 +309,8 @@ export class SkillManager {
     for (const [key, info] of Object.entries(this.activeSkills)) {
       const skill = getCharacterSkill(info.characterId)
 
-      // Find the character's current position
       const currentHexId = findCharacterHex(grid, info.characterId, info.team)
-      if (!currentHexId) {
+      if (currentHexId === null) {
         // Character no longer on grid, deactivate skill
         delete this.activeSkills[key]
         continue

@@ -116,7 +116,7 @@ export interface ModelPrediction {
   id: string
   name: string
   prediction: MatchupPrediction
-  /** Raw pre-calibration probability (kept for diagnostics). */
+  /** Raw pre-calibration probability, surfaced for diagnostics. */
   rawLeftWinProbability: number
   /** Per-model self-confidence [0, 1] — how well the data supports this model's answer. */
   selfConfidence: number

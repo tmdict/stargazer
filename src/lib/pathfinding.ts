@@ -94,33 +94,6 @@ export class PathfindingCache {
     this.closestEnemyCache.clear()
     this.closestAllyCache.clear()
   }
-
-  clearSpecific(cacheType: 'path' | 'effectiveDistance' | 'closestEnemy' | 'closestAlly'): void {
-    switch (cacheType) {
-      case 'path':
-        this.pathCache.clear()
-        break
-      case 'effectiveDistance':
-        this.effectiveDistanceCache.clear()
-        break
-      case 'closestEnemy':
-        this.closestEnemyCache.clear()
-        break
-      case 'closestAlly':
-        this.closestAllyCache.clear()
-        break
-    }
-  }
-
-  // Cache statistics for debugging
-  getStats() {
-    return {
-      pathCacheSize: this.pathCache.size,
-      effectiveDistanceCacheSize: this.effectiveDistanceCache.size,
-      closestEnemyCacheSize: this.closestEnemyCache.size,
-      closestAllyCacheSize: this.closestAllyCache.size,
-    }
-  }
 }
 
 // Default cache instance for module-level operations
