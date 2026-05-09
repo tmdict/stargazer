@@ -55,7 +55,6 @@ interface Skill {
   companionImageModifier?: string // Custom image for companion units
   companionColorModifier?: string // Border color for companion units
   targetingColorModifier?: string // Arrow color for targeting skills
-  tileColorModifier?: string // Tile color for targeting skills
   companionRange?: number // Override range for companion units
 
   onActivate(context: SkillContext): void
@@ -165,14 +164,67 @@ Highlight multiple tiles based on game state:
 
 ## Adding New Skills
 
-To add a new skill:
+Most skills follow one of two reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts` — it eliminates the activate/deactivate/update boilerplate and only takes a `calculateTarget` callback.
 
-1. **Create skill file** in `/src/lib/skills/characters/`:
+### Pattern 1: arrow-based targeting (`createTargetingSkill`)
+
+For skills that compute a target and draw an arrow (or build their own arrows for multi-target cases like Ravion / Aliceth):
 
 ```typescript
-import { registerSkill, type Skill, type SkillContext } from '../skill'
+import { registerSkill } from '../registry'
+import { createTargetingSkill } from '../utils/builders'
+import { findTarget, TargetingMethod } from '../utils/distance'
 
-const mySkill: Skill = {
+registerSkill(
+  createTargetingSkill({
+    id: 'my-skill',
+    characterId: 123,
+    name: 'Skill Name',
+    description: 'What it does',
+    color: '#hexcolor', // arrow color (becomes targetingColorModifier)
+    arrowType: 'ally', // omit when calculateTarget builds its own arrows array
+    calculateTarget: (ctx) =>
+      findTarget(ctx, {
+        targetTeam: ctx.team,
+        excludeSelf: true,
+        targetingMethod: TargetingMethod.FRONTMOST,
+      }),
+  }),
+)
+```
+
+### Pattern 2: tile highlight (`createTileHighlightSkill`)
+
+For skills that highlight a single tile and need previous-target cleanup on update:
+
+```typescript
+import { registerSkill } from '../registry'
+import { createTileHighlightSkill } from '../utils/builders'
+import { rowScan, RowScanDirection } from '../utils/ring'
+
+registerSkill(
+  createTileHighlightSkill({
+    id: 'my-skill',
+    characterId: 123,
+    name: 'Skill Name',
+    description: 'What it does',
+    tileColor: '#hexcolor',
+    calculateTarget: (ctx) => rowScan(ctx, ctx.team, { direction: RowScanDirection.REARMOST }),
+  }),
+)
+```
+
+### Pattern 3: custom lifecycle (companions, multi-tile zones, etc.)
+
+When neither factory fits — companion spawning, multi-tile state changes, multi-tile highlights — pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object:
+
+```typescript
+import { registerSkill } from '../registry'
+import { type SkillContext } from '../skill'
+
+const TILE_COLOR = '#hexcolor'
+
+registerSkill({
   id: 'my-skill',
   characterId: 123,
   name: 'Skill Name',
@@ -180,29 +232,22 @@ const mySkill: Skill = {
   colorModifier: '#hexcolor', // optional - character border
   companionImageModifier: 'image-name', // optional - companion profile image
   companionColorModifier: '#hexcolor', // optional - companion border
-  targetingColorModifier: '#hexcolor', // optional - arrow color
-  tileColorModifier: '#hexcolor', // optional - tile border
   companionRange: 2, // optional - companion range override
 
   onActivate(context: SkillContext) {
     const { grid, team, characterId, skillManager } = context
-
-    // Activation logic - spawn companions, set targets, etc.
-    // Use skillManager.setTileColorModifier(hexId, color) for tiles
+    // Spawn companions, modify tiles, etc.
+    // Use skillManager.setTileColorModifier(hexId, TILE_COLOR) for tiles
   },
 
   onDeactivate(context: SkillContext) {
-    // Cleanup logic - remove companions, clear targets, etc.
-    // Use skillManager.removeTileColorModifier(hexId) for tiles
+    // Use skillManager.removeTileColorModifier(hexId, TILE_COLOR)
   },
 
   onUpdate(context: SkillContext) {
     // Optional - recalculate targets, update visuals, etc.
   },
-}
-
-// Self-register the skill - this is all that's needed!
-registerSkill(mySkill)
+})
 ```
 
 Skills placed in `/src/lib/skills/characters/` are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration.

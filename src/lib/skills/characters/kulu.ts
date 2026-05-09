@@ -10,7 +10,9 @@ import { performRemove } from '../../characters/remove'
 import { State } from '../../types/state'
 import { Team } from '../../types/team'
 import { hasSkill, registerSkill } from '../registry'
-import { type Skill, type SkillContext } from '../skill'
+import { type SkillContext } from '../skill'
+
+const TILE_COLOR = '#a47fb8'
 
 // Tile IDs that become BLOCKED/BREAKABLE per team
 const ALLY_AFFECTED = { blocked: [18, 19, 20, 21, 22, 24], breakable: [23] }
@@ -73,13 +75,12 @@ function removeCharacterFromAffectedTile(
   }
 }
 
-const kuluSkill: Skill = {
+registerSkill({
   id: 'kulu',
   characterId: 80,
   name: 'Demolition Zone',
   description:
     'Creates a demolition zone that blocks nearby tiles. Characters on affected tiles are removed. The zone is cleared when Kulu leaves the battlefield',
-  tileColorModifier: '#a47fb8',
 
   onActivate(context: SkillContext): void {
     const { grid, hexId, team, characterId, skillManager } = context
@@ -120,11 +121,11 @@ const kuluSkill: Skill = {
     // Set affected tiles to BLOCKED / BREAKABLE with color border
     for (const id of config.blocked) {
       grid.setState(grid.getHexById(id), State.BLOCKED)
-      skillManager.setTileColorModifier(id, kuluSkill.tileColorModifier!)
+      skillManager.setTileColorModifier(id, TILE_COLOR)
     }
     for (const id of config.breakable) {
       grid.setState(grid.getHexById(id), State.BLOCKED_BREAKABLE)
-      skillManager.setTileColorModifier(id, kuluSkill.tileColorModifier!)
+      skillManager.setTileColorModifier(id, TILE_COLOR)
     }
 
     // Relocate kulu if she was on an affected tile
@@ -154,12 +155,10 @@ const kuluSkill: Skill = {
 
     // Remove tile color modifiers and restore original states
     for (const [hexId, originalState] of saved) {
-      skillManager.removeTileColorModifier(hexId, kuluSkill.tileColorModifier!)
+      skillManager.removeTileColorModifier(hexId, TILE_COLOR)
       grid.setState(grid.getHexById(hexId), originalState)
     }
 
     savedTileStates.delete(team)
   },
-}
-
-registerSkill(kuluSkill)
+})
