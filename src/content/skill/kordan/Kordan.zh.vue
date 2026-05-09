@@ -10,7 +10,7 @@ setupSkillContentMeta('kordan', 'zh')
     <article>
       <h1>戈丹</h1>
 
-      <h2>开局开大招 · 非永久增益</h2>
+      <h2>瞬发大招 · 非永久增益</h2>
 
       <h3>终极技能</h3>
       <p>

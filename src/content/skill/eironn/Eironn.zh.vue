@@ -10,7 +10,7 @@ setupSkillContentMeta('eironn', 'zh')
     <article>
       <h1>埃隆 (绿剑)</h1>
 
-      <h2>开局开大招</h2>
+      <h2>瞬发大招</h2>
 
       <h3>终极技能</h3>
       <p>

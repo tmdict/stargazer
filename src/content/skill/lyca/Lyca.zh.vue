@@ -10,7 +10,7 @@ setupSkillContentMeta('lyca', 'zh')
     <article>
       <h1>莱卡 (兔弓)</h1>
 
-      <h2>非永久增益 (开局) · 充能</h2>
+      <h2>非永久增益 (瞬发) · 充能</h2>
 
       <h3>技能</h3>
       <p>
