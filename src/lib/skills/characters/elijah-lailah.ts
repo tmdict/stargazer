@@ -5,9 +5,9 @@ import { performRemove } from '../../characters/remove'
 import { State } from '../../types/state'
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
-import { type Skill, type SkillContext } from '../skill'
+import { type SkillContext } from '../skill'
 
-const elijahLailahSkill: Skill = {
+registerSkill({
   id: 'elijah-lailah',
   characterId: 68,
   name: 'Twins',
@@ -106,6 +106,4 @@ const elijahLailahSkill: Skill = {
       console.warn(`elijah-lailah: Failed to restore team size for ${team}`)
     }
   },
-}
-
-registerSkill(elijahLailahSkill)
+})
