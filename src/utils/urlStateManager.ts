@@ -38,6 +38,7 @@ export function generateShareableUrl(
     showArrows?: boolean
     showPerspective?: boolean
     showSkills?: boolean
+    teamView?: boolean
   },
 ): string {
   // Serialize to compact format
@@ -76,6 +77,7 @@ export function updateUrlWithGridState(
     showArrows?: boolean
     showPerspective?: boolean
     showSkills?: boolean
+    teamView?: boolean
   },
 ): void {
   try {

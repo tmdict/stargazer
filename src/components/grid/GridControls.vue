@@ -12,6 +12,9 @@ defineProps<{
   showHexIds: boolean
   showPerspective: boolean
   showSkills?: boolean
+  teamView?: boolean
+  // When true, the Team View toggle is hidden (e.g. Map Editor tab).
+  hideTeamView?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -20,6 +23,7 @@ const emit = defineEmits<{
   'update:showHexIds': [value: boolean]
   'update:showPerspective': [value: boolean]
   'update:showSkills': [value: boolean]
+  'update:teamView': [value: boolean]
   copyLink: []
   copyImage: []
   download: []
@@ -48,6 +52,11 @@ const handlePerspectiveChange = (event: Event) => {
 const handleSkillsChange = (event: Event) => {
   if (!(event.target instanceof HTMLInputElement)) return
   emit('update:showSkills', event.target.checked)
+}
+
+const handleTeamViewChange = (event: Event) => {
+  if (!(event.target instanceof HTMLInputElement)) return
+  emit('update:teamView', event.target.checked)
 }
 
 const handleCopyLink = () => {
@@ -83,28 +92,40 @@ const handleDownload = () => {
       />
       <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
     </label>
-    <label class="grid-toggle-btn">
+    <label v-if="!hideTeamView" class="grid-toggle-btn">
+      <input
+        type="checkbox"
+        :checked="teamView"
+        @change="handleTeamViewChange"
+        class="grid-toggle-checkbox"
+      />
+      <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
+    </label>
+    <label class="grid-toggle-btn" :class="{ disabled: teamView }">
       <input
         type="checkbox"
         :checked="showSkills"
+        :disabled="teamView"
         @change="handleSkillsChange"
         class="grid-toggle-checkbox"
       />
       <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
     </label>
-    <label class="grid-toggle-btn">
+    <label class="grid-toggle-btn" :class="{ disabled: teamView }">
       <input
         type="checkbox"
         :checked="showArrows"
+        :disabled="teamView"
         @change="handleArrowsChange"
         class="grid-toggle-checkbox"
       />
       <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
     </label>
-    <label class="grid-toggle-btn">
+    <label class="grid-toggle-btn" :class="{ disabled: teamView }">
       <input
         type="checkbox"
         :checked="showDebug"
+        :disabled="teamView"
         @change="handleDebugChange"
         class="grid-toggle-checkbox"
       />
@@ -168,6 +189,12 @@ const handleDownload = () => {
   background: var(--color-bg-tertiary);
   border-color: var(--color-primary);
   color: var(--color-primary);
+}
+
+.grid-toggle-btn.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  pointer-events: none;
 }
 
 /* Action button specific styles */

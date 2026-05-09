@@ -243,7 +243,7 @@ defineExpose({
   <div id="map">
     <!-- Grid tiles (base layer) -->
     <GridTiles
-      :hexes="gridStore.hexes"
+      :hexes="gridStore.visibleHexes"
       :layout="gridStore.layout"
       :height="defaultSvgHeight"
       :center-x="gridStore.gridOrigin.x"
@@ -257,10 +257,10 @@ defineExpose({
       :readonly
     />
 
-    <!-- Artifact layer (behind characters) -->
+    <!-- Artifact layer (behind characters); enemy artifact is hidden in team view -->
     <GridArtifacts
       :allyArtifactId="artifactStore.allyArtifactId"
-      :enemyArtifactId="artifactStore.enemyArtifactId"
+      :enemyArtifactId="gridStore.teamView ? null : artifactStore.enemyArtifactId"
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
       :readonly
