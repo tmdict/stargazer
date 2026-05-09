@@ -1,114 +1,70 @@
 import type { GridTile } from './grid'
 
 /**
- * LRU (Least Recently Used) cache implementation for memoization.
- * Automatically evicts least recently used items when capacity is reached.
- * Used to cache expensive pathfinding and closest target calculations.
+ * LRU (Least Recently Used) cache for memoization.
+ *
+ * Relies on JS Map preserving insertion order: re-inserting a key on access
+ * moves it to the end (most-recently-used), and the first key in iteration
+ * order is always the LRU candidate for eviction. All ops are O(1).
  */
 export class MemoCache<K, V> {
   private cache = new Map<K, { value: V; timestamp: number }>()
-  private accessOrder: K[] = []
 
   constructor(
     private maxSize: number = 100,
-    private ttl: number = Infinity, // Time to live in milliseconds
+    private ttl: number = Infinity,
   ) {}
 
-  /**
-   * Get value from cache, updating access order
-   * Returns undefined if not found or expired
-   */
+  private isExpired(timestamp: number): boolean {
+    return this.ttl !== Infinity && Date.now() - timestamp > this.ttl
+  }
+
   get(key: K): V | undefined {
     const entry = this.cache.get(key)
     if (!entry) return undefined
 
-    // Check if expired
-    if (this.ttl !== Infinity && Date.now() - entry.timestamp > this.ttl) {
-      this.delete(key)
+    if (this.isExpired(entry.timestamp)) {
+      this.cache.delete(key)
       return undefined
     }
 
-    // Update access order
-    this.updateAccessOrder(key)
+    // Move to end (most recently used)
+    this.cache.delete(key)
+    this.cache.set(key, entry)
     return entry.value
   }
 
-  /**
-   * Set value in cache, evicting LRU item if needed
-   */
   set(key: K, value: V): void {
-    // Remove existing entry if present
     if (this.cache.has(key)) {
-      this.delete(key)
+      this.cache.delete(key)
+    } else if (this.cache.size >= this.maxSize) {
+      // Evict the oldest key (first in iteration order)
+      const oldest = this.cache.keys().next().value
+      if (oldest !== undefined) this.cache.delete(oldest)
     }
-
-    // Evict LRU item if at capacity
-    if (this.cache.size >= this.maxSize && this.accessOrder.length > 0) {
-      const lru = this.accessOrder[0]
-      if (lru !== undefined) {
-        this.delete(lru)
-      } else {
-        console.warn('memoization: LRU key is undefined despite non-empty accessOrder', {
-          accessOrderLength: this.accessOrder.length,
-        })
-      }
-    }
-
-    // Add new entry
     this.cache.set(key, { value, timestamp: Date.now() })
-    this.accessOrder.push(key)
   }
 
-  /**
-   * Check if key exists and is not expired
-   */
   has(key: K): boolean {
     const entry = this.cache.get(key)
     if (!entry) return false
-
-    if (this.ttl !== Infinity && Date.now() - entry.timestamp > this.ttl) {
-      this.delete(key)
+    if (this.isExpired(entry.timestamp)) {
+      this.cache.delete(key)
       return false
     }
-
     return true
   }
 
-  /**
-   * Remove entry from cache
-   */
   delete(key: K): boolean {
-    const deleted = this.cache.delete(key)
-    if (deleted) {
-      const index = this.accessOrder.indexOf(key)
-      if (index !== -1) {
-        this.accessOrder.splice(index, 1)
-      }
-    }
-    return deleted
+    return this.cache.delete(key)
   }
 
-  /**
-   * Clear all entries
-   */
   clear(): void {
     this.cache.clear()
-    this.accessOrder.length = 0
   }
 
-  /**
-   * Get current cache size
-   */
   get size(): number {
     return this.cache.size
-  }
-
-  private updateAccessOrder(key: K): void {
-    const index = this.accessOrder.indexOf(key)
-    if (index !== -1) {
-      this.accessOrder.splice(index, 1)
-    }
-    this.accessOrder.push(key)
   }
 }
 
