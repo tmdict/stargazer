@@ -3,7 +3,7 @@ import { buildTeams } from './teams'
 import type { Insight, InsightCategory, InsightDeps } from './types'
 import { buildUnits } from './units'
 
-export type { Insight, InsightCategory, InsightDeps, SweepRecord } from './types'
+export type { InsightCategory, SweepRecord } from './types'
 
 // Builds insights for a single category. Caller passes pre-computed Vue refs unwrapped.
 // Switching tabs only re-runs the relevant builder, so the heaviest sections (NN trios,

@@ -22,8 +22,7 @@ export function getMainCharacterId(grid: Grid, companionId: number): number {
   if (!isCompanionId(grid, companionId)) {
     return companionId // Already a main character
   }
-  // Use modulo 10000 to handle both 10000+ and 20000+ companion IDs
-  return companionId % 10000
+  return companionId % grid.companionIdOffset
 }
 
 export function getCompanions(grid: Grid, mainCharacterId: number, team: Team): Set<number> {

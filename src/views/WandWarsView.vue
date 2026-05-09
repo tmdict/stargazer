@@ -50,7 +50,8 @@ function loadRecords(): RecordedMatch[] {
     const parsed: unknown = JSON.parse(stored)
     if (!Array.isArray(parsed)) return []
     return parsed.filter(isRecordedMatch)
-  } catch {
+  } catch (err) {
+    console.warn('WandWars: failed to parse stored records, resetting to empty.', err)
     return []
   }
 }

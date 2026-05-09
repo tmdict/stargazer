@@ -1,6 +1,6 @@
 /**
- * Core NN training primitives — extracted from trainNN.ts so the benchmark
- * script can retrain the network per CV fold without duplicating code.
+ * Core NN training primitives shared by `trainNN.ts` and the benchmark's
+ * per-fold retraining loop.
  *
  * Architecture: hero embeddings (N×EMB_DIM) → team sum → difference →
  * Dense(HIDDEN_DIM) → ReLU → Dense(1) → sigmoid.

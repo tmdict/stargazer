@@ -641,9 +641,9 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
 
     process.stdout.write(`Fold ${fold + 1}/${NUM_FOLDS}: `)
 
-    // Fit Bradley-Terry once per fold (strengths + pair interactions).
-    // Reusing across all test-match predictions in this fold replaces ~225
-    // redundant refits with one — the dominant phase-2 speedup.
+    // Fit Bradley-Terry once per fold (strengths + pair interactions) and
+    // reuse the result across all test-match predictions — the BT fit only
+    // depends on the training set, so per-prediction refits are unnecessary.
     const btStart = Date.now()
     const btFit = fitBradleyTerry(trainMatches, foldAnalysis)
     const btTime = ((Date.now() - btStart) / 1000).toFixed(2)

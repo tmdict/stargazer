@@ -13,32 +13,15 @@ import {
 } from '@/lib/characters/companion'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
-import type { GridPreset } from '@/lib/types/grid'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-
-// Test grid setup
-const TEST_GRID: GridPreset = {
-  hex: [[3], [2, 4], [1, 5], [6, 7]],
-  qOffset: [0, -1, -1, -2],
-}
-
-const TEST_ARENA = {
-  id: 1,
-  name: 'Test',
-  grid: [
-    { type: State.AVAILABLE_ALLY, hex: [1, 2, 3] },
-    { type: State.AVAILABLE_ENEMY, hex: [5, 6, 7] },
-    { type: State.DEFAULT, hex: [4] },
-  ],
-}
+import { COMPANION_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('companion', () => {
   let grid: Grid
   let skillManager: SkillManager
 
   beforeEach(() => {
-    grid = new Grid(TEST_GRID, TEST_ARENA)
+    grid = new Grid(STANDARD_GRID, COMPANION_ARENA)
     skillManager = new SkillManager()
     grid.skillManager = skillManager
   })

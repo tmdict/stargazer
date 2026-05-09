@@ -5,7 +5,7 @@ export class Hex {
   readonly q: number
   readonly r: number
   readonly s: number
-  id: number
+  readonly id: number
 
   // Static direction vectors for neighbor calculations
   private static readonly DIRECTIONS: readonly Hex[] = [
@@ -24,10 +24,6 @@ export class Hex {
     this.q = q
     this.r = r
     this.s = s
-    this.id = id
-  }
-
-  setId(id: number): void {
     this.id = id
   }
 
@@ -79,22 +75,6 @@ export class Hex {
       neighbors.push(this.neighbor(i))
     }
     return neighbors
-  }
-
-  /**
-   * Static method to get neighbor coordinates without creating Hex instances
-   * Useful for performance-critical operations
-   */
-  static getNeighborCoordinates(
-    q: number,
-    r: number,
-    s: number,
-  ): Array<{ q: number; r: number; s: number }> {
-    return Hex.DIRECTIONS.map((dir) => ({
-      q: q + dir.q,
-      r: r + dir.r,
-      s: s + dir.s,
-    }))
   }
 
   static fromAxial(q: number, r: number): Hex {

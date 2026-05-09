@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { getSymmetricalHexId, isOnMiddleDiagonal } from '@/lib/skills/utils/symmetry'
+import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
 import { DIAGONAL_ROWS } from '@/lib/types/grid'
 
 describe('symmetry', () => {
@@ -83,34 +83,6 @@ describe('symmetry', () => {
         expect(targetRow).toBeDefined()
         expect(row!.length).toBe(targetRow!.length)
       }
-    })
-  })
-
-  describe('isOnMiddleDiagonal', () => {
-    it('correctly identifies middle diagonal hexes', () => {
-      // Row 8 (index 7) is the middle diagonal
-      const middleRow = DIAGONAL_ROWS[7] ?? []
-      expect(middleRow.length).toBeGreaterThan(0)
-      for (const hexId of middleRow) {
-        expect(isOnMiddleDiagonal(hexId)).toBe(true)
-      }
-    })
-
-    it('correctly identifies non-middle diagonal hexes', () => {
-      // isOnMiddleDiagonal(h) is equivalent to getSymmetricalHexId(h) === h.
-      const hex1 = 1
-      expect(isOnMiddleDiagonal(hex1)).toBe(getSymmetricalHexId(hex1) === hex1)
-
-      // Verify the equivalence holds across the full grid.
-      for (let hexId = 1; hexId <= 45; hexId++) {
-        expect(isOnMiddleDiagonal(hexId)).toBe(getSymmetricalHexId(hexId) === hexId)
-      }
-    })
-
-    it('handles invalid hex IDs', () => {
-      expect(isOnMiddleDiagonal(0)).toBe(false)
-      expect(isOnMiddleDiagonal(-1)).toBe(false)
-      expect(isOnMiddleDiagonal(100)).toBe(false)
     })
   })
 

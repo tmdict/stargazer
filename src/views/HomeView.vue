@@ -357,7 +357,6 @@ const handleResetMap = () => {
   }
 }
 
-/* Debug panel styling (moved from GridManager) */
 .debug-panel {
   flex-shrink: 0;
   width: 100%;

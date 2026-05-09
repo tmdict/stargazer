@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
@@ -124,26 +124,32 @@ describe('MemoCache', () => {
   })
 
   describe('TTL (Time To Live)', () => {
-    it('expires entries after TTL', async () => {
+    beforeEach(() => {
+      vi.useFakeTimers()
+    })
+
+    afterEach(() => {
+      vi.useRealTimers()
+    })
+
+    it('expires entries after TTL', () => {
       const ttlCache = new MemoCache<string, number>(100, 100) // 100ms TTL
 
       ttlCache.set('key1', 42)
       expect(ttlCache.get('key1')).toBe(42)
 
-      // Wait for TTL to expire
-      await new Promise((resolve) => setTimeout(resolve, 150))
+      vi.advanceTimersByTime(150)
 
       expect(ttlCache.get('key1')).toBeUndefined()
       expect(ttlCache.has('key1')).toBe(false)
     })
 
-    it('does not expire entries before TTL', async () => {
+    it('does not expire entries before TTL', () => {
       const ttlCache = new MemoCache<string, number>(100, 200) // 200ms TTL
 
       ttlCache.set('key1', 42)
 
-      // Wait less than TTL
-      await new Promise((resolve) => setTimeout(resolve, 50))
+      vi.advanceTimersByTime(50)
 
       expect(ttlCache.get('key1')).toBe(42)
       expect(ttlCache.has('key1')).toBe(true)
@@ -153,11 +159,9 @@ describe('MemoCache', () => {
       const cache = new MemoCache<string, number>(100, Infinity)
 
       cache.set('key1', 42)
+      vi.advanceTimersByTime(100)
 
-      // Even after delay, should still be there
-      setTimeout(() => {
-        expect(cache.get('key1')).toBe(42)
-      }, 100)
+      expect(cache.get('key1')).toBe(42)
     })
   })
 

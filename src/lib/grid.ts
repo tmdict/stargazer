@@ -48,7 +48,7 @@ export class Grid {
   // so this never needs invalidation.
   private hexById: Map<number, Hex> = new Map()
 
-  // Team management - now public for character.ts
+  // Tracks which character IDs are placed on each team
   teamCharacters: Map<Team, Set<number>> = new Map([
     [Team.ALLY, new Set()],
     [Team.ENEMY, new Set()],
@@ -58,12 +58,11 @@ export class Grid {
     [Team.ENEMY, 5],
   ])
 
-  // Companion support - now public for companion.ts
+  // Companion IDs are derived as N * companionIdOffset + mainCharacterId
   companionIdOffset = 10000
-  // Changed to include team in the key: "mainId-team" -> Set of companions
+  // Key format: `${mainCharacterId}-${team}` → set of companion character IDs
   companionLinks: Map<string, Set<number>> = new Map()
 
-  // Skill manager reference for triggering skill updates
   skillManager?: SkillManager
 
   readonly gridPreset: GridPreset
@@ -112,15 +111,7 @@ export class Grid {
     return Array.from(this.storage.values())
   }
 
-  setState(hex: Hex, state: State): boolean {
-    if (!Object.values(State).includes(state)) {
-      return false // Invalid state
-    }
-    const tile = this.getTile(hex)
-    if (tile) {
-      tile.state = state
-      return true
-    }
-    return false
+  setState(hex: Hex, state: State): void {
+    this.getTile(hex).state = state
   }
 }

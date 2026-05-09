@@ -53,10 +53,11 @@ export function spiralSearchFromTile(
     if (distance > maxDistance) maxDistance = distance
   }
 
+  const allTiles = grid.getAllTiles()
+
   // Search expanding rings from distance 1 outward
   for (let distance = 1; distance <= maxDistance; distance++) {
     const ringTiles: Array<{ hexId: number; angle: number }> = []
-    const allTiles = grid.getAllTiles()
 
     // Collect all tiles at the current distance
     for (const tile of allTiles) {
@@ -212,10 +213,11 @@ export function rowScan(
     maxDistance = Math.min(maxDistance, options.maxDistance)
   }
 
+  const allTiles = grid.getAllTiles()
+
   // Search expanding rings from distance 1 outward
   for (let distance = 1; distance <= maxDistance; distance++) {
     const ringTiles: number[] = []
-    const allTiles = grid.getAllTiles()
 
     // Collect all tile IDs at the current distance
     for (const tile of allTiles) {

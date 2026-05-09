@@ -8,9 +8,9 @@ import {
 import { Grid } from '@/lib/grid'
 // Import hasSkill directly for mocking
 import { hasSkill, SkillManager } from '@/lib/skills/skill'
-import type { GridPreset } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 // Mock hasSkill to control skill behavior
 vi.mock('@/lib/skills/skill', () => ({
@@ -20,30 +20,12 @@ vi.mock('@/lib/skills/skill', () => ({
 
 // Don't mock performRemove globally - import the real implementation
 
-// Create a simple test grid preset
-const TEST_GRID: GridPreset = {
-  hex: [[3], [2, 4], [1, 5], [6, 7]],
-  qOffset: [0, -1, -1, -2],
-}
-
-// Test arena that works with TEST_GRID
-const TEST_ARENA = {
-  id: 1,
-  name: 'Test',
-  grid: [
-    { type: State.AVAILABLE_ALLY, hex: [1, 2, 3] },
-    { type: State.AVAILABLE_ENEMY, hex: [4, 5] },
-    { type: State.BLOCKED, hex: [6] },
-    { type: State.DEFAULT, hex: [7] },
-  ],
-}
-
 describe('place.ts', () => {
   let grid: Grid
   let skillManager: SkillManager
 
   beforeEach(() => {
-    grid = new Grid(TEST_GRID, TEST_ARENA)
+    grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
 
     // Reset mocks
     vi.clearAllMocks()
@@ -315,7 +297,7 @@ describe('place.ts', () => {
       const results: number[] = []
       for (let i = 0; i < 5; i++) {
         // Reset grid
-        grid = new Grid(TEST_GRID, TEST_ARENA)
+        grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
         grid.skillManager = skillManager
 
         executeAutoPlaceCharacter(grid, skillManager, 100 + i, Team.ALLY)
@@ -379,7 +361,7 @@ describe('place.ts', () => {
         name: 'Enemy Only',
         grid: [{ type: State.AVAILABLE_ENEMY, hex: [1, 2, 3, 4, 5, 6, 7] }],
       }
-      const enemyGrid = new Grid(TEST_GRID, enemyOnlyArena)
+      const enemyGrid = new Grid(STANDARD_GRID, enemyOnlyArena)
       enemyGrid.skillManager = skillManager
 
       const result = executeAutoPlaceCharacter(enemyGrid, skillManager, 100, Team.ALLY)

@@ -30,10 +30,10 @@ setupSkillContentMeta('evie', 'en')
 
       <h3>Ultimate</h3>
       <p>
-        Active. Evie interrogates the enemy with the highest cumulative damage dealt for [[6]]s.
-        During the interrogation, she deals [[180%]] damage to the enemy every second and
-        [[immobilizes]] them. If she has already gathered intel on the target, the skill also
-        silences them during the interrogation.
+        <strong>Active.</strong> Evie interrogates the enemy with the highest cumulative damage
+        dealt for [[6]]s. During the interrogation, she deals [[180%]] damage to the enemy every
+        second and [[immobilizes]] them. If she has already gathered intel on the target, the skill
+        also silences them during the interrogation.
       </p>
     </article>
   </StyledText>

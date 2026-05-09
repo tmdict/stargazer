@@ -112,22 +112,10 @@ describe('Grid', () => {
       grid = new Grid(TEST_GRID, TEST_ARENA)
     })
 
-    it('should set valid state and return true', () => {
+    it('should set the tile state', () => {
       const hex = grid.getHexById(1)
-      const result = grid.setState(hex, State.BLOCKED)
-      expect(result).toBe(true)
+      grid.setState(hex, State.BLOCKED)
       expect(grid.getTile(hex).state).toBe(State.BLOCKED)
-    })
-
-    it.each([
-      [999, false],
-      [-1, false],
-    ])('should return false for invalid state %i', (invalidState, expected) => {
-      const hex = grid.getHexById(1)
-      const originalState = grid.getTile(hex).state
-      const result = grid.setState(hex, invalidState as State)
-      expect(result).toBe(expected)
-      expect(grid.getTile(hex).state).toBe(originalState)
     })
 
     it('should handle state transitions correctly', () => {

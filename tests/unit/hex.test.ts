@@ -117,27 +117,12 @@ describe('Hex', () => {
       expect(hex.r).toBe(-3)
       expect(hex.s).toBe(1)
     })
-
-    it('gets neighbor coordinates without creating Hex instances', () => {
-      const neighbors = Hex.getNeighborCoordinates(0, 0, 0)
-
-      expect(neighbors).toHaveLength(6)
-      expect(neighbors[0]).toEqual({ q: 1, r: -1, s: 0 })
-      expect(neighbors[1]).toEqual({ q: 1, r: 0, s: -1 })
-      expect(neighbors[2]).toEqual({ q: 0, r: 1, s: -1 })
-      expect(neighbors[3]).toEqual({ q: -1, r: 1, s: 0 })
-      expect(neighbors[4]).toEqual({ q: -1, r: 0, s: 1 })
-      expect(neighbors[5]).toEqual({ q: 0, r: -1, s: 1 })
-    })
   })
 
   describe('ID and string operations', () => {
-    it('manages hex ID correctly', () => {
-      const hex = new Hex(1, -2, 1)
-      expect(hex.getId()).toBe(-1) // Default ID
-
-      hex.setId(42)
-      expect(hex.getId()).toBe(42)
+    it('returns the hex ID, defaulting to -1 when omitted', () => {
+      expect(new Hex(1, -2, 1).getId()).toBe(-1)
+      expect(new Hex(1, -2, 1, 42).getId()).toBe(42)
     })
 
     it('converts to string correctly', () => {

@@ -80,11 +80,3 @@ buildSymmetryMap()
 export function getSymmetricalHexId(hexId: number): number | undefined {
   return SYMMETRY_MAP.get(hexId)
 }
-
-/**
- * Check if a hex is on the middle diagonal
- */
-export function isOnMiddleDiagonal(hexId: number): boolean {
-  const symmetricalId = SYMMETRY_MAP.get(hexId)
-  return symmetricalId === hexId
-}

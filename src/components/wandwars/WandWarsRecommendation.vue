@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { useI18nStore } from '@/stores/i18n'
 import { DATA_DEPTH_DESCRIPTIONS } from '@/wandwars/constants'
 import {
@@ -37,13 +39,17 @@ const props = defineProps<{
 }>()
 
 const i18n = useI18nStore()
-const confidenceTooltip = DATA_DEPTH_DESCRIPTIONS[props.recommendation.confidence]
+
 const DATA_DEPTH_LABEL_KEYS: Record<string, string> = {
   high: 'rich-data',
   medium: 'moderate-data',
   low: 'sparse-data',
 }
-const dataDepthLabel = DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data'
+
+const confidenceTooltip = computed(() => DATA_DEPTH_DESCRIPTIONS[props.recommendation.confidence])
+const dataDepthLabel = computed(
+  () => DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data',
+)
 </script>
 
 <template>
