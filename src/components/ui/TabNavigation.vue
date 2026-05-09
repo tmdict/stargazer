@@ -97,7 +97,13 @@ onUnmounted(() => {
         @click="setActiveTab('mapEditor')"
         :class="['tab-btn', { active: activeTab === 'mapEditor' }]"
       >
-        <span class="hide-mobile">{{ i18n.t('app.arena') }}</span> {{ i18n.t('app.editor') }}
+        {{ i18n.t('app.editor') }}
+      </button>
+      <button
+        @click="setActiveTab('debug')"
+        :class="['tab-btn', 'hide-mobile', { active: activeTab === 'debug' }]"
+      >
+        {{ i18n.t('app.debug') }}
       </button>
       <div class="tab-dropdown" @mouseenter="openMapDropdown" @mouseleave="closeMapDropdown">
         <button @click="toggleMapDropdown" class="tab-btn dropdown-btn">
