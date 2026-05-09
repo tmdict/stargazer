@@ -10,7 +10,7 @@ setupSkillContentMeta('zandrok', 'zh')
     <article>
       <h1>赞东 (人马)</h1>
 
-      <h2>非永久增益 (开局)</h2>
+      <h2>非永久增益 (瞬发)</h2>
 
       <h3>技能</h3>
       <p>

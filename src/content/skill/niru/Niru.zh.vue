@@ -10,7 +10,7 @@ setupSkillContentMeta('niru', 'zh')
     <article>
       <h1>尼汝</h1>
 
-      <h2>开局开大招</h2>
+      <h2>瞬发大招</h2>
 
       <h3>终极技能</h3>
       <p>

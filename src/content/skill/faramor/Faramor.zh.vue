@@ -12,7 +12,7 @@ setupSkillContentMeta('faramor', 'zh')
     <article>
       <h1>法拉莫尔 (白狼)</h1>
 
-      <h2>非永久增益 (开局) · 特殊目标机制</h2>
+      <h2>非永久增益 (瞬发) · 特殊目标机制</h2>
 
       <h3>技能</h3>
       <p>

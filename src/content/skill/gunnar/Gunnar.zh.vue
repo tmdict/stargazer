@@ -10,7 +10,7 @@ setupSkillContentMeta('gunnar', 'zh')
     <article>
       <h1>勒图姆 (炮魔)</h1>
 
-      <h2>非永久增益 (开局)</h2>
+      <h2>非永久增益 (瞬发)</h2>
 
       <h3>终极技能</h3>
       <p>
