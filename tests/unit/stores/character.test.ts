@@ -46,6 +46,23 @@ describe('characterStore.handleCharacterDrop', () => {
 
       expect(ok).toBe(true)
       expect(gridStore.getTile(allyTile.getId()).characterId).toBe(101)
+      expect(gridStore.getTile(allyTile.getId()).team).toBe(Team.ALLY)
+    })
+
+    it('places a character on a valid enemy tile', () => {
+      const enemyTile = gridStore.hexes.find(
+        (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ENEMY,
+      )
+      if (!enemyTile) throw new Error('Test setup: no enemy-available tile in default map')
+
+      const ok = store.handleCharacterDrop(
+        { character: buildCharacter(202), characterId: 202 },
+        enemyTile.getId(),
+      )
+
+      expect(ok).toBe(true)
+      expect(gridStore.getTile(enemyTile.getId()).characterId).toBe(202)
+      expect(gridStore.getTile(enemyTile.getId()).team).toBe(Team.ENEMY)
     })
 
     it('returns false when target tile is not a valid placement state', () => {
@@ -132,5 +149,54 @@ describe('characterStore.handleCharacterDrop', () => {
       expect(gridStore.getTile(sourceId).characterId).toBe(202)
       expect(gridStore.getTile(targetId).characterId).toBe(101)
     })
+  })
+})
+
+describe('characterStore.handleHexClick', () => {
+  let store: ReturnType<typeof useCharacterStore>
+  let gridStore: ReturnType<typeof useGridStore>
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    gridStore = useGridStore()
+    store = useCharacterStore()
+  })
+
+  it('returns false and removes nothing when clicking an empty tile', () => {
+    const allyTile = gridStore.hexes.find(
+      (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
+    )
+    if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
+
+    const ok = store.handleHexClick(allyTile)
+
+    expect(ok).toBe(false)
+    expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
+  })
+
+  it('removes an occupied ally and returns true', () => {
+    const allyTile = gridStore.hexes.find(
+      (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
+    )
+    if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
+    store.placeCharacterOnHex(allyTile.getId(), 101, Team.ALLY)
+
+    const ok = store.handleHexClick(allyTile)
+
+    expect(ok).toBe(true)
+    expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
+  })
+
+  it('removes an occupied enemy and returns true', () => {
+    const enemyTile = gridStore.hexes.find(
+      (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ENEMY,
+    )
+    if (!enemyTile) throw new Error('Test setup: no enemy-available tile in default map')
+    store.placeCharacterOnHex(enemyTile.getId(), 202, Team.ENEMY)
+
+    const ok = store.handleHexClick(enemyTile)
+
+    expect(ok).toBe(true)
+    expect(gridStore.getTile(enemyTile.getId()).characterId).toBeUndefined()
   })
 })

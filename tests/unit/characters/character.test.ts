@@ -14,7 +14,6 @@ import {
   getMaxTeamSize,
   getOpposingTeam,
   getTeamCharacters,
-  getTeamFromTileState,
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
   hasCharacter,
@@ -26,6 +25,7 @@ import {
 import { Grid } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 import { SMALL_BLOCKED_ARENA, SMALL_GRID } from '../fixtures/grid'
 
 describe('character.ts', () => {
