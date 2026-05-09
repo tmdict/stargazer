@@ -109,7 +109,19 @@ describe('gridStateSerializer', () => {
         showSkills: false,
       }
       const result = serializeGridState(tiles, null, null, displayFlags)
-      expect(result).toEqual({ d: 0b0101 })
+      expect(result).toEqual({ d: 0b00101 })
+    })
+
+    it('serializes teamView in display flags (bit 4)', () => {
+      const tiles: GridTile[] = []
+      const result = serializeGridState(tiles, null, null, {
+        showHexIds: false,
+        showArrows: false,
+        showPerspective: false,
+        showSkills: false,
+        teamView: true,
+      })
+      expect(result).toEqual({ d: 0b10000 })
     })
 
     it('serializes complete state with all components', () => {
@@ -133,7 +145,7 @@ describe('gridStateSerializer', () => {
         ],
         c: [[1, 100, Team.ALLY]],
         a: [1, 2],
-        d: 0b1011,
+        d: 0b01011,
       })
     })
   })
@@ -146,29 +158,148 @@ describe('gridStateSerializer', () => {
         showArrows: true,
         showPerspective: true,
         showSkills: true,
+        teamView: false,
       })
     })
 
     it.each([
-      [0b1111, { showHexIds: true, showArrows: true, showPerspective: true, showSkills: true }],
-      [0b0000, { showHexIds: false, showArrows: false, showPerspective: false, showSkills: false }],
-      [0b0001, { showHexIds: true, showArrows: false, showPerspective: false, showSkills: false }],
-      [0b0010, { showHexIds: false, showArrows: true, showPerspective: false, showSkills: false }],
-      [0b0100, { showHexIds: false, showArrows: false, showPerspective: true, showSkills: false }],
-      [0b1000, { showHexIds: false, showArrows: false, showPerspective: false, showSkills: true }],
-      [0b0101, { showHexIds: true, showArrows: false, showPerspective: true, showSkills: false }],
-      [0b1010, { showHexIds: false, showArrows: true, showPerspective: false, showSkills: true }],
+      [
+        0b01111,
+        {
+          showHexIds: true,
+          showArrows: true,
+          showPerspective: true,
+          showSkills: true,
+          teamView: false,
+        },
+      ],
+      [
+        0b00000,
+        {
+          showHexIds: false,
+          showArrows: false,
+          showPerspective: false,
+          showSkills: false,
+          teamView: false,
+        },
+      ],
+      [
+        0b00001,
+        {
+          showHexIds: true,
+          showArrows: false,
+          showPerspective: false,
+          showSkills: false,
+          teamView: false,
+        },
+      ],
+      [
+        0b00010,
+        {
+          showHexIds: false,
+          showArrows: true,
+          showPerspective: false,
+          showSkills: false,
+          teamView: false,
+        },
+      ],
+      [
+        0b00100,
+        {
+          showHexIds: false,
+          showArrows: false,
+          showPerspective: true,
+          showSkills: false,
+          teamView: false,
+        },
+      ],
+      [
+        0b01000,
+        {
+          showHexIds: false,
+          showArrows: false,
+          showPerspective: false,
+          showSkills: true,
+          teamView: false,
+        },
+      ],
+      [
+        0b00101,
+        {
+          showHexIds: true,
+          showArrows: false,
+          showPerspective: true,
+          showSkills: false,
+          teamView: false,
+        },
+      ],
+      [
+        0b01010,
+        {
+          showHexIds: false,
+          showArrows: true,
+          showPerspective: false,
+          showSkills: true,
+          teamView: false,
+        },
+      ],
+      [
+        0b10000,
+        {
+          showHexIds: false,
+          showArrows: false,
+          showPerspective: false,
+          showSkills: false,
+          teamView: true,
+        },
+      ],
+      [
+        0b11111,
+        {
+          showHexIds: true,
+          showArrows: true,
+          showPerspective: true,
+          showSkills: true,
+          teamView: true,
+        },
+      ],
     ])('unpacks flags %i correctly', (flags, expected) => {
       expect(unpackDisplayFlags(flags)).toEqual(expected)
     })
 
-    it('ignores bits beyond the first 4', () => {
+    it('ignores bits beyond the first 5', () => {
       const result = unpackDisplayFlags(0b11111111)
       expect(result).toEqual({
         showHexIds: true,
         showArrows: true,
         showPerspective: true,
         showSkills: true,
+        teamView: true,
+      })
+    })
+
+    it('round-trips teamView through pack and unpack', () => {
+      const tiles: GridTile[] = []
+      const original = {
+        showHexIds: true,
+        showArrows: false,
+        showPerspective: true,
+        showSkills: false,
+        teamView: true,
+      }
+      const packed = serializeGridState(tiles, null, null, original).d
+      expect(unpackDisplayFlags(packed)).toEqual(original)
+    })
+
+    it('decodes URLs from before teamView existed (bit 4 unset) as teamView=false', () => {
+      // Simulate an old URL where the packed value uses only bits 0-3.
+      const legacyPacked = 0b01111
+      expect(unpackDisplayFlags(legacyPacked)).toEqual({
+        showHexIds: true,
+        showArrows: true,
+        showPerspective: true,
+        showSkills: true,
+        teamView: false,
       })
     })
   })

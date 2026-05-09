@@ -58,8 +58,8 @@ interface GridState {
 
 [Extended Header (if bit 7 set): 8+ bits]
   - Bit 0: Needs extended counts
-  - Bits 1-4: Display flags (Grid Info, Targeting, Flat, Skills)
-  - Bits 5-7: Reserved
+  - Bits 1-5: Display flags (Grid Info, Targeting, Flat, Skills, Team View)
+  - Bits 6-7: Reserved
   - Additional tile count byte (if bit 0 set)
   - Additional character count byte (if bit 0 set)
 
