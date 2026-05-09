@@ -44,6 +44,9 @@ export interface GridTile {
 
 export class Grid {
   private storage: Map<string, GridTile>
+  // Parallel ID index for O(1) getHexById. Hexes are immutable after construction,
+  // so this never needs invalidation.
+  private hexById: Map<number, Hex> = new Map()
 
   // Team management - now public for character.ts
   teamCharacters: Map<Team, Set<number>> = new Map([
@@ -70,6 +73,7 @@ export class Grid {
     this.storage = new Map()
     iniGrid(layout).forEach((hex) => {
       this.storage.set(Grid.key(hex), { hex, state: State.DEFAULT })
+      this.hexById.set(hex.getId(), hex)
     })
     map.grid.forEach((mapState) => {
       mapState.hex.forEach((hexId) => {
@@ -88,7 +92,7 @@ export class Grid {
   }
 
   getHexById(id: number): Hex {
-    const hex = Array.from(this.storage.values()).find((entry) => entry.hex.getId() === id)?.hex
+    const hex = this.hexById.get(id)
     if (!hex) throw new Error(`Hex with ID ${id} not found`)
     return hex
   }
