@@ -277,12 +277,6 @@ export function getCachedBradleyTerryFit(
   return cachedFit
 }
 
-/** Force the next caller to refit. Reserved for future "merge recorded matches" features. */
-export function invalidateBradleyTerryCache(): void {
-  cachedFit = null
-  cachedMatchesRef = null
-}
-
 export const bradleyTerryModel: RecommendationModel = {
   id: 'bradley-terry',
   name: 'Team Power',

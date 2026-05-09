@@ -28,11 +28,7 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
       characterStore.removeCharacterFromHex(hexId)
     }
 
-    // Set the new state
-    if (!gridStore.setState(hex, state)) {
-      console.warn(`Failed to set state ${state} for hex at position (${hex.q}, ${hex.r})`)
-      return false
-    }
+    gridStore.setState(hex, state)
     return true
   }
 
@@ -47,11 +43,8 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     // Clear all characters first using shared utility
     clearCharacters()
 
-    // Reset all hexes to specified state
     for (const hex of gridStore.hexes) {
-      if (!gridStore.setState(hex, state)) {
-        console.warn(`Failed to reset hex at position (${hex.q}, ${hex.r}) to state ${state}`)
-      }
+      gridStore.setState(hex, state)
     }
   }
 
@@ -70,10 +63,7 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     // Apply the original map states
     mapConfig.grid.forEach((mapState) => {
       mapState.hex.forEach((hexId) => {
-        const hex = gridStore.getHexById(hexId)
-        if (!gridStore.setState(hex, mapState.type)) {
-          console.warn(`Failed to restore map state ${mapState.type} for hex ${hexId}`)
-        }
+        gridStore.setState(gridStore.getHexById(hexId), mapState.type)
       })
     })
   }

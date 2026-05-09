@@ -84,9 +84,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
         try {
           const hex = gridStore.getHexById(validated.hexId)
-          if (!gridStore.setState(hex, validated.state)) {
-            console.warn(`Failed to set state ${validated.state} for hex ${validated.hexId}`)
-          }
+          gridStore.setState(hex, validated.state)
         } catch (error) {
           console.warn(`Failed to restore tile state for hex ${validated.hexId}:`, error)
         }

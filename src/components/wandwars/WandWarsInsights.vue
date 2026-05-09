@@ -13,7 +13,7 @@ import {
   metaMinPairSweeps,
 } from '@/wandwars/constants'
 import { formatInsightHtml, formatName, joinLocale } from '@/wandwars/formatting'
-import { buildInsights, type InsightCategory } from '@/wandwars/insights'
+import { buildInsights, type InsightCategory, type SweepRecord } from '@/wandwars/insights'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
 
@@ -392,12 +392,6 @@ const groupedTeamCounters = computed(() => {
 })
 
 // Sweep stats: teams with most dominant wins
-interface SweepRecord {
-  team: string[]
-  sweeps: number
-  total: number
-}
-
 const sweepTeams = computed(() => {
   const stats = new Map<string, { team: string[]; sweeps: number; total: number }>()
   for (const match of props.matchData) {
@@ -440,8 +434,8 @@ const sweepPairs = computed(() => {
   return results.sort((a, b) => b.sweeps - a.sweeps || b.total - a.total)
 })
 
-// Only the active category's builder runs — switching tabs no longer recomputes
-// units + teams + synergy on every change.
+// Only the active category's builder runs; switching tabs swaps the builder
+// rather than recomputing units + teams + synergy together.
 const filteredInsights = computed(() =>
   buildInsights(props.category, {
     matchData: props.matchData,
