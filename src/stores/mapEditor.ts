@@ -14,22 +14,15 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
   const { clearCharacters } = useStateReset()
 
   /**
-   * Sets a hex to the specified state (used by map editor)
-   * Removes any existing character and resets the tile completely
+   * Sets a hex to the specified state (used by map editor).
+   * Removes any existing character and resets the tile completely.
    */
-  const setHexState = (hexId: number, state: State): boolean => {
-    const hex = gridStore.getHexById(hexId)
-    if (!hex) return false
-
+  const setHexState = (hexId: number, state: State): void => {
     const tile = gridStore.getTile(hexId)
-
-    // Remove character if hex is occupied
     if (tile.state === State.OCCUPIED_ALLY || tile.state === State.OCCUPIED_ENEMY) {
       characterStore.removeCharacterFromHex(hexId)
     }
-
-    gridStore.setState(hex, state)
-    return true
+    gridStore.setState(gridStore.getHexById(hexId), state)
   }
 
   /**
