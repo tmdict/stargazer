@@ -8,7 +8,7 @@
 - Keep comments concise and focused on design concepts
 - Don't add comments if it just repeats a function name
 - Use functional and stateless approaches when possible
-- Test changes: `npm run build` and `npm run type-check`
+- Test changes: `npm run lint` and `npm run type-check`
 - Update relevant architecture docs when making major changes
 
 ## DOCUMENTATION

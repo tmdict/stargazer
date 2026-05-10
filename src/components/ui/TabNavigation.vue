@@ -140,6 +140,15 @@ onUnmounted(() => {
 <style scoped>
 .tab-container {
   margin: -2em;
+  /* Flex-column so the tab content area can fill any height the parent gives
+     us (when the right column is height-capped on wide screens) while the
+     tab-buttons row stays pinned at its natural size. When the parent is
+     unconstrained (mobile column stack), height collapses to content and
+     the inner overflow:auto becomes a no-op. */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
 }
 
 .tab-buttons {
@@ -152,6 +161,7 @@ onUnmounted(() => {
   border: 2px solid var(--color-border-primary);
   border-bottom: none;
   min-height: 54px;
+  flex-shrink: 0;
 }
 
 .tab-btn:first-child {
@@ -198,6 +208,13 @@ onUnmounted(() => {
 .tab-content {
   background: var(--color-bg-primary);
   border-radius: 0 0 var(--radius-large) var(--radius-large);
+  flex: 1;
+  min-height: 0;
+  /* Each panel component handles its own internal scrolling (overflow-y: auto
+     on the component root). Tab-content stays as a flex shell so the active
+     panel can flex-fill on wide screens. */
+  display: flex;
+  flex-direction: column;
 }
 
 .tab-dropdown {
@@ -257,6 +274,47 @@ onUnmounted(() => {
 @media (min-width: 1281px) {
   .tab-btn {
     font-size: 0.9rem;
+  }
+}
+
+/* Mirror the narrow-viewport tab styling whenever the containing column is
+   narrow, regardless of viewport. This kicks in for the right column in
+   side-by-side layout below ~600px (HomeView declares `container-type:
+   inline-size` on its right column at min-width: 1024px). Browsers without
+   container-query support fall back to viewport-only @media rules below. */
+@container (max-width: 600px) {
+  .tab-buttons {
+    flex-wrap: wrap;
+    gap: 0;
+  }
+
+  .tab-btn {
+    padding: var(--spacing-md) var(--spacing-lg);
+    font-size: 0.9rem;
+    flex: 1 1 auto;
+    min-width: 100px;
+    border-right: 1px solid var(--color-border-primary);
+    border-bottom: 1px solid var(--color-border-primary);
+    margin-bottom: -1px;
+    margin-right: -1px;
+  }
+
+  .tab-dropdown {
+    margin-left: 0;
+    flex: 1 1 100%;
+  }
+
+  .dropdown-btn {
+    width: 100%;
+    border-right: 1px solid var(--color-border-primary);
+    border-bottom: 1px solid var(--color-border-primary);
+    margin-bottom: -1px;
+    margin-right: -1px;
+  }
+
+  .dropdown-content {
+    left: 0;
+    right: 0;
   }
 }
 
