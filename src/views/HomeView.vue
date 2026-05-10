@@ -335,8 +335,19 @@ const handleResetMap = () => {
   width: 100%;
 }
 
-/* Side-by-side layout for screens > 1440px */
-@media (min-width: 1400px) {
+/* Side-by-side layout. Floor is dictated by the left column's fixed width:
+   grid (600px) + padding pushes it to ~660px. Below ~1220px, the right
+   column gets uncomfortably narrow and tab content cramps even with wrap.
+
+   container-type: inline-size on the right column lets TabNavigation's
+   @container queries respond to the right column's actual width (which is
+   what determines whether tabs need to wrap), independent of viewport.
+
+   NOTE: this breakpoint must stay in sync with the @media rules in each
+   tab-content panel component (CharacterSelection, ArtifactSelection,
+   SkillsSelection, MapEditor, DebugPanel) and .tab-panel below — they
+   gate the flex-fill + internal scroll behavior on the same condition. */
+@media (min-width: 1220px) {
   .sections-container {
     flex-direction: row;
     align-items: flex-start;
@@ -347,15 +358,45 @@ const handleResetMap = () => {
     width: 660px;
   }
 
+  /* Right column is height-capped to viewport so long tab content (e.g. the
+     character grid) scrolls within the panel rather than stretching the page.
+     The TabNavigation child fills the column via flex; its internal
+     .tab-content handles the scroll so the tab buttons stay pinned. The cap
+     is released below 1024px (column-stacked layout), where there's no row
+     to keep aligned and the natural page scroll is correct. */
   .sections-container > .section:last-child {
     flex: 1 1 auto;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+    /* Subtract the section's natural top offset (header + page padding ~100px)
+       so the column's bottom aligns with the viewport bottom rather than
+       extending below it. */
+    max-height: calc(100vh - 100px);
+    container-type: inline-size;
+  }
+
+  .sections-container > .section:last-child > * {
+    flex: 1;
+    min-height: 0;
   }
 }
 
 .tab-panel {
   padding: var(--spacing-2xl);
   color: var(--color-text-muted);
+}
+
+/* On wide screens, the active tab panel flex-fills the right column so the
+   panel component inside (whose max-height is overridden in its own scoped
+   CSS at the same breakpoint) can stretch to viewport-bounded height. */
+@media (min-width: 1220px) {
+  .tab-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
 }
 
 @media (max-width: 768px) {

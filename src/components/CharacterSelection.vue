@@ -163,9 +163,19 @@ const handleClearFilters = () => {
 .character-selection {
   display: flex;
   flex-direction: column;
-  min-height: 652px;
-  max-height: 652px;
-  overflow-y: auto;
+  min-height: 656px;
+}
+
+/* On wide screens the right column is height-capped to the viewport, so the
+   panel flex-fills the column and owns its own scroll. On narrow screens
+   (column-stacked layout) the panel grows to natural content height and the
+   page handles scrolling — no internal scrollbar. */
+@media (min-width: 1220px) {
+  .character-selection {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 /* Add scroll for large screens when in side-by-side layout */
