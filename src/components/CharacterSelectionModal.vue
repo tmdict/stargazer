@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
+import FilterIcons from './ui/FilterIcons.vue'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
@@ -49,6 +50,18 @@ const availableCharacters = computed(() => {
       return a.name.localeCompare(b.name)
     })
 })
+
+// Faction filter — composes on top of availableCharacters (which already
+// excludes heroes already placed on the current team).
+const factionFilter = ref('')
+const factionOptions = computed(() =>
+  [...new Set(availableCharacters.value.map((c) => c.faction))].sort(),
+)
+const filteredCharacters = computed(() =>
+  factionFilter.value
+    ? availableCharacters.value.filter((c) => c.faction === factionFilter.value)
+    : availableCharacters.value,
+)
 
 const handleCharacterClick = (character: CharacterType) => {
   if (!team.value) return
@@ -103,16 +116,25 @@ onUnmounted(() => {
     }"
     @mouseleave="handleMouseLeave"
   >
+    <div class="filter-row">
+      <FilterIcons
+        v-model="factionFilter"
+        icon-prefix="faction"
+        :options="factionOptions"
+        :size="28"
+        :show-tooltip="false"
+      />
+    </div>
     <div class="characters-grid">
       <div
-        v-for="character in availableCharacters"
+        v-for="character in filteredCharacters"
         :key="character.id"
         class="character-item"
         @click="handleCharacterClick(character)"
       >
         <CharacterIcon :character="character" :isDraggable="false" :showSimpleTooltip="true" />
       </div>
-      <div v-if="availableCharacters.length === 0" class="no-characters">
+      <div v-if="filteredCharacters.length === 0" class="no-characters">
         No available characters
       </div>
     </div>
@@ -132,7 +154,17 @@ onUnmounted(() => {
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   z-index: 1000;
   max-width: 320px;
-  max-height: 340px;
+  max-height: 380px;
+}
+
+.filter-row {
+  margin-bottom: 8px;
+}
+
+/* FilterIcons defaults to --color-text-secondary (dark gray), which disappears
+   on this modal's dark backdrop. Override the "All" button color for legibility. */
+.filter-row :deep(.clear-option) {
+  color: rgba(255, 255, 255, 0.75);
 }
 
 .characters-grid {
@@ -140,7 +172,7 @@ onUnmounted(() => {
   grid-template-columns: repeat(5, 1fr);
   gap: 5px;
   overflow-y: auto;
-  max-height: 320px;
+  max-height: 280px;
 }
 
 .characters-grid::-webkit-scrollbar {
