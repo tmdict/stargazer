@@ -134,8 +134,16 @@ const getPreviewFillColor = (state: State): string => {
   padding: 1rem;
   gap: var(--spacing-lg);
   min-height: 656px;
-  max-height: 656px;
-  overflow-y: auto;
+}
+
+/* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
+   stacks naturally. */
+@media (min-width: 1220px) {
+  .map-editor {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 .editor-description {

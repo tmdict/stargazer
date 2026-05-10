@@ -61,10 +61,17 @@ const sortedArtifacts = computed(() => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  gap: var(--spacing-lg);
   min-height: 656px;
-  max-height: 656px;
-  overflow-y: auto;
+}
+
+/* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
+   stacks naturally and lets the page scroll. */
+@media (min-width: 1220px) {
+  .artifact-selection {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 .artifacts {

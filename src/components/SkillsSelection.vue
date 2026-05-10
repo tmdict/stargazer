@@ -137,8 +137,16 @@ const openDetailsModal = (character: CharacterType) => {
   flex-direction: column;
   gap: var(--spacing-lg);
   min-height: 656px;
-  max-height: 656px;
-  overflow-y: auto;
+}
+
+/* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
+   stacks naturally. */
+@media (min-width: 1220px) {
+  .skills-selection {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
 }
 
 .characters {
