@@ -369,10 +369,7 @@ const handleResetMap = () => {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    /* Subtract the section's natural top offset (header + page padding ~100px)
-       so the column's bottom aligns with the viewport bottom rather than
-       extending below it. */
-    max-height: calc(100vh - 100px);
+    max-height: 100vh;
     container-type: inline-size;
   }
 
