@@ -1,0 +1,12 @@
+{
+  "id": 114,
+  "name": "nerion",
+  "level": "a",
+  "faction": "graveborn",
+  "class": "marksman",
+  "damage": "magic",
+  "energy": [400],
+  "range": 7,
+  "season": 6,
+  "tags": ["initial-energy", "initial-energy-300"]
+}
