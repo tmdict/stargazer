@@ -24,7 +24,7 @@
     "ww:validate": "tsx src/wandwars/scripts/validateData.ts"
   },
   "dependencies": {
-    "@unhead/vue": "^3.1.0",
+    "@unhead/vue": "^2.1.4",
     "html-to-image": "^1.11.13",
     "pinia": "^3.0.3",
     "vue": "^3.5.28",
