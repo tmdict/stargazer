@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 1,
   "season": 1,
-  "tags": ["summon"]
+  "tags": {
+    "summon": [{ "ultimate": 1 }, { "ex": 4 }]
+  }
 }

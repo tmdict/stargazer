@@ -3,7 +3,7 @@ import { markRaw, shallowRef, unref, watchEffect, type Component, type Ref } fro
 import { formatToCamelCase } from '@/utils/nameFormatting'
 
 interface ContentComponentOptions {
-  type: 'skill' | 'page' | 'default'
+  type: 'page' | 'default'
   name: string | Ref<string>
   locale: string | Ref<string>
   fallbackToEnglish?: boolean
@@ -31,11 +31,6 @@ export function useContentComponent(options: ContentComponentOptions) {
     // Build the path based on content type (using locale in filename)
     const buildPath = (lang: string) => {
       switch (type) {
-        case 'skill':
-          // currentName is in kebab-case (e.g., 'lily-may')
-          // Convert to 'LilyMay' for filename
-          const fileName = formatToCamelCase(currentName)
-          return `/src/content/skill/${currentName}/${fileName}.${lang}.vue`
         case 'page':
           return `/src/content/page/${formatToCamelCase(currentName)}.${lang}.vue`
         default:

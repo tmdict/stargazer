@@ -8,5 +8,8 @@
   "energy": [300],
   "range": 1,
   "season": 0,
-  "tags": ["energy-reduction", "initial-energy"]
+  "tags": {
+    "energy-reduction": [{ "ultimate": 1 }],
+    "initial-energy": []
+  }
 }

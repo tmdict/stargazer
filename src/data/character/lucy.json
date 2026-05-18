@@ -8,5 +8,9 @@
   "energy": [700],
   "range": 3,
   "season": 3,
-  "tags": ["initial-energy", "initial-energy-300", "summon"]
+  "tags": {
+    "initial-energy": [],
+    "initial-energy-300": [],
+    "summon": [{ "ultimate": 1 }]
+  }
 }

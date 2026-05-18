@@ -1,6 +1,7 @@
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
+import type { SkillLocaleFile } from '@/lib/types/skill'
 
 export interface ArenaJson {
   name: string
@@ -200,14 +201,15 @@ let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
 let wandwarsLocalesCache: Record<string, LocaleData> | null = null
+let skillLocalesCache: Record<'en' | 'zh', Record<string, SkillLocaleFile>> | null = null
 
 // Vite's import.meta.glob requires a string literal for the pattern, so the glob calls
 // can't be parameterized — but the post-processing (filename → key) can.
-function buildLocaleDict(
-  modules: Record<string, LocaleData>,
+function buildLocaleDict<T = LocaleData>(
+  modules: Record<string, T>,
   keyFn: (path: string) => string = extractFileName,
-): Record<string, LocaleData> {
-  const result: Record<string, LocaleData> = {}
+): Record<string, T> {
+  const result: Record<string, T> = {}
   for (const [path, content] of Object.entries(modules)) {
     result[keyFn(path)] = content
   }
@@ -242,6 +244,26 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
     }),
   )
   return artifactLocalesCache
+}
+
+/** Per-language skill text, keyed by character slug (filename basename). */
+export function loadSkillLocales(): Record<'en' | 'zh', Record<string, SkillLocaleFile>> {
+  if (skillLocalesCache) return skillLocalesCache
+  skillLocalesCache = {
+    en: buildLocaleDict<SkillLocaleFile>(
+      import.meta.glob<SkillLocaleFile>('@/locales/skill/en/*.json', {
+        eager: true,
+        import: 'default',
+      }),
+    ),
+    zh: buildLocaleDict<SkillLocaleFile>(
+      import.meta.glob<SkillLocaleFile>('@/locales/skill/zh/*.json', {
+        eager: true,
+        import: 'default',
+      }),
+    ),
+  }
+  return skillLocalesCache
 }
 
 export function loadGameLocales(): Record<string, LocaleData> {

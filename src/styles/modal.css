@@ -30,6 +30,20 @@
   z-index: 9998;
 }
 
+/* Top-anchored variant. `.container` uses `margin: auto`, which in a flex
+   parent absorbs free space evenly top/bottom and overrides `align-items`, so
+   we have to zero the vertical autos in addition to setting flex-start. */
+.overlayModal.is-top-anchored,
+.overlay.is-top-anchored {
+  align-items: flex-start;
+}
+
+.overlayModal.is-top-anchored > .container,
+.overlay.is-top-anchored > .container {
+  margin-top: 0;
+  margin-bottom: auto;
+}
+
 /* Backdrop link - covers entire overlay for click-to-close */
 .backdrop-link {
   position: absolute;
@@ -160,6 +174,34 @@
 
 .content .skill-highlight {
   color: #5fc4bb;
+}
+
+.content .skill-stat-tag {
+  display: inline-block;
+  padding: 0 5px;
+  margin: 0 1px;
+  border-radius: 3px;
+  font-size: 0.82em;
+  font-weight: 600;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+/* Stat-tag colors are kept distinct from the teal [[…]] highlight so values
+   and stats read as separate inline tokens. */
+.content .skill-stat-atk {
+  background: rgba(196, 128, 128, 0.12);
+  color: #c98080;
+}
+
+.content .skill-stat-hp {
+  background: rgba(148, 178, 125, 0.12);
+  color: #b0c79a;
+}
+
+.content .skill-stat-tag:not(.skill-stat-atk):not(.skill-stat-hp) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
 }
 
 /* Responsive styles */

@@ -8,5 +8,10 @@
   "energy": [0, 400],
   "range": 1,
   "season": 2,
-  "tags": ["energy-reduction", "initial-energy", "initial-energy-300", "summon"]
+  "tags": {
+    "energy-reduction": [{ "skill3": 1 }, { "ex": 1 }],
+    "initial-energy": [],
+    "initial-energy-300": [],
+    "summon": [{ "ex": 1 }]
+  }
 }

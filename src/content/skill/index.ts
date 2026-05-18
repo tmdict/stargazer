@@ -1,9 +1,5 @@
-// Derived from src/content/skill/ directories at build time via import.meta.glob
-const skillModules = import.meta.glob('@/content/skill/*/*.en.vue')
+import { loadSkillLocales } from '@/utils/dataLoader'
 
-export const DOCUMENTED_SKILLS = Object.keys(skillModules)
-  .map((path) => {
-    const parts = path.split('/')
-    return parts[parts.length - 2]!
-  })
-  .sort()
+// Used by SkillView as a route guard. A hero is "documented" iff it has an
+// en locale file.
+export const DOCUMENTED_SKILLS = Object.keys(loadSkillLocales().en).sort()

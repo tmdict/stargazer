@@ -8,5 +8,8 @@
   "energy": [200],
   "range": 4,
   "season": 0,
-  "tags": ["initial-energy", "temp-buff"]
+  "tags": {
+    "initial-energy": [],
+    "temp-buff": [{ "ex": 3 }, { "awakening": 1 }]
+  }
 }

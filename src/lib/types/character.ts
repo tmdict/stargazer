@@ -1,3 +1,4 @@
+import type { CharacterTags } from './skill'
 import { Team } from './team'
 
 export interface CharacterType {
@@ -10,7 +11,7 @@ export interface CharacterType {
   energy: readonly number[]
   range: number
   season: number
-  tags: readonly string[]
+  tags: CharacterTags
   sourceHexId?: number // Optional property for tracking drag source
   team?: Team // Team assignment for placement
 }

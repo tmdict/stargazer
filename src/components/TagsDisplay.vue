@@ -19,7 +19,7 @@ const i18n = useI18nStore()
 const tagPills = computed<FilterPill[]>(() => {
   const names = new Set<string>()
   for (const char of props.characters) {
-    for (const tag of char.tags) names.add(tag)
+    for (const tag of Object.keys(char.tags)) names.add(tag)
   }
   return [...names].sort().map((name) => ({
     name,
