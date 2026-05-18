@@ -11,6 +11,7 @@ import { useI18nStore } from '@/stores/i18n'
 
 interface Props {
   character: CharacterType
+  selectedFilter?: string | null
 }
 
 const props = defineProps<Props>()
@@ -76,6 +77,7 @@ const handleMouseLeave = () => {
   <SkillModal
     :show="showSkillModal"
     :skillName="selectedSkillName"
+    :initial-chip="selectedFilter"
     @close="showSkillModal = false"
   />
 

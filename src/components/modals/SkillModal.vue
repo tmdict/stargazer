@@ -12,6 +12,7 @@ import { loadSkillLocales } from '@/utils/dataLoader'
 interface Props {
   show: boolean
   skillName: string
+  initialChip?: string | null
 }
 
 const props = defineProps<Props>()
@@ -61,7 +62,12 @@ const hasLocaleData = computed(() => !!loadSkillLocales()[displayLocale.value]?.
         <IconLocaleEn v-else :size="22" no-circle />
       </button>
     </template>
-    <SkillSections v-if="hasLocaleData" :slug="skillName" :lang="displayLocale" />
+    <SkillSections
+      v-if="hasLocaleData"
+      :slug="skillName"
+      :lang="displayLocale"
+      :initial-chip="initialChip"
+    />
     <div v-else>Content not found for skill: {{ skillName }}</div>
   </BaseModal>
 </template>

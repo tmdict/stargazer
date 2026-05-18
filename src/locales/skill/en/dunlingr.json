@@ -2,7 +2,7 @@
   "ultimate": {
     "n": "Echo of Silence",
     "d": [
-      "Dunlingr designates the Bell of Order as either <sprite name=\"spui_oldgod_icon_1\">Spellbind or <sprite name=\"spui_oldgod_icon_2\">Curelock before a battle starts, setting the stage for the battle's order.\n<sprite name=\"spui_oldgod_icon_1\">Spellbind: Unable to cast Ultimate.\n<sprite name=\"spui_oldgod_icon_2\">Curelock: Unable to restore HP for others.\nActive. Dunlingr summons the Bell of Order, declaring an order that all non-boss units on both sides must obey unconditionally for [[6]]s.\nPassive. Dunlingr summons the Bell of Order when a battle starts and keeps it on the battlefield for [[12]]s. The Bell of Order deals [[200%]]<ATK> damage to all enemies each time it is summoned.\nAfter Dunlingr is defeated, the order's effect duration is reduced to [[30%]] of the remaining time.",
+      "Dunlingr designates the Bell of Order as either Spellbind or Curelock before a battle starts, setting the stage for the battle's order.\nSpellbind: Unable to cast Ultimate.\nCurelock: Unable to restore HP for others.\nActive. Dunlingr summons the Bell of Order, declaring an order that all non-boss units on both sides must obey unconditionally for [[6]]s.\nPassive. Dunlingr summons the Bell of Order when a battle starts and keeps it on the battlefield for [[12]]s. The Bell of Order deals [[200%]]<ATK> damage to all enemies each time it is summoned.\nAfter Dunlingr is defeated, the order's effect duration is reduced to [[30%]] of the remaining time.",
       "Increases damage to [[210%]]<ATK>.",
       "Increases damage to [[220%]]<ATK>.",
       "Increases damage to [[230%]]<ATK>.",
@@ -12,7 +12,7 @@
   "skill2": {
     "n": "Grand Resonance",
     "d": [
-      "Dunlingr releases a shockwave covering the frontal area (3-tile wide and 3-tile long), dealing 4 hits of [[40%]]<ATK> damage each to enemies within. If the Bell of Order is set to <sprite name=\"spui_oldgod_icon_1\">Spellbind, Dunlingr reduces the enemies' ATK SPD by an extra [[60]] for [[4]]s. If the Bell of Order is set to <sprite name=\"spui_oldgod_icon_2\">Curelock, Dunlingr deals extra damage equal to [[3%]] of the enemies' lost HP, up to [[30%]] of his own ATK.",
+      "Dunlingr releases a shockwave covering the frontal area (3-tile wide and 3-tile long), dealing 4 hits of [[40%]]<ATK> damage each to enemies within. If the Bell of Order is set to Spellbind, Dunlingr reduces the enemies' ATK SPD by an extra [[60]] for [[4]]s. If the Bell of Order is set to Curelock, Dunlingr deals extra damage equal to [[3%]] of the enemies' lost HP, up to [[30%]] of his own ATK.",
       "Increases damage to [[45%]]<ATK>.",
       "Increases damage to [[50%]]<ATK>.",
       "Increases damage to [[55%]]<ATK>."
@@ -21,7 +21,7 @@
   "skill3": {
     "n": "Harmonic Soundwall",
     "d": [
-      "If the Bell of Order is set to <sprite name=\"spui_oldgod_icon_1\">Spellbind, Dunlingr gains a shield that absorbs [[130%]]<ATK> damage whenever an enemy casts their Ultimate, lasting until the battle ends.\nIf the Bell of Order is set to <sprite name=\"spui_oldgod_icon_2\">Curelock, Dunlingr gains a shield that absorbs [[130%]]<ATK> damage each time he loses [[20%]] of his max HP, lasting until the battle ends.",
+      "If the Bell of Order is set to Spellbind, Dunlingr gains a shield that absorbs [[130%]]<ATK> damage whenever an enemy casts their Ultimate, lasting until the battle ends.\nIf the Bell of Order is set to Curelock, Dunlingr gains a shield that absorbs [[130%]]<ATK> damage each time he loses [[20%]] of his max HP, lasting until the battle ends.",
       "Increases shield value to [[140%]]<ATK>.",
       "Increases shield value to [[150%]]<ATK>.",
       "Increases shield value to [[160%]]<ATK>."
@@ -45,8 +45,8 @@
   },
   "awakening": {
     "d": [
-      "Upon casting Echo of Silence, Dunlingr grants all allies [[50]] ATK SPD for [[6]]s if the order is set to <sprite name=\"spui_oldgod_icon_1\">Spellbind, or provides them with [[25]] Life Drain for [[6]]s if the order is set to <sprite name=\"spui_oldgod_icon_2\">Curelock.",
-      "If Dunlingr is alive, each time the order effect of his Bell ends or its duration is refreshed, an extra effect will be triggered based on the Bell's active order:\n<sprite name=\"spui_oldgod_icon_1\">Spellbind: Reduces all enemies' Energy by [[150]] and their Haste by [[10]] for [[8]]s.\n<sprite name=\"spui_oldgod_icon_2\">Curelock: Reduces all enemies' HP by [[150%]]<ATK> and their Vitality by [[50]] for [[8]]s."
+      "Upon casting Echo of Silence, Dunlingr grants all allies [[50]] ATK SPD for [[6]]s if the order is set to Spellbind, or provides them with [[25]] Life Drain for [[6]]s if the order is set to Curelock.",
+      "If Dunlingr is alive, each time the order effect of his Bell ends or its duration is refreshed, an extra effect will be triggered based on the Bell's active order:\nSpellbind: Reduces all enemies' Energy by [[150]] and their Haste by [[10]] for [[8]]s.\nCurelock: Reduces all enemies' HP by [[150%]]<ATK> and their Vitality by [[50]] for [[8]]s."
     ]
   }
 }

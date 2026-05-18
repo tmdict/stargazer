@@ -20,6 +20,7 @@ import { SkillLangKey, SkillSnippetAnchorsKey } from './snippetKeys'
 const props = defineProps<{
   slug: string
   lang: 'en' | 'zh'
+  initialChip?: string | null
 }>()
 
 setupSkillContentMeta(props.slug, props.lang)
@@ -61,7 +62,7 @@ function headingFor(slotKey: SlotKey, name: string | null | undefined): string {
   return trimmedName ? `${prefix}: ${trimmedName}` : prefix
 }
 
-const activeChips = ref<Set<string>>(new Set())
+const activeChips = ref<Set<string>>(new Set(props.initialChip ? [props.initialChip] : []))
 
 function toggleChip(tag: string) {
   const next = new Set(activeChips.value)
@@ -125,7 +126,7 @@ const snippetComp = computed(() => {
 
 <template>
   <div v-if="!locale" class="skill-empty">No skill data available for this character.</div>
-  <div v-else class="skill-sections">
+  <article v-else class="skill-sections">
     <h1 class="skill-hero-name">{{ heroName }}</h1>
 
     <div v-if="perCharacter.length > 0" class="skill-chips" @click="clearChips">
@@ -158,7 +159,7 @@ const snippetComp = computed(() => {
     </template>
 
     <component :is="snippetComp" v-if="snippetComp" class="skill-snippet-host" />
-  </div>
+  </article>
 </template>
 
 <style scoped>
@@ -204,9 +205,9 @@ const snippetComp = computed(() => {
 }
 
 .skill-chip.is-active {
-  background: #5fc4bb;
-  color: var(--color-bg, #0f1115);
-  border-color: #5fc4bb;
+  background: #3a8a83;
+  color: #fff;
+  border-color: #3a8a83;
 }
 
 .skill-snippet-anchor {

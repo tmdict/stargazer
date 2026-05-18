@@ -38,7 +38,7 @@ function getSSGRoutes(): string[] {
 
 /** Extracts description from rendered page content's first 1-2 <p> tags */
 function extractContentDescription(html: string): string | null {
-  const articleMatch = html.match(/<article>([\s\S]*?)<\/article>/)
+  const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/)
   if (!articleMatch) return null
 
   const paragraphs = [...articleMatch[1].matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]

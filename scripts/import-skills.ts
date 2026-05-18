@@ -154,6 +154,14 @@ function reorderStatValuePairs(text: string): string {
   return text.replace(STAT_VALUE_SWAP, '$2<$1>')
 }
 
+// Strip Unity TextMeshPro <sprite name="..."> markers. The mode label that
+// follows the sprite carries the meaning; we don't ship the icon assets.
+const SPRITE_TAG = /<sprite\s+name="[^"]*">/g
+
+function stripSpriteTags(text: string): string {
+  return text.replace(SPRITE_TAG, '')
+}
+
 function projectLocale(hero: HeroEntry, lang: Locale): LocaleFile {
   const out: LocaleFile = {}
   for (const slotKey of SLOT_ORDER) {
@@ -163,6 +171,7 @@ function projectLocale(hero: HeroEntry, lang: Locale): LocaleFile {
     const descriptions = slot.levels
       .map((l) => l.description[lang])
       .filter((d): d is string => d != null)
+      .map(stripSpriteTags)
       .map(reorderStatValuePairs)
     if (descriptions.length === 0) continue
     if (NAME_INVARIANT_SLOTS.has(slotKey)) {
