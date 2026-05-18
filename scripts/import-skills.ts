@@ -152,6 +152,10 @@ function reorderStatValuePairs(text: string): string {
   return text.replace(STAT_VALUE_SWAP, '$2{$1}')
 }
 
+// follows the sprite carries the meaning; we don't ship the icon assets.
+
+}
+
 function projectLocale(hero: HeroEntry, lang: Locale): LocaleFile {
   const out: LocaleFile = {}
   for (const slotKey of SLOT_ORDER) {

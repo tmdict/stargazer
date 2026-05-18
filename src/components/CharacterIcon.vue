@@ -152,7 +152,7 @@ const handleTouchStart = () => {
         class="portrait"
       />
     </div>
-    <CharacterInfoIcons v-if="!hideInfo" :character="character" />
+    <CharacterInfoIcons v-if="!hideInfo" :character :selected-filter="selectedFilter" />
 
     <!-- Energy Display -->
     <div v-if="showEnergy" class="character-energy">

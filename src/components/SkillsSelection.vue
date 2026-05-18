@@ -126,6 +126,7 @@ const openDetailsModal = (character: CharacterType) => {
     <SkillModal
       :show="showSkillModal"
       :skill-name="selectedSkillName"
+      :initial-chip="selectedTagNames"
       @close="showSkillModal = false"
     />
   </SelectionContainer>
