@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Flame Barrage",
+    "d": [
+      "Passive. Rhys can move while attacking but is unable to do so for [[8]]s if under control effects. ATK SPD and Haste won't affect his attack animation speed. Every 1 ATK SPD or Haste grants him [[2]] Crit DMG Boost.\nRhys fires at enemies within a arced radius, shooting 6 projectiles across the battlefield, each dealing [[280%]]<ATK> damage to enemies on its path. Rhys then loads his lance with Blast Ammo, allowing his normal attacks to deal [[180%]]<ATK> damage to the target and causing [[40%]]<ATK> splash damage to enemies in a 1-tile arc behind the target until he is affected by a control effect.",
+      "Increases the damage dealt by each projectile against enemies on its path to [[290%]]<ATK>.",
+      "Increases the damage dealt by each projectile against enemies on its path to [[300%]]<ATK>.",
+      "Increases the damage dealt by each projectile against enemies on its path to [[310%]]<ATK>.",
+      "Increases the damage dealt by each projectile against enemies on its path to [[320%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Defensive Stance",
+    "d": [
+      "Passive. Rhys gains [[10]] Crit.\nActive. Rhys gains control immunity when taking control effects.",
+      "Restores [[120%]]<ATK> HP upon casting this skill.",
+      "Increases the Passive Crit bonus to [[12]].",
+      "Increases the Passive Crit bonus to [[15]]."
+    ]
+  },
+  "skill3": {
+    "n": "Concussive Strike",
+    "d": [
+      "Rhys loads Shock Ammo to shoot enemies within [[2]]-tile, dealing [[220%]]<ATK> damage and knocking them back [[2]]-tile. He's unable to cast this skill when loaded with Blast Ammo.",
+      "Increases damage to [[230%]]<ATK>.",
+      "Increases damage to [[240%]]<ATK>.",
+      "Increases damage to [[250%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Rhys increase his Crit DMG Boost by [[22]] during battle. He gains an extra [[8]] Crit DMG Boost when his lance is loaded with Blast Ammo.",
+      "Rhys increase his Crit DMG Boost by [[30]] during battle. He gains an extra [[10]] Crit DMG Boost when his lance is loaded with Blast Ammo.",
+      "Rhys increase his Crit DMG Boost by [[38]] during battle. He gains an extra [[12]] Crit DMG Boost when his lance is loaded with Blast Ammo."
+    ]
+  },
+  "ex": {
+    "n": "Fury Rush",
+    "d": [
+      "Rhys gains bonus movement speed when moving on the battlefield. He reaches the max speed [[5]]s into a battle and loads Blast Ammo.",
+      "Increases Blast Ammo damage to [[220%]]<ATK> and the splash damage to [[50%]]<ATK>. Increases the splash range to a 2-tile arc behind the target.",
+      "Increases Blast Ammo damage to [[230%]]<ATK> and the splash damage to [[55%]]<ATK>. Increases the splash range to a 2-tile arc behind the target.",
+      "Increases Blast Ammo damage to [[240%]]<ATK> and the splash damage to [[60%]]<ATK>. Increases the splash range to a 2-tile arc behind the target."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Reduces the cooldown of Defensive Stance to [[3]]s.",
+      "Rhys' Ultimate now stops time until he finishes firing all bullets. If cast while Blast Ammo is loaded, he increases his Crit DMG Boost by [[120]] and movement speed by [[60%]], lasting until he's affected by a control effect."
+    ]
+  }
+}

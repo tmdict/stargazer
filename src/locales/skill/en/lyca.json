@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Comet Archery",
+    "d": [
+      "Lyca fires a comet-like arrow in a chosen direction, dealing [[200%]]<ATK> damage to enemies within 5 tiles along its path and leaving Nebula Reflection for [[7]]s. The allies under Nebula Reflection summon meteors to deal extra damage equal to [[50%]] of their ATK to the target while using normal attacks.",
+      "Increases damage to [[220%]]<ATK>.",
+      "Increases damage to [[240%]]<ATK>.",
+      "Increases damage to [[260%]]<ATK>.",
+      "Increases damage to [[270%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Empyrean Blessing",
+    "d": [
+      "Lyca bestows blessings of the stars, increasing all allies' ATK SPD by [[25]] for [[6]]s. This effect is triggered immediately when a battle starts and grants all allies [[120]] Energy.",
+      "Increases ATK SPD to [[30]].",
+      "Increases effect duration to [[8]]s.",
+      "Increases ATK SPD to [[40]]."
+    ]
+  },
+  "skill3": {
+    "n": "Nova Fall",
+    "d": [
+      "Lyca summons meteors to attack all enemies, dealing [[100%]]<ATK> damage and reducing their Phys DEF by [[-10%]] for [[5]]s.",
+      "Increases damage to [[120%]]<ATK>.",
+      "Reduces their Phys DEF by [[-12%]].",
+      "Increases damage to [[130%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases ATK SPD by [[21]] during battle.",
+      "Increases ATK SPD by [[27]] during battle.",
+      "Increases ATK SPD by [[33]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Meteor Catastrophe",
+    "d": [
+      "Lyca summons meteors when a battle starts, directing them to attack targets with her normal attacks, dealing [[40%]]<ATK> physical damage.",
+      "Increases damage to [[50%]]<ATK>.",
+      "Shoots an aerolite at a shielded enemy, dealing [[350%]]<ATK> damage. If the shield breaks, the target is stunned for [[4]]s. Only 1 aerolite can be shot every [[10]]s.",
+      "Increases aerolite damage to [[450%]]<ATK>."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Lyca reduces the target's Phys DEF by [[25%]] for [[6]]s if they are hit by Comet Archery.",
+      "Lyca gains [[300]] extra Initial Energy. She extends the duration of Nebula Reflection from her Comet Archery by [[7]]s and makes each meteor summoned by allied attacks deal extra damage equal to [[40%]]<ATK> of her ATK."
+    ]
+  }
+}

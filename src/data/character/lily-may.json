@@ -8,5 +8,8 @@
   "energy": [0],
   "range": 3,
   "season": 1,
-  "tags": ["energy-reduction", "ult-negation"]
+  "tags": {
+    "energy-reduction": [{ "ultimate": 1 }],
+    "ult-negation": [{ "ultimate": 1 }]
+  }
 }

@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Frostveil Domain",
+    "d": [
+      "Cryonaia summons the domain of Eternal Winter, trapping up to 3 enemy heroes and their summons in the domain for [[12]]s, cutting them off from the rest of the battlefield. This skill prioritizes enemy heroes who have dealt the highest cumulative damage. In Boss fights, Cryonaia traps all enemies in the domain of Eternal Winter.\nWhen Cryonaia casts Frostveil Domain, she gains a Frost Shield that only lasts when Eternal Winter is active, absorbing up to [[1400%]]<ATK> damage. When the shield is active, Cryonaia is immune to control effects, her Haste increases by [[60]], her ATK increases by [[60%]], and she cannot be defeated. Eternal Winter will end early if all trapped enemies are defeated or if the Frost Shield is destroyed.",
+      "Increases the value of Frost Shield to [[1800%]]<ATK>.",
+      "Increases the value of Frost Shield to [[2200%]]<ATK>.",
+      "Increases the value of Frost Shield to [[2600%]]<ATK>.",
+      "Increases the value of Frost Shield to [[3000%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Icicle Tempest",
+    "d": [
+      "Cryonaia summons a powerful ice storm that sweeps across the battlefield for [[6]]s, dealing [[40%]]<ATK> damage every [[0.5]]s to enemies in its path and [[20%]]<ATK> damage to enemies within 1 tile of the storm. After casting Frostveil Domain, Cryonaia stops using this skill actively. Instead, she creates a full-sized ice storm and two smaller ones at the center of the battlefield, which last for the duration of her Frost Shield. The smaller storms deal [[20%]]<ATK> damage every [[0.5]]s to enemies caught in their path.",
+      "Enhances the full-sized ice storm to deal [[50%]]<ATK> damage to enemies on its tile and [[25%]]<ATK> damage to enemies within 1 tile. Also increases the smaller ice storms' damage to [[25%]]<ATK>.",
+      "Enhances the full-sized ice storm to deal [[60%]]<ATK> damage to enemies on its tile and [[30%]]<ATK> damage to enemies within 1 tile. Also increases the smaller ice storms' damage to [[30%]]<ATK>.",
+      "Enhances the full-sized ice storm to deal [[70%]]<ATK> damage to enemies on its tile and [[35%]]<ATK> damage to enemies within 1 tile. Also increases the smaller ice storms' damage to [[35%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Frigid Edge",
+    "d": [
+      "Cryonaia creates and launches 5 ice shards at an enemy, with each shard dealing [[140%]]<ATK> damage to the enemy hit. While her Frost Shield is active, the cooldown of this skill is reduced to [[3]]s.",
+      "Increases the damage dealt to [[160%]]<ATK>.",
+      "Increases the damage dealt to [[180%]]<ATK>.",
+      "Increases the damage dealt to [[200%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Cryonaia increases her ATK by [[7%]] during battle. For every [[2]]s that the Frost Shield remains active, her ATK increases by an additional [[1%]], stacking up to [[6]] times.",
+      "Cryonaia increases her ATK by [[10%]] during battle. For every [[2]]s that the Frost Shield remains active, her ATK increases by an additional [[1.2%]], stacking up to [[6]] times.",
+      "Cryonaia increases her ATK by [[12%]] during battle. For every [[2]]s that the Frost Shield remains active, her ATK increases by an additional [[1.5%]], stacking up to [[6]] times."
+    ]
+  },
+  "ex": {
+    "n": "Frozen in Time",
+    "d": [
+      "Cryonaia deals [[60%]]<ATK> damage to enemies each time they are brought into the domain of Eternal Winter. Only Cryonaia can cast Ultimate while within the domain.",
+      "Increases enemies' damage taken to [[130%]]<ATK>.",
+      "Increases enemies' damage taken to [[200%]]<ATK>.",
+      "The biting cold of Eternal Winter freezes time itself. Cryonaia can stop the battle time for up to [[30]]s with Eternal Winter."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "While the Frost Shield is active, Cryonaia instantly freezes and defeats enemies within the domain of Eternal Winter if their current HP is below [[300%]] of her ATK and their HP percentage is lower than [[15%]].",
+      "Within the domain of Eternal Winter, Cryonaia's ice storms move [[37.5%]] faster and deal damage once every [[0.25]]s. While inside the domain, Cryonaia also gains [[60%]] damage reduction, and dealing damage to enemies triggers extra magic damage equal to [[4%]] of the target's current HP. The extra magic damage cannot exceed [[40%]]<ATK>."
+    ]
+  }
+}

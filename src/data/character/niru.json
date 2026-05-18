@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 1,
   "season": 0,
-  "tags": ["instant-ult"]
+  "tags": {
+    "instant-ult": [{ "ex": 1 }]
+  }
 }

@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Swift Shift",
+    "d": [
+      "When Vala casts the skill at an empty tile, she jumps to the tile and switches to Skyblaster Mode. She prioritizes shooting the marked enemy, dealing [[450%]]<ATK> damage and stunning them for [[4]]s. \nWhen Vala casts the skill at an enemy, she switches to Sword Mode. She rushes to slash the target, dealing [[420%]]<ATK> true damage. And all her normal attacks become melee attacks. \nIn Auto Battle, Vala switches to Sword Mode and prioritizes the marked enemy if their HP ratio is lower than [[50%]]. Otherwise, she switches to Skyblaster Mode to shoot the enemy and remains at a safe distance.",
+      "In Skyblaster Mode, Vala deals [[40%]] more damage to enemy with a HP ratio higher than [[50%]].",
+      "In Sword Mode, Vala's normal attacks and skills deal extra damage to enemy with a HP ratio lower than [[50%]]. Damage dealt equals to [[10%]] of the target's lost HP, up to [[300%]] of Vala's ATK. ",
+      "In Skyblaster Mode, Vala deals [[45%]] more damage to enemy with a HP ratio higher than [[50%]].",
+      "In Sword Mode, Vala's normal attacks and skills deal extra damage to enemy with a HP ratio lower than [[50%]]. Damage dealt equals to [[12%]] of the target's lost HP, up to [[300%]] of Vala's ATK. "
+    ]
+  },
+  "skill2": {
+    "n": "Notice Beforehand",
+    "d": [
+      "Vala sends a notice to mark the farthest enemy when a battle starts. She prioritizes attacking the noticed enemy, absorbing [[90]] Energy for each hit. When the noticed enemy is defeated, Vala sends a new notice to mark the farthest enemy if she is in Skyblaster Mode or to the nearest enemy if she is in Sword Mode.",
+      "Increases Energy absorbed to [[100]].",
+      "Increases Energy absorbed to [[110]].",
+      "Increases Energy absorbed to [[120]]."
+    ]
+  },
+  "skill3": {
+    "n": "Checkmate",
+    "d": [
+      "In Skyblaster Mode, Vala shoots with an exclusive anesthetic bullet, dealing [[230%]]<ATK> damage to an enemy and reducing their Haste by [[60]] for [[8]]s. \nIn Sword Mode, Vala hits the enemy [[3]] times, dealing [[100%]]<ATK> damage each hit and stunning them for [[1]]s.",
+      "Increases bullet damage to [[240%]]<ATK> or each sword hit damage to [[105%]]<ATK>.",
+      "Increases bullet damage to [[250%]]<ATK> or each sword hit damage to [[110%]]<ATK>.",
+      "Increases bullet damage to [[260%]]<ATK> or each sword hit damage to [[115%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Vala increases her ATK by [[9%]] during battle. She also gains an extra [[3%]] ATK every time a non-summoned enemy is defeated.",
+      "Vala increases her ATK by [[12%]] during battle. She also gains an extra [[4%]] ATK every time a non-summoned enemy is defeated.",
+      "Vala increases her ATK by [[15%]] during battle. She also gains an extra [[5%]] ATK every time a non-summoned enemy is defeated."
+    ]
+  },
+  "ex": {
+    "n": "Night Maneuver",
+    "d": [
+      "Vala blends into the darkness when the marked enemy is defeated, making her untargetable until all other allies are defeated. During this time, her movement speed increases by [[60%]] and Haste by [[80]] for [[10]]s.",
+      "Increases her movement speed by [[80%]] and Haste by [[100]] when in the darkness.",
+      "Recovers [[40%]] of her max HP when the marked enemy is defeated.",
+      "Increases her movement speed by [[90%]] and Haste by [[120]] when in the darkness."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Vala increases her damage dealt to the marked enemy by [[10%]]. ",
+      "Enemies marked by Notice Beforehand deal [[20%]] less damage. While in Skyblaster mode, Vala gains [[100]] more Energy every time she attacks the marked enemy. In Sword mode, she instead gains an extra [[30]] Execution."
+    ]
+  }
+}

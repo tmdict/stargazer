@@ -8,11 +8,13 @@ import generateSitemap from 'vite-ssg-sitemap'
 
 // SSG Helpers
 
-// Derive skill list from directory structure (Node context, no import.meta.glob)
-const skillContentDir = fileURLToPath(new URL('./src/content/skill', import.meta.url))
-const skillIds = readdirSync(skillContentDir, { withFileTypes: true })
-  .filter((d) => d.isDirectory())
-  .map((d) => d.name)
+// Derive skill list from the locale dir — every hero with skill text gets a
+// route. Optional `<HeroName>.<lang>.vue` snippet files in src/content/skill/
+// are discovered at runtime via import.meta.glob; they don't gate routing.
+const skillLocaleDir = fileURLToPath(new URL('./src/locales/skill/en', import.meta.url))
+const skillIds = readdirSync(skillLocaleDir)
+  .filter((f) => f.endsWith('.json'))
+  .map((f) => f.replace(/\.json$/, ''))
   .sort()
 
 const locales = ['en', 'zh']

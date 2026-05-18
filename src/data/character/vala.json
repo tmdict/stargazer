@@ -8,5 +8,8 @@
   "energy": [0],
   "range": 7,
   "season": 0,
-  "tags": ["energy-reduction", "special-target"]
+  "tags": {
+    "energy-reduction": [{ "skill2": 1 }],
+    "special-target": [{ "skill2": 1 }]
+  }
 }

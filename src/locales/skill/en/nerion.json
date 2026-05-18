@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Drowning Doom",
+    "d": [
+      "Passive. When an enemy has been under control effects for [[8]]s, they take [[350%]]<ATK> damage and are afflicted with drowning. Nerion deals [[30%]] more damage to drowning enemies. And both effects last until the end of the battle.\nThis passive effect takes only [[6]]s to trigger on enemies that deal magic damage.\nActive. Nerion empowers himself with the force of the tide for [[12]]s. While this effect lasts, his ATK and ATK SPD are increased by [[22%]] and [[60]] respectively, and his normal attacks gain the Deluge effect: when a normal attack hits, it bounces between drowning enemies, dealing [[220%]]<ATK> extra damage. Each unit can be hit by the bounce up to [[1]] time.",
+      "While empowered by the force of the tide, Nerion's ATK increases to [[24%]], and the extra damage dealt by Deluge increases to [[240%]]<ATK>.",
+      "While empowered by the force of the tide, Nerion's ATK increases to [[26%]], and the extra damage dealt by Deluge increases to [[260%]]<ATK>.",
+      "While empowered by the force of the tide, Nerion's ATK increases to [[28%]], and the extra damage dealt by Deluge increases to [[280%]]<ATK>.",
+      "While empowered by the force of the tide, Nerion's ATK increases to [[30%]], and the extra damage dealt by Deluge increases to [[300%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Tidal Rebuke",
+    "d": [
+      "After every [[3]] normal attacks, Nerion's next normal attack becomes enhanced. Upon hitting a target, the enhanced normal attack knocks the target back [[1]] tile, deals [[270%]]<ATK> damage, and stuns them for [[2]]s.",
+      "Increases damage to [[300%]]<ATK>.",
+      "Increases damage to [[330%]]<ATK>.",
+      "Increases damage to [[360%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Riptide Wrath",
+    "d": [
+      "Nerion throws his spear at the area with the most enemies. Upon hitting the target tile, the spear deals [[140%]]<ATK> damage to all enemies within [[1]] tile. [[2]]s later, a raging current erupts, knocking all enemies within the same area into the air and dealing [[210%]]<ATK> damage.",
+      "Increases the spear's damage dealt upon hitting the target tile to [[160%]]<ATK>; increases the damage dealt by the following current attack to [[240%]]<ATK>.",
+      "Increases the spear's damage dealt upon hitting the target tile to [[180%]]<ATK>; increases the damage dealt by the following current attack to [[270%]]<ATK>.",
+      "Increases the spear's damage dealt upon hitting the target tile to [[200%]]<ATK>; increases the damage dealt by the following current attack to [[300%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases ATK SPD by [[21]] during battle.",
+      "Increases ATK SPD by [[27]] during battle.",
+      "Increases ATK SPD by [[33]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Abyssal Embrace",
+    "d": [
+      "When a battle starts, Nerion applies the drowning effect to the [[rearmost]] enemy. Drowning enemies have their ATK and Haste reduced by [[20%]] and [[40]] respectively, and take [[50%]]<ATK> damage every time they have been under control effects for [[0.5]]s.",
+      "“溺水”的敌人处于控制状态时每[[0.5]]秒受到的伤害提升至[[60%]]<ATK>。",
+      "Whenever Nerion applies the drowning effect, he immediately gains a permanent Tidal Shield equal to [[600%]]<ATK>. The shield takes [[60%]] less damage from magic attacks.",
+      "“溺水”的敌人处于控制状态时每[[0.5]]秒受到的伤害提升至[[70%]]<ATK>。"
+    ]
+  },
+  "awakening": {
+    "d": [
+      "When all non-summoned enemies on the battlefield are under the drowning effect, or if a total of [[4]] non-summoned enemies have been affected by it, Nerion immediately gains [[1000]] Energy and becomes permanently empowered by the force of the tide. While permanently empowered, Nerion gains [[30]] extra Penetration if he has more than [[800]] Energy."
+    ]
+  }
+}

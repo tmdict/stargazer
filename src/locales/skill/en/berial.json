@@ -1,0 +1,47 @@
+{
+  "ultimate": {
+    "n": "Scared Swamp",
+    "d": [
+      "Berial flies beneath the enemy, hiding within their shadow and dealing [[36%]]<ATK> damage every [[0.25]]s, absorbing [[15]] Energy, lasting up to [[5]]s. Berial is [[invincible]] during the effect. Then he jumps out from the shadow, dealing [[320%]]<ATK> damage to adjacent enemies and [[frightening]] them for [[4]]s.",
+      "Deals [[38%]]<ATK> damage to enemies every [[0.25]]s when hiding in the shadow.",
+      "Deals [[40%]]<ATK> damage to enemies every [[0.25]]s when hiding in the shadow.",
+      "Deals [[42%]]<ATK> damage to enemies every [[0.25]]s when hiding in the shadow.",
+      "Deals [[45%]]<ATK> damage to enemies every [[0.25]]s when hiding in the shadow."
+    ]
+  },
+  "skill2": {
+    "n": "Shadow Trick",
+    "d": [
+      "Berial hides in shadow, and becomes [[invincible]] while hidden. If there are [[isolated]] enemies on the battlefield, Berial will move to each [[isolated]] target in turn, dealing [[300%]]<ATK> damage to each target. Otherwise, he will stay in the shadow, and recover a total of [[300%]]<ATK> HP, before returning to his original tile.",
+      "Increases the damage dealt to the [[isolated]] targets to [[310%]]<ATK>.",
+      "Increases the damage dealt to the [[isolated]] targets to [[320%]]<ATK>.",
+      "Increases the damage dealt to the [[isolated]] targets to [[350%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Devil's Contract",
+    "d": [
+      "Berial hides within the shadow for [[10]]s after being defeated. However, during which, if a non-summoned enemy is taken down, Berial will revive from the vanquished enemy and return to the battlefield with [[40%]]<HP> HP. This effect can only be triggered once per battle.",
+      "Increases Berial's restored HP to [[45%]]<HP> after revival.",
+      "Increases Berial's restored HP to [[50%]]<HP> after revival.",
+      "Increases Berial's restored HP to [[60%]]<HP> after revival."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Berial reduces the damage dealt by an isolated enemy by [[6%]] and increases their damage taken by [[3%]].",
+      "Berial reduces the damage dealt by an isolated enemy by [[8%]] and increases their damage taken by [[4%]].",
+      "Berial reduces the damage dealt by an isolated enemy by [[10%]] and increases their damage taken by [[5%]]."
+    ]
+  },
+  "ex": {
+    "n": "Shadow Reflection",
+    "d": [
+      "If non-summoned enemies remain [[isolated]] for over [[3]]s, they lose [[180]] Energy and generate a Silhouette that inherits [[50%]] of Berial's ATK, HP, and 100% of other stats. The Silhouette loses [[8%]] of its max HP per second. This effect can only be triggered once on the same target within [[20]]s, and the Silhouette can only deal damage by normal attacks.",
+      "The Silhouette inherits [[70%]] of Berial's ATK and HP.",
+      "Enemies lose [[40]] Energy when they receive damage from the Silhouette.",
+      "The Silhouette inherits [[80%]] of Berial's ATK and HP."
+    ]
+  },
+  "awakening": { "d": ["Increases the hiding duration after being defeated by [[10]]s."] }
+}

@@ -2,11 +2,12 @@
 import { computed, provide, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
+import SkillSections from '@/components/skill/SkillSections.vue'
 import IconLocaleEn from '@/components/ui/IconLocaleEn.vue'
 import IconLocaleZh from '@/components/ui/IconLocaleZh.vue'
-import { useContentComponent } from '@/composables/useContentComponent'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey } from '@/utils/contentMeta'
+import { loadSkillLocales } from '@/utils/dataLoader'
 
 interface Props {
   show: boolean
@@ -37,11 +38,7 @@ const toggleLocale = () => {
   displayLocale.value = displayLocale.value === 'en' ? 'zh' : 'en'
 }
 
-const { ContentComponent } = useContentComponent({
-  type: 'skill',
-  name: computed(() => props.skillName),
-  locale: displayLocale,
-})
+const hasLocaleData = computed(() => !!loadSkillLocales()[displayLocale.value]?.[props.skillName])
 </script>
 
 <template>
@@ -49,6 +46,8 @@ const { ContentComponent } = useContentComponent({
     :show="show"
     :link-param="skillName"
     :locale-override="displayLocale"
+    max-width="960px"
+    :top-anchor="true"
     @close="emit('close')"
   >
     <template #header-buttons>
@@ -62,7 +61,7 @@ const { ContentComponent } = useContentComponent({
         <IconLocaleEn v-else :size="22" no-circle />
       </button>
     </template>
-    <component v-if="ContentComponent" :is="ContentComponent" />
+    <SkillSections v-if="hasLocaleData" :slug="skillName" :lang="displayLocale" />
     <div v-else>Content not found for skill: {{ skillName }}</div>
   </BaseModal>
 </template>

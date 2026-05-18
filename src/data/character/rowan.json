@@ -8,5 +8,10 @@
   "energy": [400],
   "range": 3,
   "season": 0,
-  "tags": ["energy-recharge", "energy-reduction", "initial-energy", "initial-energy-300"]
+  "tags": {
+    "energy-recharge": [{ "ultimate": 1 }, { "skill2": 3 }],
+    "energy-reduction": [{ "skill3": 1 }],
+    "initial-energy": [],
+    "initial-energy-300": []
+  }
 }

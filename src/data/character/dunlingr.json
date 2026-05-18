@@ -8,5 +8,10 @@
   "energy": [0],
   "range": 1,
   "season": 2,
-  "tags": ["energy-reduction", "special-target", "temp-buff", "ult-negation"]
+  "tags": {
+    "energy-reduction": [{ "awakening": 2 }],
+    "special-target": [{ "ex": 1 }],
+    "temp-buff": [{ "awakening": 1 }],
+    "ult-negation": [{ "ultimate": 1 }]
+  }
 }

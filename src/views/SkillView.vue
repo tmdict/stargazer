@@ -2,10 +2,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+import SkillSections from '@/components/skill/SkillSections.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
-import { useContentComponent } from '@/composables/useContentComponent'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { DOCUMENTED_SKILLS } from '@/content/skill'
+import { loadSkillLocales } from '@/utils/dataLoader'
 
 interface Props {
   name?: string
@@ -15,30 +16,26 @@ const props = defineProps<Props>()
 
 const route = useRoute()
 const locale = useRouteLocale()
+const lang = computed<'en' | 'zh'>(() => (locale.value === 'zh' ? 'zh' : 'en'))
 
-// Use the prop if provided, otherwise fall back to route params
 const skillName = computed(() => props.name || (route.params.name as string) || 'undefined')
 
-// Validate the skill exists and pass it directly (in kebab-case)
 const validatedSkillName = computed(() => {
   const name = skillName.value?.toLowerCase()
   if (!name) return ''
-
-  // Check if it's a valid documented skill
   return DOCUMENTED_SKILLS.includes(name) ? name : 'undefined'
 })
 
-// Pass the original kebab-case name
-const { ContentComponent } = useContentComponent({
-  type: 'skill',
-  name: validatedSkillName,
-  locale,
+const hasLocaleData = computed(() => {
+  const slug = validatedSkillName.value
+  if (!slug || slug === 'undefined') return false
+  return !!loadSkillLocales()[lang.value]?.[slug]
 })
 </script>
 
 <template>
-  <PageContainer maxWidth="800px">
-    <component v-if="ContentComponent" :is="ContentComponent" />
+  <PageContainer maxWidth="960px" :top-anchor="true">
+    <SkillSections v-if="hasLocaleData" :slug="validatedSkillName" :lang="lang" />
     <div v-else class="skill-not-found">
       <h1>Skill Not Found</h1>
       <p>The skill "{{ skillName }}" was not found.</p>

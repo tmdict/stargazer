@@ -1,52 +1,34 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
-import StyledText from '@/components/StyledText.vue'
-import { setupSkillContentMeta } from '@/utils/contentMeta'
+import SkillSnippet from '@/components/skill/SkillSnippet.vue'
+import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 import { gridStyles, images } from './Silvina.data'
-
-setupSkillContentMeta('silvina', 'en')
 </script>
 
 <template>
-  <StyledText>
-    <article>
-      <h1>Silvina</h1>
-
-      <h2>Energy Reduction</h2>
-
-      <h3>Ultimate</h3>
-      <p>Silvina deals [[300%]] damage to an enemy and reduces their Energy by [[200]].</p>
-
-      <h2>Targeting Mechanics</h2>
-
-      <h3>Skill</h3>
-      <p>
-        Silvina marks the closest enemy in a [[symmetrical]] position, flashes next to them, and
-        launches an attack when a battle starts, dealing [[300%]] damage.
-      </p>
-
-      <strong>How It Works</strong>
-      <p>
-        Silvina first checks her symmetrical tile (the mirror position across the grid's center). If
-        an enemy is there, they become the target.
-      </p>
-      <p>
-        If the symmetrical tile is empty, Silvina searches for the nearest enemy in a clockwise
-        spiral expanding from that tile's position:
-      </p>
-      <ul>
-        <li><strong>Ring 1:</strong> 6 tiles immediately adjacent</li>
-        <li><strong>Ring 2:</strong> 12 tiles at distance 2</li>
-        <li>And so on...</li>
-      </ul>
-
-      <GridSnippet :grid-style="gridStyles.main" :images />
-
-      <p>
-        Ally (targeting enemy) walks clockwise from top-right, while Enemy (targeting ally) walks
-        counter-clockwise from bottom-left (180° rotation).
-      </p>
-      <p>(Credit: rkkñ for documenting Silvina's targeting mechanics)</p>
-    </article>
-  </StyledText>
+  <SkillSnippets>
+    <template #skill2>
+      <SkillSnippet title-key="how-it-works">
+        <p>
+          Silvina first checks her symmetrical tile (the mirror position across the grid's center).
+          If an opponent is there, they become the target.
+        </p>
+        <p>
+          If the symmetrical tile is empty, Silvina searches for the nearest opponent in a clockwise
+          spiral expanding from that tile's position:
+        </p>
+        <ul>
+          <li><strong>Ring 1:</strong> 6 tiles immediately adjacent</li>
+          <li><strong>Ring 2:</strong> 12 tiles at distance 2</li>
+          <li>And so on...</li>
+        </ul>
+        <GridSnippet :grid-style="gridStyles.main" :images />
+        <p>
+          Ally (targeting opponent) walks clockwise from top-right, while Enemy (targeting opponent)
+          walks counter-clockwise from bottom-left (180° rotation).
+        </p>
+        <p>(Credit: rkkñ for documenting Silvina's targeting mechanics)</p>
+      </SkillSnippet>
+    </template>
+  </SkillSnippets>
 </template>

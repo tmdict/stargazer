@@ -1,38 +1,26 @@
 <script setup lang="ts">
-import StyledText from '@/components/StyledText.vue'
-import { setupSkillContentMeta } from '@/utils/contentMeta'
-
-setupSkillContentMeta('vala', 'en')
+import SkillSnippet from '@/components/skill/SkillSnippet.vue'
+import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 </script>
 
 <template>
-  <StyledText>
-    <article>
-      <h1>Vala</h1>
-
-      <h2>Energy Reduction · Targeting Mechanics</h2>
-
-      <h3>Skill</h3>
-      <p>
-        Vala sends a notice to mark the farthest enemy when a battle starts. She prioritizes
-        attacking the noticed enemy, absorbing [[90]] Energy for each hit. When the Noticed enemy is
-        defeated, Vala sends the Notice Beforehand to the farthest enemy if she is in Skyblaster
-        Mode or to the nearest enemy if she is in Sword Mode.
-      </p>
-
-      <strong>How It Works</strong>
-      <p>
-        Vala automatically identifies and targets an opposing team's character that is furthest away
-        from her current tile.
-      </p>
-      <p>Distance calculation uses hexagonal grid distance to determine the furthest enemy.</p>
-      <p>When multiple enemies have the same distance:</p>
-      <ul>
-        <li><strong>Ally Team Vala:</strong> Prefers the enemy with the lower hex ID</li>
-        <li>
-          <strong>Enemy Team Vala:</strong> Prefers the enemy with the higher hex ID (180° rotation)
-        </li>
-      </ul>
-    </article>
-  </StyledText>
+  <SkillSnippets>
+    <template #skill2>
+      <SkillSnippet title-key="how-it-works">
+        <p>
+          Vala automatically identifies and targets an opposing-team character that is furthest away
+          from her current tile.
+        </p>
+        <p>Distance calculation uses hexagonal grid distance to determine the furthest opponent.</p>
+        <p>When multiple opponents have the same distance:</p>
+        <ul>
+          <li><strong>Ally Team Vala:</strong> Prefers the opponent with the lower hex ID</li>
+          <li>
+            <strong>Enemy Team Vala:</strong> Prefers the opponent with the higher hex ID (180°
+            rotation)
+          </li>
+        </ul>
+      </SkillSnippet>
+    </template>
+  </SkillSnippets>
 </template>

@@ -1,0 +1,49 @@
+{
+  "ultimate": {
+    "n": "Gale Thrust",
+    "d": [
+      "Passive. Kafra prioritizes attacking the enemy who carries Forest Mark. Kafra inflicts a Forest Mark on an enemy when casting Ultimate and launches a mighty strike, dealing [[500%]]<ATK> damage and knocking them back for [[2]]-tile. Only 1 Forest Mark exists per attack.",
+      "Increases damage to [[510%]]<ATK>.",
+      "Increases damage to [[520%]]<ATK>.",
+      "Increases damage to [[530%]]<ATK>.",
+      "Increases damage to [[550%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Relentless Chase",
+    "d": [
+      "When a marked enemy is out of Kafra's attack range, Kafra charges towards the enemy, dealing [[280%]]<ATK> damage and stunning them for [[1.5]]s. If there's no marked enemy, Kafra marks the nearest enemy and casts the skill.",
+      "Increases damage to [[290%]]<ATK>.",
+      "Increases damage to [[300%]]<ATK>.",
+      "Increases damage to [[320%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Forest's Wrath",
+    "d": [
+      "The Forest Mark reduces the enemy's Phys DEF by [[6%]]. When a marked enemy is defeated, Kafra and allies within 2 tiles of this enemy recover [[-100%]]<ATK> HP every [[0.38]]s for [[1.13]]s.",
+      "Reduces Phys DEF by [[9%]].",
+      "Reduces Phys DEF by [[12%]].",
+      "Reduces Phys DEF by [[15%]]."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases ATK by [[12%]] during battle.",
+      "Increases ATK by [[16%]] during battle.",
+      "Increases ATK by [[20%]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Sylvan Banishment",
+    "d": [
+      "When a marked enemy receives healing from other enemies, Kafra jumps to the healer and attacks them, dealing [[250%]]<ATK> damage and reducing their Haste by [[40]] for [[5]]s. Kafra is [[unaffected]] during the period.",
+      "Kafra gains a shield that can block [[350%]]<ATK> damage for [[5]]s while casting this skill.",
+      "Increases damage to [[260%]]<ATK>.",
+      "Increases damage to [[270%]]<ATK>."
+    ]
+  },
+  "awakening": {
+    "d": ["The damage of Relentless Chase's first casting in battle is increased to [[520%]]<ATK>."]
+  }
+}

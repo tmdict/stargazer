@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Spellbane Shot",
+    "d": [
+      "Indris fires a silencing arrow at an enemy, dealing [[240%]]<ATK> damage. The shot disables the enemy's stat buffs for [[8]]s and reduces their Phys & Magic DEF by [[20%]] for the rest of the battle. Unstackable. The buff-disabling effect doesn't work on Bosses.",
+      "When Indris fires a silencing arrow at a target with exposed weakness, he deals extra true damage equal to [[20%]] of the target's max HP. The true damage cannot exceed [[500%]]<ATK>.",
+      "Increases the damage of silencing arrow to [[260%]]<ATK>.",
+      "Increases the damage of silencing arrow to [[280%]]<ATK>.",
+      "Increases the damage of silencing arrow to [[300%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "True Sight",
+    "d": [
+      "Passive. When an enemy is afflicted by at least [[3]] different stat reduction debuffs from Indris or his allies, the enemy's weakness is exposed. Indris' normal attacks deal [[60%]]<ATK> extra true damage to enemies with exposed weaknesses. This effect can trigger once every [[4]]s per enemy.\nIn addition, Indris' normal attack fires 3 arrows, each dealing [[165%]]<ATK> damage. The arrows prioritize different enemies with exposed weaknesses. If all 3 arrows hit the same target, the second and third arrows deal [[25%]] less damage.",
+      "Increases the damage of each arrow triggered with True Sight to [[170%]]<ATK>.",
+      "Increases the damage of each arrow triggered with True Sight to [[175%]]<ATK>.",
+      "Increases the damage of each arrow triggered with True Sight to [[180%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Arcane Binding",
+    "d": [
+      "Indris knocks back all enemies within 2 tiles, pushing them out of the 2-tile area surrounding him. He then casts a binding spell on the nearest enemy, dealing [[170%]]<ATK> damage and immobilizing them for [[5]]s.",
+      "Increases the damage dealt to [[180%]]<ATK>.",
+      "Increases the damage dealt to [[190%]]<ATK>.",
+      "Increases the damage dealt to [[200%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Indris increases his ATK by [[6%]] during battle, plus an extra [[9%]] ATK if any enemy has exposed weakness.",
+      "Indris increases his ATK by [[8%]] during battle, plus an extra [[12%]] ATK if any enemy has exposed weakness.",
+      "Indris increases his ATK by [[10%]] during battle, plus an extra [[15%]] ATK if any enemy has exposed weakness."
+    ]
+  },
+  "ex": {
+    "n": "Windpiercer",
+    "d": [
+      "Each time Indris triggers the exposed weakness damage bonus, he increases his ATK SPD by [[40]] for [[6]]s. Unstackable.",
+      "Increases the ATK SPD Indris gains when triggering the exposed weakness damage bonus to [[50]].",
+      "Indris' normal attacks reduce the target's Phys DEF by [[20%]] for [[6]]s. Unstackable.",
+      "Increases the ATK SPD Indris gains when triggering the exposed weakness damage bonus to [[60]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "After hitting a target with Arcane Binding, Indris' normal attacks can trigger the exposed weakness damage bonus without cooldown for [[5]]s.",
+      "Within [[4]]s after Indris breaks an enemy's weakness, each of his normal attack arrow that hits the affected enemy deals extra physical damage equal to [[5%]] of the enemy's max HP. The damage cannot exceed [[150%]] of Indris' ATK."
+    ]
+  }
+}

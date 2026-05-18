@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Heroic Slash",
+    "d": [
+      "Himmel delivers [[9]] consecutive slashes on enemies in a designated frontal area ([[3]]-tile wide and [[3]]-tile long), each dealing [[60%]]<ATK> damage. He then follows up with a massive sweep that deals [[220%]]<ATK> damage to all enemies in front of him, plus extra true damage equal to [[15%]] of the target's max HP. The extra true damage cannot exceed [[300%]]<ATK>.",
+      "Increases the final sweep damage to [[240%]]<ATK>.",
+      "Increases the final sweep damage to [[260%]]<ATK>.",
+      "Increases the final sweep damage to [[280%]]<ATK>.",
+      "Increases the final sweep damage to [[300%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Heroic Dash",
+    "d": [
+      "Himmel dashes to the [[2]] enemies with the highest cumulative damage dealt, dealing [[340%]]<ATK> damage and knocking each enemy down for [[2]]s. He then returns to his original position. Himmel remains [[unaffected]] while casting this skill.",
+      "Increases the damage dealt to [[360%]]<ATK>.",
+      "Increases the damage dealt to [[380%]]<ATK>.",
+      "Increases the damage dealt to [[400%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Hero Party",
+    "d": [
+      "Passive. When a battle starts, if at least 1 Mage, 1 Tank, and 1 Support ally are within 1 tile of Himmel, he forms a Hero Party with himself and one ally from each class.\nHimmel inspires all party members, increasing their basic stats by [[12%]] and granting them a shared permanent shield equal to [[1500%]] of Himmel's initial ATK.\nActive. Himmel strikes the target [[4]] times, each dealing [[120%]]<ATK> damage, then converts [[30%]] of the damage dealt into healing for all party members.",
+      "Increases the damage per strike to [[140%]]<ATK> when Himmel actively casts this skill.",
+      "Increases the damage per strike to [[160%]]<ATK> when Himmel actively casts this skill.",
+      "Increases the damage per strike to [[180%]]<ATK> when Himmel actively casts this skill."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Haste by [[12]] during battle.",
+      "Increases Haste by [[16]] during battle.",
+      "Increases Haste by [[20]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Blue-Moon Blessings",
+    "d": [
+      "When a battle starts, blue-moon weed petals sweep across the battlefield, bestowing blessings on Himmel and his party members:\nTank & Support: Increases their max HP by [[150%]] of Himmel's initial ATK.\nMage & Himmel: Increases their ATK by [[8%]] of Himmel's initial ATK.\nIf Frieren is part of Himmel's Hero Party, Himmel places a flower wreath on her, permanently increasing both Himmel's and Frieren's Penetration by [[30]].",
+      "The Tank and Support members increase their max HP by [[200%]] of Himmel's initial ATK, while the Mage member and Himmel increase their ATK by [[10%]] of Himmel's initial ATK.",
+      "[[10]]s into a battle, the Blue-Moon Blessings sweep across the battlefield again, healing all party members for [[40%]] of their max HP and removing all their debuffs. For each surviving party member, increases Himmel's ATK by [[12%]].",
+      "The Tank and Support members increase their max HP by [[250%]] of Himmel's initial ATK, while the Mage member and Himmel increase their ATK by [[12%]] of Himmel's initial ATK."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Himmel has the same fighting spirit that once drove him to challenge the Demon King. In Boss Fights, Himmel and his party members cause [[12%]] more HP loss on boss targets."
+    ]
+  }
+}

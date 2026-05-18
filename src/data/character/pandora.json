@@ -8,5 +8,10 @@
   "energy": [0],
   "range": 5,
   "season": 4,
-  "tags": ["energy-recharge", "special-target", "summon", "temp-buff"]
+  "tags": {
+    "energy-recharge": [{ "skill3": 1 }],
+    "special-target": [{ "skill2": 1 }],
+    "summon": [{ "ex": 1 }],
+    "temp-buff": [{ "skill2": 1 }]
+  }
 }

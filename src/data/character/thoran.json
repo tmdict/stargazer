@@ -8,5 +8,7 @@
   "energy": [200],
   "range": 1,
   "season": 0,
-  "tags": ["initial-energy"]
+  "tags": {
+    "initial-energy": []
+  }
 }

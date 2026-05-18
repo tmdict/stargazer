@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Splashing Fun",
+    "d": [
+      "Gerda uses a wooden ladle to splash spring water within a 2-tile radius, healing affected allies for [[120%]]<ATK> HP and dealing [[140%]]<ATK> damage to affected enemies. Enemies affected are also put to sleep for [[1]]s and cannot move or act. Each time a target receives healing equal to [[10%]] of their max HP or is healed [[3]] times by Gerda's hot spring, the sleep extends by [[0.5]]s, up to [[3]]s.",
+      "Increases damage dealt to [[150%]]<ATK>.",
+      "Increases damage dealt to [[160%]]<ATK>.",
+      "Increases damage dealt to [[170%]]<ATK>.",
+      "Increases damage dealt to [[180%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Spring Therapy",
+    "d": [
+      "When a battle starts, Gerda leaps forward up to 3 tiles and stomps the ground to unleash a spring, dealing [[200%]]<ATK> damage with an interruption effect to enemies within 1 tile. Then she creates a hot spring within a 2-tile radius. Allies within this area recover [[25%]]<ATK> HP per second, while enemies recover [[4%]]<ATK> HP per second (capped at [[0.5%]] of their max HP). Gerda is [[unaffected]] when casting this skill.",
+      "Increases damage to [[220%]]<ATK>.",
+      "Increases damage to [[240%]]<ATK>.",
+      "Increases damage to [[260%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Mighty Smash",
+    "d": [
+      "Gerda smashes an enemy with a wooden ladle, dealing [[150%]]<ATK> damage and stunning them for [[1.5]]s. At the same time, Gerda gains a [[340%]]<ATK> shield for [[8]]s.",
+      "Increases the shield value to [[360%]]<ATK>.",
+      "Increases the shield value to [[380%]]<ATK>.",
+      "Increases the shield value to [[400%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Reduces damage taken by [[12%]] during battle.",
+      "Reduces damage taken by [[16%]] during battle.",
+      "Reduces damage taken by [[20%]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Spring of Life",
+    "d": [
+      "Gerda increases healing received from the allied hot spring by [[120%]]. Each time an ally is healed by it, the cooldown of Mighty Smash is reduced by [[0.2]]s.",
+      "Increases the healing received from the allied hot spring by [[150%]].",
+      "When an ally enters an allied hot spring for the first time, they become [[unaffected]] for [[5]]s.",
+      "Increases the healing received from the allied hot spring by [[180%]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "When Gerda stomps the ground during Spring Therapy, she stuns enemies for [[2]]s instead of interrupting them.",
+      "When an ally enters Gerda's hot spring area for the first time, they gain a shield that can absorb [[300%]]<ATK> damage. For every [[3]] instances of healing the ally receives from the hot spring, they gain an extra shield that absorbs [[150%]]<ATK> damage. The total shield value from this skill cannot exceed [[450%]]<ATK> per ally at once."
+    ]
+  }
+}

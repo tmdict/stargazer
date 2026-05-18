@@ -1,0 +1,47 @@
+{
+  "ultimate": {
+    "n": "Floral Splendor",
+    "d": [
+      "Parisa marks a non-marked enemy with a flower until the battle ends, dealing [[480%]]<ATK> damage to all floral-marked targets and other enemies within [[1]] tiles of them. If the skill hits the targets multiple times within [[2]]s, the subsequent damage dealt by targets is reduced by [[20%]].",
+      "Increases damage to [[490%]]<ATK>.",
+      "Each defeated enemy who carries Floral Mark grants Parisa [[60]] Energy recovery per second in [[5]]s.",
+      "Increases damage to [[510%]]<ATK>.",
+      "Increases damage to [[520%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Floral Inspiration",
+    "d": [
+      "Parisa increases ATK SPD by [[22]] and normal attack damage by [[22%]] for [[10]]s for herself and [[1]] nearest ally.",
+      "Increases ATK SPD by [[25]], and the normal attack damage by [[25%]].",
+      "Increases ATK SPD by [[28]], and the normal attack damage by [[28%]].",
+      "Increases ATK SPD by [[30]], and the normal attack damage by [[30%]]."
+    ]
+  },
+  "skill3": {
+    "n": "Flower Power",
+    "d": [
+      "After every [[3]] normal attacks, Parisa launches a bouquet of flowers that gradually expands toward her target, dealing [[200%]]<ATK> damage to all enemies along the path. Each enemy hit by flowers restores herself an extra [[70]] Energy. Every bouquet of flowers can recover her Energy up to [[3]] times.",
+      "The flowers deal [[205%]]<ATK> damage.",
+      "The flowers deal [[210%]]<ATK> damage.",
+      "The flowers deal [[215%]]<ATK> damage."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases ATK by [[12%]] during battle.",
+      "Increases ATK by [[16%]] during battle.",
+      "Increases ATK by [[20%]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Falling Blossom",
+    "d": [
+      "Parisa marks the nearest enemy in a [[symmetrical]] position with a flower when a battle starts.",
+      "Normal attacks hit [[1]] more target after inflicting [[4]] marks. ",
+      "Normal attacks hit [[1]] more target after inflicting [[3]] marks. ",
+      "Normal attacks hit [[1]] more target after inflicting [[2]] marks. "
+    ]
+  },
+  "awakening": { "d": ["Reduces the required normal attacks to trigger Flower Power by [[-1]]."] }
+}

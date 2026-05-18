@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Dolly Defender",
+    "d": [
+      "Passive. Daimon's guardian spirit, Stitchy, fights alongside him in battle, automatically attacking the enemy closest to Daimon for [[90%]]<ATK> damage. Stitchy cannot be targeted or attacked, and is defeated when Daimon is defeated.\nActive. Daimon commands Stitchy to unleash an X-shaped slash at the area with the most enemies, dealing true damage equal to [[20%]] of each target's max HP. This damage cannot exceed [[500%]]<ATK>. Daimon and his two [[weakest]] allies then gain a shield equal to [[60%]] of the damage dealt, lasting for [[8]]s.",
+      "Increases the X-shaped slash damage to [[22%]] of each target's max HP.",
+      "Increases the X-shaped slash damage to [[23%]] of each target's max HP.",
+      "Increases the X-shaped slash damage to [[24%]] of each target's max HP.",
+      "Increases the X-shaped slash damage to [[25%]] of each target's max HP."
+    ]
+  },
+  "skill2": {
+    "n": "Playtime Plunder",
+    "d": [
+      "Passive. Every [[8]]s, Stitchy unleashes a powerful attack that deals true damage to the target and adjacent enemies, equal to [[20%]] of the target's max HP. The true damage cannot exceed [[400%]]<ATK>. [[100%]] of the damage dealt is then converted into a shield for Daimon that lasts for [[8]]s.\nActive. Daimon drains [[17%]] of an enemy's max HP and converts it into a shield for himself, lasting [[8]]s. The shield value cannot exceed [[250%]]<ATK>.",
+      "Increases the shield conversion rate when Daimon actively casts the skill to [[18%]].",
+      "Increases the shield conversion rate when Daimon actively casts the skill to [[19%]].",
+      "Increases the shield conversion rate when Daimon actively casts the skill to [[20%]]."
+    ]
+  },
+  "skill3": {
+    "n": "Buddy Barrier",
+    "d": [
+      "Daimon forms a bond with the ally placed behind him during battle preparation. Whenever Daimon gains a shield, the bonded ally also receives [[24%]] of that shield for the same duration. While shielded by Daimon, the bonded ally gains an extra [[15]] Life Drain and [[25%]] ATK. If the bonded ally is defeated, Daimon will immediately bond with the [[weakest]] ally.",
+      "The bonded ally receives [[26%]] of the shield that Daimon gains.",
+      "The bonded ally receives [[28%]] of the shield that Daimon gains.",
+      "The bonded ally receives [[30%]] of the shield that Daimon gains."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Daimon reduces damage taken by [[10%]] during the battle. While shielded, he further reduces damage taken by an extra [[5%]].",
+      "Daimon reduces damage taken by [[14%]] during the battle. While shielded, he further reduces damage taken by an extra [[6%]].",
+      "Daimon reduces damage taken by [[18%]] during the battle. While shielded, he further reduces damage taken by an extra [[7%]]."
+    ]
+  },
+  "ex": {
+    "n": "Guardian Growl",
+    "d": [
+      "Whenever Daimon's cumulative damage taken and shield value loss combined exceed [[70%]] of his max HP, Stitchy returns to him and lets out a terrifying roar, frightening enemies within [[3]] tiles. The enemy who dealt the most damage to Daimon will also be [[frightened]]. The effect lasts for [[2]]s and triggers once every [[10]]s.",
+      "Stitchy returns whenever Daimon's cumulative damage taken and shield value loss combined exceed [[50%]] of his max HP.",
+      "Stitchy's roar unleashes deafening shockwaves, affecting enemies within [[3]] tiles and the enemy who dealt the most damage to Daimon. The roar deals damage equal to [[5%]] of each enemy's max HP every [[0.5]]s for [[2]]s. This damage cannot exceed [[100%]]<ATK>. Stitchy then converts [[100%]] of the damage dealt into a shield for Daimon, which lasts for [[8]]s.",
+      "Increases the damage of Stitchy's roar to [[6%]] of each enemy's max HP."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "When an allied hero's shield expires, converts [[50%]] of the remaining shield value into healing for that hero."
+    ]
+  }
+}

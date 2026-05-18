@@ -5,15 +5,19 @@ import '@/styles/modal.css'
 
 interface Props {
   maxWidth?: string
+  // Anchor to viewport top instead of centering. Use when content height can
+  // change at runtime so the top edge stays put.
+  topAnchor?: boolean
 }
 
 withDefaults(defineProps<Props>(), {
   maxWidth: '800px',
+  topAnchor: false,
 })
 </script>
 
 <template>
-  <div class="overlay">
+  <div class="overlay" :class="{ 'is-top-anchored': topAnchor }">
     <!-- Backdrop link to home -->
     <a href="/" class="backdrop-link" aria-label="Stargazer"></a>
 

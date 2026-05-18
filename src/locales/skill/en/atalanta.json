@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Wild Sniper",
+    "d": [
+      "Atalanta selects a tile and dashes there, shooting a powerful penetrative bolt in the target direction, dealing [[280%]]<ATK> damage to all enemies along a 1-tile wide path and stunning them for [[2]]s.",
+      "Increases damage to [[300%]]<ATK>.",
+      "When Atalanta hits an enemy with this skill, she triggers the explosion of Scorching Gift at the target's location, dealing [[75%]] of the skill's damage. Scorching Gift can only deal damage [[3]] times to an enemy in this way each time Atalanta casts her Ultimate.",
+      "Increases damage to [[320%]]<ATK>.",
+      "Increases damage to [[340%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Sweet Encounter",
+    "d": [
+      "Atalanta swings her whip at an enemy, dealing [[130%]]<ATK> damage, knocking them back [[2]] tiles, and immobilizing them for [[3]]s. If there is another enemy behind the target within range, Atalanta will instead knock the target towards that enemy, dealing damage and immobilizing both of them.",
+      "If Atalanta knocks the target into another enemy, the two enemies take damage from each other. The damage received is equal to [[150%]] of the other side's ATK, up to [[300%]] of Atalanta's ATK.",
+      "Increases damage to [[140%]]<ATK>.",
+      "Increases damage to [[150%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Scorching Gift",
+    "d": [
+      "Atalanta shoots an explosive bolt that explodes upon hitting an enemy, dealing [[190%]]<ATK> damage to the target and adjacent enemies.",
+      "Increases damage to [[200%]]<ATK>.",
+      "The explosion range is increased to 2 tiles. However, enemies in the outermost circle of the explosion only take [[60%]] of the original damage.",
+      "Increases damage to [[210%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Atalanta increases her Haste by [[12]] during battle. She gains an extra [[2]] Haste after dealing damage to 3 different enemies within 3s.",
+      "Atalanta increases her Haste by [[15]] during battle. She gains an extra [[4]] Haste after dealing damage to 3 different enemies within 3s.",
+      "Atalanta increases her Haste by [[18]] during battle. She gains an extra [[6]] Haste after dealing damage to 3 different enemies within 3s."
+    ]
+  },
+  "ex": {
+    "n": "Sleight of Hand",
+    "d": [
+      "Sweet Encounter can be cast [[2]] times in a row when a battle starts, prioritizing different targets. Passive. The damage dealt by Sweet Encounter is increased by [[6%]].",
+      "The bonus damage ratio of Sweet Encounter is increased to [[8%]].",
+      "Atalanta steals [[10%]] ATK and [[10%]] Phys DEF from the target every time she hits her main target with Sweet Encounter. This effect cannot be stacked on the same target, and the stolen stats will be returned in [[8]]s.",
+      "The bonus damage ratio of Sweet Encounter is increased to [[10%]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Atalanta recovers [[10%]] of max HP every time an enemy is directly hit by Wild Sniper.",
+      "While casting Sweet Encounter, makes Atalanta [[unaffected]] and increases her Haste by [[60]]. If Sweet Encounter knocks the target enemy into another, reduces both enemies' Phys DEF by [[40%]] for [[8]]s."
+    ]
+  }
+}

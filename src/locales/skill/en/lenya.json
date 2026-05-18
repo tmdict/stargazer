@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Wild Duel",
+    "d": [
+      "Lenya targets the enemy who has dealt the highest cumulative damage and dashes at them, delivering a flying kick that deals [[200%]]<ATK> damage and knocks them back in a straight line toward an open area. She then follows up with a second flying kick, dealing [[200%]]<ATK> damage, before initiating a duel with that enemy. The duel lasts for [[12]]s, during which both Lenya and the enemy prioritize attacking each other. Lenya's flying kick can stun the enemy for [[2]] seconds, and she is [[unaffected]] while performing the kicks.",
+      "Lenya increases her flying kick's damage to [[210%]]<ATK>.",
+      "Lenya increases her flying kick's damage to [[220%]]<ATK>.",
+      "Lenya increases her flying kick's damage to [[230%]]<ATK>.",
+      "Lenya increases her flying kick's damage to [[240%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Tornado Strike",
+    "d": [
+      "Passive. Lenya blocks a normal attack from her current target if the target is within 1 tile. She then retaliates with a kick that deals [[260%]]<ATK> damage and stuns the target for [[2]]s. The effect can be triggered once every [[6]]s and makes Lenya [[unaffected]] while active.\nActive. Lenya performs a tornado kick, dealing [[110%]]<ATK> damage 3 times to surrounding enemies.",
+      "Increases the damage dealt to [[120%]]<ATK>.",
+      "Increases the damage dealt to [[125%]]<ATK>.",
+      "Increases the damage dealt to [[130%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Flurry Kicks",
+    "d": [
+      "Lenya increases her Crit by [[15]]. When dealing critical damage with her normal attacks, she immediately follows up with a power kick that deals [[200%]]<ATK> damage and stuns the enemy for [[1]]s .",
+      "Lenya increases her power kick's damage to [[210%]]<ATK>.",
+      "Lenya increases her power kick's damage to [[230%]]<ATK>.",
+      "Lenya increases her power kick's damage to [[240%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Haste by [[12]] during battle.",
+      "Increases Haste by [[16]] during battle.",
+      "Increases Haste by [[20]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Winning Resolve",
+    "d": [
+      "Lenya unlocks her full potential once a duel begins, increasing her Crit DMG Boost by [[55]] and ATK by [[15%]] during the duel. While at full potential, her Flurry Kicks skill delivers a super kick instead of a power kick, dealing [[70%]]<ATK> damage 8 times and stunning the enemy for [[2]]s.",
+      "Increases Crit DMG Boost by [[60]] and ATK by [[18%]].",
+      "If Lenya deals more damage than her target by the end of the duel, she is considered the winner. Winning the duel increases the duration her full potential effects by [[8]]s.",
+      "Increases Crit DMG Boost by [[65]] and ATK by [[20%]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Lenya reduces damage taken from enemies other than her target by [[35%]].",
+      "When a battle starts, Lenya gains a shield that absorbs [[800%]]<ATK> damage. While the shield is active, she gains [[25]] Crit and [[40]] Crit DMG Boost. The shield value increases by [[800%]]<ATK> whenever Lenya casts her Ultimate. Additionally, each time Lenya wins a duel, she recovers [[300]] Energy."
+    ]
+  }
+}

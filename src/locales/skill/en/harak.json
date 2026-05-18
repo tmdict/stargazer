@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Vicious Bite",
+    "d": [
+      "Harak launches a vicious assault, striking an enemy [[10]] times, each dealing [[60%]]<ATK> damage. Each strike also deals extra damage equal to [[6%]] of the enemy's lost HP, up to [[120%]] of Harak's own ATK. The final strike deals [[200%]]<ATK> damage and knocks the enemy down. While casting this skill, Harak remains [[unaffected]] and prevents the enemy from recovering HP for [[6]]s, causing them to lose [[40%]]<ATK> HP per second.",
+      "Increases the damage of each successive strike to [[70%]]<ATK>, and the final strike to [[210%]]<ATK>.",
+      "Increases the damage of each successive strike to [[80%]]<ATK>, and the final strike to [[220%]]<ATK>.",
+      "Increases the damage of each successive strike to [[90%]]<ATK>, and the final strike to [[230%]]<ATK>.",
+      "Increases the damage of each successive strike to [[100%]]<ATK>, and the final strike to [[240%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Tidal Assault",
+    "d": [
+      "Harak dives beneath the surface, swiftly reaching the [[weakest]] enemy, dealing [[220%]]<ATK> damage and knocking them 1 tile back. While underwater, Harak is [[invincible]], and each assist or defeat resets Tidal Assault's cooldown.",
+      "Increases the damage dealt to [[230%]]<ATK>.",
+      "Increases the damage dealt to [[240%]]<ATK>.",
+      "Increases the damage dealt to [[250%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Flesh Feast",
+    "d": [
+      "Passive. Harak enters feast mode when a battle starts, increasing Crit by [[35]] and Haste by [[50]] for [[12]]s. Assisting or defeating a unit resets the duration of feast mode.\nUpon exiting feast mode, Harak loses control and indiscriminately devours the [[weakest]] non-summoned unit, whether ally or enemy, instantly defeating them. During this time, he is [[unaffected]]. Harak cannot devour an enemy whose HP exceeds [[200%]]<ATK> of his own ATK. In Boss fights, if attempting to devour an ally, Harak prioritizes devouring the unit positioned closest to the front at the start of the battle.",
+      "Increases Crit granted by feast mode to [[40]].",
+      "Increases Crit granted by feast mode to [[45]].",
+      "Increases Crit granted by feast mode to [[50]]."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Harak increases Life Drain by [[8]] during battle. Each time he assists or defeats a unit, he gains an extra [[1]] Life Drain, up to a maximum of [[4]].",
+      "Harak increases Life Drain by [[10]] during battle. Each time he assists or defeats a unit, he gains an extra [[2]] Life Drain, up to a maximum of [[8]].",
+      "Harak increases Life Drain by [[12]] during battle. Each time he assists or defeats a unit, he gains an extra [[3]] Life Drain, up to a maximum of [[12]]."
+    ]
+  },
+  "ex": {
+    "n": "Ravenous Digestion",
+    "d": [
+      "Upon assisting or defeating a unit, Harak gains [[60%]] of their ATK and [[60%]] of their max HP, up to [[220%]] of his base ATK and [[220%]] of his base max HP.",
+      "Gains up to [[240%]] of his base ATK and [[240%]] of his base max HP.",
+      "Gains up to [[260%]] of his base ATK and [[260%]] of his base max HP.",
+      "Recovers HP when assisting or defeating a unit, with the recovery amount equal to [[50%]] of the defeated unit's max HP. "
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Upon assisting or defeating [[2]] units, Harak recovers [[700]] Energy from casting Vicious Bite."
+    ]
+  }
+}

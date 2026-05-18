@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Wrath of the Wilds",
+    "d": [
+      "Passive. When a battle starts, Tilaya loses [[70%]] HP and gains Vine Ward, a shield that blocks up to [[120%]]<HP> damage. Vine Ward automatically recovers [[10%]]<HP> shield value every second and makes Tilaya [[unaffected]] while active. When Vine Ward breaks, it enters a [[3]]-second cooldown, after which its shield value is restored to [[45%]]<HP>.\nActive. Tilaya swings her greatsword [[8]] times, hitting enemies within a 2-tile arc in front. Each swing deals [[60%]]<ATK> damage twice. While casting this skill, Tilaya reduces her damage taken by [[70%]]; every time she takes [[4]] hits, she performs an additional swing, up to [[12]] swings total. If no enemies are within range, Tilaya charges toward the nearest enemy and continues casting this skill. Tilaya's Haste stat does not affect this skill when used actively.",
+      "Increases each swing hit's damage to [[65%]]<ATK> when this skill is used actively.",
+      "Increases each swing hit's damage to [[70%]]<ATK> when this skill is used actively.",
+      "Increases each swing hit's damage to [[75%]]<ATK> when this skill is used actively.",
+      "Increases each swing hit's damage to [[80%]]<ATK> when this skill is used actively."
+    ]
+  },
+  "skill2": {
+    "n": "Mighty Slash",
+    "d": [
+      "Tilaya charges briefly and launches a powerful strike on her target, dealing [[220%]]<ATK> damage. If Vine Ward is active, she restores its shield value by [[160%]] of the damage dealt.",
+      "Increases the damage dealt to [[230%]]<ATK>.",
+      "Increases the damage dealt to [[240%]]<ATK>.",
+      "Increases the damage dealt to [[250%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Wildwood Resonance",
+    "d": [
+      "Tilaya's greatsword resonates with nearby plants, causing her attacks to deal extra damage equal to [[6%]] of her current shield value for [[10]]s. This extra damage cannot exceed [[200%]]<ATK>.\nWhen Tilaya casts this skill, the duration of the resonance is extended by [[3.5]]s for each ally within [[2]] tiles.",
+      "Increases the extra damage to [[7%]] of Tilaya's current shield value.",
+      "Increases the extra damage to [[8%]] of Tilaya's current shield value.",
+      "Increases the extra damage to [[9%]] of Tilaya's current shield value."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Vitality by [[11]] during battle.",
+      "Increases Vitality by [[15]] during battle.",
+      "Increases Vitality by [[19]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Verdant Growth",
+    "d": [
+      "The first time Vine Ward breaks, it instantly recovers [[120%]]<HP> shield value without triggering its cooldown. For subsequent Vine Ward breaks, the shield value recovered after cooldown is increased to [[60%]]<HP>.",
+      "Increases the shield value recovered after Vine Ward's cooldown to [[70%]]<HP>.",
+      "After Vine Ward remains active for [[15]]s, its bond with nature deepens. While active, it increases the max HP by [[40%]] and Phys & Magic DEF by [[60%]] for all allies within 2 tiles. The max HP gained from this effect cannot exceed [[80%]] of Tilaya's initial max HP.",
+      "Increases the shield value recovered after Vine Ward's cooldown to [[80%]]<HP>."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Increases Vine Ward's shield value recovery to [[15%]]<HP> per second while Tilaya casts her Ultimate."
+    ]
+  }
+}

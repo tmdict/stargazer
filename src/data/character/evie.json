@@ -8,5 +8,10 @@
   "energy": [200],
   "range": 20,
   "season": 6,
-  "tags": ["initial-energy", "temp-buff", "temp-buff-instant", "ult-negation"]
+  "tags": {
+    "initial-energy": [],
+    "temp-buff": [{ "skill3": 1 }, { "awakening": 1 }],
+    "temp-buff-instant": [{ "skill3": 1 }, { "awakening": 1 }],
+    "ult-negation": [{ "ultimate": 1 }]
+  }
 }

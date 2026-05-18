@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Rend Rupture",
+    "d": [
+      "[[4]]s into a battle, Nazrik marks the enemy who has taken the most damage as his Prey and prioritizes them as the target for all his skills.\nWhen casting this skill, Nazrik silently prays before hurling a spear with a guaranteed critical hit, dealing [[600%]]<ATK> true damage to an enemy. After a short delay, he triggers all Rend stacks on that enemy, dealing [[35%]]<ATK> extra damage per stack.",
+      "Increases the damage of this skill's spear hurl to [[630%]]<ATK>.",
+      "Increases the damage of this skill's spear hurl to [[660%]]<ATK>.",
+      "Increases the damage of this skill's spear hurl to [[690%]]<ATK>.",
+      "Increases the damage of this skill's spear hurl to [[720%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Savage Wound",
+    "d": [
+      "Whenever Nazrik lands a critical hit on an enemy with a spear throw from his normal attacks or skills, he deals extra damage equal to [[6.5%]] of the enemy's initial max HP. The extra damage cannot exceed [[180%]]<ATK>.\nEach hit also reduces the enemy's max HP by the same amount, up to [[40%]]. Against bosses, the max HP reduction does not apply; instead, the extra damage is converted into true damage.\nAdditionally, each hit inflicts [[5]] stacks of Rend on the enemy, up to [[30]] stacks. This effect cannot be dispelled.\nWhen an enemy affected by Rend casts their Ultimate, they take [[35%]]<ATK> damage for each Rend stack they currently have.",
+      "Increases the extra damage dealt to [[7%]] of the enemy's max HP.",
+      "Increases the extra damage dealt to [[7.5%]] of the enemy's max HP.",
+      "Increases the extra damage dealt to [[8%]] of the enemy's max HP."
+    ]
+  },
+  "skill3": {
+    "n": "Staggering Strike",
+    "d": [
+      "Nazrik hurls a spear at the enemy with the highest total healing done, dealing [[300%]]<ATK> damage, stunning them for [[3]]s, and reducing their Healing by [[90]] for [[15]]s.",
+      "Increases damage to [[330%]]<ATK>.",
+      "Increases damage to [[360%]]<ATK>.",
+      "Increases damage to [[390%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Nazrik increases his Crit by [[24]] during battle. After inflicting a total of 15 Rend stacks on enemies, he gains an extra [[12]] Crit.",
+      "Nazrik increases his Crit by [[30]] during battle. After inflicting a total of 15 Rend stacks on enemies, he gains an extra [[15]] Crit.",
+      "Nazrik increases his Crit by [[36]] during battle. After inflicting a total of 15 Rend stacks on enemies, he gains an extra [[18]] Crit."
+    ]
+  },
+  "ex": {
+    "n": "Pack Tactics",
+    "d": [
+      "Nazrik reduces his Prey's Crit Resist by [[16]]. When allied units land a critical hit on his Prey, they inflict 1 stack of Rend. Each ally can apply only 1 Rend stack per second this way.",
+      "Reduces the Prey's Crit Resist by [[24]].",
+      "When the Prey has at least [[15]] Rend stacks, reduces their Vitality by [[50]], and increases their damage taken by [[12%]].",
+      "Reduces the Prey's Crit Resist by [[32]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Each time Nazrik lands a critical hit on an enemy, the Crit DMG Boost of that hit increases by [[0.8]] for every 1% of Nazrik's crit rate."
+    ]
+  }
+}

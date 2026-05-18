@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Mutual Reflection",
+    "d": [
+      "If non-summoned allies outnumber non-summoned enemies, Reinier selects an enemy, dealing [[230%]]<ATK> damage, and teleporting to another dimension with the target for [[10]]s.\nOtherwise, only the target will be teleported to another dimension while Reinier remains on the battlefield.\nIf the target is under [[steadfast]] or [[unaffected]], or if the target is the only non-summoned enemy alive, Reinier will deal [[450%]]<ATK> damage instead of entering another dimension. This skill prioritizes the [[healthiest]] non-summoned enemy.",
+      "The Mutual Reflection works on an extra enemy if non-summoned enemies outnumber allies by at least 2. Reduces the duration of transferring this enemy to another dimension to [[7]]s.",
+      "Increases the damage to [[250%]]<ATK>. The damage is increased to [[460%]]<ATK> if the target is [[steadfast]], [[unaffected]], or the only non-summoned unit alive.",
+      "Increases the damage to [[260%]]<ATK>. The damage is increased to [[480%]]<ATK> if the target is [[steadfast]], [[unaffected]], or the only non-summoned unit alive.",
+      "Increases the damage to [[270%]]<ATK>. The damage is increased to [[500%]]<ATK> if the target is [[steadfast]], [[unaffected]], or the only non-summoned unit alive."
+    ]
+  },
+  "skill2": {
+    "n": "Dynamic Balance",
+    "d": [
+      "When a battle starts, Reinier switches an adjacent ally's position with an enemy if they're in [[symmetrical]] positions. Whenever the enemy takes damage, the ally restores HP equal to [[45%]] of the enemy's taken damage till a battle ends. The total HP recovery amount by this means is no more than [[1000%]]<ATK> in a consecutive [[8]]s.",
+      "Restores allied hero's HP equal to [[46%]] of damage dealt.",
+      "Restores allied hero's HP equal to [[48%]] of damage dealt.",
+      "Restores allied hero's HP equal to [[50%]] of damage dealt."
+    ]
+  },
+  "skill3": {
+    "n": "Golden Ratio",
+    "d": [
+      "Reinier launches a mighty strike against the [[healthiest]] enemy through the portal, [[interrupting]] them and dealing [[45%]]<ATK> damage 8 times. Afterward, Reinier punches and knocks them into the air, dealing [[120%]]<ATK> damage. If the enemy's HP ratio is above [[61.8%]], then each hit attaches extra damage equal to [[1%]] of their current HP, up to [[20%]] of ATK.",
+      "Reinier senses satisfaction when each enemy's HP ratio drops below [[61.8%]] for the first time, recovering [[200%]]<ATK> HP and [[80]] Energy.",
+      "The damage of each strike is increased to [[1.2%]] of the enemy's current HP.",
+      "Reinier shares satisfaction with allies when each enemy's HP ratio drops below [[61.8%]] for the first time, granting all allies [[120%]]<ATK> HP and [[50]] Energy."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Reinier's Dynamic Balance increases the target's ATK by [[7%]] when cast on an ally or reduces the target ATK by [[7%]] when cast on an enemy.",
+      "Reinier's Dynamic Balance increases the target's ATK by [[10%]] when cast on an ally or reduces the target ATK by [[10%]] when cast on an enemy.",
+      "Reinier's Dynamic Balance increases the target's ATK by [[12%]] when cast on an ally or reduces the target ATK by [[12%]] when cast on an enemy."
+    ]
+  },
+  "ex": {
+    "n": "Tuned Art",
+    "d": [
+      "Reinier deals [[200%]]<ATK> damage to the enemy and knocks them down when casting Dynamic Balance, increasing their damage taken by [[25%]] till the battle ends.",
+      "Increases damage dealt to the enemy to [[250%]]<ATK>.",
+      "Reduces the position-switched ally's damage taken by [[25%]] till the battle ends.",
+      "Increases damage dealt to the enemy to [[300%]]<ATK>."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Reinier increases the allied hero's ATK by [[4%]] till the battle ends if they're in a [[symmetrical]] position with an enemy hero."
+    ]
+  }
+}

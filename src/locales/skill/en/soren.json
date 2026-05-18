@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Whirlwind Swing",
+    "d": [
+      "Soren selects a tile and rushes there to swing his weapon, dealing [[250%]]<ATK> damage to adjacent enemies and knocking them back [[1]] tile. If the targets collide with allies, enemies, terrain, or battlefield borders along their path, they take [[400%]]<ATK> damage and are stunned for [[2.5]]s. This skill prioritizes targeting the tile that will cause the most enemies to collide when cast automatically.",
+      "Soren deals [[400%]]<ATK> damage and stuns another enemy for [[2.5]]s if the target knocked back by this skill collides with them.",
+      "Increases the collision damage to [[410%]]<ATK>.",
+      "Increases the collision damage to [[420%]]<ATK>.",
+      "Increases the collision damage to [[430%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Repel Sweep",
+    "d": [
+      "Soren swings his weapon to deal [[180%]]<ATK> damage to an enemy in melee range, knocking them back [[1]] tile. If the target collides with allies, enemies, terrain, or battlefield borders along their path, they take [[250%]]<ATK> damage and are stunned for [[1.5]]s. Soren repositions himself to ensure maximum collisions between targets when casting this skill.",
+      "Increases base damage to [[210%]]<ATK>.",
+      "Increases the collision damage to [[270%]]<ATK>.",
+      "Extends the stun duration upon collision to [[2]]s."
+    ]
+  },
+  "skill3": {
+    "n": "Deflecting Swing",
+    "d": [
+      "Soren reduces the damage taken from a single attack that exceeds [[10%]] of his max HP by [[70%]], resetting the cooldown of Repel Sweep. This effect can be triggered once every [[7]]s.",
+      "Increases the DMG Reduction ratio to [[80%]].",
+      "Increases the DMG Reduction ratio to [[90%]].",
+      "Reduces the skill cooldown to [[6]]s."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Haste by [[12]] during battle.",
+      "Increases Haste by [[16]] during battle.",
+      "Increases Haste by [[20]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Dusk Rejuvenation",
+    "d": [
+      "Soren gains [[60]] Haste and recovers [[4%]] of max HP and [[40]] Energy per second for [[12]]s when his HP ratio is below [[60%]]. This effect can only be triggered once per battle.",
+      "Soren removes all active control effects when this skill is triggered. It can be triggered repeatedly in a single battle, with a cooldown of [[25]]s.",
+      "Increases the bonus Haste to [[80]] while this skill is active.",
+      "Increases the HP recovery to [[5%]] of the max HP per second while this skill is active."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "After Deflecting Swing is triggered, the next Repel Sweep knocks enemies back [[2]] tiles and deals bonus damage equal to [[50%]] of the damage blocked.",
+      "If an enemy hit by Whirlwind Swing or Repel Sweep collides with any unit, terrain, or battlefield boundaries while being knocked back, restores [[80]] Energy to Soren. This also grants Soren a shield equal to [[100%]]<ATK> for the rest of the battle and refreshes the cooldown of Deflecting Swing. This effect can be triggered once per skill cast."
+    ]
+  }
+}

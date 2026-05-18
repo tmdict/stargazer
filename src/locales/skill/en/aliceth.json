@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Radiant Rain",
+    "d": [
+      "Aliceth flies into the air and fires [[6]] volleys of 3 arrows in rapid succession at an enemy. Each arrow deals [[100%]]<ATK> damage, plus extra damage equal to [[5%]] of the enemy's lost HP. The extra damage cannot exceed [[50%]]<ATK>. Aliceth remains invincible while airborne.",
+      "Increases the base damage of each arrow to [[105%]]<ATK>.",
+      "Increases the base damage of each arrow to [[110%]]<ATK>.",
+      "Increases the base damage of each arrow to [[115%]]<ATK>.",
+      "Increases the base damage of each arrow to [[120%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Guiding Light",
+    "d": [
+      "Passive. Aliceth grants an ally Brightfeather, prioritizing the nearest ally in her row. After that ally deals ranged damage [[3]] times, they unleash a feather for an additional strike, dealing [[120%]]<ATK> damage. This extra strike can trigger once every [[0.5]]s.\nIf the ally granted Brightfeather is a ranged unit, their normal attack range is increased by [[5]] tiles. The ally loses Brightfeather if they are defeated.\nActive. Aliceth shoots a charged arrow at an enemy, dealing [[380%]]<ATK> damage, knocking them back [[6]] tiles, and stunning them for [[2.5]]s.",
+      "Increases the damage of the charged arrow to [[420%]]<ATK>.",
+      "Increases the damage of the charged arrow to [[460%]]<ATK>.",
+      "Increases the damage of the charged arrow to [[500%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Sealed Fate",
+    "d": [
+      "When a battle starts, Aliceth places her Mark of Judgment on the farthest enemy. She and allies with Brightfeather both prioritize attacking the marked enemy, and their attacks against that enemy gain an extra [[35]] Penetration.\nPassive. After Aliceth locks on the same enemy for [[6]]s or casts her Ultimate, the Mark of Judgment is enhanced. The enhanced mark allows her to instantly defeat the marked enemy if her attack reduces the enemy's HP below [[300%]]<ATK>. If the marked enemy is defeated or becomes untargetable, Aliceth shifts the mark to a new enemy, resetting the mark's duration counter.",
+      "Increases the extra Penetration applied to Aliceth and her ally's attacks against the marked enemy by [[40]].",
+      "Increases the extra Penetration applied to Aliceth and her ally's attacks against the marked enemy by [[45]].",
+      "Increases the extra Penetration applied to Aliceth and her ally's attacks against the marked enemy by [[50]]."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Aliceth increases her ATK by [[9%]] during battle. After the first enemy affected by her Mark of Judgment is defeated or becomes untargetable, Aliceth and allies with Brightfeather gain an extra [[6%]] ATK.",
+      "Aliceth increases her ATK by [[13%]] during battle. After the first enemy affected by her Mark of Judgment is defeated or becomes untargetable, Aliceth and allies with Brightfeather gain an extra [[8%]] ATK.",
+      "Aliceth increases her ATK by [[16%]] during battle. After the first enemy affected by her Mark of Judgment is defeated or becomes untargetable, Aliceth and allies with Brightfeather gain an extra [[10%]] ATK."
+    ]
+  },
+  "ex": {
+    "n": "Aegis Wings",
+    "d": [
+      "The first time Aliceth or an ally with Brightfeather takes a [[fatal blow]], Aliceth prevents their defeat. The affected hero instead becomes [[invincible]] for [[1.5]]s and recovers [[30%]]<HP>. Afterward, Aliceth or the ally is moved to a safe spot within [[4]] tiles. But allies who are [[unaffected]] or [[steadfast]] will not be moved. This skill can trigger once per hero.",
+      "The affected hero recovers [[35%]]<HP>.",
+      "The affected hero recovers [[40%]]<HP>.",
+      "For every [[4]] feathers unleashed by an ally with Brightfeather, a burst of light erupts, dealing [[330%]]<ATK> damage to adjacent enemies and [[blinding]] them for [[3]]s. Blinded enemies lose [[40%]]<ATK> HP per second."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "For every [[4]] feathers unleashed by an ally with Brightfeather, Aliceth's Radiant Rain is enhanced to fire [[1]] extra arrow volley for the rest of the battle. Through this, she can fire up to [[6]] extra arrow volleys in total."
+    ]
+  }
+}

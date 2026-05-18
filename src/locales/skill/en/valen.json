@@ -1,0 +1,47 @@
+{
+  "ultimate": {
+    "n": "Thunder Swordwork",
+    "d": [
+      "Valen selects a tile and launches [[7]] Swift Strikes at the selected tile and its adjacent tiles. Each strike deals [[70%]]<ATK> damage to all targets. Valen is [[invincible]] while striking. After striking, Valen gains Invigoration for [[12]]s, increasing his ATK by [[20%]].",
+      "Increases damage to [[75%]]<ATK>.",
+      "Increases damage to [[80%]]<ATK>.",
+      "Increases damage to [[85%]]<ATK>.",
+      "Increases damage to [[90%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Unseen Blade",
+    "d": [
+      "Valen strikes the target 3 times. Each strike deals [[100%]]<ATK> damage. During Invigoration, Valen generates forked lightning with each strike, dealing equal damage to the target and up to 2 nearby enemies within 2 tiles.",
+      "Increases damage to [[105%]]<ATK>.",
+      "Increases damage to [[110%]]<ATK>.",
+      "Increases damage to [[115%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Fury Thunder Strike",
+    "d": [
+      "Valen casts his lightning strike only when he gains Invigoration, dealing [[190%]]<ATK> damage to all enemies within 2 tiles.",
+      "Increases damage to [[200%]]<ATK>.",
+      "Increases damage to [[210%]]<ATK>.",
+      "Increases damage to [[220%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases ATK by [[12%]] during battle.",
+      "Increases ATK by [[16%]] during battle.",
+      "Increases ATK by [[20%]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Eternal Thunder",
+    "d": [
+      "Valen gains permanent Invigoration. When casting Thunder Swordwork during Invigoration, he permanently gains [[10%]] ATK bonus, up to [[10]] stacks.",
+      "Increases each stack of ATK bonus to [[12%]].",
+      "Triggers a lightning strike during a normal attack after gaining Invigoration, dealing equal amount of normal attack damage to an enemy within 2 tiles.",
+      "Increases each stack of ATK bonus to [[13%]]."
+    ]
+  },
+  "awakening": { "d": ["Valen inflicts a [[3]]s stun with his Fury Thunder Strike."] }
+}

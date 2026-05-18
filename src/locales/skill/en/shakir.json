@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Ravaging Claws",
+    "d": [
+      "Shakir morphs into a wolf and smashes a tile, knocking the enemy there into the air, and dealing [[190%]]<ATK> damage to enemies within 2 tiles, during which he is [[unaffected]]. Shakir consumes [[60]] Energy per second to maintain his wolf shape. Shakir generates a Lupine Aura in a range of 2-tile while in the wolf shape, dealing damage to all enemies within the frontal radius of the arc with normal attacks. Allies within the range of Lupine Aura reduce [[20%]] taken damage and increase [[10]] Haste.",
+      "Reduces the allies' damage taken within Lupine Aura by [[20%]] and increases their Haste by [[15]].",
+      "Reduces the allies' damage taken within Lupine Aura by [[25%]] and increases their Haste by [[15]].",
+      "Reduces the allies' damage taken within Lupine Aura by [[25%]] and increases their Haste by [[20]].",
+      "Reduces the allies' damage taken within Lupine Aura by [[25%]] and increases their Haste by [[25]]."
+    ]
+  },
+  "skill2": {
+    "n": "Savage Cleave",
+    "d": [
+      "Shakir launches 3 consecutive strikes at an enemy, dealing [[90%]]<ATK> damage with his first 2 attacks and [[160%]] damage with his 3rd attack. While in Wolf Form, this skill damages enemies within a frontal 1-tile arc.",
+      "The 3rd attack deals [[180%]] damage.",
+      "The 3rd attack deals [[200%]] damage.",
+      "The 3rd attack deals [[220%]] damage."
+    ]
+  },
+  "skill3": {
+    "n": "Wolf's Will",
+    "d": [
+      "Passive. Shakir gains [[25]] Ranged DEF. In Wolf Form, he is [[unaffected]] and gains [[30]] Life Drain. Each non-summoned ally within Lupine Aura will also grants him [[5%]] ATK.",
+      "Increases passive Life Drain bonus to [[40]].",
+      "Increases passive Ranged DEF bonus to [[30]].",
+      "The bonus ATK from each non-summoned ally within Lupine Aura is increased to [[7.5%]]."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Shakir reduces his damage taken by [[9%]] during battle. His damage taken is further reduced by [[4%]] if at least 2 non-summoned allies are buffed by his Lupine Aura.",
+      "Shakir reduces his damage taken by [[12%]] during battle. His damage taken is further reduced by [[5%]] if at least 2 non-summoned allies are buffed by his Lupine Aura.",
+      "Shakir reduces his damage taken by [[15%]] during battle. His damage taken is further reduced by [[7%]] if at least 2 non-summoned allies are buffed by his Lupine Aura."
+    ]
+  },
+  "ex": {
+    "n": "All-Conquering",
+    "d": [
+      "Shakir can cast his Ultimate once his Energy exceeds [[700]]. Shakir stays in Wolf Form and consumes no Energy within [[5]]s each time after casting the Ultimate.",
+      "Shakir stays in Wolf Form and consumes no Energy within [[7]]s each time after casting his Ultimate.",
+      "Each non-summoned ally within Lupine Aura can share the same bonus ATK from Wolf's Will.",
+      "Shakir stays in Wolf Form and consumes no Energy within [[8]]s each time after casting his Ultimate."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Shakir reduces the target's Vitality by [[60]] within [[4]]s using the 3rd hit of Savage Cleave."
+    ]
+  }
+}

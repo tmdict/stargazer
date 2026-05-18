@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Restless Guardian",
+    "d": [
+      "When a battle starts, Callan gains a [[200%]]<HP> shield and becomes [[unaffected]]. While the shield is active, Callan cannot move or act. The shield's value drops by [[20%]] per second and can absorb [[50%]] physical and magic damage taken by allies within a 2-tile radius. Callan enters the battle when the shield expires.\nActive. Callan maintains the shield for up to 10s, gaining a [[100%]]<HP> shield and becomes [[unaffected]]. During this time, the shield absorbs [[50%]] physical or magic damage taken by allies within a 2-tile radius.",
+      "When actively used, increases the shield value to [[110%]]<HP>.",
+      "When actively used, increases the shield value to [[120%]]<HP>.",
+      "When actively used, increases the shield value to [[130%]]<HP>.",
+      "When actively used, increases the shield value to [[140%]]<HP>."
+    ]
+  },
+  "skill2": {
+    "n": "Flail Slam",
+    "d": [
+      "Callan swings his flail to deal [[160%]]<ATK> damage to an enemy twice. He then slams them on the ground, dealing [[150%]]<ATK> damage to all enemies in a rectangular area in front of him and knocking them down.",
+      "Increases slam damage to [[170%]]<ATK>.",
+      "Increases slam damage to [[200%]]<ATK>.",
+      "Increases slam damage to [[220%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Eternal Watch",
+    "d": [
+      "Callan converts [[25%]] of the damage absorbed by his shield into golem's might during battle.\nActive. Callan unleashes the stored golem's might to deal an equal amount damage to enemies within a 2-tile radius. This skill can only be used when the amount of stored golem's might exceeds [[350%]]<ATK>. Each cast consumes up to [[600%]]<ATK> of the stored might, with any excess reserved for the next cast.",
+      "Callan converts [[28%]] of the damage absorbed by his shield into golem's might.",
+      "Callan converts [[31%]] of the damage absorbed by his shield into golem's might.",
+      "Callan converts [[35%]] of the damage absorbed by his shield into golem's might."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Vitality by [[11]] during battle.",
+      "Increases Vitality by [[15]] during battle.",
+      "Increases Vitality by [[19]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Hollowed Wrath",
+    "d": [
+      "When Callan or any non-summoned ally's HP falls below [[30%]], he lets out a wrathful howl, dealing [[50%]]<ATK> damage per enemy to all enemies up to 8 times and stunning them for [[0.5]]s. While casting this skill, Callan becomes [[unaffected]]. This skill can be used once per battle.",
+      "Increases damage to [[60%]]<ATK>.",
+      "Increases stun duration to [[2]]s.",
+      "Increases damage to [[70%]]<ATK>."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "When gaining a shield, Callan recovers HP equal to [[15%]] of the shield's max value.",
+      "Callan enhances the shield granted by Restless Guardian at the start of battle, increasing its value to [[600%]]<HP> and raising the percentage of incoming damage it absorbs to [[80%]] for allies within 2 tiles. After the shield expires, he gets back up [[50%]] faster."
+    ]
+  }
+}

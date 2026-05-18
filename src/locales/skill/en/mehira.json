@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Euphoric Rush",
+    "d": [
+      "Mehira marks a target area with her kiss, striking all enemies within [[2]] tiles [[6]] times, with each strike dealing [[50%]]<ATK> damage. After a short delay, she unleashes a powerful blast in the same area, dealing [[170%]]<ATK> damage.\nEnemies hit by the powerful blast become [[charmed]] for [[3]]s.",
+      "Increases the powerful blast damage to [[190%]]<ATK>.",
+      "Increases the powerful blast damage to [[210%]]<ATK>.",
+      "Increases the powerful blast damage to [[230%]]<ATK>.",
+      "Increases the powerful blast damage to [[250%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Blissful Whip",
+    "d": [
+      "Mehira lashes her whip at all units, friend or foe, in a [[3]]-tile frontal arc [[5]] times. Each hit causes a unit to lose [[20%]]<ATK> HP. If an allied unit is hit, they gain [[25]] Haste for [[8]]s, and their HP loss from this skill is reduced by [[90%]]. Mehira always targets the direction that hits the most enemies.",
+      "Increases the HP loss caused by each whip hit to [[24%]]<ATK>.",
+      "Increases the HP loss caused by each whip hit to [[28%]]<ATK>.",
+      "Increases the HP loss caused by each whip hit to [[32%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Alluring Mirage",
+    "d": [
+      "Mehira summons an illusion of herself on the tile closest to the enemy lineup, bewitching all enemies and making them rush mindlessly toward the illusion for [[2.2]]s. When a battle starts, she summons such an illusion on a [[symmetrical]] tile across from where she stands.",
+      "Increases the duration of the bewitched state to [[2.3]]s.",
+      "Increases the duration of the bewitched state to [[2.4]]s.",
+      "Increases the duration of the bewitched state to [[2.5]]s."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Life Drain by [[8]]. Each time the total healing Mehira receives from any sources reaches [[40%]] of her initial max HP, her ATK increases by [[6%]], up to [[18%]].",
+      "Increases Life Drain by [[10]]. Each time the total healing Mehira receives from any sources reaches [[40%]] of her initial max HP, her ATK increases by [[8%]], up to [[24%]].",
+      "Increases Life Drain by [[12]]. Each time the total healing Mehira receives from any sources reaches [[40%]] of her initial max HP, her ATK increases by [[10%]], up to [[30%]]."
+    ]
+  },
+  "ex": {
+    "n": "Total Devotion",
+    "d": [
+      "When a battle starts, Mehira summons [[3]] voidlings around her. Each voidling attacks an enemy every [[1.5]]s, dealing [[40%]]<ATK> damage. If Mehira takes a hit that would reduce her HP below [[20%]], she sacrifices a voidling to block that damage. She then becomes untargetable for [[2.5]]s and instantly recovers [[20%]] of her max HP.",
+      "Increases the damage dealt by each voidling attack to [[50%]]<ATK>.",
+      "Increases the damage dealt by each voidling attack to [[60%]]<ATK>.",
+      "Mehira stores any excess healing she receives. Each time the stored amount reaches [[50%]] of her initial max HP, she summons one extra voidling, up to [[3]] per battle."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Increases the damage taken by enemies [[charmed]] with Mehira's Euphoric Rush or bewitched with her Alluring Mirage by [[15%]]. This effect does not stack."
+    ]
+  }
+}

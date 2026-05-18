@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Fiery Dance",
+    "d": [
+      "Satrana does the fiery dance, dealing [[240%]]<ATK> damage to surrounding enemies within [[2]] tiles. She is [[invincible]] during the effect.",
+      "The last strike of this skill [[charms]] enemies for [[2]]s, making them only use normal attacks while charmed.",
+      "Increases damage to [[260%]]<ATK>.",
+      "Increases damage to [[280%]]<ATK>.",
+      "Increases damage to [[300%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Vixen Rush",
+    "d": [
+      "Satrana scratches enemies in a 1-tile arc twice. Each strike deals [[110%]]<ATK> damage plus [[2.5%]] target's max HP. The additional damage cannot exceed [[75%]] of Satrana's ATK. The damage dealt by this skill grants Satrana [[100]] Life Drain.",
+      "Increases damage to [[115%]]<ATK>.",
+      "Increases damage to [[120%]]<ATK>.",
+      "Increases damage to [[130%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Ignite Passions",
+    "d": [
+      "Satrana grants Sparks to allies within 2 tiles when a battle starts. When Satrana or allies with Sparks deal damage to an enemy for [[3]] times, the target is ignited, taking damage equal to [[0.8%]] of max HP every [[1]]s and reducing their Vitality by [[20]]. The skill damage cannot exceed [[45%]] of Satrana's ATK. The effect lasts until the battle ends.",
+      "When all enemies or a total of [[5]] enemies have been ignited, the Vitality reduction is increased to [[60]].",
+      "Increases damage to [[1%]] of the target's max HP.",
+      "When all enemy heroes or [[5]] enemy heroes have been ignited, the damage is increased to [[2%]] of max HP."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Reduces damage taken by [[12%]] during battle.",
+      "Reduces damage taken by [[16%]] during battle.",
+      "Reduces damage taken by [[20%]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Radiant Vigor",
+    "d": [
+      "When an enemy hero is ignited, the magic damage taken by Satrana is reduced by [[16%]] until the battle ends. Satrana grants this effect to a nearby ally when one more enemy hero is ignited.",
+      "Each ignited enemy hero grants Satrana [[200]] Energy.",
+      "Increases Satrana's magic DMG Reduction to [[20%]].",
+      "Increases Satrana's magic DMG Reduction to [[22%]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Vixen Rush's cooldown is removed when all enemy heroes are ignited or when a total of [[5]] enemy heroes have been ignited.",
+      "Increases ignite damage by [[100%]]. The effects that previously required igniting [[5]] heroes now trigger after igniting [[4]] heroes."
+    ]
+  }
+}

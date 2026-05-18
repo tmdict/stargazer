@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Winged Flame",
+    "d": [
+      "Mirael selects a direction and summons a 3-tile wide wall of flame, dealing [[600%]]<ATK> damage to burned enemies.",
+      "Increases damage to [[610%]]<ATK>.",
+      "Increases damage to [[620%]]<ATK>.",
+      "Increases damage to [[630%]]<ATK>.",
+      "Increases damage to [[640%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Bone Sear",
+    "d": [
+      "Mirael burns and deals [[35%]]<ATK> damage every second to [[1]] enemy for [[10]]s. This skill prioritizes the unburned enemies.",
+      "Increases damage per second to [[37%]]<ATK>.",
+      "Increases damage per second to [[40%]]<ATK>.",
+      "Increases damage per second to [[45%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Fireball Singe",
+    "d": [
+      "Mirael shoots a fireball, dealing [[250%]]<ATK> damage to a target and [[160%]]<ATK> damage to adjacent enemies.",
+      "Mirael shoots a fireball, dealing [[260%]]<ATK> damage to a target and [[180%]]<ATK> damage to adjacent enemies.",
+      "Mirael shoots a fireball, dealing [[270%]]<ATK> damage to a target and [[190%]]<ATK> damage to adjacent enemies.",
+      "Mirael shoots a fireball, dealing [[280%]]<ATK> damage to a target and [[200%]]<ATK> damage to adjacent enemies."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases ATK SPD by [[21]] during battle.",
+      "Increases ATK SPD by [[27]] during battle.",
+      "Increases ATK SPD by [[33]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Dance of Flames",
+    "d": [
+      "Mirael uses Fireball Singe as her normal attack for the rest of the battle after casting Winged Flame for the first time. Fireball Singe shoots 2 fireballs each time, each dealing [[150%]]<ATK> damage to the target and [[100%]]<ATK> damage to the adjacent enemies.",
+      "Burns [[2]] enemies with Bone Sear for the rest of the battle after casting Winged Flame for the first time.",
+      "Increases each fireball damage to [[160%]]<ATK> on the target and [[110%]]<ATK> on adjacent enemies.",
+      "Increases each fireball damage to [[170%]]<ATK> on the target and [[120%]]<ATK> on adjacent enemies."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Mirael increases the burning duration of Bone Sear by [[4]]s.",
+      "Increases Bone Sear's cooldown by [[12]]s and the number of enemies it burns by [[3]]. Bone Sear also increases Mirael's ATK SPD by [[300]] for [[18]]s."
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "ultimate": {
+    "n": "Brothers-in-arms",
+    "d": [
+      "Chippy calls in two of his hamster friends into battle and stands on their shoulders to deal [[300%]]<ATK> damage to the enemy.",
+      "Increases damage to [[320%]]<ATK>.",
+      "Increases damage to [[340%]]<ATK>.",
+      "Increases damage to [[350%]]<ATK>.",
+      "Increases damage to [[360%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Take This!",
+    "d": [
+      "Chippy jumps to deal [[240%]]<ATK> damage to the enemy.",
+      "Increases damage to [[250%]]<ATK>.",
+      "Increases damage to [[260%]]<ATK>.",
+      "Increases damage to [[270%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Eureka!",
+    "d": [
+      "Chippy's normal attacks have a [[2%]] chance to deal [[1000%]]<ATK> damage. These attacks cannot deal critical damage and can only be triggered [[1]] time per battle.",
+      "Increases the chance to [[3%]].",
+      "Increases the chance to [[4%]].",
+      "Increases the chance to [[5%]]."
+    ]
+  }
+}

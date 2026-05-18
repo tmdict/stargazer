@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Pounding Blow",
+    "d": [
+      "Florabelle summons Spiny when a battle starts. Spiny inherits [[80%]] of Florabelle's Max HP, dealing [[60%]]<ATK> damage with normal attacks. Spiny retreats to the pod when defeated, then rejoins the battle after [[10]]s.\nActive. Florabelle selects a tile to summon Smashy to smash the ground, dealing [[300%]]<ATK> damage to all adjacent enemies and knocking them into the air. Smashy inherits [[220%]] of Florabelle's Max HP, dealing [[120%]]<ATK> damage with normal attacks. Smashy takes [[100%]] extra damage when under control effects.\nFlorabelle casts the skill to remove all debuffs on Smashy and restore its HP to full, commanding Smashy to smash the target area ground again.",
+      "Increases Spiny's normal attack damage to [[70%]]<ATK>.",
+      "When all three Bulbsprites are on the battlefield, summoning Smashy will instead trigger a coordinated attack from all Bulbsprites, dealing [[400%]]<ATK> damage to all enemies within 3 tiles and knocking them into the air.",
+      "Increases Spiny's normal attack damage to [[80%]]<ATK>.",
+      "Increases Smashy's normal attack damage to [[220%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Overgrowth",
+    "d": [
+      "Florabelle feeds a Bulbsprite with petalplum to transform them into a giant for [[8]]s. Giant Bulbsprites will gain an extra [[60]] Haste and [[60]] Life Drain. When multiple Bulbsprites are on the field, this skill targets them in the order of Smashy, Swifty, and Spiny.",
+      "Increases Life Drain in giant form to [[80]].",
+      "Increases Life Drain in giant form to [[100]].",
+      "Increases the duration of the giant form to [[10]]s."
+    ]
+  },
+  "skill3": {
+    "n": "Tiny Sharpshooter",
+    "d": [
+      "Florabelle summons Swifty in the back. Swifty has a [[6]]-tile attack range, inherits [[45%]] of Florabelle's Max HP, and deals [[80%]]<ATK> damage with normal attacks. Casting this skill while Swifty is already on the battlefield initiates Swifty's Rapid Fire, unleashing [[8]] arrows at random targets, each dealing [[70%]]<ATK> damage. Swifty cannot be summoned again for the next [[8]]s after being defeated.",
+      "Increases Swifty's normal attack damage to [[95%]]<ATK>.",
+      "Increases the damage of each arrow to [[88%]]<ATK> when Swifty casts Rapid Fire.",
+      "Increases Swifty's normal attack damage to [[110%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Florabelle increases her ATK by [[10%]] during battle. She gains an extra [[4%]] ATK when at least 2 of her summons are on the battlefield. ",
+      "Florabelle increases her ATK by [[14%]] during battle. She gains an extra [[6%]] ATK when at least 2 of her summons are on the battlefield. ",
+      "Florabelle increases her ATK by [[18%]] during battle. She gains an extra [[8%]] ATK when at least 2 of her summons are on the battlefield. "
+    ]
+  },
+  "ex": {
+    "n": "Protective Blessing",
+    "d": [
+      "Grants a Natural Blessing to allied summons upon their entrance to the battlefield, providing them with a permanent shield capable of absorbing damage equal to [[280%]] of Florabelle's ATK.",
+      "Boosts the shield granted by this skill to [[330%]] of Florabell's ATK.",
+      "Feeds the allied summon with the highest ATK with an unripe petalplum when Florabelle casts Overgrowth. This transforms the summon into a giant, increasing their Haste by [[27]] and Life Drain by [[32]].",
+      "Boosts the shield granted by this skill to [[350%]] of Florabell's ATK."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Allied Bulbsprite in their giant form are immune to control effects.",
+      "Overgrowth has its cooldown reduced to [[5]]s and can simultaneously affect Smashy, Swifty, and Spiny. Meanwhile, allied summons in their giant form gain extra ATK equal to [[40%]]<ATK>."
+    ]
+  }
+}

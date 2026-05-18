@@ -1,0 +1,52 @@
+{
+  "ultimate": {
+    "n": "Shield Assault",
+    "d": [
+      "Antandra sets her shield up and [[taunts]] enemies within 2 tiles for [[1]]s, reducing her damage taken by [[60%]] and becoming [[unaffected]] for [[5]]s. Afterward, she raises the shield to stun adjacent enemies for [[2]]s and swings the spear, dealing [[400%]]<ATK> damage to adjacent enemies and knocking them down, recovering [[20%]]<HP> HP. Each enemy hit recovers her an extra [[8%]]<HP> HP.",
+      "Increases damage to [[420%]]<ATK>.",
+      "Increases damage to [[440%]]<ATK>.",
+      "Increases damage to [[450%]]<ATK>.",
+      "Increases damage to [[460%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Shield Formation",
+    "d": [
+      "Antandra selects the [[frontmost]] ally (except herself) as the guarded ally when a battle starts. Antandra grants herself and the guarded ally shields that block damage equal to [[15%]] of the ally's max HP for [[5]]s, and the shield value is up to [[500%]] of her ATK. Antandra reselects another front-most ally (except herself) as the guarded ally if the previous one is defeated.",
+      "Reduces the skill cooldown by [[3]]s whenever the guarded ally loses [[10%]] max HP.",
+      "Increases the shield value to [[20%]] of the guarded ally's max HP.",
+      "Increases the shield value to [[25%]] of the guarded ally's max HP."
+    ]
+  },
+  "skill3": {
+    "n": "Spear Barrage",
+    "d": [
+      "Antandra attacks the frontal area within a 1-tile arc 3 times and reduces the targets' ATK by [[20%]] for [[6]]s, with the first 2 hits dealing [[100%]]<ATK> damage and the third hit dealing [[120%]] damage.",
+      "Increases the damage of 3rd attack to [[140%]]<ATK>.",
+      "Increases the damage of 3rd attack to [[160%]]<ATK>.",
+      "Increases the damage of 3rd attack to [[180%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases max HP by [[17%]] during battle.",
+      "Increases max HP by [[23%]] during battle.",
+      "Increases max HP by [[29%]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Gale Barrier",
+    "d": [
+      "Antandra rushes next to the guarded ally when their HP ratio drops below [[50%]] for the first time, reducing their damage taken by [[40%]] for [[10]]s. This skill can only be used once for each guarded ally per battle.",
+      "Rushes next to the guarded ally, recovering their Energy by [[100]] per second for [[4]]s.",
+      "Rushes next to the guarded ally, reducing their damage taken by [[50%]].",
+      "Rushes next to the guarded ally, reducing their damage taken by [[60%]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Each enemy hit by Shield Assault increases [[10%]] of Antandra's Phys DEF, up to [[6]] stacks.",
+      "Antandra increases the shield value her guarded ally receives from Shield Formation by [[40%]] of her current HP. While the shield is active, the guarded ally also heals Antandra for [[60%]] of the damage they deal."
+    ]
+  }
+}

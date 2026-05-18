@@ -8,5 +8,10 @@
   "energy": [600],
   "range": 20,
   "season": 2,
-  "tags": ["initial-energy", "initial-energy-300", "temp-buff", "temp-buff-instant"]
+  "tags": {
+    "initial-energy": [],
+    "initial-energy-300": [],
+    "temp-buff": [{ "ultimate": 1 }, { "skill2": 1 }, { "ex": 1 }],
+    "temp-buff-instant": [{ "ultimate": 1 }, { "skill2": 1 }, { "ex": 1 }]
+  }
 }

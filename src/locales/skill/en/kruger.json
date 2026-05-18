@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Devastating Axe",
+    "d": [
+      "Kruger launches a mighty slash to knock down an enemy for [[1.5]]s, dealing [[450%]]<ATK> damage and inflicting them with [[3]] stacks of Shatter Armor. Each stack reduces the target's Phys DEF by [[10%]], up to [[4]] stacks on a target.",
+      "If Kruger is present, the ally inflicts enemies with an extra stack of Shatter Armor when reducing their Phys DEF.",
+      "Increases damage to [[465%]]<ATK>.",
+      "Increases damage to [[480%]]<ATK>.",
+      "Increases damage to [[500%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Smashing Assault",
+    "d": [
+      "Kruger slashes an enemy, dealing [[240%]]<ATK> damage and inflicting them with a stack of Shatter Armor.",
+      "Increases damage to [[260%]]<ATK>.",
+      "Increases damage to [[280%]]<ATK>.",
+      "Increases damage to [[300%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Vital Strike",
+    "d": [
+      "Kruger launches a powerful attack on adjacent enemies with at least [[4]] stacks of Shatter Armor and not affected by Vulnerable, dealing [[400%]]<ATK> damage and inflicting Vulnerable. For Vulnerable enemies, their physical damage taken is increased by [[40%]], and [[40%]] of their damage taken is transformed to Kruger's HP.",
+      "Increases damage to [[440%]]<ATK>.",
+      "Increases damage to [[480%]]<ATK>.",
+      "Increases damage to [[520%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Ranged DEF by [[16]] during battle.",
+      "Increases Ranged DEF by [[21]] during battle.",
+      "Increases Ranged DEF by [[26]] during battle."
+    ]
+  },
+  "ex": {
+    "n": "Ruthless Vanguard",
+    "d": [
+      "When a battle starts, Kruger gains a shield that blocks damage equal to [[40%]]<HP> for [[15]]s if no allies are present within the surrounding [[1]] tile. The shield also grants him control immunity. Additionally, Kruger gains [[30]] Life Drain when no allies are detected within the surrounding [[1]] tile.",
+      "Increases the shield value to [[44%]]<HP>.",
+      "Removes the distance limit for Vital Strike (the other restrictions remain). Kruger can rush to Vulnerable enemies and cast Vital Strike to deal damage.",
+      "Increases the shield value to [[48%]]<HP>."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Kruger gains a [[40%]] ATK boost until the battle ends when a Vulnerable enemy is defeated by Vital Strike, stacking up to [[2]] stacks."
+    ]
+  }
+}

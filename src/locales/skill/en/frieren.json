@@ -1,0 +1,51 @@
+{
+  "ultimate": {
+    "n": "Zoltraak",
+    "d": [
+      "Frieren moves to the rearmost position that maximizes the number of enemies her Ultimate can hit. The Ultimate strikes enemies in a 3-tile rectangular area for 3s, dealing [[220%]]<ATK> damage per second and [[1400%]]<ATK> true damage evenly split among all enemies hit.",
+      "Increases damage per second to [[240%]]<ATK>, and the extra true damage to [[1500%]]<ATK>.",
+      "Increases damage per second to [[260%]]<ATK>, and the extra true damage to [[1600%]]<ATK>.",
+      "Increases damage per second to [[280%]]<ATK>, and the extra true damage to [[1700%]]<ATK>.",
+      "Increases damage per second to [[300%]]<ATK>, and the extra true damage to [[1800%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Lightning: Judradjim",
+    "d": [
+      "When a battle starts, Frieren conceals her magic, making enemies less likely to target her. [[15]]s into the battle, she amplifies her magic power, increasing her damage dealt by [[60%]], replacing her normal attack with Lightning: Judradjim, and no longer being a low-priority target for enemies.\nLightning: Judradjim strikes an enemy 3 times, each hit dealing [[220%]]<ATK> damage, and the final hit stuns the target for 0.5s.\nAfter fighting alongside Himmel for [[5]]s, Frieren immediately amplifies her magic power, ignoring the time restriction, and gains a permanent ATK bonus equal to [[30%]] of Himmel's initial ATK.",
+      "Increases Lightning: Judradjim's damage per hit to [[230%]]<ATK>.",
+      "Increases Lightning: Judradjim's damage per hit to [[240%]]<ATK>.",
+      "Increases Lightning: Judradjim's damage per hit to [[250%]]<ATK>."
+    ]
+  },
+  "skill3": {
+    "n": "Hellfire: Vollzanbel",
+    "d": [
+      "Frieren casts Hellfire: Vollzanbel, dealing [[300%]]<ATK> damage to the target and adjacent enemies and burning the area for [[5]]s. Enemies in the burning area lose [[35%]]<ATK> HP every [[0.5]]s, and their Vitality is reduced by [[20]]. After Frieren amplifies her magic power, this skill's cooldown is reduced by [[50%]].",
+      "Reduces the Vitality of enemies burned by Hellfire: Vollzanbel by [[30]].",
+      "Reduces the Vitality of enemies burned by Hellfire: Vollzanbel by [[40]].",
+      "Reduces the Vitality of enemies burned by Hellfire: Vollzanbel by [[50]]."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Frieren increases her ATK by [[9%]] during battle. After amplifying her magic power, she increases her ATK by an extra [[6%]].",
+      "Frieren increases her ATK by [[12%]] during battle. After amplifying her magic power, she increases her ATK by an extra [[8%]].",
+      "Frieren increases her ATK by [[15%]] during battle. After amplifying her magic power, she increases her ATK by an extra [[10%]]."
+    ]
+  },
+  "ex": {
+    "n": "Defensive Magic",
+    "d": [
+      "When a battle starts, Frieren casts defensive magic on herself and the [[frontmost]] ally. When either takes damage exceeding [[10%]] of their initial max HP, the excess damage is reduced by [[75%]].",
+      "The excess damage is reduced by [[80%]].",
+      "While the [[frontmost]] ally remains alive, Frieren increases her Haste by [[35]].",
+      "The excess damage is reduced by [[85%]]."
+    ]
+  },
+  "awakening": {
+    "d": [
+      "[[5]]s after Frieren amplifies her magic power, she knocks the enemy with the most cumulative damage dealt into the air and hurls them toward the edge of the battlefield, dealing [[800%]]<ATK> damage and knocking them down for [[2]]s."
+    ]
+  }
+}

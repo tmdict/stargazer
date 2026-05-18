@@ -12,10 +12,14 @@ interface Props {
   maxWidth?: string
   linkParam: string
   localeOverride?: 'en' | 'zh'
+  // Anchor to viewport top instead of centering. Use when content height can
+  // change at runtime so the top edge stays put.
+  topAnchor?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
   maxWidth: '800px',
+  topAnchor: false,
 })
 
 const emit = defineEmits<{
@@ -57,7 +61,12 @@ onUnmounted(() => {
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div v-if="show" class="overlayModal" @click="handleClickOutside">
+      <div
+        v-if="show"
+        class="overlayModal"
+        :class="{ 'is-top-anchored': topAnchor }"
+        @click="handleClickOutside"
+      >
         <div ref="modalRef" class="container" :style="{ maxWidth }" @click.stop>
           <div class="buttons">
             <slot name="header-buttons" />

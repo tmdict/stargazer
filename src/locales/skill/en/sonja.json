@@ -1,0 +1,49 @@
+{
+  "ultimate": {
+    "n": "Tempest Thrusts",
+    "d": [
+      "Sonja delivers [[8]] Piercing Strikes on enemies in a designated frontal area ([[3]]-tile wide and [[3]]-tile long), each dealing [[35%]]<ATK> damage. Each strike also deals extra damage equal to [[4%]] of the enemy's current HP, up to [[160%]] of Sonja's own ATK. She then charges to the far end of the struck area, dealing [[180%]]<ATK> damage to enemies within it. While casting this skill, Sonja is immune to all control effects.",
+      "Increases the damage of each Piercing Strike to [[40%]]<ATK>.",
+      "Increases the damage of each Piercing Strike to [[45%]]<ATK>.",
+      "Increases the damage of each Piercing Strike to [[50%]]<ATK>.",
+      "Increases the damage of Sonja's charge to [[220%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Crimson Covenant",
+    "d": [
+      "When a battle starts, Sonja forms Crimson Covenant with two allies placed to her left and right (prioritizing those in the front over those in the back), increasing their ATK by [[10%]] and their Phys & Magic DEF by [[15%]]. While Crimson Covenant is active, the two allies gain an extra [[3%]] ATK and [[4%]] Phys & Magic DEF every [[6]]s, stacking up to [[6]] times. Sonja is immune to all control effects while casting this skill.\nCrimson Covenant is terminated if either of the buffed allies is defeated. In this case, Sonja absorbs the accumulated stat bonuses from both allies, gaining them for herself until the battle ends.",
+      "Increases Crimson Covenant's initial ATK bonus to [[13%]], and its initial Phys & Magic DEF bonus to [[18%]].",
+      "Grants allies with Crimson Covenant an extra [[4%]] ATK and [[5%]] Phys & Magic DEF every [[6]]s.",
+      "Increases Crimson Covenant's initial ATK bonus to [[16%]], and its initial Phys & Magic DEF bonus to [[21%]]."
+    ]
+  },
+  "skill3": {
+    "n": "Stunning Reception",
+    "d": [
+      "Sonja spins, slashing enemies within [[1]] tile twice with her cloak. Each slash deals [[120%]]<ATK> damage and stuns the enemies hit for [[1]]s.",
+      "Increases the damage of each slash to [[130%]]<ATK>.",
+      "Increases the damage of each slash to [[140%]]<ATK>.",
+      "Extends the stun duration to [[1.5]]s."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Sonja increases her Haste by [[7.2]] during battle. She gains an extra [[7.2]] Haste after casting Tempest Thrusts for the first time.",
+      "Sonja increases her Haste by [[9.6]] during battle. She gains an extra [[9.6]] Haste after casting Tempest Thrusts for the first time.",
+      "Sonja increases her Haste by [[12]] during battle. She gains an extra [[12]] Haste after casting Tempest Thrusts for the first time."
+    ]
+  },
+  "ex": {
+    "n": "Unbreakable Bond",
+    "d": [
+      "Sonja gains [[100]] extra Initial Energy. She permanently enhances Crimson Covenant after casting her first Tempest Thrusts. Instead of only gaining stat bonuses when a buffed ally is defeated, she continuously benefits from the accumulated stat bonuses while the buffed allies are alive.",
+      "Increases Sonja's Initial Energy to [[200]].",
+      "Enhancing the Crimson Covenant also reduces damage taken by [[40%]] for a covenant member if any other member is alive. [[50%]] of the reduced damage is shared by other members, but this will not cause them to be defeated.",
+      "Enhancing the Crimson Covenant also reduces damage shared by other members to [[40%]] of the total amount reduced."
+    ]
+  },
+  "awakening": {
+    "d": ["Sonja converts [[20%]] of the damage dealt by Tempest Thrusts into self-healing."]
+  }
+}
