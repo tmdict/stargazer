@@ -1,58 +1,33 @@
 <script setup lang="ts">
 import GridSnippet from '@/components/grid/GridSnippet.vue'
-import StyledText from '@/components/StyledText.vue'
-import { setupSkillContentMeta } from '@/utils/contentMeta'
+import SkillSnippet from '@/components/skill/SkillSnippet.vue'
+import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 import { gridStyles, images } from './Pandora.data'
-
-setupSkillContentMeta('pandora', 'zh')
 </script>
 
 <template>
-  <StyledText>
-    <article>
-      <h1>潘多拉</h1>
-
-      <h2>充能</h2>
-
-      <h3>技能</h3>
-      <p>
-        被动地，潘多拉每次释放普通攻击以外的技能时，为从魔盒中放出的友军恢复[[290%]]生命值和[[90]]点能量。
-      </p>
-
-      <h2>非永久增益 · 特殊目标机制</h2>
-
-      <h3>技能</h3>
-      <p>
-        战斗开始时，将[[最靠后]]的一名友军吸入魔盒中，使其处于[[无敌]]状态，但无法释放任何技能。经过[[4]]秒后，将其从魔盒内放出。若放出该友军时潘多拉依然存活，则该名友军获得[[1000]]点能量，并在接下来[[10]]秒内攻击力增加[[35%]]。
-      </p>
-
-      <strong>技能机制</strong>
-      <p>
-        网格由多个横排组成，第15排（格子44、45）为敌方队伍的最后一排，第1排（格子1、2）为友方队伍的最后一排。
-      </p>
-      <p>
-        同一排内，靠左侧（ID较大）的格子在友方一侧视为“更靠前”，靠右侧（ID较小）的格子在敌方一侧视为“更靠前”。
-      </p>
-      <p>最靠后的角色根据其在战场上的位置确定：</p>
-      <ul>
-        <li>
-          <strong>友方潘多拉：</strong
-          >从最后排开始扫描队友位置，从右到左（最低格子ID到最高），瞄准找到的第一个队友。
-        </li>
-        <li>
-          <strong>敌方潘多拉：</strong
-          >以相反顺序扫描敌人位置，从左到右（最高格子ID到最低），瞄准找到的第一个敌人。
-        </li>
-      </ul>
-
-      <GridSnippet :grid-style="gridStyles.main" :images />
-
-      <h2>召唤</h2>
-
-      <h3>专武技能</h3>
-      <p>
-        自身被击败后魔盒可留在场上，魔盒不会被优先选为目标，处于霸体状态且不可摧毁，拥有1000点能量上限，每秒恢复[[45]]点能量，能量满时，魔盒会再次释放终极技能“灾厄释放”，但不再产生生命流失效果。每隔[[5]]秒，魔盒对随机一名敌人释放“致命侵蚀”，但只会随机选择一种负面效果。
-      </p>
-    </article>
-  </StyledText>
+  <SkillSnippets>
+    <template #skill2>
+      <SkillSnippet title-key="how-it-works">
+        <p>
+          网格由多个横排组成，第15排（格子44、45）为敌方队伍的最后一排，第1排（格子1、2）为友方队伍的最后一排。
+        </p>
+        <p>
+          同一排内，靠左侧（ID较大）的格子在友方一侧视为"更靠前"，靠右侧（ID较小）的格子在敌方一侧视为"更靠前"。
+        </p>
+        <p>最靠后的角色根据其在战场上的位置确定：</p>
+        <ul>
+          <li>
+            <strong>友方潘多拉：</strong
+            >从最后排开始扫描友方位置，从右到左（最低格子ID到最高），瞄准找到的第一个队友。
+          </li>
+          <li>
+            <strong>敌方潘多拉：</strong
+            >以相反顺序扫描敌方位置，从左到右（最高格子ID到最低），瞄准找到的第一个队友。
+          </li>
+        </ul>
+        <GridSnippet :grid-style="gridStyles.main" :images />
+      </SkillSnippet>
+    </template>
+  </SkillSnippets>
 </template>

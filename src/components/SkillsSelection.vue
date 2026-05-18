@@ -28,7 +28,7 @@ const skillCharacters = computed(() => {
 
   // Apply tag filters
   if (selectedTagNames.value) {
-    filtered = filtered.filter((char) => char.tags.includes(selectedTagNames.value!))
+    filtered = filtered.filter((char) => Object.keys(char.tags).includes(selectedTagNames.value!))
   }
 
   // Sort by the order in DOCUMENTED_SKILLS array

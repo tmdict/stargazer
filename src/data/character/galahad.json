@@ -8,5 +8,11 @@
   "energy": [400],
   "range": 10,
   "season": 5,
-  "tags": ["initial-energy", "initial-energy-300", "special-target", "summon", "temp-buff"]
+  "tags": {
+    "initial-energy": [],
+    "initial-energy-300": [],
+    "special-target": [{ "ex": 1 }],
+    "summon": [{ "ultimate": 1 }, { "ex": 1 }],
+    "temp-buff": [{ "skill3": 1 }]
+  }
 }

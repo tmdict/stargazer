@@ -8,5 +8,9 @@
   "energy": [0],
   "range": 4,
   "season": 4,
-  "tags": ["special-target", "temp-buff", "temp-buff-instant"]
+  "tags": {
+    "special-target": [{ "skill2": 1 }],
+    "temp-buff": [{ "skill2": 1 }, { "awakening": 1 }],
+    "temp-buff-instant": [{ "skill2": 1 }]
+  }
 }

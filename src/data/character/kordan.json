@@ -8,5 +8,10 @@
   "energy": [1000],
   "range": 1,
   "season": 5,
-  "tags": ["initial-energy", "initial-energy-300", "instant-ult", "temp-buff"]
+  "tags": {
+    "initial-energy": [],
+    "initial-energy-300": [],
+    "instant-ult": [{ "ultimate": 1 }],
+    "temp-buff": [{ "ultimate": 1 }]
+  }
 }

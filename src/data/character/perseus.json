@@ -8,5 +8,8 @@
   "energy": [0],
   "range": 1,
   "season": 5,
-  "tags": ["temp-buff", "temp-buff-instant"]
+  "tags": {
+    "temp-buff": [{ "skill3": 1 }],
+    "temp-buff-instant": [{ "skill3": 1 }]
+  }
 }

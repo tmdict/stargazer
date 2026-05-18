@@ -8,5 +8,7 @@
   "energy": [750],
   "range": 1,
   "season": 2,
-  "tags": ["special-target"]
+  "tags": {
+    "special-target": [{ "skill2": 1 }]
+  }
 }
