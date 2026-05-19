@@ -9,6 +9,7 @@
   "range": 3,
   "season": 0,
   "tags": {
-    "special-target": [{ "skill3": 1 }]
+    "special-target": [{ "skill3": 1 }],
+    "enhance-force-2": [{ "awakening": 2 }]
   }
 }

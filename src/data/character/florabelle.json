@@ -9,6 +9,14 @@
   "range": 5,
   "season": 0,
   "tags": {
-    "summon": [{ "ultimate": 1 }, { "skill3": 1 }]
+    "summon": [
+      {
+        "ultimate": 1
+      },
+      {
+        "skill3": 1
+      }
+    ],
+    "enhance-force-2": [{ "awakening": 2 }]
   }
 }

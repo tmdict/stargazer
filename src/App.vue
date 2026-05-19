@@ -15,6 +15,10 @@ const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
 const i18n = useI18nStore()
 
+// Header renders on every route; init here so SSG-only routes whose views
+// don't call initialize (about, skill/*) still get translations. Idempotent.
+i18n.initialize()
+
 // Keyboard shortcut handler
 const handleKeyDown = (e: KeyboardEvent) => {
   // Alt+L to toggle language

@@ -11,7 +11,7 @@ The pre-rendering system uses vite-ssg to generate static HTML for content pages
 3. **Route-based Locale**: Determine language from URL path rather than global state during SSG
 4. **SSR Safety**: Guard browser APIs with environment checks to prevent build errors
 5. **Shared Routes**: Single route definition used by both SPA and SSG modes
-6. **Minimal Store Dependencies**: Static pages avoid store dependencies, using hardcoded strings and props instead
+6. **Minimal Store Dependencies**: Static views avoid heavy store dependencies, but the shared header still calls `i18n.initialize()` (idempotent) from `App.vue` so cross-route navigation chrome stays translated
 
 ## How It Works
 
@@ -62,7 +62,7 @@ Key considerations:
 
 ### SSG Entry Point (`/src/main.ssg.ts`)
 
-Simplified configuration without i18n store dependency:
+Simplified configuration; i18n bootstrap lives in `App.vue`, not here:
 
 ```typescript
 export const createApp = ViteSSG(
@@ -70,25 +70,26 @@ export const createApp = ViteSSG(
   { routes }, // Shared routes from router/routes.ts
   async ({ app }) => {
     app.use(createPinia())
-    // No i18n store setup needed - static pages handle locale themselves
   },
 )
 ```
 
+`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including SSG-only `/about` and `/skill/*`) resolves translation keys rather than emitting literals like `wandwars.wand-wars`. Per-page locale is still derived from the URL via `useRouteLocale`.
+
 Key considerations:
 
 - **Shared routes**: Uses same route definitions as SPA
-- **No global locale state**: Static pages extract locale from route
-- **Minimal setup**: No pre-loading or router guards needed
+- **Per-page locale from route**: Static views extract locale from URL
+- **Header i18n in App.vue**: Idempotent init keeps the nav chrome translated on SSG-only routes
 
 ### Static Content Components
 
 #### PageContainer Component
 
-The PageContainer component does not depend on i18n store for static pages:
+The PageContainer component avoids store-driven content of its own, so static views can render with minimal hydration risk:
 
 ```typescript
-// PageContainer.vue - simplified without i18n
+// PageContainer.vue
 <template>
   <div class="overlay">
     <a href="/" class="backdrop-link" aria-label="Stargazer"></a>
@@ -99,8 +100,7 @@ The PageContainer component does not depend on i18n store for static pages:
 
 Key considerations:
 
-- Uses hardcoded "Stargazer" instead of translations
-- No store dependencies for static rendering
+- No store-driven content inside the container itself (header translations are handled separately in `App.vue`)
 - Clean separation from dynamic app state
 
 #### GridSnippet Component
@@ -162,7 +162,7 @@ Key considerations:
 - **No hydration mismatch**: Static pages use props, avoiding store state changes
 - **Clean separation**: Static content is self-contained with its own data
 - **Locale from route**: Static views extract locale from URL path using `useRouteLocale`
-- **No i18n dependency**: PageContainer and static views use hardcoded strings
+- **Header i18n via App.vue**: The shared nav uses store-backed translations; static view bodies still avoid store dependencies
 - **Optimized images**: Content data files use vite-imagetools for WebP conversion
 
 ### SSR-Safe Stores
@@ -263,6 +263,12 @@ ssgOptions: {
   }
 }
 ```
+
+`onPageRendered` also extracts the page description from the first `<article>` element in the rendered HTML (regex `/<article[^>]*>([\s\S]*?)<\/article>/`). Skill page bodies (`SkillSections.vue`) wrap themselves in `<article>` so this contract holds — changing the root tag would silently break per-page descriptions.
+
+### `@unhead/vue` Version Pinning
+
+`@unhead/vue` is pinned to `^2.1.4` in `package.json` to match the version bundled inside `vite-ssg@28.3.0` (v2.1.15). Allowing the root to install v3.x produces two parallel head instances during SSG — same-key inject still works, but cross-version `push` does not reliably populate the v2 head, so `<title>`, canonical, and keywords drop out of the rendered HTML. If `vite-ssg` later bumps to unhead v3, lift this pin in the same change.
 
 ### TypeScript Support for Imagetools
 

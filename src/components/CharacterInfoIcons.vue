@@ -4,10 +4,10 @@ import { computed, ref } from 'vue'
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
-import { DOCUMENTED_SKILLS } from '@/content/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { hasSkillLocale } from '@/utils/dataLoader'
 
 interface Props {
   character: CharacterType
@@ -18,9 +18,7 @@ const props = defineProps<Props>()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-const hasDocumentedSkill = computed(() => {
-  return DOCUMENTED_SKILLS.includes(props.character.name)
-})
+const hasDocumentedSkill = computed(() => hasSkillLocale(props.character.name))
 
 // Skill modal state
 const showSkillModal = ref(false)

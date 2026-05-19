@@ -5,8 +5,7 @@ import { useRoute } from 'vue-router'
 import SkillSections from '@/components/skill/SkillSections.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
 import { useRouteLocale } from '@/composables/useRouteLocale'
-import { DOCUMENTED_SKILLS } from '@/content/skill'
-import { loadSkillLocales } from '@/utils/dataLoader'
+import { hasSkillLocale, loadSkillLocales } from '@/utils/dataLoader'
 
 interface Props {
   name?: string
@@ -18,24 +17,17 @@ const route = useRoute()
 const locale = useRouteLocale()
 const lang = computed<'en' | 'zh'>(() => (locale.value === 'zh' ? 'zh' : 'en'))
 
-const skillName = computed(() => props.name || (route.params.name as string) || 'undefined')
+const skillName = computed(() => props.name || (route.params.name as string) || '')
+const slug = computed(() => skillName.value.toLowerCase())
 
-const validatedSkillName = computed(() => {
-  const name = skillName.value?.toLowerCase()
-  if (!name) return ''
-  return DOCUMENTED_SKILLS.includes(name) ? name : 'undefined'
-})
-
-const hasLocaleData = computed(() => {
-  const slug = validatedSkillName.value
-  if (!slug || slug === 'undefined') return false
-  return !!loadSkillLocales()[lang.value]?.[slug]
-})
+const hasLocaleData = computed(
+  () => hasSkillLocale(slug.value) && !!loadSkillLocales()[lang.value]?.[slug.value],
+)
 </script>
 
 <template>
   <PageContainer maxWidth="960px" :top-anchor="true">
-    <SkillSections v-if="hasLocaleData" :slug="validatedSkillName" :lang="lang" />
+    <SkillSections v-if="hasLocaleData" :slug="slug" :lang="lang" />
     <div v-else class="skill-not-found">
       <h1>Skill Not Found</h1>
       <p>The skill "{{ skillName }}" was not found.</p>
