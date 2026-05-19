@@ -38,6 +38,15 @@ watch(searchQuery, (q) => {
   }, 150)
 })
 
+// Clicking a tag chip signals "refocus by tag", so any active search is
+// cleared (both refs together to avoid a debounce-delayed flash).
+watch(selectedTagNames, () => {
+  if (!searchQuery.value) return
+  if (debounceTimer) clearTimeout(debounceTimer)
+  searchQuery.value = ''
+  debouncedQuery.value = ''
+})
+
 onUnmounted(() => {
   if (debounceTimer) clearTimeout(debounceTimer)
 })
@@ -122,6 +131,7 @@ const handleSelectSlug = (slug: string) => {
           :character
           :hideInfo="true"
           :isSelected="skillsStore.selectedSlug === character.name"
+          :selected-filter="selectedTagNames"
         />
         <div class="meta-row">
           <img
@@ -260,6 +270,21 @@ const handleSelectSlug = (slug: string) => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+}
+
+/* Flatten CharacterIcon's wrapper so its energy badge and our meta-row
+   share one flex order. */
+.character-cell :deep(.character-wrapper) {
+  display: contents;
+}
+.character-cell :deep(.character-display) {
+  order: 1;
+}
+.character-cell .meta-row {
+  order: 2;
+}
+.character-cell :deep(.character-energy) {
+  order: 3;
 }
 
 /* Wider gap (0.6 vs 0.2rem) compensates for the missing info button between
