@@ -173,6 +173,7 @@ const snippetComp = computed(() => {
   margin: 0 0 var(--spacing-md);
   font-size: 24px;
   font-weight: 600;
+  text-align: left;
 }
 
 .skill-chips {
