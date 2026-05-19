@@ -10,6 +10,7 @@
   "season": 3,
   "tags": {
     "initial-energy": [],
-    "initial-energy-300": []
+    "initial-energy-300": [],
+    "enhance-force-2": [{ "awakening": 2 }]
   }
 }

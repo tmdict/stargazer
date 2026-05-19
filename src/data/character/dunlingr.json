@@ -12,6 +12,7 @@
     "energy-reduction": [{ "awakening": 2 }],
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 1 }],
-    "ult-negation": [{ "ultimate": 1 }]
+    "ult-negation": [{ "ultimate": 1 }],
+    "enhance-force-2": [{ "awakening": 2 }]
   }
 }

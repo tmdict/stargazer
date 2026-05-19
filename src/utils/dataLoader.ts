@@ -266,6 +266,13 @@ export function loadSkillLocales(): Record<'en' | 'zh', Record<string, SkillLoca
   return skillLocalesCache
 }
 
+/** True iff the importer has produced an `en` locale file for `slug`. Used as
+ * a UI gate (info button / route validator) so a character JSON without a
+ * matching locale file doesn't surface a dead modal or route. */
+export function hasSkillLocale(slug: string): boolean {
+  return !!loadSkillLocales().en[slug]
+}
+
 export function loadGameLocales(): Record<string, LocaleData> {
   if (gameLocalesCache) return gameLocalesCache
   gameLocalesCache = buildLocaleDict(

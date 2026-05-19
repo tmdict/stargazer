@@ -10,6 +10,7 @@
   "season": 0,
   "tags": {
     "energy-reduction": [{ "ultimate": 1 }],
-    "initial-energy": []
+    "initial-energy": [],
+    "enhance-force-2": [{ "awakening": 2 }]
   }
 }

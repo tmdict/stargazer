@@ -97,9 +97,7 @@ const swap = () => {
   min-height: 24px;
 }
 
-/* Fixed label width so "Ally" and "Enemy" render the same pill size.
-   Sized for the longer EN label; the wider count slot (e.g. "10/10") still
-   pushes the pill wider in either state, just symmetrically. */
+/* Fixed label width so "Ally" and "Enemy" render the same pill size. */
 .label {
   min-width: 45px;
   text-align: center;

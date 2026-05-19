@@ -18,8 +18,7 @@ defineProps<{
   teamView?: boolean
   // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
   hideTeamView?: boolean
-  // When true, the Ally/Enemy toggle and Clear button are hidden
-  // (Map Editor / Debug tabs don't place characters).
+  // Hides the Ally/Enemy toggle and Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
 }>()
 
