@@ -127,19 +127,21 @@ const snippetComp = computed(() => {
 <template>
   <div v-if="!locale" class="skill-empty">No skill data available for this character.</div>
   <article v-else class="skill-sections">
-    <h1 class="skill-hero-name">{{ heroName }}</h1>
+    <div class="skill-header" :class="{ resettable: activeChips.size > 0 }" @click="clearChips">
+      <h1 class="skill-hero-name">{{ heroName }}</h1>
 
-    <div v-if="perCharacter.length > 0" class="skill-chips" @click="clearChips">
-      <button
-        v-for="tag in perCharacter"
-        :key="tag"
-        type="button"
-        class="skill-chip"
-        :class="{ 'is-active': activeChips.has(tag) }"
-        @click.stop="toggleChip(tag)"
-      >
-        {{ tagLabel(tag) }}
-      </button>
+      <div v-if="perCharacter.length > 0" class="skill-chips">
+        <button
+          v-for="tag in perCharacter"
+          :key="tag"
+          type="button"
+          class="skill-chip"
+          :class="{ 'is-active': activeChips.has(tag) }"
+          @click.stop="toggleChip(tag)"
+        >
+          {{ tagLabel(tag) }}
+        </button>
+      </div>
     </div>
 
     <template v-for="section in sections" :key="section.slotKey">
@@ -176,6 +178,13 @@ const snippetComp = computed(() => {
   text-align: left;
 }
 
+/* Clicks anywhere in the header (hero name, gaps, chip-strip background)
+   clear the active chips; chip buttons themselves stop propagation. Pointer
+   cursor only when there's actually something to reset. */
+.skill-header.resettable {
+  cursor: pointer;
+}
+
 .skill-chips {
   display: flex;
   flex-wrap: wrap;
@@ -183,8 +192,6 @@ const snippetComp = computed(() => {
   margin-bottom: var(--spacing-md);
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  /* Gaps in the strip clear the selection — pointer cursor cues that. */
-  cursor: pointer;
 }
 
 .skill-chip {

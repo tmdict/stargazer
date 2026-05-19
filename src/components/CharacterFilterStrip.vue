@@ -15,10 +15,30 @@ const props = defineProps<{ characters: readonly CharacterType[] }>()
 const factionOptions = computed(() => [...new Set(props.characters.map((c) => c.faction))].sort())
 const classOptions = computed(() => [...new Set(props.characters.map((c) => c.class))].sort())
 const damageOptions = computed(() => [...new Set(props.characters.map((c) => c.damage))].sort())
+
+const hasActiveFilter = computed(
+  () =>
+    factionFilter.value !== '' ||
+    classFilter.value !== '' ||
+    damageFilter.value !== '' ||
+    tagFilter.value !== null,
+)
+
+// Clicks on the strip background (gaps, between rows) clear every filter.
+// FilterIcons + FilterPills render their options as <button>s, so a closest()
+// check skips any click that actually landed on a filter.
+function handleStripClick(e: MouseEvent) {
+  if (!hasActiveFilter.value) return
+  if ((e.target as HTMLElement).closest('button')) return
+  factionFilter.value = ''
+  classFilter.value = ''
+  damageFilter.value = ''
+  tagFilter.value = null
+}
 </script>
 
 <template>
-  <div class="filter-strip">
+  <div class="filter-strip" :class="{ resettable: hasActiveFilter }" @click="handleStripClick">
     <div class="filters-row">
       <FilterIcons
         v-model="factionFilter"
@@ -48,6 +68,10 @@ const damageOptions = computed(() => [...new Set(props.characters.map((c) => c.d
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
+}
+
+.filter-strip.resettable {
+  cursor: pointer;
 }
 
 .filters-row {
