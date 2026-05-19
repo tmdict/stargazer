@@ -6,6 +6,8 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
+import { formatToCamelCase } from './src/utils/nameFormatting'
+
 // SSG Helpers
 
 // Derive skill list from the locale dir — every hero with skill text gets a
@@ -69,10 +71,7 @@ function pruneSnippetPreloads(html: string, route: string): string {
   const match = route.match(/^\/(en|zh)\/skill\/([\w-]+)/)
   if (!match) return html
   const [, lang, slug] = match
-  const camel = slug
-    .split('-')
-    .map((s) => s.charAt(0).toUpperCase() + s.slice(1))
-    .join('')
+  const camel = formatToCamelCase(slug)
 
   let pruned = 0
   const result = html.replace(
