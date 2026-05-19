@@ -80,4 +80,19 @@ const linkHref = computed(() =>
   font-size: 0.95rem;
   max-width: 320px;
 }
+
+/* Edge-to-edge on small screens, matching the grid section's responsive
+   chrome. Overrides modal.css's `max-width: 90% !important`. */
+@media (max-width: 768px) {
+  .container {
+    max-width: 100% !important;
+  }
+}
+@media (max-width: 480px) {
+  .container {
+    border-radius: 0;
+    border-left: 0;
+    border-right: 0;
+  }
+}
 </style>
