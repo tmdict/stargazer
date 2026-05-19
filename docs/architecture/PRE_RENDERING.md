@@ -42,22 +42,24 @@ The pre-rendering system uses vite-ssg to generate static HTML for content pages
 Shared routes defined once and used by both modes:
 
 ```typescript
-// src/router/routes.ts
+// src/router/routes.ts (abbreviated)
 export const routes: RouteRecordRaw[] = [
-  { path: '/', component: () => import('../views/HomeView.vue') },
-  { path: '/share', component: () => import('../views/ShareView.vue') },
-  { path: '/en/about', component: () => import('../views/AboutView.vue') },
-  { path: '/zh/about', component: () => import('../views/AboutView.vue') },
-  { path: '/en/skill/:name', component: () => import('../views/SkillView.vue'), props: true },
-  { path: '/zh/skill/:name', component: () => import('../views/SkillView.vue'), props: true },
+  { path: '/', component: () => import('@/views/HomeView.vue') },
+  { path: '/share', component: () => import('@/views/ShareView.vue') },
+  { path: '/skills', component: () => import('@/views/SkillsView.vue') },
+  { path: '/wandwars', component: () => import('@/views/WandWarsView.vue') },
+  { path: '/en/about', component: () => import('@/views/AboutView.vue') },
+  { path: '/en/skill/:name', component: () => import('@/views/SkillView.vue'), props: true },
+  // ...zh equivalents
 ]
 ```
 
 Key considerations:
 
 - Single source of truth for all routes
-- Home route included but not pre-rendered (fully interactive)
+- `/`, `/skills`, `/wandwars` are client-only (interactive). `/` is in the SSG list (no static content, but produces a fallback `index.html`); `/skills` and `/wandwars` rely on the host's SPA fallback
 - Share route is pre-rendered with default content for direct URL navigation
+- Per-skill `/{en,zh}/skill/<slug>` routes are pre-rendered as the canonical skill permalinks
 - Locale determined from URL path, not props
 
 ### SSG Entry Point (`/src/main.ssg.ts`)
@@ -132,7 +134,7 @@ const getCharacterImage = (characterName: string): string | undefined => {
 Content components are self-contained with their own data and locale handling:
 
 ```vue
-<!-- src/content/skills/Silvina.en.vue -->
+<!-- src/content/skill/Silvina.en.vue -->
 <template>
   <GridSnippet :grid-style="gridStyles.main" :images />
 </template>
@@ -145,7 +147,7 @@ import { gridStyles, images } from './Silvina.data'
 Data files use optimized images via vite-imagetools:
 
 ```typescript
-// src/content/skills/Silvina.data.ts
+// src/content/skill/Silvina.data.ts
 import silvinaImage from '@/assets/images/character/silvina.png?format=webp&quality=80&w=100'
 
 export const gridStyles = {
