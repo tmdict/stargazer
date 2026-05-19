@@ -5,7 +5,6 @@ import CharacterIcon from './CharacterIcon.vue'
 import SkillModal from './modals/SkillModal.vue'
 import TagsDisplay from './TagsDisplay.vue'
 import IconInfo from './ui/IconInfo.vue'
-import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { DOCUMENTED_SKILLS } from '@/content/skill'
 import type { CharacterType } from '@/lib/types/character'
@@ -72,10 +71,6 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 }
 
-const clearFilters = () => {
-  selectedTagNames.value = null
-}
-
 // Modal state - single modal for all skills
 const showSkillModal = ref(false)
 const selectedSkillName = ref('')
@@ -87,16 +82,7 @@ const openDetailsModal = (character: CharacterType) => {
 </script>
 
 <template>
-  <SelectionContainer
-    containerClass="skills-selection"
-    :showCounts="true"
-    :allyCount="characterStore.availableAlly"
-    :enemyCount="characterStore.availableEnemy"
-    :maxAllyCount="characterStore.maxTeamSizeAlly"
-    :maxEnemyCount="characterStore.maxTeamSizeEnemy"
-    :showFilters="true"
-    @clear-filters="clearFilters"
-  >
+  <div class="skills-selection">
     <!-- Tags Display -->
     <TagsDisplay v-model="selectedTagNames" :characters />
 
@@ -129,7 +115,7 @@ const openDetailsModal = (character: CharacterType) => {
       :initial-chip="selectedTagNames"
       @close="showSkillModal = false"
     />
-  </SelectionContainer>
+  </div>
 </template>
 
 <style scoped>

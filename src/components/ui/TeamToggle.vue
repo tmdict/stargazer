@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
 
-defineProps<{
+const props = defineProps<{
   selectedTeam: Team
   showCounts?: boolean
   allyCount?: number
@@ -17,82 +19,126 @@ const emit = defineEmits<{
   teamChange: [team: Team]
 }>()
 
-const setTeam = (team: Team) => {
-  emit('teamChange', team)
+const isAlly = computed(() => props.selectedTeam === Team.ALLY)
+const activeLabel = computed(() => i18n.t(isAlly.value ? 'app.ally' : 'app.enemy'))
+const activeCount = computed(() => (isAlly.value ? props.allyCount : props.enemyCount))
+const activeMax = computed(() => (isAlly.value ? props.maxAllyCount : props.maxEnemyCount))
+const swapTitle = computed(() => i18n.t(isAlly.value ? 'app.enemy' : 'app.ally'))
+
+const swap = () => {
+  emit('teamChange', isAlly.value ? Team.ENEMY : Team.ALLY)
 }
 </script>
 
 <template>
-  <div class="team-toggle">
-    <button
-      @click="setTeam(Team.ALLY)"
-      :class="['team-btn', { active: selectedTeam === Team.ALLY }]"
-    >
-      <span v-if="showCounts">{{ i18n.t('app.ally') }} ({{ allyCount }}/{{ maxAllyCount }})</span>
-      <span v-else>{{ i18n.t('app.ally') }}</span>
-    </button>
-    <button
-      @click="setTeam(Team.ENEMY)"
-      :class="['team-btn', { active: selectedTeam === Team.ENEMY }]"
-    >
-      <span v-if="showCounts"
-        >{{ i18n.t('app.enemy') }} ({{ enemyCount }}/{{ maxEnemyCount }})</span
+  <button
+    type="button"
+    class="team-toggle"
+    :class="{ 'is-enemy': !isAlly }"
+    :aria-label="`Switch to ${swapTitle}`"
+    :title="`Switch to ${swapTitle}`"
+    @click="swap"
+  >
+    <span class="active-pill" :class="isAlly ? 'is-ally' : 'is-enemy'">
+      <span class="label">{{ activeLabel }}</span>
+      <span v-if="showCounts" class="count">{{ activeCount }}/{{ activeMax }}</span>
+    </span>
+    <span class="swap-icon" aria-hidden="true">
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.4"
+        stroke-linecap="round"
+        stroke-linejoin="round"
       >
-      <span v-else>{{ i18n.t('app.enemy') }}</span>
-    </button>
-  </div>
+        <path d="M7 7h13M16 3l4 4-4 4" />
+        <path d="M17 17H4M8 13l-4 4 4 4" />
+      </svg>
+    </span>
+  </button>
 </template>
 
 <style scoped>
 .team-toggle {
-  display: flex;
-  justify-content: center;
-  gap: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   background: var(--color-bg-secondary);
-  border-radius: var(--radius-large);
-  padding: 4px;
   border: 2px solid var(--color-border-primary);
-  width: fit-content;
+  border-radius: var(--radius-large);
+  padding: 3px;
+  cursor: pointer;
+  font: inherit;
+  transition: border-color var(--transition-fast);
 }
 
-.team-btn {
-  background: transparent;
-  color: var(--color-text-secondary);
-  border: none;
-  padding: var(--spacing-sm) var(--spacing-lg);
-  cursor: pointer;
+/* Pill slides to the right when enemy is active; arrows take the left side. */
+.team-toggle.is-enemy {
+  flex-direction: row-reverse;
+}
+
+.team-toggle:hover {
+  border-color: var(--color-primary);
+}
+
+.active-pill {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: var(--radius-medium);
   font-size: 0.85rem;
   font-weight: 600;
-  transition: all var(--transition-fast);
-  border-radius: var(--radius-medium);
-  min-width: 120px;
+  color: white;
+  min-height: 24px;
 }
 
-.team-btn:hover {
-  background: var(--color-bg-tertiary);
+/* Fixed label width so "Ally" and "Enemy" render the same pill size.
+   Sized for the longer EN label; the wider count slot (e.g. "10/10") still
+   pushes the pill wider in either state, just symmetrically. */
+.label {
+  min-width: 45px;
+  text-align: center;
+}
+
+.active-pill.is-ally {
+  background: var(--color-ally);
+}
+
+.active-pill.is-enemy {
+  background: var(--color-danger);
+}
+
+.count {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8em;
+  opacity: 0.9;
+}
+
+.swap-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  color: var(--color-text-secondary);
+}
+
+.team-toggle:hover .swap-icon {
   color: var(--color-primary);
 }
 
-.team-btn.active {
-  background: var(--color-primary);
-  color: white;
-}
-
-@media (max-width: 768px) {
-  .team-toggle {
-    width: 100%;
-  }
-
-  .team-btn {
-    flex: 1;
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 0.85rem;
-  }
+.team-toggle:active {
+  transform: scale(0.97);
 }
 
 @media (max-width: 480px) {
-  .team-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
+  .active-pill {
+    padding: 5px 10px;
     font-size: 0.8rem;
   }
 }

@@ -270,6 +270,7 @@ const handleResetMap = () => {
             :showSkills
             :teamView="gridStore.teamView"
             :hideTeamView="activeTab === 'mapEditor' || activeTab === 'debug'"
+            :hideTeamControls="activeTab === 'mapEditor' || activeTab === 'debug'"
             @update:showArrows="showArrows = $event"
             @update:showHexIds="showHexIds = $event"
             @update:showPerspective="showPerspective = $event"

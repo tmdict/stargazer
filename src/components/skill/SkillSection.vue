@@ -112,9 +112,9 @@ const rendered = computed(() =>
 
 .skill-level-badge {
   flex: 0 0 auto;
-  /* Matches body first-line height (16px × 1.55) so the small label is
+  /* Matches body first-line height (15px × 1.55) so the small label is
      vertically centered against the first line of description text. */
-  line-height: 24.8px;
+  line-height: 23.25px;
   color: rgba(255, 255, 255, 0.55);
   font-size: 10px;
   font-weight: 700;
@@ -127,5 +127,9 @@ const rendered = computed(() =>
   white-space: pre-line;
   line-height: 1.55;
   flex: 1;
+}
+
+.skill-level.upgrade .skill-level-desc {
+  font-size: 15px;
 }
 </style>
