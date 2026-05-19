@@ -4,7 +4,6 @@ import { computed, ref } from 'vue'
 import CharacterIcon from './CharacterIcon.vue'
 import TagsDisplay from './TagsDisplay.vue'
 import FilterIcons from './ui/FilterIcons.vue'
-import SelectionContainer from './ui/SelectionContainer.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { compareFaction } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
@@ -82,49 +81,31 @@ const removeCharacterFromGrid = (characterId: number) => {
     characterStore.removeCharacterFromHex(characterTile.hex.getId())
   }
 }
-
-const handleClearFilters = () => {
-  factionFilter.value = ''
-  classFilter.value = ''
-  damageFilter.value = ''
-  selectedTagNames.value = null
-}
 </script>
 
 <template>
-  <SelectionContainer
-    containerClass="character-selection"
-    :showCounts="true"
-    :allyCount="characterStore.availableAlly"
-    :enemyCount="characterStore.availableEnemy"
-    :maxAllyCount="characterStore.maxTeamSizeAlly"
-    :maxEnemyCount="characterStore.maxTeamSizeEnemy"
-    :showFilters="true"
-    @clear-filters="handleClearFilters"
-  >
-    <!-- Character Filters in Controls Row -->
-    <template #filters>
-      <div class="filters-row">
-        <FilterIcons
-          v-model="factionFilter"
-          icon-prefix="faction"
-          :options="factionOptions"
-          active-border-color="var(--color-primary)"
-        />
-        <FilterIcons
-          v-model="classFilter"
-          icon-prefix="class"
-          :options="classOptions"
-          active-border-color="var(--color-primary)"
-        />
-        <FilterIcons
-          v-model="damageFilter"
-          icon-prefix="damage"
-          :options="damageOptions"
-          active-border-color="var(--color-primary)"
-        />
-      </div>
-    </template>
+  <div class="character-selection">
+    <!-- Character Filters -->
+    <div class="filters-row">
+      <FilterIcons
+        v-model="factionFilter"
+        icon-prefix="faction"
+        :options="factionOptions"
+        active-border-color="var(--color-primary)"
+      />
+      <FilterIcons
+        v-model="classFilter"
+        icon-prefix="class"
+        :options="classOptions"
+        active-border-color="var(--color-primary)"
+      />
+      <FilterIcons
+        v-model="damageFilter"
+        icon-prefix="damage"
+        :options="damageOptions"
+        active-border-color="var(--color-primary)"
+      />
+    </div>
 
     <!-- Tags Display -->
     <TagsDisplay v-model="selectedTagNames" :characters />
@@ -141,7 +122,7 @@ const handleClearFilters = () => {
         @character-click="handleCharacterClick"
       />
     </div>
-  </SelectionContainer>
+  </div>
 </template>
 
 <style scoped>
@@ -163,6 +144,7 @@ const handleClearFilters = () => {
 .character-selection {
   display: flex;
   flex-direction: column;
+  gap: var(--spacing-lg);
   min-height: 656px;
 }
 

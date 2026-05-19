@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconTrash from './IconTrash.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
@@ -13,11 +14,17 @@ const handleClick = () => {
 </script>
 
 <template>
-  <button @click="handleClick" class="clear-all-btn">{{ i18n.t('app.clear') }}</button>
+  <button @click="handleClick" class="clear-all-btn">
+    <IconTrash :size="14" class="btn-icon" />
+    {{ i18n.t('app.clear') }}
+  </button>
 </template>
 
 <style scoped>
 .clear-all-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
   background: var(--color-danger);
   color: white;
   border: 2px solid var(--color-danger);
@@ -28,6 +35,10 @@ const handleClick = () => {
   font-size: 0.85rem;
   font-weight: 600;
   transition: all var(--transition-fast);
+}
+
+.btn-icon {
+  flex-shrink: 0;
 }
 
 .clear-all-btn:hover {
