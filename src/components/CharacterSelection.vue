@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
+import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterIcon from './CharacterIcon.vue'
-import TagsDisplay from './TagsDisplay.vue'
-import FilterIcons from './ui/FilterIcons.vue'
+import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { compareFaction } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
 
 const props = defineProps<{
@@ -15,68 +14,29 @@ const props = defineProps<{
 
 const { selectedTeam, characterStore } = useSelectionState()
 
-// Filter state
-const factionFilter = ref('')
-const classFilter = ref('')
-const damageFilter = ref('')
-const selectedTagNames = ref<string | null>(null)
-
-const factionOptions = computed(() => [...new Set(props.characters.map((c) => c.faction))].sort())
-const classOptions = computed(() => [...new Set(props.characters.map((c) => c.class))].sort())
-const damageOptions = computed(() => [...new Set(props.characters.map((c) => c.damage))].sort())
-
-// Filtered and sorted characters
-const filteredAndSortedCharacters = computed(() => {
-  let filtered = [...props.characters]
-
-  // Apply filters
-  if (factionFilter.value) {
-    filtered = filtered.filter((char) => char.faction === factionFilter.value)
-  }
-  if (classFilter.value) {
-    filtered = filtered.filter((char) => char.class === classFilter.value)
-  }
-  if (damageFilter.value) {
-    filtered = filtered.filter((char) => char.damage === damageFilter.value)
-  }
-
-  // Apply tag filters
-  if (selectedTagNames.value) {
-    filtered = filtered.filter((char) => Object.keys(char.tags).includes(selectedTagNames.value!))
-  }
-
-  // Sort filtered results
-  return filtered.sort((a, b) => compareFaction(a.faction, b.faction) || a.id - b.id)
-})
+const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
+  useCharacterFilters(computed(() => props.characters))
 
 const isCharacterPlaced = (characterId: number): boolean => {
-  // Get all tiles with characters
   const tilesWithCharacters = characterStore.getTilesWithCharacters()
-
-  // Check if this character is placed for the current selected team
   return tilesWithCharacters.some(
     (tile) => tile.characterId === characterId && tile.team === selectedTeam.value,
   )
 }
 
 const handleCharacterClick = (character: CharacterType) => {
-  // Check if character is already placed for current team
   if (isCharacterPlaced(character.id)) {
     removeCharacterFromGrid(character.id)
     return
   }
-
-  // Attempt to auto-place the character
   characterStore.autoPlaceCharacter(character.id, selectedTeam.value)
 }
 
 const removeCharacterFromGrid = (characterId: number) => {
-  // Find the hex where this character is placed for the current team
   const tilesWithCharacters = characterStore.getTilesWithCharacters()
   const characterTile = tilesWithCharacters.find(
     (tile) => tile.characterId === characterId && tile.team === selectedTeam.value,
   )
-
   if (characterTile) {
     characterStore.removeCharacterFromHex(characterTile.hex.getId())
   }
@@ -85,35 +45,17 @@ const removeCharacterFromGrid = (characterId: number) => {
 
 <template>
   <div class="character-selection">
-    <!-- Character Filters -->
-    <div class="filters-row">
-      <FilterIcons
-        v-model="factionFilter"
-        icon-prefix="faction"
-        :options="factionOptions"
-        active-border-color="var(--color-primary)"
-      />
-      <FilterIcons
-        v-model="classFilter"
-        icon-prefix="class"
-        :options="classOptions"
-        active-border-color="var(--color-primary)"
-      />
-      <FilterIcons
-        v-model="damageFilter"
-        icon-prefix="damage"
-        :options="damageOptions"
-        active-border-color="var(--color-primary)"
-      />
-    </div>
+    <CharacterFilterStrip
+      v-model:faction-filter="factionFilter"
+      v-model:class-filter="classFilter"
+      v-model:damage-filter="damageFilter"
+      v-model:tag-filter="selectedTagNames"
+      :characters
+    />
 
-    <!-- Tags Display -->
-    <TagsDisplay v-model="selectedTagNames" :characters />
-
-    <!-- Characters Grid -->
     <div class="characters">
       <CharacterIcon
-        v-for="character in filteredAndSortedCharacters"
+        v-for="character in filteredCharacters"
         :key="character.id"
         :character="{ ...character, team: selectedTeam }"
         :isDraggable
@@ -126,21 +68,6 @@ const removeCharacterFromGrid = (characterId: number) => {
 </template>
 
 <style scoped>
-.filters-row {
-  display: flex;
-  gap: var(--spacing-md);
-  align-items: end;
-  flex-wrap: wrap;
-}
-
-@media (max-width: 768px) {
-  .filters-row {
-    gap: var(--spacing-sm);
-    flex-direction: column;
-    align-items: stretch;
-  }
-}
-
 .character-selection {
   display: flex;
   flex-direction: column;
@@ -160,7 +87,6 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 }
 
-/* Add scroll for large screens when in side-by-side layout */
 .characters {
   display: flex;
   flex-wrap: wrap;

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
+import { useOverlay } from '@/composables/useOverlay'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
@@ -41,18 +42,11 @@ const availableCharacters = computed(() => {
 
   return props.characters
     .filter((char) => !placedCharacterIds.includes(char.id))
-    .sort((a, b) => {
-      // First sort by faction
-      const factionCompare = a.faction.localeCompare(b.faction)
-      if (factionCompare !== 0) return factionCompare
-
-      // Then sort by name within the same faction
-      return a.name.localeCompare(b.name)
-    })
+    .sort((a, b) => a.faction.localeCompare(b.faction) || a.name.localeCompare(b.name))
 })
 
-// Faction filter — composes on top of availableCharacters (which already
-// excludes heroes already placed on the current team).
+// Faction filter composes on top of availableCharacters (which excludes
+// already-placed heroes), so options/count reflect the remaining pool.
 const factionFilter = ref('')
 const factionOptions = computed(() =>
   [...new Set(availableCharacters.value.map((c) => c.faction))].sort(),
@@ -80,29 +74,10 @@ const handleMouseLeave = () => {
   emit('close')
 }
 
-const handleKeydown = (event: KeyboardEvent) => {
-  if (event.key === 'Escape') {
-    emit('close')
-  }
-}
-
-const handleClickOutside = (event: MouseEvent) => {
-  if (modalRef.value && event.target instanceof Node && !modalRef.value.contains(event.target)) {
-    emit('close')
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', handleKeydown)
-  // Add click listener with a small delay to avoid closing immediately on the same click that opened it
-  setTimeout(() => {
-    document.addEventListener('click', handleClickOutside)
-  }, 100)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleKeydown)
-  document.removeEventListener('click', handleClickOutside)
+useOverlay({
+  elementRef: modalRef,
+  onClose: () => emit('close'),
+  clickOutsideDelay: 100,
 })
 </script>
 
