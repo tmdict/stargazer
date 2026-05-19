@@ -1,0 +1,75 @@
+<script setup lang="ts">
+import { computed } from 'vue'
+
+import SkillSections from './SkillSections.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import IconLink from '@/components/ui/IconLink.vue'
+import { useI18nStore } from '@/stores/i18n'
+import { useSkillsTabStore } from '@/stores/skillsTab'
+import { hasSkillLocale } from '@/utils/dataLoader'
+
+import '@/styles/modal.css'
+
+const skillsTabStore = useSkillsTabStore()
+const i18n = useI18nStore()
+
+const lang = computed<'en' | 'zh'>(() => (i18n.currentLocale === 'zh' ? 'zh' : 'en'))
+
+// hasSkillLocale also covers the null-selection case.
+const visibleSlug = computed(() => {
+  const slug = skillsTabStore.selectedSlug
+  return slug && hasSkillLocale(slug) ? slug : null
+})
+
+const linkHref = computed(() =>
+  visibleSlug.value ? `/${lang.value}/skill/${visibleSlug.value}` : '',
+)
+</script>
+
+<template>
+  <!-- .container + .content from modal.css — visual match to SkillModal / SkillView. -->
+  <div class="container">
+    <div v-if="visibleSlug" class="buttons">
+      <a :href="linkHref" class="button" :aria-label="visibleSlug" :title="visibleSlug">
+        <IconLink :size="16" />
+      </a>
+    </div>
+    <div class="content">
+      <!-- :key remounts the chip strip on each hero (SkillSections caches activeChips). -->
+      <SkillSections v-if="visibleSlug" :key="visibleSlug" :slug="visibleSlug" :lang="lang" />
+      <div v-else class="empty-state">
+        <IconInfo :size="40" class="empty-icon" />
+        <p class="empty-tip">{{ i18n.t('app.skill-tab-empty-hint') }}</p>
+      </div>
+    </div>
+  </div>
+</template>
+
+<style scoped>
+/* Slightly lighter than modal.css's default so the inline panel reads as a
+   distinct surface from the popup modal. */
+.container {
+  background: #262626;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 540px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.empty-icon {
+  opacity: 0.4;
+  margin-bottom: var(--spacing-md);
+}
+
+.empty-tip {
+  margin: 0;
+  font-size: 0.95rem;
+  max-width: 320px;
+}
+</style>
