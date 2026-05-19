@@ -34,14 +34,21 @@ export function setupContentMeta(options: ContentMetaOptions): void {
   // Combine base keywords with any additional keywords
   const allKeywords = keywords ? [...baseKeywords, ...keywords] : baseKeywords
 
+  const ORIGIN = 'https://stargazer.tmdict.com'
+
   useHead({
     title: title + ' | Stargazer',
     meta: [
       { name: 'keywords', content: allKeywords.join(', ') },
       { property: 'og:title', content: title },
-      { property: 'og:url', content: `https://stargazer.tmdict.com/${locale}/${url}` },
+      { property: 'og:url', content: `${ORIGIN}/${locale}/${url}` },
     ],
-    link: [{ rel: 'canonical', href: `https://stargazer.tmdict.com/${locale}/${url}` }],
+    link: [
+      { rel: 'canonical', href: `${ORIGIN}/${locale}/${url}` },
+      { rel: 'alternate', hreflang: 'en', href: `${ORIGIN}/en/${url}` },
+      { rel: 'alternate', hreflang: 'zh', href: `${ORIGIN}/zh/${url}` },
+      { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
+    ],
   })
 }
 
