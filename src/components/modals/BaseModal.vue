@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref, toRef } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
 import IconLink from '@/components/ui/IconLink.vue'
+import { useOverlay } from '@/composables/useOverlay'
 import { useI18nStore } from '@/stores/i18n'
 
 import '@/styles/modal.css'
@@ -35,38 +36,17 @@ const linkHref = computed(() => {
   return props.linkParam === 'about' ? `/${locale}/about` : `/${locale}/skill/${props.linkParam}`
 })
 
-// Handle escape key
-const handleEscape = (e: KeyboardEvent) => {
-  if (e.key === 'Escape' && props.show) {
-    emit('close')
-  }
-}
-
-// Handle click outside
-const handleClickOutside = (e: MouseEvent) => {
-  if (modalRef.value && e.target instanceof Node && !modalRef.value.contains(e.target)) {
-    emit('close')
-  }
-}
-
-onMounted(() => {
-  document.addEventListener('keydown', handleEscape)
-})
-
-onUnmounted(() => {
-  document.removeEventListener('keydown', handleEscape)
+useOverlay({
+  elementRef: modalRef,
+  onClose: () => emit('close'),
+  isOpen: toRef(props, 'show'),
 })
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="modal">
-      <div
-        v-if="show"
-        class="overlayModal"
-        :class="{ 'is-top-anchored': topAnchor }"
-        @click="handleClickOutside"
-      >
+      <div v-if="show" class="overlay is-modal" :class="{ 'is-top-anchored': topAnchor }">
         <div ref="modalRef" class="container" :style="{ maxWidth }" @click.stop>
           <div class="buttons">
             <slot name="header-buttons" />

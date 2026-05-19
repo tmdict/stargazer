@@ -14,6 +14,7 @@ const props = defineProps<{
   character: CharacterType
   isDraggable?: boolean
   isPlaced?: boolean
+  isSelected?: boolean
   showSimpleTooltip?: boolean
   hideInfo?: boolean
   selectedFilter?: string | null
@@ -133,7 +134,7 @@ const handleTouchStart = () => {
     <div
       ref="characterElement"
       class="character-display"
-      :class="{ draggable: isDraggable, placed: isPlaced }"
+      :class="{ draggable: isDraggable, placed: isPlaced, selected: isSelected }"
       :style="{
         background: `url(${gameDataStore.getIcon(`bg-${character.level}`)}) center/cover`,
       }"
@@ -294,6 +295,10 @@ const handleTouchStart = () => {
 
 .character-display.placed {
   box-shadow: 0 0 0 5px #c05b4d;
+}
+
+.character-display.selected {
+  box-shadow: 0 0 0 5px var(--color-primary);
 }
 
 /* Simple tooltip - just name */

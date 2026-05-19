@@ -1,6 +1,7 @@
 /* Shared styles for modal-like components */
 
-/* Overlay styles */
+/* Overlay styles. Base rules cover SSG-page surfaces (no z-index). The
+   `.is-modal` modifier layers above other UI for popup modal usage. */
 .overlay {
   position: fixed;
   top: 0;
@@ -15,30 +16,17 @@
   padding: 40px 20px;
 }
 
-.overlayModal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow-y: auto;
-  padding: 40px 20px;
+.overlay.is-modal {
   z-index: 9998;
 }
 
 /* Top-anchored variant. `.container` uses `margin: auto`, which in a flex
    parent absorbs free space evenly top/bottom and overrides `align-items`, so
    we have to zero the vertical autos in addition to setting flex-start. */
-.overlayModal.is-top-anchored,
 .overlay.is-top-anchored {
   align-items: flex-start;
 }
 
-.overlayModal.is-top-anchored > .container,
 .overlay.is-top-anchored > .container {
   margin-top: 0;
   margin-bottom: auto;
@@ -89,6 +77,9 @@
   color: rgba(255, 255, 255, 0.6);
   width: 32px;
   height: 32px;
+  /* Reset native <button> padding so the SVG sizes identically whether the
+     wrapper is an <a> or a <button>. */
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
