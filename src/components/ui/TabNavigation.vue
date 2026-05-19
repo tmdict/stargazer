@@ -82,12 +82,6 @@ onUnmounted(() => {
         {{ i18n.t('app.characters') }}
       </button>
       <button
-        @click="setActiveTab('skills')"
-        :class="['tab-btn', { active: activeTab === 'skills' }]"
-      >
-        {{ i18n.t('app.skills') }}
-      </button>
-      <button
         @click="setActiveTab('artifacts')"
         :class="['tab-btn', { active: activeTab === 'artifacts' }]"
       >

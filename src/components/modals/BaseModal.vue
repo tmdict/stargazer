@@ -53,8 +53,8 @@ useOverlay({
             <a
               :href="linkHref"
               class="button"
-              :aria-label="linkParam"
-              :title="linkParam"
+              :aria-label="i18n.t('app.link')"
+              :title="i18n.t('app.link')"
               @click="emit('close')"
             >
               <IconLink :size="16" />
