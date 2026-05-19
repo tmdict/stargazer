@@ -9,6 +9,14 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "temp-buff": [{ "skill2": 1 }, { "awakening": 2 }]
+    "temp-buff": [
+      {
+        "skill2": 1
+      },
+      {
+        "awakening": 2
+      }
+    ],
+    "enhance-force-2": [{ "awakening": 2 }]
   }
 }

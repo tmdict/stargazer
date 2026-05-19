@@ -90,8 +90,8 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 
 ### Adding a Character
 
-1. Add JSON: `src/data/characters/[name].json`
-2. Add image: `src/assets/images/characters/[name].webp`
+1. Add JSON: `src/data/character/[name].json`
+2. Add image: `src/assets/images/character/[name].png` (vite-imagetools converts to WebP at build time)
 3. Character automatically appears in roster
 
 ### Modifying Grid Logic

@@ -4,11 +4,13 @@ import { computed, ref } from 'vue'
 import CharacterIcon from './CharacterIcon.vue'
 import SkillModal from './modals/SkillModal.vue'
 import TagsDisplay from './TagsDisplay.vue'
+import FilterIcons from './ui/FilterIcons.vue'
 import IconInfo from './ui/IconInfo.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { DOCUMENTED_SKILLS } from '@/content/skill'
+import { compareFaction } from '@/lib/filterOrder'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
+import { hasSkillLocale } from '@/utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -19,24 +21,35 @@ const { selectedTeam, characterStore } = useSelectionState()
 const i18n = useI18nStore()
 
 // Filter state
+const factionFilter = ref('')
+const classFilter = ref('')
+const damageFilter = ref('')
 const selectedTagNames = ref<string | null>(null)
 
-// Filter characters to only show those with skills
-const skillCharacters = computed(() => {
-  let filtered = props.characters.filter((char) => DOCUMENTED_SKILLS.includes(char.name))
+const factionOptions = computed(() => [...new Set(props.characters.map((c) => c.faction))].sort())
+const classOptions = computed(() => [...new Set(props.characters.map((c) => c.class))].sort())
+const damageOptions = computed(() => [...new Set(props.characters.map((c) => c.damage))].sort())
 
-  // Apply tag filters
+const skillCharacters = computed(() => {
+  let filtered = [...props.characters]
+
+  if (factionFilter.value) {
+    filtered = filtered.filter((char) => char.faction === factionFilter.value)
+  }
+  if (classFilter.value) {
+    filtered = filtered.filter((char) => char.class === classFilter.value)
+  }
+  if (damageFilter.value) {
+    filtered = filtered.filter((char) => char.damage === damageFilter.value)
+  }
   if (selectedTagNames.value) {
     filtered = filtered.filter((char) => Object.keys(char.tags).includes(selectedTagNames.value!))
   }
 
-  // Sort by the order in DOCUMENTED_SKILLS array
-  return filtered.sort((a, b) => {
-    const aIndex = DOCUMENTED_SKILLS.indexOf(a.name)
-    const bIndex = DOCUMENTED_SKILLS.indexOf(b.name)
-    return aIndex - bIndex
-  })
+  return filtered.sort((a, b) => compareFaction(a.faction, b.faction) || a.id - b.id)
 })
+
+const hasDocumentedSkill = (name: string): boolean => hasSkillLocale(name)
 
 const isCharacterPlaced = (characterId: number): boolean => {
   // Get all tiles with characters
@@ -83,6 +96,28 @@ const openDetailsModal = (character: CharacterType) => {
 
 <template>
   <div class="skills-selection">
+    <!-- Faction / Class / Damage filters -->
+    <div class="filters-row">
+      <FilterIcons
+        v-model="factionFilter"
+        icon-prefix="faction"
+        :options="factionOptions"
+        active-border-color="var(--color-primary)"
+      />
+      <FilterIcons
+        v-model="classFilter"
+        icon-prefix="class"
+        :options="classOptions"
+        active-border-color="var(--color-primary)"
+      />
+      <FilterIcons
+        v-model="damageFilter"
+        icon-prefix="damage"
+        :options="damageOptions"
+        active-border-color="var(--color-primary)"
+      />
+    </div>
+
     <!-- Tags Display -->
     <TagsDisplay v-model="selectedTagNames" :characters />
 
@@ -98,6 +133,7 @@ const openDetailsModal = (character: CharacterType) => {
           @character-click="handleCharacterClick"
         />
         <button
+          v-if="hasDocumentedSkill(character.name)"
           @click="openDetailsModal(character)"
           class="details-button"
           title="View skill details"
@@ -119,6 +155,21 @@ const openDetailsModal = (character: CharacterType) => {
 </template>
 
 <style scoped>
+.filters-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: end;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 768px) {
+  .filters-row {
+    gap: var(--spacing-sm);
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
 .skills-selection {
   display: flex;
   flex-direction: column;
