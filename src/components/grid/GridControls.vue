@@ -1,10 +1,14 @@
 <script setup lang="ts">
+import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconLink from '@/components/ui/IconLink.vue'
+import TeamToggle from '@/components/ui/TeamToggle.vue'
+import { useSelectionState } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
+const { selectedTeam, characterStore, handleTeamChange, handleClearAll } = useSelectionState()
 
 defineProps<{
   showArrows: boolean
@@ -14,6 +18,9 @@ defineProps<{
   teamView?: boolean
   // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
   hideTeamView?: boolean
+  // When true, the Ally/Enemy toggle and Clear button are hidden
+  // (Map Editor / Debug tabs don't place characters).
+  hideTeamControls?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -67,77 +74,101 @@ const handleDownload = () => {
 
 <template>
   <div class="grid-controls">
-    <label class="grid-toggle-btn">
-      <input
-        type="checkbox"
-        :checked="!showPerspective"
-        @change="handlePerspectiveChange"
-        class="grid-toggle-checkbox"
-      />
-      <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
-    </label>
-    <label class="grid-toggle-btn">
-      <input
-        type="checkbox"
-        :checked="showHexIds"
-        @change="handleHexIdsChange"
-        class="grid-toggle-checkbox"
-      />
-      <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
-    </label>
-    <label v-if="!hideTeamView" class="grid-toggle-btn">
-      <input
-        type="checkbox"
-        :checked="teamView"
-        @change="handleTeamViewChange"
-        class="grid-toggle-checkbox"
-      />
-      <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
-    </label>
-    <label class="grid-toggle-btn" :class="{ disabled: teamView }">
-      <input
-        type="checkbox"
-        :checked="showSkills"
-        :disabled="teamView"
-        @change="handleSkillsChange"
-        class="grid-toggle-checkbox"
-      />
-      <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
-    </label>
-    <label class="grid-toggle-btn" :class="{ disabled: teamView }">
-      <input
-        type="checkbox"
-        :checked="showArrows"
-        :disabled="teamView"
-        @change="handleArrowsChange"
-        class="grid-toggle-checkbox"
-      />
-      <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
-    </label>
+    <!-- Row 1: grid display toggles -->
+    <div class="controls-row">
+      <label class="grid-toggle-btn">
+        <input
+          type="checkbox"
+          :checked="!showPerspective"
+          @change="handlePerspectiveChange"
+          class="grid-toggle-checkbox"
+        />
+        <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
+      </label>
+      <label class="grid-toggle-btn">
+        <input
+          type="checkbox"
+          :checked="showHexIds"
+          @change="handleHexIdsChange"
+          class="grid-toggle-checkbox"
+        />
+        <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
+      </label>
+      <label v-if="!hideTeamView" class="grid-toggle-btn">
+        <input
+          type="checkbox"
+          :checked="teamView"
+          @change="handleTeamViewChange"
+          class="grid-toggle-checkbox"
+        />
+        <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
+      </label>
+      <label class="grid-toggle-btn" :class="{ disabled: teamView }">
+        <input
+          type="checkbox"
+          :checked="showSkills"
+          :disabled="teamView"
+          @change="handleSkillsChange"
+          class="grid-toggle-checkbox"
+        />
+        <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
+      </label>
+      <label class="grid-toggle-btn" :class="{ disabled: teamView }">
+        <input
+          type="checkbox"
+          :checked="showArrows"
+          :disabled="teamView"
+          @change="handleArrowsChange"
+          class="grid-toggle-checkbox"
+        />
+        <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
+      </label>
+    </div>
 
-    <!-- Action Buttons -->
-    <button @click="handleCopyLink" class="action-btn">
-      <IconLink :size="14" class="btn-icon" />
-      {{ i18n.t('app.link') }}
-    </button>
-    <button @click="handleCopyImage" class="action-btn">
-      <IconCopy :size="14" class="btn-icon" />
-      {{ i18n.t('app.copy') }}
-    </button>
-    <button @click="handleDownload" class="action-btn">
-      <IconDownload :size="14" class="btn-icon" />
-      {{ i18n.t('app.download') }}
-    </button>
+    <!-- Row 2: team toggle + action buttons + clear -->
+    <div class="controls-row">
+      <TeamToggle
+        v-if="!hideTeamControls"
+        :selectedTeam
+        :showCounts="showHexIds"
+        :allyCount="characterStore.availableAlly"
+        :enemyCount="characterStore.availableEnemy"
+        :maxAllyCount="characterStore.maxTeamSizeAlly"
+        :maxEnemyCount="characterStore.maxTeamSizeEnemy"
+        @team-change="handleTeamChange"
+      />
+      <button @click="handleCopyLink" class="action-btn">
+        <IconLink :size="14" class="btn-icon" />
+        {{ i18n.t('app.link') }}
+      </button>
+      <button @click="handleCopyImage" class="action-btn">
+        <IconCopy :size="14" class="btn-icon" />
+        {{ i18n.t('app.copy') }}
+      </button>
+      <button @click="handleDownload" class="action-btn">
+        <IconDownload :size="14" class="btn-icon" />
+        {{ i18n.t('app.download') }}
+      </button>
+      <ClearButton v-if="!hideTeamControls" @click="handleClearAll" />
+    </div>
   </div>
 </template>
 
 <style scoped>
 .grid-controls {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  margin-top: var(--spacing-lg);
+}
+
+.controls-row {
+  display: flex;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
   gap: var(--spacing-lg);
-  margin-top: var(--spacing-lg);
 }
 
 /* Base button styles shared by all control buttons */
