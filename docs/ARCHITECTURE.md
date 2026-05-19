@@ -88,6 +88,9 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 - `useDragDrop`: Global drag state management
 - `useGridEvents`: Event system using provide/inject pattern
 - `useBreakpoint`: Responsive breakpoint detection
+- `useOverlay`: Escape + click-outside-to-close for modal-style surfaces
+- `useCharacterFilters`: Shared faction/class/damage/tag filter state for the Characters tab and `/skills`
+- `useSkillSearch`: Lazy per-language skill-text index for the `/skills` browser
 
 ### State Layer (`/src/stores/`)
 

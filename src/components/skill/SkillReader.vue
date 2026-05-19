@@ -5,19 +5,19 @@ import SkillSections from './SkillSections.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import { useI18nStore } from '@/stores/i18n'
-import { useSkillsTabStore } from '@/stores/skillsTab'
+import { useSkillsStore } from '@/stores/skills'
 import { hasSkillLocale } from '@/utils/dataLoader'
 
 import '@/styles/modal.css'
 
-const skillsTabStore = useSkillsTabStore()
+const skillsStore = useSkillsStore()
 const i18n = useI18nStore()
 
 const lang = computed<'en' | 'zh'>(() => (i18n.currentLocale === 'zh' ? 'zh' : 'en'))
 
 // hasSkillLocale also covers the null-selection case.
 const visibleSlug = computed(() => {
-  const slug = skillsTabStore.selectedSlug
+  const slug = skillsStore.selectedSlug
   return slug && hasSkillLocale(slug) ? slug : null
 })
 
@@ -30,7 +30,12 @@ const linkHref = computed(() =>
   <!-- .container + .content from modal.css — visual match to SkillModal / SkillView. -->
   <div class="container">
     <div v-if="visibleSlug" class="buttons">
-      <a :href="linkHref" class="button" :aria-label="visibleSlug" :title="visibleSlug">
+      <a
+        :href="linkHref"
+        class="button"
+        :aria-label="i18n.t('app.link')"
+        :title="i18n.t('app.link')"
+      >
         <IconLink :size="16" />
       </a>
     </div>
@@ -39,7 +44,7 @@ const linkHref = computed(() =>
       <SkillSections v-if="visibleSlug" :key="visibleSlug" :slug="visibleSlug" :lang="lang" />
       <div v-else class="empty-state">
         <IconInfo :size="40" class="empty-icon" />
-        <p class="empty-tip">{{ i18n.t('app.skill-tab-empty-hint') }}</p>
+        <p class="empty-tip">{{ i18n.t('app.skill-empty-hint') }}</p>
       </div>
     </div>
   </div>
@@ -47,17 +52,20 @@ const linkHref = computed(() =>
 
 <style scoped>
 /* Slightly lighter than modal.css's default so the inline panel reads as a
-   distinct surface from the popup modal. */
+   distinct surface from the popup modal. `margin: 0` overrides the modal-
+   context `margin: auto`, which would otherwise vertical-center the panel
+   inside its flex slot. */
 .container {
   background: #262626;
+  margin: 0;
 }
 
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
   min-height: 540px;
+  padding-top: var(--spacing-2xl);
   text-align: center;
   color: rgba(255, 255, 255, 0.55);
 }

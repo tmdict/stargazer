@@ -9,7 +9,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { type SlotKey } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { useSkillsTabStore } from '@/stores/skillsTab'
+import { useSkillsStore } from '@/stores/skills'
 import { loadAppLocales, loadCharacterLocales } from '@/utils/dataLoader'
 
 const props = defineProps<{
@@ -17,7 +17,7 @@ const props = defineProps<{
 }>()
 
 const gameDataStore = useGameDataStore()
-const skillsTabStore = useSkillsTabStore()
+const skillsStore = useSkillsStore()
 const i18n = useI18nStore()
 
 const lang = computed<'en' | 'zh'>(() => (i18n.currentLocale === 'zh' ? 'zh' : 'en'))
@@ -78,11 +78,11 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 }
 
 const handleSelect = (character: CharacterType) => {
-  skillsTabStore.setSelectedSlug(character.name)
+  skillsStore.setSelectedSlug(character.name)
 }
 
 const handleSelectSlug = (slug: string) => {
-  skillsTabStore.setSelectedSlug(slug)
+  skillsStore.setSelectedSlug(slug)
 }
 </script>
 
@@ -94,10 +94,10 @@ const handleSelectSlug = (slug: string) => {
         v-model="searchQuery"
         type="search"
         class="search-input"
-        :placeholder="i18n.t('app.skill-tab-search-placeholder')"
+        :placeholder="i18n.t('app.skill-search-placeholder')"
       />
       <span v-if="visibleSearchResults" class="search-count">
-        {{ visibleSearchResults.length }} {{ i18n.t('app.skill-tab-results') }}
+        {{ visibleSearchResults.length }} {{ i18n.t('app.skill-results') }}
       </span>
     </div>
 
@@ -121,7 +121,7 @@ const handleSelectSlug = (slug: string) => {
         <CharacterIcon
           :character
           :hideInfo="true"
-          :isSelected="skillsTabStore.selectedSlug === character.name"
+          :isSelected="skillsStore.selectedSlug === character.name"
         />
         <div class="meta-row">
           <img
@@ -140,14 +140,14 @@ const handleSelectSlug = (slug: string) => {
 
     <div v-else class="results">
       <p v-if="visibleSearchResults.length === 0" class="empty-results">
-        {{ i18n.t('app.skill-tab-no-matches', { query: `"${debouncedQuery}"` }) }}
+        {{ i18n.t('app.skill-no-matches', { query: `"${debouncedQuery}"` }) }}
       </p>
       <div
         v-for="result in visibleSearchResults"
         :key="result.slug"
         class="result-row"
         :class="{
-          active: skillsTabStore.selectedSlug === result.slug,
+          active: skillsStore.selectedSlug === result.slug,
           'single-hit': result.hits.length === 1,
         }"
         @click="handleSelectSlug(result.slug)"

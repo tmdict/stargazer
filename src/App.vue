@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
-import { RouterView } from 'vue-router'
+import { RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
@@ -14,6 +14,7 @@ import { useI18nStore } from '@/stores/i18n'
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
 const i18n = useI18nStore()
+const route = useRoute()
 
 // Header renders on every route; init here so SSG-only routes whose views
 // don't call initialize (about, skill/*) still get translations. Idempotent.
@@ -50,7 +51,12 @@ onUnmounted(() => {
       </a>
 
       <div class="nav-right">
-        <a href="/wandwars" class="nav-text-link">{{ i18n.t('wandwars.wand-wars') }}</a>
+        <a href="/skills" class="nav-text-link" :class="{ active: route.path === '/skills' }">{{
+          i18n.t('app.skills')
+        }}</a>
+        <a href="/wandwars" class="nav-text-link" :class="{ active: route.path === '/wandwars' }">{{
+          i18n.t('wandwars.wand-wars')
+        }}</a>
         <ul class="menu">
           <li>
             <LanguageToggle class="icon-link" />
@@ -159,15 +165,28 @@ nav ul li {
   text-decoration: none;
   letter-spacing: 0.05em;
   padding: 4px 10px;
-  margin-right: -0.8rem;
   margin-bottom: 0.2rem;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
 }
 
+/* Space between consecutive pills. */
+.nav-text-link + .nav-text-link {
+  margin-left: 1.5rem;
+}
+
+/* Tuck the last pill close to the menu icons. */
+.nav-text-link:last-of-type {
+  margin-right: -0.8rem;
+}
+
 .nav-text-link:hover {
   color: #f7d87c;
   background: rgba(255, 255, 255, 0.18);
+}
+
+.nav-text-link.active {
+  color: #f7d87c;
 }
 
 .icon-link {
@@ -244,8 +263,10 @@ nav ul li {
   .nav-text-link {
     font-size: 0.65rem;
     padding: 2px 6px;
-    margin-right: -0.3rem;
     margin-bottom: -0.1rem;
+  }
+  .nav-text-link:last-of-type {
+    margin-right: -0.3rem;
   }
 }
 </style>

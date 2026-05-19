@@ -54,8 +54,8 @@ const hasLocaleData = computed(() => !!loadSkillLocales()[displayLocale.value]?.
     <template #header-buttons>
       <button
         class="button"
-        :aria-label="`Switch to ${displayLocale === 'en' ? 'Chinese' : 'English'}`"
-        :title="displayLocale === 'en' ? 'Switch to Chinese' : 'Switch to English'"
+        :aria-label="displayLocale === 'en' ? '中' : 'En'"
+        :title="displayLocale === 'en' ? '中' : 'En'"
         @click="toggleLocale"
       >
         <IconLocaleZh v-if="displayLocale === 'en'" :size="22" no-circle />

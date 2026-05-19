@@ -10,11 +10,10 @@ const i18n = useI18nStore()
   <button
     @click="i18n.toggleLocale()"
     class="language-toggle"
-    :aria-label="`Switch to ${i18n.currentLocale === 'en' ? 'Chinese' : 'English'}`"
+    :aria-label="i18n.currentLocale === 'en' ? '中' : 'En'"
+    :title="i18n.currentLocale === 'en' ? '中' : 'En'"
   >
-    <!-- Show Chinese icon when current locale is English (to switch to Chinese) -->
     <IconLocaleZh v-if="i18n.currentLocale === 'en'" :size="24" class="language-icon" />
-    <!-- Show English icon when current locale is Chinese (to switch to English) -->
     <IconLocaleEn v-else :size="24" class="language-icon" />
   </button>
 </template>

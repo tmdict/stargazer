@@ -1,4 +1,3 @@
-/** * Home.vue - Main application layout */
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -10,8 +9,6 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import MapEditor from '@/components/MapEditor.vue'
-import SkillsTabLeft from '@/components/skill/SkillsTabLeft.vue'
-import SkillsSelection from '@/components/SkillsSelection.vue'
 import TabNavigation from '@/components/ui/TabNavigation.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
@@ -50,11 +47,14 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // Tab state management
-// Valid tabs that can be set via query param
-const validTabs = ['characters', 'artifacts', 'skills', 'mapEditor', 'debug'] as const
+const validTabs = ['characters', 'artifacts', 'mapEditor', 'debug'] as const
 type ValidTab = (typeof validTabs)[number]
 
-// Initialize active tab from query param 't' if present and valid
+// The `?t=skills` query param resolves to the dedicated /skills route.
+if (route.query.t === 'skills') {
+  router.replace('/skills')
+}
+
 const getInitialTab = (): string => {
   const tabParam = route.query.t as string | undefined
   if (tabParam && validTabs.includes(tabParam as ValidTab)) {
@@ -247,42 +247,37 @@ const handleResetMap = () => {
   <main>
     <DragDropProvider>
       <div class="sections-container">
-        <div class="section" :class="{ 'is-skill-display': activeTab === 'skills' }">
-          <!-- Skills tab repurposes the left section as a skill-reader panel.
-               Other tabs keep the grid + controls. -->
-          <SkillsTabLeft v-if="activeTab === 'skills'" />
-          <template v-else>
-            <GridContainer
-              :characters="gameDataStore.characters"
-              :show-arrows="showArrows"
-              :show-hex-ids="showHexIds"
-              :show-debug="showDebug"
-              :show-skills="showSkills"
-              :is-map-editor-mode="activeTab === 'mapEditor'"
-              :selected-map-editor-state="selectedMapEditorState"
-              :show-perspective
-              :debugPanelRef
-              :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
-              :default-svg-height="DEFAULT_SVG_HEIGHT"
-            />
-            <GridControls
-              :showArrows
-              :showHexIds
-              :showPerspective
-              :showSkills
-              :teamView="gridStore.teamView"
-              :hideTeamView="activeTab === 'mapEditor' || activeTab === 'debug'"
-              :hideTeamControls="activeTab === 'mapEditor' || activeTab === 'debug'"
-              @update:showArrows="showArrows = $event"
-              @update:showHexIds="showHexIds = $event"
-              @update:showPerspective="showPerspective = $event"
-              @update:showSkills="showSkills = $event"
-              @update:teamView="gridStore.teamView = $event"
-              @copyLink="handleCopyLink"
-              @copyImage="handleCopyImage"
-              @download="handleDownload"
-            />
-          </template>
+        <div class="section">
+          <GridContainer
+            :characters="gameDataStore.characters"
+            :show-arrows="showArrows"
+            :show-hex-ids="showHexIds"
+            :show-debug="showDebug"
+            :show-skills="showSkills"
+            :is-map-editor-mode="activeTab === 'mapEditor'"
+            :selected-map-editor-state="selectedMapEditorState"
+            :show-perspective
+            :debugPanelRef
+            :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
+            :default-svg-height="DEFAULT_SVG_HEIGHT"
+          />
+          <GridControls
+            :showArrows
+            :showHexIds
+            :showPerspective
+            :showSkills
+            :teamView="gridStore.teamView"
+            :hideTeamView="activeTab === 'mapEditor' || activeTab === 'debug'"
+            :hideTeamControls="activeTab === 'mapEditor' || activeTab === 'debug'"
+            @update:showArrows="showArrows = $event"
+            @update:showHexIds="showHexIds = $event"
+            @update:showPerspective="showPerspective = $event"
+            @update:showSkills="showSkills = $event"
+            @update:teamView="gridStore.teamView = $event"
+            @copyLink="handleCopyLink"
+            @copyImage="handleCopyImage"
+            @download="handleDownload"
+          />
         </div>
 
         <!-- Tab Navigation -->
@@ -302,10 +297,6 @@ const handleResetMap = () => {
             <!-- Artifacts Tab -->
             <div v-show="activeTab === 'artifacts'" class="tab-panel">
               <ArtifactSelection :artifacts="gameDataStore.artifacts" />
-            </div>
-            <!-- Skills Tab -->
-            <div v-show="activeTab === 'skills'" class="tab-panel">
-              <SkillsSelection :characters="gameDataStore.characters" />
             </div>
             <!-- Map Editor Tab -->
             <div v-show="activeTab === 'mapEditor'" class="tab-panel">
@@ -339,13 +330,6 @@ const handleResetMap = () => {
   width: 100%;
 }
 
-/* Defeat .section's cream chrome; the rgba backdrop mirrors the modal overlay
-   so the container composites to the same darkness as SkillModal. */
-.section.is-skill-display {
-  padding: 0;
-  background: rgba(0, 0, 0, 0.5);
-}
-
 /* Side-by-side layout. Floor is dictated by the left column's fixed width:
    grid (600px) + padding pushes it to ~660px. Below ~1220px, the right
    column gets uncomfortably narrow and tab content cramps even with wrap.
@@ -356,8 +340,8 @@ const handleResetMap = () => {
 
    NOTE: this breakpoint must stay in sync with the @media rules in each
    tab-content panel component (CharacterSelection, ArtifactSelection,
-   SkillsSelection, MapEditor, DebugPanel) and .tab-panel below — they
-   gate the flex-fill + internal scroll behavior on the same condition. */
+   MapEditor, DebugPanel) and .tab-panel below — they gate the flex-fill
+   + internal scroll behavior on the same condition. */
 @media (min-width: 1220px) {
   .sections-container {
     flex-direction: row;
