@@ -220,12 +220,19 @@ nav ul li {
   .menu button {
     font-size: 1rem;
     padding: 0.5rem;
+    margin-left: 0.7rem;
   }
 
   .nav-text-link {
     font-size: 0.75rem;
     padding: 3px 8px;
     margin-bottom: -0.75rem;
+  }
+  .nav-text-link + .nav-text-link {
+    margin-left: 0.6rem;
+  }
+  .nav-text-link:last-of-type {
+    margin-right: 0;
   }
 }
 
@@ -250,6 +257,7 @@ nav ul li {
   .menu button {
     font-size: 0.9rem;
     padding: 0;
+    margin-left: 0.5rem;
   }
 
   .logo {
@@ -265,8 +273,11 @@ nav ul li {
     padding: 2px 6px;
     margin-bottom: -0.1rem;
   }
+  .nav-text-link + .nav-text-link {
+    margin-left: 0.4rem;
+  }
   .nav-text-link:last-of-type {
-    margin-right: -0.3rem;
+    margin-right: -0.1rem;
   }
 }
 </style>

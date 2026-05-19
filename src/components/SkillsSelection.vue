@@ -320,6 +320,14 @@ const handleSelectSlug = (slug: string) => {
     padding: var(--spacing-sm);
     justify-content: center;
   }
+  /* Mirror CharacterInfoIcons' mobile sizing so cards match Characters tab. */
+  .meta-row {
+    gap: 0.25rem;
+  }
+  .meta-icon {
+    width: 18px;
+    height: 18px;
+  }
 }
 
 .results {

@@ -88,13 +88,18 @@ useI18nStore().initialize()
   border-radius: var(--radius-large);
 }
 
+/* Drop horizontal padding on mobile so the inner grid + search-bar get the
+   same edge-to-edge real estate that TabNavigation's `margin: -2em` gives
+   CharacterSelection on the home page. */
 @media (max-width: 768px) {
   .skills-list {
+    padding: var(--spacing-lg) 0;
     border-radius: var(--radius-medium);
   }
 }
 @media (max-width: 480px) {
   .skills-list {
+    padding: var(--spacing-sm) 0;
     border-radius: 0;
   }
 }
