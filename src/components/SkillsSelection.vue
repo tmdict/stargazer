@@ -25,8 +25,7 @@ const lang = computed<'en' | 'zh'>(() => (i18n.currentLocale === 'zh' ? 'zh' : '
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters))
 
-// Two refs so the input stays responsive while a 150ms debounce gates the
-// (heavier) search index lookup.
+// 150ms debounce gates the heavier search index lookup.
 const searchQuery = ref('')
 const debouncedQuery = ref('')
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
@@ -38,8 +37,7 @@ watch(searchQuery, (q) => {
   }, 150)
 })
 
-// Clicking a tag chip signals "refocus by tag", so any active search is
-// cleared (both refs together to avoid a debounce-delayed flash).
+// Selecting a tag clears the search (both refs to avoid a debounce flash).
 watch(selectedTagNames, () => {
   if (!searchQuery.value) return
   if (debounceTimer) clearTimeout(debounceTimer)
@@ -53,7 +51,7 @@ onUnmounted(() => {
 
 const searchResults = useSkillSearch(debouncedQuery, lang)
 
-// Search ∩ filters. Search results are already ordered by hit count desc.
+// Search ∩ filters; results stay ordered by hit count desc.
 const visibleSearchResults = computed(() => {
   const results = searchResults.value
   if (!results) return null
@@ -79,7 +77,7 @@ function slotLabel(slot: SlotKey): string {
   return app[SLOT_LABEL_KEY[slot]]?.[lang.value] ?? slot
 }
 
-// `null` for name matches — they're already highlighted in the displayed name.
+// null for name matches — already highlighted in the displayed name.
 function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, level?: number) {
   if (loc === 'name' || !slot) return null
   if (loc === 'skill-name') return slotLabel(slot)
@@ -97,7 +95,7 @@ const handleSelectSlug = (slug: string) => {
 
 <template>
   <div class="skills-selection">
-    <!-- Native <input type="search"> for the built-in webkit clear button. -->
+    <!-- type="search" for the native webkit clear button. -->
     <div class="search-row">
       <input
         v-model="searchQuery"
@@ -118,8 +116,7 @@ const handleSelectSlug = (slug: string) => {
       :characters
     />
 
-    <!-- Meta row mirrors CharacterInfoIcons' dimensions so cards match the
-         Characters tab; info button is replaced by a wider gap. -->
+    <!-- Meta row mirrors CharacterInfoIcons; wider gap replaces info button. -->
     <div v-if="!visibleSearchResults" class="characters">
       <div
         v-for="character in filteredCharacters"
@@ -230,7 +227,7 @@ const handleSelectSlug = (slug: string) => {
   opacity: 0.65;
 }
 
-/* Style WebKit's native clear glyph. Firefox has no styleable pseudo here. */
+/* WebKit-only: Firefox has no styleable pseudo for the clear glyph. */
 .search-input::-webkit-search-cancel-button {
   -webkit-appearance: none;
   appearance: none;
@@ -254,7 +251,7 @@ const handleSelectSlug = (slug: string) => {
   white-space: nowrap;
 }
 
-/* Spacing mirrors CharacterSelection.vue. */
+/* Mirrors CharacterSelection.vue spacing. */
 .characters {
   display: flex;
   flex-wrap: wrap;
@@ -272,8 +269,7 @@ const handleSelectSlug = (slug: string) => {
   cursor: pointer;
 }
 
-/* Flatten CharacterIcon's wrapper so its energy badge and our meta-row
-   share one flex order. */
+/* Flatten so energy badge and meta-row share one flex order. */
 .character-cell :deep(.character-wrapper) {
   display: contents;
 }
@@ -287,8 +283,7 @@ const handleSelectSlug = (slug: string) => {
   order: 3;
 }
 
-/* Wider gap (0.6 vs 0.2rem) compensates for the missing info button between
-   the two icons on the Characters tab. */
+/* Wider gap (0.6 vs 0.2rem) compensates for the missing info button. */
 .meta-row {
   display: flex;
   justify-content: center;
@@ -309,6 +304,13 @@ const handleSelectSlug = (slug: string) => {
     padding: var(--spacing-md);
     justify-content: center;
   }
+  .search-row {
+    padding-top: var(--spacing-sm);
+  }
+  .search-input {
+    min-width: 0;
+    max-width: none;
+  }
 }
 
 @media (max-width: 480px) {
@@ -320,7 +322,7 @@ const handleSelectSlug = (slug: string) => {
     padding: var(--spacing-sm);
     justify-content: center;
   }
-  /* Mirror CharacterInfoIcons' mobile sizing so cards match Characters tab. */
+  /* Match CharacterInfoIcons mobile sizing. */
   .meta-row {
     gap: 0.25rem;
   }
@@ -337,6 +339,13 @@ const handleSelectSlug = (slug: string) => {
   padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-sm) 0;
 }
 
+/* Cards carry their own padding; wrapper can go edge-to-edge on mobile. */
+@media (max-width: 768px) {
+  .results {
+    padding: 0;
+  }
+}
+
 .empty-results {
   text-align: center;
   color: var(--color-text-secondary);
@@ -344,7 +353,7 @@ const handleSelectSlug = (slug: string) => {
   padding: var(--spacing-xl);
 }
 
-/* Card shape mirrors WandWarsRecommendation's .recommendation-card. */
+/* Mirrors WandWarsRecommendation's .recommendation-card. */
 .result-row {
   display: flex;
   align-items: flex-start;
@@ -356,7 +365,7 @@ const handleSelectSlug = (slug: string) => {
   cursor: pointer;
   transition: box-shadow var(--transition-fast);
 }
-/* Single snippet looks lopsided when top-aligned against the portrait. */
+/* Single snippet looks lopsided top-aligned against the portrait. */
 .result-row.single-hit {
   align-items: center;
 }

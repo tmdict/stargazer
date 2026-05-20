@@ -11,7 +11,7 @@ useI18nStore().initialize()
 </script>
 
 <template>
-  <main class="skills-page">
+  <main>
     <div class="skills-layout">
       <SkillReader class="skills-reader" />
       <div class="skills-list">
@@ -22,33 +22,7 @@ useI18nStore().initialize()
 </template>
 
 <style scoped>
-.skills-page {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  padding: var(--spacing-2xl) 2em;
-}
-
-@media (max-width: 1280px) {
-  .skills-page {
-    padding: var(--spacing-lg);
-  }
-}
-@media (max-width: 768px) {
-  .skills-page {
-    padding: var(--spacing-md);
-  }
-}
-@media (max-width: 480px) {
-  .skills-page {
-    padding: 0;
-  }
-}
-
-/* Left/right layout mirrors HomeView's .sections-container so the Skills
-   page feels consistent with the grid pages on every breakpoint. */
+/* Mirrors HomeView's .sections-container layout. */
 .skills-layout {
   display: flex;
   flex-direction: column;
@@ -79,8 +53,7 @@ useI18nStore().initialize()
   }
 }
 
-/* Right column gets the cream .section chrome; left column is the dark
-   reader panel and styles itself. */
+/* Right column uses .section chrome; left reader panel styles itself. */
 .skills-list {
   padding: 2em;
   width: 100%;
@@ -88,18 +61,16 @@ useI18nStore().initialize()
   border-radius: var(--radius-large);
 }
 
-/* Drop horizontal padding on mobile so the inner grid + search-bar get the
-   same edge-to-edge real estate that TabNavigation's `margin: -2em` gives
-   CharacterSelection on the home page. */
+/* Mobile horizontal inset matches HomeView: .section 2em − TabNavigation -1em. */
 @media (max-width: 768px) {
   .skills-list {
-    padding: var(--spacing-lg) 0;
+    padding: var(--spacing-lg);
     border-radius: var(--radius-medium);
   }
 }
 @media (max-width: 480px) {
   .skills-list {
-    padding: var(--spacing-sm) 0;
+    padding: var(--spacing-sm) var(--spacing-lg);
     border-radius: 0;
   }
 }
