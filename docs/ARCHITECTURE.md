@@ -84,8 +84,9 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 **Key Composables:**
 
 - `useStateReset`: Cross-store orchestration for clearing state
-- `useSelectionState`: Shared team selection state
-- `useDragDrop`: Global drag state management
+- `useSelectionState`: Shared team selection + the mobile tap interaction state — the placement-target hex (tap an empty cell to add from the roster) and the lifted hex (tap a placed hero to move/swap it)
+- `useDragDrop`: Global drag state management (desktop/mouse only — touch placement is tap-based)
+- `useBottomSheet`: Pull-up sheet state for the mobile roster sheets on the grid and `/skills` — peek/expanded detents, drag-to-resize by touch **or** mouse (narrow desktop), tap-to-toggle, SSR-safe (CSS drives the resting layout; the composable only adds the inline `transform` once mounted)
 - `useGridEvents`: Event system using provide/inject pattern
 - `useBreakpoint`: Responsive breakpoint detection
 - `useOverlay`: Escape + click-outside-to-close for modal-style surfaces

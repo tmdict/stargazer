@@ -99,7 +99,12 @@ onUnmounted(() => {
       >
         {{ i18n.t('app.debug') }}
       </button>
-      <div class="tab-dropdown" @mouseenter="openMapDropdown" @mouseleave="closeMapDropdown">
+      <!-- Hidden on mobile to save space — the arena is also selectable in the Map Editor tab. -->
+      <div
+        class="tab-dropdown hide-mobile"
+        @mouseenter="openMapDropdown"
+        @mouseleave="closeMapDropdown"
+      >
         <button @click="toggleMapDropdown" class="tab-btn dropdown-btn">
           {{
             `${i18n.t('app.arena')} ${availableMaps.find((m) => m.key === selectedMap)?.name || 'I'}`
