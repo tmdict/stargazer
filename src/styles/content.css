@@ -1,0 +1,152 @@
+/* Shared content surface: the bordered box and prose typography used by the
+   modal popups (BaseModal, PageContainer) and the inline skill reader panel.
+   Pairs with modal.css, which supplies the overlay/popup chrome (and the mobile
+   button-clearance padding for `.content` rendered inside an overlay). */
+
+.container {
+  position: relative;
+  background: rgba(20, 20, 20, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  box-shadow:
+    0 10px 30px rgba(0, 0, 0, 0.5),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  width: 100%;
+  margin: auto;
+  display: flex;
+  flex-direction: column;
+  z-index: 1; /* Ensure container is above an overlay's backdrop-link */
+}
+
+/* Content styles */
+.content {
+  padding: 24px 32px 32px 32px;
+  color: #fff;
+}
+
+/* Typography styles */
+.content h1 {
+  margin: 0 0 20px 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.content h2 {
+  margin: 28px 0 12px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.content h3 {
+  margin-top: 24px;
+  font-size: 16px;
+}
+
+.content p {
+  margin: 12px 0;
+  line-height: 1.6;
+  color: #fff;
+  opacity: 0.9;
+}
+
+.content ul,
+.content ol {
+  margin: 12px 0;
+  padding-left: 20px;
+}
+
+.content li {
+  margin: 6px 0;
+  line-height: 1.6;
+  color: #fff;
+  opacity: 0.9;
+}
+
+.content ul ul {
+  margin-top: 8px;
+  margin-bottom: 8px;
+}
+
+.content a {
+  color: #5fc4bb;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.content a:hover {
+  color: var(--color-danger);
+  text-decoration: underline;
+}
+
+.content strong {
+  font-weight: 600;
+}
+
+.content .skill-highlight {
+  color: #5fc4bb;
+}
+
+.content .skill-stat-tag {
+  display: inline-block;
+  padding: 0 5px;
+  margin: 0 1px;
+  border-radius: 3px;
+  font-size: 0.82em;
+  font-weight: 600;
+  vertical-align: 1px;
+  white-space: nowrap;
+}
+
+/* Stat-tag colors are kept distinct from the teal [[…]] highlight so values
+   and stats read as separate inline tokens. */
+.content .skill-stat-atk {
+  background: rgba(196, 128, 128, 0.12);
+  color: #c98080;
+}
+
+.content .skill-stat-hp {
+  background: rgba(148, 178, 125, 0.12);
+  color: #b0c79a;
+}
+
+.content .skill-stat-tag:not(.skill-stat-atk):not(.skill-stat-hp) {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .container {
+    max-width: 90% !important;
+  }
+
+  .content {
+    padding: 24px;
+  }
+
+  .content h1 {
+    font-size: 22px;
+  }
+
+  .content h2 {
+    font-size: 17px;
+  }
+}
+
+@media (max-width: 480px) {
+  .content {
+    padding: 20px;
+  }
+
+  .content h1 {
+    font-size: 20px;
+  }
+
+  .content h2 {
+    font-size: 16px;
+  }
+}

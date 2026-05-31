@@ -3,45 +3,28 @@ import { computed } from 'vue'
 
 import SkillSections from './SkillSections.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
-import IconLink from '@/components/ui/IconLink.vue'
 import { useI18nStore } from '@/stores/i18n'
-import { useSkillsStore } from '@/stores/skills'
 import { hasSkillLocale } from '@/utils/dataLoader'
 
-import '@/styles/modal.css'
+import '@/styles/content.css'
 
-const skillsStore = useSkillsStore()
+const props = defineProps<{
+  slug: string | null
+  lang: 'en' | 'zh'
+}>()
+
 const i18n = useI18nStore()
 
-const lang = computed<'en' | 'zh'>(() => (i18n.currentLocale === 'zh' ? 'zh' : 'en'))
-
-// hasSkillLocale also covers the null-selection case.
-const visibleSlug = computed(() => {
-  const slug = skillsStore.selectedSlug
-  return slug && hasSkillLocale(slug) ? slug : null
-})
-
-const linkHref = computed(() =>
-  visibleSlug.value ? `/${lang.value}/skill/${visibleSlug.value}` : '',
-)
+// hasSkillLocale also covers the null-selection case (the /skills index).
+const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? props.slug : null))
 </script>
 
 <template>
-  <!-- .container + .content from modal.css — visual match to SkillModal / SkillView. -->
+  <!-- .container + .content from modal.css — visual match to SkillModal. -->
   <div class="container">
-    <div v-if="visibleSlug" class="buttons">
-      <a
-        :href="linkHref"
-        class="button"
-        :aria-label="i18n.t('app.link')"
-        :title="i18n.t('app.link')"
-      >
-        <IconLink :size="16" />
-      </a>
-    </div>
     <div class="content">
       <!-- :key remounts the chip strip on each hero (SkillSections caches activeChips). -->
-      <SkillSections v-if="visibleSlug" :key="visibleSlug" :slug="visibleSlug" :lang="lang" />
+      <SkillSections v-if="visibleSlug" :key="visibleSlug" :slug="visibleSlug" :lang />
       <div v-else class="empty-state">
         <IconInfo :size="40" class="empty-icon" />
         <p class="empty-tip">{{ i18n.t('app.skill-empty-hint') }}</p>

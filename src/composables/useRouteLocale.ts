@@ -1,13 +1,11 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { splitLocalePath } from '@/utils/routeLocale'
+
 export function useRouteLocale() {
   const route = useRoute()
 
-  const locale = computed(() => {
-    const match = route.path.match(/^\/(en|zh)\//)
-    return match?.[1] ?? 'en' // 'en': default locale for missing/invalid routes
-  })
-
-  return locale
+  // 'en': default locale for missing/invalid route prefixes.
+  return computed(() => splitLocalePath(route.path).locale ?? 'en')
 }

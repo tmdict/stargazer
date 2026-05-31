@@ -20,39 +20,43 @@ export const useGameDataStore = defineStore('gameData', () => {
   // Character ranges - internal state
   const characterRanges = ref(new Map<number, number>())
 
-  // Initialize all data using dataLoader
+  const loadIntoState = () => {
+    const data = loadAllData()
+    characters.value = data.characters
+    artifacts.value = data.artifacts
+    characterImages.value = data.characterImages
+    artifactImages.value = data.artifactImages
+    icons.value = data.icons
+    artifactEffects.value = data.artifactEffects
+    characterRanges.value = data.characterRanges
+    dataLoaded.value = true
+  }
+
+  // Client-only loader for the interactive game (home/share): skipped during
+  // SSG so the pre-rendered grid stays empty until hydration.
   const initializeData = () => {
-    // Skip if already loaded or during SSG
     if (dataLoaded.value || import.meta.env.SSR) {
       return
     }
-
     try {
-      const data = loadAllData()
-
-      // Update reactive state
-      characters.value = data.characters
-      artifacts.value = data.artifacts
-      characterImages.value = data.characterImages
-      artifactImages.value = data.artifactImages
-      icons.value = data.icons
-      artifactEffects.value = data.artifactEffects
-      characterRanges.value = data.characterRanges
-
-      dataLoaded.value = true
+      loadIntoState()
     } catch (error) {
       console.error('Failed to initialize data:', error)
     }
   }
 
-  /**
-   * Sets character images directly.
-   * Used by SSG to inject pre-loaded images during hydration.
-   * This allows content pages to display character images without
-   * loading the full game data.
-   */
-  const setCharacterImages = (images: Record<string, string>) => {
-    characterImages.value = images
+  // SSG-safe loader for content pages (the skill browser): runs during SSG too
+  // so the character grid — and its crawlable skill links — is baked into the
+  // static HTML and hydrates without a mismatch.
+  const initializeContentData = () => {
+    if (dataLoaded.value) {
+      return
+    }
+    try {
+      loadIntoState()
+    } catch (error) {
+      console.error('Failed to initialize content data:', error)
+    }
   }
 
   // Helper to get character range by ID
@@ -122,7 +126,7 @@ export const useGameDataStore = defineStore('gameData', () => {
 
     // Actions
     initializeData,
-    setCharacterImages,
+    initializeContentData,
     getCharacterRange,
     getCharacterById,
     getCharacterNameById,

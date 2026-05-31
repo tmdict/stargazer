@@ -90,7 +90,8 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 - `useBreakpoint`: Responsive breakpoint detection
 - `useOverlay`: Escape + click-outside-to-close for modal-style surfaces
 - `useCharacterFilters`: Shared faction/class/damage/tag filter state for the Characters tab and `/skills`
-- `useSkillSearch`: Lazy per-language skill-text index for the `/skills` browser
+- `useSkillSearch`: Lazy per-language skill-text index for the skill browser (`/skills` + skill permalinks)
+- `useLocaleToggle`: Language switch that navigates between `/en`↔`/zh` URLs on locale-prefixed routes, otherwise flips the global locale
 
 ### State Layer (`/src/stores/`)
 
