@@ -42,3 +42,35 @@ export function setupSkillContentMeta(name: string, locale: 'en' | 'zh'): void {
     ],
   })
 }
+
+/** Sets up meta tags for the /{locale}/mechanics compendium. */
+export function setupMechanicsContentMeta(locale: 'en' | 'zh'): void {
+  if (!import.meta.env.SSR) {
+    document.documentElement.lang = locale
+    return
+  }
+
+  const title = locale === 'en' ? 'Mechanics' : '机制'
+  const description =
+    locale === 'en'
+      ? 'How each AFK Journey hero’s skill actually targets, buffs, and positions — hand-authored mechanics explanations with grid diagrams.'
+      : '剑与远征启程英雄技能的实际机制详解：目标选择、增益与站位，附带格子示意图。'
+  const url = 'mechanics'
+
+  useHead({
+    title: `${title} | Stargazer`,
+    meta: [
+      { name: 'description', content: description },
+      { name: 'keywords', content: [...BASE_KEYWORDS, title].join(', ') },
+      { property: 'og:title', content: title },
+      { property: 'og:description', content: description },
+      { property: 'og:url', content: `${ORIGIN}/${locale}/${url}` },
+    ],
+    link: [
+      { rel: 'canonical', href: `${ORIGIN}/${locale}/${url}` },
+      { rel: 'alternate', hreflang: 'en', href: `${ORIGIN}/en/${url}` },
+      { rel: 'alternate', hreflang: 'zh', href: `${ORIGIN}/zh/${url}` },
+      { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
+    ],
+  })
+}
