@@ -41,6 +41,13 @@
       "Increases damage to [[10%]] of the defeated target's max HP, and healing to [[10%]] of the defeated target's max HP.",
       "When Nara's Energy is full, she casts Phantom Chains on an enemy outside of her normal attack range with an HP ratio below [[40%]].",
       "Increases damage to [[15%]] of the defeated target's max HP, and healing to [[15%]] of the defeated target's max HP."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 15 Crit, 14 DEF Penetration." }
     ]
   },
   "awakening": {

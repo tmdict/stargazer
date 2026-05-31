@@ -41,6 +41,13 @@
       "Increases the box's Energy recovery to [[55]] per second.",
       "Panic Projection's ATK reduction effect on enemies becomes permanent.",
       "Increases the box's Energy recovery to [[65]] per second."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 10 Haste." }
     ]
   },
   "awakening": {

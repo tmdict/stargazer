@@ -41,6 +41,16 @@
       "Reduces damage to [[70%]] of the original.",
       "Increases immobilize duration to [[6]]s.",
       "Reduces damage to [[80%]] of the original."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 16 DEF Penetration, 10 Execution."
+      }
     ]
   },
   "awakening": {

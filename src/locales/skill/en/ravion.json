@@ -41,6 +41,16 @@
       "Increases the permanent ATK boost after Ravion's first Mortal Ace attack to [[30%]] of his initial ATK.",
       "When Ravion or an ally with their Objective takes a fatal blow, Life Saver is triggered to prevent their defeat, granting a [[200%]]<ATK> shield and [[20]] Life Drain for [[5]]s.\nIf an ally triggers Life Saver, they swap positions with Ravion; if Ravion triggers Life Saver, no position swap occurs, but the cooldown of Phantom Gambit is reset.\nEach unit can trigger Life Saver [[1]] time per battle.\n\nAllies receive extra shield values based on how much progress they've made on their Objective. The closer to completion, the higher the extra shield value, up to [[100%]].",
       "Increases the permanent ATK boost after Ravion's first Mortal Ace attack to [[35%]] of his initial ATK."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 16 DEF Penetration, 10 Execution."
+      }
     ]
   },
   "awakening": {

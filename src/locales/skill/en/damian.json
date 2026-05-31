@@ -41,6 +41,13 @@
       "Heals allies within [[2]] tiles for [[-80%]]<ATK> HP per second.",
       "Inspires non-summoned allies and grants them [[50]] Haste.",
       "Inspires non-summoned allies and grants them [[55]] Haste."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 14 Healing, 15 Assistance." }
     ]
   },
   "awakening": {

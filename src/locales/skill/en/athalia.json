@@ -41,6 +41,16 @@
       "Increases the impact damage to [[240%]]<ATK>.",
       "Increases the impact damage to [[280%]]<ATK>.",
       "While casting Vengeance Charge, Athalia increases her Execution by [[50]]. Whenever she [[assists or defeats]] an enemy or uses her Ultimate, the cooldown of Vengeance Charge resets immediately."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 Execution, 30 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {

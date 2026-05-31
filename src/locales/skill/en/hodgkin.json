@@ -41,6 +41,13 @@
       "Increases explosion damage to [[140%]]<ATK>.",
       "Applies voidbound magic to any unit hit by Cannon Fire that does not already have it. The energy loss from this kind of explosion is reduced to [[70%]]. The skill also applies voidbound magic to Breakable Walls within range.",
       "Increases explosion damage to [[160%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Vitality, 18 Crit Resist." }
     ]
   },
   "awakening": {

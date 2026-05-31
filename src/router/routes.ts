@@ -20,11 +20,6 @@ export const routes: RouteRecordRaw[] = [
   },
   // English routes
   {
-    path: '/en/about',
-    name: 'about-en',
-    component: () => import('@/views/AboutView.vue'),
-  },
-  {
     path: '/en/skill/:name',
     name: 'skill-en',
     component: () => import('@/views/SkillView.vue'),
@@ -41,11 +36,6 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/SkillsView.vue'),
   },
   // Chinese routes
-  {
-    path: '/zh/about',
-    name: 'about-zh',
-    component: () => import('@/views/AboutView.vue'),
-  },
   {
     path: '/zh/skill/:name',
     name: 'skill-zh',

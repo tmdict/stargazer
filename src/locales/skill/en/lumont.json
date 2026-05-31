@@ -41,7 +41,22 @@
       "Gains an extra skill attempt when a battle starts or an ally is defeated for the first time.",
       "Increases damage to [[180%]]<ATK>.",
       "Increases damage to [[210%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Crit Resist, 15 Ranged DEF, 10 Crit DMG DEF."
+      }
     ]
   },
-  "awakening": { "d": ["Lumont recovers [[7%]]<HP> HP per second while shielded by Totem Ward."] }
+  "awakening": {
+    "d": [
+      "Lumont recovers [[7%]]<HP> HP per second while shielded by Totem Ward.",
+      "首次释放“撼地怒击”时，自身获得[[500%]]<ATK>“图腾护佑”的护盾，并使“战争践踏”获得永久强化，造成的眩晕时间增加[[1]]秒。"
+    ]
+  }
 }

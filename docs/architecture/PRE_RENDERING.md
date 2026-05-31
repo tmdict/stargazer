@@ -2,7 +2,7 @@
 
 ## Overview
 
-The pre-rendering system uses vite-ssg to generate static HTML for content pages while preserving the dynamic game experience. It selectively pre-renders only documentation and skill pages, leaving the interactive game as a client-side application.
+The pre-rendering system uses vite-ssg to generate static HTML for the skill permalink pages while preserving the dynamic game experience. Skill pages (`/{en,zh}/skill/<slug>`) are the only pre-rendered content; everything else (home, skills index, wandwars, the about modal) is client-side. The share page is also pre-rendered with default state so direct URLs resolve.
 
 ## Design Principles
 
@@ -48,9 +48,8 @@ export const routes: RouteRecordRaw[] = [
   { path: '/share', component: () => import('@/views/ShareView.vue') },
   { path: '/skills', component: () => import('@/views/SkillsView.vue') },
   { path: '/wandwars', component: () => import('@/views/WandWarsView.vue') },
-  { path: '/en/about', component: () => import('@/views/AboutView.vue') },
   { path: '/en/skill/:name', component: () => import('@/views/SkillView.vue'), props: true },
-  // ...zh equivalents
+  // ...zh equivalent
 ]
 ```
 
@@ -76,7 +75,7 @@ export const createApp = ViteSSG(
 )
 ```
 
-`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including SSG-only `/about` and `/skill/*`) resolves translation keys rather than emitting literals like `wandwars.wand-wars`. It also watches the route path and calls `i18n.setLocale()` for any `/{en,zh}/...` route (via `splitLocalePath`), so the store-backed chrome and the skill browser's right column render in the URL's locale during SSG and client navigation alike. Per-page skill content still derives its locale directly from the URL via `useRouteLocale`.
+`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including the SSG-only `/skill/*` pages) resolves translation keys rather than emitting literals like `wandwars.wand-wars`. It also watches the route path and calls `i18n.setLocale()` for any `/{en,zh}/...` route (via `splitLocalePath`), so the store-backed chrome and the skill browser's right column render in the URL's locale during SSG and client navigation alike. Per-page skill content still derives its locale directly from the URL via `useRouteLocale`.
 
 Key considerations:
 
@@ -85,25 +84,6 @@ Key considerations:
 - **Header i18n in App.vue**: Idempotent init keeps the nav chrome translated on SSG-only routes
 
 ### Static Content Components
-
-#### PageContainer Component
-
-The PageContainer component avoids store-driven content of its own, so static views can render with minimal hydration risk:
-
-```typescript
-// PageContainer.vue
-<template>
-  <div class="overlay">
-    <a href="/" class="backdrop-link" aria-label="Stargazer"></a>
-    <!-- content -->
-  </div>
-</template>
-```
-
-Key considerations:
-
-- No store-driven content inside the container itself (header translations are handled separately in `App.vue`)
-- Clean separation from dynamic app state
 
 #### GridSnippet Component
 
@@ -211,8 +191,8 @@ export function splitLocalePath(path: string): { locale: Locale | null; rest: st
 `useRouteLocale()` wraps it for static views that need the page locale (defaulting to `'en'`):
 
 ```typescript
-// In AboutView.vue and SkillView.vue
-const locale = useRouteLocale() // computed(() => splitLocalePath(route.path).locale ?? 'en')
+// In SkillView.vue
+const lang = useRouteLocale() // computed(() => splitLocalePath(route.path).locale ?? 'en')
 ```
 
 #### i18n Store (`/src/stores/i18n.ts`)
@@ -244,8 +224,7 @@ ssgOptions: {
   entry: 'src/main.ssg.ts',
   includedRoutes: () => [
     '/', '/share', // Share page for direct URL access
-    '/en/about', '/zh/about',
-    '/en/skill/silvina', // ... all skill pages
+    '/en/skill/silvina', '/zh/skill/silvina', // ... all skill pages, both locales
   ],
   onPageRendered: (route, html) => {
     // Inject correct lang attribute

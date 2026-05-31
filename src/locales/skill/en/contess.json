@@ -41,6 +41,13 @@
       "Expelled units take [[20%]] more HP loss.",
       "Expelled units take [[22%]] more HP loss.",
       "Permanently expelled enemies lose [[30%]]<ATK> HP per second, and [[40%]] of the HP lost this way is converted into healing for Contess and her allies with Exemption."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 10 Haste." }
     ]
   },
   "awakening": {

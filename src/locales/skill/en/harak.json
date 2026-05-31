@@ -41,6 +41,16 @@
       "Gains up to [[240%]] of his base ATK and [[240%]] of his base max HP.",
       "Gains up to [[260%]] of his base ATK and [[260%]] of his base max HP.",
       "Recovers HP when assisting or defeating a unit, with the recovery amount equal to [[50%]] of the defeated unit's max HP. "
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 DEF Penetration, 25 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {

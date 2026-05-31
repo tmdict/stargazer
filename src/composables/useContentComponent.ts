@@ -3,23 +3,25 @@ import { markRaw, shallowRef, unref, watchEffect, type Component, type Ref } fro
 import { formatToCamelCase } from '@/utils/nameFormatting'
 
 interface ContentComponentOptions {
-  type: 'page' | 'default'
   name: string | Ref<string>
   locale: string | Ref<string>
   fallbackToEnglish?: boolean
 }
 
+/** Resolves a localized page-content component from `@/content/page/<Name>.<lang>.vue`. */
 export function useContentComponent(options: ContentComponentOptions) {
-  const { type, name, locale, fallbackToEnglish = true } = options
+  const { name, locale, fallbackToEnglish = true } = options
 
-  // Import all content components eagerly (at build time)
-  const contentModules = import.meta.glob('@/content/**/*.vue', { eager: true })
+  // Import page content eagerly (at build time)
+  const contentModules = import.meta.glob('@/content/page/*.vue', { eager: true })
 
   const ContentComponent = shallowRef<Component | null>(null)
 
+  const buildPath = (currentName: string, lang: string) =>
+    `/src/content/page/${formatToCamelCase(currentName)}.${lang}.vue`
+
   // Synchronously update component when locale or name changes
   watchEffect(() => {
-    // Get the current values whether it's a ref or not
     const currentLocale = unref(locale)
     const currentName = unref(name)
 
@@ -28,26 +30,16 @@ export function useContentComponent(options: ContentComponentOptions) {
       return
     }
 
-    // Build the path based on content type (using locale in filename)
-    const buildPath = (lang: string) => {
-      switch (type) {
-        case 'page':
-          return `/src/content/page/${formatToCamelCase(currentName)}.${lang}.vue`
-        default:
-          return `/src/content/${currentName}.${lang}.vue`
-      }
-    }
-
-    // Try to get the component synchronously
-    let module = contentModules[buildPath(currentLocale)] as { default: Component } | undefined
+    let module = contentModules[buildPath(currentName, currentLocale)] as
+      | { default: Component }
+      | undefined
 
     // Fallback to English if not found
     if (!module && fallbackToEnglish && currentLocale !== 'en') {
       console.warn(`Content not found for ${currentName}.${currentLocale}, falling back to en`)
-      module = contentModules[buildPath('en')] as { default: Component } | undefined
+      module = contentModules[buildPath(currentName, 'en')] as { default: Component } | undefined
     }
 
-    // Set the component or null if not found
     ContentComponent.value = module?.default ? markRaw(module.default) : null
   })
 

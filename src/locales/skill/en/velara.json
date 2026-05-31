@@ -41,6 +41,13 @@
       "Increases the shield value granted by Graceful Edict to [[550%]]<ATK> and the damage it deals to [[350%]].",
       "Every [[10]]s during battle, each awakened magic circle fires a mystic bolt at the [[weakest]] unit on the battlefield.",
       "Increases the shield value granted by Graceful Edict to [[600%]]<ATK> and the damage it deals to [[400%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 10 Haste." }
     ]
   },
   "awakening": {

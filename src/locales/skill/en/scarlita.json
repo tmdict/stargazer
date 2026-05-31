@@ -41,6 +41,13 @@
       "Scarlita deals true damage if there are at least [[3]] surviving non-summoned allies other than herself on the battlefield.",
       "Scarlita's skills knock the non-boss enemies with HP lower than [[180%]]<ATK> and HP ratio below [[20%]] out of the battlefield. The enemy sent out the combat this way cannot return and is considered defeated.",
       "Scarlita's skills knock the non-boss enemies with HP lower than [[180%]]<ATK> and HP ratio below [[25%]] out of the battlefield. The enemy sent out the combat this way cannot return and is considered defeated."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 25 Crit, 25 Execution." }
     ]
   },
   "awakening": {

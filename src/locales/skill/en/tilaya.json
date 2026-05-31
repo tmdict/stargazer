@@ -41,6 +41,16 @@
       "Increases the shield value recovered after Vine Ward's cooldown to [[70%]]<HP>.",
       "After Vine Ward remains active for [[15]]s, its bond with nature deepens. While active, it increases the max HP by [[40%]] and Phys & Magic DEF by [[60%]] for all allies within 2 tiles. The max HP gained from this effect cannot exceed [[80%]] of Tilaya's initial max HP.",
       "Increases the shield value recovered after Vine Ward's cooldown to [[80%]]<HP>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 Crit Resist, 15 Ranged DEF."
+      }
     ]
   },
   "awakening": {

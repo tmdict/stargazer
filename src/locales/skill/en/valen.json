@@ -41,7 +41,19 @@
       "Increases each stack of ATK bonus to [[12%]].",
       "Triggers a lightning strike during a normal attack after gaining Invigoration, dealing equal amount of normal attack damage to an enemy within 2 tiles.",
       "Increases each stack of ATK bonus to [[13%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 10 DEF Penetration." }
     ]
   },
-  "awakening": { "d": ["Valen inflicts a [[3]]s stun with his Fury Thunder Strike."] }
+  "awakening": {
+    "d": [
+      "Valen inflicts a [[3]]s stun with his Fury Thunder Strike.",
+      "Valen gains [[500]] initial Energy. Whenever his lightning deals damage to an enemy, he gains [[60]] extra Energy and reduces that enemy's Haste by [[20]] and movement speed by [[30]] for [[2]]s."
+    ]
+  }
 }

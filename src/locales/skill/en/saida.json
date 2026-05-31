@@ -41,6 +41,16 @@
       "Increases the damage dealt by Drain Seeds to [[290%]]<ATK>.",
       "Increases the damage dealt by Drain Seeds to [[330%]]<ATK>.",
       "When Saida has shortened the interval between Drain Seed's attack effects to its limit with Deepening Roots, she deals [[1200%]]<ATK> damage to all enemies and traps them with blood spikes, preventing them from moving or acting. If an enemy becomes [[unaffected]], they are temporarily freed, but the trap resumes once the [[unaffected]] effect ends. Each enemy is always trapped for a total of [[45]]s, losing [[160%]]<ATK> HP per second while trapped."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 16 Ranged DEF, 8 DEF Penetration."
+      }
     ]
   },
   "awakening": {

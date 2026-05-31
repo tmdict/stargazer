@@ -41,6 +41,13 @@
       "Burns [[2]] enemies with Bone Sear for the rest of the battle after casting Winged Flame for the first time.",
       "Increases each fireball damage to [[160%]]<ATK> on the target and [[110%]]<ATK> on adjacent enemies.",
       "Increases each fireball damage to [[170%]]<ATK> on the target and [[120%]]<ATK> on adjacent enemies."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 10 DEF Penetration." }
     ]
   },
   "awakening": {

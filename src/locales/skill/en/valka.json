@@ -41,6 +41,16 @@
       "Increases Energy recovery from Blooming Terror to [[300]] after blocking.",
       "Within [[10]]s of casting this skill, increases own ATK SPD by [[80]] and Life Drain by [[60]].",
       "Increases Energy recovery from Blooming Terror to [[350]] after blocking."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 24 Crit Resist, 10 DEF Penetration."
+      }
     ]
   },
   "awakening": {

@@ -41,6 +41,13 @@
       "Stitchy returns whenever Daimon's cumulative damage taken and shield value loss combined exceed [[50%]] of his max HP.",
       "Stitchy's roar unleashes deafening shockwaves, affecting enemies within [[3]] tiles and the enemy who dealt the most damage to Daimon. The roar deals damage equal to [[5%]] of each enemy's max HP every [[0.5]]s for [[2]]s. This damage cannot exceed [[100%]]<ATK>. Stitchy then converts [[100%]] of the damage dealt into a shield for Daimon, which lasts for [[8]]s.",
       "Increases the damage of Stitchy's roar to [[6%]] of each enemy's max HP."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Haste, 10 Ranged DEF." }
     ]
   },
   "awakening": {

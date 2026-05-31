@@ -1,0 +1,58 @@
+{
+  "ultimate": {
+    "n": "Grand Finale",
+    "d": [
+      "Passive. Sylphira lights up [[1]] beat on her score every [[1]]s. [[1]] extra beat light up whenever an enemy is affected by an [[interruption effect]] or defeated; each ally can trigger this once per second per enemy. Once [[12]] beats are lit, Sylphira activates her score, increasing her ATK by [[50%]] and Haste by [[30]]. In addition, the musical effect of the skill triggers Resonance, spreading the skill's effect to up to [[2]] enemies within [[2]] tiles of the target.\nActive. Sylphira glides into the [[2]]-tile area with the most enemies, dealing [[400%]]<ATK> damage to enemies within range and creating a [[2]]-tile Harmonic Domain that lasts for [[10]]s. Enemies within the domain are [[silenced]], while Sylphira becomes [[unaffected]] as long as she remains inside. After that, she performs [[5]] musical phrases, dealing [[110%]]<ATK> damage to her target and reducing their max HP by the same amount.",
+      "Increases the musical phrase damage to [[120%]]<ATK>.",
+      "Increases the musical phrase damage to [[130%]]<ATK>.",
+      "Increases the musical phrase damage to [[140%]]<ATK>.",
+      "Increases the musical phrase damage to [[150%]]<ATK>."
+    ]
+  },
+  "skill2": {
+    "n": "Punishing Rhythm",
+    "d": [
+      "Sylphira uses her tuning fork to perform Legato, striking the target with 3 rhythmic hits. Each hit deals [[150%]]<ATK> damage to the target and reduces their Energy by [[120]].",
+      "Increases Legato's damage per hit to [[160%]]<ATK>; increases Energy Reduction to [[130]].",
+      "Increases Legato's damage per hit to [[170%]]<ATK>; increases Energy Reduction to [[140]].",
+      "Increases Legato's damage per hit to [[180%]]<ATK>; increases Energy Reduction to [[150]]."
+    ]
+  },
+  "skill3": {
+    "n": "Piercing Silence",
+    "d": [
+      "Sylphira drives her tuning fork into the enemy, briefly controlling them and dealing [[200%]]<ATK> damage. She then charges it with melody to trigger Staccato, dealing [[320%]]<ATK> damage to the target and all nearby enemies within [[1]] tile while knocking them down for [[2]]s. Sylphira is immune to control effects while casting this skill.",
+      "Increases the damage of Staccato to [[340%]]<ATK>.",
+      "Increases the damage of Staccato to [[360%]]<ATK>.",
+      "Increases the damage of Staccato to [[380%]]<ATK>."
+    ]
+  },
+  "mastery": {
+    "d": [
+      "Increases Haste by [[6]] during battle. Every time Sylphira lights up a beat, she increases her Haste by [[1]]. Once her score is activated, she further increases her Haste by [[6]].",
+      "Increases Haste by [[8]] during battle. Every time Sylphira lights up a beat, she increases her Haste by [[1]]. Once her score is activated, she further increases her Haste by [[8]].",
+      "Increases Haste by [[10]] during battle. Every time Sylphira lights up a beat, she increases her Haste by [[1]]. Once her score is activated, she further increases her Haste by [[10]]."
+    ]
+  },
+  "ex": {
+    "n": "Harmonic Refrain",
+    "d": [
+      "Once her score is activated, Sylphira starts playing it. The score then plays [[1]] time automatically every [[8]]s. Every time the score plays, it removes all dispellable debuffs from Sylphira and restores [[40%]] of her max HP and [[250]] Energy. While the score is active, collecting more beats makes it play [[10%]] faster and further increases Sylphira's Haste by [[3]], up to [[10]] stacks.",
+      "Increases the HP recovered to [[50%]].",
+      "Increases the HP recovered to [[60%]].",
+      "When the score plays, it also deals true damage equal to [[20%]] of max HP to the nearest [[2]] enemies within [[2]] tiles of Sylphira. This damage cannot exceed [[1000%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 Crit, 15 Ranged DEF." }
+    ]
+  },
+  "awakening": {
+    "d": [
+      "Once her score is activated, Sylphira performs Tremolo to enhance her normal attacks. The enhanced normal attacks gain [[50]] Life Drain and deal extra true damage equal to [[18%]] of the target's max HP. The extra true damage dealt cannot exceed [[600%]]<ATK>."
+    ]
+  }
+}

@@ -17,14 +17,13 @@ defineEmits<{
 const i18n = useI18nStore()
 
 const { ContentComponent } = useContentComponent({
-  type: 'page',
   name: 'About',
   locale: computed(() => i18n.currentLocale),
 })
 </script>
 
 <template>
-  <BaseModal :show="show" maxWidth="1000px" linkParam="about" @close="$emit('close')">
+  <BaseModal :show="show" maxWidth="1000px" @close="$emit('close')">
     <component v-if="ContentComponent" :is="ContentComponent" />
     <div v-else>Content not found</div>
   </BaseModal>

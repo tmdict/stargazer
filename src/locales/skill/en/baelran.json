@@ -41,6 +41,13 @@
       "Increases the damage dealt by each Divine Light strike to [[8%]]<HP>.",
       "Increases the damage dealt by each Divine Light strike to [[10%]]<HP>.",
       "When Baelran enters Celestial Form, he dispels all debuffs on himself and permanently increases his ATK by [[10%]]. Upon entering enhanced Celestial Form, Baelran calls down Divine Light strikes on every tile within 2 tiles of him, dealing [[10%]]<HP> true damage per strike to enemies hit."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Vitality, 10 Life Drain." }
     ]
   },
   "awakening": {

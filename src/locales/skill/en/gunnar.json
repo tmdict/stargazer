@@ -41,6 +41,16 @@
       "Increases the missile damage to [[550%]]<ATK>.",
       "Increases the missile damage to [[600%]]<ATK>.",
       "After Gunnar's HP ratio remains above [[35%]] for [[3]]s, the ally within his Doomfield becomes [[invincible]] and gains extra ATK equal to [[45%]] of Gunnar's initial ATK."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 28 Crit Resist, 20 Crit DMG DEF."
+      }
     ]
   },
   "awakening": {

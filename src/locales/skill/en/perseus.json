@@ -41,6 +41,16 @@
       "When Perseus gains a temporary stat buff, its effect is increased by [[30%]].",
       "When Perseus has 2 temporary stat buffs from different allies, the damage he deals is converted to true damage, and he becomes [[unaffected]]. This effect lasts at least [[6]]s each time it's triggered.",
       "When Perseus gains a temporary stat buff, its effect is increased by [[40%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 22 Crit Resist, 25 Crit DMG DEF."
+      }
     ]
   },
   "awakening": { "d": ["Expands the range of fertile ground by [[1]] tile."] }

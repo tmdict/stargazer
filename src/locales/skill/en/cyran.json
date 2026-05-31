@@ -41,6 +41,13 @@
       "Increases dark flame damage to [[45%]]<ATK>.",
       "If Merlin is present on the enemy side, Merlin is silenced for [[8]]s when a battle starts, preventing Merlin from casting any skills. Any skills Merlin would've cast when a battle starts are triggered after silence ends, at which point Cyran loses [[5%]] of his current HP. If Merlin is absent on the enemy side, Cyran permanently increases his ATK by [[10%]].",
       "Increases dark flame damage to [[50%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 25 Execution." }
     ]
   },
   "awakening": { "d": ["Gains extra [[200]] Initial Energy."] }

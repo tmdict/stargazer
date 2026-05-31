@@ -3,43 +3,34 @@ import { useHead } from '@unhead/vue'
 
 import { loadCharacterLocales } from '@/utils/dataLoader'
 
-interface ContentMetaOptions {
-  title: string
-  url: string
-  locale: 'en' | 'zh'
-  keywords?: string[]
-}
-
-/** Provide(true) when rendering content inside a modal to suppress page-level meta writes. */
+/** Provide(true) when rendering skill content inside a modal to suppress page-level meta writes. */
 export const ContentInModalKey: InjectionKey<boolean> = Symbol('ContentInModal')
 
+const ORIGIN = 'https://stargazer.tmdict.com'
+const BASE_KEYWORDS = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远征']
+
 /**
- * Sets up meta tags for content pages during SSR
- * Centralizes the meta tag configuration for all content components
+ * Sets up meta tags for skill pages (the only pre-rendered content), deriving
+ * title/keywords from hero locale data. During SSG it writes the full head;
+ * on the client it only syncs <html lang>, and skips even that when embedded in
+ * a modal so the popup doesn't mutate the host page.
  */
-export function setupContentMeta(options: ContentMetaOptions): void {
-  const { title, url, keywords, locale } = options
+export function setupSkillContentMeta(name: string, locale: 'en' | 'zh'): void {
   const isEmbedded = inject(ContentInModalKey, false)
 
-  // Set document language during runtime — skip when embedded so modal toggles
-  // don't leak into the host page's <html lang>
   if (!import.meta.env.SSR) {
     if (!isEmbedded) document.documentElement.lang = locale
     return
   }
 
-  // Base keywords that are always included
-  const baseKeywords = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远征']
-
-  // Combine base keywords with any additional keywords
-  const allKeywords = keywords ? [...baseKeywords, ...keywords] : baseKeywords
-
-  const ORIGIN = 'https://stargazer.tmdict.com'
+  const nameLocale = loadCharacterLocales()[name]!
+  const title = locale === 'en' ? `${nameLocale.en} Skills` : `${nameLocale.zh} 技能`
+  const url = `skill/${name}`
 
   useHead({
-    title: title + ' | Stargazer',
+    title: `${title} | Stargazer`,
     meta: [
-      { name: 'keywords', content: allKeywords.join(', ') },
+      { name: 'keywords', content: [...BASE_KEYWORDS, nameLocale.en, nameLocale.zh].join(', ') },
       { property: 'og:title', content: title },
       { property: 'og:url', content: `${ORIGIN}/${locale}/${url}` },
     ],
@@ -49,18 +40,5 @@ export function setupContentMeta(options: ContentMetaOptions): void {
       { rel: 'alternate', hreflang: 'zh', href: `${ORIGIN}/zh/${url}` },
       { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
     ],
-  })
-}
-
-/** Sets up meta tags for skill content pages, deriving title/url/keywords from hero locale data */
-export function setupSkillContentMeta(name: string, locale: 'en' | 'zh'): void {
-  const nameLocale = loadCharacterLocales()[name]!
-  const title = locale === 'en' ? `${nameLocale.en} Skills` : `${nameLocale.zh} 技能`
-
-  setupContentMeta({
-    title,
-    url: `skill/${name}`,
-    locale,
-    keywords: [nameLocale.en, nameLocale.zh],
   })
 }

@@ -41,6 +41,13 @@
       "Each ignited enemy hero grants Satrana [[200]] Energy.",
       "Increases Satrana's magic DMG Reduction to [[20%]].",
       "Increases Satrana's magic DMG Reduction to [[22%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 12 Ranged DEF." }
     ]
   },
   "awakening": {

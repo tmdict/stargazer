@@ -41,6 +41,16 @@
       "Increases damage to [[230%]]<ATK> plus [[12%]] of the target's max HP (the total damage cannot exceed [[780%]]<ATK>).",
       "Removes the cooldown limit for this skill. Brutus can cast this skill for every [[10]] physical damage attacks he receives from adjacent enemies.",
       "Increases damage to [[260%]]<ATK> plus [[12%]] of the target's max HP (the total damage cannot exceed [[780%]]<ATK>)."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 15 Life Drain, 15 Crit DMG DEF."
+      }
     ]
   },
   "awakening": {

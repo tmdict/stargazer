@@ -41,6 +41,13 @@
       "Increases the damage Laios deals to monsters (excluding heroes and their summoned units) by [[50%]].",
       "Permanently increases Laios' Phys DEF and Magic DEF by [[25%]] for each ingredient collected from monsters, up to [[3]] stacks.",
       "Increases the damage Laios deals to monsters (excluding heroes and their summoned units) by [[80%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Healing, 18 Crit Resist." }
     ]
   },
   "awakening": {

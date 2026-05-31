@@ -1,16 +1,15 @@
 // Skill data importer.
 //
 // Character files are the source of truth for which heroes exist. This script
-// walks src/data/character/*.json, looks up each hero's slug in a skill-data
-// JSON feed, and writes per-language locale files at
-// src/locales/skill/{en,zh}/<slug>.json.
+// reads N per-locale skill-data feeds (one per language we render), and writes
+// per-language locale files at `src/locales/skill/{en,zh}/<slug>.json`.
 //
 // Read-only against character files. The only write target is the locale dir.
 //
 // Usage:
-//   npm run import:skills                 # reads from DEFAULT_SOURCE (below)
-//   npm run import:skills -- --src <PATH> # override the local file path
-//   npm run import:skills -- --url <URL>  # fetch the feed from a URL instead
+//   npm run import:skills                          # reads from DEFAULT_SOURCE/<lang>/skills.json
+//   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<lang>/skills.json
+//   npm run import:skills -- --url-base <URL>      # remote: <URL>/<lang>/skills.json
 
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -23,7 +22,18 @@ import {
   type SlotKey,
   type CharacterTags,
   type SkillLocaleFile,
+  type SkillRefineEntry,
 } from '../src/lib/types/skill.ts'
+
+// ---------- locales we render ----------
+
+// Hardcoded — these are the languages Stargazer's UI ships. Adding another
+// locale here means adding the matching `src/locales/skill/<lang>/` shard set
+// to the build and a one-line `--locales <lang>` extension on the producer
+// (afkj-data-viewer) side; the per-locale feed schema is identical so no
+// other importer changes are needed.
+const LOCALES = ['en', 'zh'] as const
+type Locale = (typeof LOCALES)[number]
 
 // ---------- paths ----------
 
@@ -32,42 +42,41 @@ const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
 
-// Default location of the skill-data feed (relative to project root). Override
-// at runtime with `--src <PATH>` or `--url <URL>`; or change this constant if
-// you keep the file elsewhere by convention.
-const DEFAULT_SOURCE = 'skills.json'
+// Default local source. The producer (afkj-data-viewer) emits
+// `static/api/<locale>/skills.json`; conventionally a sibling checkout of
+// that repo gets symlinked / copied to `./api` here. Override at runtime
+// with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
+const DEFAULT_SRC_DIR = 'api'
 
-const LOCALES = ['en', 'zh'] as const
-type Locale = (typeof LOCALES)[number]
-
-// ---------- feed shape (see contract docs) ----------
-
-interface LocalizedPair {
-  en: string | null
-  zh: string | null
-}
+// ---------- feed shape (single-locale per file) ----------
 
 interface ExportLevel {
   level: number
-  description: LocalizedPair
+  description: string | null
+}
+
+interface ExportRefinement {
+  tier: number
+  description: string | null
 }
 
 interface ExportSlot {
-  name: LocalizedPair
+  name: string | null
   skillTypeCodes?: string[]
   levels: ExportLevel[]
+  refinements?: ExportRefinement[]
 }
 
 interface HeroEntry {
   slug: string
   codename: string
-  name: LocalizedPair
-  title: LocalizedPair
+  name: string | null
+  title: string | null
   skills: Partial<Record<SlotKey, ExportSlot>>
 }
 
 interface SkillsBulk {
-  _meta: { generatedAt: string; locales: string[]; heroCount: number }
+  _meta: { generatedAt: string; locale: string; heroCount: number }
   heroes: Record<string, HeroEntry>
 }
 
@@ -81,23 +90,26 @@ function arg(name: string): string | undefined {
   return argv[i + 1]
 }
 
-const URL_FLAG = arg('url')
-const SRC_FLAG = arg('src')
+const URL_BASE_FLAG = arg('url-base')
+const SRC_DIR_FLAG = arg('src-dir')
 
 // ---------- io helpers ----------
 
-async function loadSkillsBulk(): Promise<SkillsBulk> {
-  if (URL_FLAG) {
-    console.log(`import-skills: fetching ${URL_FLAG}`)
-    const res = await fetch(URL_FLAG)
-    if (!res.ok) throw new Error(`fetch ${URL_FLAG} → HTTP ${res.status}`)
+async function loadSkillsBulk(lang: Locale): Promise<SkillsBulk> {
+  if (URL_BASE_FLAG) {
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${lang}/skills.json`
+    console.log(`import-skills: fetching ${url}`)
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as SkillsBulk
   }
-  const path = SRC_FLAG ? resolve(SRC_FLAG) : join(PROJECT_ROOT, DEFAULT_SOURCE)
+  const base = SRC_DIR_FLAG ? resolve(SRC_DIR_FLAG) : join(PROJECT_ROOT, DEFAULT_SRC_DIR)
+  const path = join(base, lang, 'skills.json')
   if (!existsSync(path)) {
     throw new Error(
       `skill data feed not found at ${path}\n` +
-        `  Place the JSON at the path above, or pass --src <PATH> / --url <URL>.`,
+        `  Place the per-locale skill JSON under <src-dir>/<locale>/skills.json,\n` +
+        `  or pass --src-dir <PATH> / --url-base <URL>.`,
     )
   }
   console.log(`import-skills: reading ${path}`)
@@ -162,23 +174,28 @@ function stripSpriteTags(text: string): string {
   return text.replace(SPRITE_TAG, '')
 }
 
-function projectLocale(hero: HeroEntry, lang: Locale): LocaleFile {
+function cleanDescription(text: string): string {
+  return reorderStatValuePairs(stripSpriteTags(text))
+}
+
+function projectLocale(hero: HeroEntry): LocaleFile {
   const out: LocaleFile = {}
   for (const slotKey of SLOT_ORDER) {
     const slot = hero.skills[slotKey]
     if (!slot) continue
-    // Skip the slot if every level is null for this language.
     const descriptions = slot.levels
-      .map((l) => l.description[lang])
+      .map((l) => l.description)
       .filter((d): d is string => d != null)
-      .map(stripSpriteTags)
-      .map(reorderStatValuePairs)
-    if (descriptions.length === 0) continue
-    if (NAME_INVARIANT_SLOTS.has(slotKey)) {
-      out[slotKey] = { d: descriptions }
-    } else {
-      out[slotKey] = { n: slot.name[lang], d: descriptions }
-    }
+      .map(cleanDescription)
+    const refinements: SkillRefineEntry[] = (slot.refinements ?? [])
+      .filter((r): r is { tier: number; description: string } => r.description != null)
+      .map((r) => ({ t: r.tier, d: cleanDescription(r.description) }))
+    if (descriptions.length === 0 && refinements.length === 0) continue
+    const entry: NonNullable<LocaleFile[typeof slotKey]> = NAME_INVARIANT_SLOTS.has(slotKey)
+      ? { d: descriptions }
+      : { n: slot.name, d: descriptions }
+    if (refinements.length > 0) entry.r = refinements
+    out[slotKey] = entry
   }
   return out
 }
@@ -227,17 +244,30 @@ function validateTagAttachments(slug: string, char: CharacterFile, hero: HeroEnt
 
 // ---------- main ----------
 
+interface ImportRecord {
+  slug: string
+  written: number
+  unchanged: number
+}
+
 interface RunSummary {
-  imported: { slug: string; localesWritten: number; localesUnchanged: number }[]
-  missingFromFeed: string[] // character file present, no entry in the skill feed
+  imported: ImportRecord[]
+  missingFromFeed: string[] // character file present, no entry in the skill feed (any locale)
   availableNotAdded: string[] // feed entry present, no character file
   orphans: OrphanTag[]
 }
 
 async function main() {
   const t0 = Date.now()
-  const bulk = await loadSkillsBulk()
-  console.log(`import-skills: bulk has ${Object.keys(bulk.heroes).length} heroes`)
+
+  // Load one bulk per locale. Tag-attachment validation is locale-agnostic
+  // (kits are language-independent), so we validate against the EN bulk and
+  // assume slot shapes match across languages. The producer's per-hero slug
+  // is EN-derived, so all per-locale bulks share the same slug set.
+  const bulks: Record<Locale, SkillsBulk> = {} as Record<Locale, SkillsBulk>
+  for (const lang of LOCALES) bulks[lang] = await loadSkillsBulk(lang)
+  const heroCount = Object.keys(bulks[LOCALES[0]].heroes).length
+  console.log(`import-skills: bulks have ${heroCount} heroes (per locale)`)
 
   const characters = await loadCharacters()
   console.log(`import-skills: ${characters.length} character files found`)
@@ -252,25 +282,31 @@ async function main() {
   const knownSlugs = new Set(characters.map((c) => c.slug))
 
   for (const { slug, file } of characters) {
-    const hero = bulk.heroes[slug]
-    if (!hero) {
+    const enHero = bulks.en.heroes[slug]
+    if (!enHero) {
       summary.missingFromFeed.push(slug)
       continue
     }
-    summary.orphans.push(...validateTagAttachments(slug, file, hero))
+    summary.orphans.push(...validateTagAttachments(slug, file, enHero))
+
     let written = 0
     let unchanged = 0
     for (const lang of LOCALES) {
-      const data = projectLocale(hero, lang)
+      const hero = bulks[lang].heroes[slug]
+      if (!hero) continue
+      const data = projectLocale(hero)
       const path = join(LOCALES_DIR, lang, `${slug}.json`)
       const changed = await writeJsonIfChanged(path, data)
       if (changed) written++
       else unchanged++
     }
-    summary.imported.push({ slug, localesWritten: written, localesUnchanged: unchanged })
+    summary.imported.push({ slug, written, unchanged })
   }
 
-  for (const slug of Object.keys(bulk.heroes)) {
+  // Discovery hint — heroes that the producer publishes but Stargazer hasn't
+  // added a character/ entry for yet. Reported off the EN bulk; the slug set
+  // is the same across locales.
+  for (const slug of Object.keys(bulks.en.heroes)) {
     if (!knownSlugs.has(slug)) summary.availableNotAdded.push(slug)
   }
 
@@ -278,8 +314,8 @@ async function main() {
   const ms = Date.now() - t0
   console.log('')
   console.log(`import-skills: ${summary.imported.length} characters processed in ${ms}ms`)
-  const written = summary.imported.reduce((n, r) => n + r.localesWritten, 0)
-  const unchanged = summary.imported.reduce((n, r) => n + r.localesUnchanged, 0)
+  const written = summary.imported.reduce((n, r) => n + r.written, 0)
+  const unchanged = summary.imported.reduce((n, r) => n + r.unchanged, 0)
   console.log(`  locale files: ${written} written, ${unchanged} unchanged`)
 
   if (summary.missingFromFeed.length > 0) {

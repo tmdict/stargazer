@@ -41,6 +41,13 @@
       "Increases the healing received from the allied hot spring by [[150%]].",
       "When an ally enters an allied hot spring for the first time, they become [[unaffected]] for [[5]]s.",
       "Increases the healing received from the allied hot spring by [[180%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 12 Ranged DEF." }
     ]
   },
   "awakening": {

@@ -41,6 +41,16 @@
       "If the \"hitter\" deals more normal attack damage, Sinbad will reduce their ATK SPD by [[80]]; if they deal more skill damage, he will reduce their Energy Recovery efficiency by [[80%]].\nIf the \"guard\" relies more on healing from allies or themselves, Sinbad will reduce their Vitality by [[80]]; if they rely more on damage mitigations, he will reduce their Phys DEF and Magic DEF by [[40%]].",
       "If an enemy is marked as \"hitter\" or \"guard\" in two consecutive assessments, their ATK is further reduced by [[20%]] if marked as \"hitter\", and they take [[10%]] more damage if marked as \"guard\".",
       "Reduces the \"hitter's\" ATK by an extra [[30%]]. Increases the \"guard's\" damage taken by an extra [[15%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 ATK SPD, 14 DEF Penetration."
+      }
     ]
   },
   "awakening": {

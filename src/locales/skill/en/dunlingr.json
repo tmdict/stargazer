@@ -41,6 +41,16 @@
       "Increases the protected ally's ATK by [[2%]].",
       "Increases the protected ally's ATK by [[4%]].",
       "Increases the protected ally's Haste by [[20]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 30 Crit Resist, 10 Ranged DEF."
+      }
     ]
   },
   "awakening": {

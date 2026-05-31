@@ -41,6 +41,13 @@
       "Increases the shield value to [[500%]]<ATK>.",
       "Increases the shielded ally's Ranged DEF by [[50]] while the shield is active.",
       "Increases the shield value to [[550%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 10 DEF Penetration." }
     ]
   },
   "awakening": {

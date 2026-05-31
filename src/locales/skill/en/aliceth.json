@@ -41,6 +41,13 @@
       "The affected hero recovers [[35%]]<HP>.",
       "The affected hero recovers [[40%]]<HP>.",
       "For every [[4]] feathers unleashed by an ally with Brightfeather, a burst of light erupts, dealing [[330%]]<ATK> damage to adjacent enemies and [[blinding]] them for [[3]]s. Blinded enemies lose [[40%]]<ATK> HP per second."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 25 Crit, 10 Haste." }
     ]
   },
   "awakening": {

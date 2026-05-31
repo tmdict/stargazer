@@ -41,6 +41,16 @@
       "Increases damage of Predator's Lunge by an extra [[15%]] for each casting, up to [[5]] stacks.",
       "Increases Energy recovery to [[240]].",
       "Increases Energy recovery to [[260]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 Crit, 15 Execution, 15 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {

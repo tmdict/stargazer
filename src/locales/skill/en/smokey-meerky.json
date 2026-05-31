@@ -41,6 +41,13 @@
       "Make enemies within skill range lose [[14%]] of their max HP during aroma enhancement.",
       "Stun the enemy for [[0.1]]s during aroma enhancement when the enemy is losing HP.",
       "Make enemies within skill range lose [[15%]] of their max HP during aroma enhancement."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 10 Haste." }
     ]
   },
   "awakening": {

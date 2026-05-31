@@ -41,6 +41,16 @@
       "Increases the duration of healing and toughened skin granted by this skill to [[7]]s.",
       "Hepler gains ATK equal to [[30%]] of the protected ally's initial ATK, while that ally gains max HP equal to [[40%]] of Hepler's initial HP. The ATK Hepler gains from this skill cannot exceed [[80%]] of his own initial ATK.",
       "Increases the duration of healing and toughened skin granted by this skill to [[9]]s."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 15 Crit Resist, 10 Ranged DEF, 15 Crit DMG DEF."
+      }
     ]
   },
   "awakening": {

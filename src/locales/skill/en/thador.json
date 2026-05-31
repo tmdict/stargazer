@@ -41,6 +41,16 @@
       "Increases damage when the effect ends to [[540%]]<ATK>.",
       "Grants Thador's lieutenant [[350]] Energy when a battle starts.",
       "Increases damage when the effect ends to [[560%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 18 Crit Resist, 30 Crit DMG DEF."
+      }
     ]
   },
   "awakening": {

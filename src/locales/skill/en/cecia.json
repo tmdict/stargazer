@@ -41,9 +41,22 @@
       "Absorbs [[1]] of the target's Vitality each time when stealing stats.",
       "Increases the entangled targets' damage taken per second to [[70%]]<ATK>.",
       "Increases the entangled targets' damage taken per second to [[80%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 ATK SPD, 8 DEF Penetration."
+      }
     ]
   },
   "awakening": {
-    "d": ["Reduces the required normal attacks to trigger Agonizing Puncture by [[-1]]."]
+    "d": [
+      "Reduces the required normal attacks to trigger Agonizing Puncture by [[-1]].",
+      "获得[[500]]点初始能量。释放终极技能时，将会每秒永久吸取被缠绕敌人[[2%]]的基础属性，至多偷取相当于自身对应初始属性的[[50%]]，并与卡莱尔先生共享吸取到的属性值。"
+    ]
   }
 }

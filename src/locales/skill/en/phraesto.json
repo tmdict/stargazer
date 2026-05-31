@@ -41,6 +41,13 @@
       "Increases the skill damage to [[600%]]<ATK>.",
       "Increases the skill damage to [[700%]]<ATK>.",
       "Phraesto summons a new Illusion in front of himself if the previous Illusion is defeated before he is. The new Illusion inherits only [[60%]] of Phraesto's max HP. Triggers once at most per battle."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Vitality, 10 Ranged DEF." }
     ]
   },
   "awakening": {

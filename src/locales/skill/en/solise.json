@@ -41,6 +41,13 @@
       "Once a Bulb blooms into a Bulbsprite, its host gains Phys & Magic DEF equal to [[6%]] of Solise's initial ATK.",
       "After a Bulbsprite reaches its max level, it permanently increases its host's max HP by [[450%]] of Solise's initial ATK.",
       "Once a Bulb blooms into a Bulbsprite, its host gains Phys & Magic DEF equal to [[8%]] of Solise's initial ATK."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 10 Haste." }
     ]
   },
   "awakening": {

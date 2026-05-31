@@ -41,6 +41,13 @@
       "The doom bomb explosion deals [[240%]]<ATK> base damage.",
       "The doom bomb explosion deals [[270%]]<ATK> base damage.",
       "Each time a doom bomb detonates, Kulu enters Blast Mania for [[10]]s. While in Blast Mania, she gains [[35]] Penetration and the explosion radius of her normal attacks, Blast Mayhem, and Boomboom Bash skills expands to 2 tiles. Subsequent detonations will extend the duration of Blast Mania, but the effects will not stack."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 ATK SPD, 18 Ranged DEF." }
     ]
   },
   "awakening": {

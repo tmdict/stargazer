@@ -41,6 +41,13 @@
       "Increases the range of Force of Nature to [[3]] tiles.",
       "Increases the duration of Entangling Vines to [[3]]s.",
       "Increases the duration of Entangling Vines to [[3.5]]s."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 10 DEF Penetration." }
     ]
   },
   "awakening": {

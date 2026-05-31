@@ -41,11 +41,22 @@
       "Reduces the Energy cost to [[400]] when the Vigorous Slam buff is stacked to its maximum.",
       "Reduces the cooldown to [[6]]s when the Swift Evasion buff is stacked to its maximum.",
       "Increases the damage dealt by the next Vigorous Slam by [[55%]]<ATK>. This effect can stack up to [[2]] times."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Crit, 10 Haste, 12 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {
     "d": [
-      "Rolling Boulder deals an extra [[180%]]<ATK> damage to enemies recently affected by multiple control effects."
+      "Rolling Boulder deals an extra [[180%]]<ATK> damage to enemies recently affected by multiple control effects.",
+      "每累计对[[4]]名敌人释放“落石术”后，该技能将生成一颗巨型落岩，对最密集的[[2]]格范围内敌人造成[[250%]]<ATK>伤害，并使命中的目标在[[10]]秒内魔抗降低[[30%]]。"
     ]
   }
 }

@@ -41,6 +41,13 @@
       "When Bryon takes a [[fatal blow]] for the first time, Elona consumes all the Energy to block the fatal damage and restores [[200%]]<ATK> HP for Bryon. For the next [[5]]s, Bryon becomes untargetable and recovers [[40%]]<ATK> HP per second. Then Elona departs from the battlefield and cannot be summoned for [[10]]s.",
       "Elona's counterattack damage is increased to [[400%]]<ATK>.",
       "Elona's counterattack damage is increased to [[450%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 25 Crit, 25 Crit DMG Boost." }
     ]
   },
   "awakening": {

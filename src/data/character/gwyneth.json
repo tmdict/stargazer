@@ -1,0 +1,12 @@
+{
+  "id": 115,
+  "name": "gwyneth",
+  "level": "s",
+  "faction": "lightbearer",
+  "class": "marksman",
+  "damage": "physical",
+  "energy": [0],
+  "range": 8,
+  "season": 7,
+  "tags": {}
+}

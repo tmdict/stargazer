@@ -41,6 +41,13 @@
       "Revived allies recover [[450%]]<ATK> HP.",
       "While chanting to cast this skill, the ancient magic circle deals [[250%]]<ATK> damage each second to all enemies and converts [[100%]] of the damage dealt into additional HP for the revived ally.",
       "Revived allies recover [[500%]]<ATK> HP."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 16 ATK SPD, 10 Haste." }
     ]
   },
   "awakening": {

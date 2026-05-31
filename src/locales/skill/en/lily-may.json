@@ -41,6 +41,13 @@
       "Increases ATK boost granted by each of her growth to [[12%]].",
       "Allows her to deal [[2]] additional attacks the next time she casts Rainstorm Ballet with each growth.",
       "Increases ATK boost granted by each of her growth to [[14%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 25 Crit, 25 Execution." }
     ]
   },
   "awakening": {

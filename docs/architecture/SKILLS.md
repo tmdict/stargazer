@@ -277,14 +277,22 @@ Slot keys and on-disk shape are defined in `/src/lib/types/skill.ts` and are the
 export const SLOT_ORDER = ['ultimate', 'skill2', 'skill3', 'mastery', 'ex', 'awakening'] as const
 export type SlotKey = (typeof SLOT_ORDER)[number]
 
+export interface SkillRefineEntry {
+  t: number // tier — 2 or 4 in current data
+  d: string // pre-rendered body text
+}
+
 export interface SkillLocaleSlot {
   n?: string | null // omitted for mastery/awakening (invariant names live in app locales)
   d: string[] // d[i] is description for level i+1
+  r?: SkillRefineEntry[] // EX refinement tiers (currently only on `ex`)
 }
 export type SkillLocaleFile = Partial<Record<SlotKey, SkillLocaleSlot>>
 ```
 
 Description encoding: `[[…]]` wraps numeric/keyword highlights; `<TAG>` wraps stat-tag pills (`<ATK>`, `<HP>`). Both are rendered by `utils/textHighlight.ts`.
+
+EX refinement tiers (`r`) only appear on the `ex` slot when the source data has them (≈99% of heroes for tier 2, ≈98% for tier 4 in current AFKJ data). Tier 2 is the class-shared Rivalry Skill unlocked at EX +27; tier 4 is the new-attribute introduction at EX +29, rendered via the localized "Lvl. N Refinement" template. They render as additional rows below the regular levels with a `REFINE N` badge in `SkillSection.vue`. Refinement tiers are not taggable — the `tags` overlay only attaches to numeric level rows.
 
 ### Tag overlay
 
@@ -345,4 +353,4 @@ Because the permalink pages are pre-rendered, `SkillsBrowser` loads its data thr
 
 ### Importer
 
-`npm run import:skills` (`scripts/import-skills.ts`) reads a bulk feed (default `./skills.json`, override with `--src` / `--url`), walks `/src/data/character/*.json`, and writes only `/src/locales/skill/{en,zh}/<slug>.json`. It is read-only against character files (hand-curated `tags` are never touched) and idempotent (diff-then-write). Heroes missing from the feed are reported, not failed.
+`npm run import:skills` (`scripts/import-skills.ts`) reads N per-locale bulk feeds (one per language Stargazer renders — currently `en` + `zh`, hardcoded as the importer's `LOCALES` constant), walks `/src/data/character/*.json`, and writes only `/src/locales/skill/{en,zh}/<slug>.json`. Per-locale source path: `<src-dir>/<lang>/skills.json` (local) or `<url-base>/<lang>/skills.json` (remote). Default `--src-dir` is `./api`; override with `--src-dir <PATH>` or `--url-base <URL>`. The producer (afkj-data-viewer) emits the same schema to `static/api/<locale>/skills.json` — pointing `--src-dir` at that directory wires the integration. Read-only against character files (hand-curated `tags` are never touched) and idempotent (diff-then-write). Heroes missing from the feed are reported, not failed.

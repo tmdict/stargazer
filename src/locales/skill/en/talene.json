@@ -41,6 +41,13 @@
       "Increases Pyre of Renewal carrier's damage dealt to adjacent enemies to [[55%]] of their ATK, and HP recovery to [[30%]] of their damage dealt.",
       "Increases Pyre of Renewal carrier's damage dealt to adjacent enemies to [[60%]] of their ATK, and HP recovery to [[35%]] of their damage dealt.",
       "When Pyre of Renewal reaches the maximum number of stacks and its carrier is defeated, all stacks will be consumed to transform the carrier into a ball of flame. The carrier will then resurrect in [[3]]s with [[50%]] of their max HP. This effect can only be triggered once in each battle."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Vitality, 10 Healing." }
     ]
   },
   "awakening": {

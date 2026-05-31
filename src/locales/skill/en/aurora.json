@@ -41,6 +41,13 @@
       "Increase all allied summons' damage dealt by [[8%]].",
       "Increase all allied summons' damage dealt by [[12%]].",
       "When allied summons deal damage to the enemy marked as Nightmare, [[50%]] of the damage dealt ignores all enemy Phys & Magic DEF."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 ATK SPD, 14 Haste." }
     ]
   },
   "awakening": {

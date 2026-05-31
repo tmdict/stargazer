@@ -41,6 +41,16 @@
       "Increases damage to [[50%]]<ATK>.",
       "Shoots an aerolite at a shielded enemy, dealing [[350%]]<ATK> damage. If the shield breaks, the target is stunned for [[4]]s. Only 1 aerolite can be shot every [[10]]s.",
       "Increases aerolite damage to [[450%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 15 ATK SPD, 10 DEF Penetration."
+      }
     ]
   },
   "awakening": {

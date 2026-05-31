@@ -41,11 +41,22 @@
       "Increases damage to [[450%]]<ATK>.",
       "Darkvipers gain [[2]] enhancements after the skill is cast.",
       "Increases damage to [[480%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Crit, 10 Haste, 12 Execution."
+      }
     ]
   },
   "awakening": {
     "d": [
-      "Darkvipers return when the possessed enemies are defeated, recovering [[14%]]<HP> HP and [[80]] Energy for Viperian."
+      "Darkvipers return when the possessed enemies are defeated, recovering [[14%]]<HP> HP and [[80]] Energy for Viperian.",
+      "“冥蛇”造成的伤害将附带[[10]]点生命汲取。每有一名敌人生命值百分比首次低于[[60%]]时，可额外派出一条“冥蛇”，优先选择未被“冥蛇”附身或当前造成伤害最高的敌人，每名敌人至多被[[2]]条“冥蛇”附身。"
     ]
   }
 }

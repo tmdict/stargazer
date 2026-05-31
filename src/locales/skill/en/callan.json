@@ -41,6 +41,13 @@
       "Increases damage to [[60%]]<ATK>.",
       "Increases stun duration to [[2]]s.",
       "Increases damage to [[70%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 12 Vitality, 10 Ranged DEF." }
     ]
   },
   "awakening": {

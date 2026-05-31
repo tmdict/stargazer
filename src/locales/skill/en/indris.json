@@ -41,6 +41,13 @@
       "Increases the ATK SPD Indris gains when triggering the exposed weakness damage bonus to [[50]].",
       "Indris' normal attacks reduce the target's Phys DEF by [[20%]] for [[6]]s. Unstackable.",
       "Increases the ATK SPD Indris gains when triggering the exposed weakness damage bonus to [[60]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 ATK SPD, 20 Execution." }
     ]
   },
   "awakening": {

@@ -41,6 +41,13 @@
       "Increases shield value to [[500%]]<ATK>.",
       "When a marked enemy is defeated, Silvina frightens enemies within 2 tiles of the defeated enemy for [[4]]s while Blade Vortex is in effect.",
       "Increases shield value to [[600%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 25 Execution." }
     ]
   },
   "awakening": {

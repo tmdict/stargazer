@@ -41,6 +41,13 @@
       "Uses a snowball to attack the same controlled enemy hit by Carolina's normal attacks.",
       "Reduces enemies' Magic DEF by [[25%]].",
       "Reduces enemies' Magic DEF by [[30%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 25 Crit DMG Boost." }
     ]
   },
   "awakening": { "d": ["Carolina inflicts Frostbite when dealing damage with Snowball Witchery."] }

@@ -41,6 +41,16 @@
       "Recovers [[105%]]<ATK> HP every second.",
       "Gains [[unaffected]] when skill takes effect.",
       "Recovers [[110%]]<ATK> HP every second."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, when HP drops below [[60%]], reduces damage taken by [[15%]] and recovers [[3%]] of lost HP per second for [[8]]s. Triggers up to once every [[20]]s."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Crit Resist, 15 Ranged DEF, 10 Crit DMG DEF."
+      }
     ]
   },
   "awakening": {

@@ -41,6 +41,16 @@
       "Reduces the enemies' Crit Resist by [[10]] in [[15]]s.",
       "Increases damage to [[150%]]<ATK>.",
       "Increases damage to [[160%]]<ATK>."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 DEF Penetration, 25 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {

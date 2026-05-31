@@ -41,6 +41,13 @@
       "Increases the Vitality bonus to [[25]] and the Energy gain bonus to [[12%]] while the Stellar Bond resonance is active.",
       "Increases the Vitality bonus to [[40]] and the Energy gain bonus to [[14%]] while the Stellar Bond resonance is active.",
       "After Stellar Bond unleashes an energy burst, increases the Energy returned to allies from each Ultimate cast to [[15%]] of their Energy used."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, the first time an ally's HP drops below [[40%]], restores [[160%]]<ATK> HP to them and grants them a shield equal to [[160%]]<ATK>."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 14 Haste, 15 Assistance." }
     ]
   },
   "awakening": {

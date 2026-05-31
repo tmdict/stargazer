@@ -41,6 +41,13 @@
       "Increases the extra damage dealt by Fury Slash to [[35%]] of the target's lost HP, up to [[700%]]<ATK>. Also increases the extra damage dealt by Sundering Strike to [[350%]].",
       "Each [[assist or defeat]] Kordan achieves against a non-summoned enemy inside the hunting circle permanently increases his Phys & Magic DEF by [[40%]], stacking up to [[3]] times. Each assist or defeat also restores [[15%]] of his max HP every second for [[3]]s.",
       "Increases the extra damage dealt by Fury Slash to [[40%]] of the target's lost HP, up to [[800%]]<ATK>. Also increases the extra damage dealt by Sundering Strike to [[400%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Life Drain, 13 Ranged DEF." }
     ]
   },
   "awakening": {
