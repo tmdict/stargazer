@@ -12,7 +12,9 @@ import '@/styles/content.css'
 interface Props {
   show: boolean
   maxWidth?: string
-  linkParam: string
+  // Hero slug for the permalink button; omit to hide the button (e.g. the
+  // about modal, which has no standalone page).
+  linkParam?: string
   localeOverride?: 'en' | 'zh'
   // Anchor to viewport top instead of centering. Use when content height can
   // change at runtime so the top edge stays put.
@@ -31,10 +33,10 @@ const emit = defineEmits<{
 const modalRef = ref<HTMLElement>()
 const i18n = useI18nStore()
 
-// Compute the href for the link with locale (modal-local override wins over global)
+// Permalink to the hero's skill page (modal-local locale override wins over global).
 const linkHref = computed(() => {
   const locale = props.localeOverride ?? i18n.currentLocale
-  return props.linkParam === 'about' ? `/${locale}/about` : `/${locale}/skill/${props.linkParam}`
+  return `/${locale}/skill/${props.linkParam}`
 })
 
 useOverlay({
@@ -52,6 +54,7 @@ useOverlay({
           <div class="buttons">
             <slot name="header-buttons" />
             <a
+              v-if="linkParam"
               :href="linkHref"
               class="button"
               :aria-label="i18n.t('app.link')"

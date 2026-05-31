@@ -20,7 +20,7 @@ const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? p
 </script>
 
 <template>
-  <!-- .container + .content from modal.css — visual match to SkillModal. -->
+  <!-- .container + .content from content.css — visual match to SkillModal. -->
   <div class="container">
     <div class="content">
       <!-- :key remounts the chip strip on each hero (SkillSections caches activeChips). -->

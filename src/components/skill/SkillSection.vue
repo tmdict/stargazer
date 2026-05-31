@@ -8,10 +8,16 @@ interface LevelRow {
   description: string
 }
 
+interface RefinementRow {
+  tier: number
+  description: string
+}
+
 const props = defineProps<{
   heading: string
   slotTags?: string[]
   levels: LevelRow[]
+  refinements?: RefinementRow[]
 }>()
 
 const rendered = computed(() =>
@@ -19,6 +25,13 @@ const rendered = computed(() =>
     level: l.level,
     html: highlightSkillText(l.description),
     isUpgrade: l.level > 1,
+  })),
+)
+
+const renderedRefinements = computed(() =>
+  (props.refinements ?? []).map((r) => ({
+    tier: r.tier,
+    html: highlightSkillText(r.description),
   })),
 )
 </script>
@@ -43,6 +56,16 @@ const rendered = computed(() =>
           <p class="skill-level-desc" v-html="row.html" />
         </div>
         <p v-else class="skill-level-desc" v-html="row.html" />
+      </div>
+      <div
+        v-for="row in renderedRefinements"
+        :key="`refine-${row.tier}`"
+        class="skill-level upgrade refine"
+      >
+        <div class="skill-level-row">
+          <span class="skill-level-badge refine-badge">REFINE {{ row.tier }}</span>
+          <p class="skill-level-desc" v-html="row.html" />
+        </div>
       </div>
     </div>
   </section>
@@ -120,6 +143,13 @@ const rendered = computed(() =>
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+}
+
+/* EX refinement tiers (Refine 2 / Refine 4). Distinct teal so they read as a
+   different tier class from the numeric LV badges above without competing
+   with the per-section chip strip. */
+.skill-level-badge.refine-badge {
+  color: #5fc4bb;
 }
 
 .skill-level-desc {

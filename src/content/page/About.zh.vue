@@ -1,13 +1,3 @@
-<script setup lang="ts">
-import { setupContentMeta } from '@/utils/contentMeta'
-
-setupContentMeta({
-  title: '关于',
-  url: 'about',
-  locale: 'zh',
-})
-</script>
-
 <template>
   <article>
     <h1>剑与远征启程 · 竞技场模拟器</h1>
