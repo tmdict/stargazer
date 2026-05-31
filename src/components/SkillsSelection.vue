@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onUnmounted, ref, watch } from 'vue'
+import { useRoute } from 'vue-router'
 
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterIcon from './CharacterIcon.vue'
@@ -24,6 +25,16 @@ const lang = computed<'en' | 'zh'>(() => props.lang)
 
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters))
+
+// Seed the tag filter from `/skills?tag=<name>` (e.g. a clicked skill chip).
+const route = useRoute()
+watch(
+  () => route.query.tag,
+  (tag) => {
+    selectedTagNames.value = typeof tag === 'string' ? tag : null
+  },
+  { immediate: true },
+)
 
 // 150ms debounce gates the heavier search index lookup.
 const searchQuery = ref('')
