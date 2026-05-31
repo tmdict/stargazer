@@ -26,6 +26,11 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
   },
   {
+    path: '/en/mechanics',
+    name: 'mechanics-en',
+    component: () => import('@/views/MechanicsView.vue'),
+  },
+  {
     path: '/wandwars',
     name: 'wandwars',
     component: () => import('@/views/WandWarsView.vue'),
@@ -41,5 +46,10 @@ export const routes: RouteRecordRaw[] = [
     name: 'skill-zh',
     component: () => import('@/views/SkillView.vue'),
     props: true, // Pass route params as props for better testability
+  },
+  {
+    path: '/zh/mechanics',
+    name: 'mechanics-zh',
+    component: () => import('@/views/MechanicsView.vue'),
   },
 ]

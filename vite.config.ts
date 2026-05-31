@@ -27,6 +27,7 @@ function getSSGRoutes(): string[] {
   ]
 
   locales.forEach((locale) => {
+    routes.push(`/${locale}/mechanics`)
     skillIds.forEach((skillId) => {
       routes.push(`/${locale}/skill/${skillId}`)
     })
