@@ -65,37 +65,43 @@ onUnmounted(() => {
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
       </a>
 
-      <div class="nav-right">
+      <div class="nav-tabs">
         <a href="/skills" class="nav-text-link" :class="{ active: route.path === '/skills' }">{{
           i18n.t('app.skills')
         }}</a>
+        <a
+          :href="`/${i18n.currentLocale}/mechanics`"
+          class="nav-text-link"
+          :class="{ active: route.path.endsWith('/mechanics') }"
+          >{{ i18n.t('app.mechanics') }}</a
+        >
         <a href="/wandwars" class="nav-text-link" :class="{ active: route.path === '/wandwars' }">{{
           i18n.t('wandwars.wand-wars')
         }}</a>
-        <ul class="menu">
-          <li>
-            <LanguageToggle class="icon-link" />
-          </li>
-          <li>
-            <a
-              href="https://github.com/tmdict/stargazer/"
-              class="icon-link"
-              :title="i18n.t('app.code')"
-            >
-              <IconGitHub />
-            </a>
-          </li>
-          <li>
-            <button
-              @click="showAboutModal = true"
-              class="icon-link icon-button"
-              :title="i18n.t('app.about')"
-            >
-              <IconInfo />
-            </button>
-          </li>
-        </ul>
       </div>
+      <ul class="menu">
+        <li>
+          <LanguageToggle class="icon-link" />
+        </li>
+        <li>
+          <a
+            href="https://github.com/tmdict/stargazer/"
+            class="icon-link"
+            :title="i18n.t('app.code')"
+          >
+            <IconGitHub />
+          </a>
+        </li>
+        <li>
+          <button
+            @click="showAboutModal = true"
+            class="icon-link icon-button"
+            :title="i18n.t('app.about')"
+          >
+            <IconInfo />
+          </button>
+        </li>
+      </ul>
     </nav>
   </header>
 
@@ -117,8 +123,9 @@ header {
 
 nav {
   display: flex;
-  justify-content: space-between;
   align-items: flex-end;
+  flex-wrap: wrap;
+  row-gap: 0.4rem;
   max-width: none;
   margin: 0;
   padding: 0 2.5em 0 2em;
@@ -147,10 +154,13 @@ nav ul li {
   transform: scale(1.25);
 }
 
+/* Utility icons (language, source, about). */
 .menu {
   display: flex;
   list-style: none;
   align-items: center;
+  gap: 1.5rem;
+  margin-left: 1.5rem;
 }
 
 .menu a,
@@ -159,7 +169,6 @@ nav ul li {
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 600;
-  margin-left: 1.5rem;
   border-radius: 6px;
 }
 
@@ -168,9 +177,12 @@ nav ul li {
   color: #f7d87c;
 }
 
-.nav-right {
+/* Section tabs; sit at the right ahead of the icons on desktop. */
+.nav-tabs {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  gap: 1.5rem;
+  margin-left: auto;
 }
 
 .nav-text-link {
@@ -183,16 +195,6 @@ nav ul li {
   margin-bottom: 0.2rem;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.1);
-}
-
-/* Space between consecutive pills. */
-.nav-text-link + .nav-text-link {
-  margin-left: 1.5rem;
-}
-
-/* Tuck the last pill close to the menu icons. */
-.nav-text-link:last-of-type {
-  margin-right: -0.8rem;
 }
 
 .nav-text-link:hover {
@@ -218,9 +220,14 @@ nav ul li {
   transition: color 0.2s ease;
 }
 
+/* Mobile: two rows — logo + icons on top, a full-width segmented tab strip
+   below — instead of cramming everything into one shrunken row. The icons
+   (order 1) stay on the logo row; the tabs (order 2, full-width) wrap beneath. */
 @media (max-width: 768px) {
   nav {
-    padding: 0 1.5em 0 1em;
+    align-items: center;
+    padding: 0.4rem 1rem 0;
+    row-gap: 0.5rem;
   }
 
   .logo {
@@ -228,26 +235,31 @@ nav ul li {
   }
 
   .menu {
-    margin-bottom: -0.5rem;
+    order: 1;
+    margin-left: auto;
+    gap: 1rem;
   }
 
-  .menu a,
-  .menu button {
-    font-size: 1rem;
-    padding: 0.5rem;
-    margin-left: 0.7rem;
+  .nav-tabs {
+    order: 2;
+    flex-basis: 100%;
+    margin-left: 0;
+    gap: 0.5rem;
+    padding-bottom: 0.3rem;
   }
 
   .nav-text-link {
-    font-size: 0.75rem;
-    padding: 3px 8px;
-    margin-bottom: -0.75rem;
+    flex: 1;
+    text-align: center;
+    font-size: 0.8rem;
+    padding: 6px 8px;
+    margin-bottom: 0;
+    white-space: nowrap;
+    background: rgba(255, 255, 255, 0.08);
   }
-  .nav-text-link + .nav-text-link {
-    margin-left: 0.6rem;
-  }
-  .nav-text-link:last-of-type {
-    margin-right: 0;
+
+  .nav-text-link.active {
+    background: rgba(247, 216, 124, 0.18);
   }
 }
 
@@ -257,42 +269,30 @@ nav ul li {
   }
 
   nav {
-    padding: 0.5rem 1rem 0;
-  }
-
-  .menu {
-    flex-direction: row;
-    gap: 0.5rem;
-    margin: 0;
-    margin-bottom: -0.3rem;
-    padding-bottom: 0;
-  }
-
-  .menu a,
-  .menu button {
-    font-size: 0.9rem;
-    padding: 0;
-    margin-left: 0.5rem;
+    padding: 0.4rem 0.75rem 0;
   }
 
   .logo {
-    height: 55px;
+    height: 48px;
   }
 
   .logo:hover {
     transform: scale(1.1);
   }
 
+  .menu {
+    gap: 0.8rem;
+  }
+
+  .menu a,
+  .menu button {
+    font-size: 1rem;
+  }
+
   .nav-text-link {
-    font-size: 0.65rem;
-    padding: 2px 6px;
-    margin-bottom: -0.1rem;
-  }
-  .nav-text-link + .nav-text-link {
-    margin-left: 0.4rem;
-  }
-  .nav-text-link:last-of-type {
-    margin-right: -0.1rem;
+    font-size: 0.72rem;
+    padding: 6px 4px;
+    letter-spacing: 0.02em;
   }
 }
 </style>
