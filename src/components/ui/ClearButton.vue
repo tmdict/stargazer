@@ -14,9 +14,9 @@ const handleClick = () => {
 </script>
 
 <template>
-  <button @click="handleClick" class="clear-all-btn">
+  <button @click="handleClick" class="clear-all-btn" :title="i18n.t('app.clear')">
     <IconTrash :size="14" class="btn-icon" />
-    {{ i18n.t('app.clear') }}
+    <span class="btn-text">{{ i18n.t('app.clear') }}</span>
   </button>
 </template>
 
@@ -50,17 +50,32 @@ const handleClick = () => {
   transform: scale(0.95);
 }
 
+/* Mobile: icon-only round button, matching GridControls' action buttons. */
 @media (max-width: 768px) {
   .clear-all-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 0.85rem;
+    border-radius: 999px;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    justify-content: center;
+  }
+  .clear-all-btn .btn-text {
+    display: none;
+  }
+  .clear-all-btn .btn-icon {
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (max-width: 480px) {
   .clear-all-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    font-size: 0.8rem;
+    width: 36px;
+    height: 36px;
+  }
+  .clear-all-btn .btn-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 </style>

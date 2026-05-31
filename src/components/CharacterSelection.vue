@@ -5,26 +5,45 @@ import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
+import type { Team } from '@/lib/types/team'
+import { useGridStore } from '@/stores/grid'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
   isDraggable?: boolean
 }>()
 
-const { selectedTeam, characterStore } = useSelectionState()
+const { selectedTeam, targetHexId, clearTargetHex, characterStore } = useSelectionState()
+const gridStore = useGridStore()
 
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters))
 
-const isCharacterPlaced = (characterId: number): boolean => {
-  const tilesWithCharacters = characterStore.getTilesWithCharacters()
-  return tilesWithCharacters.some(
-    (tile) => tile.characterId === characterId && tile.team === selectedTeam.value,
-  )
+// Hex a character currently occupies on a given team, or null if unplaced.
+const placedHexForTeam = (characterId: number, team: Team): number | null => {
+  const tile = characterStore
+    .getTilesWithCharacters()
+    .find((t) => t.characterId === characterId && t.team === team)
+  return tile ? tile.hex.getId() : null
 }
 
+const isCharacterPlaced = (characterId: number): boolean =>
+  placedHexForTeam(characterId, selectedTeam.value) !== null
+
 const handleCharacterClick = (character: CharacterType) => {
+  // Mobile: a tapped tile targets a specific cell — place the hero there
+  // (using that tile's team), regardless of the roster's selected team.
+  if (targetHexId.value !== null) {
+    const team = getTeamFromTileState(gridStore.getTile(targetHexId.value).state)
+    if (team && canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, team)) {
+      characterStore.placeCharacterOnHex(targetHexId.value, character.id, team)
+    }
+    clearTargetHex()
+    return
+  }
   if (isCharacterPlaced(character.id)) {
     removeCharacterFromGrid(character.id)
     return
@@ -33,13 +52,8 @@ const handleCharacterClick = (character: CharacterType) => {
 }
 
 const removeCharacterFromGrid = (characterId: number) => {
-  const tilesWithCharacters = characterStore.getTilesWithCharacters()
-  const characterTile = tilesWithCharacters.find(
-    (tile) => tile.characterId === characterId && tile.team === selectedTeam.value,
-  )
-  if (characterTile) {
-    characterStore.removeCharacterFromHex(characterTile.hex.getId())
-  }
+  const hexId = placedHexForTeam(characterId, selectedTeam.value)
+  if (hexId !== null) characterStore.removeCharacterFromHex(hexId)
 }
 </script>
 

@@ -1,11 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { watch } from 'vue'
 
-import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
 import SkillReader from '@/components/skill/SkillReader.vue'
 import SkillsSelection from '@/components/SkillsSelection.vue'
-import type { CharacterType } from '@/lib/types/character'
+import { useBottomSheet } from '@/composables/useBottomSheet'
 import { useGameDataStore } from '@/stores/gameData'
 
 const props = defineProps<{
@@ -19,39 +17,47 @@ const props = defineProps<{
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeContentData()
 
-const router = useRouter()
+// Mobile: the roster column becomes a pull-up bottom sheet over the reader. It
+// opens on the empty /skills index, but stays peeked on a hero page so it
+// doesn't cover the skill content; picking a hero collapses it.
+const {
+  expanded,
+  dragging,
+  sheetStyle,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  onMouseDown,
+  collapse,
+} = useBottomSheet({
+  peek: 96,
+  expanded: 0.62,
+  initialExpanded: !props.slug,
+})
 
-// Reuses the grid's character picker (CharacterSelectionPopup): clicking the
-// empty reader opens it at the click point; selecting navigates to that hero.
-const pickerPosition = ref<{ x: number; y: number } | null>(null)
-
-const openPicker = (event: MouseEvent) => {
-  pickerPosition.value = { x: event.clientX - 30, y: event.clientY - 30 }
-}
-
-const selectCharacter = (character: CharacterType) => {
-  pickerPosition.value = null
-  router.push(`/${props.lang}/skill/${character.name}`)
-}
+watch(() => props.slug, collapse)
 </script>
 
 <template>
   <main>
+    <!-- Tap-scrim: dismisses the expanded sheet when tapping the reader above. -->
+    <div v-if="expanded" class="sheet-backdrop" @click="collapse" />
     <div class="skills-layout">
-      <SkillReader class="skills-reader" :slug :lang @pick="openPicker" />
-      <div class="skills-list">
+      <SkillReader class="skills-reader" :slug :lang />
+      <div class="skills-list" :class="{ 'is-dragging': dragging }" :style="sheetStyle">
+        <div
+          class="sheet-handle-area"
+          @touchstart.passive="onTouchStart"
+          @touchmove.passive="onTouchMove"
+          @touchend="onTouchEnd"
+          @touchcancel="onTouchEnd"
+          @mousedown="onMouseDown"
+        >
+          <span class="sheet-handle" />
+        </div>
         <SkillsSelection :characters="gameDataStore.characters" :lang :current-slug="slug" />
       </div>
     </div>
-    <Teleport to="body">
-      <CharacterSelectionPopup
-        v-if="pickerPosition"
-        :characters="gameDataStore.characters"
-        :position="pickerPosition"
-        @select="selectCharacter"
-        @close="pickerPosition = null"
-      />
-    </Teleport>
   </main>
 </template>
 
@@ -110,17 +116,91 @@ const selectCharacter = (character: CharacterType) => {
   border-radius: var(--radius-large);
 }
 
-/* Mobile horizontal inset matches HomeView: .section 2em − TabNavigation -1em. */
-@media (max-width: 768px) {
-  .skills-list {
-    padding: var(--spacing-lg);
-    border-radius: var(--radius-medium);
+/* The drag handle only exists in the mobile bottom-sheet mode. */
+.sheet-handle-area {
+  display: none;
+}
+
+/* Scrim behind the expanded sheet (mobile only — only rendered when expanded).
+   Sits just under the sheet (z 800); a tap collapses it. */
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 799;
+  background: rgba(0, 0, 0, 0.15);
+  animation: sheet-fade-in 0.2s ease;
+}
+@keyframes sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
   }
 }
-@media (max-width: 480px) {
+
+/* Mobile/tablet: the roster becomes a pull-up bottom sheet over the reader.
+   Layout is CSS-driven (so SSG markup hydrates without a mismatch); the
+   composable adds the drag once mounted, overriding `transform` inline.
+   Mirrors HomeView's grid sheet (.tab-section) — keep the two in sync. */
+@media (max-width: 768px) {
+  main {
+    /* Clear the collapsed peek so the reader's last content isn't hidden. */
+    padding-bottom: 96px;
+  }
+
   .skills-list {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    border-radius: 0;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 62vh;
+    padding: 0;
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+    z-index: 800;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    /* Collapsed peek before the composable engages; it sets the same inline. */
+    transform: translateY(calc(62vh - 96px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .skills-list.is-dragging {
+    transition: none;
+  }
+
+  .sheet-handle-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    touch-action: none;
+    cursor: grab;
+  }
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+  }
+
+  /* Roster fills the sheet and scrolls within it. */
+  .skills-list > :deep(.skills-selection) {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 var(--spacing-lg) var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  main {
+    padding-bottom: 88px;
+  }
+  .skills-list > :deep(.skills-selection) {
+    padding: 0 var(--spacing-md) var(--spacing-md);
   }
 }
 </style>

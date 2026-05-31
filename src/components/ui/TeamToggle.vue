@@ -134,10 +134,41 @@ const swap = () => {
   transform: scale(0.97);
 }
 
+/* Minimal toolbar form: drop the Ally/Enemy word so the toggle stops being
+   sized to fit it. The pill colour (green vs red, matching the tiles) plus the
+   swap arrow carry the state; the count still shows when grid info is on. */
+@media (max-width: 768px) {
+  .label {
+    display: none;
+  }
+  /* Round to match the circular Link/Copy/Download action buttons. */
+  .team-toggle {
+    border-radius: 999px;
+  }
+  .active-pill {
+    align-items: center;
+    padding: 0 9px;
+    min-width: 30px;
+    height: 30px;
+    min-height: 0;
+    border-radius: 999px;
+  }
+  .swap-icon {
+    width: 26px;
+    height: 26px;
+  }
+}
+
 @media (max-width: 480px) {
   .active-pill {
-    padding: 5px 10px;
+    padding: 0 7px;
+    min-width: 26px;
+    height: 26px;
     font-size: 0.8rem;
+  }
+  .swap-icon {
+    width: 22px;
+    height: 22px;
   }
 }
 </style>

@@ -4,9 +4,16 @@ import { computed, ref } from 'vue'
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import { useOverlay } from '@/composables/useOverlay'
+import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
+import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
+import { useCharacterStore } from '@/stores/character'
+import { useGridStore } from '@/stores/grid'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
+  // The tapped tile — determines the team and where the chosen hero is placed.
+  hex: Hex
   characters: readonly CharacterType[]
   position: { x: number; y: number }
 }
@@ -14,19 +21,32 @@ interface Props {
 const props = defineProps<Props>()
 
 const emit = defineEmits<{
-  select: [character: CharacterType]
   close: []
 }>()
 
 const popupRef = ref<HTMLElement>()
+const characterStore = useCharacterStore()
+const gridStore = useGridStore()
+
+const team = computed(() => getTeamFromTileState(gridStore.getTile(props.hex.getId()).state))
+
+// Heroes not already placed on this tile's team.
+const availableCharacters = computed(() => {
+  if (!team.value) return []
+  const placedIds = characterStore
+    .getTilesWithCharacters()
+    .filter((tile) => tile.team === team.value)
+    .map((tile) => tile.characterId)
+  return props.characters.filter((char) => !placedIds.includes(char.id))
+})
 
 const sortedCharacters = computed(() =>
-  [...props.characters].sort(
+  [...availableCharacters.value].sort(
     (a, b) => a.faction.localeCompare(b.faction) || a.name.localeCompare(b.name),
   ),
 )
 
-// Faction filter composes on top of the provided pool.
+// Faction filter composes on top of the available pool.
 const factionFilter = ref('')
 const factionOptions = computed(() =>
   [...new Set(sortedCharacters.value.map((c) => c.faction))].sort(),
@@ -36,6 +56,14 @@ const filteredCharacters = computed(() =>
     ? sortedCharacters.value.filter((c) => c.faction === factionFilter.value)
     : sortedCharacters.value,
 )
+
+function handleSelect(character: CharacterType) {
+  if (!team.value) return
+  if (!canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, team.value)) return
+  if (characterStore.placeCharacterOnHex(props.hex.getId(), character.id, team.value)) {
+    emit('close')
+  }
+}
 
 useOverlay({
   elementRef: popupRef,
@@ -65,7 +93,7 @@ useOverlay({
         v-for="character in filteredCharacters"
         :key="character.id"
         class="character-item"
-        @click="emit('select', character)"
+        @click="handleSelect(character)"
       >
         <CharacterIcon :character :isDraggable="false" :showSimpleTooltip="true" />
       </div>

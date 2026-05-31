@@ -3,7 +3,7 @@ import { onMounted, onUnmounted, watch, type Ref } from 'vue'
 interface UseOverlayOptions {
   elementRef: Ref<HTMLElement | undefined | null>
   onClose: () => void
-  /** Omit when the component mounts only while open (e.g. CharacterSelectionModal).
+  /** Omit when the component mounts only while open (e.g. CharacterSelectionPopup).
    * Provide when it stays mounted across open/closed transitions
    * (e.g. BaseModal); handlers no-op while `false`. */
   isOpen?: Ref<boolean>

@@ -75,7 +75,7 @@ const handleDownload = () => {
   <div class="grid-controls">
     <!-- Row 1: grid display toggles -->
     <div class="controls-row">
-      <label class="grid-toggle-btn">
+      <label class="grid-toggle-btn" :class="{ active: !showPerspective }">
         <input
           type="checkbox"
           :checked="!showPerspective"
@@ -84,7 +84,7 @@ const handleDownload = () => {
         />
         <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
       </label>
-      <label class="grid-toggle-btn">
+      <label class="grid-toggle-btn" :class="{ active: showHexIds }">
         <input
           type="checkbox"
           :checked="showHexIds"
@@ -93,7 +93,7 @@ const handleDownload = () => {
         />
         <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
       </label>
-      <label v-if="!hideTeamView" class="grid-toggle-btn">
+      <label v-if="!hideTeamView" class="grid-toggle-btn" :class="{ active: teamView }">
         <input
           type="checkbox"
           :checked="teamView"
@@ -102,7 +102,7 @@ const handleDownload = () => {
         />
         <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
       </label>
-      <label class="grid-toggle-btn" :class="{ disabled: teamView }">
+      <label class="grid-toggle-btn" :class="{ active: showSkills, disabled: teamView }">
         <input
           type="checkbox"
           :checked="showSkills"
@@ -112,7 +112,7 @@ const handleDownload = () => {
         />
         <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
       </label>
-      <label class="grid-toggle-btn" :class="{ disabled: teamView }">
+      <label class="grid-toggle-btn" :class="{ active: showArrows, disabled: teamView }">
         <input
           type="checkbox"
           :checked="showArrows"
@@ -136,17 +136,17 @@ const handleDownload = () => {
         :maxEnemyCount="characterStore.maxTeamSizeEnemy"
         @team-change="handleTeamChange"
       />
-      <button @click="handleCopyLink" class="action-btn">
+      <button @click="handleCopyLink" class="action-btn" :title="i18n.t('app.link')">
         <IconLink :size="14" class="btn-icon" />
-        {{ i18n.t('app.link') }}
+        <span class="btn-text">{{ i18n.t('app.link') }}</span>
       </button>
-      <button @click="handleCopyImage" class="action-btn">
+      <button @click="handleCopyImage" class="action-btn" :title="i18n.t('app.copy')">
         <IconCopy :size="14" class="btn-icon" />
-        {{ i18n.t('app.copy') }}
+        <span class="btn-text">{{ i18n.t('app.copy') }}</span>
       </button>
-      <button @click="handleDownload" class="action-btn">
+      <button @click="handleDownload" class="action-btn" :title="i18n.t('app.download')">
         <IconDownload :size="14" class="btn-icon" />
-        {{ i18n.t('app.download') }}
+        <span class="btn-text">{{ i18n.t('app.download') }}</span>
       </button>
       <ClearButton v-if="!hideTeamControls" @click="handleClearAll" />
     </div>
@@ -244,39 +244,78 @@ const handleDownload = () => {
   flex-shrink: 0;
 }
 
+/* Mobile: a native-first toolbar — display toggles become filled/outlined
+   choice chips (the fill is the on/off state, so the checkbox is dropped) and
+   the link/copy/download actions become icon-only round buttons. */
 @media (max-width: 768px) {
-  .grid-toggle-btn,
-  .action-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
-    min-height: 32px;
-    font-size: 0.85rem;
+  .grid-controls {
+    gap: var(--spacing-sm);
+  }
+  .controls-row {
+    gap: 6px;
+  }
+  /* Row 2 (team toggle + action buttons) breathes more; row 1's chips stay
+     tight so they don't re-wrap. */
+  .controls-row:last-child {
+    gap: 12px;
   }
 
   .grid-toggle-btn {
-    padding: var(--spacing-xs) var(--spacing-sm);
+    border-radius: 999px;
+    border-width: 1px;
+    border-color: var(--color-border-primary);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    padding: 5px 11px;
+    min-height: 0;
+    gap: 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .grid-toggle-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+  .grid-toggle-checkbox {
+    display: none;
+  }
+
+  .action-btn {
+    border-radius: 999px;
+    padding: 0;
+    width: 40px;
+    height: 40px;
+    min-height: 0;
+    justify-content: center;
+  }
+  .action-btn .btn-text {
+    display: none;
+  }
+  .action-btn .btn-icon {
+    width: 18px;
+    height: 18px;
   }
 }
 
 @media (max-width: 480px) {
-  .grid-controls {
-    gap: var(--spacing-sm);
+  .controls-row {
+    gap: 5px;
   }
-
-  .grid-toggle-btn,
+  .controls-row:last-child {
+    gap: 10px;
+  }
+  .grid-toggle-btn {
+    padding: 4px 10px;
+    font-size: 0.74rem;
+  }
   .action-btn {
-    padding: 6px 10px;
-    min-height: 28px;
-    font-size: 0.8rem;
+    width: 36px;
+    height: 36px;
   }
-
-  .grid-toggle-checkbox {
-    width: 0.8rem;
-    height: 0.8rem;
-  }
-
-  .btn-icon {
-    width: 12px;
-    height: 12px;
+  .action-btn .btn-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 </style>
