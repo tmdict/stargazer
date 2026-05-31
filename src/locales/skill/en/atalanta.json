@@ -41,6 +41,13 @@
       "The bonus damage ratio of Sweet Encounter is increased to [[8%]].",
       "Atalanta steals [[10%]] ATK and [[10%]] Phys DEF from the target every time she hits her main target with Sweet Encounter. This effect cannot be stacked on the same target, and the stolen stats will be returned in [[8]]s.",
       "The bonus damage ratio of Sweet Encounter is increased to [[10%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 25 Crit, 10 Haste." }
     ]
   },
   "awakening": {

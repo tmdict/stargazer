@@ -41,6 +41,13 @@
       "Reduces the Prey's Crit Resist by [[24]].",
       "When the Prey has at least [[15]] Rend stacks, reduces their Vitality by [[50]], and increases their damage taken by [[12%]].",
       "Reduces the Prey's Crit Resist by [[32]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 ATK SPD, 20 Execution." }
     ]
   },
   "awakening": {

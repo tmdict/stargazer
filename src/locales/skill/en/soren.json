@@ -41,6 +41,16 @@
       "Soren removes all active control effects when this skill is triggered. It can be triggered repeatedly in a single battle, with a cooldown of [[25]]s.",
       "Increases the bonus Haste to [[80]] while this skill is active.",
       "Increases the HP recovery to [[5%]] of the max HP per second while this skill is active."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 14 Crit Resist, 8 Haste, 8 Ranged DEF."
+      }
     ]
   },
   "awakening": {

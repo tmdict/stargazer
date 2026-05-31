@@ -1,6 +1,6 @@
 /* Shared content surface: the bordered box and prose typography used by the
-   modal popups (BaseModal, PageContainer) and the inline skill reader panel.
-   Pairs with modal.css, which supplies the overlay/popup chrome (and the mobile
+   modal popups (BaseModal) and the inline skill reader panel. Pairs with
+   modal.css, which supplies the overlay/popup chrome (and the mobile
    button-clearance padding for `.content` rendered inside an overlay). */
 
 .container {

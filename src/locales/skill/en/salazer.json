@@ -41,6 +41,13 @@
       "The Enraptured Whip deals additional damage equal to [[5%]] of the enemy's current HP, granting [[50]] Life Drain to Salazer. The additional damage cannot exceed [[150%]] of Salazer's ATK.",
       "Casts Enraptured Whip [[2]] times without cooldown.",
       "The Enraptured Whip deals additional damage equal to [[5.5%]] of the enemy's current HP, granting [[52]] Life Drain to Salazer. The additional damage cannot exceed [[160%]] of Salazer's ATK."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Life Drain, 10 Haste." }
     ]
   },
   "awakening": {

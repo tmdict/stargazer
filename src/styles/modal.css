@@ -1,6 +1,6 @@
-/* Overlay/popup chrome for modal-style surfaces (BaseModal, PageContainer) and
-   the share overlay. Pairs with content.css, which supplies the inner content
-   box and prose typography. */
+/* Overlay/popup chrome for the modal popups (BaseModal) and the share overlay.
+   Pairs with content.css, which supplies the inner content box and prose
+   typography. */
 
 /* Overlay styles. Base rules cover SSG-page surfaces (no z-index). The
    `.is-modal` modifier layers above other UI for popup modal usage. */

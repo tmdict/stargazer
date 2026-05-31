@@ -41,6 +41,16 @@
       "Increases Crit DMG Boost by [[60]] and ATK by [[18%]].",
       "If Lenya deals more damage than her target by the end of the duel, she is considered the winner. Winning the duel increases the duration her full potential effects by [[8]]s.",
       "Increases Crit DMG Boost by [[65]] and ATK by [[20%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 Execution, 30 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {

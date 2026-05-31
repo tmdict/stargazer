@@ -41,7 +41,22 @@
       "Normal attacks hit [[1]] more target after inflicting [[4]] marks. ",
       "Normal attacks hit [[1]] more target after inflicting [[3]] marks. ",
       "Normal attacks hit [[1]] more target after inflicting [[2]] marks. "
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 16 ATK SPD, 10 DEF Penetration."
+      }
     ]
   },
-  "awakening": { "d": ["Reduces the required normal attacks to trigger Flower Power by [[-1]]."] }
+  "awakening": {
+    "d": [
+      "Reduces the required normal attacks to trigger Flower Power by [[-1]].",
+      "Floral Inspiration no longer has an initial cooldown. After this skill is cast for the first time, Floral Inspiration targets [[1]] extra allies, prioritizing those who have dealt the most normal attack damage."
+    ]
+  }
 }

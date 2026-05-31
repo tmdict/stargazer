@@ -41,6 +41,13 @@
       "Increases her movement speed by [[80%]] and Haste by [[100]] when in the darkness.",
       "Recovers [[40%]] of her max HP when the marked enemy is defeated.",
       "Increases her movement speed by [[90%]] and Haste by [[120]] when in the darkness."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 10 DEF Penetration." }
     ]
   },
   "awakening": {

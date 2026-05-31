@@ -41,6 +41,16 @@
       "Increases the Penetration Silven gains to [[6]].",
       "After the effect triggers [[2]] times, Silven gains an extra [[15%]] ATK.",
       "Increases the Penetration Silven gains to [[8]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 18 ATK SPD, 10 DEF Penetration."
+      }
     ]
   },
   "awakening": {

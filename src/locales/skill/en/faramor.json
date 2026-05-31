@@ -41,6 +41,13 @@
       "Increases the extra true damage dealt by allies to [[80%]] of their ATK.",
       "When an enemy is defeated within the magic circle, grants Faramor [[10%]] ATK and expands the circle's radius to [[2]] tiles. This effect can only trigger once per battle.",
       "Increases the extra true damage dealt by allies to [[85%]] of their ATK."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 14 Haste, 15 Execution." }
     ]
   },
   "awakening": {

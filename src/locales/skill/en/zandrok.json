@@ -41,6 +41,13 @@
       "Increases the extra damage to [[5%]] of Zandrok's max HP.",
       "Enhances the next normal attack of allies inspired by Rallying Roar, making it deal extra damage equal to [[15%]] of their own max HP. This extra damage cannot exceed [[100%]] of Zandrok's max HP.",
       "Increases the extra damage to [[6%]] of Zandrok's max HP."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 18 Crit Resist, 12 Haste." }
     ]
   },
   "awakening": {

@@ -41,6 +41,13 @@
       "Pang increases the ATK of any unit shielded by his Chi Barrier by [[17%]].",
       "Pang draws on the chi around him to protect an ally. When an allied hero (other than Pang) reaches [[850]] Energy or higher, Pang grants them a Chi Barrier. He can only shield the same ally once every [[15]]s.",
       "Pang increases the ATK of any unit shielded by his Chi Barrier by [[19%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Healing, 10 Haste." }
     ]
   },
   "awakening": {

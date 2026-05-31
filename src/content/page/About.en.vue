@@ -1,13 +1,3 @@
-<script setup lang="ts">
-import { setupContentMeta } from '@/utils/contentMeta'
-
-setupContentMeta({
-  title: 'About',
-  url: 'about',
-  locale: 'en',
-})
-</script>
-
 <template>
   <article>
     <h1>AFK Journey Arena Simulator</h1>

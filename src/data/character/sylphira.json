@@ -1,0 +1,15 @@
+{
+  "id": 116,
+  "name": "sylphira",
+  "level": "s",
+  "faction": "celestial",
+  "class": "rogue",
+  "damage": "magic",
+  "energy": [500],
+  "range": 1,
+  "season": 7,
+  "tags": {
+    "initial-energy": [],
+    "initial-energy-300": []
+  }
+}

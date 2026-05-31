@@ -41,6 +41,13 @@
       "Gains an extra stack of Battlefield Learning when Hyperfocus takes effect for every [[10]]s.",
       "Increases each stack of ATK bonus to [[7.5%]].",
       "Increases each stack of ATK bonus to [[8.5%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 30 ATK SPD, 5 Crit." }
     ]
   },
   "awakening": {

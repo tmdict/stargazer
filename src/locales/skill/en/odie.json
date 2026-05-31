@@ -41,6 +41,16 @@
       "Increases the threshold to [[5.7]] times the [[base damage]] dealt by Dart Poison per second.",
       "Gains [[600]] Initial Energy.",
       "Increases the threshold to [[6.2]] times the [[base damage]] dealt by Dart Poison per second."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, each normal attack increases ATK SPD by [[2]] and normal attack damage by [[1%]], stacking up to [[10]] times."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 16 ATK SPD, 10 DEF Penetration."
+      }
     ]
   },
   "awakening": {

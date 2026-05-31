@@ -41,6 +41,13 @@
       "Boosts the shield granted by this skill to [[330%]] of Florabell's ATK.",
       "Feeds the allied summon with the highest ATK with an unripe petalplum when Florabelle casts Overgrowth. This transforms the summon into a giant, increasing their Haste by [[27]] and Life Drain by [[32]].",
       "Boosts the shield granted by this skill to [[350%]] of Florabell's ATK."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 25 Crit DMG DEF." }
     ]
   },
   "awakening": {

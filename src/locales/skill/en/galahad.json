@@ -41,6 +41,13 @@
       "The summoned shadow now inherits [[100%]] of the marked ally's basic stats.",
       "When Galahad's magic circle is fully formed for the first time, Magister Merlin's skills grant stat buffs that are [[20%]] stronger and last [[100%]] longer. Every time Magister Merlin casts a skill, a shadow of Merlin appears nearby and casts the same skill again, causing [[60%]] as much [[HP loss]] as Merlin's original skill does.",
       "The summoned shadow now inherits [[120%]] of the marked ally's basic stats."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Haste, 10 DEF Penetration." }
     ]
   },
   "awakening": {

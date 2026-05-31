@@ -41,6 +41,13 @@
       "Increases Sonja's Initial Energy to [[200]].",
       "Enhancing the Crimson Covenant also reduces damage taken by [[40%]] for a covenant member if any other member is alive. [[50%]] of the reduced damage is shared by other members, but this will not cause them to be defeated.",
       "Enhancing the Crimson Covenant also reduces damage shared by other members to [[40%]] of the total amount reduced."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 Life Drain, 10 Haste." }
     ]
   },
   "awakening": {

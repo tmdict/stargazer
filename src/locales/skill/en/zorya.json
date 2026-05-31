@@ -41,6 +41,13 @@
       "Increases the Haste granted by the forcefield to [[30]].",
       "As long as Zorya's HP ratio remains above [[50%]], she stays [[unaffected]].",
       "Increases the Haste granted by the forcefield to [[40]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 18 Crit, 12 DEF Penetration." }
     ]
   },
   "awakening": {

@@ -41,6 +41,13 @@
       "Increases the damage dealt to [[90%]] of the original damage.",
       "Pippa grows more confident in her magic each time she uses it. After she casts her Ultimate [[4]] times, her magic no longer goes out of control, and her chance to trigger mutation increases to [[60%]].",
       "Increases the damage dealt to [[100%]] of the original damage."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, casting an Ultimate increases damage dealt by [[8%]] for the next [[8]]s. Unstackable. The first Ultimate cast also permanently increases Energy recovery from attacking by [[8%]]."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 20 Crit, 30 Crit DMG Boost." }
     ]
   },
   "awakening": {

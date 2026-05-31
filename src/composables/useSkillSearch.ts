@@ -61,6 +61,18 @@ function buildIndex(lang: 'en' | 'zh') {
           text: cleanSkillText(rawDesc),
         })
       })
+      // EX refinement tiers — indexed so queries like "Rivalry Mode" or
+      // "DEF Penetration" surface relevant heroes. The level field carries
+      // the tier number so hits land on the right row in result display.
+      for (const r of slotData.r ?? []) {
+        deep.push({
+          slug,
+          loc: 'description',
+          slot,
+          level: r.t,
+          text: cleanSkillText(r.d),
+        })
+      }
     }
   }
 

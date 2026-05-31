@@ -41,6 +41,16 @@
       "Increases the max damage boost Shadewing can gain from Withering Curse's lash to [[42%]].",
       "Converts [[85%]] of the damage dealt by Withering Curse's lash into true damage.",
       "Increases the max damage boost Shadewing can gain from Withering Curse's lash to [[48%]]."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 15 Crit, 15 Execution, 20 Crit DMG Boost."
+      }
     ]
   },
   "awakening": {

@@ -41,6 +41,13 @@
       "Reduces the targets' healing received for [[5]]s.",
       "Enhances Ghastly Explosion once with each cast of Specter Guard, regardless of Igor's HP ratio.",
       "Reduces the targets' healing received for [[6]]s."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, reduces damage taken by [[10%]] for [[20]]s when a battle starts. [[20]]s later, increases damage dealt by [[10%]] for [[20]]s."
+      },
+      { "t": 4, "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 15 Life Drain, 10 Execution." }
     ]
   },
   "awakening": {

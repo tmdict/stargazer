@@ -41,7 +41,22 @@
       "The Silhouette inherits [[70%]] of Berial's ATK and HP.",
       "Enemies lose [[40]] Energy when they receive damage from the Silhouette.",
       "The Silhouette inherits [[80%]] of Berial's ATK and HP."
+    ],
+    "r": [
+      {
+        "t": 2,
+        "d": "In Rivalry Mode, gains [[15]] Penetration and [[15]] Haste for [[5]]s when a battle starts and when [[assisting or defeating]] an enemy."
+      },
+      {
+        "t": 4,
+        "d": "Lvl. 4 Refinement: In Rivalry Mode, increases 10 DEF Penetration, 25 Execution."
+      }
     ]
   },
-  "awakening": { "d": ["Increases the hiding duration after being defeated by [[10]]s."] }
+  "awakening": {
+    "d": [
+      "Increases the hiding duration after being defeated by [[10]]s.",
+      "“二重身”对每名角色的触发时间降低至[[15]]秒。首次召唤残影后，自身和残影对敌人造成的能量损失效果提升[[50%]]。累计召唤[[3]]次残影后，残影将不再自动损失生命值。"
+    ]
+  }
 }
