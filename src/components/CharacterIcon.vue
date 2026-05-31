@@ -298,7 +298,7 @@ const handleTouchStart = () => {
 }
 
 .character-display.selected {
-  box-shadow: 0 0 0 5px var(--color-primary);
+  box-shadow: 0 0 0 5px #c05b4d;
 }
 
 /* Simple tooltip - just name */

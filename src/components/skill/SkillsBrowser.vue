@@ -58,6 +58,21 @@ gameDataStore.initializeContentData()
   }
 }
 
+/* Widen the reader on larger monitors; the right column keeps the remainder. */
+@media (min-width: 1600px) {
+  .skills-layout > .skills-reader {
+    flex-basis: 760px;
+    width: 760px;
+  }
+}
+
+@media (min-width: 1920px) {
+  .skills-layout > .skills-reader {
+    flex-basis: 860px;
+    width: 860px;
+  }
+}
+
 /* Right column uses .section chrome; left reader panel styles itself. */
 .skills-list {
   padding: 2em;
