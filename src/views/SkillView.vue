@@ -2,7 +2,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
-import SkillSections from '@/components/skill/SkillSections.vue'
+import SkillsBrowser from '@/components/skill/SkillsBrowser.vue'
 import PageContainer from '@/components/ui/PageContainer.vue'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { hasSkillLocale, loadSkillLocales } from '@/utils/dataLoader'
@@ -14,8 +14,7 @@ interface Props {
 const props = defineProps<Props>()
 
 const route = useRoute()
-const locale = useRouteLocale()
-const lang = computed<'en' | 'zh'>(() => (locale.value === 'zh' ? 'zh' : 'en'))
+const lang = useRouteLocale()
 
 const skillName = computed(() => props.name || (route.params.name as string) || '')
 const slug = computed(() => skillName.value.toLowerCase())
@@ -26,9 +25,9 @@ const hasLocaleData = computed(
 </script>
 
 <template>
-  <PageContainer maxWidth="960px" :top-anchor="true">
-    <SkillSections v-if="hasLocaleData" :slug="slug" :lang="lang" />
-    <div v-else class="skill-not-found">
+  <SkillsBrowser v-if="hasLocaleData" :slug :lang />
+  <PageContainer v-else maxWidth="960px" :top-anchor="true">
+    <div class="skill-not-found">
       <h1>Skill Not Found</h1>
       <p>The skill "{{ skillName }}" was not found.</p>
       <img src="@/assets/rowan.gif" alt="logo" class="rowan-gif" />

@@ -1,14 +1,16 @@
 <script setup lang="ts">
 import IconLocaleEn from './IconLocaleEn.vue'
 import IconLocaleZh from './IconLocaleZh.vue'
+import { useLocaleToggle } from '@/composables/useLocaleToggle'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
+const toggle = useLocaleToggle()
 </script>
 
 <template>
   <button
-    @click="i18n.toggleLocale()"
+    @click="toggle()"
     class="language-toggle"
     :aria-label="i18n.currentLocale === 'en' ? '中' : 'En'"
     :title="i18n.currentLocale === 'en' ? '中' : 'En'"

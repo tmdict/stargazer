@@ -8,10 +8,10 @@ The pre-rendering system uses vite-ssg to generate static HTML for content pages
 
 1. **Selective Pre-rendering**: Only content pages are pre-rendered, not the interactive game
 2. **Prop-based Static Content**: Pass data as props to components in static pages to avoid hydration mismatches
-3. **Route-based Locale**: Determine language from URL path rather than global state during SSG
+3. **Route-based Locale**: Language comes from the URL path; `App.vue` also syncs the global i18n store from the path (`splitLocalePath`) so shared chrome and the skill browser render in the URL's locale
 4. **SSR Safety**: Guard browser APIs with environment checks to prevent build errors
 5. **Shared Routes**: Single route definition used by both SPA and SSG modes
-6. **Minimal Store Dependencies**: Static views avoid heavy store dependencies, but the shared header still calls `i18n.initialize()` (idempotent) from `App.vue` so cross-route navigation chrome stays translated
+6. **Selective Store Dependencies**: Most static views avoid heavy store dependencies — the shared header calls `i18n.initialize()` (idempotent) from `App.vue`. The skill permalink pages are the deliberate exception: they render the full character browser and load display data during SSG via `gameDataStore.initializeContentData()` so the grid and its crawlable links pre-render
 
 ## How It Works
 
@@ -76,7 +76,7 @@ export const createApp = ViteSSG(
 )
 ```
 
-`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including SSG-only `/about` and `/skill/*`) resolves translation keys rather than emitting literals like `wandwars.wand-wars`. Per-page locale is still derived from the URL via `useRouteLocale`.
+`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including SSG-only `/about` and `/skill/*`) resolves translation keys rather than emitting literals like `wandwars.wand-wars`. It also watches the route path and calls `i18n.setLocale()` for any `/{en,zh}/...` route (via `splitLocalePath`), so the store-backed chrome and the skill browser's right column render in the URL's locale during SSG and client navigation alike. Per-page skill content still derives its locale directly from the URL via `useRouteLocale`.
 
 Key considerations:
 
@@ -172,58 +172,47 @@ Key considerations:
 #### Game Data Store (`/src/stores/gameData.ts`)
 
 ```typescript
+// Interactive game (home/share): client-only, stays empty during SSG.
 const initializeData = () => {
   if (dataLoaded.value || import.meta.env.SSR) {
     return // Skip during SSG
   }
-  // Normal initialization
+  loadIntoState()
 }
 
-const setCharacterImages = (images: Record<string, string>) => {
-  characterImages.value = images
+// Content pages (skill browser): SSR-safe, so the grid + crawlable links
+// pre-render. Same data, no SSR guard. Idempotent via dataLoaded.
+const initializeContentData = () => {
+  if (dataLoaded.value) return
+  loadIntoState()
 }
 ```
 
 Key considerations:
 
-- **SSR guard**: Skip initialization during pre-rendering
-- **Direct setters**: Allow SSG to inject pre-loaded data
-- **Preserved functionality**: Client-side behavior unchanged
+- **Two loaders, one body**: `initializeData` keeps the interactive game client-only; `initializeContentData` opts the skill browser into SSG without disturbing home/share
+- **No hydration mismatch**: `initializeContentData` runs synchronously in `SkillsBrowser` setup, so the client's first render matches the pre-rendered HTML (same deterministic data-loader output)
+- **Preserved functionality**: Home and share pages are unchanged
 
 ### Locale Extraction
 
-#### Route Locale Composable (`/src/composables/useRouteLocale.ts`)
+#### Locale-prefix parser (`/src/utils/routeLocale.ts`)
 
-Extract locale from the current route path:
+A single pure helper splits a path into its locale prefix and remainder; the route-locale composable, the `App.vue` store sync, and the language toggle all share it so the prefix regex lives in one place:
 
 ```typescript
-import { computed } from 'vue'
-import { useRoute } from 'vue-router'
-
-export function useRouteLocale() {
-  const route = useRoute()
-
-  const locale = computed(() => {
-    const match = route.path.match(/^\/(en|zh)\//)
-    return match ? match[1] : 'en'
-  })
-
-  return locale
+export function splitLocalePath(path: string): { locale: Locale | null; rest: string } {
+  const match = path.match(/^\/(en|zh)(\/.*)?$/)
+  if (!match) return { locale: null, rest: path }
+  return { locale: match[1] as Locale, rest: match[2] ?? '' }
 }
 ```
 
-Used in static view components:
+`useRouteLocale()` wraps it for static views that need the page locale (defaulting to `'en'`):
 
 ```typescript
-// In About.vue and Skill.vue
-import { useRouteLocale } from '@/composables/useRouteLocale'
-
-const locale = useRouteLocale()
-const { ContentComponent } = useContentComponent({
-  type: 'skill',
-  name: normalizedSkillName,
-  locale, // Pass extracted locale
-})
+// In AboutView.vue and SkillView.vue
+const locale = useRouteLocale() // computed(() => splitLocalePath(route.path).locale ?? 'en')
 ```
 
 #### i18n Store (`/src/stores/i18n.ts`)

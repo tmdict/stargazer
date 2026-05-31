@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
@@ -9,23 +9,38 @@ import IconInfo from '@/components/ui/IconInfo.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
+import { useLocaleToggle } from '@/composables/useLocaleToggle'
 import { useI18nStore } from '@/stores/i18n'
+import { splitLocalePath } from '@/utils/routeLocale'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
 const i18n = useI18nStore()
 const route = useRoute()
+const toggleLocale = useLocaleToggle()
 
 // Header renders on every route; init here so SSG-only routes whose views
 // don't call initialize (about, skill/*) still get translations. Idempotent.
 i18n.initialize()
+
+// Locale-prefixed routes are authoritative: keep the store in sync with the
+// path so the header and skill browser render in the URL's language (during
+// SSG and client navigation alike). Unprefixed routes keep the saved choice.
+watch(
+  () => route.path,
+  (path) => {
+    const { locale } = splitLocalePath(path)
+    if (locale) i18n.setLocale(locale)
+  },
+  { immediate: true },
+)
 
 // Keyboard shortcut handler
 const handleKeyDown = (e: KeyboardEvent) => {
   // Alt+L to toggle language
   if (e.altKey && e.key === 'l') {
     e.preventDefault()
-    i18n.toggleLocale()
+    toggleLocale()
   }
 }
 

@@ -9,18 +9,18 @@ import type { CharacterType } from '@/lib/types/character'
 import { type SlotKey } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { useSkillsStore } from '@/stores/skills'
 import { loadAppLocales, loadCharacterLocales } from '@/utils/dataLoader'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
+  lang: 'en' | 'zh'
+  currentSlug?: string | null
 }>()
 
 const gameDataStore = useGameDataStore()
-const skillsStore = useSkillsStore()
 const i18n = useI18nStore()
 
-const lang = computed<'en' | 'zh'>(() => (i18n.currentLocale === 'zh' ? 'zh' : 'en'))
+const lang = computed<'en' | 'zh'>(() => props.lang)
 
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters))
@@ -83,14 +83,6 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   if (loc === 'skill-name') return slotLabel(slot)
   return level ? `${slotLabel(slot)} · L${level}` : slotLabel(slot)
 }
-
-const handleSelect = (character: CharacterType) => {
-  skillsStore.setSelectedSlug(character.name)
-}
-
-const handleSelectSlug = (slug: string) => {
-  skillsStore.setSelectedSlug(slug)
-}
 </script>
 
 <template>
@@ -118,16 +110,16 @@ const handleSelectSlug = (slug: string) => {
 
     <!-- Meta row mirrors CharacterInfoIcons; wider gap replaces info button. -->
     <div v-if="!visibleSearchResults" class="characters">
-      <div
+      <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
+        :to="`/${lang}/skill/${character.name}`"
         class="character-cell"
-        @click="handleSelect(character)"
       >
         <CharacterIcon
           :character
           :hideInfo="true"
-          :isSelected="skillsStore.selectedSlug === character.name"
+          :isSelected="currentSlug === character.name"
           :selected-filter="selectedTagNames"
         />
         <div class="meta-row">
@@ -142,22 +134,22 @@ const handleSelectSlug = (slug: string) => {
             class="meta-icon"
           />
         </div>
-      </div>
+      </RouterLink>
     </div>
 
     <div v-else class="results">
       <p v-if="visibleSearchResults.length === 0" class="empty-results">
         {{ i18n.t('app.skill-no-matches', { query: `"${debouncedQuery}"` }) }}
       </p>
-      <div
+      <RouterLink
         v-for="result in visibleSearchResults"
         :key="result.slug"
+        :to="`/${lang}/skill/${result.slug}`"
         class="result-row"
         :class="{
-          active: skillsStore.selectedSlug === result.slug,
+          active: currentSlug === result.slug,
           'single-hit': result.hits.length === 1,
         }"
-        @click="handleSelectSlug(result.slug)"
       >
         <img
           :src="gameDataStore.getCharacterImage(result.slug)"
@@ -175,7 +167,7 @@ const handleSelectSlug = (slug: string) => {
             >
           </div>
         </div>
-      </div>
+      </RouterLink>
     </div>
   </div>
 </template>
@@ -267,6 +259,8 @@ const handleSelectSlug = (slug: string) => {
   flex-direction: column;
   align-items: center;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
 }
 
 /* Flatten so energy badge and meta-row share one flex order. */
@@ -363,6 +357,8 @@ const handleSelectSlug = (slug: string) => {
   border: 1px solid var(--color-border-light);
   border-radius: var(--radius-medium);
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
   transition: box-shadow var(--transition-fast);
 }
 /* Single snippet looks lopsided top-aligned against the portrait. */

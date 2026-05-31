@@ -2,6 +2,7 @@
 import IconClose from './IconClose.vue'
 
 import '@/styles/modal.css'
+import '@/styles/content.css'
 
 interface Props {
   maxWidth?: string

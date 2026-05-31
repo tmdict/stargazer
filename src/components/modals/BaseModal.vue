@@ -7,6 +7,7 @@ import { useOverlay } from '@/composables/useOverlay'
 import { useI18nStore } from '@/stores/i18n'
 
 import '@/styles/modal.css'
+import '@/styles/content.css'
 
 interface Props {
   show: boolean
