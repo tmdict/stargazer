@@ -304,7 +304,7 @@ Tag display labels resolve through `/src/locales/app/<tag>.json`. Adding a new t
 
 ### Render pipeline
 
-- **`SkillSections.vue`** is the canonical wrapper used by both `SkillView` (SSG page) and `SkillModal`. It owns the chip filter state, composes section headings, and provides the snippet teleport anchors. Its root is `<article>` so SSG meta extraction (`vite.config.ts`) can pull the description.
+- **`SkillSections.vue`** is the canonical wrapper used by both `SkillReader` (the left panel of the shared `SkillsBrowser`) and `SkillModal`. It owns the chip filter state, composes section headings, and provides the snippet teleport anchors. Its root is `<article>` so SSG meta extraction (`vite.config.ts`) can pull the description — the browser keeps its other column free of `<article>` so the first match stays the skill text.
 - **`SkillSection.vue`** renders one slot's heading + per-level descriptions. A level is shown if any of its tags is in the active chip set (empty filter shows all).
 - **Heading composition** (per `SLOT_ORDER`):
   - `ultimate` / `ex` → `<prefix>: <name>` (prefix from app locale: `ultimate`, `ex-skill`)
@@ -333,9 +333,13 @@ Commentary is authored against a fixed set of "slots" (the same `SLOT_ORDER` as 
 
 Under the hood, `<SkillSections>` reserves an anchor element after each rendered skill section and provides the anchor map; `<SkillSnippets>` reads it and moves each filled slot into the matching anchor at render time. The slot keys and the section order are therefore the contract — adding a new slot key is a one-line change in `src/lib/types/skill.ts` that the snippet system inherits automatically.
 
-### `/skills` page
+### Skill browser
 
-The skill browser at the top-level route. `useSkillsStore` (Pinia) bridges the search/filter list to the reader panel — list writes `selectedSlug`, reader reads it.
+One layout — `SkillsBrowser.vue` — backs both the `/skills` index (SPA) and every `/{en,zh}/skill/<slug>` permalink (SSG). Left column `SkillReader` shows the active hero's `SkillSections` (or an empty prompt on `/skills`); right column `SkillsSelection` is the searchable, filterable character grid.
+
+The URL is the single source of truth — there is no selection store. Each character in the grid (and each search result) is a `<RouterLink>` to `/{lang}/skill/<slug>`, so picking a hero is a navigation, not local state. On a permalink page the left column reads its hero from the route param and that hero is highlighted in the grid; on `/skills` the left column stays empty until the first click navigates into a permalink.
+
+Because the permalink pages are pre-rendered, `SkillsBrowser` loads its data through `gameDataStore.initializeContentData()` (SSR-safe, unlike the client-only `initializeData`), so the full grid — and its crawlable inter-page links — bakes into the static HTML and hydrates without a mismatch. Locale is URL-authoritative: `App.vue` syncs the i18n store from the path (`splitLocalePath`), and the language toggle (`useLocaleToggle`) navigates to the sibling-locale URL on `/{en,zh}/...` routes instead of flipping global state.
 
 `useSkillSearch(query, lang)` builds an in-memory per-language index lazily on first query, sourced from `loadCharacterLocales()` and `loadSkillLocales()[lang]` (both already loaded by the app, so no extra bundle cost). Matching rules: ≥1 char matches hero name only; ≥3 chars adds skill names + descriptions. At most one hit per (slug, slot) — multiple-level matches collapse to the lowest level. Results capped at 3 hits per hero, ordered by hit count.
 
