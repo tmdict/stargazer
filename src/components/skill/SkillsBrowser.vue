@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
 import SkillReader from '@/components/skill/SkillReader.vue'
 import SkillsSelection from '@/components/SkillsSelection.vue'
+import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 
-defineProps<{
+const props = defineProps<{
   // null on the /skills index (empty reader); a hero slug on a skill page.
   slug: string | null
   lang: 'en' | 'zh'
@@ -13,16 +18,40 @@ defineProps<{
 // character grid and its crawlable skill links pre-render into the static HTML.
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeContentData()
+
+const router = useRouter()
+
+// Reuses the grid's character picker (CharacterSelectionPopup): clicking the
+// empty reader opens it at the click point; selecting navigates to that hero.
+const pickerPosition = ref<{ x: number; y: number } | null>(null)
+
+const openPicker = (event: MouseEvent) => {
+  pickerPosition.value = { x: event.clientX - 30, y: event.clientY - 30 }
+}
+
+const selectCharacter = (character: CharacterType) => {
+  pickerPosition.value = null
+  router.push(`/${props.lang}/skill/${character.name}`)
+}
 </script>
 
 <template>
   <main>
     <div class="skills-layout">
-      <SkillReader class="skills-reader" :slug :lang />
+      <SkillReader class="skills-reader" :slug :lang @pick="openPicker" />
       <div class="skills-list">
         <SkillsSelection :characters="gameDataStore.characters" :lang :current-slug="slug" />
       </div>
     </div>
+    <Teleport to="body">
+      <CharacterSelectionPopup
+        v-if="pickerPosition"
+        :characters="gameDataStore.characters"
+        :position="pickerPosition"
+        @select="selectCharacter"
+        @close="pickerPosition = null"
+      />
+    </Teleport>
   </main>
 </template>
 

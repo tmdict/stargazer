@@ -13,6 +13,11 @@ const props = defineProps<{
   lang: 'en' | 'zh'
 }>()
 
+// Empty state (the /skills index) opens the character picker at the click point.
+const emit = defineEmits<{
+  pick: [event: MouseEvent]
+}>()
+
 const i18n = useI18nStore()
 
 // hasSkillLocale also covers the null-selection case (the /skills index).
@@ -25,7 +30,7 @@ const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? p
     <div class="content">
       <!-- :key remounts the chip strip on each hero (SkillSections caches activeChips). -->
       <SkillSections v-if="visibleSlug" :key="visibleSlug" :slug="visibleSlug" :lang />
-      <div v-else class="empty-state">
+      <div v-else class="empty-state" @click="emit('pick', $event)">
         <IconInfo :size="40" class="empty-icon" />
         <p class="empty-tip">{{ i18n.t('app.skill-empty-hint') }}</p>
       </div>
@@ -51,6 +56,7 @@ const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? p
   padding-top: var(--spacing-2xl);
   text-align: center;
   color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
 }
 
 .empty-icon {
