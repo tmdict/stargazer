@@ -27,11 +27,8 @@ import {
 
 // ---------- locales we render ----------
 
-// Hardcoded — these are the languages Stargazer's UI ships. Adding another
-// locale here means adding the matching `src/locales/skill/<lang>/` shard set
-// to the build and a one-line `--locales <lang>` extension on the producer
-// (afkj-data-viewer) side; the per-locale feed schema is identical so no
-// other importer changes are needed.
+// Languages Stargazer's UI ships. Add to extend — the per-locale feed
+// schema is identical, no other importer changes needed.
 const LOCALES = ['en', 'zh'] as const
 type Locale = (typeof LOCALES)[number]
 
