@@ -298,7 +298,7 @@ interface DragData {
 
 ## Browser Compatibility
 
-- **HTML5 Drag API**: Supported in all modern browsers
+- **HTML5 Drag API**: Supported in all modern browsers (mouse-only — `dataTransfer` doesn't fire on touch)
 - **SVG Events**: Pointer events with proper configuration
-- **Touch Support**: Planned enhancement for mobile
+- **Touch**: Drag is desktop-only; mobile placement is tap-based instead (tap a tile to target it, then tap a roster character) — see [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)
 - **Fallback Handling**: Graceful degradation for older browsers

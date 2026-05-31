@@ -57,9 +57,10 @@ function handleStripClick(e: MouseEvent) {
         icon-prefix="damage"
         :options="damageOptions"
         active-border-color="var(--color-primary)"
+        class="filter-damage"
       />
     </div>
-    <TagsDisplay v-model="tagFilter" :characters />
+    <TagsDisplay v-model="tagFilter" :characters class="filter-tags" />
   </div>
 </template>
 
@@ -86,6 +87,13 @@ function handleStripClick(e: MouseEvent) {
     gap: var(--spacing-sm);
     flex-direction: column;
     align-items: stretch;
+  }
+  /* Tag chips ("Energy Recharge", etc.) and the magic/physical damage filter
+     are hidden on mobile to save space — the roster's only mobile surface is
+     the skills sheet. */
+  .filter-tags,
+  .filter-damage {
+    display: none;
   }
 }
 </style>

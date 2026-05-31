@@ -5,13 +5,14 @@ import GridArrows from './GridArrows.vue'
 import GridArtifacts from './GridArtifacts.vue'
 import GridCharacters from './GridCharacters.vue'
 import GridTiles from './GridTiles.vue'
-import CharacterSelectionModal from '@/components/CharacterSelectionModal.vue'
+import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
 import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
 import { provideGridEvents } from '@/composables/useGridEvents'
-import { getAvailableTeamSize } from '@/lib/characters/character'
+import { useSelectionState } from '@/composables/useSelectionState'
+import { getAvailableTeamSize, getCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
@@ -73,6 +74,11 @@ const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
 const modalPosition = ref({ x: 0, y: 0 })
 
+// Mobile/tablet places via the pull-up roster sheet (HomeView): a cell tap
+// targets the tile, or drops a lifted hero onto it. The desktop popup is used
+// only at full scale.
+const { liftedHexId, setTargetHex, clearLiftedHex } = useSelectionState()
+
 // Map editor integration - handle hex clicks for painting tiles
 // When in map editor mode, clicking a hex changes its state to the selected state
 // In normal mode, show character selection modal
@@ -86,54 +92,56 @@ gridEvents.on('hex:click', (hex: Hex) => {
     const hexId = hex.getId()
     mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
   } else {
-    // Normal mode - show character selection modal if tile can accept characters
-    // Disable modal for mobile and tablet views (scale < 1)
+    // Normal mode — open the character picker for a tile that can take a unit.
+    const tile = gridStore.getTile(hex.getId())
+    const tileTeam = getTeamFromTileState(tile.state)
     const scale = gridStore.getHexScale()
-    if (scale < 1) {
-      // On mobile/tablet, clicking tiles does nothing
+    if (tileTeam === null) {
+      // Tapping a non-placement tile cancels a pending lift on mobile.
+      if (scale < 1) clearLiftedHex()
       return
     }
 
-    const tile = gridStore.getTile(hex.getId())
-    const state = tile.state
-
-    // Check if this is a tile that can accept characters
-    const tileTeam = getTeamFromTileState(state)
-    if (tileTeam !== null) {
-      // Check if the team has space for more characters
-      if (getAvailableTeamSize(gridStore._getGrid(), tileTeam) <= 0) {
-        // Team is full, don't show the modal
+    if (scale < 1) {
+      const grid = gridStore._getGrid()
+      // Drop a lifted hero onto this empty cell. Allowed even when the team is
+      // full — a move adds no unit.
+      if (liftedHexId.value !== null && tile.characterId === undefined) {
+        const characterId = getCharacter(grid, liftedHexId.value)
+        if (characterId !== undefined) {
+          characterStore.moveCharacter(liftedHexId.value, hex.getId(), characterId)
+        }
+        clearLiftedHex()
         return
       }
+      // Otherwise target this empty tile so a roster tap fills it (needs space).
+      if (tile.characterId === undefined && getAvailableTeamSize(grid, tileTeam) > 0) {
+        setTargetHex(hex.getId())
+      }
+      return
+    }
 
-      // Calculate position for modal based on hex position
-      // Need to account for perspective transform which is applied to the parent container
-      const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
-      const perspectiveContainer = document.querySelector<HTMLElement>('.perspective-container')
+    // Desktop popup can only add — skip a tile whose team is already full.
+    if (getAvailableTeamSize(gridStore._getGrid(), tileTeam) <= 0) return
 
-      if (svgElement && perspectiveContainer) {
-        const hexPos = gridStore.layout.hexToPixel(hex)
-
-        // Create SVG point for the hex position
-        const pt = svgElement.createSVGPoint()
-        pt.x = hexPos.x
-        pt.y = hexPos.y
-
-        // Transform to screen coordinates using SVG's coordinate system
-        const screenCTM = svgElement.getScreenCTM()
-        if (screenCTM) {
-          const screenPt = pt.matrixTransform(screenCTM)
-
-          // Adjust for perspective scaling if active
-          // The perspective transform scales Y, but getScreenCTM already accounts for this
-          // We just need to position relative to viewport
-          modalPosition.value = {
-            x: screenPt.x + 30 * scale, // Scaled offset to the right
-            y: screenPt.y - 50 * scale, // Scaled offset above
-          }
-          modalHex.value = hex
-          showCharacterModal.value = true
+    // Desktop: anchor the popup near the tapped hex. The perspective transform
+    // scales Y, but getScreenCTM already accounts for it.
+    const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
+    const perspectiveContainer = document.querySelector<HTMLElement>('.perspective-container')
+    if (svgElement && perspectiveContainer) {
+      const hexPos = gridStore.layout.hexToPixel(hex)
+      const pt = svgElement.createSVGPoint()
+      pt.x = hexPos.x
+      pt.y = hexPos.y
+      const screenCTM = svgElement.getScreenCTM()
+      if (screenCTM) {
+        const screenPt = pt.matrixTransform(screenCTM)
+        modalPosition.value = {
+          x: screenPt.x + 30 * scale,
+          y: screenPt.y - 50 * scale,
         }
+        modalHex.value = hex
+        showCharacterModal.value = true
       }
     }
   }
@@ -304,7 +312,7 @@ defineExpose({
 
   <!-- Character Selection Modal - Outside of map container to avoid transform issues -->
   <Teleport to="body">
-    <CharacterSelectionModal
+    <CharacterSelectionPopup
       v-if="showCharacterModal && modalHex"
       :hex="modalHex"
       :characters="props.characters"

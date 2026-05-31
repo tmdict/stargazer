@@ -221,7 +221,8 @@ const homeLink = computed(() => {
   }
 
   .grid-wrapper {
-    margin: 80px 10px;
+    margin: 80px 4px;
+    padding: 4px;
   }
 
   .empty-state {

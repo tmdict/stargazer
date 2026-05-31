@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } f
 
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridEvents } from '@/composables/useGridEvents'
+import { useSelectionState } from '@/composables/useSelectionState'
 import { canPlaceCharacterOnTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { Layout } from '@/lib/layout'
@@ -79,6 +80,9 @@ const gridStore = useGridStore()
 const characterStore = useCharacterStore()
 const mapEditorStore = useMapEditorStore()
 const skillStore = useSkillStore()
+
+// Mobile: the tile tapped to target placement (highlighted until a hero fills it).
+const { targetHexId } = useSelectionState()
 
 // Track which hex is currently being hovered (non-drag)
 const hoveredHex = ref<number | null>(null)
@@ -312,6 +316,7 @@ const getHexDropClass = (hex: Hex) => {
     'drag-hover': isDragHover,
     'invalid-drop': isDragHover && !validDropZone,
     hover: hoveredHex.value === hexId,
+    targeted: targetHexId.value === hexId,
   }
 }
 
@@ -631,5 +636,13 @@ onUnmounted(() => {
 
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
   stroke: #36958e;
+}
+
+/* Mobile: the tile tapped to target placement — a persistent gold highlight
+   until a hero fills it. */
+.grid-event-layer.targeted polygon {
+  fill: rgba(247, 216, 124, 0.35);
+  stroke: #f7d87c;
+  stroke-width: 3;
 }
 </style>

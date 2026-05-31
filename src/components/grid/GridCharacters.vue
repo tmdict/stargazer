@@ -3,6 +3,7 @@ import { computed, inject } from 'vue'
 
 import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import { useGridEvents } from '@/composables/useGridEvents'
+import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -34,6 +35,8 @@ if (!dragDropAPI) {
 }
 
 const { startDrag, endDrag } = dragDropAPI
+
+const { liftedHexId, setLiftedHex, clearLiftedHex } = useSelectionState()
 
 // Get character data
 const getCharacterName = (characterId: number, hexId: number): string => {
@@ -145,9 +148,25 @@ const handleDragEnd = (event: DragEvent) => {
 }
 
 const handleClick = (hexId: number) => {
-  if (!props.isMapEditorMode) {
-    gridEvents.emit('character:remove', hexId)
+  if (props.isMapEditorMode) return
+
+  // Mobile/tablet: tap-lift / tap-drop. Tapping a hero lifts it for moving;
+  // tapping it again removes it; tapping a different hero while one is lifted
+  // swaps the two. (Desktop moves via drag, so a tap there just removes.)
+  if (gridStore.getHexScale() < 1) {
+    if (liftedHexId.value === hexId) {
+      gridEvents.emit('character:remove', hexId)
+      clearLiftedHex()
+    } else if (liftedHexId.value !== null) {
+      characterStore.swapCharacters(liftedHexId.value, hexId)
+      clearLiftedHex()
+    } else {
+      setLiftedHex(hexId)
+    }
+    return
   }
+
+  gridEvents.emit('character:remove', hexId)
 }
 
 // Handle mouse hover to trigger tile hover effect

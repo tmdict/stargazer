@@ -175,7 +175,7 @@ export const useGridStore = defineStore('grid', () => {
   // Breakpoint-based size updater
   const updateBreakpoint = (breakpoint: Breakpoint) => {
     const sizeMap: Record<Breakpoint, { x: number; y: number }> = {
-      mobile: { x: 20, y: 20 }, // 50% scale
+      mobile: { x: 23, y: 23 }, // 57.5% scale
       tablet: { x: 30, y: 30 }, // 75% scale
       desktop: { x: 40, y: 40 }, // 100% scale
     }

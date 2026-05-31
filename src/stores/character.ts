@@ -105,6 +105,10 @@ export const useCharacterStore = defineStore('character', () => {
   }
 
   const handleHexClick = (hex: Hex): boolean => {
+    // Desktop only: clicking an occupied tile removes its hero. On mobile, tile
+    // taps are handled by GridManager (lift/move/target) and the character
+    // overlay (remove); auto-removing here would undo a just-completed move.
+    if (gridStore.getHexScale() < 1) return false
     const hexId = hex.getId()
     if (hasCharacter(grid, hexId)) {
       return executeRemoveCharacter(grid, skillManager, hexId)

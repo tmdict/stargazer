@@ -254,15 +254,14 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   white-space: nowrap;
 }
 
-/* Mirrors CharacterSelection.vue spacing. */
+/* No own padding — the .skills-list card (desktop) / sheet (mobile) provides the
+   inset, so the grid aligns with the search + filter rows above it. */
 .characters {
   display: flex;
   flex-wrap: wrap;
   gap: var(--spacing-lg);
   justify-content: flex-start;
   align-content: flex-start;
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-large);
 }
 
 .character-cell {
@@ -306,7 +305,6 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 
 @media (max-width: 768px) {
   .characters {
-    padding: var(--spacing-md);
     justify-content: center;
   }
   .search-row {
@@ -324,7 +322,6 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   }
   .characters {
     gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
     justify-content: center;
   }
   /* Match CharacterInfoIcons mobile sizing. */
