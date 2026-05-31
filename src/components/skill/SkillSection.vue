@@ -15,7 +15,7 @@ interface RefinementRow {
 
 const props = defineProps<{
   heading: string
-  slotTags?: string[]
+  slotTags?: { name: string; label: string }[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
 }>()
@@ -41,7 +41,13 @@ const renderedRefinements = computed(() =>
     <header class="skill-section-header">
       <h2 class="skill-section-heading">{{ heading }}</h2>
       <span v-if="slotTags?.length" class="skill-section-chips">
-        <span v-for="tag in slotTags" :key="tag" class="skill-level-chip">{{ tag }}</span>
+        <RouterLink
+          v-for="tag in slotTags"
+          :key="tag.name"
+          class="skill-level-chip"
+          :to="{ path: '/skills', query: { tag: tag.name } }"
+          >{{ tag.label }}</RouterLink
+        >
       </span>
     </header>
     <div class="skill-levels">
@@ -131,6 +137,16 @@ const renderedRefinements = computed(() =>
   font-size: 12px;
   background: rgba(95, 196, 187, 0.18);
   color: #5fc4bb;
+  text-decoration: none;
+  transition: background-color 0.15s;
+}
+
+/* Override content.css's global `.content a:hover` (red + underline) so the
+   chip just lifts its background and keeps its teal text. */
+.skill-level-chip:hover {
+  background: rgba(95, 196, 187, 0.28);
+  color: #5fc4bb;
+  text-decoration: none;
 }
 
 .skill-level-badge {

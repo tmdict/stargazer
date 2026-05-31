@@ -92,7 +92,8 @@ const sections = computed(() => {
     }))
     const slotTagsSet = new Set<string>()
     for (const l of rawLevels) for (const t of l.rawTags) slotTagsSet.add(t)
-    const slotTags = [...slotTagsSet].map(tagLabel)
+    // Keep the raw tag name (for the browser filter link) next to its label.
+    const slotTags = [...slotTagsSet].map((t) => ({ name: t, label: tagLabel(t) }))
     const levels = rawLevels
       .filter((l) => filter.size === 0 || l.rawTags.some((t) => filter.has(t)))
       .map((l) => ({ level: l.level, description: l.description }))

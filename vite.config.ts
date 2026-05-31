@@ -6,8 +6,6 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
-import { formatToCamelCase } from './src/utils/nameFormatting'
-
 // SSG Helpers
 
 // Derive skill list from the locale dir — every hero with skill text gets a
@@ -61,42 +59,6 @@ function extractContentDescription(html: string): string | null {
   return text.length <= 150 ? text : text.slice(0, text.lastIndexOf(' ', 150) || 150) + ' ...'
 }
 
-/** Strips `<link rel="modulepreload">` for snippet chunks belonging to other
- * heroes. `import.meta.glob` in SkillSections registers every hero's snippet
- * as a potential dynamic import, so vite-ssg preloads them all on every
- * skill page. The HTML already has its content rendered, so only the current
- * hero's chunk is needed for hydration. */
-function pruneSnippetPreloads(html: string, route: string): string {
-  const match = route.match(/^\/(en|zh)\/skill\/([\w-]+)/)
-  if (!match) return html
-  const [, lang, slug] = match
-  const camel = formatToCamelCase(slug)
-
-  let pruned = 0
-  const result = html.replace(
-    /<link[^>]+rel="modulepreload"[^>]*href="\/assets\/([A-Z][A-Za-z]*)\.(en|zh|data)-[A-Za-z0-9_-]+\.js"[^>]*>\s*/g,
-    (full, hero: string, kind: string) => {
-      if (hero !== camel) {
-        pruned++
-        return ''
-      }
-      if (kind === 'data' || kind === lang) return full
-      pruned++
-      return ''
-    },
-  )
-
-  // Sanity: every skill page should strip dozens of other-hero snippet chunks.
-  // Zero suggests Vite's asset naming changed and the regex no longer matches.
-  if (pruned === 0) {
-    console.warn(
-      `[ssg] pruneSnippetPreloads stripped nothing on ${route} — asset naming may have changed.`,
-    )
-  }
-
-  return result
-}
-
 /** vite-ssg emits asset `<link>` tags in two passes (static manifest +
  * dynamic-import resolution); modules reachable from both are listed twice.
  * Keep the first occurrence per href. */
@@ -122,8 +84,6 @@ function processRenderedPage(route: string, html: string): string {
   html = dedupeAssetLinks(html)
 
   if (route.match(/^\/(en|zh)\/skill\//)) {
-    html = pruneSnippetPreloads(html, route)
-
     const description = extractContentDescription(html)
     if (description) {
       const escaped = description.replace(/"/g, '&quot;')
