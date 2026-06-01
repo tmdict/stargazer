@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import { useGridEvents } from '@/composables/useGridEvents'
+import { useSelectionState } from '@/composables/useSelectionState'
 import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -22,6 +23,7 @@ const props = defineProps<{
 const gridEvents = useGridEvents()
 const gameDataStore = useGameDataStore()
 const gridStore = useGridStore()
+const { handleTeamChange, requestTab } = useSelectionState()
 
 // Purely-visual host cells: the left/right neighbours of real cells 1 (ally) and
 // 45 (enemy). Not part of the grid simulation (no tile, pathfinding, or drop
@@ -91,8 +93,6 @@ const iconStyle = (center: { x: number; y: number }) => {
   if (props.showPerspective) {
     const verticalOffset = -70 * gridStore.getHexScale()
     styles.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY || 1.0})`
-    styles.transformOrigin = 'center'
-    styles.transition = 'transform 0.3s ease-out'
   }
   return styles
 }
@@ -145,9 +145,16 @@ const popupTeam = ref<Team | null>(null)
 const popupPosition = ref({ x: 0, y: 0 })
 
 const openPopup = (team: Team, center: { x: number; y: number }) => {
+  const scale = gridStore.getHexScale()
+  // Mobile (sheet mode, scale < 1): mirror the character flow — no on-grid popup;
+  // open the roster sheet on the Seasonal tab, targeting the tapped team.
+  if (scale < 1) {
+    handleTeamChange(team)
+    requestTab('seasonal')
+    return
+  }
   const screen = svgPointToScreen(center)
   if (!screen) return
-  const scale = gridStore.getHexScale()
   popupPosition.value = { x: screen.x + 30 * scale, y: screen.y - 50 * scale }
   popupTeam.value = team
   showPopup.value = true
@@ -275,6 +282,10 @@ const handleArtifactClick = (team: Team) => {
   width: 100%;
   height: 100%;
   pointer-events: none;
+  /* Host cells sit just past the grid's left/right edges; clip x only (y stays
+     visible for perspective-lifted icons) so they can't cause horizontal page
+     overflow if the grid is ever transiently mis-scaled. */
+  overflow-x: clip;
 }
 
 .artifact-cell-layer {
@@ -305,6 +316,10 @@ const handleArtifactClick = (team: Team) => {
   position: absolute;
   cursor: pointer;
   pointer-events: auto;
+  transform-origin: center;
+  /* Always present (not inline-only) so the perspective<->flat transform animates
+     in both directions, in sync with the grid + character icons. */
+  transition: transform 0.3s ease-out;
 }
 
 /* Ally artifact paints above the character layer (which is a later sibling). */
