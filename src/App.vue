@@ -66,6 +66,9 @@ onUnmounted(() => {
       </a>
 
       <div class="nav-tabs">
+        <a href="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
+          i18n.t('app.arena')
+        }}</a>
         <a href="/skills" class="nav-text-link" :class="{ active: route.path === '/skills' }">{{
           i18n.t('app.skills')
         }}</a>

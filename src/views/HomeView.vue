@@ -68,7 +68,7 @@ const getInitialTab = (): string => {
 const activeTab = ref(getInitialTab())
 
 // Mobile: the tab panel (roster) is a pull-up bottom sheet over the grid.
-const { targetHexId, liftedHexId, clearTargetHex } = useSelectionState()
+const { targetHexId, liftedHexId, tabRequest, clearTargetHex } = useSelectionState()
 const sheetExpanded = ref(false)
 
 // Tapping a grid cell targets it: jump to the roster, open the sheet; placing
@@ -80,6 +80,14 @@ watch(targetHexId, (id) => {
   } else {
     sheetExpanded.value = false
   }
+})
+
+// Mobile: a component (e.g. an on-grid artifact cell) requesting the roster open
+// on a specific tab — switch to it and expand the sheet.
+watch(tabRequest, (req) => {
+  if (!req) return
+  activeTab.value = req.tab
+  sheetExpanded.value = true
 })
 
 // Lifting a hero (tap-to-move) collapses the sheet so every destination cell on
