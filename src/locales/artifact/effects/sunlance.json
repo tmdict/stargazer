@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Whenever an ally casts an Ultimate, conjures 1 light spear. After conjuring [[3]] light spears, launches them from [[3]] directions along the lines that cover the most enemies. Each light spear deals true damage equal to [[60%]] of [[Team ATK]] to all enemies hit and reduces their damage dealt by [[20%]] for [[8]]s, stacking up to [[2]] times. Each light spear also stuns the first enemy hit for [[2]]s.",
+    "zh": "己方每次释放终极技能时，凝聚1根光枪，每当凝聚[[3]]根光枪后，从[[3]]个方向朝覆盖敌人最多的轴线发射光枪，每根光枪对命中的所有敌人造成[[队伍攻击力]][[60%]]的真实伤害，并使目标造成伤害降低[[20%]]持续[[8]]秒，该效果至多叠加[[2]]层。此外，每根光枪还会对首个命中的敌人造成持续[[2]]秒的眩晕。"
+  },
+  {
+    "en": "Increases damage dealt to [[64%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[64%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[68%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[68%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[72%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[72%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[76%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[76%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[80%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[80%]]。"
+  },
+  {
+    "en": "After this skill has been cast [[3]] times, each launched light spear also returns along its path, but deals [[40%]] of its original damage to enemies hit on the way back.",
+    "zh": "累计释放[[3]]次该技能后，每根光枪还会额外折返1次，但伤害量降低至[[40%]]。"
+  }
+]

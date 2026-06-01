@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Every [[12]]s during battle, records the healing received by allies during the previous [[12]]s (including excess healing), and summons a Soul Storm. The Soul Storm causes all enemies to lose HP equal to [[30%]] of [[Team ATK]], plus [[4%]] of the recorded healing amount, dealt over [[3]]s. The total HP lost cannot exceed [[60%]] of [[Team ATK]]. Each Soul Storm summoned permanently increases allies' healing received by [[12%]], stacking up to [[3]] times.",
+    "zh": "战斗中每隔[[12]]秒，记录前[[12]]秒内己方受到的治疗量（包括溢出部分），并唤起灵魂风暴，使所有敌人在[[3]]秒内失去相当于[[30%]][[队伍攻击力]]外加[[4%]]记录值的生命（总计不超过[[队伍攻击力]]的[[60%]]）。每次唤起灵魂风暴都会使己方生命能量更活跃，使己方受到的治疗效果永久提高[[12%]]，至多因此提高[[3]]次。"
+  },
+  {
+    "en": "Increases base damage to [[31%]] of [[Team ATK]], and increases the total damage limit to [[62%]] of [[Team ATK]].",
+    "zh": "基础伤害量提高至[[队伍攻击力]][[31%]]，总计伤害量上限提高[[队伍攻击力]][[62%]]。"
+  },
+  {
+    "en": "Increases base damage to [[32%]] of [[Team ATK]], and increases the total damage limit to [[64%]] of [[Team ATK]].",
+    "zh": "基础伤害量提高至[[队伍攻击力]][[32%]]，总计伤害量上限提高[[队伍攻击力]][[64%]]。"
+  },
+  {
+    "en": "Increases base damage to [[33%]] of [[Team ATK]], and increases the total damage limit to [[66%]] of [[Team ATK]].",
+    "zh": "基础伤害量提高至[[队伍攻击力]][[33%]]，总计伤害量上限提高[[队伍攻击力]][[66%]]。"
+  },
+  {
+    "en": "Increases base damage to [[34%]] of [[Team ATK]], and increases the total damage limit to [[68%]] of [[Team ATK]].",
+    "zh": "基础伤害量提高至[[队伍攻击力]][[34%]]，总计伤害量上限提高[[队伍攻击力]][[68%]]。"
+  },
+  {
+    "en": "Increases base damage to [[35%]] of [[Team ATK]], and increases the total damage limit to [[70%]] of [[Team ATK]].",
+    "zh": "基础伤害量提高至[[队伍攻击力]][[35%]]，总计伤害量上限提高[[队伍攻击力]][[70%]]。"
+  },
+  {
+    "en": "Each Soul Storm summoned also permanently reduces enemies' Haste by [[10]] and Vitality by [[20]], stacking up to [[3]] times.",
+    "zh": "每次唤起灵魂风暴还会额外使敌人永久降低[[10]]点急速和[[20]]点受愈，至多因此降低[[3]]次。"
+  }
+]

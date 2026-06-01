@@ -1,0 +1,10 @@
+{
+  "id": 7,
+  "name": "swiftheal",
+  "season": 7,
+  "stats": {
+    "atk": 15.1,
+    "hp": 21.1,
+    "vitality": 19.6
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "id": 11,
+  "name": "wing-guard",
+  "season": 7,
+  "stats": {
+    "hp": 35.3,
+    "def": 37.8,
+    "ranged-def": 11.2
+  }
+}

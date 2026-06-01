@@ -1,0 +1,10 @@
+{
+  "id": 14,
+  "name": "vanguard",
+  "season": 7,
+  "stats": {
+    "atk": 17.8,
+    "hp": 25.4,
+    "def-penetration": 8.4
+  }
+}

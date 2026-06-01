@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, and every [[12]]s thereafter, summons an energy orb from each surviving ally to attack their nearest enemy. Each orb deals magic damage equal to [[100%]] of the respective ally's ATK and reduces the target's Haste by [[8]] and their Phys & Magic DEF by [[8%]] for [[8]]s, stacking up to [[4]] times.",
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒从所有存活友军身上召唤一个能量球攻击其距离最近的敌人，造成该友军[[100%]]攻击力的魔法伤害，该使该敌人降低[[8]]点急速以及[[8%]]护甲和魔抗，持续[[8]]秒，该效果至多叠加[[4]]层。"
+  },
+  {
+    "en": "Increases damage dealt to [[105%]] of ATK.",
+    "zh": "伤害量提高至[[105%]]攻击力。"
+  },
+  {
+    "en": "Increases damage dealt to [[110%]] of ATK.",
+    "zh": "伤害量提高至[[110%]]攻击力。"
+  },
+  {
+    "en": "Increases damage dealt to [[115%]] of ATK.",
+    "zh": "伤害量提高至[[115%]]攻击力。"
+  },
+  {
+    "en": "Increases damage dealt to [[120%]] of ATK.",
+    "zh": "伤害量提高至[[120%]]攻击力。"
+  },
+  {
+    "en": "Increases damage dealt to [[125%]] of ATK.",
+    "zh": "伤害量提高至[[125%]]攻击力。"
+  },
+  {
+    "en": "Energy orbs deal extra true damage equal to [[40%]] of the respective ally's ATK and restore HP to that ally equal to [[40%]] of the actual damage dealt.",
+    "zh": "能量球额外造成对应友军[[40%]]攻击力的真实伤害，并为对应友军恢复实际伤害量[[40%]]的生命值。"
+  }
+]

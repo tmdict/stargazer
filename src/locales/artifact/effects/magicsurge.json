@@ -1,0 +1,30 @@
+[
+  {
+    "en": "At [[10]]s, [[30]]s, and [[50]]s into the battle, casts the corresponding spell:\nDeals physical damage equal to [[120%]] of [[Team ATK]] to all enemies and permanently reduces their Vitality by [[30]].\nDeals magic damage equal to [[150%]] of [[Team ATK]] to all enemies and permanently reduces their Energy recovery efficiency by [[20%]].\nDeals true damage equal to [[180%]] of [[Team ATK]] to all enemies and permanently reduces their ATK by [[25%]].",
+    "zh": "战斗中第[[10]]/[[30]]/[[50]]秒时，分别释放对应的强力法术：\n对所有敌人造成[[120%]][[队伍攻击力]]的物理伤害并永久降低目标受愈[[30]]点。\n对所有敌人造成[[150%]][[队伍攻击力]]的魔法伤害并永久降低目标[[20%]]回能效率。\n对所有敌人造成[[180%]][[队伍攻击力]]的真实伤害并永久降低目标[[25%]]攻击力。"
+  },
+  {
+    "en": "Increases the damage dealt by the first spell to [[130%]] of [[Team ATK]].",
+    "zh": "第一次释放法术造成的伤害量提高至[[队伍攻击力]][[130%]]。"
+  },
+  {
+    "en": "Increases the damage dealt by the first spell to [[140%]] of [[Team ATK]].",
+    "zh": "第一次释放法术造成的伤害量提高至[[队伍攻击力]][[140%]]。"
+  },
+  {
+    "en": "Increases the damage dealt by the second spell to [[160%]] of [[Team ATK]].",
+    "zh": "第二次释放法术造成的伤害量提高至[[队伍攻击力]][[160%]]。"
+  },
+  {
+    "en": "Increases the damage dealt by the second spell to [[170%]] of [[Team ATK]].",
+    "zh": "第二次释放法术造成的伤害量提高至[[队伍攻击力]][[170%]]。"
+  },
+  {
+    "en": "Increases the damage dealt by the third spell to [[200%]] of [[Team ATK]].",
+    "zh": "第三次释放法术造成的伤害量提高至[[队伍攻击力]][[200%]]。"
+  },
+  {
+    "en": "Further enhances the third spell: Grants all allies a permanent shield equal to [[200%]] of [[Team ATK]] and causes all enemies to take true damage equal to [[20%]] of [[Team ATK]] every second for the rest of the battle.",
+    "zh": "第三次释放的法术进一步增强，额外为所有友军提供[[200%]][[队伍攻击力]]的永久护盾，并使所有敌人此后每秒受到[[20%]][[队伍攻击力]]的真实伤害。"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, inspires allies every [[12]]s for [[6]]s. Inspired allies increase their ATK by [[14%]] and Phys & Magic DEF by [[30%]], and recover [[20]] Energy every second.",
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒，激励友军斗志持续[[6]]秒，持续期间提高[[14%]]攻击力和[[30%]]护甲和魔抗，且每秒恢复[[20]]点能量。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[16%]].",
+    "zh": "施加的攻击力加成提高至[[16%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[18%]].",
+    "zh": "施加的攻击力加成提高至[[18%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[20%]].",
+    "zh": "施加的攻击力加成提高至[[20%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[22%]].",
+    "zh": "施加的攻击力加成提高至[[22%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[24%]].",
+    "zh": "施加的攻击力加成提高至[[24%]]。"
+  },
+  {
+    "en": "When casting the skill, also increases allies' Haste by [[20]].",
+    "zh": "释放技能时额外使友军提高[[20]]点急速。"
+  }
+]

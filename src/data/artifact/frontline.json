@@ -1,0 +1,10 @@
+{
+  "id": 16,
+  "name": "frontline",
+  "season": 7,
+  "stats": {
+    "atk": 15.1,
+    "hp": 21.1,
+    "life-drain": 14
+  }
+}
