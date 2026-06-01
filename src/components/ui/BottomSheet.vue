@@ -3,8 +3,9 @@ import { watch } from 'vue'
 
 import { useBottomSheet } from '@/composables/useBottomSheet'
 
-// Shared roster panel for the grid (`HomeView`) and skills (`SkillsBrowser`)
-// pages: a card column on desktop, a drag-to-resize pull-up sheet on mobile.
+// Shared roster panel for the grid (`HomeView`), skills (`SkillsBrowser`), and
+// guide (`GuideView`) pages: a card column on desktop, a drag-to-resize
+// pull-up sheet on mobile.
 // The slot holds the page's content (tabs / roster); its own fill + scroll
 // stays in the page since each content component scrolls differently.
 const {

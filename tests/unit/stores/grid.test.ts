@@ -99,13 +99,13 @@ describe('gridStore — team view', () => {
     })
 
     it('scales bounds with the breakpoint hex size', () => {
-      gridStore.updateBreakpoint('mobile') // hexSize 20, scale 0.5
+      gridStore.updateBreakpoint('mobile') // hexSize 23, scale 0.575
       gridStore.teamView = true
 
       const bounds = gridStore.viewBoxBounds
-      expect(bounds.width).toBe(300) // 600 * 0.5
+      expect(bounds.width).toBe(345) // 600 * 0.575
       expect(bounds.x).toBe(0)
-      expect(bounds.height).toBeLessThanOrEqual(300)
+      expect(bounds.height).toBeLessThanOrEqual(345)
     })
   })
 })

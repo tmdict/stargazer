@@ -8,7 +8,7 @@ import { gridStyles, images } from './Faramor.data'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="mechanic-tile">
+      <SkillSnippet title-key="guide-tile">
         <p>
           法拉莫尔搜索与自己相邻格子上的队友，优先选择位置更靠后的角色。当同排有多个友方角色时，法拉莫尔会优先选择位置更靠右的角色（较低ID的格子）。
         </p>
