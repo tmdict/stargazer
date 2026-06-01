@@ -2,5 +2,6 @@
   "id": 3,
   "name": "blightshroom",
   "season": 7,
+  "range": 20,
   "faction": "wilder"
 }

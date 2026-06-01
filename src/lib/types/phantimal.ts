@@ -6,6 +6,7 @@ export interface PhantimalType {
   id: number
   name: string
   season: number
+  range: number // attack range, used when the phantimal targets on the grid
   faction: string // faction slug → game.<faction> label + faction-<faction> icon
 }
 

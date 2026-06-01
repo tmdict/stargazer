@@ -1,3 +1,4 @@
+import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import type { GridTile } from '@/lib/grid'
 
 /* Ultra-compact format for URL serialization - the ONLY format we support */
@@ -5,6 +6,7 @@ export interface GridState {
   t?: number[][] // tiles: [hexId, state] (only non-default states)
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
+  p?: number[][] // phantimals: [hexId, localPhantimalId, team] (kept out of c, ids don't fit 14 bits)
   d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills, teamView)
 }
 
@@ -33,13 +35,30 @@ export function serializeGridState(
     state.t = nonDefaultTiles
   }
 
-  // Extract characters from tiles that have them
+  // Extract characters from tiles that have them (phantimals are serialized
+  // separately so the character section keeps its compact 14-bit id field).
   const characters = allTiles
-    .filter((tile) => tile.characterId && tile.team !== undefined)
+    .filter(
+      (tile) => tile.characterId && tile.team !== undefined && !isPhantimalId(tile.characterId),
+    )
     .map((tile) => [tile.hex.getId(), tile.characterId!, tile.team!])
 
   if (characters.length > 0) {
     state.c = characters
+  }
+
+  // Extract phantimals, stored by their local id (offset stripped).
+  const phantimals = allTiles
+    .filter(
+      (tile) =>
+        tile.characterId !== undefined &&
+        tile.team !== undefined &&
+        isPhantimalId(tile.characterId),
+    )
+    .map((tile) => [tile.hex.getId(), toLocalPhantimalId(tile.characterId!), tile.team!])
+
+  if (phantimals.length > 0) {
+    state.p = phantimals
   }
 
   // Convert artifacts to compact format: [ally, enemy]

@@ -1,6 +1,7 @@
 import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -64,7 +65,11 @@ export const useGameDataStore = defineStore('gameData', () => {
 
   // Helper to get character range by ID
   const getCharacterRange = (characterId: number): number => {
-    // Check if this is a companion ID (10000+ or 20000+)
+    // Phantimals carry their own range in data; fall back to melee if missing.
+    if (isPhantimalId(characterId)) {
+      return getPhantimalById(characterId)?.range ?? 1
+    }
+    // Check if this is a companion ID (10000+)
     if (characterId >= 10000) {
       const mainCharacterId = characterId % 10000
       const skill = getCharacterSkill(mainCharacterId)
@@ -89,6 +94,9 @@ export const useGameDataStore = defineStore('gameData', () => {
 
   // Helper to get character name by ID
   const getCharacterNameById = (characterId: number): string | undefined => {
+    if (isPhantimalId(characterId)) {
+      return getPhantimalById(characterId)?.name
+    }
     // Handle companion IDs (10000+)
     const actualId = characterId >= 10000 ? characterId % 10000 : characterId
     const character = getCharacterById(actualId)
@@ -98,6 +106,12 @@ export const useGameDataStore = defineStore('gameData', () => {
   // Helper to get artifact by ID
   const getArtifactById = (artifactId: number): ArtifactType | undefined => {
     return artifacts.value.find((artifact) => artifact.id === artifactId)
+  }
+
+  // Helper to get phantimal by ID (accepts the namespaced grid ID or the local ID)
+  const getPhantimalById = (phantimalId: number): PhantimalType | undefined => {
+    const localId = isPhantimalId(phantimalId) ? toLocalPhantimalId(phantimalId) : phantimalId
+    return phantimals.value.find((phantimal) => phantimal.id === localId)
   }
 
   // Safe accessors for images and icons
@@ -135,6 +149,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterById,
     getCharacterNameById,
     getArtifactById,
+    getPhantimalById,
     getCharacterImage,
     getArtifactImage,
     getArtifactEffects,

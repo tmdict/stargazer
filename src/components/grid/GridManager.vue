@@ -115,8 +115,10 @@ gridEvents.on('hex:click', (hex: Hex) => {
         clearLiftedHex()
         return
       }
-      // Otherwise target this empty tile so a roster tap fills it (needs space).
-      if (tile.characterId === undefined && getAvailableTeamSize(grid, tileTeam) > 0) {
+      // Otherwise target this empty tile so a roster tap fills it. Allowed even
+      // when the team is full — a phantimal can still be placed there, and the
+      // roster re-checks character capacity before placing a character.
+      if (tile.characterId === undefined) {
         setTargetHex(hex.getId())
       }
       return

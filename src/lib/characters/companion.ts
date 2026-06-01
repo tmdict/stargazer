@@ -15,7 +15,9 @@ export interface CompanionPosition {
 // Companion system helpers
 
 export function isCompanionId(grid: Grid, characterId: number): boolean {
-  return characterId >= grid.companionIdOffset
+  // Phantimals live above the companion range, so bound the upper end to keep
+  // them from being treated as companions.
+  return characterId >= grid.companionIdOffset && characterId < grid.phantimalIdOffset
 }
 
 export function getMainCharacterId(grid: Grid, companionId: number): number {

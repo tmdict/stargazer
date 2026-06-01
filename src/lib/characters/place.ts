@@ -11,6 +11,7 @@ import {
   removeCharacterFromTeam,
 } from './character'
 import { isCompanionId } from './companion'
+import { isPhantimalId } from './phantimal'
 import { performRemove } from './remove'
 import { executeTransaction, handleCacheInvalidation } from './transaction'
 
@@ -153,7 +154,10 @@ export function performPlace(
   tile.characterId = characterId
   tile.team = team
   tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-  getTeamCharacters(grid, team).add(characterId)
+  // Phantimals occupy the tile but are exempt from team-size tracking.
+  if (!isPhantimalId(characterId)) {
+    getTeamCharacters(grid, team).add(characterId)
+  }
 
   // Handle cache invalidation with batching support
   handleCacheInvalidation(skipCacheInvalidation, grid.skillManager, grid)

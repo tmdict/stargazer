@@ -5,12 +5,14 @@ import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam } from '@/lib/characters/character'
+import { isPhantimalId } from '@/lib/characters/phantimal'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useSkillStore } from '@/stores/skill'
+import { phantimalImageSources } from '@/utils/artifactImage'
 
 interface Props {
   characters: readonly CharacterType[]
@@ -54,15 +56,30 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 }
 
 const getCharacterLevel = (characterId: number): 's' | 'a' => {
-  // Handle companion IDs (10000+ or 20000+)
+  // Handle companion IDs (10000+)
   const actualId = characterId >= 10000 ? characterId % 10000 : characterId
   const character = props.characters.find((c) => c.id === actualId)
   return (character?.level as 's' | 'a') || 'a'
 }
 
-const isCompanion = (characterId: number): boolean => characterId >= 10000
+const isCompanion = (characterId: number): boolean =>
+  characterId >= 10000 && !isPhantimalId(characterId)
+
+// Phantimal-specific render helpers (B1 seam: phantimals reuse the character
+// wrapper's positioning, drag, lift and perspective; only image + colour differ).
+const PHANTIMAL_COLOR = '#b0b6bb'
+
+const phantimalSources = (characterId: number) =>
+  phantimalImageSources(gameDataStore.getPhantimalById(characterId)?.name ?? '')
+
+const phantimalName = (characterId: number): string =>
+  gameDataStore.getPhantimalById(characterId)?.name ?? 'Phantimal'
 
 const getCharacterColors = (characterId: number) => {
+  if (isPhantimalId(characterId)) {
+    return { backgroundColor: PHANTIMAL_COLOR, borderColor: PHANTIMAL_COLOR }
+  }
+
   const level = getCharacterLevel(characterId)
   const baseColor = level === 's' ? '#facd7e' : '#a78fc5'
 
@@ -129,6 +146,16 @@ const getCharacterStyle = (hexId: number) => {
 // Drag handlers
 const handleDragStart = (event: DragEvent, hexId: number, characterId: number) => {
   if (props.isMapEditorMode) return
+
+  // Phantimals carry a minimal payload (the drop handler only needs id +
+  // sourceHexId); their image comes from the remote phantimal sources.
+  if (isPhantimalId(characterId)) {
+    const phantimal = gameDataStore.getPhantimalById(characterId)
+    if (!phantimal) return
+    const dragData = { id: characterId, sourceHexId: hexId } as unknown as CharacterType
+    startDrag(event, dragData, characterId, phantimalImageSources(phantimal.name).png)
+    return
+  }
 
   // For companions, we need to use the base character data
   const actualId = characterId >= 10000 ? characterId % 10000 : characterId
@@ -213,7 +240,17 @@ const visiblePlacements = computed(() => {
     >
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />
+        <picture v-if="isPhantimalId(characterId)" class="phantimal-pic">
+          <source :srcset="phantimalSources(characterId).avif" type="image/avif" />
+          <source :srcset="phantimalSources(characterId).webp" type="image/webp" />
+          <img
+            :src="phantimalSources(characterId).png"
+            :alt="phantimalName(characterId)"
+            class="character-image"
+          />
+        </picture>
         <img
+          v-else
           :src="gameDataStore.getCharacterImage(getCharacterName(characterId, hexId))"
           :alt="getCharacterName(characterId, hexId)"
           class="character-image"
@@ -268,6 +305,11 @@ const visiblePlacements = computed(() => {
   border-radius: 50%;
   border: var(--character-border-width, 3px) solid;
   border-color: #fff;
+}
+
+/* display: contents so the <picture> doesn't add a box around the phantimal image. */
+.phantimal-pic {
+  display: contents;
 }
 
 .character-image {

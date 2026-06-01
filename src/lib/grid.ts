@@ -1,3 +1,4 @@
+import { PHANTIMAL_ID_OFFSET } from './characters/phantimal'
 import { Hex } from './hex'
 import { DEFAULT_MAP, type MapConfig } from './maps'
 import type { SkillManager } from './skills/skill'
@@ -60,6 +61,8 @@ export class Grid {
 
   // Companion IDs are derived as N * companionIdOffset + mainCharacterId
   companionIdOffset = 10000
+  // Phantimals occupy the same unit slot as characters, namespaced above companions.
+  phantimalIdOffset = PHANTIMAL_ID_OFFSET
   // Key format: `${mainCharacterId}-${team}` → set of companion character IDs
   companionLinks: Map<string, Set<number>> = new Map()
 
