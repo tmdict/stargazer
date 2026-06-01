@@ -1,0 +1,104 @@
+{
+  "name": {
+    "en": "Aurelian",
+    "zh": "奥瑞利安"
+  },
+  "skills": [
+    {
+      "name": {
+        "en": "Burning Desire",
+        "zh": "点燃贪欲"
+      },
+      "levels": [
+        {
+          "en": "Summons a flower of desire that lasts [[5]]s. While active, the flower causes all enemies to take <ATK>[[40%]] true damage every second, while reducing damage taken by [[15%]] for allies. When the flower expires, it restores HP to all allies equal to <ATK>[[150%]] plus [[50%]] of the damage dealt by this skill, and deals <ATK>[[100%]] true damage to all enemies.",
+          "zh": "召唤持续[[5]]秒的欲望之花，持续期间内所有敌人每秒受到<ATK>[[40%]]的真实伤害，并且己方受到伤害降低[[15%]]，持续时间结束时为所有友军恢复相当于<ATK>[[150%]]外加相当于该技能造成伤害量[[50%]]的生命值，并对所有敌人造成<ATK>[[100%]]的真实伤害。"
+        },
+        {
+          "en": "While active, increases all enemies' true damage taken per second to <ATK>[[45%]].",
+          "zh": "持续期间所有敌人每秒受到的真实伤害提升至<ATK>[[45%]]。"
+        },
+        {
+          "en": "While the flower of desire is active, all allies gain [[30]] Haste.",
+          "zh": "欲望之花持续期间，所有友军提高[[30]]点急速。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Unfair Contract",
+        "zh": "非对称契约"
+      },
+      "levels": [
+        {
+          "en": "Aurelian signs a contract with the rearmost ally and the [[3]] rearmost enemies, causing Aurelian and that ally to lose [[1%]] of their current HP. He then steals [[8%]] ATK from each contracted enemy, granting it to himself and the ally for [[8]]s. This bonus ATK gained from this skill cannot exceed [[24%]] of Aurelian's initial ATK.",
+          "zh": "与最靠后的友军以及最靠后的[[3]]名敌人签订契约，使自身和友军失去[[1%]]当前生命值，偷取契约中每名敌人[[8%]]攻击力，持续[[8]]秒。自身及友军通过该技能提高的攻击力总计不超过自身初始攻击力的[[24%]]。"
+        },
+        {
+          "en": "Increases ATK stolen from each contracted enemy to [[10%]]. The ATK gained by Aurelian and the ally from this skill cannot exceed [[30%]] of Aurelian's initial ATK.",
+          "zh": "契约中的每名敌人被偷取的攻击力提升至[[10%]]，自身及友军因此提高的攻击力不超过自身初始攻击力的[[30%]]。"
+        },
+        {
+          "en": "Increases ATK stolen from each contracted enemy to [[12%]]. The ATK gained by Aurelian and the ally from this skill cannot exceed [[36%]] of Aurelian's initial ATK.",
+          "zh": "契约中的每名敌人被偷取的攻击力提升至[[12%]]，自身及友军因此提高的攻击力不超过自身初始攻击力的[[36%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Soulpact",
+        "zh": "契约之灵赋"
+      },
+      "levels": [
+        {
+          "en": "Aurelian applies [[Spirit Mark]] to an allied hero behind, granting them Soulpact.\nSoulpact: The [[spirit-marked hero]]'s normal attack damage increases by [[20%]]. \nWhen Aurelian's normal attack hits an enemy, it channels the impact to the [[spirit-marked hero]], healing the [[spirit-marked hero]] for [[50%]] of the damage dealt. When Aurelian casts Unfair Contract, he prioritizes the [[spirit-marked hero]] as the allied target.",
+          "zh": "使身后1名友方英雄成为[[灵能者]]，获得“契约”之灵能：[[灵能者]]的普通攻击造成的伤害提升[[20%]]。\n奥瑞利安的普通攻击命中敌人后会弹射至[[灵能者]]，为[[灵能者]]回复相当于该次伤害量[[50%]]的生命值；同时奥瑞利安释放非对称契约时优先选择[[灵能者]]作为友军目标。"
+        },
+        {
+          "en": "Aurelian and the [[spirit-marked hero]] increase their ATK SPD by [[15]] and Crit by [[20]]. Unfair Contract also steals an extra [[5]] ATK SPD from each contracted enemy.",
+          "zh": "奥瑞利安和[[灵能者]]的攻击速度提高[[15]]点，暴击提高[[20]]；同时非对称契约还会额外偷取每名目标敌人[[5]]点攻击速度。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Contractual Immunity",
+        "zh": "权能豁免"
+      },
+      "levels": [
+        {
+          "en": "Aurelian targets the [[2]] weakest allies, granting them a shield equal to <ATK>[[350%]] for [[8]]s. While the shield is active, he increases their Phys & Magic DEF by [[30%]]. If multiple allies have the same HP ratio, Aurelian prioritizes those positioned closer to the front.",
+          "zh": "以[[2]]名最虚弱的友军为目标，为其添加相当于<ATK>[[350%]]的护盾，持续[[8]]秒，护盾存在期间使其护甲和魔抗提高[[30%]]，生命值比例相同时，优先选择更靠前的友军。"
+        },
+        {
+          "en": "Increases shield value to <ATK>[[500%]].",
+          "zh": "护盾的数值提升至<ATK>[[500%]]。"
+        }
+      ]
+    }
+  ]
+}

@@ -3,8 +3,7 @@ import { computed, provide, ref, watch } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSections from '@/components/skill/SkillSections.vue'
-import IconLocaleEn from '@/components/ui/IconLocaleEn.vue'
-import IconLocaleZh from '@/components/ui/IconLocaleZh.vue'
+import ModalLocaleToggle from '@/components/ui/ModalLocaleToggle.vue'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey } from '@/utils/contentMeta'
 import { loadSkillLocales } from '@/utils/dataLoader'
@@ -35,10 +34,6 @@ watch(
   },
 )
 
-const toggleLocale = () => {
-  displayLocale.value = displayLocale.value === 'en' ? 'zh' : 'en'
-}
-
 const hasLocaleData = computed(() => !!loadSkillLocales()[displayLocale.value]?.[props.skillName])
 </script>
 
@@ -52,15 +47,7 @@ const hasLocaleData = computed(() => !!loadSkillLocales()[displayLocale.value]?.
     @close="emit('close')"
   >
     <template #header-buttons>
-      <button
-        class="button"
-        :aria-label="displayLocale === 'en' ? '中' : 'En'"
-        :title="displayLocale === 'en' ? '中' : 'En'"
-        @click="toggleLocale"
-      >
-        <IconLocaleZh v-if="displayLocale === 'en'" :size="22" no-circle />
-        <IconLocaleEn v-else :size="22" no-circle />
-      </button>
+      <ModalLocaleToggle v-model="displayLocale" />
     </template>
     <SkillSections
       v-if="hasLocaleData"

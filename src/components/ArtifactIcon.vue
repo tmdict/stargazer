@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import ArtifactModal from './modals/ArtifactModal.vue'
+import InfoPill from './ui/InfoPill.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useTouchDetection } from '@/composables/useTouchDetection'
-import { PERCENT_STAT_KEYS, type ArtifactStatKey, type ArtifactType } from '@/lib/types/artifact'
+import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { isRemoteArtifact, seasonArtifactImageSources } from '@/utils/artifactImage'
+import { formatArtifactStats } from '@/utils/artifactStats'
 import { formatDisplayName } from '@/utils/nameFormatting'
-import { highlightSkillText } from '@/utils/textHighlight'
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
@@ -41,20 +44,17 @@ const formattedArtifactName = computed(() => {
   return formatDisplayName(props.artifact.name)
 })
 
-const formattedStats = computed(() => {
-  return Object.entries(props.artifact.stats).flatMap(([key, value]) => {
-    if (value === undefined) return []
-    const k = key as ArtifactStatKey
-    const display = PERCENT_STAT_KEYS.has(k) ? `${value}%` : `${value}`
-    return [{ key: k, label: i18n.t(`game.${k}`), value: display }]
-  })
-})
+const formattedStats = computed(() => formatArtifactStats(props.artifact.stats, i18n.currentLocale))
 
-const effects = computed(() =>
-  gameDataStore
-    .getArtifactEffects(props.artifact.name)
-    .map((effect) => highlightSkillText(effect[i18n.currentLocale] || effect.en)),
-)
+// Pre-season icons are bundled locally; seasonal icons load from afkj-data-viewer.
+const isRemote = computed(() => isRemoteArtifact(props.artifact.season))
+const remoteSources = computed(() => seasonArtifactImageSources(props.artifact.name))
+
+// Effects live in a popup modal (info button), not the hover tooltip.
+const showInfoModal = ref(false)
+const openInfoModal = () => {
+  showInfoModal.value = true
+}
 
 const handleClick = () => {
   emit('artifactClick', props.artifact)
@@ -83,18 +83,30 @@ const handleTouchStart = () => {
     <div
       ref="artifactElement"
       class="artifact"
-      :class="[`season-${artifact.season}`, { placed: isPlaced }]"
+      :class="{ placed: isPlaced }"
       @click="handleClick"
       @mouseenter="handleMouseEnter"
       @mouseleave="handleMouseLeave"
       @touchstart="handleTouchStart"
     >
+      <picture v-if="isRemote" class="portrait-pic">
+        <source :srcset="remoteSources.avif" type="image/avif" />
+        <source :srcset="remoteSources.webp" type="image/webp" />
+        <img :src="remoteSources.png" :alt="artifact.name" class="portrait-season" loading="lazy" />
+      </picture>
       <img
+        v-else
         :src="gameDataStore.getArtifactImage(artifact.name)"
         :alt="artifact.name"
         class="portrait"
       />
     </div>
+
+    <!-- Info pill (effects open in a modal) -->
+    <InfoPill :label="formattedArtifactName" @click="openInfoModal" />
+
+    <!-- Effects modal -->
+    <ArtifactModal :show="showInfoModal" :artifact @close="showInfoModal = false" />
 
     <!-- Tooltip -->
     <Teleport to="body">
@@ -103,8 +115,6 @@ const handleTouchStart = () => {
         :targetElement="artifactElement"
         variant="detailed"
         :offset="10"
-        min-width="340px"
-        max-width="340px"
       >
         <template #content>
           <div class="tooltip-header">
@@ -120,9 +130,6 @@ const handleTouchStart = () => {
               <span class="tooltip-value">{{ stat.value }}</span>
             </div>
           </div>
-          <ul v-if="effects.length" class="tooltip-effects">
-            <li v-for="(effect, idx) in effects" :key="idx" v-html="effect"></li>
-          </ul>
         </template>
       </TooltipPopup>
     </Teleport>
@@ -130,18 +137,27 @@ const handleTouchStart = () => {
 </template>
 
 <style scoped>
+/* Center the icon and the (wider, name-bearing) info pill on one column. */
+.artifact-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .artifact {
   width: 50px;
   height: 50px;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-white);
+  /* White backing for every season (icons may have transparency). */
+  background: #fff;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 0 5px var(--color-bg-white);
+  box-shadow: 0 0 0 2px var(--color-bg-white);
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
@@ -159,6 +175,12 @@ const handleTouchStart = () => {
   background: #fff4;
 }
 
+/* display: contents so the <picture> wrapper doesn't add a box — the <img>
+   participates in the .artifact layout exactly like the bare <img> branch. */
+.portrait-pic {
+  display: contents;
+}
+
 .portrait {
   width: 80px;
   height: 80px;
@@ -167,16 +189,21 @@ const handleTouchStart = () => {
   transform: translateY(-9px) translateX(1.5px);
 }
 
+/* Seasonal icons are full-bleed square art — fill the circle so the artwork
+   reads at full size rather than a small cropped region. */
+.portrait-season {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  z-index: 1;
+}
+
 .artifact:hover {
   transform: scale(1.05);
 }
 
-.season-0 {
-  background: #fff;
-}
-
 .artifact.placed {
-  box-shadow: 0 0 0 5px var(--color-danger);
+  box-shadow: 0 0 0 2px var(--color-danger);
 }
 
 /* Tooltip styles */
@@ -210,24 +237,5 @@ const handleTouchStart = () => {
 
 .tooltip-value {
   font-weight: 500;
-}
-
-.tooltip-effects {
-  margin: 10px 0 0;
-  padding: 8px 0 0 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.tooltip-effects li {
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.tooltip-effects :deep(.skill-highlight) {
-  color: #5fc4bb;
 }
 </style>

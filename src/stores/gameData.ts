@@ -5,12 +5,14 @@ import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { LocaleData } from '@/lib/types/i18n'
+import type { PhantimalType } from '@/lib/types/phantimal'
 import { loadAllData } from '@/utils/dataLoader'
 
 export const useGameDataStore = defineStore('gameData', () => {
   // Data state
   const characters = ref<CharacterType[]>([])
   const artifacts = ref<ArtifactType[]>([])
+  const phantimals = ref<PhantimalType[]>([])
   const characterImages = ref<Record<string, string>>({})
   const artifactImages = ref<Record<string, string>>({})
   const icons = ref<Record<string, string>>({})
@@ -24,6 +26,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     const data = loadAllData()
     characters.value = data.characters
     artifacts.value = data.artifacts
+    phantimals.value = data.phantimals
     characterImages.value = data.characterImages
     artifactImages.value = data.artifactImages
     icons.value = data.icons
@@ -118,6 +121,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     // State (readonly)
     characters: readonly(characters),
     artifacts: readonly(artifacts),
+    phantimals: readonly(phantimals),
     characterImages: readonly(characterImages),
     artifactImages: readonly(artifactImages),
     icons: readonly(icons),

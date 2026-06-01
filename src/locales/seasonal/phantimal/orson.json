@@ -1,0 +1,104 @@
+{
+  "name": {
+    "en": "Orson",
+    "zh": "奥格"
+  },
+  "skills": [
+    {
+      "name": {
+        "en": "Heavensunder",
+        "zh": "穿天拆地"
+      },
+      "levels": [
+        {
+          "en": "Passive. When a battle starts, Orson gains [[5]] stacks of Fury and becomes frenzied. While frenzied, Orson takes [[20%]] less damage and remains [[unaffected]]. When his HP falls below [[40%]], he spends 1 Fury stack to restore [[12%]] of his max HP. When Orson loses all Fury stacks, he exits the frenzied state.\nActive. Orson hurls several spears forward, dealing <ATK>[[140%]] damage to all enemies along a 3-tile-wide path and knocking them down for [[1]]s. If Orson is frenzied, this instead deals <ATK>[[200%]] damage to all enemies on the battlefield and knocks them down for [[1]]s.",
+          "zh": "被动地，战斗开始时奥格获得[[5]]层“狂怒”并进入“狂暴”状态，“狂暴”状态下受到的伤害降低[[20%]]并获得[[霸体]]；当自身生命值低于[[40%]]时，消耗1层“狂怒”为自身恢复[[12%]]最大生命值，失去全部“狂怒”后退出“狂暴”状态。\n主动释放时，向前投出数根巨矛，对沿途3格宽轴线上的所有敌人造成<ATK>[[140%]]的伤害，并使其倒地[[1]]秒；若处于“狂暴”状态，则会对全场范围的敌人造成<ATK>[[200%]]的伤害，并使目标倒地[[1]]秒。"
+        },
+        {
+          "en": "Increases damage outside frenzied state to <ATK>[[180%]]; increases damage in frenzied state to <ATK>[[250%]].",
+          "zh": "非“狂暴”状态下造成的伤害提升至<ATK>[[180%]]，狂暴状态下造成的伤害提升至<ATK>[[250%]]。"
+        },
+        {
+          "en": "Orson enters a battle with an extra [[500]] Initial Energy.",
+          "zh": "奥格会额外拥有[[500]]点初始能量。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Impale Strike",
+        "zh": "暴烈一击"
+      },
+      "levels": [
+        {
+          "en": "Orson lifts the nearest enemy with a spear, then throws them at the area with the most enemies. Upon impact, the lifted enemy and adjacent enemies take <ATK>[[120%]] damage and are knocked down for [[1]]s.",
+          "zh": "挑起距离自身最近的敌人，随后投掷巨矛将目标砸向敌方最密集区域，对目标格周围1格范围内的敌人造成<ATK>[[120%]]伤害，并使其倒地[[1]]秒。"
+        },
+        {
+          "en": "Increases damage taken by the lifted enemy and adjacent enemies to <ATK>[[140%]].",
+          "zh": "对目标及其周围1格范围内的敌人造成的伤害提升至<ATK>[[140%]]。"
+        },
+        {
+          "en": "Increases damage taken by the lifted enemy and adjacent enemies to <ATK>[[160%]].",
+          "zh": "对目标及其周围1格范围内的敌人造成的伤害提升至<ATK>[[160%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Ironwill",
+        "zh": "坚毅之灵赋"
+      },
+      "levels": [
+        {
+          "en": "Orson applies [[Spirit Mark]] to an allied hero behind, granting them Ironwill.\nIronwill: The [[spirit-marked hero]] takes [[20%]] less damage. \nWhen a battle starts, the spirit-marked hero becomes frenzied for [[5]]s. While frenzied, they gain [[30]] Haste and become [[unaffected]].",
+          "zh": "使身后1名友方英雄成为[[灵能者]]，获得“坚毅”之灵能：[[灵能者]]受到伤害降低[[20%]]。\n战斗开始时，灵能者获得持续[[5]]秒的“狂暴”状态，“狂暴”状态下会提高[[30]]点急速并处于[[霸体]]状态。"
+        },
+        {
+          "en": "Orson and the [[spirit-marked hero]] gain [[20%]] max HP and recover [[3%]] of lost HP per second.",
+          "zh": "奥格和[[灵能者]]的最大生命值提高[[20%]]，并且每秒恢复[[3%]]已损失生命值。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Grimmaw Fury",
+        "zh": "黑嚎怒爪"
+      },
+      "levels": [
+        {
+          "en": "Orson roars to taunt enemies within 2 tiles for [[3]]s. Then he sweeps adjacent enemies, dealing <ATK>[[130%]] damage and reducing their damage dealt by [[20%]] for [[5]]s.",
+          "zh": "发出怒吼，嘲讽周围2格范围内的敌人[[3]]秒，随后挥扫攻击，对附近1格范围内的敌人造成<ATK>[[130%]]伤害，并使其在接下来[[5]]秒内造成的伤害降低[[20%]]。"
+        },
+        {
+          "en": "Increases damage dealt to <ATK>[[160%]].",
+          "zh": "对敌人造成的伤害值提升至<ATK>[[160%]]。"
+        }
+      ]
+    }
+  ]
+}

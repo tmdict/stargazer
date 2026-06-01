@@ -5,6 +5,7 @@ import { useGridEvents } from '@/composables/useGridEvents'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
+import { isRemoteArtifact, seasonArtifactImageSources } from '@/utils/artifactImage'
 
 const props = defineProps<{
   allyArtifactId?: number | null
@@ -80,17 +81,19 @@ const getImageStyles = computed(() => {
   }
 })
 
-// Convert artifact IDs to names for display
-const allyArtifactName = computed(() => {
+// Seasonal icons are full-bleed square art — fill the circle (the local
+// getImageStyles overshoot/offset is tuned for the bundled pre-season icons).
+const seasonImageStyles = computed(() => ({ width: '100%', height: '100%' }))
+
+// Resolve artifact IDs to records (name + season drive local vs remote icons).
+const allyArtifact = computed(() => {
   if (props.allyArtifactId === null || props.allyArtifactId === undefined) return null
-  const artifact = gameDataStore.getArtifactById(props.allyArtifactId)
-  return artifact?.name || null
+  return gameDataStore.getArtifactById(props.allyArtifactId) ?? null
 })
 
-const enemyArtifactName = computed(() => {
+const enemyArtifact = computed(() => {
   if (props.enemyArtifactId === null || props.enemyArtifactId === undefined) return null
-  const artifact = gameDataStore.getArtifactById(props.enemyArtifactId)
-  return artifact?.name || null
+  return gameDataStore.getArtifactById(props.enemyArtifactId) ?? null
 })
 
 const handleArtifactClick = (team: Team) => {
@@ -102,15 +105,27 @@ const handleArtifactClick = (team: Team) => {
   <div class="grid-artifacts">
     <!-- Ally Artifact (bottom left) -->
     <div
-      v-if="allyArtifactName"
+      v-if="allyArtifact"
       class="grid-artifact"
       :class="{ readonly }"
       :style="getAllyStyles"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
     >
+      <picture v-if="isRemoteArtifact(allyArtifact.season)" class="artifact-picture">
+        <source :srcset="seasonArtifactImageSources(allyArtifact.name).avif" type="image/avif" />
+        <source :srcset="seasonArtifactImageSources(allyArtifact.name).webp" type="image/webp" />
+        <img
+          :src="seasonArtifactImageSources(allyArtifact.name).png"
+          :alt="allyArtifact.name"
+          class="artifact-image"
+          :style="seasonImageStyles"
+          loading="lazy"
+        />
+      </picture>
       <img
-        :src="gameDataStore.getArtifactImage(allyArtifactName)"
-        :alt="allyArtifactName"
+        v-else
+        :src="gameDataStore.getArtifactImage(allyArtifact.name)"
+        :alt="allyArtifact.name"
         class="artifact-image"
         :style="getImageStyles"
       />
@@ -118,15 +133,27 @@ const handleArtifactClick = (team: Team) => {
 
     <!-- Enemy Artifact (top right) -->
     <div
-      v-if="enemyArtifactName"
+      v-if="enemyArtifact"
       class="grid-artifact"
       :class="{ readonly }"
       :style="getEnemyStyles"
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
     >
+      <picture v-if="isRemoteArtifact(enemyArtifact.season)" class="artifact-picture">
+        <source :srcset="seasonArtifactImageSources(enemyArtifact.name).avif" type="image/avif" />
+        <source :srcset="seasonArtifactImageSources(enemyArtifact.name).webp" type="image/webp" />
+        <img
+          :src="seasonArtifactImageSources(enemyArtifact.name).png"
+          :alt="enemyArtifact.name"
+          class="artifact-image"
+          :style="seasonImageStyles"
+          loading="lazy"
+        />
+      </picture>
       <img
-        :src="gameDataStore.getArtifactImage(enemyArtifactName)"
-        :alt="enemyArtifactName"
+        v-else
+        :src="gameDataStore.getArtifactImage(enemyArtifact.name)"
+        :alt="enemyArtifact.name"
         class="artifact-image"
         :style="getImageStyles"
       />
@@ -154,12 +181,18 @@ const handleArtifactClick = (team: Team) => {
   border-style: solid;
   border-color: var(--color-bg-white);
   box-shadow: 0 0 0 2px #fff;
+  /* White backing for every season (icons may have transparency). */
+  background: #fff;
   cursor: pointer;
   pointer-events: auto;
 }
 
 .grid-artifact.readonly {
   cursor: default;
+}
+
+.artifact-picture {
+  display: contents;
 }
 
 .artifact-image {

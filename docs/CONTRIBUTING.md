@@ -58,7 +58,7 @@ Development always runs in SPA mode for hot module replacement.
 │   ├── utils/          # Helper utilities
 │   ├── views/          # Page-level components
 │   ├── router/         # Vue Router configuration
-│   ├── data/           # Static JSON data (characters, artifacts)
+│   ├── data/           # Static JSON data (characters, artifacts, seasonal/phantimal)
 │   ├── locales/        # i18n translations
 │   ├── assets/         # Images and styles
 │   ├── styles/         # Global CSS styles
@@ -93,6 +93,27 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 1. Add JSON: `src/data/character/[name].json`
 2. Add image: `src/assets/images/character/[name].png` (vite-imagetools converts to WebP at build time)
 3. Character automatically appears in roster
+
+### Updating Seasonal Content (Artifacts / Phantimals)
+
+Seasonal artifacts (`season > 0`) and phantimals are sourced from
+**afkj-data-viewer**'s exported API (`/api/<locale>/artifacts.json`,
+`/api/<locale>/phantimals.json`); pre-season artifacts (`season: 0`) are
+maintained locally.
+
+- **Data:** `src/data/artifact/[name].json` (artifacts) and
+  `src/data/seasonal/phantimal/[name].json`. `name` is the slug (artifact name
+  minus " Spell"); artifact `id` must be globally unique (URL serialization
+  keys on it). Stat keys map to `ArtifactStatKey` (`src/lib/types/artifact.ts`).
+- **Locales:** `src/locales/artifact/[name].json` (name) +
+  `effects/[name].json` (per-level descriptions); phantimals use a single
+  `src/locales/seasonal/phantimal/[name].json` (name + skills + levels).
+- **Icons:** pre-season artifacts ship local images; seasonal artifacts and
+  phantimals load **remotely** from afkj-data-viewer
+  (`utils/artifactImage.ts`), so those icons require afkj-data-viewer to be
+  deployed.
+- **Each new season:** remove the previous season's entries and add the new
+  ones (re-run afkj-data-viewer's `export:api`, then regenerate these files).
 
 ### Modifying Grid Logic
 
