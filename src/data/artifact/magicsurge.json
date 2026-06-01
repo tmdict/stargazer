@@ -1,0 +1,10 @@
+{
+  "id": 17,
+  "name": "magicsurge",
+  "season": 7,
+  "stats": {
+    "atk": 18.7,
+    "hp": 21.4,
+    "ranged-def": 14
+  }
+}
