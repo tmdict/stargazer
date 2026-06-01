@@ -61,8 +61,8 @@ export const useGridStore = defineStore('grid', () => {
 
   // Bounds of the rendered region in unscaled SVG coordinates.
   // Always returns x = 0 and width = full grid width: cropping is vertical-only.
-  // Horizontal cropping would clip the ally artifact (anchored at the bottom-left
-  // of the full grid) and any other corner-anchored overlays.
+  // Horizontal cropping would clip the artifact host cells (beside grid cells 1 and
+  // 45, near the horizontal edges) and any other edge-anchored overlays.
   // When team view is off (or no ally tiles exist), height is the full grid box too.
   const viewBoxBounds = computed(() => {
     const scale = hexSize.value.x / 40

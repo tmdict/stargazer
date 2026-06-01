@@ -1,11 +1,14 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import { useGridEvents } from '@/composables/useGridEvents'
+import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { isRemoteArtifact, seasonArtifactImageSources } from '@/utils/artifactImage'
+import { svgPointToScreen } from '@/utils/gridScreenPosition'
 
 const props = defineProps<{
   allyArtifactId?: number | null
@@ -13,76 +16,100 @@ const props = defineProps<{
   showPerspective?: boolean
   scaleY?: number
   readonly?: boolean
+  isMapEditorMode?: boolean
 }>()
 
 const gridEvents = useGridEvents()
 const gameDataStore = useGameDataStore()
 const gridStore = useGridStore()
 
-// Dynamic artifact dimensions based on grid scale
+// Purely-visual host cells: the left/right neighbours of real cells 1 (ally) and
+// 45 (enemy). Not part of the grid simulation (no tile, pathfinding, or drop
+// target) — just an SVG outline + the icon, tracking the layout/scale.
+const ghostCell = (baseId: number, direction: number): Hex | null => {
+  try {
+    return gridStore.getHexById(baseId).neighbor(direction)
+  } catch {
+    return null
+  }
+}
+const allyCellHex = computed(() => ghostCell(1, 4)) // direction 4 = left of cell 1
+const enemyCellHex = computed(() => ghostCell(45, 1)) // direction 1 = right of cell 45
+
+const cellCenter = (hex: Hex | null) => (hex ? gridStore.layout.hexToPixel(hex) : { x: 0, y: 0 })
+const cellPoints = (hex: Hex | null) =>
+  hex
+    ? gridStore.layout
+        .polygonCorners(hex)
+        .map((p) => `${p.x},${p.y}`)
+        .join(' ')
+    : ''
+
+const allyCenter = computed(() => cellCenter(allyCellHex.value))
+const enemyCenter = computed(() => cellCenter(enemyCellHex.value))
+const allyCellPoints = computed(() => cellPoints(allyCellHex.value))
+const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
+
+// The cell-outline SVG shares the full grid box and coordinate space with GridTiles,
+// so it compresses with the perspective wrapper exactly like the real hexes.
+const gridPixelSize = computed(() => 600 * gridStore.getHexScale())
+const cellStrokeWidth = computed(() => Math.max(1.5, 2 * gridStore.getHexScale()))
+const cellDashArray = computed(() => {
+  const scale = gridStore.getHexScale()
+  return `${6 * scale},${4 * scale}`
+})
+
+// Artifact icon geometry (at 40px hex radius). The local pre-season art is
+// zoomed/recentred within the circle; keeping its ratio and offsets relative to
+// the icon size holds the framing constant at any size or breakpoint scale.
+const BASE_ARTIFACT_SIZE = 52
+const LOCAL_IMAGE_RATIO = 95 / 45
+const LOCAL_IMAGE_OFFSET_Y = -8 / 45
+const LOCAL_IMAGE_OFFSET_X = 1 / 45
+
 const artifactDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
-    containerSize: 45 * scale,
-    imageSize: 95 * scale,
-    position: 50 * scale,
-    offset: 25 * scale,
+    containerSize: BASE_ARTIFACT_SIZE * scale,
+    imageSize: BASE_ARTIFACT_SIZE * LOCAL_IMAGE_RATIO * scale,
     borderWidth: Math.max(2, 2 * scale),
-    shadowWidth: Math.max(3, 3 * scale),
   }
 })
 
-// Compute scaleY transform for artifacts in perspective mode
-const getArtifactStyles = () => {
+// Center the icon on its host cell. In perspective, lift it and counter-scale
+// vertically — the same transform GridCharacters applies — so it reads as an
+// isometric token standing in the cell while the cell beneath it compresses.
+const iconStyle = (center: { x: number; y: number }) => {
   const { containerSize, borderWidth } = artifactDimensions.value
   const styles: Record<string, string | number> = {
     width: `${containerSize}px`,
     height: `${containerSize}px`,
-    borderWidth: `${borderWidth}px`,
+    '--artifact-border-width': `${borderWidth}px`,
+    left: `${center.x - containerSize / 2}px`,
+    top: `${center.y - containerSize / 2}px`,
   }
-
   if (props.showPerspective) {
-    styles.transform = `scaleY(${props.scaleY || 1.0})`
+    const verticalOffset = -70 * gridStore.getHexScale()
+    styles.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY || 1.0})`
     styles.transformOrigin = 'center'
     styles.transition = 'transform 0.3s ease-out'
   }
-
   return styles
 }
 
-// Get position styles for ally artifact
-const getAllyStyles = computed(() => {
-  const { position, offset } = artifactDimensions.value
-  return {
-    ...getArtifactStyles(),
-    bottom: `${offset}px`,
-    left: `${position}px`,
-  }
-})
+const getAllyStyles = computed(() => iconStyle(allyCenter.value))
+const getEnemyStyles = computed(() => iconStyle(enemyCenter.value))
 
-// Get position styles for enemy artifact
-const getEnemyStyles = computed(() => {
-  const { position, offset } = artifactDimensions.value
-  return {
-    ...getArtifactStyles(),
-    top: `${offset}px`,
-    right: `${position}px`,
-  }
-})
-
-// Get image styles
 const getImageStyles = computed(() => {
-  const { imageSize } = artifactDimensions.value
-  const scale = gridStore.getHexScale()
+  const { imageSize, containerSize } = artifactDimensions.value
   return {
     width: `${imageSize}px`,
     height: `${imageSize}px`,
-    transform: `translateY(${-8 * scale}px) translateX(${1 * scale}px)`,
+    transform: `translateY(${LOCAL_IMAGE_OFFSET_Y * containerSize}px) translateX(${LOCAL_IMAGE_OFFSET_X * containerSize}px)`,
   }
 })
 
-// Seasonal icons are full-bleed square art — fill the circle (the local
-// getImageStyles overshoot/offset is tuned for the bundled pre-season icons).
+// Seasonal icons are full-bleed square art — fill the circle.
 const seasonImageStyles = computed(() => ({ width: '100%', height: '100%' }))
 
 // Resolve artifact IDs to records (name + season drive local vs remote icons).
@@ -96,6 +123,41 @@ const enemyArtifact = computed(() => {
   return gameDataStore.getArtifactById(props.enemyArtifactId) ?? null
 })
 
+// The empty dashed cell is an "add artifact here" affordance, shown only on the
+// interactive grid; a filled cell always frames its artifact. The enemy cell
+// follows the enemy artifact's team-view visibility (id is nulled upstream).
+const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
+const showAllyCell = computed(() => !!allyArtifact.value || showPlaceholders.value)
+const showEnemyCell = computed(
+  () => !gridStore.teamView && (!!enemyArtifact.value || showPlaceholders.value),
+)
+
+// An empty host cell opens the artifact picker; a filled cell's icon handles
+// removal (handleArtifactClick), mirroring the character flow (empty hex → picker,
+// placed hero → remove).
+const allyCellClickable = computed(() => showPlaceholders.value && !allyArtifact.value)
+const enemyCellClickable = computed(
+  () => showPlaceholders.value && !gridStore.teamView && !enemyArtifact.value,
+)
+
+const showPopup = ref(false)
+const popupTeam = ref<Team | null>(null)
+const popupPosition = ref({ x: 0, y: 0 })
+
+const openPopup = (team: Team, center: { x: number; y: number }) => {
+  const screen = svgPointToScreen(center)
+  if (!screen) return
+  const scale = gridStore.getHexScale()
+  popupPosition.value = { x: screen.x + 30 * scale, y: screen.y - 50 * scale }
+  popupTeam.value = team
+  showPopup.value = true
+}
+
+const closePopup = () => {
+  showPopup.value = false
+  popupTeam.value = null
+}
+
 const handleArtifactClick = (team: Team) => {
   gridEvents.emit('artifact:remove', team)
 }
@@ -103,35 +165,67 @@ const handleArtifactClick = (team: Team) => {
 
 <template>
   <div class="grid-artifacts">
-    <!-- Ally Artifact (bottom left) -->
+    <!-- Visual-only host cells (dashed). Same coordinate space as GridTiles. -->
+    <svg
+      v-if="showAllyCell || showEnemyCell"
+      class="artifact-cell-layer"
+      :width="gridPixelSize"
+      :height="gridPixelSize"
+    >
+      <polygon
+        v-if="showAllyCell"
+        class="artifact-cell"
+        :class="{ clickable: allyCellClickable }"
+        :points="allyCellPoints"
+        :stroke-width="cellStrokeWidth"
+        :stroke-dasharray="cellDashArray"
+        @click="allyCellClickable && openPopup(Team.ALLY, allyCenter)"
+      />
+      <polygon
+        v-if="showEnemyCell"
+        class="artifact-cell"
+        :class="{ clickable: enemyCellClickable }"
+        :points="enemyCellPoints"
+        :stroke-width="cellStrokeWidth"
+        :stroke-dasharray="cellDashArray"
+        @click="enemyCellClickable && openPopup(Team.ENEMY, enemyCenter)"
+      />
+    </svg>
+
+    <!-- Ally artifact (host cell: left of cell 1). `front` lifts it above the
+         character layer so the lifted icon isn't covered in perspective. -->
     <div
       v-if="allyArtifact"
-      class="grid-artifact"
+      class="grid-artifact front"
       :class="{ readonly }"
       :style="getAllyStyles"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
     >
-      <picture v-if="isRemoteArtifact(allyArtifact.season)" class="artifact-picture">
-        <source :srcset="seasonArtifactImageSources(allyArtifact.name).avif" type="image/avif" />
-        <source :srcset="seasonArtifactImageSources(allyArtifact.name).webp" type="image/webp" />
+      <div class="artifact-circle">
+        <picture v-if="isRemoteArtifact(allyArtifact.season)" class="artifact-picture">
+          <source :srcset="seasonArtifactImageSources(allyArtifact.name).avif" type="image/avif" />
+          <source :srcset="seasonArtifactImageSources(allyArtifact.name).webp" type="image/webp" />
+          <img
+            :src="seasonArtifactImageSources(allyArtifact.name).png"
+            :alt="allyArtifact.name"
+            class="artifact-image"
+            :style="seasonImageStyles"
+            loading="lazy"
+          />
+        </picture>
         <img
-          :src="seasonArtifactImageSources(allyArtifact.name).png"
+          v-else
+          :src="gameDataStore.getArtifactImage(allyArtifact.name)"
           :alt="allyArtifact.name"
           class="artifact-image"
-          :style="seasonImageStyles"
-          loading="lazy"
+          :style="getImageStyles"
         />
-      </picture>
-      <img
-        v-else
-        :src="gameDataStore.getArtifactImage(allyArtifact.name)"
-        :alt="allyArtifact.name"
-        class="artifact-image"
-        :style="getImageStyles"
-      />
+      </div>
+      <div v-if="showPerspective" class="artifact-pointer" />
     </div>
 
-    <!-- Enemy Artifact (top right) -->
+    <!-- Enemy artifact (host cell: right of cell 45). Stays behind the character
+         layer (DOM order) so overlapping characters sit on top in perspective. -->
     <div
       v-if="enemyArtifact"
       class="grid-artifact"
@@ -139,25 +233,37 @@ const handleArtifactClick = (team: Team) => {
       :style="getEnemyStyles"
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
     >
-      <picture v-if="isRemoteArtifact(enemyArtifact.season)" class="artifact-picture">
-        <source :srcset="seasonArtifactImageSources(enemyArtifact.name).avif" type="image/avif" />
-        <source :srcset="seasonArtifactImageSources(enemyArtifact.name).webp" type="image/webp" />
+      <div class="artifact-circle">
+        <picture v-if="isRemoteArtifact(enemyArtifact.season)" class="artifact-picture">
+          <source :srcset="seasonArtifactImageSources(enemyArtifact.name).avif" type="image/avif" />
+          <source :srcset="seasonArtifactImageSources(enemyArtifact.name).webp" type="image/webp" />
+          <img
+            :src="seasonArtifactImageSources(enemyArtifact.name).png"
+            :alt="enemyArtifact.name"
+            class="artifact-image"
+            :style="seasonImageStyles"
+            loading="lazy"
+          />
+        </picture>
         <img
-          :src="seasonArtifactImageSources(enemyArtifact.name).png"
+          v-else
+          :src="gameDataStore.getArtifactImage(enemyArtifact.name)"
           :alt="enemyArtifact.name"
           class="artifact-image"
-          :style="seasonImageStyles"
-          loading="lazy"
+          :style="getImageStyles"
         />
-      </picture>
-      <img
-        v-else
-        :src="gameDataStore.getArtifactImage(enemyArtifact.name)"
-        :alt="enemyArtifact.name"
-        class="artifact-image"
-        :style="getImageStyles"
-      />
+      </div>
+      <div v-if="showPerspective" class="artifact-pointer" />
     </div>
+
+    <Teleport to="body">
+      <ArtifactSelectionPopup
+        v-if="showPopup && popupTeam !== null"
+        :team="popupTeam"
+        :position="popupPosition"
+        @close="closePopup"
+      />
+    </Teleport>
   </div>
 </template>
 
@@ -171,24 +277,59 @@ const handleArtifactClick = (team: Team) => {
   pointer-events: none;
 }
 
+.artifact-cell-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.artifact-cell {
+  fill: rgba(255, 255, 255, 0.06);
+  stroke: var(--color-text-tertiary, #8a8f98);
+}
+
+/* Empty host cells invite a click to open the artifact picker. */
+.artifact-cell.clickable {
+  pointer-events: auto;
+  cursor: pointer;
+  transition: fill 0.15s ease;
+}
+
+.artifact-cell.clickable:hover {
+  fill: rgba(255, 255, 255, 0.16);
+}
+
 .grid-artifact {
   position: absolute;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* Ally artifact paints above the character layer (which is a later sibling). */
+.grid-artifact.front {
+  z-index: 2;
+}
+
+.grid-artifact.readonly {
+  cursor: default;
+}
+
+/* The circular, clipped visual. The wrapper stays overflow-visible so the
+   perspective pointer can extend below it. */
+.artifact-circle {
+  width: 100%;
+  height: 100%;
   border-radius: var(--radius-round);
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border-style: solid;
-  border-color: var(--color-bg-white);
+  border: var(--artifact-border-width, 2px) solid var(--color-bg-white);
   box-shadow: 0 0 0 2px #fff;
   /* White backing for every season (icons may have transparency). */
   background: #fff;
-  cursor: pointer;
-  pointer-events: auto;
-}
-
-.grid-artifact.readonly {
-  cursor: default;
 }
 
 .artifact-picture {
@@ -198,5 +339,18 @@ const handleArtifactClick = (team: Team) => {
 .artifact-image {
   object-fit: cover;
   z-index: 1;
+}
+
+/* Mirrors GridCharacters' .character-pointer — the isometric "foot" in perspective. */
+.artifact-pointer {
+  position: absolute;
+  bottom: -8px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 8px solid #777;
 }
 </style>
