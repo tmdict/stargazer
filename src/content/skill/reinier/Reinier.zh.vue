@@ -8,7 +8,7 @@ import { gridStyles, images } from './Reinier.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>雷内亚会自动识别并标记对称，并包含友方和敌方角色的格子对。</p>
         <p>当存在多个友方敌方对时，使用以下规则处理平局：</p>
         <ul>

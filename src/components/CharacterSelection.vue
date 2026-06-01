@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
+import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -67,7 +68,7 @@ const removeCharacterFromGrid = (characterId: number) => {
       :characters
     />
 
-    <div class="characters">
+    <CharacterGrid class="characters">
       <CharacterIcon
         v-for="character in filteredCharacters"
         :key="character.id"
@@ -77,7 +78,7 @@ const removeCharacterFromGrid = (characterId: number) => {
         :selected-filter="selectedTagNames"
         @character-click="handleCharacterClick"
       />
-    </div>
+    </CharacterGrid>
   </div>
 </template>
 
@@ -86,7 +87,7 @@ const removeCharacterFromGrid = (characterId: number) => {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  min-height: 656px;
+  min-height: var(--panel-min-height);
 }
 
 /* On wide screens the right column is height-capped to the viewport, so the
@@ -101,12 +102,9 @@ const removeCharacterFromGrid = (characterId: number) => {
   }
 }
 
+/* CharacterGrid owns the wrap-grid layout; this only adds the inset (the tab
+   panel's horizontal padding is zeroed on mobile, so the grid carries it). */
 .characters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-lg);
-  justify-content: flex-start;
-  align-content: flex-start;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
 }
@@ -114,15 +112,12 @@ const removeCharacterFromGrid = (characterId: number) => {
 @media (max-width: 768px) {
   .characters {
     padding: var(--spacing-md);
-    justify-content: center;
   }
 }
 
 @media (max-width: 480px) {
   .characters {
-    gap: var(--spacing-sm);
     padding: var(--spacing-sm);
-    justify-content: center;
   }
 }
 </style>

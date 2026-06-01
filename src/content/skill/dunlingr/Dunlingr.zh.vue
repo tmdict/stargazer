@@ -6,7 +6,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ex>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>顿里尔会自动识别并锁定距离他所在格子最远的友方角色。</p>
         <p>距离计算使用六边形网格距离来确定最远的队友。</p>
         <p>当多个队友距离相等时：</p>

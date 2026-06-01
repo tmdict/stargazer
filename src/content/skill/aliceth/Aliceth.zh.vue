@@ -8,7 +8,7 @@ import { gridStyles, images } from './Aliceth.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title="技能机制（友方）">
+      <SkillSnippet title="目标选择（友方）">
         <p>
           亚莉克希首先检查与她同排的队友。当同排有多个队友时，亚莉克希会选择距离更近的队友，当距离相同时，优先选择位置更靠左的角色（较高ID的格子）。
         </p>
@@ -29,7 +29,7 @@ import { gridStyles, images } from './Aliceth.data'
           敌方亚莉克希锁定队友时，此行为会被翻转（180°旋转）。亚莉克希会从右侧（较低ID）扫描到左侧（较高ID）。
         </p>
       </SkillSnippet>
-      <SkillSnippet title="技能机制（敌方）">
+      <SkillSnippet title="目标选择（敌方）">
         <p>亚莉克希会自动识别并锁定距离她所在格子最远的对手。</p>
         <p>距离计算使用六边形网格距离来确定最远的对手。</p>
         <p>当多个对手距离相等时：</p>

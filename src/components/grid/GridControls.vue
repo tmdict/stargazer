@@ -125,7 +125,7 @@ const handleDownload = () => {
     </div>
 
     <!-- Row 2: team toggle + action buttons + clear -->
-    <div class="controls-row">
+    <div class="controls-row controls-actions">
       <TeamToggle
         v-if="!hideTeamControls"
         :selectedTeam
@@ -254,10 +254,10 @@ const handleDownload = () => {
   .controls-row {
     gap: 6px;
   }
-  /* Row 2 (team toggle + action buttons) breathes more; row 1's chips stay
-     tight so they don't re-wrap. */
-  .controls-row:last-child {
-    gap: 12px;
+  /* Row 2 (team toggle + link/copy/download + clear) breathes more; row 1's
+     chips stay tight so they don't re-wrap. */
+  .controls-row.controls-actions {
+    gap: 18px;
   }
 
   .grid-toggle-btn {
@@ -302,8 +302,8 @@ const handleDownload = () => {
   .controls-row {
     gap: 5px;
   }
-  .controls-row:last-child {
-    gap: 10px;
+  .controls-row.controls-actions {
+    gap: 16px;
   }
   .grid-toggle-btn {
     padding: 4px 10px;

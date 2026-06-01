@@ -8,7 +8,7 @@ import { gridStyles, images } from './Aliceth.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title="How It Works (Ally)">
+      <SkillSnippet title="Targeting (Ally)">
         <p>
           Aliceth first checks for teammate characters in the same row as her. When multiple
           teammate characters are in the same row, Aliceth will target the character closer to her,
@@ -44,7 +44,7 @@ import { gridStyles, images } from './Aliceth.data'
           right (lower hex ID) to left (higher hex ID).
         </p>
       </SkillSnippet>
-      <SkillSnippet title="How It Works (Enemy)">
+      <SkillSnippet title="Targeting (Enemy)">
         <p>
           Aliceth automatically identifies and targets an opposing-team character that is furthest
           away from her current tile.

@@ -138,14 +138,17 @@ onUnmounted(() => {
 
 <style scoped>
 .tab-container {
+  /* Negative margin escapes the host panel's 2em card padding (BottomSheet on
+     mobile, .section on desktop) so the tab bar spans edge-to-edge. */
   margin: -2em;
-  /* Flex-column so the tab content area can fill any height the parent gives
-     us (when the right column is height-capped on wide screens) while the
-     tab-buttons row stays pinned at its natural size. When the parent is
-     unconstrained (mobile column stack), height collapses to content and
-     the inner overflow:auto becomes a no-op. */
+  /* Flex-column + flex:1 so the tab content area fills whatever height the host
+     gives us (the height-capped column on wide screens, the sheet on mobile)
+     while the tab-buttons row stays pinned at its natural size. When the host is
+     unconstrained (mobile column stack), height collapses to content and the
+     inner overflow:auto becomes a no-op. */
   display: flex;
   flex-direction: column;
+  flex: 1;
   height: 100%;
   min-height: 0;
 }
@@ -322,8 +325,15 @@ onUnmounted(() => {
     display: none;
   }
 
+  /* Inside the mobile sheet the host has no padding to escape, so drop the
+     negative margin; fill the sheet and let the active panel scroll within it
+     (the tab bar stays pinned). */
   .tab-container {
-    margin: -1em;
+    margin: 0;
+    height: auto;
+  }
+  .tab-content {
+    overflow-y: auto;
   }
 
   .tab-buttons {

@@ -2,35 +2,8 @@ import type { Component } from 'vue'
 
 import { loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
 
-export type MechanicCategory = 'targeting' | 'tile' | 'companion'
-
-/** Display order + the app-locale key for each category heading. */
-export const CATEGORY_ORDER: MechanicCategory[] = ['targeting', 'tile', 'companion']
-export const CATEGORY_LABEL_KEY: Record<MechanicCategory, string> = {
-  targeting: 'mechanic-targeting',
-  tile: 'mechanic-tile',
-  companion: 'mechanic-companion',
-}
-
-/**
- * Category per snippet hero. Derived from each hero's registered skill builder:
- * `createTargetingSkill` → targeting, `createTileHighlightSkill` → tile,
- * companion summons → companion. Listed here are the non-targeting heroes;
- * everything else — including any newly added snippet — defaults to `targeting`.
- */
-const CATEGORY_OVERRIDES: Record<string, MechanicCategory> = {
-  cassadee: 'tile',
-  daimon: 'tile',
-  faramor: 'tile',
-  galahad: 'tile',
-  'lily-may': 'tile',
-  phraesto: 'companion',
-  zanie: 'companion',
-}
-
 export interface MechanicEntry {
   slug: string
-  category: MechanicCategory
   components: Partial<Record<'en' | 'zh', Component>>
 }
 
@@ -67,7 +40,7 @@ export function mechanicEntries(): MechanicEntry[] {
     if (!match || !hasUniqueContent(path)) continue
     const [, slug, lang] = match
     if (!bySlug[slug]) {
-      bySlug[slug] = { slug, category: CATEGORY_OVERRIDES[slug] ?? 'targeting', components: {} }
+      bySlug[slug] = { slug, components: {} }
     }
     bySlug[slug].components[lang as 'en' | 'zh'] = mod.default
   }

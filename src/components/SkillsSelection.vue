@@ -3,6 +3,7 @@ import { computed, onUnmounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
+import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSkillSearch } from '@/composables/useSkillSearch'
@@ -16,12 +17,15 @@ const props = defineProps<{
   characters: readonly CharacterType[]
   lang: 'en' | 'zh'
   currentSlug?: string | null
+  /** Route segment the roster links into (`skill` or `mechanics`). */
+  routeBase?: string
 }>()
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 const lang = computed<'en' | 'zh'>(() => props.lang)
+const base = computed(() => props.routeBase ?? 'skill')
 
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters))
@@ -120,11 +124,11 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
     />
 
     <!-- Meta row mirrors CharacterInfoIcons; wider gap replaces info button. -->
-    <div v-if="!visibleSearchResults" class="characters">
+    <CharacterGrid v-if="!visibleSearchResults">
       <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
-        :to="`/${lang}/skill/${character.name}`"
+        :to="`/${lang}/${base}/${character.name}`"
         class="character-cell"
       >
         <CharacterIcon
@@ -146,7 +150,7 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
           />
         </div>
       </RouterLink>
-    </div>
+    </CharacterGrid>
 
     <div v-else class="results">
       <p v-if="visibleSearchResults.length === 0" class="empty-results">
@@ -155,7 +159,7 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
       <RouterLink
         v-for="result in visibleSearchResults"
         :key="result.slug"
-        :to="`/${lang}/skill/${result.slug}`"
+        :to="`/${lang}/${base}/${result.slug}`"
         class="result-row"
         :class="{
           active: currentSlug === result.slug,
@@ -188,7 +192,7 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  min-height: 656px;
+  min-height: var(--panel-min-height);
 }
 
 @media (min-width: 1220px) {
@@ -254,16 +258,6 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   white-space: nowrap;
 }
 
-/* No own padding — the .skills-list card (desktop) / sheet (mobile) provides the
-   inset, so the grid aligns with the search + filter rows above it. */
-.characters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-lg);
-  justify-content: flex-start;
-  align-content: flex-start;
-}
-
 .character-cell {
   display: flex;
   flex-direction: column;
@@ -304,8 +298,15 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 }
 
 @media (max-width: 768px) {
-  .characters {
-    justify-content: center;
+  /* Inside the mobile roster sheet (BottomSheet): fill it and scroll within,
+     carrying the inset since the sheet itself has no padding. Horizontal inset
+     matches the arena roster (CharacterSelection's .characters) so both grids
+     fit the same icons per row. */
+  .skills-selection {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding: 0 var(--spacing-md) var(--spacing-lg);
   }
   .search-row {
     padding-top: var(--spacing-sm);
@@ -319,10 +320,7 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 @media (max-width: 480px) {
   .skills-selection {
     gap: var(--spacing-sm);
-  }
-  .characters {
-    gap: var(--spacing-sm);
-    justify-content: center;
+    padding: 0 var(--spacing-sm) var(--spacing-md);
   }
   /* Match CharacterInfoIcons mobile sizing. */
   .meta-row {
