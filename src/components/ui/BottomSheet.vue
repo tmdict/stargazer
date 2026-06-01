@@ -9,7 +9,7 @@ import { useBottomSheet } from '@/composables/useBottomSheet'
 // The slot holds the page's content (tabs / roster); its own fill + scroll
 // stays in the page since each content component scrolls differently.
 const {
-  peek = 96,
+  peek = 56,
   expandedFraction = 0.62,
   initialExpanded = false,
 } = defineProps<{
@@ -133,7 +133,7 @@ defineExpose({ expand })
     z-index: 800;
     overflow: hidden;
     /* Collapsed peek before the composable engages; it sets the same inline. */
-    transform: translateY(calc(62vh - 96px));
+    transform: translateY(calc(62vh - 56px));
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .bottom-sheet.is-dragging {

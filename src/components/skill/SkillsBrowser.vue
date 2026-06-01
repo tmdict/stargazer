@@ -79,13 +79,13 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
    BottomSheet; SkillsSelection owns its own in-sheet fill/scroll/inset. */
 @media (max-width: 768px) {
   main {
-    padding-bottom: 96px;
+    padding-bottom: 64px;
   }
 }
 
 @media (max-width: 480px) {
   main {
-    padding-bottom: 88px;
+    padding-bottom: 64px;
   }
 }
 </style>
