@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
-import { useOverlay } from '@/composables/useOverlay'
+import SelectionPopup from './ui/SelectionPopup.vue'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
@@ -24,7 +24,6 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const popupRef = ref<HTMLElement>()
 const characterStore = useCharacterStore()
 const gridStore = useGridStore()
 
@@ -64,21 +63,10 @@ function handleSelect(character: CharacterType) {
     emit('close')
   }
 }
-
-useOverlay({
-  elementRef: popupRef,
-  onClose: () => emit('close'),
-  clickOutsideDelay: 100,
-})
 </script>
 
 <template>
-  <div
-    ref="popupRef"
-    class="character-selection-popup"
-    :style="{ left: `${position.x}px`, top: `${position.y}px` }"
-    @mouseleave="emit('close')"
-  >
+  <SelectionPopup :position @close="emit('close')">
     <div class="filter-row">
       <FilterIcons
         v-model="factionFilter"
@@ -101,25 +89,10 @@ useOverlay({
         No available characters
       </div>
     </div>
-  </div>
+  </SelectionPopup>
 </template>
 
 <style scoped>
-.character-selection-popup {
-  position: fixed;
-  background: rgba(20, 20, 20, 0.8);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
-  padding: 10px;
-  box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.5),
-    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  z-index: 1000;
-  max-width: 320px;
-  max-height: 380px;
-}
-
 .filter-row {
   margin-bottom: 8px;
 }
@@ -134,25 +107,12 @@ useOverlay({
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 5px;
+  /* overflow-y:auto forces overflow-x to auto; pin it hidden so the hover
+     scale-up can't add a horizontal scrollbar. Padding gives edge icons room. */
+  overflow-x: hidden;
   overflow-y: auto;
   max-height: 280px;
-}
-
-.characters-grid::-webkit-scrollbar {
-  width: 4px;
-}
-
-.characters-grid::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.characters-grid::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 2px;
-}
-
-.characters-grid::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  padding: 2px 4px;
 }
 
 .character-item {
