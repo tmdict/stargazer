@@ -8,7 +8,7 @@ import { gridStyles, images } from './Cassadee.data'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="mechanic-tile">
+      <SkillSnippet title-key="guide-tile">
         <p>
           科丝蒂从与她相邻的格子开始搜索队友，并向外扩展，优先选择位置更靠后的角色。当同排有多个友方角色时，科丝蒂会优先选择位置更靠右的角色（较低ID的格子）：
         </p>

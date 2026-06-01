@@ -1,14 +1,14 @@
 <script setup lang="ts">
 import { computed, provide, ref, watch } from 'vue'
 
-import { SkillLangKey } from '@/components/skill/snippetKeys'
 import SkillsSelection from '@/components/SkillsSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
+import { SkillLangKey } from '@/components/skill/snippetKeys'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { setupMechanicsContentMeta } from '@/utils/contentMeta'
-import { heroName, heroPortrait, mechanicEntries } from '@/utils/mechanics'
+import { setupGuideContentMeta } from '@/utils/contentMeta'
+import { guideEntries, heroName, heroPortrait } from '@/utils/guide'
 
 import '@/styles/content.css'
 
@@ -17,20 +17,20 @@ const props = defineProps<{ name?: string }>()
 
 const lang = useRouteLocale()
 provide(SkillLangKey, lang)
-setupMechanicsContentMeta(lang.value)
+setupGuideContentMeta(lang.value)
 
 const i18n = useI18nStore()
 
-// SSG-safe so the filtered roster (and its crawlable mechanics links) bakes into
+// SSG-safe so the filtered roster (and its crawlable guide links) bakes into
 // the static HTML, exactly as the skills browser does.
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeContentData()
 
-const entries = mechanicEntries()
-const mechanicSlugs = new Set(entries.map((e) => e.slug))
-// Roster pre-filtered to heroes that have a mechanics snippet.
-const mechanicsCharacters = computed(() =>
-  gameDataStore.characters.filter((c) => mechanicSlugs.has(c.name)),
+const entries = guideEntries()
+const guideSlugs = new Set(entries.map((e) => e.slug))
+// Roster pre-filtered to heroes that have a guide snippet.
+const guideCharacters = computed(() =>
+  gameDataStore.characters.filter((c) => guideSlugs.has(c.name)),
 )
 
 const slug = computed(() => (props.name ?? '').toLowerCase())
@@ -46,20 +46,20 @@ watch(slug, () => (expanded.value = false))
 
 <template>
   <main>
-    <div class="mechanics-layout">
+    <div class="guide-layout">
       <!-- .container + .content from content.css — same reader surface as SkillReader. -->
-      <div class="mech-reader-col">
-        <article v-for="e in displayedEntries" :key="e.slug" class="container mech-panel">
+      <div class="guide-reader-col">
+        <article v-for="e in displayedEntries" :key="e.slug" class="container guide-panel">
           <div class="content">
-            <div class="mech-entry-head">
+            <div class="guide-entry-head">
               <img
                 :src="heroPortrait(e.slug)"
                 :alt="heroName(e.slug, lang)"
-                class="mech-portrait"
+                class="guide-portrait"
                 loading="lazy"
               />
-              <h2 class="mech-name">{{ heroName(e.slug, lang) }}</h2>
-              <a :href="`/${lang}/skill/${e.slug}`" class="mech-go">
+              <h2 class="guide-name">{{ heroName(e.slug, lang) }}</h2>
+              <a :href="`/${lang}/skill/${e.slug}`" class="guide-go">
                 {{ i18n.t('app.skills') }}
               </a>
             </div>
@@ -70,10 +70,10 @@ watch(slug, () => (expanded.value = false))
 
       <BottomSheet v-model:expanded="expanded" :initial-expanded="!slug">
         <SkillsSelection
-          :characters="mechanicsCharacters"
+          :characters="guideCharacters"
           :lang
           :current-slug="slug"
-          route-base="mechanics"
+          route-base="guide"
         />
       </BottomSheet>
     </div>
@@ -82,7 +82,7 @@ watch(slug, () => (expanded.value = false))
 
 <style scoped>
 /* Mirrors SkillsBrowser's .skills-layout split. */
-.mechanics-layout {
+.guide-layout {
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -90,7 +90,7 @@ watch(slug, () => (expanded.value = false))
 }
 
 /* Left column stacks one snippet (a selected hero) or all of them (the index). */
-.mech-reader-col {
+.guide-reader-col {
   display: flex;
   flex-direction: column;
   gap: var(--stack-gap);
@@ -98,37 +98,47 @@ watch(slug, () => (expanded.value = false))
 }
 
 @media (min-width: 1220px) {
-  .mechanics-layout {
+  .guide-layout {
     flex-direction: row;
     align-items: flex-start;
   }
-  .mechanics-layout > .mech-reader-col {
+  .guide-layout > .guide-reader-col {
     flex: 0 0 660px;
     width: 660px;
   }
 }
 
 @media (min-width: 1600px) {
-  .mechanics-layout > .mech-reader-col {
+  .guide-layout > .guide-reader-col {
     flex-basis: 760px;
     width: 760px;
   }
 }
 
 @media (min-width: 1920px) {
-  .mechanics-layout > .mech-reader-col {
+  .guide-layout > .guide-reader-col {
     flex-basis: 860px;
     width: 860px;
   }
 }
 
 /* Reader surface: override content.css's modal background/centering, as SkillReader does. */
-.mech-panel {
+.guide-panel {
   background: #262626;
   margin: 0;
 }
 
-.mech-entry-head {
+/* The snippet's callout chrome (teal left border + tinted fill) exists to set it
+   apart from surrounding skill text on the skill page. Here each snippet is the
+   whole panel, so drop the chrome — the heading alone carries it. */
+.guide-panel :deep(.skill-snippet) {
+  padding: 0;
+  border-left: none;
+  background: none;
+  border-radius: 0;
+}
+
+.guide-entry-head {
   display: flex;
   align-items: center;
   gap: 0.7rem;
@@ -136,7 +146,7 @@ watch(slug, () => (expanded.value = false))
   padding-bottom: var(--spacing-sm);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.mech-portrait {
+.guide-portrait {
   width: 40px;
   height: 40px;
   border-radius: 50%;
@@ -144,13 +154,13 @@ watch(slug, () => (expanded.value = false))
   object-position: center 20%;
   border: 1px solid var(--color-border-light);
 }
-.mech-name {
+.guide-name {
   margin: 0;
   font-size: 20px;
   font-weight: 600;
 }
 /* Pill action so the full-skill-page link reads as a clear call-to-action. */
-.mech-go {
+.guide-go {
   margin-left: auto;
   font-size: 0.78rem;
   font-weight: 600;
@@ -165,7 +175,7 @@ watch(slug, () => (expanded.value = false))
 }
 /* Hover mirrors the skill page's tag chips: subtle fill, with teal text and no
    underline pinned so the global `a:hover` (red + underline) can't take over. */
-.mech-go:hover {
+.guide-go:hover {
   background: rgba(95, 196, 187, 0.1);
   color: #5fc4bb;
   text-decoration: none;
@@ -177,7 +187,7 @@ watch(slug, () => (expanded.value = false))
   main {
     padding-bottom: 96px;
   }
-  .mech-panel {
+  .guide-panel {
     max-width: 100% !important;
     border: none;
     box-shadow: none;
@@ -191,7 +201,7 @@ watch(slug, () => (expanded.value = false))
   main {
     padding-bottom: 88px;
   }
-  .mech-panel {
+  .guide-panel {
     border-radius: 0;
   }
   .content {

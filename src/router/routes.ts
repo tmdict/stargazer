@@ -26,9 +26,9 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
   },
   {
-    path: '/en/mechanics/:name?',
-    name: 'mechanics-en',
-    component: () => import('@/views/MechanicsView.vue'),
+    path: '/en/guide/:name?',
+    name: 'guide-en',
+    component: () => import('@/views/GuideView.vue'),
     props: true,
   },
   {
@@ -49,9 +49,9 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
   },
   {
-    path: '/zh/mechanics/:name?',
-    name: 'mechanics-zh',
-    component: () => import('@/views/MechanicsView.vue'),
+    path: '/zh/guide/:name?',
+    name: 'guide-zh',
+    component: () => import('@/views/GuideView.vue'),
     props: true,
   },
 ]

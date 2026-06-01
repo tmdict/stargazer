@@ -8,7 +8,7 @@ import { gridStyles, images } from './Daimon.data'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="mechanic-tile">
+      <SkillSnippet title-key="guide-tile">
         <p>
           戴蒙搜索自己正后方相邻格子上的队友，当同排有多个友方角色时，戴蒙会优先选择位置更靠左的角色（较高ID的格子）。
         </p>

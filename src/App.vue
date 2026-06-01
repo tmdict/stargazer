@@ -70,10 +70,10 @@ onUnmounted(() => {
           i18n.t('app.skills')
         }}</a>
         <a
-          :href="`/${i18n.currentLocale}/mechanics`"
+          :href="`/${i18n.currentLocale}/guide`"
           class="nav-text-link"
-          :class="{ active: route.path.includes('/mechanics') }"
-          >{{ i18n.t('app.mechanics') }}</a
+          :class="{ active: route.path.includes('/guide') }"
+          >{{ i18n.t('app.guide') }}</a
         >
         <a href="/wandwars" class="nav-text-link" :class="{ active: route.path === '/wandwars' }">{{
           i18n.t('wandwars.wand-wars')
