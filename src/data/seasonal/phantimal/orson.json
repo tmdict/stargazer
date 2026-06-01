@@ -2,5 +2,6 @@
   "id": 2,
   "name": "orson",
   "season": 7,
+  "range": 1,
   "faction": "mauler"
 }

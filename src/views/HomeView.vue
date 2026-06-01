@@ -330,6 +330,7 @@ const handleResetMap = () => {
               <SeasonalSelection
                 :artifacts="gameDataStore.artifacts"
                 :phantimals="gameDataStore.phantimals"
+                :is-draggable="true"
               />
             </div>
             <!-- Map Editor Tab -->

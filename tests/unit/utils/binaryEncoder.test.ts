@@ -52,6 +52,31 @@ describe('binaryEncoder', () => {
           a: [2, 4],
         },
       ],
+      [
+        'only phantimals',
+        {
+          p: [
+            [1, 3, 1],
+            [5, 2, 2],
+          ],
+        },
+      ],
+      [
+        'phantimals with characters and artifacts',
+        {
+          c: [[2, 100, 1]],
+          a: [2, 4],
+          p: [[7, 1, 2]],
+        },
+      ],
+      [
+        'phantimals with display flags',
+        {
+          t: [[1, 1]],
+          p: [[3, 4, 1]],
+          d: 0b1010,
+        },
+      ],
     ])('encodes and decodes %s', (_, state) => {
       const encoded = encodeToBinary(state as GridState)
       const decoded = decodeFromBinary(encoded)

@@ -30,7 +30,10 @@ describe('companion', () => {
     it('identifies companion IDs correctly', () => {
       expect(isCompanionId(grid, 10000)).toBe(true)
       expect(isCompanionId(grid, 10001)).toBe(true)
-      expect(isCompanionId(grid, 20000)).toBe(true)
+      // Upper-bounded by the phantimal namespace so phantimal IDs aren't treated
+      // as companions.
+      expect(isCompanionId(grid, grid.phantimalIdOffset - 1)).toBe(true)
+      expect(isCompanionId(grid, grid.phantimalIdOffset)).toBe(false)
 
       expect(isCompanionId(grid, 100)).toBe(false)
       expect(isCompanionId(grid, 9999)).toBe(false)
@@ -305,11 +308,17 @@ describe('companion', () => {
       expect(isCompanionId(grid, grid.companionIdOffset - 1)).toBe(false)
     })
 
-    it('handles very large companion IDs', () => {
-      const largeCompanionId = 99999
+    it('handles large companion IDs within the namespace', () => {
+      // Companions live between the companion offset and the phantimal offset.
+      const largeCompanionId = grid.phantimalIdOffset - 1 // 19999
       expect(isCompanionId(grid, largeCompanionId)).toBe(true)
-      // Uses modulo, so 99999 % 10000 = 9999
+      // Uses modulo, so 19999 % 10000 = 9999
       expect(getMainCharacterId(grid, largeCompanionId)).toBe(9999)
+    })
+
+    it('treats phantimal-range IDs as non-companions', () => {
+      expect(isCompanionId(grid, grid.phantimalIdOffset)).toBe(false)
+      expect(isCompanionId(grid, grid.phantimalIdOffset + 5)).toBe(false)
     })
 
     it('handles multiple main characters with companions', () => {

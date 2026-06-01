@@ -1,6 +1,7 @@
 import type { Grid, GridTile } from '../grid'
 import { State } from '../types/state'
 import { Team } from '../types/team'
+import { isPhantimalId } from './phantimal'
 
 // Character queries
 
@@ -89,9 +90,23 @@ export function getAvailableTeamSize(grid: Grid, team: Team): number {
 }
 
 export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
+  // Phantimals don't count toward team size and are capped at one per team by the
+  // placement layer, so capacity/duplicate checks don't apply to them.
+  if (isPhantimalId(characterId)) return true
   const available = getAvailableTeamSize(grid, team)
   if (available <= 0) return false
   return !isCharacterOnTeam(grid, characterId, team)
+}
+
+// Hex of the team's on-field phantimal, or null. Phantimals are capped at one per
+// team, so this identifies the one to clear before placing a replacement.
+export function findTeamPhantimalHex(grid: Grid, team: Team): number | null {
+  for (const tile of grid.getAllTiles()) {
+    if (tile.team === team && tile.characterId !== undefined && isPhantimalId(tile.characterId)) {
+      return tile.hex.getId()
+    }
+  }
+  return null
 }
 
 export function canPlaceCharacterOnTile(grid: Grid, hexId: number, team: Team): boolean {
