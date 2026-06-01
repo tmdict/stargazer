@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
 
 import { useBottomSheet } from '@/composables/useBottomSheet'
 
@@ -38,6 +38,16 @@ const {
   onMouseDown,
 } = useBottomSheet({ peek, expanded: expandedFraction, initialExpanded })
 
+// Expose peek + expanded size as CSS vars so the pre-mount CSS fallback derives
+// from the same props the composable uses (single source of truth, no duplicated
+// magic numbers). SSR-safe (no window); the composable overrides height/transform
+// inline once mounted. Mirrors the composable's fraction(<1)/px(>=1) semantics.
+const sheetVars = computed(() => ({
+  '--sheet-peek': `${peek}px`,
+  '--sheet-expanded':
+    expandedFraction < 1 ? `${expandedFraction * 100}vh` : `${expandedFraction}px`,
+}))
+
 watch(sheetExpanded, (v) => (expanded.value = v))
 watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
 
@@ -57,7 +67,7 @@ defineExpose({ expand })
 <template>
   <!-- Tap-scrim behind the expanded sheet (mobile only); a tap collapses it. -->
   <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
-  <div class="bottom-sheet" :class="{ 'is-dragging': dragging }" :style="sheetStyle">
+  <div class="bottom-sheet" :class="{ 'is-dragging': dragging }" :style="[sheetVars, sheetStyle]">
     <div
       class="sheet-handle-area"
       @touchstart.passive="onTouchStart"
@@ -126,14 +136,14 @@ defineExpose({ expand })
     left: 0;
     right: 0;
     bottom: 0;
-    height: 62vh;
+    height: var(--sheet-expanded);
     padding: 0;
     border-radius: var(--radius-large) var(--radius-large) 0 0;
     box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
     z-index: 800;
     overflow: hidden;
-    /* Collapsed peek before the composable engages; it sets the same inline. */
-    transform: translateY(calc(62vh - 56px));
+    /* Collapsed peek before the composable engages; it overrides this inline. */
+    transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .bottom-sheet.is-dragging {
