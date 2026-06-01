@@ -53,8 +53,8 @@ export function setupGuideContentMeta(locale: 'en' | 'zh'): void {
   const title = locale === 'en' ? 'Guide' : '机制'
   const description =
     locale === 'en'
-      ? 'How each AFK Journey hero’s skill actually targets, buffs, and positions — hand-authored mechanics explanations with grid diagrams.'
-      : '剑与远征启程英雄技能的实际机制详解：目标选择、增益与站位，附带格子示意图。'
+      ? 'In-depth guide to AFK Journey hero skill mechanics - targeting, buffs, and positioning, illustrated with grid diagrams.'
+      : '剑与远征启程英雄技能机制详解：目标选择、增益与站位，附带格子示意图。'
   const url = 'guide'
 
   useHead({

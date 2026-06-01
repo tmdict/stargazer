@@ -90,9 +90,10 @@ function handleStripClick(e: MouseEvent) {
   }
   /* Tag chips ("Energy Recharge", etc.) and the magic/physical damage filter
      are hidden on mobile to save space — the roster's only mobile surface is
-     the skills sheet. */
-  .filter-tags,
-  .filter-damage {
+     the skills sheet. Scoped under their parents so these win the specificity
+     tie against the children's own `display` rules regardless of bundle order. */
+  .filter-strip .filter-tags,
+  .filters-row .filter-damage {
     display: none;
   }
 }

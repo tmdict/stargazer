@@ -358,7 +358,7 @@ const handleResetMap = () => {
    BottomSheet; TabNavigation owns its own in-sheet fill/scroll. */
 @media (max-width: 768px) {
   main {
-    padding-bottom: 96px;
+    padding-bottom: 64px;
   }
 
   .sections-container > .section:first-child {
@@ -413,7 +413,7 @@ const handleResetMap = () => {
 
 @media (max-width: 480px) {
   main {
-    padding-bottom: 88px;
+    padding-bottom: 64px;
   }
   .sections-container > .section:first-child {
     padding-left: var(--spacing-xs);

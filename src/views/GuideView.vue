@@ -185,7 +185,7 @@ watch(slug, () => (expanded.value = false))
    — matching SkillReader/SkillsBrowser. */
 @media (max-width: 768px) {
   main {
-    padding-bottom: 96px;
+    padding-bottom: 64px;
   }
   .guide-panel {
     max-width: 100% !important;
@@ -199,7 +199,7 @@ watch(slug, () => (expanded.value = false))
 }
 @media (max-width: 480px) {
   main {
-    padding-bottom: 88px;
+    padding-bottom: 64px;
   }
   .guide-panel {
     border-radius: 0;
