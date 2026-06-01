@@ -82,10 +82,10 @@ onUnmounted(() => {
         {{ i18n.t('app.characters') }}
       </button>
       <button
-        @click="setActiveTab('artifacts')"
-        :class="['tab-btn', { active: activeTab === 'artifacts' }]"
+        @click="setActiveTab('seasonal')"
+        :class="['tab-btn', { active: activeTab === 'seasonal' }]"
       >
-        {{ i18n.t('app.artifacts') }}
+        {{ i18n.t('app.seasonal') }}
       </button>
       <button
         @click="setActiveTab('mapEditor')"

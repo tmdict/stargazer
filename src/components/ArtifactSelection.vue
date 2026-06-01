@@ -2,16 +2,13 @@
 import { computed } from 'vue'
 
 import ArtifactIcon from './ArtifactIcon.vue'
-import PhantimalSelection from './PhantimalSelection.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { ArtifactType } from '@/lib/types/artifact'
-import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]
-  phantimals: readonly PhantimalType[]
 }>()
 
 const { selectedTeam, artifactStore } = useSelectionState()
@@ -76,8 +73,6 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
         </div>
       </div>
     </section>
-
-    <PhantimalSelection :phantimals />
   </div>
 </template>
 
@@ -86,17 +81,6 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
-  min-height: var(--panel-min-height);
-}
-
-/* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
-   stacks naturally and lets the page scroll. */
-@media (min-width: 1220px) {
-  .artifact-selection {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-  }
 }
 
 .artifact-group {

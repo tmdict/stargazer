@@ -2,13 +2,13 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import ArtifactSelection from '@/components/ArtifactSelection.vue'
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import DebugPanel from '@/components/debug/DebugPanel.vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import MapEditor from '@/components/MapEditor.vue'
+import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabNavigation from '@/components/ui/TabNavigation.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
@@ -49,7 +49,7 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // Tab state management
-const validTabs = ['characters', 'artifacts', 'mapEditor', 'debug'] as const
+const validTabs = ['characters', 'seasonal', 'mapEditor', 'debug'] as const
 type ValidTab = (typeof validTabs)[number]
 
 // The `?t=skills` query param resolves to the dedicated /skills route.
@@ -317,9 +317,9 @@ const handleResetMap = () => {
             <div v-show="activeTab === 'characters'" class="tab-panel">
               <CharacterSelection :characters="gameDataStore.characters" :isDraggable="true" />
             </div>
-            <!-- Artifacts Tab -->
-            <div v-show="activeTab === 'artifacts'" class="tab-panel">
-              <ArtifactSelection
+            <!-- Seasonal Tab -->
+            <div v-show="activeTab === 'seasonal'" class="tab-panel">
+              <SeasonalSelection
                 :artifacts="gameDataStore.artifacts"
                 :phantimals="gameDataStore.phantimals"
               />
@@ -376,7 +376,7 @@ const handleResetMap = () => {
    it) lives in BottomSheet.
 
    NOTE: this breakpoint must stay in sync with the @media rules in each
-   tab-content panel component (CharacterSelection, ArtifactSelection,
+   tab-content panel component (CharacterSelection, SeasonalSelection,
    MapEditor, DebugPanel) and .tab-panel below — they gate the flex-fill
    + internal scroll behavior on the same condition. */
 @media (min-width: 1220px) {
