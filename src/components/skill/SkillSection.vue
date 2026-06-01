@@ -14,7 +14,7 @@ interface RefinementRow {
 }
 
 const props = defineProps<{
-  heading: string
+  heading?: string
   slotTags?: { name: string; label: string }[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
@@ -38,8 +38,8 @@ const renderedRefinements = computed(() =>
 
 <template>
   <section class="skill-section">
-    <header class="skill-section-header">
-      <h2 class="skill-section-heading">{{ heading }}</h2>
+    <header v-if="heading || slotTags?.length" class="skill-section-header">
+      <h2 v-if="heading" class="skill-section-heading">{{ heading }}</h2>
       <span v-if="slotTags?.length" class="skill-section-chips">
         <RouterLink
           v-for="tag in slotTags"
