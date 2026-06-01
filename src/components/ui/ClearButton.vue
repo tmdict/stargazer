@@ -50,13 +50,17 @@ const handleClick = () => {
   transform: scale(0.95);
 }
 
-/* Mobile: icon-only round button, matching GridControls' action buttons. */
+/* Mobile: icon-only round button, matching GridControls' action buttons. The
+   desktop side-margin is dropped so spacing comes purely from the row's flex
+   gap — otherwise Clear sits farther from the actions than they do from each
+   other. */
 @media (max-width: 768px) {
   .clear-all-btn {
     border-radius: 999px;
     padding: 0;
     width: 40px;
     height: 40px;
+    margin: 0;
     justify-content: center;
   }
   .clear-all-btn .btn-text {

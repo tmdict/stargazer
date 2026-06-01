@@ -72,7 +72,7 @@ onUnmounted(() => {
         <a
           :href="`/${i18n.currentLocale}/mechanics`"
           class="nav-text-link"
-          :class="{ active: route.path.endsWith('/mechanics') }"
+          :class="{ active: route.path.includes('/mechanics') }"
           >{{ i18n.t('app.mechanics') }}</a
         >
         <a href="/wandwars" class="nav-text-link" :class="{ active: route.path === '/wandwars' }">{{

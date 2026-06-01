@@ -13,6 +13,10 @@ const props = defineProps<{
   lang: 'en' | 'zh'
 }>()
 
+// Tapping the empty placeholder reveals the roster (the mobile sheet); the
+// parent decides what that means.
+const emit = defineEmits<{ emptyClick: [] }>()
+
 const i18n = useI18nStore()
 
 // hasSkillLocale also covers the null-selection case (the /skills index).
@@ -25,7 +29,7 @@ const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? p
     <div class="content">
       <!-- :key remounts the chip strip on each hero (SkillSections caches activeChips). -->
       <SkillSections v-if="visibleSlug" :key="visibleSlug" :slug="visibleSlug" :lang />
-      <div v-else class="empty-state">
+      <div v-else class="empty-state" @click="emit('emptyClick')">
         <IconInfo :size="40" class="empty-icon" />
         <p class="empty-tip">{{ i18n.t('app.skill-empty-hint') }}</p>
       </div>
@@ -64,18 +68,32 @@ const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? p
   max-width: 320px;
 }
 
-/* Edge-to-edge on small screens, matching the grid section's responsive
-   chrome. Overrides modal.css's `max-width: 90% !important`. */
+/* Mobile: drop the modal card chrome (border, shadow, large radius) so the
+   reader fills the width edge-to-edge like the grid page's panel, and tighten
+   the prose inset so it doesn't waste horizontal space. Mirrors `.section`'s
+   responsive chrome (radius-medium at ≤768, flat at ≤480). Overrides
+   content.css's `max-width: 90% !important` and the card border/shadow. */
 @media (max-width: 768px) {
   .container {
     max-width: 100% !important;
+    border: none;
+    box-shadow: none;
+    border-radius: var(--radius-medium);
+  }
+  .content {
+    padding: var(--spacing-lg);
+  }
+  /* On mobile the empty placeholder is a tap target that reveals the roster. */
+  .empty-state {
+    cursor: pointer;
   }
 }
 @media (max-width: 480px) {
   .container {
     border-radius: 0;
-    border-left: 0;
-    border-right: 0;
+  }
+  .content {
+    padding: var(--spacing-md);
   }
 }
 </style>

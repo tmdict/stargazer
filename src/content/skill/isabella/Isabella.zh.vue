@@ -8,7 +8,7 @@ import { gridStyles, images } from './Isabella.data'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>
           网格由多个横排组成，第15排（格子44、45）为敌方队伍的最后一排，第1排（格子1、2）为友方队伍的最后一排。
         </p>

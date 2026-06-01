@@ -6,7 +6,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>维拉会自动识别并锁定距离她所在格子最远的对手。</p>
         <p>距离计算使用六边形网格距离来确定最远的对手。</p>
         <p>当多个对手距离相等时：</p>

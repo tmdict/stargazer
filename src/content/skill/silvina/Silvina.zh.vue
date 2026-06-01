@@ -8,7 +8,7 @@ import { gridStyles, images } from './Silvina.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>西尔维娜首先检查她的对称格子（网格的镜像位置）。如果那里有对手，则选择为目标。</p>
         <p>如果对称格子是空的，西尔维娜会以顺时针螺旋模式搜索离该位置最近的对手：</p>
         <ul>
