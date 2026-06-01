@@ -1,0 +1,10 @@
+{
+  "id": 13,
+  "name": "arc-burst",
+  "season": 7,
+  "stats": {
+    "hp": 13.2,
+    "def": 41.9,
+    "atk": 22.1
+  }
+}

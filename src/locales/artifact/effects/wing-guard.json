@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Deploys a protective ward on the allied side, increasing the ATK of the allies within by [[20%]] and making them [[steadfast]]. The ward starts with HP equal to [[100%]] of the initial allied Team HP, and absorbs [[70%]] of the damage taken by allies inside it. It cannot be healed and loses [[5%]] HP every second.",
+    "zh": "战斗开始时在己方半场展开防护结界，结界中的友军提高[[20%]]攻击力且处于[[稳定]]状态。结界具有[[100%]]己方初始队伍生命值，能够代替其中友军承受其受到的[[70%]]伤害，结界无法恢复生命值且每秒失去[[5%]]生命值。"
+  },
+  {
+    "en": "Increases the ward's HP to [[110%]] of the initial Team HP.",
+    "zh": "结界生命值提高至[[110%]]初始队伍生命值。"
+  },
+  {
+    "en": "Increases the ward's HP to [[120%]] of the initial Team HP.",
+    "zh": "结界生命值提高至[[120%]]初始队伍生命值。"
+  },
+  {
+    "en": "Increases the ward's HP to [[130%]] of the initial Team HP.",
+    "zh": "结界生命值提高至[[130%]]初始队伍生命值。"
+  },
+  {
+    "en": "Increases the ward's HP to [[140%]] of the initial Team HP.",
+    "zh": "结界生命值提高至[[140%]]初始队伍生命值。"
+  },
+  {
+    "en": "Increases the ward's HP to [[150%]] of the initial Team HP.",
+    "zh": "结界生命值提高至[[150%]]初始队伍生命值。"
+  },
+  {
+    "en": "While the ward exists, restores [[15]] Energy per second to allies inside, and reduces [[15]] Energy per second from enemies outside.",
+    "zh": "结界存在时，每秒为结界内的友军恢复[[15]]点能量，扣除结界外的敌人[[15]]点能量。"
+  }
+]

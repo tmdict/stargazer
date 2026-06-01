@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Designates the [[frontmost]] ally as the vanguard. When a battle starts, adopts a tactic based on the vanguard's damage type, increasing all allies' physical or magic damage by [[20%]]. In addition, when allies deal the corresponding type of damage, heals them for HP equal to [[30%]] of the damage dealt. The vanguard is also healed for [[20%]] of the damage dealt.",
+    "zh": "指定布阵[[最靠前]]的友军为先锋，战斗开始时根据先锋的特征（造成伤害的类型）制定战术，使所有友军造成的物理或魔法伤害提高[[20%]]，并且在造成对应伤害时恢复相当于伤害量[[30%]]的生命值，同时额外为先锋恢复相当于伤害量[[20%]]的生命值。"
+  },
+  {
+    "en": "Increases the damage bonus provided to [[22%]].",
+    "zh": "提供的伤害增幅提高至[[22%]]。"
+  },
+  {
+    "en": "Increases the damage bonus provided to [[24%]].",
+    "zh": "提供的伤害增幅提高至[[24%]]。"
+  },
+  {
+    "en": "Increases the damage bonus provided to [[26%]].",
+    "zh": "提供的伤害增幅提高至[[26%]]。"
+  },
+  {
+    "en": "Increases the damage bonus provided to [[28%]].",
+    "zh": "提供的伤害增幅提高至[[28%]]。"
+  },
+  {
+    "en": "Increases the damage bonus provided to [[30%]].",
+    "zh": "提供的伤害增幅提高至[[30%]]。"
+  },
+  {
+    "en": "The vanguard gains an extra [[20%]] [[basic stats]]. After dealing total damage equal to [[500%]] of the caster's initial ATK, permanently increases all allies' ATK by [[10%]] of the vanguard's ATK, up to [[15%]] of the caster's initial ATK.",
+    "zh": "先锋额外提高[[20%]][[基础属性]]，并在累计造成自身初始攻击力[[500%]]的伤害后，使所有友军永久提高相当于先锋[[10%]]的攻击力（不超过自身初始攻击力的[[15%]]）。"
+  }
+]

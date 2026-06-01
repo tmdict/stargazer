@@ -1,0 +1,30 @@
+[
+  {
+    "en": "When a battle starts, grants a shield equal to [[100%]] of [[Team ATK]] to both the [[frontmost]] and the [[rearmost]] allied heroes, lasting up to [[12]]s. While the shield is active, the shielded allies remain [[unaffected]]. Additionally, the frontmost ally gains [[75%]] Phys DEF and Magic DEF, while the rearmost ally gains [[60]] Haste.",
+    "zh": "战斗开始时，为[[最靠前]]、[[最靠后]]的各一名友方英雄施加一个[[队伍攻击力]][[100%]]的庇护之盾，最多持续[[12]]秒。庇护之盾存在期间，其拥有者处于[[霸体]]状态，并且其中靠前的一方还会提升[[75%]]护甲与魔抗、靠后的一方还会提升[[60]]点急速。"
+  },
+  {
+    "en": "Increases the shield value to [[110%]] of the [[Team ATK]].",
+    "zh": "庇护之盾能够抵挡的伤害量提高至[[队伍攻击力]]的[[110%]]。"
+  },
+  {
+    "en": "Increases the shield value to [[120%]] of the [[Team ATK]].",
+    "zh": "庇护之盾能够抵挡的伤害量提高至[[队伍攻击力]]的[[120%]]。"
+  },
+  {
+    "en": "Increases the shield value to [[130%]] of the [[Team ATK]].",
+    "zh": "庇护之盾能够抵挡的伤害量提高至[[队伍攻击力]]的[[130%]]。"
+  },
+  {
+    "en": "Increases the shield value to [[140%]] of the [[Team ATK]].",
+    "zh": "庇护之盾能够抵挡的伤害量提高至[[队伍攻击力]]的[[140%]]。"
+  },
+  {
+    "en": "Increases the shield value to [[150%]] of the [[Team ATK]].",
+    "zh": "庇护之盾能够抵挡的伤害量提高至[[队伍攻击力]]的[[150%]]。"
+  },
+  {
+    "en": "After these two allies [[assist or defeat]] a non-summoned enemy for the first time, they gain extra shield value equal to [[70%]] of [[Team ATK]], and the shield's duration is extended by [[6]]s.",
+    "zh": "这两名友军首次[[参与击败]]非召唤物敌人后，使庇护之盾额外获得[[队伍攻击力]][[70%]]的护盾量，并且持续时间延长[[6]]秒。"
+  }
+]

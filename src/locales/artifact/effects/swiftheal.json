@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[6]]s into a battle, casts a healing wave that restores HP equal to [[50%]] of [[Team ATK]] to the weakest ally every [[10]]s. The healing wave then bounces to the next weakest ally, healing them for a reduced amount. The healing wave can bounce up to [[2]] times, with each bounce reducing the healing amount by [[25%]].",
+    "zh": "从战斗开始第[[6]]秒起，每隔[[10]]秒，释放一道治疗波，为最虚弱的友军恢复[[队伍攻击力]][[50%]]的生命值。治疗波随后会弹射[[2]]次，每次对另一名最虚弱的友军产生治疗。每弹射一次，该技能产生的治疗效果便会衰减[[25%]]。"
+  },
+  {
+    "en": "Increases the healing amount to [[55%]] of [[Team ATK]].",
+    "zh": "治疗量提高至[[55%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the healing amount to [[60%]] of [[Team ATK]].",
+    "zh": "治疗量提高至[[60%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the healing amount to [[65%]] of [[Team ATK]].",
+    "zh": "治疗量提高至[[65%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the healing amount to [[70%]] of [[Team ATK]].",
+    "zh": "治疗量提高至[[70%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the healing amount to [[75%]] of [[Team ATK]].",
+    "zh": "治疗量提高至[[75%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the healing wave's maximum bounces to [[3]] and reduces the healing reduction per bounce to [[20%]].",
+    "zh": "治疗波弹射的次数提高至[[3]]次，并且治疗量随每次弹射的衰减比例减少至[[20%]]。"
+  }
+]

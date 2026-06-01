@@ -1,0 +1,10 @@
+{
+  "id": 18,
+  "name": "valorshield",
+  "season": 7,
+  "stats": {
+    "atk": 16.2,
+    "hp": 24.3,
+    "atk-spd": 18.2
+  }
+}

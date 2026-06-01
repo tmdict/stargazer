@@ -1,7 +1,7 @@
 [
   {
     "en": "[[3]]s into a battle, deals magic damage equal to [[25%]] of the [[Team ATK]] to the [[2]] [[rearmost]] enemies every [[12]]s, making them unable to move or act for [[1.5]]s.",
-    "zh": "从战斗开始第[[3]]秒起，每隔[[12]]秒，对敌方[[最靠后]]的2名英雄造成[[队伍攻击力25%]]的魔法伤害，并将其禁锢[[1.5]]秒。被禁锢的敌人无法行动。"
+    "zh": "从战斗开始第[[3]]秒起，每隔[[12]]秒，对敌方[[最靠后]]的[[2]]名英雄造成[[队伍攻击力]][[25%]]的魔法伤害，并将其禁锢[[1.5]]秒。被禁锢的敌人无法行动。"
   },
   {
     "en": "Increases Prison duration to [[2.5]]s.",

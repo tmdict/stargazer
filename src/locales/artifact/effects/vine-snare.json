@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, releases vines at the [[frontmost]] enemy every [[10]]s. The vines entangle the target, making them unable to move or act for [[2]]s. After that, the vines spread to the nearest [[2]] other enemies, entangling them for [[2]]s. During entanglement, the vines deal total magic damage equal to [[40%]] of [[Team ATK]] every second.",
+    "zh": "战斗开始第[[3]]秒起，每隔[[10]]秒，对[[最靠前]]的敌人释放藤蔓，藤蔓会缠绕目标使其无法行动持续[[2]]秒，持续时间结束后藤蔓会蔓延至距离最近的其他[[2]]名敌人身上，再次缠绕目标[[2]]秒。藤蔓缠绕期间每秒总共造成[[队伍攻击力]][[40%]]的魔法伤害。"
+  },
+  {
+    "en": "Increases the vines' damage dealt every second to [[44%]] of [[Team ATK]].",
+    "zh": "藤蔓每秒造成的伤害量提高至[[队伍攻击力]][[44%]]。"
+  },
+  {
+    "en": "Increases the vines' damage dealt every second to [[48%]] of [[Team ATK]].",
+    "zh": "藤蔓每秒造成的伤害量提高至[[队伍攻击力]][[48%]]。"
+  },
+  {
+    "en": "Increases the vines' damage dealt every second to [[52%]] of [[Team ATK]].",
+    "zh": "藤蔓每秒造成的伤害量提高至[[队伍攻击力]][[52%]]。"
+  },
+  {
+    "en": "Increases the vines' damage dealt every second to [[56%]] of [[Team ATK]].",
+    "zh": "藤蔓每秒造成的伤害量提高至[[队伍攻击力]][[56%]]。"
+  },
+  {
+    "en": "Increases the vines' damage dealt every second to [[60%]] of [[Team ATK]].",
+    "zh": "藤蔓每秒造成的伤害量提高至[[队伍攻击力]][[60%]]。"
+  },
+  {
+    "en": "When entangling enemies, the vines also absorb their HP and shield value equal to [[30%]] of [[Team ATK]] every second, while reducing their Vitality by [[40]] for [[8]]s.",
+    "zh": "藤蔓缠绕期间每秒还会吸收敌人[[30%]][[队伍攻击力]]的生命值及护盾，并使其受愈降低[[40]]点持续[[8]]秒。"
+  }
+]

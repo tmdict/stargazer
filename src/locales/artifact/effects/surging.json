@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, selects a 3-tile wide line that covers the most allies and enemies every [[8]]s, firing a light beam towards the enemy side of the battlefield. The beam deals magic damage equal to [[60%]] of [[Team ATK]] to all enemies in its path, and grants allies in its path a shield equal to [[50%]] of [[Team ATK]] for [[6]]s.",
+    "zh": "从战斗开始第[[3]]秒起，每隔[[8]]秒，选择覆盖敌我角色最多的3格宽度轴线，朝敌方阵营方向发射光束，光束对路径上的所有敌人造成[[60%]][[队伍攻击力]]的魔法伤害，对路径上的所有友军施加[[50%]][[队伍攻击力]]的护盾，持续[[6]]秒。"
+  },
+  {
+    "en": "Increases the beam damage to [[65%]] of [[Team ATK]], and shield value to [[55%]] of [[Team ATK]].",
+    "zh": "光束伤害提升至[[65%]][[队伍攻击力]]，护盾量提升至[[55%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the beam damage to [[70%]] of [[Team ATK]], and shield value to [[60%]] of [[Team ATK]].",
+    "zh": "光束伤害提升至[[70%]][[队伍攻击力]]，护盾量提升至[[60%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the beam damage to [[75%]] of [[Team ATK]], and shield value to [[65%]] of [[Team ATK]].",
+    "zh": "光束伤害提升至[[75%]][[队伍攻击力]]，护盾量提升至[[65%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the beam damage to [[80%]] of [[Team ATK]], and shield value to [[70%]] of [[Team ATK]].",
+    "zh": "光束伤害提升至[[80%]][[队伍攻击力]]，护盾量提升至[[70%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Increases the beam damage to [[85%]] of [[Team ATK]], and shield value to [[75%]] of [[Team ATK]].",
+    "zh": "光束伤害提升至[[85%]][[队伍攻击力]]，护盾量提升至[[75%]][[队伍攻击力]]。"
+  },
+  {
+    "en": "Every time this skill is cast, increases the shield value by an extra [[30%]] of [[Team ATK]] if the total HP lost by all affected allies since the last cast exceeds [[20%]] of the team's total initial max HP.",
+    "zh": "每次释放该技能时，若所有友军相比上次释放该技能时累计损失的生命值超过了己方初始生命上限之和的[[20%]]，则护盾量额外提高[[30%]][[队伍攻击力]]。"
+  }
+]

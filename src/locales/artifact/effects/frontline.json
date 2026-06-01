@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Commands allies to charge when a battle starts, increasing their movement speed by [[100%]] and Haste by [[20]] for [[10]]s. When an allied hero enters the enemy side of the battlefield for the first time, grants them a permanent shield equal to [[100%]] of [[Team ATK]].\nWhen [[3]] different allied heroes have entered the enemy side of the battlefield, places a banner of inspiration there. The banner increases the damage of all allies by [[18%]] and reduces their damage taken by [[20%]] while they are on the enemy side.",
+    "zh": "战斗开始时号令己方突击，使己方移速加快[[100%]]并提高[[20]]点急速，持续[[10]]秒。每当一名友方英雄首次进入敌方半场时，为其施加一个[[队伍攻击力]][[100%]]的永久护盾。\n当累计有[[3]]名不同的友方英雄进入过敌方半场后，在敌方半场升起一面永久的鼓舞旗帜，使所有位于敌方半场的友军造成伤害提高[[18%]]、受到伤害降低[[20%]]。"
+  },
+  {
+    "en": "Increases the damage buff from the banner of inspiration to [[20%]].",
+    "zh": "鼓舞旗帜使位于敌方半场的友军造成伤害提高至[[20%]]。"
+  },
+  {
+    "en": "Increases the damage buff from the banner of inspiration to [[22%]].",
+    "zh": "鼓舞旗帜使位于敌方半场的友军造成伤害提高至[[22%]]。"
+  },
+  {
+    "en": "Increases the damage buff from the banner of inspiration to [[24%]].",
+    "zh": "鼓舞旗帜使位于敌方半场的友军造成伤害提高至[[24%]]。"
+  },
+  {
+    "en": "Increases the damage buff from the banner of inspiration to [[26%]].",
+    "zh": "鼓舞旗帜使位于敌方半场的友军造成伤害提高至[[26%]]。"
+  },
+  {
+    "en": "Increases the damage buff from the banner of inspiration to [[28%]].",
+    "zh": "鼓舞旗帜使位于敌方半场的友军造成伤害提高至[[28%]]。"
+  },
+  {
+    "en": "After an ally enters the enemy side of the battlefield for the first time, they also become [[unaffected]] for [[6]]s. Allies on the enemy side gain an extra [[30]] Life Drain.",
+    "zh": "友军首次进入敌方半场后还会进入[[霸体]]状态持续[[6]]秒。位于敌方半场的友军，额外提高[[30]]点生命汲取。"
+  }
+]
