@@ -3,14 +3,17 @@ import { defineStore } from 'pinia'
 
 import {
   canPlaceCharacterOnTeam,
+  findTeamPhantimalHex,
   getCharacterCount,
   getCharacterPlacements,
+  getCharacterTeam,
   getMaxTeamSize,
   getTeamCharacters,
   getTilesWithCharacters,
   hasCharacter,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
+import { isPhantimalId } from '@/lib/characters/phantimal'
 import { executeAutoPlaceCharacter, executePlaceCharacter } from '@/lib/characters/place'
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
@@ -86,6 +89,29 @@ export const useCharacterStore = defineStore('character', () => {
   const autoPlaceCharacter = (characterId: number, team: Team): boolean =>
     executeAutoPlaceCharacter(grid, skillManager, characterId, team)
 
+  // Phantimals are capped at one per team: clear the team's current phantimal
+  // (unless it's the one we're about to (re)place) before adding a new one.
+  const clearTeamPhantimal = (team: Team, exceptHexId?: number): void => {
+    const existing = findTeamPhantimalHex(grid, team)
+    if (existing !== null && existing !== exceptHexId) {
+      executeRemoveCharacter(grid, skillManager, existing)
+    }
+  }
+
+  const placePhantimalOnHex = (
+    hexId: number,
+    phantimalId: number,
+    team: Team = Team.ALLY,
+  ): boolean => {
+    clearTeamPhantimal(team, hexId)
+    return executePlaceCharacter(grid, skillManager, hexId, phantimalId, team)
+  }
+
+  const autoPlacePhantimal = (phantimalId: number, team: Team): boolean => {
+    clearTeamPhantimal(team)
+    return executeAutoPlaceCharacter(grid, skillManager, phantimalId, team)
+  }
+
   // Dispatch a drop payload to the right placement primitive.
   // Grid-source drops swap-or-move; selection drops validate team capacity then place.
   const handleCharacterDrop = (
@@ -94,12 +120,25 @@ export const useCharacterStore = defineStore('character', () => {
   ): boolean => {
     const { character, characterId } = payload
     if (character.sourceHexId !== undefined) {
-      return hasCharacter(grid, targetHexId)
-        ? swapCharacters(character.sourceHexId, targetHexId)
-        : moveCharacter(character.sourceHexId, targetHexId, characterId)
+      if (hasCharacter(grid, targetHexId)) {
+        return swapCharacters(character.sourceHexId, targetHexId)
+      }
+      // Moving a phantimal onto an empty cell on the other team must preserve the
+      // one-per-team rule (a swap already does, since it exchanges occupants).
+      if (isPhantimalId(characterId)) {
+        const destTeam = getTeamFromTileState(gridStore.getTile(targetHexId).state)
+        const sourceTeam = getCharacterTeam(grid, character.sourceHexId)
+        if (destTeam !== null && destTeam !== sourceTeam) {
+          clearTeamPhantimal(destTeam, character.sourceHexId)
+        }
+      }
+      return moveCharacter(character.sourceHexId, targetHexId, characterId)
     }
     const team = getTeamFromTileState(gridStore.getTile(targetHexId).state)
     if (team === null) return false
+    if (isPhantimalId(characterId)) {
+      return placePhantimalOnHex(targetHexId, characterId, team)
+    }
     if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
     return placeCharacterOnHex(targetHexId, characterId, team)
   }
@@ -134,6 +173,8 @@ export const useCharacterStore = defineStore('character', () => {
     swapCharacters,
     getTilesWithCharacters: getTilesWithCharactersStore,
     autoPlaceCharacter,
+    placePhantimalOnHex,
+    autoPlacePhantimal,
     handleHexClick,
     handleCharacterDrop,
   }

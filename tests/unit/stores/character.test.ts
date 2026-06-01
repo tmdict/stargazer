@@ -1,6 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -198,5 +199,53 @@ describe('characterStore.handleHexClick', () => {
 
     expect(ok).toBe(true)
     expect(gridStore.getTile(enemyTile.getId()).characterId).toBeUndefined()
+  })
+})
+
+describe('characterStore phantimals', () => {
+  let store: ReturnType<typeof useCharacterStore>
+  let gridStore: ReturnType<typeof useGridStore>
+
+  const allyTiles = () =>
+    gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY)
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    gridStore = useGridStore()
+    store = useCharacterStore()
+  })
+
+  it('places a phantimal without consuming team size', () => {
+    const tiles = allyTiles()
+    const before = store.availableAlly
+    const ok = store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
+
+    expect(ok).toBe(true)
+    expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBe(toPhantimalId(1))
+    expect(store.availableAlly).toBe(before) // unchanged by the phantimal
+  })
+
+  it('keeps at most one phantimal per team (replace on add)', () => {
+    const tiles = allyTiles()
+    store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
+    store.placePhantimalOnHex(tiles[1]!.getId(), toPhantimalId(2), Team.ALLY)
+
+    expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBeUndefined()
+    expect(gridStore.getTile(tiles[1]!.getId()).characterId).toBe(toPhantimalId(2))
+  })
+
+  it('routes a roster phantimal drop through one-per-team placement', () => {
+    const tiles = allyTiles()
+    store.handleCharacterDrop(
+      { character: buildCharacter(toPhantimalId(1)), characterId: toPhantimalId(1) },
+      tiles[0]!.getId(),
+    )
+    store.handleCharacterDrop(
+      { character: buildCharacter(toPhantimalId(2)), characterId: toPhantimalId(2) },
+      tiles[1]!.getId(),
+    )
+
+    expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBeUndefined()
+    expect(gridStore.getTile(tiles[1]!.getId()).characterId).toBe(toPhantimalId(2))
   })
 })

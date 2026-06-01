@@ -7,6 +7,9 @@ const HEX_ID_BITS = 6 // Supports hex IDs 0-63
 const TILE_STATE_BITS = 3 // Supports states 0-7
 const TEAM_BITS = 1 // Supports 2 teams
 const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
+const PHANTIMAL_ID_BITS = 4 // Supports local phantimal IDs 1-15
+const MAX_PHANTIMAL_ID = (1 << PHANTIMAL_ID_BITS) - 1 // 15
+const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
 
 /**
  * Binary encoding utilities for ultra-compact URL serialization
@@ -23,7 +26,8 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
  *   - Bits 1-5: Display flags (showHexIds, showArrows, showPerspective, showSkills, teamView)
- *   - Bits 6-7: Reserved (not currently used)
+ *   - Bit 6: Has phantimals (phantimal section present after artifacts)
+ *   - Bit 7: Reserved (not currently used)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -42,6 +46,10 @@ const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
  * Artifacts (6 bits):
  * - Bits 0-2: Ally artifact (3 bits, 0 = null, 1-7 = artifact ID)
  * - Bits 3-5: Enemy artifact (3 bits, 0 = null, 1-7 = artifact ID)
+ *
+ * Phantimals (only if extended flag bit 6 is set, written after artifacts):
+ * - Count (4 bits, 0-15)
+ * - Each entry (11 bits): hexId (6) + local phantimal ID (4) + team (1)
  */
 
 /**
@@ -112,6 +120,28 @@ export function validateGridState(state: GridState): GridState {
   // Artifacts: must be array with exactly 2 elements
   if (state.a && Array.isArray(state.a) && state.a.length === 2) {
     validated.a = state.a
+  }
+
+  // Validate phantimal entries: hexId 1-63, local id 1-15, team 1-2
+  if (state.p && Array.isArray(state.p)) {
+    const validPhantimals = state.p.filter((entry) => {
+      const [hexId, localId, team] = entry
+      const isValid =
+        hexId != null &&
+        hexId > 0 &&
+        hexId <= 63 &&
+        localId != null &&
+        localId > 0 &&
+        localId <= MAX_PHANTIMAL_ID &&
+        (team === 1 || team === 2)
+      if (!isValid) {
+        console.warn('Invalid phantimal entry:', entry)
+      }
+      return isValid
+    })
+    if (validPhantimals.length > 0) {
+      validated.p = validPhantimals
+    }
   }
 
   // Display flags: keep as-is (5-bit value is masked during encoding)
@@ -193,11 +223,12 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const charCount = validState.c?.length || 0
   const hasArtifacts = validState.a !== undefined
   const hasDisplayFlags = validState.d !== undefined
+  const hasPhantimals = validState.p !== undefined && validState.p.length > 0
 
-  // Extended header is needed if we have >7 entries OR display flags
+  // Extended header is needed if we have >7 entries OR display flags OR phantimals
   // This optimization keeps URLs short for small grids
   const needsExtendedCounts = tileCount > 7 || charCount > 7
-  const needsExtended = needsExtendedCounts || hasDisplayFlags
+  const needsExtended = needsExtendedCounts || hasDisplayFlags || hasPhantimals
 
   // Write header byte (8 bits total)
   let header = 0
@@ -221,6 +252,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
       // Pack display flags into bits 1-5
       // Only the lower 5 bits of d are used (one bit per flag)
       extendedFlags |= (validState.d & 0x1f) << 1
+    }
+    if (hasPhantimals) {
+      extendedFlags |= 0x40 // Bit 6: has phantimals
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -270,6 +304,20 @@ export function encodeToBinary(state: GridState): Uint8Array {
     writer.writeBits(enemy, ARTIFACT_BITS) // 3 bits for enemy artifact
   }
 
+  // Write phantimals (after artifacts): count, then hexId + local id + team each
+  if (hasPhantimals && validState.p) {
+    writer.writeBits(validState.p.length, PHANTIMAL_COUNT_BITS)
+    for (const entry of validState.p) {
+      const hexId = entry[0]! // Guaranteed valid (1-63) by validation
+      const localId = entry[1]! // Guaranteed valid (1-15) by validation
+      const team = entry[2]! // Guaranteed valid (1 or 2) by validation
+
+      writer.writeBits(hexId, HEX_ID_BITS) // 6 bits for hex ID
+      writer.writeBits(localId, PHANTIMAL_ID_BITS) // 4 bits for local phantimal ID
+      writer.writeBits(team - 1, TEAM_BITS) // 1 bit for team
+    }
+  }
+
   return writer.getBytes()
 }
 
@@ -295,11 +343,16 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     const hasArtifacts = (header & 0x40) !== 0 // Bit 6
     const hasExtended = (header & 0x80) !== 0 // Bit 7
 
+    // Phantimals can be the sole reason for an extended header; track it so the
+    // section after artifacts is read and the display-flag inference stays correct.
+    let hasPhantimals = false
+
     // Read extended header if present
     if (hasExtended) {
       // Read extended flags byte
       const extendedFlags = reader.readBits(8)
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
+      hasPhantimals = (extendedFlags & 0x40) !== 0 // Bit 6
 
       // Extract display flags from bits 1-5
       // IMPORTANT: Only set display flags if they were explicitly encoded
@@ -308,8 +361,9 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
 
       // Display flags are present if:
       // 1. We have display flag bits set (non-zero), OR
-      // 2. We have extended header WITHOUT extended counts (display-only header)
-      const hasDisplayFlags = displayFlagBits !== 0 || !needsExtendedCounts
+      // 2. We have an extended header that ISN'T solely for extended counts or
+      //    phantimals (i.e. a display-only header)
+      const hasDisplayFlags = displayFlagBits !== 0 || (!needsExtendedCounts && !hasPhantimals)
 
       if (hasDisplayFlags) {
         // Set display flags (including 0 if explicitly stored)
@@ -357,6 +411,20 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
 
       // Convert 0 back to null (no artifact), 1-7 are artifact IDs
       state.a = [ally === 0 ? null : ally, enemy === 0 ? null : enemy]
+    }
+
+    // Read phantimals (after artifacts) if the extended flag marked them present
+    if (hasPhantimals) {
+      const phantimalCount = reader.readBits(PHANTIMAL_COUNT_BITS)
+      if (phantimalCount > 0) {
+        state.p = []
+        for (let i = 0; i < phantimalCount; i++) {
+          const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
+          const localId = reader.readBits(PHANTIMAL_ID_BITS) // 4 bits
+          const teamBit = reader.readBits(TEAM_BITS) // 1 bit
+          state.p.push([hexId, localId, teamBit + 1])
+        }
+      }
     }
 
     return state

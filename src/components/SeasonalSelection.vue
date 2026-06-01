@@ -7,13 +7,14 @@ import type { PhantimalType } from '@/lib/types/phantimal'
 defineProps<{
   artifacts: readonly ArtifactType[]
   phantimals: readonly PhantimalType[]
+  isDraggable?: boolean
 }>()
 </script>
 
 <template>
   <div class="seasonal-selection">
     <ArtifactSelection :artifacts />
-    <PhantimalSelection :phantimals />
+    <PhantimalSelection :phantimals :is-draggable />
   </div>
 </template>
 

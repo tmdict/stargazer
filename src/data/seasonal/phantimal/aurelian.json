@@ -2,5 +2,6 @@
   "id": 1,
   "name": "aurelian",
   "season": 7,
+  "range": 20,
   "faction": "lightbearer"
 }

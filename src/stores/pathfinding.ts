@@ -1,6 +1,8 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
+import { isPhantimalId } from '@/lib/characters/phantimal'
+import type { GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import {
   defaultCanTraverse,
@@ -25,10 +27,22 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
   const characterStore = useCharacterStore()
   const gameDataStore = useGameDataStore()
 
+  // The static range map is keyed by character id; phantimals carry their range in
+  // their own data, so add an entry for each on-grid phantimal as a targeting source.
+  const buildUnitRanges = (tiles: GridTile[]): Map<number, number> => {
+    const ranges = new Map(gameDataStore.characterRanges)
+    for (const tile of tiles) {
+      if (tile.characterId !== undefined && isPhantimalId(tile.characterId)) {
+        ranges.set(tile.characterId, gameDataStore.getCharacterRange(tile.characterId))
+      }
+    }
+    return ranges
+  }
+
   // Lazy evaluation for expensive computations - only compute when accessed
   const closestEnemyMap = computed(() => {
     const tilesWithCharacters = characterStore.getTilesWithCharacters()
-    const characterRanges = new Map(gameDataStore.characterRanges)
+    const characterRanges = buildUnitRanges(tilesWithCharacters)
     const grid = gridStore._getGrid()
     return getClosestTargetMap(
       tilesWithCharacters,
@@ -48,7 +62,7 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
 
   const closestAllyMap = computed(() => {
     const tilesWithCharacters = characterStore.getTilesWithCharacters()
-    const characterRanges = new Map(gameDataStore.characterRanges)
+    const characterRanges = buildUnitRanges(tilesWithCharacters)
     const grid = gridStore._getGrid()
     return getClosestTargetMap(
       tilesWithCharacters,

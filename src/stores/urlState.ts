@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 
 import { useStateReset } from '@/composables/useStateReset'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { Team } from '@/lib/types/team'
 import { unpackDisplayFlags, type GridState } from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl } from '@/utils/urlStateManager'
@@ -169,6 +170,21 @@ export const useUrlStateStore = defineStore('urlState', () => {
       if (enemyArtifact !== null) {
         artifactStore.placeArtifact(enemyArtifact, Team.ENEMY)
       }
+    }
+
+    // Restore phantimals from compact format: [hexId, localPhantimalId, team]
+    if (gridState.p) {
+      gridState.p.forEach((entry) => {
+        const hexId = entry[0]
+        const localId = entry[1]
+        const team = entry[2]
+        if (hexId === undefined || localId === undefined || team === undefined) return
+
+        const placed = characterStore.placePhantimalOnHex(hexId, toPhantimalId(localId), team)
+        if (!placed) {
+          console.warn(`Failed to place phantimal ${localId} on hex ${hexId}`)
+        }
+      })
     }
   }
 
