@@ -1,5 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
+import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
+
 interface Options {
   /** Collapsed (peek) visible height, in px. */
   peek: number
@@ -20,7 +22,7 @@ interface Options {
  * viewport. `sheetStyle` is `undefined` on desktop so the CSS column layout wins.
  */
 export function useBottomSheet(opts: Options) {
-  const breakpoint = opts.breakpoint ?? 768
+  const breakpoint = opts.breakpoint ?? TABLET_MAX_WIDTH
 
   const isMobile = ref(false)
   const expanded = ref(false)
@@ -38,10 +40,9 @@ export function useBottomSheet(opts: Options) {
     const base = expanded.value ? expandedPx.value : opts.peek
     return Math.max(opts.peek, Math.min(expandedPx.value, base - dragDelta.value))
   })
-  // Drive height from the same basis as the transform: the collapsed peek is then
-  // exactly `peek` px regardless of how CSS `vh` resolves (it can diverge from
-  // window.innerHeight under mobile toolbars / DevTools emulation, which otherwise
-  // pushes the collapsed sheet off-screen).
+  // Height shares the transform's basis so the collapsed peek is exactly `peek`px
+  // regardless of how CSS `vh` resolves (vh vs innerHeight diverge under mobile
+  // toolbars / DevTools emulation, which otherwise hides the collapsed sheet).
   const sheetStyle = computed(() =>
     isMobile.value
       ? {
@@ -120,19 +121,21 @@ export function useBottomSheet(opts: Options) {
     if (!isMobile.value) expanded.value = false
   }
 
-  onMounted(() => {
+  // Re-measure next frame too: emulated/mobile viewports can report stale
+  // dimensions at mount/toggle without a settled follow-up resize.
+  function scheduleUpdate() {
     update()
+    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
+  }
+
+  onMounted(() => {
+    scheduleUpdate()
     // Reveal opens it (animating up from the CSS peek) only when asked.
     if (isMobile.value && opts.initialExpanded) expanded.value = true
-    window.addEventListener('resize', update)
-    // DevTools device emulation can report a stale window.innerHeight at mount
-    // (without a follow-up resize), which mis-sizes the sheet; re-measure next frame.
-    if (typeof requestAnimationFrame !== 'undefined') {
-      requestAnimationFrame(update)
-    }
+    window.addEventListener('resize', scheduleUpdate)
   })
   onBeforeUnmount(() => {
-    window.removeEventListener('resize', update)
+    window.removeEventListener('resize', scheduleUpdate)
     window.removeEventListener('mousemove', onMouseMove)
     window.removeEventListener('mouseup', onMouseUp)
   })

@@ -38,10 +38,9 @@ const {
   onMouseDown,
 } = useBottomSheet({ peek, expanded: expandedFraction, initialExpanded })
 
-// Expose peek + expanded size as CSS vars so the pre-mount CSS fallback derives
-// from the same props the composable uses (single source of truth, no duplicated
-// magic numbers). SSR-safe (no window); the composable overrides height/transform
-// inline once mounted. Mirrors the composable's fraction(<1)/px(>=1) semantics.
+// CSS vars so the pre-mount CSS fallback derives from the same props the
+// composable uses (single source of truth; SSR-safe). The composable overrides
+// height/transform inline once mounted. Mirrors its fraction(<1)/px(>=1) units.
 const sheetVars = computed(() => ({
   '--sheet-peek': `${peek}px`,
   '--sheet-expanded':
@@ -127,9 +126,9 @@ defineExpose({ expand })
   }
 }
 
-/* Mobile/tablet (<=768px): the column becomes a pull-up bottom sheet. Layout is
-   CSS-driven so SSG markup hydrates without a mismatch; useBottomSheet adds the
-   drag transform inline once mounted. */
+/* Mobile/tablet (<=768px, mirrors TABLET_MAX_WIDTH): the column becomes a pull-up
+   sheet. Layout is CSS-driven so SSG markup hydrates without a mismatch;
+   useBottomSheet adds the drag transform inline once mounted. */
 @media (max-width: 768px) {
   .bottom-sheet {
     position: fixed;

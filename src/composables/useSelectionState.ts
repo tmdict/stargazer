@@ -16,6 +16,11 @@ const targetHexId = ref<number | null>(null)
 // GridManager; highlighted by GridTiles.
 const liftedHexId = ref<number | null>(null)
 
+// Mobile: a deep component asking HomeView to open the roster sheet on a given
+// tab (e.g. an on-grid artifact cell → Seasonal tab). A fresh object per call so
+// repeated requests for the same tab still fire the watcher.
+const tabRequest = ref<{ tab: string } | null>(null)
+
 export function useSelectionState() {
   const characterStore = useCharacterStore()
   const artifactStore = useArtifactStore()
@@ -47,10 +52,15 @@ export function useSelectionState() {
     liftedHexId.value = null
   }
 
+  const requestTab = (tab: string) => {
+    tabRequest.value = { tab }
+  }
+
   return {
     selectedTeam,
     targetHexId,
     liftedHexId,
+    tabRequest,
     characterStore,
     artifactStore,
     handleTeamChange,
@@ -59,5 +69,6 @@ export function useSelectionState() {
     clearTargetHex,
     setLiftedHex,
     clearLiftedHex,
+    requestTab,
   }
 }
