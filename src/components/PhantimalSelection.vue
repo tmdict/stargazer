@@ -88,8 +88,8 @@ const openModal = (phantimal: PhantimalType) => {
 }
 
 .phantimal {
-  width: 50px;
-  height: 50px;
+  width: 70px;
+  height: 70px;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-white);
   background: #fff;

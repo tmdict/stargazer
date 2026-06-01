@@ -18,6 +18,7 @@ const i18n = useI18nStore()
 const props = defineProps<{
   artifact: ArtifactType
   isPlaced?: boolean
+  showSimpleTooltip?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -113,23 +114,28 @@ const handleTouchStart = () => {
       <TooltipPopup
         v-if="showTooltip && artifactElement"
         :targetElement="artifactElement"
-        variant="detailed"
+        :variant="showSimpleTooltip ? 'simple' : 'detailed'"
         :offset="10"
       >
         <template #content>
-          <div class="tooltip-header">
-            <div class="tooltip-name">{{ formattedArtifactName }}</div>
-          </div>
-          <div class="tooltip-info">
-            <div class="tooltip-row">
-              <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
-              <span class="tooltip-value">{{ artifact.season }}</span>
+          <!-- Simple tooltip - just the name -->
+          <div v-if="showSimpleTooltip" class="simple-tooltip">{{ formattedArtifactName }}</div>
+          <!-- Detailed tooltip - name + stats -->
+          <template v-else>
+            <div class="tooltip-header">
+              <div class="tooltip-name">{{ formattedArtifactName }}</div>
             </div>
-            <div v-for="stat in formattedStats" :key="stat.key" class="tooltip-row">
-              <span class="tooltip-label">{{ stat.label }}:</span>
-              <span class="tooltip-value">{{ stat.value }}</span>
+            <div class="tooltip-info">
+              <div class="tooltip-row">
+                <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
+                <span class="tooltip-value">{{ artifact.season }}</span>
+              </div>
+              <div v-for="stat in formattedStats" :key="stat.key" class="tooltip-row">
+                <span class="tooltip-label">{{ stat.label }}:</span>
+                <span class="tooltip-value">{{ stat.value }}</span>
+              </div>
             </div>
-          </div>
+          </template>
         </template>
       </TooltipPopup>
     </Teleport>
@@ -204,6 +210,14 @@ const handleTouchStart = () => {
 
 .artifact.placed {
   box-shadow: 0 0 0 2px var(--color-danger);
+}
+
+/* Simple tooltip - just name */
+.simple-tooltip {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Tooltip styles */

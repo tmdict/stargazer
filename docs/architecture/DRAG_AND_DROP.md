@@ -176,7 +176,7 @@ function validateDrop(hexId: number, character: CharacterType): boolean {
 
 **GridManager**: Orchestrates all layers and registers position-based detection
 **GridTiles**: Renders hexes with three-layer SVG structure and invisible events
-**GridArtifacts**: Shows team artifacts in fixed corner positions (renders before characters)
+**GridArtifacts**: Shows team artifacts in their visual-only host cells — dashed cells beside grid cells 1 (ally) and 45 (enemy), not part of the grid simulation (renders before characters)
 **GridCharacters**: Positions character portraits with absolute positioning
 **GridArrows**: Displays pathfinding visualization with SVG arrows
 **SkillTargeting**: Shows skill-specific targeting arrows (e.g., Silvina's First Strike)

@@ -20,6 +20,7 @@ import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
 import { useMapEditorStore } from '@/stores/mapEditor'
+import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -125,24 +126,15 @@ gridEvents.on('hex:click', (hex: Hex) => {
     if (getAvailableTeamSize(gridStore._getGrid(), tileTeam) <= 0) return
 
     // Desktop: anchor the popup near the tapped hex. The perspective transform
-    // scales Y, but getScreenCTM already accounts for it.
-    const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
-    const perspectiveContainer = document.querySelector<HTMLElement>('.perspective-container')
-    if (svgElement && perspectiveContainer) {
-      const hexPos = gridStore.layout.hexToPixel(hex)
-      const pt = svgElement.createSVGPoint()
-      pt.x = hexPos.x
-      pt.y = hexPos.y
-      const screenCTM = svgElement.getScreenCTM()
-      if (screenCTM) {
-        const screenPt = pt.matrixTransform(screenCTM)
-        modalPosition.value = {
-          x: screenPt.x + 30 * scale,
-          y: screenPt.y - 50 * scale,
-        }
-        modalHex.value = hex
-        showCharacterModal.value = true
+    // scales Y, but svgPointToScreen (getScreenCTM) already accounts for it.
+    const screenPt = svgPointToScreen(gridStore.layout.hexToPixel(hex))
+    if (screenPt) {
+      modalPosition.value = {
+        x: screenPt.x + 30 * scale,
+        y: screenPt.y - 50 * scale,
       }
+      modalHex.value = hex
+      showCharacterModal.value = true
     }
   }
 })
@@ -271,6 +263,7 @@ defineExpose({
       :enemyArtifactId="gridStore.teamView ? null : artifactStore.enemyArtifactId"
       :show-perspective="showPerspective"
       :scaleY="verticalScaleComp"
+      :is-map-editor-mode="isMapEditorMode"
       :readonly
     />
 
