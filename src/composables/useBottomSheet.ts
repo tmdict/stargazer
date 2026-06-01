@@ -38,8 +38,17 @@ export function useBottomSheet(opts: Options) {
     const base = expanded.value ? expandedPx.value : opts.peek
     return Math.max(opts.peek, Math.min(expandedPx.value, base - dragDelta.value))
   })
+  // Drive height from the same basis as the transform: the collapsed peek is then
+  // exactly `peek` px regardless of how CSS `vh` resolves (it can diverge from
+  // window.innerHeight under mobile toolbars / DevTools emulation, which otherwise
+  // pushes the collapsed sheet off-screen).
   const sheetStyle = computed(() =>
-    isMobile.value ? { transform: `translateY(${expandedPx.value - visible.value}px)` } : undefined,
+    isMobile.value
+      ? {
+          height: `${expandedPx.value}px`,
+          transform: `translateY(${expandedPx.value - visible.value}px)`,
+        }
+      : undefined,
   )
 
   let startY = 0
@@ -116,6 +125,11 @@ export function useBottomSheet(opts: Options) {
     // Reveal opens it (animating up from the CSS peek) only when asked.
     if (isMobile.value && opts.initialExpanded) expanded.value = true
     window.addEventListener('resize', update)
+    // DevTools device emulation can report a stale window.innerHeight at mount
+    // (without a follow-up resize), which mis-sizes the sheet; re-measure next frame.
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(update)
+    }
   })
   onBeforeUnmount(() => {
     window.removeEventListener('resize', update)
