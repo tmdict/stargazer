@@ -6,7 +6,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>
           Vala automatically identifies and targets an opposing-team character that is furthest away
           from her current tile.

@@ -157,12 +157,12 @@ The UI for getting a character onto a tile differs by viewport (`gridStore.getHe
 
 - **Desktop** — drag a roster icon onto a tile (HTML5 drag, mouse-only), or tap an empty tile to open `CharacterSelectionPopup` (a small picker anchored near the tile) and pick.
 - **Mobile/tablet** — HTML5 drag doesn't fire on touch, so interactions are tap-based, split across two gestures:
-  - **Add** — the roster lives in a **pull-up bottom sheet** (`HomeView`'s tab panel, via `useBottomSheet`). Tapping an empty tile (with team capacity) sets a shared **target hex** (`useSelectionState.targetHexId`), highlights it gold (`GridTiles`), and opens the sheet; tapping a roster character `placeCharacterOnHex`'s it there (team derived from the tile) and the sheet collapses. With no target set, a roster tap auto-places.
+  - **Add** — the roster lives in a **pull-up bottom sheet** (`HomeView`'s tab panel, wrapped in the shared `BottomSheet` component). Tapping an empty tile (with team capacity) sets a shared **target hex** (`useSelectionState.targetHexId`), highlights it gold (`GridTiles`), and opens the sheet; tapping a roster character `placeCharacterOnHex`'s it there (team derived from the tile) and the sheet collapses. With no target set, a roster tap auto-places.
   - **Move / remove (tap-lift, tap-drop)** — tapping a placed hero on the grid **lifts** it (`useSelectionState.liftedHexId`; the tile's existing hover/active border marks it, and the sheet collapses so all cells stay reachable). Then: tapping an empty cell `moveCharacter`'s it there (allowed even at full capacity — a move adds no unit); tapping the lifted hero again `removes` it; tapping a _different_ placed hero `swapCharacters` the two. Tapping a non-placement tile cancels the lift. The lift gesture lives in `GridCharacters` (the character overlay's tap); the drop/target/cancel logic lives in `GridManager`'s `hex:click`.
 
   When the sheet is expanded a tap-scrim sits behind it — tapping it collapses the sheet and clears any pending target.
 
-The grid sheet mirrors the skills-page sheet (`SkillsBrowser`); their styles and the scrim are kept in sync.
+The grid and skills pages share one `BottomSheet` component (`src/components/ui/BottomSheet.vue`) for the roster column — desktop card chrome + the mobile pull-up sheet (drag handle, scrim, `useBottomSheet` drag) — so the two stay identical by construction rather than by mirrored CSS. Each page slots its own content (tabs / roster), which owns its in-sheet fill + scroll.
 
 ## Team & Companion Systems
 

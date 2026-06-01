@@ -8,7 +8,7 @@ import { gridStyles, images } from './Galahad.data'
 <template>
   <SkillSnippets>
     <template #ex>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-tile">
         <p>
           Galahad looks for teammate characters starting from tiles adjacent to her and expanding
           outwards, prioritizing characters in the back. When multiple characters are in the same

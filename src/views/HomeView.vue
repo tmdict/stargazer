@@ -9,9 +9,9 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import MapEditor from '@/components/MapEditor.vue'
+import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabNavigation from '@/components/ui/TabNavigation.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
-import { useBottomSheet } from '@/composables/useBottomSheet'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -69,16 +69,7 @@ const activeTab = ref(getInitialTab())
 
 // Mobile: the tab panel (roster) is a pull-up bottom sheet over the grid.
 const { targetHexId, liftedHexId, clearTargetHex } = useSelectionState()
-const {
-  expanded: sheetExpanded,
-  dragging: sheetDragging,
-  sheetStyle,
-  onTouchStart,
-  onTouchMove,
-  onTouchEnd,
-  onMouseDown,
-  collapse: collapseSheet,
-} = useBottomSheet({ peek: 96, expanded: 0.62 })
+const sheetExpanded = ref(false)
 
 // Tapping a grid cell targets it: jump to the roster, open the sheet; placing
 // (which clears the target) collapses it so the grid result is visible.
@@ -94,14 +85,8 @@ watch(targetHexId, (id) => {
 // Lifting a hero (tap-to-move) collapses the sheet so every destination cell on
 // the grid stays tappable for the drop.
 watch(liftedHexId, (id) => {
-  if (id !== null) collapseSheet()
+  if (id !== null) sheetExpanded.value = false
 })
-
-// Tap-scrim: dismiss the sheet and cancel any pending placement target.
-const dismissSheet = () => {
-  clearTargetHex()
-  collapseSheet()
-}
 
 // Debug visualization is active iff the user is on the Debug tab. Derived rather
 // than its own ref so tab is the single source of truth (browser refresh on the
@@ -283,8 +268,6 @@ const handleResetMap = () => {
 
 <template>
   <main>
-    <!-- Tap-scrim: dismisses the expanded sheet (and cancels a pending target). -->
-    <div v-if="sheetExpanded" class="sheet-backdrop" @click="dismissSheet" />
     <DragDropProvider>
       <div class="sections-container">
         <div class="section">
@@ -320,22 +303,8 @@ const handleResetMap = () => {
           />
         </div>
 
-        <!-- Tab Navigation (a pull-up bottom sheet over the grid on mobile). -->
-        <div
-          class="section tab-section"
-          :class="{ 'is-dragging': sheetDragging }"
-          :style="sheetStyle"
-        >
-          <div
-            class="sheet-handle-area"
-            @touchstart.passive="onTouchStart"
-            @touchmove.passive="onTouchMove"
-            @touchend="onTouchEnd"
-            @touchcancel="onTouchEnd"
-            @mousedown="onMouseDown"
-          >
-            <span class="sheet-handle" />
-          </div>
+        <!-- Roster (a pull-up bottom sheet over the grid on mobile). -->
+        <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargetHex">
           <TabNavigation
             :activeTab
             :availableMaps
@@ -366,7 +335,7 @@ const handleResetMap = () => {
               <DebugPanel ref="debugPanelRef" />
             </div>
           </TabNavigation>
-        </div>
+        </BottomSheet>
       </div>
     </DragDropProvider>
 
@@ -384,104 +353,24 @@ const handleResetMap = () => {
   width: 100%;
 }
 
-/* The drag handle only exists in the mobile bottom-sheet mode. */
-.sheet-handle-area {
-  display: none;
-}
-
-/* Scrim behind the expanded sheet (only rendered when expanded); a tap
-   collapses it. Mirrors SkillsBrowser's sheet backdrop. */
-.sheet-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 799;
-  background: rgba(0, 0, 0, 0.15);
-  animation: sheet-fade-in 0.2s ease;
-}
-@keyframes sheet-fade-in {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* Mobile/tablet (matches the grid picker's scale < 1 breakpoint, <= 768px):
-   the tab panel becomes a pull-up bottom sheet over the grid. Tapping a tile
-   targets it and opens this sheet; tapping a character fills the targeted tile.
-   Mirrors the skills-page sheet (SkillsBrowser) — keep the two in sync. */
+/* Mobile: clear the collapsed sheet peek and trim the grid card's side padding
+   so the grid claims the narrow viewport. The roster sheet chrome lives in
+   BottomSheet; TabNavigation owns its own in-sheet fill/scroll. */
 @media (max-width: 768px) {
   main {
-    padding-bottom: 96px; /* clear the collapsed peek */
+    padding-bottom: 96px;
   }
 
-  /* Trim the grid card's side padding so the grid claims more of the narrow
-     viewport instead of floating in whitespace. */
   .sections-container > .section:first-child {
     padding-left: var(--spacing-md);
     padding-right: var(--spacing-md);
   }
-
-  .tab-section {
-    position: fixed;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 62vh;
-    padding: 0;
-    background: var(--color-bg-primary);
-    border-radius: var(--radius-large) var(--radius-large) 0 0;
-    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
-    z-index: 800;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    /* Collapsed peek before the composable engages; it sets the same inline. */
-    transform: translateY(calc(62vh - 96px));
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  }
-  .tab-section.is-dragging {
-    transition: none;
-  }
-
-  .sheet-handle-area {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 28px;
-    touch-action: none;
-    cursor: grab;
-  }
-  .sheet-handle {
-    width: 40px;
-    height: 4px;
-    border-radius: 999px;
-    background: rgba(0, 0, 0, 0.22);
-  }
-
-  /* TabNavigation fills the sheet (its -2em — which escapes the section's
-     normal padding, zeroed here — is neutralized); its .tab-content scrolls so
-     the tab buttons stay pinned. */
-  .tab-section > :deep(.tab-container) {
-    flex: 1;
-    min-height: 0;
-    height: auto;
-    margin: 0;
-  }
-  .tab-section :deep(.tab-content) {
-    overflow-y: auto;
-  }
 }
 
 /* Side-by-side layout. Floor is dictated by the left column's fixed width:
-   grid (600px) + padding pushes it to ~660px. Below ~1220px, the right
-   column gets uncomfortably narrow and tab content cramps even with wrap.
-
-   container-type: inline-size on the right column lets TabNavigation's
-   @container queries respond to the right column's actual width (which is
-   what determines whether tabs need to wrap), independent of viewport.
+   grid (600px) + padding pushes it to ~660px. Below ~1220px the columns stack.
+   The right column's height-cap + flex-fill (so long tab content scrolls within
+   it) lives in BottomSheet.
 
    NOTE: this breakpoint must stay in sync with the @media rules in each
    tab-content panel component (CharacterSelection, ArtifactSelection,
@@ -496,26 +385,6 @@ const handleResetMap = () => {
   .sections-container > .section:first-child {
     flex: 0 0 660px;
     width: 660px;
-  }
-
-  /* Right column is height-capped to viewport so long tab content (e.g. the
-     character grid) scrolls within the panel rather than stretching the page.
-     The TabNavigation child fills the column via flex; its internal
-     .tab-content handles the scroll so the tab buttons stay pinned. The cap
-     is released below 1024px (column-stacked layout), where there's no row
-     to keep aligned and the natural page scroll is correct. */
-  .sections-container > .section:last-child {
-    flex: 1 1 auto;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    max-height: 100vh;
-    container-type: inline-size;
-  }
-
-  .sections-container > .section:last-child > * {
-    flex: 1;
-    min-height: 0;
   }
 }
 

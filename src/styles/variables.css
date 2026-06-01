@@ -51,6 +51,11 @@
      via `gap: var(--stack-gap)` on their layout container. */
   --stack-gap: var(--spacing-xl);
 
+  /* Min content height shared by the tab-panel / roster components
+     (CharacterSelection, ArtifactSelection, MapEditor, SkillsSelection) so
+     panels stay the same height and the layout doesn't jump between tabs. */
+  --panel-min-height: 656px;
+
   /* Transitions */
   --transition-fast: 0.2s ease;
   --transition-medium: 0.3s ease;

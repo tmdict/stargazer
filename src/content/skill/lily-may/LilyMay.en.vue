@@ -6,7 +6,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-tile">
         <p>When battle starts:</p>
         <ul>
           <li>

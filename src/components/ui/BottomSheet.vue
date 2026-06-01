@@ -1,0 +1,158 @@
+<script setup lang="ts">
+import { watch } from 'vue'
+
+import { useBottomSheet } from '@/composables/useBottomSheet'
+
+// Shared roster panel for the grid (`HomeView`) and skills (`SkillsBrowser`)
+// pages: a card column on desktop, a drag-to-resize pull-up sheet on mobile.
+// The slot holds the page's content (tabs / roster); its own fill + scroll
+// stays in the page since each content component scrolls differently.
+const {
+  peek = 96,
+  expandedFraction = 0.62,
+  initialExpanded = false,
+} = defineProps<{
+  /** Collapsed (peek) visible height on mobile, in px. */
+  peek?: number
+  /** Expanded visible height as a fraction of the viewport. */
+  expandedFraction?: number
+  /** Start expanded (vs. peeked) on first mobile mount. */
+  initialExpanded?: boolean
+}>()
+
+// Two-way so the page can open/collapse it (e.g. on a grid-cell tap) while the
+// drag gesture writes back through the same model.
+const expanded = defineModel<boolean>('expanded', { default: false })
+
+const emit = defineEmits<{ dismiss: [] }>()
+
+const {
+  expanded: sheetExpanded,
+  isMobile,
+  dragging,
+  sheetStyle,
+  onTouchStart,
+  onTouchMove,
+  onTouchEnd,
+  onMouseDown,
+} = useBottomSheet({ peek, expanded: expandedFraction, initialExpanded })
+
+watch(sheetExpanded, (v) => (expanded.value = v))
+watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
+
+const onScrimClick = () => {
+  sheetExpanded.value = false
+  emit('dismiss')
+}
+
+// Imperative open for "tap the empty content to reveal the roster" — a no-op on
+// desktop, where the roster column is always visible (there's no sheet).
+const expand = () => {
+  if (isMobile.value) sheetExpanded.value = true
+}
+defineExpose({ expand })
+</script>
+
+<template>
+  <!-- Tap-scrim behind the expanded sheet (mobile only); a tap collapses it. -->
+  <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
+  <div class="bottom-sheet" :class="{ 'is-dragging': dragging }" :style="sheetStyle">
+    <div
+      class="sheet-handle-area"
+      @touchstart.passive="onTouchStart"
+      @touchmove.passive="onTouchMove"
+      @touchend="onTouchEnd"
+      @touchcancel="onTouchEnd"
+      @mousedown="onMouseDown"
+    >
+      <span class="sheet-handle" />
+    </div>
+    <slot />
+  </div>
+</template>
+
+<style scoped>
+/* Desktop: a plain card column (matches base.css `.section` chrome). */
+.bottom-sheet {
+  width: 100%;
+  padding: 2em;
+  background-color: var(--color-bg-primary);
+  border-radius: var(--radius-large);
+  display: flex;
+  flex-direction: column;
+}
+
+/* The drag handle only exists in the mobile sheet mode. */
+.sheet-handle-area {
+  display: none;
+}
+
+/* Wide screens: the column is height-capped so long content scrolls within it
+   rather than stretching the page. container queries let the slotted content
+   respond to the column's real width. The content flex-fills via its own scoped
+   styles (it owns its scroll, which differs per content). */
+@media (min-width: 1220px) {
+  .bottom-sheet {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-height: 100vh;
+    container-type: inline-size;
+  }
+}
+
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 799;
+  background: rgba(0, 0, 0, 0.15);
+  animation: sheet-fade-in 0.2s ease;
+}
+@keyframes sheet-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Mobile/tablet (<=768px): the column becomes a pull-up bottom sheet. Layout is
+   CSS-driven so SSG markup hydrates without a mismatch; useBottomSheet adds the
+   drag transform inline once mounted. */
+@media (max-width: 768px) {
+  .bottom-sheet {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 62vh;
+    padding: 0;
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
+    box-shadow: 0 -6px 24px rgba(0, 0, 0, 0.25);
+    z-index: 800;
+    overflow: hidden;
+    /* Collapsed peek before the composable engages; it sets the same inline. */
+    transform: translateY(calc(62vh - 96px));
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  .bottom-sheet.is-dragging {
+    transition: none;
+  }
+
+  .sheet-handle-area {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    touch-action: none;
+    cursor: grab;
+  }
+  .sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.22);
+  }
+}
+</style>

@@ -8,7 +8,7 @@ import { gridStyles, images } from './Bonnie.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>
           The grid is organized into horizontal rows, with row 15 (hexes 44, 45) being the rearmost
           position for the enemy team, and row 1 (hexes 1, 2) being the rearmost for the ally team.

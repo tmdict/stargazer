@@ -6,7 +6,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-companion">
         <p>
           Phraesto's first clone placed during battle preparation is not a summon, but his second
           clone created when the first dies is a summon.

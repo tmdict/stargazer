@@ -43,6 +43,9 @@ export function useBottomSheet(opts: Options) {
   )
 
   let startY = 0
+  // Timestamp of the last touch release. Touch devices fire emulated mouse
+  // events right after the touch sequence; we use this to ignore them.
+  let lastTouchEnd = 0
 
   function dragStart(clientY: number) {
     if (!isMobile.value) return
@@ -73,6 +76,7 @@ export function useBottomSheet(opts: Options) {
     dragMove(e.touches[0]!.clientY)
   }
   function onTouchEnd() {
+    lastTouchEnd = Date.now()
     dragEnd()
   }
 
@@ -87,6 +91,9 @@ export function useBottomSheet(opts: Options) {
     window.removeEventListener('mouseup', onMouseUp)
   }
   function onMouseDown(e: MouseEvent) {
+    // Skip the emulated mouse event a touch device fires right after a tap —
+    // otherwise dragEnd runs twice (touch + mouse) and the toggle snaps back.
+    if (Date.now() - lastTouchEnd < 700) return
     dragStart(e.clientY)
     if (!dragging.value) return
     e.preventDefault() // don't text-select while dragging

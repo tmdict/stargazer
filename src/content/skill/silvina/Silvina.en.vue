@@ -8,7 +8,7 @@ import { gridStyles, images } from './Silvina.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="how-it-works">
+      <SkillSnippet title-key="mechanic-targeting">
         <p>
           Silvina first checks her symmetrical tile (the mirror position across the grid's center).
           If an opponent is there, they become the target.
