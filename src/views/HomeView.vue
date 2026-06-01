@@ -319,7 +319,10 @@ const handleResetMap = () => {
             </div>
             <!-- Artifacts Tab -->
             <div v-show="activeTab === 'artifacts'" class="tab-panel">
-              <ArtifactSelection :artifacts="gameDataStore.artifacts" />
+              <ArtifactSelection
+                :artifacts="gameDataStore.artifacts"
+                :phantimals="gameDataStore.phantimals"
+              />
             </div>
             <!-- Map Editor Tab -->
             <div v-show="activeTab === 'mapEditor'" class="tab-panel">

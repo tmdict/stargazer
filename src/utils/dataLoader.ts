@@ -1,6 +1,7 @@
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
+import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
 import type { SkillLocaleFile } from '@/lib/types/skill'
 
 export interface ArenaJson {
@@ -36,6 +37,8 @@ let iconsCache: Record<string, string> | null = null
 let characterRangesCache: Map<number, number> | null = null
 let arenasCache: Record<string, ArenaJson> | null = null
 let artifactEffectsCache: Record<string, LocaleData[]> | null = null
+let phantimalsCache: PhantimalType[] | null = null
+let phantimalLocalesCache: Record<string, PhantimalLocale> | null = null
 
 export function loadCharacters(): CharacterType[] {
   if (charactersCache) {
@@ -104,6 +107,39 @@ export function loadArtifactImages(): Record<string, string> {
 
   artifactImagesCache = images
   return images
+}
+
+export function loadPhantimals(): PhantimalType[] {
+  if (phantimalsCache) {
+    return phantimalsCache
+  }
+
+  const modules = import.meta.glob<PhantimalType>('@/data/seasonal/phantimal/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  phantimalsCache = Object.values(modules).sort((a, b) => a.id - b.id)
+  return phantimalsCache
+}
+
+// Full localized phantimal content (name + per-skill names/levels), keyed by
+// phantimal name (matches the JSON filename).
+export function loadPhantimalLocales(): Record<string, PhantimalLocale> {
+  if (phantimalLocalesCache) {
+    return phantimalLocalesCache
+  }
+
+  const modules = import.meta.glob<PhantimalLocale>('@/locales/seasonal/phantimal/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  const result: Record<string, PhantimalLocale> = {}
+  Object.entries(modules).forEach(([path, content]) => {
+    result[extractFileName(path)] = content
+  })
+
+  phantimalLocalesCache = result
+  return result
 }
 
 export function loadArenas(): Record<string, ArenaJson> {
@@ -177,6 +213,7 @@ export function getCharacterRanges(): Map<number, number> {
 export function loadAllData() {
   const characters = loadCharacters()
   const artifacts = loadArtifacts()
+  const phantimals = loadPhantimals()
   const arenas = loadArenas()
   const characterImages = loadCharacterImages()
   const artifactImages = loadArtifactImages()
@@ -186,6 +223,7 @@ export function loadAllData() {
   return {
     characters,
     artifacts,
+    phantimals,
     arenas,
     characterImages,
     artifactImages,
@@ -323,4 +361,6 @@ export function clearCache() {
   gameLocalesCache = null
   wandwarsLocalesCache = null
   artifactEffectsCache = null
+  phantimalsCache = null
+  phantimalLocalesCache = null
 }

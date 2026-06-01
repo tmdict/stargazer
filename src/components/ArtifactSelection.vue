@@ -2,15 +2,20 @@
 import { computed } from 'vue'
 
 import ArtifactIcon from './ArtifactIcon.vue'
+import PhantimalSelection from './PhantimalSelection.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { ArtifactType } from '@/lib/types/artifact'
+import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
+import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]
+  phantimals: readonly PhantimalType[]
 }>()
 
 const { selectedTeam, artifactStore } = useSelectionState()
+const i18n = useI18nStore()
 
 const handleArtifactClick = (artifact: ArtifactType) => {
   // Check if this artifact is already placed for the selected team
@@ -35,23 +40,44 @@ const isArtifactPlaced = (artifactId: number): boolean => {
   }
 }
 
-const sortedArtifacts = computed(() => {
-  return [...props.artifacts].sort((a, b) => a.id - b.id)
+// Group artifacts into their own section per season (pre-season first).
+const seasonGroups = computed(() => {
+  const bySeason = new Map<number, ArtifactType[]>()
+  for (const artifact of props.artifacts) {
+    const list = bySeason.get(artifact.season) ?? []
+    list.push(artifact)
+    bySeason.set(artifact.season, list)
+  }
+  return [...bySeason.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([season, artifacts]) => ({
+      season,
+      artifacts: [...artifacts].sort((a, b) => a.id - b.id),
+    }))
 })
+
+// Pre-season (0) renders without a heading; only real seasons are labelled.
+const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${season}`
 </script>
 
 <template>
   <div class="artifact-selection">
-    <!-- Artifacts Grid -->
-    <div class="artifacts">
-      <div v-for="artifact in sortedArtifacts" :key="artifact.id" class="artifact-profile">
-        <ArtifactIcon
-          :artifact="artifact"
-          :isPlaced="isArtifactPlaced(artifact.id)"
-          @artifact-click="handleArtifactClick"
-        />
+    <section v-for="group in seasonGroups" :key="group.season" class="artifact-group">
+      <h3 v-if="group.season !== 0" class="artifact-group-title">
+        {{ seasonLabel(group.season) }}
+      </h3>
+      <div class="artifacts">
+        <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-profile">
+          <ArtifactIcon
+            :artifact="artifact"
+            :isPlaced="isArtifactPlaced(artifact.id)"
+            @artifact-click="handleArtifactClick"
+          />
+        </div>
       </div>
-    </div>
+    </section>
+
+    <PhantimalSelection :phantimals />
   </div>
 </template>
 
@@ -73,6 +99,20 @@ const sortedArtifacts = computed(() => {
   }
 }
 
+.artifact-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.artifact-group-title {
+  margin: 0;
+  padding: 0 var(--spacing-lg);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text-secondary, var(--color-text-primary));
+}
+
 .artifacts {
   display: flex;
   flex-wrap: wrap;
@@ -80,8 +120,6 @@ const sortedArtifacts = computed(() => {
   justify-content: flex-start;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
-  max-height: 70vh;
-  overflow-y: auto;
 }
 
 .artifact-profile {
@@ -92,17 +130,10 @@ const sortedArtifacts = computed(() => {
   color: var(--color-text-primary);
 }
 
-.artifact-info {
-  display: flex;
-  justify-content: center;
-  padding-top: 0.4rem;
-}
-
 @media (max-width: 768px) {
   .artifacts {
     gap: var(--spacing-lg);
     padding: var(--spacing-md);
-    max-height: 60vh;
   }
 }
 
@@ -114,7 +145,6 @@ const sortedArtifacts = computed(() => {
   .artifacts {
     gap: var(--spacing-md);
     padding: var(--spacing-sm);
-    max-height: 50vh;
   }
 
   .artifact-profile {
