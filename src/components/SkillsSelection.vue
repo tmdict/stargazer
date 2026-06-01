@@ -17,7 +17,7 @@ const props = defineProps<{
   characters: readonly CharacterType[]
   lang: 'en' | 'zh'
   currentSlug?: string | null
-  /** Route segment the roster links into (`skill` or `mechanics`). */
+  /** Route segment the roster links into (`skill` or `guide`). */
   routeBase?: string
 }>()
 
