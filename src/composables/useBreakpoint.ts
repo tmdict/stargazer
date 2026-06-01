@@ -55,6 +55,13 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
 
     // Handle orientation change
     window.addEventListener('orientationchange', handleResize)
+
+    // DevTools device emulation (and some mobile browsers) can report stale
+    // window dimensions at mount without firing a follow-up resize. Re-check on
+    // the next frame so the grid scale matches the settled viewport.
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(handleResize)
+    }
   }
 
   // Cleanup listeners
