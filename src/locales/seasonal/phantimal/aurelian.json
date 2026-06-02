@@ -11,12 +11,12 @@
       },
       "levels": [
         {
-          "en": "Summons a flower of desire that lasts [[5]]s. While active, the flower causes all enemies to take <ATK>[[40%]] true damage every second, while reducing damage taken by [[15%]] for allies. When the flower expires, it restores HP to all allies equal to <ATK>[[150%]] plus [[50%]] of the damage dealt by this skill, and deals <ATK>[[100%]] true damage to all enemies.",
-          "zh": "召唤持续[[5]]秒的欲望之花，持续期间内所有敌人每秒受到<ATK>[[40%]]的真实伤害，并且己方受到伤害降低[[15%]]，持续时间结束时为所有友军恢复相当于<ATK>[[150%]]外加相当于该技能造成伤害量[[50%]]的生命值，并对所有敌人造成<ATK>[[100%]]的真实伤害。"
+          "en": "Summons a flower of desire that lasts [[5]]s. While active, the flower causes all enemies to take [[40%]]<ATK> true damage every second, while reducing damage taken by [[15%]] for allies. When the flower expires, it restores HP to all allies equal to [[150%]]<ATK> plus [[50%]] of the damage dealt by this skill, and deals [[100%]]<ATK> true damage to all enemies.",
+          "zh": "召唤持续[[5]]秒的欲望之花，持续期间内所有敌人每秒受到[[40%]]<ATK>的真实伤害，并且己方受到伤害降低[[15%]]，持续时间结束时为所有友军恢复相当于[[150%]]<ATK>外加相当于该技能造成伤害量[[50%]]的生命值，并对所有敌人造成[[100%]]<ATK>的真实伤害。"
         },
         {
-          "en": "While active, increases all enemies' true damage taken per second to <ATK>[[45%]].",
-          "zh": "持续期间所有敌人每秒受到的真实伤害提升至<ATK>[[45%]]。"
+          "en": "While active, increases all enemies' true damage taken per second to [[45%]]<ATK>.",
+          "zh": "持续期间所有敌人每秒受到的真实伤害提升至[[45%]]<ATK>。"
         },
         {
           "en": "While the flower of desire is active, all allies gain [[30]] Haste.",
@@ -91,12 +91,12 @@
       },
       "levels": [
         {
-          "en": "Aurelian targets the [[2]] weakest allies, granting them a shield equal to <ATK>[[350%]] for [[8]]s. While the shield is active, he increases their Phys & Magic DEF by [[30%]]. If multiple allies have the same HP ratio, Aurelian prioritizes those positioned closer to the front.",
-          "zh": "以[[2]]名最虚弱的友军为目标，为其添加相当于<ATK>[[350%]]的护盾，持续[[8]]秒，护盾存在期间使其护甲和魔抗提高[[30%]]，生命值比例相同时，优先选择更靠前的友军。"
+          "en": "Aurelian targets the [[2]] weakest allies, granting them a shield equal to [[350%]]<ATK> for [[8]]s. While the shield is active, he increases their Phys & Magic DEF by [[30%]]. If multiple allies have the same HP ratio, Aurelian prioritizes those positioned closer to the front.",
+          "zh": "以[[2]]名最虚弱的友军为目标，为其添加相当于[[350%]]<ATK>的护盾，持续[[8]]秒，护盾存在期间使其护甲和魔抗提高[[30%]]，生命值比例相同时，优先选择更靠前的友军。"
         },
         {
-          "en": "Increases shield value to <ATK>[[500%]].",
-          "zh": "护盾的数值提升至<ATK>[[500%]]。"
+          "en": "Increases shield value to [[500%]]<ATK>.",
+          "zh": "护盾的数值提升至[[500%]]<ATK>。"
         }
       ]
     }

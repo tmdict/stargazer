@@ -11,12 +11,12 @@
       },
       "levels": [
         {
-          "en": "Blightshroom sprays parasitic spores at the nearest enemy, dealing <ATK>[[50%]] damage [[4]] times and attaching the spores to the target. Every [[3]]s, the spores release neurotoxins at adjacent enemies, dealing <ATK>[[20%]] damage. When the enemy hosting the spores is defeated, the spores automatically spread to the nearest enemy that does not already have spores, prioritizing non-summoned enemies. If the target is already a spore host, the spread immediately causes the target to release neurotoxins [[5]] times.",
-          "zh": "朝以距离自身最近的敌人为目标喷射寄生孢子，对敌人造成[[4]]次<ATK>[[50%]]的伤害并使孢子寄生在敌人身上，寄生孢子每[[3]]秒向周围1格内的敌人喷射\"神经毒素\"，造成<ATK>[[20%]]伤害。被孢子寄生的敌人被击败后，寄生孢子自动传染至距离最近且未被寄生的敌人，优先选择非召唤物敌人。若目标已被寄生，则立即使孢子连续喷射[[5]]次\"神经毒素\"。"
+          "en": "Blightshroom sprays parasitic spores at the nearest enemy, dealing [[50%]]<ATK> damage [[4]] times and attaching the spores to the target. Every [[3]]s, the spores release neurotoxins at adjacent enemies, dealing [[20%]]<ATK> damage. When the enemy hosting the spores is defeated, the spores automatically spread to the nearest enemy that does not already have spores, prioritizing non-summoned enemies. If the target is already a spore host, the spread immediately causes the target to release neurotoxins [[5]] times.",
+          "zh": "朝以距离自身最近的敌人为目标喷射寄生孢子，对敌人造成[[4]]次[[50%]]<ATK>的伤害并使孢子寄生在敌人身上，寄生孢子每[[3]]秒向周围1格内的敌人喷射\"神经毒素\"，造成[[20%]]<ATK>伤害。被孢子寄生的敌人被击败后，寄生孢子自动传染至距离最近且未被寄生的敌人，优先选择非召唤物敌人。若目标已被寄生，则立即使孢子连续喷射[[5]]次\"神经毒素\"。"
         },
         {
-          "en": "Increases neurotoxin damage per hit to <ATK>[[30%]].",
-          "zh": "每次\"神经毒素\"造成的伤害提升至<ATK>[[30%]]。"
+          "en": "Increases neurotoxin damage per hit to [[30%]]<ATK>.",
+          "zh": "每次\"神经毒素\"造成的伤害提升至[[30%]]<ATK>。"
         },
         {
           "en": "While hosting spores, the target loses [[30%]] Phys & Magic DEF. The spores also absorb [[60]] Energy from their host every [[3]]s.",
@@ -31,8 +31,8 @@
       },
       "levels": [
         {
-          "en": "Passive. Blightshroom remains steadfast throughout battle.\nBlightshroom rapidly grows mushrooms beneath the [[2]] nearest enemies, knocking them into the air and then knocking them down for [[1]]s. When they land, all adjacent enemies take <ATK>[[340%]] damage.",
-          "zh": "被动地，自身在战斗中会一直处于稳定状态。\n在距离最近的[[2]]名敌人脚下快速生长蘑菇，对目标造成击飞并使其击倒[[1]]秒，并在其落地时对周围1格范围内的所有敌人造成<ATK>[[340%]]伤害。"
+          "en": "Passive. Blightshroom remains steadfast throughout battle.\nBlightshroom rapidly grows mushrooms beneath the [[2]] nearest enemies, knocking them into the air and then knocking them down for [[1]]s. When they land, all adjacent enemies take [[340%]]<ATK> damage.",
+          "zh": "被动地，自身在战斗中会一直处于稳定状态。\n在距离最近的[[2]]名敌人脚下快速生长蘑菇，对目标造成击飞并使其击倒[[1]]秒，并在其落地时对周围1格范围内的所有敌人造成[[340%]]<ATK>伤害。"
         },
         {
           "en": "Knocks targets into the air and knocks them down for [[1.5]]s.",
@@ -79,8 +79,8 @@
           "zh": "使身后1名友方英雄成为[[灵能者]]，获得\"繁茂\"之灵能：[[灵能者]]对处于控制状态下的敌人造成的伤害提高[[20%]]。\n处于[[灵能者]]控制状态下的敌人，每[[0.5]]秒汲取[[10]]点能量提供给瘴孢之菌。"
         },
         {
-          "en": "When all non-summoned enemies are hosting spores, the spores become hyper-active. Their neurotoxins deal an extra <ATK>[[20%]] true damage, and [[50%]] of the Energy absorbed each time is granted to the [[spirit-marked hero]].",
-          "zh": "当所有非召唤物敌人均被孢子寄生后，寄生孢子进入活化状态，喷射的神经毒素会额外造成<ATK>[[20%]]的真实伤害，并且每次汲取能量的[[50%]]也会提供给[[灵能者]]。"
+          "en": "When all non-summoned enemies are hosting spores, the spores become hyper-active. Their neurotoxins deal an extra [[20%]]<ATK> true damage, and [[50%]] of the Energy absorbed each time is granted to the [[spirit-marked hero]].",
+          "zh": "当所有非召唤物敌人均被孢子寄生后，寄生孢子进入活化状态，喷射的神经毒素会额外造成[[20%]]<ATK>的真实伤害，并且每次汲取能量的[[50%]]也会提供给[[灵能者]]。"
         }
       ]
     },
@@ -91,12 +91,12 @@
       },
       "levels": [
         {
-          "en": "Blightshroom releases toxic gas that covers the entire battlefield for [[8]]s. While it lasts, all enemies lose [[20]] Haste and take <ATK>[[20%]] damage per second.",
-          "zh": "喷射毒雾弥漫全场，持续[[8]]秒。持续时间内，所有敌人降低[[20]]点急速，并且每秒受到<ATK>[[20%]]的伤害。"
+          "en": "Blightshroom releases toxic gas that covers the entire battlefield for [[8]]s. While it lasts, all enemies lose [[20]] Haste and take [[20%]]<ATK> damage per second.",
+          "zh": "喷射毒雾弥漫全场，持续[[8]]秒。持续时间内，所有敌人降低[[20]]点急速，并且每秒受到[[20%]]<ATK>的伤害。"
         },
         {
-          "en": "Increases toxic gas damage to <ATK>[[30%]].",
-          "zh": "毒雾每秒造成的伤害提升至<ATK>[[30%]]。"
+          "en": "Increases toxic gas damage to [[30%]]<ATK>.",
+          "zh": "毒雾每秒造成的伤害提升至[[30%]]<ATK>。"
         }
       ]
     }

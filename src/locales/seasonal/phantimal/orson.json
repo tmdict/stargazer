@@ -11,12 +11,12 @@
       },
       "levels": [
         {
-          "en": "Passive. When a battle starts, Orson gains [[5]] stacks of Fury and becomes frenzied. While frenzied, Orson takes [[20%]] less damage and remains [[unaffected]]. When his HP falls below [[40%]], he spends 1 Fury stack to restore [[12%]] of his max HP. When Orson loses all Fury stacks, he exits the frenzied state.\nActive. Orson hurls several spears forward, dealing <ATK>[[140%]] damage to all enemies along a 3-tile-wide path and knocking them down for [[1]]s. If Orson is frenzied, this instead deals <ATK>[[200%]] damage to all enemies on the battlefield and knocks them down for [[1]]s.",
-          "zh": "被动地，战斗开始时奥格获得[[5]]层“狂怒”并进入“狂暴”状态，“狂暴”状态下受到的伤害降低[[20%]]并获得[[霸体]]；当自身生命值低于[[40%]]时，消耗1层“狂怒”为自身恢复[[12%]]最大生命值，失去全部“狂怒”后退出“狂暴”状态。\n主动释放时，向前投出数根巨矛，对沿途3格宽轴线上的所有敌人造成<ATK>[[140%]]的伤害，并使其倒地[[1]]秒；若处于“狂暴”状态，则会对全场范围的敌人造成<ATK>[[200%]]的伤害，并使目标倒地[[1]]秒。"
+          "en": "Passive. When a battle starts, Orson gains [[5]] stacks of Fury and becomes frenzied. While frenzied, Orson takes [[20%]] less damage and remains [[unaffected]]. When his HP falls below [[40%]], he spends 1 Fury stack to restore [[12%]] of his max HP. When Orson loses all Fury stacks, he exits the frenzied state.\nActive. Orson hurls several spears forward, dealing [[140%]]<ATK> damage to all enemies along a 3-tile-wide path and knocking them down for [[1]]s. If Orson is frenzied, this instead deals [[200%]]<ATK> damage to all enemies on the battlefield and knocks them down for [[1]]s.",
+          "zh": "被动地，战斗开始时奥格获得[[5]]层“狂怒”并进入“狂暴”状态，“狂暴”状态下受到的伤害降低[[20%]]并获得[[霸体]]；当自身生命值低于[[40%]]时，消耗1层“狂怒”为自身恢复[[12%]]最大生命值，失去全部“狂怒”后退出“狂暴”状态。\n主动释放时，向前投出数根巨矛，对沿途3格宽轴线上的所有敌人造成[[140%]]<ATK>的伤害，并使其倒地[[1]]秒；若处于“狂暴”状态，则会对全场范围的敌人造成[[200%]]<ATK>的伤害，并使目标倒地[[1]]秒。"
         },
         {
-          "en": "Increases damage outside frenzied state to <ATK>[[180%]]; increases damage in frenzied state to <ATK>[[250%]].",
-          "zh": "非“狂暴”状态下造成的伤害提升至<ATK>[[180%]]，狂暴状态下造成的伤害提升至<ATK>[[250%]]。"
+          "en": "Increases damage outside frenzied state to [[180%]]<ATK>; increases damage in frenzied state to [[250%]]<ATK>.",
+          "zh": "非“狂暴”状态下造成的伤害提升至[[180%]]<ATK>，狂暴状态下造成的伤害提升至[[250%]]<ATK>。"
         },
         {
           "en": "Orson enters a battle with an extra [[500]] Initial Energy.",
@@ -31,16 +31,16 @@
       },
       "levels": [
         {
-          "en": "Orson lifts the nearest enemy with a spear, then throws them at the area with the most enemies. Upon impact, the lifted enemy and adjacent enemies take <ATK>[[120%]] damage and are knocked down for [[1]]s.",
-          "zh": "挑起距离自身最近的敌人，随后投掷巨矛将目标砸向敌方最密集区域，对目标格周围1格范围内的敌人造成<ATK>[[120%]]伤害，并使其倒地[[1]]秒。"
+          "en": "Orson lifts the nearest enemy with a spear, then throws them at the area with the most enemies. Upon impact, the lifted enemy and adjacent enemies take [[120%]]<ATK> damage and are knocked down for [[1]]s.",
+          "zh": "挑起距离自身最近的敌人，随后投掷巨矛将目标砸向敌方最密集区域，对目标格周围1格范围内的敌人造成[[120%]]<ATK>伤害，并使其倒地[[1]]秒。"
         },
         {
-          "en": "Increases damage taken by the lifted enemy and adjacent enemies to <ATK>[[140%]].",
-          "zh": "对目标及其周围1格范围内的敌人造成的伤害提升至<ATK>[[140%]]。"
+          "en": "Increases damage taken by the lifted enemy and adjacent enemies to [[140%]]<ATK>.",
+          "zh": "对目标及其周围1格范围内的敌人造成的伤害提升至[[140%]]<ATK>。"
         },
         {
-          "en": "Increases damage taken by the lifted enemy and adjacent enemies to <ATK>[[160%]].",
-          "zh": "对目标及其周围1格范围内的敌人造成的伤害提升至<ATK>[[160%]]。"
+          "en": "Increases damage taken by the lifted enemy and adjacent enemies to [[160%]]<ATK>.",
+          "zh": "对目标及其周围1格范围内的敌人造成的伤害提升至[[160%]]<ATK>。"
         }
       ]
     },
@@ -91,12 +91,12 @@
       },
       "levels": [
         {
-          "en": "Orson roars to taunt enemies within 2 tiles for [[3]]s. Then he sweeps adjacent enemies, dealing <ATK>[[130%]] damage and reducing their damage dealt by [[20%]] for [[5]]s.",
-          "zh": "发出怒吼，嘲讽周围2格范围内的敌人[[3]]秒，随后挥扫攻击，对附近1格范围内的敌人造成<ATK>[[130%]]伤害，并使其在接下来[[5]]秒内造成的伤害降低[[20%]]。"
+          "en": "Orson roars to taunt enemies within 2 tiles for [[3]]s. Then he sweeps adjacent enemies, dealing [[130%]]<ATK> damage and reducing their damage dealt by [[20%]] for [[5]]s.",
+          "zh": "发出怒吼，嘲讽周围2格范围内的敌人[[3]]秒，随后挥扫攻击，对附近1格范围内的敌人造成[[130%]]<ATK>伤害，并使其在接下来[[5]]秒内造成的伤害降低[[20%]]。"
         },
         {
-          "en": "Increases damage dealt to <ATK>[[160%]].",
-          "zh": "对敌人造成的伤害值提升至<ATK>[[160%]]。"
+          "en": "Increases damage dealt to [[160%]]<ATK>.",
+          "zh": "对敌人造成的伤害值提升至[[160%]]<ATK>。"
         }
       ]
     }

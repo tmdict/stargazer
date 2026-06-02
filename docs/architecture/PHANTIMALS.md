@@ -71,6 +71,15 @@ get their own section rather than overloading `c`:
 **Backward compatible:** old URLs have the flag unset, so the decoder never reads
 the section; a state with no phantimals encodes byte-for-byte as before.
 
+## Descriptions
+
+Phantimal skill descriptions use the same `[[value]]` / `<STAT>` markup as
+character skills, and `textHighlight` renders both. The character importer
+(`scripts/import-skills.ts`) reorders `<STAT>[[value]]` → `[[value]]<STAT>` (reads
+naturally in EN and ZH) at import. Phantimals have no importer, so their locale
+files are simply stored in that already-reordered form — a one-time normalization,
+since the season's data is fixed.
+
 ## Faction requirement
 
 A phantimal may only be on a team that fields at least

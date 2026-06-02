@@ -11,12 +11,12 @@
       },
       "levels": [
         {
-          "en": "Passive. Necrodrakon absorbs the HP enemies lose in battle. Whenever an enemy suffers HP loss, [[10%]] of that lost amount is converted into healing for Necrodrakon. Every time the same enemy's total HP loss exceeds [[20%]] of their max HP, their healing received is reduced by [[10%]]. This can trigger up to [[3]] times per enemy. Once the trigger limit is reached, Necrodrakon inflicts Abyssal Sacrifice on that enemy, further reducing their healing received by [[20%]].\nActive. Necrodrakon deals <ATK>[[100%]] base damage 3 times to all enemies, plus extra damage equal to [[4%]] of each target's lost HP. This extra damage cannot exceed <ATK>[[100%]]. Targets affected by Abyssal Sacrifice take true damage instead and are stunned for [[2.5]]s.",
-          "zh": "被动地，深渊蚀骨龙汲取战场中敌人损耗的生命力，每当敌人受到生命损耗时，损耗量的[[10%]]会转化为对深渊蚀骨龙的生命回复；每当同一名敌人累计损耗超过其[[20%]]最大生命值时，使这名敌人受到的治疗效果降低[[10%]]，该效果对同一名敌人至多触发[[3]]次，触发次数达到上限时对该敌人施加\"深渊献祭\"，额外使其受到的治疗效果降低[[20%]]。\n主动释放时，对所有敌人造成3次<ATK>[[100%]]基础伤害并附加目标[[4%]]已损耗生命值的伤害，附加伤害至多不超过<ATK>[[100%]]；拥有\"深渊献祭\"的目标受到的伤害类型会变为真实伤害，且会被眩晕[[2.5]]秒。"
+          "en": "Passive. Necrodrakon absorbs the HP enemies lose in battle. Whenever an enemy suffers HP loss, [[10%]] of that lost amount is converted into healing for Necrodrakon. Every time the same enemy's total HP loss exceeds [[20%]] of their max HP, their healing received is reduced by [[10%]]. This can trigger up to [[3]] times per enemy. Once the trigger limit is reached, Necrodrakon inflicts Abyssal Sacrifice on that enemy, further reducing their healing received by [[20%]].\nActive. Necrodrakon deals [[100%]]<ATK> base damage 3 times to all enemies, plus extra damage equal to [[4%]] of each target's lost HP. This extra damage cannot exceed [[100%]]<ATK>. Targets affected by Abyssal Sacrifice take true damage instead and are stunned for [[2.5]]s.",
+          "zh": "被动地，深渊蚀骨龙汲取战场中敌人损耗的生命力，每当敌人受到生命损耗时，损耗量的[[10%]]会转化为对深渊蚀骨龙的生命回复；每当同一名敌人累计损耗超过其[[20%]]最大生命值时，使这名敌人受到的治疗效果降低[[10%]]，该效果对同一名敌人至多触发[[3]]次，触发次数达到上限时对该敌人施加\"深渊献祭\"，额外使其受到的治疗效果降低[[20%]]。\n主动释放时，对所有敌人造成3次[[100%]]<ATK>基础伤害并附加目标[[4%]]已损耗生命值的伤害，附加伤害至多不超过[[100%]]<ATK>；拥有\"深渊献祭\"的目标受到的伤害类型会变为真实伤害，且会被眩晕[[2.5]]秒。"
         },
         {
-          "en": "Increases base damage per hit to <ATK>[[120%]].",
-          "zh": "每次造成的基础伤害提升至<ATK>[[120%]]。"
+          "en": "Increases base damage per hit to [[120%]]<ATK>.",
+          "zh": "每次造成的基础伤害提升至[[120%]]<ATK>。"
         },
         {
           "en": "Whenever a non-summoned enemy is defeated, Necrodrakon gains bonus max HP and ATK equal to [[10%]] of that enemy's max HP and [[10%]] of their ATK. The total bonus from this effect cannot exceed [[50%]] of Necrodrakon's corresponding initial stats.",
@@ -31,16 +31,16 @@
       },
       "levels": [
         {
-          "en": "Necrodrakon unleashes powerful dragon's breath at the area with the most enemies, dealing <ATK>[[130%]] damage to all enemies in a 1-tile radius and creating an abyss mire that persists for [[5]]s. Enemies within the mire lose [[20]] Haste and [[50%]] movement speed, and take <ATK>[[30%]] damage every [[0.5]]s.",
-          "zh": "在敌方最密集区域喷吐龙焰，对半径1格范围内所有敌人造成<ATK>[[130%]]伤害，并制造一片持续[[5]]秒的深渊泥潭，处于泥潭内的敌人急速降低[[20]]点，移动速度降低[[50%]]，并且每[[0.5]]秒受到<ATK>[[30%]]伤害。"
+          "en": "Necrodrakon unleashes powerful dragon's breath at the area with the most enemies, dealing [[130%]]<ATK> damage to all enemies in a 1-tile radius and creating an abyss mire that persists for [[5]]s. Enemies within the mire lose [[20]] Haste and [[50%]] movement speed, and take [[30%]]<ATK> damage every [[0.5]]s.",
+          "zh": "在敌方最密集区域喷吐龙焰，对半径1格范围内所有敌人造成[[130%]]<ATK>伤害，并制造一片持续[[5]]秒的深渊泥潭，处于泥潭内的敌人急速降低[[20]]点，移动速度降低[[50%]]，并且每[[0.5]]秒受到[[30%]]<ATK>伤害。"
         },
         {
-          "en": "Increases dragon's breath damage to <ATK>[[140%]].",
-          "zh": "喷吐龙焰造成的伤害提升至<ATK>[[140%]]。"
+          "en": "Increases dragon's breath damage to [[140%]]<ATK>.",
+          "zh": "喷吐龙焰造成的伤害提升至[[140%]]<ATK>。"
         },
         {
-          "en": "Increases dragon's breath damage to <ATK>[[150%]].",
-          "zh": "喷吐龙焰造成的伤害提升至<ATK>[[150%]]。"
+          "en": "Increases dragon's breath damage to [[150%]]<ATK>.",
+          "zh": "喷吐龙焰造成的伤害提升至[[150%]]<ATK>。"
         }
       ]
     },
@@ -91,12 +91,12 @@
       },
       "levels": [
         {
-          "en": "Necrodrakon targets the [[2]] [[weakest]] enemies, dealing <ATK>[[200%]] damage and stunning them for [[1]]s. If a target has a shield, they also lose <ATK>[[200%]] shield value.",
-          "zh": "以[[最虚弱的]]的[[2]]名敌人为目标，对目标造成<ATK>[[200%]]伤害并使其眩晕[[1]]秒；若目标拥有护盾，则额外使其失去<ATK>[[200%]]的护盾量。"
+          "en": "Necrodrakon targets the [[2]] [[weakest]] enemies, dealing [[200%]]<ATK> damage and stunning them for [[1]]s. If a target has a shield, they also lose [[200%]]<ATK> shield value.",
+          "zh": "以[[最虚弱的]]的[[2]]名敌人为目标，对目标造成[[200%]]<ATK>伤害并使其眩晕[[1]]秒；若目标拥有护盾，则额外使其失去[[200%]]<ATK>的护盾量。"
         },
         {
-          "en": "Increases the damage dealt to the target to <ATK>[[250%]].",
-          "zh": "对目标造成的伤害提升至<ATK>[[250%]]。"
+          "en": "Increases the damage dealt to the target to [[250%]]<ATK>.",
+          "zh": "对目标造成的伤害提升至[[250%]]<ATK>。"
         }
       ]
     }

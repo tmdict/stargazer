@@ -11,12 +11,12 @@
       },
       "levels": [
         {
-          "en": "Passive. Midnight Hunter switches between light and dark forms during battle.\nWhile in light form, it increases Max HP by [[50%]] and Haste by [[30]].\nWhile in dark form, it increases ATK by [[30%]] and Phys & Magic DEF by [[50%]].\nWhen assisting or defeating an enemy or casting an Ultimate, Midnight Hunter gains 1 Ancient Blessing. Each Ancient Blessing further increases the current form's buffs by [[20%]], stacking up to [[5]] times.\nActive. While in light form, Midnight Hunter deals <ATK>[[160%]] damage to enemies in a [[4]]-tile rectangular area in front, plus extra true damage equal to [[10%]] of Midnight Hunter's max HP. It then knocks the enemies into the air before knocking them down for [[1]]s.\nWhile in dark form, Midnight Hunter deals <ATK>[[160%]] damage to enemies within the radius of a [[2]]-tile arc in front, plus extra true damage equal to [[15%]] of each target's lost HP. It then knocks them into the air before knocking them down for [[1]]s. This extra true damage cannot exceed <ATK>[[300%]]. Midnight Hunter switches forms after casting the skill.",
-          "zh": "被动地，在战斗中以\"极昼形态\"与\"极夜形态\"交替作战：极昼形态下自身最大生命值提高[[50%]]，急速提高[[30]]；极夜形态下自身攻击力提高[[30%]]、护甲和魔抗提高[[50%]]。每参与击败敌人或释放终极技能后获得1枚\"远古赐福\"，每枚\"远古赐福\"使当前形态增益效果额外提高[[20%]]，至多持有[[5]]枚。\n主动释放时，极昼形态下会对前方[[4]]格矩形范围内的敌人造成<ATK>[[160%]]额外附加自身[[10%]]最大生命值的真实伤害，同时击飞目标使其倒地[[1]]秒。极夜形态下会对前方[[2]]格扇形范围内的敌人造成<ATK>[[160%]]额外附加目标[[15%]]已损耗生命值的真实伤害，同时击飞目标使其倒地[[1]]秒，额外附加的伤害不超过自身<ATK>[[300%]]。释放后自身切换至另一形态。"
+          "en": "Passive. Midnight Hunter switches between light and dark forms during battle.\nWhile in light form, it increases Max HP by [[50%]] and Haste by [[30]].\nWhile in dark form, it increases ATK by [[30%]] and Phys & Magic DEF by [[50%]].\nWhen assisting or defeating an enemy or casting an Ultimate, Midnight Hunter gains 1 Ancient Blessing. Each Ancient Blessing further increases the current form's buffs by [[20%]], stacking up to [[5]] times.\nActive. While in light form, Midnight Hunter deals [[160%]]<ATK> damage to enemies in a [[4]]-tile rectangular area in front, plus extra true damage equal to [[10%]] of Midnight Hunter's max HP. It then knocks the enemies into the air before knocking them down for [[1]]s.\nWhile in dark form, Midnight Hunter deals [[160%]]<ATK> damage to enemies within the radius of a [[2]]-tile arc in front, plus extra true damage equal to [[15%]] of each target's lost HP. It then knocks them into the air before knocking them down for [[1]]s. This extra true damage cannot exceed [[300%]]<ATK>. Midnight Hunter switches forms after casting the skill.",
+          "zh": "被动地，在战斗中以\"极昼形态\"与\"极夜形态\"交替作战：极昼形态下自身最大生命值提高[[50%]]，急速提高[[30]]；极夜形态下自身攻击力提高[[30%]]、护甲和魔抗提高[[50%]]。每参与击败敌人或释放终极技能后获得1枚\"远古赐福\"，每枚\"远古赐福\"使当前形态增益效果额外提高[[20%]]，至多持有[[5]]枚。\n主动释放时，极昼形态下会对前方[[4]]格矩形范围内的敌人造成[[160%]]<ATK>额外附加自身[[10%]]最大生命值的真实伤害，同时击飞目标使其倒地[[1]]秒。极夜形态下会对前方[[2]]格扇形范围内的敌人造成[[160%]]<ATK>额外附加目标[[15%]]已损耗生命值的真实伤害，同时击飞目标使其倒地[[1]]秒，额外附加的伤害不超过自身[[300%]]<ATK>。释放后自身切换至另一形态。"
         },
         {
-          "en": "Increases base damage dealt to <ATK>[[240%]].",
-          "zh": "对敌人造成的基础伤害提升至<ATK>[[240%]]。"
+          "en": "Increases base damage dealt to [[240%]]<ATK>.",
+          "zh": "对敌人造成的基础伤害提升至[[240%]]<ATK>。"
         },
         {
           "en": "Each Ancient Blessing also increases the ATK of all other allied heroes by [[3%]].",
@@ -31,16 +31,16 @@
       },
       "levels": [
         {
-          "en": "Midnight Hunter delivers a mighty strike with its greatsword, unleashing a sword shock across a [[4]]-tile rectangular area in front. The shock deals <ATK>[[200%]] damage to all enemies within range.\nIf Midnight Hunter has at least [[3]] Ancient Blessings, it also performs a slash after the greatsword strike. In light form, the slash deals <ATK>[[140%]] true damage to enemies within [[4]] tiles in front; in dark form, it deals <ATK>[[140%]] true damage to enemies within [[2]] tiles around Midnight Hunter.",
-          "zh": "挥舞巨剑重重劈下，斩出覆盖前方[[4]]格矩形范围的剑气，对范围内所有敌人造成<ATK>[[200%]]伤害；若自身当前持有的\"远古赐福\"不少于[[3]]枚，则追加一道斩击，极昼形态下对前方[[4]]格的敌人造成<ATK>[[140%]]真实伤害，在极夜形态下对周围[[2]]格的敌人造成<ATK>[[140%]]真实伤害。"
+          "en": "Midnight Hunter delivers a mighty strike with its greatsword, unleashing a sword shock across a [[4]]-tile rectangular area in front. The shock deals [[200%]]<ATK> damage to all enemies within range.\nIf Midnight Hunter has at least [[3]] Ancient Blessings, it also performs a slash after the greatsword strike. In light form, the slash deals [[140%]]<ATK> true damage to enemies within [[4]] tiles in front; in dark form, it deals [[140%]]<ATK> true damage to enemies within [[2]] tiles around Midnight Hunter.",
+          "zh": "挥舞巨剑重重劈下，斩出覆盖前方[[4]]格矩形范围的剑气，对范围内所有敌人造成[[200%]]<ATK>伤害；若自身当前持有的\"远古赐福\"不少于[[3]]枚，则追加一道斩击，极昼形态下对前方[[4]]格的敌人造成[[140%]]<ATK>真实伤害，在极夜形态下对周围[[2]]格的敌人造成[[140%]]<ATK>真实伤害。"
         },
         {
-          "en": "Increases damage dealt to all enemies within range to <ATK>[[240%]].",
-          "zh": "对范围内所有敌人造成的伤害提升至<ATK>[[240%]]。"
+          "en": "Increases damage dealt to all enemies within range to [[240%]]<ATK>.",
+          "zh": "对范围内所有敌人造成的伤害提升至[[240%]]<ATK>。"
         },
         {
-          "en": "Increases damage dealt to all enemies within range to <ATK>[[240%]].",
-          "zh": "对范围内所有敌人造成的伤害提升至<ATK>[[240%]]。"
+          "en": "Increases damage dealt to all enemies within range to [[240%]]<ATK>.",
+          "zh": "对范围内所有敌人造成的伤害提升至[[240%]]<ATK>。"
         }
       ]
     },
