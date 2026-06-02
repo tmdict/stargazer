@@ -114,6 +114,14 @@ export const useGameDataStore = defineStore('gameData', () => {
     return phantimals.value.find((phantimal) => phantimal.id === localId)
   }
 
+  // Resolves a grid unit's faction by ID, mapping companions (10000+) to their
+  // main character and phantimals to their own faction.
+  const getCharacterFaction = (characterId: number): string | undefined => {
+    if (isPhantimalId(characterId)) return getPhantimalById(characterId)?.faction
+    const actualId = characterId >= 10000 ? characterId % 10000 : characterId
+    return getCharacterById(actualId)?.faction
+  }
+
   // Safe accessors for images and icons
   const getCharacterImage = (name: string): string => {
     return characterImages.value[name] ?? ''
@@ -150,6 +158,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterNameById,
     getArtifactById,
     getPhantimalById,
+    getCharacterFaction,
     getCharacterImage,
     getArtifactImage,
     getArtifactEffects,
