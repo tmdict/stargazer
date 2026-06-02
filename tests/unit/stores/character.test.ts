@@ -1,11 +1,14 @@
+import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { CharacterType } from '@/lib/types/character'
+import type { PhantimalType } from '@/lib/types/phantimal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 
 const buildCharacter = (id: number, sourceHexId?: number): CharacterType => ({
@@ -247,5 +250,71 @@ describe('characterStore phantimals', () => {
 
     expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBeUndefined()
     expect(gridStore.getTile(tiles[1]!.getId()).characterId).toBe(toPhantimalId(2))
+  })
+})
+
+describe('characterStore phantimal faction rule', () => {
+  let store: ReturnType<typeof useCharacterStore>
+  let gridStore: ReturnType<typeof useGridStore>
+
+  // Character id → faction, fed to the (spied) data store so the rule is active.
+  const FACTIONS: Record<number, string> = { 1: 'lightbearer', 2: 'lightbearer', 3: 'lightbearer' }
+
+  const allyTiles = () =>
+    gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY)
+
+  const aurelian: PhantimalType = {
+    id: 1,
+    name: 'aurelian',
+    season: 7,
+    range: 20,
+    faction: 'lightbearer',
+  }
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+    gridStore = useGridStore()
+    const gameData = useGameDataStore()
+    vi.spyOn(gameData, 'getCharacterFaction').mockImplementation((id: number) => FACTIONS[id])
+    vi.spyOn(gameData, 'getPhantimalById').mockReturnValue(aurelian)
+    store = useCharacterStore()
+  })
+
+  it('blocks placement below the faction requirement', () => {
+    const tiles = allyTiles()
+    store.placeCharacterOnHex(tiles[0]!.getId(), 1, Team.ALLY)
+    store.placeCharacterOnHex(tiles[1]!.getId(), 2, Team.ALLY) // only 2 lightbearers
+
+    const ok = store.placePhantimalOnHex(tiles[2]!.getId(), toPhantimalId(1), Team.ALLY)
+
+    expect(ok).toBe(false)
+    expect(gridStore.getTile(tiles[2]!.getId()).characterId).toBeUndefined()
+  })
+
+  it('allows placement once the faction requirement is met', () => {
+    const tiles = allyTiles()
+    store.placeCharacterOnHex(tiles[0]!.getId(), 1, Team.ALLY)
+    store.placeCharacterOnHex(tiles[1]!.getId(), 2, Team.ALLY)
+    store.placeCharacterOnHex(tiles[2]!.getId(), 3, Team.ALLY) // now 3 lightbearers
+
+    const ok = store.placePhantimalOnHex(tiles[3]!.getId(), toPhantimalId(1), Team.ALLY)
+
+    expect(ok).toBe(true)
+    expect(gridStore.getTile(tiles[3]!.getId()).characterId).toBe(toPhantimalId(1))
+  })
+
+  it('auto-removes a phantimal when its faction drops below the requirement', async () => {
+    const tiles = allyTiles()
+    store.placeCharacterOnHex(tiles[0]!.getId(), 1, Team.ALLY)
+    store.placeCharacterOnHex(tiles[1]!.getId(), 2, Team.ALLY)
+    store.placeCharacterOnHex(tiles[2]!.getId(), 3, Team.ALLY)
+    store.placePhantimalOnHex(tiles[3]!.getId(), toPhantimalId(1), Team.ALLY)
+    expect(gridStore.getTile(tiles[3]!.getId()).characterId).toBe(toPhantimalId(1))
+
+    // Removing a lightbearer drops the count to 2 — the phantimal must leave.
+    store.removeCharacterFromHex(tiles[0]!.getId())
+    await nextTick()
+
+    expect(gridStore.getTile(tiles[3]!.getId()).characterId).toBeUndefined()
   })
 })

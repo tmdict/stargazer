@@ -3,9 +3,12 @@ import { computed, ref } from 'vue'
 
 import PhantimalModal from './modals/PhantimalModal.vue'
 import InfoPill from './ui/InfoPill.vue'
+import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useTouchDetection } from '@/composables/useTouchDetection'
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { useGridStore } from '@/stores/grid'
@@ -22,6 +25,7 @@ const i18n = useI18nStore()
 const gridStore = useGridStore()
 const { selectedTeam, targetHexId, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
+const { isTouchDevice } = useTouchDetection()
 
 const sorted = computed(() => [...phantimals].sort((a, b) => a.id - b.id))
 
@@ -91,6 +95,34 @@ const handleDragEnd = (event: DragEvent) => {
   if (isDraggable) endDrag(event)
 }
 
+// Hover tooltip: whether the phantimal can currently be deployed on the selected
+// team, with the faction unit count. One shared popup follows the hovered icon.
+const hovered = ref<PhantimalType | null>(null)
+const hoveredEl = ref<HTMLElement | null>(null)
+
+const onPortraitEnter = (event: MouseEvent, phantimal: PhantimalType) => {
+  if (isTouchDevice.value) return
+  hovered.value = phantimal
+  hoveredEl.value = event.currentTarget as HTMLElement
+}
+
+const onPortraitLeave = () => {
+  hovered.value = null
+  hoveredEl.value = null
+}
+
+const tooltipText = computed(() => {
+  const phantimal = hovered.value
+  if (!phantimal) return ''
+  const count = characterStore.phantimalFactionCount(
+    toPhantimalId(phantimal.id),
+    selectedTeam.value,
+  )
+  const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
+  const key = canPlace ? 'app.phantimalDeployable' : 'app.phantimalLocked'
+  return i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT })
+})
+
 const selected = ref<PhantimalType | null>(null)
 const showModal = ref(false)
 const openModal = (phantimal: PhantimalType) => {
@@ -112,6 +144,8 @@ const openModal = (phantimal: PhantimalType) => {
           @dragend="handleDragEnd"
           @mousedown="handleMouseDown"
           @mouseup="handleMouseUp(phantimal)"
+          @mouseenter="onPortraitEnter($event, phantimal)"
+          @mouseleave="onPortraitLeave"
         >
           <picture class="portrait-pic">
             <source :srcset="phantimalImageSources(phantimal.name).avif" type="image/avif" />
@@ -134,6 +168,19 @@ const openModal = (phantimal: PhantimalType) => {
       :phantimal="selected"
       @close="showModal = false"
     />
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="hovered && hoveredEl"
+        :target-element="hoveredEl"
+        variant="simple"
+        :offset="10"
+      >
+        <template #content>
+          <div class="phantimal-tooltip">{{ tooltipText }}</div>
+        </template>
+      </TooltipPopup>
+    </Teleport>
   </section>
 </template>
 
@@ -194,6 +241,13 @@ const openModal = (phantimal: PhantimalType) => {
 .phantimal.placed {
   box-shadow: 0 0 0 2px #c05b4d;
   border-color: #c05b4d;
+}
+
+.phantimal-tooltip {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* display: contents so the <picture> doesn't add a box around the image. */
