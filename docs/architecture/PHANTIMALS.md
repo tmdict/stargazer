@@ -71,18 +71,49 @@ get their own section rather than overloading `c`:
 **Backward compatible:** old URLs have the flag unset, so the decoder never reads
 the section; a state with no phantimals encodes byte-for-byte as before.
 
+## Faction requirement
+
+A phantimal may only be on a team that fields at least
+`PHANTIMAL_FACTION_REQUIREMENT` (3) characters of its faction. The rule lives in
+the pure, injectable `lib/characters/phantimalFaction.ts` (`requiredFactions`,
+`countTeamFaction`) — it takes a `factionOf(id)` resolver so it stays free of the
+data store. **midnight-hunter** is special: its `requiredFactions` override counts
+both `hypogean` and `celestial`. Only distinct main characters count — companions
+and phantimals are excluded.
+
+The character store wires `gameDataStore.getCharacterFaction` into the rule and
+enforces it at four points:
+
+- **Placement gate** — `placePhantimalOnHex` / `autoPlacePhantimal` return `false`
+  if the team is short, so a click or drop simply does nothing.
+- **Cross-team gate** — `handleCharacterDrop` blocks dragging a phantimal to the
+  other team (move or swap) unless that team still qualifies once the swapped
+  character leaves; the phantimal stays put.
+- **Auto-removal** — a `watch(characterPlacements)` runs
+  `enforcePhantimalFactionRule`, removing any on-field phantimal whose team drops
+  below the requirement (e.g. a faction character is removed or moved away).
+- **Roster tooltip** — `PhantimalSelection` shows `app.phantimalDeployable` /
+  `app.phantimalLocked` with the live `count/required` on hover.
+
+When phantimal data isn't loaded (e.g. unit tests) the rule can't be evaluated and
+placement is allowed, so the gate is inert rather than blocking.
+
 ## Modularity & removability
 
 Everything phantimal-specific is reachable from a short list of seams, each keyed
 on `isPhantimalId` or living in a dedicated file. To retire the feature:
 
-1. Delete `lib/characters/phantimal.ts`, `PhantimalSelection.vue`,
-   `modals/PhantimalModal.vue`, the phantimal data/locale files, and this doc.
+1. Delete `lib/characters/phantimal.ts`, `lib/characters/phantimalFaction.ts`,
+   `PhantimalSelection.vue`, `modals/PhantimalModal.vue`, the phantimal
+   data/locale files (incl. `app/phantimalDeployable|Locked.json`), and this doc.
 2. Remove the phantimal section from `binaryEncoder.ts` / `gridStateSerializer.ts`
-   / `urlState.ts` (the `p` field) and the `getPhantimalById` accessor.
-3. Drop the `!isPhantimalId(...)` guards (they collapse to "always a character"),
-   the `GridCharacters` render branch, and `Grid.phantimalIdOffset` (restoring
-   `isCompanionId` to a single lower bound).
+   / `urlState.ts` (the `p` field) and the `getPhantimalById` /
+   `getCharacterFaction` accessors.
+3. Drop the phantimal helpers from the character store (placement, the faction
+   gate, and the `enforcePhantimalFactionRule` watcher), the `!isPhantimalId(...)`
+   guards (they collapse to "always a character"), the `GridCharacters` render
+   branch, and `Grid.phantimalIdOffset` (restoring `isCompanionId` to a single
+   lower bound).
 
 The `GridTile` model, targeting, pathfinding, swap/move, and the `c` URL section
 were never modified for phantimals, so nothing there needs reverting.
