@@ -36,6 +36,10 @@ const {
   onTouchMove,
   onTouchEnd,
   onMouseDown,
+  onContentTouchStart,
+  onContentTouchMove,
+  onContentTouchEnd,
+  onContentMouseDown,
 } = useBottomSheet({ peek, expanded: expandedFraction, initialExpanded })
 
 // CSS vars so the pre-mount CSS fallback derives from the same props the
@@ -77,7 +81,17 @@ defineExpose({ expand })
     >
       <span class="sheet-handle" />
     </div>
-    <slot />
+    <!-- Hosts the overscroll-to-collapse listeners; transparent to layout. -->
+    <div
+      class="sheet-content"
+      @touchstart.passive="onContentTouchStart"
+      @touchmove="onContentTouchMove"
+      @touchend="onContentTouchEnd"
+      @touchcancel="onContentTouchEnd"
+      @mousedown="onContentMouseDown"
+    >
+      <slot />
+    </div>
   </div>
 </template>
 
@@ -95,6 +109,13 @@ defineExpose({ expand })
 /* The drag handle only exists in the mobile sheet mode. */
 .sheet-handle-area {
   display: none;
+}
+
+/* Transparent to layout (display: contents): the slotted content stays a direct
+   flex child of the sheet, so its own fill/scroll rules are unchanged. The
+   wrapper exists only to host the overscroll-to-collapse drag listeners. */
+.sheet-content {
+  display: contents;
 }
 
 /* Wide screens: the column is height-capped so long content scrolls within it

@@ -67,11 +67,13 @@ export function useBottomSheet(opts: Options) {
     if (!dragging.value) return
     dragDelta.value = clientY - startY
   }
-  function dragEnd() {
+  function dragEnd(allowTap = true) {
     if (!dragging.value) return
     dragging.value = false
-    // A near-stationary release is a tap (toggle); otherwise snap to the nearer detent.
-    if (Math.abs(dragDelta.value) < 8) {
+    // A near-stationary release is a tap (toggle); otherwise snap to the nearer
+    // detent. Content-initiated drags pass allowTap=false so a small overscroll
+    // settles back instead of toggling.
+    if (allowTap && Math.abs(dragDelta.value) < 8) {
       expanded.value = !expanded.value
     } else {
       expanded.value = visible.value >= (opts.peek + expandedPx.value) / 2
@@ -111,8 +113,90 @@ export function useBottomSheet(opts: Options) {
     window.addEventListener('mouseup', onMouseUp)
   }
 
-  function collapse() {
-    expanded.value = false
+  // Whole-sheet drag from the content area (not just the handle):
+  //  • Collapsed — any drag past the threshold drives the sheet, so swiping up on
+  //    the exposed peek expands it.
+  //  • Expanded — only a downward pull while the inner scroll is at the top pulls
+  //    the sheet down (overscroll-to-collapse); otherwise the content scrolls and
+  //    we never touch the gesture.
+  const CONTENT_DRAG_THRESHOLD = 4 // px of travel before the sheet engages
+  let scrollEl: HTMLElement | null = null
+  let anchorY = 0
+
+  // Nearest scrollable ancestor of the touch target (the element that owns the
+  // sheet's content scroll); null when nothing scrolls (short content).
+  function findScrollable(target: EventTarget | null): HTMLElement | null {
+    let el = target instanceof HTMLElement ? target : null
+    while (el) {
+      if (el.scrollHeight > el.clientHeight) {
+        const overflowY = getComputedStyle(el).overflowY
+        if (overflowY === 'auto' || overflowY === 'scroll') return el
+      }
+      el = el.parentElement
+    }
+    return null
+  }
+
+  // Begin the sheet drag from the anchor and apply the current position at once.
+  function engageDrag(clientY: number): boolean {
+    dragStart(anchorY)
+    dragMove(clientY)
+    return dragging.value
+  }
+
+  // Drives a content gesture frame. Returns true once the sheet drag has engaged,
+  // signalling the caller to suppress native scroll for the rest of the gesture.
+  function contentDragStep(clientY: number): boolean {
+    if (dragging.value) {
+      dragMove(clientY)
+      return true
+    }
+    // Collapsed: any drag past the threshold moves the sheet (swipe up to expand).
+    if (!expanded.value) {
+      return Math.abs(clientY - anchorY) > CONTENT_DRAG_THRESHOLD ? engageDrag(clientY) : false
+    }
+    // Expanded: not at the top yet, so let content scroll and keep the anchor at
+    // the live position so the pull is measured from the moment the top is reached.
+    if (scrollEl && scrollEl.scrollTop > 0) {
+      anchorY = clientY
+      return false
+    }
+    if (clientY - anchorY > CONTENT_DRAG_THRESHOLD) return engageDrag(clientY)
+    // Moving up at the top: re-anchor so a later downward pull starts fresh.
+    if (clientY < anchorY) anchorY = clientY
+    return false
+  }
+
+  function onContentTouchStart(e: TouchEvent) {
+    if (!isMobile.value) return
+    scrollEl = findScrollable(e.target)
+    anchorY = e.touches[0]!.clientY
+  }
+  function onContentTouchMove(e: TouchEvent) {
+    if (!isMobile.value) return
+    if (contentDragStep(e.touches[0]!.clientY)) e.preventDefault()
+  }
+  function onContentTouchEnd() {
+    if (!dragging.value) return
+    lastTouchEnd = Date.now()
+    dragEnd(false)
+  }
+
+  function onContentMouseMove(e: MouseEvent) {
+    if (contentDragStep(e.clientY)) e.preventDefault()
+  }
+  function onContentMouseUp() {
+    window.removeEventListener('mousemove', onContentMouseMove)
+    window.removeEventListener('mouseup', onContentMouseUp)
+    dragEnd(false)
+  }
+  function onContentMouseDown(e: MouseEvent) {
+    if (!isMobile.value) return
+    if (Date.now() - lastTouchEnd < 700) return
+    scrollEl = findScrollable(e.target)
+    anchorY = e.clientY
+    window.addEventListener('mousemove', onContentMouseMove)
+    window.addEventListener('mouseup', onContentMouseUp)
   }
 
   function update() {
@@ -138,6 +222,8 @@ export function useBottomSheet(opts: Options) {
     window.removeEventListener('resize', scheduleUpdate)
     window.removeEventListener('mousemove', onMouseMove)
     window.removeEventListener('mouseup', onMouseUp)
+    window.removeEventListener('mousemove', onContentMouseMove)
+    window.removeEventListener('mouseup', onContentMouseUp)
   })
 
   return {
@@ -149,6 +235,9 @@ export function useBottomSheet(opts: Options) {
     onTouchMove,
     onTouchEnd,
     onMouseDown,
-    collapse,
+    onContentTouchStart,
+    onContentTouchMove,
+    onContentTouchEnd,
+    onContentMouseDown,
   }
 }
