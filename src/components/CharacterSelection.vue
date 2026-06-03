@@ -68,7 +68,7 @@ const removeCharacterFromGrid = (characterId: number) => {
       :characters
     />
 
-    <CharacterGrid class="characters">
+    <CharacterGrid>
       <CharacterIcon
         v-for="character in filteredCharacters"
         :key="character.id"
@@ -99,25 +99,6 @@ const removeCharacterFromGrid = (characterId: number) => {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-  }
-}
-
-/* CharacterGrid owns the wrap-grid layout; this only adds the inset (the tab
-   panel's horizontal padding is zeroed on mobile, so the grid carries it). */
-.characters {
-  padding: var(--spacing-lg);
-  border-radius: var(--radius-large);
-}
-
-@media (max-width: 768px) {
-  .characters {
-    padding: var(--spacing-md);
-  }
-}
-
-@media (max-width: 480px) {
-  .characters {
-    padding: var(--spacing-sm);
   }
 }
 </style>

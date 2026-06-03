@@ -298,18 +298,17 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 }
 
 @media (max-width: 768px) {
-  /* Inside the mobile roster sheet (BottomSheet): fill it and scroll within,
-     carrying the inset since the sheet itself has no padding. Horizontal inset
-     matches the arena roster (CharacterSelection's .characters) so both grids
-     fit the same icons per row. */
+  /* Fill the mobile roster sheet and scroll within it. No panel inset: the grid
+     insets itself (CharacterGrid) and the filter/results go edge-to-edge; only
+     the search row keeps a horizontal inset so the input isn't flush. */
   .skills-selection {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 0 var(--spacing-md) var(--spacing-lg);
+    padding: 0 0 var(--spacing-lg);
   }
   .search-row {
-    padding-top: var(--spacing-sm);
+    padding: var(--spacing-sm) var(--spacing-md) 0;
   }
   .search-input {
     min-width: 0;
@@ -320,7 +319,10 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 @media (max-width: 480px) {
   .skills-selection {
     gap: var(--spacing-sm);
-    padding: 0 var(--spacing-sm) var(--spacing-md);
+    padding: 0 0 var(--spacing-md);
+  }
+  .search-row {
+    padding: var(--spacing-sm) var(--spacing-sm) 0;
   }
   /* Match CharacterInfoIcons mobile sizing. */
   .meta-row {
@@ -339,7 +341,7 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   padding: var(--spacing-sm) var(--spacing-lg) var(--spacing-sm) 0;
 }
 
-/* Cards carry their own padding; wrapper can go edge-to-edge on mobile. */
+/* Cards carry their own padding; wrapper goes edge-to-edge on mobile. */
 @media (max-width: 768px) {
   .results {
     padding: 0;
@@ -376,6 +378,13 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
 }
 .result-row.active {
   border-color: var(--color-primary);
+}
+/* Full-width on mobile → square corners. Keep after the base .result-row rules
+   so it wins on source order (equal specificity). */
+@media (max-width: 768px) {
+  .result-row {
+    border-radius: 0;
+  }
 }
 
 .result-portrait {
