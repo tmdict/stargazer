@@ -22,14 +22,17 @@ grid" for free.
 Phantimals are distinguished by an **ID namespace**, the same technique already
 used for companions (`companionIdOffset = 10000`):
 
-- `lib/characters/phantimal.ts` owns `PHANTIMAL_ID_OFFSET = 20000` plus the pure
+- `lib/characters/phantimal.ts` owns `PHANTIMAL_ID_OFFSET = 100000` plus the pure
   helpers `isPhantimalId`, `toPhantimalId(localId)`, `toLocalPhantimalId(id)`.
 - A tile whose `characterId >= PHANTIMAL_ID_OFFSET` holds phantimal
   `characterId - PHANTIMAL_ID_OFFSET` (local IDs come from
   `src/data/seasonal/phantimal/*.json`).
 - `grid.ts` imports the constant as `Grid.phantimalIdOffset`. `isCompanionId` is
   bounded by it (`>= companionIdOffset && < phantimalIdOffset`) so phantimal IDs
-  are never mistaken for companions.
+  are never mistaken for companions. The offset sits well above the companion
+  band (`N * companionIdOffset + characterId`, N ≥ 1) so a character with several
+  companions (e.g. Zanie's two turrets at `10089`/`20089`) can't spill into the
+  phantimal namespace.
 
 Because the simulation is ID-agnostic, the only code that needs phantimal
 awareness is the small set of seams below.
@@ -58,7 +61,7 @@ passes to `getClosestTargetMap` (the static map is keyed by character id only).
 
 ## URL serialization
 
-Phantimal IDs (20000+) don't fit the character section's 14-bit ID field, so they
+Phantimal IDs (100000+) don't fit the character section's 14-bit ID field, so they
 get their own section rather than overloading `c`:
 
 - `GridState.p`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`).

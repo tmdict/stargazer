@@ -63,15 +63,15 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
 /* Widen the reader on larger monitors; the right column keeps the remainder. */
 @media (min-width: 1600px) {
   .skills-layout > .skills-reader {
-    flex-basis: 760px;
-    width: 760px;
+    flex-basis: 860px;
+    width: 860px;
   }
 }
 
 @media (min-width: 1920px) {
   .skills-layout > .skills-reader {
-    flex-basis: 860px;
-    width: 860px;
+    flex-basis: 960px;
+    width: 960px;
   }
 }
 
