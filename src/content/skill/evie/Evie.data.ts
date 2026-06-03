@@ -1,4 +1,4 @@
-import ravionImage from '@/assets/images/character/ravion.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
+import evieImage from '@/assets/images/character/evie.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
 
 export const gridStyles = {
   main: {
@@ -29,14 +29,14 @@ export const gridStyles = {
       44: 44,
       45: 45,
     },
-    highlight: [2, 3],
-    highlight2: [4, 7],
+    highlight: [1],
+    highlight2: [2, 3, 7],
     character: {
-      ravion: 16,
+      evie: 16,
     },
   },
 }
 
 export const images = {
-  ravion: ravionImage,
+  evie: evieImage,
 }
