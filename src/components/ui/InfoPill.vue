@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import IconInfo from '@/components/ui/IconInfo.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 // Green text pill shown under a seasonal artifact / phantimal icon; opens the
@@ -18,6 +19,7 @@ const i18n = useI18nStore()
       :title="i18n.t('app.info')"
       @click="emit('click')"
     >
+      <IconInfo :size="15" class="info-pill-icon" />
       {{ label }}
     </button>
   </div>
@@ -34,13 +36,14 @@ const i18n = useI18nStore()
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 20px;
-  padding: 0 10px;
+  gap: 5px;
+  height: 23px;
+  padding: 0 12px 0 8px;
   background: var(--color-primary);
   border: none;
   border-radius: 999px;
   color: #fff;
-  font-size: 11px;
+  font-size: 12.5px;
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -49,5 +52,9 @@ const i18n = useI18nStore()
 
 .info-pill:hover {
   transform: scale(1.05);
+}
+
+.info-pill-icon {
+  flex-shrink: 0;
 }
 </style>

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useHead } from '@unhead/vue'
 
 import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
 import WandWarsInsights from '@/components/wandwars/WandWarsInsights.vue'
@@ -15,6 +16,10 @@ const gameDataStore = useGameDataStore()
 gameDataStore.initializeData()
 
 useI18nStore().initialize()
+
+useHead({
+  link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/wandwars' }],
+})
 
 const mainTab = ref<'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'>('draft')
 
@@ -44,6 +49,7 @@ function isRecordedMatch(value: unknown): value is RecordedMatch {
 }
 
 function loadRecords(): RecordedMatch[] {
+  if (import.meta.env.SSR) return []
   try {
     const stored = localStorage.getItem(RECORDS_STORAGE_KEY)
     if (!stored) return []

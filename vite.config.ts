@@ -21,10 +21,8 @@ const locales = ['en', 'zh']
 
 /** Returns all routes to pre-render during SSG */
 function getSSGRoutes(): string[] {
-  const routes: string[] = [
-    '/', // Include home but won't be pre-rendered (no static content)
-    '/share', // Include share for direct URL navigation
-  ]
+  // Pre-render static HTML so canonical/meta are correct without JS.
+  const routes: string[] = ['/', '/share', '/skills', '/wandwars']
 
   locales.forEach((locale) => {
     routes.push(`/${locale}/guide`)
