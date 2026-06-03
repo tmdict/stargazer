@@ -2,6 +2,7 @@ import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -69,9 +70,9 @@ export const useGameDataStore = defineStore('gameData', () => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.range ?? 1
     }
-    // Check if this is a companion ID (10000+)
-    if (characterId >= 10000) {
-      const mainCharacterId = characterId % 10000
+    // Check if this is a companion ID
+    if (characterId >= COMPANION_ID_OFFSET) {
+      const mainCharacterId = characterId % COMPANION_ID_OFFSET
       const skill = getCharacterSkill(mainCharacterId)
 
       // If the skill defines a companion range, use that
@@ -97,8 +98,9 @@ export const useGameDataStore = defineStore('gameData', () => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.name
     }
-    // Handle companion IDs (10000+)
-    const actualId = characterId >= 10000 ? characterId % 10000 : characterId
+    // Handle companion IDs
+    const actualId =
+      characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
     const character = getCharacterById(actualId)
     return character?.name
   }
@@ -114,11 +116,12 @@ export const useGameDataStore = defineStore('gameData', () => {
     return phantimals.value.find((phantimal) => phantimal.id === localId)
   }
 
-  // Resolves a grid unit's faction by ID, mapping companions (10000+) to their
-  // main character and phantimals to their own faction.
+  // Resolves a grid unit's faction by ID, mapping companions to their main
+  // character and phantimals to their own faction.
   const getCharacterFaction = (characterId: number): string | undefined => {
     if (isPhantimalId(characterId)) return getPhantimalById(characterId)?.faction
-    const actualId = characterId >= 10000 ? characterId % 10000 : characterId
+    const actualId =
+      characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
     return getCharacterById(actualId)?.faction
   }
 

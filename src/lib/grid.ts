@@ -6,6 +6,10 @@ import { FULL_GRID, type GridPreset } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 
+// Companions are namespaced as N * COMPANION_ID_OFFSET + mainCharacterId (N >= 1),
+// occupying the band between regular characters and PHANTIMAL_ID_OFFSET.
+export const COMPANION_ID_OFFSET = 10000
+
 function iniGrid(preset: GridPreset): Hex[] {
   const centerRowIndex = Math.floor(preset.hex.length / 2)
   const hexes: Hex[] = []
@@ -60,7 +64,7 @@ export class Grid {
   ])
 
   // Companion IDs are derived as N * companionIdOffset + mainCharacterId
-  companionIdOffset = 10000
+  companionIdOffset = COMPANION_ID_OFFSET
   // Phantimals occupy the same unit slot as characters, namespaced above companions.
   phantimalIdOffset = PHANTIMAL_ID_OFFSET
   // Key format: `${mainCharacterId}-${team}` → set of companion character IDs

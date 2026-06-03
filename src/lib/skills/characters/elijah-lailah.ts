@@ -19,7 +19,7 @@ registerSkill({
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context
-    const companionId = 10000 + characterId // 10068 for Elijah & Lailah
+    const companionId = grid.companionIdOffset + characterId
 
     // Find a random available tile for the companion
     const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
