@@ -6,7 +6,10 @@
 // team-size limit (canPlaceCharacterOnTeam) and capped at one per team by the
 // character store's placement helpers. Keeping these as pure id-math (no Grid
 // dependency) makes this a leaf module the serializer and grid can both import.
-export const PHANTIMAL_ID_OFFSET = 20000
+//
+// Sits well above the companion band (N * companionIdOffset + characterId) so a
+// character with several companions never spills into the phantimal namespace.
+export const PHANTIMAL_ID_OFFSET = 100000
 
 export function isPhantimalId(id: number): boolean {
   return id >= PHANTIMAL_ID_OFFSET
