@@ -18,7 +18,8 @@ registerSkill({
 
   onActivate(context: SkillContext): void {
     const { grid, team, characterId, skillManager } = context
-    const companionIds = [10000 + characterId, 20000 + characterId] // Two turrets: 10089 and 20089
+    // Two turrets, namespaced as N * companionIdOffset + characterId.
+    const companionIds = [1, 2].map((n) => n * grid.companionIdOffset + characterId)
 
     // Find available tiles for companions
     const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY

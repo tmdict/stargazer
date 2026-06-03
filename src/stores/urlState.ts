@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 
 import { useStateReset } from '@/composables/useStateReset'
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
 import { unpackDisplayFlags, type GridState } from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl } from '@/utils/urlStateManager'
@@ -103,7 +104,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
         const characterId = entry[1]
         if (characterId === undefined) return
 
-        if (characterId >= 10000) {
+        if (characterId >= COMPANION_ID_OFFSET) {
           companions.push(entry)
         } else {
           mainCharacters.push(entry)

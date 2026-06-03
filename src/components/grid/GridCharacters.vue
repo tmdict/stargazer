@@ -6,6 +6,7 @@ import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
@@ -56,14 +57,15 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 }
 
 const getCharacterLevel = (characterId: number): 's' | 'a' => {
-  // Handle companion IDs (10000+)
-  const actualId = characterId >= 10000 ? characterId % 10000 : characterId
+  // Handle companion IDs
+  const actualId =
+    characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
   const character = props.characters.find((c) => c.id === actualId)
   return (character?.level as 's' | 'a') || 'a'
 }
 
 const isCompanion = (characterId: number): boolean =>
-  characterId >= 10000 && !isPhantimalId(characterId)
+  characterId >= COMPANION_ID_OFFSET && !isPhantimalId(characterId)
 
 // Phantimal-specific render helpers (B1 seam: phantimals reuse the character
 // wrapper's positioning, drag, lift and perspective; only image + colour differ).
@@ -158,7 +160,8 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   }
 
   // For companions, we need to use the base character data
-  const actualId = characterId >= 10000 ? characterId % 10000 : characterId
+  const actualId =
+    characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
   const character = props.characters.find((c) => c.id === actualId)
   if (!character) return
 
