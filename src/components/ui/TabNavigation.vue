@@ -217,6 +217,9 @@ onUnmounted(() => {
      panel can flex-fill on wide screens. */
   display: flex;
   flex-direction: column;
+  /* Keep roster overscroll local — collapsing the sheet by dragging its content
+     must not pull or pull-to-refresh the page behind it. */
+  overscroll-behavior: contain;
 }
 
 .tab-dropdown {

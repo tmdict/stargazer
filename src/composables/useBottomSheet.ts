@@ -57,23 +57,44 @@ export function useBottomSheet(opts: Options) {
   // events right after the touch sequence; we use this to ignore them.
   let lastTouchEnd = 0
 
+  // Velocity tracking for flick-to-toggle: a quick swipe snaps in its direction
+  // regardless of distance, the way native mobile sheets behave.
+  const FLICK_VELOCITY = 0.5 // px/ms (≈500 px/s); above this a release is a flick
+  let lastMoveY = 0
+  let lastMoveTime = 0
+  let velocity = 0 // px/ms, positive = downward
+
   function dragStart(clientY: number) {
     if (!isMobile.value) return
     dragging.value = true
     startY = clientY
     dragDelta.value = 0
+    lastMoveY = clientY
+    lastMoveTime = Date.now()
+    velocity = 0
   }
   function dragMove(clientY: number) {
     if (!dragging.value) return
     dragDelta.value = clientY - startY
+    const now = Date.now()
+    const dt = now - lastMoveTime
+    if (dt > 0) {
+      velocity = (clientY - lastMoveY) / dt
+      lastMoveY = clientY
+      lastMoveTime = now
+    }
   }
   function dragEnd(allowTap = true) {
     if (!dragging.value) return
     dragging.value = false
-    // A near-stationary release is a tap (toggle); otherwise snap to the nearer
-    // detent. Content-initiated drags pass allowTap=false so a small overscroll
-    // settles back instead of toggling.
-    if (allowTap && Math.abs(dragDelta.value) < 8) {
+    // A flick (quick release) wins first — open/close in its direction even on a
+    // short swipe. Ignore stale velocity from a finger that paused before lifting.
+    const isFlick = Date.now() - lastMoveTime < 100 && Math.abs(velocity) >= FLICK_VELOCITY
+    if (isFlick) {
+      expanded.value = velocity < 0 // upward → expand, downward → collapse
+    } else if (allowTap && Math.abs(dragDelta.value) < 8) {
+      // A near-stationary release is a tap (toggle). Content-initiated drags pass
+      // allowTap=false so a small overscroll settles back instead of toggling.
       expanded.value = !expanded.value
     } else {
       expanded.value = visible.value >= (opts.peek + expandedPx.value) / 2
