@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 8,
   "season": 7,
-  "tags": {}
+  "tags": {
+    "ult-negation": [{ "skill2": 1 }]
+  }
 }

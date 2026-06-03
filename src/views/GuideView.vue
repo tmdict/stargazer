@@ -110,15 +110,15 @@ watch(slug, () => (expanded.value = false))
 
 @media (min-width: 1600px) {
   .guide-layout > .guide-reader-col {
-    flex-basis: 760px;
-    width: 760px;
+    flex-basis: 860px;
+    width: 860px;
   }
 }
 
 @media (min-width: 1920px) {
   .guide-layout > .guide-reader-col {
-    flex-basis: 860px;
-    width: 860px;
+    flex-basis: 960px;
+    width: 960px;
   }
 }
 
