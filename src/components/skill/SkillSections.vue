@@ -77,8 +77,8 @@ function clearChips() {
 
 // A slot is shown when at least one of its levels passes the active-chip
 // filter; empty filter shows everything. `slotTags` is the union of per-level
-// tags, rendered as chips next to the heading. EX refinement tiers (`r`)
-// always render — they share the slot but aren't taggable.
+// tags, rendered as chips next to the heading. EX refinement tiers (`r`) aren't
+// taggable, so they show only in the unfiltered view.
 const sections = computed(() => {
   if (!locale.value) return []
   const filter = activeChips.value
@@ -97,7 +97,10 @@ const sections = computed(() => {
     const levels = rawLevels
       .filter((l) => filter.size === 0 || l.rawTags.some((t) => filter.has(t)))
       .map((l) => ({ level: l.level, description: l.description }))
-    const refinements = (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d }))
+    // Refinements carry no tags, so an active filter hides them; they only
+    // appear in the unfiltered view.
+    const refinements =
+      filter.size === 0 ? (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d })) : []
     if (levels.length === 0 && refinements.length === 0) return null
     return { slotKey, heading: headingFor(slotKey, slot.n), slotTags, levels, refinements }
   }).filter((s): s is NonNullable<typeof s> => s !== null)

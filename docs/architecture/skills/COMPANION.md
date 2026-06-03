@@ -14,7 +14,7 @@ Spawn linked characters that share fate with their main character. Companions us
 When activated, finds a random available tile and places the companion:
 
 ```typescript
-const companionId = characterId + 10000
+const companionId = grid.companionIdOffset + characterId
 grid.setTile(randomTile.hex.getId(), {
   characterId: companionId,
   team,
@@ -36,7 +36,7 @@ if (skill.companionImageModifier) {
 For skills that spawn multiple companions (e.g., Zanie's turrets):
 
 ```typescript
-const companionIds = [10000 + characterId, 20000 + characterId]
+const companionIds = [1, 2].map((n) => n * grid.companionIdOffset + characterId)
 
 for (const companionId of companionIds) {
   // Place each companion
@@ -57,8 +57,13 @@ setMaxTeamSize(grid, team, currentSize + companionIds.length)
 
 ## Companion ID Ranges
 
-- **10000-19999**: First companion
-- **20000-29999**: Second companion
-- **30000+**: Additional companions as needed
+Companions are namespaced as `N * COMPANION_ID_OFFSET + mainCharacterId`
+(`COMPANION_ID_OFFSET = 10000`), occupying the band between regular characters and
+`PHANTIMAL_ID_OFFSET` (100000):
 
-The system uses modulo 10000 to get the main character ID from any companion ID.
+- **10000-19999**: First companion (N=1)
+- **20000-29999**: Second companion (N=2)
+- **…up to 99999**: Further companions, before the phantimal range (100000+)
+
+The system uses modulo `COMPANION_ID_OFFSET` to recover the main character ID from
+any companion ID (`getMainCharacterId`).
