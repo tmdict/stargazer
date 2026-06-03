@@ -88,6 +88,9 @@ const removeCharacterFromGrid = (characterId: number) => {
   flex-direction: column;
   gap: var(--spacing-lg);
   min-height: var(--panel-min-height);
+  /* Keep roster overscroll local — collapsing the sheet by dragging its content
+     must not pull or pull-to-refresh the page behind it. */
+  overscroll-behavior: contain;
 }
 
 /* On wide screens the right column is height-capped to the viewport, so the
