@@ -32,11 +32,11 @@ export const gridStyles = {
     highlight: [2, 3],
     highlight2: [4, 7],
     character: {
-      pandora: 16,
+      ravion: 16,
     },
   },
 }
 
 export const images = {
-  pandora: ravionImage,
+  ravion: ravionImage,
 }
