@@ -207,8 +207,11 @@ const openModal = (phantimal: PhantimalType) => {
   padding: var(--spacing-lg);
 }
 
+/* Center the portrait and the (wider, name-bearing) info pill on one column. */
 .phantimal-profile {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   margin-top: var(--spacing-xs);
 }
 
