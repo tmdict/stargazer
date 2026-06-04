@@ -138,7 +138,7 @@ defineExpose({ expand })
   position: fixed;
   inset: 0;
   z-index: 799;
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 0, 0, 0.08);
   animation: sheet-fade-in 0.2s ease;
 }
 @keyframes sheet-fade-in {

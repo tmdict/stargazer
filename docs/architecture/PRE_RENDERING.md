@@ -2,11 +2,11 @@
 
 ## Overview
 
-The pre-rendering system uses vite-ssg to generate static HTML for the skill permalink pages while preserving the dynamic game experience. Skill pages (`/{en,zh}/skill/<slug>`) are the only pre-rendered content; everything else (home, skills index, wandwars, the about modal) is client-side. The share page is also pre-rendered with default state so direct URLs resolve.
+The pre-rendering system uses vite-ssg to emit static HTML at build time while preserving the dynamic game experience. Pre-rendered routes are the per-hero skill permalinks (`/{en,zh}/skill/<slug>`) and guide pages (`/{en,zh}/guide`) for crawlable content, plus `/`, `/share`, `/skills`, and `/wandwars`. The latter three carry little/no static body — they exist in the SSG list so each ships the correct canonical/meta and resolves on direct navigation; `/skills` additionally pre-renders its browser content. Every route still hydrates into the full SPA after load.
 
 ## Design Principles
 
-1. **Selective Pre-rendering**: Only content pages are pre-rendered, not the interactive game
+1. **Selective Pre-rendering**: Content/permalink pages pre-render their bodies; interactive routes in the SSG list (`/`, `/skills`, `/wandwars`) emit only a canonical/meta shell, never game state
 2. **Prop-based Static Content**: Pass data as props to components in static pages to avoid hydration mismatches
 3. **Route-based Locale**: Language comes from the URL path; `App.vue` also syncs the global i18n store from the path (`splitLocalePath`) so shared chrome and the skill browser render in the URL's locale
 4. **SSR Safety**: Guard browser APIs with environment checks to prevent build errors
@@ -56,7 +56,7 @@ export const routes: RouteRecordRaw[] = [
 Key considerations:
 
 - Single source of truth for all routes
-- `/`, `/skills`, `/wandwars` are client-only (interactive). `/` is in the SSG list (no static content, but produces a fallback `index.html`); `/skills` and `/wandwars` rely on the host's SPA fallback
+- `/`, `/skills`, `/wandwars` are interactive but still in the SSG list so each emits its own static HTML (`index.html` / `skills.html` / `wandwars.html`) carrying the right canonical/meta; `/` and `/wandwars` are otherwise empty shells, `/skills` pre-renders its browser content. All three hydrate to the full app
 - Share route is pre-rendered with default content for direct URL navigation
 - Per-skill `/{en,zh}/skill/<slug>` routes are pre-rendered as the canonical skill permalinks
 - Locale determined from URL path, not props
@@ -223,7 +223,8 @@ Vite config includes SSG-specific options:
 ssgOptions: {
   entry: 'src/main.ssg.ts',
   includedRoutes: () => [
-    '/', '/share', // Share page for direct URL access
+    '/', '/share', '/skills', '/wandwars', // shells for canonical/meta + direct access
+    '/en/guide', '/zh/guide',
     '/en/skill/silvina', '/zh/skill/silvina', // ... all skill pages, both locales
   ],
   onPageRendered: (route, html) => {
