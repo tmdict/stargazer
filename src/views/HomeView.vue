@@ -23,7 +23,6 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import { useSkillStore } from '@/stores/skill'
 import { useUrlStateStore } from '@/stores/urlState'
 import { generateShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
@@ -38,15 +37,11 @@ const i18nStore = useI18nStore()
 const urlStateStore = useUrlStateStore()
 const artifactStore = useArtifactStore()
 const mapEditorStore = useMapEditorStore()
-const skillStore = useSkillStore()
 const { success, error } = useToast()
 const router = useRouter()
 const route = useRoute()
 const { showPerspective } = useBreakpoint()
 const { copyToClipboard, downloadAsImage } = useGridExport()
-
-// Connect grid and skill manager
-gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // Tab state management
 const validTabs = ['characters', 'seasonal', 'mapEditor', 'debug'] as const
@@ -164,12 +159,8 @@ const handleTabChange = (tab: string) => {
 }
 
 const handleMapChange = (mapKey: string) => {
-  const success = gridStore.switchMap(mapKey)
-  if (success) {
+  if (gridStore.switchMap(mapKey)) {
     selectedMap.value = mapKey
-    // Reset skill manager state and reconnect to the new grid
-    skillStore._getSkillManager().reset()
-    gridStore._getGrid().skillManager = skillStore._getSkillManager()
   }
 }
 
