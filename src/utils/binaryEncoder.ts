@@ -41,7 +41,10 @@ const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
  * - Bits 6-19: Character ID (14 bits, supports 0-16383)
  * - Bit 20: Team (1 bit)
  *
- * Note: Character IDs are currently limited to 16383 (14 bits).
+ * Note: Character IDs are currently limited to 16383 (14 bits). Synthetic runtime
+ * IDs above this ceiling never reach this field: companion IDs (N * companionIdOffset
+ * + base) are reconstructed from their parent on placement, and phantimals serialize
+ * via their 4-bit local ID below — so neither overflows the 14 bits.
  *
  * Artifacts (6 bits):
  * - Bits 0-2: Ally artifact (3 bits, 0 = null, 1-7 = artifact ID)

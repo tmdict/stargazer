@@ -12,7 +12,6 @@ import { useToast } from '@/composables/useToast'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
-import { useSkillStore } from '@/stores/skill'
 import { useUrlStateStore } from '@/stores/urlState'
 import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
@@ -22,7 +21,6 @@ import '@/styles/modal.css'
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
-const skillStore = useSkillStore()
 const urlStateStore = useUrlStateStore()
 const { success } = useToast()
 const route = useRoute()
@@ -34,9 +32,6 @@ useHead({
 
 // Use breakpoint for responsive grid sizing only (don't auto-flatten on mobile)
 useBreakpoint({ autoFlattenOnMobile: false })
-
-// Connect grid and skill manager
-gridStore._getGrid().skillManager = skillStore._getSkillManager()
 
 // State management
 const hasValidGrid = ref(false)

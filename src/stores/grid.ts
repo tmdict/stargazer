@@ -7,6 +7,7 @@ import { Layout, POINTY } from '@/lib/layout'
 import { getMapByKey, type MapConfig } from '@/lib/maps'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
+import { useSkillStore } from '@/stores/skill'
 
 export type Breakpoint = 'mobile' | 'tablet' | 'desktop'
 
@@ -24,6 +25,12 @@ const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
 export const useGridStore = defineStore('grid', () => {
   // Core grid instance - using reactive for automatic reactivity
   const grid = reactive(new Grid())
+  const skillStore = useSkillStore()
+
+  // The grid drives skill recalculation through its skillManager. The store owns
+  // this link across the grid's lifecycle: attached here, re-attached after
+  // switchMap rebuilds the grid (Object.assign drops it).
+  grid.skillManager = skillStore._getSkillManager()
 
   // Reactive hex size state
   const hexSize = ref({ x: 40, y: 40 })
@@ -140,11 +147,11 @@ export const useGridStore = defineStore('grid', () => {
       return false
     }
 
-    // Create new grid with the selected map
-    const newGrid = new Grid(FULL_GRID, mapConfig)
-
-    // Copy properties to maintain reactivity
-    Object.assign(grid, newGrid)
+    // Rebuild the grid for the new map (Object.assign preserves reactivity), then
+    // reset stale targeting and re-attach the skill manager the rebuild dropped.
+    Object.assign(grid, new Grid(FULL_GRID, mapConfig))
+    skillStore._getSkillManager().reset()
+    grid.skillManager = skillStore._getSkillManager()
     currentMap.value = mapKey
 
     return true
