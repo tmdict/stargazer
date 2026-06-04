@@ -1,9 +1,12 @@
 import { onBeforeUnmount, watch, type Ref } from 'vue'
 
-// Locks page scroll while `active` is true — for modal overlays, so the page
-// behind can't scroll even when the modal itself isn't scrollable (iOS ignores
-// `overflow`/`overscroll-behavior` there). Uses `position: fixed` on <body> with
-// scroll-position restore, the only method iOS Safari honors reliably.
+// Locks page scroll while `active` is true — for modal overlays. Two parts:
+//  - `position: fixed` on <body> (with scroll restore) freezes content scroll,
+//    the only method iOS Safari honors reliably.
+//  - `overscroll-behavior: none` on <html> stops the document's own pull-to-
+//    refresh / rubber-band, which the body lock and the overlay's containment
+//    don't (iOS ignores overscroll-behavior on a non-scrollable overlay; the
+//    overlay's containment doesn't govern the document's overscroll).
 //
 // Ref-counted at module scope so stacked modals share one lock and the scroll
 // position is captured/restored exactly once.
@@ -19,6 +22,7 @@ function lock(): void {
     style.top = `-${savedScrollY}px`
     style.left = '0'
     style.right = '0'
+    document.documentElement.style.overscrollBehavior = 'none'
   }
   lockCount++
 }
@@ -32,6 +36,7 @@ function unlock(): void {
     style.top = ''
     style.left = ''
     style.right = ''
+    document.documentElement.style.overscrollBehavior = ''
     window.scrollTo(0, savedScrollY)
   }
 }
