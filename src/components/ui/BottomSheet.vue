@@ -111,9 +111,8 @@ defineExpose({ expand })
   display: none;
 }
 
-/* Transparent to layout (display: contents): the slotted content stays a direct
-   flex child of the sheet, so its own fill/scroll rules are unchanged. The
-   wrapper exists only to host the overscroll-to-collapse drag listeners. */
+/* display: contents — hosts the drag listeners without affecting layout, so the
+   slotted content stays a direct flex child with its own fill/scroll. */
 .sheet-content {
   display: contents;
 }
