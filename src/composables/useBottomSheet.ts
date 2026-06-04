@@ -114,15 +114,28 @@ export function useBottomSheet(opts: Options) {
   }
 
   // Mouse drag — for narrow desktop viewports where touch events don't fire.
-  // Tracked on the window so the drag continues when the cursor leaves the handle.
-  function onMouseMove(e: MouseEvent) {
-    dragMove(e.clientY)
+  // Tracks move/up on the window so a drag continues when the cursor leaves the
+  // element; `onMove` returns whether to suppress the default. The active teardown
+  // is kept in `removeMouseListeners` so unmount (or a re-entrant down) can cancel.
+  let removeMouseListeners: (() => void) | null = null
+  function runMouseDrag(onMove: (clientY: number) => boolean, onEnd: () => void) {
+    removeMouseListeners?.()
+    const move = (e: MouseEvent) => {
+      if (onMove(e.clientY)) e.preventDefault()
+    }
+    const end = () => {
+      removeMouseListeners?.()
+      onEnd()
+    }
+    removeMouseListeners = () => {
+      window.removeEventListener('mousemove', move)
+      window.removeEventListener('mouseup', end)
+      removeMouseListeners = null
+    }
+    window.addEventListener('mousemove', move)
+    window.addEventListener('mouseup', end)
   }
-  function onMouseUp() {
-    dragEnd()
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-  }
+
   function onMouseDown(e: MouseEvent) {
     // Skip the emulated mouse event a touch device fires right after a tap —
     // otherwise dragEnd runs twice (touch + mouse) and the toggle snaps back.
@@ -130,8 +143,10 @@ export function useBottomSheet(opts: Options) {
     dragStart(e.clientY)
     if (!dragging.value) return
     e.preventDefault() // don't text-select while dragging
-    window.addEventListener('mousemove', onMouseMove)
-    window.addEventListener('mouseup', onMouseUp)
+    runMouseDrag((clientY) => {
+      dragMove(clientY)
+      return false
+    }, dragEnd)
   }
 
   // Whole-sheet drag from the content area (not just the handle):
@@ -159,33 +174,39 @@ export function useBottomSheet(opts: Options) {
   }
 
   // Begin the sheet drag from the anchor and apply the current position at once.
-  function engageDrag(clientY: number): boolean {
+  function engageDrag(clientY: number): void {
     dragStart(anchorY)
     dragMove(clientY)
-    return dragging.value
   }
 
-  // Drives a content gesture frame. Returns true once the sheet drag has engaged,
-  // signalling the caller to suppress native scroll for the rest of the gesture.
+  // Drives a content gesture frame. Returns true when the caller should suppress
+  // native scroll because the sheet — not the content — is handling the gesture.
+  //
+  // Native scroll is allowed in just two cases, both while expanded: the content
+  // is scrolled below its top, or the finger is moving up at the top. Otherwise
+  // the sheet owns the gesture — collapsed (swipe up to expand) or an at-top
+  // downward pull (swipe down to collapse) — so it suppresses scroll from the
+  // first move (the page never drags) and engages the drag past the threshold.
   function contentDragStep(clientY: number): boolean {
     if (dragging.value) {
       dragMove(clientY)
       return true
     }
-    // Collapsed: any drag past the threshold moves the sheet (swipe up to expand).
-    if (!expanded.value) {
-      return Math.abs(clientY - anchorY) > CONTENT_DRAG_THRESHOLD ? engageDrag(clientY) : false
+    if (expanded.value) {
+      // Scrolled below the top: let it scroll, keeping the anchor live so a later
+      // pull is measured from the moment the top is reached.
+      if (scrollEl && scrollEl.scrollTop > 0) {
+        anchorY = clientY
+        return false
+      }
+      // At the top, moving up: scroll the content, not the sheet.
+      if (clientY < anchorY) {
+        anchorY = clientY
+        return false
+      }
     }
-    // Expanded: not at the top yet, so let content scroll and keep the anchor at
-    // the live position so the pull is measured from the moment the top is reached.
-    if (scrollEl && scrollEl.scrollTop > 0) {
-      anchorY = clientY
-      return false
-    }
-    if (clientY - anchorY > CONTENT_DRAG_THRESHOLD) return engageDrag(clientY)
-    // Moving up at the top: re-anchor so a later downward pull starts fresh.
-    if (clientY < anchorY) anchorY = clientY
-    return false
+    if (Math.abs(clientY - anchorY) > CONTENT_DRAG_THRESHOLD) engageDrag(clientY)
+    return true
   }
 
   function onContentTouchStart(e: TouchEvent) {
@@ -203,21 +224,12 @@ export function useBottomSheet(opts: Options) {
     dragEnd(false)
   }
 
-  function onContentMouseMove(e: MouseEvent) {
-    if (contentDragStep(e.clientY)) e.preventDefault()
-  }
-  function onContentMouseUp() {
-    window.removeEventListener('mousemove', onContentMouseMove)
-    window.removeEventListener('mouseup', onContentMouseUp)
-    dragEnd(false)
-  }
   function onContentMouseDown(e: MouseEvent) {
     if (!isMobile.value) return
     if (Date.now() - lastTouchEnd < 700) return
     scrollEl = findScrollable(e.target)
     anchorY = e.clientY
-    window.addEventListener('mousemove', onContentMouseMove)
-    window.addEventListener('mouseup', onContentMouseUp)
+    runMouseDrag(contentDragStep, () => dragEnd(false))
   }
 
   function update() {
@@ -241,10 +253,7 @@ export function useBottomSheet(opts: Options) {
   })
   onBeforeUnmount(() => {
     window.removeEventListener('resize', scheduleUpdate)
-    window.removeEventListener('mousemove', onMouseMove)
-    window.removeEventListener('mouseup', onMouseUp)
-    window.removeEventListener('mousemove', onContentMouseMove)
-    window.removeEventListener('mouseup', onContentMouseUp)
+    removeMouseListeners?.()
   })
 
   return {
