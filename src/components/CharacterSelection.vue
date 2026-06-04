@@ -4,12 +4,15 @@ import { computed } from 'vue'
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
-import { useCharacterFilters } from '@/composables/useCharacterFilters'
+import CharacterSearchBar from './CharacterSearchBar.vue'
+import CharacterSearchResults from './CharacterSearchResults.vue'
+import { useCharacterRoster } from '@/composables/useCharacterRoster'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import type { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
+import { useI18nStore } from '@/stores/i18n'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const props = defineProps<{
@@ -19,9 +22,20 @@ const props = defineProps<{
 
 const { selectedTeam, targetHexId, clearTargetHex, characterStore } = useSelectionState()
 const gridStore = useGridStore()
+const i18n = useI18nStore()
 
-const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
-  useCharacterFilters(computed(() => props.characters))
+const {
+  factionFilter,
+  classFilter,
+  damageFilter,
+  selectedTagNames,
+  filteredCharacters,
+  searchQuery,
+  visibleSearchResults,
+} = useCharacterRoster(
+  computed(() => props.characters),
+  computed(() => i18n.currentLocale),
+)
 
 // Hex a character currently occupies on a given team, or null if unplaced.
 const placedHexForTeam = (characterId: number, team: Team): number | null => {
@@ -56,10 +70,23 @@ const removeCharacterFromGrid = (characterId: number) => {
   const hexId = placedHexForTeam(characterId, selectedTeam.value)
   if (hexId !== null) characterStore.removeCharacterFromHex(hexId)
 }
+
+// A search result places its hero exactly like clicking the roster icon would.
+const handleResultSelect = (slug: string) => {
+  const character = props.characters.find((c) => c.name === slug)
+  if (character) handleCharacterClick(character)
+}
 </script>
 
 <template>
   <div class="character-selection">
+    <CharacterSearchBar
+      v-model="searchQuery"
+      :placeholder="i18n.t('app.skill-search-placeholder')"
+      :count="visibleSearchResults?.length ?? null"
+      :count-label="i18n.t('app.skill-results')"
+    />
+
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
       v-model:class-filter="classFilter"
@@ -68,7 +95,7 @@ const removeCharacterFromGrid = (characterId: number) => {
       :characters
     />
 
-    <CharacterGrid>
+    <CharacterGrid v-if="!visibleSearchResults">
       <CharacterIcon
         v-for="character in filteredCharacters"
         :key="character.id"
@@ -79,6 +106,15 @@ const removeCharacterFromGrid = (characterId: number) => {
         @character-click="handleCharacterClick"
       />
     </CharacterGrid>
+
+    <CharacterSearchResults
+      v-else
+      :results="visibleSearchResults"
+      :lang="i18n.currentLocale"
+      :query="searchQuery"
+      mode="action"
+      @select="handleResultSelect"
+    />
   </div>
 </template>
 
