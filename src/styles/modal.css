@@ -20,8 +20,6 @@
 
 .overlay.is-modal {
   z-index: 9998;
-  /* Contain overscroll so scrolling the modal never scrolls the page behind. */
-  overscroll-behavior: contain;
 }
 
 /* Top-anchored variant. `.container` uses `margin: auto`, which in a flex
