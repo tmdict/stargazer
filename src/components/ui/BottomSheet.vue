@@ -70,7 +70,11 @@ defineExpose({ expand })
 <template>
   <!-- Tap-scrim behind the expanded sheet (mobile only); a tap collapses it. -->
   <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
-  <div class="bottom-sheet" :class="{ 'is-dragging': dragging }" :style="[sheetVars, sheetStyle]">
+  <div
+    class="bottom-sheet"
+    :class="{ 'is-dragging': dragging, 'is-collapsed': !expanded }"
+    :style="[sheetVars, sheetStyle]"
+  >
     <div
       class="sheet-handle-area"
       @touchstart.passive="onTouchStart"
@@ -167,6 +171,11 @@ defineExpose({ expand })
   }
   .bottom-sheet.is-dragging {
     transition: none;
+  }
+  /* Collapsed peek is drag-only — block native scroll so a swipe there drives the
+     sheet, not the page (iOS ignores overscroll-behavior on the non-scrollable peek). */
+  .bottom-sheet.is-collapsed {
+    touch-action: none;
   }
 
   .sheet-handle-area {

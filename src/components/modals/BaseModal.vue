@@ -4,6 +4,7 @@ import { computed, ref, toRef } from 'vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import { useOverlay } from '@/composables/useOverlay'
+import { useScrollLock } from '@/composables/useScrollLock'
 import { useI18nStore } from '@/stores/i18n'
 
 import '@/styles/modal.css'
@@ -44,6 +45,9 @@ useOverlay({
   onClose: () => emit('close'),
   isOpen: toRef(props, 'show'),
 })
+
+// Lock the page behind so it can't scroll while the modal is open.
+useScrollLock(toRef(props, 'show'))
 </script>
 
 <template>
