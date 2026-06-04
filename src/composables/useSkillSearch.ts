@@ -8,6 +8,7 @@ export interface SearchHit {
   loc: 'name' | 'skill-name' | 'description'
   slot?: SlotKey
   level?: number
+  tier?: number // EX refinement tier (Refine 2/4); set instead of level for refine rows
   snippet: Snippet
 }
 
@@ -25,6 +26,7 @@ interface DeepEntry {
   loc: 'skill-name' | 'description'
   slot: SlotKey
   level?: number
+  tier?: number
   text: string
 }
 
@@ -62,14 +64,14 @@ function buildIndex(lang: 'en' | 'zh') {
         })
       })
       // EX refinement tiers — indexed so queries like "Rivalry Mode" or
-      // "DEF Penetration" surface relevant heroes. The level field carries
-      // the tier number so hits land on the right row in result display.
+      // "DEF Penetration" surface relevant heroes. `tier` (not level) marks
+      // these as Refine rows so the result label reads "Refine 2" not "LV 2".
       for (const r of slotData.r ?? []) {
         deep.push({
           slug,
           loc: 'description',
           slot,
-          level: r.t,
+          tier: r.t,
           text: cleanSkillText(r.d),
         })
       }
@@ -130,6 +132,7 @@ export function useSkillSearch(
           loc: e.loc,
           slot: e.slot,
           level: e.level,
+          tier: e.tier,
           snippet: s,
         })
       }
