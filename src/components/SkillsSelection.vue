@@ -193,8 +193,7 @@ function locText(loc: 'name' | 'skill-name' | 'description', slot?: SlotKey, lev
   flex-direction: column;
   gap: var(--spacing-lg);
   min-height: var(--panel-min-height);
-  /* Keep roster overscroll local — collapsing the sheet by dragging its content
-     must not pull or pull-to-refresh the page behind it. */
+  /* Contain overscroll so collapsing the sheet doesn't pull/refresh the page. */
   overscroll-behavior: contain;
 }
 

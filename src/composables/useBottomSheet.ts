@@ -57,8 +57,7 @@ export function useBottomSheet(opts: Options) {
   // events right after the touch sequence; we use this to ignore them.
   let lastTouchEnd = 0
 
-  // Velocity tracking for flick-to-toggle: a quick swipe snaps in its direction
-  // regardless of distance, the way native mobile sheets behave.
+  // Flick-to-toggle: a quick swipe snaps in its direction regardless of distance.
   const FLICK_VELOCITY = 0.5 // px/ms (≈500 px/s); above this a release is a flick
   let lastMoveY = 0
   let lastMoveTime = 0
@@ -113,10 +112,9 @@ export function useBottomSheet(opts: Options) {
     dragEnd()
   }
 
-  // Mouse drag — for narrow desktop viewports where touch events don't fire.
-  // Tracks move/up on the window so a drag continues when the cursor leaves the
-  // element; `onMove` returns whether to suppress the default. The active teardown
-  // is kept in `removeMouseListeners` so unmount (or a re-entrant down) can cancel.
+  // Mouse drag for narrow desktop (no touch events). Tracks move/up on the window
+  // so the drag survives the cursor leaving the element; `onMove` returns whether
+  // to preventDefault. `removeMouseListeners` cancels an active drag on unmount.
   let removeMouseListeners: (() => void) | null = null
   function runMouseDrag(onMove: (clientY: number) => boolean, onEnd: () => void) {
     removeMouseListeners?.()
@@ -149,12 +147,8 @@ export function useBottomSheet(opts: Options) {
     }, dragEnd)
   }
 
-  // Whole-sheet drag from the content area (not just the handle):
-  //  • Collapsed — any drag past the threshold drives the sheet, so swiping up on
-  //    the exposed peek expands it.
-  //  • Expanded — only a downward pull while the inner scroll is at the top pulls
-  //    the sheet down (overscroll-to-collapse); otherwise the content scrolls and
-  //    we never touch the gesture.
+  // State for the content-area drag (swipe-to-expand / overscroll-to-collapse);
+  // contentDragStep below holds the gesture rules.
   const CONTENT_DRAG_THRESHOLD = 4 // px of travel before the sheet engages
   let scrollEl: HTMLElement | null = null
   let anchorY = 0
