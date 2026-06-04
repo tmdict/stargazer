@@ -275,7 +275,9 @@ onUnmounted(() => {
   color: white;
 }
 
-@media (min-width: 1281px) {
+/* 1280 is the canonical desktop-chrome boundary: max-width rules tune chrome
+   at/below it; this min-width rule shrinks the tab font above it. */
+@media (min-width: 1280px) {
   .tab-btn {
     font-size: 0.9rem;
   }
