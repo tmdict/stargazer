@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 
 import { useBottomSheet } from '@/composables/useBottomSheet'
+import { useScrollLock } from '@/composables/useScrollLock'
 
 // Shared roster panel for the grid (`HomeView`), skills (`SkillsBrowser`), and
 // guide (`GuideView`) pages: a card column on desktop, a drag-to-resize
@@ -55,6 +56,11 @@ const sheetVars = computed(() => ({
 watch(sheetExpanded, (v) => (expanded.value = v))
 watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
 
+// Lock the page behind while the sheet is expanded on mobile, so dragging the
+// scrim (or anywhere off the sheet) can't scroll the page underneath. No-op on
+// desktop, where the sheet is a static column.
+useScrollLock(computed(() => isMobile.value && expanded.value))
+
 const onScrimClick = () => {
   sheetExpanded.value = false
   emit('dismiss')
@@ -66,6 +72,17 @@ const expand = () => {
   if (isMobile.value) sheetExpanded.value = true
 }
 defineExpose({ expand })
+
+// While collapsed, the peek shows the top of the content (e.g. the tabs). Swallow
+// clicks there in the capture phase so a tap only expands the sheet instead of
+// also triggering the control underneath. Swipe-to-expand is unaffected (touch
+// events, not clicks). No-op when expanded or on desktop.
+const onCollapsedClickCapture = (e: MouseEvent) => {
+  if (expanded.value || !isMobile.value) return
+  e.stopPropagation()
+  e.preventDefault()
+  sheetExpanded.value = true
+}
 </script>
 
 <template>
@@ -75,6 +92,7 @@ defineExpose({ expand })
     class="bottom-sheet"
     :class="{ 'is-dragging': dragging, 'is-snapping': snapping, 'is-collapsed': !expanded }"
     :style="[sheetVars, sheetStyle]"
+    @click.capture="onCollapsedClickCapture"
   >
     <div
       class="sheet-handle-area"
