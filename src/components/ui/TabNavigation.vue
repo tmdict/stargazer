@@ -285,18 +285,20 @@ onUnmounted(() => {
 
 /* Mirror the narrow-viewport tab styling whenever the containing column is
    narrow, regardless of viewport. This kicks in for the right column in
-   side-by-side layout below ~600px (HomeView declares `container-type:
-   inline-size` on its right column at min-width: 1024px). Browsers without
+   side-by-side layout below ~600px (BottomSheet declares `container-type:
+   inline-size` on its column at min-width: 1220px). Browsers without
    container-query support fall back to viewport-only @media rules below. */
 @container (max-width: 600px) {
   .tab-buttons {
     flex-wrap: wrap;
     gap: 0;
+    min-height: auto;
   }
 
   .tab-btn {
-    padding: var(--spacing-md) var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 0.9rem;
+    line-height: 1.2;
     flex: 1 1 auto;
     min-width: 100px;
     border-right: 1px solid var(--color-border-primary);
@@ -343,11 +345,16 @@ onUnmounted(() => {
   .tab-buttons {
     flex-wrap: wrap;
     gap: 0;
+    /* Drop the 54px desktop floor so the row shrinks to the reduced tab height. */
+    min-height: auto;
   }
 
   .tab-btn {
-    padding: var(--spacing-md) var(--spacing-lg);
+    /* Trim vertical padding and the inherited 1.6 line-height so the tab bar
+       stays compact where space is tight (mobile sheet / narrow column). */
+    padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 0.9rem;
+    line-height: 1.2;
     flex: 1 1 auto;
     min-width: 100px;
     border-right: 1px solid var(--color-border-primary);

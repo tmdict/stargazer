@@ -235,32 +235,31 @@ export function useBottomSheet(opts: Options) {
     if (!isMobile.value) expanded.value = false
   }
 
+  // Measure now and again next frame: emulated/mobile viewports can report stale
+  // dimensions without a settled follow-up resize.
+  function remeasure() {
+    update()
+    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
+  }
+
   // A viewport change (mobile toolbars show/hide on scroll, firing `resize`) must
-  // reposition the sheet *instantly*, never via the transition: the collapsed peek
+  // reposition the sheet instantly, never via the transition: the collapsed peek
   // stays pinned only while `height` and `transform` change together, but they
-  // animate on different threads (height = main-thread layout, transform =
-  // compositor) and drift under scroll load, jiggling the peek. `snapping`
-  // suppresses the transition while the new geometry applies. The second pass
-  // catches emulated viewports that report stale dimensions; transitions resume
-  // once the snapped geometry has painted.
+  // animate on different threads (height = layout, transform = compositor) and
+  // drift under scroll load, jiggling the peek. `snapping` suppresses the
+  // transition until the new geometry has painted.
   function onResize() {
     snapping.value = true
-    update()
+    remeasure()
     if (typeof requestAnimationFrame !== 'undefined') {
-      requestAnimationFrame(() => {
-        update()
-        requestAnimationFrame(() => (snapping.value = false))
-      })
+      requestAnimationFrame(() => requestAnimationFrame(() => (snapping.value = false)))
     } else {
       snapping.value = false
     }
   }
 
   onMounted(() => {
-    update()
-    // Re-measure next frame: emulated/mobile viewports can report stale dimensions
-    // at mount without a settled follow-up resize.
-    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
+    remeasure()
     // Reveal opens it (animating up from the CSS peek) only when asked.
     if (isMobile.value && opts.initialExpanded) expanded.value = true
     window.addEventListener('resize', onResize)
