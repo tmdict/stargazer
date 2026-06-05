@@ -31,6 +31,7 @@ const {
   expanded: sheetExpanded,
   isMobile,
   dragging,
+  snapping,
   sheetStyle,
   onTouchStart,
   onTouchMove,
@@ -72,7 +73,7 @@ defineExpose({ expand })
   <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
   <div
     class="bottom-sheet"
-    :class="{ 'is-dragging': dragging, 'is-collapsed': !expanded }"
+    :class="{ 'is-dragging': dragging, 'is-snapping': snapping, 'is-collapsed': !expanded }"
     :style="[sheetVars, sheetStyle]"
   >
     <div
@@ -167,17 +168,14 @@ defineExpose({ expand })
     overflow: hidden;
     /* Collapsed peek before the composable engages; it overrides this inline. */
     transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
-    /* height and transform both derive from the viewport-px geometry, so they
-       must animate in lockstep: when a mobile toolbar show/hide fires `resize`
-       and the px height changes, transitioning only transform would snap height
-       while transform eased — briefly jumping the collapsed peek. Transitioning
-       both keeps the peek pinned (open/close/drag are unaffected: height is
-       constant there, so only transform moves). */
-    transition:
-      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
-      height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  .bottom-sheet.is-dragging {
+  /* No transition while dragging, or while snapping to a new viewport size: a
+     resize (mobile toolbar show/hide) must reposition the sheet instantly so the
+     collapsed peek can't jiggle as height (layout) and transform (compositor)
+     animate out of sync. See useBottomSheet's onResize. */
+  .bottom-sheet.is-dragging,
+  .bottom-sheet.is-snapping {
     transition: none;
   }
   /* Collapsed peek is drag-only — block native scroll so a swipe there drives the
