@@ -167,7 +167,15 @@ defineExpose({ expand })
     overflow: hidden;
     /* Collapsed peek before the composable engages; it overrides this inline. */
     transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* height and transform both derive from the viewport-px geometry, so they
+       must animate in lockstep: when a mobile toolbar show/hide fires `resize`
+       and the px height changes, transitioning only transform would snap height
+       while transform eased — briefly jumping the collapsed peek. Transitioning
+       both keeps the peek pinned (open/close/drag are unaffected: height is
+       constant there, so only transform moves). */
+    transition:
+      transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+      height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .bottom-sheet.is-dragging {
     transition: none;
