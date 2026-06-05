@@ -27,6 +27,9 @@ export function useBottomSheet(opts: Options) {
   const isMobile = ref(false)
   const expanded = ref(false)
   const dragging = ref(false)
+  // True while applying a viewport-driven resize; suppresses the transition so the
+  // sheet snaps to the new size instead of animating (see onResize).
+  const snapping = ref(false)
   const dragDelta = ref(0) // px, positive = dragged down
   const viewportH = ref(800)
 
@@ -232,21 +235,38 @@ export function useBottomSheet(opts: Options) {
     if (!isMobile.value) expanded.value = false
   }
 
-  // Re-measure next frame too: emulated/mobile viewports can report stale
-  // dimensions at mount/toggle without a settled follow-up resize.
-  function scheduleUpdate() {
+  // A viewport change (mobile toolbars show/hide on scroll, firing `resize`) must
+  // reposition the sheet *instantly*, never via the transition: the collapsed peek
+  // stays pinned only while `height` and `transform` change together, but they
+  // animate on different threads (height = main-thread layout, transform =
+  // compositor) and drift under scroll load, jiggling the peek. `snapping`
+  // suppresses the transition while the new geometry applies. The second pass
+  // catches emulated viewports that report stale dimensions; transitions resume
+  // once the snapped geometry has painted.
+  function onResize() {
+    snapping.value = true
     update()
-    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
+    if (typeof requestAnimationFrame !== 'undefined') {
+      requestAnimationFrame(() => {
+        update()
+        requestAnimationFrame(() => (snapping.value = false))
+      })
+    } else {
+      snapping.value = false
+    }
   }
 
   onMounted(() => {
-    scheduleUpdate()
+    update()
+    // Re-measure next frame: emulated/mobile viewports can report stale dimensions
+    // at mount without a settled follow-up resize.
+    if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
     // Reveal opens it (animating up from the CSS peek) only when asked.
     if (isMobile.value && opts.initialExpanded) expanded.value = true
-    window.addEventListener('resize', scheduleUpdate)
+    window.addEventListener('resize', onResize)
   })
   onBeforeUnmount(() => {
-    window.removeEventListener('resize', scheduleUpdate)
+    window.removeEventListener('resize', onResize)
     removeMouseListeners?.()
   })
 
@@ -254,6 +274,7 @@ export function useBottomSheet(opts: Options) {
     isMobile,
     expanded,
     dragging,
+    snapping,
     sheetStyle,
     onTouchStart,
     onTouchMove,
