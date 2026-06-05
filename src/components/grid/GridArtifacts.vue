@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -8,7 +9,6 @@ import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
-import { isRemoteArtifact, seasonArtifactImageSources } from '@/utils/artifactImage'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 
 const props = defineProps<{
@@ -61,19 +61,14 @@ const cellDashArray = computed(() => {
   return `${6 * scale},${4 * scale}`
 })
 
-// Artifact icon geometry (at 40px hex radius). The local pre-season art is
-// zoomed/recentred within the circle; keeping its ratio and offsets relative to
-// the icon size holds the framing constant at any size or breakpoint scale.
+// Artifact icon geometry (at 40px hex radius). Icons are full-bleed square art
+// that fills the circle; only the container scales with the breakpoint.
 const BASE_ARTIFACT_SIZE = 52
-const LOCAL_IMAGE_RATIO = 95 / 45
-const LOCAL_IMAGE_OFFSET_Y = -8 / 45
-const LOCAL_IMAGE_OFFSET_X = 1 / 45
 
 const artifactDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
     containerSize: BASE_ARTIFACT_SIZE * scale,
-    imageSize: BASE_ARTIFACT_SIZE * LOCAL_IMAGE_RATIO * scale,
     borderWidth: Math.max(2, 2 * scale),
   }
 })
@@ -99,18 +94,6 @@ const iconStyle = (center: { x: number; y: number }) => {
 
 const getAllyStyles = computed(() => iconStyle(allyCenter.value))
 const getEnemyStyles = computed(() => iconStyle(enemyCenter.value))
-
-const getImageStyles = computed(() => {
-  const { imageSize, containerSize } = artifactDimensions.value
-  return {
-    width: `${imageSize}px`,
-    height: `${imageSize}px`,
-    transform: `translateY(${LOCAL_IMAGE_OFFSET_Y * containerSize}px) translateX(${LOCAL_IMAGE_OFFSET_X * containerSize}px)`,
-  }
-})
-
-// Seasonal icons are full-bleed square art — fill the circle.
-const seasonImageStyles = computed(() => ({ width: '100%', height: '100%' }))
 
 // Resolve artifact IDs to records (name + season drive local vs remote icons).
 const allyArtifact = computed(() => {
@@ -209,24 +192,7 @@ const handleArtifactClick = (team: Team) => {
       @click="!readonly && handleArtifactClick(Team.ALLY)"
     >
       <div class="artifact-circle">
-        <picture v-if="isRemoteArtifact(allyArtifact.season)" class="artifact-picture">
-          <source :srcset="seasonArtifactImageSources(allyArtifact.name).avif" type="image/avif" />
-          <source :srcset="seasonArtifactImageSources(allyArtifact.name).webp" type="image/webp" />
-          <img
-            :src="seasonArtifactImageSources(allyArtifact.name).png"
-            :alt="allyArtifact.name"
-            class="artifact-image"
-            :style="seasonImageStyles"
-            loading="lazy"
-          />
-        </picture>
-        <img
-          v-else
-          :src="gameDataStore.getArtifactImage(allyArtifact.name)"
-          :alt="allyArtifact.name"
-          class="artifact-image"
-          :style="getImageStyles"
-        />
+        <ArtifactImage :artifact="allyArtifact" />
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
     </div>
@@ -241,24 +207,7 @@ const handleArtifactClick = (team: Team) => {
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
     >
       <div class="artifact-circle">
-        <picture v-if="isRemoteArtifact(enemyArtifact.season)" class="artifact-picture">
-          <source :srcset="seasonArtifactImageSources(enemyArtifact.name).avif" type="image/avif" />
-          <source :srcset="seasonArtifactImageSources(enemyArtifact.name).webp" type="image/webp" />
-          <img
-            :src="seasonArtifactImageSources(enemyArtifact.name).png"
-            :alt="enemyArtifact.name"
-            class="artifact-image"
-            :style="seasonImageStyles"
-            loading="lazy"
-          />
-        </picture>
-        <img
-          v-else
-          :src="gameDataStore.getArtifactImage(enemyArtifact.name)"
-          :alt="enemyArtifact.name"
-          class="artifact-image"
-          :style="getImageStyles"
-        />
+        <ArtifactImage :artifact="enemyArtifact" />
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
     </div>
@@ -345,15 +294,6 @@ const handleArtifactClick = (team: Team) => {
   box-shadow: 0 0 0 2px #fff;
   /* White backing for every season (icons may have transparency). */
   background: #fff;
-}
-
-.artifact-picture {
-  display: contents;
-}
-
-.artifact-image {
-  object-fit: cover;
-  z-index: 1;
 }
 
 /* Mirrors GridCharacters' .character-pointer — the isometric "foot" in perspective. */

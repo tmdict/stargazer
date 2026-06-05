@@ -1,18 +1,16 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import ArtifactImage from './ArtifactImage.vue'
 import ArtifactModal from './modals/ArtifactModal.vue'
 import InfoPill from './ui/InfoPill.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useTouchDetection } from '@/composables/useTouchDetection'
 import type { ArtifactType } from '@/lib/types/artifact'
-import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { isRemoteArtifact, seasonArtifactImageSources } from '@/utils/artifactImage'
 import { formatArtifactStats } from '@/utils/artifactStats'
 import { formatDisplayName } from '@/utils/nameFormatting'
 
-const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 const props = defineProps<{
@@ -46,10 +44,6 @@ const formattedArtifactName = computed(() => {
 })
 
 const formattedStats = computed(() => formatArtifactStats(props.artifact.stats, i18n.currentLocale))
-
-// Pre-season icons are bundled locally; seasonal icons load from afkj-data-viewer.
-const isRemote = computed(() => isRemoteArtifact(props.artifact.season))
-const remoteSources = computed(() => seasonArtifactImageSources(props.artifact.name))
 
 // Effects live in a popup modal (info button), not the hover tooltip.
 const showInfoModal = ref(false)
@@ -90,17 +84,7 @@ const handleTouchStart = () => {
       @mouseleave="handleMouseLeave"
       @touchstart="handleTouchStart"
     >
-      <picture v-if="isRemote" class="portrait-pic">
-        <source :srcset="remoteSources.avif" type="image/avif" />
-        <source :srcset="remoteSources.webp" type="image/webp" />
-        <img :src="remoteSources.png" :alt="artifact.name" class="portrait-season" loading="lazy" />
-      </picture>
-      <img
-        v-else
-        :src="gameDataStore.getArtifactImage(artifact.name)"
-        :alt="artifact.name"
-        class="portrait"
-      />
+      <ArtifactImage :artifact />
     </div>
 
     <!-- Info pill (effects open in a modal) -->
@@ -179,29 +163,6 @@ const handleTouchStart = () => {
   inset: 0;
   border-radius: var(--radius-round);
   background: #fff4;
-}
-
-/* display: contents so the <picture> wrapper doesn't add a box — the <img>
-   participates in the .artifact layout exactly like the bare <img> branch. */
-.portrait-pic {
-  display: contents;
-}
-
-.portrait {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  z-index: 1;
-  transform: translateY(-9px) translateX(1.5px);
-}
-
-/* Seasonal icons are full-bleed square art — fill the circle so the artwork
-   reads at full size rather than a small cropped region. */
-.portrait-season {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  z-index: 1;
 }
 
 .artifact:hover {

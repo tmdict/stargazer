@@ -90,12 +90,4 @@ const handleSelect = (artifact: ArtifactType) => {
 .artifact-item :deep(.artifact::before) {
   display: none;
 }
-
-/* Local pre-season art overshoots/recentres within the circle; scale it from the
-   50px default to the 45px popup size to preserve the framing. */
-.artifact-item :deep(.portrait) {
-  width: 72px;
-  height: 72px;
-  transform: translateY(-8.1px) translateX(1.35px);
-}
 </style>
