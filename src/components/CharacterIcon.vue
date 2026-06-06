@@ -60,9 +60,9 @@ const energyIcon = computed(() => {
   return gameDataStore.getIcon('initial-energy')
 })
 
-// Show energy when energy filters are active
+// Show the energy badge when the initial-energy-300 filter is active
 const showEnergy = computed(() => {
-  return props.selectedFilter === 'initial-energy' || props.selectedFilter === 'initial-energy-300'
+  return props.selectedFilter === 'initial-energy-300'
 })
 
 // Tooltip: "base (bonus)" when skill grants extra starting energy; else just "base"

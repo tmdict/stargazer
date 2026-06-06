@@ -8,7 +8,5 @@
   "energy": [0],
   "range": 5,
   "season": 0,
-  "tags": {
-    "enhance-force-2": [{ "awakening": 2 }]
-  }
+  "tags": {}
 }

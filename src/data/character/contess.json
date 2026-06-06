@@ -9,7 +9,6 @@
   "range": 6,
   "season": 6,
   "tags": {
-    "initial-energy": [],
     "ult-negation": [{ "skill3": 1 }, { "ex": 1 }, { "awakening": 1 }]
   }
 }

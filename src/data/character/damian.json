@@ -9,9 +9,7 @@
   "range": 20,
   "season": 0,
   "tags": {
-    "initial-energy": [],
     "summon": [{ "ultimate": 1 }],
-    "temp-buff": [{ "ex": 1 }],
-    "enhance-force-2": [{ "awakening": 2 }]
+    "temp-buff": [{ "ex": 1 }]
   }
 }

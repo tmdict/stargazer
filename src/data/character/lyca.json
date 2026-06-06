@@ -10,10 +10,8 @@
   "season": 0,
   "tags": {
     "energy-recharge": [{ "skill2": 1 }],
-    "initial-energy": [],
     "initial-energy-300": [],
     "temp-buff": [{ "skill2": 1 }],
-    "temp-buff-instant": [{ "skill2": 1 }],
-    "enhance-force-2": [{ "awakening": 2 }]
+    "temp-buff-instant": [{ "skill2": 1 }]
   }
 }

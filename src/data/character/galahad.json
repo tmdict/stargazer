@@ -9,7 +9,6 @@
   "range": 10,
   "season": 5,
   "tags": {
-    "initial-energy": [],
     "initial-energy-300": [],
     "special-target": [{ "ex": 1 }],
     "summon": [{ "ultimate": 1 }, { "ex": 1 }],
