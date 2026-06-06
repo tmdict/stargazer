@@ -10,7 +10,6 @@
   "season": 4,
   "tags": {
     "energy-recharge": [{ "ex": 3 }],
-    "initial-energy": [],
     "initial-energy-300": []
   }
 }

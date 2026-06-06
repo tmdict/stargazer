@@ -9,7 +9,6 @@
   "range": 1,
   "season": 4,
   "tags": {
-    "initial-energy": [],
     "initial-energy-300": [],
     "temp-buff": [{ "skill3": 1 }, { "ex": 1 }, { "ex": 3 }]
   }
