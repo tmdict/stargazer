@@ -300,9 +300,9 @@ EX refinement tiers (`r`) only appear on the `ex` slot when the source data has 
 
 ```jsonc
 "tags": {
-  "special-target":    [{ "skill2": 1 }],
-  "temp-buff":         [{ "skill2": 1 }, { "awakening": 1 }],
-  "initial-energy":    []
+  "special-target":     [{ "skill2": 1 }],
+  "temp-buff":          [{ "skill2": 1 }, { "awakening": 1 }],
+  "initial-energy-300": []
 }
 ```
 

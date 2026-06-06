@@ -9,8 +9,6 @@
   "range": 1,
   "season": 2,
   "tags": {
-    "initial-energy": [],
-    "initial-energy-300": [],
-    "enhance-force-2": [{ "awakening": 2 }]
+    "initial-energy-300": []
   }
 }

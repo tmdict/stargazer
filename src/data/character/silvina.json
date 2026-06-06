@@ -10,7 +10,6 @@
   "season": 0,
   "tags": {
     "energy-reduction": [{ "ultimate": 1 }],
-    "initial-energy": [],
     "initial-energy-300": [],
     "special-target": [{ "skill2": 1 }]
   }
