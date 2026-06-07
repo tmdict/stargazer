@@ -209,7 +209,6 @@ export function findPathAStar(
     }
   }
 
-  // No path found
   return null
 }
 

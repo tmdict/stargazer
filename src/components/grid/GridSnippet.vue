@@ -38,12 +38,10 @@ const props = withDefaults(defineProps<Props>(), {
   layout: 'default',
 })
 
-// Create grid for snippet
 const snippetGrid = computed(() => {
   return new Grid()
 })
 
-// Layout for the snippet grid
 const snippetLayout = computed(() => {
   return new Layout(
     POINTY,
@@ -52,14 +50,12 @@ const snippetLayout = computed(() => {
   )
 })
 
-// Get polygon points for a hex
 const getHexPolygon = (hex: Hex): string => {
   const layout = snippetLayout.value
   const corners = layout.polygonCorners(hex)
   return corners.map((p) => `${p.x},${p.y}`).join(' ')
 }
 
-// Get hex fill color based on state and highlighting
 const getHexFill = (tile: GridTile): string => {
   const hexId = tile.hex.getId()
 
@@ -86,13 +82,11 @@ const getHexFill = (tile: GridTile): string => {
   }
 }
 
-// Get text position for hex center
 const getHexCenter = (hex: Hex) => {
   const layout = snippetLayout.value
   return layout.hexToPixel(hex)
 }
 
-// Get character for a specific hex
 const getCharacterForHex = (hexId: number): string | null => {
   if (!props.gridStyle.character) return null
 
@@ -104,12 +98,10 @@ const getCharacterForHex = (hexId: number): string | null => {
   return null
 }
 
-// Get character image by name
 const getCharacterImage = (characterName: string): string | undefined => {
   return props.images?.[characterName]
 }
 
-// Calculate imaginary hex positions
 const imaginaryHexes = computed(() => {
   if (!props.gridStyle.imaginaryHexes || !snippetGrid.value) return []
 

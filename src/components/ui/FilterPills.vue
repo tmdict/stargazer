@@ -8,7 +8,6 @@ defineProps<{
   pills: FilterPill[]
 }>()
 
-// Using defineModel for v-model support - handles single selection
 const modelValue = defineModel<string | null>({ default: null })
 
 const handlePillClick = (pillName: string) => {

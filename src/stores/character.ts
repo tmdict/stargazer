@@ -38,7 +38,7 @@ export const useCharacterStore = defineStore('character', () => {
   const skillStore = useSkillStore()
   const gameDataStore = useGameDataStore()
 
-  // Get references to domain objects - keep private for internal use
+  // Internal domain refs via the stores' private _ accessors; not re-exposed.
   const grid = gridStore._getGrid()
   const skillManager = skillStore._getSkillManager()
 

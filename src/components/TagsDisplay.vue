@@ -10,12 +10,10 @@ const props = defineProps<{
   characters: readonly CharacterType[]
 }>()
 
-// Using defineModel for v-model support
 const modelValue = defineModel<string | null>({ default: null })
 
 const i18n = useI18nStore()
 
-// Derive unique tag names from characters
 const tagPills = computed<FilterPill[]>(() => {
   const names = new Set<string>()
   for (const char of props.characters) {

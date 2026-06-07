@@ -74,7 +74,6 @@ const getIcon = () => {
   flex: 1;
 }
 
-/* Toast variants */
 .toast-success,
 .toast-error,
 .toast-info {

@@ -17,7 +17,6 @@ import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
 import '@/styles/modal.css'
 
-// Use stores
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
@@ -33,7 +32,6 @@ useHead({
 // Use breakpoint for responsive grid sizing only (don't auto-flatten on mobile)
 useBreakpoint({ autoFlattenOnMobile: false })
 
-// State management
 const hasValidGrid = ref(false)
 const showArrows = ref(false)
 const showHexIds = ref(false)
@@ -83,7 +81,6 @@ onMounted(() => {
   }
 })
 
-// Empty state message
 const emptyMessage = computed(() => {
   const queryParam = getEncodedStateFromRoute(route.query)
   if (!queryParam) {
@@ -92,7 +89,6 @@ const emptyMessage = computed(() => {
   return 'Invalid grid data'
 })
 
-// Home link with encoded state
 const homeLink = computed(() => {
   if (encodedState.value) {
     return `/?g=${encodedState.value}`
