@@ -9,6 +9,7 @@
   "range": 1,
   "season": 2,
   "tags": {
+    "execute": [{ "ultimate": 1 }, { "ultimate": 2 }, { "ultimate": 3 }, { "ultimate": 4 }],
     "special-target": [{ "skill2": 1 }]
   }
 }
