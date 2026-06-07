@@ -9,7 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "energy-reduction": [{ "ultimate": 1 }],
+    "energy-denial": [{ "ultimate": 1 }],
     "initial-energy-300": [],
     "special-target": [{ "skill2": 1 }]
   }

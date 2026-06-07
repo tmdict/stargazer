@@ -9,9 +9,9 @@
   "range": 1,
   "season": 2,
   "tags": {
-    "energy-reduction": [{ "awakening": 2 }],
+    "energy-denial": [{ "awakening": 2 }],
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 1 }],
-    "ult-negation": [{ "ultimate": 1 }]
+    "ult-denial": [{ "ultimate": 1 }]
   }
 }
