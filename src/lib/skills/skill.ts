@@ -56,7 +56,6 @@ export function registerSkill(skill: Skill): void {
   _registerSkill<SkillContext>(skill)
 }
 
-// SkillManager class for managing active skills
 export class SkillManager {
   // Track which characters have active skills on which hexes
   // Key is "characterId-team" to allow same character on different teams

@@ -14,7 +14,6 @@ import { usePathfindingStore } from '@/stores/pathfinding'
 import { useSkillStore } from '@/stores/skill'
 import { getStateClass, getStateName } from '@/utils/tileStateFormatting'
 
-// Access Pinia stores
 const gridStore = useGridStore()
 const characterStore = useCharacterStore()
 const pathfindingStore = usePathfindingStore()
@@ -22,22 +21,18 @@ const artifactStore = useArtifactStore()
 const gameDataStore = useGameDataStore()
 const skillStore = useSkillStore()
 
-// Character visibility toggles for debug lines
 const hiddenCharacters = ref<Set<number>>(new Set())
 
-// Helper function to get character name by ID
 const getCharacterName = (characterId: number): string => {
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
 
-// Helper function to get artifact name by ID
 const getArtifactName = (artifactId: number | null): string => {
   if (artifactId === null) return 'n/a'
   const artifact = gameDataStore.getArtifactById(artifactId)
   return artifact?.name || 'Unknown'
 }
 
-// Toggle visibility of debug lines for a character
 const toggleCharacterDebugLines = (hexId: number) => {
   if (hiddenCharacters.value.has(hexId)) {
     hiddenCharacters.value.delete(hexId)
@@ -48,12 +43,10 @@ const toggleCharacterDebugLines = (hexId: number) => {
   hiddenCharacters.value = new Set(hiddenCharacters.value)
 }
 
-// Check if debug lines should be shown for a character
 const shouldShowDebugLines = (hexId: number): boolean => {
   return !hiddenCharacters.value.has(hexId)
 }
 
-// Helper to get skill targets for a character
 const getSkillTargetsForCharacter = (
   characterId: number,
   team: Team,
@@ -70,7 +63,6 @@ const getSkillTargetsForCharacter = (
   return targets
 }
 
-// Helper to format target label based on team context
 const getTargetLabel = (
   targetHexId: number | null,
   sourceTeam: Team | null | undefined,
@@ -87,7 +79,6 @@ const getTargetLabel = (
   return `Hex ${targetHexId}`
 }
 
-// Helper to get metadata descriptor
 const getMetadataDescriptor = (metadata: SkillTargetInfo['metadata']): string | null => {
   if (!metadata) return null
 
@@ -101,7 +92,6 @@ const getMetadataDescriptor = (metadata: SkillTargetInfo['metadata']): string | 
   return null
 }
 
-// Computed property for active skill configs
 const activeSkillConfigs = computed(() => {
   const configs: Array<{
     tile: GridTile
@@ -112,7 +102,6 @@ const activeSkillConfigs = computed(() => {
     showSymmetry: boolean
   }> = []
 
-  // Get all tiles with characters that have skills
   for (const tile of characterStore.getTilesWithCharacters()) {
     if (!tile.characterId || !tile.team) continue
 

@@ -145,7 +145,6 @@ const shouldShowHexId = (hex: Hex) => {
 // keeps blockHover true for a grace period after drag ends.
 const blockHover = ref(false)
 
-// Computed SVG dimensions based on hex scale
 const svgDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
@@ -154,7 +153,6 @@ const svgDimensions = computed(() => {
   }
 })
 
-// Dynamic font sizes
 const scaledFontSizes = computed(() => {
   const scale = gridStore.getHexScale()
   return {
@@ -170,7 +168,6 @@ const shouldShowCoordinates = computed(() => {
   return props.showCoordinates && scale >= 1
 })
 
-// Dynamic stroke width
 const scaledStrokeWidth = computed(() => {
   const scale = gridStore.getHexScale()
   return Math.max(1, props.strokeWidth * scale) // Min 1px
@@ -200,7 +197,6 @@ watchEffect(() => {
   }
 })
 
-// Mouse hover handling functions
 const handleHexMouseEnter = (hex: Hex) => {
   // Don't set hover state if we're blocking
   if (!blockHover.value) {
@@ -534,7 +530,7 @@ onUnmounted(() => {
           </text>
         </g>
 
-        <!-- Grid tiles are now purely visual, no child components -->
+        <!-- Purely visual layer; no child components. -->
 
         <!-- 
         Invisible event layer - MUST be rendered last to be topmost layer

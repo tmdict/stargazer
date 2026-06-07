@@ -41,7 +41,6 @@ const { startDrag, endDrag } = dragDropAPI
 
 const { liftedHexId, setLiftedHex, clearLiftedHex } = useSelectionState()
 
-// Get character data
 const getCharacterName = (characterId: number, hexId: number): string => {
   // Check if this character has a custom image modifier
   const team = getCharacterTeam(gridStore._getGrid(), hexId)
@@ -52,7 +51,6 @@ const getCharacterName = (characterId: number, hexId: number): string => {
     }
   }
 
-  // Otherwise use the default character name
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
 
@@ -95,7 +93,6 @@ const getCharacterColors = (characterId: number) => {
 const BASE_CHARACTER_SIZE = 60
 const BASE_CHARACTER_OFFSET = 30
 
-// Computed character dimensions
 const characterDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
@@ -119,7 +116,6 @@ const getSkillBorderStyle = (characterId: number, hexId: number) => {
   return {}
 }
 
-// Compute character styles
 const getCharacterStyle = (hexId: number) => {
   // Use getHexPosition to get SVG coordinates, not screen coordinates
   const position = gridStore.getHexPosition(hexId)
@@ -135,7 +131,6 @@ const getCharacterStyle = (hexId: number) => {
     '--character-border-width': `${borderWidth}px`,
   }
 
-  // Add perspective transforms if enabled
   if (props.showPerspective) {
     const verticalOffset = -70 * gridStore.getHexScale()
     baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY})`
@@ -145,7 +140,6 @@ const getCharacterStyle = (hexId: number) => {
   return baseStyle
 }
 
-// Drag handlers
 const handleDragStart = (event: DragEvent, hexId: number, characterId: number) => {
   if (props.isMapEditorMode) return
 

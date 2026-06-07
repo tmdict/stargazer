@@ -55,7 +55,6 @@ const handleArenaSelected = (mapKey: string) => {
   emit('arenaSelected', mapKey)
 }
 
-// Invert tooltip state
 const showInvertTooltip = ref(false)
 const invertButtonElement = ref<HTMLElement>()
 

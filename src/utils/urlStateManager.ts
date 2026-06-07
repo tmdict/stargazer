@@ -2,7 +2,6 @@ import type { GridTile } from '@/lib/grid'
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
 import { serializeGridState, type GridState } from './gridStateSerializer'
 
-/* Encode grid state to compressed URL-safe string using binary encoding */
 export function encodeGridStateToUrl(gridState: GridState): string {
   try {
     const binaryData = encodeToBinary(gridState)
@@ -13,7 +12,6 @@ export function encodeGridStateToUrl(gridState: GridState): string {
   }
 }
 
-/* Decode compressed URL string back to grid state using binary decoding */
 export function decodeGridStateFromUrl(encodedState: string): GridState | null {
   try {
     const bytes = urlSafeToBytes(encodedState)
@@ -41,10 +39,8 @@ export function generateShareableUrl(
     teamView?: boolean
   },
 ): string {
-  // Serialize to compact format
   const gridState = serializeGridState(allTiles, allyArtifact, enemyArtifact, displayFlags)
 
-  // Encode using binary compression
   const encodedState = encodeGridStateToUrl(gridState)
 
   // Generate full URL with query parameter format

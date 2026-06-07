@@ -46,16 +46,13 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Use stores and inject drag/drop API
 const gridStore = useGridStore()
 const characterStore = useCharacterStore()
 const mapEditorStore = useMapEditorStore()
 const artifactStore = useArtifactStore()
 
-// Provide grid events to children
 const gridEvents = provideGridEvents()
 
-// Inject the drag/drop API from provider
 const dragDropAPI = inject<DragDropAPI>('dragDrop')
 if (!dragDropAPI) {
   throw new Error('GridManager must be used within a DragDropProvider')
@@ -70,7 +67,6 @@ const {
   registerDropHandler,
 } = dragDropAPI
 
-// Modal state for character selection
 const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
 const modalPosition = ref({ x: 0, y: 0 })
@@ -156,7 +152,6 @@ const findHexUnderMouse = (x: number, y: number): number | null => {
   const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
   if (!svgElement) return null
 
-  // Create SVG point for coordinate conversion
   const pt = svgElement.createSVGPoint()
   pt.x = x
   pt.y = y

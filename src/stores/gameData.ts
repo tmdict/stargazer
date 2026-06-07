@@ -88,12 +88,10 @@ export const useGameDataStore = defineStore('gameData', () => {
     return characterRanges.value.get(characterId) ?? 1
   }
 
-  // Helper to get character by ID
   const getCharacterById = (characterId: number): CharacterType | undefined => {
     return characters.value.find((char) => char.id === characterId)
   }
 
-  // Helper to get character name by ID
   const getCharacterNameById = (characterId: number): string | undefined => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.name
@@ -105,7 +103,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     return character?.name
   }
 
-  // Helper to get artifact by ID
   const getArtifactById = (artifactId: number): ArtifactType | undefined => {
     return artifacts.value.find((artifact) => artifact.id === artifactId)
   }
