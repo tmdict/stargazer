@@ -9,13 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "temp-buff": [
-      {
-        "skill2": 1
-      },
-      {
-        "awakening": 2
-      }
-    ]
+    "execute": [{ "ex": 3 }, { "ex": 4 }],
+    "temp-buff": [{ "skill2": 1 }, { "awakening": 2 }]
   }
 }

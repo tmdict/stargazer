@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 5,
   "season": 3,
-  "tags": {}
+  "tags": {
+    "execute": [{ "awakening": 1 }]
+  }
 }

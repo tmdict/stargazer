@@ -9,6 +9,7 @@
   "range": 6,
   "season": 3,
   "tags": {
+    "execute": [{ "ultimate": 1 }],
     "initial-energy-300": []
   }
 }

@@ -9,6 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "cheat-death": [{ "ultimate": 1 }],
     "instant-ult": [{ "ex": 1 }]
   }
 }

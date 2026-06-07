@@ -10,6 +10,7 @@
   "season": 6,
   "tags": {
     "anti-heal": [{ "awakening": 1 }],
+    "cheat-death": [{ "ex": 4 }],
     "temp-buff": [{ "ultimate": 1 }, { "skill3": 1 }],
     "temp-buff-instant": [{ "ultimate": 1 }]
   }

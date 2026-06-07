@@ -9,6 +9,7 @@
   "range": 4,
   "season": 4,
   "tags": {
+    "cheat-death": [{ "ex": 3 }],
     "energy-battery": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
     "temp-buff": [{ "skill2": 1 }, { "awakening": 1 }],
