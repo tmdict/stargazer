@@ -9,6 +9,7 @@
   "range": 20,
   "season": 2,
   "tags": {
+    "energy-battery": [{ "skill3": 1 }],
     "initial-energy-300": [],
     "temp-buff": [{ "ultimate": 1 }, { "skill2": 1 }, { "ex": 1 }],
     "temp-buff-instant": [{ "ultimate": 1 }, { "skill2": 1 }, { "ex": 1 }]

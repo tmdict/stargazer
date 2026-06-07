@@ -11,6 +11,6 @@
   "tags": {
     "temp-buff": [{ "skill3": 1 }, { "awakening": 1 }],
     "temp-buff-instant": [{ "skill3": 1 }, { "awakening": 1 }],
-    "ult-negation": [{ "ultimate": 1 }]
+    "ult-denial": [{ "ultimate": 1 }]
   }
 }

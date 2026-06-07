@@ -9,6 +9,7 @@
   "range": 4,
   "season": 4,
   "tags": {
+    "energy-battery": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
     "temp-buff": [{ "skill2": 1 }, { "awakening": 1 }],
     "temp-buff-instant": [{ "skill2": 1 }]
