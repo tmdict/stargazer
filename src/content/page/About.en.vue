@@ -49,6 +49,10 @@
         <a href="https://www.yaphalla.com/">Yaphalla</a>: Team formation builder, priority list
         builder, and database.
       </li>
+      <li>
+        <a href="https://afkj-data-viewer.pages.dev/">AFKJ Data Viewer</a>: Multilingual AFKJ
+        database.
+      </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ database and guides.</li>
       <li>Special thanks to Milan for information on hero skills and various mechanics.</li>
       <li>

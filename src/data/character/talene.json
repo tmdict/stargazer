@@ -9,6 +9,7 @@
   "range": 3,
   "season": 1,
   "tags": {
+    "cheat-death": [{ "ex": 4 }],
     "special-target": [{ "ex": 1 }]
   }
 }

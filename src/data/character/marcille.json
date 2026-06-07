@@ -9,6 +9,7 @@
   "range": 6,
   "season": 5,
   "tags": {
+    "cheat-death": [{ "ex": 1 }, { "ex": 2 }, { "ex": 3 }, { "ex": 4 }],
     "initial-energy-300": []
   }
 }

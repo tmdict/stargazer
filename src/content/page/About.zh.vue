@@ -44,6 +44,9 @@
       <li>
         <a href="https://www.yaphalla.com/">Yaphalla</a>：阵型构建工具、英雄优先级工具与数据库。
       </li>
+      <li>
+        <a href="https://afkj-data-viewer.pages.dev/">AFKJ Data Viewer</a>：多语言AFKJ数据库。
+      </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>：AFKJ 数据库与攻略。</li>
       <li>特别感谢 Milan 提供英雄技能与相关机制的资料。</li>
       <li>
