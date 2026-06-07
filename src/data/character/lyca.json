@@ -9,7 +9,7 @@
   "range": 5,
   "season": 0,
   "tags": {
-    "energy-recharge": [{ "skill2": 1 }],
+    "energy-battery": [{ "skill2": 1 }],
     "initial-energy-300": [],
     "temp-buff": [{ "skill2": 1 }],
     "temp-buff-instant": [{ "skill2": 1 }]

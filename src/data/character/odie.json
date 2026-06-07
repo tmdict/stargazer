@@ -5,8 +5,8 @@
   "faction": "mauler",
   "class": "marksman",
   "damage": "magic",
-  "energy": [0],
+  "energy": [0, 600],
   "range": 5,
   "season": 0,
-  "tags": {}
+  "tags": { "initial-energy-300": [] }
 }

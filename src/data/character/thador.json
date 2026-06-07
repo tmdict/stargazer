@@ -9,7 +9,7 @@
   "range": 1,
   "season": 4,
   "tags": {
-    "energy-recharge": [{ "ex": 3 }],
+    "energy-battery": [{ "ex": 3 }],
     "initial-energy-300": []
   }
 }

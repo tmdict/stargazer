@@ -9,8 +9,8 @@
   "range": 3,
   "season": 0,
   "tags": {
-    "energy-recharge": [{ "ultimate": 1 }, { "skill2": 3 }],
-    "energy-reduction": [{ "skill3": 1 }],
+    "energy-battery": [{ "ultimate": 1 }, { "skill2": 3 }],
+    "energy-denial": [{ "skill3": 1 }],
     "initial-energy-300": []
   }
 }

@@ -9,6 +9,6 @@
   "range": 5,
   "season": 6,
   "tags": {
-    "energy-reduction": [{ "skill3": 1 }]
+    "energy-denial": [{ "skill3": 1 }]
   }
 }

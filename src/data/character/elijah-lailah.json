@@ -9,7 +9,7 @@
   "range": 6,
   "season": 3,
   "tags": {
-    "energy-recharge": [{ "skill2": 1 }, { "ex": 1 }],
+    "energy-battery": [{ "skill2": 1 }, { "ex": 1 }],
     "temp-buff": [{ "ultimate": 1 }]
   }
 }
