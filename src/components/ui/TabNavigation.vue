@@ -34,7 +34,6 @@ const toggleMapDropdown = () => {
 }
 
 const openMapDropdown = () => {
-  // Clear any pending close timeout
   if (closeTimeout) {
     clearTimeout(closeTimeout)
     closeTimeout = null
@@ -55,7 +54,6 @@ const handleMapChange = (mapKey: string) => {
   showMapDropdown.value = false // Close dropdown after selection
 }
 
-// Close dropdown when clicking outside
 const handleClickOutside = (event: MouseEvent) => {
   const dropdown = document.querySelector('.tab-dropdown')
   if (dropdown && event.target instanceof Node && !dropdown.contains(event.target)) {

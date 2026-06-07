@@ -25,7 +25,6 @@ const emit = defineEmits<{
 
 const { isTouchDevice } = useTouchDetection()
 
-// Tooltip state
 const showTooltip = ref(false)
 const artifactElement = ref<HTMLElement>()
 
@@ -33,13 +32,12 @@ const artifactElement = ref<HTMLElement>()
 const interactionStartedAsTouch = ref(false)
 
 const formattedArtifactName = computed(() => {
-  // Use i18n for artifact name if available, fallback to formatted name
+  // i18n.t returns the key unchanged when no translation exists; fall back then.
   const translationKey = `artifact.${props.artifact.name}`
   const translated = i18n.t(translationKey)
   if (translated !== translationKey) {
     return translated
   }
-  // Fallback to formatted name
   return formatDisplayName(props.artifact.name)
 })
 

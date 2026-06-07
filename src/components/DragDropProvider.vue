@@ -23,7 +23,6 @@ export interface DragDropAPI {
   registerDropHandler: (handler: (event: DragEvent) => void) => void
 }
 
-// Use the existing drag/drop composable
 const {
   startDrag,
   endDrag,
@@ -41,12 +40,10 @@ const hexDetector = ref<((x: number, y: number) => number | null) | null>(null)
 // Drop handler function - will be provided by GridManager
 const dropHandler = ref<((event: DragEvent) => void) | null>(null)
 
-// Register a hex detector function
 const registerHexDetector = (detector: (x: number, y: number) => number | null) => {
   hexDetector.value = detector
 }
 
-// Register a drop handler function
 const registerDropHandler = (handler: (event: DragEvent) => void) => {
   dropHandler.value = handler
 }
@@ -61,7 +58,6 @@ const handleGlobalMouseMove = (event: MouseEvent) => {
 
 // Track during dragover events for better coverage
 const handleGlobalDragOver = (event: DragEvent) => {
-  // Prevent default to allow drop
   event.preventDefault()
 
   // Update hex detection during dragover as backup to mousemove
@@ -73,7 +69,6 @@ const handleGlobalDragOver = (event: DragEvent) => {
 
 // Global drop handling for characters dropped outside valid hexes
 const handleGlobalDrop = (event: DragEvent) => {
-  // Prevent default behavior
   event.preventDefault()
 
   // Check if drop was already handled by a hex tile
@@ -88,7 +83,6 @@ const handleGlobalDrop = (event: DragEvent) => {
   }
 }
 
-// Create the API object to provide to children
 const dragDropAPI: DragDropAPI = {
   isDragging,
   hoveredHexId,
@@ -102,10 +96,8 @@ const dragDropAPI: DragDropAPI = {
   registerDropHandler,
 }
 
-// Provide the API to all child components
 provide('dragDrop', dragDropAPI)
 
-// Setup global event handlers
 onMounted(() => {
   // Add listeners to the document body to catch drops outside the grid
   document.addEventListener('drop', handleGlobalDrop)
@@ -115,7 +107,6 @@ onMounted(() => {
 })
 
 onUnmounted(() => {
-  // Clean up listeners
   document.removeEventListener('drop', handleGlobalDrop)
   document.removeEventListener('dragover', handleGlobalDragOver)
   document.removeEventListener('mousemove', handleGlobalMouseMove)

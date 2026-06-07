@@ -20,11 +20,9 @@ const i18n = useI18nStore()
 
 const hasDocumentedSkill = computed(() => hasSkillLocale(props.character.name))
 
-// Skill modal state
 const showSkillModal = ref(false)
 const selectedSkillName = ref('')
 
-// Tooltip state
 const showTooltip = ref(false)
 const buttonElement = ref<HTMLElement>()
 
@@ -137,7 +135,6 @@ const handleMouseLeave = () => {
     gap: 0.5rem;
   }
 
-  /* Hide skill button and spacer on mobile */
   .hide-on-mobile {
     display: none;
   }

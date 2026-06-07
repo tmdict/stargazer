@@ -30,7 +30,6 @@ import { generateShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateMa
 const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
 const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 
-// Use Pinia stores and router
 const gridStore = useGridStore()
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
@@ -96,11 +95,9 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-// Map management
 const availableMaps = getMapNames().filter((m) => m.key.startsWith('arena'))
 const selectedMap = ref('arena1')
 
-// Grid display toggles
 const showArrows = ref(false)
 const showHexIds = ref(false)
 const showSkills = ref(true)
@@ -120,10 +117,8 @@ watch(
   },
 )
 
-// Debug grid ref
 const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
 
-// Map editor state
 const selectedMapEditorState = ref<State>(State.DEFAULT)
 
 // Map editor mode is incompatible with these display modes; force them off when entering.
@@ -183,7 +178,6 @@ i18nStore.initialize()
 if (gameDataStore.dataLoaded) {
   const encodedState = getEncodedStateFromUrl()
   if (encodedState) {
-    // Only try to restore if there's a query param
     const result = urlStateStore.restoreFromEncodedState(encodedState)
 
     if (result.success && result.displayFlags) {
@@ -218,12 +212,10 @@ const handleCopyLink = async () => {
       },
     )
 
-    // Convert to share link format
     const urlParams = new URLSearchParams(shareableUrl.split('?')[1])
     const encodedState = urlParams.get('g')
     const shareLink = `${window.location.origin}/share?g=${encodedState}`
 
-    // Copy share URL to clipboard
     await navigator.clipboard.writeText(shareLink)
 
     // Navigate to share page with state indicating link was copied

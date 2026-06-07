@@ -12,7 +12,6 @@ export function useGridExport() {
    * Captures the grid as a PNG data URL, with optional perspective cropping
    */
   const captureGrid = async (options: ExportOptions): Promise<string> => {
-    // Import html-to-image dynamically
     const { toPng } = await import('html-to-image')
 
     // Get the perspective container to capture all transforms
@@ -50,7 +49,6 @@ export function useGridExport() {
       img.onload = resolve
     })
 
-    // Create canvas for cropping
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
     if (!ctx) {
@@ -66,11 +64,9 @@ export function useGridExport() {
       Math.floor(img.height * compressionRatio) + 100,
     ) // Adjust height accordingly
 
-    // Set canvas size to cropped dimensions
     canvas.width = img.width
     canvas.height = cropHeight
 
-    // Draw cropped image
     ctx.drawImage(
       img,
       0,
@@ -83,7 +79,6 @@ export function useGridExport() {
       cropHeight, // Destination width, height
     )
 
-    // Get cropped image as data URL
     return canvas.toDataURL('image/png', 1.0)
   }
 
@@ -94,7 +89,6 @@ export function useGridExport() {
     try {
       const dataUrl = await captureGrid(options)
 
-      // Convert data URL to blob
       const response = await fetch(dataUrl)
       const blob = await response.blob()
 
@@ -123,7 +117,6 @@ export function useGridExport() {
     try {
       const dataUrl = await captureGrid(options)
 
-      // Create download link
       const now = new Date()
       const dateStr = (now.toISOString().split('T')[0] ?? 'undefined').replace(/-/g, '')
       const timeStr =
@@ -133,7 +126,6 @@ export function useGridExport() {
       link.download = `stargazer-${dateStr}-${timeStr}.png`
       link.href = dataUrl
 
-      // Trigger download
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)

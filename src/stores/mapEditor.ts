@@ -25,10 +25,6 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
   }
 
   /**
-   * Resets all hexes to DEFAULT state (used by "Clear Map" button)
-   * Removes all characters and resets all tiles completely
-   */
-  /**
    * Resets all hexes to a specific state with character clearing
    */
   const resetAllHexesToState = (state: State) => {

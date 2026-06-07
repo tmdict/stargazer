@@ -26,7 +26,6 @@ if (!import.meta.env.SSR && typeof Image !== 'undefined') {
     'data:image/gif;base64,R0lGODlhAQABAIAAAAUEBAAAACwAAAAAAQABAAACAkQBADs='
 }
 
-// Global drag state - shared across all components
 const isDragging = ref(false)
 const draggedCharacter = ref<CharacterType | null>(null)
 const draggedImageSrc = ref<string>('')
@@ -38,7 +37,6 @@ const currentMousePosition = ref({ x: 0, y: 0 })
 const hoveredHexId = ref<number | null>(null)
 
 export const useDragDrop = () => {
-  // Start dragging a character
   const startDrag = (
     event: DragEvent,
     character: CharacterType,
@@ -52,10 +50,8 @@ export const useDragDrop = () => {
     draggedImageSrc.value = imageUrl || character.name
     dropHandled.value = false // Reset drop handled flag for new drag
 
-    // Set initial position
     updateDragPosition(event.clientX, event.clientY)
 
-    // Set drag data
     event.dataTransfer.setData(
       CHARACTER_MIME_TYPE,
       JSON.stringify({
@@ -64,7 +60,6 @@ export const useDragDrop = () => {
       }),
     )
 
-    // Set drag effect
     event.dataTransfer.effectAllowed = 'copy'
 
     // Hide the default drag image using pre-loaded transparent image
@@ -82,7 +77,6 @@ export const useDragDrop = () => {
     document.addEventListener('drag', handleGlobalDrag)
   }
 
-  // Update drag preview position and current mouse position
   const updateDragPosition = (x: number, y: number) => {
     // Get the current grid scale to adjust preview offset
     const gridStore = useGridStore()
@@ -95,7 +89,6 @@ export const useDragDrop = () => {
     currentMousePosition.value = { x, y }
   }
 
-  // Global drag over handler for position tracking
   const handleGlobalDragOver = (event: DragEvent) => {
     if (isDragging.value) {
       updateDragPosition(event.clientX, event.clientY)
@@ -103,14 +96,12 @@ export const useDragDrop = () => {
     }
   }
 
-  // Global drag handler for position tracking
   const handleGlobalDrag = (event: DragEvent) => {
     if (isDragging.value && event.clientX !== 0 && event.clientY !== 0) {
       updateDragPosition(event.clientX, event.clientY)
     }
   }
 
-  // Handle drag end
   const endDrag = (event: DragEvent) => {
     isDragging.value = false
     draggedCharacter.value = null
@@ -125,7 +116,6 @@ export const useDragDrop = () => {
       event.target.style.opacity = '1'
     }
 
-    // Remove global event listeners
     document.removeEventListener('dragover', handleGlobalDragOver)
     document.removeEventListener('drag', handleGlobalDrag)
 
@@ -164,7 +154,6 @@ export const useDragDrop = () => {
     }
   }
 
-  // Check if event contains character data
   const hasCharacterData = (event: DragEvent): boolean => {
     return event.dataTransfer?.types.includes(CHARACTER_MIME_TYPE) || false
   }
@@ -174,7 +163,6 @@ export const useDragDrop = () => {
     hoveredHexId.value = hexId
   }
 
-  // Set the drop handled flag
   const setDropHandled = (handled: boolean) => {
     dropHandled.value = handled
   }

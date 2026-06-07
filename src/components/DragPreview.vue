@@ -7,7 +7,6 @@ import { useGameDataStore } from '@/stores/gameData'
 const { isDragging, draggedCharacter, draggedImageSrc, dragPreviewPosition } = useDragDrop()
 const gameData = useGameDataStore()
 
-// Get background image based on character level
 const backgroundImage = computed(() => {
   if (!draggedCharacter.value) return ''
   const level = draggedCharacter.value.level

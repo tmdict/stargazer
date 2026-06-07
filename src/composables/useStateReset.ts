@@ -17,7 +17,6 @@ export function useStateReset() {
    * Used by URL state restoration, map editor, and other reset operations
    */
   const clearAllState = () => {
-    // Clear characters and artifacts
     characterStore.clearAllCharacters()
     artifactStore.clearAllArtifacts()
 

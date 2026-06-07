@@ -15,16 +15,13 @@ const { selectedTeam, artifactStore } = useSelectionState()
 const i18n = useI18nStore()
 
 const handleArtifactClick = (artifact: ArtifactType) => {
-  // Check if this artifact is already placed for the selected team
   const isAlreadyPlaced =
     (selectedTeam.value === Team.ALLY && artifactStore.allyArtifactId === artifact.id) ||
     (selectedTeam.value === Team.ENEMY && artifactStore.enemyArtifactId === artifact.id)
 
   if (isAlreadyPlaced) {
-    // Remove the artifact if it's already placed
     artifactStore.removeArtifact(selectedTeam.value)
   } else {
-    // Place artifact for the selected team
     artifactStore.placeArtifact(artifact.id, selectedTeam.value)
   }
 }

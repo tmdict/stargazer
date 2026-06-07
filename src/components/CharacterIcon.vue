@@ -29,12 +29,10 @@ const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
 const { isTouchDevice } = useTouchDetection()
 
-// Click detection variables
 const isMouseDown = ref(false)
 const startTime = ref(0)
 const CLICK_THRESHOLD = 200 // ms
 
-// Tooltip state
 const showTooltip = ref(false)
 const characterElement = ref<HTMLElement>()
 
@@ -42,13 +40,12 @@ const characterElement = ref<HTMLElement>()
 const interactionStartedAsTouch = ref(false)
 
 const formattedCharacterName = computed(() => {
-  // Use i18n for character name if available, fallback to formatted name
+  // i18n.t returns the key unchanged when no translation exists; fall back then.
   const translationKey = `character.${props.character.name}`
   const translated = i18n.t(translationKey)
   if (translated !== translationKey) {
     return translated
   }
-  // Fallback to formatted name
   return formatDisplayName(props.character.name)
 })
 

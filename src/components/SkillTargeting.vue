@@ -13,19 +13,14 @@ interface Props {
 
 const props = defineProps<Props>()
 
-// Grid and skill stores
 const gridStore = useGridStore()
 const skillStore = useSkillStore()
 const gridEvents = useGridEvents()
 
-// Get all active skill targets - Vue will track this computed
 const skillTargets = computed(() => {
-  // This computed will automatically re-run when getAllSkillTargets changes
-  // because getAllSkillTargets itself is a computed that depends on targetVersion
   return skillStore.getAllSkillTargets
 })
 
-// Compute SVG dimensions based on grid scale
 const svgDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
@@ -50,7 +45,6 @@ const arrowStyle = computed(() => {
   }
 })
 
-// Get arrow path for skill targeting
 function getSkillArrowPath(fromHexId: number, toHexId: number): string | null {
   if (!fromHexId || !toHexId) return null
 
@@ -63,7 +57,6 @@ function getSkillArrowPath(fromHexId: number, toHexId: number): string | null {
   }
 }
 
-// Parse skill key to get character and team info
 function parseSkillKey(key: string): { characterId: number; team: string } | null {
   const parts = key.split('-')
   if (parts.length !== 2) return null
@@ -89,7 +82,6 @@ function isTargetingSkill(key: string): boolean {
   return skill?.targetingColorModifier !== undefined
 }
 
-// Get the targeting color for a skill
 function getTargetingColor(key: string): string {
   const parsed = parseSkillKey(key)
   if (!parsed) return '#36958e'
@@ -97,7 +89,6 @@ function getTargetingColor(key: string): string {
   return skill?.targetingColorModifier || '#36958e' // Default to green if not specified
 }
 
-// Compute all arrows to render from skill targets
 const arrowsToRender = computed(() => {
   const arrows: Array<{
     key: string
@@ -126,10 +117,9 @@ const arrowsToRender = computed(() => {
   return arrows
 })
 
-// Force update when grid changes
-function handleGridUpdate() {
-  // Component will automatically re-render due to computed properties
-}
+// Empty body: the subscriptions exist only to nudge re-render; the computed
+// properties pull the new state on their own.
+function handleGridUpdate() {}
 
 onMounted(() => {
   gridEvents.on('grid:updated', handleGridUpdate)
