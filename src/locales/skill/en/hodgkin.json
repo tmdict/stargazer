@@ -12,10 +12,10 @@
   "skill2": {
     "n": "Phantom Respite",
     "d": [
-      "Hodgkin enters an ethereal state for [[8]]s, during which he is immune to physical damage and recovers [[-70%]]<ATK> HP per second.\nPassive. When Hodgkin casts Cannon Fire, he immediately enters the ethereal state for [[4]]s.",
-      "Recovers [[-80%]]<ATK> HP per second during ethereal state.",
-      "Recovers [[-90%]]<ATK> HP per second during ethereal state.",
-      "Recovers [[-100%]]<ATK> HP per second during ethereal state."
+      "Hodgkin enters an ethereal state for [[8]]s, during which he is immune to physical damage and recovers [[70%]]<ATK> HP per second.\nPassive. When Hodgkin casts Cannon Fire, he immediately enters the ethereal state for [[4]]s.",
+      "Recovers [[80%]]<ATK> HP per second during ethereal state.",
+      "Recovers [[90%]]<ATK> HP per second during ethereal state.",
+      "Recovers [[100%]]<ATK> HP per second during ethereal state."
     ]
   },
   "skill3": {
@@ -52,7 +52,7 @@
   },
   "awakening": {
     "d": [
-      "Hodgkin reduces the Phys DEF of enemies hit by the cannon by [[-15%]], up to [[2]] stacks, for [[10]]s.",
+      "Hodgkin reduces the Phys DEF of enemies hit by the cannon by [[15%]], up to [[2]] stacks, for [[10]]s.",
       "Hodgkin gains [[400]] initial Energy. During Cannon Fire, for each enemy hit by the cannon at least [[2]] times, he recovers [[150]] Energy and reduces that enemy's Vitality by [[80]] for [[10]]s."
     ]
   }

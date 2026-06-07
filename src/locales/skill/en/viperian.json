@@ -55,8 +55,7 @@
   },
   "awakening": {
     "d": [
-      "Darkvipers return when the possessed enemies are defeated, recovering [[14%]]<HP> HP and [[80]] Energy for Viperian.",
-      "“冥蛇”造成的伤害将附带[[10]]点生命汲取。每有一名敌人生命值百分比首次低于[[60%]]时，可额外派出一条“冥蛇”，优先选择未被“冥蛇”附身或当前造成伤害最高的敌人，每名敌人至多被[[2]]条“冥蛇”附身。"
+      "Darkvipers return when the possessed enemies are defeated, recovering [[14%]]<HP> HP and [[80]] Energy for Viperian."
     ]
   }
 }

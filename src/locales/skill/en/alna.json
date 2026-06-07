@@ -21,7 +21,7 @@
   "skill3": {
     "n": "Wild Whirl",
     "d": [
-      "Alna repeatedly swings her spear, striking enemies within a 1-tile arc in front of her twice, with each hit dealing [[120%]]<ATK> damage. She then sweeps her spear around, dealing [[240%]]<ATK> damage to all surrounding enemies and reducing their Haste by [[-50]] for [[8]]s.",
+      "Alna repeatedly swings her spear, striking enemies within a 1-tile arc in front of her twice, with each hit dealing [[120%]]<ATK> damage. She then sweeps her spear around, dealing [[240%]]<ATK> damage to all surrounding enemies and reducing their Haste by [[50]] for [[8]]s.",
       "Increases the damage of the first 2 strikes to [[130%]]<ATK>, and the final strike to [[260%]]<ATK>.",
       "Increases the damage of the first 2 strikes to [[140%]]<ATK>, and the final strike to [[280%]]<ATK>.",
       "Increases the damage of the first 2 strikes to [[150%]]<ATK>, and the final strike to [[300%]]<ATK>."
@@ -55,7 +55,7 @@
   },
   "awakening": {
     "d": [
-      "Alna and her Winter Warrior gain a [[15%]] increase to their [[basic stats]] until one of them is defeated. The first time either of them leaves the Chilling Presence state, Alna or the Winter Warrior will freeze enemies within [[1]] tile for [[2]]s and reduce those enemies' Vitality by [[-50]] for [[10]]s."
+      "Alna and her Winter Warrior gain a [[15%]] increase to their [[basic stats]] until one of them is defeated. The first time either of them leaves the Chilling Presence state, Alna or the Winter Warrior will freeze enemies within [[1]] tile for [[2]]s and reduce those enemies' Vitality by [[50]] for [[10]]s."
     ]
   }
 }

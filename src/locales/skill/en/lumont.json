@@ -53,10 +53,5 @@
       }
     ]
   },
-  "awakening": {
-    "d": [
-      "Lumont recovers [[7%]]<HP> HP per second while shielded by Totem Ward.",
-      "首次释放“撼地怒击”时，自身获得[[500%]]<ATK>“图腾护佑”的护盾，并使“战争践踏”获得永久强化，造成的眩晕时间增加[[1]]秒。"
-    ]
-  }
+  "awakening": { "d": ["Lumont recovers [[7%]]<HP> HP per second while shielded by Totem Ward."] }
 }

@@ -55,8 +55,7 @@
   },
   "awakening": {
     "d": [
-      "Rolling Boulder deals an extra [[180%]]<ATK> damage to enemies recently affected by multiple control effects.",
-      "每累计对[[4]]名敌人释放“落石术”后，该技能将生成一颗巨型落岩，对最密集的[[2]]格范围内敌人造成[[250%]]<ATK>伤害，并使命中的目标在[[10]]秒内魔抗降低[[30%]]。"
+      "Rolling Boulder deals an extra [[180%]]<ATK> damage to enemies recently affected by multiple control effects."
     ]
   }
 }

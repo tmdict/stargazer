@@ -21,7 +21,7 @@
   "skill3": {
     "n": "Forest's Wrath",
     "d": [
-      "The Forest Mark reduces the enemy's Phys DEF by [[6%]]. When a marked enemy is defeated, Kafra and allies within 2 tiles of this enemy recover [[-100%]]<ATK> HP every [[0.38]]s for [[1.13]]s.",
+      "The Forest Mark reduces the enemy's Phys DEF by [[6%]]. When a marked enemy is defeated, Kafra and allies within 2 tiles of this enemy recover [[100%]]<ATK> HP every [[0.38]]s for [[1.13]]s.",
       "Reduces Phys DEF by [[9%]].",
       "Reduces Phys DEF by [[12%]].",
       "Reduces Phys DEF by [[15%]]."

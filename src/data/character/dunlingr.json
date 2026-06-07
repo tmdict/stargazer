@@ -9,6 +9,7 @@
   "range": 1,
   "season": 2,
   "tags": {
+    "anti-heal": [{ "ultimate": 1 }],
     "energy-denial": [{ "awakening": 2 }],
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 1 }],

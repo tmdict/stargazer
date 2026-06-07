@@ -21,10 +21,10 @@
   "skill3": {
     "n": "Zephyr's Embrace",
     "d": [
-      "Lorsan protects the [[weakest]] ally with Zephyr's Embrace for [[6]]s. While active, the protected ally gains [[50]] [[dodge chance]], [[30]] Haste, and recovers [[-90%]]<ATK> HP per second.",
-      "Increases HP recovered per second to [[-100%]]<ATK>.",
-      "Increases HP recovered per second to [[-110%]]<ATK>.",
-      "Increases HP recovered per second to [[-120%]]<ATK>."
+      "Lorsan protects the [[weakest]] ally with Zephyr's Embrace for [[6]]s. While active, the protected ally gains [[50]] [[dodge chance]], [[30]] Haste, and recovers [[90%]]<ATK> HP per second.",
+      "Increases HP recovered per second to [[100%]]<ATK>.",
+      "Increases HP recovered per second to [[110%]]<ATK>.",
+      "Increases HP recovered per second to [[120%]]<ATK>."
     ]
   },
   "mastery": {

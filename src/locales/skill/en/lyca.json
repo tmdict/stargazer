@@ -21,9 +21,9 @@
   "skill3": {
     "n": "Nova Fall",
     "d": [
-      "Lyca summons meteors to attack all enemies, dealing [[100%]]<ATK> damage and reducing their Phys DEF by [[-10%]] for [[5]]s.",
+      "Lyca summons meteors to attack all enemies, dealing [[100%]]<ATK> damage and reducing their Phys DEF by [[10%]] for [[5]]s.",
       "Increases damage to [[120%]]<ATK>.",
-      "Reduces their Phys DEF by [[-12%]].",
+      "Reduces their Phys DEF by [[12%]].",
       "Increases damage to [[130%]]<ATK>."
     ]
   },

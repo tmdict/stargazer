@@ -12,10 +12,10 @@
   "skill2": {
     "n": "Stellar Bond",
     "d": [
-      "Elijah forms a Stellar Bond with Lailah when they align on the battlefield. Allied heroes placed in a [[straight path]] between the twins are also linked by Stellar Bond. Stellar Bond grants a permanent ATK bonus to all linked allies, including Elijah and Lailah. If no other allies are linked, Elijah and Lailah gain an ATK increase of [[25%]]. However, for each additional ally linked, this ATK bonus is reduced by [[5%]] for everyone linked by the bond.\nActive. Elijah sends a golden glow through the Stellar Bond link to Lailah, restoring [[30]] Energy to each linked ally along the path. Simultaneously, Lailah sends a green glow through the Stellar Bond link to Elijah, healing each linked ally along the path for an HP amount equal to [[-100%]]<ATK>.",
-      "Increases the Energy recovered by Elijah's golden glow to [[35]], and the HP recovered through Lailah's green glow to [[-110%]]<ATK>.",
-      "Increases the Energy recovered by Elijah's golden glow to [[40]], and the HP recovered through Lailah's green glow to [[-120%]]<ATK>.",
-      "Increases the Energy recovered by Elijah's golden glow to [[45]], and the HP recovered through Lailah's green glow to [[-130%]]<ATK>."
+      "Elijah forms a Stellar Bond with Lailah when they align on the battlefield. Allied heroes placed in a [[straight path]] between the twins are also linked by Stellar Bond. Stellar Bond grants a permanent ATK bonus to all linked allies, including Elijah and Lailah. If no other allies are linked, Elijah and Lailah gain an ATK increase of [[25%]]. However, for each additional ally linked, this ATK bonus is reduced by [[5%]] for everyone linked by the bond.\nActive. Elijah sends a golden glow through the Stellar Bond link to Lailah, restoring [[30]] Energy to each linked ally along the path. Simultaneously, Lailah sends a green glow through the Stellar Bond link to Elijah, healing each linked ally along the path for an HP amount equal to [[100%]]<ATK>.",
+      "Increases the Energy recovered by Elijah's golden glow to [[35]], and the HP recovered through Lailah's green glow to [[110%]]<ATK>.",
+      "Increases the Energy recovered by Elijah's golden glow to [[40]], and the HP recovered through Lailah's green glow to [[120%]]<ATK>.",
+      "Increases the Energy recovered by Elijah's golden glow to [[45]], and the HP recovered through Lailah's green glow to [[130%]]<ATK>."
     ]
   },
   "skill3": {

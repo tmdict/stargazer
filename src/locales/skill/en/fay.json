@@ -2,7 +2,7 @@
   "ultimate": {
     "n": "Vibrant Dance",
     "d": [
-      "Fay selects a direction and casts vitality magic to frontal allies within a 3-tile arc, restoring [[-300%]]<ATK> HP and increasing their ATK by [[12%]] for [[8]]s.",
+      "Fay selects a direction and casts vitality magic to frontal allies within a 3-tile arc, restoring [[300%]]<ATK> HP and increasing their ATK by [[12%]] for [[8]]s.",
       "Increases effect duration to [[9]]s.",
       "Increases the ATK of allies within range by [[14%]].",
       "Increases the ATK SPD of allies within range by [[15]].",

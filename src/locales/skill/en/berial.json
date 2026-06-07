@@ -53,10 +53,5 @@
       }
     ]
   },
-  "awakening": {
-    "d": [
-      "Increases the hiding duration after being defeated by [[10]]s.",
-      "“二重身”对每名角色的触发时间降低至[[15]]秒。首次召唤残影后，自身和残影对敌人造成的能量损失效果提升[[50%]]。累计召唤[[3]]次残影后，残影将不再自动损失生命值。"
-    ]
-  }
+  "awakening": { "d": ["Increases the hiding duration after being defeated by [[10]]s."] }
 }

@@ -12,10 +12,10 @@
   "skill2": {
     "n": "Lingering Grace",
     "d": [
-      "Isabella targets only her companion with this skill, healing them for [[-340%]]<ATK> HP and then dealing [[150%]]<ATK> damage to enemies adjacent to her companion. [[100%]] of the damage dealt is also converted into extra healing for her companion.",
-      "Increases the amount of direct healing to [[-360%]]<ATK>.",
-      "Increases the amount of direct healing to [[-380%]]<ATK>.",
-      "Increases the amount of direct healing to [[-400%]]<ATK>."
+      "Isabella targets only her companion with this skill, healing them for [[340%]]<ATK> HP and then dealing [[150%]]<ATK> damage to enemies adjacent to her companion. [[100%]] of the damage dealt is also converted into extra healing for her companion.",
+      "Increases the amount of direct healing to [[360%]]<ATK>.",
+      "Increases the amount of direct healing to [[380%]]<ATK>.",
+      "Increases the amount of direct healing to [[400%]]<ATK>."
     ]
   },
   "skill3": {

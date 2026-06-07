@@ -51,6 +51,6 @@
     ]
   },
   "awakening": {
-    "d": ["Marilee reduces the required no-enemy range for triggering Hyperfocus by [[-1]] tile."]
+    "d": ["Marilee reduces the required no-enemy range for triggering Hyperfocus by [[1]] tile."]
   }
 }

@@ -2,19 +2,19 @@
   "ultimate": {
     "n": "Rain Prayer",
     "d": [
-      "Hewynn heals all allies for [[-95%]]<ATK> HP per second for [[9]]s.",
-      "Increases healing amount per second to [[-100%]]<ATK>.",
-      "Increases healing amount per second to [[-105%]]<ATK>.",
-      "Increases healing amount per second to [[-110%]]<ATK>.",
-      "Increases healing amount per second to [[-115%]]<ATK>."
+      "Hewynn heals all allies for [[95%]]<ATK> HP per second for [[9]]s.",
+      "Increases healing amount per second to [[100%]]<ATK>.",
+      "Increases healing amount per second to [[105%]]<ATK>.",
+      "Increases healing amount per second to [[110%]]<ATK>.",
+      "Increases healing amount per second to [[115%]]<ATK>."
     ]
   },
   "skill2": {
     "n": "Healing Wave",
     "d": [
-      "Hewynn heals [[1]] [[weakest]] ally for [[-280%]]<ATK> of their HP.",
-      "Increases HP recovery to [[-290%]]<ATK>.",
-      "Increases HP recovery to [[-300%]]<ATK>.",
+      "Hewynn heals [[1]] [[weakest]] ally for [[280%]]<ATK> of their HP.",
+      "Increases HP recovery to [[290%]]<ATK>.",
+      "Increases HP recovery to [[300%]]<ATK>.",
       "Hewynn's skill grants this effect once every [[3]]s to [[1]] [[weakest]] ally while casting her Ultimate."
     ]
   },
@@ -35,7 +35,7 @@
     ]
   },
   "ex": {
-    "n": "静谧",
+    "n": "Tranquil",
     "d": [
       "Hewynn is [[unaffected]] for [[6]]s while casting Rain Prayer. During this time, all allies take [[30%]] less damage.",
       "Hewynn has [[300]] Initial Energy. While Rain Prayer is effective, all allies take [[32%]] less damage.",

@@ -12,10 +12,10 @@
   "skill2": {
     "n": "Emergency Support!",
     "d": [
-      "If a toy chariot is present on the battlefield, Damian controls it to play music for the [[weakest]] ally within [[3]] tiles, recovering [[-120%]]<ATK> HP to this ally [[4]] times. If there is no toy chariot, Damian recovers himself [[300]] Energy.",
-      "Increases the healing amount to [[-130%]]<ATK>.",
-      "Increases the healing amount to [[-140%]]<ATK>.",
-      "Increases the healing amount to [[-150%]]<ATK>."
+      "If a toy chariot is present on the battlefield, Damian controls it to play music for the [[weakest]] ally within [[3]] tiles, recovering [[120%]]<ATK> HP to this ally [[4]] times. If there is no toy chariot, Damian recovers himself [[300]] Energy.",
+      "Increases the healing amount to [[130%]]<ATK>.",
+      "Increases the healing amount to [[140%]]<ATK>.",
+      "Increases the healing amount to [[150%]]<ATK>."
     ]
   },
   "skill3": {
@@ -38,7 +38,7 @@
     "n": "Inventor's Will",
     "d": [
       "Damian's toy chariot activates a music halo when it responds to Emergency Support! for the first time, inspiring non-summoned allies within [[2]] tiles and increasing their Haste by [[40]] for [[10]]s.",
-      "Heals allies within [[2]] tiles for [[-80%]]<ATK> HP per second.",
+      "Heals allies within [[2]] tiles for [[80%]]<ATK> HP per second.",
       "Inspires non-summoned allies and grants them [[50]] Haste.",
       "Inspires non-summoned allies and grants them [[55]] Haste."
     ],

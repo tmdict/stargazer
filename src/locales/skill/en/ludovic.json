@@ -2,11 +2,11 @@
   "ultimate": {
     "n": "Eternal Serenity",
     "d": [
-      "Ludovic generates a field of everblooms with a total healing amount equal to [[1200%]] of his current ATK at his position, restoring HP for adjacent allies by up to [[150%]]<ATK> per second. Ludovic is [[unaffected]] while generating the everbloom field. The everbloom field will wither when its healing amount depletes but will restore [[100%]]<ATK> per second and revive when the healing amount is full.\nActive. Ludovic moves the everbloom field to a designated tile for it to release 3 healing waves, each restoring HP for all allies within 2 tiles by [[-110%]]<ATK>. This takes effect even when the everbloom field is withered.",
-      "Increases the healing amount of each healing wave to [[-120%]]<ATK>.",
-      "Increases the healing amount of each healing wave to [[-130%]]<ATK>.",
-      "Increases the healing amount of each healing wave to [[-140%]]<ATK>.",
-      "Increases the healing amount of each healing wave to [[-150%]]<ATK>."
+      "Ludovic generates a field of everblooms with a total healing amount equal to [[1200%]] of his current ATK at his position, restoring HP for adjacent allies by up to [[150%]]<ATK> per second. Ludovic is [[unaffected]] while generating the everbloom field. The everbloom field will wither when its healing amount depletes but will restore [[100%]]<ATK> per second and revive when the healing amount is full.\nActive. Ludovic moves the everbloom field to a designated tile for it to release 3 healing waves, each restoring HP for all allies within 2 tiles by [[110%]]<ATK>. This takes effect even when the everbloom field is withered.",
+      "Increases the healing amount of each healing wave to [[120%]]<ATK>.",
+      "Increases the healing amount of each healing wave to [[130%]]<ATK>.",
+      "Increases the healing amount of each healing wave to [[140%]]<ATK>.",
+      "Increases the healing amount of each healing wave to [[150%]]<ATK>."
     ]
   },
   "skill2": {

@@ -2,11 +2,11 @@
   "ultimate": {
     "n": "Special Aroma",
     "d": [
-      "Smokey & Meerky create an aroma within 2 tiles and keep it going through channeling when a battle starts. While the aroma is around, Smokey & Meerky recover [[50]] Energy per second, and allies within the aroma recover [[-21%]]<ATK> HP per second.\nPassive. If [[interrupted]], Smokey & Meerky lose the aroma and cannot recreate it in [[4]]s.\nActive. Smokey & Meerky heal allies within the aroma by [[170%]]<ATK>, and permanently level up the aroma's effects.\nImproved Aroma I: Expand the range by 1 tile. \nImproved Aroma II: Grant [[30]] Haste to allied heroes affected by the aroma.",
-      "Increase HP recovery per second to [[-24%]]<ATK>.",
-      "Increase HP recovery per second to [[-27%]]<ATK>.",
-      "Increase HP recovery per second to [[-29%]]<ATK>.",
-      "Increase HP recovery per second to [[-31%]]<ATK>."
+      "Smokey & Meerky create an aroma within 2 tiles and keep it going through channeling when a battle starts. While the aroma is around, Smokey & Meerky recover [[50]] Energy per second, and allies within the aroma recover [[21%]]<ATK> HP per second.\nPassive. If [[interrupted]], Smokey & Meerky lose the aroma and cannot recreate it in [[4]]s.\nActive. Smokey & Meerky heal allies within the aroma by [[170%]]<ATK>, and permanently level up the aroma's effects.\nImproved Aroma I: Expand the range by 1 tile. \nImproved Aroma II: Grant [[30]] Haste to allied heroes affected by the aroma.",
+      "Increase HP recovery per second to [[24%]]<ATK>.",
+      "Increase HP recovery per second to [[27%]]<ATK>.",
+      "Increase HP recovery per second to [[29%]]<ATK>.",
+      "Increase HP recovery per second to [[31%]]<ATK>."
     ]
   },
   "skill2": {
@@ -21,10 +21,10 @@
   "skill3": {
     "n": "Quick Recovery",
     "d": [
-      "Smokey & Meerky recover [[-90%]]<ATK> HP for allies within the aroma.",
-      "Increases HP recovery to [[-100%]]<ATK>.",
-      "Increases HP recovery to [[-110%]]<ATK>.",
-      "Increases HP recovery to [[-120%]]<ATK>."
+      "Smokey & Meerky recover [[90%]]<ATK> HP for allies within the aroma.",
+      "Increases HP recovery to [[100%]]<ATK>.",
+      "Increases HP recovery to [[110%]]<ATK>.",
+      "Increases HP recovery to [[120%]]<ATK>."
     ]
   },
   "mastery": {

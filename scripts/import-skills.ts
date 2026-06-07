@@ -39,11 +39,11 @@ const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
 
-// Default local source. The producer (afkj-data-viewer) emits
-// `static/api/<locale>/skills.json`; conventionally a sibling checkout of
-// that repo gets symlinked / copied to `./api` here. Override at runtime
-// with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
-const DEFAULT_SRC_DIR = 'api'
+// Default local source: the sibling afkj-data-viewer checkout, which emits
+// `static/api/<locale>/skills.json`. Resolved against this repo root so it
+// holds regardless of CWD as long as the two repos are siblings. Override at
+// runtime with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
+const DEFAULT_SRC_DIR = '../afkj-data-viewer/static/api'
 
 // ---------- feed shape (single-locale per file) ----------
 
