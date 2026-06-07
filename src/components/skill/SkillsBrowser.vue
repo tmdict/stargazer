@@ -5,6 +5,12 @@ import SkillReader from '@/components/skill/SkillReader.vue'
 import SkillsSelection from '@/components/SkillsSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import { useGameDataStore } from '@/stores/gameData'
+import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
+
+// At/above this width the reader and roster sit side by side; below it the
+// roster stacks under the reader. Mirrors the `@media (min-width: 1220px)`
+// row switch in this file's styles (and BottomSheet's).
+const SPLIT_MIN_WIDTH = 1220
 
 const props = defineProps<{
   // null on the /skills index (empty reader); a hero slug on a skill page.
@@ -23,7 +29,18 @@ gameDataStore.initializeContentData()
 const expanded = ref(false)
 watch(
   () => props.slug,
-  () => (expanded.value = false),
+  (slug) => {
+    expanded.value = false
+    // Narrow-desktop stacked layout only: the roster sits below the reader, so
+    // selecting a hero leaves the user scrolled past the content — jump back to
+    // the top to reveal it. Side-by-side (>= SPLIT_MIN_WIDTH) keeps the reader
+    // in view, and the mobile sheet (<= TABLET_MAX_WIDTH) collapses to reveal
+    // it, so both skip the scroll.
+    if (!slug || typeof window === 'undefined') return
+    const isMobileSheet = window.matchMedia(`(max-width: ${TABLET_MAX_WIDTH}px)`).matches
+    const isSideBySide = window.matchMedia(`(min-width: ${SPLIT_MIN_WIDTH}px)`).matches
+    if (!isMobileSheet && !isSideBySide) window.scrollTo(0, 0)
+  },
 )
 
 const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
