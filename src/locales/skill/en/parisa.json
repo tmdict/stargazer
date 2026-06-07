@@ -55,7 +55,7 @@
   },
   "awakening": {
     "d": [
-      "Reduces the required normal attacks to trigger Flower Power by [[-1]].",
+      "Reduces the required normal attacks to trigger Flower Power by [[1]].",
       "Floral Inspiration no longer has an initial cooldown. After this skill is cast for the first time, Floral Inspiration targets [[1]] extra allies, prioritizing those who have dealt the most normal attack damage."
     ]
   }

@@ -9,6 +9,7 @@
   "range": 1,
   "season": 3,
   "tags": {
+    "anti-heal": [{ "ultimate": 1 }],
     "special-target": [{ "skill3": 1 }],
     "temp-buff": [{ "skill3": 1 }],
     "temp-buff-instant": [{ "skill3": 1 }]

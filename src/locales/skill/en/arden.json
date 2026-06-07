@@ -52,7 +52,7 @@
   },
   "awakening": {
     "d": [
-      "Arden reduces the lightning strike interval of Force of Nature for the same enemy by [[-1]]s."
+      "Arden reduces the lightning strike interval of Force of Nature for the same enemy by [[1]]s."
     ]
   }
 }

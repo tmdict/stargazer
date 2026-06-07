@@ -12,10 +12,10 @@
   "skill2": {
     "n": "Fulfilling Feast",
     "d": [
-      "Koko feeds the [[weakest]] ally, healing them by [[-230%]]{atk} HP and granting them [[10%]] ATK for [[5]]s. Koko also feeds Patto to recover [[350%]]{atk} HP every [[15]]s, increasing [[20]] Energy on Hit for [[7]]s.",
-      "Recovers [[-240%]]{atk} HP for allies.",
-      "Recovers [[-250%]]{atk} HP for allies.",
-      "Recovers [[-260%]]{atk} HP for allies."
+      "Koko feeds the [[weakest]] ally, healing them by [[230%]]{atk} HP and granting them [[10%]] ATK for [[5]]s. Koko also feeds Patto to recover [[350%]]{atk} HP every [[15]]s, increasing [[20]] Energy on Hit for [[7]]s.",
+      "Recovers [[240%]]{atk} HP for allies.",
+      "Recovers [[250%]]{atk} HP for allies.",
+      "Recovers [[260%]]{atk} HP for allies."
     ]
   },
   "skill3": {

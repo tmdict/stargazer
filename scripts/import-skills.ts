@@ -39,11 +39,11 @@ const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
 
-// Default local source. The upstream data feed emits
-// `static/api/<locale>/skills.json`; conventionally a sibling checkout of
-// that repo gets symlinked / copied to `./api` here. Override at runtime
-// with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
-const DEFAULT_SRC_DIR = 'api'
+// Default local source: the upstream data feed's checkout, which emits
+// `static/api/<locale>/skills.json`. Resolved against this repo root so it
+// holds regardless of CWD as long as the two repos are siblings. Override at
+// runtime with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
+const DEFAULT_SRC_DIR = '../data-feed/api'
 
 // ---------- feed shape (single-locale per file) ----------
 
