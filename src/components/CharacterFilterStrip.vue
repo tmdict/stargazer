@@ -82,6 +82,17 @@ function handleStripClick(e: MouseEvent) {
   flex-wrap: wrap;
 }
 
+.filter-strip :deep(.filter-tags .pill) {
+  padding: 3px var(--spacing-md);
+  line-height: 1.4;
+}
+
+.filter-strip :deep(.filter-tags .pill.selected) {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
 @media (max-width: 768px) {
   .filters-row {
     gap: var(--spacing-sm);
