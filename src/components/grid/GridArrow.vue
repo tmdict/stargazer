@@ -11,22 +11,30 @@ interface Props {
   arrowheadSize: number
   characterRadius?: number
   invertCurve?: boolean
+  curveScale?: number
+  dashed?: boolean
   id?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
   characterRadius: 30,
   invertCurve: false,
+  curveScale: 1,
+  dashed: false,
   id: '',
 })
-
-// Arrow clicks are not currently used
 
 const gridStore = useGridStore()
 
 const markerId = computed(() =>
   props.id ? `arrowhead-${props.id}` : `arrowhead-${props.startHexId}-${props.endHexId}`,
 )
+
+const dashArray = computed(() => {
+  if (!props.dashed) return undefined
+  const dash = 8 * gridStore.getHexScale()
+  return `${dash},${dash}`
+})
 
 // Scale-aware character radius for arrow positioning
 const scaledCharacterRadius = computed(() => {
@@ -39,6 +47,7 @@ const pathData = computed(() => {
     props.endHexId,
     scaledCharacterRadius.value,
     props.invertCurve,
+    props.curveScale,
   )
 })
 </script>
@@ -70,6 +79,7 @@ const pathData = computed(() => {
       fill="none"
       opacity="0.8"
       stroke-linecap="round"
+      :stroke-dasharray="dashArray"
     />
     <!-- Main arrow path -->
     <path
@@ -80,6 +90,7 @@ const pathData = computed(() => {
       fill="none"
       opacity="0.8"
       :marker-end="`url(#${markerId})`"
+      :stroke-dasharray="dashArray"
     />
   </g>
 </template>
