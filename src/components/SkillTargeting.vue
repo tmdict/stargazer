@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import { computed, onMounted, onUnmounted } from 'vue'
 
+import GridArrow from './grid/GridArrow.vue'
+import { useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { getCharacterSkill } from '@/lib/skills/skill'
-import { useGridStore } from '@/stores/grid'
 import { useSkillStore } from '@/stores/skill'
 
 interface Props {
@@ -13,49 +14,17 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const gridStore = useGridStore()
 const skillStore = useSkillStore()
 const gridEvents = useGridEvents()
+
+const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
+  () => props.showPerspective,
+  () => props.defaultSvgHeight,
+)
 
 const skillTargets = computed(() => {
   return skillStore.getAllSkillTargets
 })
-
-const svgDimensions = computed(() => {
-  const scale = gridStore.getHexScale()
-  return {
-    width: 600 * scale,
-    height: props.defaultSvgHeight * scale,
-  }
-})
-
-// Compute transform for perspective mode - same as GridArrows
-const skillTransform = computed(() => {
-  const scale = gridStore.getHexScale()
-  return props.showPerspective ? `translate(0, ${-75 * scale})` : ''
-})
-
-// Dynamic arrow styling based on scale
-const arrowStyle = computed(() => {
-  const scale = gridStore.getHexScale()
-  return {
-    strokeWidth: Math.max(3, 5 * scale), // Min 3px, thicker arrows
-    dashArray: `${8 * scale},${8 * scale}`, // Scale the dash pattern
-    arrowheadSize: Math.max(4, 4 * scale), // Same as normal arrows
-  }
-})
-
-function getSkillArrowPath(fromHexId: number, toHexId: number): string | null {
-  if (!fromHexId || !toHexId) return null
-
-  try {
-    // Use the same arrow path logic as targeting arrows
-    // Character radius of 30 to start/end at character edge
-    return gridStore.getArrowPath(fromHexId, toHexId, 30, false)
-  } catch {
-    return null
-  }
-}
 
 function parseSkillKey(key: string): { characterId: number; team: string } | null {
   const parts = key.split('-')
@@ -141,48 +110,17 @@ onUnmounted(() => {
     :width="svgDimensions.width"
     :height="svgDimensions.height"
   >
-    <g :transform="skillTransform">
-      <!-- Render all skill targeting arrows -->
-      <template v-for="arrow in arrowsToRender" :key="arrow.key">
-        <g v-if="getSkillArrowPath(arrow.fromHexId, arrow.toHexId)">
-          <!-- Arrow head definition -->
-          <defs>
-            <marker
-              :id="`skill-arrow-${arrow.key}`"
-              markerWidth="20"
-              markerHeight="14"
-              refX="16"
-              refY="7"
-              orient="auto"
-              markerUnits="userSpaceOnUse"
-            >
-              <polygon points="0 0, 20 7, 0 14" :fill="arrow.color" />
-            </marker>
-          </defs>
-
-          <!-- White shadow path for better visibility -->
-          <path
-            :d="getSkillArrowPath(arrow.fromHexId, arrow.toHexId)!"
-            fill="none"
-            stroke="white"
-            :stroke-width="arrowStyle.strokeWidth + 4"
-            :stroke-dasharray="arrowStyle.dashArray"
-            stroke-linecap="round"
-            opacity="0.8"
-          />
-
-          <!-- Curved dotted arrow path -->
-          <path
-            :d="getSkillArrowPath(arrow.fromHexId, arrow.toHexId)!"
-            fill="none"
-            :stroke="arrow.color"
-            :stroke-width="arrowStyle.strokeWidth"
-            :stroke-dasharray="arrowStyle.dashArray"
-            :marker-end="`url(#skill-arrow-${arrow.key})`"
-            opacity="0.8"
-          />
-        </g>
-      </template>
+    <g :transform="layerTransform">
+      <GridArrow
+        v-for="arrow in arrowsToRender"
+        :id="arrow.key"
+        :key="arrow.key"
+        :start-hex-id="arrow.fromHexId"
+        :end-hex-id="arrow.toHexId"
+        :color="arrow.color"
+        :stroke-width="arrowStyle.strokeWidth"
+        :arrowhead-size="arrowStyle.arrowheadSize"
+      />
     </g>
   </svg>
 </template>
@@ -198,9 +136,5 @@ onUnmounted(() => {
 
 .skill-arrow-layer g {
   transition: transform 0.3s ease-out;
-}
-
-.skill-arrow-layer path {
-  pointer-events: none;
 }
 </style>

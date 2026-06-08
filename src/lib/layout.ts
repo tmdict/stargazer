@@ -126,6 +126,7 @@ export class Layout {
     endHex: Hex,
     characterRadius: number = 0,
     invertCurve: boolean = false,
+    curveScale: number = 1,
   ): string {
     const startCenter = this.hexToPixel(startHex)
     const endCenter = this.hexToPixel(endHex)
@@ -147,10 +148,10 @@ export class Layout {
     // edge arrows bow outward more than central ones.
     const relativeX = (startCenter.x + endCenter.x) / 2 - this.origin.x
     const curveFactor = Math.min(Math.abs(relativeX) / MAX_GRID_HALF_WIDTH, 1)
+    // curveScale lets callers bow some arrows harder than others so overlapping
+    // arrows between the same pair stay visually distinct.
     const baseCurvature = length * BASE_CURVATURE_FACTOR
-    // Enemy-to-ally arrows bow 1.5x harder so they clear the opposing arrow.
-    const curvatureMultiplier = invertCurve ? 1.5 : 1.0
-    const curvature = (baseCurvature + baseCurvature * curveFactor) * curvatureMultiplier
+    const curvature = (baseCurvature + baseCurvature * curveFactor) * curveScale
 
     // Bulge toward the grid's outer edge; inverted arrows bow the other way.
     let curveDirection = relativeX < 0 ? -1 : 1
