@@ -130,93 +130,61 @@ export class Layout {
     const startCenter = this.hexToPixel(startHex)
     const endCenter = this.hexToPixel(endHex)
 
-    // Calculate direction vector
     const dx = endCenter.x - startCenter.x
     const dy = endCenter.y - startCenter.y
     const length = Math.sqrt(dx * dx + dy * dy)
 
-    // Handle zero-length case (same hex)
+    // Same hex: draw a small self-loop.
     if (length === 0) {
-      // Create a small loop path
       const offset = characterRadius || 10
       return `M ${startCenter.x} ${startCenter.y - offset} Q ${startCenter.x + offset} ${startCenter.y} ${startCenter.x} ${startCenter.y + offset}`
     }
 
-    // Normalize direction vector
     const dirX = dx / length
     const dirY = dy / length
 
-    // Add angular offset for inverted arrows to prevent overlap
-    // Offset by ~15 degrees (π/12 radians) for enemy-to-ally arrows
-    let startDirX = dirX
-    let startDirY = dirY
-    let endDirX = -dirX
-    let endDirY = -dirY
+    // Curve grows with arrow length and with distance from the grid center, so
+    // edge arrows bow outward more than central ones.
+    const relativeX = (startCenter.x + endCenter.x) / 2 - this.origin.x
+    const curveFactor = Math.min(Math.abs(relativeX) / MAX_GRID_HALF_WIDTH, 1)
+    const baseCurvature = length * BASE_CURVATURE_FACTOR
+    // Enemy-to-ally arrows bow 1.5x harder so they clear the opposing arrow.
+    const curvatureMultiplier = invertCurve ? 1.5 : 1.0
+    const curvature = (baseCurvature + baseCurvature * curveFactor) * curvatureMultiplier
 
-    if (invertCurve) {
-      const angleOffset = Math.PI / 12 // 15 degrees
+    // Bulge toward the grid's outer edge; inverted arrows bow the other way.
+    let curveDirection = relativeX < 0 ? -1 : 1
+    if (invertCurve) curveDirection *= -1
 
-      // Determine which side of the grid we're on based on average X position
-      const avgX = (startCenter.x + endCenter.x) / 2
-      const gridCenterX = this.origin.x
-      const isOnLeftSide = avgX < gridCenterX
+    // Unit normal pointing toward the bulge side.
+    const normX = -dirY * curveDirection
+    const normY = dirX * curveDirection
 
-      // Choose rotation direction based on grid position
-      const rotationMultiplier = isOnLeftSide ? 1 : -1
+    // Anchor the endpoints on the icon edge, rotated around each circle toward
+    // the bulge side by the curve's tangent angle. The arrow then leaves and
+    // enters the icon head-on (radially) rather than slanting off the
+    // straight-line point, which reads awkwardly on a curved path. The tangent
+    // of a quadratic Bézier at its endpoints aims at the control point, which
+    // sits `curvature` off the chord at half its length: atan2(curvature, half).
+    const halfChord = Math.max((length - 2 * characterRadius) / 2, 1)
+    const tangentAngle = Math.atan2(curvature, halfChord)
+    const cosA = Math.cos(tangentAngle)
+    const sinA = Math.sin(tangentAngle)
 
-      const cosOffset = Math.cos(angleOffset)
-      const sinOffset = Math.sin(angleOffset)
-
-      // Rotate start direction (swap offset direction for left vs right side)
-      startDirX = dirX * cosOffset + dirY * sinOffset * -rotationMultiplier
-      startDirY = -dirX * sinOffset * -rotationMultiplier + dirY * cosOffset
-
-      // Rotate end direction (inverted from start)
-      endDirX = -dirX * cosOffset - dirY * sinOffset * rotationMultiplier
-      endDirY = dirX * sinOffset * rotationMultiplier - dirY * cosOffset
-    }
-
-    // Calculate start and end points at edge of circles with offset
     const start = {
-      x: startCenter.x + startDirX * characterRadius,
-      y: startCenter.y + startDirY * characterRadius,
+      x: startCenter.x + (dirX * cosA + normX * sinA) * characterRadius,
+      y: startCenter.y + (dirY * cosA + normY * sinA) * characterRadius,
     }
     const end = {
-      x: endCenter.x + endDirX * characterRadius,
-      y: endCenter.y + endDirY * characterRadius,
+      x: endCenter.x + (-dirX * cosA + normX * sinA) * characterRadius,
+      y: endCenter.y + (-dirY * cosA + normY * sinA) * characterRadius,
     }
 
-    // Calculate control point for curve (offset perpendicular to line)
+    // Control point offset perpendicular from the chord midpoint.
     const midX = (start.x + end.x) / 2
     const midY = (start.y + end.y) / 2
-
-    // Determine curve direction based on average X position relative to grid center
-    const avgX = (startCenter.x + endCenter.x) / 2
-    const gridCenterX = this.origin.x
-    const relativeX = avgX - gridCenterX
-
-    // Calculate curve intensity based on distance from center
-    // Arrows closer to center have less curve, arrows at edges have more
-    const distanceFromCenter = Math.abs(relativeX)
-    const curveFactor = Math.min(distanceFromCenter / MAX_GRID_HALF_WIDTH, 1) // 0 to 1
-    const baseCurvature = length * BASE_CURVATURE_FACTOR // Base curve amount
-
-    // Apply different curvature multipliers for enemy arrows (invertCurve = true)
-    // Enemy arrows curve 1.5x more than ally arrows to prevent overlap
-    const curvatureMultiplier = invertCurve ? 1.5 : 1.0
-    const curvature = (baseCurvature + baseCurvature * curveFactor) * curvatureMultiplier // Scale curve by position and type
-
-    // Curve direction: negative for left side, positive for right side
-    let curveDirection = relativeX < 0 ? -1 : 1
-
-    // Invert curve direction if requested (for enemy-to-ally arrows)
-    if (invertCurve) {
-      curveDirection *= -1
-    }
-
-    // Perpendicular offset for control point
-    const controlX = midX - dirY * curvature * curveDirection
-    const controlY = midY + dirX * curvature * curveDirection
+    const controlX = midX + normX * curvature
+    const controlY = midY + normY * curvature
 
     return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`
   }
