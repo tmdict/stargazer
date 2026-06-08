@@ -94,13 +94,3 @@ const pathData = computed(() => {
     />
   </g>
 </template>
-
-<style scoped>
-.grid-arrow path {
-  cursor: pointer;
-}
-
-.grid-arrow path:hover {
-  stroke-opacity: 0.8;
-}
-</style>

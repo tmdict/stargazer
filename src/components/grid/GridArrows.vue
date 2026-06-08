@@ -72,8 +72,4 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 .arrow-layer g {
   transition: transform 0.3s ease-out;
 }
-
-.arrow-layer :deep(path) {
-  pointer-events: auto;
-}
 </style>
