@@ -14,8 +14,11 @@ const props = defineProps<Props>()
 const pathfindingStore = usePathfindingStore()
 
 // Normal targeting arrows bow harder than skill arrows so the two stay distinct
-// where they share a direction (skill arrows use the default scale).
-const TARGETING_CURVE_SCALE = 1.5
+// where they share a direction (skill arrows use the default scale). Ally and
+// enemy arrows bow to the same side (enemy arrows invert), so the enemy scale is
+// larger to nest them apart instead of overlapping.
+const ALLY_CURVE_SCALE = 1.5
+const ENEMY_CURVE_SCALE = 2.0
 
 const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
   () => props.showPerspective,
@@ -40,7 +43,7 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
         :color="'#36958e'"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
-        :curve-scale="TARGETING_CURVE_SCALE"
+        :curve-scale="ALLY_CURVE_SCALE"
         dashed
       />
 
@@ -54,7 +57,7 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :invert-curve="true"
-        :curve-scale="TARGETING_CURVE_SCALE"
+        :curve-scale="ENEMY_CURVE_SCALE"
         dashed
       />
     </g>
