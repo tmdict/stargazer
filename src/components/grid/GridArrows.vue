@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-
 import GridArrow from './GridArrow.vue'
-import { useGridStore } from '@/stores/grid'
+import { useArrowLayer } from '@/composables/useArrowLayer'
 import { usePathfindingStore } from '@/stores/pathfinding'
 
 interface Props {
@@ -14,31 +12,15 @@ interface Props {
 const props = defineProps<Props>()
 
 const pathfindingStore = usePathfindingStore()
-const gridStore = useGridStore()
 
-// Computed SVG dimensions based on hex scale
-const svgDimensions = computed(() => {
-  const scale = gridStore.getHexScale()
-  return {
-    width: 600 * scale,
-    height: props.defaultSvgHeight * scale,
-  }
-})
+// Normal targeting arrows bow harder than skill arrows so the two stay distinct
+// where they share a direction (skill arrows use the default scale).
+const TARGETING_CURVE_SCALE = 1.5
 
-// Dynamic arrow styling
-const arrowStyle = computed(() => {
-  const scale = gridStore.getHexScale()
-  return {
-    strokeWidth: Math.max(2, 3 * scale), // Min 2px
-    arrowheadSize: Math.max(4, 6 * scale), // Min 4px
-  }
-})
-
-// Compute arrow layer transform for perspective mode
-const arrowTransform = computed(() => {
-  const scale = gridStore.getHexScale()
-  return props.showPerspective ? `translate(0, ${-75 * scale})` : ''
-})
+const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
+  () => props.showPerspective,
+  () => props.defaultSvgHeight,
+)
 </script>
 
 <template>
@@ -48,7 +30,7 @@ const arrowTransform = computed(() => {
     :width="svgDimensions.width"
     :height="svgDimensions.height"
   >
-    <g :transform="arrowTransform">
+    <g :transform="layerTransform">
       <!-- Ally to Enemy arrows (teal) -->
       <GridArrow
         v-for="[allyHexId, enemyInfo] in pathfindingStore.closestEnemyMap"
@@ -58,6 +40,8 @@ const arrowTransform = computed(() => {
         :color="'#36958e'"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
+        :curve-scale="TARGETING_CURVE_SCALE"
+        dashed
       />
 
       <!-- Enemy to Ally arrows (red) -->
@@ -70,6 +54,8 @@ const arrowTransform = computed(() => {
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :invert-curve="true"
+        :curve-scale="TARGETING_CURVE_SCALE"
+        dashed
       />
     </g>
   </svg>

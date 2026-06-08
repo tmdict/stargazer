@@ -167,10 +167,11 @@ export const useGridStore = defineStore('grid', () => {
     endHexId: number,
     characterRadius: number = 30,
     invertCurve: boolean = false,
+    curveScale: number = 1,
   ): string => {
     const startHex = grid.getHexById(startHexId)
     const endHex = grid.getHexById(endHexId)
-    return layout.value.getArrowPath(startHex, endHex, characterRadius, invertCurve)
+    return layout.value.getArrowPath(startHex, endHex, characterRadius, invertCurve, curveScale)
   }
 
   // Get screen position for a hex (includes grid origin offset)
