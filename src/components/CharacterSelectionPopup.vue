@@ -5,6 +5,7 @@ import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
+import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { useCharacterStore } from '@/stores/character'
@@ -39,9 +40,10 @@ const availableCharacters = computed(() => {
   return props.characters.filter((char) => !placedIds.includes(char.id))
 })
 
+// Match the main roster's order (CharacterSelection): canonical faction order, then id.
 const sortedCharacters = computed(() =>
   [...availableCharacters.value].sort(
-    (a, b) => a.faction.localeCompare(b.faction) || a.name.localeCompare(b.name),
+    (a, b) => compareFaction(a.faction, b.faction) || a.id - b.id,
   ),
 )
 
