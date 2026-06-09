@@ -41,6 +41,12 @@ export const routes: RouteRecordRaw[] = [
     name: 'skills',
     component: () => import('@/views/SkillsView.vue'),
   },
+  // Hidden utility: not in the nav, not pre-rendered (client-only). Link-access only.
+  {
+    path: '/comps',
+    name: 'comps',
+    component: () => import('@/views/CompsView.vue'),
+  },
   // Chinese routes
   {
     path: '/zh/skill/:name',
