@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
+import IconImage from '@/components/ui/IconImage.vue'
 import { useI18nStore } from '@/stores/i18n'
 import { imageFilesFromDrop, imageFilesFromInput, imageFilesFromPaste } from '@/utils/imageFile'
 import { formatName } from '@/wandwars/formatting'
@@ -443,8 +444,9 @@ function reset() {
           <div class="busy-indicator">{{ i18n.t('wandwars.loading') }}</div>
         </template>
         <template v-else>
+          <IconImage :size="28" class="drop-icon" />
           <div class="drop-title">{{ i18n.t('wandwars.messages/pool-upload-title') }}</div>
-          <div class="drop-subtitle">{{ i18n.t('wandwars.messages/pool-upload-subtitle') }}</div>
+          <div class="drop-subtitle">{{ i18n.t('app.upload-hint') }}</div>
         </template>
       </div>
       <input
@@ -823,6 +825,12 @@ function reset() {
 .busy-indicator {
   font-weight: 600;
   color: var(--color-primary);
+}
+
+.drop-icon {
+  display: block;
+  margin: 0 auto var(--spacing-xs);
+  color: var(--color-text-secondary);
 }
 
 .drop-title {
