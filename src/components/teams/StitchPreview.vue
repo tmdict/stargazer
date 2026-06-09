@@ -53,7 +53,7 @@ const copy = () => {
 const download = () => {
   props.canvas?.toBlob((blob) => {
     if (!blob) return error('Download failed')
-    downloadBlob(blob, timestampedName('comps', 'png'))
+    downloadBlob(blob, timestampedName('teams', 'png'))
     success('Image downloaded!')
   })
 }

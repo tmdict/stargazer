@@ -43,9 +43,9 @@ export const routes: RouteRecordRaw[] = [
   },
   // Hidden utility: not in the nav, not pre-rendered (client-only). Link-access only.
   {
-    path: '/comps',
-    name: 'comps',
-    component: () => import('@/views/CompsView.vue'),
+    path: '/teams',
+    name: 'teams',
+    component: () => import('@/views/TeamsView.vue'),
   },
   // Chinese routes
   {
