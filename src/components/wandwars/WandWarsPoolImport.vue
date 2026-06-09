@@ -434,7 +434,7 @@ function reset() {
 
     <div v-if="phase === 'upload'" class="upload-zone" @click="openFilePicker">
       <div
-        class="drop-target"
+        class="upload-dropzone drop-target"
         :class="{ dragging, busy }"
         @dragover.prevent="dragging = true"
         @dragleave.prevent="dragging = false"
@@ -746,19 +746,8 @@ function reset() {
 }
 
 .drop-target {
-  border: 2px dashed var(--color-border-primary);
   border-radius: var(--radius-medium);
   padding: var(--spacing-xl);
-  text-align: center;
-  background: var(--color-bg-secondary);
-  transition:
-    border-color var(--transition-fast),
-    background var(--transition-fast);
-}
-
-.drop-target.dragging {
-  border-color: var(--color-primary);
-  background: var(--color-bg-white);
 }
 
 .drop-target.busy {

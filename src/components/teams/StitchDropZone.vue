@@ -17,7 +17,7 @@ defineProps<{
 }>()
 
 const fileInput = ref<HTMLInputElement>()
-const isDragOver = ref(false)
+const isDragging = ref(false)
 
 const openPicker = () => fileInput.value?.click()
 
@@ -28,12 +28,12 @@ const handleFileInput = (event: Event) => {
 }
 
 const handleDrop = (event: DragEvent) => {
-  isDragOver.value = false
+  isDragging.value = false
   const files = imageFilesFromDrop(event)
   if (files.length) emit('add', files)
 }
 
-// Page-level paste: pull any image files off the clipboard.
+// Window-level so paste works without focusing the drop zone.
 const handlePaste = (event: ClipboardEvent) => {
   const files = imageFilesFromPaste(event)
   if (files.length) {
@@ -48,15 +48,15 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
 <template>
   <div
-    class="drop-zone"
-    :class="{ 'drag-over': isDragOver, compact }"
+    class="upload-dropzone drop-zone"
+    :class="{ dragging: isDragging, compact }"
     role="button"
     tabindex="0"
     @click="openPicker"
     @keydown.enter.prevent="openPicker"
     @keydown.space.prevent="openPicker"
-    @dragover.prevent="isDragOver = true"
-    @dragleave.prevent="isDragOver = false"
+    @dragover.prevent="isDragging = true"
+    @dragleave.prevent="isDragging = false"
     @drop.prevent="handleDrop"
   >
     <input
@@ -78,26 +78,12 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  border: 2px dashed var(--color-primary);
   border-radius: var(--radius-large);
-  background: #eef6f5;
-  color: var(--color-primary-hover);
+  color: var(--color-text-secondary);
   padding: var(--spacing-2xl);
-  cursor: pointer;
-  text-align: center;
-  transition: all var(--transition-fast);
 }
 
-.drop-zone:hover,
-.drop-zone:focus-visible {
-  background: #e3f0ee;
-  border-color: var(--color-primary-hover);
-  outline: none;
-}
-
-.drop-zone.drag-over {
-  background: #d8e9e7;
-  border-color: var(--color-primary-hover);
+.drop-zone.dragging {
   transform: scale(1.01);
 }
 
