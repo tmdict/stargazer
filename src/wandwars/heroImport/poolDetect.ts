@@ -15,7 +15,7 @@ import {
   POOL_GRID_MAX_WIDTH,
   POOL_GRID_SMOOTH_FRACTION,
 } from '../constants'
-import { computeSignature, loadImage, signatureDistance } from './imageSignature'
+import { computeSignature, loadImageFromFile, signatureDistance } from './imageSignature'
 
 export interface PoolDetection {
   hero: string | null // null if no confident match
@@ -60,7 +60,7 @@ function isGoldPixel(r: number, g: number, b: number): boolean {
  * is found.
  */
 export async function suggestGridCrop(source: File | HTMLImageElement): Promise<CropRect> {
-  const img = source instanceof File ? await loadFile(source) : source
+  const img = source instanceof File ? await loadImageFromFile(source) : source
 
   // Downscale for speed; the crop is returned as ratios so resolution doesn't matter.
   const scale = Math.min(1, POOL_GRID_MAX_WIDTH / img.naturalWidth)
@@ -266,7 +266,7 @@ export async function detectPool(
 ): Promise<PoolDetection[]> {
   const { crop, ...rest } = options
   const opts = { ...DEFAULT_OPTIONS, ...rest }
-  const img = source instanceof File ? await loadFile(source) : source
+  const img = source instanceof File ? await loadImageFromFile(source) : source
 
   // Grid bounds in image pixel space
   const gridX = (crop?.x ?? 0) * img.naturalWidth
@@ -380,14 +380,5 @@ function resolveDuplicates(detections: PoolDetection[], threshold: number): void
       }
     }
     loser.hero = null
-  }
-}
-
-async function loadFile(file: File): Promise<HTMLImageElement> {
-  const url = URL.createObjectURL(file)
-  try {
-    return await loadImage(url)
-  } finally {
-    URL.revokeObjectURL(url)
   }
 }

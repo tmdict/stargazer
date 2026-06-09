@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { useI18nStore } from '@/stores/i18n'
+import { imageFilesFromDrop, imageFilesFromInput, imageFilesFromPaste } from '@/utils/imageFile'
 import { formatName } from '@/wandwars/formatting'
 import {
   getBundledReferenceCount,
@@ -164,14 +165,14 @@ function openFilePicker() {
 }
 
 function handleFileChange(event: Event) {
-  const file = (event.target as HTMLInputElement).files?.[0]
+  const file = imageFilesFromInput(event)[0]
   if (file) loadScreenshot(file)
 }
 
 function handleDrop(event: DragEvent) {
   dragging.value = false
-  const file = event.dataTransfer?.files[0]
-  if (file && file.type.startsWith('image/')) loadScreenshot(file)
+  const file = imageFilesFromDrop(event)[0]
+  if (file) loadScreenshot(file)
 }
 
 async function loadScreenshot(file: File) {
@@ -282,17 +283,10 @@ function endDrag() {
 
 function onPaste(event: ClipboardEvent) {
   if (phase.value !== 'upload' || busy.value) return
-  const items = event.clipboardData?.items
-  if (!items) return
-  for (const item of Array.from(items)) {
-    if (item.type.startsWith('image/')) {
-      const file = item.getAsFile()
-      if (file) {
-        event.preventDefault()
-        loadScreenshot(file)
-        return
-      }
-    }
+  const file = imageFilesFromPaste(event)[0]
+  if (file) {
+    event.preventDefault()
+    loadScreenshot(file)
   }
 }
 

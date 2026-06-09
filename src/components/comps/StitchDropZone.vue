@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
+import { imageFilesFromDrop, imageFilesFromInput, imageFilesFromPaste } from '@/utils/imageFile'
+
 const emit = defineEmits<{
   add: [files: File[]]
 }>()
@@ -16,28 +18,20 @@ const isDragOver = ref(false)
 const openPicker = () => fileInput.value?.click()
 
 const handleFileInput = (event: Event) => {
-  const input = event.target as HTMLInputElement
-  if (input.files?.length) emit('add', Array.from(input.files))
-  input.value = '' // allow re-selecting the same file
+  const files = imageFilesFromInput(event)
+  if (files.length) emit('add', files)
+  ;(event.target as HTMLInputElement).value = '' // allow re-selecting the same file
 }
 
 const handleDrop = (event: DragEvent) => {
   isDragOver.value = false
-  const files = event.dataTransfer?.files
-  if (files?.length) emit('add', Array.from(files))
+  const files = imageFilesFromDrop(event)
+  if (files.length) emit('add', files)
 }
 
 // Page-level paste: pull any image files off the clipboard.
 const handlePaste = (event: ClipboardEvent) => {
-  const items = event.clipboardData?.items
-  if (!items) return
-  const files: File[] = []
-  for (const item of items) {
-    if (item.kind === 'file' && item.type.startsWith('image/')) {
-      const file = item.getAsFile()
-      if (file) files.push(file)
-    }
-  }
+  const files = imageFilesFromPaste(event)
   if (files.length) {
     event.preventDefault()
     emit('add', files)

@@ -28,6 +28,16 @@ export async function loadImage(src: string): Promise<HTMLImageElement> {
   return img
 }
 
+/** Decode a File into an image, cleaning up the temporary object URL. */
+export async function loadImageFromFile(file: File): Promise<HTMLImageElement> {
+  const url = URL.createObjectURL(file)
+  try {
+    return await loadImage(url)
+  } finally {
+    URL.revokeObjectURL(url)
+  }
+}
+
 /**
  * Compute a normalized 32x32 circular-masked grayscale signature.
  */

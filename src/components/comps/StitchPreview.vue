@@ -5,6 +5,8 @@ import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import { useToast } from '@/composables/useToast'
+import { copyImageBlob } from '@/utils/clipboard'
+import { downloadBlob, timestampedName } from '@/utils/download'
 
 const props = defineProps<{
   canvas: HTMLCanvasElement | null
@@ -35,21 +37,14 @@ watch(
   { flush: 'post', immediate: true },
 )
 
-const timestamp = (): string => {
-  const now = new Date()
-  const date = (now.toISOString().split('T')[0] ?? '').replace(/-/g, '')
-  const time = (now.toTimeString().split(' ')[0] ?? '').replace(/:/g, '')
-  return `${date}-${time}`
-}
-
 const copy = () => {
   props.canvas?.toBlob(async (blob) => {
-    if (!blob) return error('Copy failed')
+    if (!blob) return error("Couldn't copy image — download instead.")
     try {
-      await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])
+      await copyImageBlob(blob)
       success('Copied to clipboard!')
     } catch {
-      error('Clipboard not supported')
+      error("Couldn't copy image — download instead.")
     }
   })
 }
@@ -57,12 +52,7 @@ const copy = () => {
 const download = () => {
   props.canvas?.toBlob((blob) => {
     if (!blob) return error('Download failed')
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `comps-${timestamp()}.png`
-    link.click()
-    URL.revokeObjectURL(url)
+    downloadBlob(blob, timestampedName('comps', 'png'))
     success('Image downloaded!')
   })
 }

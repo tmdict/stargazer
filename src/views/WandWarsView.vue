@@ -7,6 +7,7 @@ import WandWarsInsights from '@/components/wandwars/WandWarsInsights.vue'
 import WandWarsMain from '@/components/wandwars/WandWarsMain.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
+import { downloadBlob } from '@/utils/download'
 import { DRAFT_ORDER } from '@/wandwars/constants'
 import { getAnalysisData, getMatchData } from '@/wandwars/prediction/recommend'
 import { serializeMatches } from '@/wandwars/records/serializer'
@@ -187,13 +188,7 @@ function handleClearRecords() {
 
 function handleExport() {
   const content = serializeMatches(records.value)
-  const blob = new Blob([content], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = 'wandwars-recorded.data'
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadBlob(new Blob([content], { type: 'text/plain' }), 'wandwars-recorded.data')
 }
 </script>
 
