@@ -165,6 +165,7 @@ const handleArtifactClick = (team: Team) => {
       <polygon
         v-if="showAllyCell"
         class="artifact-cell"
+        fill="transparent"
         :class="{ clickable: allyCellClickable }"
         :points="allyCellPoints"
         :stroke-width="cellStrokeWidth"
@@ -174,6 +175,7 @@ const handleArtifactClick = (team: Team) => {
       <polygon
         v-if="showEnemyCell"
         class="artifact-cell"
+        fill="transparent"
         :class="{ clickable: enemyCellClickable }"
         :points="enemyCellPoints"
         :stroke-width="cellStrokeWidth"
@@ -246,6 +248,8 @@ const handleArtifactClick = (team: Team) => {
 }
 
 .artifact-cell {
+  /* Paired with a transparent `fill` attribute in the template: PNG export drops
+     scoped CSS, so without it the polygon falls back to SVG's default black fill. */
   fill: rgba(255, 255, 255, 0.06);
   stroke: var(--color-text-tertiary, #8a8f98);
 }
