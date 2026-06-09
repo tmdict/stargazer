@@ -254,3 +254,25 @@ main {
   font-size: 0.85rem;
   line-height: 1.4;
 }
+
+/* Shared dashed upload zone; callers add their own size and layout. */
+.upload-dropzone {
+  border: 2px dashed var(--color-border-primary);
+  background: var(--color-bg-secondary);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+/* All interactive states lift the background; focus and drag also cue the border. */
+.upload-dropzone:hover,
+.upload-dropzone:focus-visible,
+.upload-dropzone.dragging {
+  background: var(--color-bg-primary);
+}
+
+.upload-dropzone:focus-visible,
+.upload-dropzone.dragging {
+  border-color: var(--color-primary);
+  outline: none;
+}
