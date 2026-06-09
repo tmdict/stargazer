@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 
 import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
@@ -22,20 +22,21 @@ const { success, error } = useToast()
 
 const previewBox = ref<HTMLElement>()
 
-// Mount the full-resolution canvas; CSS scales it to fit the box.
-watch(
-  () => props.canvas,
-  (canvas) => {
-    if (!previewBox.value) return
-    if (canvas) {
-      canvas.classList.add('preview-canvas')
-      previewBox.value.replaceChildren(canvas)
-    } else {
-      previewBox.value.replaceChildren()
-    }
-  },
-  { flush: 'post', immediate: true },
-)
+// Mount the full-resolution canvas; CSS scales it to fit the box. Mount on first
+// render (the template ref isn't set yet when a watcher's initial run fires) and
+// on every subsequent canvas update.
+const mountCanvas = (canvas: HTMLCanvasElement | null) => {
+  if (!previewBox.value) return
+  if (canvas) {
+    canvas.classList.add('preview-canvas')
+    previewBox.value.replaceChildren(canvas)
+  } else {
+    previewBox.value.replaceChildren()
+  }
+}
+
+onMounted(() => mountCanvas(props.canvas))
+watch(() => props.canvas, mountCanvas, { flush: 'post' })
 
 const copy = () => {
   props.canvas?.toBlob(async (blob) => {

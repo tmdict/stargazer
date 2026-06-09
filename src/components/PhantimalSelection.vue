@@ -119,7 +119,7 @@ const tooltipText = computed(() => {
     selectedTeam.value,
   )
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
-  const key = canPlace ? 'app.phantimalDeployable' : 'app.phantimalLocked'
+  const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
   return i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT })
 })
 
