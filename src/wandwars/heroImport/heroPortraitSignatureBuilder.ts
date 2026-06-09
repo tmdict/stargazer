@@ -12,7 +12,8 @@
  * they do with the resulting map.
  */
 
-import { computeSignature, loadImage } from './imageSignature'
+import { downloadBlob } from '@/utils/download'
+import { computeSignature, loadImageFromFile } from './imageSignature'
 import { float32ToBase64 } from './signatureCodec'
 
 function heroNameFromFilename(filename: string): string {
@@ -44,14 +45,10 @@ export async function buildSignaturesFromFiles(files: FileList | File[]): Promis
         skipped.push({ filename: file.name, reason: 'empty hero name' })
         return
       }
-      const url = URL.createObjectURL(file)
       try {
-        const img = await loadImage(url)
-        signatures[name] = computeSignature(img)
+        signatures[name] = computeSignature(await loadImageFromFile(file))
       } catch (err) {
         skipped.push({ filename: file.name, reason: String(err) })
-      } finally {
-        URL.revokeObjectURL(url)
       }
     }),
   )
@@ -85,11 +82,5 @@ export const HERO_PORTRAIT_SIGNATURES: Record<string, string> = {
 }
 
 export function downloadSignaturesFile(content: string, filename = 'heroPortraitSignatures.ts') {
-  const blob = new Blob([content], { type: 'text/plain' })
-  const url = URL.createObjectURL(blob)
-  const a = document.createElement('a')
-  a.href = url
-  a.download = filename
-  a.click()
-  URL.revokeObjectURL(url)
+  downloadBlob(new Blob([content], { type: 'text/plain' }), filename)
 }

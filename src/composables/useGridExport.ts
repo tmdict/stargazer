@@ -1,3 +1,5 @@
+import { copyImageBlob } from '@/utils/clipboard'
+import { downloadUrl, timestampedName } from '@/utils/download'
 import { useToast } from './useToast'
 
 interface ExportOptions {
@@ -88,25 +90,12 @@ export function useGridExport() {
   const copyToClipboard = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-
-      const response = await fetch(dataUrl)
-      const blob = await response.blob()
-
-      // Copy to clipboard using Clipboard API
-      if (navigator.clipboard && window.ClipboardItem) {
-        await navigator.clipboard.write([
-          new ClipboardItem({
-            'image/png': blob,
-          }),
-        ])
-        success('Copied to clipboard!')
-      } else {
-        // Fallback: show message for manual copy
-        error('Clipboard not supported')
-      }
+      const blob = await (await fetch(dataUrl)).blob()
+      await copyImageBlob(blob)
+      success('Copied to clipboard!')
     } catch (err) {
       console.error('Failed to copy grid image:', err)
-      error('Failed to copy image')
+      error("Couldn't copy image — download instead.")
     }
   }
 
@@ -116,20 +105,7 @@ export function useGridExport() {
   const downloadAsImage = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-
-      const now = new Date()
-      const dateStr = (now.toISOString().split('T')[0] ?? 'undefined').replace(/-/g, '')
-      const timeStr =
-        (now.toTimeString().split(' ')[0] ?? 'undefined').replace(/:/g, '') +
-        now.getMilliseconds().toString().padStart(3, '0')
-      const link = document.createElement('a')
-      link.download = `stargazer-${dateStr}-${timeStr}.png`
-      link.href = dataUrl
-
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-
+      downloadUrl(dataUrl, timestampedName('stargazer', 'png'))
       success('Grid downloaded!')
     } catch (err) {
       console.error('Failed to export grid:', err)
