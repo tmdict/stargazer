@@ -1,7 +1,11 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref } from 'vue'
 
+import IconImage from '@/components/ui/IconImage.vue'
+import { useI18nStore } from '@/stores/i18n'
 import { imageFilesFromDrop, imageFilesFromInput, imageFilesFromPaste } from '@/utils/imageFile'
+
+const i18n = useI18nStore()
 
 const emit = defineEmits<{
   add: [files: File[]]
@@ -63,8 +67,8 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
       class="file-input"
       @change="handleFileInput"
     />
-    <span class="drop-icon">⬆</span>
-    <span class="drop-text"> <strong>Click to upload</strong>, drop images here, or paste </span>
+    <IconImage :size="compact ? 18 : 22" class="drop-icon" />
+    <span class="drop-text">{{ i18n.t('app.upload-hint') }}</span>
   </div>
 </template>
 
@@ -107,11 +111,7 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 }
 
 .drop-icon {
-  font-size: 1.2rem;
-}
-
-.drop-zone.compact .drop-icon {
-  font-size: 1rem;
+  flex-shrink: 0;
 }
 
 .drop-text {
