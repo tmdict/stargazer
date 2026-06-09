@@ -23,7 +23,7 @@ export interface StitchImage {
 // past this a canvas silently renders blank, so we refuse instead.
 const MAX_CANVAS_EDGE = 16384
 
-/** Ordered image list + reactive canvas stitching for the /comps page. */
+/** Ordered image list + reactive canvas stitching for the /teams page. */
 export function useImageStitch() {
   const images = ref<StitchImage[]>([])
 
