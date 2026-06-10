@@ -107,6 +107,7 @@ Key methods:
 - `deactivateCharacterSkill()` - Deactivates and cleans up
 - `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
 - `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
+- `claimTileState()` / `releaseTileState()` - Saves and restores tile states altered by skills. Multiple skills can claim the same tile (e.g. both teams' Kulu zones overlap on the middle tiles); the original state is captured at first claim and the tile is restored only when the last claimant releases
 
 #### 4. Characters Operations (`/src/lib/characters/`)
 
