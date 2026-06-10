@@ -54,8 +54,11 @@ function extractContentDescription(html: string): string | null {
     .join(' ')
 
   if (!text) return null
+  if (text.length <= 150) return text
 
-  return text.length <= 150 ? text : text.slice(0, text.lastIndexOf(' ', 150) || 150) + ' ...'
+  // Cut at the last word boundary before 150 chars; spaceless text (e.g. zh) cuts at 150
+  const cut = text.lastIndexOf(' ', 150)
+  return text.slice(0, cut > 0 ? cut : 150) + ' ...'
 }
 
 /** vite-ssg emits asset `<link>` tags in two passes (static manifest +
