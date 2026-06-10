@@ -92,7 +92,7 @@ describe('urlStateManager', () => {
         ],
         c: [
           [1, 100, 1], // Valid
-          [2, 20000, 1], // Invalid: charId > 16383
+          [2, 70000, 1], // Invalid: charId > 65535
         ],
       }
       const encoded = encodeGridStateToUrl(state)

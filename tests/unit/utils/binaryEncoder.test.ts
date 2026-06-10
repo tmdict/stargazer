@@ -34,10 +34,26 @@ describe('binaryEncoder', () => {
         },
       ],
       ['only artifacts', { a: [3, 5] }],
+      ['artifact IDs above 7', { a: [9, 18] }],
       ['null artifacts', { a: [null, 5] }],
       ['both null artifacts', { a: [null, null] }],
+      [
+        'companion IDs',
+        {
+          c: [
+            [10, 89, 1],
+            [11, 10089, 1],
+            [12, 20089, 1], // Zanie's second turret: 2 * companionIdOffset + 89
+          ],
+        },
+      ],
       ['display flags', { t: [[1, 1]], d: 0b1010 }],
       ['display flags zero', { t: [[1, 1]], d: 0 }],
+      [
+        'display flags zero with extended counts',
+        { t: Array.from({ length: 10 }, (_, i) => [i + 1, 1]), d: 0 },
+      ],
+      ['display flags zero with phantimals', { p: [[5, 1, 1]], d: 0 }],
       [
         'complete state',
         {
@@ -122,10 +138,10 @@ describe('binaryEncoder', () => {
     })
 
     describe('validation and filtering', () => {
-      it('handles max character ID (16383)', () => {
+      it('handles max character ID (65535)', () => {
         const state: GridState = {
           c: [
-            [1, 16383, 1],
+            [1, 65535, 1],
             [2, 1, 2],
             [3, 10000, 1],
           ],
@@ -146,7 +162,7 @@ describe('binaryEncoder', () => {
           ],
           c: [
             [1, 100, 1],
-            [2, 20000, 1], // Invalid: charId > 16383
+            [2, 70000, 1], // Invalid: charId > 65535
             [3, 300, 3], // Invalid: team must be 1 or 2
           ],
         }
@@ -206,15 +222,34 @@ describe('binaryEncoder', () => {
           [1, 2],
         ], // Invalid: 0 and 64
         c: [
-          [1, 20000, 1],
+          [1, 70000, 1],
           [2, 100, 1],
-        ], // Invalid: charId > 16383
+        ], // Invalid: charId > 65535
       }
       const result = validateGridState(state)
       expect(result).toEqual({
         t: [[1, 2]],
         c: [[2, 100, 1]],
       })
+      consoleSpy.mockRestore()
+    })
+
+    it('nulls out-of-range artifact IDs instead of truncating them', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const result = validateGridState({ a: [64, 18] })
+      expect(result).toEqual({ a: [null, 18] })
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('caps phantimal entries at the 4-bit count limit (15)', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const state: GridState = {
+        p: Array.from({ length: 16 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
+      }
+      const result = validateGridState(state)
+      expect(result.p).toHaveLength(15)
+      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
 

@@ -1,15 +1,17 @@
 import type { GridState } from './gridStateSerializer'
 
 // Character ID encoding constants
-const CHARACTER_ID_BITS = 14 // Supports IDs 0-16383
-const MAX_CHARACTER_ID = (1 << CHARACTER_ID_BITS) - 1 // 16383
+const CHARACTER_ID_BITS = 16 // Supports IDs 0-65535 (covers companion IDs, see format note)
+const MAX_CHARACTER_ID = (1 << CHARACTER_ID_BITS) - 1 // 65535
 const HEX_ID_BITS = 6 // Supports hex IDs 0-63
 const TILE_STATE_BITS = 3 // Supports states 0-7
 const TEAM_BITS = 1 // Supports 2 teams
-const ARTIFACT_BITS = 3 // Supports artifact IDs 0-7
+const ARTIFACT_BITS = 6 // Supports artifact IDs 0-63 (0 = null)
+const MAX_ARTIFACT_ID = (1 << ARTIFACT_BITS) - 1 // 63
 const PHANTIMAL_ID_BITS = 4 // Supports local phantimal IDs 1-15
 const MAX_PHANTIMAL_ID = (1 << PHANTIMAL_ID_BITS) - 1 // 15
 const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
+const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
 
 /**
  * Binary encoding utilities for ultra-compact URL serialization
@@ -27,7 +29,7 @@ const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
  *   - Bit 0: Actually needs extended counts (not just display flags)
  *   - Bits 1-5: Display flags (showHexIds, showArrows, showPerspective, showSkills, teamView)
  *   - Bit 6: Has phantimals (phantimal section present after artifacts)
- *   - Bit 7: Reserved (not currently used)
+ *   - Bit 7: Has display flags (distinguishes an explicit d=0 from no display flags)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -36,19 +38,20 @@ const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
  * - Bits 0-5: Hex ID (6 bits, supports 1-63)
  * - Bits 6-8: State (3 bits, supports 0-7)
  *
- * Character entry (21 bits):
+ * Character entry (23 bits):
  * - Bits 0-5: Hex ID (6 bits)
- * - Bits 6-19: Character ID (14 bits, supports 0-16383)
- * - Bit 20: Team (1 bit)
+ * - Bits 6-21: Character ID (16 bits, supports 0-65535)
+ * - Bit 22: Team (1 bit)
  *
- * Note: Character IDs are currently limited to 16383 (14 bits). Synthetic runtime
- * IDs above this ceiling never reach this field: companion IDs (N * companionIdOffset
- * + base) are reconstructed from their parent on placement, and phantimals serialize
- * via their 4-bit local ID below — so neither overflows the 14 bits.
+ * Note: This field also carries companion IDs (N * companionIdOffset + base, see
+ * grid.ts), which the restore path uses to reposition companions after their main
+ * character is placed. 16 bits covers companion index N up to 6 for base IDs below
+ * 5536. Phantimal IDs (100000+) never reach this field — they serialize via their
+ * 4-bit local ID below.
  *
- * Artifacts (6 bits):
- * - Bits 0-2: Ally artifact (3 bits, 0 = null, 1-7 = artifact ID)
- * - Bits 3-5: Enemy artifact (3 bits, 0 = null, 1-7 = artifact ID)
+ * Artifacts (12 bits):
+ * - Bits 0-5: Ally artifact (6 bits, 0 = null, 1-63 = artifact ID)
+ * - Bits 6-11: Enemy artifact (6 bits, 0 = null, 1-63 = artifact ID)
  *
  * Phantimals (only if extended flag bit 6 is set, written after artifacts):
  * - Count (4 bits, 0-15)
@@ -92,8 +95,8 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
-  // Validate character entries: hexId 1-63, charId 1-16383, team 1-2
-  // This ensures character IDs fit in 14 bits and teams in 1 bit
+  // Validate character entries: hexId 1-63, charId 1-65535, team 1-2
+  // This ensures character IDs fit in 16 bits and teams in 1 bit
   if (state.c && Array.isArray(state.c)) {
     const validChars = state.c.filter((entry) => {
       const [hexId, charId, team] = entry
@@ -120,14 +123,21 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
-  // Artifacts: must be array with exactly 2 elements
+  // Artifacts: must be array with exactly 2 elements; each element null or an ID
+  // within the 6-bit field (1-63). Out-of-range IDs become null — writeBits would
+  // otherwise silently truncate them to a different artifact's ID.
   if (state.a && Array.isArray(state.a) && state.a.length === 2) {
-    validated.a = state.a
+    validated.a = state.a.map((id) => {
+      if (id == null) return null
+      if (Number.isInteger(id) && id > 0 && id <= MAX_ARTIFACT_ID) return id
+      console.warn(`Invalid artifact ID ${id} (valid: 1-${MAX_ARTIFACT_ID}), dropping`)
+      return null
+    })
   }
 
   // Validate phantimal entries: hexId 1-63, local id 1-15, team 1-2
   if (state.p && Array.isArray(state.p)) {
-    const validPhantimals = state.p.filter((entry) => {
+    let validPhantimals = state.p.filter((entry) => {
       const [hexId, localId, team] = entry
       const isValid =
         hexId != null &&
@@ -142,6 +152,14 @@ export function validateGridState(state: GridState): GridState {
       }
       return isValid
     })
+    // Cap at the 4-bit count field's maximum — a longer list would wrap the
+    // encoded count and desync the decoder.
+    if (validPhantimals.length > MAX_PHANTIMAL_COUNT) {
+      console.warn(
+        `Too many phantimal entries (${validPhantimals.length}), keeping first ${MAX_PHANTIMAL_COUNT}`,
+      )
+      validPhantimals = validPhantimals.slice(0, MAX_PHANTIMAL_COUNT)
+    }
     if (validPhantimals.length > 0) {
       validated.p = validPhantimals
     }
@@ -246,7 +264,8 @@ export function encodeToBinary(state: GridState): Uint8Array {
     // Extended flags byte layout:
     // Bit 0: needs extended counts (1 if >7 entries)
     // Bits 1-5: display flags (5 bits: showHexIds, showArrows, showPerspective, showSkills, teamView)
-    // Bits 6-7: reserved for future use
+    // Bit 6: has phantimals
+    // Bit 7: has display flags (so an explicit d=0 survives the round trip)
     let extendedFlags = 0
     if (needsExtendedCounts) {
       extendedFlags |= 0x01 // Bit 0: needs extended counts
@@ -255,6 +274,7 @@ export function encodeToBinary(state: GridState): Uint8Array {
       // Pack display flags into bits 1-5
       // Only the lower 5 bits of d are used (one bit per flag)
       extendedFlags |= (validState.d & 0x1f) << 1
+      extendedFlags |= 0x80 // Bit 7: display flags present
     }
     if (hasPhantimals) {
       extendedFlags |= 0x40 // Bit 6: has phantimals
@@ -285,11 +305,11 @@ export function encodeToBinary(state: GridState): Uint8Array {
   if (validState.c) {
     for (const entry of validState.c) {
       const hexId = entry[0]! // Guaranteed valid (1-63) by validation
-      const charId = entry[1]! // Guaranteed valid (1-16383) by validation
+      const charId = entry[1]! // Guaranteed valid (1-65535) by validation
       const team = entry[2]! // Guaranteed valid (1 or 2) by validation
 
       writer.writeBits(hexId, HEX_ID_BITS) // 6 bits for hex ID
-      writer.writeBits(charId, CHARACTER_ID_BITS) // 14 bits for character ID
+      writer.writeBits(charId, CHARACTER_ID_BITS) // 16 bits for character ID
 
       // Convert Team enum to bit value: Team.ALLY (1) -> 0, Team.ENEMY (2) -> 1
       // This saves 1 bit per character entry
@@ -298,13 +318,13 @@ export function encodeToBinary(state: GridState): Uint8Array {
     }
   }
 
-  // Write artifacts (6 bits total: 3 bits per artifact)
+  // Write artifacts (12 bits total: 6 bits per artifact)
   if (hasArtifacts && validState.a) {
-    // 0 represents null/no artifact, 1-7 are valid artifact IDs
+    // 0 represents null/no artifact, 1-63 are valid artifact IDs
     const ally = validState.a[0] ?? 0 // null -> 0
     const enemy = validState.a[1] ?? 0 // null -> 0
-    writer.writeBits(ally, ARTIFACT_BITS) // 3 bits for ally artifact
-    writer.writeBits(enemy, ARTIFACT_BITS) // 3 bits for enemy artifact
+    writer.writeBits(ally, ARTIFACT_BITS) // 6 bits for ally artifact
+    writer.writeBits(enemy, ARTIFACT_BITS) // 6 bits for enemy artifact
   }
 
   // Write phantimals (after artifacts): count, then hexId + local id + team each
@@ -347,7 +367,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     const hasExtended = (header & 0x80) !== 0 // Bit 7
 
     // Phantimals can be the sole reason for an extended header; track it so the
-    // section after artifacts is read and the display-flag inference stays correct.
+    // section after artifacts is read.
     let hasPhantimals = false
 
     // Read extended header if present
@@ -357,22 +377,11 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
       hasPhantimals = (extendedFlags & 0x40) !== 0 // Bit 6
 
-      // Extract display flags from bits 1-5
-      // IMPORTANT: Only set display flags if they were explicitly encoded
-      // This fixes the bug where d=0 was incorrectly set when only extended counts were present
-      const displayFlagBits = (extendedFlags >> 1) & 0x1f
-
-      // Display flags are present if:
-      // 1. We have display flag bits set (non-zero), OR
-      // 2. We have an extended header that ISN'T solely for extended counts or
-      //    phantimals (i.e. a display-only header)
-      const hasDisplayFlags = displayFlagBits !== 0 || (!needsExtendedCounts && !hasPhantimals)
-
-      if (hasDisplayFlags) {
-        // Set display flags (including 0 if explicitly stored)
-        state.d = displayFlagBits
+      // Bit 7 explicitly marks display flags as present, so d=0 (all flags off)
+      // is distinguishable from "no display flags encoded" (d stays undefined).
+      if ((extendedFlags & 0x80) !== 0) {
+        state.d = (extendedFlags >> 1) & 0x1f
       }
-      // If no display flags were encoded, state.d remains undefined (as intended)
 
       // Read extended counts if present
       if (needsExtendedCounts) {
@@ -393,12 +402,12 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       }
     }
 
-    // Read characters (each character is 21 bits: 6 + 14 + 1)
+    // Read characters (each character is 23 bits: 6 + 16 + 1)
     if (charCount > 0) {
       state.c = []
       for (let i = 0; i < charCount; i++) {
         const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
-        const charId = reader.readBits(CHARACTER_ID_BITS) // 14 bits (max 16383)
+        const charId = reader.readBits(CHARACTER_ID_BITS) // 16 bits (max 65535)
         const teamBit = reader.readBits(TEAM_BITS) // 1 bit
 
         // Convert bit value back to Team enum: 0 -> Team.ALLY (1), 1 -> Team.ENEMY (2)
@@ -412,7 +421,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const ally = reader.readBits(ARTIFACT_BITS) // 3 bits
       const enemy = reader.readBits(ARTIFACT_BITS) // 3 bits
 
-      // Convert 0 back to null (no artifact), 1-7 are artifact IDs
+      // Convert 0 back to null (no artifact), 1-63 are artifact IDs
       state.a = [ally === 0 ? null : ally, enemy === 0 ? null : enemy]
     }
 

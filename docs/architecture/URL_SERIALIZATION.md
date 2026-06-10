@@ -41,6 +41,7 @@ interface GridState {
   t?: number[][] // tiles: [hexId, state]
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy]
+  p?: number[][] // phantimals: [hexId, localPhantimalId, team]
   d?: number // display flags (bit-packed)
 }
 ```
@@ -59,7 +60,8 @@ interface GridState {
 [Extended Header (if bit 7 set): 8+ bits]
   - Bit 0: Needs extended counts
   - Bits 1-5: Display flags (Grid Info, Targeting, Flat, Skills, Team View)
-  - Bits 6-7: Reserved
+  - Bit 6: Has phantimals (phantimal section present after artifacts)
+  - Bit 7: Has display flags (distinguishes an explicit d=0 from no display flags)
   - Additional tile count byte (if bit 0 set)
   - Additional character count byte (if bit 0 set)
 
@@ -67,14 +69,18 @@ interface GridState {
   - Hex ID (6 bits): Range 1-63
   - State (3 bits): Range 0-7
 
-[Characters: 21 bits each]
+[Characters: 23 bits each]
   - Hex ID (6 bits): Range 1-63
-  - Character ID (14 bits): Range 1-16383
+  - Character ID (16 bits): Range 1-65535
   - Team (1 bit): 1=ALLY, 2=ENEMY
 
-[Artifacts (if header bit 6 set): 6 bits]
-  - Ally artifact (3 bits): Range 0-7
-  - Enemy artifact (3 bits): Range 0-7
+[Artifacts (if header bit 6 set): 12 bits]
+  - Ally artifact (6 bits): 0 = null, 1-63 = artifact ID
+  - Enemy artifact (6 bits): 0 = null, 1-63 = artifact ID
+
+[Phantimals (if extended flags bit 6 set, after artifacts)]
+  - Count (4 bits): Range 0-15
+  - Each entry (11 bits): hex ID (6) + local phantimal ID (4) + team (1)
 ```
 
 Only non-default hex states are stored, significantly reducing size.
@@ -85,11 +91,13 @@ Before encoding, `validateGridState()` filters invalid entries:
 
 - **Hex IDs**: Must be 1-63 (6-bit limit)
 - **Tile States**: Must be 0-7 (3-bit limit)
-- **Character IDs**: Must be 1-16383 (14-bit limit)
+- **Character IDs**: Must be 1-65535 (16-bit limit)
+- **Artifact IDs**: Must be null or 1-63 (6-bit limit); out-of-range IDs become null
+- **Phantimal entries**: Local ID 1-15, capped at 15 entries (4-bit count field)
 - **Team Values**: Must be 1 (ALLY) or 2 (ENEMY)
 - **Maximum Counts**: 262 tiles or characters (7 in header + 255 in extended)
 
-Invalid entries are filtered with console warnings, ensuring header counts match actual data written and preventing encoding/decoding mismatches.
+Invalid entries are filtered with console warnings, ensuring header counts match actual data written and preventing encoding/decoding mismatches. Every field validated here must stay in sync with its bit width — `writeBits` silently truncates oversized values, which would alias them to different IDs on decode.
 
 ### Extended Mode
 
@@ -97,8 +105,9 @@ Extended mode activates when:
 
 - More than 7 tile entries (modified hexes) OR more than 7 character entries
 - Display flags are explicitly provided (even if all false)
+- Phantimals are present
 
-Display flags are only stored when explicitly provided (`d !== undefined`), preserving `d=0` when intentionally set but omitting from output when not provided for URL optimization.
+Display flags are only stored when explicitly provided (`d !== undefined`). Extended flags bit 7 marks their presence, so an explicit `d=0` (all toggles off) survives the round trip even when extended counts or phantimals also require the extended header.
 
 ## URL Operations
 
@@ -136,5 +145,6 @@ if (result.success) {
 
 - **Standard characters (ID < 10000)**: Direct placement
 - **Companions (ID ≥ 10000)**: Two-phase - place mains first (triggers skills), then reposition companions
+- **Phantimals (ID ≥ 100000)**: Serialized separately in the `p` section via 4-bit local IDs
 
-**Note**: Character IDs are currently limited to 16,383 (14-bit encoding). This supports approximately 6,383 main characters with their companions. IDs exceeding this limit are filtered during validation.
+**Note**: Character IDs are limited to 65,535 (16-bit encoding). Companion IDs are `N * 10000 + base`, so the field covers companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). IDs exceeding the limit are filtered during validation.

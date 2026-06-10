@@ -14,17 +14,17 @@ const fit = defineModel<StitchFit>('fit', { required: true })
       <div class="segmented">
         <button
           class="seg-btn"
-          :class="{ active: direction === 'vertical' }"
-          @click="direction = 'vertical'"
-        >
-          Vertical
-        </button>
-        <button
-          class="seg-btn"
           :class="{ active: direction === 'horizontal' }"
           @click="direction = 'horizontal'"
         >
           Horizontal
+        </button>
+        <button
+          class="seg-btn"
+          :class="{ active: direction === 'vertical' }"
+          @click="direction = 'vertical'"
+        >
+          Vertical
         </button>
       </div>
     </div>
@@ -32,8 +32,8 @@ const fit = defineModel<StitchFit>('fit', { required: true })
     <div class="setting">
       <span class="setting-label">Fit</span>
       <select v-model="fit" class="setting-input">
-        <option value="scale">Scale to match</option>
         <option value="original">Keep original</option>
+        <option value="scale">Scale to match</option>
       </select>
     </div>
 
@@ -109,6 +109,16 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   font-size: 0.85rem;
   padding: var(--spacing-xs) var(--spacing-sm);
   min-height: 34px;
+}
+
+/* Custom chevron so the dropdown arrow keeps a consistent gap from the edge. */
+select.setting-input {
+  appearance: none;
+  padding-right: 1.6rem;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--spacing-sm) center;
+  background-size: 12px;
 }
 
 .gap-input {
