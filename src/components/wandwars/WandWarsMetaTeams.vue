@@ -115,7 +115,7 @@ const allPairRows = computed(() => {
         wins,
         losses,
         total,
-        winRate: total > 0 ? wins / total : 0,
+        winRate: wins + losses > 0 ? wins / (wins + losses) : 0,
         synergy: entry.score,
       })
     }

@@ -75,7 +75,10 @@ export interface Recommendation {
   hero: string
   score: number
   confidence: 'high' | 'medium' | 'low'
-  breakdown: Record<string, number | { teammate: string; wins: number; total: number }[]>
+  breakdown: Record<
+    string,
+    number | { teammate: string; wins: number; losses: number; total: number }[]
+  >
   relevantNotes: MatchNote[]
 }
 
