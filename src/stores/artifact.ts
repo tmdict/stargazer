@@ -31,10 +31,6 @@ export const useArtifactStore = defineStore('artifact', () => {
     enemyArtifactId.value = null
   }
 
-  const getArtifactId = (team: Team): number | null => {
-    return team === Team.ALLY ? allyArtifactId.value : enemyArtifactId.value
-  }
-
   return {
     // State (readonly)
     allyArtifactId: readonly(allyArtifactId),
@@ -44,6 +40,5 @@ export const useArtifactStore = defineStore('artifact', () => {
     placeArtifact,
     removeArtifact,
     clearAllArtifacts,
-    getArtifactId,
   }
 })

@@ -1,9 +1,8 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted } from 'vue'
+import { computed } from 'vue'
 
 import GridArrow from './grid/GridArrow.vue'
 import { useArrowLayer } from '@/composables/useArrowLayer'
-import { useGridEvents } from '@/composables/useGridEvents'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import { useSkillStore } from '@/stores/skill'
 
@@ -15,7 +14,6 @@ interface Props {
 const props = defineProps<Props>()
 
 const skillStore = useSkillStore()
-const gridEvents = useGridEvents()
 
 const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
   () => props.showPerspective,
@@ -84,22 +82,6 @@ const arrowsToRender = computed(() => {
   }
 
   return arrows
-})
-
-// Empty body: the subscriptions exist only to nudge re-render; the computed
-// properties pull the new state on their own.
-function handleGridUpdate() {}
-
-onMounted(() => {
-  gridEvents.on('grid:updated', handleGridUpdate)
-  gridEvents.on('character:placed', handleGridUpdate)
-  gridEvents.on('character:removed', handleGridUpdate)
-})
-
-onUnmounted(() => {
-  gridEvents.off('grid:updated', handleGridUpdate)
-  gridEvents.off('character:placed', handleGridUpdate)
-  gridEvents.off('character:removed', handleGridUpdate)
 })
 </script>
 

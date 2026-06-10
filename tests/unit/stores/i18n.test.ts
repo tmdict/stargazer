@@ -110,29 +110,6 @@ describe('i18nStore', () => {
     })
   })
 
-  describe('hasTranslation', () => {
-    it('returns true for an existing translation in the current locale', () => {
-      expect(store.hasTranslation('app.title')).toBe(true)
-    })
-
-    it('returns false when category is missing', () => {
-      expect(store.hasTranslation('nonexistent.key')).toBe(false)
-    })
-
-    it('returns false when name is missing', () => {
-      expect(store.hasTranslation('app.missing')).toBe(false)
-    })
-
-    it('returns false for invalid key format', () => {
-      expect(store.hasTranslation('invalid')).toBe(false)
-    })
-
-    it('returns false when current locale has no translation but other locales do', () => {
-      store.setLocale('zh')
-      expect(store.hasTranslation('partial.enOnly')).toBe(false)
-    })
-  })
-
   describe('toggleLocale', () => {
     it('swaps en ↔ zh', () => {
       expect(store.currentLocale).toBe('en')

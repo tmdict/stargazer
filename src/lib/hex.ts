@@ -43,14 +43,6 @@ export class Hex {
     return new Hex(this.q + other.q, this.r + other.r, this.s + other.s)
   }
 
-  subtract(other: Hex): Hex {
-    return new Hex(this.q - other.q, this.r - other.r, this.s - other.s)
-  }
-
-  scale(k: number): Hex {
-    return new Hex(this.q * k, this.r * k, this.s * k)
-  }
-
   distance(other: Hex): number {
     return (
       (Math.abs(this.q - other.q) + Math.abs(this.r - other.r) + Math.abs(this.s - other.s)) / 2

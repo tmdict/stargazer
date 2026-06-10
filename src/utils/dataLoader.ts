@@ -14,7 +14,7 @@ export interface ArenaJson {
   }
 }
 
-export function extractFileName(path: string, removeExtension = true): string {
+function extractFileName(path: string, removeExtension = true): string {
   const fileName = path.split('/').pop() || 'Unknown'
   return removeExtension ? fileName.replace(/\.\w+$/, '') : fileName
 }
@@ -353,22 +353,4 @@ export function loadAllLocales(): LocaleDictionary {
     game: loadGameLocales(),
     wandwars: loadWandWarsLocales(),
   }
-}
-
-export function clearCache() {
-  charactersCache = null
-  artifactsCache = null
-  characterImagesCache = null
-  artifactImagesCache = null
-  iconsCache = null
-  characterRangesCache = null
-  arenasCache = null
-  appLocalesCache = null
-  characterLocalesCache = null
-  artifactLocalesCache = null
-  gameLocalesCache = null
-  wandwarsLocalesCache = null
-  artifactEffectsCache = null
-  phantimalsCache = null
-  phantimalLocalesCache = null
 }

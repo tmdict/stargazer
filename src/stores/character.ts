@@ -50,10 +50,6 @@ export const useCharacterStore = defineStore('character', () => {
     return getCharacterPlacements(grid)
   })
 
-  const placedCharactersList = computed(() => {
-    return Array.from(characterPlacements.value.entries())
-  })
-
   // Separate computed for team counts to avoid full traversal
   const teamCharacterCounts = computed(() => {
     const allyCount = getTeamCharacters(grid, Team.ALLY).size
@@ -231,7 +227,6 @@ export const useCharacterStore = defineStore('character', () => {
     // Reactive state
     characterPlacements,
     charactersPlaced,
-    placedCharactersList,
     availableAlly,
     availableEnemy,
     maxTeamSizeAlly,

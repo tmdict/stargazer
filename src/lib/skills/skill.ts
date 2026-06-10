@@ -72,8 +72,7 @@ export class SkillManager {
   // Track original states of tiles altered by skills. A tile may be claimed by
   // several skills at once (e.g. both teams' zone skills overlap); the original
   // state is captured at first claim and restored when the last claim is released
-  private tileStateClaims: Map<number, { originalState: State; claimants: Set<string> }> =
-    new Map()
+  private tileStateClaims: Map<number, { originalState: State; claimants: Set<string> }> = new Map()
   // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Version counter to trigger reactivity

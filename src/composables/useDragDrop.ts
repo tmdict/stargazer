@@ -32,8 +32,6 @@ const draggedImageSrc = ref<string>('')
 const dragPreviewPosition = ref({ x: 0, y: 0 })
 const dropHandled = ref(false)
 
-// Mouse position tracking for hex detection - enables position-based detection system
-const currentMousePosition = ref({ x: 0, y: 0 })
 const hoveredHexId = ref<number | null>(null)
 
 export const useDragDrop = () => {
@@ -86,7 +84,6 @@ export const useDragDrop = () => {
     const offset = 35 * scale
 
     dragPreviewPosition.value = { x: x - offset, y: y - offset } // Offset to center the preview
-    currentMousePosition.value = { x, y }
   }
 
   const handleGlobalDragOver = (event: DragEvent) => {
@@ -173,7 +170,6 @@ export const useDragDrop = () => {
     draggedCharacter,
     draggedImageSrc,
     dragPreviewPosition,
-    currentMousePosition,
     hoveredHexId,
     dropHandled,
 
