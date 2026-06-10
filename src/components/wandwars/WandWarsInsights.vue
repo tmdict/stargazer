@@ -12,7 +12,7 @@ import {
   metaMinPairCounterWins,
   metaMinPairSweeps,
 } from '@/wandwars/constants'
-import { formatInsightHtml, formatName, joinLocale } from '@/wandwars/formatting'
+import { formatInsightHtml, formatName, formatPercent, joinLocale } from '@/wandwars/formatting'
 import { buildInsights, type InsightCategory, type SweepRecord } from '@/wandwars/insights'
 import { computeTeamRecords } from '@/wandwars/prediction/analysis'
 import type { AnalysisData, MatchResult } from '@/wandwars/types'
@@ -500,7 +500,7 @@ const filteredInsights = computed(() =>
             <span class="counter-record">
               <span class="wins">{{ o.wins }}W</span> /
               <span class="losses">{{ o.losses }}L</span>
-              <span class="win-rate">{{ (o.winRate * 10).toFixed(2) }}</span>
+              <span class="win-rate">{{ formatPercent(o.winRate) }}</span>
             </span>
           </div>
         </div>
@@ -540,7 +540,7 @@ const filteredInsights = computed(() =>
                 <span class="response-target-record">
                   <span class="wins">{{ c.wins }}W</span> /
                   <span class="losses">{{ c.losses }}L</span>
-                  <span class="win-rate-inline">{{ (c.winRate * 10).toFixed(2) }}</span>
+                  <span class="win-rate-inline">{{ formatPercent(c.winRate) }}</span>
                 </span>
               </div>
             </div>

@@ -527,7 +527,7 @@ Scores are combined with the same adaptive weights as the 2-teammate case. Enume
 
 - Deduplicated against exact trios (won't repeat data-backed teams)
 - Dashed border, predicted win rate displayed (muted, to distinguish from real W/L records)
-- Up to 3 shown, sorted by NN-predicted win rate
+- Up to 3 shown, sorted by a probability-scale team-quality estimate: the four models' per-trio quality scores blended with the adaptive aggregate weights (vs a generic opponent)
 - Max width capped at 1/3 container (consistent sizing)
 
 ### Hero Ordering

@@ -211,9 +211,16 @@ export function buildTeams(deps: InsightDeps): Insight[] {
   if (decisiveCount >= 10) {
     const leftRate = leftWins / decisiveCount
     if (Math.abs(leftRate - 0.5) > INSIGHT_BALANCED_TOLERANCE) {
-      const favored = leftRate > 0.5 ? ti('left-first-pick') : t('wandwars.right')
-      const rate = leftRate > 0.5 ? leftRate : 1 - leftRate
-      add(ti('side-advantage', { side: favored, rate: formatPercent(rate), leftWins, rightWins }))
+      const leftFavored = leftRate > 0.5
+      const favored = leftFavored ? ti('left-first-pick') : ti('right-second-pick')
+      add(
+        ti('side-advantage', {
+          side: favored,
+          rate: formatPercent(leftFavored ? leftRate : 1 - leftRate),
+          wins: leftFavored ? leftWins : rightWins,
+          losses: leftFavored ? rightWins : leftWins,
+        }),
+      )
     }
   }
 
