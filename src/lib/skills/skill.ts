@@ -1,5 +1,6 @@
 import { findCharacterHex } from '../characters/character'
 import type { Grid } from '../grid'
+import type { State } from '../types/state'
 import type { Team } from '../types/team'
 // Underscore imports use SkillBase<unknown>, wrapped below with Skill = SkillBase<SkillContext>
 import {
@@ -68,6 +69,11 @@ export class SkillManager {
   private characterImageModifiers: Record<string, string> = {}
   // Track color modifiers for specific tiles (supports multiple colors per tile)
   private tileColorModifiers: Map<number, string[]> = new Map()
+  // Track original states of tiles altered by skills. A tile may be claimed by
+  // several skills at once (e.g. both teams' zone skills overlap); the original
+  // state is captured at first claim and restored when the last claim is released
+  private tileStateClaims: Map<number, { originalState: State; claimants: Set<string> }> =
+    new Map()
   // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Version counter to trigger reactivity
@@ -176,8 +182,35 @@ export class SkillManager {
     this.characterColorModifiers = {}
     this.characterImageModifiers = {}
     this.tileColorModifiers.clear()
+    this.tileStateClaims.clear()
     this.skillTargets.clear()
     this.targetVersion++ // Trigger reactivity to clear UI
+  }
+
+  // Claim a tile a skill is about to alter. The first claim records the tile's
+  // original state; later claimants share it (their "current" reading would
+  // already be skill-altered). Claims are per skill instance (character + team)
+  claimTileState(hexId: number, characterId: number, team: Team, originalState: State): void {
+    const claimant = this.getSkillKey(characterId, team)
+    const entry = this.tileStateClaims.get(hexId)
+    if (entry) {
+      entry.claimants.add(claimant)
+    } else {
+      this.tileStateClaims.set(hexId, { originalState, claimants: new Set([claimant]) })
+    }
+  }
+
+  // Release a claim on a tile. Returns the original state once the last
+  // claimant releases (the caller restores the tile); undefined while other
+  // claims remain or if the caller held no claim
+  releaseTileState(hexId: number, characterId: number, team: Team): State | undefined {
+    const entry = this.tileStateClaims.get(hexId)
+    if (!entry || !entry.claimants.delete(this.getSkillKey(characterId, team))) {
+      return undefined
+    }
+    if (entry.claimants.size > 0) return undefined
+    this.tileStateClaims.delete(hexId)
+    return entry.originalState
   }
 
   // Add color modifier for a specific character (used by skills for companions)

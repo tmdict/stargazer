@@ -34,9 +34,6 @@ function getRestorableState(state: State): State {
   return state
 }
 
-// Store original tile states per team for restoration on deactivation
-const savedTileStates = new Map<Team, Map<number, State>>()
-
 // Remove a character from a tile, deactivating its skill if active
 function removeCharacterFromAffectedTile(
   { grid, skillManager }: SkillContext,
@@ -105,13 +102,13 @@ registerSkill({
       }
     }
 
-    // Save original tile states (convert OCCUPIED to AVAILABLE for restoration)
-    const saved = new Map<number, State>()
+    // Claim original tile states (convert OCCUPIED to AVAILABLE for restoration).
+    // The shared middle tiles may already be claimed by the other team's zone;
+    // the first claim's original state wins
     for (const id of affectedIds) {
       const tile = grid.getTileById(id)
-      saved.set(id, getRestorableState(tile.state))
+      skillManager.claimTileState(id, characterId, team, getRestorableState(tile.state))
     }
-    savedTileStates.set(team, saved)
 
     // Remove characters from affected tiles (except kulu)
     for (const id of affectedIds) {
@@ -149,16 +146,16 @@ registerSkill({
   },
 
   onDeactivate(context: SkillContext): void {
-    const { grid, team, skillManager } = context
-    const saved = savedTileStates.get(team)
-    if (!saved) return
+    const { grid, team, characterId, skillManager } = context
 
-    // Remove tile color modifiers and restore original states
-    for (const [hexId, originalState] of saved) {
-      skillManager.removeTileColorModifier(hexId, TILE_COLOR)
-      grid.setState(grid.getHexById(hexId), originalState)
+    // Release this zone's claims. A tile shared with the other team's zone is
+    // restored (and its highlight removed) only when the last claim is released
+    for (const hexId of getAllAffectedIds(team)) {
+      const originalState = skillManager.releaseTileState(hexId, characterId, team)
+      if (originalState !== undefined) {
+        skillManager.removeTileColorModifier(hexId, TILE_COLOR)
+        grid.setState(grid.getHexById(hexId), originalState)
+      }
     }
-
-    savedTileStates.delete(team)
   },
 })
