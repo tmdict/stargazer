@@ -78,14 +78,6 @@ export class PriorityQueue<T> {
     }
   }
 
-  /**
-   * Check if item exists in queue
-   * Time complexity: O(n)
-   */
-  contains(item: T, equals: (a: T, b: T) => boolean): boolean {
-    return this.heap.some((node) => equals(node.item, item))
-  }
-
   private bubbleUp(index: number): void {
     while (index > 0) {
       const parentIndex = Math.floor((index - 1) / 2)

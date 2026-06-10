@@ -64,7 +64,7 @@ class Grid {
 
   // Spatial operations only
   getTile(hex: Hex): GridTile
-  setState(hex: Hex, state: State): boolean
+  setState(hex: Hex, state: State): void
 }
 ```
 
@@ -119,7 +119,8 @@ Character placement with skill integration:
 ```typescript
 function executePlaceCharacter(grid, skillManager, hexId, characterId, team) {
   return executeTransaction([
-    () => performPlace(grid, hexId, characterId, team, true),
+    () => clearOccupantWithSkillCleanup(), // replacement: occupied target only
+    () => performPlace(grid, hexId, characterId, team),
     () => {
       if (!hasSkill(characterId)) return true
       return skillManager.activateCharacterSkill(characterId, hexId, team, grid)
@@ -134,6 +135,8 @@ Validates:
 2. No duplicate characters on team
 3. Team hasn't exceeded capacity
 4. Skill activates successfully (if present)
+
+Placing onto an occupied tile replaces the occupant: its skill is deactivated and it is removed first (a companion occupant cascades to its main character), and the rollback fully restores it — re-place, re-activate skill, restore companions. The atomic `performPlace` primitive itself rejects occupied tiles.
 
 ### Movement & Swapping
 
@@ -240,7 +243,6 @@ class Hex {
 The Layout class handles pixel conversions:
 
 - `hexToPixel(hex)` - Screen position
-- `pixelToHex(point)` - Find hex at position
 - `polygonCorners(hex)` - Vertices for rendering
 
 ## Component Usage

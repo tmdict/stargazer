@@ -111,10 +111,6 @@ export const useGridStore = defineStore('grid', () => {
     grid.setState(hex, state)
   }
 
-  const getState = (hex: Hex): State => {
-    return grid.getTile(hex).state
-  }
-
   // Grid utility functions
   const getHexById = (id: number): Hex => {
     return grid.getHexById(id)
@@ -174,12 +170,6 @@ export const useGridStore = defineStore('grid', () => {
     return layout.value.getArrowPath(startHex, endHex, characterRadius, invertCurve, curveScale)
   }
 
-  // Get screen position for a hex (includes grid origin offset)
-  const getScreenPosition = (hexId: number): { x: number; y: number } => {
-    const hex = getHexById(hexId)
-    return layout.value.hexToScreen(hex, gridOrigin.value)
-  }
-
   // Breakpoint-based size updater
   const updateBreakpoint = (breakpoint: Breakpoint) => {
     const sizeMap: Record<Breakpoint, { x: number; y: number }> = {
@@ -217,10 +207,8 @@ export const useGridStore = defineStore('grid', () => {
 
     // Core grid operations
     setState,
-    getState,
     getHexById,
     getHexPosition,
-    getScreenPosition,
     getTile,
     getAllTiles,
     switchMap,

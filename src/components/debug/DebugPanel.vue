@@ -345,70 +345,9 @@ defineExpose({
   }
 }
 
-.stats-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 1rem;
-}
-
 .grid-stats h3 {
   margin: 0;
   color: var(--color-text-primary);
-}
-
-.toggle-btn {
-  background: #007acc;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 0.9rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  transition: background-color 0.2s ease;
-}
-
-.toggle-btn:hover {
-  background: #005a9e;
-}
-
-.toggle-btn.collapsed {
-  background: #6c757d;
-}
-
-.toggle-btn.collapsed:hover {
-  background: #5a6268;
-}
-
-.toggle-icon {
-  font-size: 0.8rem;
-  transition: transform 0.2s ease;
-}
-
-.stats-content {
-  animation: fadeIn 0.3s ease-in-out;
-}
-
-.stats-header + .stats-content {
-  margin-top: 0;
-}
-
-.grid-stats.collapsed .stats-header {
-  margin-bottom: 0;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .grid-stats p {

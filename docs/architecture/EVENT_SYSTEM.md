@@ -31,9 +31,9 @@ interface GridEventAPI {
 ```typescript
 interface GridEvents {
   'hex:click': (hex: Hex) => void
-  'hex:hover': (hexId: number | null) => void
   'character:remove': (hexId: number) => void
-  'character:dragStart': (hexId: number, characterId: number) => void
+  'character:mouseenter': (hexId: number) => void
+  'character:mouseleave': (hexId: number) => void
   'artifact:remove': (team: Team) => void
 }
 ```
@@ -43,12 +43,11 @@ interface GridEvents {
 ### Hex Events
 
 - **hex:click**: User clicks hex tile - triggers character placement logic
-- **hex:hover**: Mouse enters/leaves hex - updates hover state
 
 ### Character Events
 
 - **character:remove**: Remove character from hex
-- **character:dragStart**: Start dragging character from grid
+- **character:mouseenter** / **character:mouseleave**: Hover state for character icons (drives the targeting-arrow highlight)
 
 ### Artifact Events
 

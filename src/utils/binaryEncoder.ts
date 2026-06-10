@@ -226,10 +226,6 @@ class BitReader {
     this.position += bitCount
     return value
   }
-
-  hasMoreData(): boolean {
-    return Math.floor(this.position / 8) < this.bytes.length
-  }
 }
 
 export function encodeToBinary(state: GridState): Uint8Array {

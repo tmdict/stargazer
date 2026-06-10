@@ -121,34 +121,6 @@ export const useI18nStore = defineStore('i18n', () => {
     }
   })
 
-  const hasTranslation = computed(() => {
-    return (key: string): boolean => {
-      const parts = key.split('.')
-
-      if (parts.length !== 2) {
-        return false
-      }
-
-      const [category, name] = parts
-      if (!category || !name) {
-        console.warn('i18n: Invalid translation key parts in hasTranslation', {
-          key,
-          category,
-          name,
-        })
-        return false
-      }
-
-      const categoryTranslations = translations.value[category]
-
-      return !!(
-        categoryTranslations &&
-        categoryTranslations[name] &&
-        categoryTranslations[name][currentLocale.value]
-      )
-    }
-  })
-
   // Actions
   const initialize = () => {
     if (loaded.value) {
@@ -177,7 +149,6 @@ export const useI18nStore = defineStore('i18n', () => {
 
     // Getters
     t,
-    hasTranslation,
 
     // Actions
     initialize,

@@ -46,7 +46,7 @@ export const DIAGONAL_ROWS: readonly number[][] = [
  * Get the diagonal row number for a given hex ID.
  * Simple lookup in the DIAGONAL_ROWS array.
  */
-export function getDiagonalRowNumber(hexId: number): number {
+function getDiagonalRowNumber(hexId: number): number {
   for (let rowIndex = 0; rowIndex < DIAGONAL_ROWS.length; rowIndex++) {
     const row = DIAGONAL_ROWS[rowIndex]
     if (row && row.includes(hexId)) {

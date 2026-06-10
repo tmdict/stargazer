@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { Hex } from '@/lib/hex'
-import { FLAT, Layout, POINTY, type Point } from '@/lib/layout'
+import { Layout, POINTY, type Point } from '@/lib/layout'
 
 describe('Layout', () => {
   const SQRT3 = Math.sqrt(3)
@@ -18,18 +18,6 @@ describe('Layout', () => {
       expect(POINTY.b3).toBeCloseTo(2 / 3)
       expect(POINTY.startAngle).toBe(0.5)
     })
-
-    it('should have correct FLAT orientation values', () => {
-      expect(FLAT.f0).toBeCloseTo(3 / 2)
-      expect(FLAT.f1).toBe(0)
-      expect(FLAT.f2).toBeCloseTo(SQRT3 / 2)
-      expect(FLAT.f3).toBeCloseTo(SQRT3)
-      expect(FLAT.b0).toBeCloseTo(2 / 3)
-      expect(FLAT.b1).toBe(0)
-      expect(FLAT.b2).toBeCloseTo(-1 / 3)
-      expect(FLAT.b3).toBeCloseTo(SQRT3 / 3)
-      expect(FLAT.startAngle).toBe(0)
-    })
   })
 
   describe('coordinate conversion', () => {
@@ -43,23 +31,6 @@ describe('Layout', () => {
       const pixel = layout.hexToPixel(new Hex(1, 0, -1))
       expect(pixel.x).toBeCloseTo(100 + SQRT3 * 10)
       expect(pixel.y).toBeCloseTo(100)
-    })
-
-    it('should convert pixel to hex coordinates', () => {
-      const hex = layout.pixelToHex({ x: 100, y: 100 })
-      expect(hex.q).toBeCloseTo(0)
-      expect(hex.r).toBeCloseTo(0)
-      expect(hex.s).toBeCloseTo(0)
-    })
-
-    it('should maintain accuracy for round-trip conversion', () => {
-      const originalHex = new Hex(2, -3, 1)
-      const pixel = layout.hexToPixel(originalHex)
-      const convertedHex = layout.pixelToHex(pixel)
-
-      expect(Math.round(convertedHex.q)).toBe(originalHex.q)
-      expect(Math.round(convertedHex.r)).toBe(originalHex.r)
-      expect(Math.round(convertedHex.s)).toBe(originalHex.s)
     })
   })
 

@@ -5,7 +5,6 @@ import { Grid } from '@/lib/grid'
 import {
   calculateDistances,
   getCandidates,
-  getOpposingCharacters,
   getTeamTargetCandidates,
   type TargetCandidate,
 } from '@/lib/skills/utils/targeting'
@@ -62,24 +61,6 @@ describe('targeting foundations', () => {
       const enemyChars = getTeamTargetCandidates(grid, Team.ENEMY)
       expect(enemyChars).toHaveLength(1)
       expect(enemyChars[0]?.characterId).toBe(200)
-    })
-
-    it('retrieves opposing characters', () => {
-      const tile1 = grid.getTileById(1)
-      tile1.characterId = 100
-      tile1.team = Team.ALLY
-
-      const tile2 = grid.getTileById(10)
-      tile2.characterId = 200
-      tile2.team = Team.ENEMY
-
-      const opposingToAlly = getOpposingCharacters(grid, Team.ALLY)
-      expect(opposingToAlly).toHaveLength(1)
-      expect(opposingToAlly[0]?.characterId).toBe(200)
-
-      const opposingToEnemy = getOpposingCharacters(grid, Team.ENEMY)
-      expect(opposingToEnemy).toHaveLength(1)
-      expect(opposingToEnemy[0]?.characterId).toBe(100)
     })
   })
 

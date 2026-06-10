@@ -7,7 +7,6 @@ import {
   defaultCanTraverse,
   findClosestTarget,
   findPathAStar,
-  findPathDistance,
   getClosestTargetMap,
   isVerticallyAligned,
 } from '@/lib/pathfinding'
@@ -104,49 +103,6 @@ describe('pathfinding', () => {
       expect(path).not.toBeNull()
       expect(path).toHaveLength(1)
       expect(path![0].equals(hex)).toBe(true)
-    })
-  })
-
-  describe('findPathDistance', () => {
-    it('calculates distance between adjacent hexes', () => {
-      const start = grid.getHexById(1)
-      const goal = grid.getHexById(2)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      const distance = findPathDistance(start, goal, getTile, defaultCanTraverse)
-
-      expect(distance).toBe(1)
-    })
-
-    it('returns 0 for same hex', () => {
-      const hex = grid.getHexById(1)
-      const getTile = (h: Hex) => {
-        try {
-          return grid.getTile(h)
-        } catch {
-          return undefined
-        }
-      }
-
-      const distance = findPathDistance(hex, hex, getTile, defaultCanTraverse)
-
-      expect(distance).toBe(0)
-    })
-
-    it('returns null for unreachable hex', () => {
-      const start = grid.getHexById(1)
-      const goal = new Hex(100, -50, -50)
-      const getTile = () => undefined
-
-      const distance = findPathDistance(start, goal, getTile, defaultCanTraverse)
-
-      expect(distance).toBeNull()
     })
   })
 

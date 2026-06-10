@@ -249,7 +249,7 @@ const handleMapEditorStateSelected = (state: State) => {
 }
 
 const handleApplyAllTiles = (state: State) => {
-  mapEditorStore.applyAllHexStates(state)
+  mapEditorStore.resetAllHexesToState(state)
 }
 
 const handleResetMap = () => {

@@ -147,32 +147,6 @@ describe('PriorityQueue', () => {
     })
   })
 
-  describe('contains', () => {
-    it('checks if item exists', () => {
-      queue.enqueue(42, 1)
-      queue.enqueue(100, 2)
-
-      expect(queue.contains(42, (a, b) => a === b)).toBe(true)
-      expect(queue.contains(100, (a, b) => a === b)).toBe(true)
-      expect(queue.contains(999, (a, b) => a === b)).toBe(false)
-    })
-
-    it('works with custom equality function', () => {
-      interface Point {
-        x: number
-        y: number
-      }
-
-      const q = new PriorityQueue<Point>()
-      q.enqueue({ x: 1, y: 2 }, 1)
-
-      const equalPoints = (a: Point, b: Point) => a.x === b.x && a.y === b.y
-
-      expect(q.contains({ x: 1, y: 2 }, equalPoints)).toBe(true)
-      expect(q.contains({ x: 1, y: 3 }, equalPoints)).toBe(false)
-    })
-  })
-
   describe('clear', () => {
     it('removes all items', () => {
       queue.enqueue(1, 1)

@@ -131,9 +131,6 @@ export function executeAutoPlaceCharacter(
   const availableTiles = getAllAvailableTilesForTeam(grid, team)
   if (availableTiles.length == 0) return false
 
-  // Sort by hex ID descending (largest first) for deterministic randomness
-  availableTiles.sort((a, b) => b.hex.getId() - a.hex.getId())
-
   // Select random tile from available options
   const randomIndex = Math.floor(Math.random() * availableTiles.length)
   const selectedTile = availableTiles[randomIndex]

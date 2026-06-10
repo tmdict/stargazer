@@ -243,8 +243,6 @@ defineExpose({
       :hexes="gridStore.visibleHexes"
       :layout="gridStore.layout"
       :height="defaultSvgHeight"
-      :center-x="gridStore.gridOrigin.x"
-      :center-y="gridStore.gridOrigin.y"
       :show-hex-ids="showHexIds"
       :show-coordinates="showDebug"
       :is-map-editor-mode="isMapEditorMode"

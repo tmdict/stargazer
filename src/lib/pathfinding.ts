@@ -145,20 +145,6 @@ export function findPathAStar(
 }
 
 /*
- * Find shortest path distance using A* algorithm.
- * Returns number of steps needed, or null if no path exists.
- */
-export function findPathDistance(
-  start: Hex,
-  goal: Hex,
-  getTile: (hex: Hex) => GridTile | undefined,
-  canTraverse: (tile: GridTile) => boolean,
-): number | null {
-  const path = findPathAStar(start, goal, getTile, canTraverse)
-  return path ? path.length - 1 : null // Subtract 1 to get number of steps
-}
-
-/*
  * Calculate minimum movement distance to reach any target using BFS.
  * Returns the movement distance and all targets reachable at that distance.
  */
