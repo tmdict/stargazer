@@ -32,19 +32,6 @@ export const POINTY: Orientation = {
   startAngle: 0.5,
 }
 
-// Flat-top orientation
-export const FLAT: Orientation = {
-  f0: 3 / 2,
-  f1: 0,
-  f2: SQRT3 / 2,
-  f3: SQRT3,
-  b0: 2 / 3,
-  b1: 0,
-  b2: -1 / 3,
-  b3: SQRT3 / 3,
-  startAngle: 0,
-}
-
 export interface Point {
   x: number
   y: number
@@ -74,18 +61,6 @@ export class Layout {
       x: x + this.origin.x,
       y: y + this.origin.y,
     }
-  }
-
-  // Convert pixel to hex (fractional)
-  pixelToHex(point: Point): Hex {
-    const M = this.orientation
-    const pt = {
-      x: (point.x - this.origin.x) / this.size.x,
-      y: (point.y - this.origin.y) / this.size.y,
-    }
-    const q = M.b0 * pt.x + M.b1 * pt.y
-    const r = M.b2 * pt.x + M.b3 * pt.y
-    return Hex.fromAxial(q, r)
   }
 
   // Calculate offset used to get corner location relative to center

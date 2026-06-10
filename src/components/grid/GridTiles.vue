@@ -21,25 +21,9 @@ import {
 interface Props {
   hexes: Hex[]
   layout: Layout
-  width?: number
   height: number
-  rotation?: number
-  scaleX?: number
-  scaleY?: number
-  skewX?: number
-  skewY?: number
-  centerX: number
-  centerY: number
-  strokeWidth?: number
   showHexIds: boolean
   showCoordinates: boolean
-  hexIdFontSize?: number
-  coordinateFontSize?: number
-  textColor?: string
-  coordinateColor?: string
-  textRotation?: number
-  hexFillColor?: string
-  hexStrokeColor?: string
   isMapEditorMode: boolean
   selectedMapEditorState: State
   showPerspective: boolean
@@ -47,22 +31,18 @@ interface Props {
   readonly?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  width: 600,
-  rotation: 0,
-  scaleX: 1,
-  scaleY: 1,
-  skewX: 0,
-  skewY: 0,
-  strokeWidth: 2,
-  hexIdFontSize: 18,
-  coordinateFontSize: 8,
-  textColor: '#222',
-  coordinateColor: '#555',
-  textRotation: 30,
-  hexFillColor: '#fff',
-  hexStrokeColor: '#ccc',
-})
+const props = defineProps<Props>()
+
+// Base (unscaled) render constants
+const BASE_WIDTH = 600
+const BASE_STROKE_WIDTH = 2
+const HEX_ID_FONT_SIZE = 18
+const COORDINATE_FONT_SIZE = 8
+const TEXT_ROTATION = 30
+const TEXT_COLOR = '#222'
+const COORDINATE_COLOR = '#555'
+const HEX_FILL_COLOR = '#fff'
+const HEX_STROKE_COLOR = '#ccc'
 
 const gridEvents = useGridEvents()
 
@@ -96,33 +76,15 @@ const paintedHexes = ref(new Set<number>()) // Tracks painted hexes to avoid dup
 let lastPaintTime = 0
 const PAINT_THROTTLE_MS = 50 // Performance: throttle painting to every 50ms
 
-const gridTransform = computed(() => {
-  const transforms: string[] = []
-  if (props.rotation !== 0) {
-    transforms.push(`rotate(${props.rotation},${props.centerX},${props.centerY})`)
-  }
-  if (props.skewX !== 0) {
-    transforms.push(`skewX(${props.skewX})`)
-  }
-  if (props.skewY !== 0) {
-    transforms.push(`skewY(${props.skewY})`)
-  }
-  if (props.scaleX !== 1 || props.scaleY !== 1) {
-    transforms.push(`scale(${props.scaleX},${props.scaleY})`)
-  }
-  return transforms.join(' ')
-})
-
 const textTransform = (hex: Hex) => {
-  if (props.textRotation === 0) return ''
   const pos = gridStore.layout.hexToPixel(hex)
-  return `rotate(${props.textRotation},${pos.x},${pos.y})`
+  return `rotate(${TEXT_ROTATION},${pos.x},${pos.y})`
 }
 
 const getHexFill = (hex: Hex) => {
   const state = gridStore.grid.getTile(hex).state
   const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
-  return getTileFillColor(displayState) || props.hexFillColor
+  return getTileFillColor(displayState) || HEX_FILL_COLOR
 }
 
 const shouldShowHexId = (hex: Hex) => {
@@ -148,7 +110,7 @@ const blockHover = ref(false)
 const svgDimensions = computed(() => {
   const scale = gridStore.getHexScale()
   return {
-    width: props.width * scale,
+    width: BASE_WIDTH * scale,
     height: props.height * scale,
   }
 })
@@ -156,8 +118,8 @@ const svgDimensions = computed(() => {
 const scaledFontSizes = computed(() => {
   const scale = gridStore.getHexScale()
   return {
-    hexId: Math.max(10, props.hexIdFontSize * scale), // Min 10px for readability
-    coordinate: Math.max(6, props.coordinateFontSize * scale), // Min 6px
+    hexId: Math.max(10, HEX_ID_FONT_SIZE * scale), // Min 10px for readability
+    coordinate: Math.max(6, COORDINATE_FONT_SIZE * scale), // Min 6px
   }
 })
 
@@ -170,7 +132,7 @@ const shouldShowCoordinates = computed(() => {
 
 const scaledStrokeWidth = computed(() => {
   const scale = gridStore.getHexScale()
-  return Math.max(1, props.strokeWidth * scale) // Min 1px
+  return Math.max(1, BASE_STROKE_WIDTH * scale) // Min 1px
 })
 
 // When dragging state changes, manage the block
@@ -332,7 +294,7 @@ const getHexStroke = (hex: Hex) => {
   }
 
   const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
-  return isOccupied ? '#999' : props.hexStrokeColor
+  return isOccupied ? '#999' : HEX_STROKE_COLOR
 }
 
 const getHexStrokeWidth = (hex: Hex) => {
@@ -436,7 +398,7 @@ onUnmounted(() => {
     <defs>
       <slot name="defs" />
     </defs>
-    <g :transform="gridTransform">
+    <g>
       <g>
         <!-- Regular hexes (render first, behind elevated hexes) -->
         <g v-for="hex in regularHexes" :key="hex.getId()" class="grid-tile">
@@ -510,7 +472,7 @@ onUnmounted(() => {
             :y="gridStore.layout.hexToPixel(hex).y + 6"
             text-anchor="middle"
             :font-size="scaledFontSizes.hexId"
-            :fill="textColor"
+            :fill="TEXT_COLOR"
             font-family="monospace"
             :transform="textTransform(hex)"
           >
@@ -522,7 +484,7 @@ onUnmounted(() => {
             :y="gridStore.layout.hexToPixel(hex).y + 18"
             text-anchor="middle"
             :font-size="scaledFontSizes.coordinate"
-            :fill="coordinateColor"
+            :fill="COORDINATE_COLOR"
             font-family="monospace"
             :transform="textTransform(hex)"
           >

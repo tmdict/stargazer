@@ -1,4 +1,4 @@
-import { getOpposingTeam, getTilesWithCharacters } from '../../characters/character'
+import { getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 
@@ -32,13 +32,6 @@ export function getTeamTargetCandidates(grid: Grid, team: Team): TargetCandidate
   }
 
   return characters
-}
-
-/**
- * Get all opposing team characters for a given team
- */
-export function getOpposingCharacters(grid: Grid, team: Team): TargetCandidate[] {
-  return getTeamTargetCandidates(grid, getOpposingTeam(team))
 }
 
 /**

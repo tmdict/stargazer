@@ -47,24 +47,16 @@ export function useToast() {
     }
   }
 
-  const clear = () => {
-    state.toasts.splice(0)
-  }
-
   // Convenience methods
   const success = (message: string, duration?: number) => show(message, 'success', duration)
 
   const error = (message: string, duration?: number) => show(message, 'error', duration)
 
-  const info = (message: string, duration?: number) => show(message, 'info', duration)
-
   return {
     toasts: state.toasts,
     show,
     remove,
-    clear,
     success,
     error,
-    info,
   }
 }

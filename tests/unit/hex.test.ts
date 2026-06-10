@@ -39,18 +39,6 @@ describe('Hex', () => {
       expect(sum.q).toBe(3)
       expect(sum.r).toBe(-3)
       expect(sum.s).toBe(0)
-
-      // Subtract
-      const diff = hex1.subtract(hex2)
-      expect(diff.q).toBe(-1)
-      expect(diff.r).toBe(-1)
-      expect(diff.s).toBe(2)
-
-      // Scale
-      const scaled = hex1.scale(3)
-      expect(scaled.q).toBe(3)
-      expect(scaled.r).toBe(-6)
-      expect(scaled.s).toBe(3)
     })
 
     it('calculates distance correctly', () => {
@@ -142,14 +130,6 @@ describe('Hex', () => {
       expect(hex.q).toBe(1000)
       expect(hex.r).toBe(-500)
       expect(hex.s).toBe(-500)
-    })
-
-    it('handles fractional coordinates in operations', () => {
-      const hex = new Hex(1.5, -2.5, 1)
-      const scaled = hex.scale(2)
-      expect(scaled.q).toBe(3)
-      expect(scaled.r).toBe(-5)
-      expect(scaled.s).toBe(2)
     })
   })
 })

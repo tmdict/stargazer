@@ -36,10 +36,6 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     }
   }
 
-  const applyAllHexStates = (state: State) => {
-    resetAllHexesToState(state)
-  }
-
   const resetToCurrentMap = () => {
     // Get the current map configuration
     const mapConfig = gridStore.getCurrentMapConfig()
@@ -68,7 +64,7 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
     isColorInverted,
     // Actions
     setHexState,
-    applyAllHexStates,
+    resetAllHexesToState,
     resetToCurrentMap,
     toggleColorInvert,
   }
