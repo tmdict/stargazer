@@ -5,6 +5,7 @@ import {
   executePlaceCharacter,
   performPlace,
 } from '@/lib/characters/place'
+import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 // Import hasSkill directly for mocking
 import { hasSkill, SkillManager } from '@/lib/skills/skill'
@@ -15,6 +16,7 @@ import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 // Mock hasSkill to control skill behavior
 vi.mock('@/lib/skills/skill', () => ({
   hasSkill: vi.fn(),
+  hasCompanionSkill: vi.fn(),
   SkillManager: vi.fn(),
 }))
 
@@ -35,6 +37,7 @@ describe('place.ts', () => {
       activateCharacterSkill: vi.fn().mockReturnValue(true),
       deactivateCharacterSkill: vi.fn(),
       updateActiveSkills: vi.fn(),
+      hasActiveSkill: vi.fn().mockReturnValue(false),
     } as unknown as SkillManager
 
     // Set skillManager on grid for some tests
@@ -67,19 +70,19 @@ describe('place.ts', () => {
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
     })
 
-    it('should replace existing character on occupied tile', () => {
-      // First placement
+    it('should reject placement on an occupied tile', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
 
-      // Second placement replaces first
+      // The atomic primitive never displaces an existing unit;
+      // replacement is the skill-aware composite in executePlaceCharacter
       const result = performPlace(grid, 1, 200, Team.ALLY)
 
-      expect(result).toBe(true)
+      expect(result).toBe(false)
       const tile = grid.getTileById(1)
-      expect(tile.characterId).toBe(200)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+      expect(tile.characterId).toBe(100)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(false)
     })
 
     it('should reject invalid character ID', () => {
@@ -138,29 +141,16 @@ describe('place.ts', () => {
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
     })
 
-    it('should handle skipCacheInvalidation parameter', () => {
-      // Just verify the parameter is accepted without testing cache internals
-      const result1 = performPlace(grid, 1, 100, Team.ALLY, false)
-      expect(result1).toBe(true)
-
-      const result2 = performPlace(grid, 2, 200, Team.ALLY, true)
-      expect(result2).toBe(true)
-    })
-
     it('should handle occupied tile with missing team gracefully', () => {
       // Manually create invalid state
       const tile = grid.getTileById(1)
       tile.characterId = 999
       tile.team = undefined
 
-      // Should log error and fail
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const result = performPlace(grid, 1, 100, Team.ALLY)
 
       expect(result).toBe(false)
-      expect(consoleSpy).toHaveBeenCalledWith('Tile has characterId 999 but no team')
-
-      consoleSpy.mockRestore()
+      expect(tile.characterId).toBe(999)
     })
   })
 
@@ -192,6 +182,60 @@ describe('place.ts', () => {
       expect(result).toBe(false)
       const tile = grid.getTileById(1)
       expect(tile.characterId).toBeUndefined()
+    })
+
+    it('should replace an occupant with full skill cleanup', () => {
+      performPlace(grid, 1, 100, Team.ALLY)
+      skillManager.hasActiveSkill = vi.fn().mockImplementation((id: number) => id === 100)
+
+      const result = executePlaceCharacter(grid, skillManager, 1, 200, Team.ALLY)
+
+      expect(result).toBe(true)
+      expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
+      expect(grid.getTileById(1).characterId).toBe(200)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+    })
+
+    it('should restore the occupant when the new character skill activation fails', () => {
+      performPlace(grid, 1, 100, Team.ALLY)
+      skillManager.hasActiveSkill = vi.fn().mockImplementation((id: number) => id === 100)
+      vi.mocked(hasSkill).mockReturnValue(true)
+      skillManager.activateCharacterSkill = vi.fn().mockImplementation((id: number) => id !== 200)
+
+      const result = executePlaceCharacter(grid, skillManager, 1, 200, Team.ALLY)
+
+      expect(result).toBe(false)
+      // Occupant fully restored: tile, team membership, skill reactivated
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(false)
+      expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
+    })
+
+    it('should cascade a companion occupant to its main character', () => {
+      const mainId = 100
+      const companionId = grid.companionIdOffset + mainId
+      performPlace(grid, 1, mainId, Team.ALLY)
+      performPlace(grid, 2, companionId, Team.ALLY)
+      grid.companionLinks.set(`${mainId}-${Team.ALLY}`, new Set([companionId]))
+      skillManager.hasActiveSkill = vi.fn().mockImplementation((id: number) => id === mainId)
+      // Mirror the real teardown: deactivating the main removes its companion
+      skillManager.deactivateCharacterSkill = vi.fn().mockImplementation(() => {
+        performRemove(grid, 2)
+      })
+
+      const result = executePlaceCharacter(grid, skillManager, 2, 300, Team.ALLY)
+
+      expect(result).toBe(true)
+      // Deactivation is anchored on the main character, not the companion tile
+      expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(mainId, 1, Team.ALLY, grid)
+      // Main and companion both gone; new character sits on the companion's tile
+      expect(grid.getTileById(1).characterId).toBeUndefined()
+      expect(grid.getTileById(2).characterId).toBe(300)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(mainId)).toBe(false)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(companionId)).toBe(false)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(300)).toBe(true)
     })
 
     it('should rollback on skill activation failure', () => {

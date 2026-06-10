@@ -107,16 +107,18 @@ describe('move.ts', () => {
       expect(grid.getTileById(5).team).toBe(Team.ENEMY)
     })
 
-    it('should replace existing character on destination', () => {
+    it('should reject move onto an occupied destination', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, 200, Team.ALLY)
 
+      // Occupied destinations are swap territory; a move never displaces a unit
       const result = executeMoveCharacter(grid, skillManager, 1, 2, 100)
 
-      expect(result).toBe(true)
-      expect(grid.getTileById(2).characterId).toBe(100)
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(2).characterId).toBe(200)
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(false)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
     })
 
     it('should update skill manager after successful move', () => {
@@ -190,6 +192,12 @@ describe('move.ts', () => {
       // Character should remain at original position
       expect(grid.getTileById(1).characterId).toBe(100)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
+      // The destination must be fully vacated — no duplicate left behind
+      expect(grid.getTileById(4).characterId).toBeUndefined()
+      expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
+      // Team membership restored: on the original team only
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(false)
     })
 
     it('should restore skill on rollback', () => {
@@ -261,18 +269,20 @@ describe('move.ts', () => {
   })
 
   describe('Transaction and rollback behavior', () => {
-    it('should handle transaction failure in performMove', () => {
+    it('should roll back cleanly when the destination is occupied', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       // Place another character at destination
       performPlace(grid, 2, 200, Team.ALLY)
 
-      // Move should succeed by replacing the character at destination
+      // performMove's place step fails on the occupied tile; its rollback
+      // restores the character at the origin
       const result = executeMoveCharacter(grid, skillManager, 1, 2, 100)
 
-      expect(result).toBe(true)
-      expect(grid.getTileById(2).characterId).toBe(100)
-      // Character 200 should be removed from team
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(false)
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(2).characterId).toBe(200)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
     })
 
     it('should handle complex move sequences', () => {
@@ -342,18 +352,18 @@ describe('move.ts', () => {
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
     })
 
-    it('should handle move to occupied tile of different team', () => {
+    it('should reject move to occupied tile of different team', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 4, 200, Team.ENEMY)
 
-      // Move ally to occupied enemy tile (should replace)
+      // Occupied destinations are swap territory, cross-team included
       const result = executeMoveCharacter(grid, skillManager, 1, 4, 100)
 
-      expect(result).toBe(true)
-      expect(grid.getTileById(4).characterId).toBe(100)
-      expect(grid.getTileById(4).team).toBe(Team.ENEMY)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(false)
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(4).characterId).toBe(200)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
     })
 
     it('should handle character with no team gracefully', () => {

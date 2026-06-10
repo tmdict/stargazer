@@ -57,7 +57,7 @@ Separates spatial operations (Grid) from entity management (Characters folder). 
 
 ### Pathfinding System
 
-Pure functional algorithms (A\* and BFS) for movement calculation and target selection. Features LRU caching and deterministic tie-breaking for consistent gameplay.
+Pure functional algorithms (A\* and BFS) for movement calculation and target selection, with deterministic tie-breaking for consistent gameplay. Results are memoized by Vue computed properties in the pathfinding store, recomputing only when relevant grid state changes.
 
 ### Skill System
 
@@ -117,7 +117,7 @@ Pure TypeScript game logic, completely framework-agnostic. Can be tested in isol
   - `place.ts`, `remove.ts`, `move.ts`, `swap.ts`: Complex operations with skills
   - `companion.ts`: Companion system helpers
   - `transaction.ts`: Atomic operation utilities
-- `Pathfinding`: A\* and BFS algorithms with caching
+- `Pathfinding`: A\* and BFS algorithms
 - `Skills`: Ability system with visual effects
 
 ### Content Layer (`/src/content/`)
@@ -176,8 +176,7 @@ Ensures atomic operations - all succeed or all rollback.
 
 ## Performance Optimizations
 
-- **LRU Caching**: Pathfinding results cached to avoid recalculation
-- **Cache Invalidation Batching**: Transaction-based operations trigger single cache clear instead of multiple
+- **Reactive Memoization**: Pathfinding target maps are Vue computed properties, recomputing only when the grid state they read changes
 - **Lazy Evaluation**: Computed properties calculate only when needed
 - **Granular Reactive State**: Character store uses separate computed properties to minimize unnecessary recalculations
 - **Layer Independence**: Each rendering layer updates separately

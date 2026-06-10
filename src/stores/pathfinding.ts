@@ -16,12 +16,6 @@ import { useGameDataStore } from './gameData'
 import { useGridStore } from './grid'
 
 export const usePathfindingStore = defineStore('pathfinding', () => {
-  /*
-   * Cache Configuration
-   */
-  // Set to false to disable all pathfinding caching across the application
-  const ENABLE_CACHE = true
-
   // Store instances created once at store level
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
@@ -39,7 +33,8 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
     return ranges
   }
 
-  // Lazy evaluation for expensive computations - only compute when accessed
+  // Computed properties memoize these maps: they recompute only when the reactive
+  // grid state they read (placements, tile states, ranges) actually changes.
   const closestEnemyMap = computed(() => {
     const tilesWithCharacters = characterStore.getTilesWithCharacters()
     const characterRanges = buildUnitRanges(tilesWithCharacters)
@@ -48,8 +43,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
       tilesWithCharacters,
       Team.ALLY,
       Team.ENEMY,
-      characterRanges,
-      ENABLE_CACHE,
       (hex) => {
         try {
           return grid.getTile(hex)
@@ -57,6 +50,7 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
           return undefined
         }
       },
+      characterRanges,
     )
   })
 
@@ -68,8 +62,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
       tilesWithCharacters,
       Team.ENEMY,
       Team.ALLY,
-      characterRanges,
-      ENABLE_CACHE,
       (hex) => {
         try {
           return grid.getTile(hex)
@@ -77,6 +69,7 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
           return undefined
         }
       },
+      characterRanges,
     )
   })
 
