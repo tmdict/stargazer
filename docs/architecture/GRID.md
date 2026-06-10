@@ -221,14 +221,7 @@ Example swap operation:
 2. Place in swapped positions
 3. If any step fails, rollback all
 
-### Performance Optimizations
-
-The transaction system includes intelligent cache management:
-
-- **Batched Cache Invalidation**: All operations within a transaction share a single cache clear
-- **Skip Flags**: Operations pass `skipCacheInvalidation = true` to defer clearing
-- **Automatic Batching**: The `executeTransaction` method handles batching transparently
-- **Rollback Efficiency**: Failed transactions still only trigger one cache clear
+Rollbacks run in LIFO order so each rollback sees its dependencies still applied, and a throwing rollback doesn't halt the rest of the chain.
 
 ## Hexagonal Coordinates
 

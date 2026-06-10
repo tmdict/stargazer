@@ -305,13 +305,15 @@ export class SkillManager {
 
   // Update all active skills
   updateActiveSkills(grid: Grid): void {
-    for (const [key, info] of Object.entries(this.activeSkills)) {
+    for (const info of Object.values(this.activeSkills)) {
       const skill = getCharacterSkill(info.characterId)
 
       const currentHexId = findCharacterHex(grid, info.characterId, info.team)
       if (currentHexId === null) {
-        // Character no longer on grid, deactivate skill
-        delete this.activeSkills[key]
+        // Character vanished without going through removal — run full
+        // deactivation so modifiers, companions, and team-size changes are
+        // cleaned up rather than leaked
+        this.deactivateCharacterSkill(info.characterId, info.hexId, info.team, grid)
         continue
       }
 

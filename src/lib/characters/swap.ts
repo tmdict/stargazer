@@ -100,25 +100,25 @@ function performSwap(
     // Operations to execute
     [
       () => {
-        return performRemove(grid, fromHexId, true)
+        return performRemove(grid, fromHexId)
       },
       () => {
-        return performRemove(grid, toHexId, true)
+        return performRemove(grid, toHexId)
       },
       () => {
-        return performPlace(grid, fromHexId, toChar, toCharDestTeam, true)
+        return performPlace(grid, fromHexId, toChar, toCharDestTeam)
       },
       () => {
-        return performPlace(grid, toHexId, fromChar, fromCharDestTeam, true)
+        return performPlace(grid, toHexId, fromChar, fromCharDestTeam)
       },
     ],
     // Rollback operations
     [
       () => {
-        performPlace(grid, fromHexId, fromChar, fromCharOriginalTeam, true)
+        performPlace(grid, fromHexId, fromChar, fromCharOriginalTeam)
       },
       () => {
-        performPlace(grid, toHexId, toChar, toCharOriginalTeam, true)
+        performPlace(grid, toHexId, toChar, toCharOriginalTeam)
       },
     ],
   )
