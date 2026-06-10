@@ -103,13 +103,13 @@ export function restoreCompanions(
       const currentHexId = findCharacterHex(grid, companionId, team)
       if (currentHexId !== null && currentHexId !== originalHexId) {
         // Remove from current position
-        if (!performRemove(grid, currentHexId, true)) {
+        if (!performRemove(grid, currentHexId)) {
           console.warn(
             `Failed to remove companion ${companionId} from hex ${currentHexId} during restoration`,
           )
         }
         // Place at original position
-        performPlace(grid, originalHexId, companionId, team, true)
+        performPlace(grid, originalHexId, companionId, team)
         // Re-add color modifier (use companion color for companions)
         const skill = getCharacterSkill(mainCharId)
         if (skill?.companionColorModifier) {

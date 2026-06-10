@@ -1,6 +1,5 @@
 import type { GridTile } from './grid'
 import { Hex } from './hex'
-import { generateGridCacheKey, generatePathCacheKey, MemoCache } from './memoization'
 import { PriorityQueue } from './priorityQueue'
 import { areHexesInSameDiagonalRow } from './types/grid'
 import { State } from './types/state'
@@ -13,12 +12,6 @@ interface AStarNode {
   hCost: number // Heuristic cost estimate to goal
   fCost: number // Total cost (gCost + hCost)
   parent: AStarNode | null
-}
-
-interface DistanceResult {
-  movementDistance: number
-  canReach: boolean
-  directDistance: number
 }
 
 interface RangedDistanceResult {
@@ -37,67 +30,6 @@ interface TargetInfo {
   allyHexId?: number
   distance: number
 }
-
-/*
- * Caching System
- */
-
-/*
- * Cache management for pathfinding operations.
- */
-export class PathfindingCache {
-  private pathCache = new MemoCache<string, Hex[] | null>(500)
-  private effectiveDistanceCache = new MemoCache<string, DistanceResult>(500)
-  private closestEnemyCache = new MemoCache<string, Map<number, TargetInfo>>(100)
-  private closestAllyCache = new MemoCache<string, Map<number, TargetInfo>>(100)
-
-  // Path cache operations
-  getPath(key: string): Hex[] | null {
-    return this.pathCache.get(key) ?? null
-  }
-
-  setPath(key: string, value: Hex[] | null): void {
-    this.pathCache.set(key, value)
-  }
-
-  // Effective distance cache operations
-  getEffectiveDistance(key: string): DistanceResult | null {
-    return this.effectiveDistanceCache.get(key) ?? null
-  }
-
-  setEffectiveDistance(key: string, value: DistanceResult): void {
-    this.effectiveDistanceCache.set(key, value)
-  }
-
-  // Closest enemy cache operations
-  getClosestEnemyMap(key: string): Map<number, TargetInfo> | null {
-    return this.closestEnemyCache.get(key) ?? null
-  }
-
-  setClosestEnemyMap(key: string, value: Map<number, TargetInfo>): void {
-    this.closestEnemyCache.set(key, value)
-  }
-
-  // Closest ally cache operations
-  getClosestAllyMap(key: string): Map<number, TargetInfo> | null {
-    return this.closestAllyCache.get(key) ?? null
-  }
-
-  setClosestAllyMap(key: string, value: Map<number, TargetInfo>): void {
-    this.closestAllyCache.set(key, value)
-  }
-
-  // Cache management operations
-  clear(): void {
-    this.pathCache.clear()
-    this.effectiveDistanceCache.clear()
-    this.closestEnemyCache.clear()
-    this.closestAllyCache.clear()
-  }
-}
-
-// Default cache instance for module-level operations
-const defaultCache = new PathfindingCache()
 
 /*
  * Core Pathfinding Algorithms
@@ -224,70 +156,6 @@ export function findPathDistance(
 ): number | null {
   const path = findPathAStar(start, goal, getTile, canTraverse)
   return path ? path.length - 1 : null // Subtract 1 to get number of steps
-}
-
-/*
- * Calculate effective movement distance considering character range.
- * Returns movement tiles needed (0 if already in range).
- */
-export function calculateEffectiveDistance(
-  start: Hex,
-  goal: Hex,
-  range: number,
-  getTile: (hex: Hex) => GridTile | undefined,
-  canTraverse: (tile: GridTile) => boolean,
-  cachingEnabled: boolean = false,
-): DistanceResult {
-  // Check cache first if caching is enabled
-  if (cachingEnabled) {
-    const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-    const cached = defaultCache.getEffectiveDistance(cacheKey)
-    if (cached) {
-      return cached
-    }
-  }
-
-  // Calculate direct hex distance (ignoring obstacles)
-  const directDistance = start.distance(goal)
-
-  // If target is within range, no movement needed
-  if (directDistance <= range) {
-    const result = { movementDistance: 0, canReach: true, directDistance }
-    if (cachingEnabled) {
-      const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-      defaultCache.setEffectiveDistance(cacheKey, result)
-    }
-    return result
-  }
-
-  // Need to move closer - use A* to find optimal path
-  const path = findPathAStar(start, goal, getTile, canTraverse)
-
-  if (!path) {
-    // No path exists, cannot reach target
-    const result = { movementDistance: Infinity, canReach: false, directDistance }
-    if (cachingEnabled) {
-      const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-      defaultCache.setEffectiveDistance(cacheKey, result)
-    }
-    return result
-  }
-
-  // Calculate how many tiles we need to move to get within range
-  const pathLength = path.length - 1 // Subtract 1 because path includes start position
-  const movementNeeded = Math.max(0, pathLength - range)
-
-  const result = {
-    movementDistance: movementNeeded,
-    canReach: true,
-    directDistance,
-  }
-
-  if (cachingEnabled) {
-    const cacheKey = generatePathCacheKey(start.getId(), goal.getId(), range)
-    defaultCache.setEffectiveDistance(cacheKey, result)
-  }
-  return result
 }
 
 /*
@@ -550,35 +418,14 @@ export function getClosestTargetMap(
   tilesWithCharacters: GridTile[],
   sourceTeam: Team,
   targetTeam: Team,
+  getTile: (hex: Hex) => GridTile | undefined,
   characterRanges: Map<number, number> = new Map(),
-  cachingEnabled: boolean = true,
-  getTile?: (hex: Hex) => GridTile | undefined,
 ): Map<number, TargetInfo> {
-  // Check cache first if caching is enabled
-  if (cachingEnabled) {
-    const cacheKey = generateGridCacheKey(tilesWithCharacters, characterRanges)
-    const cached =
-      sourceTeam === Team.ALLY
-        ? defaultCache.getClosestEnemyMap(cacheKey)
-        : defaultCache.getClosestAllyMap(cacheKey)
-    if (cached) {
-      return cached
-    }
-  }
-
   const result = new Map<number, TargetInfo>()
 
   // Get tiles for source and target teams
   const sourceTiles = tilesWithCharacters.filter((tile) => tile.team === sourceTeam)
   const targetTiles = tilesWithCharacters.filter((tile) => tile.team === targetTeam)
-
-  // getTile helper that handles out-of-bounds hexes
-  const getTileHelper =
-    getTile ||
-    ((hex: Hex) => {
-      const tile = tilesWithCharacters.find((t) => t.hex.equals(hex))
-      return tile
-    })
 
   // For each source character, find closest target using shared pathfinding logic
   for (const sourceTile of sourceTiles) {
@@ -587,7 +434,7 @@ export function getClosestTargetMap(
       sourceTile,
       targetTiles,
       range,
-      getTileHelper,
+      getTile,
       defaultCanTraverse,
     )
 
@@ -607,25 +454,5 @@ export function getClosestTargetMap(
     }
   }
 
-  // Cache the result if caching is enabled
-  if (cachingEnabled) {
-    const cacheKey = generateGridCacheKey(tilesWithCharacters, characterRanges)
-    if (sourceTeam === Team.ALLY) {
-      defaultCache.setClosestEnemyMap(cacheKey, result)
-    } else {
-      defaultCache.setClosestAllyMap(cacheKey, result)
-    }
-  }
   return result
-}
-
-/*
- * Cache Management
- */
-
-/*
- * Clear all pathfinding caches.
- */
-export function clearPathfindingCache(): void {
-  defaultCache.clear()
 }

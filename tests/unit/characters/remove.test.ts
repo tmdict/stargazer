@@ -91,18 +91,6 @@ describe('remove.ts', () => {
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
     })
 
-    it('should handle skipCacheInvalidation parameter', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      // Just verify it accepts the parameter without error
-      const result1 = performRemove(grid, 1, false)
-      expect(result1).toBe(true)
-
-      performPlace(grid, 2, 200, Team.ALLY)
-      const result2 = performRemove(grid, 2, true)
-      expect(result2).toBe(true)
-    })
-
     it('should handle tile with missing team gracefully', () => {
       // Manually create invalid state
       const tile = grid.getTileById(1)
@@ -201,7 +189,7 @@ describe('remove.ts', () => {
 
       // Mock skill deactivation to also remove the character
       skillManager.deactivateCharacterSkill = vi.fn().mockImplementation(() => {
-        performRemove(grid, 1, true)
+        performRemove(grid, 1)
       })
 
       const result = executeRemoveCharacter(grid, skillManager, 1)

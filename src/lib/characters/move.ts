@@ -87,10 +87,10 @@ function performMove(
 ): boolean {
   return executeTransaction(
     [
-      () => performRemove(grid, fromHexId, true),
-      () => performPlace(grid, toHexId, characterId, targetTeam, true),
+      () => performRemove(grid, fromHexId),
+      () => performPlace(grid, toHexId, characterId, targetTeam),
     ],
-    [() => performPlace(grid, fromHexId, characterId, originalTeam, true)],
+    [() => performPlace(grid, fromHexId, characterId, originalTeam)],
   )
 }
 
@@ -106,6 +106,7 @@ function performCrossTeamMove(
 ): boolean {
   let companionPositions: ReturnType<typeof storeCompanionPositions> = []
   let skillDeactivated = false
+  let movePerformed = false
 
   return executeTransaction(
     [
@@ -117,14 +118,21 @@ function performCrossTeamMove(
         return true
       },
       // Step 2: Execute the move
-      () => performMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam),
+      () => {
+        movePerformed = performMove(grid, fromHexId, toHexId, characterId, targetTeam, originalTeam)
+        return movePerformed
+      },
       // Step 3: Activate skill at new position with new team
       () => skillManager.activateCharacterSkill(characterId, toHexId, targetTeam, grid),
     ],
     [
-      // Rollback
+      // Rollback: first reverse the move if it was performed, then reactivate
+      // the original skill. If the move never happened (or failed), performMove's
+      // own transaction already restored the character at fromHexId.
       () => {
-        performPlace(grid, fromHexId, characterId, originalTeam, true)
+        if (movePerformed) {
+          performMove(grid, toHexId, fromHexId, characterId, originalTeam, targetTeam)
+        }
         if (skillDeactivated && hasSkill(characterId)) {
           skillManager.activateCharacterSkill(characterId, fromHexId, originalTeam, grid)
           if (hasCompanionSkill(characterId)) {

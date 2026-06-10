@@ -1,19 +1,26 @@
 import type { Grid } from '../grid'
-import { hasSkill, SkillManager } from '../skills/skill'
+import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import {
   canPlaceCharacterOnTeam,
   canPlaceCharacterOnTile,
+  findCharacterHex,
   getAllAvailableTilesForTeam,
+  getCharacter,
+  getCharacterTeam,
   getTeamCharacters,
   hasCharacter,
-  removeCharacterFromTeam,
 } from './character'
-import { isCompanionId } from './companion'
+import {
+  getMainCharacterId,
+  isCompanionId,
+  restoreCompanions,
+  storeCompanionPositions,
+} from './companion'
 import { isPhantimalId } from './phantimal'
 import { performRemove } from './remove'
-import { executeTransaction, handleCacheInvalidation } from './transaction'
+import { executeTransaction } from './transaction'
 
 // High-level operations
 
@@ -29,27 +36,74 @@ export function executePlaceCharacter(
     return false
   }
 
+  // Placing onto an occupied tile replaces the occupant, with full skill
+  // cleanup. The unit to remove is anchored on the main character: a companion
+  // occupant cascades to its main (removing either removes the whole unit,
+  // matching executeRemoveCharacter's semantics).
+  const occupantId = getCharacter(grid, hexId)
+  const occupantTeam = getCharacterTeam(grid, hexId)
+  let anchorId = occupantId
+  let anchorHex = hexId
+  if (occupantId !== undefined && occupantTeam !== undefined && isCompanionId(grid, occupantId)) {
+    const mainCharId = getMainCharacterId(grid, occupantId)
+    const mainHexId = findCharacterHex(grid, mainCharId, occupantTeam)
+    if (mainHexId !== null) {
+      anchorId = mainCharId
+      anchorHex = mainHexId
+    }
+  }
+
+  let occupantCompanions: ReturnType<typeof storeCompanionPositions> = []
+  let occupantSkillDeactivated = false
+  let occupantRemoved = false
   let placed = false
 
   const result = executeTransaction(
     [
-      // Place character
+      // Step 1: Clear the occupant (if any) with full skill cleanup
       () => {
-        placed = performPlace(grid, hexId, characterId, team, true)
+        if (anchorId === undefined || occupantTeam === undefined) return true
+        occupantCompanions = storeCompanionPositions(grid, anchorId, occupantTeam)
+        if (skillManager.hasActiveSkill(anchorId, occupantTeam)) {
+          skillManager.deactivateCharacterSkill(anchorId, anchorHex, occupantTeam, grid)
+          occupantSkillDeactivated = true
+        }
+        if (hasCharacter(grid, anchorHex)) {
+          occupantRemoved = performRemove(grid, anchorHex)
+          if (!occupantRemoved) return false
+        }
+        // The target tile must be free now (a companion occupant is removed
+        // by its main's skill deactivation)
+        return !hasCharacter(grid, hexId)
+      },
+      // Step 2: Place character
+      () => {
+        placed = performPlace(grid, hexId, characterId, team)
         return placed
       },
-      // Activate skill if character has one
+      // Step 3: Activate skill if character has one
       () => {
         if (!hasSkill(characterId)) return true
         return skillManager.activateCharacterSkill(characterId, hexId, team, grid)
       },
     ],
     [
-      // Rollback: remove character if it was placed
+      // Rollback: remove the new character first, then restore the occupant —
+      // re-place, re-activate its skill, and return companions to their tiles
       () => {
         if (placed && hasCharacter(grid, hexId)) {
-          if (!performRemove(grid, hexId, true)) {
+          if (!performRemove(grid, hexId)) {
             console.warn(`Failed to rollback character placement at hex ${hexId}`)
+          }
+        }
+        if (anchorId === undefined || occupantTeam === undefined) return
+        if (occupantRemoved) {
+          performPlace(grid, anchorHex, anchorId, occupantTeam)
+        }
+        if (occupantSkillDeactivated) {
+          skillManager.activateCharacterSkill(anchorId, anchorHex, occupantTeam, grid)
+          if (hasCompanionSkill(anchorId)) {
+            restoreCompanions(grid, skillManager, anchorId, occupantCompanions)
           }
         }
       },
@@ -98,7 +152,7 @@ export function executeAutoPlaceCharacter(
   const hexId = selectedTile.hex.getId()
 
   // Place character
-  const placed = performPlace(grid, hexId, characterId, team, true)
+  const placed = performPlace(grid, hexId, characterId, team)
   if (!placed) return false
 
   // Activate skill if character has one
@@ -107,7 +161,7 @@ export function executeAutoPlaceCharacter(
 
     if (!activated) {
       // Clean up on skill failure
-      if (!performRemove(grid, hexId, true)) {
+      if (!performRemove(grid, hexId)) {
         console.warn(
           `Failed to remove character ${characterId} from hex ${hexId} after skill activation failure`,
         )
@@ -132,7 +186,6 @@ export function performPlace(
   hexId: number,
   characterId: number,
   team: Team = Team.ALLY,
-  skipCacheInvalidation: boolean = false,
 ): boolean {
   // Input validation
   if (!Number.isInteger(characterId) || characterId <= 0) return false
@@ -142,13 +195,9 @@ export function performPlace(
 
   const tile = grid.getTileById(hexId)
 
-  if (tile.characterId) {
-    if (!tile.team) {
-      console.error(`Tile has characterId ${tile.characterId} but no team`)
-      return false
-    }
-    removeCharacterFromTeam(grid, tile.characterId, tile.team)
-  }
+  // The atomic primitive never displaces an existing unit: replacement is the
+  // skill-aware composite in executePlaceCharacter, swaps clear both tiles first
+  if (tile.characterId) return false
 
   // Set character on tile (merged from setCharacterOnTile)
   tile.characterId = characterId
@@ -158,9 +207,6 @@ export function performPlace(
   if (!isPhantimalId(characterId)) {
     getTeamCharacters(grid, team).add(characterId)
   }
-
-  // Handle cache invalidation with batching support
-  handleCacheInvalidation(skipCacheInvalidation, grid.skillManager, grid)
 
   return true
 }

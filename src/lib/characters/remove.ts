@@ -13,7 +13,7 @@ import {
 } from './character'
 import { getMainCharacterId, isCompanionId } from './companion'
 import { performPlace } from './place'
-import { executeTransaction, handleCacheInvalidation } from './transaction'
+import { executeTransaction } from './transaction'
 
 // High-level operations
 
@@ -41,7 +41,7 @@ export function executeRemoveCharacter(
       return executeRemoveCharacter(grid, skillManager, mainHexId)
     } else {
       // Main character not found, just remove the companion directly
-      return performRemove(grid, hexId, true)
+      return performRemove(grid, hexId)
     }
   }
 
@@ -57,7 +57,7 @@ export function executeRemoveCharacter(
   // Remove character(s) - skill may have already removed them
   let removed = true
   if (hasCharacter(grid, hexId)) {
-    removed = performRemove(grid, hexId, true)
+    removed = performRemove(grid, hexId)
   }
 
   // Update all active skills to recalculate targets after removal
@@ -77,11 +77,7 @@ export function executeClearAllCharacters(grid: Grid, skillManager: SkillManager
 // Atomic operations
 
 // Performs atomic character removal
-export function performRemove(
-  grid: Grid,
-  hexId: number,
-  skipCacheInvalidation: boolean = false,
-): boolean {
+export function performRemove(grid: Grid, hexId: number): boolean {
   const tile = grid.getTileById(hexId)
   if (tile.characterId) {
     if (!tile.team) {
@@ -96,8 +92,6 @@ export function performRemove(
     // Clear character from tile
     clearCharacterFromTile(tile)
 
-    // Handle cache invalidation with batching support
-    handleCacheInvalidation(skipCacheInvalidation, grid.skillManager, grid)
     return true
   }
   return false
@@ -114,7 +108,6 @@ export function performClearAll(grid: Grid): boolean {
 
   // If no characters to clear, return success immediately
   if (currentPlacements.length === 0) {
-    handleCacheInvalidation(false, grid.skillManager, grid)
     return true
   }
 
@@ -138,7 +131,7 @@ export function performClearAll(grid: Grid): boolean {
     [
       () => {
         currentPlacements.forEach((placement) => {
-          performPlace(grid, placement.hexId, placement.characterId, placement.team, true)
+          performPlace(grid, placement.hexId, placement.characterId, placement.team)
         })
       },
     ],

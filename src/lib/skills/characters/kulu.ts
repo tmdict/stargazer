@@ -56,12 +56,12 @@ function removeCharacterFromAffectedTile(
         skillManager.deactivateCharacterSkill(mainCharId, mainHexId, charTeam, grid)
       }
       if (hasCharacter(grid, mainHexId)) {
-        performRemove(grid, mainHexId, true)
+        performRemove(grid, mainHexId)
       }
     }
     // Companion may already be removed by skill deactivation; clean up if not
     if (hasCharacter(grid, hexId)) {
-      performRemove(grid, hexId, true)
+      performRemove(grid, hexId)
     }
     return
   }
@@ -71,7 +71,7 @@ function removeCharacterFromAffectedTile(
     skillManager.deactivateCharacterSkill(charId, hexId, charTeam, grid)
   }
   if (hasCharacter(grid, hexId)) {
-    performRemove(grid, hexId, true)
+    performRemove(grid, hexId)
   }
 }
 
@@ -143,8 +143,8 @@ registerSkill({
       const randomIndex = Math.floor(Math.random() * availableTiles.length)
       const newHexId = availableTiles[randomIndex]!.hex.getId()
 
-      performRemove(grid, hexId, true)
-      performPlace(grid, newHexId, characterId, team, true)
+      performRemove(grid, hexId)
+      performPlace(grid, newHexId, characterId, team)
     }
   },
 

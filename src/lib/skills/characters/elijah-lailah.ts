@@ -52,7 +52,7 @@ registerSkill({
     }
 
     // Place the companion
-    const placed = performPlace(grid, companionHexId, companionId, team, true)
+    const placed = performPlace(grid, companionHexId, companionId, team)
     if (!placed) {
       // Rollback team size if placement failed
       if (!setMaxTeamSize(grid, team, currentSize)) {
@@ -89,7 +89,7 @@ registerSkill({
       const companionHex = findCharacterHex(grid, companionId, team)
       if (companionHex !== null) {
         skillManager.removeCharacterColorModifier(companionId, team)
-        if (!performRemove(grid, companionHex, true)) {
+        if (!performRemove(grid, companionHex)) {
           console.warn(
             `elijah-lailah: Failed to remove companion ${companionId} from hex ${companionHex}`,
           )

@@ -58,7 +58,7 @@ registerSkill({
         placedCompanions.forEach((placedId) => {
           const hexId = findCharacterHex(grid, placedId, team)
           if (hexId !== null) {
-            performRemove(grid, hexId, true)
+            performRemove(grid, hexId)
           }
         })
         // Rollback team size
@@ -69,13 +69,13 @@ registerSkill({
       const companionHexId = randomTile.hex.getId()
 
       // Place the companion
-      const placed = performPlace(grid, companionHexId, companionId, team, true)
+      const placed = performPlace(grid, companionHexId, companionId, team)
       if (!placed) {
         // Rollback previous placements
         placedCompanions.forEach((placedId) => {
           const hexId = findCharacterHex(grid, placedId, team)
           if (hexId !== null) {
-            performRemove(grid, hexId, true)
+            performRemove(grid, hexId)
           }
         })
         // Rollback team size
@@ -117,7 +117,7 @@ registerSkill({
       const companionHex = findCharacterHex(grid, companionId, team)
       if (companionHex !== null) {
         skillManager.removeCharacterImageModifier(companionId, team)
-        if (!performRemove(grid, companionHex, true)) {
+        if (!performRemove(grid, companionHex)) {
           console.warn(`zanie: Failed to remove turret ${companionId} from hex ${companionHex}`)
         }
       }

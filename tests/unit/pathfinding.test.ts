@@ -3,9 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import {
-  calculateEffectiveDistance,
   calculateRangedMovementDistance,
-  clearPathfindingCache,
   defaultCanTraverse,
   findClosestTarget,
   findPathAStar,
@@ -39,7 +37,6 @@ describe('pathfinding', () => {
 
   beforeEach(() => {
     grid = new Grid(TEST_GRID, TEST_ARENA)
-    clearPathfindingCache()
   })
 
   describe('findPathAStar', () => {
@@ -150,78 +147,6 @@ describe('pathfinding', () => {
       const distance = findPathDistance(start, goal, getTile, defaultCanTraverse)
 
       expect(distance).toBeNull()
-    })
-  })
-
-  describe('calculateEffectiveDistance', () => {
-    it('returns 0 when target is within range', () => {
-      const start = grid.getHexById(1)
-      const goal = grid.getHexById(2)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      const result = calculateEffectiveDistance(start, goal, 2, getTile, defaultCanTraverse)
-
-      expect(result.movementDistance).toBe(0)
-      expect(result.canReach).toBe(true)
-      expect(result.directDistance).toBe(1)
-    })
-
-    it('calculates movement needed to get within range', () => {
-      const start = grid.getHexById(1)
-      const goal = grid.getHexById(7)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      // Check actual direct distance first
-      const directDist = start.distance(goal)
-
-      const result = calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse)
-
-      // Movement is needed iff the goal is outside the range (1).
-      expect(result.movementDistance > 0).toBe(directDist > 1)
-      expect(result.canReach).toBe(true)
-    })
-
-    it('returns Infinity for unreachable targets', () => {
-      const start = grid.getHexById(1)
-      const goal = new Hex(100, -50, -50)
-      const getTile = () => undefined
-
-      const result = calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse)
-
-      expect(result.movementDistance).toBe(Infinity)
-      expect(result.canReach).toBe(false)
-    })
-
-    it('uses cache when enabled', () => {
-      const start = grid.getHexById(1)
-      const goal = grid.getHexById(2)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      // First call - not cached
-      const result1 = calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse, true)
-
-      // Second call - should use cache
-      const result2 = calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse, true)
-
-      expect(result1).toEqual(result2)
     })
   })
 
@@ -373,6 +298,14 @@ describe('pathfinding', () => {
   })
 
   describe('getClosestTargetMap', () => {
+    const makeGetTile = () => (hex: Hex) => {
+      try {
+        return grid.getTile(hex)
+      } catch {
+        return undefined
+      }
+    }
+
     it('creates map of closest enemies for ally team', () => {
       // Set up ally characters
       const ally1 = grid.getTileById(1)
@@ -393,7 +326,7 @@ describe('pathfinding', () => {
       enemy2.characterId = 101
 
       const tilesWithCharacters = [ally1, ally2, enemy1, enemy2]
-      const result = getClosestTargetMap(tilesWithCharacters, Team.ALLY, Team.ENEMY)
+      const result = getClosestTargetMap(tilesWithCharacters, Team.ALLY, Team.ENEMY, makeGetTile())
 
       expect(result.size).toBe(2) // Two allies
       expect(result.has(1)).toBe(true)
@@ -421,6 +354,7 @@ describe('pathfinding', () => {
         tilesWithCharacters,
         Team.ALLY,
         Team.ENEMY,
+        makeGetTile(),
         characterRanges,
       )
 
@@ -428,62 +362,6 @@ describe('pathfinding', () => {
       expect(allyTarget).toBeDefined()
       // With range 5, might need less movement
       expect(allyTarget!.distance).toBeGreaterThanOrEqual(0)
-    })
-
-    it('uses cache when enabled', () => {
-      const ally = grid.getTileById(1)
-      ally.team = Team.ALLY
-      ally.characterId = 1
-
-      const enemy = grid.getTileById(6)
-      enemy.team = Team.ENEMY
-      enemy.characterId = 100
-
-      const tilesWithCharacters = [ally, enemy]
-
-      // First call - not cached
-      const result1 = getClosestTargetMap(
-        tilesWithCharacters,
-        Team.ALLY,
-        Team.ENEMY,
-        new Map(),
-        true,
-      )
-
-      // Second call - should use cache
-      const result2 = getClosestTargetMap(
-        tilesWithCharacters,
-        Team.ALLY,
-        Team.ENEMY,
-        new Map(),
-        true,
-      )
-
-      expect(result1).toEqual(result2)
-    })
-  })
-
-  describe('cache management', () => {
-    it('clears cache correctly', () => {
-      const start = grid.getHexById(1)
-      const goal = grid.getHexById(2)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      // Cache a result
-      calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse, true)
-
-      // Clear cache
-      clearPathfindingCache()
-
-      // Next call should not use cache (but we can't directly test this)
-      const result = calculateEffectiveDistance(start, goal, 1, getTile, defaultCanTraverse, true)
-      expect(result).toBeDefined()
     })
   })
 })

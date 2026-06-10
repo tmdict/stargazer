@@ -6,9 +6,9 @@ The pathfinding system provides movement calculations, target selection, and dis
 
 ## Design Principles
 
-1. **Pure Functions**: All functions are side-effect free except module-level caching
+1. **Pure Functions**: All functions are side-effect free and stateless
 2. **Algorithm Specialization**: A\* for specific paths, BFS for closest targets
-3. **Performance First**: LRU caching, early termination, optimized data structures
+3. **Performance First**: Early termination and optimized data structures
 4. **Framework Agnostic**: Works with any grid via callback functions
 5. **Deterministic Behavior**: Consistent tie-breaking rules for predictable outcomes
 6. **Team Asymmetry**: Different targeting preferences based on attacking team
@@ -84,54 +84,25 @@ Combines BFS exploration with team-aware tie-breaking for consistent target sele
 
 ```typescript
 function getClosestTargetMap(
-  allies: Character[],
-  enemies: Character[],
-  gridData: GridData,
+  tilesWithCharacters: GridTile[],
+  sourceTeam: Team,
+  targetTeam: Team,
+  getTile: (hex: Hex) => GridTile | undefined,
+  characterRanges?: Map<number, number>,
 ): Map<number, TargetInfo>
 ```
 
-Processes all characters, returning optimal targets based on team and range.
+Processes all source-team characters, returning optimal targets based on team and range.
 
-## Caching System
+## Memoization Strategy
 
-### Multi-Level Caches
-
-- **Path Cache**: A\* path results
-- **Distance Cache**: BFS distance calculations
-- **Target Cache**: Closest target results
-
-### Cache Keys
-
-Combines position, range, and grid state into compact strings:
-
-```typescript
-const key = `${sourceId}-${targetId}-${range}-${gridHash}`
-```
-
-### Invalidation Strategy
-
-The cache invalidation system uses intelligent batching to minimize performance overhead:
-
-#### Batched Invalidation
-
-- **Transaction Batching**: Multiple character operations within a transaction trigger only ONE cache clear
-- **Automatic Batching**: The Grid's `executeTransaction` method automatically batches cache invalidations
-- **Manual Control**: Operations can pass `skipCacheInvalidation = true` to defer clearing
-
-#### When Cache is Cleared
-
-- **After Transactions**: Single clear after all operations complete
-- **On Rollback**: Single clear if transaction fails
-- **Direct Operations**: Immediate clear for non-transactional operations
-
-Call `clearPathfindingCache()` directly only for significant grid state changes outside of normal character operations.
+The library functions are pure and uncached: every call computes from the grid state it is given. Memoization lives one layer up, in the pathfinding store (`/src/stores/pathfinding.ts`), where `closestEnemyMap`/`closestAllyMap` are Vue `computed` properties. They recompute only when the reactive grid state they read — placements, tile states, character ranges — actually changes, so results can never go stale: any mutation that affects targeting (character operations, map-editor tile painting, map switches) invalidates them automatically through Vue's dependency tracking.
 
 ## Performance Characteristics
 
 - **A\* Complexity**: O(b^d) reduced by heuristic
 - **BFS Complexity**: O(V + E) for local exploration
-- **Cached Queries**: O(1) lookup time
-- **Memory Bounded**: LRU eviction prevents growth
+- **Recomputation Cost**: Bounded by the 45-tile board and unit count; recomputes only on relevant reactive changes
 
 ## Movement Calculations
 

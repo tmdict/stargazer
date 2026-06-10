@@ -1,10 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { SMALL_GRID, SMALL_OPEN_ARENA } from '../fixtures/grid'
+import { SMALL_GRID, SMALL_OPEN_ARENA, STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('skill', () => {
   let grid: Grid
@@ -226,6 +227,34 @@ describe('skill', () => {
 
         // Should not throw and should maintain empty state
         expect(skillManager.hasActiveSkill(999)).toBe(false)
+      })
+
+      it('runs full deactivation when a tracked character vanished from the grid', () => {
+        // Phraesto (50): companion skill — activation places a companion and
+        // raises the team size, so a leaked deactivation is observable
+        const bigGrid = new Grid(STANDARD_GRID, STANDARD_ARENA)
+        performPlace(bigGrid, 1, 50, Team.ALLY)
+        expect(skillManager.activateCharacterSkill(50, 1, Team.ALLY, bigGrid)).toBe(true)
+        const companionTile = bigGrid
+          .getAllTiles()
+          .find((t) => t.characterId === bigGrid.companionIdOffset + 50)
+        expect(companionTile).toBeDefined()
+        expect(bigGrid.maxTeamSizes.get(Team.ALLY)).toBe(6)
+
+        // Orphan the character: clear its tile without going through removal
+        const tile = bigGrid.getTileById(1)
+        tile.characterId = undefined
+        tile.team = undefined
+        tile.state = State.AVAILABLE_ALLY
+        bigGrid.teamCharacters.get(Team.ALLY)?.delete(50)
+
+        skillManager.updateActiveSkills(bigGrid)
+
+        // Tracking removed AND skill side effects cleaned up: companion gone,
+        // team size restored
+        expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(false)
+        expect(companionTile!.characterId).toBeUndefined()
+        expect(bigGrid.maxTeamSizes.get(Team.ALLY)).toBe(5)
       })
     })
 
