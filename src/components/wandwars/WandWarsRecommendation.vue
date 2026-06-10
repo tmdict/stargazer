@@ -93,6 +93,7 @@ const dataDepthLabel = computed(
           v-for="pair in (recommendation.breakdown.pairDetails as {
             teammate: string
             wins: number
+            losses: number
             total: number
           }[]) || []"
           :key="pair.teammate"
@@ -101,7 +102,7 @@ const dataDepthLabel = computed(
           <span class="breakdown-label">w/ {{ formatName(pair.teammate) }}</span>
           <span class="breakdown-value">
             <span class="pair-wins">{{ pair.wins }}W</span> /
-            <span class="pair-losses">{{ pair.total - pair.wins }}L</span>
+            <span class="pair-losses">{{ pair.losses }}L</span>
           </span>
         </div>
       </template>

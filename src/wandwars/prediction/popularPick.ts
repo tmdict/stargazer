@@ -26,17 +26,19 @@ const CONTEXT_MIN_MATCHES = 3
 const BAYESIAN_PRIOR = 1.0
 
 /**
- * Compute pair win record: wins and total matches where candidate
- * and a specific teammate appeared on the same team.
+ * Compute pair win record: wins, losses, and total matches where candidate
+ * and a specific teammate appeared on the same team. Draws count toward
+ * total but are neither wins nor losses.
  */
 function pairRecord(
   candidate: string,
   teammate: string,
   matches: MatchResult[],
-): { wins: number; total: number; winRate: number } {
+): { wins: number; losses: number; total: number; winRate: number } {
   let weightedWins = 0
   let weightedTotal = 0
   let rawWins = 0
+  let rawLosses = 0
   let rawTotal = 0
 
   for (const match of matches) {
@@ -50,13 +52,15 @@ function pairRecord(
     if (won) {
       rawWins++
       weightedWins += match.weight
+    } else if (match.result !== 'draw') {
+      rawLosses++
     }
   }
 
   const winRate =
     weightedTotal > 0 ? (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR) : 0.5
 
-  return { wins: rawWins, total: rawTotal, winRate }
+  return { wins: rawWins, losses: rawLosses, total: rawTotal, winRate }
 }
 
 /**
@@ -158,17 +162,25 @@ function computePairScore(
   candidate: string,
   teammates: string[],
   matches: MatchResult[],
-): { score: number; pairDetails: { teammate: string; wins: number; total: number }[] } {
+): {
+  score: number
+  pairDetails: { teammate: string; wins: number; losses: number; total: number }[]
+} {
   if (teammates.length === 0) {
     return { score: 0.5, pairDetails: [] }
   }
 
-  const pairDetails: { teammate: string; wins: number; total: number }[] = []
+  const pairDetails: { teammate: string; wins: number; losses: number; total: number }[] = []
   let totalPairWinRate = 0
 
   for (const mate of teammates) {
     const record = pairRecord(candidate, mate, matches)
-    pairDetails.push({ teammate: mate, wins: record.wins, total: record.total })
+    pairDetails.push({
+      teammate: mate,
+      wins: record.wins,
+      losses: record.losses,
+      total: record.total,
+    })
     totalPairWinRate += record.winRate
   }
 

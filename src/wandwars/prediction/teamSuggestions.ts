@@ -1,10 +1,8 @@
 import { getAdaptiveAggregateWeights } from '../constants'
 import type { AnalysisData, MatchResult } from '../types'
-import { adaptiveMLModel, predictVsAverage as nnPredictVsAverage } from './adaptiveML'
-import { bradleyTerryModel, getCachedBradleyTerryFit, type BradleyTerryFit } from './bradleyTerry'
-import { compositeModel } from './composite'
+import { predictVsAverage as nnPredictVsAverage } from './adaptiveML'
+import { getCachedBradleyTerryFit, type BradleyTerryFit } from './bradleyTerry'
 import { NN_WEIGHTS } from './nnWeights'
-import { popularPickModel } from './popularPick'
 import { getAnalysisData, getMatchData } from './recommend'
 
 export interface TeamSuggestion {
@@ -68,12 +66,11 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
   return results
 }
 
-// ---- Per-model "team quality" scoring for the 1-teammate case ----
+// ---- Per-model "team quality" scoring for constructed suggestions ----
 // Each function returns a [0, 1] probability that [a, b, c] is a strong trio
-// against a generic opponent. Used only when we need to enumerate all
-// (i, j) pairs completing a single known teammate — `predictMatchup`
-// requires a specific opponent and `recommend` can't efficiently score all
-// 2-hero extensions at once.
+// against a generic opponent. All constructed suggestions are scored this way
+// so the displayed percentage is always probability-scale — `predictMatchup`
+// can't be used here because it requires a specific opponent.
 
 function bradleyTerryTeamQuality(
   team: [string, string, string],
@@ -143,46 +140,29 @@ function popularPickTeamQuality(team: [string, string, string], analysis: Analys
   return 0.4 * indiv + 0.6 * pairAvg
 }
 
-/**
- * Score candidates using all 4 models aggregated, for the 2-teammate case.
- * Each model scores all available heroes as the 3rd pick, then we aggregate.
- */
-function aggregateThirdPickScores(teammates: string[], available: string[]): Map<string, number> {
+// Blend the four models' team-quality estimates with the same adaptive
+// weights used for match predictions.
+function makeTeamQualityScorer(): (team: [string, string, string]) => number {
   const analysis = getAnalysisData()
   const matches = getMatchData()
   const weights = getAdaptiveAggregateWeights(matches.length)
+  const btFit = getCachedBradleyTerryFit(matches, analysis)
+  const avgStrength =
+    [...btFit.strengths.values()].reduce((s, v) => s + v, 0) / btFit.strengths.size
+  const avgOppStrength = avgStrength * 3
 
-  const models = [
-    { id: 'popular-pick', model: popularPickModel },
-    { id: 'composite', model: compositeModel },
-    { id: 'bradley-terry', model: bradleyTerryModel },
-    { id: 'adaptive-ml', model: adaptiveMLModel },
-  ]
+  const totalWeight =
+    (weights['popular-pick'] || 0) +
+    (weights['composite'] || 0) +
+    (weights['bradley-terry'] || 0) +
+    (weights['adaptive-ml'] || 0)
 
-  // Get recommendations from each model (opponents unknown)
-  const modelRecs: { id: string; recs: Map<string, number> }[] = []
-  for (const { id, model } of models) {
-    const recs = model.recommend(teammates, [], available, analysis, matches)
-    const scoreMap = new Map<string, number>()
-    for (const rec of recs) scoreMap.set(rec.hero, rec.score)
-    modelRecs.push({ id, recs: scoreMap })
-  }
-
-  // Aggregate scores per hero
-  const aggregated = new Map<string, number>()
-  let totalWeight = 0
-  for (const { id } of modelRecs) totalWeight += weights[id] || 0
-
-  for (const hero of available) {
-    let score = 0
-    for (const { id, recs } of modelRecs) {
-      const w = (weights[id] || 0) / totalWeight
-      score += w * (recs.get(hero) || 0.5)
-    }
-    aggregated.set(hero, score)
-  }
-
-  return aggregated
+  return (team) =>
+    ((weights['popular-pick'] || 0) * popularPickTeamQuality(team, analysis) +
+      (weights['composite'] || 0) * compositeTeamQuality(team, analysis) +
+      (weights['bradley-terry'] || 0) * bradleyTerryTeamQuality(team, btFit, avgOppStrength) +
+      (weights['adaptive-ml'] || 0) * nnPredictVsAverage(team)) /
+    totalWeight
 }
 
 // ---- Constructed team generation ----
@@ -195,66 +175,40 @@ function getConstructedTeams(
 ): TeamSuggestion[] {
   const excluded = new Set([...excludeHeroes, ...teammates])
   const candidates = allHeroes.filter((h) => !excluded.has(h))
-  const results: TeamSuggestion[] = []
 
+  // Enumerate candidate trios: every (i, j) completion with 1 teammate, every
+  // 3rd pick with 2. Per-trio scoring is cheap (O(1) pair/trio lookups or a
+  // single NN forward pass), so even the ~3-5k trios of the 1-teammate case
+  // stay well under 100ms.
+  const teams: [string, string, string][] = []
   if (teammates.length === 1) {
-    // Score each candidate trio (teammate, i, j) via all 4 models, aggregated
-    // using the same weights as the match prediction. Per-model scorers are
-    // cheap (O(1) pair/trio lookups or a single forward pass) so enumerating
-    // ~3–5k trios stays well under 100ms.
-    const analysis = getAnalysisData()
-    const matches = getMatchData()
-    const weights = getAdaptiveAggregateWeights(matches.length)
-    const btFit = getCachedBradleyTerryFit(matches, analysis)
-    const avgStrength =
-      [...btFit.strengths.values()].reduce((s, v) => s + v, 0) / btFit.strengths.size
-    const avgOppStrength = avgStrength * 3
-
-    const totalWeight =
-      (weights['popular-pick'] || 0) +
-      (weights['composite'] || 0) +
-      (weights['bradley-terry'] || 0) +
-      (weights['adaptive-ml'] || 0)
-
     for (let i = 0; i < candidates.length; i++) {
       for (let j = i + 1; j < candidates.length; j++) {
-        const team = [teammates[0]!, candidates[i]!, candidates[j]!].sort() as [
-          string,
-          string,
-          string,
-        ]
-        const key = team.join(',')
-        if (existingKeys.has(key)) continue
-
-        const ppScore = popularPickTeamQuality(team, analysis)
-        const compositeScore = compositeTeamQuality(team, analysis)
-        const btScore = bradleyTerryTeamQuality(team, btFit, avgOppStrength)
-        const nnScore = nnPredictVsAverage(team)
-
-        const winRate =
-          ((weights['popular-pick'] || 0) * ppScore +
-            (weights['composite'] || 0) * compositeScore +
-            (weights['bradley-terry'] || 0) * btScore +
-            (weights['adaptive-ml'] || 0) * nnScore) /
-          totalWeight
-
-        results.push({ team, wins: 0, losses: 0, draws: 0, total: 0, winRate, constructed: true })
+        teams.push(
+          [teammates[0]!, candidates[i]!, candidates[j]!].sort() as [string, string, string],
+        )
       }
     }
-  }
-
-  if (teammates.length === 2) {
-    // 2 teammates: aggregate all 4 models for the 3rd pick
-    const scores = aggregateThirdPickScores(teammates, candidates)
-
+  } else if (teammates.length === 2) {
     for (const third of candidates) {
-      const team = [...teammates, third].sort() as [string, string, string]
-      const key = team.join(',')
-      if (existingKeys.has(key)) continue
-
-      const winRate = scores.get(third) || 0.5
-      results.push({ team, wins: 0, losses: 0, draws: 0, total: 0, winRate, constructed: true })
+      teams.push([...teammates, third].sort() as [string, string, string])
     }
+  }
+  if (teams.length === 0) return []
+
+  const scoreTeam = makeTeamQualityScorer()
+  const results: TeamSuggestion[] = []
+  for (const team of teams) {
+    if (existingKeys.has(team.join(','))) continue
+    results.push({
+      team,
+      wins: 0,
+      losses: 0,
+      draws: 0,
+      total: 0,
+      winRate: scoreTeam(team),
+      constructed: true,
+    })
   }
 
   return results.sort((a, b) => b.winRate - a.winRate).slice(0, MAX_SUGGESTIONS)
