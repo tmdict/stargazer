@@ -28,10 +28,10 @@ export function useImageStitch() {
   const images = ref<StitchImage[]>([])
 
   const settings = ref<StitchSettings>({
-    direction: 'vertical',
+    direction: 'horizontal',
     gap: 0,
     background: 'transparent',
-    fit: 'scale',
+    fit: 'original',
   })
 
   let nextId = 0

@@ -6,7 +6,7 @@ export interface GridState {
   t?: number[][] // tiles: [hexId, state] (only non-default states)
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
-  p?: number[][] // phantimals: [hexId, localPhantimalId, team] (kept out of c, ids don't fit 14 bits)
+  p?: number[][] // phantimals: [hexId, localPhantimalId, team] (kept out of c, ids 100000+ don't fit the character field)
   d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills, teamView)
 }
 
@@ -36,7 +36,7 @@ export function serializeGridState(
   }
 
   // Extract characters from tiles that have them (phantimals are serialized
-  // separately so the character section keeps its compact 14-bit id field).
+  // separately so the character section keeps its compact 16-bit id field).
   const characters = allTiles
     .filter(
       (tile) => tile.characterId && tile.team !== undefined && !isPhantimalId(tile.characterId),
