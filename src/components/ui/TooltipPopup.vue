@@ -60,12 +60,15 @@ const updatePosition = () => {
 
 onMounted(() => {
   updatePosition()
-  window.addEventListener('scroll', updatePosition)
+  // Capture phase: scroll events don't bubble, so this is the only way to
+  // hear scrolls inside nested containers (e.g. the roster panel) and keep
+  // the tooltip anchored to its target.
+  window.addEventListener('scroll', updatePosition, { capture: true })
   window.addEventListener('resize', updatePosition)
 })
 
 onUnmounted(() => {
-  window.removeEventListener('scroll', updatePosition)
+  window.removeEventListener('scroll', updatePosition, { capture: true })
   window.removeEventListener('resize', updatePosition)
 })
 </script>

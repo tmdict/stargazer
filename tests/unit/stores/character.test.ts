@@ -156,7 +156,7 @@ describe('characterStore.handleCharacterDrop', () => {
   })
 })
 
-describe('characterStore.handleHexClick', () => {
+describe('characterStore.removeCharacterFromHex', () => {
   let store: ReturnType<typeof useCharacterStore>
   let gridStore: ReturnType<typeof useGridStore>
 
@@ -166,15 +166,15 @@ describe('characterStore.handleHexClick', () => {
     store = useCharacterStore()
   })
 
-  it('returns false and removes nothing when clicking an empty tile', () => {
+  it('is an idempotent success on an empty tile', () => {
     const allyTile = gridStore.hexes.find(
       (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
     )
     if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
 
-    const ok = store.handleHexClick(allyTile)
+    const ok = store.removeCharacterFromHex(allyTile.getId())
 
-    expect(ok).toBe(false)
+    expect(ok).toBe(true)
     expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
   })
 
@@ -185,7 +185,7 @@ describe('characterStore.handleHexClick', () => {
     if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
     store.placeCharacterOnHex(allyTile.getId(), 101, Team.ALLY)
 
-    const ok = store.handleHexClick(allyTile)
+    const ok = store.removeCharacterFromHex(allyTile.getId())
 
     expect(ok).toBe(true)
     expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
@@ -198,7 +198,7 @@ describe('characterStore.handleHexClick', () => {
     if (!enemyTile) throw new Error('Test setup: no enemy-available tile in default map')
     store.placeCharacterOnHex(enemyTile.getId(), 202, Team.ENEMY)
 
-    const ok = store.handleHexClick(enemyTile)
+    const ok = store.removeCharacterFromHex(enemyTile.getId())
 
     expect(ok).toBe(true)
     expect(gridStore.getTile(enemyTile.getId()).characterId).toBeUndefined()

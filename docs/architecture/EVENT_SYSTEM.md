@@ -6,17 +6,17 @@ The event system provides centralized, type-safe component communication using V
 
 ## Design Principles
 
-1. **Centralized Bus**: Single event API instance for all application events
-2. **Namespaced Events**: Organized by feature (`hex:*`, `character:*`, `artifact:*`)
+1. **Pure Pub/Sub**: Emitting only notifies subscribers — all state changes live in the subscribing components, never inside the bus
+2. **Namespaced Events**: Organized by feature (`hex:*`, `character:*`)
 3. **Type Safety**: Full TypeScript support with compile-time checking
-4. **Direct Store Integration**: Events trigger store actions automatically
+4. **Real Consumers Only**: An event exists only when it has a cross-component subscriber; components with a direct line to a store call its actions directly
 5. **Simple API**: Minimal interface with emit, on, and off methods
 
 ## Core Components
 
 ### Event API (`/src/composables/useGridEvents.ts`)
 
-Provides typed event access throughout the application:
+Provides typed event access throughout the grid component tree (the bus is created and provided by `GridManager`):
 
 ```typescript
 interface GridEventAPI {
@@ -31,10 +31,8 @@ interface GridEventAPI {
 ```typescript
 interface GridEvents {
   'hex:click': (hex: Hex) => void
-  'character:remove': (hexId: number) => void
   'character:mouseenter': (hexId: number) => void
   'character:mouseleave': (hexId: number) => void
-  'artifact:remove': (team: Team) => void
 }
 ```
 
@@ -42,16 +40,13 @@ interface GridEvents {
 
 ### Hex Events
 
-- **hex:click**: User clicks hex tile - triggers character placement logic
+- **hex:click**: Emitted by GridTiles' invisible event-capture layer. GridManager's subscriber owns all click semantics in one decision tree: map-editor paint, the mobile tap flow (lift/drop/target), and desktop remove-or-pick (clicking a placed hero removes it; an empty placement tile opens the character picker)
 
 ### Character Events
 
-- **character:remove**: Remove character from hex
-- **character:mouseenter** / **character:mouseleave**: Hover state for character icons (drives the targeting-arrow highlight)
+- **character:mouseenter** / **character:mouseleave**: Emitted by the GridCharacters overlay; GridTiles subscribes to drive the hover highlight on the tile beneath the character
 
-### Artifact Events
-
-- **artifact:remove**: Remove artifact from team
+Character and artifact removal are not bus events: GridCharacters and GridArtifacts call `characterStore.removeCharacterFromHex()` / `artifactStore.removeArtifact()` directly, the same way they call their other store actions.
 
 ## Implementation Patterns
 
@@ -70,7 +65,6 @@ export function provideGridEvents() {
 ```typescript
 const events = useGridEvents()
 events.emit('hex:click', hex)
-events.emit('character:remove', hexId)
 ```
 
 ### Listening to Events
@@ -83,19 +77,4 @@ onMounted(() => {
 onUnmounted(() => {
   events.off('hex:click', handleHexClick)
 })
-```
-
-### Direct Store Actions
-
-Events automatically trigger store actions:
-
-```typescript
-switch (event) {
-  case 'hex:click':
-    characterStore.handleHexClick(hex)
-    break
-  case 'character:remove':
-    characterStore.removeCharacterFromHex(hexId)
-    break
-}
 ```

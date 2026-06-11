@@ -100,7 +100,6 @@ function handleOverrideToggle() {
   if (usingOverride.value) {
     setOverrideReference(null)
     invalidateBundledCache()
-    sigCache = null
     usingOverride.value = false
     referenceCount.value = getBundledReferenceCount()
     return
@@ -142,7 +141,6 @@ async function handleOverrideFolder(event: Event) {
       return
     }
     setOverrideReference(signatures)
-    sigCache = null
     usingOverride.value = true
     referenceCount.value = count
     builderStatusState.value = { kind: 'override-active', count, skipped: skipped.length }
@@ -153,25 +151,19 @@ async function handleOverrideFolder(event: Event) {
   }
 }
 
-let sigCache: Record<string, Float32Array> | null = null
-
-async function getSignatures(): Promise<Record<string, Float32Array>> {
-  if (sigCache) return sigCache
-  sigCache = await loadBundledReferenceSignatures()
-  return sigCache
-}
-
 function openFilePicker() {
   fileInput.value?.click()
 }
 
 function handleFileChange(event: Event) {
+  if (busy.value) return
   const file = imageFilesFromInput(event)[0]
   if (file) loadScreenshot(file)
 }
 
 function handleDrop(event: DragEvent) {
   dragging.value = false
+  if (busy.value) return
   const file = imageFilesFromDrop(event)[0]
   if (file) loadScreenshot(file)
 }
@@ -203,7 +195,7 @@ async function runDetection() {
   if (!uploadedImage.value || !cropRect.value) return
   busy.value = true
   try {
-    const sigs = await getSignatures()
+    const sigs = await loadBundledReferenceSignatures()
     detections.value = await detectPool(uploadedImage.value, sigs, {
       rows: rows.value,
       cols: cols.value,
@@ -326,6 +318,12 @@ function applyPick(hero: string) {
   if (activePicker.value === null) return
   const target = detections.value[activePicker.value]
   if (target) {
+    // A hero occupies exactly one cell: clear any other cell holding it so the
+    // pool stays 20 distinct heroes. The cleared cell re-enters the unknown
+    // state and gates Confirm until re-fixed.
+    for (const d of detections.value) {
+      if (d !== target && d.hero === hero) d.hero = null
+    }
     target.hero = hero
     target.distance = 0
   }
@@ -335,10 +333,11 @@ function applyPick(hero: string) {
 function confirm() {
   const pool = detections.value.map((d) => d.hero).filter((h): h is string => !!h)
   emit('apply', pool)
-  reset()
+  resetState()
 }
 
-function reset() {
+// Clear all import state back to the upload phase
+function resetState() {
   detections.value = []
   activePicker.value = null
   pickerQuery.value = ''
@@ -350,6 +349,10 @@ function reset() {
     uploadedSrc.value = ''
   }
   if (fileInput.value) fileInput.value.value = ''
+}
+
+function cancel() {
+  resetState()
   emit('cancel')
 }
 </script>
@@ -500,7 +503,7 @@ function reset() {
         </div>
       </div>
       <div class="actions">
-        <button class="action-btn danger" @click="reset">{{ i18n.t('wandwars.cancel') }}</button>
+        <button class="action-btn danger" @click="cancel">{{ i18n.t('wandwars.cancel') }}</button>
         <button class="action-btn" @click="resetCropToFull">
           {{ i18n.t('wandwars.select-all') }}
         </button>
@@ -542,7 +545,7 @@ function reset() {
       </div>
 
       <div class="actions">
-        <button class="action-btn danger" @click="reset">{{ i18n.t('wandwars.cancel') }}</button>
+        <button class="action-btn danger" @click="cancel">{{ i18n.t('wandwars.cancel') }}</button>
         <button class="action-btn" @click="backToCrop">
           {{ i18n.t('wandwars.back-to-crop') }}
         </button>

@@ -25,7 +25,6 @@ import { executeAutoPlaceCharacter, executePlaceCharacter } from '@/lib/characte
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import type { GridTile } from '@/lib/grid'
-import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -211,18 +210,6 @@ export const useCharacterStore = defineStore('character', () => {
     return placeCharacterOnHex(targetHexId, characterId, team)
   }
 
-  const handleHexClick = (hex: Hex): boolean => {
-    // Desktop only: clicking an occupied tile removes its hero. On mobile, tile
-    // taps are handled by GridManager (lift/move/target) and the character
-    // overlay (remove); auto-removing here would undo a just-completed move.
-    if (gridStore.getHexScale() < 1) return false
-    const hexId = hex.getId()
-    if (hasCharacter(grid, hexId)) {
-      return executeRemoveCharacter(grid, skillManager, hexId)
-    }
-    return false
-  }
-
   return {
     // Reactive state
     characterPlacements,
@@ -244,7 +231,6 @@ export const useCharacterStore = defineStore('character', () => {
     autoPlacePhantimal,
     phantimalCanJoinTeam,
     phantimalFactionCount,
-    handleHexClick,
     handleCharacterDrop,
   }
 })

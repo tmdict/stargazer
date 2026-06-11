@@ -25,15 +25,27 @@ i18n.initialize()
 
 // Locale-prefixed routes are authoritative: keep the store in sync with the
 // path so the header and skill browser render in the URL's language (during
-// SSG and client navigation alike). Unprefixed routes keep the saved choice.
+// SSG and client navigation alike). URL-derived locale is display-only —
+// following a shared /zh/... link must not overwrite the saved preference
+// (only the language toggle and ?l= persist).
 watch(
   () => route.path,
   (path) => {
     const { locale } = splitLocalePath(path)
-    if (locale) i18n.setLocale(locale)
+    if (locale) i18n.setLocale(locale, { persist: false })
   },
   { immediate: true },
 )
+
+// The unprefixed shells (/, /skills, …) are pre-rendered in English; applying
+// the saved locale only after mount keeps hydration matched to the baked HTML
+// (the post-mount swap updates text and link hrefs alike). Prefixed routes are
+// language-pinned by the path via the watcher above.
+onMounted(() => {
+  if (!splitLocalePath(window.location.pathname).locale) {
+    i18n.initializeLocale()
+  }
+})
 
 // Keyboard shortcut handler
 const handleKeyDown = (e: KeyboardEvent) => {
