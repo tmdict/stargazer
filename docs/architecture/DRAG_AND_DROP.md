@@ -2,7 +2,7 @@
 
 ## Overview
 
-The drag and drop system enables intuitive character placement through native HTML5 drag events combined with SVG coordinate detection. It uses Vue 3's provide/inject pattern for global state management and implements a two-phase detection system for accurate hex targeting.
+The drag and drop system enables intuitive character placement through native HTML5 drag events combined with SVG coordinate detection. Drag state lives in a module-singleton composable (`useDragDrop`); a thin provider component scopes the document-level listeners and exposes a typed registration channel for the grid's hex detection. A two-phase detection system gives accurate hex targeting.
 
 ## Design Principles
 
@@ -16,26 +16,36 @@ The drag and drop system enables intuitive character placement through native HT
 
 ### DragDropProvider (`/src/components/DragDropProvider.vue`)
 
-Global state provider that wraps the application:
+Thin lifecycle wrapper around the drag UI. It owns the document-level
+`drop`/`dragover`/`mousemove` listeners (its global `dragover` calls
+`preventDefault()`, which makes the page a drop target — that must not outlive
+the drag UI, so it is mount-scoped rather than module state), and it provides
+the typed registration channel:
 
 ```typescript
-interface DragDropState {
-  draggedCharacter: Ref<CharacterType | null>
-  isDragging: Ref<boolean>
-  hoveredHexId: Ref<number | null>
-  dropHandled: Ref<boolean>
+// provided under a typed InjectionKey (useDragDrop.ts), consumed via
+// useDragDropRegistration() — throws outside a DragDropProvider
+interface DragDropRegistration {
+  registerHexDetector: (detector: (x: number, y: number) => number | null) => void
+  registerDropHandler: (handler: (event: DragEvent) => void) => void
 }
 ```
 
-Key features:
-
-- **Global event listeners** for drag operations
-- **Drag preview component** that follows cursor
-- **State injection** via Vue's provide/inject
+GridManager registers its pointer→hex detector (built on the SVG element that
+GridTiles exposes via `defineExpose`) and its drop handler on mount, skipping
+both in readonly grids. All other drag state and actions come straight from
+`useDragDrop()` — components don't inject them.
 
 ### useDragDrop Composable (`/src/composables/useDragDrop.ts`)
 
-Core logic for drag and drop operations:
+Core state and logic, as module-level singletons: at most one drag exists at a
+time, and the document listener add/remove pairs must share function identity
+no matter which component starts or ends the drag. `startDrag` also attaches a
+once-only document `dragend` listener as a safety net — if the source element's
+own `@dragend` binding is gone when the drag ends, state still resets and the
+ghost preview can't get stuck. `endDrag` records the drop tile in
+`lastDropHexId`, which GridTiles consumes (read + clear) to restore the hover
+highlight after its post-drag grace period.
 
 ```typescript
 // Key functions exposed

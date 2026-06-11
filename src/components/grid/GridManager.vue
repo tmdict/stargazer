@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { inject, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 import GridArrows from './GridArrows.vue'
 import GridArtifacts from './GridArtifacts.vue'
@@ -8,8 +8,8 @@ import GridTiles from './GridTiles.vue'
 import CharacterSelectionPopup from '@/components/CharacterSelectionPopup.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
-import type { DragDropAPI } from '@/components/DragDropProvider.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
+import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { provideGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getAvailableTeamSize, getCharacter } from '@/lib/characters/character'
@@ -53,19 +53,11 @@ const artifactStore = useArtifactStore()
 
 const gridEvents = provideGridEvents()
 
-const dragDropAPI = inject<DragDropAPI>('dragDrop')
-if (!dragDropAPI) {
-  throw new Error('GridManager must be used within a DragDropProvider')
-}
+const { hoveredHexId, handleDrop, dropHandled, setDropHandled } = useDragDrop()
+const { registerHexDetector, registerDropHandler } = useDragDropRegistration()
 
-const {
-  hoveredHexId,
-  handleDrop,
-  dropHandled,
-  setDropHandled,
-  registerHexDetector,
-  registerDropHandler,
-} = dragDropAPI
+// GridTiles exposes its root SVG for screen→SVG coordinate conversion
+const gridTilesRef = ref<InstanceType<typeof GridTiles> | null>(null)
 
 const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
@@ -156,7 +148,7 @@ const closeCharacterModal = () => {
  */
 const findHexUnderMouse = (x: number, y: number): number | null => {
   // Get the SVG element to convert screen coordinates to SVG coordinates
-  const svgElement = document.querySelector<SVGSVGElement>('.grid-tiles')
+  const svgElement = gridTilesRef.value?.svgEl
   if (!svgElement) return null
 
   const pt = svgElement.createSVGPoint()
@@ -247,6 +239,7 @@ defineExpose({
   <div id="map">
     <!-- Grid tiles (base layer) -->
     <GridTiles
+      ref="gridTilesRef"
       :hexes="gridStore.visibleHexes"
       :layout="gridStore.layout"
       :height="defaultSvgHeight"

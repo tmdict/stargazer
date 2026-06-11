@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, inject } from 'vue'
+import { computed } from 'vue'
 
-import type { DragDropAPI } from '@/components/DragDropProvider.vue'
+import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam } from '@/lib/characters/character'
@@ -31,13 +31,7 @@ const skillStore = useSkillStore()
 const gameDataStore = useGameDataStore()
 const gridEvents = useGridEvents()
 
-// Inject drag/drop API
-const dragDropAPI = inject<DragDropAPI>('dragDrop')
-if (!dragDropAPI) {
-  throw new Error('GridCharacters must be used within a DragDropProvider')
-}
-
-const { startDrag, endDrag } = dragDropAPI
+const { startDrag, endDrag } = useDragDrop()
 
 const { liftedHexId, setLiftedHex, clearLiftedHex } = useSelectionState()
 

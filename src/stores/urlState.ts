@@ -1,6 +1,5 @@
 import { defineStore } from 'pinia'
 
-import { useStateReset } from '@/composables/useStateReset'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
@@ -21,7 +20,6 @@ export const useUrlStateStore = defineStore('urlState', () => {
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
   const artifactStore = useArtifactStore()
-  const { clearAllState } = useStateReset()
 
   // Restore grid state from encoded string
   const restoreFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
@@ -69,9 +67,10 @@ export const useUrlStateStore = defineStore('urlState', () => {
       return { hexId, characterId, team }
     }
 
-    // Clear existing state first using shared utility
-    // This resets all tiles to DEFAULT, clears characters and artifacts
-    clearAllState()
+    // Clear existing state first: characters, artifacts, and all tile states
+    characterStore.clearAllCharacters()
+    artifactStore.clearAllArtifacts()
+    gridStore.resetAllTiles()
 
     // Restore tile states from compact format: [hexId, state]
     if (gridState.t) {

@@ -170,6 +170,8 @@ weightedStddev = √[ Σ(credibility_i × (prob_i − μ)²) / Σ(credibility_i)
 avgSelfConf    = Σ(credibility_i × selfConf_i)   / Σ(credibility_i)
 ```
 
+This math has a single implementation — `computeCredibilityBlend` in `prediction/credibilityBlend.ts` — used by both the runtime aggregate (`getAggregatePrediction`) and the benchmark's threshold tuning, so the fitted thresholds always describe the deployed computation.
+
 Where this matters at runtime:
 
 1. **μ is the displayed aggregate win probability.** If NN's self-confidence collapses for a matchup with unseen hero pairs, NN's vote barely moves the blended %. The aggregate falls back toward the hand-crafted models. Conversely, when all four are confident, they contribute roughly in proportion to their base aggregate weights.
