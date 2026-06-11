@@ -232,7 +232,7 @@ The new design:
 - Uses cross-model agreement at the aggregate level only, weighted by credibility so sparse-data outliers don't torpedo well-supported predictions
 - Grade-degrades gracefully: when tuning can't find a confident threshold, the band disables rather than firing an unreliable badge
 
-The tooltip copy in `constants.ts` (`PREDICTION_CONFIDENCE_DESCRIPTIONS`) explains this in layman terms to users on hover.
+The tooltip copy lives in the locale files (`src/locales/wandwars/messages/confidence-*.json`) and explains this in layman terms to users on hover.
 
 ### Probability Calibration (calibration.ts + calibrationData.ts)
 
@@ -779,7 +779,7 @@ Weights used in the combined match prediction, scaling by dataset size:
 
 At low data, Popular Pick dominates (works immediately). As data grows, weight shifts toward Hero Synergy and Team Power — the two models currently leading the calibrated CV benchmark. Adaptive ML gets meaningful ensemble weight at scale but not the largest share; see "Will Adaptive ML pull ahead at scale?" below for when to revisit. Calibration is per-model, so weighting the aggregate gives a properly-calibrated blend regardless of which model is leading.
 
-These weights are mirrored in `teamSuggestions.ts` (Suggested Teams scoring) — keep the two tables in sync.
+`teamSuggestions.ts` (Suggested Teams scoring) imports the same `getAdaptiveAggregateWeights`, so the two stay in sync by construction.
 
 ### Will Adaptive ML pull ahead at scale?
 

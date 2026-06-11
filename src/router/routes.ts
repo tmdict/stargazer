@@ -60,4 +60,11 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/GuideView.vue'),
     props: true,
   },
+  // Unknown URLs (stale links, typos) redirect home instead of rendering a
+  // blank router-view. Dynamic path: skipped by SSG pre-rendering.
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'not-found',
+    redirect: '/',
+  },
 ]

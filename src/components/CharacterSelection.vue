@@ -100,8 +100,8 @@ const handleResultSelect = (slug: string) => {
         v-for="character in filteredCharacters"
         :key="character.id"
         :character="{ ...character, team: selectedTeam }"
-        :isDraggable
-        :isPlaced="isCharacterPlaced(character.id)"
+        :is-draggable
+        :is-placed="isCharacterPlaced(character.id)"
         :selected-filter="selectedTagNames"
         @character-click="handleCharacterClick"
       />

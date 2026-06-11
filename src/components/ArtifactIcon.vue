@@ -95,7 +95,7 @@ const handleTouchStart = () => {
     <Teleport to="body">
       <TooltipPopup
         v-if="showTooltip && artifactElement"
-        :targetElement="artifactElement"
+        :target-element="artifactElement"
         :variant="showSimpleTooltip ? 'simple' : 'detailed'"
         :offset="10"
       >

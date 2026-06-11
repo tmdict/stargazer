@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
@@ -68,31 +68,37 @@ onUnmounted(() => {
 <template>
   <header>
     <nav>
-      <a
-        href="/"
+      <RouterLink
+        to="/"
         class="logo-link"
         @mouseenter="isLogoHovered = true"
         @mouseleave="isLogoHovered = false"
       >
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
-      </a>
+      </RouterLink>
 
       <div class="nav-tabs">
-        <a href="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
+        <RouterLink to="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
           i18n.t('app.arena')
-        }}</a>
-        <a href="/skills" class="nav-text-link" :class="{ active: route.path === '/skills' }">{{
-          i18n.t('app.skills')
-        }}</a>
-        <a
-          :href="`/${i18n.currentLocale}/guide`"
+        }}</RouterLink>
+        <RouterLink
+          to="/skills"
+          class="nav-text-link"
+          :class="{ active: route.path === '/skills' }"
+          >{{ i18n.t('app.skills') }}</RouterLink
+        >
+        <RouterLink
+          :to="`/${i18n.currentLocale}/guide`"
           class="nav-text-link"
           :class="{ active: route.path.includes('/guide') }"
-          >{{ i18n.t('app.guide') }}</a
+          >{{ i18n.t('app.guide') }}</RouterLink
         >
-        <a href="/wandwars" class="nav-text-link" :class="{ active: route.path === '/wandwars' }">{{
-          i18n.t('wandwars.wand-wars')
-        }}</a>
+        <RouterLink
+          to="/wandwars"
+          class="nav-text-link"
+          :class="{ active: route.path === '/wandwars' }"
+          >{{ i18n.t('wandwars.wand-wars') }}</RouterLink
+        >
       </div>
       <ul class="menu">
         <li>

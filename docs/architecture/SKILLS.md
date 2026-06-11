@@ -272,11 +272,12 @@ registerSkill({
 
 Skills placed in `/src/lib/skills/characters/` are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration.
 
-2. **Test thoroughly** - Skills must handle:
-   - Activation failures (rollback state)
-   - Clean deactivation
-   - Team changes
-   - Edge cases
+Skills must handle:
+
+- Activation failures (rollback state)
+- Clean deactivation
+- Team changes
+- Edge cases
 
 ## Skill Page Pipeline
 

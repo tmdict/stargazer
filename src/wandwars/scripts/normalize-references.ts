@@ -11,6 +11,13 @@ import { mkdir, readdir } from 'node:fs/promises'
 import { join } from 'node:path'
 import sharp from 'sharp'
 
+import {
+  POOL_GOLD_HUE_MAX,
+  POOL_GOLD_HUE_MIN,
+  POOL_GOLD_MIN_DELTA,
+  POOL_GOLD_MIN_VALUE,
+} from '../constants'
+
 const INPUT_DIR = join(import.meta.dirname!, '../data/raw/portraits')
 const OUTPUT_DIR = join(import.meta.dirname!, '../data/raw/portraits_normalized')
 
@@ -20,21 +27,23 @@ const TARGET_H = 230
 /**
  * Classify a pixel as part of the gold border. Uses hue + saturation
  * thresholds in HSV — orange-yellow with enough vibrance to exclude skin
- * tones and background beige.
+ * tones and background beige. Shares the POOL_GOLD_* thresholds with the
+ * runtime detector (poolDetect.isGoldPixel) so the normalizer crops the
+ * same border the detector finds.
  */
 function isGold(r: number, g: number, b: number): boolean {
   const max = Math.max(r, g, b)
   const min = Math.min(r, g, b)
   const delta = max - min
-  if (max < 100) return false
-  if (delta < 40) return false
+  if (max < POOL_GOLD_MIN_VALUE) return false
+  if (delta < POOL_GOLD_MIN_DELTA) return false
   let hue: number
   if (max === r) hue = ((g - b) / delta) % 6
   else if (max === g) hue = (b - r) / delta + 2
   else hue = (r - g) / delta + 4
   hue *= 60
   if (hue < 0) hue += 360
-  return hue >= 25 && hue <= 55
+  return hue >= POOL_GOLD_HUE_MIN && hue <= POOL_GOLD_HUE_MAX
 }
 
 interface BBox {
