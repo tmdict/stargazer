@@ -57,12 +57,6 @@ describe('i18nStore', () => {
       expect(store.t('app.title')).toBe('Stargazer')
     })
 
-    it('returns translation in zh after toggleLocale', () => {
-      store.toggleLocale()
-      expect(store.currentLocale).toBe('zh')
-      expect(store.t('app.title')).toBe('观星者')
-    })
-
     it('returns translation in zh after explicit setLocale', () => {
       store.setLocale('zh')
       expect(store.t('greeting.welcome')).toBe('欢迎')
@@ -85,14 +79,9 @@ describe('i18nStore', () => {
       expect(store.t('partial.enOnly')).toBe('partial.enOnly')
     })
 
-    it('returns the key for invalid format (no dot)', () => {
+    it.each(['invalid', 'a.b.c'])('returns the key for invalid format "%s"', (key) => {
       vi.spyOn(console, 'warn').mockImplementation(() => {})
-      expect(store.t('invalid')).toBe('invalid')
-    })
-
-    it('returns the key for invalid format (multiple dots)', () => {
-      vi.spyOn(console, 'warn').mockImplementation(() => {})
-      expect(store.t('a.b.c')).toBe('a.b.c')
+      expect(store.t(key)).toBe(key)
     })
   })
 

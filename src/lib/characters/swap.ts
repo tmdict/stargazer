@@ -34,6 +34,15 @@ export function executeSwapCharacters(
     return false
   }
 
+  // Cross-team swaps must not duplicate a character on its destination team
+  // (the same character may legally exist once on each team)
+  if (
+    fromTeam !== toTeam &&
+    (isCharacterOnTeam(grid, fromChar, toTeam) || isCharacterOnTeam(grid, toChar, fromTeam))
+  ) {
+    return false
+  }
+
   // 2. Determine swap type and execute
 
   const isSameTeam = fromTeam == toTeam
@@ -137,11 +146,6 @@ function performCrossTeamSwap(
   fromTeam: Team,
   toTeam: Team,
 ): boolean {
-  // Check if swap would create duplicates
-  if (isCharacterOnTeam(grid, fromChar, toTeam) || isCharacterOnTeam(grid, toChar, fromTeam)) {
-    return false
-  }
-
   const fromHasSkill = skillManager.hasActiveSkill(fromChar, fromTeam)
   const toHasSkill = skillManager.hasActiveSkill(toChar, toTeam)
 

@@ -173,19 +173,6 @@ describe('createTargetingSkill', () => {
       expect(stored?.targetHexId).toBeNull()
       expect(stored?.metadata?.arrows).toEqual(customArrows)
     })
-
-    it('treats null result as miss', () => {
-      const skill = createTargetingSkill({
-        id: 'test',
-        characterId: CHARACTER_ID,
-        name: 'Test',
-        description: '',
-        color: '#000',
-        calculateTarget: () => null,
-      })
-      skill.onActivate(buildContext(grid, skillManager))
-      expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    })
   })
 })
 

@@ -60,6 +60,9 @@ function loadCategoryKeys(category: string): Map<string, Record<string, unknown>
     const folder = parts[parts.length - 2]!
     const name = parts[parts.length - 1]!.replace(/\.json$/, '')
     const key = prefixSubfolders && folder !== category ? `${folder}/${name}` : name
+    // The loader silently overwrites colliding flat keys (e.g. a file in
+    // app/messages/ shadowing one at the app root) — fail loudly instead
+    expect(keys.has(key), `duplicate locale key ${category}.${key} (${file})`).toBe(false)
     keys.set(key, JSON.parse(readFileSync(file, 'utf-8')))
   }
   return keys

@@ -89,7 +89,12 @@ describe('buildCounterIndicatorMap', () => {
     hero1: { x: entry(0.3), y: entry(-0.2) },
     hero2: { x: entry(0.05), y: entry(0.08) }, // both inside the threshold
     hero3: { x: entry(0.15), y: entry(0.4) },
+    hero4: { x: entry(0.1), y: entry(-0.1) }, // exactly at the threshold
   }
+
+  it('excludes scores exactly at the ±threshold (strict inequality)', () => {
+    expect(buildCounterIndicatorMap(matrix, ['x', 'y']).has('hero4')).toBe(false)
+  })
 
   it('classifies by threshold and sorts counters first, then by magnitude', () => {
     const map = buildCounterIndicatorMap(matrix, ['x', 'y'])

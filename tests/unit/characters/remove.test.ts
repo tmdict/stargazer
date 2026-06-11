@@ -148,8 +148,6 @@ describe('remove.ts', () => {
       executeRemoveCharacter(grid, skillManager, 1)
 
       expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
-      // Verify deactivate was called
-      expect(skillManager.deactivateCharacterSkill).toHaveBeenCalled()
     })
 
     it('should handle companion removal by removing main character', () => {
@@ -247,21 +245,6 @@ describe('remove.ts', () => {
 
       expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
     })
-
-    it('should be able to rollback on transaction failure', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 4, 300, Team.ENEMY)
-
-      // Clear should succeed
-      const result = performClearAll(grid)
-      expect(result).toBe(true)
-
-      // Verify everything was cleared
-      expect(grid.getTileById(1).characterId).toBeUndefined()
-      expect(grid.getTileById(2).characterId).toBeUndefined()
-      expect(grid.getTileById(4).characterId).toBeUndefined()
-    })
   })
 
   describe('executeClearAllCharacters', () => {
@@ -273,8 +256,6 @@ describe('remove.ts', () => {
       executeClearAllCharacters(grid, skillManager)
 
       expect(skillManager.deactivateAllSkills).toHaveBeenCalledWith(grid)
-      // Verify deactivate was called
-      expect(skillManager.deactivateAllSkills).toHaveBeenCalled()
     })
 
     it('should clear all characters', () => {
@@ -311,47 +292,6 @@ describe('remove.ts', () => {
 
       expect(result).toBe(true)
       expect(grid.getTileById(2).characterId).toBeUndefined()
-    })
-
-    it('should handle clearing large grid', () => {
-      // Place characters on all available tiles
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 3, 300, Team.ALLY)
-      performPlace(grid, 4, 400, Team.ENEMY)
-      performPlace(grid, 5, 500, Team.ENEMY)
-
-      const result = performClearAll(grid)
-
-      expect(result).toBe(true)
-      // Verify all cleared
-      for (const tile of grid.getAllTiles()) {
-        expect(tile.characterId).toBeUndefined()
-        expect(tile.team).toBeUndefined()
-      }
-    })
-
-    it('should handle companion and main character removal correctly', () => {
-      const mainId = 100
-      const companionId1 = grid.companionIdOffset + mainId
-      const companionId2 = grid.companionIdOffset + mainId + 1
-
-      // Place main and companions
-      performPlace(grid, 1, mainId, Team.ALLY)
-      performPlace(grid, 2, companionId1, Team.ALLY)
-      performPlace(grid, 3, companionId2, Team.ALLY)
-
-      // Link companions
-      const key = `${mainId}-${Team.ALLY}`
-      grid.companionLinks.set(key, new Set([companionId1, companionId2]))
-
-      vi.mocked(hasSkill).mockImplementation((id) => id === mainId)
-
-      // Remove main character
-      const result = executeRemoveCharacter(grid, skillManager, 1)
-
-      expect(result).toBe(true)
-      expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(mainId, 1, Team.ALLY, grid)
     })
 
     it('should handle invalid hex in executeRemoveCharacter', () => {

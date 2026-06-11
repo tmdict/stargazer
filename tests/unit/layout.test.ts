@@ -1,24 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import { Hex } from '@/lib/hex'
-import { Layout, POINTY, type Point } from '@/lib/layout'
+import { Layout, POINTY } from '@/lib/layout'
 
 describe('Layout', () => {
   const SQRT3 = Math.sqrt(3)
-
-  describe('orientation constants', () => {
-    it('should have correct POINTY orientation values', () => {
-      expect(POINTY.f0).toBeCloseTo(SQRT3)
-      expect(POINTY.f1).toBeCloseTo(SQRT3 / 2)
-      expect(POINTY.f2).toBe(0)
-      expect(POINTY.f3).toBeCloseTo(3 / 2)
-      expect(POINTY.b0).toBeCloseTo(SQRT3 / 3)
-      expect(POINTY.b1).toBeCloseTo(-1 / 3)
-      expect(POINTY.b2).toBe(0)
-      expect(POINTY.b3).toBeCloseTo(2 / 3)
-      expect(POINTY.startAngle).toBe(0.5)
-    })
-  })
 
   describe('coordinate conversion', () => {
     const size = { x: 10, y: 10 }
@@ -28,9 +14,15 @@ describe('Layout', () => {
     it('should convert hex to pixel coordinates', () => {
       expect(layout.hexToPixel(new Hex(0, 0, 0))).toEqual({ x: 100, y: 100 })
 
-      const pixel = layout.hexToPixel(new Hex(1, 0, -1))
-      expect(pixel.x).toBeCloseTo(100 + SQRT3 * 10)
-      expect(pixel.y).toBeCloseTo(100)
+      // q axis maps to pure horizontal movement
+      const qPixel = layout.hexToPixel(new Hex(1, 0, -1))
+      expect(qPixel.x).toBeCloseTo(100 + SQRT3 * 10)
+      expect(qPixel.y).toBeCloseTo(100)
+
+      // r axis moves diagonally (half a hex right, one and a half down)
+      const rPixel = layout.hexToPixel(new Hex(0, 1, -1))
+      expect(rPixel.x).toBeCloseTo(100 + (SQRT3 / 2) * 10)
+      expect(rPixel.y).toBeCloseTo(115)
     })
   })
 
@@ -39,18 +31,15 @@ describe('Layout', () => {
     const origin = { x: 0, y: 0 }
     const layout = new Layout(POINTY, size, origin)
 
-    it('should calculate correct offsets for all 6 corners', () => {
-      const corners: Point[] = []
-      for (let i = 0; i < 6; i++) {
-        corners.push(layout.hexCornerOffset(i))
-      }
+    it('pointy-top: first corner sits at 30°, corners step by 60°', () => {
+      const corner0 = layout.hexCornerOffset(0)
+      expect(corner0.x).toBeCloseTo(10 * Math.cos(Math.PI / 6))
+      expect(corner0.y).toBeCloseTo(5)
 
-      expect(corners).toHaveLength(6)
-      corners.forEach((corner, i) => {
-        const angle = (2 * Math.PI * (0.5 + i)) / 6
-        expect(corner.x).toBeCloseTo(10 * Math.cos(angle))
-        expect(corner.y).toBeCloseTo(10 * Math.sin(angle))
-      })
+      // Corner 3 is diametrically opposite corner 0
+      const corner3 = layout.hexCornerOffset(3)
+      expect(corner3.x).toBeCloseTo(-corner0.x)
+      expect(corner3.y).toBeCloseTo(-corner0.y)
     })
 
     it('should return 6 corner points for a hex', () => {

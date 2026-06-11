@@ -236,6 +236,14 @@ describe('character.ts', () => {
       expect(tile.characterId).toBeUndefined()
       expect(tile.team).toBeUndefined()
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
+
+      // Enemy tiles restore to their own available state
+      const enemyTile = grid.getTileById(3)
+      enemyTile.characterId = 200
+      enemyTile.team = Team.ENEMY
+      enemyTile.state = State.OCCUPIED_ENEMY
+      clearCharacterFromTile(enemyTile)
+      expect(enemyTile.state).toBe(State.AVAILABLE_ENEMY)
     })
 
     it('should check if character can be placed on tile', () => {
@@ -308,24 +316,14 @@ describe('character.ts', () => {
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
     })
 
-    it('should handle state transitions correctly', () => {
-      const tile = grid.getTileById(1)
+    it('should reject invalid max team sizes, leaving the limit unchanged', () => {
+      const defaultSize = getMaxTeamSize(grid, Team.ALLY)
 
-      // Available -> Occupied
-      tile.state = State.AVAILABLE_ALLY
-      tile.characterId = 100
-      tile.team = Team.ALLY
-      tile.state = State.OCCUPIED_ALLY
-
-      // Clear back to available
-      clearCharacterFromTile(tile)
-      expect(tile.state).toBe(State.AVAILABLE_ALLY)
-
-      // Enemy tile
-      const enemyTile = grid.getTileById(3)
-      enemyTile.state = State.OCCUPIED_ENEMY
-      clearCharacterFromTile(enemyTile)
-      expect(enemyTile.state).toBe(State.AVAILABLE_ENEMY)
+      expect(setMaxTeamSize(grid, Team.ALLY, 0)).toBe(false)
+      expect(setMaxTeamSize(grid, Team.ALLY, -1)).toBe(false)
+      expect(setMaxTeamSize(grid, Team.ALLY, 2.5)).toBe(false)
+      expect(setMaxTeamSize(grid, Team.ALLY, grid.getAllTiles().length + 1)).toBe(false)
+      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(defaultSize)
     })
   })
 })

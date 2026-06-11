@@ -56,17 +56,17 @@ export class Hex {
     return this.add(directionHex)
   }
 
-  /**
-   * Get all 6 neighbor hexes
-   * Order: [top-right, right, bottom-right, bottom-left, left, top-left]
-   * Corresponds to direction indices 0-5 clockwise from top-right
-   */
   // Hexes on the same upper-left→lower-right diagonal share q - r; the
   // board's middle diagonal is the q = r line (diagonal 0)
   getDiagonal(): number {
     return this.q - this.r
   }
 
+  /**
+   * Get all 6 neighbor hexes
+   * Order: [top-right, right, bottom-right, bottom-left, left, top-left]
+   * Corresponds to direction indices 0-5 clockwise from top-right
+   */
   getNeighbors(): Hex[] {
     const neighbors: Hex[] = []
     for (let i = 0; i < 6; i++) {

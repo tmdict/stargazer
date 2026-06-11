@@ -1,11 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import {
-  countTeamFaction,
-  PHANTIMAL_FACTION_REQUIREMENT,
-  requiredFactions,
-} from '@/lib/characters/phantimalFaction'
+import { countTeamFaction, requiredFactions } from '@/lib/characters/phantimalFaction'
 import { performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
@@ -29,11 +25,11 @@ describe('phantimalFaction', () => {
 
     beforeEach(() => {
       grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-      performPlace(grid, 1, 100, Team.ALLY, true)
-      performPlace(grid, 2, 101, Team.ALLY, true)
-      performPlace(grid, 3, 102, Team.ALLY, true)
-      performPlace(grid, 4, 200, Team.ENEMY, true)
-      performPlace(grid, 5, toPhantimalId(1), Team.ENEMY, true) // phantimal: never counted
+      performPlace(grid, 1, 100, Team.ALLY)
+      performPlace(grid, 2, 101, Team.ALLY)
+      performPlace(grid, 3, 102, Team.ALLY)
+      performPlace(grid, 4, 200, Team.ENEMY)
+      performPlace(grid, 5, toPhantimalId(1), Team.ENEMY) // phantimal: never counted
     })
 
     it('counts only matching-faction characters on the team', () => {
@@ -52,13 +48,9 @@ describe('phantimalFaction', () => {
 
     it('excludes companions — only distinct heroes count', () => {
       const g = new Grid(STANDARD_GRID, STANDARD_ARENA)
-      performPlace(g, 1, 100, Team.ALLY, true) // lightbearer hero
-      performPlace(g, 2, 10100, Team.ALLY, true) // companion (10000+), must not count
+      performPlace(g, 1, 100, Team.ALLY) // lightbearer hero
+      performPlace(g, 2, 10100, Team.ALLY) // companion (10000+), must not count
       expect(countTeamFaction(g, Team.ALLY, ['lightbearer'], factionOf)).toBe(1)
     })
-  })
-
-  it('requires three faction units', () => {
-    expect(PHANTIMAL_FACTION_REQUIREMENT).toBe(3)
   })
 })

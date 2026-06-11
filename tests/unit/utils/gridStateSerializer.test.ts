@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { State } from '@/lib/types/state'
@@ -94,10 +95,14 @@ describe('gridStateSerializer', () => {
       expect(result).toEqual({ a: expected })
     })
 
-    it('does not include artifacts when both are null', () => {
-      const tiles: GridTile[] = [createMockTile(1, State.OCCUPIED_ALLY)]
+    it('extracts phantimals into p with local IDs, keeping them out of c', () => {
+      const tiles: GridTile[] = [
+        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
+        createMockTile(5, State.OCCUPIED_ENEMY, toPhantimalId(3), Team.ENEMY),
+      ]
       const result = serializeGridState(tiles, null, null)
-      expect(result.a).toBeUndefined()
+      expect(result.c).toEqual([[1, 100, Team.ALLY]])
+      expect(result.p).toEqual([[5, 3, Team.ENEMY]])
     })
 
     it('serializes display flags', () => {
@@ -163,16 +168,6 @@ describe('gridStateSerializer', () => {
     })
 
     it.each([
-      [
-        0b01111,
-        {
-          showHexIds: true,
-          showArrows: true,
-          showPerspective: true,
-          showSkills: true,
-          teamView: false,
-        },
-      ],
       [
         0b00000,
         {

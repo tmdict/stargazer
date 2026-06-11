@@ -229,8 +229,8 @@ class BitReader {
 }
 
 export function encodeToBinary(state: GridState): Uint8Array {
-  // Validate and filter input to ensure all values are within valid ranges
-  // This prevents the count mismatch bug where invalid entries were skipped
+  // Validate and filter input before counting, so the encoded counts always
+  // match the entries actually written
   const validState = validateGridState(state)
 
   const writer = new BitWriter()
@@ -412,10 +412,10 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       }
     }
 
-    // Read artifacts (6 bits total)
+    // Read artifacts (ARTIFACT_BITS each for ally and enemy)
     if (hasArtifacts) {
-      const ally = reader.readBits(ARTIFACT_BITS) // 3 bits
-      const enemy = reader.readBits(ARTIFACT_BITS) // 3 bits
+      const ally = reader.readBits(ARTIFACT_BITS)
+      const enemy = reader.readBits(ARTIFACT_BITS)
 
       // Convert 0 back to null (no artifact), 1-63 are artifact IDs
       state.a = [ally === 0 ? null : ally, enemy === 0 ? null : enemy]

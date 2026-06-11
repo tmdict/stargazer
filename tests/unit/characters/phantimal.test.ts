@@ -43,7 +43,7 @@ describe('phantimal', () => {
     })
 
     it('occupies a tile but is excluded from team-size tracking', () => {
-      const ok = performPlace(grid, 1, toPhantimalId(2), Team.ALLY, true)
+      const ok = performPlace(grid, 1, toPhantimalId(2), Team.ALLY)
 
       expect(ok).toBe(true)
       const tile = grid.getTileById(1)
@@ -57,21 +57,21 @@ describe('phantimal', () => {
 
     it('is exempt from the team-size limit when the team is full', () => {
       setMaxTeamSize(grid, Team.ALLY, 1)
-      performPlace(grid, 1, 100, Team.ALLY, true) // fills the ally team
+      performPlace(grid, 1, 100, Team.ALLY) // fills the ally team
 
       expect(canPlaceCharacterOnTeam(grid, 200, Team.ALLY)).toBe(false)
       expect(canPlaceCharacterOnTeam(grid, toPhantimalId(1), Team.ALLY)).toBe(true)
     })
 
     it('findTeamPhantimalHex locates only the team phantimal', () => {
-      performPlace(grid, 1, toPhantimalId(1), Team.ALLY, true)
-      performPlace(grid, 4, toPhantimalId(1), Team.ENEMY, true)
-      performPlace(grid, 2, 100, Team.ALLY, true) // a regular character
+      performPlace(grid, 1, toPhantimalId(1), Team.ALLY)
+      performPlace(grid, 4, toPhantimalId(1), Team.ENEMY)
+      performPlace(grid, 2, 100, Team.ALLY) // a regular character
 
       expect(findTeamPhantimalHex(grid, Team.ALLY)).toBe(1)
       expect(findTeamPhantimalHex(grid, Team.ENEMY)).toBe(4)
 
-      performRemove(grid, 1, true)
+      performRemove(grid, 1)
       expect(findTeamPhantimalHex(grid, Team.ALLY)).toBeNull()
     })
   })

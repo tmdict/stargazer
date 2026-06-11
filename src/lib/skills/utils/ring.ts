@@ -31,7 +31,6 @@ export function spiralSearchFromTile(
   casterTeam: Team,
 ): SkillTargetInfo | null {
   const centerHex = grid.getHexById(centerHexId)
-  if (!centerHex) return null
 
   const candidates = getTeamTargetCandidates(grid, targetTeam)
   if (candidates.length === 0) return null
@@ -185,7 +184,6 @@ export function rowScan(
   const direction = options.direction ?? RowScanDirection.FRONTMOST
 
   const centerHex = grid.getHexById(hexId)
-  if (!centerHex) return null
 
   // Get all ally candidates
   let candidates = getCandidates(grid, targetTeam, characterId)

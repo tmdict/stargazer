@@ -14,7 +14,9 @@ import type { GridPreset } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 
-// Simple test grid
+// 7-hex grid; key geometry for the assertions below:
+// hex 7 shares q with hex 2 (vertically aligned); hexes 3 and 6 share the
+// q−r diagonal; from hex 1, hexes 3/5/6 are all direct distance 2
 const TEST_GRID: GridPreset = {
   hex: [[4], [3, 5], [2, 6], [1, 7]],
   qOffset: [0, -1, -1, -2],
@@ -33,55 +35,57 @@ const TEST_ARENA = {
 
 describe('pathfinding', () => {
   let grid: Grid
+  let getTile: (hex: Hex) => ReturnType<Grid['getTileOrUndefined']>
 
   beforeEach(() => {
     grid = new Grid(TEST_GRID, TEST_ARENA)
+    getTile = (hex: Hex) => grid.getTileOrUndefined(hex)
   })
+
+  const pathIds = (path: Hex[]) => path.map((h) => grid.getTile(h).hex.getId())
 
   describe('findPathAStar', () => {
     it('finds path between adjacent hexes', () => {
       const start = grid.getHexById(1)
       const goal = grid.getHexById(2)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
 
       const path = findPathAStar(start, goal, getTile, defaultCanTraverse)
 
       expect(path).not.toBeNull()
-      expect(path).toHaveLength(2)
-      expect(path![0].equals(start)).toBe(true)
-      expect(path![1].equals(goal)).toBe(true)
+      expect(pathIds(path!)).toEqual([1, 2])
     })
 
-    it('finds path around blocked tiles', () => {
-      const start = grid.getHexById(3)
-      const goal = grid.getHexById(5)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      // Hex 4 is blocked, so path must go around
-      const path = findPathAStar(start, goal, getTile, defaultCanTraverse)
+    it('finds the optimal path when unobstructed', () => {
+      const path = findPathAStar(
+        grid.getHexById(1),
+        grid.getHexById(5),
+        getTile,
+        defaultCanTraverse,
+      )
 
       expect(path).not.toBeNull()
-      expect(path!.length).toBeGreaterThanOrEqual(2) // Path exists
-      expect(path![0].equals(start)).toBe(true)
-      expect(path![path!.length - 1].equals(goal)).toBe(true)
+      expect(pathIds(path!)).toEqual([1, 2, 5])
+    })
+
+    it('routes around blocked tiles', () => {
+      // Hex 2 is the only direct step from 1 toward 5; blocking it forces
+      // the unique detour through 7 and 6, one longer than the optimum
+      grid.getTileById(2).state = State.BLOCKED
+
+      const path = findPathAStar(
+        grid.getHexById(1),
+        grid.getHexById(5),
+        getTile,
+        defaultCanTraverse,
+      )
+
+      expect(path).not.toBeNull()
+      expect(pathIds(path!)).toEqual([1, 7, 6, 5])
     })
 
     it('returns null for unreachable goal', () => {
       const start = grid.getHexById(1)
-      const goal = new Hex(100, -50, -50) // Far away hex
-      const getTile = () => undefined // All tiles outside grid are undefined
+      const goal = new Hex(100, -50, -50) // outside the grid
 
       const path = findPathAStar(start, goal, getTile, defaultCanTraverse)
 
@@ -90,19 +94,11 @@ describe('pathfinding', () => {
 
     it('returns single-element path when start equals goal', () => {
       const hex = grid.getHexById(1)
-      const getTile = (h: Hex) => {
-        try {
-          return grid.getTile(h)
-        } catch {
-          return undefined
-        }
-      }
 
       const path = findPathAStar(hex, hex, getTile, defaultCanTraverse)
 
       expect(path).not.toBeNull()
-      expect(path).toHaveLength(1)
-      expect(path![0].equals(hex)).toBe(true)
+      expect(pathIds(path!)).toEqual([1])
     })
   })
 
@@ -110,13 +106,6 @@ describe('pathfinding', () => {
     it('returns 0 when targets are within range', () => {
       const start = grid.getHexById(1)
       const targets = [grid.getHexById(2)]
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
 
       const result = calculateRangedMovementDistance(start, targets, 2, getTile, defaultCanTraverse)
 
@@ -125,34 +114,20 @@ describe('pathfinding', () => {
       expect(result.reachableTargets).toHaveLength(1)
     })
 
-    it('finds minimum movement to reach any target', () => {
+    it('finds minimum movement to reach a distant target', () => {
+      // Hex 6 is direct distance 2 from hex 1, so a melee unit must step once
       const start = grid.getHexById(1)
-      const targets = [grid.getHexById(6), grid.getHexById(7)]
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
+      const targets = [grid.getHexById(6)]
 
       const result = calculateRangedMovementDistance(start, targets, 1, getTile, defaultCanTraverse)
 
+      expect(result.movementDistance).toBe(1)
       expect(result.canReach).toBe(true)
-      expect(result.reachableTargets.length).toBeGreaterThan(0)
-      // Movement distance depends on actual hex layout
-      expect(result.movementDistance).toBeGreaterThanOrEqual(0)
+      expect(result.reachableTargets.map((h) => h.getId())).toEqual([6])
     })
 
     it('handles empty target list', () => {
       const start = grid.getHexById(1)
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
 
       const result = calculateRangedMovementDistance(start, [], 1, getTile, defaultCanTraverse)
 
@@ -169,7 +144,7 @@ describe('pathfinding', () => {
     })
 
     it('blocks traversal through blocked tiles', () => {
-      const tile = grid.getTileById(4) // Blocked tile
+      const tile = grid.getTileById(4)
       expect(defaultCanTraverse(tile)).toBe(false)
     })
   })
@@ -191,79 +166,92 @@ describe('pathfinding', () => {
   })
 
   describe('findClosestTarget', () => {
+    const occupy = (hexId: number, team: Team, characterId?: number) => {
+      const tile = grid.getTileById(hexId)
+      tile.team = team
+      if (characterId) tile.characterId = characterId
+      return tile
+    }
+
     it('finds closest target for melee unit', () => {
-      const sourceTile = grid.getTileById(1)
-      sourceTile.team = Team.ALLY
+      const sourceTile = occupy(1, Team.ALLY)
+      const targetTile = occupy(6, Team.ENEMY, 100)
 
-      const targetTile = grid.getTileById(6)
-      targetTile.team = Team.ENEMY
-      targetTile.characterId = 100
-
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
       const result = findClosestTarget(sourceTile, [targetTile], 1, getTile, defaultCanTraverse)
 
       expect(result).not.toBeNull()
       expect(result!.hexId).toBe(6)
-      expect(result!.distance).toBeGreaterThan(0)
+      expect(result!.distance).toBe(1)
     })
 
     it('returns null when no targets exist', () => {
-      const sourceTile = grid.getTileById(1)
-      sourceTile.team = Team.ALLY
+      const sourceTile = occupy(1, Team.ALLY)
 
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
       const result = findClosestTarget(sourceTile, [], 1, getTile, defaultCanTraverse)
 
       expect(result).toBeNull()
     })
 
     it('handles ranged units correctly', () => {
-      const sourceTile = grid.getTileById(1)
-      sourceTile.team = Team.ALLY
+      const sourceTile = occupy(1, Team.ALLY)
+      const targetTile = occupy(3, Team.ENEMY, 100)
 
-      const targetTile = grid.getTileById(3)
-      targetTile.team = Team.ENEMY
-      targetTile.characterId = 100
-
-      const getTile = (hex: Hex) => {
-        try {
-          return grid.getTile(hex)
-        } catch {
-          return undefined
-        }
-      }
-
-      // With range 3, should be able to reach without moving
+      // Range 3 covers the direct distance of 2, so no movement is needed
       const result = findClosestTarget(sourceTile, [targetTile], 3, getTile, defaultCanTraverse)
 
       expect(result).not.toBeNull()
-      expect(result!.distance).toBe(0) // No movement needed
+      expect(result!.distance).toBe(0)
+    })
+
+    describe('tie-breaking between equally distant targets', () => {
+      it('Rule 1: prefers the vertically aligned target', () => {
+        // From hex 2, hexes 6 and 7 are both reachable without moving;
+        // hex 7 shares q with the source
+        const sourceTile = occupy(2, Team.ALLY)
+        const targets = [occupy(6, Team.ENEMY, 100), occupy(7, Team.ENEMY, 101)]
+
+        const result = findClosestTarget(sourceTile, targets, 1, getTile, defaultCanTraverse)
+
+        expect(result!.hexId).toBe(7)
+      })
+
+      it('Rule 2: same diagonal — ally prefers the higher hex ID', () => {
+        // Hexes 3 and 6 share the q−r diagonal and are both one move from hex 1
+        const sourceTile = occupy(1, Team.ALLY)
+        const targets = [occupy(3, Team.ENEMY, 100), occupy(6, Team.ENEMY, 101)]
+
+        const result = findClosestTarget(sourceTile, targets, 1, getTile, defaultCanTraverse)
+
+        expect(result!.hexId).toBe(6)
+      })
+
+      it('Rule 2: same diagonal — enemy prefers the lower hex ID', () => {
+        const sourceTile = occupy(1, Team.ENEMY)
+        const targets = [occupy(3, Team.ALLY, 100), occupy(6, Team.ALLY, 101)]
+
+        const result = findClosestTarget(sourceTile, targets, 1, getTile, defaultCanTraverse)
+
+        expect(result!.hexId).toBe(3)
+      })
+
+      it('Rule 3 fallback: equal direct distance resolves by team ID preference', () => {
+        // Hexes 5 and 6 sit on different diagonals, neither vertical with
+        // hex 1, both direct distance 2 and one move away
+        const allySource = occupy(1, Team.ALLY)
+        const targets = [occupy(5, Team.ENEMY, 100), occupy(6, Team.ENEMY, 101)]
+
+        const allyResult = findClosestTarget(allySource, targets, 1, getTile, defaultCanTraverse)
+        expect(allyResult!.hexId).toBe(6)
+
+        allySource.team = Team.ENEMY
+        const enemyResult = findClosestTarget(allySource, targets, 1, getTile, defaultCanTraverse)
+        expect(enemyResult!.hexId).toBe(5)
+      })
     })
   })
 
   describe('getClosestTargetMap', () => {
-    const makeGetTile = () => (hex: Hex) => {
-      try {
-        return grid.getTile(hex)
-      } catch {
-        return undefined
-      }
-    }
-
     it('creates map of closest enemies for ally team', () => {
-      // Set up ally characters
       const ally1 = grid.getTileById(1)
       ally1.team = Team.ALLY
       ally1.characterId = 1
@@ -272,7 +260,6 @@ describe('pathfinding', () => {
       ally2.team = Team.ALLY
       ally2.characterId = 2
 
-      // Set up enemy characters
       const enemy1 = grid.getTileById(6)
       enemy1.team = Team.ENEMY
       enemy1.characterId = 100
@@ -282,42 +269,39 @@ describe('pathfinding', () => {
       enemy2.characterId = 101
 
       const tilesWithCharacters = [ally1, ally2, enemy1, enemy2]
-      const result = getClosestTargetMap(tilesWithCharacters, Team.ALLY, Team.ENEMY, makeGetTile())
+      const result = getClosestTargetMap(tilesWithCharacters, Team.ALLY, Team.ENEMY, getTile)
 
-      expect(result.size).toBe(2) // Two allies
-      expect(result.has(1)).toBe(true)
-      expect(result.has(2)).toBe(true)
-
-      const ally1Target = result.get(1)
-      expect(ally1Target).toBeDefined()
-      expect(ally1Target!.enemyHexId).toBeDefined()
-      expect(ally1Target!.distance).toBeDefined()
+      // Hex 7 is adjacent to hex 1 and vertically aligned with hex 2, so it
+      // wins for both allies with no movement required
+      expect(result.size).toBe(2)
+      expect(result.get(1)).toMatchObject({ enemyHexId: 7, distance: 0 })
+      expect(result.get(2)).toMatchObject({ enemyHexId: 7, distance: 0 })
     })
 
-    it('handles characters with custom ranges', () => {
+    it('consults custom ranges instead of the default melee range', () => {
       const ally = grid.getTileById(1)
       ally.team = Team.ALLY
       ally.characterId = 1
 
-      const enemy = grid.getTileById(7)
+      const enemy = grid.getTileById(5)
       enemy.team = Team.ENEMY
       enemy.characterId = 100
 
-      const characterRanges = new Map([[1, 5]]) // Ally has range 5
       const tilesWithCharacters = [ally, enemy]
 
-      const result = getClosestTargetMap(
+      // Hex 5 is direct distance 2: melee range needs one move
+      const melee = getClosestTargetMap(tilesWithCharacters, Team.ALLY, Team.ENEMY, getTile)
+      expect(melee.get(1)).toMatchObject({ enemyHexId: 5, distance: 1 })
+
+      // Range 5 covers it from the starting tile
+      const ranged = getClosestTargetMap(
         tilesWithCharacters,
         Team.ALLY,
         Team.ENEMY,
-        makeGetTile(),
-        characterRanges,
+        getTile,
+        new Map([[1, 5]]),
       )
-
-      const allyTarget = result.get(1)
-      expect(allyTarget).toBeDefined()
-      // With range 5, might need less movement
-      expect(allyTarget!.distance).toBeGreaterThanOrEqual(0)
+      expect(ranged.get(1)).toMatchObject({ enemyHexId: 5, distance: 0 })
     })
   })
 })

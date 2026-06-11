@@ -141,7 +141,7 @@ Placing onto an occupied tile replaces the occupant: its skill is deactivated an
 ### Movement & Swapping
 
 - **Move (`move.ts`)**: Handles same-team and cross-team movements
-- **Swap (`swap.ts`)**: Atomic character exchange with skill transitions
+- **Swap (`swap.ts`)**: Atomic character exchange with skill transitions; a cross-team swap is rejected up front if either character already exists on its destination team (the same character may legally appear once per team)
 - **Cross-team logic**: Deactivate → perform operation → reactivate skills
 
 ### Removal (`/src/lib/characters/remove.ts`)
