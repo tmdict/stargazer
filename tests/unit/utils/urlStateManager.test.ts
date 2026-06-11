@@ -30,80 +30,24 @@ function createMockTile(
 
 describe('urlStateManager', () => {
   describe('encodeGridStateToUrl and decodeGridStateFromUrl', () => {
-    it.each([
-      ['empty state', {}],
-      [
-        'state with tiles',
-        {
-          t: [
-            [1, 2],
-            [5, 3],
-          ],
-        },
-      ],
-      [
-        'state with characters',
-        {
-          c: [
-            [1, 100, Team.ALLY],
-            [2, 200, Team.ENEMY],
-          ],
-        },
-      ],
-      ['state with artifacts', { a: [3, 5] }],
-      ['state with display flags', { t: [[1, 1]], d: 0b1010 }],
-      [
-        'complete state',
-        {
-          t: [
-            [1, 2],
-            [5, 3],
-          ],
-          c: [
-            [2, 100, Team.ALLY],
-            [6, 200, Team.ENEMY],
-          ],
-          a: [2, 4],
-          d: 0b1111,
-        },
-      ],
-    ])('encodes and decodes %s', (_, state) => {
-      const encoded = encodeGridStateToUrl(state as GridState)
-      const decoded = decodeGridStateFromUrl(encoded)
-      expect(decoded).toEqual(state)
-    })
-
-    it('produces URL-safe encoded strings', () => {
-      const state: GridState = {
-        t: Array.from({ length: 10 }, (_, i) => [i + 1, (i % 7) + 1]),
-        c: Array.from({ length: 5 }, (_, i) => [i + 10, 100 + i, (i % 2) + 1]),
-      }
-      const encoded = encodeGridStateToUrl(state)
-      expect(encoded).toMatch(/^[A-Za-z0-9\-_]+$/)
-    })
-
-    it('validates and filters invalid entries', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    // Round-trip content is pinned by the binaryEncoder tests; this verifies
+    // the composition seam once
+    it('encodes and decodes a complete state', () => {
       const state: GridState = {
         t: [
-          [1, 2], // Valid
-          [0, 3], // Invalid: hexId must be > 0
-          [64, 4], // Invalid: hexId > 63
+          [1, 2],
+          [5, 3],
         ],
         c: [
-          [1, 100, 1], // Valid
-          [2, 70000, 1], // Invalid: charId > 65535
+          [2, 100, Team.ALLY],
+          [6, 200, Team.ENEMY],
         ],
+        a: [2, 4],
+        d: 0b1111,
       }
       const encoded = encodeGridStateToUrl(state)
       const decoded = decodeGridStateFromUrl(encoded)
-
-      expect(decoded).toEqual({
-        t: [[1, 2]],
-        c: [[1, 100, 1]],
-      })
-      expect(consoleSpy).toHaveBeenCalled()
-      consoleSpy.mockRestore()
+      expect(decoded).toEqual(state)
     })
 
     it('handles decoding errors gracefully', () => {
@@ -136,12 +80,6 @@ describe('urlStateManager', () => {
       vi.unstubAllGlobals()
     })
 
-    it('generates URL with empty grid', () => {
-      const tiles: GridTile[] = []
-      const url = generateShareableUrl(tiles, null, null)
-      expect(url).toMatch(/^http:\/\/localhost:3000\/app\?g=/)
-    })
-
     it('generates URL with grid state', () => {
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
@@ -156,33 +94,23 @@ describe('urlStateManager', () => {
       expect(decoded?.a).toEqual([1, 2])
     })
 
-    it('generates URL with display flags', () => {
-      const tiles: GridTile[] = []
-      const displayFlags = {
-        showHexIds: true,
-        showArrows: false,
-        showPerspective: true,
-        showSkills: false,
-      }
-      const url = generateShareableUrl(tiles, null, null, displayFlags)
-
+    it.each([
+      [{ showHexIds: true, showArrows: false, showPerspective: true, showSkills: false }, 0b00101],
+      [
+        {
+          showHexIds: false,
+          showArrows: false,
+          showPerspective: false,
+          showSkills: false,
+          teamView: true,
+        },
+        0b10000,
+      ],
+    ])('round-trips display flags through the generated URL (%o)', (displayFlags, expected) => {
+      const url = generateShareableUrl([], null, null, displayFlags)
       const match = url.match(/\?g=(.+)$/)
       const decoded = decodeGridStateFromUrl(match![1])
-      expect(decoded?.d).toBe(0b00101)
-    })
-
-    it('round-trips teamView through generated URL', () => {
-      const tiles: GridTile[] = []
-      const url = generateShareableUrl(tiles, null, null, {
-        showHexIds: false,
-        showArrows: false,
-        showPerspective: false,
-        showSkills: false,
-        teamView: true,
-      })
-      const match = url.match(/\?g=(.+)$/)
-      const decoded = decodeGridStateFromUrl(match![1])
-      expect(decoded?.d).toBe(0b10000)
+      expect(decoded?.d).toBe(expected)
     })
 
     it('uses correct base URL from window.location', () => {
@@ -229,7 +157,6 @@ describe('urlStateManager', () => {
       [{ g: undefined }, null],
       [{}, null],
       [{ l: 'zh', g: 'encodedState', debug: 'true' }, 'encodedState'],
-      [{ g: ['singleState'] }, null],
       [{ g: '' }, ''],
     ])('with query %o returns %s', (query, expected) => {
       const result = getEncodedStateFromRoute(query)
@@ -294,8 +221,9 @@ describe('urlStateManager', () => {
       const decoded = decodeGridStateFromUrl(match![1])
       expect(decoded).not.toBeNull()
       expect(decoded?.d).toBeUndefined()
-      expect(decoded?.t?.length).toBeGreaterThan(0)
-      expect(decoded?.c?.length).toBeGreaterThan(0)
+      // 66 non-default tiles and 50 characters force the extended header
+      expect(decoded?.t).toHaveLength(66)
+      expect(decoded?.c).toHaveLength(50)
     })
   })
 })

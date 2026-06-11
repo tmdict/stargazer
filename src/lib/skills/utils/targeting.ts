@@ -18,7 +18,7 @@ export interface TargetCandidate {
 export function getTeamTargetCandidates(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
 
-  // Use Grid's optimized getTilesWithCharacters() instead of getAllTiles()
+  // Only tiles holding characters can be candidates
   const tilesWithCharacters = getTilesWithCharacters(grid)
 
   for (const tile of tilesWithCharacters) {

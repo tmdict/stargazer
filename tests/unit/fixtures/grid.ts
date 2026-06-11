@@ -1,8 +1,9 @@
 /**
  * Shared grid presets and arena layouts for unit tests.
  *
- * Two presets (SMALL_GRID 5 hexes, STANDARD_GRID 7 hexes) paired with
- * four arenas covering the placement permutations used by the test suites.
+ * Three presets (SMALL_GRID 5 hexes, STANDARD_GRID 7 hexes, TARGETING_GRID
+ * 14 hexes) paired with arenas covering the placement permutations used by
+ * the test suites.
  */
 
 import type { GridPreset } from '@/lib/types/grid'
@@ -18,6 +19,23 @@ export const SMALL_GRID: GridPreset = {
 export const STANDARD_GRID: GridPreset = {
   hex: [[3], [2, 4], [1, 5], [6, 7]],
   qOffset: [0, -1, -1, -2],
+}
+
+/** 14-hex grid for targeting tests: a tall column of 1-2 hex rows */
+export const TARGETING_GRID: GridPreset = {
+  hex: [[7], [6, 8], [5, 9], [4, 10], [3, 11], [2, 12], [1, 13, 14]],
+  qOffset: [0, -1, -1, -2, -2, -3, -3],
+}
+
+/** Used with TARGETING_GRID. Ally [1-6], Enemy [9-14], Default [7,8]. */
+export const TARGETING_ARENA = {
+  id: 1,
+  name: 'Test',
+  grid: [
+    { type: State.AVAILABLE_ALLY, hex: [1, 2, 3, 4, 5, 6] },
+    { type: State.AVAILABLE_ENEMY, hex: [9, 10, 11, 12, 13, 14] },
+    { type: State.DEFAULT, hex: [7, 8] },
+  ],
 }
 
 /** Used with SMALL_GRID. Ally [1,2], Enemy [3,4], Blocked [5]. */

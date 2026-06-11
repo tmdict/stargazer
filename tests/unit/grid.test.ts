@@ -2,18 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
-import type { SkillManager } from '@/lib/skills/skill'
 import { FULL_GRID, type GridPreset } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { SMALL_GRID } from './fixtures/grid'
 
-// Create a simple test grid preset
-const TEST_GRID: GridPreset = {
-  hex: [[3], [2, 4], [1, 5]],
-  qOffset: [0, -1, -1],
-}
-
-// Test arena that works with TEST_GRID
+// Arena exercising every tile-state type on SMALL_GRID
 const TEST_ARENA = {
   id: 1,
   name: 'Test',
@@ -39,14 +33,15 @@ describe('Grid', () => {
       expect(grid.maxTeamSizes.get(Team.ALLY)).toBe(5)
       expect(grid.maxTeamSizes.get(Team.ENEMY)).toBe(5)
       expect(grid.companionIdOffset).toBe(10000)
+      expect(grid.companionLinks.size).toBe(0)
       expect(grid.skillManager).toBeUndefined()
     })
 
     it('should initialize with custom layout and map', () => {
-      grid = new Grid(TEST_GRID, TEST_ARENA)
+      grid = new Grid(SMALL_GRID, TEST_ARENA)
 
       expect(grid.getAllTiles()).toHaveLength(5)
-      expect(grid.gridPreset).toBe(TEST_GRID)
+      expect(grid.gridPreset).toBe(SMALL_GRID)
 
       // Check states are applied from TEST_ARENA
       expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
@@ -59,7 +54,7 @@ describe('Grid', () => {
 
   describe('tile access methods', () => {
     beforeEach(() => {
-      grid = new Grid(TEST_GRID, TEST_ARENA)
+      grid = new Grid(SMALL_GRID, TEST_ARENA)
     })
 
     it('should get tiles by ID', () => {
@@ -105,75 +100,19 @@ describe('Grid', () => {
       const invalidHex = new Hex(999, 999, -1998, 999)
       expect(() => grid.getTile(invalidHex)).toThrow('Tile with hex key 999,999,-1998 not found')
     })
+
+    it('should return undefined from getTileOrUndefined for out-of-grid hexes', () => {
+      expect(grid.getTileOrUndefined(grid.getHexById(1))).toBe(grid.getTileById(1))
+      expect(grid.getTileOrUndefined(new Hex(999, 999, -1998))).toBeUndefined()
+    })
   })
 
   describe('setState()', () => {
-    beforeEach(() => {
-      grid = new Grid(TEST_GRID, TEST_ARENA)
-    })
-
     it('should set the tile state', () => {
+      grid = new Grid(SMALL_GRID, TEST_ARENA)
       const hex = grid.getHexById(1)
       grid.setState(hex, State.BLOCKED)
       expect(grid.getTile(hex).state).toBe(State.BLOCKED)
-    })
-
-    it('should handle state transitions correctly', () => {
-      const hex = grid.getHexById(1)
-
-      expect(grid.getTile(hex).state).toBe(State.AVAILABLE_ALLY)
-
-      grid.setState(hex, State.OCCUPIED_ALLY)
-      expect(grid.getTile(hex).state).toBe(State.OCCUPIED_ALLY)
-
-      grid.setState(hex, State.BLOCKED)
-      expect(grid.getTile(hex).state).toBe(State.BLOCKED)
-
-      grid.setState(hex, State.DEFAULT)
-      expect(grid.getTile(hex).state).toBe(State.DEFAULT)
-    })
-  })
-
-  describe('public properties manipulation', () => {
-    beforeEach(() => {
-      grid = new Grid()
-    })
-
-    it('should manipulate teamCharacters', () => {
-      grid.teamCharacters.get(Team.ALLY)?.add(100)
-      grid.teamCharacters.get(Team.ALLY)?.add(101)
-      grid.teamCharacters.get(Team.ENEMY)?.add(200)
-
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(101)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
-
-      grid.teamCharacters.get(Team.ALLY)?.delete(100)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
-    })
-
-    it('should manipulate maxTeamSizes', () => {
-      grid.maxTeamSizes.set(Team.ALLY, 7)
-      grid.maxTeamSizes.set(Team.ENEMY, 3)
-      expect(grid.maxTeamSizes.get(Team.ALLY)).toBe(7)
-      expect(grid.maxTeamSizes.get(Team.ENEMY)).toBe(3)
-    })
-
-    it('should manipulate companionLinks', () => {
-      const key = '100-ALLY'
-      grid.companionLinks.set(key, new Set([10100, 10101]))
-
-      expect(grid.companionLinks.has(key)).toBe(true)
-      expect(grid.companionLinks.get(key)?.has(10100)).toBe(true)
-
-      grid.companionLinks.get(key)?.add(10102)
-      expect(grid.companionLinks.get(key)?.size).toBe(3)
-    })
-
-    it('should set skillManager', () => {
-      const mockSkillManager = { updateActiveSkills: () => {} } as SkillManager
-      grid.skillManager = mockSkillManager
-      expect(grid.skillManager).toBe(mockSkillManager)
     })
   })
 
@@ -203,7 +142,7 @@ describe('Grid', () => {
     })
 
     it('should preserve tile references', () => {
-      grid = new Grid(TEST_GRID, TEST_ARENA)
+      grid = new Grid(SMALL_GRID, TEST_ARENA)
 
       const tile1 = grid.getTileById(1)
       const tile2 = grid.getTileById(1)

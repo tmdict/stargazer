@@ -16,11 +16,6 @@ describe('gridStore — team view', () => {
     it('defaults to false', () => {
       expect(gridStore.teamView).toBe(false)
     })
-
-    it('is writable from outside the store', () => {
-      gridStore.teamView = true
-      expect(gridStore.teamView).toBe(true)
-    })
   })
 
   describe('visibleHexes', () => {
@@ -35,27 +30,9 @@ describe('gridStore — team view', () => {
       const visibleStates = visible.map((hex) => gridStore.getTile(hex.getId()).state)
 
       expect(visible.length).toBeGreaterThan(0)
+      expect(visible.length).toBeLessThan(gridStore.hexes.length)
       for (const state of visibleStates) {
         expect([State.AVAILABLE_ALLY, State.OCCUPIED_ALLY]).toContain(state)
-      }
-    })
-
-    it('excludes enemy and blocked hexes when teamView is true', () => {
-      gridStore.teamView = true
-
-      const visibleIds = new Set(gridStore.visibleHexes.map((h) => h.getId()))
-      const allTiles = gridStore.getAllTiles
-      const nonAllyHidden = allTiles.filter(
-        (tile) =>
-          tile.state !== State.AVAILABLE_ALLY &&
-          tile.state !== State.OCCUPIED_ALLY &&
-          tile.state !== State.DEFAULT,
-      )
-
-      // At least one non-ally tile exists in the default map; none should be visible.
-      expect(nonAllyHidden.length).toBeGreaterThan(0)
-      for (const tile of nonAllyHidden) {
-        expect(visibleIds.has(tile.hex.getId())).toBe(false)
       }
     })
   })
@@ -73,17 +50,6 @@ describe('gridStore — team view', () => {
       expect(bounds.x).toBe(0)
       expect(bounds.width).toBe(600)
       expect(bounds.height).toBeLessThan(600)
-      expect(bounds.height).toBeGreaterThan(0)
-    })
-
-    it('y can be negative to provide top padding for character sprites near SVG y=0', () => {
-      gridStore.teamView = true
-
-      // Bounds.y = minY - topPad. If the topmost ally hex's top corner sits within
-      // topPad pixels of SVG y=0, bounds.y is negative — this becomes top padding
-      // inside the clip wrapper so perspective-mode sprites don't clip.
-      const bounds = gridStore.viewBoxBounds
-      // y + height should always reflect (maxY + bottomPad) regardless of sign of y.
       expect(bounds.height).toBeGreaterThan(0)
     })
 

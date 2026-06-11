@@ -34,6 +34,7 @@ describe('companion', () => {
       // as companions.
       expect(isCompanionId(grid, grid.phantimalIdOffset - 1)).toBe(true)
       expect(isCompanionId(grid, grid.phantimalIdOffset)).toBe(false)
+      expect(isCompanionId(grid, grid.phantimalIdOffset + 5)).toBe(false)
 
       expect(isCompanionId(grid, 100)).toBe(false)
       expect(isCompanionId(grid, 9999)).toBe(false)
@@ -46,6 +47,7 @@ describe('companion', () => {
       expect(getMainCharacterId(grid, 10100)).toBe(100)
       expect(getMainCharacterId(grid, 10001)).toBe(1)
       expect(getMainCharacterId(grid, 12345)).toBe(2345)
+      expect(getMainCharacterId(grid, grid.phantimalIdOffset - 1)).toBe(9999)
     })
 
     it('returns same ID for non-companion characters', () => {
@@ -163,14 +165,6 @@ describe('companion', () => {
         const companions = getCompanions(grid, 999, Team.ALLY)
         expect(companions).toBeInstanceOf(Set)
         expect(companions.size).toBe(0)
-      })
-
-      it('returns companions for main character', () => {
-        addCompanionLink(grid, 100, 10100, Team.ALLY)
-        addCompanionLink(grid, 100, 10101, Team.ALLY)
-
-        const companions = getCompanions(grid, 100, Team.ALLY)
-        expect(companions.size).toBe(2)
       })
     })
   })
@@ -303,24 +297,6 @@ describe('companion', () => {
   })
 
   describe('edge cases', () => {
-    it('handles companion ID at offset boundary', () => {
-      expect(isCompanionId(grid, grid.companionIdOffset)).toBe(true)
-      expect(isCompanionId(grid, grid.companionIdOffset - 1)).toBe(false)
-    })
-
-    it('handles large companion IDs within the namespace', () => {
-      // Companions live between the companion offset and the phantimal offset.
-      const largeCompanionId = grid.phantimalIdOffset - 1 // 19999
-      expect(isCompanionId(grid, largeCompanionId)).toBe(true)
-      // Uses modulo, so 19999 % 10000 = 9999
-      expect(getMainCharacterId(grid, largeCompanionId)).toBe(9999)
-    })
-
-    it('treats phantimal-range IDs as non-companions', () => {
-      expect(isCompanionId(grid, grid.phantimalIdOffset)).toBe(false)
-      expect(isCompanionId(grid, grid.phantimalIdOffset + 5)).toBe(false)
-    })
-
     it('handles multiple main characters with companions', () => {
       addCompanionLink(grid, 100, 10100, Team.ALLY)
       addCompanionLink(grid, 100, 10101, Team.ALLY)

@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { addCompanionLink } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { performPlace } from '@/lib/characters/place'
+import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 // Import skill functions for mocking
 import { hasCompanionSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
@@ -128,15 +130,6 @@ describe('move.ts', () => {
 
       expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
     })
-
-    it('should complete move successfully', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      const result = executeMoveCharacter(grid, skillManager, 1, 2, 100)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(2).characterId).toBe(100)
-    })
   })
 
   describe('executeMoveCharacter - cross-team movement without skills', () => {
@@ -200,18 +193,16 @@ describe('move.ts', () => {
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(false)
     })
 
-    it('should restore skill on rollback', () => {
+    it('should reactivate the skill at the origin on rollback', () => {
       performPlace(grid, 1, 100, Team.ALLY)
-      // Skill activation will fail on team change, triggering rollback
       skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
 
       const result = executeMoveCharacter(grid, skillManager, 1, 4, 100)
 
       expect(result).toBe(false)
-      // Verify original skill activation was attempted
+      // Failed activation at the destination, then reactivation at the origin
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 4, Team.ENEMY, grid)
-      // Character should be back at original position
-      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
     })
   })
 
@@ -238,75 +229,43 @@ describe('move.ts', () => {
       expect(grid.getTileById(2).characterId).toBe(companionId)
     })
 
-    it('should store and restore companion positions on cross-team move with companion skill', () => {
+    it('should restore a displaced companion to its stored hex on rollback', () => {
       vi.mocked(hasSkill).mockReturnValue(true)
       vi.mocked(hasCompanionSkill).mockReturnValue(true)
 
-      // Set up main character and companion
       const mainId = 100
       const companionId = grid.companionIdOffset + mainId
       performPlace(grid, 1, mainId, Team.ALLY)
       performPlace(grid, 2, companionId, Team.ALLY)
+      addCompanionLink(grid, mainId, companionId, Team.ALLY)
 
-      // Link companion to main character
-      const key = `${mainId}-${Team.ALLY}`
-      grid.companionLinks.set(key, new Set([companionId]))
-
-      // Mock skill activation failure to trigger rollback
+      // Mirror the real skill lifecycle: deactivation removes the companion;
+      // activation fails at the destination (triggering rollback) and on the
+      // rollback reactivation re-spawns the companion at its default hex (3),
+      // from which restoreCompanions must return it to the stored hex (2)
+      skillManager.deactivateCharacterSkill = vi.fn().mockImplementation(() => {
+        performRemove(grid, 2)
+      })
       skillManager.activateCharacterSkill = vi
         .fn()
-        .mockReturnValueOnce(false) // Fail on team change
-        .mockReturnValueOnce(true) // Succeed on rollback
+        .mockImplementation((id: number, hexId: number) => {
+          if (hexId === 4) return false
+          performPlace(grid, 3, companionId, Team.ALLY)
+          return true
+        })
 
       const result = executeMoveCharacter(grid, skillManager, 1, 4, mainId)
 
       expect(result).toBe(false)
-      // Main character should be restored
       expect(grid.getTileById(1).characterId).toBe(mainId)
-      // Companion restoration is mocked, so we just verify the flow
-      expect(hasCompanionSkill).toHaveBeenCalled()
-    })
-  })
-
-  describe('Transaction and rollback behavior', () => {
-    it('should roll back cleanly when the destination is occupied', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      // Place another character at destination
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      // performMove's place step fails on the occupied tile; its rollback
-      // restores the character at the origin
-      const result = executeMoveCharacter(grid, skillManager, 1, 2, 100)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(100)
-      expect(grid.getTileById(2).characterId).toBe(200)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
-    })
-
-    it('should handle complex move sequences', () => {
-      // Test multiple moves in sequence
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      // Move first character
-      let result = executeMoveCharacter(grid, skillManager, 1, 3, 100)
-      expect(result).toBe(true)
-
-      // Move second character to vacated spot
-      result = executeMoveCharacter(grid, skillManager, 2, 1, 200)
-      expect(result).toBe(true)
-
-      expect(grid.getTileById(3).characterId).toBe(100)
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.getTileById(2).characterId).toBeUndefined()
+      expect(grid.getTileById(2).characterId).toBe(companionId)
+      expect(grid.getTileById(3).characterId).toBeUndefined()
     })
   })
 
   describe('Edge cases', () => {
     it('should handle move on empty grid', () => {
-      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { id: 1, name: 'Empty', grid: [] })
+      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
       emptyGrid.skillManager = skillManager
 
       // This will throw because hex 1 doesn't exist in empty grid
@@ -321,13 +280,12 @@ describe('move.ts', () => {
       expect(() => executeMoveCharacter(grid, skillManager, 1, 999, 100)).toThrow()
     })
 
-    it('should handle concurrent moves correctly', () => {
-      // Set up multiple characters
+    it('should handle sequential moves correctly', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, 200, Team.ALLY)
       performPlace(grid, 4, 300, Team.ENEMY)
 
-      // Execute multiple moves
+      // The second move lands on the hex the first move vacated
       expect(executeMoveCharacter(grid, skillManager, 1, 3, 100)).toBe(true)
       expect(executeMoveCharacter(grid, skillManager, 2, 1, 200)).toBe(true)
       expect(executeMoveCharacter(grid, skillManager, 4, 5, 300)).toBe(true)

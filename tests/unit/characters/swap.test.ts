@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { addCompanionLink } from '@/lib/characters/companion'
 import { performPlace } from '@/lib/characters/place'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { Grid } from '@/lib/grid'
@@ -98,6 +99,10 @@ describe('swap.ts', () => {
       expect(grid.getTileById(2).characterId).toBe(100)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(2).team).toBe(Team.ALLY)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(2)
+      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
     })
 
     it('should swap two enemy characters', () => {
@@ -112,30 +117,10 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
       expect(grid.getTileById(5).team).toBe(Team.ENEMY)
     })
-
-    it('should maintain team membership after swap', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      executeSwapCharacters(grid, skillManager, 1, 2)
-
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(2)
-    })
-
-    it('should update skill manager after successful swap', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      executeSwapCharacters(grid, skillManager, 1, 2)
-
-      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
-    })
   })
 
   describe('executeSwapCharacters - cross-team swaps without skills', () => {
-    it('should swap ally and enemy characters', () => {
+    it('should swap ally and enemy characters, switching their teams', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 4, 200, Team.ENEMY)
 
@@ -146,29 +131,32 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).characterId).toBe(100)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
-    })
-
-    it('should update team memberships correctly', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 4, 200, Team.ENEMY)
-
-      executeSwapCharacters(grid, skillManager, 1, 4)
-
+      // Characters switch team membership; tiles keep their occupied states
       expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(false)
-    })
-
-    it('should maintain tile states after cross-team swap', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 4, 200, Team.ENEMY)
-
-      executeSwapCharacters(grid, skillManager, 1, 4)
-
-      // Tiles should maintain their occupied states
       expect(grid.getTileById(1).state).toBe(State.OCCUPIED_ALLY)
       expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
+    })
+
+    it('should reject swap that would duplicate a character on the destination team', () => {
+      // 100 already exists on ENEMY, so swapping its ally copy into ENEMY
+      // must be rejected up front with all placements intact
+      performPlace(grid, 1, 100, Team.ALLY)
+      performPlace(grid, 4, 200, Team.ENEMY)
+      performPlace(grid, 5, 100, Team.ENEMY)
+
+      const result = executeSwapCharacters(grid, skillManager, 1, 4)
+
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(1).team).toBe(Team.ALLY)
+      expect(grid.getTileById(4).characterId).toBe(200)
+      expect(grid.getTileById(4).team).toBe(Team.ENEMY)
+      expect(grid.getTileById(5).characterId).toBe(100)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
     })
   })
 
@@ -228,37 +216,28 @@ describe('swap.ts', () => {
       const result = executeSwapCharacters(grid, skillManager, 1, 4)
 
       expect(result).toBe(false)
-      // After fix: Characters should remain at original positions after rollback
+      // Characters remain at original positions after rollback
       expect(grid.getTileById(1).characterId).toBe(100)
       expect(grid.getTileById(4).characterId).toBe(200)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
     })
 
-    it('should handle companion skill restoration on rollback', () => {
+    it('should reject swap that would duplicate a character with an active skill', () => {
+      // The duplicate guard rejects before any skill teardown happens
       vi.mocked(hasSkill).mockReturnValue(true)
-      vi.mocked(hasCompanionSkill).mockReturnValue(true)
       skillManager.hasActiveSkill = vi.fn().mockReturnValue(true)
-      skillManager.activateCharacterSkill = vi
-        .fn()
-        .mockReturnValueOnce(false) // Fail first activation
-        .mockReturnValue(true) // Succeed on rollback
 
-      const mainId = 100
-      const companionId = grid.companionIdOffset + mainId
-
-      performPlace(grid, 1, mainId, Team.ALLY)
-      performPlace(grid, 2, companionId, Team.ALLY)
+      performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 4, 200, Team.ENEMY)
-
-      // Link companion to main character
-      const key = `${mainId}-${Team.ALLY}`
-      grid.companionLinks.set(key, new Set([companionId]))
+      performPlace(grid, 5, 100, Team.ENEMY)
 
       const result = executeSwapCharacters(grid, skillManager, 1, 4)
 
       expect(result).toBe(false)
-      expect(hasCompanionSkill).toHaveBeenCalled()
+      expect(skillManager.deactivateCharacterSkill).not.toHaveBeenCalled()
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(4).characterId).toBe(200)
     })
 
     it('should preserve grid integrity when skill activation fails mid-swap', () => {
@@ -277,7 +256,7 @@ describe('swap.ts', () => {
       performPlace(grid, 1, mainId, Team.ALLY)
       performPlace(grid, 2, companionId, Team.ALLY)
       performPlace(grid, 4, enemyId, Team.ENEMY)
-      grid.companionLinks.set(`${mainId}-${Team.ALLY}`, new Set([companionId]))
+      addCompanionLink(grid, mainId, companionId, Team.ALLY)
 
       const result = executeSwapCharacters(grid, skillManager, 1, 4)
 
@@ -345,7 +324,7 @@ describe('swap.ts', () => {
 
   describe('Edge cases', () => {
     it('should handle empty grid', () => {
-      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { id: 1, name: 'Empty', grid: [] })
+      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
       emptyGrid.skillManager = skillManager
 
       // This will throw because hex doesn't exist

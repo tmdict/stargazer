@@ -21,60 +21,48 @@ const buildCharacter = (id: number, sourceHexId?: number): CharacterType => ({
   energy: [],
   range: 1,
   season: 1,
-  tags: [],
+  tags: {},
   ...(sourceHexId !== undefined ? { sourceHexId } : {}),
 })
 
+let store: ReturnType<typeof useCharacterStore>
+let gridStore: ReturnType<typeof useGridStore>
+
+const tilesByState = (state: State) =>
+  gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === state)
+
+const firstTile = (state: State) => {
+  const tile = tilesByState(state)[0]
+  if (!tile) throw new Error(`Test setup: no tile in state ${state} in default map`)
+  return tile
+}
+
+beforeEach(() => {
+  setActivePinia(createPinia())
+  gridStore = useGridStore()
+  store = useCharacterStore()
+})
+
 describe('characterStore.handleCharacterDrop', () => {
-  let store: ReturnType<typeof useCharacterStore>
-  let gridStore: ReturnType<typeof useGridStore>
-
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    gridStore = useGridStore()
-    store = useCharacterStore()
-  })
-
   describe('selection drop (no sourceHexId)', () => {
-    it('places a character on a valid ally tile', () => {
-      // Find an ally-available tile in the default map
-      const allyTile = gridStore.hexes.find(
-        (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
-      )
-      if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
+    it.each([
+      [Team.ALLY, State.AVAILABLE_ALLY, 101],
+      [Team.ENEMY, State.AVAILABLE_ENEMY, 202],
+    ])('places a character on a valid %s tile', (team, state, characterId) => {
+      const tile = firstTile(state)
 
       const ok = store.handleCharacterDrop(
-        { character: buildCharacter(101), characterId: 101 },
-        allyTile.getId(),
+        { character: buildCharacter(characterId), characterId },
+        tile.getId(),
       )
 
       expect(ok).toBe(true)
-      expect(gridStore.getTile(allyTile.getId()).characterId).toBe(101)
-      expect(gridStore.getTile(allyTile.getId()).team).toBe(Team.ALLY)
-    })
-
-    it('places a character on a valid enemy tile', () => {
-      const enemyTile = gridStore.hexes.find(
-        (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ENEMY,
-      )
-      if (!enemyTile) throw new Error('Test setup: no enemy-available tile in default map')
-
-      const ok = store.handleCharacterDrop(
-        { character: buildCharacter(202), characterId: 202 },
-        enemyTile.getId(),
-      )
-
-      expect(ok).toBe(true)
-      expect(gridStore.getTile(enemyTile.getId()).characterId).toBe(202)
-      expect(gridStore.getTile(enemyTile.getId()).team).toBe(Team.ENEMY)
+      expect(gridStore.getTile(tile.getId()).characterId).toBe(characterId)
+      expect(gridStore.getTile(tile.getId()).team).toBe(team)
     })
 
     it('returns false when target tile is not a valid placement state', () => {
-      // Find a DEFAULT tile (state 0) that doesn't accept characters
-      const defaultTile = gridStore.hexes.find(
-        (h) => gridStore.getTile(h.getId()).state === State.DEFAULT,
-      )
-      if (!defaultTile) throw new Error('Test setup: no DEFAULT tile in default map')
+      const defaultTile = firstTile(State.DEFAULT)
 
       const ok = store.handleCharacterDrop(
         { character: buildCharacter(101), characterId: 101 },
@@ -86,22 +74,15 @@ describe('characterStore.handleCharacterDrop', () => {
     })
 
     it('returns false when team is at capacity', () => {
-      // Fill ally team to capacity (default 5)
-      const allyTiles = gridStore.hexes.filter(
-        (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
-      )
+      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
       const allyHexIds = allyTiles.slice(0, store.maxTeamSizeAlly).map((h) => h.getId())
       allyHexIds.forEach((id, i) => store.placeCharacterOnHex(id, 100 + i, Team.ALLY))
 
-      // Verify ally team is full
       expect(store.availableAlly).toBe(0)
 
-      // Try to place an additional character — should fail
       const remaining = allyTiles[allyHexIds.length]
-      if (!remaining) {
-        // No remaining ally tile, test premise is wrong; skip silently
-        return
-      }
+      if (!remaining) throw new Error('Test setup: default map has no spare ally tile')
+
       const ok = store.handleCharacterDrop(
         { character: buildCharacter(999), characterId: 999 },
         remaining.getId(),
@@ -113,9 +94,7 @@ describe('characterStore.handleCharacterDrop', () => {
 
   describe('grid-source drop (sourceHexId set)', () => {
     it('moves a character to an empty target', () => {
-      const allyTiles = gridStore.hexes.filter(
-        (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
-      )
+      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
       if (allyTiles.length < 2) throw new Error('Test setup: need at least 2 ally tiles')
 
       const sourceId = allyTiles[0]!.getId()
@@ -133,9 +112,7 @@ describe('characterStore.handleCharacterDrop', () => {
     })
 
     it('swaps when target is occupied', () => {
-      const allyTiles = gridStore.hexes.filter(
-        (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
-      )
+      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
       if (allyTiles.length < 2) throw new Error('Test setup: need at least 2 ally tiles')
 
       const sourceId = allyTiles[0]!.getId()
@@ -157,69 +134,21 @@ describe('characterStore.handleCharacterDrop', () => {
 })
 
 describe('characterStore.removeCharacterFromHex', () => {
-  let store: ReturnType<typeof useCharacterStore>
-  let gridStore: ReturnType<typeof useGridStore>
-
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    gridStore = useGridStore()
-    store = useCharacterStore()
-  })
-
-  it('is an idempotent success on an empty tile', () => {
-    const allyTile = gridStore.hexes.find(
-      (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
-    )
-    if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
-
-    const ok = store.removeCharacterFromHex(allyTile.getId())
-
-    expect(ok).toBe(true)
-    expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
-  })
-
-  it('removes an occupied ally and returns true', () => {
-    const allyTile = gridStore.hexes.find(
-      (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY,
-    )
-    if (!allyTile) throw new Error('Test setup: no ally-available tile in default map')
+  it('removes an occupied character and is an idempotent success when empty', () => {
+    const allyTile = firstTile(State.AVAILABLE_ALLY)
     store.placeCharacterOnHex(allyTile.getId(), 101, Team.ALLY)
 
-    const ok = store.removeCharacterFromHex(allyTile.getId())
-
-    expect(ok).toBe(true)
+    expect(store.removeCharacterFromHex(allyTile.getId())).toBe(true)
     expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
-  })
 
-  it('removes an occupied enemy and returns true', () => {
-    const enemyTile = gridStore.hexes.find(
-      (h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ENEMY,
-    )
-    if (!enemyTile) throw new Error('Test setup: no enemy-available tile in default map')
-    store.placeCharacterOnHex(enemyTile.getId(), 202, Team.ENEMY)
-
-    const ok = store.removeCharacterFromHex(enemyTile.getId())
-
-    expect(ok).toBe(true)
-    expect(gridStore.getTile(enemyTile.getId()).characterId).toBeUndefined()
+    // Removing again succeeds without a character present
+    expect(store.removeCharacterFromHex(allyTile.getId())).toBe(true)
   })
 })
 
 describe('characterStore phantimals', () => {
-  let store: ReturnType<typeof useCharacterStore>
-  let gridStore: ReturnType<typeof useGridStore>
-
-  const allyTiles = () =>
-    gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY)
-
-  beforeEach(() => {
-    setActivePinia(createPinia())
-    gridStore = useGridStore()
-    store = useCharacterStore()
-  })
-
   it('places a phantimal without consuming team size', () => {
-    const tiles = allyTiles()
+    const tiles = tilesByState(State.AVAILABLE_ALLY)
     const before = store.availableAlly
     const ok = store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
 
@@ -229,7 +158,7 @@ describe('characterStore phantimals', () => {
   })
 
   it('keeps at most one phantimal per team (replace on add)', () => {
-    const tiles = allyTiles()
+    const tiles = tilesByState(State.AVAILABLE_ALLY)
     store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
     store.placePhantimalOnHex(tiles[1]!.getId(), toPhantimalId(2), Team.ALLY)
 
@@ -238,7 +167,7 @@ describe('characterStore phantimals', () => {
   })
 
   it('routes a roster phantimal drop through one-per-team placement', () => {
-    const tiles = allyTiles()
+    const tiles = tilesByState(State.AVAILABLE_ALLY)
     store.handleCharacterDrop(
       { character: buildCharacter(toPhantimalId(1)), characterId: toPhantimalId(1) },
       tiles[0]!.getId(),
@@ -254,14 +183,16 @@ describe('characterStore phantimals', () => {
 })
 
 describe('characterStore phantimal faction rule', () => {
-  let store: ReturnType<typeof useCharacterStore>
-  let gridStore: ReturnType<typeof useGridStore>
-
   // Character id → faction, fed to the (spied) data store so the rule is active.
-  const FACTIONS: Record<number, string> = { 1: 'lightbearer', 2: 'lightbearer', 3: 'lightbearer' }
-
-  const allyTiles = () =>
-    gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === State.AVAILABLE_ALLY)
+  const FACTIONS: Record<number, string> = {
+    1: 'lightbearer',
+    2: 'lightbearer',
+    3: 'lightbearer',
+    4: 'lightbearer',
+    5: 'lightbearer',
+    6: 'lightbearer',
+    7: 'lightbearer',
+  }
 
   const aurelian: PhantimalType = {
     id: 1,
@@ -272,49 +203,114 @@ describe('characterStore phantimal faction rule', () => {
   }
 
   beforeEach(() => {
-    setActivePinia(createPinia())
-    gridStore = useGridStore()
     const gameData = useGameDataStore()
     vi.spyOn(gameData, 'getCharacterFaction').mockImplementation((id: number) => FACTIONS[id])
     vi.spyOn(gameData, 'getPhantimalById').mockReturnValue(aurelian)
-    store = useCharacterStore()
   })
 
-  it('blocks placement below the faction requirement', () => {
-    const tiles = allyTiles()
-    store.placeCharacterOnHex(tiles[0]!.getId(), 1, Team.ALLY)
-    store.placeCharacterOnHex(tiles[1]!.getId(), 2, Team.ALLY) // only 2 lightbearers
+  // Field `count` faction heroes on a team, returning the used hex ids
+  const fieldHeroes = (team: Team, ids: number[]): number[] => {
+    const state = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+    const tiles = tilesByState(state)
+    return ids.map((id, i) => {
+      const hexId = tiles[i]!.getId()
+      store.placeCharacterOnHex(hexId, id, team)
+      return hexId
+    })
+  }
 
-    const ok = store.placePhantimalOnHex(tiles[2]!.getId(), toPhantimalId(1), Team.ALLY)
+  it('blocks placement below the faction requirement', () => {
+    fieldHeroes(Team.ALLY, [1, 2]) // only 2 lightbearers
+    const target = tilesByState(State.AVAILABLE_ALLY)[2]!
+
+    const ok = store.placePhantimalOnHex(target.getId(), toPhantimalId(1), Team.ALLY)
 
     expect(ok).toBe(false)
-    expect(gridStore.getTile(tiles[2]!.getId()).characterId).toBeUndefined()
+    expect(gridStore.getTile(target.getId()).characterId).toBeUndefined()
   })
 
   it('allows placement once the faction requirement is met', () => {
-    const tiles = allyTiles()
-    store.placeCharacterOnHex(tiles[0]!.getId(), 1, Team.ALLY)
-    store.placeCharacterOnHex(tiles[1]!.getId(), 2, Team.ALLY)
-    store.placeCharacterOnHex(tiles[2]!.getId(), 3, Team.ALLY) // now 3 lightbearers
+    fieldHeroes(Team.ALLY, [1, 2, 3])
+    const target = tilesByState(State.AVAILABLE_ALLY)[3]!
 
-    const ok = store.placePhantimalOnHex(tiles[3]!.getId(), toPhantimalId(1), Team.ALLY)
+    const ok = store.placePhantimalOnHex(target.getId(), toPhantimalId(1), Team.ALLY)
 
     expect(ok).toBe(true)
-    expect(gridStore.getTile(tiles[3]!.getId()).characterId).toBe(toPhantimalId(1))
+    expect(gridStore.getTile(target.getId()).characterId).toBe(toPhantimalId(1))
   })
 
   it('auto-removes a phantimal when its faction drops below the requirement', async () => {
-    const tiles = allyTiles()
-    store.placeCharacterOnHex(tiles[0]!.getId(), 1, Team.ALLY)
-    store.placeCharacterOnHex(tiles[1]!.getId(), 2, Team.ALLY)
-    store.placeCharacterOnHex(tiles[2]!.getId(), 3, Team.ALLY)
-    store.placePhantimalOnHex(tiles[3]!.getId(), toPhantimalId(1), Team.ALLY)
-    expect(gridStore.getTile(tiles[3]!.getId()).characterId).toBe(toPhantimalId(1))
+    const heroHexes = fieldHeroes(Team.ALLY, [1, 2, 3])
+    const target = tilesByState(State.AVAILABLE_ALLY)[3]!
+    store.placePhantimalOnHex(target.getId(), toPhantimalId(1), Team.ALLY)
+    expect(gridStore.getTile(target.getId()).characterId).toBe(toPhantimalId(1))
 
     // Removing a lightbearer drops the count to 2 — the phantimal must leave.
-    store.removeCharacterFromHex(tiles[0]!.getId())
+    store.removeCharacterFromHex(heroHexes[0]!)
     await nextTick()
 
-    expect(gridStore.getTile(tiles[3]!.getId()).characterId).toBeUndefined()
+    expect(gridStore.getTile(target.getId()).characterId).toBeUndefined()
+  })
+
+  it('blocks a cross-team phantimal swap when the swapped hero leaving breaks the requirement', async () => {
+    fieldHeroes(Team.ALLY, [1, 2, 3])
+    const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6]) // exactly at the requirement
+    const phantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
+    store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)
+    await nextTick()
+
+    // Swapping with hero 4 would leave the enemy team at 2 lightbearers
+    const ok = store.handleCharacterDrop(
+      { character: buildCharacter(toPhantimalId(1), phantimalHex), characterId: toPhantimalId(1) },
+      enemyHexes[0]!,
+    )
+
+    expect(ok).toBe(false)
+    expect(gridStore.getTile(phantimalHex).characterId).toBe(toPhantimalId(1))
+    expect(gridStore.getTile(enemyHexes[0]!).characterId).toBe(4)
+  })
+
+  it('allows a cross-team phantimal swap when the requirement survives the departure', async () => {
+    fieldHeroes(Team.ALLY, [1, 2, 3])
+    const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6, 7]) // one above the requirement
+    const phantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
+    store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)
+    await nextTick()
+
+    const ok = store.handleCharacterDrop(
+      { character: buildCharacter(toPhantimalId(1), phantimalHex), characterId: toPhantimalId(1) },
+      enemyHexes[0]!,
+    )
+
+    expect(ok).toBe(true)
+    expect(gridStore.getTile(enemyHexes[0]!).characterId).toBe(toPhantimalId(1))
+    expect(gridStore.getTile(enemyHexes[0]!).team).toBe(Team.ENEMY)
+    expect(gridStore.getTile(phantimalHex).characterId).toBe(4)
+    expect(gridStore.getTile(phantimalHex).team).toBe(Team.ALLY)
+  })
+
+  it('moving a phantimal to an empty enemy tile displaces the enemy phantimal', async () => {
+    fieldHeroes(Team.ALLY, [1, 2, 3])
+    fieldHeroes(Team.ENEMY, [4, 5, 6])
+    const allyPhantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
+    store.placePhantimalOnHex(allyPhantimalHex, toPhantimalId(1), Team.ALLY)
+    const enemyPhantimalHex = tilesByState(State.AVAILABLE_ENEMY)[3]!.getId()
+    store.placePhantimalOnHex(enemyPhantimalHex, toPhantimalId(2), Team.ENEMY)
+    const emptyEnemyHex = tilesByState(State.AVAILABLE_ENEMY)[4]!.getId()
+    await nextTick()
+
+    const ok = store.handleCharacterDrop(
+      {
+        character: buildCharacter(toPhantimalId(1), allyPhantimalHex),
+        characterId: toPhantimalId(1),
+      },
+      emptyEnemyHex,
+    )
+
+    expect(ok).toBe(true)
+    // One phantimal per team: the enemy's previous phantimal is gone
+    expect(gridStore.getTile(emptyEnemyHex).characterId).toBe(toPhantimalId(1))
+    expect(gridStore.getTile(enemyPhantimalHex).characterId).toBeUndefined()
+    expect(gridStore.getTile(allyPhantimalHex).characterId).toBeUndefined()
   })
 })

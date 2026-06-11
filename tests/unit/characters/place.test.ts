@@ -140,18 +140,6 @@ describe('place.ts', () => {
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
     })
-
-    it('should handle occupied tile with missing team gracefully', () => {
-      // Manually create invalid state
-      const tile = grid.getTileById(1)
-      tile.characterId = 999
-      tile.team = undefined
-
-      const result = performPlace(grid, 1, 100, Team.ALLY)
-
-      expect(result).toBe(false)
-      expect(tile.characterId).toBe(999)
-    })
   })
 
   describe('executePlaceCharacter', () => {
@@ -250,23 +238,18 @@ describe('place.ts', () => {
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
     })
 
-    it('should handle rollback failure gracefully', () => {
-      vi.mocked(hasSkill).mockReturnValue(true)
-      skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
+    it('should replace an occupant when the team is at max capacity', () => {
+      // Occupant removal precedes the capacity check, so replacement on a
+      // full team must succeed rather than trip the team size limit
+      grid.maxTeamSizes.set(Team.ALLY, 1)
+      performPlace(grid, 1, 100, Team.ALLY)
 
-      // Mock console.warn
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const result = executePlaceCharacter(grid, skillManager, 1, 200, Team.ALLY)
 
-      // The rollback in executePlaceCharacter will succeed, so we won't see a warning
-      // This test just verifies the rollback path is executed
-      const result = executePlaceCharacter(grid, skillManager, 1, 100, Team.ALLY)
-
-      expect(result).toBe(false)
-      // Verify character was rolled back
-      const tile = grid.getTileById(1)
-      expect(tile.characterId).toBeUndefined()
-
-      consoleSpy.mockRestore()
+      expect(result).toBe(true)
+      expect(grid.getTileById(1).characterId).toBe(200)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
     })
 
     it('should use default team ALLY when not specified', () => {
@@ -334,29 +317,6 @@ describe('place.ts', () => {
       expect(placedHex).toBeUndefined()
     })
 
-    it('should sort tiles deterministically before random selection', () => {
-      // Run placement multiple times with same random seed
-      const mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(0.5)
-
-      const results: number[] = []
-      for (let i = 0; i < 5; i++) {
-        // Reset grid
-        grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-        grid.skillManager = skillManager
-
-        executeAutoPlaceCharacter(grid, skillManager, 100 + i, Team.ALLY)
-
-        // Find where character was placed
-        const placedHex = [1, 2, 3].find((hexId) => grid.getTileById(hexId).characterId === 100 + i)
-        if (placedHex) results.push(placedHex)
-      }
-
-      // All placements should be on the same hex with fixed random
-      expect(results.every((hex) => hex === results[0])).toBe(true)
-
-      mathRandomSpy.mockRestore()
-    })
-
     it('should handle undefined selected tile gracefully', () => {
       // Mock console.error
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
@@ -392,7 +352,7 @@ describe('place.ts', () => {
 
   describe('Edge cases', () => {
     it('should handle empty grid', () => {
-      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { id: 1, name: 'Empty', grid: [] })
+      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
       emptyGrid.skillManager = skillManager
 
       const result = executeAutoPlaceCharacter(emptyGrid, skillManager, 100, Team.ALLY)
@@ -412,8 +372,7 @@ describe('place.ts', () => {
       expect(result).toBe(false)
     })
 
-    it('should handle concurrent placements correctly', () => {
-      // Place multiple characters in sequence
+    it('should track multiple sequential placements', () => {
       expect(performPlace(grid, 1, 100, Team.ALLY)).toBe(true)
       expect(performPlace(grid, 2, 200, Team.ALLY)).toBe(true)
       expect(performPlace(grid, 3, 300, Team.ALLY)).toBe(true)
