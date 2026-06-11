@@ -1,3 +1,4 @@
+import { useI18nStore } from '@/stores/i18n'
 import { copyImageBlob } from '@/utils/clipboard'
 import { downloadUrl, timestampedName } from '@/utils/download'
 import { useToast } from './useToast'
@@ -9,6 +10,7 @@ interface ExportOptions {
 
 export function useGridExport() {
   const { success, error } = useToast()
+  const i18n = useI18nStore()
 
   /**
    * Captures the grid as a PNG data URL, with optional perspective cropping
@@ -92,10 +94,10 @@ export function useGridExport() {
       const dataUrl = await captureGrid(options)
       const blob = await (await fetch(dataUrl)).blob()
       await copyImageBlob(blob)
-      success('Copied to clipboard!')
+      success(i18n.t('app.copied-clipboard'))
     } catch (err) {
       console.error('Failed to copy grid image:', err)
-      error("Couldn't copy image — download instead.")
+      error(i18n.t('app.copy-image-failed'))
     }
   }
 
@@ -106,10 +108,10 @@ export function useGridExport() {
     try {
       const dataUrl = await captureGrid(options)
       downloadUrl(dataUrl, timestampedName('stargazer', 'png'))
-      success('Grid downloaded!')
+      success(i18n.t('app.grid-downloaded'))
     } catch (err) {
       console.error('Failed to export grid:', err)
-      error('Download failed')
+      error(i18n.t('app.download-failed'))
     }
   }
 

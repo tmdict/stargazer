@@ -3,7 +3,6 @@ import { computed, ref, watch } from 'vue'
 
 import WandWarsMatchupPrediction from './WandWarsMatchupPrediction.vue'
 import WandWarsRecommendation from './WandWarsRecommendation.vue'
-import type { CounterIndicator, TeamCounterInfo } from './WandWarsRecommendation.vue'
 import WandWarsRecordForm from './WandWarsRecordForm.vue'
 import WandWarsRecordsList from './WandWarsRecordsList.vue'
 import WandWarsTopTeams from './WandWarsTopTeams.vue'
@@ -19,6 +18,7 @@ import {
   getMatchData,
   getRecommendations,
 } from '@/wandwars/prediction/recommend'
+import { buildCounterIndicatorMap, buildTeamCounterMap } from '@/wandwars/teamCounter'
 import type { MatchResult, PickSide, PickState, RecordedMatch } from '@/wandwars/types'
 
 const gameDataStore = useGameDataStore()
@@ -57,70 +57,6 @@ function onRecordSubmit(record: RecordedMatch) {
   activeTab.value = 'records'
 }
 
-// Counter score threshold: > 0.1 = strong against, < -0.1 = weak against
-const COUNTER_THRESHOLD = 0.1
-
-/**
- * Check if adding this candidate to the current teammates forms a team
- * that has beaten teams containing the known opponents.
- * Works with 2+ known opponents (doesn't require all 3).
- */
-function getTeamCounter(hero: string): TeamCounterInfo | null {
-  const opponents = opponentTeam.value
-  const teammates = currentTeammates.value
-  if (opponents.length < 2 || teammates.length < 2) return null
-
-  const myTeam = [...teammates, hero]
-  const matches = getMatchData()
-
-  let wins = 0
-  let losses = 0
-  let total = 0
-
-  for (const match of matches) {
-    const leftSet = new Set(match.left)
-    const rightSet = new Set(match.right)
-
-    // My team on left, opponents' heroes all on right (opponent may have unknown 3rd)
-    const myOnLeft = myTeam.every((h) => leftSet.has(h)) && opponents.every((h) => rightSet.has(h))
-    // My team on right, opponents' heroes all on left
-    const myOnRight = myTeam.every((h) => rightSet.has(h)) && opponents.every((h) => leftSet.has(h))
-
-    if (!myOnLeft && !myOnRight) continue
-
-    total++
-    if (myOnLeft && match.result === 'left') wins++
-    else if (myOnLeft && match.result === 'right') losses++
-    else if (myOnRight && match.result === 'right') wins++
-    else if (myOnRight && match.result === 'left') losses++
-  }
-
-  if (total === 0) return null
-  return { wins, losses, total }
-}
-
-function getCounterIndicators(hero: string): CounterIndicator[] {
-  const analysis = getAnalysisData()
-  const opponents = opponentTeam.value
-  if (opponents.length === 0) return []
-
-  const indicators: CounterIndicator[] = []
-  for (const opp of opponents) {
-    const score = analysis.counterMatrix[hero]?.[opp]?.score ?? 0
-    if (score > COUNTER_THRESHOLD) {
-      indicators.push({ opponent: opp, type: 'counters', score })
-    } else if (score < -COUNTER_THRESHOLD) {
-      indicators.push({ opponent: opp, type: 'countered', score })
-    }
-  }
-  // Ordering: 'counters' (strong against) before 'countered' (weak against),
-  // then by descending score magnitude within each group.
-  return indicators.sort((a, b) => {
-    if (a.type !== b.type) return a.type === 'counters' ? -1 : 1
-    return Math.abs(b.score) - Math.abs(a.score)
-  })
-}
-
 // Lock recommendations to a specific side (null = follow draft order)
 const lockedSide = ref<PickSide | null>(null)
 
@@ -149,6 +85,17 @@ const opponentTeam = computed(() => {
   if (!effectivePickSide.value) return []
   return props.pickState[opponentSide.value].filter((h): h is string => h !== null)
 })
+
+// Per-card counter data, keyed by candidate hero. Computed so the single-pass
+// scans refresh on draft changes — not on sort/filter re-renders, which a
+// per-card template method call would.
+const teamCounterByHero = computed(() =>
+  buildTeamCounterMap(getMatchData(), currentTeammates.value, opponentTeam.value),
+)
+
+const counterIndicatorsByHero = computed(() =>
+  buildCounterIndicatorMap(getAnalysisData().counterMatrix, opponentTeam.value),
+)
 
 const allPickedHeroes = computed(() => [
   ...props.pickState.left.filter((h): h is string => h !== null),
@@ -347,8 +294,7 @@ const aggregatePrediction = computed(() => {
         v-if="activeTab === 'bradley-terry' && matchData.length < BT_LOW_DATA_THRESHOLD"
         class="warning-banner"
       >
-        Limited data ({{ matchData.length }} matches) — estimates may be unreliable. Prefer Hero
-        Synergy tab.
+        {{ i18n.t('wandwars.messages/low-data-warning', { count: matchData.length }) }}
       </div>
 
       <WandWarsMatchupPrediction
@@ -374,7 +320,7 @@ const aggregatePrediction = computed(() => {
             <button
               :class="['lock-btn', { active: lockedSide === 'left' }]"
               @click="toggleLock('left')"
-              title="Lock recommendations to Left team"
+              :title="i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.left') })"
             >
               <svg
                 v-if="lockedSide === 'left'"
@@ -391,7 +337,7 @@ const aggregatePrediction = computed(() => {
             <button
               :class="['lock-btn', { active: lockedSide === 'right' }]"
               @click="toggleLock('right')"
-              :title="joinLocale(i18n.t('wandwars.right'), i18n.t('wandwars.team'))"
+              :title="i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.right') })"
             >
               <svg
                 v-if="lockedSide === 'right'"
@@ -474,8 +420,8 @@ const aggregatePrediction = computed(() => {
               :recommendation="rec"
               :model-id="activeTab"
               :character-images="characterImages"
-              :counter-indicators="getCounterIndicators(rec.hero)"
-              :team-counter="getTeamCounter(rec.hero)"
+              :counter-indicators="counterIndicatorsByHero.get(rec.hero) ?? []"
+              :team-counter="teamCounterByHero.get(rec.hero) ?? null"
               :opponent-count="opponentTeam.length"
               :left-team="leftTeam"
               :right-team="rightTeam"

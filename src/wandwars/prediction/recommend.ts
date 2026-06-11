@@ -3,6 +3,7 @@ import encodedData from '../data/data?raw'
 import { getUniqueHeroes, parseMatchData } from '../records/parser'
 import type {
   AnalysisData,
+  CalibratedMatchupPrediction,
   MatchNote,
   MatchResult,
   MatchupPrediction,
@@ -88,7 +89,7 @@ function calibratedPrediction(
   modelId: string,
   raw: MatchupPrediction,
   selfConfidence: number,
-): MatchupPrediction {
+): CalibratedMatchupPrediction {
   const calLeft = calibrate(modelId, raw.leftWinProbability)
   return {
     ...raw,
@@ -98,27 +99,10 @@ function calibratedPrediction(
   }
 }
 
-export function getMatchupPrediction(
-  modelId: string,
-  leftTeam: string[],
-  rightTeam: string[],
-): MatchupPrediction | null {
-  const model = models.find((m) => m.id === modelId)
-  if (!model) return null
-  const analysis = getAnalysis()
-  const matches = getMatches()
-  const btFit = getCachedBradleyTerryFit(matches, analysis)
-  const selfConf = computeAllSelfConfidences(leftTeam, rightTeam, analysis, btFit)
-  const raw = model.predictMatchup(leftTeam, rightTeam, analysis, matches)
-  return calibratedPrediction(modelId, raw, selfConf[modelId] ?? 0)
-}
-
 export interface ModelPrediction {
   id: string
   name: string
-  prediction: MatchupPrediction
-  /** Raw pre-calibration probability, surfaced for diagnostics. */
-  rawLeftWinProbability: number
+  prediction: CalibratedMatchupPrediction
   /** Per-model self-confidence [0, 1] — how well the data supports this model's answer. */
   selfConfidence: number
 }
@@ -138,7 +122,6 @@ export function getAllMatchupPredictions(
       id: model.id,
       name: model.name,
       prediction: calibratedPrediction(model.id, raw, sc),
-      rawLeftWinProbability: raw.leftWinProbability,
       selfConfidence: sc,
     }
   })
