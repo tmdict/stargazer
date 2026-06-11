@@ -1,14 +1,25 @@
 /**
- * Factories for skills that share a calculate-and-store lifecycle.
+ * Factories for skills that share a common lifecycle.
  *
- * Both factories wire up the standard activate/deactivate/update hooks
- * around a single `calculateTarget` callback; they differ only in how
- * the result is presented:
+ * createTargetingSkill and createTileHighlightSkill wire the standard
+ * activate/deactivate/update hooks around a single `calculateTarget`
+ * callback; they differ only in how the result is presented:
  *   - createTargetingSkill: optionally enriches the target with arrow metadata
  *   - createTileHighlightSkill: paints a color modifier on the target tile,
  *     with previous-target cleanup on update
+ *
+ * createCompanionSkill owns the companion lifecycle instead: spawning N
+ * companions on random free tiles, raising team capacity, linking them to
+ * the main character, and tearing all of it down on deactivation.
  */
 
+import { findCharacterHex, getMaxTeamSize, setMaxTeamSize } from '../../characters/character'
+import { addCompanionLink, clearCompanionLinks, getCompanions } from '../../characters/companion'
+import { performPlace } from '../../characters/place'
+import { performRemove } from '../../characters/remove'
+import { BASE_TEAM_SIZE } from '../../grid'
+import { State } from '../../types/state'
+import { Team } from '../../types/team'
 import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
 
 interface TargetingSkillConfig {
@@ -128,6 +139,137 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
     },
     onUpdate(ctx) {
       updateTargets(ctx)
+    },
+  }
+}
+
+interface CompanionSkillConfig {
+  id: string
+  characterId: number
+  name: string
+  description: string
+  /** Number of companions to spawn; each raises team capacity by one. */
+  count?: number
+  colorModifier?: string
+  companionColorModifier?: string
+  companionImageModifier?: string
+  companionRange?: number
+}
+
+/**
+ * Skill that spawns companion units on random free tiles.
+ *
+ * Activation raises the team capacity by `count`, places the companions
+ * (IDs namespaced as N * companionIdOffset + characterId), links them to the
+ * main character, and applies the configured modifiers. A placement failure
+ * rolls back already-placed companions and the capacity bump, then throws so
+ * the surrounding placement transaction fails as a whole. Deactivation
+ * removes the companions, their links and modifiers, and restores capacity.
+ */
+export function createCompanionSkill(config: CompanionSkillConfig): Skill {
+  const {
+    id,
+    characterId,
+    name,
+    description,
+    count = 1,
+    colorModifier,
+    companionColorModifier,
+    companionImageModifier,
+    companionRange,
+  } = config
+
+  return {
+    id,
+    characterId,
+    name,
+    description,
+    colorModifier,
+    companionColorModifier,
+    companionImageModifier,
+    companionRange,
+
+    onActivate(ctx: SkillContext): void {
+      const { grid, team, skillManager } = ctx
+      const companionIds = Array.from(
+        { length: count },
+        (_, i) => (i + 1) * grid.companionIdOffset + characterId,
+      )
+
+      const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
+      const availableTiles = grid
+        .getAllTiles()
+        .filter((tile) => tile.state === availableState && !tile.characterId)
+
+      if (availableTiles.length < count) {
+        // Throwing makes the surrounding placement transaction fail as a whole
+        throw new Error(`${id}: not enough free tiles for ${count} companion(s)`)
+      }
+
+      const baseSize = getMaxTeamSize(grid, team)
+      if (!setMaxTeamSize(grid, team, baseSize + count)) {
+        console.warn(`${id}: failed to increase team size for ${team}`)
+        return // Skip companion placement
+      }
+
+      const rollback = (placed: number[]): void => {
+        for (const placedId of placed) {
+          const hexId = findCharacterHex(grid, placedId, team)
+          if (hexId !== null) performRemove(grid, hexId)
+        }
+        setMaxTeamSize(grid, team, baseSize)
+      }
+
+      const placedCompanions: number[] = []
+      for (const companionId of companionIds) {
+        const randomIndex = Math.floor(Math.random() * availableTiles.length)
+        const tile = availableTiles[randomIndex]
+        if (!tile || !performPlace(grid, tile.hex.getId(), companionId, team)) {
+          rollback(placedCompanions)
+          throw new Error(`${id}: failed to place companion ${companionId}`)
+        }
+        placedCompanions.push(companionId)
+        availableTiles.splice(randomIndex, 1)
+
+        addCompanionLink(grid, characterId, companionId, team)
+        if (companionColorModifier) {
+          skillManager.addCharacterColorModifier(companionId, team, companionColorModifier)
+        }
+        if (companionImageModifier) {
+          skillManager.addCharacterImageModifier(companionId, team, companionImageModifier)
+        }
+      }
+
+      if (colorModifier) {
+        skillManager.addCharacterColorModifier(characterId, team, colorModifier)
+      }
+    },
+
+    onDeactivate(ctx: SkillContext): void {
+      const { grid, team, skillManager } = ctx
+
+      skillManager.removeCharacterColorModifier(characterId, team)
+
+      for (const companionId of getCompanions(grid, characterId, team)) {
+        const companionHex = findCharacterHex(grid, companionId, team)
+        if (companionHex !== null) {
+          skillManager.removeCharacterColorModifier(companionId, team)
+          skillManager.removeCharacterImageModifier(companionId, team)
+          if (!performRemove(grid, companionHex)) {
+            console.warn(
+              `${id}: failed to remove companion ${companionId} from hex ${companionHex}`,
+            )
+          }
+        }
+      }
+
+      clearCompanionLinks(grid, characterId, team)
+
+      // Restore capacity, clamped to the base size
+      const currentSize = getMaxTeamSize(grid, team)
+      if (!setMaxTeamSize(grid, team, Math.max(BASE_TEAM_SIZE, currentSize - count))) {
+        console.warn(`${id}: failed to restore team size for ${team}`)
+      }
     },
   }
 }

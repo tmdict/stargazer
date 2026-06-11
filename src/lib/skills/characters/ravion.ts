@@ -1,15 +1,20 @@
+import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import { createTargetingSkill } from '../utils/builders'
 import { getCandidates } from '../utils/targeting'
 
-// Targets the 2 rearmost allies (smallest hex IDs) with arrows for each.
+// Targets the 2 rearmost allies with arrows for each. Rearmost follows the
+// grid convention (see findRearmostTarget): smallest hex IDs for the ally
+// team, largest for the enemy team.
 function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const { grid, team, characterId, hexId } = context
   const candidates = getCandidates(grid, team, characterId)
   if (candidates.length === 0) return null
 
-  const sorted = [...candidates].sort((a, b) => a.hexId - b.hexId)
+  const sorted = [...candidates].sort((a, b) =>
+    team === Team.ENEMY ? b.hexId - a.hexId : a.hexId - b.hexId,
+  )
   const targets = sorted.slice(0, 2)
 
   return {

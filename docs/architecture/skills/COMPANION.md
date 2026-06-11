@@ -9,51 +9,29 @@ Spawn linked characters that share fate with their main character. Companions us
 - Visual differentiation via `companionColorModifier` and `companionImageModifier`
 - Optional range override via `companionRange`
 
-## Single Companion
+## The Factory
 
-When activated, finds a random available tile and places the companion:
-
-```typescript
-const companionId = grid.companionIdOffset + characterId
-grid.setTile(randomTile.hex.getId(), {
-  characterId: companionId,
-  team,
-  state,
-})
-grid.addCompanionLink(characterId, companionId, team)
-
-// Visual modifiers
-if (skill.companionColorModifier) {
-  skillManager.addCharacterColorModifier(companionId, team, skill.companionColorModifier)
-}
-if (skill.companionImageModifier) {
-  skillManager.addCharacterImageModifier(companionId, team, skill.companionImageModifier)
-}
-```
-
-## Multiple Companions
-
-For skills that spawn multiple companions (e.g., Zanie's turrets):
+All companion skills (Phraesto, Elijah & Lailah, Zanie) are registrations of `createCompanionSkill` from `/src/lib/skills/utils/builders.ts`:
 
 ```typescript
-const companionIds = [1, 2].map((n) => n * grid.companionIdOffset + characterId)
-
-for (const companionId of companionIds) {
-  // Place each companion
-  performPlace(grid, hexId, companionId, team, true)
-
-  // Link to main character
-  addCompanionLink(grid, characterId, companionId, team)
-
-  // Apply visual modifiers
-  if (skill.companionImageModifier) {
-    skillManager.addCharacterImageModifier(companionId, team, skill.companionImageModifier)
-  }
-}
-
-// Increase team size by number of companions
-setMaxTeamSize(grid, team, currentSize + companionIds.length)
+registerSkill(
+  createCompanionSkill({
+    id: 'zanie',
+    characterId: 89,
+    name: 'Turret',
+    description: '…',
+    count: 2, // companions to spawn (default 1)
+    companionImageModifier: 'zanie-turret',
+    companionRange: 3,
+  }),
+)
 ```
+
+The factory owns the full lifecycle:
+
+- **Activation**: derives the companion IDs (`N * companionIdOffset + characterId` for N = 1..count), raises team capacity by `count`, places each companion on a random free tile of the team's side, links it to the main character, and applies the configured modifiers
+- **Failure**: a placement failure rolls back already-placed companions and the capacity bump, then throws — so the surrounding placement transaction (`executePlaceCharacter`) fails as a whole
+- **Deactivation**: removes the companions, their links and modifiers, and restores capacity to `BASE_TEAM_SIZE` semantics (clamped, never below the base)
 
 ## Companion ID Ranges
 

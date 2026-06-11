@@ -10,6 +10,10 @@ import { Team } from './types/team'
 // occupying the band between regular characters and PHANTIMAL_ID_OFFSET.
 export const COMPANION_ID_OFFSET = 10000
 
+// Per-team unit capacity before any skill raises it (companion skills bump it
+// by their companion count while active)
+export const BASE_TEAM_SIZE = 5
+
 function iniGrid(preset: GridPreset): Hex[] {
   const centerRowIndex = Math.floor(preset.hex.length / 2)
   const hexes: Hex[] = []
@@ -59,8 +63,8 @@ export class Grid {
     [Team.ENEMY, new Set()],
   ])
   maxTeamSizes: Map<Team, number> = new Map([
-    [Team.ALLY, 5],
-    [Team.ENEMY, 5],
+    [Team.ALLY, BASE_TEAM_SIZE],
+    [Team.ENEMY, BASE_TEAM_SIZE],
   ])
 
   // Companion IDs are derived as N * companionIdOffset + mainCharacterId
