@@ -6,16 +6,12 @@ const SQRT3 = Math.sqrt(3)
 const MAX_GRID_HALF_WIDTH = 200 // Approximate half-width of the grid
 const BASE_CURVATURE_FACTOR = 0.15 // Base curve amount as fraction of length
 
-// Orientation matrices for hex-to-pixel and pixel-to-hex conversion
+// Orientation matrix for hex-to-pixel conversion
 export interface Orientation {
   f0: number // forward transform matrix (2x2)
   f1: number
   f2: number
   f3: number
-  b0: number // backward transform matrix (2x2)
-  b1: number
-  b2: number
-  b3: number
   startAngle: number // angle offset for corner vertices, multiples of 60deg
 }
 
@@ -25,10 +21,6 @@ export const POINTY: Orientation = {
   f1: SQRT3 / 2,
   f2: 0,
   f3: 3 / 2,
-  b0: SQRT3 / 3,
-  b1: -1 / 3,
-  b2: 0,
-  b3: 2 / 3,
   startAngle: 0.5,
 }
 

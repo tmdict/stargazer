@@ -49,6 +49,19 @@ describe('computeCredibilityBlend', () => {
     expect(blend.avgSelfConfidence).toBeCloseTo(0.5, 6)
   })
 
+  it('excludes a zero-confidence vote when peers have confidence', () => {
+    const blend = computeCredibilityBlend(
+      [
+        { id: 'a', probability: 0.9, selfConfidence: 0 }, // cred 0 — no influence
+        { id: 'b', probability: 0.4, selfConfidence: 0.5 },
+      ],
+      weights,
+    )
+    expect(blend.probability).toBeCloseTo(0.4, 6)
+    expect(blend.weightedStddev).toBeCloseTo(0, 6)
+    expect(blend.avgSelfConfidence).toBeCloseTo(0.5, 6)
+  })
+
   it('a unanimous panel has zero disagreement', () => {
     const blend = computeCredibilityBlend(
       [

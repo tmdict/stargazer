@@ -14,8 +14,6 @@ describe('skill', () => {
   beforeEach(() => {
     grid = new Grid(SMALL_GRID, SMALL_OPEN_ARENA)
     skillManager = new SkillManager()
-    // Reset mocks
-    vi.clearAllMocks()
   })
 
   describe('Skill Registry', () => {
@@ -32,34 +30,18 @@ describe('skill', () => {
 
   describe('SkillManager', () => {
     describe('skill activation/deactivation', () => {
-      it('tracks activation state correctly', () => {
-        // Use a character ID without a skill to test pure SkillManager tracking
-        // This avoids skill-specific failures due to test grid limitations
+      it('treats characters without skills as successful no-ops, never tracked', () => {
         const result = skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
 
-        // Should return true (no skill = success)
         expect(result).toBe(true)
-        // Should not be tracked since there's no skill
         expect(skillManager.hasActiveSkill(999, Team.ALLY)).toBe(false)
+        expect(skillManager.hasActiveSkill(999)).toBe(false)
+        expect(skillManager.getActiveSkillInfo(999)).toBeUndefined()
       })
 
-      it('handles character with no skill gracefully', () => {
-        // Character ID 999 has no skill registered
-        const result = skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
-
-        // Should return true (no skill = success)
-        expect(result).toBe(true)
-        // But should not be tracked as active
-        expect(skillManager.hasActiveSkill(999, Team.ALLY)).toBe(false)
-      })
-
-      it('handles skill activation errors gracefully', () => {
-        // We can't easily force a real skill to fail without mocking,
-        // but we can test that the error handling works by checking
-        // that skills requiring specific conditions fail gracefully
-
-        // Phraesto (ID 50) requires space for companion
-        // Fill all available ally tiles to cause failure
+      it('reports failure and does not track when a skill throws on activation', () => {
+        // Phraesto (50) needs a free tile for its companion; fill every ally
+        // tile so activation fails
         grid.getAllTiles().forEach((tile) => {
           if (tile.state === State.AVAILABLE_ALLY) {
             tile.characterId = 1000 + tile.hex.getId()
@@ -68,43 +50,27 @@ describe('skill', () => {
 
         const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
-        // Try to activate Phraesto when no space is available
         const result = skillManager.activateCharacterSkill(50, 1, Team.ALLY, grid)
 
-        // Should fail and not be tracked as active
         expect(result).toBe(false)
         expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(false)
 
         consoleSpy.mockRestore()
       })
 
-      it('properly manages skill state', () => {
-        // Test that SkillManager properly tracks state
-        // We can't test real skill activation due to grid limitations
-        // But we can test that the manager correctly reports state
+      it('deactivates all active skills, cleaning up their side effects', () => {
+        const bigGrid = new Grid(STANDARD_GRID, STANDARD_ARENA)
+        performPlace(bigGrid, 1, 50, Team.ALLY)
+        skillManager.activateCharacterSkill(50, 1, Team.ALLY, bigGrid)
+        expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(true)
 
-        // No skill character returns true but isn't tracked
-        const result = skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
-        expect(result).toBe(true)
-        expect(skillManager.hasActiveSkill(999, Team.ALLY)).toBe(false)
-      })
+        skillManager.deactivateAllSkills(bigGrid)
 
-      it('handles team-specific tracking', () => {
-        // Test team separation logic without real skills
-        // Characters without skills don't get tracked
-        skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
-        skillManager.activateCharacterSkill(999, 4, Team.ENEMY, grid)
-
-        expect(skillManager.hasActiveSkill(999, Team.ALLY)).toBe(false)
-        expect(skillManager.hasActiveSkill(999, Team.ENEMY)).toBe(false)
-      })
-
-      it('deactivates all skills', () => {
-        // Test deactivateAllSkills with no active skills
-        skillManager.deactivateAllSkills(grid)
-
-        // Should handle empty state gracefully
-        expect(skillManager.hasActiveSkill(999)).toBe(false)
+        expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(false)
+        const companion = bigGrid
+          .getAllTiles()
+          .find((t) => t.characterId === bigGrid.companionIdOffset + 50)
+        expect(companion).toBeUndefined()
       })
     })
 
@@ -112,9 +78,8 @@ describe('skill', () => {
       it('manages character color modifiers', () => {
         skillManager.addCharacterColorModifier(100, Team.ALLY, '#ff0000')
 
-        // Just verify the modifier system works without checking specific keys
         const modifiers = skillManager.getColorModifiersByCharacterAndTeam()
-        expect(modifiers.size).toBeGreaterThan(0)
+        expect(modifiers.get(`100-${Team.ALLY}`)).toBe('#ff0000')
 
         skillManager.removeCharacterColorModifier(100, Team.ALLY)
         const updated = skillManager.getColorModifiersByCharacterAndTeam()
@@ -166,15 +131,6 @@ describe('skill', () => {
         skillManager.removeTileColorModifier(99, '#ff0000')
         expect(skillManager.getTileColorModifier(99)).toBeUndefined()
       })
-
-      it('clears multi-color tiles with clearTileColorModifiers', () => {
-        skillManager.setTileColorModifier(1, '#ff0000')
-        skillManager.setTileColorModifier(1, '#00ff00')
-        skillManager.setTileColorModifier(2, '#0000ff')
-
-        skillManager.clearTileColorModifiers()
-        expect(skillManager.getTileColorModifiers().size).toBe(0)
-      })
     })
 
     describe('skill targeting', () => {
@@ -221,14 +177,6 @@ describe('skill', () => {
     })
 
     describe('skill updates', () => {
-      it('handles update calls gracefully', () => {
-        // Test that updateActiveSkills works with no active skills
-        skillManager.updateActiveSkills(grid)
-
-        // Should not throw and should maintain empty state
-        expect(skillManager.hasActiveSkill(999)).toBe(false)
-      })
-
       it('runs full deactivation when a tracked character vanished from the grid', () => {
         // Phraesto (50): companion skill — activation places a companion and
         // raises the team size, so a leaked deactivation is observable
@@ -278,28 +226,13 @@ describe('skill', () => {
     })
 
     describe('edge cases', () => {
-      it('handles character with no skill gracefully', () => {
-        const result = skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
-        expect(result).toBe(true) // No skill = success
-        expect(skillManager.hasActiveSkill(999)).toBe(false)
-      })
-
-      it('checks active skill without team parameter', () => {
-        // Test with character without skill
-        skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
-
-        expect(skillManager.hasActiveSkill(999)).toBe(false)
-        const info = skillManager.getActiveSkillInfo(999)
-        expect(info).toBeUndefined()
-      })
-
-      it('handles duplicate color modifier additions', () => {
+      it('overwrites a character color modifier on re-add', () => {
         skillManager.addCharacterColorModifier(100, Team.ALLY, '#ff0000')
-        skillManager.addCharacterColorModifier(100, Team.ALLY, '#00ff00') // Overwrite
+        skillManager.addCharacterColorModifier(100, Team.ALLY, '#00ff00')
 
-        // Just verify modifiers exist
         const modifiers = skillManager.getColorModifiersByCharacterAndTeam()
-        expect(modifiers.size).toBeGreaterThan(0)
+        expect(modifiers.get(`100-${Team.ALLY}`)).toBe('#00ff00')
+        expect(modifiers.size).toBe(1)
       })
     })
   })

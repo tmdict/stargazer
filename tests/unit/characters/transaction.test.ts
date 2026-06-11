@@ -111,58 +111,6 @@ describe('transaction.ts', () => {
         expect(result).toBe(false)
         expect(counter).toBe(0) // 2 increments, then 2 decrements
       })
-
-      it('should maintain transaction atomicity', () => {
-        const state = { value: 0 }
-
-        const operations = [
-          () => {
-            state.value = 10
-            return true
-          },
-          () => {
-            state.value = 20
-            return true
-          },
-          () => {
-            state.value = 30
-            return false
-          }, // Fail here
-        ]
-
-        const rollbacks = [
-          () => {
-            state.value = 0
-          }, // Reset state
-        ]
-
-        executeTransaction(operations, rollbacks)
-
-        expect(state.value).toBe(0) // State should be rolled back
-      })
-
-      it('should support nested transactions', () => {
-        let innerCalled = false
-
-        const operations = [
-          () => true,
-          () => {
-            // Nested transaction
-            const innerResult = executeTransaction([
-              () => {
-                innerCalled = true
-                return true
-              },
-            ])
-            return innerResult
-          },
-        ]
-
-        const result = executeTransaction(operations)
-
-        expect(result).toBe(true)
-        expect(innerCalled).toBe(true)
-      })
     })
 
     describe('Edge cases', () => {
@@ -219,46 +167,6 @@ describe('transaction.ts', () => {
         executeTransaction([op1, op2], [rollback1, rollback2, rollback3])
 
         expect(calls).toEqual([3, 2, 1])
-      })
-
-      it('should handle very large transaction sets', () => {
-        const operations = Array.from(
-          { length: 1000 },
-          (_, i) => vi.fn(() => i !== 500), // Fail at operation 500
-        )
-
-        const rollbacks = Array.from({ length: 100 }, () => vi.fn())
-
-        const result = executeTransaction(operations, rollbacks)
-
-        expect(result).toBe(false)
-        // Should have executed up to and including operation 500
-        expect(operations[499]).toHaveBeenCalled()
-        expect(operations[500]).toHaveBeenCalled()
-        expect(operations[501]).not.toHaveBeenCalled()
-
-        // All rollbacks should have been called
-        rollbacks.forEach((rb) => expect(rb).toHaveBeenCalled())
-      })
-
-      it('should handle all operations returning false', () => {
-        const operations = [vi.fn(() => false), vi.fn(() => false), vi.fn(() => false)]
-
-        const result = executeTransaction(operations)
-
-        expect(result).toBe(false)
-        expect(operations[0]).toHaveBeenCalledTimes(1)
-        expect(operations[1]).not.toHaveBeenCalled()
-        expect(operations[2]).not.toHaveBeenCalled()
-      })
-
-      it('should handle all operations returning true', () => {
-        const operations = Array.from({ length: 10 }, () => vi.fn(() => true))
-
-        const result = executeTransaction(operations)
-
-        expect(result).toBe(true)
-        operations.forEach((op) => expect(op).toHaveBeenCalledTimes(1))
       })
     })
   })

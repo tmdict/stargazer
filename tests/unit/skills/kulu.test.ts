@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { executePlaceCharacter } from '@/lib/characters/place'
+import { findCharacterHex } from '@/lib/characters/character'
+import { executeMoveCharacter } from '@/lib/characters/move'
+import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { executeRemoveCharacter } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
@@ -81,6 +83,73 @@ describe('kulu (Demolition Zone)', () => {
     for (const id of ENEMY_ONLY) {
       expect(grid.getTileById(id).state).toBe(State.BLOCKED)
     }
+  })
+
+  it('removes characters standing on affected tiles', () => {
+    // The default map has no placeable zone tiles; open one up like the
+    // arenas where the zone overlaps a deployable area
+    grid.getTileById(20).state = State.AVAILABLE_ALLY
+    expect(performPlace(grid, 20, 100, Team.ALLY)).toBe(true)
+
+    expect(executePlaceCharacter(grid, skillManager, 1, KULU, Team.ALLY)).toBe(true)
+
+    expect(grid.getTileById(20).state).toBe(State.BLOCKED)
+    expect(grid.getTileById(20).characterId).toBeUndefined()
+    expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
+  })
+
+  it('removes the main character when a companion stands on an affected tile', () => {
+    const PHRAESTO = 50
+    grid.getTileById(20).state = State.AVAILABLE_ALLY
+    expect(executePlaceCharacter(grid, skillManager, 2, PHRAESTO, Team.ALLY)).toBe(true)
+    const companionId = grid.companionIdOffset + PHRAESTO
+    const spawnHex = findCharacterHex(grid, companionId, Team.ALLY)!
+    expect(executeMoveCharacter(grid, skillManager, spawnHex, 20, companionId)).toBe(true)
+
+    expect(executePlaceCharacter(grid, skillManager, 1, KULU, Team.ALLY)).toBe(true)
+
+    // Cascade: companion removal deactivates and removes its main as well
+    expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(false)
+    expect(findCharacterHex(grid, PHRAESTO, Team.ALLY)).toBeNull()
+    expect(findCharacterHex(grid, companionId, Team.ALLY)).toBeNull()
+  })
+
+  it('relocates kulu when she is placed inside her own zone', () => {
+    grid.getTileById(20).state = State.AVAILABLE_ALLY
+
+    expect(executePlaceCharacter(grid, skillManager, 20, KULU, Team.ALLY)).toBe(true)
+
+    expect(grid.getTileById(20).state).toBe(State.BLOCKED)
+    expect(grid.getTileById(20).characterId).toBeUndefined()
+    const kuluTile = grid.getAllTiles().find((t) => t.characterId === KULU)
+    expect(kuluTile).toBeDefined()
+    expect(ALL_AFFECTED).not.toContain(kuluTile!.hex.getId())
+    expect(kuluTile!.team).toBe(Team.ALLY)
+    expect(skillManager.hasActiveSkill(KULU, Team.ALLY)).toBe(true)
+  })
+
+  it('fails activation without side effects when no relocation target exists', () => {
+    grid.getTileById(20).state = State.AVAILABLE_ALLY
+    // Occupy every ally tile outside the zone so relocation has nowhere to go
+    for (const tile of grid.getAllTiles()) {
+      if (tile.state === State.AVAILABLE_ALLY && tile.hex.getId() !== 20) {
+        tile.characterId = 1000 + tile.hex.getId()
+      }
+    }
+    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
+
+    const result = executePlaceCharacter(grid, skillManager, 20, KULU, Team.ALLY)
+
+    expect(result).toBe(false)
+    expect(skillManager.hasActiveSkill(KULU, Team.ALLY)).toBe(false)
+    expect(grid.getTileById(20).characterId).toBeUndefined()
+    // The pre-check throws before any tile is claimed or blocked
+    for (const [id, state] of originalStates) {
+      if (id === 20) continue
+      expect(grid.getTileById(id).state).toBe(state)
+    }
+
+    consoleSpy.mockRestore()
   })
 
   it('keeps zone state isolated per grid', () => {

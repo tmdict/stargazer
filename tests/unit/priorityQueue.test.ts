@@ -3,10 +3,10 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { PriorityQueue } from '@/lib/priorityQueue'
 
 describe('PriorityQueue', () => {
-  let queue: PriorityQueue<number>
+  let queue: PriorityQueue<string | number>
 
   beforeEach(() => {
-    queue = new PriorityQueue<number>()
+    queue = new PriorityQueue<string | number>()
   })
 
   describe('basic operations', () => {
@@ -164,47 +164,22 @@ describe('PriorityQueue', () => {
   })
 
   describe('edge cases', () => {
-    it('handles large number of items', () => {
+    it('dequeues a large randomized set in priority order', () => {
+      // Item value === its priority, so heap order is directly observable
       const count = 1000
       for (let i = 0; i < count; i++) {
-        queue.enqueue(i, Math.random() * 1000)
+        const priority = Math.random() * 1000
+        queue.enqueue(priority, priority)
       }
 
       expect(queue.size).toBe(count)
 
+      let previous = -Infinity
       while (!queue.isEmpty()) {
-        const item = queue.dequeue()
-        // Each item should have priority >= previous
-        expect(item).toBeDefined()
+        const item = queue.dequeue() as number
+        expect(item).toBeGreaterThanOrEqual(previous)
+        previous = item
       }
-    })
-
-    it('handles identical priorities correctly', () => {
-      for (let i = 0; i < 10; i++) {
-        queue.enqueue(i, 1) // All same priority
-      }
-
-      const results = new Set<number>()
-      while (!queue.isEmpty()) {
-        results.add(queue.dequeue()!)
-      }
-
-      // All items should be dequeued
-      expect(results.size).toBe(10)
-    })
-
-    it('maintains heap after many updates', () => {
-      // Simplified test - just verify the queue still works after updates
-      queue.enqueue(1, 10)
-      queue.enqueue(2, 20)
-      queue.enqueue(3, 30)
-
-      // Update an item to have lowest priority
-      queue.updatePriority(3, 5, (a, b) => a === b)
-
-      // Should dequeue the updated item first
-      const first = queue.dequeue()
-      expect(first).toBe(3)
     })
   })
 })

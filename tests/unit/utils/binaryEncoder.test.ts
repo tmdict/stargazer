@@ -112,17 +112,17 @@ describe('binaryEncoder', () => {
         expect(decoded).toEqual(state)
       })
 
-      it('handles maximum tiles (262)', () => {
+      it('handles maximum tiles (262) with content intact', () => {
         const maxTiles = 262 // 7 in header + 255 in extended
         const state: GridState = {
           t: Array.from({ length: maxTiles }, (_, i) => [(i % 63) + 1, (i % 7) + 1]),
         }
         const encoded = encodeToBinary(state)
         const decoded = decodeFromBinary(encoded)
-        expect(decoded?.t).toHaveLength(maxTiles)
+        expect(decoded?.t).toEqual(state.t)
       })
 
-      it('handles maximum characters (262)', () => {
+      it('handles maximum characters (262) with content intact', () => {
         const maxChars = 262 // 7 in header + 255 in extended
         const state: GridState = {
           c: Array.from({ length: maxChars }, (_, i) => [
@@ -133,7 +133,47 @@ describe('binaryEncoder', () => {
         }
         const encoded = encodeToBinary(state)
         const decoded = decodeFromBinary(encoded)
-        expect(decoded?.c).toHaveLength(maxChars)
+        expect(decoded?.c).toEqual(state.c)
+      })
+
+      it('round-trips the maximum phantimal count (15)', () => {
+        const state: GridState = {
+          p: Array.from({ length: 15 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
+        }
+        const encoded = encodeToBinary(state)
+        const decoded = decodeFromBinary(encoded)
+        expect(decoded?.p).toEqual(state.p)
+      })
+    })
+
+    describe('wire format', () => {
+      // Shared URLs embed this exact format: a change to bit layout, header
+      // flags, or the URL-safe alphabet silently breaks every existing link.
+      // If this test fails, the encoding changed — old URLs no longer decode
+      const GOLDEN_STATE: GridState = {
+        t: [
+          [1, 2],
+          [5, 3],
+        ],
+        c: [
+          [2, 100, 1],
+          [6, 200, 2],
+          [10, 10089, 1],
+        ],
+        a: [3, 18],
+        p: [[7, 2, 2]],
+        d: 0b10110,
+      }
+      const GOLDEN_ENCODED = '2uyBiglkAAxkgEraiUGKQwI'
+
+      it('encodes the golden state to the frozen string', () => {
+        expect(bytesToUrlSafe(encodeToBinary(GOLDEN_STATE))).toBe(GOLDEN_ENCODED)
+      })
+
+      it('decodes the frozen string back to the golden state', () => {
+        const bytes = urlSafeToBytes(GOLDEN_ENCODED)
+        expect(bytes).not.toBeNull()
+        expect(decodeFromBinary(bytes!)).toEqual(GOLDEN_STATE)
       })
     })
 
@@ -322,6 +362,11 @@ describe('binaryEncoder', () => {
       expect(urlSafeToBytes(url1)).toEqual(bytes1)
       expect(urlSafeToBytes(url2)).toEqual(bytes2)
       expect(urlSafeToBytes(url3)).toEqual(bytes3)
+    })
+
+    it('returns null for strings outside the URL-safe alphabet', () => {
+      expect(urlSafeToBytes('abc!def')).toBeNull()
+      expect(urlSafeToBytes('with space')).toBeNull()
     })
   })
 })

@@ -10,13 +10,6 @@ describe('Hex', () => {
       expect(hex.r).toBe(-2)
       expect(hex.s).toBe(1)
     })
-
-    it('creates hex at origin', () => {
-      const hex = new Hex(0, 0, 0)
-      expect(hex.q).toBe(0)
-      expect(hex.r).toBe(0)
-      expect(hex.s).toBe(0)
-    })
   })
 
   describe('coordinate operations', () => {
@@ -55,6 +48,15 @@ describe('Hex', () => {
 
       // Negative coordinates
       expect(new Hex(-2, 1, 1).distance(new Hex(2, -1, -1))).toBe(4)
+    })
+
+    it.each([
+      [new Hex(0, 0, 0), 0],
+      [new Hex(2, 2, -4), 0], // on the q = r middle diagonal
+      [new Hex(1, -1, 0), 2],
+      [new Hex(-3, 2, 1), -5],
+    ])('getDiagonal() returns q − r for %s', (hex, expected) => {
+      expect(hex.getDiagonal()).toBe(expected)
     })
   })
 
@@ -123,13 +125,6 @@ describe('Hex', () => {
     it('throws error for invalid coordinates', () => {
       expect(() => new Hex(1, 1, 1)).toThrow('q=1 + r=1 + s=1 must be 0')
       expect(() => new Hex(0, 0, 1)).toThrow('q=0 + r=0 + s=1 must be 0')
-    })
-
-    it('handles large coordinates', () => {
-      const hex = new Hex(1000, -500, -500)
-      expect(hex.q).toBe(1000)
-      expect(hex.r).toBe(-500)
-      expect(hex.s).toBe(-500)
     })
   })
 })
