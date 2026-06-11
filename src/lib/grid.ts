@@ -107,6 +107,12 @@ export class Grid {
     return hex
   }
 
+  // Non-throwing lookup for probing hexes that may lie outside the grid
+  // (pathfinding callbacks, neighbor scans)
+  getTileOrUndefined(hex: Hex): GridTile | undefined {
+    return this.storage.get(Grid.key(hex))
+  }
+
   getTile(hex: Hex): GridTile {
     const tile = this.storage.get(Grid.key(hex))
     if (!tile) throw new Error(`Tile with hex key ${Grid.key(hex)} not found`)

@@ -104,10 +104,10 @@ const shiftStyle = computed(() => {
             :show-skills
             :is-map-editor-mode
             :selected-map-editor-state
-            :showPerspective
-            :debugPanelRef
-            :verticalScaleComp
-            :defaultSvgHeight
+            :show-perspective
+            :debug-panel-ref
+            :vertical-scale-comp
+            :default-svg-height
             :readonly
           />
         </div>

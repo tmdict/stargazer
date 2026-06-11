@@ -117,7 +117,7 @@ const getPreviewFillColor = (state: State): string => {
   <Teleport to="body">
     <TooltipPopup
       v-if="showInvertTooltip && invertButtonElement"
-      :targetElement="invertButtonElement"
+      :target-element="invertButtonElement"
       variant="detailed"
       max-width="350px"
     >
