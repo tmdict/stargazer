@@ -2,7 +2,6 @@
 import { computed } from 'vue'
 
 import { useI18nStore } from '@/stores/i18n'
-import { DATA_DEPTH_DESCRIPTIONS } from '@/wandwars/constants'
 import {
   formatName,
   formatNoteHtml,
@@ -12,19 +11,8 @@ import {
   joinLocale,
   signClass,
 } from '@/wandwars/formatting'
+import type { CounterIndicator, TeamCounterInfo } from '@/wandwars/teamCounter'
 import type { Recommendation } from '@/wandwars/types'
-
-export interface CounterIndicator {
-  opponent: string
-  type: 'counters' | 'countered'
-  score: number
-}
-
-export interface TeamCounterInfo {
-  wins: number
-  losses: number
-  total: number
-}
 
 const props = defineProps<{
   recommendation: Recommendation
@@ -46,7 +34,9 @@ const DATA_DEPTH_LABEL_KEYS: Record<string, string> = {
   low: 'sparse-data',
 }
 
-const confidenceTooltip = computed(() => DATA_DEPTH_DESCRIPTIONS[props.recommendation.confidence])
+const confidenceTooltip = computed(() =>
+  i18n.t(`wandwars.messages/data-depth-${props.recommendation.confidence}`),
+)
 const dataDepthLabel = computed(
   () => DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data',
 )

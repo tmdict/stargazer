@@ -5,6 +5,7 @@ import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import { useToast } from '@/composables/useToast'
+import { useI18nStore } from '@/stores/i18n'
 import { copyImageBlob } from '@/utils/clipboard'
 import { downloadBlob, timestampedName } from '@/utils/download'
 
@@ -19,6 +20,7 @@ const emit = defineEmits<{
 }>()
 
 const { success, error } = useToast()
+const i18n = useI18nStore()
 
 const previewBox = ref<HTMLElement>()
 
@@ -40,21 +42,21 @@ watch(() => props.canvas, mountCanvas, { flush: 'post' })
 
 const copy = () => {
   props.canvas?.toBlob(async (blob) => {
-    if (!blob) return error("Couldn't copy image — download instead.")
+    if (!blob) return error(i18n.t('app.copy-image-failed'))
     try {
       await copyImageBlob(blob)
-      success('Copied to clipboard!')
+      success(i18n.t('app.copied-clipboard'))
     } catch {
-      error("Couldn't copy image — download instead.")
+      error(i18n.t('app.copy-image-failed'))
     }
   })
 }
 
 const download = () => {
   props.canvas?.toBlob((blob) => {
-    if (!blob) return error('Download failed')
+    if (!blob) return error(i18n.t('app.download-failed'))
     downloadBlob(blob, timestampedName('teams', 'png'))
-    success('Image downloaded!')
+    success(i18n.t('app.image-downloaded'))
   })
 }
 </script>

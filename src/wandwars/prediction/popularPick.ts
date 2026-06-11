@@ -5,12 +5,7 @@ import type {
   Recommendation,
   RecommendationModel,
 } from '../types'
-import {
-  getHeroWilsonConfidence,
-  getMatchupNotes,
-  getRelevantNotes,
-  getWorstConfidence,
-} from './modelUtils'
+import { getHeroWilsonConfidence, getMatchupNotes, getRelevantNotes } from './modelUtils'
 
 // Weights shift as teammates are picked
 // 0 teammates: 60% win rate, 40% pick rate, 0% pair
@@ -278,8 +273,6 @@ export const popularPickModel: RecommendationModel = {
     return {
       leftWinProbability: leftProb,
       rightWinProbability: 1 - leftProb,
-      confidence: getWorstConfidence([...leftTeam, ...rightTeam], analysisData),
-      breakdown: { leftScore, rightScore },
       relevantNotes: getMatchupNotes(leftTeam, rightTeam, matches),
     }
   },

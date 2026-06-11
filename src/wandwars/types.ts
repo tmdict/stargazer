@@ -82,12 +82,17 @@ export interface Recommendation {
   relevantNotes: MatchNote[]
 }
 
+// What models produce: probabilities and notes only. The reliability badge is
+// owned by the calibration layer (recommend.ts calibratedPrediction), not the
+// models themselves.
 export interface MatchupPrediction {
   leftWinProbability: number
   rightWinProbability: number
-  confidence: 'high' | 'medium' | 'low'
-  breakdown: Record<string, number>
   relevantNotes: MatchNote[]
+}
+
+export interface CalibratedMatchupPrediction extends MatchupPrediction {
+  confidence: 'high' | 'medium' | 'low'
 }
 
 export interface RecommendationModel {

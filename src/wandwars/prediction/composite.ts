@@ -13,7 +13,7 @@ import type {
   RecommendationModel,
 } from '../types'
 import { wilsonConfidence } from './confidence'
-import { getMatchupNotes, getRelevantNotes, getWorstConfidence } from './modelUtils'
+import { getMatchupNotes, getRelevantNotes } from './modelUtils'
 
 function normalizeModifier(value: number): number {
   const clamped = Math.max(-0.5, Math.min(0.5, value))
@@ -211,17 +211,9 @@ export const compositeModel: RecommendationModel = {
     const total = leftScore + rightScore
     const leftProb = total > 0 ? leftScore / total : 0.5
 
-    const confidence = getWorstConfidence([...leftTeam, ...rightTeam], analysisData, (hero) => {
-      const opponents = leftTeam.includes(hero) ? rightTeam : leftTeam
-      const teammates = (leftTeam.includes(hero) ? leftTeam : rightTeam).filter((h) => h !== hero)
-      return getHeroConfidence(hero, teammates, opponents, analysisData)
-    })
-
     return {
       leftWinProbability: leftProb,
       rightWinProbability: 1 - leftProb,
-      confidence,
-      breakdown: { leftScore, rightScore },
       relevantNotes: getMatchupNotes(leftTeam, rightTeam, matches),
     }
   },
