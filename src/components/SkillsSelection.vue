@@ -9,12 +9,13 @@ import CharacterSearchBar from './CharacterSearchBar.vue'
 import CharacterSearchResults from './CharacterSearchResults.vue'
 import { useCharacterRoster } from '@/composables/useCharacterRoster'
 import type { CharacterType } from '@/lib/types/character'
+import type { Locale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  lang: 'en' | 'zh'
+  lang: Locale
   currentSlug?: string | null
   /** Route segment the roster links into (`skill` or `guide`). */
   routeBase?: string
@@ -23,7 +24,7 @@ const props = defineProps<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-const lang = computed<'en' | 'zh'>(() => props.lang)
+const lang = computed<Locale>(() => props.lang)
 const base = computed(() => props.routeBase ?? 'skill')
 
 const {

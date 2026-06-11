@@ -3,7 +3,7 @@ import { dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 import { describe, expect, it } from 'vitest'
 
-import type { Grid, GridTile } from '@/lib/grid'
+import { Grid, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { spiralSearchFromTile } from '@/lib/skills/utils/ring'
 import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
@@ -157,6 +157,7 @@ function runSpiralSearch(config: SpiralSearchConfig): SpiralSearchResult {
 }
 
 describe('Symmetrical Spiral Targeting Tests', () => {
+  const grid = new Grid()
   const symmetricalSpiralDir = join(__dirname, 'symmetricalSpiral')
   const testFiles = loadTestsFromDirectory(symmetricalSpiralDir)
 
@@ -166,7 +167,7 @@ describe('Symmetrical Spiral Targeting Tests', () => {
       testFile.testCases.forEach((testCase) => {
         it(`Spiral from tile ${testCase.symmetricalTile}`, () => {
           // First verify the symmetrical tile calculation matches expected
-          const calculatedSymmetrical = getSymmetricalHexId(testCase.characterTile)
+          const calculatedSymmetrical = getSymmetricalHexId(grid, testCase.characterTile)
           expect(calculatedSymmetrical).toBe(testCase.symmetricalTile)
 
           // Check if the expected target is on the symmetrical tile itself

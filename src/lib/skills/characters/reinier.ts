@@ -47,7 +47,7 @@ function findSymmetricalEnemy(context: SkillContext, allyHexId: number): number 
   const { grid, team } = context
 
   // Get the symmetrical hex ID
-  const symmetricalHexId = getSymmetricalHexId(allyHexId)
+  const symmetricalHexId = getSymmetricalHexId(grid, allyHexId)
   if (!symmetricalHexId) return null
 
   // Check if there's an enemy on the symmetrical tile

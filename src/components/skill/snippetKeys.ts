@@ -1,5 +1,6 @@
 import type { ComputedRef, InjectionKey, Ref } from 'vue'
 
+import type { Locale } from '@/lib/types/i18n'
 import type { SlotKey } from '@/lib/types/skill'
 
 // Teleport targets per slot. <SkillSnippets> reads this to route named slots
@@ -8,4 +9,4 @@ export const SkillSnippetAnchorsKey: InjectionKey<Record<SlotKey, Ref<HTMLElemen
   Symbol('SkillSnippetAnchors')
 
 // Computed so modal locale toggles propagate to descendant <SkillSnippet>s.
-export const SkillLangKey: InjectionKey<ComputedRef<'en' | 'zh'>> = Symbol('SkillLang')
+export const SkillLangKey: InjectionKey<ComputedRef<Locale>> = Symbol('SkillLang')
