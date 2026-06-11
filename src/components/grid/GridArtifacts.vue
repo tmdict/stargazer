@@ -3,10 +3,10 @@ import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
-import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
+import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
@@ -20,7 +20,7 @@ const props = defineProps<{
   isMapEditorMode?: boolean
 }>()
 
-const gridEvents = useGridEvents()
+const artifactStore = useArtifactStore()
 const gameDataStore = useGameDataStore()
 const gridStore = useGridStore()
 const { handleTeamChange, requestTab } = useSelectionState()
@@ -149,7 +149,7 @@ const closePopup = () => {
 }
 
 const handleArtifactClick = (team: Team) => {
-  gridEvents.emit('artifact:remove', team)
+  artifactStore.removeArtifact(team)
 }
 </script>
 

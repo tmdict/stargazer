@@ -45,8 +45,10 @@ const importStatus = computed(() => {
   return i18n.t('wandwars.messages/import-failed', { error: s.error })
 })
 
-// In-place editing of a single record.
-const editingIndex = ref<number | null>(null)
+// In-place editing of a single record. Tracked by object identity, not index:
+// deleting a row above the edited one shifts indices, and an index-tracked edit
+// would silently save onto a different record.
+const editingRecord = ref<RecordedMatch | null>(null)
 const editWinner = ref<'left' | 'right' | 'draw'>('left')
 const editDominant = ref(false)
 const editNotes = ref('')
@@ -61,26 +63,29 @@ function setEditResult(w: 'left' | 'right' | 'draw', d: boolean) {
   editDominant.value = d
 }
 
-function startEdit(i: number) {
-  const r = props.records[i]
-  if (!r) return
-  editingIndex.value = i
-  editWinner.value = r.winner
-  editDominant.value = r.winner !== 'draw' && r.dominant
-  editNotes.value = r.notes
+function startEdit(record: RecordedMatch) {
+  editingRecord.value = record
+  editWinner.value = record.winner
+  editDominant.value = record.winner !== 'draw' && record.dominant
+  editNotes.value = record.notes
 }
 
 function cancelEdit() {
-  editingIndex.value = null
+  editingRecord.value = null
 }
 
-function saveEdit(i: number) {
-  emit('updateRecord', i, {
-    winner: editWinner.value,
-    dominant: editWinner.value !== 'draw' && editDominant.value,
-    notes: editNotes.value.trim(),
-  })
-  editingIndex.value = null
+function saveEdit() {
+  // Resolve the record's current position at save time; -1 means it was
+  // deleted while being edited
+  const i = editingRecord.value ? props.records.indexOf(editingRecord.value) : -1
+  if (i !== -1) {
+    emit('updateRecord', i, {
+      winner: editWinner.value,
+      dominant: editWinner.value !== 'draw' && editDominant.value,
+      notes: editNotes.value.trim(),
+    })
+  }
+  editingRecord.value = null
 }
 
 function openImport() {
@@ -177,7 +182,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
                 class="record-portrait"
               />
             </div>
-            <div v-if="editingIndex === i" class="record-edit-result">
+            <div v-if="editingRecord === record" class="record-edit-result">
               <button
                 :class="[
                   'edit-result-btn',
@@ -288,8 +293,8 @@ function recordVerbDirClass(r: RecordedMatch): string {
                 class="record-portrait"
               />
             </div>
-            <template v-if="editingIndex === i">
-              <button class="edit-action-btn" title="Save" @click="saveEdit(i)">
+            <template v-if="editingRecord === record">
+              <button class="edit-action-btn" title="Save" @click="saveEdit()">
                 <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
                   <path
                     d="M3 8l3 3 7-7"
@@ -314,7 +319,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
               </button>
             </template>
             <template v-else>
-              <button class="edit-btn" title="Edit" @click="startEdit(i)">
+              <button class="edit-btn" title="Edit" @click="startEdit(record)">
                 <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
                   <path
                     d="M11 2l3 3L5 14H2v-3L11 2zM10 3l3 3"
@@ -340,7 +345,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
             </template>
           </div>
           <textarea
-            v-if="editingIndex === i"
+            v-if="editingRecord === record"
             v-model="editNotes"
             class="record-edit-notes"
             rows="2"

@@ -110,6 +110,67 @@ describe('i18nStore', () => {
     })
   })
 
+  describe('locale persistence', () => {
+    beforeEach(() => {
+      // The store's client-only branches (localStorage, document.lang) are
+      // gated on import.meta.env.SSR, which is true under vitest's node env
+      vi.stubEnv('SSR', false)
+    })
+
+    afterEach(() => {
+      vi.unstubAllEnvs()
+    })
+
+    it('setLocale persists by default', () => {
+      store.setLocale('zh')
+      expect(localStorage.getItem('stargazer.locale')).toBe('zh')
+    })
+
+    it('setLocale with persist: false updates the render locale only', () => {
+      store.setLocale('zh', { persist: false })
+      expect(store.currentLocale).toBe('zh')
+      expect(localStorage.getItem('stargazer.locale')).toBeNull()
+    })
+
+    it('initializeLocale applies the saved preference without re-persisting', () => {
+      localStorage.setItem('stargazer.locale', 'zh')
+      const spy = vi.spyOn(localStorage, 'setItem')
+
+      store.initializeLocale()
+
+      expect(store.currentLocale).toBe('zh')
+      expect(spy).not.toHaveBeenCalled()
+    })
+
+    it('initializeLocale persists a valid ?l= param (external language-pinning contract)', () => {
+      vi.stubGlobal('window', { location: { search: '?l=zh' } })
+
+      store.initializeLocale()
+
+      expect(store.currentLocale).toBe('zh')
+      expect(localStorage.getItem('stargazer.locale')).toBe('zh')
+    })
+
+    it('initializeLocale lets ?l= override the saved preference', () => {
+      localStorage.setItem('stargazer.locale', 'zh')
+      vi.stubGlobal('window', { location: { search: '?l=en' } })
+
+      store.initializeLocale()
+
+      expect(store.currentLocale).toBe('en')
+      expect(localStorage.getItem('stargazer.locale')).toBe('en')
+    })
+
+    it('initializeLocale ignores an invalid ?l= param', () => {
+      vi.stubGlobal('window', { location: { search: '?l=fr' } })
+
+      store.initializeLocale()
+
+      expect(store.currentLocale).toBe('en')
+      expect(localStorage.getItem('stargazer.locale')).toBeNull()
+    })
+  })
+
   describe('toggleLocale', () => {
     it('swaps en ↔ zh', () => {
       expect(store.currentLocale).toBe('en')

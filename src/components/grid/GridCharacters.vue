@@ -179,7 +179,7 @@ const handleClick = (hexId: number) => {
   // swaps the two. (Desktop moves via drag, so a tap there just removes.)
   if (gridStore.getHexScale() < 1) {
     if (liftedHexId.value === hexId) {
-      gridEvents.emit('character:remove', hexId)
+      characterStore.removeCharacterFromHex(hexId)
       clearLiftedHex()
     } else if (liftedHexId.value !== null) {
       characterStore.swapCharacters(liftedHexId.value, hexId)
@@ -190,7 +190,7 @@ const handleClick = (hexId: number) => {
     return
   }
 
-  gridEvents.emit('character:remove', hexId)
+  characterStore.removeCharacterFromHex(hexId)
 }
 
 // Handle mouse hover to trigger tile hover effect

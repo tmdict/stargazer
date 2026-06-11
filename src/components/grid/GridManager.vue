@@ -77,8 +77,8 @@ const modalPosition = ref({ x: 0, y: 0 })
 const { liftedHexId, setTargetHex, clearLiftedHex } = useSelectionState()
 
 // Map editor integration - handle hex clicks for painting tiles
-// When in map editor mode, clicking a hex changes its state to the selected state
-// In normal mode, show character selection modal
+// All hex-click semantics live here: map-editor paint, the mobile tap flow
+// (lift/drop/target), and desktop remove-or-pick.
 gridEvents.on('hex:click', (hex: Hex) => {
   // Skip all interactions if readonly
   if (props.readonly) {
@@ -117,6 +117,13 @@ gridEvents.on('hex:click', (hex: Hex) => {
       if (tile.characterId === undefined) {
         setTargetHex(hex.getId())
       }
+      return
+    }
+
+    // Desktop: clicking a placed hero's tile removes it — moves use drag, and
+    // the picker below can only add.
+    if (tile.characterId !== undefined) {
+      characterStore.removeCharacterFromHex(hex.getId())
       return
     }
 

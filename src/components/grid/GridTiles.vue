@@ -389,7 +389,6 @@ onUnmounted(() => {
     :width="svgDimensions.width"
     :height="svgDimensions.height"
     class="grid-tiles"
-    :class="{ 'map-editor-mode': isMapEditorMode }"
     :data-readonly="readonly"
     @mousedown="handleMapEditorMouseDown"
     @mouseup="handleMapEditorMouseUp"
@@ -532,10 +531,6 @@ onUnmounted(() => {
 .grid-tiles {
   max-width: 100%;
   height: auto;
-}
-
-.grid-tiles.map-editor-mode {
-  cursor: crosshair;
 }
 
 .grid-tile {
