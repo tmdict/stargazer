@@ -277,25 +277,20 @@ const handleResetMap = () => {
             :is-map-editor-mode="activeTab === 'mapEditor'"
             :selected-map-editor-state="selectedMapEditorState"
             :show-perspective
-            :debugPanelRef
+            :debug-panel-ref
             :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
           <GridControls
-            :showArrows
-            :showHexIds
-            :showPerspective
-            :showSkills
-            :teamView="gridStore.teamView"
-            :hideTeamView="activeTab === 'mapEditor' || activeTab === 'debug'"
-            :hideTeamControls="activeTab === 'mapEditor' || activeTab === 'debug'"
-            @update:showArrows="showArrows = $event"
-            @update:showHexIds="showHexIds = $event"
-            @update:showPerspective="showPerspective = $event"
-            @update:showSkills="showSkills = $event"
-            @update:teamView="gridStore.teamView = $event"
-            @copyLink="handleCopyLink"
-            @copyImage="handleCopyImage"
+            v-model:show-arrows="showArrows"
+            v-model:show-hex-ids="showHexIds"
+            v-model:show-perspective="showPerspective"
+            v-model:show-skills="showSkills"
+            v-model:team-view="gridStore.teamView"
+            :hide-team-view="activeTab === 'mapEditor' || activeTab === 'debug'"
+            :hide-team-controls="activeTab === 'mapEditor' || activeTab === 'debug'"
+            @copy-link="handleCopyLink"
+            @copy-image="handleCopyImage"
             @download="handleDownload"
           />
         </div>
@@ -303,16 +298,16 @@ const handleResetMap = () => {
         <!-- Roster (a pull-up bottom sheet over the grid on mobile). -->
         <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargetHex">
           <TabNavigation
-            :activeTab
-            :availableMaps
-            :selectedMap
+            :active-tab
+            :available-maps
+            :selected-map
             @tab-change="handleTabChange"
             @map-change="handleMapChange"
           >
             <!-- Tab Content -->
             <!-- Characters Tab -->
             <div v-show="activeTab === 'characters'" class="tab-panel">
-              <CharacterSelection :characters="gameDataStore.characters" :isDraggable="true" />
+              <CharacterSelection :characters="gameDataStore.characters" :is-draggable="true" />
             </div>
             <!-- Seasonal Tab -->
             <div v-show="activeTab === 'seasonal'" class="tab-panel">

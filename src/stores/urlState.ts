@@ -4,7 +4,7 @@ import { useStateReset } from '@/composables/useStateReset'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
-import { unpackDisplayFlags, type GridState } from '@/utils/gridStateSerializer'
+import { unpackDisplayFlags, type DisplayFlags, type GridState } from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl } from '@/utils/urlStateManager'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
@@ -12,13 +12,7 @@ import { useGridStore } from './grid'
 
 interface UrlRestoreResult {
   success: boolean
-  displayFlags?: {
-    showHexIds?: boolean
-    showArrows?: boolean
-    showPerspective?: boolean
-    showSkills?: boolean
-    teamView?: boolean
-  }
+  displayFlags?: DisplayFlags
   error?: string
 }
 

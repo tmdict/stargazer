@@ -1,6 +1,6 @@
 import type { GridTile } from '@/lib/grid'
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
-import { serializeGridState, type GridState } from './gridStateSerializer'
+import { serializeGridState, type DisplayFlags, type GridState } from './gridStateSerializer'
 
 export function encodeGridStateToUrl(gridState: GridState): string {
   try {
@@ -31,13 +31,7 @@ export function generateShareableUrl(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
-  displayFlags?: {
-    showHexIds?: boolean
-    showArrows?: boolean
-    showPerspective?: boolean
-    showSkills?: boolean
-    teamView?: boolean
-  },
+  displayFlags?: DisplayFlags,
 ): string {
   const gridState = serializeGridState(allTiles, allyArtifact, enemyArtifact, displayFlags)
 
@@ -68,13 +62,7 @@ export function updateUrlWithGridState(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
-  displayFlags?: {
-    showHexIds?: boolean
-    showArrows?: boolean
-    showPerspective?: boolean
-    showSkills?: boolean
-    teamView?: boolean
-  },
+  displayFlags?: DisplayFlags,
 ): void {
   try {
     const shareableUrl = generateShareableUrl(allTiles, allyArtifact, enemyArtifact, displayFlags)

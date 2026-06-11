@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSection from '@/components/skill/SkillSection.vue'
 import ModalLocaleToggle from '@/components/ui/ModalLocaleToggle.vue'
+import { useModalLocale } from '@/composables/useModalLocale'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import { useI18nStore } from '@/stores/i18n'
 import { loadGameLocales, loadPhantimalLocales } from '@/utils/dataLoader'
 import { formatDisplayName } from '@/utils/nameFormatting'
 
@@ -19,16 +19,8 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const i18n = useI18nStore()
-
-// Modal-local locale toggle, mirroring SkillModal/ArtifactModal.
-const displayLocale = ref<'en' | 'zh'>(i18n.currentLocale)
-watch(
-  () => props.show,
-  (isOpen) => {
-    if (isOpen) displayLocale.value = i18n.currentLocale
-  },
-)
+// Modal-local locale: overrides global without mutating it
+const displayLocale = useModalLocale(() => props.show)
 
 const gameLabel = (key: string) => loadGameLocales()[key]?.[displayLocale.value] ?? key
 

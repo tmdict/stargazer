@@ -14,8 +14,11 @@ const STAT_LABEL: Record<string, string> = {
   UAP: 'Ult Power',
 }
 
-const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
-const STAT_TAG_RE = /<([A-Z][A-Za-z0-9_]*)>/g
+// Canonical skill-text token grammar. searchHighlight and scripts/import-skills
+// derive their stripping/reordering from these; vite.config.ts mirrors the
+// [[...]] pattern with a pointer comment (build config can't import src).
+export const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
+export const STAT_TAG_RE = /<([A-Z][A-Za-z0-9_]*)>/g
 
 export function highlightSkillText(text: string): string {
   if (!text) return text

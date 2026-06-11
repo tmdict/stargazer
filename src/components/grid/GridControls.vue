@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -10,12 +12,13 @@ import { useI18nStore } from '@/stores/i18n'
 const i18n = useI18nStore()
 const { selectedTeam, characterStore, handleTeamChange, handleClearAll } = useSelectionState()
 
+const showArrows = defineModel<boolean>('showArrows', { required: true })
+const showHexIds = defineModel<boolean>('showHexIds', { required: true })
+const showPerspective = defineModel<boolean>('showPerspective', { required: true })
+const showSkills = defineModel<boolean>('showSkills')
+const teamView = defineModel<boolean>('teamView')
+
 defineProps<{
-  showArrows: boolean
-  showHexIds: boolean
-  showPerspective: boolean
-  showSkills?: boolean
-  teamView?: boolean
   // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
   hideTeamView?: boolean
   // Hides the Ally/Enemy toggle and Clear (Map Editor / Debug don't place characters).
@@ -23,91 +26,39 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'update:showArrows': [value: boolean]
-  'update:showHexIds': [value: boolean]
-  'update:showPerspective': [value: boolean]
-  'update:showSkills': [value: boolean]
-  'update:teamView': [value: boolean]
   copyLink: []
   copyImage: []
   download: []
 }>()
 
-const handleArrowsChange = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) return
-  emit('update:showArrows', event.target.checked)
-}
-
-const handleHexIdsChange = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) return
-  emit('update:showHexIds', event.target.checked)
-}
-
-const handlePerspectiveChange = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) return
-  emit('update:showPerspective', !event.target.checked) // Invert logic: checked = flat = showPerspective false
-}
-
-const handleSkillsChange = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) return
-  emit('update:showSkills', event.target.checked)
-}
-
-const handleTeamViewChange = (event: Event) => {
-  if (!(event.target instanceof HTMLInputElement)) return
-  emit('update:teamView', event.target.checked)
-}
-
-const handleCopyLink = () => {
-  emit('copyLink')
-}
-
-const handleCopyImage = () => {
-  emit('copyImage')
-}
-
-const handleDownload = () => {
-  emit('download')
-}
+// The toggle presents the inverse: checked = flat = perspective off
+const flatView = computed({
+  get: () => !showPerspective.value,
+  set: (flat) => (showPerspective.value = !flat),
+})
 </script>
 
 <template>
   <div class="grid-controls">
     <!-- Row 1: grid display toggles -->
     <div class="controls-row">
-      <label class="grid-toggle-btn" :class="{ active: !showPerspective }">
-        <input
-          type="checkbox"
-          :checked="!showPerspective"
-          @change="handlePerspectiveChange"
-          class="grid-toggle-checkbox"
-        />
+      <label class="grid-toggle-btn" :class="{ active: flatView }">
+        <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
       </label>
       <label class="grid-toggle-btn" :class="{ active: showHexIds }">
-        <input
-          type="checkbox"
-          :checked="showHexIds"
-          @change="handleHexIdsChange"
-          class="grid-toggle-checkbox"
-        />
+        <input type="checkbox" v-model="showHexIds" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
       </label>
       <label v-if="!hideTeamView" class="grid-toggle-btn" :class="{ active: teamView }">
-        <input
-          type="checkbox"
-          :checked="teamView"
-          @change="handleTeamViewChange"
-          class="grid-toggle-checkbox"
-        />
+        <input type="checkbox" v-model="teamView" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
       </label>
       <label class="grid-toggle-btn" :class="{ active: showSkills, disabled: teamView }">
         <input
           type="checkbox"
-          :checked="showSkills"
+          v-model="showSkills"
           :disabled="teamView"
-          @change="handleSkillsChange"
           class="grid-toggle-checkbox"
         />
         <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
@@ -115,9 +66,8 @@ const handleDownload = () => {
       <label class="grid-toggle-btn" :class="{ active: showArrows, disabled: teamView }">
         <input
           type="checkbox"
-          :checked="showArrows"
+          v-model="showArrows"
           :disabled="teamView"
-          @change="handleArrowsChange"
           class="grid-toggle-checkbox"
         />
         <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
@@ -128,23 +78,23 @@ const handleDownload = () => {
     <div class="controls-row controls-actions">
       <TeamToggle
         v-if="!hideTeamControls"
-        :selectedTeam
-        :showCounts="showHexIds"
-        :allyCount="characterStore.availableAlly"
-        :enemyCount="characterStore.availableEnemy"
-        :maxAllyCount="characterStore.maxTeamSizeAlly"
-        :maxEnemyCount="characterStore.maxTeamSizeEnemy"
+        :selected-team
+        :show-counts="showHexIds"
+        :ally-count="characterStore.availableAlly"
+        :enemy-count="characterStore.availableEnemy"
+        :max-ally-count="characterStore.maxTeamSizeAlly"
+        :max-enemy-count="characterStore.maxTeamSizeEnemy"
         @team-change="handleTeamChange"
       />
-      <button @click="handleCopyLink" class="action-btn" :title="i18n.t('app.link')">
+      <button @click="emit('copyLink')" class="action-btn" :title="i18n.t('app.link')">
         <IconLink :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.link') }}</span>
       </button>
-      <button @click="handleCopyImage" class="action-btn" :title="i18n.t('app.copy')">
+      <button @click="emit('copyImage')" class="action-btn" :title="i18n.t('app.copy')">
         <IconCopy :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.copy') }}</span>
       </button>
-      <button @click="handleDownload" class="action-btn" :title="i18n.t('app.download')">
+      <button @click="emit('download')" class="action-btn" :title="i18n.t('app.download')">
         <IconDownload :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.download') }}</span>
       </button>

@@ -47,7 +47,7 @@ function extractContentDescription(html: string): string | null {
     .map((m) =>
       m[1]
         .replace(/<[^>]+>/g, '') // Strip HTML tags
-        .replace(/\[\[(.+?)\]\]/g, '$1') // Strip [[]] skill markers
+        .replace(/\[\[(.+?)\]\]/g, '$1') // Strip [[]] skill markers (mirrors HIGHLIGHT_RE in src/utils/textHighlight.ts)
         .replace(/\s+/g, ' ')
         .trim(),
     )

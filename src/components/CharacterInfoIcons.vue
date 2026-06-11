@@ -72,7 +72,7 @@ const handleMouseLeave = () => {
   <!-- Skill Modal -->
   <SkillModal
     :show="showSkillModal"
-    :skillName="selectedSkillName"
+    :skill-name="selectedSkillName"
     :initial-chip="selectedFilter"
     @close="showSkillModal = false"
   />
@@ -81,7 +81,7 @@ const handleMouseLeave = () => {
   <Teleport to="body">
     <TooltipPopup
       v-if="showTooltip && buttonElement"
-      :targetElement="buttonElement"
+      :target-element="buttonElement"
       :text="i18n.t('app.info')"
       variant="simple"
     />

@@ -47,5 +47,13 @@ export default defineConfigWithVueTs(
       'vue/multi-word-component-names': 'off',
     },
   },
+  {
+    // Template casing convention: kebab-case for props and events on components
+    files: ['**/*.vue'],
+    rules: {
+      'vue/attribute-hyphenation': ['error', 'always'],
+      'vue/v-on-event-hyphenation': ['error', 'always', { autofix: true }],
+    },
+  },
   skipFormatting,
 )

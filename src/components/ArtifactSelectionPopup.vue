@@ -38,7 +38,7 @@ const handleSelect = (artifact: ArtifactType) => {
   <SelectionPopup :position @close="emit('close')">
     <div class="artifacts-grid">
       <div v-for="artifact in sortedArtifacts" :key="artifact.id" class="artifact-item">
-        <ArtifactIcon :artifact :showSimpleTooltip="true" @artifact-click="handleSelect" />
+        <ArtifactIcon :artifact :show-simple-tooltip="true" @artifact-click="handleSelect" />
       </div>
     </div>
   </SelectionPopup>

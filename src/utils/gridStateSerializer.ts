@@ -10,18 +10,21 @@ export interface GridState {
   d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills, teamView)
 }
 
+/* The five user-facing display toggles carried in the URL's bit-packed `d` field */
+export interface DisplayFlags {
+  showHexIds?: boolean
+  showArrows?: boolean
+  showPerspective?: boolean
+  showSkills?: boolean
+  teamView?: boolean
+}
+
 /* Create compact serialized state for URL generation */
 export function serializeGridState(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
-  displayFlags?: {
-    showHexIds?: boolean
-    showArrows?: boolean
-    showPerspective?: boolean
-    showSkills?: boolean
-    teamView?: boolean
-  },
+  displayFlags?: DisplayFlags,
 ): GridState {
   const state: GridState = {}
 
@@ -88,13 +91,7 @@ export function serializeGridState(
 }
 
 /* Unpack display flags from bit-packed number */
-export function unpackDisplayFlags(packed: number | undefined): {
-  showHexIds: boolean
-  showArrows: boolean
-  showPerspective: boolean
-  showSkills: boolean
-  teamView: boolean
-} {
+export function unpackDisplayFlags(packed: number | undefined): Required<DisplayFlags> {
   if (packed === undefined) {
     // Return defaults if no flags are stored
     return {

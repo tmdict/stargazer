@@ -77,8 +77,8 @@ watch(
       >
         <CharacterIcon
           :character
-          :hideInfo="true"
-          :isSelected="currentSlug === character.name"
+          :hide-info="true"
+          :is-selected="currentSlug === character.name"
           :selected-filter="selectedTagNames"
         />
         <div class="meta-row">

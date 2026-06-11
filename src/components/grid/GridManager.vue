@@ -261,10 +261,10 @@ defineExpose({
 
     <!-- Artifact layer (behind characters); enemy artifact is hidden in team view -->
     <GridArtifacts
-      :allyArtifactId="artifactStore.allyArtifactId"
-      :enemyArtifactId="gridStore.teamView ? null : artifactStore.enemyArtifactId"
+      :ally-artifact-id="artifactStore.allyArtifactId"
+      :enemy-artifact-id="gridStore.teamView ? null : artifactStore.enemyArtifactId"
       :show-perspective="showPerspective"
-      :scaleY="verticalScaleComp"
+      :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
     />
@@ -273,7 +273,7 @@ defineExpose({
     <GridCharacters
       :characters
       :show-perspective="showPerspective"
-      :scaleY="verticalScaleComp"
+      :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
     />
@@ -300,7 +300,7 @@ defineExpose({
       style="position: absolute; pointer-events: none"
     >
       <g>
-        <PathfindingDebug :debugPanelRef="props.debugPanelRef" />
+        <PathfindingDebug :debug-panel-ref="props.debugPanelRef" />
       </g>
     </svg>
   </div>

@@ -64,7 +64,7 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
         <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-profile">
           <ArtifactIcon
             :artifact="artifact"
-            :isPlaced="isArtifactPlaced(artifact.id)"
+            :is-placed="isArtifactPlaced(artifact.id)"
             @artifact-click="handleArtifactClick"
           />
         </div>

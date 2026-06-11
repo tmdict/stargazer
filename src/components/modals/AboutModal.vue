@@ -23,7 +23,7 @@ const { ContentComponent } = useContentComponent({
 </script>
 
 <template>
-  <BaseModal :show="show" maxWidth="1000px" @close="$emit('close')">
+  <BaseModal :show="show" max-width="1000px" @close="$emit('close')">
     <component v-if="ContentComponent" :is="ContentComponent" />
     <div v-else>Content not found</div>
   </BaseModal>

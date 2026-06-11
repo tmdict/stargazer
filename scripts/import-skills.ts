@@ -24,6 +24,7 @@ import {
   type SkillLocaleFile,
   type SkillRefineEntry,
 } from '../src/lib/types/skill.ts'
+import { STAT_TAG_RE } from '../src/utils/textHighlight.ts'
 
 // ---------- locales we render ----------
 
@@ -156,8 +157,9 @@ const NAME_INVARIANT_SLOTS = new Set<SlotKey>(['mastery', 'awakening'])
 
 // Reorder adjacent <STAT>[[value]] pairs to [[value]]<STAT>, which reads more
 // naturally in both EN and ZH ("40% of ATK" rather than "ATK 40%"). Standalone
-// stat tags like "based on <ATK>" are left untouched.
-const STAT_VALUE_SWAP = /<([A-Z][A-Za-z0-9_]*)>\s*(\[\[[^\]]+\]\])/g
+// stat tags like "based on <ATK>" are left untouched. The tag grammar comes
+// from the canonical STAT_TAG_RE so renderer and importer can't diverge.
+const STAT_VALUE_SWAP = new RegExp(`${STAT_TAG_RE.source}\\s*(\\[\\[[^\\]]+\\]\\])`, 'g')
 
 function reorderStatValuePairs(text: string): string {
   return text.replace(STAT_VALUE_SWAP, '$2<$1>')

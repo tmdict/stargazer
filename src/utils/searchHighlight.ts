@@ -1,10 +1,12 @@
+import { HIGHLIGHT_RE, STAT_TAG_RE } from './textHighlight'
+
 /** Strips display-only tokens from skill descriptions: `[[value]]` collapses
  * to `value`, `<TAG>` is dropped. Search + snippet rendering both operate on
  * the cleaned form. */
 export function cleanSkillText(raw: string): string {
   return raw
-    .replace(/\[\[([^\]]*)\]\]/g, '$1')
-    .replace(/<[A-Z]+>/g, '')
+    .replace(HIGHLIGHT_RE, '$1')
+    .replace(STAT_TAG_RE, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
 }

@@ -85,7 +85,7 @@ function handleSelect(character: CharacterType) {
         class="character-item"
         @click="handleSelect(character)"
       >
-        <CharacterIcon :character :isDraggable="false" :showSimpleTooltip="true" />
+        <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true" />
       </div>
       <div v-if="filteredCharacters.length === 0" class="no-characters">
         No available characters

@@ -25,25 +25,15 @@ function getAdjacentAllies(context: SkillContext): Array<{ hexId: number; positi
   const neighbors = centerHex.getNeighbors()
 
   neighbors.forEach((neighborHex, position) => {
-    // Check if this neighbor hex exists on the grid
-    // Use a try-catch since getTile throws for non-existent tiles
-    try {
-      const neighborTile = grid.getTile(neighborHex)
-      if (!neighborTile) return
+    // Off-grid neighbors are expected for edge hexes
+    const neighborTile = grid.getTileOrUndefined(neighborHex)
+    if (!neighborTile) return
 
-      // Check if this neighbor has an ally
-      if (neighborTile.characterId && neighborTile.team === team) {
-        // Get the neighbor hex ID from the tile
-        const neighborHexId = neighborTile.hex.getId()
-        adjacentAllies.push({
-          hexId: neighborHexId,
-          position,
-        })
-      }
-    } catch (error) {
-      console.error('Failed to get neighbor hex:', error)
-      // Neighbor hex is outside grid boundaries, skip it
-      return
+    if (neighborTile.characterId && neighborTile.team === team) {
+      adjacentAllies.push({
+        hexId: neighborTile.hex.getId(),
+        position,
+      })
     }
   })
 
