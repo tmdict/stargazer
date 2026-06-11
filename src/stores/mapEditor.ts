@@ -1,7 +1,6 @@
 import { ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import { useStateReset } from '@/composables/useStateReset'
 import { State } from '@/lib/types/state'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
@@ -10,7 +9,6 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
   // Store instances created once at store level
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
-  const { clearCharacters } = useStateReset()
 
   /**
    * Sets a hex to the specified state (used by map editor).
@@ -28,12 +26,8 @@ export const useMapEditorStore = defineStore('mapEditor', () => {
    * Resets all hexes to a specific state with character clearing
    */
   const resetAllHexesToState = (state: State) => {
-    // Clear all characters first using shared utility
-    clearCharacters()
-
-    for (const hex of gridStore.hexes) {
-      gridStore.setState(hex, state)
-    }
+    characterStore.clearAllCharacters()
+    gridStore.resetAllTiles(state)
   }
 
   const resetToCurrentMap = () => {

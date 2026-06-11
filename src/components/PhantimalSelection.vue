@@ -5,6 +5,7 @@ import PhantimalModal from './modals/PhantimalModal.vue'
 import InfoPill from './ui/InfoPill.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
+import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useTouchDetection } from '@/composables/useTouchDetection'
 import { toPhantimalId } from '@/lib/characters/phantimal'
@@ -48,23 +49,6 @@ const placedHexForTeam = (phantimal: PhantimalType, team: typeof selectedTeam.va
 const isPlaced = (phantimal: PhantimalType): boolean =>
   placedHexForTeam(phantimal, selectedTeam.value) !== null
 
-// Distinguish a tap (place/remove) from a drag using press duration, mirroring
-// CharacterIcon so a drag doesn't also fire a placement.
-const isMouseDown = ref(false)
-const pressStart = ref(0)
-const CLICK_THRESHOLD = 200
-
-const handleMouseDown = () => {
-  isMouseDown.value = true
-  pressStart.value = Date.now()
-}
-
-const handleMouseUp = (phantimal: PhantimalType) => {
-  if (!isMouseDown.value) return
-  isMouseDown.value = false
-  if (Date.now() - pressStart.value < CLICK_THRESHOLD) handlePhantimalClick(phantimal)
-}
-
 const handlePhantimalClick = (phantimal: PhantimalType) => {
   const id = toPhantimalId(phantimal.id)
   // Mobile: a tapped tile targets a specific cell — place there using its team.
@@ -81,6 +65,9 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
   }
   characterStore.autoPlacePhantimal(id, selectedTeam.value)
 }
+
+// A drag must not also fire a placement, so clicks are press-duration gated.
+const { onMouseDown, onMouseUp } = usePressClick(handlePhantimalClick)
 
 const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   if (!isDraggable) return
@@ -142,8 +129,8 @@ const openModal = (phantimal: PhantimalType) => {
           :draggable="isDraggable"
           @dragstart="handleDragStart($event, phantimal)"
           @dragend="handleDragEnd"
-          @mousedown="handleMouseDown"
-          @mouseup="handleMouseUp(phantimal)"
+          @mousedown="onMouseDown"
+          @mouseup="onMouseUp(phantimal)"
           @mouseenter="onPortraitEnter($event, phantimal)"
           @mouseleave="onPortraitLeave"
         >

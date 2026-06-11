@@ -1,52 +1,12 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, provide, ref, type Ref } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 
-import { useDragDrop } from '@/composables/useDragDrop'
-import type { CharacterType } from '@/lib/types/character'
+import { provideDragDropRegistration, useDragDrop } from '@/composables/useDragDrop'
 
-// Types for the drag/drop API
-export interface DragDropAPI {
-  isDragging: Ref<boolean>
-  hoveredHexId: Ref<number | null>
-  dropHandled: Ref<boolean>
-  startDrag: (
-    event: DragEvent,
-    character: CharacterType,
-    characterId: number,
-    imageSrc?: string,
-  ) => void
-  endDrag: (event: DragEvent) => void
-  handleDrop: (event: DragEvent) => { character: CharacterType; characterId: number } | null
-  setHoveredHex: (hexId: number | null) => void
-  setDropHandled: (handled: boolean) => void
-  registerHexDetector: (detector: (x: number, y: number) => number | null) => void
-  registerDropHandler: (handler: (event: DragEvent) => void) => void
-}
+const { isDragging, hoveredHexId, setHoveredHex, dropHandled } = useDragDrop()
 
-const {
-  startDrag,
-  endDrag,
-  isDragging,
-  hoveredHexId,
-  setHoveredHex,
-  handleDrop,
-  dropHandled,
-  setDropHandled,
-} = useDragDrop()
-
-// Hex detector function - will be provided by GridManager
-const hexDetector = ref<((x: number, y: number) => number | null) | null>(null)
-
-// Drop handler function - will be provided by GridManager
-const dropHandler = ref<((event: DragEvent) => void) | null>(null)
-
-const registerHexDetector = (detector: (x: number, y: number) => number | null) => {
-  hexDetector.value = detector
-}
-
-const registerDropHandler = (handler: (event: DragEvent) => void) => {
-  dropHandler.value = handler
-}
+// Registration slots the grid fills in (pointer→hex detection + drop logic)
+const { hexDetector, dropHandler } = provideDragDropRegistration()
 
 // Global mouse tracking for hex detection during drag
 const handleGlobalMouseMove = (event: MouseEvent) => {
@@ -82,21 +42,6 @@ const handleGlobalDrop = (event: DragEvent) => {
     dropHandler.value(event)
   }
 }
-
-const dragDropAPI: DragDropAPI = {
-  isDragging,
-  hoveredHexId,
-  dropHandled,
-  startDrag,
-  endDrag,
-  handleDrop,
-  setHoveredHex,
-  setDropHandled,
-  registerHexDetector,
-  registerDropHandler,
-}
-
-provide('dragDrop', dragDropAPI)
 
 onMounted(() => {
   // Add listeners to the document body to catch drops outside the grid

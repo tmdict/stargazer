@@ -62,7 +62,7 @@ const getInitialTab = (): string => {
 const activeTab = ref(getInitialTab())
 
 // Mobile: the tab panel (roster) is a pull-up bottom sheet over the grid.
-const { targetHexId, liftedHexId, tabRequest, clearTargetHex } = useSelectionState()
+const { targetHexId, liftedHexId, tabRequest, clearTargetHex, clearLiftedHex } = useSelectionState()
 const sheetExpanded = ref(false)
 
 // Tapping a grid cell targets it: jump to the roster, open the sheet; placing
@@ -187,6 +187,9 @@ if (gameDataStore.dataLoaded) {
       showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
       gridStore.teamView = result.displayFlags.teamView ?? false
+      // The restore replaced the board; drop any stale mobile tap/lift selection
+      clearTargetHex()
+      clearLiftedHex()
       success('Grid loaded from URL!')
     } else {
       error('Invalid URL - using default grid')

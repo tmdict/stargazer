@@ -52,10 +52,15 @@ const {
   hasCharacterData,
   draggedCharacter,
   hoveredHexId,
+  lastDropHexId,
   isDragging,
   setHoveredHex,
   setDropHandled,
 } = useDragDrop()
+
+// Root SVG, exposed for GridManager's screen→SVG coordinate conversion
+const svgEl = ref<SVGSVGElement | null>(null)
+defineExpose({ svgEl })
 const gridStore = useGridStore()
 const characterStore = useCharacterStore()
 const mapEditorStore = useMapEditorStore()
@@ -66,8 +71,6 @@ const { targetHexId } = useSelectionState()
 
 // Track which hex is currently being hovered (non-drag)
 const hoveredHex = ref<number | null>(null)
-// Hex to highlight after drag ends (set from drag-ended event)
-let pendingHoverHex: number | null = null
 
 // Map editor drag-to-paint state
 // Enables continuous painting while dragging mouse across hexes
@@ -150,9 +153,10 @@ watchEffect(() => {
     // Just stopped dragging - keep blocking for a bit, then restore hover
     blockHoverTimeout = window.setTimeout(() => {
       blockHover.value = false
-      if (pendingHoverHex !== null) {
-        hoveredHex.value = pendingHoverHex
-        pendingHoverHex = null
+      // Restore the hover highlight on the tile that received the drop
+      if (lastDropHexId.value !== null) {
+        hoveredHex.value = lastDropHexId.value
+        lastDropHexId.value = null
       }
       blockHoverTimeout = null
     }, 100)
@@ -347,13 +351,6 @@ const elevatedHexes = computed(() =>
 )
 const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
 
-const handleDragEnded = (event: Event) => {
-  const detail = (event as CustomEvent).detail
-  if (detail?.hexId != null) {
-    pendingHoverHex = detail.hexId
-  }
-}
-
 // Handle hover events from character layer
 const handleCharacterHoverEnter = (hexId: number) => {
   if (!blockHover.value && !props.readonly) {
@@ -368,17 +365,11 @@ const handleCharacterHoverLeave = (hexId: number) => {
 }
 
 onMounted(() => {
-  document.addEventListener('drag-ended', handleDragEnded)
-
-  // Listen for character hover events
   gridEvents.on('character:mouseenter', handleCharacterHoverEnter)
   gridEvents.on('character:mouseleave', handleCharacterHoverLeave)
 })
 
 onUnmounted(() => {
-  document.removeEventListener('drag-ended', handleDragEnded)
-
-  // Clean up event listeners
   gridEvents.off('character:mouseenter', handleCharacterHoverEnter)
   gridEvents.off('character:mouseleave', handleCharacterHoverLeave)
 })
@@ -386,6 +377,7 @@ onUnmounted(() => {
 
 <template>
   <svg
+    ref="svgEl"
     :width="svgDimensions.width"
     :height="svgDimensions.height"
     class="grid-tiles"

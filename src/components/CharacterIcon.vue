@@ -4,11 +4,12 @@ import { computed, ref } from 'vue'
 import CharacterInfoIcons from './CharacterInfoIcons.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
-import { useTouchDetection } from '@/composables/useTouchDetection'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
+import { usePressClick } from '@/composables/usePressClick'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { formatDisplayName } from '@/utils/nameFormatting'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   character: CharacterType
@@ -27,27 +28,14 @@ const emit = defineEmits<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
-const { isTouchDevice } = useTouchDetection()
+const { onMouseDown, onMouseUp } = usePressClick(() => emit('characterClick', props.character))
+const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
 
-const isMouseDown = ref(false)
-const startTime = ref(0)
-const CLICK_THRESHOLD = 200 // ms
-
-const showTooltip = ref(false)
 const characterElement = ref<HTMLElement>()
 
-// Track if interaction started as touch
-const interactionStartedAsTouch = ref(false)
-
-const formattedCharacterName = computed(() => {
-  // i18n.t returns the key unchanged when no translation exists; fall back then.
-  const translationKey = `character.${props.character.name}`
-  const translated = i18n.t(translationKey)
-  if (translated !== translationKey) {
-    return translated
-  }
-  return formatDisplayName(props.character.name)
-})
+const formattedCharacterName = computed(() =>
+  localizedDisplayName(i18n.t, 'character', props.character.name),
+)
 
 const damageIcon = computed(() => {
   return gameDataStore.getIcon(`damage-${props.character.damage}`)
@@ -88,42 +76,6 @@ const handleDragEnd = (event: DragEvent) => {
   if (!props.isDraggable) return
   endDrag(event)
 }
-
-const handleMouseDown = () => {
-  isMouseDown.value = true
-  startTime.value = Date.now()
-}
-
-const handleMouseUp = () => {
-  if (!isMouseDown.value) return
-
-  const endTime = Date.now()
-  const clickDuration = endTime - startTime.value
-
-  // Only emit click if it was a short press (not a drag)
-  if (clickDuration < CLICK_THRESHOLD) {
-    emit('characterClick', props.character)
-  }
-
-  isMouseDown.value = false
-}
-
-const handleMouseEnter = () => {
-  // Only show tooltip on mouse hover, not after touch events
-  if (!isTouchDevice.value && !interactionStartedAsTouch.value) {
-    showTooltip.value = true
-  }
-}
-
-const handleMouseLeave = () => {
-  showTooltip.value = false
-  interactionStartedAsTouch.value = false // Reset for next interaction
-}
-
-const handleTouchStart = () => {
-  interactionStartedAsTouch.value = true
-  showTooltip.value = false // Ensure tooltip is hidden on touch
-}
 </script>
 
 <template>
@@ -138,11 +90,11 @@ const handleTouchStart = () => {
       :draggable="isDraggable"
       @dragstart="handleDragStart"
       @dragend="handleDragEnd"
-      @mousedown="handleMouseDown"
-      @mouseup="handleMouseUp"
-      @mouseenter="handleMouseEnter"
-      @mouseleave="handleMouseLeave"
-      @touchstart="handleTouchStart"
+      @mousedown="onMouseDown"
+      @mouseup="onMouseUp"
+      @mouseenter="onMouseEnter"
+      @mouseleave="onMouseLeave"
+      @touchstart="onTouchStart"
     >
       <img
         :src="gameDataStore.getCharacterImage(character.name)"

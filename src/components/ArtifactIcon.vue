@@ -5,11 +5,11 @@ import ArtifactImage from './ArtifactImage.vue'
 import ArtifactModal from './modals/ArtifactModal.vue'
 import InfoPill from './ui/InfoPill.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
-import { useTouchDetection } from '@/composables/useTouchDetection'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useI18nStore } from '@/stores/i18n'
 import { formatArtifactStats } from '@/utils/artifactStats'
-import { formatDisplayName } from '@/utils/nameFormatting'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const i18n = useI18nStore()
 
@@ -23,23 +23,13 @@ const emit = defineEmits<{
   artifactClick: [artifact: ArtifactType]
 }>()
 
-const { isTouchDevice } = useTouchDetection()
+const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
 
-const showTooltip = ref(false)
 const artifactElement = ref<HTMLElement>()
 
-// Track if interaction started as touch
-const interactionStartedAsTouch = ref(false)
-
-const formattedArtifactName = computed(() => {
-  // i18n.t returns the key unchanged when no translation exists; fall back then.
-  const translationKey = `artifact.${props.artifact.name}`
-  const translated = i18n.t(translationKey)
-  if (translated !== translationKey) {
-    return translated
-  }
-  return formatDisplayName(props.artifact.name)
-})
+const formattedArtifactName = computed(() =>
+  localizedDisplayName(i18n.t, 'artifact', props.artifact.name),
+)
 
 const formattedStats = computed(() => formatArtifactStats(props.artifact.stats, i18n.currentLocale))
 
@@ -52,23 +42,6 @@ const openInfoModal = () => {
 const handleClick = () => {
   emit('artifactClick', props.artifact)
 }
-
-const handleMouseEnter = () => {
-  // Only show tooltip on mouse hover, not after touch events
-  if (!isTouchDevice.value && !interactionStartedAsTouch.value) {
-    showTooltip.value = true
-  }
-}
-
-const handleMouseLeave = () => {
-  showTooltip.value = false
-  interactionStartedAsTouch.value = false // Reset for next interaction
-}
-
-const handleTouchStart = () => {
-  interactionStartedAsTouch.value = true
-  showTooltip.value = false // Ensure tooltip is hidden on touch
-}
 </script>
 
 <template>
@@ -78,9 +51,9 @@ const handleTouchStart = () => {
       class="artifact"
       :class="{ placed: isPlaced }"
       @click="handleClick"
-      @mouseenter="handleMouseEnter"
-      @mouseleave="handleMouseLeave"
-      @touchstart="handleTouchStart"
+      @mouseenter="onMouseEnter"
+      @mouseleave="onMouseLeave"
+      @touchstart="onTouchStart"
     >
       <ArtifactImage :artifact />
     </div>

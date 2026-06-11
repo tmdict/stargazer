@@ -111,6 +111,13 @@ export const useGridStore = defineStore('grid', () => {
     grid.setState(hex, state)
   }
 
+  // Reset every tile on the board to one state (URL restore, map editor wipe)
+  const resetAllTiles = (state: State = State.DEFAULT): void => {
+    for (const hex of grid.keys()) {
+      grid.setState(hex, state)
+    }
+  }
+
   // Grid utility functions
   const getHexById = (id: number): Hex => {
     return grid.getHexById(id)
@@ -207,6 +214,7 @@ export const useGridStore = defineStore('grid', () => {
 
     // Core grid operations
     setState,
+    resetAllTiles,
     getHexById,
     getHexPosition,
     getTile,

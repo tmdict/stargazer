@@ -15,6 +15,7 @@ import { bradleyTerryModel, getCachedBradleyTerryFit } from './bradleyTerry'
 import { calibrate } from './calibration'
 import { CONFIDENCE_THRESHOLDS } from './calibrationData'
 import { compositeModel } from './composite'
+import { computeCredibilityBlend } from './credibilityBlend'
 import { computeAllSelfConfidences } from './modelConfidence'
 import { popularPickModel } from './popularPick'
 
@@ -203,55 +204,20 @@ export function getAggregatePrediction(predictions: ModelPrediction[]): Aggregat
 
   const baseWeights = getAdaptiveAggregateWeights(matchCount)
 
-  // Credibility weight = aggregate weight × self-confidence. Low-confidence
-  // models have their vote downweighted in both the probability blend and
-  // the disagreement metric.
-  let totalCredibility = 0
-  const credibility: Record<string, number> = {}
-  for (const pred of predictions) {
-    const aggWeight = baseWeights[pred.id] ?? 0.25
-    const cred = aggWeight * pred.selfConfidence
-    credibility[pred.id] = cred
-    totalCredibility += cred
-  }
-
-  // Fall back to plain aggregate weights if all self-confidences are 0
-  // (e.g., every hero has 0 matches in the analysis — unusual but possible
-  // for brand-new heroes). Prevents a division-by-zero collapse.
-  let totalWeight: number
-  const weights: Record<string, number> = {}
-  if (totalCredibility > 0) {
-    totalWeight = totalCredibility
-    Object.assign(weights, credibility)
-  } else {
-    totalWeight = 0
-    for (const pred of predictions) {
-      const w = baseWeights[pred.id] ?? 0.25
-      weights[pred.id] = w
-      totalWeight += w
-    }
-  }
-
-  // Weighted mean prediction
-  let leftWinProbability = 0
-  for (const pred of predictions) {
-    const p = pred.prediction.leftWinProbability
-    leftWinProbability += (weights[pred.id]! / totalWeight) * p
-  }
-
-  // Weighted variance (around the weighted mean)
-  let variance = 0
-  for (const pred of predictions) {
-    const p = pred.prediction.leftWinProbability
-    variance += (weights[pred.id]! / totalWeight) * (p - leftWinProbability) ** 2
-  }
-  const weightedStddev = Math.sqrt(variance)
-
-  // Weighted mean self-confidence
-  let avgSelfConfidence = 0
-  for (const pred of predictions) {
-    avgSelfConfidence += (weights[pred.id]! / totalWeight) * pred.selfConfidence
-  }
+  // The blend math lives in credibilityBlend.ts, shared with the benchmark's
+  // threshold tuning — the badge calibration depends on the two staying identical.
+  const {
+    probability: leftWinProbability,
+    weightedStddev,
+    avgSelfConfidence,
+  } = computeCredibilityBlend(
+    predictions.map((pred) => ({
+      id: pred.id,
+      probability: pred.prediction.leftWinProbability,
+      selfConfidence: pred.selfConfidence,
+    })),
+    baseWeights,
+  )
 
   const confidence = aggregateConfidence(weightedStddev, avgSelfConfidence)
 

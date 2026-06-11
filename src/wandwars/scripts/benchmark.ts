@@ -22,6 +22,7 @@ import { analyzeMatches } from '../prediction/analysis'
 import { fitBradleyTerry } from '../prediction/bradleyTerry'
 import { isotonicApply, plattApply } from '../prediction/calibration'
 import { compositeModel } from '../prediction/composite'
+import { computeCredibilityBlend } from '../prediction/credibilityBlend'
 import { computeAllSelfConfidences } from '../prediction/modelConfidence'
 import { popularPickModel } from '../prediction/popularPick'
 import type { MatchResult, RecommendationModel } from '../types'
@@ -770,54 +771,25 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     return raw
   }
 
-  // Per-match aggregate snapshot: weighted mean probability, credibility-
-  // weighted variance, weighted mean self-confidence. Mirrors recommend.ts'
-  // getAggregatePrediction so the tuned thresholds map directly to the
-  // runtime badge logic.
+  // Per-match aggregate snapshot via the shared blend (credibilityBlend.ts) —
+  // the same function the runtime uses, so the tuned thresholds map directly
+  // to the runtime badge logic by construction.
   const aggregatePairs = aggregateData.map((d) => {
-    const calProbs: Record<string, number> = {}
-    for (const id of MODEL_IDS) calProbs[id] = applyCal(id, d.modelProbs[id]!)
+    const blend = computeCredibilityBlend(
+      MODEL_IDS.map((id) => ({
+        id,
+        probability: applyCal(id, d.modelProbs[id]!),
+        selfConfidence: d.modelSelfConf[id]!,
+      })),
+      aggregateWeights,
+    )
 
-    // Credibility weight = aggregateWeight × selfConfidence.
-    let totalCred = 0
-    const cred: Record<string, number> = {}
-    for (const id of MODEL_IDS) {
-      const c = (aggregateWeights[id] ?? 0.25) * d.modelSelfConf[id]!
-      cred[id] = c
-      totalCred += c
-    }
-    // Fallback if all selfConf are 0 (brand-new heroes) — avoid div-by-zero.
-    let totalW: number
-    const weights: Record<string, number> = {}
-    if (totalCred > 0) {
-      totalW = totalCred
-      Object.assign(weights, cred)
-    } else {
-      totalW = 0
-      for (const id of MODEL_IDS) {
-        const w = aggregateWeights[id] ?? 0.25
-        weights[id] = w
-        totalW += w
-      }
-    }
-
-    let prob = 0
-    for (const id of MODEL_IDS) prob += (weights[id]! / totalW) * calProbs[id]!
-
-    let variance = 0
-    for (const id of MODEL_IDS) variance += (weights[id]! / totalW) * (calProbs[id]! - prob) ** 2
-    const weightedStddev = Math.sqrt(variance)
-
-    let avgSelfConf = 0
-    for (const id of MODEL_IDS) avgSelfConf += (weights[id]! / totalW) * d.modelSelfConf[id]!
-
-    const predicted = prob >= 0.5 ? 1 : 0
     return {
-      prob,
-      weightedStddev,
-      avgSelfConf,
+      prob: blend.probability,
+      weightedStddev: blend.weightedStddev,
+      avgSelfConf: blend.avgSelfConfidence,
       actual: d.actual,
-      predicted,
+      predicted: blend.probability >= 0.5 ? 1 : 0,
     }
   })
 
