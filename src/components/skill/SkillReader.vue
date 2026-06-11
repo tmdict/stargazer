@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import SkillSections from './SkillSections.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import type { Locale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { hasSkillLocale } from '@/utils/dataLoader'
 
@@ -10,7 +11,7 @@ import '@/styles/content.css'
 
 const props = defineProps<{
   slug: string | null
-  lang: 'en' | 'zh'
+  lang: Locale
 }>()
 
 // Tapping the empty placeholder reveals the roster (the mobile sheet); the

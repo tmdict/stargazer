@@ -1,6 +1,7 @@
 import { inject, type InjectionKey } from 'vue'
 import { useHead } from '@unhead/vue'
 
+import type { Locale } from '@/lib/types/i18n'
 import { loadCharacterLocales } from '@/utils/dataLoader'
 
 /** Provide(true) when rendering skill content inside a modal to suppress page-level meta writes. */
@@ -15,7 +16,7 @@ const BASE_KEYWORDS = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远�
  * on the client it only syncs <html lang>, and skips even that when embedded in
  * a modal so the popup doesn't mutate the host page.
  */
-export function setupSkillContentMeta(name: string, locale: 'en' | 'zh'): void {
+export function setupSkillContentMeta(name: string, locale: Locale): void {
   const isEmbedded = inject(ContentInModalKey, false)
 
   if (!import.meta.env.SSR) {
@@ -44,7 +45,7 @@ export function setupSkillContentMeta(name: string, locale: 'en' | 'zh'): void {
 }
 
 /** Sets up meta tags for the /{locale}/guide compendium. */
-export function setupGuideContentMeta(locale: 'en' | 'zh'): void {
+export function setupGuideContentMeta(locale: Locale): void {
   if (!import.meta.env.SSR) {
     document.documentElement.lang = locale
     return

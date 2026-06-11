@@ -11,6 +11,7 @@ import {
 
 import SkillSection from './SkillSection.vue'
 import { useSkillTags } from '@/composables/useSkillTags'
+import type { Locale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
 import { loadAppLocales, loadCharacterLocales, loadSkillLocales } from '@/utils/dataLoader'
@@ -19,7 +20,7 @@ import { SkillLangKey, SkillSnippetAnchorsKey } from './snippetKeys'
 
 const props = defineProps<{
   slug: string
-  lang: 'en' | 'zh'
+  lang: Locale
   initialChip?: string | null
 }>()
 

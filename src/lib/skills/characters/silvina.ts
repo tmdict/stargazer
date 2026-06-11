@@ -12,7 +12,7 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   const { grid, team, hexId } = context
   const opposingTeam = getOpposingTeam(team)
 
-  const symmetricalHexId = getSymmetricalHexId(hexId)
+  const symmetricalHexId = getSymmetricalHexId(grid, hexId)
   if (!symmetricalHexId) return null
 
   const symmetricalTile = grid.getTileById(symmetricalHexId)
