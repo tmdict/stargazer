@@ -60,9 +60,15 @@ describe('urlStateManager', () => {
       consoleSpy.mockRestore()
     })
 
-    it('returns empty state for empty encoded string', () => {
-      const decoded = decodeGridStateFromUrl('')
-      expect(decoded).toEqual({})
+    it('rejects input that decodes to zero bytes', () => {
+      // A valid encoding always carries at least one header byte, so inputs
+      // too short to yield a single byte cannot be real shared state
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+      expect(decodeGridStateFromUrl('')).toBeNull()
+      expect(decodeGridStateFromUrl('A')).toBeNull()
+
+      consoleSpy.mockRestore()
     })
   })
 

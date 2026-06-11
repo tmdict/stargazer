@@ -195,6 +195,21 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(stores.artifact.allyArtifactId).toBe(3)
   })
 
+  it('rejects valid-alphabet garbage that decodes to zero bytes, leaving state untouched', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {})
+
+    const stores = createStores()
+    expect(stores.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
+    const before = snapshotTiles(stores.grid)
+
+    // 'A' is inside the URL-safe alphabet but too short to decode to any bytes
+    const result = stores.urlState.restoreFromEncodedState('A')
+
+    expect(result.success).toBe(false)
+    expect(result.error).toBe('Invalid state data')
+    expect(snapshotTiles(stores.grid)).toEqual(before)
+  })
+
   it('clears pre-existing state before applying the encoded state', () => {
     const source = createStores()
     expect(source.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)

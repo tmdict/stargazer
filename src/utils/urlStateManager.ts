@@ -15,7 +15,9 @@ export function encodeGridStateToUrl(gridState: GridState): string {
 export function decodeGridStateFromUrl(encodedState: string): GridState | null {
   try {
     const bytes = urlSafeToBytes(encodedState)
-    if (!bytes) {
+    // A valid encoding always carries at least one header byte; zero decoded
+    // bytes means the input is not shared state (e.g. a truncated link)
+    if (!bytes || bytes.length === 0) {
       console.warn('Failed to decode binary data from URL')
       return null
     }

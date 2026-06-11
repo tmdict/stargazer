@@ -8,8 +8,14 @@ import type {
   TeamRecord,
   TrioMatrix,
 } from '../types'
+import { smoothedWinRate } from './smoothing'
 
 const BAYESIAN_PRIOR = META_BAYESIAN_PRIOR
+
+// Draw convention: draws count toward match totals (data volume) but never
+// reach a rate — every rate goes through smoothedWinRate, whose denominator
+// is built from win/loss evidence only. Bradley–Terry and the NN handle
+// draws separately (half-win credit).
 
 function computeHeroStats(matches: MatchResult[], allHeroes: string[]): Record<string, HeroStats> {
   const stats: Record<string, HeroStats> = {}
@@ -60,11 +66,9 @@ function computeHeroStats(matches: MatchResult[], allHeroes: string[]): Record<s
     }
   }
 
-  // Apply Bayesian smoothing
   for (const hero of allHeroes) {
     const s = stats[hero]!
-    const totalWeighted = s.weightedWins + s.weightedLosses
-    s.winRate = (s.weightedWins + BAYESIAN_PRIOR) / (totalWeighted + 2 * BAYESIAN_PRIOR)
+    s.winRate = smoothedWinRate(s.weightedWins, s.weightedLosses, BAYESIAN_PRIOR)
   }
 
   return stats
@@ -75,7 +79,7 @@ function computeSynergyMatrix(
   heroStats: Record<string, HeroStats>,
 ): SynergyMatrix {
   const pairWeightedWins: Record<string, number> = {}
-  const pairWeightedTotal: Record<string, number> = {}
+  const pairWeightedLosses: Record<string, number> = {}
   const pairMatches: Record<string, number> = {}
   const pairWins: Record<string, number> = {}
   const pairLosses: Record<string, number> = {}
@@ -93,12 +97,14 @@ function computeSynergyMatrix(
         for (let j = i + 1; j < team.length; j++) {
           const key = [team[i], team[j]].sort().join(':')
           pairMatches[key] = (pairMatches[key] || 0) + 1
-          pairWeightedTotal[key] = (pairWeightedTotal[key] || 0) + match.weight
           if (isWin) {
             pairWins[key] = (pairWins[key] || 0) + 1
             pairWeightedWins[key] = (pairWeightedWins[key] || 0) + match.weight
           }
-          if (isLoss) pairLosses[key] = (pairLosses[key] || 0) + 1
+          if (isLoss) {
+            pairLosses[key] = (pairLosses[key] || 0) + 1
+            pairWeightedLosses[key] = (pairWeightedLosses[key] || 0) + match.weight
+          }
         }
       }
     }
@@ -108,12 +114,13 @@ function computeSynergyMatrix(
 
   for (const [key, matchCount] of Object.entries(pairMatches)) {
     const [a, b] = key.split(':') as [string, string]
-    const weightedWins = pairWeightedWins[key] || 0
-    const weightedTotal = pairWeightedTotal[key] || 0
     const losses = pairLosses[key] || 0
 
-    // Bayesian-smoothed pair win rate
-    const pairWinRate = (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR)
+    const pairWinRate = smoothedWinRate(
+      pairWeightedWins[key] || 0,
+      pairWeightedLosses[key] || 0,
+      BAYESIAN_PRIOR,
+    )
     const avgIndividualRate = ((heroStats[a]?.winRate || 0.5) + (heroStats[b]?.winRate || 0.5)) / 2
     const score = pairWinRate - avgIndividualRate
 
@@ -133,7 +140,7 @@ function computeCounterMatrix(
   heroStats: Record<string, HeroStats>,
 ): CounterMatrix {
   const vsWeightedWins: Record<string, number> = {}
-  const vsWeightedTotal: Record<string, number> = {}
+  const vsWeightedLosses: Record<string, number> = {}
   const vsMatches: Record<string, number> = {}
   const vsWins: Record<string, number> = {}
   const vsLosses: Record<string, number> = {}
@@ -143,24 +150,28 @@ function computeCounterMatrix(
       for (const oppHero of match.right) {
         const key = `${myHero}:${oppHero}`
         vsMatches[key] = (vsMatches[key] || 0) + 1
-        vsWeightedTotal[key] = (vsWeightedTotal[key] || 0) + match.weight
         if (match.result === 'left') {
           vsWins[key] = (vsWins[key] || 0) + 1
           vsWeightedWins[key] = (vsWeightedWins[key] || 0) + match.weight
         }
-        if (match.result === 'right') vsLosses[key] = (vsLosses[key] || 0) + 1
+        if (match.result === 'right') {
+          vsLosses[key] = (vsLosses[key] || 0) + 1
+          vsWeightedLosses[key] = (vsWeightedLosses[key] || 0) + match.weight
+        }
       }
     }
     for (const myHero of match.right) {
       for (const oppHero of match.left) {
         const key = `${myHero}:${oppHero}`
         vsMatches[key] = (vsMatches[key] || 0) + 1
-        vsWeightedTotal[key] = (vsWeightedTotal[key] || 0) + match.weight
         if (match.result === 'right') {
           vsWins[key] = (vsWins[key] || 0) + 1
           vsWeightedWins[key] = (vsWeightedWins[key] || 0) + match.weight
         }
-        if (match.result === 'left') vsLosses[key] = (vsLosses[key] || 0) + 1
+        if (match.result === 'left') {
+          vsLosses[key] = (vsLosses[key] || 0) + 1
+          vsWeightedLosses[key] = (vsWeightedLosses[key] || 0) + match.weight
+        }
       }
     }
   }
@@ -169,13 +180,14 @@ function computeCounterMatrix(
 
   for (const [key, matchCount] of Object.entries(vsMatches)) {
     const [hero, opponent] = key.split(':') as [string, string]
-    const weightedWins = vsWeightedWins[key] || 0
-    const weightedTotal = vsWeightedTotal[key] || 0
     const wins = vsWins[key] || 0
     const losses = vsLosses[key] || 0
 
-    // Bayesian-smoothed counter win rate
-    const vsWinRate = (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR)
+    const vsWinRate = smoothedWinRate(
+      vsWeightedWins[key] || 0,
+      vsWeightedLosses[key] || 0,
+      BAYESIAN_PRIOR,
+    )
     const overallRate = heroStats[hero]?.winRate || 0.5
     const score = vsWinRate - overallRate
 
@@ -213,7 +225,7 @@ export function computeTeamRecords(matches: MatchResult[]): TeamRecord[] {
   }
 
   for (const rec of records.values()) {
-    rec.winRate = (rec.wins + BAYESIAN_PRIOR) / (rec.total + 2 * BAYESIAN_PRIOR)
+    rec.winRate = smoothedWinRate(rec.wins, rec.losses, BAYESIAN_PRIOR)
   }
 
   return [...records.values()]
@@ -228,7 +240,7 @@ function computeTrioMatrix(
   const trioWins: Record<string, number> = {}
   const trioLosses: Record<string, number> = {}
   const trioWeightedWins: Record<string, number> = {}
-  const trioWeightedTotal: Record<string, number> = {}
+  const trioWeightedLosses: Record<string, number> = {}
 
   for (const match of matches) {
     for (const team of [match.left, match.right] as const) {
@@ -241,12 +253,14 @@ function computeTrioMatrix(
         (team === match.right && match.result === 'left')
 
       trioMatches[key] = (trioMatches[key] || 0) + 1
-      trioWeightedTotal[key] = (trioWeightedTotal[key] || 0) + match.weight
       if (isWin) {
         trioWins[key] = (trioWins[key] || 0) + 1
         trioWeightedWins[key] = (trioWeightedWins[key] || 0) + match.weight
       }
-      if (isLoss) trioLosses[key] = (trioLosses[key] || 0) + 1
+      if (isLoss) {
+        trioLosses[key] = (trioLosses[key] || 0) + 1
+        trioWeightedLosses[key] = (trioWeightedLosses[key] || 0) + match.weight
+      }
     }
   }
 
@@ -254,9 +268,11 @@ function computeTrioMatrix(
 
   for (const [key, matchCount] of Object.entries(trioMatches)) {
     const heroes = key.split(',') as [string, string, string]
-    const weightedWins = trioWeightedWins[key] || 0
-    const weightedTotal = trioWeightedTotal[key] || 0
-    const trioWinRate = (weightedWins + BAYESIAN_PRIOR) / (weightedTotal + 2 * BAYESIAN_PRIOR)
+    const trioWinRate = smoothedWinRate(
+      trioWeightedWins[key] || 0,
+      trioWeightedLosses[key] || 0,
+      BAYESIAN_PRIOR,
+    )
 
     // Expected win rate from pairwise synergies + individual rates
     let pairSum = 0
