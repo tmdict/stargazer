@@ -165,7 +165,7 @@ Highlight multiple tiles based on game state:
 
 ## Adding New Skills
 
-Most skills follow one of two reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts` — it eliminates the activate/deactivate/update boilerplate and only takes a `calculateTarget` callback.
+Most skills follow one of three reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts` — it eliminates the activate/deactivate(/update) boilerplate.
 
 ### Pattern 1: arrow-based targeting (`createTargetingSkill`)
 
@@ -215,9 +215,32 @@ registerSkill(
 )
 ```
 
-### Pattern 3: custom lifecycle (companions, multi-tile zones, etc.)
+### Pattern 3: companion units (`createCompanionSkill`)
 
-When neither factory fits — companion spawning, multi-tile state changes, multi-tile highlights — pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object:
+For skills that spawn extra units (Phraesto's shadow, Lailah, Zanie's turrets). The factory owns the whole lifecycle: random free-tile placement, the team-capacity bump (`count` companions raise it by `count`), companion links, modifiers, rollback-and-throw on placement failure, and full teardown with capacity restore on deactivation:
+
+```typescript
+import { registerSkill } from '../registry'
+import { createCompanionSkill } from '../utils/builders'
+
+registerSkill(
+  createCompanionSkill({
+    id: 'my-skill',
+    characterId: 123,
+    name: 'Skill Name',
+    description: 'What it does',
+    count: 2, // companions to spawn (default 1); IDs are N * companionIdOffset + characterId
+    colorModifier: '#hexcolor', // optional - main character border
+    companionColorModifier: '#hexcolor', // optional - companion border
+    companionImageModifier: 'image-name', // optional - companion profile image
+    companionRange: 2, // optional - companion range override
+  }),
+)
+```
+
+### Pattern 4: custom lifecycle (multi-tile zones, etc.)
+
+When no factory fits — multi-tile state changes, multi-tile highlights — pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object, and use the SkillManager's `claimTileState`/`releaseTileState` for tile-state changes so overlapping zones restore correctly (see Kulu):
 
 ```typescript
 import { registerSkill } from '../registry'
@@ -230,14 +253,10 @@ registerSkill({
   characterId: 123,
   name: 'Skill Name',
   description: 'What it does',
-  colorModifier: '#hexcolor', // optional - character border
-  companionImageModifier: 'image-name', // optional - companion profile image
-  companionColorModifier: '#hexcolor', // optional - companion border
-  companionRange: 2, // optional - companion range override
 
   onActivate(context: SkillContext) {
     const { grid, team, characterId, skillManager } = context
-    // Spawn companions, modify tiles, etc.
+    // Claim + modify tiles, etc.
     // Use skillManager.setTileColorModifier(hexId, TILE_COLOR) for tiles
   },
 

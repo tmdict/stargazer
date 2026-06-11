@@ -194,6 +194,12 @@ if (gameDataStore.dataLoaded) {
   }
 }
 
+// The initial tab comes straight from ?t= without passing through
+// handleTabChange, so enforce its display resets here — after the URL restore,
+// which is what can introduce the conflicting flags (e.g. team view encoded in
+// a share link while ?t=mapEditor).
+applyTabResets(activeTab.value)
+
 // Action button handlers
 
 const handleCopyLink = async () => {
