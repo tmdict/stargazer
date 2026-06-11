@@ -22,29 +22,37 @@ export const useI18nStore = defineStore('i18n', () => {
    *
    * This method is SSR-safe and automatically detects the environment:
    * - During SSG/SSR: Only updates the reactive locale value
-   * - On client: Also updates document.lang and persists to localStorage
+   * - On client: Also updates document.lang and persists to localStorage.
+   *   Pass persist: false for URL-derived locales (locale-prefixed routes):
+   *   they are display-only and must not overwrite the user's saved choice.
    *
    * @param locale - The locale to set ('en' or 'zh')
    */
-  const setLocale = (locale: Locale) => {
+  const setLocale = (locale: Locale, { persist = true }: { persist?: boolean } = {}) => {
     currentLocale.value = locale
 
     // Only access DOM/localStorage on client
     if (!import.meta.env.SSR) {
       document.documentElement.lang = locale
 
-      // Try to persist to localStorage, but don't fail if it's not available
-      try {
-        localStorage.setItem(LOCALE_STORAGE_KEY, locale)
-      } catch (e) {
-        console.warn('Could not save locale preference to localStorage:', e)
+      if (persist) {
+        // Try to persist to localStorage, but don't fail if it's not available
+        try {
+          localStorage.setItem(LOCALE_STORAGE_KEY, locale)
+        } catch (e) {
+          console.warn('Could not save locale preference to localStorage:', e)
+        }
       }
     }
   }
 
-  // Initialize locale from localStorage, then query param
+  // Apply the saved locale, then the `?l=` query param. Called from App.vue
+  // after mount, and only on unprefixed routes: the unprefixed shells are
+  // pre-rendered in English, so applying the saved locale before hydration
+  // would mismatch the baked HTML, and locale-prefixed routes are already
+  // language-pinned by the path.
   const initializeLocale = () => {
-    // Skip during SSG
+    // Guard against non-client callers
     if (import.meta.env.SSR) {
       return
     }
@@ -62,23 +70,17 @@ export const useI18nStore = defineStore('i18n', () => {
       currentLocale.value = 'en'
     }
 
-    // Check for locale query parameter and override if valid
-    // Note: Using URLSearchParams instead of route.query because this runs during
-    // store initialization before Vue Router is mounted
+    // `?l=` is an intentional external contract: a shared link like `/?l=zh`
+    // pins the app language for the recipient and persists it as their saved
+    // preference.
     const urlParams = new URLSearchParams(window.location.search)
     const localeParam = urlParams.get('l')
     if (localeParam && VALID_LOCALES.includes(localeParam)) {
-      // Use setLocale to update both currentLocale and localStorage
       setLocale(localeParam as Locale)
     } else {
       // Set the HTML lang attribute for the initial locale
       document.documentElement.lang = currentLocale.value
     }
-  }
-
-  // Initialize locale on store creation (only on client)
-  if (!import.meta.env.SSR) {
-    initializeLocale()
   }
 
   // Getters
@@ -152,6 +154,7 @@ export const useI18nStore = defineStore('i18n', () => {
 
     // Actions
     initialize,
+    initializeLocale,
     setLocale,
     toggleLocale,
   }
