@@ -1,5 +1,6 @@
 import { computed, type ComputedRef, type Ref } from 'vue'
 
+import type { Locale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
 import { loadCharacterLocales, loadSkillLocales } from '@/utils/dataLoader'
 import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
@@ -31,12 +32,12 @@ interface DeepEntry {
 }
 
 // Per-language index, built lazily on first query. ~2.5k entries — trivial.
-const indexCache: Record<'en' | 'zh', { names: NameEntry[]; deep: DeepEntry[] } | undefined> = {
+const indexCache: Record<Locale, { names: NameEntry[]; deep: DeepEntry[] } | undefined> = {
   en: undefined,
   zh: undefined,
 }
 
-function buildIndex(lang: 'en' | 'zh') {
+function buildIndex(lang: Locale) {
   const charLocales = loadCharacterLocales()
   const skills = loadSkillLocales()[lang]
 
@@ -81,7 +82,7 @@ function buildIndex(lang: 'en' | 'zh') {
   return { names, deep }
 }
 
-function getIndex(lang: 'en' | 'zh') {
+function getIndex(lang: Locale) {
   if (!indexCache[lang]) indexCache[lang] = buildIndex(lang)
   return indexCache[lang]!
 }
@@ -90,7 +91,7 @@ function getIndex(lang: 'en' | 'zh') {
  * descriptions. Hits per hero capped at 3; results ordered by hit count. */
 export function useSkillSearch(
   query: Ref<string>,
-  lang: Ref<'en' | 'zh'>,
+  lang: Ref<Locale>,
 ): ComputedRef<SearchResult[] | null> {
   return computed(() => {
     const q = query.value.trim()

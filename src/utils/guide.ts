@@ -1,10 +1,11 @@
 import type { Component } from 'vue'
 
+import type { Locale } from '@/lib/types/i18n'
 import { loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
 
 export interface GuideEntry {
   slug: string
-  components: Partial<Record<'en' | 'zh', Component>>
+  components: Partial<Record<Locale, Component>>
 }
 
 // Eager so the compendium renders into static HTML at SSG time (synchronous —
@@ -42,13 +43,13 @@ export function guideEntries(): GuideEntry[] {
     if (!bySlug[slug]) {
       bySlug[slug] = { slug, components: {} }
     }
-    bySlug[slug].components[lang as 'en' | 'zh'] = mod.default
+    bySlug[slug].components[lang as Locale] = mod.default
   }
   cache = Object.values(bySlug).sort((a, b) => a.slug.localeCompare(b.slug))
   return cache
 }
 
-export function heroName(slug: string, lang: 'en' | 'zh'): string {
+export function heroName(slug: string, lang: Locale): string {
   return loadCharacterLocales()[slug]?.[lang] ?? slug
 }
 

@@ -1,6 +1,6 @@
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
-import type { LocaleData, LocaleDictionary } from '@/lib/types/i18n'
+import type { Locale, LocaleData, LocaleDictionary } from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
 import type { SkillLocaleFile } from '@/lib/types/skill'
 
@@ -239,7 +239,7 @@ let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
 let wandwarsLocalesCache: Record<string, LocaleData> | null = null
-let skillLocalesCache: Record<'en' | 'zh', Record<string, SkillLocaleFile>> | null = null
+let skillLocalesCache: Record<Locale, Record<string, SkillLocaleFile>> | null = null
 
 // Vite's import.meta.glob requires a string literal for the pattern, so the glob calls
 // can't be parameterized — but the post-processing (filename → key) can.
@@ -293,7 +293,7 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
 }
 
 /** Per-language skill text, keyed by character slug (filename basename). */
-export function loadSkillLocales(): Record<'en' | 'zh', Record<string, SkillLocaleFile>> {
+export function loadSkillLocales(): Record<Locale, Record<string, SkillLocaleFile>> {
   if (skillLocalesCache) return skillLocalesCache
   skillLocalesCache = {
     en: buildLocaleDict<SkillLocaleFile>(

@@ -1,124 +1,90 @@
 import { describe, expect, it } from 'vitest'
 
+import { Grid } from '@/lib/grid'
 import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
-import { DIAGONAL_ROWS } from '@/lib/types/grid'
 
-describe('symmetry', () => {
-  describe('getSymmetricalHexId', () => {
-    it('returns correct symmetrical hex for top row', () => {
-      // Row 1 (index 0) should map to Row 15 (index 14)
-      const topRowHex = 23
-      const symmetrical = getSymmetricalHexId(topRowHex)
-      expect(symmetrical).toBeDefined()
-      // Verify it's actually symmetrical (bidirectional)
-      expect(getSymmetricalHexId(symmetrical!)).toBe(topRowHex)
-    })
+/**
+ * Oracle: the original hand-derived diagonal-row table for FULL_GRID (visually
+ * verified against the rendered board, predating the coordinate derivation).
+ * The runtime now computes both relations from cube coordinates — same
+ * diagonal ⇔ equal q − r, mirror ⇔ q↔r swap — and these tests pin that the
+ * derivation reproduces the human-verified table exactly.
+ */
+const DIAGONAL_ROWS: readonly number[][] = [
+  [1, 2],
+  [3, 4, 5],
+  [6, 7],
+  [8, 9, 10],
+  [11, 12, 13, 14],
+  [15, 16, 17],
+  [18, 19, 20, 21],
+  [22, 23, 24], // middle diagonal
+  [25, 26, 27, 28],
+  [29, 30, 31],
+  [32, 33, 34, 35],
+  [36, 37, 38],
+  [39, 40],
+  [41, 42, 43],
+  [44, 45],
+]
 
-    it('returns correct symmetrical hex for bottom row', () => {
-      // Row 15 (index 14) should map to Row 1 (index 0)
-      const bottomRowHex = 45
-      const symmetrical = getSymmetricalHexId(bottomRowHex)
-      expect(symmetrical).toBeDefined()
-      // Verify it's actually symmetrical (bidirectional)
-      expect(getSymmetricalHexId(symmetrical!)).toBe(bottomRowHex)
-    })
+const MIDDLE_ROW = 7
 
-    it('maps middle diagonal to itself', () => {
-      // Row 8 (index 7) is the middle diagonal
-      const middleRow = DIAGONAL_ROWS[7] ?? []
-      expect(middleRow.length).toBeGreaterThan(0)
-      for (const hexId of middleRow) {
-        expect(getSymmetricalHexId(hexId)).toBe(hexId)
-      }
-    })
+// The original symmetry construction: mirror row i ↔ row 14 − i, pairing by
+// position (first→first); the middle diagonal maps to itself.
+function buildOracleSymmetryMap(): Map<number, number> {
+  const map = new Map<number, number>()
+  for (let row = 0; row < DIAGONAL_ROWS.length; row++) {
+    const targetRow = 2 * MIDDLE_ROW - row
+    if (targetRow < 0 || targetRow >= DIAGONAL_ROWS.length) continue
+    const source = DIAGONAL_ROWS[row]!
+    const target = DIAGONAL_ROWS[targetRow]!
+    for (let pos = 0; pos < Math.min(source.length, target.length); pos++) {
+      map.set(source[pos]!, target[pos]!)
+      map.set(target[pos]!, source[pos]!)
+    }
+  }
+  for (const hexId of DIAGONAL_ROWS[MIDDLE_ROW]!) map.set(hexId, hexId)
+  return map
+}
 
-    it('provides bidirectional mapping', () => {
-      // Test that A→B and B→A
-      const hexId = 1
-      const symmetrical = getSymmetricalHexId(hexId)
-      expect(symmetrical).toBeDefined()
-      expect(getSymmetricalHexId(symmetrical!)).toBe(hexId)
-    })
+describe('diagonal geometry vs the hand-derived FULL_GRID table', () => {
+  const grid = new Grid()
+  const hexOf = (id: number) => grid.getHexById(id)
 
-    it('maps hexes within same position in row', () => {
-      // First position in row 2 maps to first position in row 14
-      const row2First = DIAGONAL_ROWS[1]?.[0] // Hex 13
-      const row14First = DIAGONAL_ROWS[13]?.[0] // Hex 44
-      expect(row2First).toBeDefined()
-      expect(row14First).toBeDefined()
-      expect(getSymmetricalHexId(row2First!)).toBe(row14First)
-      expect(getSymmetricalHexId(row14First!)).toBe(row2First)
-    })
-
-    it('handles all valid hex IDs', () => {
-      // Test all hex IDs from 1 to 45
-      for (let hexId = 1; hexId <= 45; hexId++) {
-        const symmetrical = getSymmetricalHexId(hexId)
-        expect(symmetrical).toBeDefined()
-        expect(symmetrical).toBeGreaterThanOrEqual(1)
-        expect(symmetrical).toBeLessThanOrEqual(45)
-      }
-    })
-
-    it('returns undefined for invalid hex IDs', () => {
-      expect(getSymmetricalHexId(0)).toBeUndefined()
-      expect(getSymmetricalHexId(46)).toBeUndefined()
-      expect(getSymmetricalHexId(-1)).toBeUndefined()
-      expect(getSymmetricalHexId(100)).toBeUndefined()
-    })
-
-    it('maintains row structure in symmetry', () => {
-      // Check that rows with same length map correctly
-      const testRows = [
-        { rowIndex: 0, length: 1 }, // Row 1
-        { rowIndex: 14, length: 1 }, // Row 15
-        { rowIndex: 3, length: 7 }, // Row 4
-        { rowIndex: 11, length: 7 }, // Row 12
-      ]
-
-      for (const { rowIndex } of testRows) {
-        const row = DIAGONAL_ROWS[rowIndex]
-        const targetRow = DIAGONAL_ROWS[14 - rowIndex]
-        expect(row).toBeDefined()
-        expect(targetRow).toBeDefined()
-        expect(row!.length).toBe(targetRow!.length)
-      }
-    })
+  it('q − r partitions the 45 tiles exactly into the table rows', () => {
+    for (const row of DIAGONAL_ROWS) {
+      const diagonal = hexOf(row[0]!).getDiagonal()
+      const members = grid
+        .getAllTiles()
+        .filter((t) => t.hex.getDiagonal() === diagonal)
+        .map((t) => t.hex.getId())
+        .sort((a, b) => a - b)
+      expect(members).toEqual([...row].sort((a, b) => a - b))
+    }
   })
 
-  describe('symmetry consistency', () => {
-    it('ensures all hexes have valid symmetrical mappings', () => {
-      let validMappings = 0
-      let totalHexes = 0
+  it('the middle diagonal is q = r (diagonal 0)', () => {
+    for (const hexId of DIAGONAL_ROWS[MIDDLE_ROW]!) {
+      expect(hexOf(hexId).getDiagonal()).toBe(0)
+    }
+  })
 
-      for (const row of DIAGONAL_ROWS) {
-        if (row) {
-          for (const hexId of row) {
-            if (hexId !== undefined) {
-              totalHexes++
-              const symmetrical = getSymmetricalHexId(hexId)
-              if (symmetrical !== undefined) {
-                validMappings++
-              }
-            }
-          }
-        }
-      }
+  it('getSymmetricalHexId reproduces the original table-built mirror map for all 45 hexes', () => {
+    const oracle = buildOracleSymmetryMap()
+    for (const tile of grid.getAllTiles()) {
+      const id = tile.hex.getId()
+      expect(getSymmetricalHexId(grid, id), `hex ${id}`).toBe(oracle.get(id))
+    }
+  })
 
-      expect(validMappings).toBe(totalHexes)
-      expect(totalHexes).toBe(45) // Total hexes in the grid
-    })
-
-    it('maintains symmetry invariants', () => {
-      // For any hex not on middle diagonal:
-      // distance from top = symmetrical hex's distance from bottom
-      const topRowHexes = DIAGONAL_ROWS[0] ?? []
-      const bottomRowHexes = DIAGONAL_ROWS[14] ?? []
-      expect(topRowHexes.length).toBeGreaterThan(0)
-
-      for (const hexId of topRowHexes) {
-        expect(bottomRowHexes).toContain(getSymmetricalHexId(hexId))
-      }
-    })
+  it('mirroring is bidirectional and fixes the middle diagonal', () => {
+    for (const tile of grid.getAllTiles()) {
+      const id = tile.hex.getId()
+      const mirror = getSymmetricalHexId(grid, id)
+      expect(mirror).toBeDefined()
+      expect(getSymmetricalHexId(grid, mirror!)).toBe(id)
+    }
+    expect(getSymmetricalHexId(grid, 23)).toBe(23)
   })
 })

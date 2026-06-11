@@ -1,7 +1,6 @@
 import type { GridTile } from './grid'
 import { Hex } from './hex'
 import { PriorityQueue } from './priorityQueue'
-import { areHexesInSameDiagonalRow } from './types/grid'
 import { State } from './types/state'
 import { Team } from './types/team'
 
@@ -295,7 +294,7 @@ function applyTieBreakingRules(
     } else if (!candidateIsVertical && bestIsVertical) {
       // Keep current best (already vertical)
       continue
-    } else if (areHexesInSameDiagonalRow(candidate.hex.getId(), bestTarget.hex.getId())) {
+    } else if (candidate.hex.getDiagonal() === bestTarget.hex.getDiagonal()) {
       // Rule 2: Same diagonal row - team-based ID preference
       // ALLY to ENEMY: prefer larger ID, ENEMY to ALLY: prefer lower ID
       const preferLowerId = sourceTeam === Team.ENEMY
@@ -346,7 +345,7 @@ export function isVerticallyAligned(sourceHex: Hex, targetHex: Hex): boolean {
  *
  * Tie-breaking Rules (when multiple targets have same movement distance):
  * 1. Vertical alignment (same q coordinate) - straight-line movement preference
- * 2. Same diagonal row position - team-based ID preference
+ * 2. Same diagonal row (equal q - r) - team-based ID preference
  * 3. Minimum direct distance - spatial proximity
  */
 export function findClosestTarget(

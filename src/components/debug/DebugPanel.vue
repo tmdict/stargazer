@@ -170,7 +170,8 @@ defineExpose({
                 >
                 <!-- Show symmetry info for characters that use it -->
                 <span v-if="config.showSymmetry" class="symmetry-info"
-                  >Symmetrical Hex: {{ getSymmetricalHexId(tile.hex.getId()) }}</span
+                  >Symmetrical Hex:
+                  {{ getSymmetricalHexId(gridStore._getGrid(), tile.hex.getId()) }}</span
                 >
                 <!-- Handle Reinier's special dual target display -->
                 <template v-if="config.characterId === 31">

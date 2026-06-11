@@ -4,6 +4,7 @@ import { ref, watch } from 'vue'
 import SkillReader from '@/components/skill/SkillReader.vue'
 import SkillsSelection from '@/components/SkillsSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
+import type { Locale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
@@ -15,7 +16,7 @@ const SPLIT_MIN_WIDTH = 1220
 const props = defineProps<{
   // null on the /skills index (empty reader); a hero slug on a skill page.
   slug: string | null
-  lang: 'en' | 'zh'
+  lang: Locale
 }>()
 
 // initializeContentData (unlike initializeData) runs during SSG too, so the

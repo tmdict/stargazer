@@ -1,6 +1,5 @@
 import { isCompanionId } from '../../characters/companion'
 import type { Grid } from '../../grid'
-import { areHexesInSameDiagonalRow } from '../../types/grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import { calculateDistances, getCandidates, getTeamTargetCandidates } from './targeting'
@@ -127,7 +126,10 @@ export function searchByRow(context: SkillContext, targetTeam: Team): SkillTarge
   if (candidates.length === 0) return null
 
   // Filter to only those in the same diagonal row
-  const sameRowCandidates = candidates.filter((c) => areHexesInSameDiagonalRow(hexId, c.hexId))
+  const casterDiagonal = grid.getHexById(hexId).getDiagonal()
+  const sameRowCandidates = candidates.filter(
+    (c) => grid.getHexById(c.hexId).getDiagonal() === casterDiagonal,
+  )
 
   if (sameRowCandidates.length === 0) return null
 
