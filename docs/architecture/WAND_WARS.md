@@ -98,6 +98,8 @@ Win rate calculations in the analysis layer (hero stats, synergy/counter/trio ma
 
 Prior fades naturally as data grows. At 50+ matches per hero it's negligible. Applied consistently to: hero win rates, synergy pair rates, counter matchup rates, trio records, and team records.
 
+**Smoothed rates have a single implementation**: `smoothedWinRate(weightedWins, weightedLosses, prior)` in `prediction/smoothing.ts`, used by the analysis layer (hero/pair/counter/trio/team-record rates), Popular Pick (pair/trio/contextual rates, prior 1.0), and team suggestions. Its denominator is built from win/loss evidence only, which encodes the draw convention structurally: draws count toward match totals (`matches`, `draws` — data volume for confidence signals) but can never move a rate. Bradley-Terry and the NN handle draws separately and deliberately (half-win credit / 0.5 training target).
+
 **Why 3.0?** Prior of 1.0 was too weak — heroes with 2W/0L scored 75%, outranking well-tested heroes. Increasing to 3.0 brings that down to 62.5%, which is much closer to properly-tested heroes' rates.
 
 **Exception**: Popular Pick uses a local Bayesian prior of **1.0** for its own pair/trio/contextual win rate calculations (not the shared analysis). This keeps computed win rates closer to the raw W/L records shown to users — if a pair shows "5W / 2L", the 1.0 prior gives 66.7% vs 3.0 giving 61.5%.

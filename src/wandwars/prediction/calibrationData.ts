@@ -55,7 +55,7 @@ export const CONFIDENCE_THRESHOLDS: ConfidenceThresholds = {
       medium: 0.65,
     },
     composite: {
-      high: 0.97,
+      high: 0.96,
       medium: 0.5,
     },
     'bradley-terry': {
@@ -70,7 +70,7 @@ export const CONFIDENCE_THRESHOLDS: ConfidenceThresholds = {
   aggregate: {
     highStddev: 0.03,
     highAvgSelfConf: 0.8,
-    mediumStddev: 0.15,
+    mediumStddev: 0.2,
     mediumAvgSelfConf: 0.7,
   },
 }
@@ -78,9 +78,9 @@ export const CONFIDENCE_THRESHOLDS: ConfidenceThresholds = {
 export const CALIBRATION: Record<string, Calibration> = {
   'popular-pick': {
     method: 'isotonic',
-    brierRaw: 0.239759,
-    brierCalibrated: 0.235075,
-    accuracy: 0.606096,
+    brierRaw: 0.239654,
+    brierCalibrated: 0.236283,
+    accuracy: 0.601407,
     samples: 1706,
     bins: [
       {
@@ -88,44 +88,44 @@ export const CALIBRATION: Record<string, Calibration> = {
         calibratedProb: 0,
       },
       {
-        rawProb: 0.315748,
+        rawProb: 0.335416,
         calibratedProb: 0,
       },
       {
-        rawProb: 0.368683,
+        rawProb: 0.367021,
         calibratedProb: 0.2,
       },
       {
-        rawProb: 0.383186,
+        rawProb: 0.381,
         calibratedProb: 0.333333,
       },
       {
-        rawProb: 0.465634,
-        calibratedProb: 0.427632,
+        rawProb: 0.426203,
+        calibratedProb: 0.383117,
       },
       {
-        rawProb: 0.506738,
-        calibratedProb: 0.5,
+        rawProb: 0.475497,
+        calibratedProb: 0.452381,
       },
       {
-        rawProb: 0.510109,
-        calibratedProb: 0.571429,
+        rawProb: 0.493763,
+        calibratedProb: 0.461255,
       },
       {
-        rawProb: 0.513089,
-        calibratedProb: 0.571429,
+        rawProb: 0.51874,
+        calibratedProb: 0.575419,
       },
       {
-        rawProb: 0.533281,
-        calibratedProb: 0.622951,
+        rawProb: 0.538117,
+        calibratedProb: 0.63871,
       },
       {
-        rawProb: 0.551185,
-        calibratedProb: 0.648936,
+        rawProb: 0.547248,
+        calibratedProb: 0.666667,
       },
       {
-        rawProb: 0.642585,
-        calibratedProb: 0.714286,
+        rawProb: 0.568532,
+        calibratedProb: 0.680851,
       },
       {
         rawProb: 0.693881,
@@ -135,57 +135,57 @@ export const CALIBRATION: Record<string, Calibration> = {
   },
   composite: {
     method: 'isotonic',
-    brierRaw: 0.241286,
-    brierCalibrated: 0.235322,
-    accuracy: 0.611372,
+    brierRaw: 0.241171,
+    brierCalibrated: 0.234747,
+    accuracy: 0.613716,
     samples: 1706,
     bins: [
       {
-        rawProb: 0.387971,
+        rawProb: 0.387849,
         calibratedProb: 0,
       },
       {
-        rawProb: 0.392916,
+        rawProb: 0.394134,
         calibratedProb: 0,
       },
       {
-        rawProb: 0.401113,
+        rawProb: 0.402147,
         calibratedProb: 0,
       },
       {
-        rawProb: 0.467365,
-        calibratedProb: 0.375,
+        rawProb: 0.466061,
+        calibratedProb: 0.347222,
       },
       {
-        rawProb: 0.473455,
-        calibratedProb: 0.419355,
+        rawProb: 0.484131,
+        calibratedProb: 0.472441,
       },
       {
-        rawProb: 0.492977,
-        calibratedProb: 0.515152,
+        rawProb: 0.503627,
+        calibratedProb: 0.557522,
       },
       {
-        rawProb: 0.515437,
-        calibratedProb: 0.560694,
+        rawProb: 0.519849,
+        calibratedProb: 0.576923,
       },
       {
-        rawProb: 0.526053,
-        calibratedProb: 0.641791,
-      },
-      {
-        rawProb: 0.53659,
+        rawProb: 0.53218,
         calibratedProb: 0.666667,
       },
       {
-        rawProb: 0.5637,
-        calibratedProb: 0.696296,
+        rawProb: 0.559542,
+        calibratedProb: 0.692708,
       },
       {
-        rawProb: 0.608071,
+        rawProb: 0.578303,
+        calibratedProb: 0.75,
+      },
+      {
+        rawProb: 0.605311,
         calibratedProb: 1,
       },
       {
-        rawProb: 0.626677,
+        rawProb: 0.626316,
         calibratedProb: 1,
       },
     ],

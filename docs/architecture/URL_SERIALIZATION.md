@@ -24,6 +24,10 @@ Handles URL generation, parsing, and state restoration through a unified API:
 - **`restoreFromEncodedState()`**: Restores grid from URL parameters
 - **`updateUrlWithGridState()`**: Updates browser URL without navigation
 
+Decoding rejects any input that yields zero bytes (a valid encoding always
+carries at least one header byte), so truncated links fail with an error
+instead of restoring an empty board.
+
 ### Binary Encoder (`/src/utils/binaryEncoder.ts`)
 
 Performs bit-level encoding/decoding with built-in validation:

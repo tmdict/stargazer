@@ -4,6 +4,7 @@ import { predictVsAverage as nnPredictVsAverage } from './adaptiveML'
 import { getCachedBradleyTerryFit, type BradleyTerryFit } from './bradleyTerry'
 import { NN_WEIGHTS } from './nnWeights'
 import { getAnalysisData, getMatchData } from './recommend'
+import { smoothedWinRate } from './smoothing'
 
 export interface TeamSuggestion {
   team: [string, string, string]
@@ -22,7 +23,7 @@ const MIN_MATCHES = 2
 /**
  * Get exact trio records from match data.
  */
-function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggestion[] {
+export function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggestion[] {
   const teamRecords = new Map<string, TeamSuggestion>()
 
   for (const match of matches) {
@@ -57,7 +58,7 @@ function getExactTrios(teammates: string[], matches: MatchResult[]): TeamSuggest
 
   const results: TeamSuggestion[] = []
   for (const record of teamRecords.values()) {
-    record.winRate = (record.wins + PRIOR) / (record.total + 2 * PRIOR)
+    record.winRate = smoothedWinRate(record.wins, record.losses, PRIOR)
     if (record.total >= MIN_MATCHES && record.wins > record.losses) {
       results.push(record)
     }

@@ -114,6 +114,59 @@ describe('trio score', () => {
   })
 })
 
+describe('draw handling', () => {
+  // Draws count toward match totals (data volume) but are excluded from every
+  // rate denominator, matching the hero winRate convention.
+  it('a drawn match does not dilute the pair winrate', () => {
+    const { synergyMatrix } = analyzeMatches(
+      [
+        m(['p', 'q', 'f1'], ['o1', 'o2', 'o3'], 'left'),
+        m(['p', 'q', 'f1'], ['o1', 'o2', 'o3'], 'draw'),
+        m(['p', 'f1', 'f2'], ['o1', 'o2', 'o3'], 'right'),
+        m(['q', 'f1', 'f2'], ['o1', 'o2', 'o3'], 'right'),
+      ],
+      ['p', 'q', 'f1', 'f2', 'o1', 'o2', 'o3'],
+    )
+
+    // p, q individually 1W 1L (draw excluded) → 0.5; pair decisive record is
+    // the single win → (1+3)/(1+6) = 4/7; score = 1/14, same as without the draw
+    const entry = synergyMatrix['p']!['q']!
+    expect(entry.matches).toBe(2)
+    expect(entry.score).toBeCloseTo(1 / 14, 12)
+  })
+
+  it('a drawn match does not make a hero look countered', () => {
+    const { counterMatrix } = analyzeMatches(
+      [
+        m(['d', 'f1', 'f2'], ['v', 'o1', 'o2'], 'left'),
+        m(['d', 'f1', 'f2'], ['v', 'o1', 'o2'], 'draw'),
+      ],
+      ['d', 'v', 'f1', 'f2', 'o1', 'o2'],
+    )
+
+    // d overall: 1W → 4/7; d vs v decisive: 1W → 4/7; the draw moves neither
+    const entry = counterMatrix['d']!['v']!
+    expect(entry.matches).toBe(2)
+    expect(entry.score).toBeCloseTo(0, 12)
+  })
+
+  it('a drawn match does not dilute the trio winrate', () => {
+    const { trioMatrix } = analyzeMatches(
+      [
+        m(['g', 'h', 'i'], ['o1', 'o2', 'o3'], 'left'),
+        m(['g', 'h', 'i'], ['o1', 'o2', 'o3'], 'draw'),
+      ],
+      ['g', 'h', 'i', 'o1', 'o2', 'o3'],
+    )
+
+    const trio = trioMatrix['g,h,i']!
+    expect(trio.matches).toBe(2)
+    expect(trio.wins).toBe(1)
+    expect(trio.losses).toBe(0)
+    expect(trio.winRate).toBeCloseTo(4 / 7, 12)
+  })
+})
+
 describe('computeTeamRecords', () => {
   const MATCHES = [
     m(['a', 'b', 'c'], ['x', 'y', 'z'], 'left'),
@@ -133,11 +186,11 @@ describe('computeTeamRecords', () => {
     })
   })
 
-  it('smooths winRate over unweighted totals, draws included in the denominator', () => {
-    // abc: (2+3)/(4+6) = 0.5; xyz: (1+3)/(4+6) = 0.4
+  it('smooths winRate over unweighted decisive results — draws stay in the record, not the rate', () => {
+    // abc: 2W 1L → (2+3)/(3+6) = 5/9; xyz: 1W 2L → (1+3)/(3+6) = 4/9
     const abc = records.find((r) => r.team.join() === 'a,b,c')!
     const xyz = records.find((r) => r.team.join() === 'x,y,z')!
-    expect(abc.winRate).toBeCloseTo(0.5, 12)
-    expect(xyz.winRate).toBeCloseTo(0.4, 12)
+    expect(abc.winRate).toBeCloseTo(5 / 9, 12)
+    expect(xyz.winRate).toBeCloseTo(4 / 9, 12)
   })
 })
