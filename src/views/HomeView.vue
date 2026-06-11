@@ -190,9 +190,9 @@ if (gameDataStore.dataLoaded) {
       // The restore replaced the board; drop any stale mobile tap/lift selection
       clearTargetHex()
       clearLiftedHex()
-      success('Grid loaded from URL!')
+      success(i18nStore.t('app.grid-loaded'))
     } else {
-      error('Invalid URL - using default grid')
+      error(i18nStore.t('app.invalid-url'))
     }
   }
 }
@@ -235,7 +235,7 @@ const handleCopyLink = async () => {
     })
   } catch (err) {
     console.error('Failed to copy grid link:', err)
-    error('Failed to copy link')
+    error(i18nStore.t('app.copy-link-failed'))
   }
 }
 

@@ -7,7 +7,7 @@ import {
 import { formatPercent } from '@/wandwars/formatting'
 import { mostSimilarHeroes } from '@/wandwars/prediction/nn'
 import { NN_WEIGHTS } from '@/wandwars/prediction/nnWeights'
-import { computeCompositionStats } from './composition'
+import { computeCompositionStats, localizeCompositionLabel } from './composition'
 import type { Insight, InsightDeps } from './types'
 
 export function buildUnits(deps: InsightDeps): Insight[] {
@@ -264,7 +264,14 @@ export function buildUnits(deps: InsightDeps): Insight[] {
     const rate = w / total
     if (Math.abs(rate - 0.5) < INSIGHT_NOTABLE_DEVIATION) continue
     const verb = rate > 0.5 ? ti('overperform') : ti('underperform')
-    add(ti('composition-pattern', { label, verb, rate: formatPercent(rate), count: total }))
+    add(
+      ti('composition-pattern', {
+        label: localizeCompositionLabel(label, t),
+        verb,
+        rate: formatPercent(rate),
+        count: total,
+      }),
+    )
   }
 
   // --- ML: similar heroes for the most-used heroes ---

@@ -3,14 +3,6 @@ export const WEIGHT_BASE = 0.5
 export const WEIGHT_SYNERGY = 0.3
 export const WEIGHT_COUNTER = 0.2
 
-// Hero data depth (used on recommendation cards). Reflects how much match data
-// we have on the hero — not how reliable any specific prediction is.
-export const DATA_DEPTH_DESCRIPTIONS: Record<string, string> = {
-  high: 'Rich data: hero has been in many matches',
-  medium: 'Moderate data: hero has some match history',
-  low: 'Sparse data: hero has few recorded matches',
-}
-
 // Bradley-Terry
 export const BT_MAX_ITERATIONS = 100
 export const BT_CONVERGENCE_TOLERANCE = 1e-6

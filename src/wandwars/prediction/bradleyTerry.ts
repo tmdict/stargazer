@@ -6,12 +6,7 @@ import type {
   Recommendation,
   RecommendationModel,
 } from '../types'
-import {
-  getHeroWilsonConfidence,
-  getMatchupNotes,
-  getRelevantNotes,
-  getWorstConfidence,
-} from './modelUtils'
+import { getHeroWilsonConfidence, getMatchupNotes, getRelevantNotes } from './modelUtils'
 
 interface BTMatch {
   leftHeroes: string[]
@@ -332,16 +327,12 @@ export const bradleyTerryModel: RecommendationModel = {
     analysisData: AnalysisData,
     matches: MatchResult[],
   ): MatchupPrediction {
-    const { strengths, predict } = getCachedBradleyTerryFit(matches, analysisData)
+    const { predict } = getCachedBradleyTerryFit(matches, analysisData)
     const leftProb = predict(leftTeam, rightTeam)
-    const leftStrength = leftTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
-    const rightStrength = rightTeam.reduce((s, h) => s + (strengths.get(h) || 1), 0)
 
     return {
       leftWinProbability: leftProb,
       rightWinProbability: 1 - leftProb,
-      confidence: getWorstConfidence([...leftTeam, ...rightTeam], analysisData),
-      breakdown: { leftStrength, rightStrength },
       relevantNotes: getMatchupNotes(leftTeam, rightTeam, matches),
     }
   },

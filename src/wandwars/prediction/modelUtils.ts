@@ -1,4 +1,4 @@
-import type { AnalysisData, HeroStats, MatchNote, MatchResult } from '../types'
+import type { HeroStats, MatchNote, MatchResult } from '../types'
 import { wilsonConfidence } from './confidence'
 
 /**
@@ -42,24 +42,4 @@ export function getMatchupNotes(
 export function getHeroWilsonConfidence(stats: HeroStats | undefined): 'high' | 'medium' | 'low' {
   if (!stats || stats.matches === 0) return 'low'
   return wilsonConfidence(stats.wins + stats.draws * 0.5, stats.matches)
-}
-
-/**
- * Worst confidence across a list of heroes.
- */
-export function getWorstConfidence(
-  heroes: string[],
-  analysisData: AnalysisData,
-  getConfidence?: (hero: string) => 'high' | 'medium' | 'low',
-): 'high' | 'medium' | 'low' {
-  const getConf =
-    getConfidence ?? ((hero: string) => getHeroWilsonConfidence(analysisData.heroStats[hero]))
-
-  let worst: 'high' | 'medium' | 'low' = 'high'
-  for (const hero of heroes) {
-    const conf = getConf(hero)
-    if (conf === 'low') return 'low'
-    if (conf === 'medium' && worst === 'high') worst = 'medium'
-  }
-  return worst
 }

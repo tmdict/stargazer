@@ -289,6 +289,8 @@ Counter score formula: `bayesianSmoothedVsWinRate - hero's overall winRate`
 
 When you have 2 teammates and opponent has 2+ heroes, checks if [your 2 + candidate] has beaten any team containing those opponent heroes in match data. Shows badge only when wins > losses. Works with partial opponent teams (doesn't require all 3 known) since your 3rd pick always happens before the opponent's 3rd.
 
+Computed for all candidates at once: `buildTeamCounterMap` (`src/wandwars/teamCounter.ts`) makes a single pass over the match list — each qualifying match (teammates on one side, opponents on the other) credits the heroes completing the teammates' side — and the per-card indicator lookups come from `buildCounterIndicatorMap`. Both are wrapped in `computed`s in `WandWarsAnalysis.vue` keyed on `(currentTeammates, opponentTeam)`, so they refresh on draft picks, not on sort/filter re-renders.
+
 ### Order Independence
 
 All team comparisons and lookups treat teams as **unordered sets**. `[A, B, C]` is identical to `[C, A, B]` everywhere:

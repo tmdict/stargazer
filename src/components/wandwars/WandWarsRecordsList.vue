@@ -190,7 +190,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
                   'dominant',
                   { active: editResultKey === 'left-dominant' },
                 ]"
-                title="Left Sweep"
+                :title="i18n.t('wandwars.left-win-sweep')"
                 @click="setEditResult('left', true)"
               >
                 <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
@@ -206,7 +206,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
               </button>
               <button
                 :class="['edit-result-btn', 'left', { active: editResultKey === 'left-normal' }]"
-                title="Left Win"
+                :title="i18n.t('wandwars.left-win')"
                 @click="setEditResult('left', false)"
               >
                 <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
@@ -222,7 +222,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
               </button>
               <button
                 :class="['edit-result-btn', 'draw', { active: editResultKey === 'draw' }]"
-                title="Draw"
+                :title="i18n.t('wandwars.draw')"
                 @click="setEditResult('draw', false)"
               >
                 <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
@@ -237,7 +237,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
               </button>
               <button
                 :class="['edit-result-btn', 'right', { active: editResultKey === 'right-normal' }]"
-                title="Right Win"
+                :title="i18n.t('wandwars.right-win')"
                 @click="setEditResult('right', false)"
               >
                 <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
@@ -258,7 +258,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
                   'dominant',
                   { active: editResultKey === 'right-dominant' },
                 ]"
-                title="Right Sweep"
+                :title="i18n.t('wandwars.right-win-sweep')"
                 @click="setEditResult('right', true)"
               >
                 <svg viewBox="0 0 16 16" class="result-icon" aria-hidden="true">
@@ -294,7 +294,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
               />
             </div>
             <template v-if="editingRecord === record">
-              <button class="edit-action-btn" title="Save" @click="saveEdit()">
+              <button class="edit-action-btn" :title="i18n.t('wandwars.save')" @click="saveEdit()">
                 <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
                   <path
                     d="M3 8l3 3 7-7"
@@ -306,7 +306,11 @@ function recordVerbDirClass(r: RecordedMatch): string {
                   />
                 </svg>
               </button>
-              <button class="edit-action-btn cancel" title="Cancel" @click="cancelEdit">
+              <button
+                class="edit-action-btn cancel"
+                :title="i18n.t('wandwars.cancel')"
+                @click="cancelEdit"
+              >
                 <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
                   <path
                     d="M4 4l8 8M12 4l-8 8"
@@ -319,7 +323,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
               </button>
             </template>
             <template v-else>
-              <button class="edit-btn" title="Edit" @click="startEdit(record)">
+              <button class="edit-btn" :title="i18n.t('wandwars.edit')" @click="startEdit(record)">
                 <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
                   <path
                     d="M11 2l3 3L5 14H2v-3L11 2zM10 3l3 3"
@@ -331,7 +335,11 @@ function recordVerbDirClass(r: RecordedMatch): string {
                   />
                 </svg>
               </button>
-              <button class="delete-btn" title="Delete" @click="emit('deleteRecord', i)">
+              <button
+                class="delete-btn"
+                :title="i18n.t('wandwars.delete')"
+                @click="emit('deleteRecord', i)"
+              >
                 <svg viewBox="0 0 16 16" class="row-icon" aria-hidden="true">
                   <path
                     d="M4 4l8 8M12 4l-8 8"

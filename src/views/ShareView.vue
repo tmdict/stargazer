@@ -77,7 +77,7 @@ onMounted(() => {
 
   // Check if we came from copy link action
   if (history.state?.linkCopied) {
-    success('Copied to clipboard!')
+    success(i18nStore.t('app.copied-clipboard'))
   }
 })
 

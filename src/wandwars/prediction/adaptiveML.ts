@@ -10,12 +10,7 @@ import type {
   Recommendation,
   RecommendationModel,
 } from '../types'
-import {
-  getHeroWilsonConfidence,
-  getMatchupNotes,
-  getRelevantNotes,
-  getWorstConfidence,
-} from './modelUtils'
+import { getHeroWilsonConfidence, getMatchupNotes, getRelevantNotes } from './modelUtils'
 import { heroNamesToIndices, nnForward } from './nn'
 import { NN_WEIGHTS } from './nnWeights'
 
@@ -117,8 +112,6 @@ export const adaptiveMLModel: RecommendationModel = {
     return {
       leftWinProbability: leftProb,
       rightWinProbability: 1 - leftProb,
-      confidence: getWorstConfidence([...leftTeam, ...rightTeam], analysisData),
-      breakdown: {},
       relevantNotes: getMatchupNotes(leftTeam, rightTeam, matches),
     }
   },

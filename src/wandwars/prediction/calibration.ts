@@ -47,8 +47,3 @@ export function calibrate(modelId: string, rawProb: number): number {
 }
 
 export type { Calibration } from './calibrationData'
-
-export function hasCalibration(modelId: string): boolean {
-  const cal = CALIBRATION[modelId]
-  return !!cal && cal.method !== 'identity'
-}

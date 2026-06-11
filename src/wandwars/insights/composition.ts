@@ -31,14 +31,14 @@ export function computeCompositionStats(
 
       // Damage type balance
       const dmgTypes = new Set(attrs.map((a) => a.damage))
-      const dmgKey = dmgTypes.size === 1 ? `all ${attrs[0]!.damage}` : 'mixed damage'
+      const dmgKey = dmgTypes.size === 1 ? `all-${attrs[0]!.damage}` : 'mixed-damage'
       if (!stats.damage[dmgKey]) stats.damage[dmgKey] = { w: 0, l: 0 }
       stats.damage[dmgKey]![isWinner ? 'w' : 'l']++
 
       // Range balance
       const allMelee = attrs.every((a) => a.range <= 1)
       const allRanged = attrs.every((a) => a.range > 1)
-      const rangeKey = allMelee ? 'all melee' : allRanged ? 'all ranged' : 'mixed range'
+      const rangeKey = allMelee ? 'all-melee' : allRanged ? 'all-ranged' : 'mixed-range'
       if (!stats.range[rangeKey]) stats.range[rangeKey] = { w: 0, l: 0 }
       stats.range[rangeKey]![isWinner ? 'w' : 'l']++
 
@@ -47,15 +47,14 @@ export function computeCompositionStats(
       for (const a of attrs) classCounts[a.class] = (classCounts[a.class] || 0) + 1
       const maxClass = Object.entries(classCounts).sort(([, a], [, b]) => b - a)[0]!
       if (maxClass[1] >= 2) {
-        const classKey = maxClass[1] === 3 ? `3x ${maxClass[0]}` : `2+ ${maxClass[0]}`
+        const classKey = maxClass[1] === 3 ? `3x-${maxClass[0]}` : `2plus-${maxClass[0]}`
         if (!stats.class[classKey]) stats.class[classKey] = { w: 0, l: 0 }
         stats.class[classKey]![isWinner ? 'w' : 'l']++
       }
 
       // Team energy: sum each hero's base + skill-granted starting energy, average over 3.
       const avgEnergy = attrs.reduce((s, a) => s + a.energy.reduce((n, e) => n + e, 0), 0) / 3
-      const energyKey =
-        avgEnergy >= 500 ? 'high energy (500+)' : avgEnergy < 200 ? 'low energy (<200)' : null
+      const energyKey = avgEnergy >= 500 ? 'high-energy' : avgEnergy < 200 ? 'low-energy' : null
       if (energyKey) {
         if (!stats.energy[energyKey]) stats.energy[energyKey] = { w: 0, l: 0 }
         stats.energy[energyKey]![isWinner ? 'w' : 'l']++
@@ -64,4 +63,45 @@ export function computeCompositionStats(
   }
 
   return stats
+}
+
+/**
+ * Localized display text for a composition stat key. The stat maps are keyed
+ * by machine identifiers (`all-melee`, `3x-mage`, ...); display strings come
+ * from the wandwars.insights locale entries, with class/damage terms re-using
+ * the game.* entries.
+ */
+export function localizeCompositionLabel(
+  id: string,
+  t: (key: string, vars?: Record<string, string | number>) => string,
+): string {
+  const ti = (key: string, vars?: Record<string, string | number>) =>
+    t(`wandwars.insights/${key}`, vars)
+
+  const allDamage = id.match(/^all-(physical|magic)$/)
+  if (allDamage) return ti('comp-all-damage', { type: t(`game.${allDamage[1]}`) })
+
+  const cls = id.match(/^(3x|2plus)-(.+)$/)
+  if (cls) {
+    return ti(cls[1] === '3x' ? 'comp-class-3x' : 'comp-class-2plus', {
+      class: t(`game.${cls[2]}`),
+    })
+  }
+
+  switch (id) {
+    case 'mixed-damage':
+      return ti('comp-mixed-damage')
+    case 'all-melee':
+      return ti('comp-all-melee')
+    case 'all-ranged':
+      return ti('comp-all-ranged')
+    case 'mixed-range':
+      return ti('comp-mixed-range')
+    case 'high-energy':
+      return ti('comp-high-energy')
+    case 'low-energy':
+      return ti('comp-low-energy')
+    default:
+      return id
+  }
 }
