@@ -6,7 +6,7 @@ import { performPlace } from '@/lib/characters/place'
 import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 // Import skill functions for mocking
-import { hasCompanionSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
+import { getCharacterSkill, hasCompanionSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
@@ -15,6 +15,7 @@ import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 vi.mock('@/lib/skills/skill', () => ({
   hasSkill: vi.fn(),
   hasCompanionSkill: vi.fn(),
+  getCharacterSkill: vi.fn(),
   SkillManager: vi.fn(),
 }))
 
@@ -239,6 +240,17 @@ describe('move.ts', () => {
       performPlace(grid, 2, companionId, Team.ALLY)
       addCompanionLink(grid, mainId, companionId, Team.ALLY)
 
+      // Restoration re-applies the main skill's companion color modifier
+      vi.mocked(getCharacterSkill).mockReturnValue({
+        id: 'companion-test',
+        characterId: mainId,
+        name: 'Companion Test',
+        description: '',
+        companionColorModifier: 'rgba(10, 20, 30, 0.4)',
+        onActivate: () => {},
+        onDeactivate: () => {},
+      })
+
       // Mirror the real skill lifecycle: deactivation removes the companion;
       // activation fails at the destination (triggering rollback) and on the
       // rollback reactivation re-spawns the companion at its default hex (3),
@@ -260,6 +272,11 @@ describe('move.ts', () => {
       expect(grid.getTileById(1).characterId).toBe(mainId)
       expect(grid.getTileById(2).characterId).toBe(companionId)
       expect(grid.getTileById(3).characterId).toBeUndefined()
+      expect(skillManager.addCharacterColorModifier).toHaveBeenCalledWith(
+        companionId,
+        Team.ALLY,
+        'rgba(10, 20, 30, 0.4)',
+      )
     })
   })
 

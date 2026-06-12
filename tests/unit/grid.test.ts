@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
@@ -127,6 +127,7 @@ describe('Grid', () => {
     })
 
     it('should handle invalid rows in grid preset', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const invalidGrid: GridPreset = {
         hex: [[1], undefined as unknown as number[], [2]],
         qOffset: [0, undefined as unknown as number, 0],
@@ -139,6 +140,11 @@ describe('Grid', () => {
 
       const grid = new Grid(invalidGrid, simpleArena)
       expect(grid.getAllTiles()).toHaveLength(2)
+      expect(consoleSpy).toHaveBeenCalledWith(
+        'grid: Skipping invalid row/offset in createHexesFromPreset',
+        { rowIndex: 1, rowExists: false, offset: undefined },
+      )
+      consoleSpy.mockRestore()
     })
 
     it('should preserve tile references', () => {

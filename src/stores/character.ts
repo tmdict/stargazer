@@ -13,7 +13,6 @@ import {
   getTilesWithCharacters,
   hasCharacter,
 } from '@/lib/characters/character'
-import { isCompanionId } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import {
@@ -110,20 +109,14 @@ export const useCharacterStore = defineStore('character', () => {
     return countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
   }
 
-  // A phantimal may only join a team that fields enough of its faction. `leaving`
-  // is a character about to vacate that team (cross-team swap), discounted up front.
+  // A phantimal may only join a team that fields enough of its faction.
   // When phantimal data isn't loaded (e.g. unit tests) the rule can't be evaluated
   // and placement is allowed.
-  const phantimalCanJoinTeam = (phantimalId: number, team: Team, leaving?: number): boolean => {
+  const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean => {
     const phantimal = gameDataStore.getPhantimalById(phantimalId)
     if (!phantimal) return true
     const factions = requiredFactions(phantimal.name, phantimal.faction)
-    let count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
-    // Only a counted hero leaving reduces the total (companions/phantimals don't count).
-    if (leaving !== undefined && !isPhantimalId(leaving) && !isCompanionId(grid, leaving)) {
-      const faction = gameDataStore.getCharacterFaction(leaving)
-      if (faction !== undefined && factions.includes(faction)) count -= 1
-    }
+    const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
     return count >= PHANTIMAL_FACTION_REQUIREMENT
   }
 
@@ -174,18 +167,8 @@ export const useCharacterStore = defineStore('character', () => {
   ): boolean => {
     const { character, characterId } = payload
     if (character.sourceHexId !== undefined) {
+      // Swaps involving a phantimal are rejected inside executeSwapCharacters
       if (hasCharacter(grid, targetHexId)) {
-        // A cross-team swap lands the phantimal on the target's team; block it
-        // unless that team still meets the faction requirement once the swapped
-        // character leaves.
-        if (isPhantimalId(characterId)) {
-          const destTeam = getCharacterTeam(grid, targetHexId)
-          const sourceTeam = getCharacterTeam(grid, character.sourceHexId)
-          if (destTeam !== undefined && destTeam !== sourceTeam) {
-            const swapped = getCharacter(grid, targetHexId)
-            if (!phantimalCanJoinTeam(characterId, destTeam, swapped)) return false
-          }
-        }
         return swapCharacters(character.sourceHexId, targetHexId)
       }
       // Moving a phantimal onto an empty cell on the other team must preserve the

@@ -52,12 +52,15 @@ describe('urlStateManager', () => {
 
     it('handles decoding errors gracefully', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       const invalidEncoded = 'invalid@#$%data'
       const decoded = decodeGridStateFromUrl(invalidEncoded)
 
       expect(decoded).toBeNull()
       expect(consoleSpy).toHaveBeenCalledWith('Failed to decode binary data from URL')
+      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid character in URL-safe string:', '@')
       consoleSpy.mockRestore()
+      consoleErrorSpy.mockRestore()
     })
 
     it('rejects input that decodes to zero bytes', () => {

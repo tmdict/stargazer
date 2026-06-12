@@ -520,16 +520,14 @@ Pinned above recommendations on all model tabs when 1+ hero picked on current si
 
 Scored by aggregating all four prediction models — can evaluate any hero combination, including trios that never appeared together in data. Info tooltip on hover explains the section.
 
-**With 2 teammates**: All possible 3rd picks are scored by all four models (Popular Pick, Hero Synergy, Team Power, Adaptive ML), aggregated using the same adaptive weights as the match prediction. Each model's `recommend()` scores the candidate independently, then scores are weighted and combined.
-
-**With 1 teammate**: All (teammate, i, j) trios are enumerated and each one is scored by all four models via dedicated "team quality" functions in `teamSuggestions.ts`:
+Candidate trios are enumerated from the picked teammates — every possible 3rd pick with 2 teammates, every (teammate, i, j) completion with 1 — and all constructed trios are scored the same way (`makeTeamQualityScorer`): per-model "team quality" functions in `teamSuggestions.ts`, blended with the same adaptive aggregate weights used for match predictions:
 
 - **Popular Pick** — avg individual win rate + avg pair win rate (from `synergyMatrix` pair records).
 - **Hero Synergy (Composite)** — avg Bayesian win rate + pairwise synergy + trio bonus (when the trio has ≥ 3 matches).
 - **Team Power (Bradley-Terry)** — `Σλ(team) / (Σλ(team) + avgOpp)` plus pair interaction residuals, using a single fold-cached B-T fit.
 - **Adaptive ML** — `predictVsAverage(team)`: NN forward pass against ~50 sampled generic opponent trios.
 
-Scores are combined with the same adaptive weights as the 2-teammate case. Enumerating ~3–5k trios (for 1 known teammate among ~87 heroes) stays well under 100ms because every scorer is O(1) lookups or a single forward pass — no per-trio model refits.
+Enumerating ~3–5k trios (for 1 known teammate among ~87 heroes) stays well under 100ms because every scorer is O(1) lookups or a single forward pass — no per-trio model refits.
 
 - Deduplicated against exact trios (won't repeat data-backed teams)
 - Dashed border, predicted win rate displayed (muted, to distinguish from real W/L records)
