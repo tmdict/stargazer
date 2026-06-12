@@ -231,6 +231,11 @@ const visiblePlacements = computed(() => {
     >
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />
+        <!-- draggable=false keeps the wrapper div as the drag source. Images are
+             draggable by default, and a swap can replace this node mid-drag
+             (character↔phantimal flips the v-if branch) — dragend fired on a
+             detached source never reaches the wrapper or document listeners,
+             leaving the drag ghost stuck. -->
         <picture v-if="isPhantimalId(characterId)" class="phantimal-pic">
           <source :srcset="phantimalSources(characterId).avif" type="image/avif" />
           <source :srcset="phantimalSources(characterId).webp" type="image/webp" />
@@ -238,6 +243,7 @@ const visiblePlacements = computed(() => {
             :src="phantimalSources(characterId).png"
             :alt="phantimalName(characterId)"
             class="character-image"
+            draggable="false"
           />
         </picture>
         <img
@@ -246,6 +252,7 @@ const visiblePlacements = computed(() => {
           :alt="getCharacterName(characterId, hexId)"
           class="character-image"
           :style="getSkillBorderStyle(characterId, hexId)"
+          draggable="false"
         />
         <div v-if="showPerspective" class="character-pointer" />
       </div>
