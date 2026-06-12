@@ -30,12 +30,15 @@ export function executeSwapCharacters(
   // Validate all required data exists
   if (!fromChar || !toChar || !fromTeam || !toTeam) return false
 
-  // Phantimals are derived from their team's faction hero count and are not
-  // swappable — with characters or each other
-  if (isPhantimalId(fromChar) || isPhantimalId(toChar)) return false
-
-  // Companions can only be swapped within the same team
-  if ((isCompanionId(grid, fromChar) || isCompanionId(grid, toChar)) && fromTeam !== toTeam) {
+  // Phantimals are tied to their team's faction hero count and companions to
+  // their main character, so both can only swap within their own team
+  if (
+    fromTeam !== toTeam &&
+    (isPhantimalId(fromChar) ||
+      isPhantimalId(toChar) ||
+      isCompanionId(grid, fromChar) ||
+      isCompanionId(grid, toChar))
+  ) {
     return false
   }
 

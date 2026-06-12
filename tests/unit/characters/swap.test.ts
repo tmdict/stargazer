@@ -339,7 +339,7 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
     })
 
-    it('should reject swap initiated from a phantimal', () => {
+    it('should reject cross-team swap initiated from a phantimal', () => {
       performPlace(grid, 1, phantimalId, Team.ALLY)
       performPlace(grid, 4, 200, Team.ENEMY)
 
@@ -350,7 +350,7 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).characterId).toBe(200)
     })
 
-    it('should reject phantimal-phantimal swap', () => {
+    it('should reject cross-team phantimal-phantimal swap', () => {
       const enemyPhantimalId = toPhantimalId(2)
       performPlace(grid, 1, phantimalId, Team.ALLY)
       performPlace(grid, 4, enemyPhantimalId, Team.ENEMY)
@@ -362,15 +362,20 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).characterId).toBe(enemyPhantimalId)
     })
 
-    it('should reject same-team character-phantimal swap', () => {
+    it('should swap a character and a phantimal on the same team', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, phantimalId, Team.ALLY)
 
       const result = executeSwapCharacters(grid, skillManager, 1, 2)
 
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(100)
-      expect(grid.getTileById(2).characterId).toBe(phantimalId)
+      expect(result).toBe(true)
+      expect(grid.getTileById(1).characterId).toBe(phantimalId)
+      expect(grid.getTileById(2).characterId).toBe(100)
+      expect(grid.getTileById(1).team).toBe(Team.ALLY)
+      expect(grid.getTileById(2).team).toBe(Team.ALLY)
+      // Team-size tracking unchanged: the character counted, the phantimal exempt
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(phantimalId)).toBe(false)
     })
 
     it('should leave a full team fully intact when swapping a character onto its phantimal', () => {

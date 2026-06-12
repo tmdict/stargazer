@@ -252,10 +252,10 @@ describe('characterStore phantimal faction rule', () => {
     expect(gridStore.getTile(target.getId()).characterId).toBeUndefined()
   })
 
-  it('rejects dropping a phantimal onto an occupied tile (phantimals are not swappable)', async () => {
+  it('rejects a cross-team phantimal swap even when the faction requirement would survive', async () => {
     fieldHeroes(Team.ALLY, [1, 2, 3])
-    // One above the requirement: even though the faction rule would survive the
-    // departure, the swap is rejected — phantimals are never swappable
+    // One above the requirement: cross-team phantimal swaps are rejected
+    // outright, independent of faction counts
     const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6, 7])
     const phantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
     store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)

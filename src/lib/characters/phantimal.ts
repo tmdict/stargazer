@@ -4,7 +4,8 @@
 // and pathfinding treat it like any other unit for free. The differences are
 // enforced elsewhere and are deliberately small: phantimals are exempt from the
 // team-size limit (canPlaceCharacterOnTeam), capped at one per team by the
-// character store's placement helpers, and not swappable (executeSwapCharacters).
+// character store's placement helpers, and swappable only within their own
+// team (executeSwapCharacters).
 // Keeping these as pure id-math (no Grid dependency) makes this a leaf module
 // the serializer and grid can both import.
 //
