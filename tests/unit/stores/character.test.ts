@@ -252,14 +252,15 @@ describe('characterStore phantimal faction rule', () => {
     expect(gridStore.getTile(target.getId()).characterId).toBeUndefined()
   })
 
-  it('blocks a cross-team phantimal swap when the swapped hero leaving breaks the requirement', async () => {
+  it('rejects dropping a phantimal onto an occupied tile (phantimals are not swappable)', async () => {
     fieldHeroes(Team.ALLY, [1, 2, 3])
-    const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6]) // exactly at the requirement
+    // One above the requirement: even though the faction rule would survive the
+    // departure, the swap is rejected — phantimals are never swappable
+    const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6, 7])
     const phantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
     store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)
     await nextTick()
 
-    // Swapping with hero 4 would leave the enemy team at 2 lightbearers
     const ok = store.handleCharacterDrop(
       { character: buildCharacter(toPhantimalId(1), phantimalHex), characterId: toPhantimalId(1) },
       enemyHexes[0]!,
@@ -268,25 +269,6 @@ describe('characterStore phantimal faction rule', () => {
     expect(ok).toBe(false)
     expect(gridStore.getTile(phantimalHex).characterId).toBe(toPhantimalId(1))
     expect(gridStore.getTile(enemyHexes[0]!).characterId).toBe(4)
-  })
-
-  it('allows a cross-team phantimal swap when the requirement survives the departure', async () => {
-    fieldHeroes(Team.ALLY, [1, 2, 3])
-    const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6, 7]) // one above the requirement
-    const phantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
-    store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)
-    await nextTick()
-
-    const ok = store.handleCharacterDrop(
-      { character: buildCharacter(toPhantimalId(1), phantimalHex), characterId: toPhantimalId(1) },
-      enemyHexes[0]!,
-    )
-
-    expect(ok).toBe(true)
-    expect(gridStore.getTile(enemyHexes[0]!).characterId).toBe(toPhantimalId(1))
-    expect(gridStore.getTile(enemyHexes[0]!).team).toBe(Team.ENEMY)
-    expect(gridStore.getTile(phantimalHex).characterId).toBe(4)
-    expect(gridStore.getTile(phantimalHex).team).toBe(Team.ALLY)
   })
 
   it('moving a phantimal to an empty enemy tile displaces the enemy phantimal', async () => {

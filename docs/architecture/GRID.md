@@ -119,7 +119,13 @@ Character placement with skill integration:
 ```typescript
 function executePlaceCharacter(grid, skillManager, hexId, characterId, team) {
   return executeTransaction([
-    () => clearOccupantWithSkillCleanup(), // replacement: occupied target only
+    // Replacement (occupied target only): store companion positions,
+    // deactivate the occupant's skill, then remove it
+    () => {
+      storeCompanionPositions(grid, anchorId, occupantTeam)
+      skillManager.deactivateCharacterSkill(anchorId, anchorHex, occupantTeam, grid)
+      return performRemove(grid, anchorHex)
+    },
     () => performPlace(grid, hexId, characterId, team),
     () => {
       if (!hasSkill(characterId)) return true
@@ -141,7 +147,7 @@ Placing onto an occupied tile replaces the occupant: its skill is deactivated an
 ### Movement & Swapping
 
 - **Move (`move.ts`)**: Handles same-team and cross-team movements
-- **Swap (`swap.ts`)**: Atomic character exchange with skill transitions; a cross-team swap is rejected up front if either character already exists on its destination team (the same character may legally appear once per team)
+- **Swap (`swap.ts`)**: Atomic character exchange with skill transitions; phantimals are never swappable. A cross-team swap is rejected up front if either character already exists on its destination team (the same character may legally appear once per team). On failure, rollback clears both tiles before restoring the original placements, since `performPlace` never overwrites an occupant
 - **Cross-team logic**: Deactivate → perform operation → reactivate skills
 
 ### Removal (`/src/lib/characters/remove.ts`)

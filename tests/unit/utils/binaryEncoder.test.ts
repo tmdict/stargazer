@@ -365,8 +365,12 @@ describe('binaryEncoder', () => {
     })
 
     it('returns null for strings outside the URL-safe alphabet', () => {
+      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       expect(urlSafeToBytes('abc!def')).toBeNull()
       expect(urlSafeToBytes('with space')).toBeNull()
+      expect(consoleSpy).toHaveBeenCalledWith('Invalid character in URL-safe string:', '!')
+      expect(consoleSpy).toHaveBeenCalledWith('Invalid character in URL-safe string:', ' ')
+      consoleSpy.mockRestore()
     })
   })
 })

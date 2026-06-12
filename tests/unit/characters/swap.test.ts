@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { addCompanionLink } from '@/lib/characters/companion'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { performPlace } from '@/lib/characters/place'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { Grid } from '@/lib/grid'
@@ -8,7 +9,7 @@ import { Grid } from '@/lib/grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { STANDARD_ARENA, STANDARD_GRID, TARGETING_ARENA, TARGETING_GRID } from '../fixtures/grid'
 
 // Mock skill-related functions
 vi.mock('@/lib/skills/skill', () => ({
@@ -319,6 +320,86 @@ describe('swap.ts', () => {
       expect(result).toBe(true)
       expect(grid.getTileById(1).characterId).toBe(200)
       expect(grid.getTileById(2).characterId).toBe(companionId)
+    })
+  })
+
+  describe('executeSwapCharacters - phantimal handling', () => {
+    const phantimalId = toPhantimalId(1)
+
+    it('should reject cross-team swap of a character onto a phantimal', () => {
+      performPlace(grid, 1, 100, Team.ALLY)
+      performPlace(grid, 4, phantimalId, Team.ENEMY)
+
+      const result = executeSwapCharacters(grid, skillManager, 1, 4)
+
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(1).team).toBe(Team.ALLY)
+      expect(grid.getTileById(4).characterId).toBe(phantimalId)
+      expect(grid.getTileById(4).team).toBe(Team.ENEMY)
+    })
+
+    it('should reject swap initiated from a phantimal', () => {
+      performPlace(grid, 1, phantimalId, Team.ALLY)
+      performPlace(grid, 4, 200, Team.ENEMY)
+
+      const result = executeSwapCharacters(grid, skillManager, 1, 4)
+
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(phantimalId)
+      expect(grid.getTileById(4).characterId).toBe(200)
+    })
+
+    it('should reject phantimal-phantimal swap', () => {
+      const enemyPhantimalId = toPhantimalId(2)
+      performPlace(grid, 1, phantimalId, Team.ALLY)
+      performPlace(grid, 4, enemyPhantimalId, Team.ENEMY)
+
+      const result = executeSwapCharacters(grid, skillManager, 1, 4)
+
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(phantimalId)
+      expect(grid.getTileById(4).characterId).toBe(enemyPhantimalId)
+    })
+
+    it('should reject same-team character-phantimal swap', () => {
+      performPlace(grid, 1, 100, Team.ALLY)
+      performPlace(grid, 2, phantimalId, Team.ALLY)
+
+      const result = executeSwapCharacters(grid, skillManager, 1, 2)
+
+      expect(result).toBe(false)
+      expect(grid.getTileById(1).characterId).toBe(100)
+      expect(grid.getTileById(2).characterId).toBe(phantimalId)
+    })
+
+    it('should leave a full team fully intact when swapping a character onto its phantimal', () => {
+      // Phantimals are exempt from team-size tracking, so swapping a character
+      // onto a full team's phantimal frees no slot and the swap cannot succeed.
+      // The guard must reject it up front with zero state changes.
+      const tGrid = new Grid(TARGETING_GRID, TARGETING_ARENA)
+      tGrid.skillManager = skillManager
+
+      performPlace(tGrid, 1, 100, Team.ALLY)
+      const enemyChars = [201, 202, 203, 204, 205]
+      enemyChars.forEach((charId, i) => performPlace(tGrid, 9 + i, charId, Team.ENEMY))
+      performPlace(tGrid, 14, phantimalId, Team.ENEMY)
+
+      const result = executeSwapCharacters(tGrid, skillManager, 1, 14)
+
+      expect(result).toBe(false)
+      expect(tGrid.getTileById(1).characterId).toBe(100)
+      expect(tGrid.getTileById(1).team).toBe(Team.ALLY)
+      expect(tGrid.getTileById(14).characterId).toBe(phantimalId)
+      expect(tGrid.getTileById(14).team).toBe(Team.ENEMY)
+      expect(tGrid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      enemyChars.forEach((charId, i) => {
+        expect(tGrid.getTileById(9 + i).characterId).toBe(charId)
+        expect(tGrid.teamCharacters.get(Team.ENEMY)?.has(charId)).toBe(true)
+      })
+      // Phantimals never appear in team-size tracking
+      expect(tGrid.teamCharacters.get(Team.ALLY)?.has(phantimalId)).toBe(false)
+      expect(tGrid.teamCharacters.get(Team.ENEMY)?.has(phantimalId)).toBe(false)
     })
   })
 
