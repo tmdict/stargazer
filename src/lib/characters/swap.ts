@@ -1,8 +1,9 @@
 import type { Grid } from '../grid'
 import { hasCompanionSkill, hasSkill, SkillManager } from '../skills/skill'
 import { Team } from '../types/team'
-import { getCharacter, getCharacterTeam, isCharacterOnTeam } from './character'
+import { getCharacter, getCharacterTeam, hasCharacter, isCharacterOnTeam } from './character'
 import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
+import { isPhantimalId } from './phantimal'
 import { performPlace } from './place'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
@@ -28,6 +29,10 @@ export function executeSwapCharacters(
 
   // Validate all required data exists
   if (!fromChar || !toChar || !fromTeam || !toTeam) return false
+
+  // Phantimals are derived from their team's faction hero count and are not
+  // swappable — with characters or each other
+  if (isPhantimalId(fromChar) || isPhantimalId(toChar)) return false
 
   // Companions can only be swapped within the same team
   if ((isCompanionId(grid, fromChar) || isCompanionId(grid, toChar)) && fromTeam !== toTeam) {
@@ -121,13 +126,19 @@ function performSwap(
         return performPlace(grid, toHexId, fromChar, fromCharDestTeam)
       },
     ],
-    // Rollback operations
+    // Rollback: clear any partial swap state from both tiles, then restore both
+    // characters to their original positions and teams. performPlace never
+    // overwrites an occupant, so the tiles must be cleared first.
     [
       () => {
-        performPlace(grid, fromHexId, fromChar, fromCharOriginalTeam)
-      },
-      () => {
-        performPlace(grid, toHexId, toChar, toCharOriginalTeam)
+        if (hasCharacter(grid, fromHexId)) performRemove(grid, fromHexId)
+        if (hasCharacter(grid, toHexId)) performRemove(grid, toHexId)
+        if (!performPlace(grid, fromHexId, fromChar, fromCharOriginalTeam)) {
+          console.warn(`Swap rollback failed to restore character ${fromChar} at hex ${fromHexId}`)
+        }
+        if (!performPlace(grid, toHexId, toChar, toCharOriginalTeam)) {
+          console.warn(`Swap rollback failed to restore character ${toChar} at hex ${toHexId}`)
+        }
       },
     ],
   )

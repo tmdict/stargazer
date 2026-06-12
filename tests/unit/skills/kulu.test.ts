@@ -103,8 +103,12 @@ describe('kulu (Demolition Zone)', () => {
     grid.getTileById(20).state = State.AVAILABLE_ALLY
     expect(executePlaceCharacter(grid, skillManager, 2, PHRAESTO, Team.ALLY)).toBe(true)
     const companionId = grid.companionIdOffset + PHRAESTO
+    // The companion spawns on a random free ally tile, possibly hex 20 itself
     const spawnHex = findCharacterHex(grid, companionId, Team.ALLY)!
-    expect(executeMoveCharacter(grid, skillManager, spawnHex, 20, companionId)).toBe(true)
+    if (spawnHex !== 20) {
+      executeMoveCharacter(grid, skillManager, spawnHex, 20, companionId)
+    }
+    expect(findCharacterHex(grid, companionId, Team.ALLY)).toBe(20)
 
     expect(executePlaceCharacter(grid, skillManager, 1, KULU, Team.ALLY)).toBe(true)
 
