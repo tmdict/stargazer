@@ -7,8 +7,8 @@ and pathfinding exactly like characters — with three deliberate differences:
 1. **They don't count toward team size.**
 2. **At most one phantimal per team** may be on the field; placing a new one
    replaces the team's current phantimal.
-3. **They are not swappable** — with characters or each other
-   (`executeSwapCharacters` rejects any swap involving a phantimal).
+3. **They can be swapped only within their own team** — `executeSwapCharacters`
+   rejects any cross-team swap involving a phantimal.
 
 They are documented separately (and kept modular) because the season they belong
 to may rotate out; see [Modularity & removability](#modularity--removability).
@@ -102,7 +102,8 @@ enforces it at four points:
   if the team is short, so a click or drop simply does nothing.
 - **Cross-team gate** — `handleCharacterDrop` blocks moving a phantimal to an
   empty tile on the other team unless that team qualifies; the phantimal stays
-  put. Dropping a phantimal on an occupied tile is rejected as a swap.
+  put. Dropping a phantimal on an occupied tile on the other team is a
+  cross-team swap, which `executeSwapCharacters` rejects outright.
 - **Auto-removal** — a `watch(characterPlacements)` runs
   `enforcePhantimalFactionRule`, removing any on-field phantimal whose team drops
   below the requirement (e.g. a faction character is removed or moved away).
@@ -125,9 +126,9 @@ on `isPhantimalId` or living in a dedicated file. To retire the feature:
    `getCharacterFaction` accessors.
 3. Drop the phantimal helpers from the character store (placement, the faction
    gate, and the `enforcePhantimalFactionRule` watcher), the `isPhantimalId(...)`
-   guards including the swap rejection in `swap.ts` (they collapse to "always a
-   character"), the `GridCharacters` render branch, and `Grid.phantimalIdOffset`
-   (restoring `isCompanionId` to a single lower bound).
+   guards including the cross-team swap rejection in `swap.ts` (they collapse to
+   "always a character"), the `GridCharacters` render branch, and
+   `Grid.phantimalIdOffset` (restoring `isCompanionId` to a single lower bound).
 
 The `GridTile` model, targeting, pathfinding, move, and the `c` URL section
 were never modified for phantimals, so nothing there needs reverting.

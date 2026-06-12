@@ -167,7 +167,7 @@ export const useCharacterStore = defineStore('character', () => {
   ): boolean => {
     const { character, characterId } = payload
     if (character.sourceHexId !== undefined) {
-      // Swaps involving a phantimal are rejected inside executeSwapCharacters
+      // Cross-team phantimal/companion swaps are rejected inside executeSwapCharacters
       if (hasCharacter(grid, targetHexId)) {
         return swapCharacters(character.sourceHexId, targetHexId)
       }
