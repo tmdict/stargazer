@@ -47,6 +47,16 @@ ghost preview can't get stuck. `endDrag` records the drop tile in
 `lastDropHexId`, which GridTiles consumes (read + clear) to restore the hover
 highlight after its post-drag grace period.
 
+The safety net depends on `dragend` bubbling to the document, which requires
+the drag _source node_ to still be attached (or detach as part of a subtree
+whose root carries the `@dragend` binding) when the drag ends. Browsers pick
+the innermost draggable element as the source, and images are draggable by
+default — so inner `<img>`s in grid drag wrappers must set `draggable="false"`
+to keep the keyed wrapper as the source. Otherwise a drop that replaces the
+image node mid-drag (e.g. a character↔phantimal swap flipping a `v-if` branch)
+orphans the source, `dragend` never reaches any listener, and the ghost
+freezes.
+
 ```typescript
 // Key functions exposed
 startDrag(event, character, characterId, imageSrc)
