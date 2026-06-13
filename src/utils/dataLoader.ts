@@ -262,8 +262,8 @@ export function loadAppLocales(): Record<string, LocaleData> {
   if (appLocalesCache) return appLocalesCache
   // `**` includes subfolders, but `app` keys stay flat (filename only): it's the
   // global namespace, with some keys resolved dynamically as `app.<key>`, so
-  // folders are organization only. (WandWars instead prefixes keys by folder — see
-  // loadWandWarsLocales — to avoid collisions across its messages/ and insights/.)
+  // folders are organization only. (WandWars instead prefixes keys by folder, in
+  // loadWandWarsLocales, to avoid collisions across its messages/ and insights/.)
   appLocalesCache = buildLocaleDict(
     import.meta.glob<LocaleData>('@/locales/app/**/*.json', { eager: true, import: 'default' }),
   )

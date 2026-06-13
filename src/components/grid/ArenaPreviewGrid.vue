@@ -84,12 +84,6 @@ const handleArenaClick = (mapKey: string) => {
 </template>
 
 <style scoped>
-.arena-preset-grid {
-  margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
-
 .arena-presets {
   display: flex;
   flex-wrap: wrap;

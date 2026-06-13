@@ -41,7 +41,7 @@ export const routes: RouteRecordRaw[] = [
     name: 'skills',
     component: () => import('@/views/SkillsView.vue'),
   },
-  // Hidden utility: not in the nav, not pre-rendered (client-only). Link-access only.
+  // Client-only image tool (canvas/clipboard/file APIs); not pre-rendered.
   {
     path: '/teams',
     name: 'teams',

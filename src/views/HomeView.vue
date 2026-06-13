@@ -16,7 +16,6 @@ import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
-import { getMapNames } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
@@ -95,9 +94,6 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-const availableMaps = getMapNames().filter((m) => m.key.startsWith('arena'))
-const selectedMap = ref('arena1')
-
 const showArrows = ref(false)
 const showHexIds = ref(false)
 const showSkills = ref(true)
@@ -154,9 +150,7 @@ const handleTabChange = (tab: string) => {
 }
 
 const handleMapChange = (mapKey: string) => {
-  if (gridStore.switchMap(mapKey)) {
-    selectedMap.value = mapKey
-  }
+  gridStore.switchMap(mapKey)
 }
 
 // Watch for route query changes (browser back/forward navigation)
@@ -300,13 +294,7 @@ const handleResetMap = () => {
 
         <!-- Roster (a pull-up bottom sheet over the grid on mobile). -->
         <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargetHex">
-          <TabNavigation
-            :active-tab
-            :available-maps
-            :selected-map
-            @tab-change="handleTabChange"
-            @map-change="handleMapChange"
-          >
+          <TabNavigation :active-tab @tab-change="handleTabChange">
             <!-- Tab Content -->
             <!-- Characters Tab -->
             <div v-show="activeTab === 'characters'" class="tab-panel">
