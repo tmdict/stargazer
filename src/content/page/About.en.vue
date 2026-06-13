@@ -2,9 +2,9 @@
   <article>
     <h1>AFK Journey Arena Simulator</h1>
     <p>
-      Stargazer is an AFK Journey arena simulator and planning tool. It lets you experiment with
-      different hero positions and team compositions on a hexagonal grid, just like the actual
-      game's battle arena.
+      Stargazer is an AFK Journey arena simulator and planning tool, plus a few companion utilities.
+      It lets you experiment with different hero positions and team compositions on a hexagonal
+      grid, just like the actual game's battle arena.
     </p>
     <p>
       The purpose of this tool is to allow rapid testing of skill mechanics with different arena
@@ -13,34 +13,43 @@
       recommend using <a href="https://www.yaphalla.com/editor">Yaphalla's builder</a>.
     </p>
 
-    <h2>How to Use</h2>
+    <h2>Tools</h2>
     <ul>
       <li>
-        <strong>Build Teams:</strong> Drag characters and artifacts onto the grid or click them to
-        add, remove, or switch teams
+        <strong>Arena:</strong> The hex-grid battle simulator. Position heroes and artifacts,
+        preview skills and targeting, and share formations.
       </li>
       <li>
-        <strong>Simulation Details:</strong> Toggle to show/hide different simulation information:
-        <ul>
-          <li><strong>Flat View:</strong> Display the grid in a top-down flat view</li>
-          <li><strong>Grid Info:</strong> Show hex coordinates and tile information</li>
-          <li><strong>Skills:</strong> Simulate skill effects of character currently on the map</li>
-          <li><strong>Targeting:</strong> Simulate attack ranges and movement paths</li>
-          <li><strong>Debug:</strong> Show debug information for troubleshooting</li>
-        </ul>
+        <strong>Teams:</strong> Stitch several screenshots into one image, vertically or
+        horizontally. Handy for posting multiple team comps together.
       </li>
-      <li><strong>Create Maps:</strong> Use Map Editor tab to design custom arenas</li>
       <li>
-        <strong>Share Teams:</strong> Click "Link" for shareable URL, "Copy" for image to clipboard,
-        or "Download" to save image
+        <strong>Skills:</strong> Search every hero by name or skill text and read full skill
+        descriptions.
+      </li>
+      <li><strong>Guide:</strong> Per-hero notes on skills and mechanics.</li>
+      <li>
+        <strong>Wand Wars:</strong> A 3v3 PvP draft analyzer with pick recommendations, matchup
+        predictions, and match tracking.
       </li>
     </ul>
 
     <h2>Tips</h2>
     <ul>
-      <li>Heroes with special abilities will modify the map or display special effects</li>
-      <li>Click any grid tile to quickly place characters via a popup menu</li>
-      <li>The grid is fully responsive - works seamlessly on mobile, tablet, and desktop!</li>
+      <li>Click any empty tile to place a character from a popup menu.</li>
+      <li>Toggle overlays to preview flat view, grid info, skills, targeting, and debug.</li>
+      <li>
+        <strong>Team View</strong> crops the board to your side for a clean formation screenshot.
+      </li>
+      <li>Use the <strong>Maps</strong> tab to load a preset arena or paint a custom one.</li>
+      <li>Heroes with special abilities reshape the map or trigger special effects.</li>
+      <li>
+        Share the board with <strong>Link</strong> (URL), or <strong>Copy</strong> /
+        <strong>Download</strong> to export an image.
+      </li>
+      <li>
+        Press <strong>Alt + L</strong> (or <strong>Option + L</strong> on Mac) to switch language.
+      </li>
     </ul>
 
     <h2>Useful Links and Resources</h2>

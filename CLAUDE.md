@@ -77,5 +77,3 @@ Imports are automatically sorted by Prettier using @ianvs/prettier-plugin-sort-i
 
 Do what has been asked; nothing more, nothing less.
 NEVER create files unless they're absolutely necessary for achieving your goal.
-NEVER run `npm run dev`
-NEVER run `npm run build`

@@ -49,8 +49,9 @@ onMounted(() => {
 
 // Keyboard shortcut handler
 const handleKeyDown = (e: KeyboardEvent) => {
-  // Alt+L to toggle language
-  if (e.altKey && e.key === 'l') {
+  // Alt+L (Option+L on macOS) to toggle language. Match the physical key via
+  // `code`: macOS composes a different `key` value when Option is held.
+  if (e.altKey && e.code === 'KeyL') {
     e.preventDefault()
     toggleLocale()
   }
@@ -81,6 +82,12 @@ onUnmounted(() => {
         <RouterLink to="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
           i18n.t('app.arena')
         }}</RouterLink>
+        <RouterLink
+          to="/teams"
+          class="nav-text-link"
+          :class="{ active: route.path === '/teams' }"
+          >{{ i18n.t('app.teams') }}</RouterLink
+        >
         <RouterLink
           to="/skills"
           class="nav-text-link"

@@ -66,52 +66,58 @@ const getPreviewFillColor = (state: State): string => {
 
 <template>
   <div class="map-editor">
-    <p class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
+    <section class="map-section">
+      <h3 class="section-title">{{ i18n.t('app.editor') }}</h3>
+      <p class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
 
-    <div class="state-options">
-      <button
-        v-for="option in stateOptions"
-        :key="option.state"
-        class="state-button"
-        :class="{ active: selectedState === option.state }"
-        @click="selectState(option.state)"
-      >
-        <div class="hex-preview">
-          <svg width="60" height="60" viewBox="0 0 60 60">
-            <polygon
-              points="30,7 46,15 46,37 30,45 14,37 14,15"
-              :fill="getPreviewFillColor(option.state)"
-              stroke="#888888"
-              stroke-width="2"
-            />
-          </svg>
-        </div>
-        <span class="state-label">{{ getStateLabel(option.labelKey) }}</span>
-      </button>
-    </div>
+      <div class="state-options">
+        <button
+          v-for="option in stateOptions"
+          :key="option.state"
+          class="state-button"
+          :class="{ active: selectedState === option.state }"
+          @click="selectState(option.state)"
+        >
+          <div class="hex-preview">
+            <svg width="60" height="60" viewBox="0 0 60 60">
+              <polygon
+                points="30,7 46,15 46,37 30,45 14,37 14,15"
+                :fill="getPreviewFillColor(option.state)"
+                stroke="#888888"
+                stroke-width="2"
+              />
+            </svg>
+          </div>
+          <span class="state-label">{{ getStateLabel(option.labelKey) }}</span>
+        </button>
+      </div>
 
-    <div class="map-editor-actions">
-      <label
-        ref="invertButtonElement"
-        class="invert-toggle"
-        @mouseenter="showInvertTooltip = true"
-        @mouseleave="showInvertTooltip = false"
-      >
-        <input
-          type="checkbox"
-          :checked="mapEditorStore.isColorInverted"
-          class="invert-checkbox"
-          @change="mapEditorStore.toggleColorInvert()"
-        />
-        <span class="invert-text">{{ i18n.t('app.invert') }}</span>
-      </label>
-      <button class="fill-button" @click="handleApplyAllTiles">
-        <IconFill :size="14" /> {{ i18n.t('app.fill') }}
-      </button>
-      <button class="clear-button" @click="handleResetMap">{{ i18n.t('app.clear') }}</button>
-    </div>
+      <div class="map-editor-actions">
+        <label
+          ref="invertButtonElement"
+          class="invert-toggle"
+          @mouseenter="showInvertTooltip = true"
+          @mouseleave="showInvertTooltip = false"
+        >
+          <input
+            type="checkbox"
+            :checked="mapEditorStore.isColorInverted"
+            class="invert-checkbox"
+            @change="mapEditorStore.toggleColorInvert()"
+          />
+          <span class="invert-text">{{ i18n.t('app.invert') }}</span>
+        </label>
+        <button class="fill-button" @click="handleApplyAllTiles">
+          <IconFill :size="14" /> {{ i18n.t('app.fill') }}
+        </button>
+        <button class="clear-button" @click="handleResetMap">{{ i18n.t('app.clear') }}</button>
+      </div>
+    </section>
 
-    <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
+    <section class="map-section">
+      <h3 class="section-title">{{ i18n.t('app.preset') }}</h3>
+      <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
+    </section>
   </div>
 
   <Teleport to="body">
@@ -143,6 +149,24 @@ const getPreviewFillColor = (state: State): string => {
     min-height: 0;
     overflow-y: auto;
   }
+}
+
+.map-section + .map-section {
+  margin-top: 3rem;
+}
+
+.section-title {
+  margin: 0 0 var(--spacing-md);
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-secondary);
+}
+
+.map-section + .map-section .section-title {
+  margin-bottom: 1.25rem;
 }
 
 .editor-description {
