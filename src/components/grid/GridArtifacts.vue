@@ -52,6 +52,25 @@ const enemyCenter = computed(() => cellCenter(enemyCellHex.value))
 const allyCellPoints = computed(() => cellPoints(allyCellHex.value))
 const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
 
+// Dashed border path covering only the edges that don't abut a grid tile, so
+// the dash never doubles up against a tile's solid border. In this pointy-top
+// layout, corner k sits at (k + 0.5)·60° and neighbor d's center at (d − 1)·60°,
+// so the hex across edge (corner k → corner k+1) is neighbor(k + 2).
+const outerEdgePath = (hex: Hex | null): string => {
+  if (!hex) return ''
+  const corners = gridStore.layout.polygonCorners(hex)
+  const segments: string[] = []
+  corners.forEach((corner, k) => {
+    if (gridStore.grid.getTileOrUndefined(hex.neighbor(k + 2))) return
+    const next = corners[(k + 1) % corners.length]!
+    segments.push(`M ${corner.x} ${corner.y} L ${next.x} ${next.y}`)
+  })
+  return segments.join(' ')
+}
+
+const allyCellBorderPath = computed(() => outerEdgePath(allyCellHex.value))
+const enemyCellBorderPath = computed(() => outerEdgePath(enemyCellHex.value))
+
 // The cell-outline SVG shares the full grid box and coordinate space with GridTiles,
 // so it compresses with the perspective wrapper exactly like the real hexes.
 const gridPixelSize = computed(() => 600 * gridStore.getHexScale())
@@ -168,9 +187,15 @@ const handleArtifactClick = (team: Team) => {
         fill="transparent"
         :class="{ clickable: allyCellClickable }"
         :points="allyCellPoints"
+        @click="allyCellClickable && openPopup(Team.ALLY, allyCenter)"
+      />
+      <path
+        v-if="showAllyCell"
+        class="artifact-cell-border"
+        fill="none"
+        :d="allyCellBorderPath"
         :stroke-width="cellStrokeWidth"
         :stroke-dasharray="cellDashArray"
-        @click="allyCellClickable && openPopup(Team.ALLY, allyCenter)"
       />
       <polygon
         v-if="showEnemyCell"
@@ -178,9 +203,15 @@ const handleArtifactClick = (team: Team) => {
         fill="transparent"
         :class="{ clickable: enemyCellClickable }"
         :points="enemyCellPoints"
+        @click="enemyCellClickable && openPopup(Team.ENEMY, enemyCenter)"
+      />
+      <path
+        v-if="showEnemyCell"
+        class="artifact-cell-border"
+        fill="none"
+        :d="enemyCellBorderPath"
         :stroke-width="cellStrokeWidth"
         :stroke-dasharray="cellDashArray"
-        @click="enemyCellClickable && openPopup(Team.ENEMY, enemyCenter)"
       />
     </svg>
 
@@ -251,6 +282,9 @@ const handleArtifactClick = (team: Team) => {
   /* Paired with a transparent `fill` attribute in the template: PNG export drops
      scoped CSS, so without it the polygon falls back to SVG's default black fill. */
   fill: rgba(255, 255, 255, 0.06);
+}
+
+.artifact-cell-border {
   stroke: var(--color-text-tertiary, #8a8f98);
 }
 
