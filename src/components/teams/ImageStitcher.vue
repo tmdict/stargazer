@@ -34,12 +34,7 @@ const handleAdd = async (files: File[]) => {
 </script>
 
 <template>
-  <div class="stitcher ww-card">
-    <header class="stitcher-head">
-      <h1>Image Stitcher</h1>
-      <p>Upload, drop, or paste images to combine them into one.</p>
-    </header>
-
+  <div class="stitcher">
     <StitchSettings
       v-model:direction="settings.direction"
       v-model:gap="settings.gap"
@@ -67,17 +62,5 @@ const handleAdd = async (files: File[]) => {
   flex-direction: column;
   gap: var(--spacing-xl);
   width: 100%;
-}
-
-.stitcher-head h1 {
-  margin: 0;
-  font-size: 1.4rem;
-  color: var(--color-text-primary);
-}
-
-.stitcher-head p {
-  margin: var(--spacing-xs) 0 0;
-  color: var(--color-text-secondary);
-  font-size: 0.92rem;
 }
 </style>
