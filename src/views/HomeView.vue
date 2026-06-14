@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import DebugPanel from '@/components/debug/DebugPanel.vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
+import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import MapEditor from '@/components/MapEditor.vue'
@@ -157,6 +158,7 @@ const handleTabChange = (tab: string) => {
   applyTabResets(tab)
 }
 
+// Switches the displayed arena; shared by the Map Editor tab and the ArenaDropdown.
 const handleMapChange = (mapKey: string) => {
   gridStore.switchMap(mapKey)
 }
@@ -328,6 +330,9 @@ const handleResetMap = () => {
             </template>
             <template #debug>
               <DebugPanel ref="debugPanelRef" />
+            </template>
+            <template #actions>
+              <ArenaDropdown />
             </template>
           </TabView>
         </BottomSheet>

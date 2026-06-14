@@ -20,29 +20,40 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
 </script>
 
 <template>
-  <div v-if="showStrip" class="tab-buttons" role="tablist">
-    <template v-for="tab in tabs" :key="tab.key">
-      <button
-        v-if="!tab.hidden"
-        type="button"
-        role="tab"
-        :aria-selected="active === tab.key"
-        :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
-        @click="active = tab.key"
-      >
-        {{ tab.label }}
-        <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
-      </button>
-    </template>
+  <div v-if="showStrip" class="tab-bar">
+    <div class="tab-buttons" role="tablist">
+      <template v-for="tab in tabs" :key="tab.key">
+        <button
+          v-if="!tab.hidden"
+          type="button"
+          role="tab"
+          :aria-selected="active === tab.key"
+          :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
+          @click="active = tab.key"
+        >
+          {{ tab.label }}
+          <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
+        </button>
+      </template>
+    </div>
+    <div v-if="$slots.actions" class="tab-actions">
+      <slot name="actions" />
+    </div>
   </div>
 </template>
 
 <style scoped>
-/* Two distinct looks by width: underline on desktop, a boxed bar on mobile. */
-.tab-buttons {
+/* Two distinct looks by width: underline on desktop, a boxed bar on mobile.
+   .tab-bar holds the tablist plus an optional trailing actions slot. */
+.tab-bar {
   display: flex;
   flex-wrap: wrap;
   flex-shrink: 0;
+}
+
+.tab-buttons {
+  display: flex;
+  flex-wrap: wrap;
 }
 
 .tab-btn {
@@ -56,6 +67,7 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  font-size: var(--tab-font-size);
   transition:
     color var(--transition-fast),
     border-color var(--transition-fast),
@@ -77,10 +89,14 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
 }
 
 @media (min-width: 769px) {
-  .tab-buttons {
-    gap: var(--spacing-lg);
+  /* Baseline the active ink-bar sits on; spans the full strip incl. the actions slot. */
+  .tab-bar {
     padding: 0 var(--spacing-md);
     border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .tab-buttons {
+    gap: var(--spacing-lg);
   }
 
   .tab-btn {
@@ -90,7 +106,6 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
     margin-bottom: -1px;
     /* Bottom < top to optically center the label over the ink-bar. */
     padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
-    font-size: 0.85rem;
   }
 
   .tab-btn:hover:not(.active) {
@@ -102,11 +117,10 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
     color: var(--color-primary);
     border-bottom-color: var(--color-primary);
   }
-}
 
-@media (min-width: 1280px) {
-  .tab-btn {
-    font-size: 0.8rem;
+  .tab-actions {
+    margin-left: auto;
+    align-self: center;
   }
 }
 
@@ -116,6 +130,7 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
   }
 
   .tab-buttons {
+    flex: 1 1 auto;
     gap: 0;
     background: var(--color-bg-secondary);
     border: 2px solid var(--color-border-primary);
@@ -129,7 +144,6 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
     justify-content: center;
     margin: 0 -1px -1px 0;
     padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 0.85rem;
     line-height: 1.2;
     border-right: 1px solid var(--color-border-primary);
     border-bottom: 1px solid var(--color-border-primary);
@@ -164,7 +178,6 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
 @media (max-width: 480px) {
   .tab-btn {
     padding: var(--spacing-sm) var(--spacing-md);
-    font-size: 0.8rem;
     min-width: 80px;
   }
 }
