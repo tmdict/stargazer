@@ -40,65 +40,27 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
 </template>
 
 <style scoped>
+/* Two looks by width: underline/ink-bar on desktop, the boxed tab bar in the
+   mobile bottom sheet (it reads better in the narrow sheet). Shared bits only. */
 .tab-buttons {
   display: flex;
-  /* Wrap instead of overflowing when the strip is wider than its column; the
-     container/media rules below refine the wrapped row. */
   flex-wrap: wrap;
-  justify-content: flex-start;
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-large) var(--radius-large) 0 0;
-  padding: 0;
-  overflow: visible;
-  border: 2px solid var(--color-border-primary);
-  border-bottom: none;
-  min-height: 54px;
   flex-shrink: 0;
 }
 
 .tab-btn {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   gap: var(--spacing-xs);
   background: transparent;
   color: var(--color-text-secondary);
   border: none;
-  padding: var(--spacing-lg) var(--spacing-2xl);
   cursor: pointer;
-  font-size: 1rem;
   font-weight: 600;
-  transition: all var(--transition-fast);
-  border-right: 1px solid var(--color-border-primary);
-  position: relative;
-}
-
-.tab-btn:first-child {
-  border-top-left-radius: var(--radius-large);
-}
-
-.tab-btn:last-child {
-  border-right: none;
-}
-
-.tab-btn:hover {
-  background: var(--color-bg-tertiary);
-  color: var(--color-primary);
-}
-
-.tab-btn.active {
-  background: var(--color-bg-primary);
-  color: var(--color-primary);
-}
-
-.tab-btn.active::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--color-primary);
+  transition:
+    color var(--transition-fast),
+    border-color var(--transition-fast),
+    background var(--transition-fast);
 }
 
 .tab-badge {
@@ -115,66 +77,90 @@ const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
   font-weight: 700;
 }
 
-/* 1280 is the canonical desktop-chrome boundary: max-width rules tune chrome
-   at/below it; this min-width rule shrinks the tab font above it. */
+/* Desktop: flat text on a hairline baseline; active tab gets a teal ink-bar.
+   Tabs sit close to the column edge; the baseline spans the full (bled) width. */
+@media (min-width: 769px) {
+  .tab-buttons {
+    gap: var(--spacing-md);
+    padding: 0 var(--spacing-sm);
+    border-bottom: 1px solid var(--color-border-light);
+  }
+
+  .tab-btn {
+    /* Transparent bar reserves the active height (no shift on select); -1px
+       lands the active bar on the strip's baseline. */
+    border-bottom: 2.5px solid transparent;
+    margin-bottom: -1px;
+    padding: var(--spacing-lg);
+    font-size: 0.95rem;
+  }
+
+  .tab-btn:hover:not(.active) {
+    color: var(--color-text-primary);
+  }
+
+  .tab-btn.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+  }
+}
+
 @media (min-width: 1280px) {
   .tab-btn {
     font-size: 0.9rem;
   }
 }
 
-/* Mirror the narrow-viewport tab styling whenever the containing column is
-   narrow, regardless of viewport (a host may declare `container-type:
-   inline-size`). Browsers without container-query support fall back to the
-   viewport-only @media rules below. */
-@container (max-width: 600px) {
-  .tab-buttons {
-    flex-wrap: wrap;
-    gap: 0;
-    min-height: auto;
-  }
-
-  .tab-btn {
-    padding: var(--spacing-sm) var(--spacing-lg);
-    font-size: 0.9rem;
-    line-height: 1.2;
-    flex: 1 1 auto;
-    min-width: 100px;
-    border-right: 1px solid var(--color-border-primary);
-    border-bottom: 1px solid var(--color-border-primary);
-    margin-bottom: -1px;
-    margin-right: -1px;
-  }
-}
-
+/* Mobile / bottom sheet: boxed tab bar — a filled beige strip with the active
+   tab highlighted; wraps to a grid when the labels don't fit one row. */
 @media (max-width: 768px) {
   .hide-mobile {
     display: none;
   }
 
   .tab-buttons {
-    flex-wrap: wrap;
     gap: 0;
-    /* Drop the 54px desktop floor so the row shrinks to the reduced tab height. */
-    min-height: auto;
+    background: var(--color-bg-secondary);
+    border: 2px solid var(--color-border-primary);
+    border-bottom: none;
+    border-radius: var(--radius-large) var(--radius-large) 0 0;
   }
 
   .tab-btn {
-    /* Trim vertical padding and the inherited line-height so the tab bar stays
-       compact where space is tight (mobile sheet / narrow column). */
+    flex: 1 1 auto;
+    min-width: 100px;
+    justify-content: center;
+    margin: 0 -1px -1px 0;
     padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 0.9rem;
     line-height: 1.2;
-    flex: 1 1 auto;
-    min-width: 100px;
     border-right: 1px solid var(--color-border-primary);
     border-bottom: 1px solid var(--color-border-primary);
-    margin-bottom: -1px;
-    margin-right: -1px;
+    position: relative;
   }
 
   .tab-btn:first-child {
     border-top-left-radius: var(--radius-large);
+  }
+
+  .tab-btn:hover:not(.active) {
+    background: var(--color-bg-tertiary);
+    color: var(--color-primary);
+  }
+
+  .tab-btn.active {
+    background: var(--color-bg-primary);
+    color: var(--color-primary);
+  }
+
+  .tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--color-primary);
   }
 }
 
