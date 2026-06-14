@@ -10,7 +10,7 @@ import GridControls from '@/components/grid/GridControls.vue'
 import MapEditor from '@/components/MapEditor.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
-import TabNavigation from '@/components/ui/TabNavigation.vue'
+import TabView from '@/components/ui/TabView.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
@@ -59,6 +59,15 @@ const getInitialTab = (): string => {
 }
 
 const activeTab = ref(getInitialTab())
+
+// Roster tabs. Debug is desktop-only (hidden on mobile to save space; the arena
+// is selectable in the Map Editor tab).
+const tabs = computed(() => [
+  { key: 'characters', label: i18nStore.t('app.characters') },
+  { key: 'seasonal', label: i18nStore.t('app.seasonal') },
+  { key: 'mapEditor', label: i18nStore.t('app.maps') },
+  { key: 'debug', label: i18nStore.t('app.debug'), hideMobile: true },
+])
 
 // Mobile: the tab panel (roster) is a pull-up bottom sheet over the grid.
 const { targetHexId, liftedHexId, tabRequest, clearTargetHex, clearLiftedHex } = useSelectionState()
@@ -137,9 +146,8 @@ const applyTabResets = (tab: string) => {
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
 
-  // Update URL with new tab query parameter
-  // Use replace to avoid creating browser history entries for tab switches
-  router.replace({
+  // Push so each tab switch is a history entry — back/forward navigates tabs.
+  router.push({
     query: {
       ...route.query,
       t: tab,
@@ -153,15 +161,14 @@ const handleMapChange = (mapKey: string) => {
   gridStore.switchMap(mapKey)
 }
 
-// Watch for route query changes (browser back/forward navigation)
+// Browser back/forward (and the push above) change the query; mirror it onto the
+// active tab. Landing back on a bare `/` (no `?t=`) restores the default.
 watch(
   () => route.query.t,
   (newTab) => {
-    if (newTab && validTabs.includes(newTab as ValidTab)) {
-      activeTab.value = newTab as string
-
-      applyTabResets(newTab as string)
-    }
+    const tab = newTab && validTabs.includes(newTab as ValidTab) ? (newTab as string) : 'characters'
+    activeTab.value = tab
+    applyTabResets(tab)
   },
 )
 
@@ -294,34 +301,35 @@ const handleResetMap = () => {
 
         <!-- Roster (a pull-up bottom sheet over the grid on mobile). -->
         <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargetHex">
-          <TabNavigation :active-tab @tab-change="handleTabChange">
-            <!-- Tab Content -->
-            <!-- Characters Tab -->
-            <div v-show="activeTab === 'characters'" class="tab-panel">
+          <TabView
+            :tabs="tabs"
+            :model-value="activeTab"
+            fill
+            eager
+            @update:model-value="handleTabChange"
+          >
+            <template #characters>
               <CharacterSelection :characters="gameDataStore.characters" :is-draggable="true" />
-            </div>
-            <!-- Seasonal Tab -->
-            <div v-show="activeTab === 'seasonal'" class="tab-panel">
+            </template>
+            <template #seasonal>
               <SeasonalSelection
                 :artifacts="gameDataStore.artifacts"
                 :phantimals="gameDataStore.phantimals"
                 :is-draggable="true"
               />
-            </div>
-            <!-- Map Editor Tab -->
-            <div v-show="activeTab === 'mapEditor'" class="tab-panel">
+            </template>
+            <template #mapEditor>
               <MapEditor
                 @state-selected="handleMapEditorStateSelected"
                 @apply-all-tiles="handleApplyAllTiles"
                 @reset-map="handleResetMap"
                 @arena-selected="handleMapChange"
               />
-            </div>
-            <!-- Debug Tab -->
-            <div v-show="activeTab === 'debug'" class="tab-panel">
+            </template>
+            <template #debug>
               <DebugPanel ref="debugPanelRef" />
-            </div>
-          </TabNavigation>
+            </template>
+          </TabView>
         </BottomSheet>
       </div>
     </DragDropProvider>
@@ -342,7 +350,7 @@ const handleResetMap = () => {
 
 /* Mobile: clear the collapsed sheet peek and trim the grid card's side padding
    so the grid claims the narrow viewport. The roster sheet chrome lives in
-   BottomSheet; TabNavigation owns its own in-sheet fill/scroll. */
+   BottomSheet; TabView owns its own in-sheet fill/scroll. */
 @media (max-width: 768px) {
   main {
     padding-bottom: 64px;
@@ -361,8 +369,8 @@ const handleResetMap = () => {
 
    NOTE: this breakpoint must stay in sync with the @media rules in each
    tab-content panel component (CharacterSelection, SeasonalSelection,
-   MapEditor, DebugPanel) and .tab-panel below — they gate the flex-fill
-   + internal scroll behavior on the same condition. */
+   MapEditor, DebugPanel) — they own the flex-fill + internal scroll on the same
+   condition (TabView provides the flex shell; the panels scroll). */
 @media (min-width: 1220px) {
   .sections-container {
     flex-direction: row;
@@ -375,29 +383,6 @@ const handleResetMap = () => {
   }
 }
 
-.tab-panel {
-  padding: var(--spacing-2xl);
-  color: var(--color-text-muted);
-}
-
-/* On wide screens, the active tab panel flex-fills the right column so the
-   panel component inside (whose max-height is overridden in its own scoped
-   CSS at the same breakpoint) can stretch to viewport-bounded height. */
-@media (min-width: 1220px) {
-  .tab-panel {
-    display: flex;
-    flex-direction: column;
-    flex: 1;
-    min-height: 0;
-  }
-}
-
-@media (max-width: 768px) {
-  .tab-panel {
-    padding: var(--spacing-lg) 0;
-  }
-}
-
 @media (max-width: 480px) {
   main {
     padding-bottom: 64px;
@@ -405,9 +390,6 @@ const handleResetMap = () => {
   .sections-container > .section:first-child {
     padding-left: var(--spacing-xs);
     padding-right: var(--spacing-xs);
-  }
-  .tab-panel {
-    padding: var(--spacing-sm) 0;
   }
 }
 </style>

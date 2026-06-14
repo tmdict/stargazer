@@ -7,9 +7,11 @@ import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
 import WandWarsPickSlots from './WandWarsPickSlots.vue'
 import WandWarsPoolImport from './WandWarsPoolImport.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import TabView from '@/components/ui/TabView.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
+import type { InsightCategory } from '@/wandwars/insights'
 import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
 
 defineProps<{
@@ -43,168 +45,116 @@ function handlePoolApply(pool: string[]) {
 }
 
 const i18n = useI18nStore()
+
+type MainTab = 'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'
+
 const tabs = computed(() => [
-  { id: 'draft' as const, label: i18n.t('wandwars.draft') },
-  { id: 'units' as const, label: i18n.t('wandwars.units') },
-  { id: 'teams' as const, label: i18n.t('wandwars.teams') },
-  { id: 'synergy' as const, label: i18n.t('wandwars.synergy') },
-  { id: 'hero-adjustments' as const, label: i18n.t('wandwars.hero-adjustments') },
+  { key: 'draft', label: i18n.t('wandwars.draft') },
+  { key: 'units', label: i18n.t('wandwars.units') },
+  { key: 'teams', label: i18n.t('wandwars.teams') },
+  { key: 'synergy', label: i18n.t('wandwars.synergy') },
+  { key: 'hero-adjustments', label: i18n.t('wandwars.hero-adjustments') },
 ])
 
-const activeTab = defineModel<'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'>(
-  'activeTab',
-  { default: 'draft' },
-)
+const activeTab = defineModel<MainTab>('activeTab', { default: 'draft' })
 </script>
 
 <template>
-  <section class="main-panel ww-card">
-    <div class="tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        :class="['tab', { active: activeTab === tab.id }]"
-        @click="activeTab = tab.id"
-      >
-        {{ tab.label }}
-      </button>
-    </div>
+  <section class="section">
+    <TabView
+      :tabs="tabs"
+      :model-value="activeTab"
+      @update:model-value="activeTab = $event as MainTab"
+    >
+      <template #draft>
+        <WandWarsPickSlots
+          :pick-state="pickState"
+          :characters="characters"
+          :current-pick-side="currentPickSide"
+          @unpick-slot="(side, slot) => emit('unpickSlot', side, slot)"
+        />
 
-    <template v-if="activeTab === 'draft'">
-      <WandWarsPickSlots
-        :pick-state="pickState"
-        :characters="characters"
-        :current-pick-side="currentPickSide"
-        @unpick-slot="(side, slot) => emit('unpickSlot', side, slot)"
-      />
-
-      <WandWarsHeroGrid
-        :characters="characters"
-        :available-heroes="availableHeroes"
-        :character-images="characterImages"
-        @pick-hero="(hero) => emit('pickHero', hero)"
-      >
-        <template #actions>
-          <button class="action-btn" @click="showPoolImport = true">
-            {{ i18n.t('wandwars.import-pool') }}
-          </button>
-          <button class="action-btn" @click="emit('undo')">{{ i18n.t('wandwars.undo') }}</button>
-          <button class="action-btn danger" @click="emit('reset')">
-            {{ i18n.t('wandwars.reset') }}
-          </button>
-        </template>
-      </WandWarsHeroGrid>
-
-      <div v-if="showPoolImport" class="pool-modal" @click.self="showPoolImport = false">
-        <div class="pool-modal-panel">
-          <div class="pool-modal-header">
-            <span class="pool-modal-title">
-              {{ i18n.t('wandwars.restrict-to-pool') }}
-              <IconInfo
-                ref="poolInfoEl"
-                :size="16"
-                class="pool-modal-info"
-                @mouseenter="showPoolInfo = true"
-                @mouseleave="showPoolInfo = false"
-              />
-            </span>
-            <span class="pool-modal-close" @click="showPoolImport = false">✕</span>
-          </div>
-          <WandWarsPoolImport
-            :character-images="characterImages"
-            :all-heroes="allHeroes"
-            @apply="handlePoolApply"
-            @cancel="showPoolImport = false"
-          />
-        </div>
-      </div>
-
-      <Teleport to="body">
-        <TooltipPopup
-          v-if="showPoolInfo && poolInfoEl?.$el"
-          :target-element="poolInfoEl.$el"
-          variant="detailed"
-          max-width="420px"
+        <WandWarsHeroGrid
+          :characters="characters"
+          :available-heroes="availableHeroes"
+          :character-images="characterImages"
+          @pick-hero="(hero) => emit('pickHero', hero)"
         >
-          <template #content>
-            <div class="pool-info-tip">
-              <p
-                v-for="(paragraph, idx) in i18n
-                  .t('wandwars.messages/tooltip-pool-info')
-                  .split('\n\n')"
-                :key="idx"
-              >
-                {{ paragraph }}
-              </p>
-            </div>
+          <template #actions>
+            <button class="action-btn" @click="showPoolImport = true">
+              {{ i18n.t('wandwars.import-pool') }}
+            </button>
+            <button class="action-btn" @click="emit('undo')">{{ i18n.t('wandwars.undo') }}</button>
+            <button class="action-btn danger" @click="emit('reset')">
+              {{ i18n.t('wandwars.reset') }}
+            </button>
           </template>
-        </TooltipPopup>
-      </Teleport>
-    </template>
+        </WandWarsHeroGrid>
 
-    <WandWarsHeroAdjustments
-      v-else-if="activeTab === 'hero-adjustments'"
-      :character-images="characterImages"
-    />
+        <div v-if="showPoolImport" class="pool-modal" @click.self="showPoolImport = false">
+          <div class="pool-modal-panel">
+            <div class="pool-modal-header">
+              <span class="pool-modal-title">
+                {{ i18n.t('wandwars.restrict-to-pool') }}
+                <IconInfo
+                  ref="poolInfoEl"
+                  :size="16"
+                  class="pool-modal-info"
+                  @mouseenter="showPoolInfo = true"
+                  @mouseleave="showPoolInfo = false"
+                />
+              </span>
+              <span class="pool-modal-close" @click="showPoolImport = false">✕</span>
+            </div>
+            <WandWarsPoolImport
+              :character-images="characterImages"
+              :all-heroes="allHeroes"
+              @apply="handlePoolApply"
+              @cancel="showPoolImport = false"
+            />
+          </div>
+        </div>
 
-    <WandWarsMetaTeams
-      v-else
-      :category="activeTab"
-      :match-data="matchData"
-      :analysis-data="analysisData"
-      :character-images="characterImages"
-    />
+        <Teleport to="body">
+          <TooltipPopup
+            v-if="showPoolInfo && poolInfoEl?.$el"
+            :target-element="poolInfoEl.$el"
+            variant="detailed"
+            max-width="420px"
+          >
+            <template #content>
+              <div class="pool-info-tip">
+                <p
+                  v-for="(paragraph, idx) in i18n
+                    .t('wandwars.messages/tooltip-pool-info')
+                    .split('\n\n')"
+                  :key="idx"
+                >
+                  {{ paragraph }}
+                </p>
+              </div>
+            </template>
+          </TooltipPopup>
+        </Teleport>
+      </template>
+
+      <template #hero-adjustments>
+        <WandWarsHeroAdjustments :character-images="characterImages" />
+      </template>
+
+      <template #default>
+        <WandWarsMetaTeams
+          :category="activeTab as InsightCategory"
+          :match-data="matchData"
+          :analysis-data="analysisData"
+          :character-images="characterImages"
+        />
+      </template>
+    </TabView>
   </section>
 </template>
 
 <style scoped>
-.tabs {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  border-bottom: 2px solid var(--color-border-light);
-}
-
-.tab {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  background: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition:
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-@media (max-width: 768px) {
-  .tabs {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  .tab {
-    padding: var(--spacing-sm);
-    font-size: 0.85rem;
-  }
-}
-
-.tab.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 600;
-}
-
-.tab:hover:not(.active) {
-  color: var(--color-text-primary);
-}
-
 .pool-modal {
   position: fixed;
   inset: 0;

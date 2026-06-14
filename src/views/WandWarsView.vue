@@ -249,9 +249,9 @@ function handleExport() {
   background: #20232a;
 }
 
-/* WandWarsMain (left) is fluid; the aside (right) is fixed-width 740px.
+/* WandWarsMain (left) is fluid; the aside (right) is fixed-width 780px.
    Drafting and meta tables benefit from horizontal room; analysis cards
-   have natural max-widths. Stacks single-column below 1220px. The Hero
+   have natural max-widths. Stacks single-column below 1220px. The
    Adjustments tab hides the aside, leaving the lone fluid child to fill
    the row. */
 .wandwars-layout {
@@ -280,8 +280,8 @@ function handleExport() {
   .wandwars-layout > .wandwars-side {
     display: flex;
     flex-direction: column;
-    flex: 0 0 740px;
-    width: 740px;
+    flex: 0 0 780px;
+    width: 780px;
     max-height: 100vh;
   }
 
