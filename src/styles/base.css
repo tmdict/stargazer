@@ -173,6 +173,10 @@ main {
   border-radius: var(--radius-large);
   display: flex;
   flex-direction: column;
+  /* A TabView child reads these to bleed its strip to the surface edge, then
+     re-applies the canonical content padding. Unused when there's no TabView. */
+  --tabview-inset-y: 2em;
+  --tabview-inset-x: 2em;
 }
 
 @media (max-width: 768px) {

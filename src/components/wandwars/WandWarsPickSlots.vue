@@ -180,7 +180,9 @@ function draftOrderFor(side: PickSide, slot: number): number {
   margin-top: var(--spacing-lg);
 }
 
-@container (max-width: 450px) {
+/* Wrap before the row overflows its column; matches the tab strip's narrow
+   threshold (≈ the ~580px point where the single row no longer fits). */
+@container (max-width: 600px) {
   .pick-slots {
     flex-wrap: wrap;
     justify-content: center;
