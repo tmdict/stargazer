@@ -47,9 +47,7 @@
   --spacing-xl: 1.5rem;
   --spacing-2xl: 2rem;
 
-  /* Horizontal inset for the character-selection roster / tab content, shared by
-     TabView and the BottomSheet card so the left/right padding matches across
-     arena, skills, and guide. */
+  /* Shared horizontal inset for tab content and the BottomSheet roster. */
   --content-padding-x: var(--spacing-xl);
 
   /* Inter-section gap that tightens as viewports narrow. Pages opt in

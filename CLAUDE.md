@@ -5,11 +5,18 @@
 - Prioritize simplicity and readability
 - Use TypeScript with proper types (avoid `any` types)
 - Refactor repeated functionality (DRY principle)
-- Keep comments concise and focused on design concepts
-- Don't add comments if it just repeats a function name
 - Use functional and stateless approaches when possible
 - Test changes: `npm run lint` and `npm run type-check`
 - Update relevant architecture docs when making major changes
+
+### Comments
+
+Add a comment only when the code can't tell the story itself: a non-obvious mechanic, something that looks wrong but is intentional, a cross-file contract, or a real gotcha. If a competent reader could already know it from the code, omit it.
+
+- Navigation aids are welcome: a short file-level header (overall purpose/architecture), and section markers that group related code.
+- Don't narrate what the code already shows — a name, a type, or what the CSS/markup visibly does.
+- Capture the decision (the _why_), not the _what_, so a later edit doesn't undo it and reintroduce a bug.
+- Keep comments concise, neutral, and current-state: no editorializing, and no past-state or migration notes ("now", "previously", "replaces", "hoisted from", etc.).
 
 ## DOCUMENTATION
 
