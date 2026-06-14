@@ -3,21 +3,17 @@ import { computed, useSlots, watchEffect } from 'vue'
 
 import TabList, { type TabItem } from './TabList.vue'
 
-// TabList over a content region. Content comes from named slots keyed by
-// `tab.key`; with no tabs the default slot renders, so a page flips
-// tabbed/untabbed by adding or removing the tabs array.
+// Slots are named by tab.key; the default slot is the fallback for an unnamed
+// tab (and the whole body when there are no tabs).
 const {
   tabs = [],
   fill = false,
   eager = false,
 } = defineProps<{
-  // Omit or pass [] for the 0-tab case (strip hides, default slot renders).
   tabs?: TabItem[]
-  // Content flex-fills the host height and scrolls internally (arena roster,
-  // WandWars recommendations). false = content flows at its natural height.
+  // Content flex-fills the host and scrolls internally; false = flows at natural height.
   fill?: boolean
-  // Keep every panel mounted (v-show) so state/scroll persist across switches.
-  // false = mount only the active panel (v-if).
+  // Keep all panels mounted (v-show) to persist state/scroll; false = active only (v-if).
   eager?: boolean
 }>()
 
@@ -26,12 +22,11 @@ const active = defineModel<string>({ default: '' })
 const renderTabs = computed(() => tabs.filter((t) => !t.hidden))
 const hasTabs = computed(() => renderTabs.value.length > 0)
 
-// Dev-only guard: a typo'd or renamed key silently renders a blank panel.
+// A renamed/typo'd key would silently render a blank panel; warn in dev.
 const slots = useSlots()
 if (import.meta.env.DEV) {
   watchEffect(() => {
     for (const tab of renderTabs.value) {
-      // A tab may render via its own named slot or a shared default fallback.
       if (!slots[tab.key] && !slots.default) {
         console.warn(`[TabView] no content slot for tab "${tab.key}"`)
       }
@@ -56,8 +51,6 @@ if (import.meta.env.DEV) {
           </div>
         </template>
         <div v-else class="tab-pane">
-          <!-- The active tab's own slot, or the default slot as a shared fallback
-               (lets several tabs render one parameterized view). -->
           <slot v-if="$slots[active]" :name="active" :active />
           <slot v-else :active />
         </div>
@@ -69,10 +62,8 @@ if (import.meta.env.DEV) {
 
 <style scoped>
 .tab-view {
-  /* Escape the host surface's padding so the strip spans edge-to-edge; the
-     surface sets --tabview-inset-x/-y to its own padding (0 when it has none).
-     The content padding below is re-applied, so the inset is identical on every
-     surface regardless of the surface's own padding. */
+  /* Negative margin = the surface's own padding (via --tabview-inset-*), so the
+     strip bleeds to the surface edge; .tab-content re-applies its own inset. */
   margin: calc(-1 * var(--tabview-inset-y, 0px)) calc(-1 * var(--tabview-inset-x, 0px));
   display: flex;
   flex-direction: column;
@@ -85,13 +76,11 @@ if (import.meta.env.DEV) {
 }
 
 .tab-content {
-  /* Top/bottom roomy; left/right use the shared --content-padding-x token (also
-     on the BottomSheet card) so insets match across surfaces. */
+  /* Horizontal inset shared with the BottomSheet card (--content-padding-x). */
   padding: var(--spacing-2xl) var(--content-padding-x);
 }
 
-/* Fill: content fills the remaining height; the active pane and its slotted
-   panel manage their own internal scroll (panels differ in how they scroll). */
+/* Just the flex shell — each slotted panel owns its own internal scroll. */
 .tab-view.fill .tab-content {
   flex: 1;
   min-height: 0;
