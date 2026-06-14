@@ -7,6 +7,7 @@ import WandWarsRecordForm from './WandWarsRecordForm.vue'
 import WandWarsRecordsList from './WandWarsRecordsList.vue'
 import WandWarsTopTeams from './WandWarsTopTeams.vue'
 import FilterIcons from '@/components/ui/FilterIcons.vue'
+import TabView from '@/components/ui/TabView.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { BT_LOW_DATA_THRESHOLD } from '@/wandwars/constants'
@@ -43,11 +44,11 @@ const emit = defineEmits<{
 }>()
 
 const tabs = computed(() => [
-  { id: 'popular-pick', label: i18n.t('wandwars.popular-pick') },
-  { id: 'composite', label: joinLocale(i18n.t('wandwars.hero'), i18n.t('wandwars.synergy')) },
-  { id: 'bradley-terry', label: i18n.t('wandwars.team-power') },
-  { id: 'adaptive-ml', label: i18n.t('wandwars.adaptive-ml') },
-  { id: 'records', label: i18n.t('wandwars.records') },
+  { key: 'popular-pick', label: i18n.t('wandwars.popular-pick') },
+  { key: 'composite', label: joinLocale(i18n.t('wandwars.hero'), i18n.t('wandwars.synergy')) },
+  { key: 'bradley-terry', label: i18n.t('wandwars.team-power') },
+  { key: 'adaptive-ml', label: i18n.t('wandwars.adaptive-ml') },
+  { key: 'records', label: i18n.t('wandwars.records'), badge: props.records.length || undefined },
 ])
 
 const activeTab = ref('popular-pick')
@@ -260,178 +261,171 @@ const aggregatePrediction = computed(() => {
 </script>
 
 <template>
-  <div class="analysis ww-card">
-    <div class="tabs">
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        :class="['tab-btn', { active: activeTab === tab.id }]"
-        @click="activeTab = tab.id"
-      >
-        {{ tab.label }}
-        <span v-if="tab.id === 'records' && records.length > 0" class="tab-count">
-          {{ records.length }}
-        </span>
-      </button>
-    </div>
-
-    <!-- Records tab -->
-    <WandWarsRecordsList
-      v-if="activeTab === 'records'"
-      :records="records"
-      :character-images="characterImages"
-      class="tab-content"
-      @delete-record="(i) => emit('deleteRecord', i)"
-      @clear-records="emit('clearRecords')"
-      @export="emit('export')"
-      @import-records="(r) => emit('importRecords', r)"
-      @update-record="(i, changes) => emit('updateRecord', i, changes)"
-    />
-
-    <!-- Model tabs -->
-    <div v-else class="tab-content">
-      <div
-        v-if="activeTab === 'bradley-terry' && matchData.length < BT_LOW_DATA_THRESHOLD"
-        class="warning-banner"
-      >
-        {{ i18n.t('wandwars.messages/low-data-warning', { count: matchData.length }) }}
-      </div>
-
-      <WandWarsMatchupPrediction
-        :aggregate-prediction="aggregatePrediction"
-        :all-predictions="allPredictions"
-        :left-team="leftTeam"
-        :right-team="rightTeam"
-      />
-
-      <WandWarsRecordForm
-        v-if="aggregatePrediction"
-        :pick-state="pickState"
-        @submit="onRecordSubmit"
-      />
-
-      <!-- Recommendations while drafting -->
-      <template v-else>
-        <div class="recommend-header">
-          <div :class="['picking-indicator', effectivePickSide]">
-            {{ i18n.t('wandwars.recommending-for') }} <strong>{{ effectivePickSideLabel }}</strong>
-          </div>
-          <div class="lock-toggle">
-            <button
-              :class="['lock-btn', { active: lockedSide === 'left' }]"
-              @click="toggleLock('left')"
-              :title="i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.left') })"
-            >
-              <svg
-                v-if="lockedSide === 'left'"
-                class="lock-icon"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path
-                  d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
-                />
-              </svg>
-              {{ joinLocale(i18n.t('wandwars.left'), i18n.t('wandwars.team')) }}
-            </button>
-            <button
-              :class="['lock-btn', { active: lockedSide === 'right' }]"
-              @click="toggleLock('right')"
-              :title="i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.right') })"
-            >
-              <svg
-                v-if="lockedSide === 'right'"
-                class="lock-icon"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-              >
-                <path
-                  d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
-                />
-              </svg>
-              {{ joinLocale(i18n.t('wandwars.right'), i18n.t('wandwars.team')) }}
-            </button>
-          </div>
-        </div>
-
-        <WandWarsTopTeams
-          v-if="currentTeammates.length > 0"
-          :teammates="currentTeammates"
-          :exclude-heroes="topTeamsExcludeHeroes"
-          :matches="matchData"
+  <section class="section">
+    <TabView v-model="activeTab" :tabs="tabs" fill>
+      <template #records>
+        <WandWarsRecordsList
+          :records="records"
           :character-images="characterImages"
+          @delete-record="(i) => emit('deleteRecord', i)"
+          @clear-records="emit('clearRecords')"
+          @export="emit('export')"
+          @import-records="(r) => emit('importRecords', r)"
+          @update-record="(i, changes) => emit('updateRecord', i, changes)"
         />
-
-        <div v-if="recommendations.length > 0" class="filters-row">
-          <FilterIcons
-            v-model="recFactionFilter"
-            icon-prefix="faction"
-            :options="factionOptions"
-            :size="32"
-            :show-tooltip="false"
-            active-border-color="var(--color-primary)"
-          />
-          <FilterIcons
-            v-model="recClassFilter"
-            icon-prefix="class"
-            :options="classOptions"
-            :size="32"
-            :show-tooltip="false"
-            active-border-color="var(--color-primary)"
-          />
-          <FilterIcons
-            v-model="recDamageFilter"
-            icon-prefix="damage"
-            :options="damageOptions"
-            :size="32"
-            :show-tooltip="false"
-            active-border-color="var(--color-primary)"
-          />
-        </div>
-
-        <div v-if="recommendations.length === 0" class="empty-state">
-          {{ i18n.t('wandwars.messages/pick-heroes-prompt') }}
-        </div>
-
-        <div v-else-if="filteredRecommendations.length === 0" class="empty-state">
-          {{ i18n.t('wandwars.messages/no-recommendations') }}
-        </div>
-
-        <template v-else>
-          <div class="rec-sort-row">
-            <span class="rec-sort-label">{{ i18n.t('wandwars.sort-by') }}</span>
-            <button
-              v-for="opt in sortOptions"
-              :key="opt.key"
-              :class="['rec-sort-btn', { active: recSortKey === opt.key }]"
-              @click="toggleRecSort(opt.key)"
-            >
-              {{ opt.label
-              }}<span v-if="recSortKey === opt.key" class="sort-arrow">{{
-                recSortDir === 'desc' ? '▼' : '▲'
-              }}</span>
-            </button>
-          </div>
-
-          <div class="recommendations">
-            <WandWarsRecommendation
-              v-for="rec in sortedFilteredRecommendations"
-              :key="rec.hero"
-              :recommendation="rec"
-              :model-id="activeTab"
-              :character-images="characterImages"
-              :counter-indicators="counterIndicatorsByHero.get(rec.hero) ?? []"
-              :team-counter="teamCounterByHero.get(rec.hero) ?? null"
-              :opponent-count="opponentTeam.length"
-              :left-team="leftTeam"
-              :right-team="rightTeam"
-              :sort-key="recSortKey"
-            />
-          </div>
-        </template>
       </template>
-    </div>
-  </div>
+
+      <template #default>
+        <div class="analysis-scroll">
+          <div
+            v-if="activeTab === 'bradley-terry' && matchData.length < BT_LOW_DATA_THRESHOLD"
+            class="warning-banner"
+          >
+            {{ i18n.t('wandwars.messages/low-data-warning', { count: matchData.length }) }}
+          </div>
+
+          <WandWarsMatchupPrediction
+            :aggregate-prediction="aggregatePrediction"
+            :all-predictions="allPredictions"
+            :left-team="leftTeam"
+            :right-team="rightTeam"
+          />
+
+          <WandWarsRecordForm
+            v-if="aggregatePrediction"
+            :pick-state="pickState"
+            @submit="onRecordSubmit"
+          />
+
+          <!-- Recommendations while drafting -->
+          <template v-else>
+            <div class="recommend-header">
+              <div :class="['picking-indicator', effectivePickSide]">
+                {{ i18n.t('wandwars.recommending-for') }}
+                <strong>{{ effectivePickSideLabel }}</strong>
+              </div>
+              <div class="lock-toggle">
+                <button
+                  :class="['lock-btn', { active: lockedSide === 'left' }]"
+                  @click="toggleLock('left')"
+                  :title="
+                    i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.left') })
+                  "
+                >
+                  <svg
+                    v-if="lockedSide === 'left'"
+                    class="lock-icon"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
+                    />
+                  </svg>
+                  {{ joinLocale(i18n.t('wandwars.left'), i18n.t('wandwars.team')) }}
+                </button>
+                <button
+                  :class="['lock-btn', { active: lockedSide === 'right' }]"
+                  @click="toggleLock('right')"
+                  :title="
+                    i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.right') })
+                  "
+                >
+                  <svg
+                    v-if="lockedSide === 'right'"
+                    class="lock-icon"
+                    viewBox="0 0 16 16"
+                    fill="currentColor"
+                  >
+                    <path
+                      d="M12 7h-1V5a3 3 0 0 0-6 0v2H4a1 1 0 0 0-1 1v6a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1V8a1 1 0 0 0-1-1zM7 5a1 1 0 0 1 2 0v2H7V5z"
+                    />
+                  </svg>
+                  {{ joinLocale(i18n.t('wandwars.right'), i18n.t('wandwars.team')) }}
+                </button>
+              </div>
+            </div>
+
+            <WandWarsTopTeams
+              v-if="currentTeammates.length > 0"
+              :teammates="currentTeammates"
+              :exclude-heroes="topTeamsExcludeHeroes"
+              :matches="matchData"
+              :character-images="characterImages"
+            />
+
+            <div v-if="recommendations.length > 0" class="filters-row">
+              <FilterIcons
+                v-model="recFactionFilter"
+                icon-prefix="faction"
+                :options="factionOptions"
+                :size="32"
+                :show-tooltip="false"
+                active-border-color="var(--color-primary)"
+              />
+              <FilterIcons
+                v-model="recClassFilter"
+                icon-prefix="class"
+                :options="classOptions"
+                :size="32"
+                :show-tooltip="false"
+                active-border-color="var(--color-primary)"
+              />
+              <FilterIcons
+                v-model="recDamageFilter"
+                icon-prefix="damage"
+                :options="damageOptions"
+                :size="32"
+                :show-tooltip="false"
+                active-border-color="var(--color-primary)"
+              />
+            </div>
+
+            <div v-if="recommendations.length === 0" class="empty-state">
+              {{ i18n.t('wandwars.messages/pick-heroes-prompt') }}
+            </div>
+
+            <div v-else-if="filteredRecommendations.length === 0" class="empty-state">
+              {{ i18n.t('wandwars.messages/no-recommendations') }}
+            </div>
+
+            <template v-else>
+              <div class="rec-sort-row">
+                <span class="rec-sort-label">{{ i18n.t('wandwars.sort-by') }}</span>
+                <button
+                  v-for="opt in sortOptions"
+                  :key="opt.key"
+                  :class="['rec-sort-btn', { active: recSortKey === opt.key }]"
+                  @click="toggleRecSort(opt.key)"
+                >
+                  {{ opt.label
+                  }}<span v-if="recSortKey === opt.key" class="sort-arrow">{{
+                    recSortDir === 'desc' ? '▼' : '▲'
+                  }}</span>
+                </button>
+              </div>
+
+              <div class="recommendations">
+                <WandWarsRecommendation
+                  v-for="rec in sortedFilteredRecommendations"
+                  :key="rec.hero"
+                  :recommendation="rec"
+                  :model-id="activeTab"
+                  :character-images="characterImages"
+                  :counter-indicators="counterIndicatorsByHero.get(rec.hero) ?? []"
+                  :team-counter="teamCounterByHero.get(rec.hero) ?? null"
+                  :opponent-count="opponentTeam.length"
+                  :left-team="leftTeam"
+                  :right-team="rightTeam"
+                  :sort-key="recSortKey"
+                />
+              </div>
+            </template>
+          </template>
+        </div>
+      </template>
+    </TabView>
+  </section>
 </template>
 
 <style scoped>
@@ -487,90 +481,16 @@ const aggregatePrediction = computed(() => {
   font-size: 0.7em;
 }
 
-/* Flex layout for pinned tabs + scrollable tab-content.
-   Card chrome comes from the shared .ww-card class (base.css). */
-.analysis {
-  display: flex;
-  flex-direction: column;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.tab-content {
+/* The active panel scrolls inside TabView's fill shell; the matchup view flows
+   instead (paired with the column max-height release in WandWarsView.vue). */
+.analysis-scroll {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
 }
 
-/* Match-prediction view should flow naturally — matchup cards + record
-   form stay fully visible, no inner scrollbar. Paired with the column
-   max-height release in WandWarsView.vue via :has(.matchup-section). */
-.analysis:has(.matchup-section) {
-  overflow: visible;
-}
-
-.analysis:has(.matchup-section) .tab-content {
+.analysis-scroll:has(.matchup-section) {
   overflow-y: visible;
-}
-
-.tabs {
-  display: flex;
-  gap: var(--spacing-sm);
-  margin-bottom: var(--spacing-md);
-  border-bottom: 2px solid var(--color-border-light);
-}
-
-.tab-btn {
-  flex: 0 0 auto;
-  white-space: nowrap;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border: none;
-  background: none;
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  font-size: 0.9rem;
-  border-bottom: 2px solid transparent;
-  margin-bottom: -2px;
-  transition:
-    color var(--transition-fast),
-    border-color var(--transition-fast);
-}
-
-@media (max-width: 768px) {
-  .tabs {
-    overflow-x: auto;
-    overflow-y: hidden;
-  }
-
-  .tab-btn {
-    padding: var(--spacing-sm);
-    font-size: 0.85rem;
-  }
-}
-
-.tab-btn.active {
-  color: var(--color-primary);
-  border-bottom-color: var(--color-primary);
-  font-weight: 600;
-}
-
-.tab-btn:hover:not(.active) {
-  color: var(--color-text-primary);
-}
-
-.tab-count {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 18px;
-  height: 18px;
-  padding: 0 4px;
-  border-radius: 9px;
-  background: var(--color-primary);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 700;
-  margin-left: 4px;
 }
 
 .recommend-header {

@@ -388,8 +388,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
 </template>
 
 <style scoped>
-/* Action buttons + import status stay pinned at the top, only the list itself scrolls.
-   Component root replaces the parent's old `.tab-content:has(.records-section)` rule. */
+/* Action buttons + import status stay pinned; only the list itself scrolls. */
 .records-tab {
   overflow-y: hidden;
   display: flex;

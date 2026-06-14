@@ -1,23 +1,28 @@
-<script setup lang="ts">
-// Shared tab strip used by all tabbed surfaces (arena, teams, …) so the tabs
-// look identical everywhere. Renders only the buttons row; callers wrap it with
-// their own content panel. Per-tab visibility (`hidden`, `hideMobile`) is data.
-interface Tab {
+<script lang="ts">
+// `key` is the stable id, the v-model value, and the content slot name in TabView.
+export interface TabItem {
   key: string
   label: string
+  badge?: number | string
   hidden?: boolean
   hideMobile?: boolean
 }
+</script>
 
-defineProps<{
-  tabs: Tab[]
-}>()
+<script setup lang="ts">
+import { computed } from 'vue'
+
+// Single source of tab-strip styling. The strip auto-hides at 0-1 visible tabs
+// (the no-tabs page case).
+const { tabs } = defineProps<{ tabs: TabItem[] }>()
 
 const active = defineModel<string>({ required: true })
+
+const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
 </script>
 
 <template>
-  <div class="tab-buttons" role="tablist">
+  <div v-if="showStrip" class="tab-buttons" role="tablist">
     <template v-for="tab in tabs" :key="tab.key">
       <button
         v-if="!tab.hidden"
@@ -28,6 +33,7 @@ const active = defineModel<string>({ required: true })
         @click="active = tab.key"
       >
         {{ tab.label }}
+        <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
       </button>
     </template>
   </div>
@@ -36,6 +42,9 @@ const active = defineModel<string>({ required: true })
 <style scoped>
 .tab-buttons {
   display: flex;
+  /* Wrap instead of overflowing when the strip is wider than its column; the
+     container/media rules below refine the wrapped row. */
+  flex-wrap: wrap;
   justify-content: flex-start;
   background: var(--color-bg-secondary);
   border-radius: var(--radius-large) var(--radius-large) 0 0;
@@ -48,6 +57,10 @@ const active = defineModel<string>({ required: true })
 }
 
 .tab-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
   background: transparent;
   color: var(--color-text-secondary);
   border: none;
@@ -86,6 +99,20 @@ const active = defineModel<string>({ required: true })
   right: 0;
   height: 3px;
   background: var(--color-primary);
+}
+
+.tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
 }
 
 /* 1280 is the canonical desktop-chrome boundary: max-width rules tune chrome
@@ -133,8 +160,8 @@ const active = defineModel<string>({ required: true })
   }
 
   .tab-btn {
-    /* Trim vertical padding and the inherited 1.6 line-height so the tab bar
-       stays compact where space is tight (mobile sheet / narrow column). */
+    /* Trim vertical padding and the inherited line-height so the tab bar stays
+       compact where space is tight (mobile sheet / narrow column). */
     padding: var(--spacing-sm) var(--spacing-lg);
     font-size: 0.9rem;
     line-height: 1.2;
