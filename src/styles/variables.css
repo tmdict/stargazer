@@ -50,6 +50,9 @@
   /* Shared horizontal inset for tab content and the BottomSheet roster. */
   --content-padding-x: var(--spacing-xl);
 
+  /* Tab-strip label size (tabs + arena dropdown); smaller at the chrome extremes. */
+  --tab-font-size: 0.85rem;
+
   /* Inter-section gap that tightens as viewports narrow. Pages opt in
      via `gap: var(--stack-gap)` on their layout container. */
   --stack-gap: var(--spacing-xl);
@@ -89,5 +92,12 @@
 @media (max-width: 480px) {
   :root {
     --stack-gap: var(--spacing-xs);
+    --tab-font-size: 0.8rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  :root {
+    --tab-font-size: 0.8rem;
   }
 }
