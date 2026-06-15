@@ -68,13 +68,13 @@ onUnmounted(cancelClose)
 </template>
 
 <style scoped>
-/* Desktop-only quick switcher; below 1280px the Map Editor tab is the arena picker. */
+/* Desktop-only quick switcher; below 1320px the Map Editor tab is the arena picker. */
 .arena-dropdown {
   position: relative;
   display: none;
 }
 
-@media (min-width: 1280px) {
+@media (min-width: 1320px) {
   .arena-dropdown {
     display: block;
   }
