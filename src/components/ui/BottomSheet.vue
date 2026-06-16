@@ -13,6 +13,7 @@ const {
   peek = 56,
   expandedFraction = 0.62,
   initialExpanded = false,
+  desktopRail = true,
 } = defineProps<{
   /** Collapsed (peek) visible height on mobile, in px. */
   peek?: number
@@ -20,6 +21,12 @@ const {
   expandedFraction?: number
   /** Start expanded (vs. peeked) on first mobile mount. */
   initialExpanded?: boolean
+  /**
+   * Wide screens: height-cap it as a side column (the two-column Arena layout, so
+   * long content scrolls within it). Off = a full-width card that flows in the
+   * page below the grid (the single-column 5 v 5 layout). Mobile is a sheet either way.
+   */
+  desktopRail?: boolean
 }>()
 
 // Two-way so the page can open/collapse it (e.g. on a grid-cell tap) while the
@@ -90,7 +97,12 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
   <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
   <div
     class="bottom-sheet"
-    :class="{ 'is-dragging': dragging, 'is-snapping': snapping, 'is-collapsed': !expanded }"
+    :class="{
+      'is-dragging': dragging,
+      'is-snapping': snapping,
+      'is-collapsed': !expanded,
+      'desktop-rail': desktopRail,
+    }"
     :style="[sheetVars, sheetStyle]"
     @click.capture="onCollapsedClickCapture"
   >
@@ -144,12 +156,13 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
   display: contents;
 }
 
-/* Wide screens: the column is height-capped so long content scrolls within it
-   rather than stretching the page. container queries let the slotted content
-   respond to the column's real width. The content flex-fills via its own scoped
-   styles (it owns its scroll, which differs per content). */
+/* Wide screens (side-column use only): height-cap the column so long content
+   scrolls within it rather than stretching the page. container queries let the
+   slotted content respond to the column's real width. The content flex-fills via
+   its own scoped styles (it owns its scroll, which differs per content). Without
+   desktopRail the sheet stays a full-width card that flows in the page. */
 @media (min-width: 1220px) {
-  .bottom-sheet {
+  .bottom-sheet.desktop-rail {
     flex: 1 1 auto;
     min-width: 0;
     max-height: 100vh;

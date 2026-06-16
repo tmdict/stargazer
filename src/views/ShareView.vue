@@ -11,6 +11,7 @@ import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useToast } from '@/composables/useToast'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
 import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
@@ -18,6 +19,10 @@ import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
 import '@/styles/modal.css'
 
 const gridStore = useGridStore()
+const grids = useGrids()
+if (grids.contexts.length !== 1) grids.setGridCount(1)
+grids.hexSizeMode = 'breakpoint'
+const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
 const urlStateStore = useUrlStateStore()
@@ -114,6 +119,7 @@ const homeLink = computed(() => {
       <!-- Grid Container -->
       <DragDropProvider>
         <GridContainer
+          :context="activeContext"
           :characters="gameDataStore.characters"
           :show-arrows
           :show-hex-ids

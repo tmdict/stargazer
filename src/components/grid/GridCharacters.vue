@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import { useDragDrop } from '@/composables/useDragDrop'
+import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacterTeam } from '@/lib/characters/character'
@@ -9,10 +10,7 @@ import { isPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
-import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
-import { useGridStore } from '@/stores/grid'
-import { useSkillStore } from '@/stores/skill'
 import { phantimalImageSources } from '@/utils/artifactImage'
 
 interface Props {
@@ -21,25 +19,25 @@ interface Props {
   scaleY: number
   isMapEditorMode: boolean
   readonly?: boolean
+  // Force tap-to-lift vs desktop click-to-remove; omit to derive from grid scale.
+  tapMode?: boolean
 }
 
 const props = defineProps<Props>()
 
-const gridStore = useGridStore()
-const characterStore = useCharacterStore()
-const skillStore = useSkillStore()
+const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const gridEvents = useGridEvents()
 
 const { startDrag, endDrag } = useDragDrop()
 
-const { liftedHexId, setLiftedHex, clearLiftedHex } = useSelectionState()
+const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelectionState()
 
 const getCharacterName = (characterId: number, hexId: number): string => {
   // Check if this character has a custom image modifier
-  const team = getCharacterTeam(gridStore._getGrid(), hexId)
+  const team = getCharacterTeam(ctx.grid, hexId)
   if (team) {
-    const customImageName = skillStore.getImageModifierForCharacter(characterId, team)
+    const customImageName = ctx.getImageModifierForCharacter(characterId, team)
     if (customImageName) {
       return customImageName
     }
@@ -88,7 +86,7 @@ const BASE_CHARACTER_SIZE = 60
 const BASE_CHARACTER_OFFSET = 30
 
 const characterDimensions = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   return {
     size: BASE_CHARACTER_SIZE * scale,
     offset: BASE_CHARACTER_OFFSET * scale,
@@ -99,11 +97,11 @@ const characterDimensions = computed(() => {
 })
 
 const getSkillBorderStyle = (characterId: number, hexId: number) => {
-  const team = getCharacterTeam(gridStore._getGrid(), hexId)
+  const team = getCharacterTeam(ctx.grid, hexId)
   if (!team) return {}
 
   // Check if this character has a color modifier (either main character with skill or companion)
-  const borderColor = skillStore.getColorModifierForCharacter(characterId, team)
+  const borderColor = ctx.getColorModifierForCharacter(characterId, team)
   if (borderColor) {
     return { borderColor }
   }
@@ -112,7 +110,7 @@ const getSkillBorderStyle = (characterId: number, hexId: number) => {
 
 const getCharacterStyle = (hexId: number) => {
   // Use getHexPosition to get SVG coordinates, not screen coordinates
-  const position = gridStore.getHexPosition(hexId)
+  const position = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
   const { size, offset, borderWidth } = characterDimensions.value
 
   // Base positioning
@@ -126,7 +124,7 @@ const getCharacterStyle = (hexId: number) => {
   }
 
   if (props.showPerspective) {
-    const verticalOffset = -70 * gridStore.getHexScale()
+    const verticalOffset = -70 * ctx.hexScale
     baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY})`
     baseStyle.transformOrigin = 'center'
   }
@@ -142,7 +140,11 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   if (isPhantimalId(characterId)) {
     const phantimal = gameDataStore.getPhantimalById(characterId)
     if (!phantimal) return
-    const dragData = { id: characterId, sourceHexId: hexId } as unknown as CharacterType
+    const dragData = {
+      id: characterId,
+      sourceHexId: hexId,
+      sourceGridId: ctx.id,
+    } as unknown as CharacterType
     startDrag(event, dragData, characterId, phantimalImageSources(phantimal.name).png)
     return
   }
@@ -155,7 +157,12 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
 
   // Add sourceHexId to differentiate from character selection drags
   // For companions, we pass the companion ID so the system knows it's a companion
-  const characterWithSource = { ...character, id: characterId, sourceHexId: hexId }
+  const characterWithSource = {
+    ...character,
+    id: characterId,
+    sourceHexId: hexId,
+    sourceGridId: ctx.id,
+  }
   const characterName = getCharacterName(characterId, hexId)
 
   startDrag(event, characterWithSource, characterId, gameDataStore.getCharacterImage(characterName))
@@ -171,20 +178,26 @@ const handleClick = (hexId: number) => {
   // Mobile/tablet: tap-lift / tap-drop. Tapping a hero lifts it for moving;
   // tapping it again removes it; tapping a different hero while one is lifted
   // swaps the two. (Desktop moves via drag, so a tap there just removes.)
-  if (gridStore.getHexScale() < 1) {
+  if (props.tapMode ?? ctx.hexScale < 1) {
+    // A lift is scoped to its board; tapping a hero on a different board starts a
+    // fresh lift there (cross-board moves use drag).
+    if (liftedHexId.value !== null && liftedGridId.value !== ctx.id) {
+      setLiftedHex(hexId, ctx.id)
+      return
+    }
     if (liftedHexId.value === hexId) {
-      characterStore.removeCharacterFromHex(hexId)
+      ctx.remove(hexId)
       clearLiftedHex()
     } else if (liftedHexId.value !== null) {
-      characterStore.swapCharacters(liftedHexId.value, hexId)
+      ctx.swap(liftedHexId.value, hexId)
       clearLiftedHex()
     } else {
-      setLiftedHex(hexId)
+      setLiftedHex(hexId, ctx.id)
     }
     return
   }
 
-  characterStore.removeCharacterFromHex(hexId)
+  ctx.remove(hexId)
 }
 
 // Handle mouse hover to trigger tile hover effect
@@ -202,11 +215,11 @@ const handleMouseLeave = (hexId: number) => {
 
 // In team view, only render characters on the ally team.
 const visiblePlacements = computed(() => {
-  const all = characterStore.characterPlacements
-  if (!gridStore.teamView) return all
+  const all = ctx.placements
+  if (!ctx.teamView) return all
   const filtered = new Map<number, number>()
   for (const [hexId, characterId] of all) {
-    if (getCharacterTeam(gridStore._getGrid(), hexId) === Team.ALLY) {
+    if (getCharacterTeam(ctx.grid, hexId) === Team.ALLY) {
       filtered.set(hexId, characterId)
     }
   }

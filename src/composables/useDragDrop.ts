@@ -9,7 +9,7 @@
  * no matter which component starts or ends the drag.
  */
 
-import { inject, provide, ref, type InjectionKey, type Ref } from 'vue'
+import { inject, provide, ref, type InjectionKey } from 'vue'
 
 import type { CharacterType } from '@/lib/types/character'
 import { useGridStore } from '@/stores/grid'
@@ -37,9 +37,13 @@ const dragPreviewPosition = ref({ x: 0, y: 0 })
 const dropHandled = ref(false)
 
 const hoveredHexId = ref<number | null>(null)
+// Board under the pointer during a drag; pairs with hoveredHexId so each board
+// only reacts to a hover on its own cells.
+const hoveredGridId = ref<number | null>(null)
 // Hex that received the last drop — consumed (read + cleared) by GridTiles to
 // restore the hover highlight once its post-drag grace period ends.
 const lastDropHexId = ref<number | null>(null)
+const lastDropGridId = ref<number | null>(null)
 
 const updateDragPosition = (x: number, y: number) => {
   // Get the current grid scale to adjust preview offset
@@ -76,7 +80,9 @@ const endDrag = (event: DragEvent) => {
 
   // Hand the drop target to the grid for the post-drag hover highlight
   lastDropHexId.value = hoveredHexId.value
+  lastDropGridId.value = hoveredGridId.value
   hoveredHexId.value = null
+  hoveredGridId.value = null
 
   // Reset visual feedback
   if (event.target instanceof HTMLElement) {
@@ -168,9 +174,11 @@ const hasCharacterData = (event: DragEvent): boolean => {
   return event.dataTransfer?.types.includes(CHARACTER_MIME_TYPE) || false
 }
 
-// Set the hovered hex ID (called by position-based hex detection)
-const setHoveredHex = (hexId: number | null) => {
+// Set the hovered hex (and its board) from position-based detection or a tile's
+// own dragover. gridId is null when the pointer is off every board.
+const setHoveredHex = (hexId: number | null, gridId: number | null = null) => {
   hoveredHexId.value = hexId
+  hoveredGridId.value = gridId
 }
 
 const setDropHandled = (handled: boolean) => {
@@ -185,7 +193,9 @@ export const useDragDrop = () => {
     draggedImageSrc,
     dragPreviewPosition,
     hoveredHexId,
+    hoveredGridId,
     lastDropHexId,
+    lastDropGridId,
     dropHandled,
 
     // Actions
@@ -212,34 +222,44 @@ export const useDragDrop = () => {
 export type HexDetector = (x: number, y: number) => number | null
 export type DropHandler = (event: DragEvent) => void
 
+// Each board registers under its own id so multiple boards coexist; the provider
+// probes every detector to find which board (and hex) the pointer is over.
 export interface DragDropRegistration {
-  registerHexDetector: (detector: HexDetector) => void
-  registerDropHandler: (handler: DropHandler) => void
+  registerHexDetector: (gridId: number, detector: HexDetector) => void
+  unregisterHexDetector: (gridId: number) => void
+  registerDropHandler: (gridId: number, handler: DropHandler) => void
+  unregisterDropHandler: (gridId: number) => void
 }
 
 const DragDropRegistrationKey: InjectionKey<DragDropRegistration> = Symbol('dragDropRegistration')
 
 /**
  * Called by DragDropProvider: provides the registration API to descendants and
- * returns the slots its own document listeners read.
+ * returns the per-board maps its own document listeners read.
  */
 export function provideDragDropRegistration(): {
-  hexDetector: Ref<HexDetector | null>
-  dropHandler: Ref<DropHandler | null>
+  detectors: Map<number, HexDetector>
+  dropHandlers: Map<number, DropHandler>
 } {
-  const hexDetector = ref<HexDetector | null>(null)
-  const dropHandler = ref<DropHandler | null>(null)
+  const detectors = new Map<number, HexDetector>()
+  const dropHandlers = new Map<number, DropHandler>()
 
   provide(DragDropRegistrationKey, {
-    registerHexDetector: (detector) => {
-      hexDetector.value = detector
+    registerHexDetector: (gridId, detector) => {
+      detectors.set(gridId, detector)
     },
-    registerDropHandler: (handler) => {
-      dropHandler.value = handler
+    unregisterHexDetector: (gridId) => {
+      detectors.delete(gridId)
+    },
+    registerDropHandler: (gridId, handler) => {
+      dropHandlers.set(gridId, handler)
+    },
+    unregisterDropHandler: (gridId) => {
+      dropHandlers.delete(gridId)
     },
   })
 
-  return { hexDetector, dropHandler }
+  return { detectors, dropHandlers }
 }
 
 export function useDragDropRegistration(): DragDropRegistration {

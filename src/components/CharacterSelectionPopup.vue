@@ -10,6 +10,7 @@ import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -27,17 +28,16 @@ const emit = defineEmits<{
 
 const characterStore = useCharacterStore()
 const gridStore = useGridStore()
+const grids = useGrids()
 
 const team = computed(() => getTeamFromTileState(gridStore.getTile(props.hex.getId()).state))
 
-// Heroes not already placed on this tile's team.
+// Heroes not already on this team on any board (page-wide uniqueness; on the
+// single Arena board this is just the one board).
 const availableCharacters = computed(() => {
-  if (!team.value) return []
-  const placedIds = characterStore
-    .getTilesWithCharacters()
-    .filter((tile) => tile.team === team.value)
-    .map((tile) => tile.characterId)
-  return props.characters.filter((char) => !placedIds.includes(char.id))
+  const t = team.value
+  if (!t) return []
+  return props.characters.filter((char) => !grids.isUsed(char.id, t))
 })
 
 // Match the main roster's order (CharacterSelection): canonical faction order, then id.
@@ -59,9 +59,10 @@ const filteredCharacters = computed(() =>
 )
 
 function handleSelect(character: CharacterType) {
-  if (!team.value) return
-  if (!canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, team.value)) return
-  if (characterStore.placeCharacterOnHex(props.hex.getId(), character.id, team.value)) {
+  const t = team.value
+  if (!t || grids.isUsed(character.id, t)) return
+  if (!canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, t)) return
+  if (characterStore.placeCharacterOnHex(props.hex.getId(), character.id, t)) {
     emit('close')
   }
 }
