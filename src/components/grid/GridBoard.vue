@@ -75,9 +75,12 @@ const isActive = computed(() => grids.activeId === context.id)
   background: var(--color-bg-light-gray);
 }
 
-/* Image export captures the boards alone: drop the active/hover border + tint so
-   they don't bleed into the picture. */
-:global(.is-capturing) .grid-board {
+/* Image export captures the boards alone: drop the board chrome (active ring, hover
+   tint) so it doesn't bleed into the picture. `.grid-board.active` is matched
+   explicitly so this outranks the active-border rule; at equal specificity the winner
+   falls back to source order, which Vue's :global emission doesn't guarantee. */
+:global(.is-capturing) .grid-board,
+:global(.is-capturing) .grid-board.active {
   border-color: transparent;
   background: transparent;
   transition: none;

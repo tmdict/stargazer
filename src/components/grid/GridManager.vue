@@ -269,10 +269,11 @@ defineExpose({
       :readonly
     />
 
-    <!-- Artifact layer (behind characters); enemy artifact is hidden in team view -->
+    <!-- Artifact layer (behind characters). Team-view hiding and invert-aware
+         front/back are handled inside GridArtifacts. -->
     <GridArtifacts
       :ally-artifact-id="ctx.artifacts.ally"
-      :enemy-artifact-id="ctx.teamView ? null : ctx.artifacts.enemy"
+      :enemy-artifact-id="ctx.artifacts.enemy"
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"

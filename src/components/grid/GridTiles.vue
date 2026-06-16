@@ -88,7 +88,7 @@ const textTransform = (hex: Hex) => {
 
 const getHexFill = (hex: Hex) => {
   const state = ctx.grid.getTile(hex).state
-  const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
+  const displayState = ctx.inverted ? getInvertedState(state) : state
   return getTileFillColor(displayState) || HEX_FILL_COLOR
 }
 

@@ -17,6 +17,8 @@ const showHexIds = defineModel<boolean>('showHexIds', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills')
 const teamView = defineModel<boolean>('teamView')
+// Boards-layout toggle, bound only by the 5 v 5 page (gated by showWrapToggle).
+const wrap = defineModel<boolean>('wrap')
 
 defineProps<{
   // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
@@ -26,6 +28,8 @@ defineProps<{
   // Lay every control out in one wrapping row (the wide 5 v 5 page) instead of
   // the default two stacked rows.
   singleRow?: boolean
+  // Shows the "Wrap" boards-layout toggle (5 v 5 only); the Arena never renders it.
+  showWrapToggle?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -45,6 +49,10 @@ const flatView = computed({
   <div class="grid-controls" :class="{ 'single-row': singleRow }">
     <!-- Row 1: grid display toggles -->
     <div class="controls-row">
+      <label v-if="showWrapToggle" class="grid-toggle-btn" :class="{ active: wrap }">
+        <input type="checkbox" v-model="wrap" class="grid-toggle-checkbox" />
+        <span class="grid-toggle-text">{{ i18n.t('app.wrap') }}</span>
+      </label>
       <label class="grid-toggle-btn" :class="{ active: flatView }">
         <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>

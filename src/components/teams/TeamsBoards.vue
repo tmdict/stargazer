@@ -3,6 +3,8 @@
    of five boards. It's the #fiveVFive panel of TeamsView's outer TabView; the tab
    strip and the roster live in TeamsView. Boards bind to their own context. */
 
+import { ref } from 'vue'
+
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import type { CharacterType } from '@/lib/types/character'
@@ -24,12 +26,18 @@ const showSkills = defineModel<boolean>('showSkills', { required: true })
 const emit = defineEmits<{ copyLink: []; copyImage: []; download: [] }>()
 
 const grids = useGrids()
+
+// "Wrap" boards layout (3-2 over two rows vs one row). Session-local and Teams-only:
+// not a display flag, so it's never serialized, persisted, or restored.
+const wrapBoards = ref(false)
 </script>
 
 <template>
   <div class="teams-boards">
     <GridControls
       :single-row="true"
+      :show-wrap-toggle="true"
+      v-model:wrap="wrapBoards"
       v-model:show-arrows="showArrows"
       v-model:show-hex-ids="showHexIds"
       v-model:show-perspective="showPerspective"
@@ -42,7 +50,7 @@ const grids = useGrids()
 
     <div v-scroll-chain.horizontal class="boards">
       <!-- .boards-track is the image-export capture root (see TeamsView's boardCapture). -->
-      <div class="boards-track">
+      <div class="boards-track" :class="{ wrap: wrapBoards }">
         <GridBoard
           v-for="ctx in grids.contexts"
           :key="ctx.id"
@@ -82,5 +90,22 @@ const grids = useGrids()
   display: flex;
   gap: var(--spacing-md);
   flex: 0 0 auto;
+}
+
+/* "Wrap" layout: the five boards as 3 then 2 over two rows. Board size and the
+   horizontal scroll are unchanged; only the arrangement differs, and the capture
+   root stays this element so Copy/Download still include all five. */
+.boards-track.wrap {
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
+  justify-content: center;
+}
+
+/* Center the second row (boards 4-5) under the three above. translateX(50%) is half
+   a board; with half the gap that is exactly half a column, the shift that centers
+   two boards beneath three. */
+.boards-track.wrap > :nth-child(4),
+.boards-track.wrap > :nth-child(5) {
+  transform: translateX(calc(50% + var(--spacing-md) / 2));
 }
 </style>
