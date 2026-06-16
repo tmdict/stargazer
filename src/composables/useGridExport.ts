@@ -6,6 +6,11 @@ import { useToast } from './useToast'
 interface ExportOptions {
   showPerspective: boolean
   perspectiveCompression?: number
+  // Element to capture; defaults to the single grid's perspective container.
+  // 5 v 5 passes the boards row to capture all five at once.
+  target?: string
+  // html-to-image node filter (return false to drop a node from the capture).
+  filter?: (node: HTMLElement) => boolean
 }
 
 export function useGridExport() {
@@ -18,25 +23,34 @@ export function useGridExport() {
   const captureGrid = async (options: ExportOptions): Promise<string> => {
     const { toPng } = await import('html-to-image')
 
-    // Get the perspective container to capture all transforms
-    const containerElement = document.querySelector<HTMLElement>('.perspective-container')
+    // Get the capture target (default: the single grid's perspective container).
+    const selector = options.target ?? '.perspective-container'
+    const containerElement = document.querySelector<HTMLElement>(selector)
     if (!containerElement) {
-      throw new Error('Perspective container not found')
+      throw new Error(`Capture target not found: ${selector}`)
     }
 
-    // Generate PNG from the perspective container (includes all transforms)
-    let dataUrl = await toPng(containerElement, {
-      quality: 1.0,
-      pixelRatio: 2, // Higher quality export
-      backgroundColor: 'transparent', // Transparent background
-    })
+    // Mark the capture so components can drop interactive-only chrome from the
+    // exported image (e.g. the 5 v 5 active-board ring / hover tint).
+    containerElement.classList.add('is-capturing')
+    try {
+      // Generate PNG from the target (includes all transforms)
+      let dataUrl = await toPng(containerElement, {
+        quality: 1.0,
+        pixelRatio: 2, // Higher quality export
+        backgroundColor: 'transparent', // Transparent background
+        filter: options.filter,
+      })
 
-    // If in perspective mode, crop the image to remove empty space
-    if (options.showPerspective) {
-      dataUrl = await cropPerspectiveImage(dataUrl, options.perspectiveCompression ?? 0.55)
+      // If in perspective mode, crop the image to remove empty space
+      if (options.showPerspective) {
+        dataUrl = await cropPerspectiveImage(dataUrl, options.perspectiveCompression ?? 0.55)
+      }
+
+      return dataUrl
+    } finally {
+      containerElement.classList.remove('is-capturing')
     }
-
-    return dataUrl
   }
 
   /**

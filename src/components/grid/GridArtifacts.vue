@@ -3,12 +3,11 @@ import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
+import { useGridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
-import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
-import { useGridStore } from '@/stores/grid'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 
 const props = defineProps<{
@@ -18,19 +17,24 @@ const props = defineProps<{
   scaleY?: number
   readonly?: boolean
   isMapEditorMode?: boolean
+  // Force tap-to-sheet vs the desktop popup; omit to derive from grid scale.
+  tapMode?: boolean
 }>()
 
-const artifactStore = useArtifactStore()
+const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
-const gridStore = useGridStore()
 const { handleTeamChange, requestTab } = useSelectionState()
+
+// This board's host-cell SVG, used to anchor the artifact popup to the clicked
+// board (its coordinate space matches the layout, like GridTiles).
+const cellLayerRef = ref<SVGSVGElement | null>(null)
 
 // Purely-visual host cells: the left/right neighbours of real cells 1 (ally) and
 // 45 (enemy). Not part of the grid simulation (no tile, pathfinding, or drop
 // target) — just an SVG outline + the icon, tracking the layout/scale.
 const ghostCell = (baseId: number, direction: number): Hex | null => {
   try {
-    return gridStore.getHexById(baseId).neighbor(direction)
+    return ctx.grid.getHexById(baseId).neighbor(direction)
   } catch {
     return null
   }
@@ -38,10 +42,10 @@ const ghostCell = (baseId: number, direction: number): Hex | null => {
 const allyCellHex = computed(() => ghostCell(1, 4)) // direction 4 = left of cell 1
 const enemyCellHex = computed(() => ghostCell(45, 1)) // direction 1 = right of cell 45
 
-const cellCenter = (hex: Hex | null) => (hex ? gridStore.layout.hexToPixel(hex) : { x: 0, y: 0 })
+const cellCenter = (hex: Hex | null) => (hex ? ctx.layout.hexToPixel(hex) : { x: 0, y: 0 })
 const cellPoints = (hex: Hex | null) =>
   hex
-    ? gridStore.layout
+    ? ctx.layout
         .polygonCorners(hex)
         .map((p) => `${p.x},${p.y}`)
         .join(' ')
@@ -58,10 +62,10 @@ const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
 // so the hex across edge (corner k → corner k+1) is neighbor(k + 2).
 const outerEdgePath = (hex: Hex | null): string => {
   if (!hex) return ''
-  const corners = gridStore.layout.polygonCorners(hex)
+  const corners = ctx.layout.polygonCorners(hex)
   const segments: string[] = []
   corners.forEach((corner, k) => {
-    if (gridStore.grid.getTileOrUndefined(hex.neighbor(k + 2))) return
+    if (ctx.grid.getTileOrUndefined(hex.neighbor(k + 2))) return
     const next = corners[(k + 1) % corners.length]!
     segments.push(`M ${corner.x} ${corner.y} L ${next.x} ${next.y}`)
   })
@@ -73,10 +77,10 @@ const enemyCellBorderPath = computed(() => outerEdgePath(enemyCellHex.value))
 
 // The cell-outline SVG shares the full grid box and coordinate space with GridTiles,
 // so it compresses with the perspective wrapper exactly like the real hexes.
-const gridPixelSize = computed(() => 600 * gridStore.getHexScale())
-const cellStrokeWidth = computed(() => Math.max(1.5, 2 * gridStore.getHexScale()))
+const gridPixelSize = computed(() => 600 * ctx.hexScale)
+const cellStrokeWidth = computed(() => Math.max(1.5, 2 * ctx.hexScale))
 const cellDashArray = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   return `${6 * scale},${4 * scale}`
 })
 
@@ -85,7 +89,7 @@ const cellDashArray = computed(() => {
 const BASE_ARTIFACT_SIZE = 52
 
 const artifactDimensions = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   return {
     containerSize: BASE_ARTIFACT_SIZE * scale,
     borderWidth: Math.max(2, 2 * scale),
@@ -105,7 +109,7 @@ const iconStyle = (center: { x: number; y: number }) => {
     top: `${center.y - containerSize / 2}px`,
   }
   if (props.showPerspective) {
-    const verticalOffset = -70 * gridStore.getHexScale()
+    const verticalOffset = -70 * ctx.hexScale
     styles.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY || 1.0})`
   }
   return styles
@@ -131,7 +135,7 @@ const enemyArtifact = computed(() => {
 const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
 const showAllyCell = computed(() => !!allyArtifact.value || showPlaceholders.value)
 const showEnemyCell = computed(
-  () => !gridStore.teamView && (!!enemyArtifact.value || showPlaceholders.value),
+  () => !ctx.teamView && (!!enemyArtifact.value || showPlaceholders.value),
 )
 
 // An empty host cell opens the artifact picker; a filled cell's icon handles
@@ -139,7 +143,7 @@ const showEnemyCell = computed(
 // placed hero → remove).
 const allyCellClickable = computed(() => showPlaceholders.value && !allyArtifact.value)
 const enemyCellClickable = computed(
-  () => showPlaceholders.value && !gridStore.teamView && !enemyArtifact.value,
+  () => showPlaceholders.value && !ctx.teamView && !enemyArtifact.value,
 )
 
 const showPopup = ref(false)
@@ -147,15 +151,15 @@ const popupTeam = ref<Team | null>(null)
 const popupPosition = ref({ x: 0, y: 0 })
 
 const openPopup = (team: Team, center: { x: number; y: number }) => {
-  const scale = gridStore.getHexScale()
-  // Mobile (sheet mode, scale < 1): mirror the character flow — no on-grid popup;
-  // open the roster sheet on the Seasonal tab, targeting the tapped team.
-  if (scale < 1) {
+  const scale = ctx.hexScale
+  // Tap-to-sheet (mobile / small grids) vs the desktop popup; the page can force
+  // the popup (5 v 5 boards are small but use the on-grid popup).
+  if (props.tapMode ?? scale < 1) {
     handleTeamChange(team)
     requestTab('seasonal')
     return
   }
-  const screen = svgPointToScreen(center)
+  const screen = svgPointToScreen(center, cellLayerRef.value)
   if (!screen) return
   popupPosition.value = { x: screen.x + 30 * scale, y: screen.y - 50 * scale }
   popupTeam.value = team
@@ -168,7 +172,7 @@ const closePopup = () => {
 }
 
 const handleArtifactClick = (team: Team) => {
-  artifactStore.removeArtifact(team)
+  ctx.removeArtifact(team)
 }
 </script>
 
@@ -177,6 +181,7 @@ const handleArtifactClick = (team: Team) => {
     <!-- Visual-only host cells (dashed). Same coordinate space as GridTiles. -->
     <svg
       v-if="showAllyCell || showEnemyCell"
+      ref="cellLayerRef"
       class="artifact-cell-layer"
       :width="gridPixelSize"
       :height="gridPixelSize"

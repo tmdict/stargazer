@@ -169,7 +169,7 @@ function recordVerbDirClass(r: RecordedMatch): string {
         </button>
       </div>
       <div v-if="importStatus" class="import-status">{{ importStatus }}</div>
-      <div class="records-list">
+      <div v-scroll-chain class="records-list">
         <div v-for="(record, i) in records" :key="i" class="record-entry">
           <div class="record-row">
             <div class="record-team">

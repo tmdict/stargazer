@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, onUnmounted, ref } from 'vue'
 
 import GridArrows from './GridArrows.vue'
 import GridArtifacts from './GridArtifacts.vue'
@@ -10,15 +10,14 @@ import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import PathfindingDebug from '@/components/debug/PathfindingDebug.vue'
 import SkillTargeting from '@/components/SkillTargeting.vue'
 import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
+import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getAvailableTeamSize, getCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
-import { useArtifactStore } from '@/stores/artifact'
-import { useCharacterStore } from '@/stores/character'
-import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -42,19 +41,21 @@ interface Props {
   debugPanelRef?: InstanceType<typeof DebugPanel> | null
   // Interaction control
   readonly?: boolean
+  // Force tap-to-place vs the desktop popup; omit to derive from grid scale.
+  tapMode?: boolean
 }
 
 const props = defineProps<Props>()
 
-const gridStore = useGridStore()
-const characterStore = useCharacterStore()
+const ctx = useGridContext()
+const grids = useGrids()
 const mapEditorStore = useMapEditorStore()
-const artifactStore = useArtifactStore()
 
 const gridEvents = provideGridEvents()
 
 const { hoveredHexId, handleDrop, dropHandled, setDropHandled } = useDragDrop()
-const { registerHexDetector, registerDropHandler } = useDragDropRegistration()
+const { registerHexDetector, unregisterHexDetector, registerDropHandler, unregisterDropHandler } =
+  useDragDropRegistration()
 
 // GridTiles exposes its root SVG for screen→SVG coordinate conversion
 const gridTilesRef = ref<InstanceType<typeof GridTiles> | null>(null)
@@ -63,10 +64,9 @@ const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
 const modalPosition = ref({ x: 0, y: 0 })
 
-// Mobile/tablet places via the pull-up roster sheet (HomeView): a cell tap
-// targets the tile, or drops a lifted hero onto it. The desktop popup is used
-// only at full scale.
-const { liftedHexId, setTargetHex, clearLiftedHex } = useSelectionState()
+// Mobile/tablet places via the pull-up roster sheet: a cell tap targets the tile,
+// or drops a lifted hero onto it. The desktop popup is used only at full scale.
+const { liftedHexId, liftedGridId, setTargetHex, clearLiftedHex } = useSelectionState()
 
 // Map editor integration - handle hex clicks for painting tiles
 // All hex-click semantics live here: map-editor paint, the mobile tap flow
@@ -82,32 +82,43 @@ gridEvents.on('hex:click', (hex: Hex) => {
     mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
   } else {
     // Normal mode — open the character picker for a tile that can take a unit.
-    const tile = gridStore.getTile(hex.getId())
+    const tile = ctx.grid.getTileById(hex.getId())
     const tileTeam = getTeamFromTileState(tile.state)
-    const scale = gridStore.getHexScale()
+    const scale = ctx.hexScale
+    // Tap-to-place (mobile sheet / small grids) vs the desktop popup. The page can
+    // force the popup: 5 v 5 boards are small but use the on-grid popup, not the
+    // shared tap-target state (which would highlight every board's same hex).
+    const tap = props.tapMode ?? scale < 1
     if (tileTeam === null) {
       // Tapping a non-placement tile cancels a pending lift on mobile.
-      if (scale < 1) clearLiftedHex()
+      if (tap) clearLiftedHex()
       return
     }
 
-    if (scale < 1) {
-      const grid = gridStore._getGrid()
-      // Drop a lifted hero onto this empty cell. Allowed even when the team is
-      // full — a move adds no unit.
-      if (liftedHexId.value !== null && tile.characterId === undefined) {
+    if (tap) {
+      const grid = ctx.grid
+      // Drop a hero lifted from THIS board onto the empty cell (cross-board moves
+      // go through drag, so a stale lift from another board is dropped below).
+      // Allowed even when the team is full — a move adds no unit.
+      if (
+        liftedHexId.value !== null &&
+        liftedGridId.value === ctx.id &&
+        tile.characterId === undefined
+      ) {
         const characterId = getCharacter(grid, liftedHexId.value)
         if (characterId !== undefined) {
-          characterStore.moveCharacter(liftedHexId.value, hex.getId(), characterId)
+          ctx.move(liftedHexId.value, hex.getId(), characterId)
         }
         clearLiftedHex()
         return
       }
-      // Otherwise target this empty tile so a roster tap fills it. Allowed even
-      // when the team is full — a phantimal can still be placed there, and the
-      // roster re-checks character capacity before placing a character.
+      // Otherwise target this empty tile so a roster tap fills it (dropping any
+      // stale lift from another board). Allowed even when the team is full — a
+      // phantimal can still be placed there, and the roster re-checks character
+      // capacity before placing a character.
       if (tile.characterId === undefined) {
-        setTargetHex(hex.getId())
+        clearLiftedHex()
+        setTargetHex(hex.getId(), ctx.id)
       }
       return
     }
@@ -115,16 +126,16 @@ gridEvents.on('hex:click', (hex: Hex) => {
     // Desktop: clicking a placed hero's tile removes it — moves use drag, and
     // the picker below can only add.
     if (tile.characterId !== undefined) {
-      characterStore.removeCharacterFromHex(hex.getId())
+      ctx.remove(hex.getId())
       return
     }
 
     // Desktop popup can only add — skip a tile whose team is already full.
-    if (getAvailableTeamSize(gridStore._getGrid(), tileTeam) <= 0) return
+    if (getAvailableTeamSize(ctx.grid, tileTeam) <= 0) return
 
     // Desktop: anchor the popup near the tapped hex. The perspective transform
     // scales Y, but svgPointToScreen (getScreenCTM) already accounts for it.
-    const screenPt = svgPointToScreen(gridStore.layout.hexToPixel(hex))
+    const screenPt = svgPointToScreen(ctx.layout.hexToPixel(hex), gridTilesRef.value?.svgEl)
     if (screenPt) {
       modalPosition.value = {
         x: screenPt.x + 30 * scale,
@@ -162,8 +173,8 @@ const findHexUnderMouse = (x: number, y: number): number | null => {
 
   // No adjustment needed since perspective offset is removed
   // Check each hex to see if the point is inside it
-  for (const hex of gridStore.hexes) {
-    const corners = gridStore.layout.polygonCorners(hex)
+  for (const hex of ctx.grid.keys()) {
+    const corners = ctx.layout.polygonCorners(hex)
 
     // Point-in-polygon test
     if (isPointInPolygon({ x: svgPt.x, y: svgPt.y }, corners)) {
@@ -217,16 +228,22 @@ const handleDetectedHexDrop = (event: DragEvent) => {
   const dropResult = handleDrop(event)
   if (dropResult) {
     setDropHandled(true)
-    characterStore.handleCharacterDrop(dropResult, hoveredHexId.value)
+    grids.routeDrop(dropResult, ctx.id, hoveredHexId.value)
   }
 }
 
-// Register hex detector and drop handler with DragDropProvider (only if not readonly)
+// Register this board's hex detector and drop handler with DragDropProvider
+// (only if interactive); unregister on unmount so detached boards aren't probed.
 onMounted(() => {
   if (!props.readonly) {
-    registerHexDetector(findHexUnderMouse)
-    registerDropHandler(handleDetectedHexDrop)
+    registerHexDetector(ctx.id, findHexUnderMouse)
+    registerDropHandler(ctx.id, handleDetectedHexDrop)
   }
+})
+
+onUnmounted(() => {
+  unregisterHexDetector(ctx.id)
+  unregisterDropHandler(ctx.id)
 })
 
 // Expose methods for parent components if needed
@@ -236,12 +253,12 @@ defineExpose({
 </script>
 
 <template>
-  <div id="map">
+  <div class="grid-map">
     <!-- Grid tiles (base layer) -->
     <GridTiles
       ref="gridTilesRef"
-      :hexes="gridStore.visibleHexes"
-      :layout="gridStore.layout"
+      :hexes="ctx.visibleHexes"
+      :layout="ctx.layout"
       :height="defaultSvgHeight"
       :show-hex-ids="showHexIds"
       :show-coordinates="showDebug"
@@ -254,12 +271,13 @@ defineExpose({
 
     <!-- Artifact layer (behind characters); enemy artifact is hidden in team view -->
     <GridArtifacts
-      :ally-artifact-id="artifactStore.allyArtifactId"
-      :enemy-artifact-id="gridStore.teamView ? null : artifactStore.enemyArtifactId"
+      :ally-artifact-id="ctx.artifacts.ally"
+      :enemy-artifact-id="ctx.teamView ? null : ctx.artifacts.enemy"
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
+      :tap-mode
     />
 
     <!-- Character layer (above artifacts) -->
@@ -269,6 +287,7 @@ defineExpose({
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
       :readonly
+      :tap-mode
     />
 
     <!-- Arrow layer (above characters) -->
@@ -288,8 +307,8 @@ defineExpose({
     <!-- Debug layer (controlled by Debug View toggle) -->
     <svg
       v-if="showDebug"
-      :width="600 * gridStore.getHexScale()"
-      :height="defaultSvgHeight * gridStore.getHexScale()"
+      :width="600 * ctx.hexScale"
+      :height="defaultSvgHeight * ctx.hexScale"
       style="position: absolute; pointer-events: none"
     >
       <g>
@@ -311,7 +330,7 @@ defineExpose({
 </template>
 
 <style scoped>
-#map {
+.grid-map {
   display: flex;
   justify-content: center;
   align-items: center;

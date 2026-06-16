@@ -190,6 +190,15 @@ function validateDrop(hexId: number, character: CharacterType): boolean {
 }
 ```
 
+### Cross-board drag (multigrid)
+
+On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`:
+
+- **Roster or same-board drop** — handled by the target board's own context (place / move / swap), unchanged from single-board.
+- **Cross-board drop** — a compensating transaction across two `Grid` instances (validate the destination, remove from the source, place on the target, restore the source on failure), since the single-board atomic `move.ts` wrapper can't span two grids. Dropping onto an occupied cell is a paired swap with the same envelope. A successful cross-board drop makes the target board active.
+
+Drop handlers register by `gridId`, so every board's `GridManager` resolves hovers/drops against its own context (see the multigrid section in [`GRID.md`](./GRID.md)).
+
 ## Layer Implementation Details
 
 ### Component Responsibilities

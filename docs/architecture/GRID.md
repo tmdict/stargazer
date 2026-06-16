@@ -46,6 +46,16 @@ The grid system provides the spatial foundation for the game, managing hexagonal
 └───────────────┘ └───────────────────┘ └────────────────┘
 ```
 
+## Multigrid: one or many boards
+
+One set of stores drives N independent boards. The Arena is the N=1 case; the Teams page's "5 v 5" view is N=5.
+
+- **`GridContext` (`/src/composables/useGridContext.ts`)** — the per-board entity. Each board owns its `Grid`, `SkillManager`, current map, artifacts, derived layout/visibility/skill targets, and its place/move/swap/auto-place/clear operations. `createGridContext(id, mapKey, globals)` builds one; `provideGridContext` / `useGridContext` hand it to descendants.
+- **`useGrids` store (`/src/stores/grids.ts`)** — the aggregate. It owns the board array, the active-board pointer (`activeId` / `active`), the globals every board shares (hex size, team view), and the cross-board rules: page-wide character uniqueness (`findPlacement` / `isUsed`), `placeOnActive`, `removeFromAnyBoard`, and `routeDrop` (roster and same-board drops use the board's own handler; cross-board drops compose remove + place as compensating transactions and make the target board active). `setGridCount(n, maps?)` (re)builds the boards.
+- **Adapter stores (`grid.ts`, `character.ts`, `skill.ts`, `artifact.ts`)** — thin facades that forward the single-board API to `useGrids().active`. Single-board consumers (the Arena, the roster) read the active board through these and never learn how many boards exist; per-board components inject their own `GridContext` instead.
+
+A multi-board page renders one `GridContainer` per `GridContext` (each provides its own context); `useGrids` arbitrates across them. The Arena's `GridContainer` is bound to whichever board is _active_, and that instance is replaced when boards are rebuilt (navigating Arena ↔ 5 v 5 runs `setGridCount`), so the container provides the context through a small forwarding proxy — descendants always read the live board, never a disposed snapshot.
+
 ## Core Components
 
 ### Grid Class (`/src/lib/grid.ts`)
@@ -162,16 +172,16 @@ Cascading removal for linked characters:
 
 ### Placement interaction (desktop vs mobile)
 
-The UI for getting a character onto a tile differs by viewport (`gridStore.getHexScale() < 1` = mobile/tablet, ≤768px):
+The UI for getting a character onto a tile differs by viewport. `GridManager` derives the mode from the board's render scale (`ctx.hexScale < 1` = mobile/tablet, ≤768px); a page can override it via `GridContainer`'s `tap-mode` prop (the 5 v 5 boards force the on-grid popup on desktop and the tap flow on mobile). The two modes:
 
 - **Desktop** — drag a roster icon onto a tile (HTML5 drag, mouse-only), or tap an empty tile to open `CharacterSelectionPopup` (a small picker anchored near the tile) and pick.
 - **Mobile/tablet** — HTML5 drag doesn't fire on touch, so interactions are tap-based, split across two gestures:
-  - **Add** — the roster lives in a **pull-up bottom sheet** (`HomeView`'s tab panel, wrapped in the shared `BottomSheet` component). Tapping an empty tile (with team capacity) sets a shared **target hex** (`useSelectionState.targetHexId`), highlights it gold (`GridTiles`), and opens the sheet; tapping a roster character `placeCharacterOnHex`'s it there (team derived from the tile) and the sheet collapses. With no target set, a roster tap auto-places.
+  - **Add** — the roster lives in a **pull-up bottom sheet** (the shared `BottomSheet` component: `HomeView`'s tab panel on the Arena, `TeamsRoster` on 5 v 5). Tapping an empty tile (with team capacity) sets a board-qualified **target** (`useSelectionState.targetHexId` + `targetGridId`, so only the tapped board highlights it — every board shares the same hex ids), highlights it (`GridTiles`), and opens the sheet; tapping a roster character `placeCharacterOnHex`'s it there (team derived from the tile) and the sheet collapses. With no target set, a roster tap auto-places onto the active board.
   - **Move / remove (tap-lift, tap-drop)** — tapping a placed hero on the grid **lifts** it (`useSelectionState.liftedHexId`; the tile's existing hover/active border marks it, and the sheet collapses so all cells stay reachable). Then: tapping an empty cell `moveCharacter`'s it there (allowed even at full capacity — a move adds no unit); tapping the lifted hero again `removes` it; tapping a _different_ placed hero `swapCharacters` the two. Tapping a non-placement tile cancels the lift. The lift gesture lives in `GridCharacters` (the character overlay's tap); the drop/target/cancel logic lives in `GridManager`'s `hex:click`.
 
   When the sheet is expanded a tap-scrim sits behind it — tapping it collapses the sheet and clears any pending target.
 
-The grid and skills pages share one `BottomSheet` component (`src/components/ui/BottomSheet.vue`) for the roster column — desktop card chrome + the mobile pull-up sheet (drag handle, scrim, `useBottomSheet` drag) — so the two stay identical by construction rather than by mirrored CSS. Each page slots its own content (tabs / roster), which owns its in-sheet fill + scroll.
+The Arena, Skills, Guide, and Teams pages share one `BottomSheet` component (`src/components/ui/BottomSheet.vue`) for the roster column — desktop card chrome + the mobile pull-up sheet (drag handle, scrim, `useBottomSheet` drag) — so they stay identical by construction rather than by mirrored CSS. Each page slots its own content (tabs / roster), which owns its in-sheet fill + scroll. The Teams roster passes `:desktop-rail="false"` so it flows as a full-width card below the boards instead of a height-capped side column.
 
 ## Team & Companion Systems
 

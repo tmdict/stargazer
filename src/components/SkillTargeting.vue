@@ -3,8 +3,8 @@ import { computed } from 'vue'
 
 import GridArrow from './grid/GridArrow.vue'
 import { useArrowLayer } from '@/composables/useArrowLayer'
+import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterSkill } from '@/lib/skills/skill'
-import { useSkillStore } from '@/stores/skill'
 
 interface Props {
   showPerspective: boolean
@@ -13,16 +13,14 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const skillStore = useSkillStore()
+const ctx = useGridContext()
 
 const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
   () => props.showPerspective,
   () => props.defaultSvgHeight,
 )
 
-const skillTargets = computed(() => {
-  return skillStore.getAllSkillTargets
-})
+const skillTargets = computed(() => ctx.skillTargets)
 
 function parseSkillKey(key: string): { characterId: number; team: string } | null {
   const parts = key.split('-')
