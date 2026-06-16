@@ -32,9 +32,27 @@ export function useGridExport() {
       throw new Error(`Capture target not found: ${selector}`)
     }
 
-    // Mark the capture so components can drop interactive-only chrome from the
-    // exported image (e.g. the 5 v 5 active-board ring / hover tint).
-    containerElement.classList.add('is-capturing')
+    // Hide the 5 v 5 active-board ring / hover tint in the export. html-to-image styles
+    // its clone from each node's computed style, so set the override inline (always
+    // reflected by getComputedStyle); transition: none keeps it instant so the border
+    // isn't captured mid-fade. Restored in finally.
+    const boards = Array.from(containerElement.querySelectorAll<HTMLElement>('.grid-board'))
+    const restoreBoards = boards.map((el) => {
+      const prev = {
+        transition: el.style.transition,
+        borderColor: el.style.borderColor,
+        background: el.style.background,
+      }
+      el.style.transition = 'none'
+      el.style.borderColor = 'transparent'
+      el.style.background = 'transparent'
+      return () => {
+        el.style.transition = prev.transition
+        el.style.borderColor = prev.borderColor
+        el.style.background = prev.background
+      }
+    })
+
     try {
       // Generate PNG from the target (includes all transforms)
       let dataUrl = await toPng(containerElement, {
@@ -51,7 +69,7 @@ export function useGridExport() {
 
       return dataUrl
     } finally {
-      containerElement.classList.remove('is-capturing')
+      restoreBoards.forEach((restore) => restore())
     }
   }
 

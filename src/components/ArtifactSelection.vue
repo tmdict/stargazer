@@ -11,27 +11,40 @@ const props = defineProps<{
   artifacts: readonly ArtifactType[]
 }>()
 
-const { selectedTeam, artifactStore } = useSelectionState()
+const { fillOrder, targetArtifactTeam, clearArtifactTarget, artifactStore } = useSelectionState()
 const i18n = useI18nStore()
 
-const handleArtifactClick = (artifact: ArtifactType) => {
-  const isAlreadyPlaced =
-    (selectedTeam.value === Team.ALLY && artifactStore.allyArtifactId === artifact.id) ||
-    (selectedTeam.value === Team.ENEMY && artifactStore.enemyArtifactId === artifact.id)
+const slotArtifactId = (team: Team): number | null =>
+  team === Team.ALLY ? artifactStore.allyArtifactId : artifactStore.enemyArtifactId
 
-  if (isAlreadyPlaced) {
-    artifactStore.removeArtifact(selectedTeam.value)
-  } else {
-    artifactStore.placeArtifact(artifact.id, selectedTeam.value)
-  }
+// The team whose slot already holds this artifact, or null.
+const placedTeam = (artifactId: number): Team | null => {
+  if (artifactStore.allyArtifactId === artifactId) return Team.ALLY
+  if (artifactStore.enemyArtifactId === artifactId) return Team.ENEMY
+  return null
 }
 
-const isArtifactPlaced = (artifactId: number): boolean => {
-  if (selectedTeam.value === Team.ALLY) {
-    return artifactStore.allyArtifactId === artifactId
-  } else {
-    return artifactStore.enemyArtifactId === artifactId
+const isArtifactPlaced = (artifactId: number): boolean => placedTeam(artifactId) !== null
+
+const handleArtifactClick = (artifact: ArtifactType) => {
+  // Tapping an on-grid artifact cell targets that cell's team (mobile); the pick
+  // toggles that slot directly.
+  const targeted = targetArtifactTeam.value
+  if (targeted !== null) {
+    if (slotArtifactId(targeted) === artifact.id) artifactStore.removeArtifact(targeted)
+    else artifactStore.placeArtifact(artifact.id, targeted)
+    clearArtifactTarget()
+    return
   }
+  // Already placed: clicking removes it from wherever it sits.
+  const placed = placedTeam(artifact.id)
+  if (placed !== null) {
+    artifactStore.removeArtifact(placed)
+    return
+  }
+  // Otherwise fill the first side with a free slot (displayed ally, then enemy).
+  const target = fillOrder.value.find((team) => slotArtifactId(team) === null)
+  if (target !== undefined) artifactStore.placeArtifact(artifact.id, target)
 }
 
 // Group artifacts into their own section per season (pre-season first).

@@ -24,7 +24,7 @@ const props = defineProps<{
 
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
-const { handleTeamChange, requestTab } = useSelectionState()
+const { setArtifactTarget, requestTab } = useSelectionState()
 
 // This board's host-cell SVG, used to anchor the artifact popup to the clicked
 // board (its coordinate space matches the layout, like GridTiles).
@@ -152,7 +152,7 @@ const openPopup = (team: Team, center: { x: number; y: number }) => {
   // Tap-to-sheet (mobile / small grids) vs the desktop popup; the page can force
   // the popup (5 v 5 boards are small but use the on-grid popup).
   if (props.tapMode ?? scale < 1) {
-    handleTeamChange(team)
+    setArtifactTarget(team)
     requestTab('seasonal')
     return
   }

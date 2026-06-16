@@ -12,6 +12,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
+import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageSources } from '@/utils/artifactImage'
@@ -24,7 +25,7 @@ const { phantimals, isDraggable = false } = defineProps<{
 
 const i18n = useI18nStore()
 const gridStore = useGridStore()
-const { selectedTeam, targetHexId, clearTargetHex, characterStore } = useSelectionState()
+const { fillOrder, targetHexId, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
 const { isTouchDevice } = useTouchDetection()
 
@@ -38,7 +39,7 @@ const heading = computed(() => {
 
 // Hex a phantimal currently occupies on a team, or null. Phantimals are capped at
 // one per team, so this also drives the "placed" affordance for the roster.
-const placedHexForTeam = (phantimal: PhantimalType, team: typeof selectedTeam.value) => {
+const placedHexForTeam = (phantimal: PhantimalType, team: Team) => {
   const id = toPhantimalId(phantimal.id)
   const tile = characterStore
     .getTilesWithCharacters()
@@ -46,8 +47,10 @@ const placedHexForTeam = (phantimal: PhantimalType, team: typeof selectedTeam.va
   return tile ? tile.hex.getId() : null
 }
 
-const isPlaced = (phantimal: PhantimalType): boolean =>
-  placedHexForTeam(phantimal, selectedTeam.value) !== null
+const placedHex = (phantimal: PhantimalType): number | null =>
+  placedHexForTeam(phantimal, Team.ALLY) ?? placedHexForTeam(phantimal, Team.ENEMY)
+
+const isPlaced = (phantimal: PhantimalType): boolean => placedHex(phantimal) !== null
 
 const handlePhantimalClick = (phantimal: PhantimalType) => {
   const id = toPhantimalId(phantimal.id)
@@ -58,12 +61,16 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
     clearTargetHex()
     return
   }
-  const placedHex = placedHexForTeam(phantimal, selectedTeam.value)
-  if (placedHex !== null) {
-    characterStore.removeCharacterFromHex(placedHex)
+  const hex = placedHex(phantimal)
+  if (hex !== null) {
+    characterStore.removeCharacterFromHex(hex)
     return
   }
-  characterStore.autoPlacePhantimal(id, selectedTeam.value)
+  // Fill the displayed-ally side first, then the displayed enemy side; each attempt
+  // fails if that team lacks the faction requirement, falling through to the next.
+  for (const team of fillOrder.value) {
+    if (characterStore.autoPlacePhantimal(id, team)) break
+  }
 }
 
 // A drag must not also fire a placement, so clicks are press-duration gated.
@@ -82,8 +89,9 @@ const handleDragEnd = (event: DragEvent) => {
   if (isDraggable) endDrag(event)
 }
 
-// Hover tooltip: whether the phantimal can currently be deployed on the selected
-// team, with the faction unit count. One shared popup follows the hovered icon.
+// Hover tooltip: whether the phantimal can currently be deployed on the primary
+// (displayed-ally) fill target, with the faction unit count. One shared popup
+// follows the hovered icon.
 const hovered = ref<PhantimalType | null>(null)
 const hoveredEl = ref<HTMLElement | null>(null)
 
@@ -103,7 +111,7 @@ const tooltipText = computed(() => {
   if (!phantimal) return ''
   const count = characterStore.phantimalFactionCount(
     toPhantimalId(phantimal.id),
-    selectedTeam.value,
+    fillOrder.value[0],
   )
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
   const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
@@ -227,7 +235,7 @@ const openModal = (phantimal: PhantimalType) => {
   transform: scale(1.05);
 }
 
-/* Placed on the selected team — match the character roster's red ring. */
+/* Placed on either team: match the character roster's red ring. */
 .phantimal.placed {
   box-shadow: 0 0 0 2px #c05b4d;
   border-color: #c05b4d;

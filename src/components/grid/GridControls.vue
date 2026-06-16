@@ -5,12 +5,11 @@ import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconLink from '@/components/ui/IconLink.vue'
-import TeamToggle from '@/components/ui/TeamToggle.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
-const { selectedTeam, characterStore, handleTeamChange, handleClearAll } = useSelectionState()
+const { handleClearAll } = useSelectionState()
 
 const showArrows = defineModel<boolean>('showArrows', { required: true })
 const showHexIds = defineModel<boolean>('showHexIds', { required: true })
@@ -23,7 +22,7 @@ const wrap = defineModel<boolean>('wrap')
 defineProps<{
   // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
   hideTeamView?: boolean
-  // Hides the Ally/Enemy toggle and Clear (Map Editor / Debug don't place characters).
+  // Hides Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
   // Lay every control out in one wrapping row (the wide 5 v 5 page) instead of
   // the default two stacked rows.
@@ -85,18 +84,8 @@ const flatView = computed({
       </label>
     </div>
 
-    <!-- Row 2: team toggle + action buttons + clear -->
+    <!-- Row 2: action buttons + clear -->
     <div class="controls-row controls-actions">
-      <TeamToggle
-        v-if="!hideTeamControls"
-        :selected-team
-        :show-counts="showHexIds"
-        :ally-count="characterStore.availableAlly"
-        :enemy-count="characterStore.availableEnemy"
-        :max-ally-count="characterStore.maxTeamSizeAlly"
-        :max-enemy-count="characterStore.maxTeamSizeEnemy"
-        @team-change="handleTeamChange"
-      />
       <button @click="emit('copyLink')" class="action-btn" :title="i18n.t('app.link')">
         <IconLink :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.link') }}</span>

@@ -81,7 +81,8 @@ const tabs = computed(() => [
 ])
 
 // Mobile: the tab panel (roster) is a pull-up bottom sheet over the grid.
-const { targetHexId, liftedHexId, tabRequest, clearTargetHex, clearLiftedHex } = useSelectionState()
+const { targetHexId, liftedHexId, tabRequest, clearTargetHex, clearTargets, clearLiftedHex } =
+  useSelectionState()
 const sheetExpanded = ref(false)
 
 // Tapping a grid cell targets it: jump to the roster, open the sheet; placing
@@ -341,7 +342,7 @@ const handleResetMap = () => {
         </div>
 
         <!-- Roster (a pull-up bottom sheet over the grid on mobile). -->
-        <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargetHex">
+        <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargets">
           <TabView
             :tabs="tabs"
             :model-value="activeTab"
