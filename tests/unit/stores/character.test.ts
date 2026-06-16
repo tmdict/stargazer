@@ -10,6 +10,7 @@ import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 
 const buildCharacter = (id: number, sourceHexId?: number): CharacterType => ({
   id,
@@ -27,6 +28,7 @@ const buildCharacter = (id: number, sourceHexId?: number): CharacterType => ({
 
 let store: ReturnType<typeof useCharacterStore>
 let gridStore: ReturnType<typeof useGridStore>
+let grids: ReturnType<typeof useGrids>
 
 const tilesByState = (state: State) =>
   gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === state)
@@ -41,9 +43,14 @@ beforeEach(() => {
   setActivePinia(createPinia())
   gridStore = useGridStore()
   store = useCharacterStore()
+  grids = useGrids()
 })
 
-describe('characterStore.handleCharacterDrop', () => {
+// Drop routing (place / move / swap / phantimal rules) lives on the GridContext;
+// the app reaches it via grids.routeDrop's same-board path. These exercise that
+// handler on the active board directly (sourceHexId without sourceGridId = a
+// same-board move, which is handleDrop's contract, not routeDrop's).
+describe('active grid — drop routing (handleDrop)', () => {
   describe('selection drop (no sourceHexId)', () => {
     it.each([
       [Team.ALLY, State.AVAILABLE_ALLY, 101],
@@ -51,7 +58,7 @@ describe('characterStore.handleCharacterDrop', () => {
     ])('places a character on a valid %s tile', (team, state, characterId) => {
       const tile = firstTile(state)
 
-      const ok = store.handleCharacterDrop(
+      const ok = grids.active!.handleDrop(
         { character: buildCharacter(characterId), characterId },
         tile.getId(),
       )
@@ -64,7 +71,7 @@ describe('characterStore.handleCharacterDrop', () => {
     it('returns false when target tile is not a valid placement state', () => {
       const defaultTile = firstTile(State.DEFAULT)
 
-      const ok = store.handleCharacterDrop(
+      const ok = grids.active!.handleDrop(
         { character: buildCharacter(101), characterId: 101 },
         defaultTile.getId(),
       )
@@ -83,7 +90,7 @@ describe('characterStore.handleCharacterDrop', () => {
       const remaining = allyTiles[allyHexIds.length]
       if (!remaining) throw new Error('Test setup: default map has no spare ally tile')
 
-      const ok = store.handleCharacterDrop(
+      const ok = grids.active!.handleDrop(
         { character: buildCharacter(999), characterId: 999 },
         remaining.getId(),
       )
@@ -101,7 +108,7 @@ describe('characterStore.handleCharacterDrop', () => {
       const targetId = allyTiles[1]!.getId()
       store.placeCharacterOnHex(sourceId, 101, Team.ALLY)
 
-      const ok = store.handleCharacterDrop(
+      const ok = grids.active!.handleDrop(
         { character: buildCharacter(101, sourceId), characterId: 101 },
         targetId,
       )
@@ -120,7 +127,7 @@ describe('characterStore.handleCharacterDrop', () => {
       store.placeCharacterOnHex(sourceId, 101, Team.ALLY)
       store.placeCharacterOnHex(targetId, 202, Team.ALLY)
 
-      const ok = store.handleCharacterDrop(
+      const ok = grids.active!.handleDrop(
         { character: buildCharacter(101, sourceId), characterId: 101 },
         targetId,
       )
@@ -168,11 +175,11 @@ describe('characterStore phantimals', () => {
 
   it('routes a roster phantimal drop through one-per-team placement', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)
-    store.handleCharacterDrop(
+    grids.active!.handleDrop(
       { character: buildCharacter(toPhantimalId(1)), characterId: toPhantimalId(1) },
       tiles[0]!.getId(),
     )
-    store.handleCharacterDrop(
+    grids.active!.handleDrop(
       { character: buildCharacter(toPhantimalId(2)), characterId: toPhantimalId(2) },
       tiles[1]!.getId(),
     )
@@ -261,7 +268,7 @@ describe('characterStore phantimal faction rule', () => {
     store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)
     await nextTick()
 
-    const ok = store.handleCharacterDrop(
+    const ok = grids.active!.handleDrop(
       { character: buildCharacter(toPhantimalId(1), phantimalHex), characterId: toPhantimalId(1) },
       enemyHexes[0]!,
     )
@@ -281,7 +288,7 @@ describe('characterStore phantimal faction rule', () => {
     const emptyEnemyHex = tilesByState(State.AVAILABLE_ENEMY)[4]!.getId()
     await nextTick()
 
-    const ok = store.handleCharacterDrop(
+    const ok = grids.active!.handleDrop(
       {
         character: buildCharacter(toPhantimalId(1), allyPhantimalHex),
         characterId: toPhantimalId(1),

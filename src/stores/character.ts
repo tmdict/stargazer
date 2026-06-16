@@ -10,7 +10,6 @@ import { defineStore } from 'pinia'
 
 import { getTilesWithCharacters } from '@/lib/characters/character'
 import type { GridTile } from '@/lib/grid'
-import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from './grids'
 
@@ -51,11 +50,6 @@ export const useCharacterStore = defineStore('character', () => {
 
   const getTilesWithCharactersStore = (): GridTile[] => getTilesWithCharacters(active().grid)
 
-  const handleCharacterDrop = (
-    payload: { character: CharacterType; characterId: number },
-    targetHexId: number,
-  ): boolean => active().handleDrop(payload, targetHexId)
-
   return {
     charactersPlaced,
     availableAlly,
@@ -70,6 +64,5 @@ export const useCharacterStore = defineStore('character', () => {
     placePhantimalOnHex,
     autoPlacePhantimal,
     phantimalFactionCount,
-    handleCharacterDrop,
   }
 })
