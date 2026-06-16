@@ -9,7 +9,7 @@ registerSkill(
     name: 'Tidal Strength',
     description:
       'Targets the nearest ally starting from tiles adjacent to her and expanding outwards, prioritizing characters in the back (lower hex ID for ally team, higher for enemy team).',
-    tileColor: '#4fc3f7',
+    tileColor: '#0288d1',
     calculateTarget: (ctx) => rowScan(ctx, ctx.team, { direction: RowScanDirection.REARMOST }),
   }),
 )
