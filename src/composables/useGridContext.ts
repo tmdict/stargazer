@@ -34,8 +34,6 @@ import {
   getCharacterCount,
   getCharacterPlacements,
   getCharacterTeam,
-  getMaxTeamSize,
-  getTeamCharacters,
   getTilesWithCharacters,
   hasCharacter,
 } from '@/lib/characters/character'
@@ -100,7 +98,6 @@ export interface GridContext {
   viewBoxBounds: ViewBoxBounds
   charactersPlaced: number
   placements: Map<number, number>
-  counts: { ally: number; enemy: number; maxAlly: number; maxEnemy: number }
   closestEnemyMap: ReturnType<typeof getClosestTargetMap>
   closestAllyMap: ReturnType<typeof getClosestTargetMap>
   skillTargets: ReturnType<SkillManager['getAllSkillTargets']>
@@ -374,12 +371,6 @@ export function createGridContext(
 
     const placements = computed(() => getCharacterPlacements(grid))
     const charactersPlaced = computed(() => getCharacterCount(grid))
-    const counts = computed(() => ({
-      ally: getTeamCharacters(grid, Team.ALLY).size,
-      enemy: getTeamCharacters(grid, Team.ENEMY).size,
-      maxAlly: getMaxTeamSize(grid, Team.ALLY),
-      maxEnemy: getMaxTeamSize(grid, Team.ENEMY),
-    }))
 
     const closestMap = (sourceTeam: Team, targetTeam: Team) =>
       computed(() => {
@@ -462,7 +453,6 @@ export function createGridContext(
       viewBoxBounds,
       placements,
       charactersPlaced,
-      counts,
       closestEnemyMap,
       closestAllyMap,
       hexScale,

@@ -2,6 +2,7 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { getAvailableTeamSize, getMaxTeamSize } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
@@ -82,10 +83,11 @@ describe('active grid — drop routing (handleDrop)', () => {
 
     it('returns false when team is at capacity', () => {
       const allyTiles = tilesByState(State.AVAILABLE_ALLY)
-      const allyHexIds = allyTiles.slice(0, store.maxTeamSizeAlly).map((h) => h.getId())
+      const maxAlly = getMaxTeamSize(grids.active!.grid, Team.ALLY)
+      const allyHexIds = allyTiles.slice(0, maxAlly).map((h) => h.getId())
       allyHexIds.forEach((id, i) => store.placeCharacterOnHex(id, 100 + i, Team.ALLY))
 
-      expect(store.availableAlly).toBe(0)
+      expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
 
       const remaining = allyTiles[allyHexIds.length]
       if (!remaining) throw new Error('Test setup: default map has no spare ally tile')
@@ -156,12 +158,12 @@ describe('characterStore.removeCharacterFromHex', () => {
 describe('characterStore phantimals', () => {
   it('places a phantimal without consuming team size', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)
-    const before = store.availableAlly
+    const before = getAvailableTeamSize(grids.active!.grid, Team.ALLY)
     const ok = store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
 
     expect(ok).toBe(true)
     expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBe(toPhantimalId(1))
-    expect(store.availableAlly).toBe(before) // unchanged by the phantimal
+    expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(before) // unchanged by the phantimal
   })
 
   it('keeps at most one phantimal per team (replace on add)', () => {

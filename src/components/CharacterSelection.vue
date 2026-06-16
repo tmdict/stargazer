@@ -10,6 +10,7 @@ import { useCharacterRoster } from '@/composables/useCharacterRoster'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
+import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -27,7 +28,7 @@ const {
   scrollable?: boolean
 }>()
 
-const { selectedTeam, targetHexId, clearTargetHex, characterStore } = useSelectionState()
+const { fillOrder, targetHexId, clearTargetHex, characterStore } = useSelectionState()
 const gridStore = useGridStore()
 const grids = useGrids()
 const i18n = useI18nStore()
@@ -46,13 +47,19 @@ const {
 )
 
 // Placement, uniqueness, and removal are page-wide (across every board); on the
-// single Arena board this is identical to a per-board check.
-const isCharacterPlaced = (characterId: number): boolean =>
-  grids.findPlacement(characterId, selectedTeam.value) !== null
+// single Arena board this is identical to a per-board check. A hero is "placed"
+// if it sits on either team, so the click toggle finds it wherever it is.
+const placedTeam = (characterId: number): Team | null => {
+  if (grids.findPlacement(characterId, Team.ALLY)) return Team.ALLY
+  if (grids.findPlacement(characterId, Team.ENEMY)) return Team.ENEMY
+  return null
+}
+
+const isCharacterPlaced = (characterId: number): boolean => placedTeam(characterId) !== null
 
 const handleCharacterClick = (character: CharacterType) => {
   // Mobile: a tapped tile targets a specific cell on the active board — place the
-  // hero there (using that tile's team), regardless of the roster's selected team.
+  // hero there using that tile's team.
   if (targetHexId.value !== null) {
     const team = getTeamFromTileState(gridStore.getTile(targetHexId.value).state)
     if (
@@ -65,11 +72,15 @@ const handleCharacterClick = (character: CharacterType) => {
     clearTargetHex()
     return
   }
-  if (isCharacterPlaced(character.id)) {
-    grids.removeFromAnyBoard(character.id, selectedTeam.value)
+  const placed = placedTeam(character.id)
+  if (placed !== null) {
+    grids.removeFromAnyBoard(character.id, placed)
     return
   }
-  grids.placeOnActive(character.id, selectedTeam.value)
+  // Fill the displayed-ally side first, then the displayed enemy side.
+  for (const team of fillOrder.value) {
+    if (grids.placeOnActive(character.id, team)) break
+  }
 }
 
 // A search result places its hero exactly like clicking the roster icon would.
@@ -100,7 +111,7 @@ const handleResultSelect = (slug: string) => {
       <CharacterIcon
         v-for="character in filteredCharacters"
         :key="character.id"
-        :character="{ ...character, team: selectedTeam }"
+        :character
         :is-draggable
         :is-placed="isCharacterPlaced(character.id)"
         :selected-filter="selectedTagNames"
