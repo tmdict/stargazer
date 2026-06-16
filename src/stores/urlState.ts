@@ -182,6 +182,10 @@ export const useUrlStateStore = defineStore('urlState', () => {
         }
       })
     }
+
+    // Auto-placement is edge-triggered; this bulk restore must not read as a
+    // transition, or a saved state that omits its phantimal would gain one.
+    characterStore.seedPhantimalBaseline()
   }
 
   // Restore N boards (5 v 5): rebuild the board array, then restore each board by
