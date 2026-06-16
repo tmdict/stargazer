@@ -1,16 +1,22 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import MapInvertToggle from './MapInvertToggle.vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import IconFill from '@/components/ui/IconFill.vue'
 import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { useMapEditorStore } from '@/stores/mapEditor'
-import { getInvertedState, getTileFillColor } from '@/utils/tileStateFormatting'
+import {
+  getInvertedState,
+  getTeamFromTileState,
+  getTileFillColor,
+  invertTeam,
+} from '@/utils/tileStateFormatting'
 
 const i18n = useI18nStore()
-const mapEditorStore = useMapEditorStore()
+const grids = useGrids()
 
 const selectedState = ref<State>(State.DEFAULT)
 
@@ -27,9 +33,13 @@ const stateOptions: StateOption[] = [
   { state: State.BLOCKED_BREAKABLE, labelKey: 'app.breakable' },
 ]
 
-const getStateLabel = computed(() => (labelKey: string) => {
-  return i18n.t(labelKey)
-})
+// Ally/enemy tile labels follow the displayed team so they match the preview
+// colour; other states keep their fixed label.
+const stateLabel = (option: StateOption): string => {
+  const team = getTeamFromTileState(option.state)
+  if (team === null) return i18n.t(option.labelKey)
+  return i18n.t(invertTeam(team, grids.inverted) === Team.ALLY ? 'app.ally-tile' : 'app.enemy-tile')
+}
 
 const emit = defineEmits<{
   stateSelected: [state: State]
@@ -56,7 +66,7 @@ const handleArenaSelected = (mapKey: string) => {
 }
 
 const getPreviewFillColor = (state: State): string => {
-  const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
+  const displayState = grids.inverted ? getInvertedState(state) : state
   return getTileFillColor(displayState)
 }
 </script>
@@ -85,7 +95,7 @@ const getPreviewFillColor = (state: State): string => {
               />
             </svg>
           </div>
-          <span class="state-label">{{ getStateLabel(option.labelKey) }}</span>
+          <span class="state-label">{{ stateLabel(option) }}</span>
         </button>
       </div>
 

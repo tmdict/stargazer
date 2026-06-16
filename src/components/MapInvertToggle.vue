@@ -5,11 +5,11 @@
 import { ref } from 'vue'
 
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { useMapEditorStore } from '@/stores/mapEditor'
 
 const i18n = useI18nStore()
-const mapEditorStore = useMapEditorStore()
+const grids = useGrids()
 
 const showTooltip = ref(false)
 const buttonElement = ref<HTMLElement>()
@@ -24,9 +24,9 @@ const buttonElement = ref<HTMLElement>()
   >
     <input
       type="checkbox"
-      :checked="mapEditorStore.isColorInverted"
+      :checked="grids.inverted"
       class="invert-checkbox"
-      @change="mapEditorStore.toggleColorInvert()"
+      @change="grids.inverted = !grids.inverted"
     />
     <span class="invert-text">{{ i18n.t('app.invert') }}</span>
   </label>

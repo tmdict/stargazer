@@ -9,6 +9,7 @@ import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
+import { invertTeam } from '@/utils/tileStateFormatting'
 
 const props = defineProps<{
   allyArtifactId?: number | null
@@ -112,21 +113,34 @@ const enemyArtifact = computed(() => {
   return gameDataStore.getArtifactById(props.enemyArtifactId) ?? null
 })
 
+// Each host cell stays anchored to its engine team, but its displayed team follows
+// invert: the slot shown as ally renders in front and is the one kept in team view.
+const allySlotDisplayTeam = computed(() => invertTeam(Team.ALLY, ctx.inverted))
+const enemySlotDisplayTeam = computed(() => invertTeam(Team.ENEMY, ctx.inverted))
+const allySlotInFront = computed(() => allySlotDisplayTeam.value === Team.ALLY)
+const enemySlotInFront = computed(() => enemySlotDisplayTeam.value === Team.ALLY)
+const allySlotVisible = computed(() => !ctx.teamView || allySlotDisplayTeam.value === Team.ALLY)
+const enemySlotVisible = computed(() => !ctx.teamView || enemySlotDisplayTeam.value === Team.ALLY)
+
 // The empty dashed cell is an "add artifact here" affordance, shown only on the
-// interactive grid; a filled cell always frames its artifact. The enemy cell
-// follows the enemy artifact's team-view visibility (id is nulled upstream).
+// interactive grid; a filled cell always frames its artifact. A slot shown as
+// enemy is hidden in team view.
 const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
-const showAllyCell = computed(() => !!allyArtifact.value || showPlaceholders.value)
+const showAllyCell = computed(
+  () => allySlotVisible.value && (!!allyArtifact.value || showPlaceholders.value),
+)
 const showEnemyCell = computed(
-  () => !ctx.teamView && (!!enemyArtifact.value || showPlaceholders.value),
+  () => enemySlotVisible.value && (!!enemyArtifact.value || showPlaceholders.value),
 )
 
 // An empty host cell opens the artifact picker; a filled cell's icon handles
 // removal (handleArtifactClick), mirroring the character flow (empty hex → picker,
 // placed hero → remove).
-const allyCellClickable = computed(() => showPlaceholders.value && !allyArtifact.value)
+const allyCellClickable = computed(
+  () => showPlaceholders.value && allySlotVisible.value && !allyArtifact.value,
+)
 const enemyCellClickable = computed(
-  () => showPlaceholders.value && !ctx.teamView && !enemyArtifact.value,
+  () => showPlaceholders.value && enemySlotVisible.value && !enemyArtifact.value,
 )
 
 const showPopup = ref(false)
@@ -217,11 +231,12 @@ const handleArtifactClick = (team: Team) => {
     </svg>
 
     <!-- Ally artifact (host cell: left of cell 1). `front` lifts it above the
-         character layer so the lifted icon isn't covered in perspective. -->
+         character layer so the lifted icon isn't covered in perspective; it tracks
+         the slot shown as ally. -->
     <div
-      v-if="allyArtifact"
-      class="grid-artifact front"
-      :class="{ readonly }"
+      v-if="allyArtifact && allySlotVisible"
+      class="grid-artifact"
+      :class="{ readonly, front: allySlotInFront }"
       :style="getAllyStyles"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
     >
@@ -231,12 +246,12 @@ const handleArtifactClick = (team: Team) => {
       <div v-if="showPerspective" class="artifact-pointer" />
     </div>
 
-    <!-- Enemy artifact (host cell: right of cell 45). Stays behind the character
-         layer (DOM order) so overlapping characters sit on top in perspective. -->
+    <!-- Enemy artifact (host cell: right of cell 45). Behind the character layer
+         (DOM order) unless invert shows this slot as ally, when it lifts to front. -->
     <div
-      v-if="enemyArtifact"
+      v-if="enemyArtifact && enemySlotVisible"
       class="grid-artifact"
-      :class="{ readonly }"
+      :class="{ readonly, front: enemySlotInFront }"
       :style="getEnemyStyles"
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
     >

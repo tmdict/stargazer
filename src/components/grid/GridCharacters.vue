@@ -12,6 +12,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { phantimalImageSources } from '@/utils/artifactImage'
+import { invertTeam } from '@/utils/tileStateFormatting'
 
 interface Props {
   characters: readonly CharacterType[]
@@ -213,13 +214,14 @@ const handleMouseLeave = (hexId: number) => {
   }
 }
 
-// In team view, only render characters on the ally team.
+// In team view, only render characters on the team shown as ally.
 const visiblePlacements = computed(() => {
   const all = ctx.placements
   if (!ctx.teamView) return all
+  const shownTeam = invertTeam(Team.ALLY, ctx.inverted)
   const filtered = new Map<number, number>()
   for (const [hexId, characterId] of all) {
-    if (getCharacterTeam(ctx.grid, hexId) === Team.ALLY) {
+    if (getCharacterTeam(ctx.grid, hexId) === shownTeam) {
       filtered.set(hexId, characterId)
     }
   }

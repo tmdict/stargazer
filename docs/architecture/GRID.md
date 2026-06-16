@@ -56,6 +56,12 @@ One set of stores drives N independent boards. The Arena is the N=1 case; the Te
 
 A multi-board page renders one `GridContainer` per `GridContext` (each provides its own context); `useGrids` arbitrates across them. The Arena's `GridContainer` is bound to whichever board is _active_, and that instance is replaced when boards are rebuilt (navigating Arena ↔ 5 v 5 runs `setGridCount`), so the container provides the context through a small forwarding proxy — descendants always read the live board, never a disposed snapshot.
 
+### Invert (ally/enemy orientation)
+
+The engine has a fixed orientation: ally occupies the low hex-id side and targeting/pathfinding bake in "ally faces the high-id (enemy) side" (see `lib/skills/utils`, `pathfinding.ts`). The two teams' rules are exact mirror images, so the engine's _enemy_ behavior is already correct for a unit on the high-id side.
+
+`Invert` (`useGrids().inverted`, a session-only global like `teamView`) exploits that: it leaves the engine fully canonical and flips only the **display↔engine team mapping**. `invertTeam(team, inverted)` (in `utils/tileStateFormatting.ts`) is the single involution every display surface goes through: tile colors (`GridTiles`), team-view filtering (`GridContext.visibleHexes`, `GridCharacters.visiblePlacements`, `GridArtifacts`), arrow colors (`GridArrows`), the team toggle (`TeamToggle`), and the Map Editor paint labels/preview. Placement, counts, serialization, and all combat math stay in engine space, so a relabeled unit targets correctly for free. Nothing moves on the board; invert relabels what is already there. Debug panels intentionally show canonical engine teams.
+
 ## Core Components
 
 ### Grid Class (`/src/lib/grid.ts`)
