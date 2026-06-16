@@ -96,7 +96,7 @@ both `hypogean` and `celestial`. Only distinct main characters count — compani
 and phantimals are excluded.
 
 The character store wires `gameDataStore.getCharacterFaction` into the rule and
-enforces it at four points:
+enforces it at five points:
 
 - **Placement gate** — `placePhantimalOnHex` / `autoPlacePhantimal` return `false`
   if the team is short, so a click or drop simply does nothing.
@@ -104,9 +104,19 @@ enforces it at four points:
   empty tile on the other team unless that team qualifies; the phantimal stays
   put. Dropping a phantimal on an occupied tile on the other team is a
   cross-team swap, which `executeSwapCharacters` rejects outright.
-- **Auto-removal** — a `watch(characterPlacements)` runs
-  `enforcePhantimalFactionRule`, removing any on-field phantimal whose team drops
-  below the requirement (e.g. a faction character is removed or moved away).
+- **Auto-removal** — a `watch(placements)` runs `reconcilePhantimals`, removing
+  any on-field phantimal whose team drops below the requirement (e.g. a faction
+  character is removed or moved away).
+- **Auto-placement** — the same `reconcilePhantimals` watcher places a faction's
+  phantimal the moment a team crosses _into_ qualifying, unless it already has
+  one. It is **edge-triggered**: `lastQualifyingPhantimal` records the phantimal
+  each team last qualified for, so placement fires once on the transition and a
+  manually removed phantimal stays gone while the faction count holds.
+  `findQualifyingPhantimalId` resolves which phantimal applies (at most one, since
+  a 5-unit roster can't reach 3 of two factions). Bulk URL restores apply many
+  characters at once, which would otherwise read as a fresh transition;
+  `seedPhantimalBaseline` re-aligns the baseline after restore so a saved state
+  that omits its phantimal loads without one.
 - **Roster tooltip** — `PhantimalSelection` shows `app.phantimalDeployable` /
   `app.phantimalLocked` with the live `count/required` on hover.
 
@@ -125,7 +135,7 @@ on `isPhantimalId` or living in a dedicated file. To retire the feature:
    / `urlState.ts` (the `p` field) and the `getPhantimalById` /
    `getCharacterFaction` accessors.
 3. Drop the phantimal helpers from the character store (placement, the faction
-   gate, and the `enforcePhantimalFactionRule` watcher), the `isPhantimalId(...)`
+   gate, and the `reconcilePhantimals` watcher), the `isPhantimalId(...)`
    guards including the cross-team swap rejection in `swap.ts` (they collapse to
    "always a character"), the `GridCharacters` render branch, and
    `Grid.phantimalIdOffset` (restoring `isCompanionId` to a single lower bound).

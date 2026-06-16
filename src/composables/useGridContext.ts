@@ -40,7 +40,7 @@ import {
   hasCharacter,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
-import { isPhantimalId } from '@/lib/characters/phantimal'
+import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import {
   countTeamFaction,
   PHANTIMAL_FACTION_REQUIREMENT,
@@ -123,6 +123,7 @@ export interface GridContext {
   autoPlacePhantimal: (phantimalId: number, team: Team) => boolean
   phantimalCanJoinTeam: (phantimalId: number, team: Team) => boolean
   phantimalFactionCount: (phantimalId: number, team: Team) => number
+  seedPhantimalBaseline: () => void
   setArtifact: (team: Team, artifactId: number) => void
   removeArtifact: (team: Team) => void
   handleDrop: (
@@ -183,6 +184,33 @@ export function createGridContext(
     if (!phantimal) return 0
     const factions = requiredFactions(phantimal.name, phantimal.faction)
     return countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
+  }
+
+  // The phantimal a team currently qualifies for, or null. With a 5-unit roster
+  // at most one faction can reach the requirement, so the first match is
+  // unambiguous in normal play.
+  const findQualifyingPhantimalId = (team: Team): number | null => {
+    for (const phantimal of gameDataStore.phantimals) {
+      const factions = requiredFactions(phantimal.name, phantimal.faction)
+      const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
+      if (count >= PHANTIMAL_FACTION_REQUIREMENT) return toPhantimalId(phantimal.id)
+    }
+    return null
+  }
+
+  // Baseline for edge-triggered auto-placement: the phantimal each team last
+  // qualified for. Auto-place fires only on the transition into qualifying, so a
+  // manually removed phantimal stays gone while the team keeps its faction count.
+  const lastQualifyingPhantimal = new Map<Team, number | null>()
+
+  // Re-align the baseline to the current grid without placing anything. A bulk URL
+  // restore applies many characters in one batch, which the watcher would
+  // otherwise read as a fresh transition; seeding afterward lets a saved state
+  // that deliberately omits its phantimal load without one.
+  const seedPhantimalBaseline = (): void => {
+    for (const team of [Team.ALLY, Team.ENEMY]) {
+      lastQualifyingPhantimal.set(team, findQualifyingPhantimalId(team))
+    }
   }
 
   // Phantimals are capped at one per team: drop the team's current phantimal
@@ -387,26 +415,43 @@ export function createGridContext(
     const getTileColorModifier = (hexId: number): string[] | undefined =>
       tileColorModifiers.value.get(hexId)
 
-    // Drop any on-field phantimal whose team no longer meets its faction
-    // requirement (e.g. a faction character was moved/removed off the team).
-    let enforcing = false
-    const enforcePhantimalFactionRule = (): void => {
-      if (enforcing) return
-      enforcing = true
+    // Reconcile each team's phantimal with its faction count after every
+    // placement change:
+    //  - Remove an on-field phantimal whose team dropped below the requirement.
+    //  - Auto-place a faction's phantimal the moment a team crosses into
+    //    qualifying (edge-triggered via lastQualifyingPhantimal), unless it
+    //    already has one. Manually removing it leaves the team still qualifying,
+    //    so no new transition fires and it stays gone.
+    let reconciling = false
+    const reconcilePhantimals = (): void => {
+      if (reconciling) return
+      reconciling = true
       try {
         for (const team of [Team.ALLY, Team.ENEMY]) {
-          const hexId = findTeamPhantimalHex(grid, team)
-          if (hexId === null) continue
-          const phantimalId = getCharacter(grid, hexId)
-          if (phantimalId !== undefined && !phantimalCanJoinTeam(phantimalId, team)) {
-            executeRemoveCharacter(grid, skillManager, hexId)
+          const phantimalHex = findTeamPhantimalHex(grid, team)
+          if (phantimalHex !== null) {
+            const phantimalId = getCharacter(grid, phantimalHex)
+            if (phantimalId !== undefined && !phantimalCanJoinTeam(phantimalId, team)) {
+              executeRemoveCharacter(grid, skillManager, phantimalHex)
+            }
           }
+
+          const qualifying = findQualifyingPhantimalId(team)
+          const previous = lastQualifyingPhantimal.get(team) ?? null
+          if (
+            qualifying !== null &&
+            qualifying !== previous &&
+            findTeamPhantimalHex(grid, team) === null
+          ) {
+            autoPlacePhantimal(qualifying, team)
+          }
+          lastQualifyingPhantimal.set(team, qualifying)
         }
       } finally {
-        enforcing = false
+        reconciling = false
       }
     }
-    watch(placements, enforcePhantimalFactionRule, { flush: 'post' })
+    watch(placements, reconcilePhantimals, { flush: 'post' })
 
     return {
       layout,
@@ -442,6 +487,7 @@ export function createGridContext(
     autoPlacePhantimal,
     phantimalCanJoinTeam,
     phantimalFactionCount,
+    seedPhantimalBaseline,
     setArtifact,
     removeArtifact,
     handleDrop,

@@ -48,6 +48,8 @@ export const useCharacterStore = defineStore('character', () => {
   const phantimalFactionCount = (phantimalId: number, team: Team): number =>
     active().phantimalFactionCount(phantimalId, team)
 
+  const seedPhantimalBaseline = (): void => active().seedPhantimalBaseline()
+
   const getTilesWithCharactersStore = (): GridTile[] => getTilesWithCharacters(active().grid)
 
   return {
@@ -64,5 +66,6 @@ export const useCharacterStore = defineStore('character', () => {
     placePhantimalOnHex,
     autoPlacePhantimal,
     phantimalFactionCount,
+    seedPhantimalBaseline,
   }
 })

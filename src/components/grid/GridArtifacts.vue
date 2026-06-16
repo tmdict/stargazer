@@ -56,29 +56,12 @@ const enemyCenter = computed(() => cellCenter(enemyCellHex.value))
 const allyCellPoints = computed(() => cellPoints(allyCellHex.value))
 const enemyCellPoints = computed(() => cellPoints(enemyCellHex.value))
 
-// Dashed border path covering only the edges that don't abut a grid tile, so
-// the dash never doubles up against a tile's solid border. In this pointy-top
-// layout, corner k sits at (k + 0.5)·60° and neighbor d's center at (d − 1)·60°,
-// so the hex across edge (corner k → corner k+1) is neighbor(k + 2).
-const outerEdgePath = (hex: Hex | null): string => {
-  if (!hex) return ''
-  const corners = ctx.layout.polygonCorners(hex)
-  const segments: string[] = []
-  corners.forEach((corner, k) => {
-    if (ctx.grid.getTileOrUndefined(hex.neighbor(k + 2))) return
-    const next = corners[(k + 1) % corners.length]!
-    segments.push(`M ${corner.x} ${corner.y} L ${next.x} ${next.y}`)
-  })
-  return segments.join(' ')
-}
-
-const allyCellBorderPath = computed(() => outerEdgePath(allyCellHex.value))
-const enemyCellBorderPath = computed(() => outerEdgePath(enemyCellHex.value))
-
 // The cell-outline SVG shares the full grid box and coordinate space with GridTiles,
 // so it compresses with the perspective wrapper exactly like the real hexes.
 const gridPixelSize = computed(() => 600 * ctx.hexScale)
-const cellStrokeWidth = computed(() => Math.max(1.5, 2 * ctx.hexScale))
+// Match the tile stroke (GridTiles' BASE_STROKE_WIDTH) so a covering tile border
+// fully hides the dash on a shared edge.
+const cellStrokeWidth = computed(() => Math.max(1, 2 * ctx.hexScale))
 const cellDashArray = computed(() => {
   const scale = ctx.hexScale
   return `${6 * scale},${4 * scale}`
@@ -178,7 +161,36 @@ const handleArtifactClick = (team: Team) => {
 
 <template>
   <div class="grid-artifacts">
-    <!-- Visual-only host cells (dashed). Same coordinate space as GridTiles. -->
+    <!-- Dashed border as a full hexagon beneath the tiles (z-index: -1): each
+         rendered neighbor's solid border covers the shared edge, and the dash shows
+         wherever no tile is drawn beside it (e.g. team view hides the neighbor). The
+         fill/click layer below stays above the tiles; it's the off-grid host cell and
+         never overlaps one. -->
+    <svg
+      v-if="showAllyCell || showEnemyCell"
+      class="artifact-cell-border-layer"
+      :width="gridPixelSize"
+      :height="gridPixelSize"
+    >
+      <polygon
+        v-if="showAllyCell"
+        class="artifact-cell-border"
+        fill="none"
+        :points="allyCellPoints"
+        :stroke-width="cellStrokeWidth"
+        :stroke-dasharray="cellDashArray"
+      />
+      <polygon
+        v-if="showEnemyCell"
+        class="artifact-cell-border"
+        fill="none"
+        :points="enemyCellPoints"
+        :stroke-width="cellStrokeWidth"
+        :stroke-dasharray="cellDashArray"
+      />
+    </svg>
+
+    <!-- Host-cell fill + click target. Same coordinate space as GridTiles. -->
     <svg
       v-if="showAllyCell || showEnemyCell"
       ref="cellLayerRef"
@@ -194,14 +206,6 @@ const handleArtifactClick = (team: Team) => {
         :points="allyCellPoints"
         @click="allyCellClickable && openPopup(Team.ALLY, allyCenter)"
       />
-      <path
-        v-if="showAllyCell"
-        class="artifact-cell-border"
-        fill="none"
-        :d="allyCellBorderPath"
-        :stroke-width="cellStrokeWidth"
-        :stroke-dasharray="cellDashArray"
-      />
       <polygon
         v-if="showEnemyCell"
         class="artifact-cell"
@@ -209,14 +213,6 @@ const handleArtifactClick = (team: Team) => {
         :class="{ clickable: enemyCellClickable }"
         :points="enemyCellPoints"
         @click="enemyCellClickable && openPopup(Team.ENEMY, enemyCenter)"
-      />
-      <path
-        v-if="showEnemyCell"
-        class="artifact-cell-border"
-        fill="none"
-        :d="enemyCellBorderPath"
-        :stroke-width="cellStrokeWidth"
-        :stroke-dasharray="cellDashArray"
       />
     </svg>
 
@@ -275,12 +271,19 @@ const handleArtifactClick = (team: Team) => {
   overflow-x: clip;
 }
 
-.artifact-cell-layer {
+.artifact-cell-layer,
+.artifact-cell-border-layer {
   position: absolute;
   top: 0;
   left: 0;
   pointer-events: none;
   overflow: visible;
+}
+
+/* Beneath the in-flow tile layer so tiles cover shared edges (see template).
+   .grid-map sets isolation: isolate so this z-index can't escape the board. */
+.artifact-cell-border-layer {
+  z-index: -1;
 }
 
 .artifact-cell {

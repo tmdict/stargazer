@@ -9,7 +9,7 @@ registerSkill(
     name: 'Foretold Favor',
     description:
       'Targets the rearmost ally on the same team, the ally the quill follows when the battle starts.',
-    color: '#9661f1',
+    color: '#0288d1',
     arrowType: 'ally',
     calculateTarget: (ctx) =>
       findTarget(ctx, {
