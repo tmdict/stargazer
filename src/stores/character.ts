@@ -18,10 +18,6 @@ export const useCharacterStore = defineStore('character', () => {
   const active = () => grids.active!
 
   const charactersPlaced = computed(() => active().charactersPlaced)
-  const availableAlly = computed(() => active().counts.maxAlly - active().counts.ally)
-  const availableEnemy = computed(() => active().counts.maxEnemy - active().counts.enemy)
-  const maxTeamSizeAlly = computed(() => active().counts.maxAlly)
-  const maxTeamSizeEnemy = computed(() => active().counts.maxEnemy)
 
   const placeCharacterOnHex = (
     hexId: number,
@@ -54,10 +50,6 @@ export const useCharacterStore = defineStore('character', () => {
 
   return {
     charactersPlaced,
-    availableAlly,
-    availableEnemy,
-    maxTeamSizeAlly,
-    maxTeamSizeEnemy,
     placeCharacterOnHex,
     removeCharacterFromHex,
     clearAllCharacters,

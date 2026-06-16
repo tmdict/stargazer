@@ -28,7 +28,7 @@ defineProps<{
 
 const i18n = useI18nStore()
 const gridStore = useGridStore()
-const { targetHexId, tabRequest, liftedHexId, clearTargetHex } = useSelectionState()
+const { targetHexId, tabRequest, liftedHexId, clearTargets } = useSelectionState()
 
 const activeTab = ref('characters')
 const tabs = computed(() => [
@@ -66,7 +66,7 @@ const handleArenaSelected = (mapKey: string) => {
 </script>
 
 <template>
-  <BottomSheet v-model:expanded="sheetExpanded" :desktop-rail="false" @dismiss="clearTargetHex">
+  <BottomSheet v-model:expanded="sheetExpanded" :desktop-rail="false" @dismiss="clearTargets">
     <TabView v-model="activeTab" :tabs="tabs" fill eager>
       <template #characters>
         <CharacterSelection :characters="characters" :is-draggable="true" :scrollable="false" />
