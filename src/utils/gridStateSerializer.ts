@@ -70,23 +70,50 @@ export function serializeGridState(
     state.a = [allyArtifact, enemyArtifact]
   }
 
-  // Pack display flags into a single number using bit flags
-  // Bit 0: showHexIds (Grid Info)
-  // Bit 1: showArrows (Targeting)
-  // Bit 2: showPerspective (!Flat)
-  // Bit 3: showSkills (Skills)
-  // Bit 4: teamView (render only ally tiles)
+  // Always include display flags even if 0 (all false)
   if (displayFlags) {
-    let packed = 0
-    if (displayFlags.showHexIds) packed |= 1 << 0
-    if (displayFlags.showArrows) packed |= 1 << 1
-    if (displayFlags.showPerspective) packed |= 1 << 2
-    if (displayFlags.showSkills) packed |= 1 << 3
-    if (displayFlags.teamView) packed |= 1 << 4
-    // Always include display flags even if 0 (all false)
-    state.d = packed
+    state.d = packDisplayFlags(displayFlags)
   }
 
+  return state
+}
+
+/* Pack the five display toggles into one number.
+ * Bit 0: showHexIds, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills, 4: teamView */
+export function packDisplayFlags(flags: DisplayFlags): number {
+  let packed = 0
+  if (flags.showHexIds) packed |= 1 << 0
+  if (flags.showArrows) packed |= 1 << 1
+  if (flags.showPerspective) packed |= 1 << 2
+  if (flags.showSkills) packed |= 1 << 3
+  if (flags.teamView) packed |= 1 << 4
+  return packed
+}
+
+/* Multi-board state (5 v 5): one GridState per board, the active board, and the
+ * global display flags. Boards carry their own map via their tile states. */
+export interface MultiGridState {
+  boards: GridState[]
+  active?: number
+  d?: number
+}
+
+export interface BoardInput {
+  tiles: GridTile[]
+  allyArtifact: number | null
+  enemyArtifact: number | null
+}
+
+export function serializeMultiGridState(
+  boards: BoardInput[],
+  activeId: number,
+  displayFlags?: DisplayFlags,
+): MultiGridState {
+  const state: MultiGridState = {
+    boards: boards.map((b) => serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact)),
+  }
+  if (activeId) state.active = activeId
+  if (displayFlags) state.d = packDisplayFlags(displayFlags)
   return state
 }
 

@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import MapInvertToggle from './MapInvertToggle.vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import IconFill from '@/components/ui/IconFill.vue'
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
@@ -55,9 +55,6 @@ const handleArenaSelected = (mapKey: string) => {
   emit('arenaSelected', mapKey)
 }
 
-const showInvertTooltip = ref(false)
-const invertButtonElement = ref<HTMLElement>()
-
 const getPreviewFillColor = (state: State): string => {
   const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
   return getTileFillColor(displayState)
@@ -65,7 +62,7 @@ const getPreviewFillColor = (state: State): string => {
 </script>
 
 <template>
-  <div class="map-editor">
+  <div v-scroll-chain class="map-editor">
     <section class="map-section">
       <h3 class="section-title">{{ i18n.t('app.editor') }}</h3>
       <p class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
@@ -93,20 +90,7 @@ const getPreviewFillColor = (state: State): string => {
       </div>
 
       <div class="map-editor-actions">
-        <label
-          ref="invertButtonElement"
-          class="invert-toggle"
-          @mouseenter="showInvertTooltip = true"
-          @mouseleave="showInvertTooltip = false"
-        >
-          <input
-            type="checkbox"
-            :checked="mapEditorStore.isColorInverted"
-            class="invert-checkbox"
-            @change="mapEditorStore.toggleColorInvert()"
-          />
-          <span class="invert-text">{{ i18n.t('app.invert') }}</span>
-        </label>
+        <MapInvertToggle />
         <button class="fill-button" @click="handleApplyAllTiles">
           <IconFill :size="14" /> {{ i18n.t('app.fill') }}
         </button>
@@ -119,19 +103,6 @@ const getPreviewFillColor = (state: State): string => {
       <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
     </section>
   </div>
-
-  <Teleport to="body">
-    <TooltipPopup
-      v-if="showInvertTooltip && invertButtonElement"
-      :target-element="invertButtonElement"
-      variant="detailed"
-      max-width="350px"
-    >
-      <template #content>
-        {{ i18n.t('app.invert-tooltip') }}
-      </template>
-    </TooltipPopup>
-  </Teleport>
 </template>
 
 <style scoped>
@@ -231,45 +202,6 @@ const getPreviewFillColor = (state: State): string => {
   display: flex;
   gap: 1rem;
   justify-content: center;
-}
-
-.invert-toggle {
-  display: flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  cursor: pointer;
-  font-family: sans-serif;
-  font-size: 0.85rem;
-  font-weight: 600;
-  user-select: none;
-  border: 2px solid;
-  border-radius: var(--radius-medium);
-  padding: var(--spacing-xs) var(--spacing-md);
-  transition: all var(--transition-fast);
-  min-height: 30px;
-  flex-shrink: 0;
-  white-space: nowrap;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-primary);
-  border-color: var(--color-border-primary);
-}
-
-.invert-toggle:hover {
-  background: var(--color-bg-tertiary);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-}
-
-.invert-checkbox {
-  width: 0.9rem;
-  height: 0.9rem;
-  cursor: pointer;
-  accent-color: var(--color-primary);
-  margin: 0;
-}
-
-.invert-text {
-  font-weight: 600;
 }
 
 .fill-button,

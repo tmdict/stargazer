@@ -2,6 +2,7 @@ import { createPinia } from 'pinia'
 import { ViteSSG } from 'vite-ssg'
 
 import App from './App.vue'
+import { vScrollChain } from '@/directives/scrollChain'
 import { routes } from '@/router/routes'
 
 import './styles/base.css'
@@ -20,4 +21,5 @@ import './styles/variables.css'
  */
 export const createApp = ViteSSG(App, { routes }, async ({ app }) => {
   app.use(createPinia())
+  app.directive('scroll-chain', vScrollChain)
 })

@@ -4,10 +4,11 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
 import { unpackDisplayFlags, type DisplayFlags, type GridState } from '@/utils/gridStateSerializer'
-import { decodeGridStateFromUrl } from '@/utils/urlStateManager'
+import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
+import { useGrids } from './grids'
 
 interface UrlRestoreResult {
   success: boolean
@@ -20,6 +21,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
   const artifactStore = useArtifactStore()
+  const grids = useGrids()
 
   // Restore grid state from encoded string
   const restoreFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
@@ -182,7 +184,35 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
   }
 
+  // Restore N boards (5 v 5): rebuild the board array, then restore each board by
+  // temporarily making it active so the same per-board apply path is reused.
+  const restoreMultiFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
+    if (!encodedState) {
+      return { success: false, error: 'No state provided' }
+    }
+
+    try {
+      const multi = decodeMultiGridStateFromUrl(encodedState)
+      if (!multi || multi.boards.length === 0) {
+        return { success: false, error: 'Invalid state data' }
+      }
+
+      grids.setGridCount(multi.boards.length)
+      multi.boards.forEach((boardState, i) => {
+        grids.setActive(i)
+        applyGridState(boardState)
+      })
+      grids.setActive(Math.min(Math.max(multi.active ?? 0, 0), multi.boards.length - 1))
+
+      return { success: true, displayFlags: unpackDisplayFlags(multi.d) }
+    } catch (err) {
+      console.error('Failed to restore multi state from encoded string:', err)
+      return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }
+
   return {
     restoreFromEncodedState,
+    restoreMultiFromEncodedState,
   }
 })

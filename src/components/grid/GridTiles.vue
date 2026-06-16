@@ -2,16 +2,15 @@
 import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 
 import { useDragDrop } from '@/composables/useDragDrop'
+import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { canPlaceCharacterOnTeam, hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
-import { useCharacterStore } from '@/stores/character'
-import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import { useSkillStore } from '@/stores/skill'
 import {
   getInvertedState,
   getTeamFromTileState,
@@ -52,7 +51,9 @@ const {
   hasCharacterData,
   draggedCharacter,
   hoveredHexId,
+  hoveredGridId,
   lastDropHexId,
+  lastDropGridId,
   isDragging,
   setHoveredHex,
   setDropHandled,
@@ -61,13 +62,14 @@ const {
 // Root SVG, exposed for GridManager's screen→SVG coordinate conversion
 const svgEl = ref<SVGSVGElement | null>(null)
 defineExpose({ svgEl })
-const gridStore = useGridStore()
-const characterStore = useCharacterStore()
+const ctx = useGridContext()
+const grids = useGrids()
 const mapEditorStore = useMapEditorStore()
-const skillStore = useSkillStore()
 
 // Mobile: the tile tapped to target placement (highlighted until a hero fills it).
-const { targetHexId } = useSelectionState()
+// Board-qualified so only this board's tapped tile lights up, not the same hex id
+// on every 5 v 5 board.
+const { targetHexId, targetGridId } = useSelectionState()
 
 // Track which hex is currently being hovered (non-drag)
 const hoveredHex = ref<number | null>(null)
@@ -80,18 +82,18 @@ let lastPaintTime = 0
 const PAINT_THROTTLE_MS = 50 // Performance: throttle painting to every 50ms
 
 const textTransform = (hex: Hex) => {
-  const pos = gridStore.layout.hexToPixel(hex)
+  const pos = ctx.layout.hexToPixel(hex)
   return `rotate(${TEXT_ROTATION},${pos.x},${pos.y})`
 }
 
 const getHexFill = (hex: Hex) => {
-  const state = gridStore.grid.getTile(hex).state
+  const state = ctx.grid.getTile(hex).state
   const displayState = mapEditorStore.isColorInverted ? getInvertedState(state) : state
   return getTileFillColor(displayState) || HEX_FILL_COLOR
 }
 
 const shouldShowHexId = (hex: Hex) => {
-  const state = gridStore.grid.getTile(hex).state
+  const state = ctx.grid.getTile(hex).state
   return state !== State.BLOCKED
 }
 
@@ -111,7 +113,7 @@ const shouldShowHexId = (hex: Hex) => {
 const blockHover = ref(false)
 
 const svgDimensions = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   return {
     width: BASE_WIDTH * scale,
     height: props.height * scale,
@@ -119,7 +121,7 @@ const svgDimensions = computed(() => {
 })
 
 const scaledFontSizes = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   return {
     hexId: Math.max(10, HEX_ID_FONT_SIZE * scale), // Min 10px for readability
     coordinate: Math.max(6, COORDINATE_FONT_SIZE * scale), // Min 6px
@@ -128,13 +130,13 @@ const scaledFontSizes = computed(() => {
 
 // Hide coordinates on mobile for better readability
 const shouldShowCoordinates = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   // Only show coordinates on desktop (scale = 1)
   return props.showCoordinates && scale >= 1
 })
 
 const scaledStrokeWidth = computed(() => {
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   return Math.max(1, BASE_STROKE_WIDTH * scale) // Min 1px
 })
 
@@ -153,10 +155,11 @@ watchEffect(() => {
     // Just stopped dragging - keep blocking for a bit, then restore hover
     blockHoverTimeout = window.setTimeout(() => {
       blockHover.value = false
-      // Restore the hover highlight on the tile that received the drop
-      if (lastDropHexId.value !== null) {
+      // Restore the hover highlight on the tile that received the drop (this board only)
+      if (lastDropHexId.value !== null && lastDropGridId.value === ctx.id) {
         hoveredHex.value = lastDropHexId.value
         lastDropHexId.value = null
+        lastDropGridId.value = null
       }
       blockHoverTimeout = null
     }, 100)
@@ -218,7 +221,7 @@ const handleHexDragOver = (event: DragEvent, hex: Hex) => {
   if (hasCharacterData(event)) {
     handleDragOver(event)
     // Sync with global hover state for visual feedback
-    setHoveredHex(hex.getId())
+    setHoveredHex(hex.getId(), ctx.id)
   }
 }
 
@@ -238,20 +241,21 @@ const handleHexDrop = (event: DragEvent, hex: Hex) => {
   const dropResult = handleDrop(event)
   if (dropResult) {
     setDropHandled(true) // Prevent duplicate processing
-    characterStore.handleCharacterDrop(dropResult, hex.getId())
+    grids.routeDrop(dropResult, ctx.id, hex.getId())
   }
 }
 
 const getHexDropClass = (hex: Hex) => {
   const hexId = hex.getId()
-  const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
+  const isOccupied = hasCharacter(ctx.grid, hexId)
   // Use position-based hover detection instead of SVG event-based detection
-  const isDragHover = isDragging.value && hoveredHexId.value === hexId
+  const isDragHover =
+    isDragging.value && hoveredGridId.value === ctx.id && hoveredHexId.value === hexId
 
   // Validate drop zone for visual feedback
   let validDropZone = false
   if (isDragHover && draggedCharacter.value) {
-    const tile = gridStore.getTile(hexId)
+    const tile = ctx.grid.getTileById(hexId)
     const state = tile.state
 
     // Check if tile accepts characters
@@ -263,11 +267,7 @@ const getHexDropClass = (hex: Hex) => {
         validDropZone = true
       } else {
         // Character selection: check team capacity
-        validDropZone = canPlaceCharacterOnTeam(
-          gridStore._getGrid(),
-          draggedCharacter.value.id,
-          tileTeam,
-        )
+        validDropZone = canPlaceCharacterOnTeam(ctx.grid, draggedCharacter.value.id, tileTeam)
       }
     }
   }
@@ -278,12 +278,12 @@ const getHexDropClass = (hex: Hex) => {
     'drag-hover': isDragHover,
     'invalid-drop': isDragHover && !validDropZone,
     hover: hoveredHex.value === hexId,
-    targeted: targetHexId.value === hexId,
+    targeted: targetHexId.value === hexId && targetGridId.value === ctx.id,
   }
 }
 
 const isElevated = (hex: Hex) => {
-  return hasCharacter(gridStore._getGrid(), hex.getId())
+  return hasCharacter(ctx.grid, hex.getId())
 }
 
 // Get stroke style for tiles - uses first skill color if available
@@ -291,22 +291,22 @@ const getHexStroke = (hex: Hex) => {
   const hexId = hex.getId()
 
   if (props.showSkills) {
-    const colors = skillStore.getTileColorModifier(hexId)
+    const colors = ctx.getTileColorModifier(hexId)
     if (colors) {
       return colors[0]
     }
   }
 
-  const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
+  const isOccupied = hasCharacter(ctx.grid, hexId)
   return isOccupied ? '#999' : HEX_STROKE_COLOR
 }
 
 const getHexStrokeWidth = (hex: Hex) => {
   const hexId = hex.getId()
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
 
   if (props.showSkills) {
-    const colors = skillStore.getTileColorModifier(hexId)
+    const colors = ctx.getTileColorModifier(hexId)
     if (colors) {
       // Total width accommodates all concentric strokes
       const baseWidth = Math.max(3, 4 * scale)
@@ -315,17 +315,17 @@ const getHexStrokeWidth = (hex: Hex) => {
     }
   }
 
-  const isOccupied = hasCharacter(gridStore._getGrid(), hexId)
+  const isOccupied = hasCharacter(ctx.grid, hexId)
   return isOccupied ? Math.max(2, 3 * scale) : scaledStrokeWidth.value
 }
 
 // Get additional concentric stroke layers for multi-color tiles
 const getConcentricStrokes = (hex: Hex): Array<{ color: string; width: number }> => {
   if (!props.showSkills) return []
-  const colors = skillStore.getTileColorModifier(hex.getId())
+  const colors = ctx.getTileColorModifier(hex.getId())
   if (!colors || colors.length <= 1) return []
 
-  const scale = gridStore.getHexScale()
+  const scale = ctx.hexScale
   const baseWidth = Math.max(3, 4 * scale)
   const step = Math.max(2, 3 * scale)
 
@@ -339,7 +339,7 @@ const getConcentricStrokes = (hex: Hex): Array<{ color: string; width: number }>
 // Helper to check if a hex has a skill highlight
 const hasSkillHighlight = (hex: Hex) => {
   if (!props.showSkills) return false
-  return skillStore.getTileColorModifier(hex.getId()) !== undefined
+  return ctx.getTileColorModifier(hex.getId()) !== undefined
 }
 
 // Separate hexes into rendering layers for proper z-ordering
@@ -459,8 +459,8 @@ onUnmounted(() => {
         <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">
           <text
             v-if="showHexIds && shouldShowHexId(hex)"
-            :x="gridStore.layout.hexToPixel(hex).x"
-            :y="gridStore.layout.hexToPixel(hex).y + 6"
+            :x="ctx.layout.hexToPixel(hex).x"
+            :y="ctx.layout.hexToPixel(hex).y + 6"
             text-anchor="middle"
             :font-size="scaledFontSizes.hexId"
             :fill="TEXT_COLOR"
@@ -471,8 +471,8 @@ onUnmounted(() => {
           </text>
           <text
             v-if="shouldShowCoordinates"
-            :x="gridStore.layout.hexToPixel(hex).x"
-            :y="gridStore.layout.hexToPixel(hex).y + 18"
+            :x="ctx.layout.hexToPixel(hex).x"
+            :y="ctx.layout.hexToPixel(hex).y + 18"
             text-anchor="middle"
             :font-size="scaledFontSizes.coordinate"
             :fill="COORDINATE_COLOR"

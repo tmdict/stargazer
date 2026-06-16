@@ -131,7 +131,7 @@ defineExpose({
 </script>
 
 <template>
-  <div class="grid-stats">
+  <div v-scroll-chain class="grid-stats">
     <h3>Debug Info</h3>
     <p>
       Total Hexes: {{ gridStore.hexes.length }}; Characters Placed:

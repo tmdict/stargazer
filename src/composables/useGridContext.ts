@@ -1,0 +1,472 @@
+/* Per-board grid context: one self-contained arena board.
+ *
+ * Bundles everything that is "per board" (its Grid, SkillManager, current map,
+ * artifact slots) with the values derived from them (layout, team-view crop,
+ * team counts, pathfinding target maps) and the operations that mutate them
+ * (place / remove / move / swap / phantimal / map switch / clear). The single
+ * Arena board is the N=1 case; the 5 v 5 page holds five of these.
+ *
+ * Reactive effects live in a detached effectScope so a board can be torn down
+ * (e.g. when the grid count changes) without leaking watchers. Each board owns
+ * its own phantimal faction watcher, scoped to its own grid.
+ *
+ * Global state (hex size, team-view flag) is passed in by useGrids and shared by
+ * every board, since all boards render at one size and one set of display flags.
+ */
+
+import {
+  computed,
+  effectScope,
+  inject,
+  provide,
+  reactive,
+  ref,
+  watch,
+  type InjectionKey,
+  type Ref,
+} from 'vue'
+
+import {
+  canPlaceCharacterOnTeam,
+  findCharacterHex,
+  findTeamPhantimalHex,
+  getCharacter,
+  getCharacterCount,
+  getCharacterPlacements,
+  getCharacterTeam,
+  getMaxTeamSize,
+  getTeamCharacters,
+  getTilesWithCharacters,
+  hasCharacter,
+} from '@/lib/characters/character'
+import { executeMoveCharacter } from '@/lib/characters/move'
+import { isPhantimalId } from '@/lib/characters/phantimal'
+import {
+  countTeamFaction,
+  PHANTIMAL_FACTION_REQUIREMENT,
+  requiredFactions,
+} from '@/lib/characters/phantimalFaction'
+import { executeAutoPlaceCharacter, executePlaceCharacter } from '@/lib/characters/place'
+import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
+import { executeSwapCharacters } from '@/lib/characters/swap'
+import { Grid, type GridTile } from '@/lib/grid'
+import type { Hex } from '@/lib/hex'
+import { Layout, POINTY, type Point } from '@/lib/layout'
+import { getMapByKey } from '@/lib/maps'
+import { getClosestTargetMap } from '@/lib/pathfinding'
+import { SkillManager } from '@/lib/skills/skill'
+import type { CharacterType } from '@/lib/types/character'
+import { FULL_GRID } from '@/lib/types/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
+
+// Crop padding for team view, as multipliers on hexRadius. The top multiplier
+// covers the perspective-mode character sprite stretch in the worst case (topmost
+// ally hex). Re-tune if GridCharacters' vertical offset / scaleY changes; there
+// is no clean closed form due to the compound transforms.
+const CHARACTER_TOP_PAD_MULTIPLIER = 2.15
+const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
+
+export interface ViewBoxBounds {
+  x: number
+  y: number
+  width: number
+  height: number
+}
+
+export interface GridContextGlobals {
+  hexSize: Ref<Point>
+  teamView: Ref<boolean>
+  // Team-view crop shared across boards so they stay the same height; null means
+  // each board crops to its own ally extent (the single-board Arena).
+  sharedCrop?: Ref<{ minY: number; maxY: number } | null>
+}
+
+// A reactive board entity (store-like): refs and computeds are unwrapped on
+// access, so consumers read `ctx.currentMap` / `ctx.viewBoxBounds` without
+// `.value`, and `ctx.grid` is the reactive grid proxy.
+export interface GridContext {
+  id: number
+  grid: Grid
+  skillManager: SkillManager
+  currentMap: string
+  artifacts: { ally: number | null; enemy: number | null }
+
+  // Derived (per board)
+  layout: Layout
+  visibleHexes: Hex[]
+  viewBoxBounds: ViewBoxBounds
+  charactersPlaced: number
+  placements: Map<number, number>
+  counts: { ally: number; enemy: number; maxAlly: number; maxEnemy: number }
+  closestEnemyMap: ReturnType<typeof getClosestTargetMap>
+  closestAllyMap: ReturnType<typeof getClosestTargetMap>
+  skillTargets: ReturnType<SkillManager['getAllSkillTargets']>
+  // Page-wide values surfaced on the board for one-stop component access.
+  hexScale: number
+  teamView: boolean
+
+  // Per-board skill queries (each board has its own SkillManager)
+  getColorModifierForCharacter: (characterId: number, team: Team) => string | undefined
+  getImageModifierForCharacter: (characterId: number, team: Team) => string | undefined
+  getTileColorModifier: (hexId: number) => string[] | undefined
+
+  // Operations (bound to this board's grid + skillManager)
+  place: (hexId: number, characterId: number, team?: Team) => boolean
+  remove: (hexId: number) => boolean
+  move: (fromHexId: number, toHexId: number, characterId: number) => boolean
+  swap: (fromHexId: number, toHexId: number) => boolean
+  autoPlace: (characterId: number, team: Team) => boolean
+  placePhantimal: (hexId: number, phantimalId: number, team?: Team) => boolean
+  autoPlacePhantimal: (phantimalId: number, team: Team) => boolean
+  phantimalCanJoinTeam: (phantimalId: number, team: Team) => boolean
+  phantimalFactionCount: (phantimalId: number, team: Team) => number
+  setArtifact: (team: Team, artifactId: number) => void
+  removeArtifact: (team: Team) => void
+  handleDrop: (
+    payload: { character: CharacterType; characterId: number },
+    targetHexId: number,
+  ) => boolean
+  switchMap: (mapKey: string) => boolean
+  clearCharacters: () => void
+  clearArtifacts: () => void
+  clear: () => void
+
+  dispose: () => void
+}
+
+export function createGridContext(
+  id: number,
+  mapKey: string,
+  globals: GridContextGlobals,
+): GridContext {
+  const gameDataStore = useGameDataStore()
+  const { hexSize, teamView, sharedCrop } = globals
+
+  const mapConfig = getMapByKey(mapKey)
+  const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
+  const skillManager = reactive(new SkillManager()) as SkillManager
+  grid.skillManager = skillManager
+
+  const currentMap = ref(mapKey)
+  const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }
+
+  const scope = effectScope(true)
+
+  // Phantimal range is data-driven; seed the static character range map with an
+  // entry per on-grid phantimal so it can act as a targeting source.
+  const buildUnitRanges = (tiles: GridTile[]): Map<number, number> => {
+    const ranges = new Map(gameDataStore.characterRanges)
+    for (const tile of tiles) {
+      if (tile.characterId !== undefined && isPhantimalId(tile.characterId)) {
+        ranges.set(tile.characterId, gameDataStore.getCharacterRange(tile.characterId))
+      }
+    }
+    return ranges
+  }
+
+  // A phantimal may only join a team that fields enough of its faction(s).
+  // With phantimal data unavailable (unit tests) the rule can't be evaluated and
+  // placement is allowed.
+  const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean => {
+    const phantimal = gameDataStore.getPhantimalById(phantimalId)
+    if (!phantimal) return true
+    const factions = requiredFactions(phantimal.name, phantimal.faction)
+    const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
+    return count >= PHANTIMAL_FACTION_REQUIREMENT
+  }
+
+  const phantimalFactionCount = (phantimalId: number, team: Team): number => {
+    const phantimal = gameDataStore.getPhantimalById(phantimalId)
+    if (!phantimal) return 0
+    const factions = requiredFactions(phantimal.name, phantimal.faction)
+    return countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
+  }
+
+  // Phantimals are capped at one per team: drop the team's current phantimal
+  // (unless it's the one being re-placed) before adding another.
+  const clearTeamPhantimal = (team: Team, exceptHexId?: number): void => {
+    const existing = findTeamPhantimalHex(grid, team)
+    if (existing !== null && existing !== exceptHexId) {
+      executeRemoveCharacter(grid, skillManager, existing)
+    }
+  }
+
+  const place = (hexId: number, characterId: number, team: Team = Team.ALLY): boolean =>
+    executePlaceCharacter(grid, skillManager, hexId, characterId, team)
+
+  const remove = (hexId: number): boolean => executeRemoveCharacter(grid, skillManager, hexId)
+
+  const move = (fromHexId: number, toHexId: number, characterId: number): boolean =>
+    executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+
+  const swap = (fromHexId: number, toHexId: number): boolean =>
+    executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
+
+  const autoPlace = (characterId: number, team: Team): boolean =>
+    executeAutoPlaceCharacter(grid, skillManager, characterId, team)
+
+  const placePhantimal = (hexId: number, phantimalId: number, team: Team = Team.ALLY): boolean => {
+    if (!phantimalCanJoinTeam(phantimalId, team)) return false
+    clearTeamPhantimal(team, hexId)
+    return executePlaceCharacter(grid, skillManager, hexId, phantimalId, team)
+  }
+
+  const autoPlacePhantimal = (phantimalId: number, team: Team): boolean => {
+    if (!phantimalCanJoinTeam(phantimalId, team)) return false
+    clearTeamPhantimal(team)
+    return executeAutoPlaceCharacter(grid, skillManager, phantimalId, team)
+  }
+
+  // Single-board drop: a grid-source drop moves or swaps; a selection drop
+  // validates team capacity then places. Cross-board routing is one level up.
+  const handleDrop = (
+    payload: { character: CharacterType; characterId: number },
+    targetHexId: number,
+  ): boolean => {
+    const { character, characterId } = payload
+    if (character.sourceHexId !== undefined) {
+      if (hasCharacter(grid, targetHexId)) {
+        return swap(character.sourceHexId, targetHexId)
+      }
+      // Moving a phantimal onto an empty cell on the other team must keep the
+      // one-per-team rule and the destination team's faction requirement.
+      if (isPhantimalId(characterId)) {
+        const destTeam = getTeamFromTileState(grid.getTileById(targetHexId).state)
+        const sourceTeam = getCharacterTeam(grid, character.sourceHexId)
+        if (destTeam !== null && destTeam !== sourceTeam) {
+          if (!phantimalCanJoinTeam(characterId, destTeam)) return false
+          clearTeamPhantimal(destTeam, character.sourceHexId)
+        }
+      }
+      return move(character.sourceHexId, targetHexId, characterId)
+    }
+    const team = getTeamFromTileState(grid.getTileById(targetHexId).state)
+    if (team === null) return false
+    if (isPhantimalId(characterId)) {
+      return placePhantimal(targetHexId, characterId, team)
+    }
+    if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
+    return place(targetHexId, characterId, team)
+  }
+
+  const setArtifact = (team: Team, artifactId: number): void => {
+    if (team === Team.ALLY) artifacts.ally.value = artifactId
+    else artifacts.enemy.value = artifactId
+  }
+
+  const removeArtifact = (team: Team): void => {
+    if (team === Team.ALLY) artifacts.ally.value = null
+    else artifacts.enemy.value = null
+  }
+
+  // Rebuild the grid for the new map. Object.assign preserves the reactive proxy
+  // identity; the skill manager must be re-attached and reset because the rebuilt
+  // grid drops it.
+  const switchMap = (mapKey: string): boolean => {
+    const config = getMapByKey(mapKey)
+    if (!config) return false
+    Object.assign(grid, new Grid(FULL_GRID, config))
+    skillManager.reset()
+    grid.skillManager = skillManager
+    currentMap.value = mapKey
+    return true
+  }
+
+  const clearCharacters = (): void => {
+    executeClearAllCharacters(grid, skillManager)
+  }
+
+  const clearArtifacts = (): void => {
+    artifacts.ally.value = null
+    artifacts.enemy.value = null
+  }
+
+  const clear = (): void => {
+    clearCharacters()
+    clearArtifacts()
+  }
+
+  const ctx = scope.run(() => {
+    const layout = computed(() => {
+      const scale = hexSize.value.x / 40
+      const origin: Point = { x: 300 * scale, y: 300 * scale }
+      return new Layout(POINTY, hexSize.value, origin)
+    })
+
+    // Team view narrows to this board's ally tiles (available + occupied).
+    const visibleHexes = computed<Hex[]>(() => {
+      if (!teamView.value) return grid.keys()
+      return grid
+        .getAllTiles()
+        .filter((tile) => tile.state === State.AVAILABLE_ALLY || tile.state === State.OCCUPIED_ALLY)
+        .map((tile) => tile.hex)
+    })
+
+    // Vertical-only crop: x and width always span the full grid box so the
+    // edge-anchored artifact host cells (beside grid cells 1 and 45) aren't clipped.
+    const viewBoxBounds = computed<ViewBoxBounds>(() => {
+      const scale = hexSize.value.x / 40
+      const fullWidth = 600 * scale
+      const fullHeight = 600 * scale
+
+      if (!teamView.value || visibleHexes.value.length === 0) {
+        return { x: 0, y: 0, width: fullWidth, height: fullHeight }
+      }
+
+      const hexRadius = hexSize.value.x
+      let minY = Infinity
+      let maxY = -Infinity
+      const shared = sharedCrop?.value
+      if (shared) {
+        // Crop every board to the same extent so the row stays even height.
+        minY = shared.minY
+        maxY = shared.maxY
+      } else {
+        for (const hex of visibleHexes.value) {
+          for (const c of layout.value.polygonCorners(hex)) {
+            if (c.y < minY) minY = c.y
+            if (c.y > maxY) maxY = c.y
+          }
+        }
+      }
+
+      const topPad = hexRadius * CHARACTER_TOP_PAD_MULTIPLIER
+      const bottomPad = hexRadius * CHARACTER_BOTTOM_PAD_MULTIPLIER
+      // y may go negative: the clip wrapper turns a negative y into top padding,
+      // which keeps perspective-mode sprites from clipping near the y=0 edge.
+      const y = minY - topPad
+      const height = maxY - minY + topPad + bottomPad
+      return { x: 0, y, width: fullWidth, height }
+    })
+
+    const placements = computed(() => getCharacterPlacements(grid))
+    const charactersPlaced = computed(() => getCharacterCount(grid))
+    const counts = computed(() => ({
+      ally: getTeamCharacters(grid, Team.ALLY).size,
+      enemy: getTeamCharacters(grid, Team.ENEMY).size,
+      maxAlly: getMaxTeamSize(grid, Team.ALLY),
+      maxEnemy: getMaxTeamSize(grid, Team.ENEMY),
+    }))
+
+    const closestMap = (sourceTeam: Team, targetTeam: Team) =>
+      computed(() => {
+        const tiles = getTilesWithCharacters(grid)
+        const ranges = buildUnitRanges(tiles)
+        return getClosestTargetMap(
+          tiles,
+          sourceTeam,
+          targetTeam,
+          (hex) => grid.getTileOrUndefined(hex),
+          ranges,
+        )
+      })
+    const closestEnemyMap = closestMap(Team.ALLY, Team.ENEMY)
+    const closestAllyMap = closestMap(Team.ENEMY, Team.ALLY)
+
+    const hexScale = computed(() => hexSize.value.x / 40)
+    const teamViewActive = computed(() => teamView.value)
+
+    // Per-board skill-derived data, read by the tile / character / targeting layers.
+    const colorModifiers = computed(() => skillManager.getColorModifiersByCharacterAndTeam())
+    const imageModifiers = computed(() => skillManager.getImageModifiersByCharacterAndTeam())
+    const tileColorModifiers = computed(() => {
+      skillManager.getTargetVersion()
+      return skillManager.getTileColorModifiers()
+    })
+    const skillTargets = computed(() => {
+      skillManager.getTargetVersion()
+      return skillManager.getAllSkillTargets()
+    })
+    const getColorModifierForCharacter = (characterId: number, team: Team): string | undefined =>
+      colorModifiers.value.get(`${characterId}-${team}`)
+    const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined =>
+      imageModifiers.value.get(`${characterId}-${team}`)
+    const getTileColorModifier = (hexId: number): string[] | undefined =>
+      tileColorModifiers.value.get(hexId)
+
+    // Drop any on-field phantimal whose team no longer meets its faction
+    // requirement (e.g. a faction character was moved/removed off the team).
+    let enforcing = false
+    const enforcePhantimalFactionRule = (): void => {
+      if (enforcing) return
+      enforcing = true
+      try {
+        for (const team of [Team.ALLY, Team.ENEMY]) {
+          const hexId = findTeamPhantimalHex(grid, team)
+          if (hexId === null) continue
+          const phantimalId = getCharacter(grid, hexId)
+          if (phantimalId !== undefined && !phantimalCanJoinTeam(phantimalId, team)) {
+            executeRemoveCharacter(grid, skillManager, hexId)
+          }
+        }
+      } finally {
+        enforcing = false
+      }
+    }
+    watch(placements, enforcePhantimalFactionRule, { flush: 'post' })
+
+    return {
+      layout,
+      visibleHexes,
+      viewBoxBounds,
+      placements,
+      charactersPlaced,
+      counts,
+      closestEnemyMap,
+      closestAllyMap,
+      hexScale,
+      teamView: teamViewActive,
+      skillTargets,
+      getColorModifierForCharacter,
+      getImageModifierForCharacter,
+      getTileColorModifier,
+    }
+  })!
+
+  return reactive({
+    id,
+    grid,
+    skillManager,
+    currentMap,
+    artifacts,
+    ...ctx,
+    place,
+    remove,
+    move,
+    swap,
+    autoPlace,
+    placePhantimal,
+    autoPlacePhantimal,
+    phantimalCanJoinTeam,
+    phantimalFactionCount,
+    setArtifact,
+    removeArtifact,
+    handleDrop,
+    switchMap,
+    clearCharacters,
+    clearArtifacts,
+    clear,
+    dispose: () => scope.stop(),
+  }) as GridContext
+}
+
+const GridContextKey: InjectionKey<GridContext> = Symbol('gridContext')
+
+export function provideGridContext(ctx: GridContext): void {
+  provide(GridContextKey, ctx)
+}
+
+export function useGridContext(): GridContext {
+  const ctx = inject(GridContextKey)
+  if (!ctx) {
+    throw new Error('useGridContext must be used within a component that provides a GridContext')
+  }
+  return ctx
+}
+
+// Re-exported so callers building cross-board logic (uniqueness scans) can locate
+// a unit on a specific board's grid without importing the character lib directly.
+export { findCharacterHex, canPlaceCharacterOnTeam }

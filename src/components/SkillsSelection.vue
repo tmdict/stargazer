@@ -52,7 +52,7 @@ watch(
 </script>
 
 <template>
-  <div class="skills-selection">
+  <div v-scroll-chain class="skills-selection">
     <CharacterSearchBar
       v-model="searchQuery"
       :placeholder="i18n.t('app.skill-search-placeholder')"

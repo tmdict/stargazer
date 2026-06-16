@@ -34,6 +34,11 @@ export const MAPS: Record<string, MapConfig> = Object.fromEntries(
 
 export const DEFAULT_MAP = MAPS['arena1']!
 
+// Per-board starting arenas for the 5 v 5 page, by board index: Arena I, Arena II,
+// Arena III, Preset SR11, Preset SR1. Keys index src/data/arena/*.json; its length
+// is the board count.
+export const FIVE_V_FIVE_DEFAULT_MAPS = ['arena1', 'arena2', 'arena3', 'preset-sr11', 'preset-sr1']
+
 export const getMapNames = (): Array<{ key: string; name: string }> => {
   return Object.entries(MAPS).map(([key, config]) => ({
     key,

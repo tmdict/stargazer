@@ -23,6 +23,9 @@ defineProps<{
   hideTeamView?: boolean
   // Hides the Ally/Enemy toggle and Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
+  // Lay every control out in one wrapping row (the wide 5 v 5 page) instead of
+  // the default two stacked rows.
+  singleRow?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -39,7 +42,7 @@ const flatView = computed({
 </script>
 
 <template>
-  <div class="grid-controls">
+  <div class="grid-controls" :class="{ 'single-row': singleRow }">
     <!-- Row 1: grid display toggles -->
     <div class="controls-row">
       <label class="grid-toggle-btn" :class="{ active: flatView }">
@@ -110,6 +113,22 @@ const flatView = computed({
   align-items: center;
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
+}
+
+/* One wrapping row: flatten both rows (display: contents) so every control is a
+   direct flex child laid out together. */
+/* 5 v 5 sits the controls at the top of the grid card, which already has its own
+   top padding, so drop the extra margin the Arena uses below its grid. */
+.grid-controls.single-row {
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: var(--spacing-md) var(--spacing-lg);
+  margin-top: 0;
+}
+
+.grid-controls.single-row .controls-row {
+  display: contents;
 }
 
 .controls-row {
@@ -200,6 +219,15 @@ const flatView = computed({
 @media (max-width: 768px) {
   .grid-controls {
     gap: var(--spacing-sm);
+  }
+  /* The wide single-row layout reverts to the stacked two-row toolbar on mobile
+     (display toggles, then team + actions + clear) — same as the Arena. */
+  .grid-controls.single-row {
+    flex-direction: column;
+    gap: var(--spacing-sm);
+  }
+  .grid-controls.single-row .controls-row {
+    display: flex;
   }
   .controls-row {
     gap: 6px;

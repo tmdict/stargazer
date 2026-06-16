@@ -1,42 +1,34 @@
-import { readonly, ref } from 'vue'
+/* Single-board artifact actions over the active grid context.
+ *
+ * Adapts the active board's artifact slots in useGrids to the artifact API the
+ * Arena consumes. Artifacts are per board (each grid has its own ally/enemy pair).
+ */
+
+import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
 import { Team } from '@/lib/types/team'
+import { useGrids } from './grids'
 
 export const useArtifactStore = defineStore('artifact', () => {
-  // Artifact tracking using numeric IDs
-  const allyArtifactId = ref<number | null>(null)
-  const enemyArtifactId = ref<number | null>(null)
+  const grids = useGrids()
+  const active = () => grids.active!
 
-  // Actions
+  const allyArtifactId = computed(() => active().artifacts.ally)
+  const enemyArtifactId = computed(() => active().artifacts.enemy)
+
   const placeArtifact = (artifactId: number, team: Team): boolean => {
-    if (team === Team.ALLY) {
-      allyArtifactId.value = artifactId
-    } else {
-      enemyArtifactId.value = artifactId
-    }
+    active().setArtifact(team, artifactId)
     return true
   }
 
-  const removeArtifact = (team: Team) => {
-    if (team === Team.ALLY) {
-      allyArtifactId.value = null
-    } else {
-      enemyArtifactId.value = null
-    }
-  }
+  const removeArtifact = (team: Team): void => active().removeArtifact(team)
 
-  const clearAllArtifacts = () => {
-    allyArtifactId.value = null
-    enemyArtifactId.value = null
-  }
+  const clearAllArtifacts = (): void => active().clearArtifacts()
 
   return {
-    // State (readonly)
-    allyArtifactId: readonly(allyArtifactId),
-    enemyArtifactId: readonly(enemyArtifactId),
-
-    // Actions
+    allyArtifactId,
+    enemyArtifactId,
     placeArtifact,
     removeArtifact,
     clearAllArtifacts,

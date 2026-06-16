@@ -21,6 +21,7 @@ import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { useUrlStateStore } from '@/stores/urlState'
@@ -31,6 +32,12 @@ const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
 const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 
 const gridStore = useGridStore()
+const grids = useGrids()
+// The Arena is the single-board case; reset to one board and breakpoint sizing in
+// case the user arrived from the multi-board 5 v 5 page, then bind to it.
+if (grids.contexts.length !== 1) grids.setGridCount(1)
+grids.hexSizeMode = 'breakpoint'
+const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
 const urlStateStore = useUrlStateStore()
@@ -275,6 +282,7 @@ const handleResetMap = () => {
       <div class="sections-container">
         <div class="section">
           <GridContainer
+            :context="activeContext"
             :characters="gameDataStore.characters"
             :show-arrows="showArrows"
             :show-hex-ids="showHexIds"

@@ -1,58 +1,27 @@
-import { computed, reactive } from 'vue'
+/* Single-board skill queries over the active grid context.
+ *
+ * Adapts the active board's SkillManager in useGrids to the skill API the grid
+ * components consume. Each board owns its own SkillManager, so these queries
+ * reflect whichever board is active.
+ */
+
+import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { SkillManager } from '@/lib/skills/skill'
-import type { Team } from '@/lib/types/team'
+import type { SkillManager } from '@/lib/skills/skill'
+import { useGrids } from './grids'
 
 export const useSkillStore = defineStore('skill', () => {
-  // Create reactive skill manager instance
-  const skillManager = reactive(new SkillManager())
+  const grids = useGrids()
+  const skillManager = (): SkillManager => grids.active!.skillManager
 
-  const colorModifiersByCharacterAndTeam = computed(() => {
-    return skillManager.getColorModifiersByCharacterAndTeam()
-  })
-
-  const imageModifiersByCharacterAndTeam = computed(() => {
-    return skillManager.getImageModifiersByCharacterAndTeam()
-  })
-
-  // Computed tile color modifiers from skill manager
-  const tileColorModifiers = computed(() => {
-    // Access version to trigger reactivity when modifiers change
-    skillManager.getTargetVersion()
-    return skillManager.getTileColorModifiers()
-  })
-
-  const getColorModifierForCharacter = (characterId: number, team: Team): string | undefined => {
-    const key = `${characterId}-${team}`
-    const color = colorModifiersByCharacterAndTeam.value.get(key)
-    return color
-  }
-
-  const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined => {
-    const key = `${characterId}-${team}`
-    const imageName = imageModifiersByCharacterAndTeam.value.get(key)
-    return imageName
-  }
-
-  const getTileColorModifier = (hexId: number): string[] | undefined => {
-    return tileColorModifiers.value.get(hexId)
-  }
-
-  // Skill targeting methods - return as computed to ensure reactivity
   const getAllSkillTargets = computed(() => {
     // Access version to trigger reactivity when targets change
-    skillManager.getTargetVersion()
-    return skillManager.getAllSkillTargets()
+    skillManager().getTargetVersion()
+    return skillManager().getAllSkillTargets()
   })
 
   return {
-    getColorModifierForCharacter,
-    getImageModifierForCharacter,
-    getTileColorModifier,
     getAllSkillTargets,
-
-    // Internal use by character store
-    _getSkillManager: () => skillManager as SkillManager,
   }
 })

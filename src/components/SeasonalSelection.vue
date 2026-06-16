@@ -4,15 +4,22 @@ import PhantimalSelection from './PhantimalSelection.vue'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { PhantimalType } from '@/lib/types/phantimal'
 
-defineProps<{
+const {
+  artifacts,
+  phantimals,
+  isDraggable,
+  // See CharacterSelection: off when the roster flows in normal page height (5 v 5).
+  scrollable = true,
+} = defineProps<{
   artifacts: readonly ArtifactType[]
   phantimals: readonly PhantimalType[]
   isDraggable?: boolean
+  scrollable?: boolean
 }>()
 </script>
 
 <template>
-  <div class="seasonal-selection">
+  <div v-scroll-chain class="seasonal-selection" :class="{ scrollable }">
     <ArtifactSelection :artifacts />
     <PhantimalSelection :phantimals :is-draggable />
   </div>
@@ -29,7 +36,7 @@ defineProps<{
 /* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
    stacks naturally and lets the page scroll. */
 @media (min-width: 1220px) {
-  .seasonal-selection {
+  .seasonal-selection.scrollable {
     flex: 1;
     min-height: 0;
     overflow-y: auto;

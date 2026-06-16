@@ -3,31 +3,37 @@ import { onMounted, onUnmounted } from 'vue'
 
 import { provideDragDropRegistration, useDragDrop } from '@/composables/useDragDrop'
 
-const { isDragging, hoveredHexId, setHoveredHex, dropHandled } = useDragDrop()
+const { isDragging, hoveredHexId, hoveredGridId, setHoveredHex, dropHandled } = useDragDrop()
 
-// Registration slots the grid fills in (pointer→hex detection + drop logic)
-const { hexDetector, dropHandler } = provideDragDropRegistration()
+// Per-board registration slots (pointer→hex detection + drop logic), filled by
+// each GridManager under its own board id.
+const { detectors, dropHandlers } = provideDragDropRegistration()
+
+// First board whose detector reports a hex under the pointer wins.
+const detectHex = (x: number, y: number) => {
+  for (const [gridId, detector] of detectors) {
+    const hexId = detector(x, y)
+    if (hexId !== null) {
+      setHoveredHex(hexId, gridId)
+      return
+    }
+  }
+  setHoveredHex(null)
+}
 
 // Global mouse tracking for hex detection during drag
 const handleGlobalMouseMove = (event: MouseEvent) => {
-  if (isDragging.value && hexDetector.value) {
-    const hexId = hexDetector.value(event.clientX, event.clientY)
-    setHoveredHex(hexId)
-  }
+  if (isDragging.value) detectHex(event.clientX, event.clientY)
 }
 
 // Track during dragover events for better coverage
 const handleGlobalDragOver = (event: DragEvent) => {
   event.preventDefault()
-
   // Update hex detection during dragover as backup to mousemove
-  if (isDragging.value && hexDetector.value) {
-    const hexId = hexDetector.value(event.clientX, event.clientY)
-    setHoveredHex(hexId)
-  }
+  if (isDragging.value) detectHex(event.clientX, event.clientY)
 }
 
-// Global drop handling for characters dropped outside valid hexes
+// Global drop handling for characters dropped outside valid hex tiles
 const handleGlobalDrop = (event: DragEvent) => {
   event.preventDefault()
 
@@ -36,10 +42,9 @@ const handleGlobalDrop = (event: DragEvent) => {
     return
   }
 
-  // Check if we detected a hex under the mouse using position-based detection
-  if (hoveredHexId.value !== null && dropHandler.value) {
-    // Let GridManager handle the actual drop logic
-    dropHandler.value(event)
+  // Route to the board under the pointer (position-based detection).
+  if (hoveredHexId.value !== null && hoveredGridId.value !== null) {
+    dropHandlers.get(hoveredGridId.value)?.(event)
   }
 }
 

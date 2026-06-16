@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import GridArrow from './GridArrow.vue'
 import { useArrowLayer } from '@/composables/useArrowLayer'
-import { usePathfindingStore } from '@/stores/pathfinding'
+import { useGridContext } from '@/composables/useGridContext'
 
 interface Props {
   showArrows: boolean
@@ -11,7 +11,7 @@ interface Props {
 
 const props = defineProps<Props>()
 
-const pathfindingStore = usePathfindingStore()
+const ctx = useGridContext()
 
 // Normal targeting arrows bow harder than skill arrows so the two stay distinct
 // where they share a direction (skill arrows use the default scale). Ally and
@@ -36,7 +36,7 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
     <g :transform="layerTransform">
       <!-- Ally to Enemy arrows (teal) -->
       <GridArrow
-        v-for="[allyHexId, enemyInfo] in pathfindingStore.closestEnemyMap"
+        v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"
         :key="`arrow-ally-${allyHexId}-${enemyInfo.enemyHexId}`"
         :start-hex-id="allyHexId"
         :end-hex-id="enemyInfo.enemyHexId!"
@@ -49,7 +49,7 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 
       <!-- Enemy to Ally arrows (red) -->
       <GridArrow
-        v-for="[enemyHexId, allyInfo] in pathfindingStore.closestAllyMap"
+        v-for="[enemyHexId, allyInfo] in ctx.closestAllyMap"
         :key="`arrow-enemy-${enemyHexId}-${allyInfo.allyHexId}`"
         :start-hex-id="enemyHexId"
         :end-hex-id="allyInfo.allyHexId!"

@@ -13,5 +13,6 @@ export interface CharacterType {
   season: number
   tags: CharacterTags
   sourceHexId?: number // Optional property for tracking drag source
+  sourceGridId?: number // Board the drag started on (for cross-board moves/swaps)
   team?: Team // Team assignment for placement
 }

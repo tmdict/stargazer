@@ -152,3 +152,13 @@ if (result.success) {
 - **Phantimals (ID ≥ 100000)**: Serialized separately in the `p` section via 4-bit local IDs
 
 **Note**: Character IDs are limited to 65,535 (16-bit encoding). Companion IDs are `N * 10000 + base`, so the field covers companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). IDs exceeding the limit are filtered during validation.
+
+## Multi-board state (5 v 5)
+
+The Teams page shares N boards in one link. Five boards plus an active-id and global flags are too varied for the single-board binary packing — and there is no back-compat constraint — so multi-board state is encoded as **url-safe base64 of JSON** instead:
+
+- `serializeMultiGridState(boards, activeId, displayFlags)` → `MultiGridState` (`/src/utils/gridStateSerializer.ts`)
+- `generateMultiShareableUrl(...)` → `…/teams?g=<base64-json>` (`/src/utils/urlStateManager.ts`)
+- `TeamsView` restores it on load via `useUrlStateStore.restoreMultiFromEncodedState`, rebuilding each board.
+
+The single-board binary format above still serves the Arena (`?g=` on `/`).

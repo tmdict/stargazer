@@ -276,7 +276,7 @@ const aggregatePrediction = computed(() => {
       </template>
 
       <template #default>
-        <div class="analysis-scroll">
+        <div v-scroll-chain class="analysis-scroll">
           <div
             v-if="activeTab === 'bradley-terry' && matchData.length < BT_LOW_DATA_THRESHOLD"
             class="warning-banner"
