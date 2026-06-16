@@ -1,11 +1,13 @@
 <script setup lang="ts">
-/* The Teams page orchestrator (mirrors WandWarsView): it owns the outer tab state
-   and the 5 v 5 board lifecycle/shared state, and renders one TabView (5 v 5 boards
-   / Image Stitcher) inside a card plus the roster as a separate sibling card shown
-   for 5 v 5. The board lifecycle (setGridCount, sizing, URL restore) lives here so
-   it's scoped to route enter/leave, not to a tab switch. */
+/* The Teams page orchestrator (mirrors WandWarsView): owns the outer tab state and
+   the boards. The active tab selects the board count (GRID_TABS), so a future grid
+   mode (e.g. 3 v 3) drops in as one entry + a tab + a panel. A single watch on the
+   active tab is the only writer of the count; onScopeDispose resets to the Arena's
+   one board on leave (synchronously, so an HMR reload can't clobber it). Renders one
+   TabView (grid modes / Image Stitcher) inside a card, plus the roster as a separate
+   sibling card shown for any grid tab. */
 
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { computed, onMounted, onScopeDispose, onUnmounted, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
@@ -62,8 +64,8 @@ const showSkills = ref(true)
 // the cell-tap flow; on desktop the roster is a card and cells use the on-grid popup.
 const isSheet = computed(() => currentBreakpoint.value !== 'desktop')
 
-// 5 v 5 pins its own size per breakpoint, not the breakpoint-driven Arena sizing;
-// hexSizeMode tells useBreakpoint to leave the size alone.
+// Grid tabs pin their own size per breakpoint, not the breakpoint-driven Arena
+// sizing; hexSizeMode tells useBreakpoint to leave the size alone.
 const applySize = () => {
   grids.hexSize =
     currentBreakpoint.value === 'mobile'
@@ -72,16 +74,35 @@ const applySize = () => {
         ? MEDIUM_HEX
         : LARGE_HEX
 }
+
+// Board count per grid tab; the active tab is the selector, so a future mode (e.g.
+// 3 v 3) drops in as one entry. Non-grid tabs (Image Stitcher) aren't listed and
+// leave the boards untouched.
+const GRID_TABS: Record<string, { count: number; maps: string[] } | undefined> = {
+  fiveVFive: { count: FIVE_V_FIVE_DEFAULT_MAPS.length, maps: FIVE_V_FIVE_DEFAULT_MAPS },
+}
+const isGridTab = computed(() => GRID_TABS[activeTab.value] !== undefined)
+
+// The only writer of the board count. Rebuilds only when the active grid tab needs a
+// different count (so toggling Image Stitcher and back preserves board state), then
+// pins the medium sizing. A rebuild drops any stale tap-target/lift pointing at the
+// replaced boards (boards share hex ids).
+watch(
+  activeTab,
+  (tab) => {
+    const cfg = GRID_TABS[tab]
+    if (!cfg) return
+    if (grids.contexts.length !== cfg.count) {
+      grids.setGridCount(cfg.count, cfg.maps)
+      clearTargetHex()
+      clearLiftedHex()
+    }
+    grids.hexSizeMode = 'fixed-medium'
+    applySize()
+  },
+  { immediate: true },
+)
 watch(currentBreakpoint, applySize)
-
-grids.setGridCount(FIVE_V_FIVE_DEFAULT_MAPS.length, FIVE_V_FIVE_DEFAULT_MAPS)
-grids.hexSizeMode = 'fixed-medium'
-applySize()
-
-// Drop any tap-target/lift carried in from another page so it can't show a stale
-// highlight or mis-route on board 0 (boards share hex ids).
-clearTargetHex()
-clearLiftedHex()
 
 // Restore a shared 5 v 5 link (?g=) if one is present.
 if (gameDataStore.dataLoaded) {
@@ -101,9 +122,12 @@ if (gameDataStore.dataLoaded) {
   }
 }
 
-onUnmounted(() => {
-  grids.hexSizeMode = 'breakpoint'
+// Reset to the Arena's single board on leave. onScopeDispose runs synchronously on
+// unmount (before any re-mounted instance's setup), so an HMR reload can't leave the
+// count clobbered the way a deferred onUnmounted would.
+onScopeDispose(() => {
   grids.setGridCount(1)
+  grids.hexSizeMode = 'breakpoint'
   clearTargetHex()
   clearLiftedHex()
 })
@@ -114,6 +138,7 @@ const boardCapture = {
   showPerspective: false,
   target: '.boards-track',
   filter: (node: HTMLElement) => !node.classList?.contains('board-clear'),
+  filePrefix: 'teams',
 }
 const handleCopyImage = () => copyToClipboard(boardCapture)
 const handleDownload = () => downloadAsImage(boardCapture)
@@ -186,7 +211,7 @@ onUnmounted(() => mq?.removeEventListener('change', enforceMobileTab))
         </section>
 
         <TeamsRoster
-          v-show="activeTab === 'fiveVFive'"
+          v-show="isGridTab"
           :characters="gameDataStore.characters"
           :artifacts="gameDataStore.artifacts"
           :phantimals="gameDataStore.phantimals"

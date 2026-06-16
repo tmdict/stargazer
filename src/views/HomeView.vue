@@ -260,6 +260,7 @@ const handleDownload = async () => {
   await downloadAsImage({
     showPerspective: showPerspective.value,
     perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
+    filePrefix: 'team',
   })
 }
 
