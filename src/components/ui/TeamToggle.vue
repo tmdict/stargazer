@@ -2,9 +2,12 @@
 import { computed } from 'vue'
 
 import { Team } from '@/lib/types/team'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { invertTeam } from '@/utils/tileStateFormatting'
 
 const i18n = useI18nStore()
+const grids = useGrids()
 
 const props = defineProps<{
   selectedTeam: Team
@@ -19,14 +22,17 @@ const emit = defineEmits<{
   teamChange: [team: Team]
 }>()
 
-const isAlly = computed(() => props.selectedTeam === Team.ALLY)
-const activeLabel = computed(() => i18n.t(isAlly.value ? 'app.ally' : 'app.enemy'))
-const activeCount = computed(() => (isAlly.value ? props.allyCount : props.enemyCount))
-const activeMax = computed(() => (isAlly.value ? props.maxAllyCount : props.maxEnemyCount))
-const swapTitle = computed(() => i18n.t(isAlly.value ? 'app.enemy' : 'app.ally'))
+// selectedTeam and the counts are the engine team; label, colour and pill side
+// follow the displayed team so an inverted board reads correctly.
+const isEngineAlly = computed(() => props.selectedTeam === Team.ALLY)
+const isDisplayAlly = computed(() => invertTeam(props.selectedTeam, grids.inverted) === Team.ALLY)
+const activeLabel = computed(() => i18n.t(isDisplayAlly.value ? 'app.ally' : 'app.enemy'))
+const activeCount = computed(() => (isEngineAlly.value ? props.allyCount : props.enemyCount))
+const activeMax = computed(() => (isEngineAlly.value ? props.maxAllyCount : props.maxEnemyCount))
+const swapTitle = computed(() => i18n.t(isDisplayAlly.value ? 'app.enemy' : 'app.ally'))
 
 const swap = () => {
-  emit('teamChange', isAlly.value ? Team.ENEMY : Team.ALLY)
+  emit('teamChange', isEngineAlly.value ? Team.ENEMY : Team.ALLY)
 }
 </script>
 
@@ -34,12 +40,12 @@ const swap = () => {
   <button
     type="button"
     class="team-toggle"
-    :class="{ 'is-enemy': !isAlly }"
+    :class="{ 'is-enemy': !isDisplayAlly }"
     :aria-label="`Switch to ${swapTitle}`"
     :title="`Switch to ${swapTitle}`"
     @click="swap"
   >
-    <span class="active-pill" :class="isAlly ? 'is-ally' : 'is-enemy'">
+    <span class="active-pill" :class="isDisplayAlly ? 'is-ally' : 'is-enemy'">
       <span class="label">{{ activeLabel }}</span>
       <span v-if="showCounts" class="count">{{ activeCount }}/{{ activeMax }}</span>
     </span>

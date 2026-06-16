@@ -57,10 +57,9 @@ import { getClosestTargetMap } from '@/lib/pathfinding'
 import { SkillManager } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
+import { getTeamFromTileState, invertTeam } from '@/utils/tileStateFormatting'
 
 // Crop padding for team view, as multipliers on hexRadius. The top multiplier
 // covers the perspective-mode character sprite stretch in the worst case (topmost
@@ -79,6 +78,7 @@ export interface ViewBoxBounds {
 export interface GridContextGlobals {
   hexSize: Ref<Point>
   teamView: Ref<boolean>
+  inverted: Ref<boolean>
   // Team-view crop shared across boards so they stay the same height; null means
   // each board crops to its own ally extent (the single-board Arena).
   sharedCrop?: Ref<{ minY: number; maxY: number } | null>
@@ -107,6 +107,7 @@ export interface GridContext {
   // Page-wide values surfaced on the board for one-stop component access.
   hexScale: number
   teamView: boolean
+  inverted: boolean
 
   // Per-board skill queries (each board has its own SkillManager)
   getColorModifierForCharacter: (characterId: number, team: Team) => string | undefined
@@ -144,7 +145,7 @@ export function createGridContext(
   globals: GridContextGlobals,
 ): GridContext {
   const gameDataStore = useGameDataStore()
-  const { hexSize, teamView, sharedCrop } = globals
+  const { hexSize, teamView, inverted, sharedCrop } = globals
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
@@ -324,12 +325,13 @@ export function createGridContext(
       return new Layout(POINTY, hexSize.value, origin)
     })
 
-    // Team view narrows to this board's ally tiles (available + occupied).
+    // Team view narrows to the tiles of whichever engine team is shown as ally.
     const visibleHexes = computed<Hex[]>(() => {
       if (!teamView.value) return grid.keys()
+      const shownTeam = invertTeam(Team.ALLY, inverted.value)
       return grid
         .getAllTiles()
-        .filter((tile) => tile.state === State.AVAILABLE_ALLY || tile.state === State.OCCUPIED_ALLY)
+        .filter((tile) => getTeamFromTileState(tile.state) === shownTeam)
         .map((tile) => tile.hex)
     })
 
@@ -396,6 +398,7 @@ export function createGridContext(
 
     const hexScale = computed(() => hexSize.value.x / 40)
     const teamViewActive = computed(() => teamView.value)
+    const invertedActive = computed(() => inverted.value)
 
     // Per-board skill-derived data, read by the tile / character / targeting layers.
     const colorModifiers = computed(() => skillManager.getColorModifiersByCharacterAndTeam())
@@ -464,6 +467,7 @@ export function createGridContext(
       closestAllyMap,
       hexScale,
       teamView: teamViewActive,
+      inverted: invertedActive,
       skillTargets,
       getColorModifierForCharacter,
       getImageModifierForCharacter,

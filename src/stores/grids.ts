@@ -36,6 +36,9 @@ export const useGrids = defineStore('grids', () => {
   const hexSize = ref<Point>({ x: 40, y: 40 })
   const hexSizeMode = ref<HexSizeMode>('breakpoint')
   const teamView = ref(false)
+  // Presentation-only ally/enemy swap (see invertTeam). The engine stays canonical;
+  // this flips every user-facing ally/enemy distinction (colors, labels, team view).
+  const inverted = ref(false)
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
 
@@ -62,7 +65,7 @@ export const useGrids = defineStore('grids', () => {
   const setGridCount = (count: number, maps?: string[]): void => {
     contexts.value.forEach((ctx) => ctx.dispose())
     contexts.value = Array.from({ length: count }, (_, i) =>
-      createGridContext(i, maps?.[i] ?? 'arena1', { hexSize, teamView, sharedCrop }),
+      createGridContext(i, maps?.[i] ?? 'arena1', { hexSize, teamView, inverted, sharedCrop }),
     )
     if (activeId.value >= count) activeId.value = 0
   }
@@ -219,6 +222,7 @@ export const useGrids = defineStore('grids', () => {
     hexSize,
     hexSizeMode,
     teamView,
+    inverted,
     setGridCount,
     setActive,
     getContext,
