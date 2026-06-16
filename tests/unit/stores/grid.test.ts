@@ -3,13 +3,19 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { State } from '@/lib/types/state'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 
-describe('gridStore — team view', () => {
+// visibleHexes / viewBoxBounds are derived per board, so they're read from the
+// active GridContext (their owner); gridStore drives the shared team-view flag,
+// breakpoint, and per-tile state.
+describe('grid team view (active board geometry)', () => {
   let gridStore: ReturnType<typeof useGridStore>
+  let grids: ReturnType<typeof useGrids>
 
   beforeEach(() => {
     setActivePinia(createPinia())
     gridStore = useGridStore()
+    grids = useGrids()
   })
 
   describe('teamView', () => {
@@ -20,13 +26,13 @@ describe('gridStore — team view', () => {
 
   describe('visibleHexes', () => {
     it('returns the full hex set when teamView is false', () => {
-      expect(gridStore.visibleHexes).toEqual(gridStore.hexes)
+      expect(grids.active!.visibleHexes).toEqual(gridStore.hexes)
     })
 
     it('returns only ally-state hexes (occupied + available) when teamView is true', () => {
       gridStore.teamView = true
 
-      const visible = gridStore.visibleHexes
+      const visible = grids.active!.visibleHexes
       const visibleStates = visible.map((hex) => gridStore.getTile(hex.getId()).state)
 
       expect(visible.length).toBeGreaterThan(0)
@@ -39,14 +45,14 @@ describe('gridStore — team view', () => {
 
   describe('viewBoxBounds', () => {
     it('returns the full grid box when teamView is false', () => {
-      const bounds = gridStore.viewBoxBounds
+      const bounds = grids.active!.viewBoxBounds
       expect(bounds).toEqual({ x: 0, y: 0, width: 600, height: 600 })
     })
 
     it('keeps full width and crops only vertically when teamView is true', () => {
       gridStore.teamView = true
 
-      const bounds = gridStore.viewBoxBounds
+      const bounds = grids.active!.viewBoxBounds
       expect(bounds.x).toBe(0)
       expect(bounds.width).toBe(600)
       expect(bounds.height).toBeLessThan(600)
@@ -60,7 +66,7 @@ describe('gridStore — team view', () => {
       }
       gridStore.teamView = true
 
-      const bounds = gridStore.viewBoxBounds
+      const bounds = grids.active!.viewBoxBounds
       expect(bounds).toEqual({ x: 0, y: 0, width: 600, height: 600 })
     })
 
@@ -68,7 +74,7 @@ describe('gridStore — team view', () => {
       gridStore.updateBreakpoint('mobile') // hexSize 23, scale 0.575
       gridStore.teamView = true
 
-      const bounds = gridStore.viewBoxBounds
+      const bounds = grids.active!.viewBoxBounds
       expect(bounds.width).toBe(345) // 600 * 0.575
       expect(bounds.x).toBe(0)
       expect(bounds.height).toBeLessThanOrEqual(345)

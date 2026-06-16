@@ -30,8 +30,6 @@ export const useGridStore = defineStore('grid', () => {
   const layout = computed(() => active().layout)
   const hexes = computed(() => active().grid.keys())
   const currentMap = computed(() => active().currentMap)
-  const visibleHexes = computed(() => active().visibleHexes)
-  const viewBoxBounds = computed(() => active().viewBoxBounds)
   const getAllTiles = computed(() => active().grid.getAllTiles())
 
   const gridOrigin = computed(() => {
@@ -91,8 +89,6 @@ export const useGridStore = defineStore('grid', () => {
     gridOrigin,
     currentMap,
     teamView,
-    visibleHexes,
-    viewBoxBounds,
     setState,
     resetAllTiles,
     getHexById,
