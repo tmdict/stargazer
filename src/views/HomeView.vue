@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import CharacterSelection from '@/components/CharacterSelection.vue'
@@ -15,6 +15,7 @@ import TabView from '@/components/ui/TabView.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
+import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { State } from '@/lib/types/state'
@@ -25,6 +26,7 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { useUrlStateStore } from '@/stores/urlState'
+import type { DisplayFlags } from '@/utils/gridStateSerializer'
 import { generateShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 // Perspective Mode Configuration
@@ -33,9 +35,10 @@ const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 
 const gridStore = useGridStore()
 const grids = useGrids()
-// The Arena is the single-board case; reset to one board and breakpoint sizing in
-// case the user arrived from the multi-board 5 v 5 page, then bind to it.
-if (grids.contexts.length !== 1) grids.setGridCount(1)
+// The Arena is the single-board case. Start from a clean single board so it never
+// inherits state left in the shared store by /share or the 5 v 5 page; the saved
+// arena (or a ?g= link) is applied on top below.
+grids.setGridCount(1)
 grids.hexSizeMode = 'breakpoint'
 const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
@@ -184,34 +187,61 @@ watch(
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
 i18nStore.initialize()
-// After data is loaded, try to restore state from URL
-if (gameDataStore.dataLoaded) {
-  const encodedState = getEncodedStateFromUrl()
-  if (encodedState) {
-    const result = urlStateStore.restoreFromEncodedState(encodedState)
 
-    if (result.success && result.displayFlags) {
-      // Apply display flags from URL
-      showHexIds.value = result.displayFlags.showHexIds ?? false
-      showArrows.value = result.displayFlags.showArrows ?? false
-      showPerspective.value = result.displayFlags.showPerspective ?? false
-      showSkills.value = result.displayFlags.showSkills ?? true
-      gridStore.teamView = result.displayFlags.teamView ?? false
-      // The restore replaced the board; drop any stale mobile tap/lift selection
-      clearTargetHex()
-      clearLiftedHex()
-      success(i18nStore.t('app.grid-loaded'))
-    } else {
-      error(i18nStore.t('app.invalid-url'))
-    }
+const arenaPersistence = useArenaPersistence(() => ({
+  showHexIds: showHexIds.value,
+  showArrows: showArrows.value,
+  showPerspective: showPerspective.value,
+  showSkills: showSkills.value,
+  teamView: gridStore.teamView,
+}))
+
+const applyDisplayFlags = (flags: DisplayFlags) => {
+  showHexIds.value = flags.showHexIds ?? false
+  showArrows.value = flags.showArrows ?? false
+  showPerspective.value = flags.showPerspective ?? false
+  showSkills.value = flags.showSkills ?? true
+  gridStore.teamView = flags.teamView ?? false
+}
+
+// A ?g= link takes priority and is applied in setup (before paint, matching the
+// existing share behavior); the autosave on mount then overwrites the saved arena
+// with it.
+const sharedLink = gameDataStore.dataLoaded ? getEncodedStateFromUrl() : null
+if (sharedLink) {
+  const result = urlStateStore.restoreFromEncodedState(sharedLink)
+  if (result.success && result.displayFlags) {
+    applyDisplayFlags(result.displayFlags)
+    // The restore replaced the board; drop any stale mobile tap/lift selection.
+    clearTargetHex()
+    clearLiftedHex()
+    success(i18nStore.t('app.grid-loaded'))
+  } else {
+    error(i18nStore.t('app.invalid-url'))
   }
 }
 
-// The initial tab comes straight from ?t= without passing through
-// handleTabChange, so enforce its display resets here — after the URL restore,
-// which is what can introduce the conflicting flags (e.g. team view encoded in
-// a share link while ?t=mapEditor).
+// The initial tab comes straight from ?t= without passing through handleTabChange,
+// so enforce its display resets here — after a restore, which can introduce the
+// conflicting flags (e.g. team view in a share link while ?t=mapEditor).
 applyTabResets(activeTab.value)
+
+// No share link: restore the saved arena. Done on mount because localStorage is
+// unavailable during SSG, so the pre-rendered empty grid hydrates cleanly first.
+// Autosave starts after the restore so the restore isn't what triggers a write.
+onMounted(() => {
+  if (!sharedLink && gameDataStore.dataLoaded) {
+    const saved = arenaPersistence.load()
+    if (saved) {
+      const result = urlStateStore.restoreFromEncodedState(saved)
+      if (result.success && result.displayFlags) {
+        applyDisplayFlags(result.displayFlags)
+        applyTabResets(activeTab.value)
+      }
+    }
+  }
+  arenaPersistence.startAutosave()
+})
 
 // Action button handlers
 

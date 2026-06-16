@@ -18,6 +18,7 @@ import TabView from '@/components/ui/TabView.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
+import { useTeamsPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
@@ -25,6 +26,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
+import type { DisplayFlags } from '@/utils/gridStateSerializer'
 import { generateMultiShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 // Board size steps down as the window narrows (large desktop / medium tablet /
@@ -104,22 +106,37 @@ watch(
 )
 watch(currentBreakpoint, applySize)
 
-// Restore a shared 5 v 5 link (?g=) if one is present.
+const teamsPersistence = useTeamsPersistence(() => ({
+  showHexIds: showHexIds.value,
+  showArrows: showArrows.value,
+  showPerspective: showPerspective.value,
+  showSkills: showSkills.value,
+  teamView: grids.teamView,
+}))
+
+const applyDisplayFlags = (flags: DisplayFlags) => {
+  showHexIds.value = flags.showHexIds ?? false
+  showArrows.value = flags.showArrows ?? false
+  showPerspective.value = flags.showPerspective ?? false
+  showSkills.value = flags.showSkills ?? true
+  grids.teamView = flags.teamView ?? false
+}
+
+// A ?g= link overwrites the saved boards; otherwise restore them. Then mirror
+// every later change to localStorage.
 if (gameDataStore.dataLoaded) {
-  const encoded = getEncodedStateFromUrl()
-  if (encoded) {
-    const result = urlStateStore.restoreMultiFromEncodedState(encoded)
+  const sharedLink = getEncodedStateFromUrl()
+  const source = sharedLink ?? teamsPersistence.load()
+  if (source) {
+    const result = urlStateStore.restoreMultiFromEncodedState(source)
     if (result.success && result.displayFlags) {
-      showHexIds.value = result.displayFlags.showHexIds ?? false
-      showArrows.value = result.displayFlags.showArrows ?? false
-      showPerspective.value = result.displayFlags.showPerspective ?? false
-      showSkills.value = result.displayFlags.showSkills ?? true
-      grids.teamView = result.displayFlags.teamView ?? false
-      success(i18n.t('app.grid-loaded'))
-    } else if (result.error && result.error !== 'No state provided') {
+      applyDisplayFlags(result.displayFlags)
+      if (sharedLink) success(i18n.t('app.grid-loaded'))
+    } else if (sharedLink && result.error && result.error !== 'No state provided') {
       error(i18n.t('app.invalid-url'))
     }
   }
+  teamsPersistence.startAutosave()
 }
 
 // Reset to the Arena's single board on leave. onScopeDispose runs synchronously on
