@@ -11,6 +11,8 @@ interface ExportOptions {
   target?: string
   // html-to-image node filter (return false to drop a node from the capture).
   filter?: (node: HTMLElement) => boolean
+  // Download filename prefix (timestamped); unused by copyToClipboard.
+  filePrefix?: string
 }
 
 export function useGridExport() {
@@ -121,7 +123,7 @@ export function useGridExport() {
   const downloadAsImage = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-      downloadUrl(dataUrl, timestampedName('stargazer', 'png'))
+      downloadUrl(dataUrl, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
       success(i18n.t('app.grid-downloaded'))
     } catch (err) {
       console.error('Failed to export grid:', err)
