@@ -6,6 +6,7 @@ import { useHead } from '@unhead/vue'
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import IconClose from '@/components/ui/IconClose.vue'
+import IconEdit from '@/components/ui/IconEdit.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useToast } from '@/composables/useToast'
@@ -94,7 +95,10 @@ const emptyMessage = computed(() => {
   return 'Invalid grid data'
 })
 
-const homeLink = computed(() => {
+// The pencil opens this shared setup in the editable Arena, which overwrites the
+// saved arena. Dismissing (backdrop / close) instead goes to a bare `/`, leaving
+// the saved arena untouched.
+const editLink = computed(() => {
   if (encodedState.value) {
     return `/?g=${encodedState.value}`
   }
@@ -104,14 +108,17 @@ const homeLink = computed(() => {
 
 <template>
   <div class="overlay">
-    <!-- Backdrop link to home -->
-    <a :href="homeLink" class="backdrop-link" aria-label="Back to Stargazer"></a>
+    <!-- Backdrop dismiss: back to the saved arena, not the shared setup. -->
+    <a href="/" class="backdrop-link" aria-label="Back to Stargazer"></a>
 
     <!-- Content container -->
     <div v-if="hasValidGrid" class="grid-wrapper" @click.stop>
-      <!-- Close button -->
+      <!-- Edit opens the shared setup in the Arena; close dismisses to the saved arena. -->
       <div class="buttons">
-        <a :href="homeLink" class="button" aria-label="Back to Stargazer" title="Back to Stargazer">
+        <a :href="editLink" class="button" aria-label="Edit in Stargazer" title="Edit">
+          <IconEdit :size="18" />
+        </a>
+        <a href="/" class="button" aria-label="Back to Stargazer" title="Back to Stargazer">
           <IconClose />
         </a>
       </div>
