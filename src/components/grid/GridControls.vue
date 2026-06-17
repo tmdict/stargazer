@@ -158,12 +158,12 @@ const flatView = computed({
   white-space: nowrap;
 }
 
-/* Toggle button specific styles */
+/* Toggle button specific styles. Padding is inherited from the shared base so the
+   height matches the action buttons and the invert toggle (all 36px). */
 .grid-toggle-btn {
   color: var(--color-text-secondary);
   background: var(--color-bg-primary);
   border-color: var(--color-border-primary);
-  padding: var(--spacing-sm) var(--spacing-md);
 }
 
 .grid-toggle-btn:hover {

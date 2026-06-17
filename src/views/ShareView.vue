@@ -67,6 +67,7 @@ const restoreStateFromUrl = () => {
       showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
       gridStore.teamView = result.displayFlags.teamView ?? false
+      gridStore.inverted = result.displayFlags.inverted ?? false
     }
 
     return true

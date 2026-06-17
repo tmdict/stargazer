@@ -27,9 +27,12 @@ const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
  * Extended header (if bit 7 is set):
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
- *   - Bits 1-5: Display flags (showHexIds, showArrows, showPerspective, showSkills, teamView)
+ *   - Bits 1-5: reserved
  *   - Bit 6: Has phantimals (phantimal section present after artifacts)
- *   - Bit 7: Has display flags (distinguishes an explicit d=0 from no display flags)
+ *   - Bit 7: Has display flags (a dedicated display-flags byte follows)
+ * - If bit 7 of extended flags is set:
+ *   - Next byte: Display flags (bit 0 showHexIds, 1 showArrows, 2 showPerspective,
+ *     3 showSkills, 4 teamView, 5 inverted; bits 6-7 spare)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -165,7 +168,7 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
-  // Display flags: keep as-is (5-bit value is masked during encoding)
+  // Display flags: keep as-is (stored in a dedicated byte during encoding)
   if (state.d !== undefined) {
     validated.d = state.d
   }
@@ -259,23 +262,25 @@ export function encodeToBinary(state: GridState): Uint8Array {
   if (needsExtended) {
     // Extended flags byte layout:
     // Bit 0: needs extended counts (1 if >7 entries)
-    // Bits 1-5: display flags (5 bits: showHexIds, showArrows, showPerspective, showSkills, teamView)
+    // Bits 1-5: reserved
     // Bit 6: has phantimals
-    // Bit 7: has display flags (so an explicit d=0 survives the round trip)
+    // Bit 7: has display flags (a dedicated byte follows; lets an explicit d=0 round-trip)
     let extendedFlags = 0
     if (needsExtendedCounts) {
       extendedFlags |= 0x01 // Bit 0: needs extended counts
     }
-    if (hasDisplayFlags && validState.d !== undefined) {
-      // Pack display flags into bits 1-5
-      // Only the lower 5 bits of d are used (one bit per flag)
-      extendedFlags |= (validState.d & 0x1f) << 1
+    if (hasDisplayFlags) {
       extendedFlags |= 0x80 // Bit 7: display flags present
     }
     if (hasPhantimals) {
       extendedFlags |= 0x40 // Bit 6: has phantimals
     }
     writer.writeBits(extendedFlags, 8)
+
+    // Dedicated display-flags byte (one bit per toggle; see format note)
+    if (hasDisplayFlags && validState.d !== undefined) {
+      writer.writeBits(validState.d & 0xff, 8)
+    }
 
     // Write extended counts if needed (supports up to 262 total entries: 7 + 255)
     if (needsExtendedCounts) {
@@ -376,7 +381,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       // Bit 7 explicitly marks display flags as present, so d=0 (all flags off)
       // is distinguishable from "no display flags encoded" (d stays undefined).
       if ((extendedFlags & 0x80) !== 0) {
-        state.d = (extendedFlags >> 1) & 0x1f
+        state.d = reader.readBits(8) // dedicated display-flags byte
       }
 
       // Read extended counts if present

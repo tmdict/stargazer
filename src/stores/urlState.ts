@@ -3,7 +3,13 @@ import { defineStore } from 'pinia'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
-import { unpackDisplayFlags, type DisplayFlags, type GridState } from '@/utils/gridStateSerializer'
+import {
+  mirrorGridState,
+  serializeGridState,
+  unpackDisplayFlags,
+  type DisplayFlags,
+  type GridState,
+} from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
@@ -215,8 +221,30 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
   }
 
+  // Mirror every board's units onto the opposite team at their 180-degree-rotated
+  // tiles (tile 1 <-> 45), so the formation rotates to the other side keeping its
+  // shape. Each board is serialized, mirrored, and rebuilt through the same restore
+  // path as a URL load, which already repositions companions and re-seeds the
+  // phantimal baseline. Pairs with the global `inverted` presentation flip.
+  const swapTeamsAllBoards = (): void => {
+    const previousActive = grids.activeId
+    grids.contexts.forEach((ctx, i) => {
+      const state = serializeGridState(
+        ctx.grid.getAllTiles(),
+        ctx.artifacts.ally,
+        ctx.artifacts.enemy,
+      )
+      if (!state.c && !state.p && !state.a) return // nothing to swap on this board
+      const mirrored = mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))
+      grids.setActive(i)
+      applyGridState(mirrored)
+    })
+    grids.setActive(previousActive)
+  }
+
   return {
     restoreFromEncodedState,
     restoreMultiFromEncodedState,
+    swapTeamsAllBoards,
   }
 })

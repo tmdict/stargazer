@@ -1,48 +1,27 @@
 <script setup lang="ts">
-/* Map color-inversion toggle, shared by the Arena Map Editor and the 5 v 5 Maps
-   tab: a labeled checkbox styled as a button, with a hover tooltip explaining it. */
+/* Invert toggle in the grid controls: a labeled checkbox. Flips the global
+   ally/enemy presentation AND mirror-swaps every board's units to the opposite
+   team, so a formation rotates to the other side keeping its shape and colour. */
 
-import { ref } from 'vue'
-
-import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { useUrlStateStore } from '@/stores/urlState'
 
 const i18n = useI18nStore()
 const grids = useGrids()
+const urlState = useUrlStateStore()
 
-const showTooltip = ref(false)
-const buttonElement = ref<HTMLElement>()
+const onToggle = () => {
+  grids.inverted = !grids.inverted
+  urlState.swapTeamsAllBoards()
+}
 </script>
 
 <template>
-  <label
-    ref="buttonElement"
-    class="invert-toggle"
-    @mouseenter="showTooltip = true"
-    @mouseleave="showTooltip = false"
-  >
-    <input
-      type="checkbox"
-      :checked="grids.inverted"
-      class="invert-checkbox"
-      @change="grids.inverted = !grids.inverted"
-    />
+  <label class="invert-toggle">
+    <input type="checkbox" :checked="grids.inverted" class="invert-checkbox" @change="onToggle" />
     <span class="invert-text">{{ i18n.t('app.invert') }}</span>
   </label>
-
-  <Teleport to="body">
-    <TooltipPopup
-      v-if="showTooltip && buttonElement"
-      :target-element="buttonElement"
-      variant="detailed"
-      max-width="350px"
-    >
-      <template #content>
-        {{ i18n.t('app.invert-tooltip') }}
-      </template>
-    </TooltipPopup>
-  </Teleport>
 </template>
 
 <style scoped>
@@ -59,7 +38,7 @@ const buttonElement = ref<HTMLElement>()
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   transition: all var(--transition-fast);
-  min-height: 30px;
+  min-height: 36px;
   flex-shrink: 0;
   white-space: nowrap;
   color: var(--color-text-secondary);

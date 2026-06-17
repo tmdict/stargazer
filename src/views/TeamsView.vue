@@ -112,6 +112,7 @@ const teamsPersistence = useTeamsPersistence(() => ({
   showPerspective: showPerspective.value,
   showSkills: showSkills.value,
   teamView: grids.teamView,
+  inverted: grids.inverted,
 }))
 
 const applyDisplayFlags = (flags: DisplayFlags) => {
@@ -120,6 +121,7 @@ const applyDisplayFlags = (flags: DisplayFlags) => {
   showPerspective.value = flags.showPerspective ?? false
   showSkills.value = flags.showSkills ?? true
   grids.teamView = flags.teamView ?? false
+  grids.inverted = flags.inverted ?? false
 }
 
 // A ?g= link overwrites the saved boards; otherwise restore them. Then mirror
@@ -173,6 +175,7 @@ const handleCopyLink = async () => {
       showPerspective: showPerspective.value,
       showSkills: showSkills.value,
       teamView: grids.teamView,
+      inverted: grids.inverted,
     })
     await navigator.clipboard.writeText(url)
     success(i18n.t('app.copied-clipboard'))

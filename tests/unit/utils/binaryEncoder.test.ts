@@ -48,6 +48,7 @@ describe('binaryEncoder', () => {
         },
       ],
       ['display flags', { t: [[1, 1]], d: 0b1010 }],
+      ['display flags with inverted (bit 5)', { t: [[1, 1]], d: 0b101010 }],
       ['display flags zero', { t: [[1, 1]], d: 0 }],
       [
         'display flags zero with extended counts',
@@ -164,7 +165,7 @@ describe('binaryEncoder', () => {
         p: [[7, 2, 2]],
         d: 0b10110,
       }
-      const GOLDEN_ENCODED = '2uyBiglkAAxkgEraiUGKQwI'
+      const GOLDEN_ENCODED = '2sAWgYoJZAAMZIBK2olBikMC'
 
       it('encodes the golden state to the frozen string', () => {
         expect(bytesToUrlSafe(encodeToBinary(GOLDEN_STATE))).toBe(GOLDEN_ENCODED)
