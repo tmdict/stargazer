@@ -248,6 +248,10 @@ describe('urlStateStore.restoreFromEncodedState', () => {
 })
 
 describe('urlStateStore.swapTeamsAllBoards', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
   it('mirrors units onto the opposite team and leaves no stale occupied tiles', () => {
     const s = createStores()
     const gridRef = useGrids().active!.grid
@@ -289,6 +293,57 @@ describe('urlStateStore.swapTeamsAllBoards', () => {
 
     expect(s.artifact.allyArtifactId).toBe(5)
     expect(s.artifact.enemyArtifactId).toBe(3)
+  })
+
+  it('re-derives a tile-blocking skill zone on the new side, leaving no ghost', () => {
+    const KULU = 80 // skill blocks the demolition zone: ally 18-24, enemy 22-28
+    const s = createStores()
+    // Hex 1 is an ally spawn outside the zone, so Kulu is not relocated.
+    expect(s.character.placeCharacterOnHex(1, KULU, Team.ALLY)).toBe(true)
+    expect(s.grid.getTile(18).state).toBe(State.BLOCKED)
+    expect(s.grid.getTile(23).state).toBe(State.BLOCKED_BREAKABLE)
+
+    s.urlState.swapTeamsAllBoards()
+
+    // Kulu rotated to the enemy side (1 -> 45); her zone re-derives there.
+    expect(s.grid.getTile(45).characterId).toBe(KULU)
+    expect(s.grid.getTile(45).team).toBe(Team.ENEMY)
+    for (const id of [25, 26, 27, 28]) expect(s.grid.getTile(id).state).toBe(State.BLOCKED)
+    expect(s.grid.getTile(23).state).toBe(State.BLOCKED_BREAKABLE)
+    // The old ally-only zone tiles are clear again, not ghost-blocked.
+    for (const id of [18, 19, 20, 21]) expect(s.grid.getTile(id).state).toBe(State.DEFAULT)
+  })
+
+  it('keeps a companion unit and a colliding neighbor through an invert', () => {
+    // Pin spawns to the first free tile. On restore Phraesto (now enemy, placed
+    // before the neighbor) spawns its companion on hex 43, which is exactly the
+    // neighbor's mirror target (rot(3) = 43). The old code let placing the
+    // neighbor evict that squatting companion, taking Phraesto down with it.
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const s = createStores()
+    const gridRef = useGrids().active!.grid
+    const mirror = (hexId: number) => gridRef.getRotatedHexId(hexId)!
+
+    expect(s.character.placeCharacterOnHex(5, PHRAESTO, Team.ALLY)).toBe(true)
+    const companionSrc = s.grid.getAllTiles
+      .find((t) => t.characterId === PHRAESTO_COMPANION)!
+      .hex.getId()
+    expect(s.character.placeCharacterOnHex(3, ALLY_A, Team.ALLY)).toBe(true)
+    expect(s.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)
+
+    s.urlState.swapTeamsAllBoards()
+
+    // Every unit survived and rotated onto the opposite team.
+    const phraestoTile = s.grid.getAllTiles.find((t) => t.characterId === PHRAESTO)
+    expect(phraestoTile?.hex.getId()).toBe(mirror(5))
+    expect(phraestoTile?.team).toBe(Team.ENEMY)
+    const companionTiles = s.grid.getAllTiles.filter((t) => t.characterId === PHRAESTO_COMPANION)
+    expect(companionTiles).toHaveLength(1)
+    expect(companionTiles[0]!.hex.getId()).toBe(mirror(companionSrc))
+    expect(s.grid.getTile(mirror(3)).characterId).toBe(ALLY_A)
+    expect(s.grid.getTile(mirror(3)).team).toBe(Team.ENEMY)
+    expect(s.grid.getTile(mirror(40)).characterId).toBe(ENEMY_A)
+    expect(s.grid.getTile(mirror(40)).team).toBe(Team.ALLY)
   })
 
   it('is an involution: swapping twice restores the original layout', () => {

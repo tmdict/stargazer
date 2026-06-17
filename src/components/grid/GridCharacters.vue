@@ -11,7 +11,7 @@ import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { phantimalImageSources } from '@/utils/artifactImage'
+import { phantimalImageUrl } from '@/utils/artifactImage'
 import { invertTeam } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -47,14 +47,6 @@ const getCharacterName = (characterId: number, hexId: number): string => {
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
 
-const getCharacterLevel = (characterId: number): 's' | 'a' => {
-  // Handle companion IDs
-  const actualId =
-    characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
-  const character = props.characters.find((c) => c.id === actualId)
-  return (character?.level as 's' | 'a') || 'a'
-}
-
 const isCompanion = (characterId: number): boolean =>
   characterId >= COMPANION_ID_OFFSET && !isPhantimalId(characterId)
 
@@ -62,24 +54,20 @@ const isCompanion = (characterId: number): boolean =>
 // wrapper's positioning, drag, lift and perspective; only image + colour differ).
 const PHANTIMAL_COLOR = '#b0b6bb'
 
-const phantimalSources = (characterId: number) =>
-  phantimalImageSources(gameDataStore.getPhantimalById(characterId)?.name ?? '')
+const phantimalUrl = (characterId: number) =>
+  phantimalImageUrl(gameDataStore.getPhantimalById(characterId)?.name ?? '')
 
 const phantimalName = (characterId: number): string =>
   gameDataStore.getPhantimalById(characterId)?.name ?? 'Phantimal'
 
+// Neutral disc behind every placed hero (one color for all, not the roster's
+// per-level gold/purple). Phantimals keep their own grey; skill-driven colors
+// (companion/skill image borders, tile tints) are separate and unaffected.
+const CHARACTER_COLOR = '#c4baa6'
+
 const getCharacterColors = (characterId: number) => {
-  if (isPhantimalId(characterId)) {
-    return { backgroundColor: PHANTIMAL_COLOR, borderColor: PHANTIMAL_COLOR }
-  }
-
-  const level = getCharacterLevel(characterId)
-  const baseColor = level === 's' ? '#facd7e' : '#a78fc5'
-
-  return {
-    backgroundColor: baseColor,
-    borderColor: baseColor,
-  }
+  const color = isPhantimalId(characterId) ? PHANTIMAL_COLOR : CHARACTER_COLOR
+  return { backgroundColor: color, borderColor: color }
 }
 
 // Base character size (at 40px hex radius)
@@ -146,7 +134,7 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
       sourceHexId: hexId,
       sourceGridId: ctx.id,
     } as unknown as CharacterType
-    startDrag(event, dragData, characterId, phantimalImageSources(phantimal.name).png)
+    startDrag(event, dragData, characterId, phantimalImageUrl(phantimal.name))
     return
   }
 
@@ -251,16 +239,14 @@ const visiblePlacements = computed(() => {
              (character↔phantimal flips the v-if branch) — dragend fired on a
              detached source never reaches the wrapper or document listeners,
              leaving the drag ghost stuck. -->
-        <picture v-if="isPhantimalId(characterId)" class="phantimal-pic">
-          <source :srcset="phantimalSources(characterId).avif" type="image/avif" />
-          <source :srcset="phantimalSources(characterId).webp" type="image/webp" />
-          <img
-            :src="phantimalSources(characterId).png"
-            :alt="phantimalName(characterId)"
-            class="character-image"
-            draggable="false"
-          />
-        </picture>
+        <img
+          v-if="isPhantimalId(characterId)"
+          :src="phantimalUrl(characterId)"
+          :alt="phantimalName(characterId)"
+          class="character-image"
+          draggable="false"
+          crossorigin="anonymous"
+        />
         <img
           v-else
           :src="gameDataStore.getCharacterImage(getCharacterName(characterId, hexId))"
@@ -318,11 +304,6 @@ const visiblePlacements = computed(() => {
   border-radius: 50%;
   border: var(--character-border-width, 3px) solid;
   border-color: #fff;
-}
-
-/* display: contents so the <picture> doesn't add a box around the phantimal image. */
-.phantimal-pic {
-  display: contents;
 }
 
 .character-image {

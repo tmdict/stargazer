@@ -212,6 +212,13 @@ export class SkillManager {
     return entry.originalState
   }
 
+  // A tile's pre-skill state: the original captured when a skill first claimed
+  // it, else `currentState`. Lets the map be serialized without baked-in skill
+  // effects, which a skill re-derives when its character is re-placed.
+  getBaseTileState(hexId: number, currentState: State): State {
+    return this.tileStateClaims.get(hexId)?.originalState ?? currentState
+  }
+
   // Add color modifier for a specific character (used by skills for companions)
   addCharacterColorModifier(characterId: number, team: Team, color: string): void {
     const key = this.getSkillKey(characterId, team)
@@ -342,7 +349,7 @@ export class SkillManager {
 
       const currentHexId = findCharacterHex(grid, info.characterId, info.team)
       if (currentHexId === null) {
-        // Character vanished without going through removal — run full
+        // Character vanished without going through removal, so run full
         // deactivation so modifiers, companions, and team-size changes are
         // cleaned up rather than leaked
         this.deactivateCharacterSkill(info.characterId, info.hexId, info.team, grid)

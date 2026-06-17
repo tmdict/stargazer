@@ -263,6 +263,7 @@ const handleCopyLink = async () => {
         teamView: gridStore.teamView,
         inverted: gridStore.inverted,
       },
+      gridStore.getBaseTileState,
     )
 
     const urlParams = new URLSearchParams(shareableUrl.split('?')[1])

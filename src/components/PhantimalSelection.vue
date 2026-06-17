@@ -15,7 +15,7 @@ import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalImageSources } from '@/utils/artifactImage'
+import { phantimalImageUrl } from '@/utils/artifactImage'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const { phantimals, isDraggable = false } = defineProps<{
@@ -82,7 +82,7 @@ const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   // Minimal character-shaped payload: the drop handler only needs the id (no
   // sourceHexId marks it as a roster placement).
   const dragData = { id } as unknown as CharacterType
-  startDrag(event, dragData, id, phantimalImageSources(phantimal.name).png)
+  startDrag(event, dragData, id, phantimalImageUrl(phantimal.name))
 }
 
 const handleDragEnd = (event: DragEvent) => {
@@ -142,16 +142,13 @@ const openModal = (phantimal: PhantimalType) => {
           @mouseenter="onPortraitEnter($event, phantimal)"
           @mouseleave="onPortraitLeave"
         >
-          <picture class="portrait-pic">
-            <source :srcset="phantimalImageSources(phantimal.name).avif" type="image/avif" />
-            <source :srcset="phantimalImageSources(phantimal.name).webp" type="image/webp" />
-            <img
-              :src="phantimalImageSources(phantimal.name).png"
-              :alt="phantimal.name"
-              class="portrait"
-              loading="lazy"
-            />
-          </picture>
+          <img
+            :src="phantimalImageUrl(phantimal.name)"
+            :alt="phantimal.name"
+            class="portrait"
+            loading="lazy"
+            crossorigin="anonymous"
+          />
         </div>
         <InfoPill :label="i18n.t(`game.${phantimal.faction}`)" @click="openModal(phantimal)" />
       </div>
@@ -246,11 +243,6 @@ const openModal = (phantimal: PhantimalType) => {
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
-}
-
-/* display: contents so the <picture> doesn't add a box around the image. */
-.portrait-pic {
-  display: contents;
 }
 
 .portrait {
