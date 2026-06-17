@@ -9,7 +9,6 @@ import { computed, ref, watch } from 'vue'
 
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
-import MapInvertToggle from '@/components/MapInvertToggle.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
@@ -81,7 +80,6 @@ const handleArenaSelected = (mapKey: string) => {
       </template>
       <template #maps>
         <div class="maps-tab">
-          <MapInvertToggle />
           <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
         </div>
       </template>

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import MapInvertToggle from '@/components/MapInvertToggle.vue'
 import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -84,8 +85,9 @@ const flatView = computed({
       </label>
     </div>
 
-    <!-- Row 2: action buttons + clear -->
+    <!-- Row 2: invert + action buttons + clear -->
     <div class="controls-row controls-actions">
+      <MapInvertToggle />
       <button @click="emit('copyLink')" class="action-btn" :title="i18n.t('app.link')">
         <IconLink :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.link') }}</span>
