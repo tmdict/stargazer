@@ -1,7 +1,6 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 
-import MapInvertToggle from './MapInvertToggle.vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import IconFill from '@/components/ui/IconFill.vue'
 import { State } from '@/lib/types/state'
@@ -100,7 +99,6 @@ const getPreviewFillColor = (state: State): string => {
       </div>
 
       <div class="map-editor-actions">
-        <MapInvertToggle />
         <button class="fill-button" @click="handleApplyAllTiles">
           <IconFill :size="14" /> {{ i18n.t('app.fill') }}
         </button>
