@@ -17,13 +17,14 @@ import {
   getAvailableTeamSize,
   getCharacter,
   getCharacterTeam,
+  getTilesWithCharacters,
   hasCharacter,
 } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import type { CharacterType } from '@/lib/types/character'
-import type { Team } from '@/lib/types/team'
+import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 export type HexSizeMode = 'breakpoint' | 'fixed-medium'
@@ -179,6 +180,69 @@ export const useGrids = defineStore('grids', () => {
     return false
   }
 
+  // A board's directly-placed roster: the main characters, dropping skill-derived
+  // units (companions, faction phantimals) since those re-derive from the roster.
+  const collectMainUnits = (ctx: GridContext): { characterId: number; team: Team }[] =>
+    getTilesWithCharacters(ctx.grid)
+      .filter(
+        (tile) =>
+          tile.characterId !== undefined &&
+          tile.team !== undefined &&
+          !isCompanion(tile.characterId) &&
+          !isPhantimalId(tile.characterId),
+      )
+      .map((tile) => ({ characterId: tile.characterId!, team: tile.team! }))
+
+  const applyArtifacts = (
+    ctx: GridContext,
+    artifacts: { ally: number | null; enemy: number | null },
+  ): void => {
+    for (const team of [Team.ALLY, Team.ENEMY]) {
+      const id = team === Team.ALLY ? artifacts.ally : artifacts.enemy
+      if (id !== null) ctx.setArtifact(team, id)
+      else ctx.removeArtifact(team)
+    }
+  }
+
+  // Exchange two boards' rosters and artifacts, keeping each unit/artifact's team
+  // (ally <-> ally, enemy <-> enemy). Only directly-placed mains move; companions,
+  // faction phantimals, and tile zones (e.g. Kulu's) are skill-derived, so
+  // clearing deactivates them on the source and autoPlace re-derives them on the
+  // destination. Nothing skill-driven is serialized or carried, so none is left
+  // stranded (no ghost zones, no orphaned companions). Placement picks random
+  // available tiles, so formations aren't preserved. The target board becomes
+  // active.
+  const swapBoards = (sourceId: number, targetId: number): boolean => {
+    if (sourceId === targetId) return false
+    const source = contexts.value[sourceId]
+    const target = contexts.value[targetId]
+    if (!source || !target) return false
+
+    const fromSource = collectMainUnits(source)
+    const fromTarget = collectMainUnits(target)
+    const sourceArtifacts = { ...source.artifacts }
+    const targetArtifacts = { ...target.artifacts }
+
+    // Clear both before placing so a unit crossing boards never transiently
+    // duplicates its pre-swap copy under page-wide per-team uniqueness.
+    source.clearCharacters()
+    target.clearCharacters()
+    // Re-seed each now-empty board's phantimal baseline so the post-placement
+    // reconcile reads the incoming roster as a fresh qualifying transition and
+    // re-derives the phantimal, even when both boards ran the same faction.
+    source.seedPhantimalBaseline()
+    target.seedPhantimalBaseline()
+
+    fromTarget.forEach((unit) => source.autoPlace(unit.characterId, unit.team))
+    fromSource.forEach((unit) => target.autoPlace(unit.characterId, unit.team))
+
+    applyArtifacts(source, targetArtifacts)
+    applyArtifacts(target, sourceArtifacts)
+
+    activeId.value = targetId
+    return true
+  }
+
   // Resolve a drop onto a board. Roster and same-board drops use the board's own
   // handler (place/move/swap); cross-board drops compose remove + place. The
   // destination board becomes active (decision: active follows a cross-grid drop).
@@ -232,6 +296,7 @@ export const useGrids = defineStore('grids', () => {
     placeOnActive,
     removeFromAnyBoard,
     routeDrop,
+    swapBoards,
     clearAll,
   }
 })

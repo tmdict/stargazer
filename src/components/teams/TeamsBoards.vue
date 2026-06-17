@@ -7,8 +7,10 @@ import { ref } from 'vue'
 
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
+import { useGridSwap } from '@/composables/useGridSwap'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 
 defineProps<{
   characters: readonly CharacterType[]
@@ -29,6 +31,8 @@ const showSkills = defineModel<boolean>('showSkills', { required: true })
 const emit = defineEmits<{ copyLink: []; copyImage: []; download: [] }>()
 
 const grids = useGrids()
+const i18n = useI18nStore()
+const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 // "Wrap" boards layout (3-2 over two rows vs one row). Session-local and Teams-only:
 // not a display flag, so it's never serialized, persisted, or restored.
@@ -67,6 +71,18 @@ const wrapBoards = ref(false)
         />
       </div>
     </div>
+
+    <!-- Cursor-following label for the desktop swap drag; teleported so the
+         scroll container's overflow can't clip it. -->
+    <Teleport to="body">
+      <div
+        v-if="swapDragging"
+        class="swap-drag-ghost"
+        :style="{ left: `${swapDragPosition.x}px`, top: `${swapDragPosition.y}px` }"
+      >
+        {{ i18n.t('app.swap') }}
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -99,6 +115,23 @@ const wrapBoards = ref(false)
     padding-left: var(--spacing-xs);
     padding-right: var(--spacing-xs);
   }
+}
+
+/* Floating label that tracks the cursor during a swap drag (desktop only). */
+.swap-drag-ghost {
+  position: fixed;
+  z-index: 1000;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #fff;
+  background: var(--color-primary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-xs) var(--spacing-md);
+  box-shadow: var(--shadow-soft, 0 2px 8px rgba(0, 0, 0, 0.25));
 }
 
 /* The full-width row of boards. Captured as one image (Copy / Download) so every
