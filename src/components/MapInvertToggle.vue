@@ -18,7 +18,7 @@ const onToggle = () => {
 </script>
 
 <template>
-  <label class="invert-toggle">
+  <label class="invert-toggle" :class="{ active: grids.inverted }">
     <input type="checkbox" :checked="grids.inverted" class="invert-checkbox" @change="onToggle" />
     <span class="invert-text">{{ i18n.t('app.invert') }}</span>
   </label>
@@ -62,5 +62,36 @@ const onToggle = () => {
 
 .invert-text {
   font-weight: 600;
+}
+
+/* Mobile: match the grid-control toggles (Flat, Grid Info, ...): a pill chip whose
+   fill is the on/off state, so the checkbox is dropped. */
+@media (max-width: 768px) {
+  .invert-toggle {
+    border-radius: 999px;
+    border-width: 1px;
+    border-color: var(--color-border-primary);
+    background: var(--color-bg-secondary);
+    color: var(--color-text-secondary);
+    padding: 5px 11px;
+    min-height: 0;
+    gap: 0;
+    font-size: 0.78rem;
+    font-weight: 500;
+  }
+  .invert-toggle.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #fff;
+  }
+  .invert-checkbox {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .invert-toggle {
+    padding: 4px 10px;
+    font-size: 0.74rem;
+  }
 }
 </style>
