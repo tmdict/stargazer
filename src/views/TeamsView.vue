@@ -19,6 +19,7 @@ import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
 import { useTeamsPersistence } from '@/composables/useGridPersistence'
+import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
@@ -43,6 +44,7 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 const { success, error } = useToast()
 const { currentBreakpoint } = useBreakpoint({ autoFlattenOnMobile: false })
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
+const { cancel: cancelSwap } = useGridSwap()
 
 gameDataStore.initializeData()
 i18n.initialize()
@@ -149,14 +151,15 @@ onScopeDispose(() => {
   grids.hexSizeMode = 'breakpoint'
   clearTargetHex()
   clearLiftedHex()
+  cancelSwap() // drop any in-flight swap + its document listeners on leave
 })
 
 // Capture all five boards as one image (the full-width track, so boards scrolled
-// out of view are still included; drop the per-board clear buttons).
+// out of view are still included; drop the per-board action buttons).
 const boardCapture = {
   showPerspective: false,
   target: '.boards-track',
-  filter: (node: HTMLElement) => !node.classList?.contains('board-clear'),
+  filter: (node: HTMLElement) => !node.classList?.contains('board-actions'),
   filePrefix: 'teams',
 }
 const handleCopyImage = () => copyToClipboard(boardCapture)
