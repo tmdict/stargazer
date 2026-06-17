@@ -65,6 +65,9 @@ import { getTeamFromTileState, invertTeam } from '@/utils/tileStateFormatting'
 // is no clean closed form due to the compound transforms.
 const CHARACTER_TOP_PAD_MULTIPLIER = 2.15
 const CHARACTER_BOTTOM_PAD_MULTIPLIER = 0.6
+// Horizontal crop is pure margin: character discs and artifact icons sit within
+// the hex polygon corners, so no sprite-clearance allowance is needed here.
+const CROP_SIDE_PAD_MULTIPLIER = 0.4
 
 export interface ViewBoxBounds {
   x: number
@@ -77,9 +80,9 @@ export interface GridContextGlobals {
   hexSize: Ref<Point>
   teamView: Ref<boolean>
   inverted: Ref<boolean>
-  // Team-view crop shared across boards so they stay the same height; null means
+  // Team-view crop shared across boards so they stay the same size; null means
   // each board crops to its own ally extent (the single-board Arena).
-  sharedCrop?: Ref<{ minY: number; maxY: number } | null>
+  sharedCrop?: Ref<{ minX: number; maxX: number; minY: number; maxY: number } | null>
 }
 
 // A reactive board entity (store-like): refs and computeds are unwrapped on
@@ -95,6 +98,7 @@ export interface GridContext {
   // Derived (per board)
   layout: Layout
   visibleHexes: Hex[]
+  cropHexes: Hex[]
   viewBoxBounds: ViewBoxBounds
   charactersPlaced: number
   placements: Map<number, number>
@@ -335,8 +339,23 @@ export function createGridContext(
         .map((tile) => tile.hex)
     })
 
-    // Vertical-only crop: x and width always span the full grid box so the
-    // edge-anchored artifact host cells (beside grid cells 1 and 45) aren't clipped.
+    // The crop must also contain the shown team's artifact host cell: the ghost
+    // cell beside hex 1 (ally) or 45 (enemy), which renders in team view and can
+    // sit at the formation's edge on maps with a sparse front line.
+    const cropHexes = computed<Hex[]>(() => {
+      if (!teamView.value) return visibleHexes.value
+      const shownTeam = invertTeam(Team.ALLY, inverted.value)
+      const [hostId, direction] = shownTeam === Team.ALLY ? [1, 4] : [45, 1]
+      try {
+        return [...visibleHexes.value, grid.getHexById(hostId).neighbor(direction)]
+      } catch {
+        return visibleHexes.value
+      }
+    })
+
+    // Team view crops to the shown team's extent (cropHexes), padded for breathing
+    // room on the sides and bottom; the top pad also clears the perspective-mode
+    // character sprite stretch.
     const viewBoxBounds = computed<ViewBoxBounds>(() => {
       const scale = hexSize.value.x / 40
       const fullWidth = 600 * scale
@@ -347,16 +366,22 @@ export function createGridContext(
       }
 
       const hexRadius = hexSize.value.x
+      let minX = Infinity
+      let maxX = -Infinity
       let minY = Infinity
       let maxY = -Infinity
       const shared = sharedCrop?.value
       if (shared) {
-        // Crop every board to the same extent so the row stays even height.
+        // Crop every board to the same extent so the row stays even-sized.
+        minX = shared.minX
+        maxX = shared.maxX
         minY = shared.minY
         maxY = shared.maxY
       } else {
-        for (const hex of visibleHexes.value) {
+        for (const hex of cropHexes.value) {
           for (const c of layout.value.polygonCorners(hex)) {
+            if (c.x < minX) minX = c.x
+            if (c.x > maxX) maxX = c.x
             if (c.y < minY) minY = c.y
             if (c.y > maxY) maxY = c.y
           }
@@ -365,11 +390,14 @@ export function createGridContext(
 
       const topPad = hexRadius * CHARACTER_TOP_PAD_MULTIPLIER
       const bottomPad = hexRadius * CHARACTER_BOTTOM_PAD_MULTIPLIER
+      const sidePad = hexRadius * CROP_SIDE_PAD_MULTIPLIER
       // y may go negative: the clip wrapper turns a negative y into top padding,
       // which keeps perspective-mode sprites from clipping near the y=0 edge.
       const y = minY - topPad
       const height = maxY - minY + topPad + bottomPad
-      return { x: 0, y, width: fullWidth, height }
+      const x = minX - sidePad
+      const width = maxX - minX + sidePad * 2
+      return { x, y, width, height }
     })
 
     const placements = computed(() => getCharacterPlacements(grid))
@@ -455,6 +483,7 @@ export function createGridContext(
     return {
       layout,
       visibleHexes,
+      cropHexes,
       viewBoxBounds,
       placements,
       charactersPlaced,
