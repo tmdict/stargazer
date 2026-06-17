@@ -168,6 +168,7 @@ const handleCopyLink = async () => {
       tiles: ctx.grid.getAllTiles(),
       allyArtifact: ctx.artifacts.ally,
       enemyArtifact: ctx.artifacts.enemy,
+      baseTileState: ctx.getBaseTileState,
     }))
     const url = generateMultiShareableUrl(boards, grids.activeId, {
       showHexIds: showHexIds.value,
@@ -218,6 +219,7 @@ onUnmounted(() => mq?.removeEventListener('change', enforceMobileTab))
                 v-model:show-skills="showSkills"
                 :characters="gameDataStore.characters"
                 :tap-mode="isSheet"
+                :can-wrap="!isSheet"
                 @copy-link="handleCopyLink"
                 @copy-image="handleCopyImage"
                 @download="handleDownload"

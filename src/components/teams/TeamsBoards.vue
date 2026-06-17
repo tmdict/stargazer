@@ -14,6 +14,9 @@ defineProps<{
   characters: readonly CharacterType[]
   // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid popup.
   tapMode: boolean
+  // Wrap is a desktop-only layout: its toggle is hidden and the row stays single on
+  // the narrow (sheet) view.
+  canWrap: boolean
 }>()
 
 // Display flags are owned by TeamsView (the share link serializes them, the URL
@@ -36,7 +39,7 @@ const wrapBoards = ref(false)
   <div class="teams-boards">
     <GridControls
       :single-row="true"
-      :show-wrap-toggle="true"
+      :show-wrap-toggle="canWrap"
       v-model:wrap="wrapBoards"
       v-model:show-arrows="showArrows"
       v-model:show-hex-ids="showHexIds"
@@ -50,7 +53,7 @@ const wrapBoards = ref(false)
 
     <div v-scroll-chain.horizontal class="boards">
       <!-- .boards-track is the image-export capture root (see TeamsView's boardCapture). -->
-      <div class="boards-track" :class="{ wrap: wrapBoards }">
+      <div class="boards-track" :class="{ wrap: wrapBoards && canWrap }">
         <GridBoard
           v-for="ctx in grids.contexts"
           :key="ctx.id"
@@ -81,6 +84,21 @@ const wrapBoards = ref(false)
   justify-content: safe center;
   margin-top: var(--spacing-lg);
   padding: 4px 0 var(--spacing-md);
+}
+
+/* The TabView bleeds the section's side padding away on the narrow view, so re-add a
+   side gutter on the row to match the Arena grid's mobile padding (HomeView). */
+@media (max-width: 768px) {
+  .boards {
+    padding-left: var(--spacing-md);
+    padding-right: var(--spacing-md);
+  }
+}
+@media (max-width: 480px) {
+  .boards {
+    padding-left: var(--spacing-xs);
+    padding-right: var(--spacing-xs);
+  }
 }
 
 /* The full-width row of boards. Captured as one image (Copy / Download) so every
