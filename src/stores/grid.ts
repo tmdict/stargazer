@@ -44,6 +44,13 @@ export const useGridStore = defineStore('grid', () => {
     },
   })
 
+  const inverted = computed({
+    get: () => grids.inverted,
+    set: (value: boolean) => {
+      grids.inverted = value
+    },
+  })
+
   const setState = (hex: Hex, state: State): void => active().grid.setState(hex, state)
 
   const resetAllTiles = (state: State = State.DEFAULT): void => {
@@ -89,6 +96,7 @@ export const useGridStore = defineStore('grid', () => {
     gridOrigin,
     currentMap,
     teamView,
+    inverted,
     setState,
     resetAllTiles,
     getHexById,

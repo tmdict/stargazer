@@ -36,8 +36,9 @@ export const useGrids = defineStore('grids', () => {
   const hexSize = ref<Point>({ x: 40, y: 40 })
   const hexSizeMode = ref<HexSizeMode>('breakpoint')
   const teamView = ref(false)
-  // Presentation-only ally/enemy swap (see invertTeam). The engine stays canonical;
-  // this flips every user-facing ally/enemy distinction (colors, labels, team view).
+  // Presentation relabel flag (see invertTeam): flips every user-facing ally/enemy
+  // distinction (colors, labels, team view) while the engine stays canonical. The
+  // invert toggle pairs setting this with a unit mirror-swap (swapTeamsAllBoards).
   const inverted = ref(false)
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])

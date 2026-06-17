@@ -124,6 +124,14 @@ export class Grid {
     return this.getTile(hex)
   }
 
+  // 180-degree point rotation about the board centre: (q,r,s) -> (-q,-r,-s). On the
+  // full arena this pairs each tile with the diagonally-opposite one (tile 1 <-> 45;
+  // the centre maps to itself). Used by the invert mirror-swap. Undefined off-grid.
+  getRotatedHexId(hexId: number): number | undefined {
+    const hex = this.getHexById(hexId)
+    return this.getTileOrUndefined(new Hex(-hex.q, -hex.r, -hex.s))?.hex.getId()
+  }
+
   getAllTiles(): GridTile[] {
     return Array.from(this.storage.values())
   }

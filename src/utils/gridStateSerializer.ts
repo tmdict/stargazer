@@ -1,5 +1,7 @@
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import type { GridTile } from '@/lib/grid'
+import { State } from '@/lib/types/state'
+import { Team } from '@/lib/types/team'
 
 /* Ultra-compact format for URL serialization - the ONLY format we support */
 export interface GridState {
@@ -7,16 +9,17 @@ export interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   p?: number[][] // phantimals: [hexId, localPhantimalId, team] (kept out of c, ids 100000+ don't fit the character field)
-  d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills, teamView)
+  d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills, teamView, inverted)
 }
 
-/* The five user-facing display toggles carried in the URL's bit-packed `d` field */
+/* The user-facing display toggles carried in the URL's bit-packed `d` field */
 export interface DisplayFlags {
   showHexIds?: boolean
   showArrows?: boolean
   showPerspective?: boolean
   showSkills?: boolean
   teamView?: boolean
+  inverted?: boolean
 }
 
 /* Create compact serialized state for URL generation */
@@ -78,8 +81,43 @@ export function serializeGridState(
   return state
 }
 
-/* Pack the five display toggles into one number.
- * Bit 0: showHexIds, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills, 4: teamView */
+/* Reflect a board's units onto the opposite team at their mirror tiles. The map
+ * itself doesn't move: tile states stay at their hexes but occupied ones are
+ * demoted to available (occupancy is re-established by the mirrored `c`/`p`
+ * placements). Character and phantimal hexes are mirrored (via the injected
+ * `mirror`, so this stays grid-agnostic) with teams flipped, artifact slots swap,
+ * and display flags pass through. Entries whose mirror is off-grid (asymmetric
+ * custom maps) are dropped. */
+export function mirrorGridState(
+  state: GridState,
+  mirror: (hexId: number) => number | undefined,
+): GridState {
+  const flip = (team: number): number => (team === Team.ALLY ? Team.ENEMY : Team.ALLY)
+  const mirrorEntry = (entry: number[]): number[] | null => {
+    const dest = mirror(entry[0])
+    return dest === undefined ? null : [dest, entry[1], flip(entry[2])]
+  }
+  const vacate = (s: number): number =>
+    s === State.OCCUPIED_ALLY
+      ? State.AVAILABLE_ALLY
+      : s === State.OCCUPIED_ENEMY
+        ? State.AVAILABLE_ENEMY
+        : s
+
+  const result: GridState = {}
+  if (state.t) result.t = state.t.map((entry) => [entry[0], vacate(entry[1])])
+  if (state.d !== undefined) result.d = state.d
+  const c = state.c?.map(mirrorEntry).filter((e): e is number[] => e !== null)
+  if (c?.length) result.c = c
+  const p = state.p?.map(mirrorEntry).filter((e): e is number[] => e !== null)
+  if (p?.length) result.p = p
+  if (state.a) result.a = [state.a[1] ?? null, state.a[0] ?? null]
+  return result
+}
+
+/* Pack the display toggles into one number.
+ * Bit 0: showHexIds, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills,
+ * 4: teamView, 5: inverted */
 export function packDisplayFlags(flags: DisplayFlags): number {
   let packed = 0
   if (flags.showHexIds) packed |= 1 << 0
@@ -87,6 +125,7 @@ export function packDisplayFlags(flags: DisplayFlags): number {
   if (flags.showPerspective) packed |= 1 << 2
   if (flags.showSkills) packed |= 1 << 3
   if (flags.teamView) packed |= 1 << 4
+  if (flags.inverted) packed |= 1 << 5
   return packed
 }
 
@@ -127,6 +166,7 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
       showPerspective: true,
       showSkills: true,
       teamView: false,
+      inverted: false,
     }
   }
 
@@ -136,5 +176,6 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
     showPerspective: !!(packed & (1 << 2)),
     showSkills: !!(packed & (1 << 3)),
     teamView: !!(packed & (1 << 4)),
+    inverted: !!(packed & (1 << 5)),
   }
 }

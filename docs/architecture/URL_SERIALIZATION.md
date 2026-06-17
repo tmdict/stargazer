@@ -62,12 +62,15 @@ interface GridState {
   - Bit 7: Extended mode flag
 
 [Extended Header (if bit 7 set): 8+ bits]
-  - Bit 0: Needs extended counts
-  - Bits 1-5: Display flags (Grid Info, Targeting, Flat, Skills, Team View)
-  - Bit 6: Has phantimals (phantimal section present after artifacts)
-  - Bit 7: Has display flags (distinguishes an explicit d=0 from no display flags)
-  - Additional tile count byte (if bit 0 set)
-  - Additional character count byte (if bit 0 set)
+  - Extended flags byte:
+    - Bit 0: Needs extended counts
+    - Bits 1-5: reserved
+    - Bit 6: Has phantimals (phantimal section present after artifacts)
+    - Bit 7: Has display flags (a dedicated display-flags byte follows)
+  - Display flags byte (if extended bit 7 set): bit 0 Grid Info, 1 Targeting,
+    2 Flat, 3 Skills, 4 Team View, 5 Invert (bits 6-7 spare)
+  - Additional tile count byte (if extended bit 0 set)
+  - Additional character count byte (if extended bit 0 set)
 
 [Tiles: 9 bits each]
   - Hex ID (6 bits): Range 1-63
@@ -111,7 +114,7 @@ Extended mode activates when:
 - Display flags are explicitly provided (even if all false)
 - Phantimals are present
 
-Display flags are only stored when explicitly provided (`d !== undefined`). Extended flags bit 7 marks their presence, so an explicit `d=0` (all toggles off) survives the round trip even when extended counts or phantimals also require the extended header.
+Display flags are only stored when explicitly provided (`d !== undefined`). Extended flags bit 7 marks their presence and is followed by a dedicated display-flags byte, so an explicit `d=0` (all toggles off) survives the round trip even when extended counts or phantimals also require the extended header.
 
 ## URL Operations
 

@@ -195,6 +195,7 @@ const arenaPersistence = useArenaPersistence(() => ({
   showPerspective: showPerspective.value,
   showSkills: showSkills.value,
   teamView: gridStore.teamView,
+  inverted: gridStore.inverted,
 }))
 
 const applyDisplayFlags = (flags: DisplayFlags) => {
@@ -203,6 +204,7 @@ const applyDisplayFlags = (flags: DisplayFlags) => {
   showPerspective.value = flags.showPerspective ?? false
   showSkills.value = flags.showSkills ?? true
   gridStore.teamView = flags.teamView ?? false
+  gridStore.inverted = flags.inverted ?? false
 }
 
 // A ?g= link takes priority and is applied in setup (before paint, matching the
@@ -259,6 +261,7 @@ const handleCopyLink = async () => {
         showPerspective: showPerspective.value,
         showSkills: showSkills.value,
         teamView: gridStore.teamView,
+        inverted: gridStore.inverted,
       },
     )
 

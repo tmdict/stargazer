@@ -8,6 +8,7 @@ import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useUrlStateStore } from '@/stores/urlState'
 import { serializeGridState, type DisplayFlags } from '@/utils/gridStateSerializer'
 import { encodeGridStateToUrl } from '@/utils/urlStateManager'
@@ -96,6 +97,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       showPerspective: false,
       showSkills: true,
       teamView: true,
+      inverted: true,
     }
     const encoded = encodeStores(source, flags)
     const expected = snapshotTiles(source.grid)
@@ -232,6 +234,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       showPerspective: true,
       showSkills: true,
       teamView: false,
+      inverted: false,
     })
     // Old placement, artifact, and custom tile state are gone.
     expect(target.grid.getTile(1).characterId).toBeUndefined()
@@ -241,5 +244,65 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(target.grid.getTile(40).characterId).toBe(ENEMY_A)
     expect(target.artifact.allyArtifactId).toBe(7)
     expect(snapshotTiles(target.grid)).toEqual(expected)
+  })
+})
+
+describe('urlStateStore.swapTeamsAllBoards', () => {
+  it('mirrors units onto the opposite team and leaves no stale occupied tiles', () => {
+    const s = createStores()
+    const gridRef = useGrids().active!.grid
+    const mirror = (hexId: number) => gridRef.getRotatedHexId(hexId)!
+
+    // 2 and 40 are not rotation partners (2->44, 40->6), so their target tiles stay
+    // empty and the sources vacate cleanly (exercising the occupied -> available
+    // demotion).
+    expect(s.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
+    expect(s.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)
+
+    s.urlState.swapTeamsAllBoards()
+
+    // Each unit sits on its mirror tile, now on the opposite team.
+    expect(s.grid.getTile(mirror(2)).characterId).toBe(ALLY_A)
+    expect(s.grid.getTile(mirror(2)).team).toBe(Team.ENEMY)
+    expect(s.grid.getTile(mirror(40)).characterId).toBe(ENEMY_A)
+    expect(s.grid.getTile(mirror(40)).team).toBe(Team.ALLY)
+
+    // Source tiles vacated, back to an available (not occupied) state.
+    expect(s.grid.getTile(2).characterId).toBeUndefined()
+    expect(s.grid.getTile(2).state).toBe(State.AVAILABLE_ALLY)
+    expect(s.grid.getTile(40).characterId).toBeUndefined()
+    expect(s.grid.getTile(40).state).toBe(State.AVAILABLE_ENEMY)
+
+    // Global invariant: a tile is in an occupied state iff it holds a character.
+    for (const tile of s.grid.getAllTiles) {
+      const occupied = tile.state === State.OCCUPIED_ALLY || tile.state === State.OCCUPIED_ENEMY
+      expect(occupied).toBe(tile.characterId !== undefined)
+    }
+  })
+
+  it('swaps the artifact slots', () => {
+    const s = createStores()
+    s.artifact.placeArtifact(3, Team.ALLY)
+    s.artifact.placeArtifact(5, Team.ENEMY)
+
+    s.urlState.swapTeamsAllBoards()
+
+    expect(s.artifact.allyArtifactId).toBe(5)
+    expect(s.artifact.enemyArtifactId).toBe(3)
+  })
+
+  it('is an involution: swapping twice restores the original layout', () => {
+    const s = createStores()
+    expect(s.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
+    expect(s.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)
+    s.artifact.placeArtifact(3, Team.ALLY)
+    const before = snapshotTiles(s.grid)
+
+    s.urlState.swapTeamsAllBoards()
+    s.urlState.swapTeamsAllBoards()
+
+    expect(snapshotTiles(s.grid)).toEqual(before)
+    expect(s.artifact.allyArtifactId).toBe(3)
+    expect(s.artifact.enemyArtifactId).toBeNull()
   })
 })
