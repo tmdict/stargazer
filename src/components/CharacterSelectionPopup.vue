@@ -11,6 +11,8 @@ import type { CharacterType } from '@/lib/types/character'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -29,6 +31,7 @@ const emit = defineEmits<{
 const characterStore = useCharacterStore()
 const gridStore = useGridStore()
 const grids = useGrids()
+const i18n = useI18nStore()
 
 const team = computed(() => getTeamFromTileState(gridStore.getTile(props.hex.getId()).state))
 
@@ -52,11 +55,21 @@ const factionFilter = ref('')
 const factionOptions = computed(() =>
   [...new Set(sortedCharacters.value.map((c) => c.faction))].sort(),
 )
-const filteredCharacters = computed(() =>
+const factionFiltered = computed(() =>
   factionFilter.value
     ? sortedCharacters.value.filter((c) => c.faction === factionFilter.value)
     : sortedCharacters.value,
 )
+
+// Name search composes on top of the faction filter.
+const searchQuery = ref('')
+const filteredCharacters = computed(() => {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return factionFiltered.value
+  return factionFiltered.value.filter((c) =>
+    localizedDisplayName(i18n.t, 'character', c.name).toLowerCase().includes(q),
+  )
+})
 
 function handleSelect(character: CharacterType) {
   const t = team.value
@@ -70,6 +83,8 @@ function handleSelect(character: CharacterType) {
 
 <template>
   <SelectionPopup :position @close="emit('close')">
+    <!-- type="search" for the native clear button. -->
+    <input v-model="searchQuery" type="search" class="search-input" placeholder="Search…" />
     <div class="filter-row">
       <FilterIcons
         v-model="factionFilter"
@@ -96,6 +111,45 @@ function handleSelect(character: CharacterType) {
 </template>
 
 <style scoped>
+.search-input {
+  /* 4px side margin lines the box up with the character grid's content padding. */
+  width: calc(100% - 8px);
+  box-sizing: border-box;
+  margin: 0 4px 8px;
+  padding: 4px 8px;
+  font: inherit;
+  font-size: 12px;
+  color: #fff;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  transition: border-color 0.15s ease;
+}
+
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.search-input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 12px;
+  width: 12px;
+  background: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12' fill='none' stroke='%23ccc' stroke-width='1.4' stroke-linecap='round'><path d='M2 2 L10 10 M10 2 L2 10'/></svg>")
+    no-repeat center / 12px 12px;
+  cursor: pointer;
+  opacity: 0.6;
+}
+
+.search-input::-webkit-search-cancel-button:hover {
+  opacity: 1;
+}
+
 .filter-row {
   margin-bottom: 8px;
 }
