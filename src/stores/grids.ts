@@ -44,22 +44,31 @@ export const useGrids = defineStore('grids', () => {
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
 
-  // Team view crops every board by the same amount (the union of all boards' ally
-  // extents) so the row stays even height. Null on a single board (the Arena),
-  // where each board crops to its own extent.
-  const sharedCrop = computed<{ minY: number; maxY: number } | null>(() => {
+  // Team view crops every board by the same amount (the union of all boards' shown
+  // extents) so the row stays even-sized. Null on a single board (the Arena), where
+  // each board crops to its own extent.
+  const sharedCrop = computed<{
+    minX: number
+    maxX: number
+    minY: number
+    maxY: number
+  } | null>(() => {
     if (!teamView.value || contexts.value.length <= 1) return null
+    let minX = Infinity
+    let maxX = -Infinity
     let minY = Infinity
     let maxY = -Infinity
     for (const ctx of contexts.value) {
-      for (const hex of ctx.visibleHexes) {
+      for (const hex of ctx.cropHexes) {
         for (const c of ctx.layout.polygonCorners(hex)) {
+          if (c.x < minX) minX = c.x
+          if (c.x > maxX) maxX = c.x
           if (c.y < minY) minY = c.y
           if (c.y > maxY) maxY = c.y
         }
       }
     }
-    return minY === Infinity ? null : { minY, maxY }
+    return minY === Infinity ? null : { minX, maxX, minY, maxY }
   })
 
   // (Re)build to exactly `count` boards. Disposes prior boards so their reactive

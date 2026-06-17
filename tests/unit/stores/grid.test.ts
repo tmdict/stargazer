@@ -49,12 +49,13 @@ describe('grid team view (active board geometry)', () => {
       expect(bounds).toEqual({ x: 0, y: 0, width: 600, height: 600 })
     })
 
-    it('keeps full width and crops only vertically when teamView is true', () => {
+    it('crops to the shown team on both axes when teamView is true', () => {
       gridStore.teamView = true
 
       const bounds = grids.active!.viewBoxBounds
-      expect(bounds.x).toBe(0)
-      expect(bounds.width).toBe(600)
+      expect(bounds.x).toBeGreaterThan(0)
+      expect(bounds.width).toBeLessThan(600)
+      expect(bounds.width).toBeGreaterThan(0)
       expect(bounds.height).toBeLessThan(600)
       expect(bounds.height).toBeGreaterThan(0)
     })
@@ -71,13 +72,19 @@ describe('grid team view (active board geometry)', () => {
     })
 
     it('scales bounds with the breakpoint hex size', () => {
-      gridStore.updateBreakpoint('mobile') // hexSize 23, scale 0.575
       gridStore.teamView = true
 
-      const bounds = grids.active!.viewBoxBounds
-      expect(bounds.width).toBe(345) // 600 * 0.575
-      expect(bounds.x).toBe(0)
-      expect(bounds.height).toBeLessThanOrEqual(345)
+      gridStore.updateBreakpoint('desktop') // hexSize 40, scale 1.0
+      const desktop = { ...grids.active!.viewBoxBounds }
+      gridStore.updateBreakpoint('mobile') // hexSize 23, scale 0.575
+      const mobile = grids.active!.viewBoxBounds
+
+      // Every term (corners + pads) is linear in hex size, so the cropped box
+      // scales by the hex-size ratio.
+      const ratio = 23 / 40
+      expect(mobile.width).toBeCloseTo(desktop.width * ratio)
+      expect(mobile.height).toBeCloseTo(desktop.height * ratio)
+      expect(mobile.x).toBeCloseTo(desktop.x * ratio)
     })
   })
 })
