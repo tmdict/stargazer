@@ -90,6 +90,30 @@ export function storeCompanionPositions(
   return positions
 }
 
+// Move companions onto target hexes. Lifts them all off first, then places
+// them, so two companions can trade hexes (Zanie) without the first place
+// failing on the second's tile. Raw ops sidestep the owner-removal cascade in
+// executeRemoveCharacter; color and image modifiers key off id + team and so
+// survive the move.
+export function repositionCompanions(
+  grid: Grid,
+  team: Team,
+  targets: { companionId: number; hexId: number }[],
+): void {
+  const lifts = targets.map((t) => ({
+    ...t,
+    from: findCharacterHex(grid, t.companionId, team),
+  }))
+  lifts.forEach((l) => {
+    if (l.from !== null) performRemove(grid, l.from)
+  })
+  lifts.forEach((l) => {
+    if (!performPlace(grid, l.hexId, l.companionId, team)) {
+      console.warn(`Failed to reposition companion ${l.companionId} to hex ${l.hexId}`)
+    }
+  })
+}
+
 // Restores companions to original positions
 export function restoreCompanions(
   grid: Grid,

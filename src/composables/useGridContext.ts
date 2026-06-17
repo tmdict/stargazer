@@ -110,6 +110,9 @@ export interface GridContext {
   getColorModifierForCharacter: (characterId: number, team: Team) => string | undefined
   getImageModifierForCharacter: (characterId: number, team: Team) => string | undefined
   getTileColorModifier: (hexId: number) => string[] | undefined
+  // A tile's pre-skill state, for serializing the bare map (see getBaseTileState
+  // on SkillManager). Lets share/save paths reach it without the skillManager.
+  getBaseTileState: (hexId: number, state: number) => number
 
   // Operations (bound to this board's grid + skillManager)
   place: (hexId: number, characterId: number, team?: Team) => boolean
@@ -408,6 +411,8 @@ export function createGridContext(
       imageModifiers.value.get(`${characterId}-${team}`)
     const getTileColorModifier = (hexId: number): string[] | undefined =>
       tileColorModifiers.value.get(hexId)
+    const getBaseTileState = (hexId: number, state: number): number =>
+      skillManager.getBaseTileState(hexId, state)
 
     // Reconcile each team's phantimal with its faction count after every
     // placement change:
@@ -462,6 +467,7 @@ export function createGridContext(
       getColorModifierForCharacter,
       getImageModifierForCharacter,
       getTileColorModifier,
+      getBaseTileState,
     }
   })!
 

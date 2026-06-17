@@ -59,6 +59,9 @@ export const useGridStore = defineStore('grid', () => {
 
   const getHexById = (id: number): Hex => active().grid.getHexById(id)
 
+  const getBaseTileState = (hexId: number, state: number): number =>
+    active().getBaseTileState(hexId, state)
+
   const getTile = (hexOrId: Hex | number): GridTile =>
     typeof hexOrId === 'number'
       ? active().grid.getTileById(hexOrId)
@@ -100,6 +103,7 @@ export const useGridStore = defineStore('grid', () => {
     setState,
     resetAllTiles,
     getHexById,
+    getBaseTileState,
     getTile,
     getAllTiles,
     switchMap,

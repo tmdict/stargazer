@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 
+import { repositionCompanions } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
@@ -97,7 +98,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
     // Restore character placements from compact format: [hexId, characterId, team]
     if (gridState.c) {
-      // Separate main characters from companions
+      // Companions are skill-spawned, not placed directly; settle them after
+      // their owner is on the board.
       const mainCharacters: typeof gridState.c = []
       const companions: typeof gridState.c = []
 
@@ -112,7 +114,12 @@ export const useUrlStateStore = defineStore('urlState', () => {
         }
       })
 
-      // Place main characters first (this will create companions via skills)
+      // Place each main character, then immediately settle its companions onto
+      // their saved hexes. Doing this per main (rather than after every main is
+      // placed) stops a skill-spawned companion from squatting on a tile a later
+      // main needs: that collision would evict the squatter, and since it is a
+      // companion the eviction cascades to drop its whole unit.
+      const grid = grids.active!.grid
       mainCharacters.forEach((entry) => {
         const validated = getValidatedCharacterEntry(entry)
         if (!validated) return
@@ -126,39 +133,14 @@ export const useUrlStateStore = defineStore('urlState', () => {
           console.warn(
             `Failed to place character ID ${validated.characterId} on hex ${validated.hexId}`,
           )
+          return
         }
-      })
-
-      // For companions, we need to move them to their correct positions
-      // The skill will have created them at random positions, but we need them at specific hexes
-      companions.forEach((entry) => {
-        const validated = getValidatedCharacterEntry(entry)
-        if (!validated) return
-
-        // Find where the companion was auto-placed
-        const tiles = gridStore.getAllTiles
-        const currentHex = tiles.find(
-          (tile) => tile.characterId === validated.characterId && tile.team === validated.team,
-        )
-
-        if (currentHex) {
-          const currentHexId = currentHex.hex.getId()
-          // Move the companion to the correct position
-          const moveSuccess = characterStore.moveCharacter(
-            currentHexId,
-            validated.hexId,
-            validated.characterId,
+        const companionTargets = companions
+          .filter(
+            (e) => e[1]! % COMPANION_ID_OFFSET === validated.characterId && e[2] === validated.team,
           )
-          if (!moveSuccess) {
-            console.warn(
-              `Failed to move companion ID ${validated.characterId} from hex ${currentHexId} to ${validated.hexId}`,
-            )
-          }
-        } else {
-          console.warn(
-            `Companion ID ${validated.characterId} was not created by skill - this shouldn't happen`,
-          )
-        }
+          .map((e) => ({ companionId: e[1]!, hexId: e[0]! }))
+        repositionCompanions(grid, validated.team, companionTargets)
       })
     }
 
@@ -233,6 +215,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
         ctx.grid.getAllTiles(),
         ctx.artifacts.ally,
         ctx.artifacts.enemy,
+        undefined,
+        ctx.getBaseTileState,
       )
       if (!state.c && !state.p && !state.a) return // nothing to swap on this board
       const mirrored = mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))

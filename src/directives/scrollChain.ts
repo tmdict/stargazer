@@ -8,9 +8,10 @@ import type { Directive } from 'vue'
  * page absorb the wheel first, so this forces the inner-first order.
  *
  * Horizontal (`v-scroll-chain.horizontal`): drives a horizontal scroller (e.g. the
- * 5 v 5 board row) from the vertical wheel — a mouse wheel only emits deltaY, so
- * it maps to scrollLeft — and is *contained*: it never chains to the page, so
- * reaching either end doesn't flip the gesture into a vertical page scroll.
+ * 5 v 5 board row) from a mouse wheel's vertical delta (a wheel only emits deltaY,
+ * so it maps to scrollLeft). A touchpad is left untouched so it scrolls natively in
+ * both axes, and at either end the wheel chains to the page (down past the right
+ * end, up past the left) like the vertical case.
  *
  * No-op when the element has nothing to scroll, so the page scrolls normally then.
  * Registered globally (main.ts / main.ssg.ts); add to a region's scroll element.
@@ -19,6 +20,22 @@ import type { Directive } from 'vue'
  */
 
 const handlers = new WeakMap<HTMLElement, (e: WheelEvent) => void>()
+
+// Mouse wheel vs touchpad: there's no exact API, so infer from the event shape. A
+// mouse wheel emits vertical-only, notched deltas; a touchpad emits small, smooth,
+// often 2-axis deltas. The check is imperfect at the margins (a Magic Mouse reads as
+// a touchpad) but right for the common laptop-trackpad-plus-wheel setup.
+function isMouseWheel(e: WheelEvent): boolean {
+  if (e.deltaX !== 0) return false // a standard wheel is vertical-only
+  if (e.deltaMode !== 0) return true // LINE/PAGE notches (Firefox wheel)
+  // wheelDeltaY counts notches (120 each), not accelerated pixels, so it stays a
+  // clean multiple for a wheel; a touchpad's is small and unaligned.
+  const wheelDeltaY = (e as WheelEvent & { wheelDeltaY?: number }).wheelDeltaY
+  if (typeof wheelDeltaY === 'number' && wheelDeltaY !== 0) {
+    return Math.abs(wheelDeltaY) % 120 === 0
+  }
+  return false
+}
 
 function makeHandler(el: HTMLElement, horizontal: boolean) {
   return (e: WheelEvent): void => {
@@ -31,9 +48,15 @@ function makeHandler(el: HTMLElement, horizontal: boolean) {
     const delta = e.deltaY * (e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? clientSize : 1)
 
     if (horizontal) {
-      // Contained: the wheel drives the row and never escapes to the page, so
-      // reaching either end doesn't suddenly scroll the page (the browser clamps
-      // scrollLeft at the boundaries).
+      // Only a mouse wheel is remapped to horizontal; a touchpad scrolls both axes
+      // natively, so leave it alone (vertical swipes scroll the page, horizontal
+      // swipes scroll the row).
+      if (!isMouseWheel(e)) return
+      // Inner-first, then chain: drive the row until an end, then let the wheel fall
+      // through to a vertical page scroll (down past the right end, up past the left).
+      const atStart = el.scrollLeft <= 0
+      const atEnd = el.scrollLeft + clientSize >= scrollSize - 1
+      if ((delta > 0 && atEnd) || (delta < 0 && atStart)) return
       e.preventDefault()
       el.scrollLeft += delta
       return
