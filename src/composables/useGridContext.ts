@@ -2,7 +2,7 @@
  *
  * Bundles everything that is "per board" (its Grid, SkillManager, current map,
  * artifact slots) with the values derived from them (layout, team-view crop,
- * team counts, pathfinding target maps) and the operations that mutate them
+ * pathfinding target maps) and the operations that mutate them
  * (place / remove / move / swap / phantimal / map switch / clear). The single
  * Arena board is the N=1 case; the 5 v 5 page holds five of these.
  *
