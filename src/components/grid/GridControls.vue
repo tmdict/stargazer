@@ -229,8 +229,8 @@ const flatView = computed({
   .controls-row {
     gap: 6px;
   }
-  /* Row 2 (team toggle + link/copy/download + clear) breathes more; row 1's
-     chips stay tight so they don't re-wrap. */
+  /* Row 2 (link/copy/download + clear) breathes more; row 1's chips stay tight
+     so they don't re-wrap. */
   .controls-row.controls-actions {
     gap: 18px;
   }
