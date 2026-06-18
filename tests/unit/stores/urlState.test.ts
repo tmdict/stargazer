@@ -98,6 +98,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       showSkills: true,
       teamView: true,
       inverted: true,
+      wrap: true,
     }
     const encoded = encodeStores(source, flags)
     const expected = snapshotTiles(source.grid)
@@ -235,6 +236,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       showSkills: true,
       teamView: false,
       inverted: false,
+      wrap: false,
     })
     // Old placement, artifact, and custom tile state are gone.
     expect(target.grid.getTile(1).characterId).toBeUndefined()

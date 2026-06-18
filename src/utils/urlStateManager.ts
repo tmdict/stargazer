@@ -2,8 +2,6 @@ import type { GridTile } from '@/lib/grid'
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
 import {
   serializeGridState,
-  serializeMultiGridState,
-  type BoardInput,
   type DisplayFlags,
   type GridState,
   type MultiGridState,
@@ -75,16 +73,6 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
     console.warn('Failed to decode multi-grid state from URL:', error)
     return null
   }
-}
-
-/* Shareable link for the 5 v 5 page; restored by TeamsView on load. */
-export function generateMultiShareableUrl(
-  boards: BoardInput[],
-  activeId: number,
-  displayFlags?: DisplayFlags,
-): string {
-  const encoded = encodeMultiGridStateToUrl(serializeMultiGridState(boards, activeId, displayFlags))
-  return `${window.location.origin}/teams?g=${encoded}`
 }
 
 /* Get encoded state from current URL
