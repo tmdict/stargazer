@@ -7,9 +7,12 @@
 import { computed } from 'vue'
 
 import GridContainer from '@/components/grid/GridContainer.vue'
+import IconCopy from '@/components/ui/IconCopy.vue'
+import IconDownload from '@/components/ui/IconDownload.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import IconTrash from '@/components/ui/IconTrash.vue'
 import type { GridContext } from '@/composables/useGridContext'
+import { useGridExport } from '@/composables/useGridExport'
 import { useGridSwap } from '@/composables/useGridSwap'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
@@ -30,9 +33,21 @@ const { context, showArrows, showHexIds, showSkills, showPerspective, tapMode } 
 const grids = useGrids()
 const i18n = useI18nStore()
 const { isSwapping, sourceId, startFromButton, selectTarget } = useGridSwap()
+const { copyToClipboard, downloadAsImage } = useGridExport()
 
 const isActive = computed(() => grids.activeId === context.id)
 const isSwapSource = computed(() => sourceId.value === context.id)
+
+// Export only this board: its .perspective-container holds the grid without the
+// active ring (on .grid-board) or these action buttons (siblings), so it needs no
+// strip/filter. Mirrors the single-grid copy/download.
+const boardImageOptions = () => ({
+  showPerspective,
+  target: `[data-grid-board-id="${context.id}"] .perspective-container`,
+  filePrefix: 'team',
+})
+const handleCopyImage = () => copyToClipboard(boardImageOptions())
+const handleDownloadImage = () => downloadAsImage(boardImageOptions())
 </script>
 
 <template>
@@ -63,6 +78,24 @@ const isSwapSource = computed(() => sourceId.value === context.id)
         @click.stop
       >
         <IconSwap :size="16" />
+      </button>
+      <button
+        type="button"
+        class="board-action board-copy"
+        :title="i18n.t('app.copy')"
+        :aria-label="i18n.t('app.copy')"
+        @click.stop="handleCopyImage"
+      >
+        <IconCopy :size="16" />
+      </button>
+      <button
+        type="button"
+        class="board-action board-download"
+        :title="i18n.t('app.download')"
+        :aria-label="i18n.t('app.download')"
+        @click.stop="handleDownloadImage"
+      >
+        <IconDownload :size="16" />
       </button>
       <button
         type="button"
@@ -116,11 +149,12 @@ const isSwapSource = computed(() => sourceId.value === context.id)
   background: var(--color-bg-light-gray);
 }
 
-/* Icon controls: Swap sits to the left of Clear. Solid-filled circular buttons;
-   the white icon inherits the fill color via currentColor. */
+/* Icon controls: Swap, then export (Copy, Download), with the destructive Clear
+   set apart at the right. Solid-filled circular buttons; the white icon inherits
+   the button color via currentColor. */
 .board-actions {
   display: flex;
-  gap: var(--spacing-sm);
+  gap: var(--spacing-md);
   margin-top: var(--spacing-sm);
 }
 
@@ -154,6 +188,17 @@ const isSwapSource = computed(() => sourceId.value === context.id)
 
 .board-clear:hover {
   background: var(--color-danger-hover);
+}
+
+/* Export actions read as neutral utilities, distinct from the colored swap/clear. */
+.board-copy,
+.board-download {
+  background: var(--color-text-secondary);
+}
+
+.board-copy:hover,
+.board-download:hover {
+  background: var(--color-text-primary);
 }
 
 /* Covers the whole board while a swap is being aimed: targets invite a click,

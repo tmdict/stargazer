@@ -32,8 +32,9 @@ import { generateMultiShareableUrl, getEncodedStateFromUrl } from '@/utils/urlSt
 
 // Board size steps down as the window narrows (large desktop / medium tablet /
 // small mobile); the row scrolls horizontally so size isn't bound by fitting five.
-const LARGE_HEX = { x: 33, y: 33 }
-const MEDIUM_HEX = { x: 26, y: 26 }
+// Tablet and mobile match the Arena's breakpoint sizes; desktop sits just above tablet.
+const LARGE_HEX = { x: 36, y: 36 }
+const MEDIUM_HEX = { x: 30, y: 30 }
 const MOBILE_HEX = { x: 23, y: 23 }
 
 const grids = useGrids()

@@ -7,6 +7,7 @@ import type { ArtifactType } from '@/lib/types/artifact'
 import type { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
+import { useGrids } from '@/stores/grids'
 
 interface Props {
   // The team whose artifact slot the chosen artifact is placed into.
@@ -22,13 +23,21 @@ const emit = defineEmits<{
 
 const gameDataStore = useGameDataStore()
 const artifactStore = useArtifactStore()
+const grids = useGrids()
 
 // Pre-season first, then by id — mirrors the Seasonal tab ordering.
 const sortedArtifacts = computed(() =>
   [...gameDataStore.artifacts].sort((a, b) => a.season - b.season || a.id - b.id),
 )
 
+// Drop artifacts already assigned to this team on any board (page-wide per-team
+// uniqueness), like the character popup hides placed heroes.
+const availableArtifacts = computed(() =>
+  sortedArtifacts.value.filter((a) => !grids.isArtifactUsed(a.id, props.team)),
+)
+
 const handleSelect = (artifact: ArtifactType) => {
+  if (grids.isArtifactUsed(artifact.id, props.team)) return
   artifactStore.placeArtifact(artifact.id, props.team)
   emit('close')
 }
@@ -37,7 +46,7 @@ const handleSelect = (artifact: ArtifactType) => {
 <template>
   <SelectionPopup :position @close="emit('close')">
     <div class="artifacts-grid">
-      <div v-for="artifact in sortedArtifacts" :key="artifact.id" class="artifact-item">
+      <div v-for="artifact in availableArtifacts" :key="artifact.id" class="artifact-item">
         <ArtifactIcon :artifact :show-simple-tooltip="true" @artifact-click="handleSelect" />
       </div>
     </div>
