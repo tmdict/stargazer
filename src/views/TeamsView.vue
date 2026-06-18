@@ -21,21 +21,16 @@ import { useGridExport } from '@/composables/useGridExport'
 import { useTeamsPersistence } from '@/composables/useGridPersistence'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useShareLink } from '@/composables/useShareLink'
 import { useToast } from '@/composables/useToast'
 import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
-import type { DisplayFlags } from '@/utils/gridStateSerializer'
-import { generateMultiShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
-
-// Board size steps down as the window narrows (large desktop / medium tablet /
-// small mobile); the row scrolls horizontally so size isn't bound by fitting five.
-// Tablet and mobile match the Arena's breakpoint sizes; desktop sits just above tablet.
-const LARGE_HEX = { x: 36, y: 36 }
-const MEDIUM_HEX = { x: 30, y: 30 }
-const MOBILE_HEX = { x: 23, y: 23 }
+import { serializeMultiGridState, type DisplayFlags } from '@/utils/gridStateSerializer'
+import { teamsBoardSize } from '@/utils/teamsBoardSize'
+import { encodeMultiGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
@@ -46,6 +41,7 @@ const { success, error } = useToast()
 const { currentBreakpoint } = useBreakpoint({ autoFlattenOnMobile: false })
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { cancel: cancelSwap } = useGridSwap()
+const shareLink = useShareLink()
 
 gameDataStore.initializeData()
 i18n.initialize()
@@ -64,6 +60,8 @@ const showArrows = ref(false)
 const showHexIds = ref(false)
 const showPerspective = ref(false)
 const showSkills = ref(true)
+// 3-2 "wrap" boards layout vs one row; serialized with the other display flags.
+const wrapBoards = ref(false)
 
 // At sheet widths (<= tablet) the roster is a pull-up sheet and boards place via
 // the cell-tap flow; on desktop the roster is a card and cells use the on-grid popup.
@@ -72,12 +70,7 @@ const isSheet = computed(() => currentBreakpoint.value !== 'desktop')
 // Grid tabs pin their own size per breakpoint, not the breakpoint-driven Arena
 // sizing; hexSizeMode tells useBreakpoint to leave the size alone.
 const applySize = () => {
-  grids.hexSize =
-    currentBreakpoint.value === 'mobile'
-      ? MOBILE_HEX
-      : currentBreakpoint.value === 'tablet'
-        ? MEDIUM_HEX
-        : LARGE_HEX
+  grids.hexSize = teamsBoardSize(currentBreakpoint.value)
 }
 
 // Board count per grid tab; the active tab is the selector, so a future mode (e.g.
@@ -109,14 +102,18 @@ watch(
 )
 watch(currentBreakpoint, applySize)
 
-const teamsPersistence = useTeamsPersistence(() => ({
+// Display flags shared by the localStorage autosave and the share link.
+const currentFlags = (): DisplayFlags => ({
   showHexIds: showHexIds.value,
   showArrows: showArrows.value,
   showPerspective: showPerspective.value,
   showSkills: showSkills.value,
   teamView: grids.teamView,
   inverted: grids.inverted,
-}))
+  wrap: wrapBoards.value,
+})
+
+const teamsPersistence = useTeamsPersistence(currentFlags)
 
 const applyDisplayFlags = (flags: DisplayFlags) => {
   showHexIds.value = flags.showHexIds ?? false
@@ -125,6 +122,7 @@ const applyDisplayFlags = (flags: DisplayFlags) => {
   showSkills.value = flags.showSkills ?? true
   grids.teamView = flags.teamView ?? false
   grids.inverted = flags.inverted ?? false
+  wrapBoards.value = flags.wrap ?? false
 }
 
 // A ?g= link overwrites the saved boards; otherwise restore them. Then mirror
@@ -166,28 +164,18 @@ const boardCapture = {
 const handleCopyImage = () => copyToClipboard(boardCapture)
 const handleDownload = () => downloadAsImage(boardCapture)
 
-const handleCopyLink = async () => {
-  try {
-    const boards = grids.contexts.map((ctx) => ({
-      tiles: ctx.grid.getAllTiles(),
-      allyArtifact: ctx.artifacts.ally,
-      enemyArtifact: ctx.artifacts.enemy,
-      baseTileState: ctx.getBaseTileState,
-    }))
-    const url = generateMultiShareableUrl(boards, grids.activeId, {
-      showHexIds: showHexIds.value,
-      showArrows: showArrows.value,
-      showPerspective: showPerspective.value,
-      showSkills: showSkills.value,
-      teamView: grids.teamView,
-      inverted: grids.inverted,
-    })
-    await navigator.clipboard.writeText(url)
-    success(i18n.t('app.copied-clipboard'))
-  } catch (err) {
-    console.error('Failed to copy 5 v 5 link:', err)
-    error(i18n.t('app.copy-link-failed'))
-  }
+// Mirror the Arena: copy a read-only /share link for all five boards and open it.
+const handleCopyLink = () => {
+  const boards = grids.contexts.map((ctx) => ({
+    tiles: ctx.grid.getAllTiles(),
+    allyArtifact: ctx.artifacts.ally,
+    enemyArtifact: ctx.artifacts.enemy,
+    baseTileState: ctx.getBaseTileState,
+  }))
+  const encoded = encodeMultiGridStateToUrl(
+    serializeMultiGridState(boards, grids.activeId, currentFlags()),
+  )
+  return shareLink(encoded)
 }
 
 // Image Stitcher is wide-window-only; if the viewport narrows while it's active,
@@ -221,6 +209,7 @@ onUnmounted(() => mq?.removeEventListener('change', enforceMobileTab))
                 v-model:show-hex-ids="showHexIds"
                 v-model:show-perspective="showPerspective"
                 v-model:show-skills="showSkills"
+                v-model:wrap="wrapBoards"
                 :characters="gameDataStore.characters"
                 :tap-mode="isSheet"
                 :can-wrap="!isSheet"

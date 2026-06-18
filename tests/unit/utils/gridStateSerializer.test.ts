@@ -274,6 +274,7 @@ describe('gridStateSerializer', () => {
       showSkills: false,
       teamView: false,
       inverted: false,
+      wrap: false,
     }
 
     it('returns the defaults when undefined', () => {
@@ -294,6 +295,7 @@ describe('gridStateSerializer', () => {
       [0b001000, { ...off, showSkills: true }],
       [0b010000, { ...off, teamView: true }],
       [0b100000, { ...off, inverted: true }],
+      [0b1000000, { ...off, wrap: true }],
       [
         0b111111,
         {
@@ -303,13 +305,14 @@ describe('gridStateSerializer', () => {
           showSkills: true,
           teamView: true,
           inverted: true,
+          wrap: false,
         },
       ],
     ])('unpacks flags %i correctly', (flags, expected) => {
       expect(unpackDisplayFlags(flags)).toEqual(expected)
     })
 
-    it('ignores bits beyond the first 6', () => {
+    it('ignores bits beyond the first 7', () => {
       expect(unpackDisplayFlags(0b11111111)).toEqual({
         showHexIds: true,
         showArrows: true,
@@ -317,6 +320,7 @@ describe('gridStateSerializer', () => {
         showSkills: true,
         teamView: true,
         inverted: true,
+        wrap: true,
       })
     })
 
@@ -329,6 +333,7 @@ describe('gridStateSerializer', () => {
         showSkills: false,
         teamView: true,
         inverted: true,
+        wrap: true,
       }
       const packed = serializeGridState(tiles, null, null, original).d
       expect(unpackDisplayFlags(packed)).toEqual(original)
@@ -344,6 +349,7 @@ describe('gridStateSerializer', () => {
         showSkills: true,
         teamView: false,
         inverted: false,
+        wrap: false,
       })
     })
   })

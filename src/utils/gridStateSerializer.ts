@@ -20,6 +20,8 @@ export interface DisplayFlags {
   showSkills?: boolean
   teamView?: boolean
   inverted?: boolean
+  // 5 v 5 only: the 3-2 "wrap" boards layout (vs one row). The Arena never sets it.
+  wrap?: boolean
 }
 
 /* Create compact serialized state for URL generation.
@@ -134,6 +136,7 @@ export function packDisplayFlags(flags: DisplayFlags): number {
   if (flags.showSkills) packed |= 1 << 3
   if (flags.teamView) packed |= 1 << 4
   if (flags.inverted) packed |= 1 << 5
+  if (flags.wrap) packed |= 1 << 6
   return packed
 }
 
@@ -179,6 +182,7 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
       showSkills: true,
       teamView: false,
       inverted: false,
+      wrap: false,
     }
   }
 
@@ -189,5 +193,6 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
     showSkills: !!(packed & (1 << 3)),
     teamView: !!(packed & (1 << 4)),
     inverted: !!(packed & (1 << 5)),
+    wrap: !!(packed & (1 << 6)),
   }
 }

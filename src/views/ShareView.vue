@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
+import BoardsRow from '@/components/teams/BoardsRow.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
@@ -15,35 +16,56 @@ import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
-import { getEncodedStateFromRoute } from '@/utils/urlStateManager'
+import { teamsBoardSize } from '@/utils/teamsBoardSize'
+import { decodeMultiGridStateFromUrl, getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
 import '@/styles/modal.css'
 
 const gridStore = useGridStore()
 const grids = useGrids()
-if (grids.contexts.length !== 1) grids.setGridCount(1)
-grids.hexSizeMode = 'breakpoint'
-const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()
 const urlStateStore = useUrlStateStore()
 const { success } = useToast()
 const route = useRoute()
 
+// /share carries either a single-board (Arena) binary state or a 5 v 5 JSON state;
+// decodeMulti returns null for the former, which selects the render mode.
+const encodedAtLoad = getEncodedStateFromRoute(route.query)
+const isMultiBoard = ref(
+  encodedAtLoad !== null && decodeMultiGridStateFromUrl(encodedAtLoad) !== null,
+)
+
+// Multi reuses the Teams board sizing; single keeps the Arena breakpoint sizing.
+if (isMultiBoard.value) {
+  grids.hexSizeMode = 'fixed-medium'
+} else {
+  if (grids.contexts.length !== 1) grids.setGridCount(1)
+  grids.hexSizeMode = 'breakpoint'
+}
+const activeContext = computed(() => grids.active!)
+
 // Set canonical link for share page
 useHead({
   link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/share' }],
 })
 
-// Use breakpoint for responsive grid sizing only (don't auto-flatten on mobile)
-useBreakpoint({ autoFlattenOnMobile: false })
+// Breakpoint drives responsive sizing only (don't auto-flatten on mobile). Multi
+// pins the Teams board size per breakpoint; single is sized by useBreakpoint.
+const { currentBreakpoint } = useBreakpoint({ autoFlattenOnMobile: false })
+const canWrap = computed(() => currentBreakpoint.value === 'desktop')
+const applyMultiSize = () => {
+  if (isMultiBoard.value) grids.hexSize = teamsBoardSize(currentBreakpoint.value)
+}
+applyMultiSize()
+watch(currentBreakpoint, applyMultiSize)
 
 const hasValidGrid = ref(false)
 const showArrows = ref(false)
 const showHexIds = ref(false)
 const showPerspective = ref(false) // Default to flat view
 const showSkills = ref(true)
-const encodedState = ref<string>('')
+const wrapBoards = ref(false) // 5 v 5 only: 3-2 layout vs one row
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
@@ -51,15 +73,11 @@ i18nStore.initialize()
 
 // Restore state from URL
 const restoreStateFromUrl = () => {
-  const encoded = getEncodedStateFromRoute(route.query)
-  const result = urlStateStore.restoreFromEncodedState(encoded)
+  const result = isMultiBoard.value
+    ? urlStateStore.restoreMultiFromEncodedState(encodedAtLoad)
+    : urlStateStore.restoreFromEncodedState(encodedAtLoad)
 
   if (result.success) {
-    // Store the encoded state for generating home link
-    if (encoded) {
-      encodedState.value = encoded
-    }
-
     // Apply display flags if present
     if (result.displayFlags) {
       showHexIds.value = result.displayFlags.showHexIds ?? false
@@ -68,6 +86,7 @@ const restoreStateFromUrl = () => {
       showSkills.value = result.displayFlags.showSkills ?? true
       gridStore.teamView = result.displayFlags.teamView ?? false
       gridStore.inverted = result.displayFlags.inverted ?? false
+      wrapBoards.value = result.displayFlags.wrap ?? false
     }
 
     return true
@@ -88,45 +107,57 @@ onMounted(() => {
   }
 })
 
-const emptyMessage = computed(() => {
-  const queryParam = getEncodedStateFromRoute(route.query)
-  if (!queryParam) {
-    return 'No grid data provided'
-  }
-  return 'Invalid grid data'
-})
+const emptyMessage = encodedAtLoad ? 'Invalid grid data' : 'No grid data provided'
 
-// The pencil opens this shared setup in the editable Arena, which overwrites the
-// saved arena. Dismissing (backdrop / close) instead goes to a bare `/`, leaving
-// the saved arena untouched.
-const editLink = computed(() => {
-  if (encodedState.value) {
-    return `/?g=${encodedState.value}`
-  }
-  return '/'
-})
+// The pencil opens this shared setup in its editable page (Arena for a single
+// board, the 5 v 5 boards for multi), which overwrites that page's saved state.
+// Dismissing (backdrop / close) instead goes to the bare page, leaving it untouched.
+const dismissLink = computed(() => (isMultiBoard.value ? '/teams' : '/'))
+const editLink = computed(() =>
+  encodedAtLoad ? `${dismissLink.value}?g=${encodedAtLoad}` : dismissLink.value,
+)
 </script>
 
 <template>
   <div class="overlay">
-    <!-- Backdrop dismiss: back to the saved arena, not the shared setup. -->
-    <a href="/" class="backdrop-link" aria-label="Back to Stargazer"></a>
+    <!-- Backdrop dismiss: back to the saved page, not the shared setup. -->
+    <a :href="dismissLink" class="backdrop-link" aria-label="Back to Stargazer"></a>
 
     <!-- Content container -->
-    <div v-if="hasValidGrid" class="grid-wrapper" @click.stop>
-      <!-- Edit opens the shared setup in the Arena; close dismisses to the saved arena. -->
+    <div v-if="hasValidGrid" class="grid-wrapper" :class="{ multi: isMultiBoard }" @click.stop>
+      <!-- Edit opens the shared setup in its editable page; close dismisses to it. -->
       <div class="buttons">
         <a :href="editLink" class="button" aria-label="Edit in Stargazer" title="Edit">
           <IconEdit :size="18" />
         </a>
-        <a href="/" class="button" aria-label="Back to Stargazer" title="Back to Stargazer">
+        <a
+          :href="dismissLink"
+          class="button"
+          aria-label="Back to Stargazer"
+          title="Back to Stargazer"
+        >
           <IconClose />
         </a>
       </div>
 
-      <!-- Grid Container -->
       <DragDropProvider>
+        <!-- Multi (5 v 5) reuses the Teams boards row, including the 3-2 wrap layout. -->
+        <BoardsRow v-if="isMultiBoard" :wrap="wrapBoards" :can-wrap>
+          <GridContainer
+            v-for="ctx in grids.contexts"
+            :key="ctx.id"
+            :context="ctx"
+            :characters="gameDataStore.characters"
+            :show-arrows
+            :show-hex-ids
+            :show-debug="false"
+            :show-skills
+            :show-perspective
+            :readonly="true"
+          />
+        </BoardsRow>
         <GridContainer
+          v-else
           :context="activeContext"
           :characters="gameDataStore.characters"
           :show-arrows
@@ -168,6 +199,13 @@ const editLink = computed(() => {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+/* Multi-board (5 v 5): let the boards row own the width and scroll horizontally
+   (and grow to two rows when wrapped) rather than centering a single grid. */
+.grid-wrapper.multi {
+  display: block;
+  max-width: 95vw;
 }
 
 /* Empty state styling */
