@@ -1,9 +1,9 @@
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
-import { type SkillContext, type SkillTargetInfo } from '../skill'
+import { type SkillContext } from '../skill'
 import { getSymmetricalHexId } from '../utils/symmetry'
 
-const TILE_COLOR = '#ad51cb'
+const TILE_COLOR = '#9661f1'
 
 /**
  * Get adjacent allies to the given hex position
@@ -122,47 +122,29 @@ function findValidAllyEnemyPair(
 function updateSkillTargets(context: SkillContext): void {
   const { skillManager, team, characterId } = context
 
-  // Get previous targets to clear their tile modifiers
-  const previousTarget = skillManager.getSkillTarget(characterId, team)
-  if (previousTarget?.metadata) {
-    const { allyHexId: prevAlly, enemyHexId: prevEnemy } = previousTarget.metadata
-    if (prevAlly) skillManager.removeTileColorModifier(prevAlly, TILE_COLOR)
-    if (prevEnemy) skillManager.removeTileColorModifier(prevEnemy, TILE_COLOR)
-  }
-
-  // Find adjacent allies
+  // Highest-priority adjacent ally that has an enemy on its symmetrical tile.
   const adjacentAllies = getAdjacentAllies(context)
-
-  if (adjacentAllies.length === 0) {
-    // No adjacent allies, clear any existing targets
-    skillManager.clearSkillTarget(characterId, team)
-    return
-  }
-
-  // Find the highest priority ally that has a valid enemy target
-  const validPair = findValidAllyEnemyPair(context, adjacentAllies, team)
+  const validPair = adjacentAllies.length
+    ? findValidAllyEnemyPair(context, adjacentAllies, team)
+    : null
 
   if (!validPair) {
-    // No valid ally-enemy pair found, clear targets
     skillManager.clearSkillTarget(characterId, team)
+    skillManager.clearPaintedTiles(characterId, team)
     return
   }
 
-  // Set skill targets with metadata
-  const targetInfo: SkillTargetInfo = {
+  // skillTarget carries the semantic pair (read by the debug overlay); paintTiles
+  // owns the tile-color set/remove diff.
+  skillManager.setSkillTarget(characterId, team, {
     targetHexId: validPair.allyHexId,
     targetCharacterId: null,
-    metadata: {
-      allyHexId: validPair.allyHexId,
-      enemyHexId: validPair.enemyHexId,
-    },
-  }
-
-  skillManager.setSkillTarget(characterId, team, targetInfo)
-
-  // Set tile color modifiers for visual feedback
-  skillManager.setTileColorModifier(validPair.allyHexId, TILE_COLOR)
-  skillManager.setTileColorModifier(validPair.enemyHexId, TILE_COLOR)
+    metadata: { allyHexId: validPair.allyHexId, enemyHexId: validPair.enemyHexId },
+  })
+  skillManager.paintTiles(characterId, team, [
+    { hexId: validPair.allyHexId, color: TILE_COLOR },
+    { hexId: validPair.enemyHexId, color: TILE_COLOR },
+  ])
 }
 
 registerSkill({
@@ -178,15 +160,7 @@ registerSkill({
 
   onDeactivate(context: SkillContext): void {
     const { team, skillManager, characterId } = context
-
-    // Clear tile modifiers for current targets before clearing the skill target
-    const currentTarget = skillManager.getSkillTarget(characterId, team)
-    if (currentTarget?.metadata) {
-      const { allyHexId, enemyHexId } = currentTarget.metadata
-      if (allyHexId) skillManager.removeTileColorModifier(allyHexId, TILE_COLOR)
-      if (enemyHexId) skillManager.removeTileColorModifier(enemyHexId, TILE_COLOR)
-    }
-
+    skillManager.clearPaintedTiles(characterId, team)
     skillManager.clearSkillTarget(characterId, team)
   },
 

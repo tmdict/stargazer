@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import GridArrow from './grid/GridArrow.vue'
+import GridLine from './grid/GridLine.vue'
 import { useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterSkill } from '@/lib/skills/skill'
@@ -81,16 +82,28 @@ const arrowsToRender = computed(() => {
 
   return arrows
 })
+
+// Lines carry their own color, so (unlike arrows) they render for any skill, not
+// just targeting ones.
+const linesToRender = computed(() => ctx.skillLines)
 </script>
 
 <template>
   <svg
-    v-if="arrowsToRender.length > 0"
+    v-if="arrowsToRender.length > 0 || linesToRender.length > 0"
     class="skill-arrow-layer"
     :width="svgDimensions.width"
     :height="svgDimensions.height"
   >
     <g :transform="layerTransform">
+      <GridLine
+        v-for="(line, idx) in linesToRender"
+        :key="`line-${idx}`"
+        :start-hex-id="line.fromHexId"
+        :end-hex-id="line.toHexId"
+        :color="line.color"
+        :stroke-width="arrowStyle.strokeWidth"
+      />
       <GridArrow
         v-for="arrow in arrowsToRender"
         :id="arrow.key"

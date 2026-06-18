@@ -156,4 +156,23 @@ export class Layout {
 
     return `M ${start.x} ${start.y} Q ${controlX} ${controlY} ${end.x} ${end.y}`
   }
+
+  // Straight border-to-border line between two hexes: pulled in by characterRadius
+  // at each end, the uncurved/headless counterpart to getArrowPath.
+  getLinePath(startHex: Hex, endHex: Hex, characterRadius: number = 0): string {
+    const start = this.hexToPixel(startHex)
+    const end = this.hexToPixel(endHex)
+    const dx = end.x - start.x
+    const dy = end.y - start.y
+    const length = Math.sqrt(dx * dx + dy * dy)
+    if (length === 0) return ''
+
+    const dirX = dx / length
+    const dirY = dy / length
+    const sx = start.x + dirX * characterRadius
+    const sy = start.y + dirY * characterRadius
+    const ex = end.x - dirX * characterRadius
+    const ey = end.y - dirY * characterRadius
+    return `M ${sx} ${sy} L ${ex} ${ey}`
+  }
 }

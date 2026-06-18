@@ -4,7 +4,6 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
-import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
 import rowanGif from '@/assets/rowan.gif'
@@ -110,15 +109,6 @@ onUnmounted(() => {
       <ul class="menu">
         <li>
           <LanguageToggle class="icon-link" />
-        </li>
-        <li>
-          <a
-            href="https://github.com/tmdict/stargazer/"
-            class="icon-link"
-            :title="i18n.t('app.code')"
-          >
-            <IconGitHub />
-          </a>
         </li>
         <li>
           <button
