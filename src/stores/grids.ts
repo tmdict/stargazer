@@ -4,7 +4,7 @@
  * state shared by every board (hex size, team-view flag). Per-board state and
  * operations live on each GridContext (see useGridContext); this store holds only
  * what spans boards: the array, the active pointer, and the cross-board rules
- * (page-wide character uniqueness, place-on-active, remove-from-any-board).
+ * (page-wide character + artifact uniqueness, place-on-active, remove-from-any-board).
  *
  * The single-grid Arena is setGridCount(1); the 5 v 5 page is setGridCount(5).
  */
@@ -121,10 +121,7 @@ export const useGrids = defineStore('grids', () => {
 
   // Page-wide per-team artifact uniqueness (one artifact per team across all
   // boards), mirroring findPlacement/isUsed/removeFromAnyBoard for characters.
-  const findArtifactPlacement = (
-    artifactId: number,
-    team: Team,
-  ): { ctxId: number } | null => {
+  const findArtifactPlacement = (artifactId: number, team: Team): { ctxId: number } | null => {
     for (const ctx of contexts.value) {
       const id = team === Team.ALLY ? ctx.artifacts.ally : ctx.artifacts.enemy
       if (id === artifactId) return { ctxId: ctx.id }

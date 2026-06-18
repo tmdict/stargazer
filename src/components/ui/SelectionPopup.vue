@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
 
 // Shared chrome for the on-grid selection popups (character / artifact pickers):
 // a fixed-positioned, click-outside-dismissing panel. Consumers supply the grid
 // of selectable items via the default slot.
-defineProps<{
+const props = defineProps<{
   position: { x: number; y: number }
 }>()
 
@@ -16,18 +16,45 @@ const emit = defineEmits<{
 
 const popupRef = ref<HTMLElement>()
 
+// Keep the panel fully on screen: render at the caller's anchor, then shift it back
+// inside the viewport (minus a margin) if it would overflow an edge. The panel
+// mounts at full size, so measuring once on open (and on resize) is enough.
+const VIEWPORT_MARGIN = 8
+const coords = ref({ ...props.position })
+
+const reposition = () => {
+  const el = popupRef.value
+  if (!el) return
+  const { width, height } = el.getBoundingClientRect()
+  // clientWidth/Height exclude the scrollbar; innerWidth/Height include it, which
+  // would let a right-clamped panel slip under the vertical scrollbar.
+  const maxX = document.documentElement.clientWidth - width - VIEWPORT_MARGIN
+  const maxY = document.documentElement.clientHeight - height - VIEWPORT_MARGIN
+  coords.value = {
+    x: Math.max(VIEWPORT_MARGIN, Math.min(props.position.x, maxX)),
+    y: Math.max(VIEWPORT_MARGIN, Math.min(props.position.y, maxY)),
+  }
+}
+
 useOverlay({
   elementRef: popupRef,
   onClose: () => emit('close'),
   clickOutsideDelay: 100,
 })
+
+onMounted(() => {
+  reposition()
+  window.addEventListener('resize', reposition)
+})
+onUnmounted(() => window.removeEventListener('resize', reposition))
+watch(() => props.position, reposition)
 </script>
 
 <template>
   <div
     ref="popupRef"
     class="selection-popup"
-    :style="{ left: `${position.x}px`, top: `${position.y}px` }"
+    :style="{ left: `${coords.x}px`, top: `${coords.y}px` }"
     @mouseleave="emit('close')"
   >
     <slot />
