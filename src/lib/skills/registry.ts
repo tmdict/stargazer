@@ -2,8 +2,6 @@
 export interface SkillBase<Context = unknown> {
   id: string
   characterId: number
-  name: string
-  description: string
   colorModifier?: string
   companionImageModifier?: string
   companionColorModifier?: string

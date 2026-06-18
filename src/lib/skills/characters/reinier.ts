@@ -147,12 +147,11 @@ function updateSkillTargets(context: SkillContext): void {
   ])
 }
 
+// Targets an adjacent ally whose symmetrical tile holds an enemy, painting both
+// the ally and that enemy.
 registerSkill({
   id: 'reinier',
   characterId: 31,
-  name: 'Dynamic Balance',
-  description:
-    'Targets an adjacent ally position with an enemy hero if both the ally and enemy are placed on a symmetrical tile.',
 
   onActivate(context: SkillContext): void {
     updateSkillTargets(context)

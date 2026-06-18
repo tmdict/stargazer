@@ -2,12 +2,11 @@ import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
 import { findTarget, TargetingMethod } from '../utils/distance'
 
+// Targets the frontmost ally on the same team.
 registerSkill(
   createTargetingSkill({
     id: 'talene',
     characterId: 52,
-    name: 'Pyre of Renewal',
-    description: 'Targets the frontmost ally character on the same team.',
     color: '#c83232',
     arrowType: 'ally',
     calculateTarget: (ctx) =>

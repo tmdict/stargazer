@@ -32,12 +32,11 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   }
 }
 
+// Targets the 2 rearmost allies on the same team.
 registerSkill(
   createTargetingSkill({
     id: 'ravion',
     characterId: 90,
-    name: 'Designated Duty',
-    description: 'Targets the 2 rearmost ally characters on the same team.',
     color: '#6d9c86',
     calculateTarget,
   }),

@@ -45,13 +45,12 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   }
 }
 
+// Targets the closest ally in the same row (highest hex ID on a tie), falling
+// back to an outward scan, and also targets the furthest enemy.
 registerSkill(
   createTargetingSkill({
     id: 'aliceth',
     characterId: 91,
-    name: 'Guiding Light',
-    description:
-      'Aliceth targets the closest ally characters in the same row as her, prioritizing those on higher hex ID in case of a tie. If no character is found, Aliceth scans from the tiles adjacent to her, expanding outward from the highest hex ID to the lowest ID, targeting the first ally character found. Additionally, also target the enemy character on the opposing team that is furthest from the current tile of Aliceth.',
     color: '#ffa000',
     calculateTarget,
   }),

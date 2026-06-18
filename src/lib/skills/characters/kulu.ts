@@ -72,12 +72,11 @@ function removeCharacterFromAffectedTile(
   }
 }
 
+// Blocks a fixed set of nearby tiles and removes any characters standing on them.
+// The zone is cleared when Kulu leaves the battlefield.
 registerSkill({
   id: 'kulu',
   characterId: 80,
-  name: 'Demolition Zone',
-  description:
-    'Creates a demolition zone that blocks nearby tiles. Characters on affected tiles are removed. The zone is cleared when Kulu leaves the battlefield',
 
   onActivate(context: SkillContext): void {
     const { grid, hexId, team, characterId, skillManager } = context

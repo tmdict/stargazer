@@ -31,13 +31,12 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return spiralSearchFromTile(grid, symmetricalHexId, opposingTeam, team)
 }
 
+// Targets the enemy on the tile symmetrical to Nara, falling back to the closest
+// enemy to that symmetrical tile.
 registerSkill(
   createTargetingSkill({
     id: 'nara',
     characterId: 58,
-    name: 'Phantom Chains',
-    description:
-      'Targets the enemy character on the opposing team on a symmetrical tile to Nara. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
     color: '#98be5d',
     arrowType: 'enemy',
     calculateTarget,

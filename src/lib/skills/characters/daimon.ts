@@ -52,13 +52,13 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return null
 }
 
+// Targets an ally on adjacent tiles behind him (lower hex ID for ally, higher for
+// enemy). Prioritizes the tile directly behind, then the higher/lower of the two
+// remaining tiles in the row behind.
 registerSkill(
   createTileHighlightSkill({
     id: 'daimon',
     characterId: 81,
-    name: 'Buddy Barrier',
-    description:
-      'Targets an ally on adjacent tiles behind him (lower hex ID for ally team, higher for enemy team). Prioritizes the tile directly behind first (lowest/highest hex ID), then the higher/lower of the two remaining tiles in the row behind.',
     tileColor: '#98be5d',
     calculateTarget,
   }),

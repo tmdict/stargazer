@@ -25,8 +25,6 @@ import type { Skill, SkillContext, SkillLine, SkillTargetInfo, TilePaint } from 
 interface TargetingSkillConfig {
   id: string
   characterId: number
-  name: string
-  description: string
   color: string
   /**
    * If set, the factory wraps the calculated target with a single arrow
@@ -42,7 +40,7 @@ interface TargetingSkillConfig {
  * Optionally enriches the target with a single arrow.
  */
 export function createTargetingSkill(config: TargetingSkillConfig): Skill {
-  const { id, characterId, name, description, color, arrowType, calculateTarget } = config
+  const { id, characterId, color, arrowType, calculateTarget } = config
 
   const isHit = (info: SkillTargetInfo | null): info is SkillTargetInfo => {
     if (info === null) return false
@@ -68,8 +66,6 @@ export function createTargetingSkill(config: TargetingSkillConfig): Skill {
   return {
     id,
     characterId,
-    name,
-    description,
     targetingColorModifier: color,
     onActivate(ctx) {
       const info = calculateTarget(ctx)
@@ -89,8 +85,6 @@ export function createTargetingSkill(config: TargetingSkillConfig): Skill {
 interface TileHighlightSkillConfig {
   id: string
   characterId: number
-  name: string
-  description: string
   tileColor: string
   calculateTarget: (context: SkillContext) => SkillTargetInfo | null
 }
@@ -101,7 +95,7 @@ interface TileHighlightSkillConfig {
  * before applying the new one.
  */
 export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skill {
-  const { id, characterId, name, description, tileColor, calculateTarget } = config
+  const { id, characterId, tileColor, calculateTarget } = config
 
   const updateTargets = (ctx: SkillContext): void => {
     const { skillManager, team } = ctx
@@ -124,8 +118,6 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
   return {
     id,
     characterId,
-    name,
-    description,
     onActivate(ctx) {
       updateTargets(ctx)
     },
@@ -201,8 +193,6 @@ export function withSkillLine(
 interface CompanionSkillConfig {
   id: string
   characterId: number
-  name: string
-  description: string
   /** Number of companions to spawn; each raises team capacity by one. */
   count?: number
   colorModifier?: string
@@ -225,8 +215,6 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
   const {
     id,
     characterId,
-    name,
-    description,
     count = 1,
     colorModifier,
     companionColorModifier,
@@ -237,8 +225,6 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
   return {
     id,
     characterId,
-    name,
-    description,
     colorModifier,
     companionColorModifier,
     companionImageModifier,

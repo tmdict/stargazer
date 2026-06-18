@@ -114,7 +114,7 @@ const activeSkillConfigs = computed(() => {
     configs.push({
       tile,
       characterId: tile.characterId,
-      skillName: skill.name || 'Unknown Skill',
+      skillName: skill.id,
       characterName: getCharacterName(tile.characterId),
       targets: targets,
       showSymmetry: [39, 58].includes(tile.characterId), // Silvina, Nara
