@@ -105,6 +105,7 @@ export interface GridContext {
   closestEnemyMap: ReturnType<typeof getClosestTargetMap>
   closestAllyMap: ReturnType<typeof getClosestTargetMap>
   skillTargets: ReturnType<SkillManager['getAllSkillTargets']>
+  skillLines: ReturnType<SkillManager['getSkillLines']>
   // Page-wide values surfaced on the board for one-stop component access.
   hexScale: number
   teamView: boolean
@@ -153,7 +154,7 @@ export function createGridContext(
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
-  const skillManager = reactive(new SkillManager()) as SkillManager
+  const skillManager = reactive(new SkillManager(gameDataStore.getCharacterFaction)) as SkillManager
   grid.skillManager = skillManager
 
   const currentMap = ref(mapKey)
@@ -433,6 +434,10 @@ export function createGridContext(
       skillManager.getTargetVersion()
       return skillManager.getAllSkillTargets()
     })
+    const skillLines = computed(() => {
+      skillManager.getTargetVersion()
+      return skillManager.getSkillLines()
+    })
     const getColorModifierForCharacter = (characterId: number, team: Team): string | undefined =>
       colorModifiers.value.get(`${characterId}-${team}`)
     const getImageModifierForCharacter = (characterId: number, team: Team): string | undefined =>
@@ -493,6 +498,7 @@ export function createGridContext(
       teamView: teamViewActive,
       inverted: invertedActive,
       skillTargets,
+      skillLines,
       getColorModifierForCharacter,
       getImageModifierForCharacter,
       getTileColorModifier,

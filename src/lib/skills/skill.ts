@@ -20,6 +20,24 @@ export interface SkillContext {
   team: Team
   characterId: number
   skillManager: SkillManager
+  // Resolves any grid unit's faction (companion -> main, phantimal -> seasonal).
+  // Injected because faction data lives in the data store, outside this pure lib;
+  // optional since hand-built test contexts omit it (the real SkillManager always
+  // supplies it).
+  factionOf?: (characterId: number) => string | undefined
+}
+
+// A tile and the border color a skill paints onto it.
+export interface TilePaint {
+  hexId: number
+  color: string
+}
+
+// A straight connection line a skill draws between two hexes (border to border).
+export interface SkillLine {
+  fromHexId: number
+  toHexId: number
+  color: string
 }
 
 export interface SkillTargetInfo {
@@ -75,8 +93,18 @@ export class SkillManager {
   private tileStateClaims: Map<number, { originalState: State; claimants: Set<string> }> = new Map()
   // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
+  // Tiles each skill instance (characterId-team) has painted, for diff-based cleanup
+  private skillPaintedTiles: Map<string, TilePaint[]> = new Map()
+  // Connection lines each skill instance draws (rendered by SkillTargeting)
+  private skillLines: Map<string, SkillLine[]> = new Map()
   // Version counter to trigger reactivity
   private targetVersion = 0
+
+  // factionOf is injected (faction data lives in the data store, outside this pure
+  // lib); defaults to "unknown" so SkillManager stays constructible in isolation.
+  constructor(
+    private readonly factionOf: (characterId: number) => string | undefined = () => undefined,
+  ) {}
 
   private getSkillKey(characterId: number, team: Team): string {
     return `${characterId}-${team}`
@@ -129,6 +157,7 @@ export class SkillManager {
       team,
       characterId,
       skillManager: this,
+      factionOf: this.factionOf,
     }
 
     try {
@@ -160,6 +189,7 @@ export class SkillManager {
       team,
       characterId,
       skillManager: this,
+      factionOf: this.factionOf,
     }
 
     skill.onDeactivate(context)
@@ -183,6 +213,8 @@ export class SkillManager {
     this.tileColorModifiers.clear()
     this.tileStateClaims.clear()
     this.skillTargets.clear()
+    this.skillPaintedTiles.clear()
+    this.skillLines.clear()
     this.targetVersion++ // Trigger reactivity to clear UI
   }
 
@@ -296,6 +328,44 @@ export class SkillManager {
     return new Map(this.tileColorModifiers)
   }
 
+  // Paint exactly `tiles` for this skill instance, first removing the tiles it
+  // painted on the previous call (the diff) so a repaint moves/recolors the
+  // highlight cleanly. Shared by every tile-highlight skill (withTilePaint,
+  // reinier, ...) so the set/remove/track cycle lives in one place.
+  paintTiles(characterId: number, team: Team, tiles: TilePaint[]): void {
+    const key = this.getSkillKey(characterId, team)
+    for (const tile of this.skillPaintedTiles.get(key) ?? []) {
+      this.removeTileColorModifier(tile.hexId, tile.color)
+    }
+    for (const tile of tiles) this.setTileColorModifier(tile.hexId, tile.color)
+    this.skillPaintedTiles.set(key, tiles)
+  }
+
+  clearPaintedTiles(characterId: number, team: Team): void {
+    const key = this.getSkillKey(characterId, team)
+    for (const tile of this.skillPaintedTiles.get(key) ?? []) {
+      this.removeTileColorModifier(tile.hexId, tile.color)
+    }
+    this.skillPaintedTiles.delete(key)
+  }
+
+  // Lines render straight from the flattened set, so this just replaces the
+  // instance's entry — no per-line diff like paintTiles needs.
+  setSkillLines(characterId: number, team: Team, lines: SkillLine[]): void {
+    const key = this.getSkillKey(characterId, team)
+    if (lines.length) this.skillLines.set(key, lines)
+    else this.skillLines.delete(key)
+    this.targetVersion++
+  }
+
+  clearSkillLines(characterId: number, team: Team): void {
+    if (this.skillLines.delete(this.getSkillKey(characterId, team))) this.targetVersion++
+  }
+
+  getSkillLines(): SkillLine[] {
+    return [...this.skillLines.values()].flat()
+  }
+
   // Get color modifiers mapped by "characterId-team"
   getColorModifiersByCharacterAndTeam(): Map<string, string> {
     const modifiers = new Map<string, string>()
@@ -368,6 +438,7 @@ export class SkillManager {
           team: info.team,
           characterId: info.characterId,
           skillManager: this,
+          factionOf: this.factionOf,
         }
         skill.onUpdate(context)
       }

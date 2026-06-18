@@ -270,6 +270,29 @@ registerSkill({
 })
 ```
 
+### Composing tile highlights onto another skill (`withTilePaint`)
+
+The registry holds one skill per character, so a character that already uses a factory (e.g. a companion skill) can't register a second skill just to highlight tiles. `withTilePaint(baseSkill, calculate)` wraps a base skill and runs a multi-tile paint pass after the base's own hooks. `calculate(ctx)` returns the tiles and colors for the current grid (`{ hexId, color }[]`); the wrapper diffs against the previously painted set (tracked per characterId-team) so stale colors clear before new ones apply, and clears all of them on deactivate. Reach for it when a highlight spans several tiles with a per-call color — unlike `createTileHighlightSkill` (single tile). Elijah-Lailah composes it onto its companion skill to outline the allies sandwiched between the twins.
+
+```typescript
+import { createCompanionSkill, withTilePaint } from '../utils/builders'
+
+registerSkill(
+  withTilePaint(
+    createCompanionSkill({
+      /* ... */
+    }),
+    (ctx) => calculateTiles(ctx), // returns { hexId, color }[]
+  ),
+)
+```
+
+When `calculate` needs a unit's faction (companion → main character, phantimal → seasonal), read it from `ctx.factionOf(characterId)`; it's injected from the data store, since faction data lives outside the pure skill lib.
+
+### Connecting hexes with a line (`withSkillLine`)
+
+`withSkillLine(baseSkill, calculate)` is the line analog of `withTilePaint`: `calculate(ctx)` returns straight connection lines (`{ fromHexId, toHexId, color }[]`) that `SkillTargeting` draws border-to-border between the hex icons — same stroke width as targeting arrows but straight, no arrowhead, and self-colored (so it renders for any skill, not just targeting ones). Stack it with `withTilePaint` to do both (Elijah-Lailah draws a line between the twins and outlines the allies between them). Both visuals, like the tile borders and arrows, only show while `showSkills` is on.
+
 Skills placed in `/src/lib/skills/characters/` are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration.
 
 Skills must handle:
