@@ -5,6 +5,7 @@ import ArtifactIcon from './ArtifactIcon.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
@@ -12,15 +13,17 @@ const props = defineProps<{
 }>()
 
 const { fillOrder, targetArtifactTeam, clearArtifactTarget, artifactStore } = useSelectionState()
+const grids = useGrids()
 const i18n = useI18nStore()
 
 const slotArtifactId = (team: Team): number | null =>
   team === Team.ALLY ? artifactStore.allyArtifactId : artifactStore.enemyArtifactId
 
-// The team whose slot already holds this artifact, or null.
+// The team whose slot holds this artifact on any board (page-wide per-team
+// uniqueness), or null.
 const placedTeam = (artifactId: number): Team | null => {
-  if (artifactStore.allyArtifactId === artifactId) return Team.ALLY
-  if (artifactStore.enemyArtifactId === artifactId) return Team.ENEMY
+  if (grids.findArtifactPlacement(artifactId, Team.ALLY)) return Team.ALLY
+  if (grids.findArtifactPlacement(artifactId, Team.ENEMY)) return Team.ENEMY
   return null
 }
 
@@ -32,14 +35,16 @@ const handleArtifactClick = (artifact: ArtifactType) => {
   const targeted = targetArtifactTeam.value
   if (targeted !== null) {
     if (slotArtifactId(targeted) === artifact.id) artifactStore.removeArtifact(targeted)
-    else artifactStore.placeArtifact(artifact.id, targeted)
+    // Block a duplicate of an artifact already on this team's slot on another board.
+    else if (!grids.isArtifactUsed(artifact.id, targeted))
+      artifactStore.placeArtifact(artifact.id, targeted)
     clearArtifactTarget()
     return
   }
-  // Already placed: clicking removes it from wherever it sits.
+  // Already placed (on any board): clicking removes it from wherever it sits.
   const placed = placedTeam(artifact.id)
   if (placed !== null) {
-    artifactStore.removeArtifact(placed)
+    grids.removeArtifactFromAnyBoard(artifact.id, placed)
     return
   }
   // Otherwise fill the first side with a free slot (displayed ally, then enemy).

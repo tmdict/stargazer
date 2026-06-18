@@ -119,6 +119,31 @@ export const useGrids = defineStore('grids', () => {
     return getContext(placement.ctxId)?.remove(placement.hexId) ?? false
   }
 
+  // Page-wide per-team artifact uniqueness (one artifact per team across all
+  // boards), mirroring findPlacement/isUsed/removeFromAnyBoard for characters.
+  const findArtifactPlacement = (
+    artifactId: number,
+    team: Team,
+  ): { ctxId: number } | null => {
+    for (const ctx of contexts.value) {
+      const id = team === Team.ALLY ? ctx.artifacts.ally : ctx.artifacts.enemy
+      if (id === artifactId) return { ctxId: ctx.id }
+    }
+    return null
+  }
+
+  const isArtifactUsed = (artifactId: number, team: Team, exceptCtxId?: number): boolean => {
+    const placement = findArtifactPlacement(artifactId, team)
+    return placement !== null && placement.ctxId !== exceptCtxId
+  }
+
+  const removeArtifactFromAnyBoard = (artifactId: number, team: Team): boolean => {
+    const placement = findArtifactPlacement(artifactId, team)
+    if (!placement) return false
+    getContext(placement.ctxId)?.removeArtifact(team)
+    return true
+  }
+
   const clearAll = (): void => contexts.value.forEach((ctx) => ctx.clear())
 
   const isCompanion = (id: number): boolean => id >= COMPANION_ID_OFFSET && !isPhantimalId(id)
@@ -304,6 +329,9 @@ export const useGrids = defineStore('grids', () => {
     isUsed,
     placeOnActive,
     removeFromAnyBoard,
+    findArtifactPlacement,
+    isArtifactUsed,
+    removeArtifactFromAnyBoard,
     routeDrop,
     swapBoards,
     clearAll,
