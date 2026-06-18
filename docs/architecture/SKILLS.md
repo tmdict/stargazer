@@ -49,8 +49,6 @@ Skills are self-contained units that:
 interface Skill {
   id: string
   characterId: number
-  name: string
-  description: string
   colorModifier?: string // Border color for visual effects (main unit)
   companionImageModifier?: string // Custom image for companion units
   companionColorModifier?: string // Border color for companion units
@@ -167,6 +165,8 @@ Highlight multiple tiles based on game state:
 
 Most skills follow one of three reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts` — it eliminates the activate/deactivate(/update) boilerplate.
 
+Each skill file carries a short block comment above `registerSkill` describing its in-game behavior. That comment is the only documentation of the skill's effect; the skill object itself holds just `id` and `characterId` (no `name`/`description` fields).
+
 ### Pattern 1: arrow-based targeting (`createTargetingSkill`)
 
 For skills that compute a target and draw an arrow (or build their own arrows for multi-target cases like Ravion / Aliceth):
@@ -176,12 +176,11 @@ import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
 import { findTarget, TargetingMethod } from '../utils/distance'
 
+// What it does (gameplay behavior).
 registerSkill(
   createTargetingSkill({
     id: 'my-skill',
     characterId: 123,
-    name: 'Skill Name',
-    description: 'What it does',
     color: '#hexcolor', // arrow color (becomes targetingColorModifier)
     arrowType: 'ally', // omit when calculateTarget builds its own arrows array
     calculateTarget: (ctx) =>
@@ -203,12 +202,11 @@ import { registerSkill } from '../registry'
 import { createTileHighlightSkill } from '../utils/builders'
 import { rowScan, RowScanDirection } from '../utils/ring'
 
+// What it does (gameplay behavior).
 registerSkill(
   createTileHighlightSkill({
     id: 'my-skill',
     characterId: 123,
-    name: 'Skill Name',
-    description: 'What it does',
     tileColor: '#hexcolor',
     calculateTarget: (ctx) => rowScan(ctx, ctx.team, { direction: RowScanDirection.REARMOST }),
   }),
@@ -223,12 +221,11 @@ For skills that spawn extra units (Phraesto's shadow, Lailah, Zanie's turrets). 
 import { registerSkill } from '../registry'
 import { createCompanionSkill } from '../utils/builders'
 
+// What it does (gameplay behavior).
 registerSkill(
   createCompanionSkill({
     id: 'my-skill',
     characterId: 123,
-    name: 'Skill Name',
-    description: 'What it does',
     count: 2, // companions to spawn (default 1); IDs are N * companionIdOffset + characterId
     colorModifier: '#hexcolor', // optional - main character border
     companionColorModifier: '#hexcolor', // optional - companion border
@@ -248,11 +245,10 @@ import { type SkillContext } from '../skill'
 
 const TILE_COLOR = '#hexcolor'
 
+// What it does (gameplay behavior).
 registerSkill({
   id: 'my-skill',
   characterId: 123,
-  name: 'Skill Name',
-  description: 'What it does',
 
   onActivate(context: SkillContext) {
     const { grid, team, characterId, skillManager } = context

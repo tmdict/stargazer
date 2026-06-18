@@ -31,13 +31,12 @@ function calculateTarget(context: SkillContext): SkillTargetInfo | null {
   return spiralSearchFromTile(grid, symmetricalHexId, opposingTeam, team)
 }
 
+// Targets the enemy on the tile symmetrical to Silvina, falling back to the
+// closest enemy to that symmetrical tile.
 registerSkill(
   createTargetingSkill({
     id: 'silvina',
     characterId: 39,
-    name: 'First Strike',
-    description:
-      'Targets the enemy character on the opposing team on a symmetrical tile to Silvina. If no character is found on the symmetrical tile, target the closest opposing character to the symmetrical tile.',
     color: '#98be5d',
     arrowType: 'enemy',
     calculateTarget,

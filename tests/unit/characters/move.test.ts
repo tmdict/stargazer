@@ -244,8 +244,6 @@ describe('move.ts', () => {
       vi.mocked(getCharacterSkill).mockReturnValue({
         id: 'companion-test',
         characterId: mainId,
-        name: 'Companion Test',
-        description: '',
         companionColorModifier: 'rgba(10, 20, 30, 0.4)',
         onActivate: () => {},
         onDeactivate: () => {},

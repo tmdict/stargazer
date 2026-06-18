@@ -40,8 +40,6 @@ describe('createTargetingSkill', () => {
     const skill = createTargetingSkill({
       id: 'test',
       characterId: CHARACTER_ID,
-      name: 'Test Skill',
-      description: 'Test description',
       color: '#abcdef',
       arrowType: 'ally',
       calculateTarget: () => null,
@@ -49,8 +47,6 @@ describe('createTargetingSkill', () => {
 
     expect(skill.id).toBe('test')
     expect(skill.characterId).toBe(CHARACTER_ID)
-    expect(skill.name).toBe('Test Skill')
-    expect(skill.description).toBe('Test description')
     expect(skill.targetingColorModifier).toBe('#abcdef')
   })
 
@@ -59,8 +55,6 @@ describe('createTargetingSkill', () => {
       createTargetingSkill({
         id: 'test',
         characterId: CHARACTER_ID,
-        name: 'Test',
-        description: '',
         color: '#000',
         arrowType: 'ally',
         calculateTarget,
@@ -110,8 +104,6 @@ describe('createTargetingSkill', () => {
       const skill = createTargetingSkill({
         id: 'test',
         characterId: CHARACTER_ID,
-        name: 'Test',
-        description: '',
         color: '#000',
         arrowType: 'enemy',
         calculateTarget: () => ({ targetHexId: 3, targetCharacterId: 42 }),
@@ -158,8 +150,6 @@ describe('createTargetingSkill', () => {
       const skill = createTargetingSkill({
         id: 'test',
         characterId: CHARACTER_ID,
-        name: 'Test',
-        description: '',
         color: '#000',
         calculateTarget: () => ({
           targetHexId: null,
@@ -190,8 +180,6 @@ describe('createTileHighlightSkill', () => {
     createTileHighlightSkill({
       id: 'test',
       characterId: CHARACTER_ID,
-      name: 'Test',
-      description: '',
       tileColor: TILE_COLOR,
       calculateTarget,
     })
@@ -265,8 +253,6 @@ describe('createCompanionSkill', () => {
     createCompanionSkill({
       id: 'test-companion',
       characterId: CHARACTER_ID,
-      name: 'Test Companion',
-      description: 'Test',
       colorModifier: '#111111',
       companionColorModifier: '#222222',
       ...overrides,

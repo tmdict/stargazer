@@ -71,15 +71,14 @@ function calculateLine(ctx: SkillContext): SkillLine[] {
   return lines
 }
 
+// Elijah and Lailah occupy separate tiles, increasing team capacity by 1.
+// Removing either removes both. Lailah has a range of 1.
 registerSkill(
   withTilePaint(
     withSkillLine(
       createCompanionSkill({
         id: 'elijah-lailah',
         characterId: 68,
-        name: 'Twins',
-        description:
-          'Elijah and Lailah appear as separate units on the map, increasing team capacity by 1. If either Elijah or Lailah is removed, both are removed. Lailah has a range of 1',
         colorModifier: SKILL_COLOR,
         companionColorModifier: COMPANION_COLOR,
         companionRange: 1,

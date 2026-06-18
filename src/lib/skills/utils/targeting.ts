@@ -1,6 +1,7 @@
 import { getTilesWithCharacters } from '../../characters/character'
 import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
+import type { SkillContext, SkillTargetInfo } from '../skill'
 
 /**
  * Shared targeting methods
@@ -69,4 +70,36 @@ export function getCandidates(
   }
 
   return candidates
+}
+
+/**
+ * The tile directly behind a unit: the adjacent tile furthest toward its team's
+ * back. The two teams face each other across the board center with ally hex IDs
+ * rising toward the front, so "behind" is the lowest-ID adjacent tile for allies
+ * and the highest for enemies. Undefined at the back edge where no tile lies
+ * behind.
+ */
+export function directlyBehindHexId(grid: Grid, hexId: number, team: Team): number | undefined {
+  const center = grid.getHexById(hexId)
+  const behindIds = grid
+    .getAllTiles()
+    .filter((tile) => center.distance(tile.hex) === 1)
+    .map((tile) => tile.hex.getId())
+    .filter((id) => (team === Team.ALLY ? id < hexId : id > hexId))
+  if (behindIds.length === 0) return undefined
+  return team === Team.ALLY ? Math.min(...behindIds) : Math.max(...behindIds)
+}
+
+/**
+ * Target the same-team unit standing on the tile directly behind the caster,
+ * or null when that tile is empty, off the board, or holds the other team.
+ */
+export function findUnitBehind(ctx: SkillContext): SkillTargetInfo | null {
+  const behindId = directlyBehindHexId(ctx.grid, ctx.hexId, ctx.team)
+  if (behindId === undefined) return null
+  const tile = ctx.grid.getTileById(behindId)
+  if (tile.characterId !== undefined && tile.team === ctx.team) {
+    return { targetHexId: behindId, targetCharacterId: tile.characterId }
+  }
+  return null
 }
