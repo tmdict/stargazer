@@ -17,6 +17,7 @@ import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGridExport } from '@/composables/useGridExport'
 import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useShareLink } from '@/composables/useShareLink'
 import { useToast } from '@/composables/useToast'
 import { State } from '@/lib/types/state'
 import { useArtifactStore } from '@/stores/artifact'
@@ -51,6 +52,7 @@ const router = useRouter()
 const route = useRoute()
 const { showPerspective } = useBreakpoint()
 const { copyToClipboard, downloadAsImage } = useGridExport()
+const shareLink = useShareLink()
 
 // Tab state management
 const validTabs = ['characters', 'seasonal', 'mapEditor', 'debug'] as const
@@ -248,40 +250,24 @@ onMounted(() => {
 
 // Action button handlers
 
-const handleCopyLink = async () => {
-  try {
-    // Generate shareable URL with current grid state exactly as it appears
-    const shareableUrl = generateShareableUrl(
-      gridStore.getAllTiles,
-      artifactStore.allyArtifactId,
-      artifactStore.enemyArtifactId,
-      {
-        showHexIds: showHexIds.value,
-        showArrows: showArrows.value,
-        showPerspective: showPerspective.value,
-        showSkills: showSkills.value,
-        teamView: gridStore.teamView,
-        inverted: gridStore.inverted,
-      },
-      gridStore.getBaseTileState,
-    )
-
-    const urlParams = new URLSearchParams(shareableUrl.split('?')[1])
-    const encodedState = urlParams.get('g')
-    const shareLink = `${window.location.origin}/share?g=${encodedState}`
-
-    await navigator.clipboard.writeText(shareLink)
-
-    // Navigate to share page with state indicating link was copied
-    router.push({
-      path: '/share',
-      query: { g: encodedState },
-      state: { linkCopied: true },
-    })
-  } catch (err) {
-    console.error('Failed to copy grid link:', err)
-    error(i18nStore.t('app.copy-link-failed'))
-  }
+const handleCopyLink = () => {
+  // Serialize the board exactly as it appears, then copy + open the read-only share.
+  const shareableUrl = generateShareableUrl(
+    gridStore.getAllTiles,
+    artifactStore.allyArtifactId,
+    artifactStore.enemyArtifactId,
+    {
+      showHexIds: showHexIds.value,
+      showArrows: showArrows.value,
+      showPerspective: showPerspective.value,
+      showSkills: showSkills.value,
+      teamView: gridStore.teamView,
+      inverted: gridStore.inverted,
+    },
+    gridStore.getBaseTileState,
+  )
+  const encodedState = new URLSearchParams(shareableUrl.split('?')[1]).get('g') ?? ''
+  return shareLink(encodedState)
 }
 
 const handleCopyImage = async () => {
