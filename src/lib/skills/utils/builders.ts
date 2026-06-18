@@ -20,7 +20,7 @@ import { performRemove } from '../../characters/remove'
 import { BASE_TEAM_SIZE } from '../../grid'
 import { State } from '../../types/state'
 import { Team } from '../../types/team'
-import type { Skill, SkillContext, SkillTargetInfo } from '../skill'
+import type { Skill, SkillContext, SkillLine, SkillTargetInfo, TilePaint } from '../skill'
 
 interface TargetingSkillConfig {
   id: string
@@ -139,6 +139,61 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
     },
     onUpdate(ctx) {
       updateTargets(ctx)
+    },
+  }
+}
+
+/**
+ * Decorates a skill with a tile-border paint pass driven by `calculate`, which
+ * returns the tiles (and colors) to highlight for the current grid state.
+ *
+ * Runs after the base skill's own hooks on activate/update, delegating the
+ * set/remove/track diff to `skillManager.paintTiles` (cleared on deactivate). Lets
+ * a skill that already owns other behavior (e.g. a companion skill) also paint
+ * tiles, since the registry allows one skill per character.
+ */
+export function withTilePaint(
+  base: Skill,
+  calculate: (context: SkillContext) => TilePaint[],
+): Skill {
+  return {
+    ...base,
+    onActivate(ctx) {
+      base.onActivate(ctx)
+      ctx.skillManager.paintTiles(ctx.characterId, ctx.team, calculate(ctx))
+    },
+    onUpdate(ctx) {
+      base.onUpdate?.(ctx)
+      ctx.skillManager.paintTiles(ctx.characterId, ctx.team, calculate(ctx))
+    },
+    onDeactivate(ctx) {
+      ctx.skillManager.clearPaintedTiles(ctx.characterId, ctx.team)
+      base.onDeactivate(ctx)
+    },
+  }
+}
+
+/**
+ * Decorates a skill with connection lines (drawn by SkillTargeting) computed by
+ * `calculate`. The line analog of withTilePaint; clears on deactivate.
+ */
+export function withSkillLine(
+  base: Skill,
+  calculate: (context: SkillContext) => SkillLine[],
+): Skill {
+  return {
+    ...base,
+    onActivate(ctx) {
+      base.onActivate(ctx)
+      ctx.skillManager.setSkillLines(ctx.characterId, ctx.team, calculate(ctx))
+    },
+    onUpdate(ctx) {
+      base.onUpdate?.(ctx)
+      ctx.skillManager.setSkillLines(ctx.characterId, ctx.team, calculate(ctx))
+    },
+    onDeactivate(ctx) {
+      ctx.skillManager.clearSkillLines(ctx.characterId, ctx.team)
+      base.onDeactivate(ctx)
     },
   }
 }
