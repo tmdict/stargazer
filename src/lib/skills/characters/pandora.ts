@@ -2,12 +2,11 @@ import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
 import { findTarget, TargetingMethod } from '../utils/distance'
 
+// Targets the rearmost ally on the same team.
 registerSkill(
   createTargetingSkill({
     id: 'pandora',
     characterId: 85,
-    name: 'Boxed Blessing',
-    description: 'Targets the rearmost ally character on the same team.',
     color: '#9661f1',
     arrowType: 'ally',
     calculateTarget: (ctx) =>
