@@ -106,7 +106,7 @@ Key methods:
 - `deactivateCharacterSkill()` - Deactivates and cleans up
 - `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
 - `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
-- `setTileFillModifier()` / `getTileFillModifier()` - Manages tile fill colors (an independent channel rendered as a translucent cell fill instead of a border)
+- `setTileFillModifier()` / `getTileFillModifier()` - Manages tile fill colors (an independent channel rendered as a tinted cell fill instead of a border)
 - `claimTileState()` / `releaseTileState()` - Saves and restores tile states altered by skills. Multiple skills can claim the same tile (e.g. both teams' Kulu zones overlap on the middle tiles); the original state is captured at first claim and the tile is restored only when the last claimant releases
 
 #### 4. Characters Operations (`/src/lib/characters/`)
@@ -158,7 +158,7 @@ See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implem
 
 Highlight multiple tiles based on game state:
 
-- **Tile modifiers**: Two channels per tile — a color border, or a translucent cell fill for skills that opt in with `fill`
+- **Tile modifiers**: Two channels per tile — a color border, or a tinted cell fill for skills that opt in with `fill`
 - **Priority selection**: Find valid targets using tie-breaking rules
 - **Dynamic updates**: Recalculate when board state changes
 - **Layered rendering**: Skill borders always visible on top

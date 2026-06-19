@@ -34,7 +34,7 @@ export interface SkillContext {
 }
 
 // A tile a skill paints. `fill` routes the color to the cell-fill channel (a
-// translucent tint); the default paints the cell border.
+// tint blended over the tile background); the default paints the cell border.
 export interface TilePaint {
   hexId: number
   color: string
