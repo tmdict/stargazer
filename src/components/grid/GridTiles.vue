@@ -42,9 +42,10 @@ const TEXT_COLOR = '#222'
 const COORDINATE_COLOR = '#555'
 const HEX_FILL_COLOR = '#fff'
 const HEX_STROKE_COLOR = '#ccc'
-// Skill fill-paints tint the cell. Kept well below the targeting-arrow opacity
-// (0.8) since the fill covers the whole cell, where that value reads too strong.
-const SKILL_FILL_OPACITY = 0.35
+// Skill fill-paints are blended into one opaque color, not a translucent layer,
+// so an exported PNG has no partial alpha for a viewer to composite against its
+// own background. Kept below the arrow opacity (0.8); a full-cell tint reads strong.
+const SKILL_FILL_RATIO = 0.35
 
 const gridEvents = useGridEvents()
 
@@ -89,18 +90,37 @@ const textTransform = (hex: Hex) => {
   return `rotate(${TEXT_ROTATION},${pos.x},${pos.y})`
 }
 
-const getHexFill = (hex: Hex) => {
-  if (props.showSkills) {
-    const fills = ctx.getTileFillModifier(hex.getId())
-    if (fills) return fills[0]
+// Composite `overlay` over `base` at `ratio` (0..1) into an opaque #rrggbb.
+// Inputs may be #rgb or #rrggbb.
+const mixHexColors = (base: string, overlay: string, ratio: number): string => {
+  const toRgb = (hex: string): number[] => {
+    const h = hex.replace('#', '')
+    const full =
+      h.length === 3
+        ? h
+            .split('')
+            .map((c) => c + c)
+            .join('')
+        : h
+    return [0, 2, 4].map((i) => parseInt(full.slice(i, i + 2), 16))
   }
-  const state = ctx.grid.getTile(hex).state
-  const displayState = ctx.inverted ? getInvertedState(state) : state
-  return getTileFillColor(displayState) || HEX_FILL_COLOR
+  const b = toRgb(base)
+  const o = toRgb(overlay)
+  const channel = (i: number) => Math.round(b[i]! * (1 - ratio) + o[i]! * ratio)
+  const toHex = (n: number) => n.toString(16).padStart(2, '0')
+  return `#${toHex(channel(0))}${toHex(channel(1))}${toHex(channel(2))}`
 }
 
-const getHexFillOpacity = (hex: Hex) =>
-  props.showSkills && ctx.getTileFillModifier(hex.getId()) ? SKILL_FILL_OPACITY : 1
+const getHexFill = (hex: Hex) => {
+  const state = ctx.grid.getTile(hex).state
+  const displayState = ctx.inverted ? getInvertedState(state) : state
+  const baseFill = getTileFillColor(displayState) || HEX_FILL_COLOR
+  if (props.showSkills) {
+    const fills = ctx.getTileFillModifier(hex.getId())
+    if (fills) return mixHexColors(baseFill, fills[0]!, SKILL_FILL_RATIO)
+  }
+  return baseFill
+}
 
 const shouldShowHexId = (hex: Hex) => {
   const state = ctx.grid.getTile(hex).state
@@ -411,7 +431,6 @@ onUnmounted(() => {
                 .join(' ')
             "
             :fill="getHexFill(hex)"
-            :fill-opacity="getHexFillOpacity(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -427,7 +446,6 @@ onUnmounted(() => {
                 .join(' ')
             "
             :fill="getHexFill(hex)"
-            :fill-opacity="getHexFillOpacity(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -448,7 +466,6 @@ onUnmounted(() => {
                 .join(' ')
             "
             :fill="getHexFill(hex)"
-            :fill-opacity="getHexFillOpacity(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
