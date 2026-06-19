@@ -154,7 +154,12 @@ export function createGridContext(
 
   const mapConfig = getMapByKey(mapKey)
   const grid = reactive(new Grid(FULL_GRID, mapConfig)) as Grid
-  const skillManager = reactive(new SkillManager(gameDataStore.getCharacterFaction)) as SkillManager
+  const skillManager = reactive(
+    new SkillManager({
+      factionOf: gameDataStore.getCharacterFaction,
+      classOf: gameDataStore.getCharacterClass,
+    }),
+  ) as SkillManager
   grid.skillManager = skillManager
 
   const currentMap = ref(mapKey)

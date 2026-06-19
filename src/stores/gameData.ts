@@ -122,6 +122,15 @@ export const useGameDataStore = defineStore('gameData', () => {
     return getCharacterById(actualId)?.faction
   }
 
+  // Resolves a grid unit's class by ID, mapping companions to their main
+  // character. Phantimals carry no class.
+  const getCharacterClass = (characterId: number): string | undefined => {
+    if (isPhantimalId(characterId)) return undefined
+    const actualId =
+      characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
+    return getCharacterById(actualId)?.class
+  }
+
   // Safe accessors for images and icons
   const getCharacterImage = (name: string): string => {
     return characterImages.value[name] ?? ''
@@ -159,6 +168,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     getArtifactById,
     getPhantimalById,
     getCharacterFaction,
+    getCharacterClass,
     getCharacterImage,
     getArtifactImage,
     getArtifactEffects,

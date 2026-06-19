@@ -16,7 +16,7 @@ integration/
 │   ├── arena1/                # Arena 1 test cases
 │   ├── arena3/                # Arena 3 test cases
 │   └── arena4/                # Arena 4 test cases
-└── rowScan/                   # Test data for row scan targeting
+└── aliceth/                   # Test data for Aliceth's row-scan targeting
 ```
 
 ## Test Coverage
@@ -59,7 +59,7 @@ Test cases are written in JSON files with the following structure:
 }
 ```
 
-### Row Scan
+### Aliceth (row scan)
 
 ```json
 {
@@ -73,7 +73,7 @@ Test cases are written in JSON files with the following structure:
   "testCases": [
     {
       "characterTile": 1, // Character's position
-      "expectedTarget": 42 // Expected target found by row scan
+      "expectedTarget": 42 // Expected ally Aliceth targets
     }
     // ... more test cases
   ]

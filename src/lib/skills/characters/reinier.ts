@@ -148,7 +148,10 @@ function updateSkillTargets(context: SkillContext): void {
 }
 
 // Targets an adjacent ally whose symmetrical tile holds an enemy, painting both
-// the ally and that enemy.
+// the ally and that enemy. The neighbour priority and the mirror-holds-enemy gate
+// are Reinier-specific, kept here rather than via the shared rowScan: the within-row
+// order alternates (not purely front- or rearmost) and the pick is conditional on
+// the symmetrical tile.
 registerSkill({
   id: 'reinier',
   characterId: 31,

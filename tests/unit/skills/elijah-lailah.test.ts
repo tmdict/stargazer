@@ -24,7 +24,7 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     team: Team.ALLY,
     characterId: ELIJAH,
     skillManager,
-    factionOf: (id) => factions.get(id),
+    lookups: { factionOf: (id) => factions.get(id) },
   })
 
   // Place the twins collinearly and link them, without the random companion spawn
