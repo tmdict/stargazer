@@ -6,7 +6,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="guide-tile">
+      <SkillSnippet title-key="guide-targeting">
         <p>战斗开始时：</p>
         <ul>
           <li>如果五月处于防守一方且有多个目标可以打断，她会优先选择最前方的对手。</li>
