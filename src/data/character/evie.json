@@ -9,6 +9,7 @@
   "range": 20,
   "season": 6,
   "tags": {
+    "special-target": [{ "ultimate": 1 }, { "skill3": 1 }],
     "temp-buff": [{ "skill3": 1 }, { "awakening": 1 }],
     "temp-buff-instant": [{ "skill3": 1 }, { "awakening": 1 }],
     "ult-denial": [{ "ultimate": 1 }]

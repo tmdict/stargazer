@@ -7,6 +7,18 @@ import { gridStyles, images } from './Evie.data'
 
 <template>
   <SkillSnippets>
+    <template #ultimate>
+      <SkillSnippet title-key="guide-targeting">
+        <p>
+          When the battle starts, Evie targets her symmetrical tile (the mirror position across the
+          grid's center). The scanned tiles are her symmetrical tile plus the six tiles around it.
+        </p>
+        <div style="text-align: center">
+          <GridSnippet :grid-style="gridStyles.enemyTarget1" :images layout="inline" />
+          <GridSnippet :grid-style="gridStyles.enemyTarget2" :images layout="inline" />
+        </div>
+      </SkillSnippet>
+    </template>
     <template #skill3>
       <SkillSnippet title-key="guide-targeting">
         <p>
@@ -22,7 +34,7 @@ import { gridStyles, images } from './Evie.data'
           The targeting arrow shows only the initial target, later in the battle the quill moves to
           the ally with the highest cumulative damage dealt.
         </p>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.allyTarget" :images />
       </SkillSnippet>
     </template>
   </SkillSnippets>
