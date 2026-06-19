@@ -1,7 +1,7 @@
 import evieImage from '@/assets/images/character/evie.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
 
 export const gridStyles = {
-  main: {
+  allyTarget: {
     numericLabel: {
       1: 1,
       2: 2,
@@ -33,6 +33,22 @@ export const gridStyles = {
     highlight2: [2, 3, 7],
     character: {
       evie: 16,
+    },
+  },
+  enemyTarget1: {
+    numericLabel: {},
+    highlight: [37],
+    highlight2: [30, 33, 34, 39, 40, 42],
+    character: {
+      evie: 9,
+    },
+  },
+  enemyTarget2: {
+    numericLabel: {},
+    highlight: [41],
+    highlight2: [36, 39, 44],
+    character: {
+      evie: 3,
     },
   },
 }
