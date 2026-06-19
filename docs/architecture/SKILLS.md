@@ -66,6 +66,7 @@ interface SkillContext {
   team: Team
   characterId: number
   skillManager: SkillManager
+  lookups?: SkillLookups // injected data-store resolvers: { factionOf, classOf, ... }
 }
 ```
 
@@ -200,7 +201,7 @@ For skills that highlight a single tile and need previous-target cleanup on upda
 ```typescript
 import { registerSkill } from '../registry'
 import { createTileHighlightSkill } from '../utils/builders'
-import { rowScan, RowScanDirection } from '../utils/ring'
+import { rowScan, ScanDirection } from '../utils/ring'
 
 // What it does (gameplay behavior).
 registerSkill(
@@ -208,7 +209,8 @@ registerSkill(
     id: 'my-skill',
     characterId: 123,
     tileColor: '#hexcolor',
-    calculateTarget: (ctx) => rowScan(ctx, ctx.team, { direction: RowScanDirection.REARMOST }),
+    calculateTarget: (ctx) =>
+      rowScan(ctx, { team: ctx.team, rowDirection: ScanDirection.REARMOST }),
   }),
 )
 ```
@@ -283,7 +285,7 @@ registerSkill(
 )
 ```
 
-When `calculate` needs a unit's faction (companion → main character, phantimal → seasonal), read it from `ctx.factionOf(characterId)`; it's injected from the data store, since faction data lives outside the pure skill lib.
+When `calculate` needs a data-store fact about a unit, read it from `ctx.lookups`: `ctx.lookups?.factionOf?.(id)` for faction (companion resolves to its main character, phantimal to its seasonal faction), `ctx.lookups?.classOf?.(id)` for class. The resolvers are injected as one `SkillLookups` bag because that data lives outside the pure skill lib, so a new fact is added in one place rather than threaded through every context (Himmel uses `classOf` to highlight one tank, one mage, and one support among its same-team neighbours).
 
 ### Connecting hexes with a line (`withSkillLine`)
 

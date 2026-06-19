@@ -16,7 +16,7 @@ function twinState(ctx: SkillContext): {
   allies: Array<{ hexId: number; characterId: number }>
   color: string
 } | null {
-  const { grid, hexId, team, characterId, factionOf } = ctx
+  const { grid, hexId, team, characterId, lookups } = ctx
   const companionIds = [...getCompanions(grid, characterId, team)]
   if (companionIds.length === 0) return null
   const companionHexId = findCharacterHex(grid, companionIds[0]!, team)
@@ -36,7 +36,7 @@ function twinState(ctx: SkillContext): {
   // One color for the borders and the line: companion color when the sandwiched
   // allies all share a faction (a lone ally counts), else skill color (also the
   // fallback when none are between).
-  const factions = new Set(allies.map((ally) => factionOf?.(ally.characterId)))
+  const factions = new Set(allies.map((ally) => lookups?.factionOf?.(ally.characterId)))
   const color = factions.size === 1 ? COMPANION_COLOR : SKILL_COLOR
 
   return { companionHexId, between, allies, color }
@@ -55,7 +55,7 @@ function calculateLine(ctx: SkillContext): SkillLine[] {
 
   // Anchors along the axis: the twins plus any characters between them, in order.
   // A border-to-border segment between each consecutive pair breaks the line around
-  // every character icon while keeping it visible everywhere else — including the
+  // every character icon while keeping it visible everywhere else, including the
   // small gap between adjacent icons (the icons don't touch).
   const anchors = [ctx.hexId]
   for (const hex of state.between) {

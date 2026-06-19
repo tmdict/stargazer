@@ -1,4 +1,3 @@
-import { isCompanionId } from '../../characters/companion'
 import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
@@ -8,9 +7,13 @@ import { calculateDistances, getCandidates, getTeamTargetCandidates } from './ta
  * Ring expansion scans
  */
 
-export enum RowScanDirection {
-  FRONTMOST, // Ally: highest→lowest hex ID, Enemy: lowest→highest
-  REARMOST, // Ally: lowest→highest hex ID, Enemy: highest→lowest
+// One end of the scanned team's front-to-back axis. A row scan uses it twice and
+// independently: which diagonal rows to reach first, and which unit within a
+// shared row to take first. For the ally team FRONTMOST is the higher diagonal /
+// higher hex id; the enemy team is flipped 180°.
+export enum ScanDirection {
+  FRONTMOST,
+  REARMOST,
 }
 
 /**
@@ -163,94 +166,75 @@ export function searchByRow(context: SkillContext, targetTeam: Team): SkillTarge
   }
 }
 
-/**
- * Scan outward from the caster's position in rings, checking tiles by hex ID order.
- * Direction controls the scan order within each ring:
- * - FRONTMOST: Ally scans highest→lowest, Enemy scans lowest→highest
- * - REARMOST: Ally scans lowest→highest, Enemy scans highest→lowest
- */
 export interface RowScanOptions {
-  direction?: RowScanDirection
-  excludeCompanions?: boolean
+  // Team to scan for (the candidates), and the front-to-back frame: rows and the
+  // within-row order are oriented to this team. Skills scan their own team.
+  team: Team
+  // Which diagonal rows to reach first (REARMOST = the team's back rows first).
+  rowDirection: ScanDirection
+  // Within a shared diagonal row, which unit to take first. Defaults to
+  // rowDirection (the aligned, common case); set it only for a mixed scan.
+  withinRowDirection?: ScanDirection
+  // Bound on how far out to scan: 1 = adjacent tiles only; omit = whole grid.
   maxDistance?: number
+  // Keep only candidates whose characterId passes this predicate (e.g. a class
+  // filter, or excluding companions).
+  filter?: (characterId: number) => boolean
 }
 
-export function rowScan(
-  context: SkillContext,
-  targetTeam: Team,
-  options: RowScanOptions = {},
-): SkillTargetInfo | null {
-  const { grid, hexId, characterId, team: casterTeam } = context
-  const direction = options.direction ?? RowScanDirection.FRONTMOST
+/**
+ * Scan for a unit on `options.team` by expanding distance rings from the caster.
+ * Within a ring, candidates are ordered by diagonal row (q - r), then by hex id
+ * within a row; rowDirection and withinRowDirection independently choose which end
+ * of that team's front-to-back axis comes first. Returns the first candidate, or null.
+ *
+ * Scan key: (distance asc, diagonal by rowDirection, hex id by withinRowDirection),
+ * both the diagonal and hex-id directions flipped when scanning the enemy team.
+ *
+ * Hex ids increase along the diagonal rows, so when the two directions agree the
+ * scan is equivalently a plain hex-id sort; only a mixed pair (e.g. rear rows but
+ * the front of each row) needs the diagonal ordering to be explicit.
+ */
+export function rowScan(ctx: SkillContext, options: RowScanOptions): SkillTargetInfo | null {
+  const { grid, hexId, characterId } = ctx
+  const center = grid.getHexById(hexId)
 
-  const centerHex = grid.getHexById(hexId)
+  let candidates = getCandidates(grid, options.team, characterId)
+  if (options.filter) candidates = candidates.filter((c) => options.filter!(c.characterId))
 
-  // Get all ally candidates
-  let candidates = getCandidates(grid, targetTeam, characterId)
-
-  if (options.excludeCompanions) {
-    candidates = candidates.filter((c) => !isCompanionId(grid, c.characterId))
-  }
-  if (candidates.length === 0) return null
-
-  // Create a set for quick lookup
-  const candidateSet = new Set(candidates.map((c) => c.hexId))
-  const candidateMap = new Map(candidates.map((c) => [c.hexId, c.characterId]))
-
-  const examinedTiles: number[] = []
-
-  // Find maximum distance to any candidate
-  let maxDistance = 0
-  for (const candidate of candidates) {
-    const candidateHex = grid.getHexById(candidate.hexId)
-    if (!candidateHex) continue
-    const distance = centerHex.distance(candidateHex)
-    if (distance > maxDistance) maxDistance = distance
-  }
-
-  // Cap at the configured maximum distance if specified
-  if (options.maxDistance !== undefined) {
-    maxDistance = Math.min(maxDistance, options.maxDistance)
-  }
-
-  const allTiles = grid.getAllTiles()
-
-  // Search expanding rings from distance 1 outward
-  for (let distance = 1; distance <= maxDistance; distance++) {
-    const ringTiles: number[] = []
-
-    // Collect all tile IDs at the current distance
-    for (const tile of allTiles) {
-      if (tile?.hex && centerHex.distance(tile.hex) === distance) {
-        ringTiles.push(tile.hex.getId())
+  const ranked = candidates
+    .map((c) => {
+      const hex = grid.getHexById(c.hexId)
+      return {
+        hexId: c.hexId,
+        characterId: c.characterId,
+        distance: center.distance(hex),
+        diagonal: hex.getDiagonal(),
       }
-    }
+    })
+    .filter((c) => options.maxDistance === undefined || c.distance <= options.maxDistance)
+  if (ranked.length === 0) return null
 
-    // Sort tiles by hex ID based on caster team and scan direction
-    const ascending = (casterTeam === Team.ALLY) === (direction === RowScanDirection.REARMOST)
-    if (ascending) {
-      ringTiles.sort((a, b) => a - b)
-    } else {
-      ringTiles.sort((a, b) => b - a)
-    }
+  const withinRowDirection = options.withinRowDirection ?? options.rowDirection
+  const allyTeam = options.team === Team.ALLY
+  const rowAscending = allyTeam === (options.rowDirection === ScanDirection.REARMOST)
+  const idAscending = allyTeam === (withinRowDirection === ScanDirection.REARMOST)
+  ranked.sort((a, b) => {
+    if (a.distance !== b.distance) return a.distance - b.distance
+    if (a.diagonal !== b.diagonal)
+      return rowAscending ? a.diagonal - b.diagonal : b.diagonal - a.diagonal
+    return idAscending ? a.hexId - b.hexId : b.hexId - a.hexId
+  })
 
-    // Check each tile in order for an ally
-    for (const tileId of ringTiles) {
-      examinedTiles.push(tileId)
-      if (candidateSet.has(tileId)) {
-        return {
-          targetHexId: tileId,
-          targetCharacterId: candidateMap.get(tileId)!,
-          metadata: {
-            sourceHexId: hexId,
-            distance,
-            isRowScanTarget: true,
-            examinedTiles: [...examinedTiles],
-          },
-        }
-      }
-    }
+  const target = ranked[0]!
+  return {
+    targetHexId: target.hexId,
+    targetCharacterId: target.characterId,
+    metadata: {
+      sourceHexId: hexId,
+      distance: target.distance,
+      isRowScanTarget: true,
+      examinedTiles: ranked.map((c) => c.hexId),
+    },
   }
-
-  return null
 }

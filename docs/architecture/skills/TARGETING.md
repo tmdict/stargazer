@@ -64,23 +64,31 @@ Selects targets by comparing distances from a reference point:
 
 Expands outward ring by ring from a center hex, checking tiles in order:
 
-- **spiralSearchFromTile()**: Spiral walk with team-specific direction (clockwise for ally, counter-clockwise for enemy)
-- **searchByRow()**: Finds closest target in the same diagonal row
-- **rowScan()**: Ring expansion with hex ID ordering controlled by `RowScanDirection`
+- **spiralSearchFromTile()**: Spiral walk by angle from a center tile, team-specific direction (clockwise for ally, counter-clockwise for enemy). Used by Silvina/Nara from a symmetrical tile.
+- **searchByRow()**: The closest unit in the caster's _own_ diagonal row (higher hex id on a tie for an ally). Used by Aliceth/Alna.
+- **rowScan()**: The diagonal-row scan below. Used by Faramor, Cassadee, Galahad, Himmel, and Aliceth's fallback.
 
-### Row Scan Direction (`RowScanDirection`)
+### Diagonal-row scan (`rowScan`)
 
-Controls the hex ID sort order within each ring during `rowScan`:
+The arena's only meaningful "row" is the **diagonal row**: `Hex.getDiagonal() = q - r`. Hex ids increase along these rows from a team's back to its front, and the two teams face across the centre, so the enemy team is a 180° flip of both axes. `rowScan` expands distance rings from the caster and, within a ring, orders candidates by **diagonal row, then hex id within a row**. Two independent `ScanDirection` knobs choose which end of the _scanned team's_ front-to-back axis comes first:
 
-- **FRONTMOST**: Ally scans highest→lowest hex ID, Enemy scans lowest→highest (used by Aliceth)
-- **REARMOST**: Ally scans lowest→highest hex ID, Enemy scans highest→lowest (used by Cassadee)
+- **rowDirection**: which diagonal rows first (`REARMOST` = the team's back rows).
+- **withinRowDirection**: which unit of a shared row first (`REARMOST` = the lower hex id). Defaults to `rowDirection`; set it explicitly only for a mixed scan.
 
-### Tie-Breaking Strategy
+Scan key: `(distance asc, diagonal by rowDirection, hex id by withinRowDirection)`. Because ids run in diagonal-row order, when the two directions agree the scan is equivalently a plain hex-id sort; only the mixed pair needs the explicit diagonal tier.
 
-When multiple candidates are at the same distance, the system applies team-aware hex ID tie-breaking:
+|                     | within: REARMOST (lower id) | within: FRONTMOST (higher id) |
+| ------------------- | --------------------------- | ----------------------------- |
+| **rows: REARMOST**  | Faramor, Cassadee, Galahad  | Himmel                        |
+| **rows: FRONTMOST** | (valid, currently unused)   | Aliceth fallback              |
 
-- Ally team prefers lower hex IDs
-- Enemy team prefers higher hex IDs (180° rotation symmetry)
+Options: `{ team, rowDirection, withinRowDirection?, maxDistance?, filter? }`. `maxDistance: 1` limits the scan to adjacent tiles; `filter` keeps only candidates whose id passes a predicate (class selection for Himmel, companion exclusion for Galahad).
+
+**When NOT to use `rowScan`**: it expresses any monotone `(distance, diagonal row, hex id)` ordering. A pick that alternates within-row direction, is gated on another tile (Reinier's symmetrical-enemy check), or composes stages (Aliceth's same-row-first plus a furthest-enemy target) stays in the character file rather than being forced into options.
+
+### Tie-Breaking Strategy (distance helpers)
+
+`rowScan`'s diagonal-then-id key is already a total order, so it needs no tie-break. The distance helpers in `distance.ts` do: when candidates share a distance they break the tie by team-aware hex id, ally preferring lower ids and enemy higher (the 180° rotation).
 
 ## Lifecycle Management
 
@@ -117,8 +125,6 @@ Visual feedback options:
      createTargetingSkill({
        id: 'my-skill',
        characterId: 123,
-       name: 'Skill Name',
-       description: '...',
        color: '#hexcolor',
        arrowType: 'enemy',
        calculateTarget: (ctx) =>

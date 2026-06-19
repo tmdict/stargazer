@@ -87,6 +87,8 @@ const getMetadataDescriptor = (metadata: SkillTargetInfo['metadata']): string | 
   if (metadata.isSymmetricalTarget === false) return 'spiral fallback'
   if (metadata.isFrontmostTarget) return 'frontmost'
   if (metadata.isRearmostTarget) return 'rearmost'
+  if (metadata.isRowTarget) return 'same row'
+  if (metadata.isRowScanTarget) return 'row scan'
   if (metadata.distance !== undefined) return `distance: ${metadata.distance}`
 
   return null
