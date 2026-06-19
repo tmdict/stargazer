@@ -10,6 +10,7 @@
   "season": 3,
   "tags": {
     "energy-battery": [{ "skill2": 1 }, { "ex": 1 }],
-    "temp-buff": [{ "ultimate": 1 }]
+    "temp-buff": [{ "ultimate": 1 }],
+    "tile-effect": [{ "skill2": 1 }]
   }
 }

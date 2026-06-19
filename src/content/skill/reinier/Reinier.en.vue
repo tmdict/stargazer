@@ -8,7 +8,7 @@ import { gridStyles, images } from './Reinier.data'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="guide-targeting">
+      <SkillSnippet title-key="guide-tile">
         <p>
           Reinier identifies symmetrical hex pairs where one contains an ally and the other contains
           an enemy.
