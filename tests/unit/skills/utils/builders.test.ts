@@ -237,6 +237,23 @@ describe('createTileHighlightSkill', () => {
     expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
     expect(skillManager.getTileColorModifier(3)).toBeUndefined()
   })
+
+  it('paints the fill channel instead of the border when fill is set', () => {
+    const skill = createTileHighlightSkill({
+      id: 'test',
+      characterId: CHARACTER_ID,
+      tileColor: TILE_COLOR,
+      fill: true,
+      calculateTarget: () => ({ targetHexId: 3, targetCharacterId: 42 }),
+    })
+    skill.onActivate(buildContext(grid, skillManager))
+
+    expect(skillManager.getTileFillModifier(3)).toContain(TILE_COLOR)
+    expect(skillManager.getTileColorModifier(3)).toBeUndefined()
+
+    skill.onDeactivate(buildContext(grid, skillManager))
+    expect(skillManager.getTileFillModifier(3)).toBeUndefined()
+  })
 })
 
 describe('createCompanionSkill', () => {

@@ -10,6 +10,7 @@ registerSkill(
     id: 'hugin',
     characterId: 65,
     tileColor: '#0288d1',
+    fill: true,
     calculateTarget: findUnitBehind,
   }),
 )

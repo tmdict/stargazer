@@ -141,9 +141,12 @@ function updateSkillTargets(context: SkillContext): void {
     targetCharacterId: null,
     metadata: { allyHexId: validPair.allyHexId, enemyHexId: validPair.enemyHexId },
   })
+  // Each tile is painted in both channels (border + fill), so each hex id appears twice.
   skillManager.paintTiles(characterId, team, [
     { hexId: validPair.allyHexId, color: TILE_COLOR },
+    { hexId: validPair.allyHexId, color: TILE_COLOR, fill: true },
     { hexId: validPair.enemyHexId, color: TILE_COLOR },
+    { hexId: validPair.enemyHexId, color: TILE_COLOR, fill: true },
   ])
 }
 

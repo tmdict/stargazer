@@ -10,6 +10,7 @@ registerSkill(
     id: 'galahad',
     characterId: 99,
     tileColor: '#e57373',
+    fill: true,
     calculateTarget: (ctx) =>
       rowScan(ctx, {
         team: ctx.team,
