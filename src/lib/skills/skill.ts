@@ -33,10 +33,12 @@ export interface SkillContext {
   lookups?: SkillLookups
 }
 
-// A tile and the border color a skill paints onto it.
+// A tile a skill paints. `fill` routes the color to the cell-fill channel (a
+// translucent tint); the default paints the cell border.
 export interface TilePaint {
   hexId: number
   color: string
+  fill?: boolean
 }
 
 // A straight connection line a skill draws between two hexes (border to border).
@@ -91,8 +93,11 @@ export class SkillManager {
   // Track image modifiers for specific characters (for companions with custom images)
   // Key is "characterId-team" to support same companion ID on different teams
   private characterImageModifiers: Record<string, string> = {}
-  // Track color modifiers for specific tiles (supports multiple colors per tile)
+  // Two independent tile-paint channels, each keyed by hex id and holding the
+  // colors painted there: borders render as the tile stroke, fills as a tinted
+  // cell fill. A skill picks one (see TilePaint.fill).
   private tileColorModifiers: Map<number, string[]> = new Map()
+  private tileFillModifiers: Map<number, string[]> = new Map()
   // Track original states of tiles altered by skills. A tile may be claimed by
   // several skills at once (e.g. both teams' zone skills overlap); the original
   // state is captured at first claim and restored when the last claim is released
@@ -215,6 +220,7 @@ export class SkillManager {
     this.characterColorModifiers = {}
     this.characterImageModifiers = {}
     this.tileColorModifiers.clear()
+    this.tileFillModifiers.clear()
     this.tileStateClaims.clear()
     this.skillTargets.clear()
     this.skillPaintedTiles.clear()
@@ -288,48 +294,65 @@ export class SkillManager {
     return modifiers
   }
 
-  // Add color modifier for a specific tile (supports multiple colors per tile)
-  setTileColorModifier(hexId: number, color: string): void {
-    const existing = this.tileColorModifiers.get(hexId)
+  // Both paint channels support multiple colors per tile and share these helpers.
+  private addTileColor(map: Map<number, string[]>, hexId: number, color: string): void {
+    const existing = map.get(hexId)
     if (existing) {
-      if (!existing.includes(color)) {
-        existing.push(color)
-      }
+      if (!existing.includes(color)) existing.push(color)
     } else {
-      this.tileColorModifiers.set(hexId, [color])
+      map.set(hexId, [color])
     }
     this.targetVersion++ // Trigger reactivity
   }
 
-  // Remove a specific color modifier from a tile
-  removeTileColorModifier(hexId: number, color: string): void {
-    const existing = this.tileColorModifiers.get(hexId)
+  private removeTileColor(map: Map<number, string[]>, hexId: number, color: string): void {
+    const existing = map.get(hexId)
     if (!existing) return
     const index = existing.indexOf(color)
-    if (index !== -1) {
-      existing.splice(index, 1)
-    }
-    if (existing.length === 0) {
-      this.tileColorModifiers.delete(hexId)
-    }
+    if (index !== -1) existing.splice(index, 1)
+    if (existing.length === 0) map.delete(hexId)
     this.targetVersion++ // Trigger reactivity
   }
 
-  // Get color modifiers for a specific tile
+  // Border channel
+  setTileColorModifier(hexId: number, color: string): void {
+    this.addTileColor(this.tileColorModifiers, hexId, color)
+  }
+
+  removeTileColorModifier(hexId: number, color: string): void {
+    this.removeTileColor(this.tileColorModifiers, hexId, color)
+  }
+
   getTileColorModifier(hexId: number): string[] | undefined {
     const colors = this.tileColorModifiers.get(hexId)
     return colors && colors.length > 0 ? colors : undefined
   }
 
-  // Clear all tile color modifiers
+  getTileColorModifiers(): Map<number, string[]> {
+    return new Map(this.tileColorModifiers)
+  }
+
   clearTileColorModifiers(): void {
     this.tileColorModifiers.clear()
     this.targetVersion++ // Trigger reactivity
   }
 
-  // Get all tile color modifiers
-  getTileColorModifiers(): Map<number, string[]> {
-    return new Map(this.tileColorModifiers)
+  // Fill channel
+  setTileFillModifier(hexId: number, color: string): void {
+    this.addTileColor(this.tileFillModifiers, hexId, color)
+  }
+
+  removeTileFillModifier(hexId: number, color: string): void {
+    this.removeTileColor(this.tileFillModifiers, hexId, color)
+  }
+
+  getTileFillModifier(hexId: number): string[] | undefined {
+    const colors = this.tileFillModifiers.get(hexId)
+    return colors && colors.length > 0 ? colors : undefined
+  }
+
+  getTileFillModifiers(): Map<number, string[]> {
+    return new Map(this.tileFillModifiers)
   }
 
   // Paint exactly `tiles` for this skill instance, first removing the tiles it
@@ -338,19 +361,27 @@ export class SkillManager {
   // reinier, ...) so the set/remove/track cycle lives in one place.
   paintTiles(characterId: number, team: Team, tiles: TilePaint[]): void {
     const key = this.getSkillKey(characterId, team)
-    for (const tile of this.skillPaintedTiles.get(key) ?? []) {
-      this.removeTileColorModifier(tile.hexId, tile.color)
-    }
-    for (const tile of tiles) this.setTileColorModifier(tile.hexId, tile.color)
+    for (const tile of this.skillPaintedTiles.get(key) ?? []) this.unpaintTile(tile)
+    for (const tile of tiles) this.paintTile(tile)
     this.skillPaintedTiles.set(key, tiles)
   }
 
   clearPaintedTiles(characterId: number, team: Team): void {
     const key = this.getSkillKey(characterId, team)
-    for (const tile of this.skillPaintedTiles.get(key) ?? []) {
-      this.removeTileColorModifier(tile.hexId, tile.color)
-    }
+    for (const tile of this.skillPaintedTiles.get(key) ?? []) this.unpaintTile(tile)
     this.skillPaintedTiles.delete(key)
+  }
+
+  // A paint's `fill` flag selects its channel for both apply and cleanup, so a
+  // tile is always removed from the same channel it was added to.
+  private paintTile(tile: TilePaint): void {
+    if (tile.fill) this.setTileFillModifier(tile.hexId, tile.color)
+    else this.setTileColorModifier(tile.hexId, tile.color)
+  }
+
+  private unpaintTile(tile: TilePaint): void {
+    if (tile.fill) this.removeTileFillModifier(tile.hexId, tile.color)
+    else this.removeTileColorModifier(tile.hexId, tile.color)
   }
 
   // Lines render straight from the flattened set, so this just replaces the

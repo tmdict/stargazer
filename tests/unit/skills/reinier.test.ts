@@ -33,45 +33,50 @@ describe('reinier tile highlighting', () => {
     placeOnTile(grid, ALLY_HEX, 100, Team.ALLY)
   })
 
-  it('highlights the ally and its symmetrical enemy tile when a valid pair exists', () => {
+  it('highlights the ally and its symmetrical enemy tile in both channels when a valid pair exists', () => {
     placeOnTile(grid, enemyHex, 200, Team.ENEMY)
 
     reinier().onActivate(ctx())
 
-    const allyHighlight = skillManager.getTileColorModifier(ALLY_HEX)
-    expect(allyHighlight).toHaveLength(1)
-    // Both tiles carry the same highlight (color value itself is a design const).
-    expect(skillManager.getTileColorModifier(enemyHex)).toEqual(allyHighlight)
+    const allyFill = skillManager.getTileFillModifier(ALLY_HEX)
+    expect(allyFill).toHaveLength(1)
+    expect(skillManager.getTileColorModifier(ALLY_HEX)).toEqual(allyFill)
+    expect(skillManager.getTileFillModifier(enemyHex)).toEqual(allyFill)
+    expect(skillManager.getTileColorModifier(enemyHex)).toEqual(allyFill)
   })
 
   it('highlights nothing when the symmetrical tile has no enemy', () => {
     reinier().onActivate(ctx())
 
-    expect(skillManager.getTileColorModifier(ALLY_HEX)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(enemyHex)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(enemyHex)).toBeUndefined()
   })
 
   it('clears the highlight on deactivate', () => {
     placeOnTile(grid, enemyHex, 200, Team.ENEMY)
     reinier().onActivate(ctx())
-    expect(skillManager.getTileColorModifier(ALLY_HEX)).toBeDefined()
+    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeDefined()
 
     reinier().onDeactivate(ctx())
 
+    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeUndefined()
     expect(skillManager.getTileColorModifier(ALLY_HEX)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(enemyHex)).toBeUndefined()
     expect(skillManager.getTileColorModifier(enemyHex)).toBeUndefined()
   })
 
   it('clears the highlight on update once the pair disappears', () => {
     placeOnTile(grid, enemyHex, 200, Team.ENEMY)
     reinier().onActivate(ctx())
-    expect(skillManager.getTileColorModifier(ALLY_HEX)).toBeDefined()
+    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeDefined()
 
     grid.getTileById(enemyHex).characterId = undefined
     grid.getTileById(enemyHex).team = undefined
     reinier().onUpdate!(ctx())
 
+    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeUndefined()
     expect(skillManager.getTileColorModifier(ALLY_HEX)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(enemyHex)).toBeUndefined()
     expect(skillManager.getTileColorModifier(enemyHex)).toBeUndefined()
   })
 })

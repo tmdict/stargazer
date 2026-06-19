@@ -10,6 +10,7 @@ registerSkill(
     id: 'gunnar',
     characterId: 106,
     tileColor: '#9661f1',
+    fill: true,
     calculateTarget: findUnitBehind,
   }),
 )
