@@ -11,7 +11,8 @@
   "tags": {
     "energy-battery": [{ "skill3": 1 }],
     "initial-energy-300": [],
-    "temp-buff": [{ "ultimate": 1 }, { "skill2": 1 }, { "ex": 1 }],
-    "temp-buff-instant": [{ "ultimate": 1 }, { "skill2": 1 }, { "ex": 1 }]
+    "temp-buff": [{ "ultimate": 1 }, { "skill3": 1 }, { "ex": 1 }],
+    "temp-buff-instant": [{ "skill3": 1 }],
+    "tile-effect": [{ "skill3": 1 }]
   }
 }

@@ -10,6 +10,6 @@
   "season": 0,
   "tags": {
     "energy-battery": [{ "skill3": 4 }],
-    "special-target": [{ "skill2": 1 }]
+    "tile-effect": [{ "skill2": 1 }]
   }
 }

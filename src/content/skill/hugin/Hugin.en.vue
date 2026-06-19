@@ -5,7 +5,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
+    <template #skill3>
       <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
     </template>
   </SkillSnippets>
