@@ -17,7 +17,7 @@ const ALICETH = 91
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
 describe('Aliceth row-scan targeting', () => {
-  const testFiles = loadTestsFromDirectory(join(__dirname, 'rowScan'))
+  const testFiles = loadTestsFromDirectory(join(__dirname, 'aliceth'))
 
   testFiles.forEach((testFile) => {
     describe(`${testFile.path ?? 'unknown fixture'}`, () => {

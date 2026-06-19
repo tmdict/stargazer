@@ -3,11 +3,17 @@ import { registerSkill } from '../registry'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import { createTargetingSkill } from '../utils/builders'
 import { findTarget, TargetingMethod } from '../utils/distance'
-import { rowScan, searchByRow } from '../utils/ring'
+import { rowScan, ScanDirection, searchByRow } from '../utils/ring'
 
-// Search for allies in same diagonal row first, then scan outward.
+// Aliceth first targets a same-team unit in her own diagonal row (searchByRow),
+// then falls back to a row scan outward. The fallback reuses rowScan, walking from
+// her front rows toward her back and taking the front of each row first; her own
+// row is necessarily empty when the fallback runs, so it needs no exclusion.
 function calculateAllyTarget(context: SkillContext): SkillTargetInfo | null {
-  return searchByRow(context, context.team) ?? rowScan(context, context.team)
+  return (
+    searchByRow(context, context.team) ??
+    rowScan(context, { team: context.team, rowDirection: ScanDirection.FRONTMOST })
+  )
 }
 
 function calculateEnemyTarget(context: SkillContext): SkillTargetInfo | null {

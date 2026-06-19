@@ -13,6 +13,16 @@ import {
 
 export { hasCompanionSkill, hasSkill }
 
+// Resolvers for data-store facts a skill may need about any grid unit, keyed by
+// characterId (companion -> main character, phantimal -> seasonal). Injected as one
+// bag so a new fact is added in a single place rather than threaded through the
+// SkillManager constructor and every SkillContext. Each is optional so hand-built
+// test contexts can supply only what they read.
+export interface SkillLookups {
+  factionOf?: (characterId: number) => string | undefined
+  classOf?: (characterId: number) => string | undefined
+}
+
 // SkillContext defined here (not registry.ts) to avoid circular dep, as it references SkillManager
 export interface SkillContext {
   grid: Grid
@@ -20,11 +30,7 @@ export interface SkillContext {
   team: Team
   characterId: number
   skillManager: SkillManager
-  // Resolves any grid unit's faction (companion -> main, phantimal -> seasonal).
-  // Injected because faction data lives in the data store, outside this pure lib;
-  // optional since hand-built test contexts omit it (the real SkillManager always
-  // supplies it).
-  factionOf?: (characterId: number) => string | undefined
+  lookups?: SkillLookups
 }
 
 // A tile and the border color a skill paints onto it.
@@ -100,11 +106,9 @@ export class SkillManager {
   // Version counter to trigger reactivity
   private targetVersion = 0
 
-  // factionOf is injected (faction data lives in the data store, outside this pure
-  // lib); defaults to "unknown" so SkillManager stays constructible in isolation.
-  constructor(
-    private readonly factionOf: (characterId: number) => string | undefined = () => undefined,
-  ) {}
+  // Lookups are injected (that data lives in the data store, outside this pure lib);
+  // they default to empty so SkillManager stays constructible in isolation.
+  constructor(private readonly lookups: SkillLookups = {}) {}
 
   private getSkillKey(characterId: number, team: Team): string {
     return `${characterId}-${team}`
@@ -157,7 +161,7 @@ export class SkillManager {
       team,
       characterId,
       skillManager: this,
-      factionOf: this.factionOf,
+      lookups: this.lookups,
     }
 
     try {
@@ -189,7 +193,7 @@ export class SkillManager {
       team,
       characterId,
       skillManager: this,
-      factionOf: this.factionOf,
+      lookups: this.lookups,
     }
 
     skill.onDeactivate(context)
@@ -350,7 +354,7 @@ export class SkillManager {
   }
 
   // Lines render straight from the flattened set, so this just replaces the
-  // instance's entry — no per-line diff like paintTiles needs.
+  // instance's entry; no per-line diff like paintTiles needs.
   setSkillLines(characterId: number, team: Team, lines: SkillLine[]): void {
     const key = this.getSkillKey(characterId, team)
     if (lines.length) this.skillLines.set(key, lines)
@@ -438,7 +442,7 @@ export class SkillManager {
           team: info.team,
           characterId: info.characterId,
           skillManager: this,
-          factionOf: this.factionOf,
+          lookups: this.lookups,
         }
         skill.onUpdate(context)
       }
