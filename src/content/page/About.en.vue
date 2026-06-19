@@ -20,8 +20,9 @@
         preview skills and targeting, and share formations.
       </li>
       <li>
-        <strong>Teams:</strong> Stitch several screenshots into one image, vertically or
-        horizontally. Handy for posting multiple team comps together.
+        <strong>Teams:</strong> Plan a 5v5 across five arena boards at once, dragging heroes between
+        boards and sharing or exporting all five together. Also includes an Image Stitcher to
+        combine separate screenshots.
       </li>
       <li>
         <strong>Skills:</strong> Search every hero by name or skill text and read full skill
@@ -61,6 +62,10 @@
       <li>
         <a href="https://afkj-data-viewer.pages.dev/">AFKJ Data Viewer</a>: Multilingual AFKJ
         database.
+      </li>
+      <li>
+        <a href="https://afkjourney-art.pages.dev/">AFK Journey Art Archive</a>: Archive of AFKJ
+        wallpapers and character sheets.
       </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ database and guides.</li>
       <li>Special thanks to Milan for information on hero skills and various mechanics.</li>

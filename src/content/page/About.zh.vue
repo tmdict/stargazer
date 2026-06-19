@@ -18,7 +18,11 @@
         <strong>竞技场：</strong
         >六边形网格战斗模拟器，调整英雄与回响站位，预览技能与目标选择，并分享阵型。
       </li>
-      <li><strong>阵容：</strong>将多张截图横向或纵向拼接成一张图片，方便一次分享多套阵容。</li>
+      <li>
+        <strong>阵容：</strong>在五个竞技场棋盘上同时规划 5v5
+        阵容，可在棋盘间拖动英雄，并将五个棋盘一起分享或导出。另含图片拼接工具（Image
+        Stitcher），可将多张截图合并为一张。
+      </li>
       <li><strong>技能：</strong>按名称或技能描述搜索英雄，查看完整技能说明。</li>
       <li><strong>机制：</strong>各英雄的技能与机制说明。</li>
       <li><strong>魔法竞技：</strong>3v3 PvP 选秀分析工具，提供选人推荐、对阵预测与对局记录。</li>
@@ -45,6 +49,10 @@
       </li>
       <li>
         <a href="https://afkj-data-viewer.pages.dev/">AFKJ Data Viewer</a>：多语言AFKJ数据库。
+      </li>
+      <li>
+        <a href="https://afkjourney-art.pages.dev/">AFK Journey Art Archive</a>：AFKJ
+        壁纸与角色立绘存档。
       </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>：AFKJ 数据库与攻略。</li>
       <li>特别感谢 Milan 提供英雄技能与相关机制的资料。</li>
