@@ -30,6 +30,14 @@ describe('directlyBehindHexId', () => {
     expect(directlyBehindHexId(grid, 1, Team.ALLY)).toBeUndefined()
     expect(directlyBehindHexId(grid, 45, Team.ENEMY)).toBeUndefined()
   })
+
+  it('ignores a same-row side neighbor (beside, not behind)', () => {
+    // These back-edge tiles have only a same-row side neighbour, not a tile behind.
+    expect(directlyBehindHexId(grid, 3, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 11, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 35, Team.ENEMY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 43, Team.ENEMY)).toBeUndefined()
+  })
 })
 
 describe('findUnitBehind', () => {
@@ -86,9 +94,26 @@ describe('behind-tile highlight skill', () => {
     const skill = getCharacterSkill(GUNNAR)!
 
     skill.onActivate(ctx())
-    expect(skillManager.getTileColorModifier(16)).toBeDefined()
+    expect(skillManager.getTileFillModifier(16)).toBeDefined()
 
     skill.onDeactivate(ctx())
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
+  })
+
+  it('does not highlight a unit beside the caster (tile 1 is beside tile 3, not behind)', () => {
+    const grid3 = new Grid()
+    const sm = new SkillManager()
+    placeOnTile(grid3, 3, GUNNAR, Team.ALLY)
+    placeOnTile(grid3, 1, 100, Team.ALLY)
+
+    getCharacterSkill(GUNNAR)!.onActivate({
+      grid: grid3,
+      hexId: 3,
+      team: Team.ALLY,
+      characterId: GUNNAR,
+      skillManager: sm,
+    })
+
+    expect(sm.getTileFillModifier(1)).toBeUndefined()
   })
 })

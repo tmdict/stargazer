@@ -42,6 +42,9 @@ const TEXT_COLOR = '#222'
 const COORDINATE_COLOR = '#555'
 const HEX_FILL_COLOR = '#fff'
 const HEX_STROKE_COLOR = '#ccc'
+// Skill fill-paints tint the cell. Kept well below the targeting-arrow opacity
+// (0.8) since the fill covers the whole cell, where that value reads too strong.
+const SKILL_FILL_OPACITY = 0.35
 
 const gridEvents = useGridEvents()
 
@@ -87,10 +90,17 @@ const textTransform = (hex: Hex) => {
 }
 
 const getHexFill = (hex: Hex) => {
+  if (props.showSkills) {
+    const fills = ctx.getTileFillModifier(hex.getId())
+    if (fills) return fills[0]
+  }
   const state = ctx.grid.getTile(hex).state
   const displayState = ctx.inverted ? getInvertedState(state) : state
   return getTileFillColor(displayState) || HEX_FILL_COLOR
 }
+
+const getHexFillOpacity = (hex: Hex) =>
+  props.showSkills && ctx.getTileFillModifier(hex.getId()) ? SKILL_FILL_OPACITY : 1
 
 const shouldShowHexId = (hex: Hex) => {
   const state = ctx.grid.getTile(hex).state
@@ -401,6 +411,7 @@ onUnmounted(() => {
                 .join(' ')
             "
             :fill="getHexFill(hex)"
+            :fill-opacity="getHexFillOpacity(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -416,6 +427,7 @@ onUnmounted(() => {
                 .join(' ')
             "
             :fill="getHexFill(hex)"
+            :fill-opacity="getHexFillOpacity(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />
@@ -436,6 +448,7 @@ onUnmounted(() => {
                 .join(' ')
             "
             :fill="getHexFill(hex)"
+            :fill-opacity="getHexFillOpacity(hex)"
             :stroke="getHexStroke(hex)"
             :stroke-width="getHexStrokeWidth(hex)"
           />

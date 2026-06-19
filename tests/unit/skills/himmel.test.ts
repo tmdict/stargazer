@@ -46,9 +46,9 @@ describe('himmel class-trio highlighting', () => {
 
     himmel().onActivate(ctx())
 
-    expect(skillManager.getTileColorModifier(16)).toHaveLength(1)
-    expect(skillManager.getTileColorModifier(12)).toHaveLength(1)
-    expect(skillManager.getTileColorModifier(6)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(16)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(12)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(6)).toHaveLength(1)
   })
 
   it('highlights nothing when a required class is missing', () => {
@@ -57,8 +57,8 @@ describe('himmel class-trio highlighting', () => {
 
     himmel().onActivate(ctx())
 
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(12)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
   })
 
   it('ignores neighbors whose class is not tank/mage/support', () => {
@@ -68,9 +68,9 @@ describe('himmel class-trio highlighting', () => {
 
     himmel().onActivate(ctx())
 
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(12)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(6)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })
 
   it('ignores units on the other team', () => {
@@ -81,8 +81,8 @@ describe('himmel class-trio highlighting', () => {
     himmel().onActivate(ctx())
 
     // No ally tank adjacent, so the trio is incomplete and nothing highlights.
-    expect(skillManager.getTileColorModifier(12)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(6)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })
 
   it('scans diagonal rows back-to-front: a deeper-row tank (4) beats a nearer-row tank (7)', () => {
@@ -93,10 +93,10 @@ describe('himmel class-trio highlighting', () => {
 
     himmel().onActivate(ctx())
 
-    expect(skillManager.getTileColorModifier(4)).toHaveLength(1)
-    expect(skillManager.getTileColorModifier(7)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(12)).toBeDefined()
-    expect(skillManager.getTileColorModifier(16)).toBeDefined()
+    expect(skillManager.getTileFillModifier(4)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(7)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeDefined()
+    expect(skillManager.getTileFillModifier(16)).toBeDefined()
   })
 
   it('within a diagonal row, takes the higher hex id for an ally (7 over 6)', () => {
@@ -107,8 +107,8 @@ describe('himmel class-trio highlighting', () => {
 
     himmel().onActivate(ctx())
 
-    expect(skillManager.getTileColorModifier(7)).toHaveLength(1)
-    expect(skillManager.getTileColorModifier(6)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(7)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })
 
   it('only considers immediately adjacent units (maxDistance 1)', () => {
@@ -119,8 +119,8 @@ describe('himmel class-trio highlighting', () => {
     himmel().onActivate(ctx())
 
     // The only tank is not adjacent, so the trio is incomplete.
-    expect(skillManager.getTileColorModifier(12)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(6)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })
 
   it('clears highlights on deactivate', () => {
@@ -128,13 +128,13 @@ describe('himmel class-trio highlighting', () => {
     placeOnTile(grid, 12, 2, Team.ALLY)
     placeOnTile(grid, 6, 3, Team.ALLY)
     himmel().onActivate(ctx())
-    expect(skillManager.getTileColorModifier(16)).toBeDefined()
+    expect(skillManager.getTileFillModifier(16)).toBeDefined()
 
     himmel().onDeactivate(ctx())
 
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(12)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(6)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })
 
   it('clears the highlight on update once the trio is broken', () => {
@@ -142,13 +142,13 @@ describe('himmel class-trio highlighting', () => {
     placeOnTile(grid, 12, 2, Team.ALLY)
     placeOnTile(grid, 6, 3, Team.ALLY)
     himmel().onActivate(ctx())
-    expect(skillManager.getTileColorModifier(6)).toBeDefined()
+    expect(skillManager.getTileFillModifier(6)).toBeDefined()
 
     grid.getTileById(6).characterId = undefined
     grid.getTileById(6).team = undefined
     himmel().onUpdate!(ctx())
 
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(12)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
   })
 })

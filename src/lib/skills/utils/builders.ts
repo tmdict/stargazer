@@ -86,6 +86,8 @@ interface TileHighlightSkillConfig {
   id: string
   characterId: number
   tileColor: string
+  /** Paint the target's cell fill (a translucent tint) instead of its border. */
+  fill?: boolean
   calculateTarget: (context: SkillContext) => SkillTargetInfo | null
 }
 
@@ -95,7 +97,14 @@ interface TileHighlightSkillConfig {
  * before applying the new one.
  */
 export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skill {
-  const { id, characterId, tileColor, calculateTarget } = config
+  const { id, characterId, tileColor, fill, calculateTarget } = config
+
+  const paint = (sm: SkillContext['skillManager'], hexId: number): void =>
+    fill ? sm.setTileFillModifier(hexId, tileColor) : sm.setTileColorModifier(hexId, tileColor)
+  const unpaint = (sm: SkillContext['skillManager'], hexId: number): void =>
+    fill
+      ? sm.removeTileFillModifier(hexId, tileColor)
+      : sm.removeTileColorModifier(hexId, tileColor)
 
   const updateTargets = (ctx: SkillContext): void => {
     const { skillManager, team } = ctx
@@ -103,13 +112,13 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
     // Clear previous tile color before applying new one
     const previous = skillManager.getSkillTarget(characterId, team)
     if (previous?.targetHexId) {
-      skillManager.removeTileColorModifier(previous.targetHexId, tileColor)
+      unpaint(skillManager, previous.targetHexId)
     }
 
     const info = calculateTarget(ctx)
     if (info?.targetHexId) {
       skillManager.setSkillTarget(characterId, team, info)
-      skillManager.setTileColorModifier(info.targetHexId, tileColor)
+      paint(skillManager, info.targetHexId)
     } else {
       skillManager.clearSkillTarget(characterId, team)
     }
@@ -125,7 +134,7 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
       const { skillManager, team } = ctx
       const current = skillManager.getSkillTarget(characterId, team)
       if (current?.targetHexId) {
-        skillManager.removeTileColorModifier(current.targetHexId, tileColor)
+        unpaint(skillManager, current.targetHexId)
       }
       skillManager.clearSkillTarget(characterId, team)
     },
@@ -136,8 +145,8 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
 }
 
 /**
- * Decorates a skill with a tile-border paint pass driven by `calculate`, which
- * returns the tiles (and colors) to highlight for the current grid state.
+ * Decorates a skill with a tile-paint pass driven by `calculate`, which returns
+ * the tiles (color, and border/fill channel) to highlight for the current grid state.
  *
  * Runs after the base skill's own hooks on activate/update, delegating the
  * set/remove/track diff to `skillManager.paintTiles` (cleared on deactivate). Lets

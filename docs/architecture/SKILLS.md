@@ -106,6 +106,7 @@ Key methods:
 - `deactivateCharacterSkill()` - Deactivates and cleans up
 - `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
 - `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
+- `setTileFillModifier()` / `getTileFillModifier()` - Manages tile fill colors (an independent channel rendered as a translucent cell fill instead of a border)
 - `claimTileState()` / `releaseTileState()` - Saves and restores tile states altered by skills. Multiple skills can claim the same tile (e.g. both teams' Kulu zones overlap on the middle tiles); the original state is captured at first claim and the tile is restored only when the last claimant releases
 
 #### 4. Characters Operations (`/src/lib/characters/`)
@@ -157,7 +158,7 @@ See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implem
 
 Highlight multiple tiles based on game state:
 
-- **Tile modifiers**: Color borders on affected tiles
+- **Tile modifiers**: Two channels per tile — a color border, or a translucent cell fill for skills that opt in with `fill`
 - **Priority selection**: Find valid targets using tie-breaking rules
 - **Dynamic updates**: Recalculate when board state changes
 - **Layered rendering**: Skill borders always visible on top
@@ -209,6 +210,7 @@ registerSkill(
     id: 'my-skill',
     characterId: 123,
     tileColor: '#hexcolor',
+    // fill: true,  // optional: tint the target's cell fill instead of its border
     calculateTarget: (ctx) =>
       rowScan(ctx, { team: ctx.team, rowDirection: ScanDirection.REARMOST }),
   }),
@@ -270,7 +272,7 @@ registerSkill({
 
 ### Composing tile highlights onto another skill (`withTilePaint`)
 
-The registry holds one skill per character, so a character that already uses a factory (e.g. a companion skill) can't register a second skill just to highlight tiles. `withTilePaint(baseSkill, calculate)` wraps a base skill and runs a multi-tile paint pass after the base's own hooks. `calculate(ctx)` returns the tiles and colors for the current grid (`{ hexId, color }[]`); the wrapper diffs against the previously painted set (tracked per characterId-team) so stale colors clear before new ones apply, and clears all of them on deactivate. Reach for it when a highlight spans several tiles with a per-call color — unlike `createTileHighlightSkill` (single tile). Elijah-Lailah composes it onto its companion skill to outline the allies sandwiched between the twins.
+The registry holds one skill per character, so a character that already uses a factory (e.g. a companion skill) can't register a second skill just to highlight tiles. `withTilePaint(baseSkill, calculate)` wraps a base skill and runs a multi-tile paint pass after the base's own hooks. `calculate(ctx)` returns the tiles and colors for the current grid (`{ hexId, color, fill? }[]`, where `fill: true` tints the cell instead of its border); the wrapper diffs against the previously painted set (tracked per characterId-team) so stale colors clear before new ones apply, and clears all of them on deactivate. Reach for it when a highlight spans several tiles with a per-call color — unlike `createTileHighlightSkill` (single tile). Elijah-Lailah composes it onto its companion skill to outline the allies sandwiched between the twins.
 
 ```typescript
 import { createCompanionSkill, withTilePaint } from '../utils/builders'

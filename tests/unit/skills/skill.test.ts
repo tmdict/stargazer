@@ -131,6 +131,18 @@ describe('skill', () => {
         skillManager.removeTileColorModifier(99, '#ff0000')
         expect(skillManager.getTileColorModifier(99)).toBeUndefined()
       })
+
+      it('keeps the fill channel independent from the border channel', () => {
+        skillManager.setTileColorModifier(1, '#ff0000')
+        skillManager.setTileFillModifier(1, '#00ff00')
+
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
+        expect(skillManager.getTileFillModifier(1)).toEqual(['#00ff00'])
+
+        skillManager.removeTileColorModifier(1, '#ff0000')
+        expect(skillManager.getTileColorModifier(1)).toBeUndefined()
+        expect(skillManager.getTileFillModifier(1)).toEqual(['#00ff00'])
+      })
     })
 
     describe('skill targeting', () => {

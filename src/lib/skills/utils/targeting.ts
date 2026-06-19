@@ -73,19 +73,20 @@ export function getCandidates(
 }
 
 /**
- * The tile directly behind a unit: the adjacent tile furthest toward its team's
- * back. The two teams face each other across the board center with ally hex IDs
- * rising toward the front, so "behind" is the lowest-ID adjacent tile for allies
- * and the highest for enemies. Undefined at the back edge where no tile lies
- * behind.
+ * The tile directly behind a unit: an adjacent tile one row toward its team's
+ * back, where rows run along the hex `r` axis (a greater `r` is behind for
+ * allies, a smaller `r` for enemies). A same-row side neighbour is never behind.
+ * When both back-row neighbours exist (back-left and back-right), the lower hex
+ * ID is taken for allies and the higher for enemies. Undefined at the back edge
+ * where no tile lies behind.
  */
 export function directlyBehindHexId(grid: Grid, hexId: number, team: Team): number | undefined {
   const center = grid.getHexById(hexId)
   const behindIds = grid
     .getAllTiles()
     .filter((tile) => center.distance(tile.hex) === 1)
+    .filter((tile) => (team === Team.ALLY ? tile.hex.r > center.r : tile.hex.r < center.r))
     .map((tile) => tile.hex.getId())
-    .filter((id) => (team === Team.ALLY ? id < hexId : id > hexId))
   if (behindIds.length === 0) return undefined
   return team === Team.ALLY ? Math.min(...behindIds) : Math.max(...behindIds)
 }

@@ -115,6 +115,7 @@ export interface GridContext {
   getColorModifierForCharacter: (characterId: number, team: Team) => string | undefined
   getImageModifierForCharacter: (characterId: number, team: Team) => string | undefined
   getTileColorModifier: (hexId: number) => string[] | undefined
+  getTileFillModifier: (hexId: number) => string[] | undefined
   // A tile's pre-skill state, for serializing the bare map (see getBaseTileState
   // on SkillManager). Lets share/save paths reach it without the skillManager.
   getBaseTileState: (hexId: number, state: number) => number
@@ -435,6 +436,10 @@ export function createGridContext(
       skillManager.getTargetVersion()
       return skillManager.getTileColorModifiers()
     })
+    const tileFillModifiers = computed(() => {
+      skillManager.getTargetVersion()
+      return skillManager.getTileFillModifiers()
+    })
     const skillTargets = computed(() => {
       skillManager.getTargetVersion()
       return skillManager.getAllSkillTargets()
@@ -449,6 +454,8 @@ export function createGridContext(
       imageModifiers.value.get(`${characterId}-${team}`)
     const getTileColorModifier = (hexId: number): string[] | undefined =>
       tileColorModifiers.value.get(hexId)
+    const getTileFillModifier = (hexId: number): string[] | undefined =>
+      tileFillModifiers.value.get(hexId)
     const getBaseTileState = (hexId: number, state: number): number =>
       skillManager.getBaseTileState(hexId, state)
 
@@ -507,6 +514,7 @@ export function createGridContext(
       getColorModifierForCharacter,
       getImageModifierForCharacter,
       getTileColorModifier,
+      getTileFillModifier,
       getBaseTileState,
     }
   })!
