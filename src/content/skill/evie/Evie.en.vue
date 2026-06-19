@@ -12,6 +12,7 @@ import { gridStyles, images } from './Evie.data'
         <p>
           When the battle starts, Evie targets her symmetrical tile (the mirror position across the
           grid's center). The scanned tiles are her symmetrical tile plus the six tiles around it.
+          Evie still investigates even if the symmetrical tile is blocked.
         </p>
         <div style="text-align: center">
           <GridSnippet :grid-style="gridStyles.enemyTarget1" :images layout="inline" />
