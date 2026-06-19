@@ -86,7 +86,7 @@ interface TileHighlightSkillConfig {
   id: string
   characterId: number
   tileColor: string
-  /** Paint the target's cell fill (a translucent tint) instead of its border. */
+  /** Paint the target's cell fill (a tint) instead of its border. */
   fill?: boolean
   calculateTarget: (context: SkillContext) => SkillTargetInfo | null
 }
