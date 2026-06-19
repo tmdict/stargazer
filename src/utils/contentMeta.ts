@@ -11,18 +11,19 @@ const ORIGIN = 'https://stargazer.tmdict.com'
 const BASE_KEYWORDS = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远征']
 
 /**
- * Sets up meta tags for skill pages (the only pre-rendered content), deriving
- * title/keywords from hero locale data. During SSG it writes the full head;
- * on the client it only syncs <html lang>, and skips even that when embedded in
- * a modal so the popup doesn't mutate the host page.
+ * Sets up meta tags for skill pages, deriving title/keywords from hero locale
+ * data. Runs on both SSG and the client so switching heroes in the SPA rewrites
+ * the head (SkillSections remounts per hero); skipped when embedded in a modal so
+ * the popup doesn't mutate the host page.
+ *
+ * The meta description is set separately at build time from page content
+ * (extractContentDescription in vite.config.ts), so it is not written here.
  */
 export function setupSkillContentMeta(name: string, locale: Locale): void {
-  const isEmbedded = inject(ContentInModalKey, false)
+  // Embedded in a modal over another page: leave that page's head untouched.
+  if (inject(ContentInModalKey, false)) return
 
-  if (!import.meta.env.SSR) {
-    if (!isEmbedded) document.documentElement.lang = locale
-    return
-  }
+  if (!import.meta.env.SSR) document.documentElement.lang = locale
 
   const nameLocale = loadCharacterLocales()[name]!
   const title = locale === 'en' ? `${nameLocale.en} Skills` : `${nameLocale.zh} 技能`
@@ -44,12 +45,9 @@ export function setupSkillContentMeta(name: string, locale: Locale): void {
   })
 }
 
-/** Sets up meta tags for the /{locale}/guide compendium. */
+/** Sets up meta tags for the /{locale}/guide compendium (SSG and client). */
 export function setupGuideContentMeta(locale: Locale): void {
-  if (!import.meta.env.SSR) {
-    document.documentElement.lang = locale
-    return
-  }
+  if (!import.meta.env.SSR) document.documentElement.lang = locale
 
   const title = locale === 'en' ? 'Guide' : '机制'
   const description =
