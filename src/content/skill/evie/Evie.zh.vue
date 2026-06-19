@@ -10,7 +10,7 @@ import { gridStyles, images } from './Evie.data'
     <template #ultimate>
       <SkillSnippet title-key="guide-targeting">
         <p>
-          战斗开始时，伊芙会瞄准她的对称格子（穿过棋盘中心的镜像位置）。目标格子为她的对称格子及其周围的6个格子。
+          战斗开始时，伊芙会瞄准她的对称格子（穿过棋盘中心的镜像位置）。目标格子为她的对称格子及其周围的6个格子。即使对称格子被阻挡，伊芙仍会进行侦查。
         </p>
         <div style="text-align: center">
           <GridSnippet :grid-style="gridStyles.enemyTarget1" :images layout="inline" />
