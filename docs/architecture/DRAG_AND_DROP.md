@@ -199,6 +199,12 @@ On a multi-board page (the Teams "5 v 5" view) a drag can end on a different boa
 
 Drop handlers register by `gridId`, so every board's `GridManager` resolves hovers/drops against its own context (see the multigrid section in [`GRID.md`](./GRID.md)).
 
+### Artifact drag (cross-team / cross-board)
+
+Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so they bypass the hex-detection pipeline entirely and use native element-level drag instead. A filled artifact icon is the drag source; an empty host-cell polygon and a filled icon are the drop targets (the same two-surface split as the click affordances, with the inner `<img>` set `draggable="false"` so the keyed wrapper stays the source). The drag carries `{ sourceCtxId, sourceTeam }` (engine team, not the invert-derived display team) under a distinct `application/artifact` MIME, and the drop handler calls `stopPropagation()` so it never reaches the character pipeline's global drop.
+
+`useGrids.routeArtifactDrop(payload, targetCtxId, targetTeam)` resolves every drop with one rule, identical on the Arena (1 board) and Teams (5 boards): an empty target moves, an occupied target swaps, and page-wide per-team uniqueness (`isArtifactUsed`) is re-checked only when the team changes, excluding each artifact's **destination** board so a copy on the other team of either board still counts. A rejected drop is a silent no-op; a successful one makes the target board active. Team view renders one slot per board, so cross-team artifact swaps are structurally unavailable there.
+
 ## Layer Implementation Details
 
 ### Component Responsibilities

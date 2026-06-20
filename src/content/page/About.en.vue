@@ -60,10 +60,6 @@
         builder, and database.
       </li>
       <li>
-        <a href="https://afkj-data-viewer.pages.dev/">AFKJ Data Viewer</a>: Multilingual AFKJ
-        database.
-      </li>
-      <li>
         <a href="https://afkjourney-art.pages.dev/">AFK Journey Art Archive</a>: Archive of AFKJ
         wallpapers and character sheets.
       </li>

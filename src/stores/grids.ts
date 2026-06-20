@@ -29,6 +29,16 @@ import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 export type HexSizeMode = 'breakpoint' | 'fixed-medium'
 
+// Payload for an artifact dragged between artifact cells. It carries no artifact id:
+// routeArtifactDrop reads the live source slot, which is authoritative at drop time.
+export interface ArtifactDragPayload {
+  sourceCtxId: number
+  sourceTeam: Team
+}
+
+const artifactSlot = (ctx: GridContext, team: Team): number | null =>
+  team === Team.ALLY ? ctx.artifacts.ally : ctx.artifacts.enemy
+
 export const useGrids = defineStore('grids', () => {
   const contexts = shallowRef<GridContext[]>([])
   const activeId = ref(0)
@@ -101,8 +111,9 @@ export const useGrids = defineStore('grids', () => {
     return null
   }
 
-  // `exceptCtxId` excludes a board (the drag source) so a same-team cross-board
-  // move isn't rejected as a duplicate of itself.
+  // `exceptCtxId` excludes one board from the scan. Callers validating a move/swap
+  // pass the character's DESTINATION board, so the slot it is about to occupy is not
+  // counted as a conflict (a copy on the other team of either board still is).
   const isUsed = (characterId: number, team: Team, exceptCtxId?: number): boolean => {
     const placement = findPlacement(characterId, team)
     return placement !== null && placement.ctxId !== exceptCtxId
@@ -129,6 +140,9 @@ export const useGrids = defineStore('grids', () => {
     return null
   }
 
+  // `exceptCtxId` excludes one board from the scan: callers validating a move/swap
+  // pass the artifact's DESTINATION board so the slot it is about to occupy is not
+  // counted; omit it to scan every board (placement / picker hiding).
   const isArtifactUsed = (artifactId: number, team: Team, exceptCtxId?: number): boolean => {
     const placement = findArtifactPlacement(artifactId, team)
     return placement !== null && placement.ctxId !== exceptCtxId
@@ -158,14 +172,16 @@ export const useGrids = defineStore('grids', () => {
     characterId: number,
     destTeam: Team,
   ): boolean => {
+    const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
+    if (sourceTeam === undefined) return false
     if (isPhantimalId(characterId)) {
       if (!targetCtx.phantimalCanJoinTeam(characterId, destTeam)) return false
     } else {
-      if (isUsed(characterId, destTeam, sourceCtx.id)) return false
+      // Only a team change can break per-team uniqueness; exclude the destination
+      // board so a copy on the other team of the source board is still counted.
+      if (sourceTeam !== destTeam && isUsed(characterId, destTeam, targetCtx.id)) return false
       if (getAvailableTeamSize(targetCtx.grid, destTeam) <= 0) return false
     }
-    const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
-    if (sourceTeam === undefined) return false
     if (!sourceCtx.remove(sourceHexId)) return false
     if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) return true
     placeUnit(sourceCtx, sourceHexId, characterId, sourceTeam) // rollback
@@ -190,11 +206,12 @@ export const useGrids = defineStore('grids', () => {
     if (isCompanion(aId) || isCompanion(bId)) return false
     // After the swap A sits on the target team and B on the source team. Enforce
     // phantimal faction on each destination and page-wide uniqueness for any
-    // character whose team actually changes.
+    // character whose team changes, excluding that character's destination board so
+    // a copy on the other team of either board is still counted.
     if (isPhantimalId(aId) && !targetCtx.phantimalCanJoinTeam(aId, bTeam)) return false
     if (isPhantimalId(bId) && !sourceCtx.phantimalCanJoinTeam(bId, aTeam)) return false
-    if (!isPhantimalId(aId) && aTeam !== bTeam && isUsed(aId, bTeam, sourceCtx.id)) return false
-    if (!isPhantimalId(bId) && aTeam !== bTeam && isUsed(bId, aTeam, targetCtx.id)) return false
+    if (!isPhantimalId(aId) && aTeam !== bTeam && isUsed(aId, bTeam, targetCtx.id)) return false
+    if (!isPhantimalId(bId) && aTeam !== bTeam && isUsed(bId, aTeam, sourceCtx.id)) return false
 
     if (!sourceCtx.remove(sourceHexId)) return false
     if (!targetCtx.remove(targetHexId)) {
@@ -307,6 +324,42 @@ export const useGrids = defineStore('grids', () => {
     return ok
   }
 
+  // Resolve an artifact dropped onto a visible artifact cell (same or other board,
+  // either team). An empty target moves, an occupied target swaps: whatever the
+  // target held (possibly nothing) returns to the source slot. Per-team uniqueness is
+  // re-checked only on a team change, excluding each artifact's destination board so a
+  // copy on the other team of either board still counts; a rejected drop is a silent
+  // no-op. Arena is the sourceCtxId === targetCtxId case and Teams adds cross-board,
+  // with no board-count branch. A successful drop makes the target board active.
+  const routeArtifactDrop = (
+    payload: ArtifactDragPayload,
+    targetCtxId: number,
+    targetTeam: Team,
+  ): boolean => {
+    const { sourceCtxId, sourceTeam } = payload
+    const sourceCtx = getContext(sourceCtxId)
+    const targetCtx = getContext(targetCtxId)
+    if (!sourceCtx || !targetCtx) return false
+    if (sourceCtxId === targetCtxId && sourceTeam === targetTeam) return false
+
+    const moving = artifactSlot(sourceCtx, sourceTeam)
+    if (moving === null) return false
+    const resident = artifactSlot(targetCtx, targetTeam)
+    if (resident === moving) return false
+
+    if (sourceTeam !== targetTeam) {
+      if (isArtifactUsed(moving, targetTeam, targetCtxId)) return false
+      if (resident !== null && isArtifactUsed(resident, sourceTeam, sourceCtxId)) return false
+    }
+
+    // Values captured above, so write order is safe and the swap is atomic.
+    targetCtx.setArtifact(targetTeam, moving)
+    if (resident !== null) sourceCtx.setArtifact(sourceTeam, resident)
+    else sourceCtx.removeArtifact(sourceTeam)
+    activeId.value = targetCtxId
+    return true
+  }
+
   // Always start with one board so single-grid consumers (the Arena) have an
   // active context immediately; pages override the count (5 v 5 -> 5).
   setGridCount(1)
@@ -330,6 +383,7 @@ export const useGrids = defineStore('grids', () => {
     isArtifactUsed,
     removeArtifactFromAnyBoard,
     routeDrop,
+    routeArtifactDrop,
     swapBoards,
     clearAll,
   }

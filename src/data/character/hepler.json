@@ -9,6 +9,7 @@
   "range": 1,
   "season": 6,
   "tags": {
+    "cheat-death": [{ "ex": 1 }],
     "initial-energy-300": [],
     "temp-buff": [{ "skill3": 1 }]
   }

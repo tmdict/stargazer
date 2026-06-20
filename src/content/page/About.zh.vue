@@ -48,9 +48,6 @@
         <a href="https://www.yaphalla.com/">Yaphalla</a>：阵型构建工具、英雄优先级工具与数据库。
       </li>
       <li>
-        <a href="https://afkj-data-viewer.pages.dev/">AFKJ Data Viewer</a>：多语言AFKJ数据库。
-      </li>
-      <li>
         <a href="https://afkjourney-art.pages.dev/">AFK Journey Art Archive</a>：AFKJ
         壁纸与角色立绘存档。
       </li>
