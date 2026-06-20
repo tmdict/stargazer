@@ -17,7 +17,10 @@ export const useArtifactStore = defineStore('artifact', () => {
   const allyArtifactId = computed(() => active().artifacts.ally)
   const enemyArtifactId = computed(() => active().artifacts.enemy)
 
+  // Enforce page-wide per-team uniqueness at the store boundary so no write path can
+  // duplicate an artifact on a team; the picker also hides used options for UX.
   const placeArtifact = (artifactId: number, team: Team): boolean => {
+    if (grids.isArtifactUsed(artifactId, team)) return false
     active().setArtifact(team, artifactId)
     return true
   }

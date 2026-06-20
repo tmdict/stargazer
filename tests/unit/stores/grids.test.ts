@@ -1,9 +1,10 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getTilesWithCharacters } from '@/lib/characters/character'
+import { getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
@@ -30,6 +31,12 @@ const roster = (grid: Grid): { characterId: number; team: Team }[] =>
   getTilesWithCharacters(grid)
     .map((tile) => ({ characterId: tile.characterId!, team: tile.team! }))
     .sort((a, b) => a.characterId - b.characterId)
+
+// Minimal cross-board drag payload (routeDrop only reads these fields off the character).
+const dragPayload = (sourceGridId: number, sourceHexId: number, characterId: number) => ({
+  character: { sourceGridId, sourceHexId } as unknown as CharacterType,
+  characterId,
+})
 
 beforeEach(() => {
   setActivePinia(createPinia())
@@ -160,5 +167,190 @@ describe('useGrids.swapBoards', () => {
 
     expect(roster(a!.grid)).toEqual(beforeA)
     expect(roster(b!.grid)).toEqual(beforeB)
+  })
+})
+
+describe('useGrids.routeArtifactDrop', () => {
+  it('swaps ally and enemy artifacts on the single Arena board', () => {
+    const grids = useGrids() // defaults to 1 board
+    const a = grids.contexts[0]!
+    a.setArtifact(Team.ALLY, 3)
+    a.setArtifact(Team.ENEMY, 4)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 0, Team.ENEMY)).toBe(
+      true,
+    )
+
+    expect(a.artifacts.ally).toBe(4)
+    expect(a.artifacts.enemy).toBe(3)
+  })
+
+  it('moves an artifact onto an empty cross-team slot', () => {
+    const grids = useGrids()
+    const a = grids.contexts[0]!
+    a.setArtifact(Team.ALLY, 3)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 0, Team.ENEMY)).toBe(
+      true,
+    )
+
+    expect(a.artifacts.ally).toBeNull()
+    expect(a.artifacts.enemy).toBe(3)
+  })
+
+  it('moves an artifact to another board on the same team and makes it active', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    grids.setActive(0)
+    const [a, b] = grids.contexts
+    a!.setArtifact(Team.ALLY, 3)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 1, Team.ALLY)).toBe(
+      true,
+    )
+
+    expect(a!.artifacts.ally).toBeNull()
+    expect(b!.artifacts.ally).toBe(3)
+    expect(grids.activeId).toBe(1)
+  })
+
+  it('swaps same-team artifacts across boards', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    a!.setArtifact(Team.ALLY, 3)
+    b!.setArtifact(Team.ALLY, 7)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 1, Team.ALLY)).toBe(
+      true,
+    )
+
+    expect(a!.artifacts.ally).toBe(7)
+    expect(b!.artifacts.ally).toBe(3)
+  })
+
+  it('rejects a cross-team drop that would duplicate an artifact on a team', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    a!.setArtifact(Team.ALLY, 5)
+    a!.setArtifact(Team.ENEMY, 5) // same artifact on both teams of board a (legal per-team)
+    b!.setArtifact(Team.ENEMY, 9)
+
+    // Dragging a's ally 5 onto b's enemy 9 would put 5 on the enemy team of both
+    // boards. Destination-exclusion catches it via board a's enemy slot.
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 1, Team.ENEMY)).toBe(
+      false,
+    )
+
+    expect(a!.artifacts.ally).toBe(5)
+    expect(a!.artifacts.enemy).toBe(5)
+    expect(b!.artifacts.enemy).toBe(9)
+  })
+
+  it('is a no-op when dropped on its own slot', () => {
+    const grids = useGrids()
+    const a = grids.contexts[0]!
+    a.setArtifact(Team.ALLY, 3)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 0, Team.ALLY)).toBe(
+      false,
+    )
+    expect(a.artifacts.ally).toBe(3)
+  })
+
+  it('is a no-op when the source slot is empty', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [, b] = grids.contexts
+    b!.setArtifact(Team.ALLY, 7)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 1, Team.ALLY)).toBe(
+      false,
+    )
+    expect(b!.artifacts.ally).toBe(7)
+  })
+
+  it('is a no-op when the same artifact already occupies the target slot', () => {
+    const grids = useGrids()
+    const a = grids.contexts[0]!
+    a.setArtifact(Team.ALLY, 5)
+    a.setArtifact(Team.ENEMY, 5)
+
+    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 0, Team.ENEMY)).toBe(
+      false,
+    )
+    expect(a.artifacts.ally).toBe(5)
+    expect(a.artifacts.enemy).toBe(5)
+  })
+})
+
+describe('useGrids.routeDrop cross-board uniqueness', () => {
+  it('rejects a cross-board swap that would put a character on the same team twice', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(a!.place(40, ALLY_A, Team.ENEMY)).toBe(true) // same hero on both teams of board a
+    expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
+
+    // Swapping a's ally copy onto b's enemy unit would put ALLY_A on the enemy team
+    // of both boards. Destination-exclusion catches it via board a's enemy slot.
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(false)
+
+    expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
+    expect(getCharacter(a!.grid, 40)).toBe(ALLY_A)
+    expect(getCharacter(b!.grid, 41)).toBe(ENEMY_A)
+  })
+
+  it('allows a cross-board cross-team swap when uniqueness holds', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
+
+    expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
+    expect(getCharacter(a!.grid, 1)).toBe(ENEMY_A)
+  })
+
+  it('rejects a cross-board cross-team move that would duplicate a character on a team', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(a!.place(40, ALLY_A, Team.ENEMY)).toBe(true)
+
+    // Moving a's ally copy onto an empty enemy tile on b would duplicate it on enemy.
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(false)
+
+    expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
+    expect(b!.grid.getTileById(41).characterId).toBeUndefined()
+  })
+
+  it('allows a cross-board cross-team move when uniqueness holds', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
+
+    expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
+    expect(a!.grid.getTileById(1).characterId).toBeUndefined()
+  })
+
+  it('allows a cross-board same-team move', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 2)).toBe(true)
+
+    expect(getCharacter(b!.grid, 2)).toBe(ALLY_A)
+    expect(a!.grid.getTileById(1).characterId).toBeUndefined()
   })
 })

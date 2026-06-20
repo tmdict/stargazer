@@ -8,6 +8,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { Hex } from '@/lib/hex'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
+import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 import { invertTeam } from '@/utils/tileStateFormatting'
 
@@ -24,6 +25,7 @@ const props = defineProps<{
 
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
+const grids = useGrids()
 const { setArtifactTarget, requestTab } = useSelectionState()
 
 // This board's host-cell SVG, used to anchor the artifact popup to the clicked
@@ -171,6 +173,40 @@ const closePopup = () => {
 const handleArtifactClick = (team: Team) => {
   ctx.removeArtifact(team)
 }
+
+// Artifact drag-and-drop. A filled icon is the drag source; an empty cell polygon
+// and a filled icon are the drop targets (the two-surface split mirrors the existing
+// click affordances). Move/swap routing and per-team uniqueness live in
+// grids.routeArtifactDrop; a distinct MIME plus stopPropagation keeps this off the
+// character drop pipeline. Desktop-only, interactive boards only.
+const ARTIFACT_MIME = 'application/artifact'
+
+const canDrag = computed(() => showPlaceholders.value && !(props.tapMode ?? ctx.hexScale < 1))
+const allyDroppable = computed(() => canDrag.value && allySlotVisible.value && !allyArtifact.value)
+const enemyDroppable = computed(
+  () => canDrag.value && enemySlotVisible.value && !enemyArtifact.value,
+)
+
+// team is the cell's fixed engine team (Team.ALLY / Team.ENEMY), never the
+// invert-derived display team; invert flips rendering only.
+const handleArtifactDragStart = (event: DragEvent, team: Team) => {
+  if (!canDrag.value || !event.dataTransfer) return
+  const payload: ArtifactDragPayload = { sourceCtxId: ctx.id, sourceTeam: team }
+  event.dataTransfer.setData(ARTIFACT_MIME, JSON.stringify(payload))
+  event.dataTransfer.effectAllowed = 'move'
+}
+
+const allowArtifactDrop = (event: DragEvent) => {
+  if (canDrag.value && event.dataTransfer?.types.includes(ARTIFACT_MIME)) event.preventDefault()
+}
+
+const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
+  const raw = event.dataTransfer?.getData(ARTIFACT_MIME)
+  if (!raw || !canDrag.value) return
+  event.stopPropagation()
+  event.preventDefault()
+  grids.routeArtifactDrop(JSON.parse(raw) as ArtifactDragPayload, ctx.id, targetTeam)
+}
 </script>
 
 <template>
@@ -216,17 +252,21 @@ const handleArtifactClick = (team: Team) => {
         v-if="showAllyCell"
         class="artifact-cell"
         fill="transparent"
-        :class="{ clickable: allyCellClickable }"
+        :class="{ clickable: allyCellClickable, droppable: allyDroppable }"
         :points="allyCellPoints"
         @click="allyCellClickable && openPopup(Team.ALLY, allyCenter)"
+        @dragover="allowArtifactDrop"
+        @drop="handleArtifactDrop($event, Team.ALLY)"
       />
       <polygon
         v-if="showEnemyCell"
         class="artifact-cell"
         fill="transparent"
-        :class="{ clickable: enemyCellClickable }"
+        :class="{ clickable: enemyCellClickable, droppable: enemyDroppable }"
         :points="enemyCellPoints"
         @click="enemyCellClickable && openPopup(Team.ENEMY, enemyCenter)"
+        @dragover="allowArtifactDrop"
+        @drop="handleArtifactDrop($event, Team.ENEMY)"
       />
     </svg>
 
@@ -238,7 +278,11 @@ const handleArtifactClick = (team: Team) => {
       class="grid-artifact"
       :class="{ readonly, front: allySlotInFront }"
       :style="getAllyStyles"
+      :draggable="canDrag"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
+      @dragstart="handleArtifactDragStart($event, Team.ALLY)"
+      @dragover="allowArtifactDrop"
+      @drop="handleArtifactDrop($event, Team.ALLY)"
     >
       <div class="artifact-circle">
         <ArtifactImage :artifact="allyArtifact" />
@@ -253,7 +297,11 @@ const handleArtifactClick = (team: Team) => {
       class="grid-artifact"
       :class="{ readonly, front: enemySlotInFront }"
       :style="getEnemyStyles"
+      :draggable="canDrag"
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
+      @dragstart="handleArtifactDragStart($event, Team.ENEMY)"
+      @dragover="allowArtifactDrop"
+      @drop="handleArtifactDrop($event, Team.ENEMY)"
     >
       <div class="artifact-circle">
         <ArtifactImage :artifact="enemyArtifact" />
@@ -320,6 +368,13 @@ const handleArtifactClick = (team: Team) => {
 
 .artifact-cell.clickable:hover {
   fill: rgba(255, 255, 255, 0.16);
+}
+
+/* An empty cell receives drops via its polygon; a filled cell via its icon (which
+   already has pointer-events: auto). On an interactive empty cell .droppable and
+   .clickable coincide by construction. */
+.artifact-cell.droppable {
+  pointer-events: auto;
 }
 
 .grid-artifact {

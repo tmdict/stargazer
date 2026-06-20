@@ -37,9 +37,8 @@ const availableArtifacts = computed(() =>
 )
 
 const handleSelect = (artifact: ArtifactType) => {
-  if (grids.isArtifactUsed(artifact.id, props.team)) return
-  artifactStore.placeArtifact(artifact.id, props.team)
-  emit('close')
+  // The store enforces per-team uniqueness; close only on a successful placement.
+  if (artifactStore.placeArtifact(artifact.id, props.team)) emit('close')
 }
 </script>
 

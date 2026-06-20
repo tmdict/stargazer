@@ -15,7 +15,9 @@ const remoteUrl = computed(() => seasonArtifactImageUrl(props.artifact.name))
 </script>
 
 <template>
-  <!-- crossorigin keeps the remote icon CORS-clean for the canvas image export. -->
+  <!-- crossorigin keeps the remote icon CORS-clean for the canvas image export.
+       draggable=false keeps the GridArtifacts wrapper (not this img) the drag source,
+       so the artifact drag carries its payload instead of a native image drag. -->
   <img
     v-if="isRemote"
     class="artifact-img"
@@ -23,12 +25,14 @@ const remoteUrl = computed(() => seasonArtifactImageUrl(props.artifact.name))
     :alt="artifact.name"
     crossorigin="anonymous"
     loading="lazy"
+    draggable="false"
   />
   <img
     v-else
     class="artifact-img"
     :src="gameDataStore.getArtifactImage(artifact.name)"
     :alt="artifact.name"
+    draggable="false"
   />
 </template>
 
