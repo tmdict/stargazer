@@ -138,7 +138,7 @@ Visual feedback options:
 
 4. **Drop down to a custom lifecycle only when needed**:
    - Complex multi-step targeting (like Reinier — highlights ally + symmetrical enemy pair)
-   - Multi-tile zones with state changes (like Kulu — paints a demolition zone)
+   - Multi-tile cosmetic zones (like Kulu, which paints a demolition zone)
    - Companion spawning (like Phraesto, Zanie)
 
    In those cases, declare a local `const TILE_COLOR = '#xxx'` for any tile color and pass the skill object directly to `registerSkill({...})`. See [SKILLS.md](../SKILLS.md#pattern-3-custom-lifecycle-companions-multi-tile-zones-etc) for a full example.

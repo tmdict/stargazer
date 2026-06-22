@@ -5,7 +5,6 @@ import { getCharacter, getTilesWithCharacters } from '@/lib/characters/character
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 
@@ -24,7 +23,7 @@ const ENEMY_B = 22
 
 const PHRAESTO = 50
 const PHRAESTO_COMPANION = COMPANION_ID_OFFSET + PHRAESTO
-const KULU = 80 // skill blocks the demolition zone: ally 18-24, enemy 22-28
+const KULU = 80 // cosmetic demolition zone: ally 18-24, enemy 22-28
 
 // (characterId, team) pairs on a board, order-independent (placement is random).
 const roster = (grid: Grid): { characterId: number; team: Team }[] =>
@@ -103,26 +102,26 @@ describe('useGrids.swapBoards', () => {
     expect(grids.swapBoards(1, 1)).toBe(false)
   })
 
-  it('re-derives a tile-blocking skill zone on the destination, leaving no ghost', () => {
+  it('re-derives a cosmetic skill zone on the destination, leaving no ghost', () => {
     const grids = useGrids()
     grids.setGridCount(2)
     const [a, b] = grids.contexts
 
+    const before = a!.grid.getTileById(18).state
     expect(a!.place(1, KULU, Team.ALLY)).toBe(true)
-    expect(a!.grid.getTileById(18).state).toBe(State.BLOCKED)
-    expect(a!.grid.getTileById(23).state).toBe(State.BLOCKED_BREAKABLE)
+    // The zone is a paint overlay; the underlying tile state is untouched.
+    expect(a!.grid.getTileById(18).state).toBe(before)
+    expect(a!.getTileColorModifier(18)).toBeDefined()
 
     grids.swapBoards(0, 1)
 
     // Kulu kept her team and moved to board b, where her zone re-derives.
     const kulu = getTilesWithCharacters(b!.grid).find((t) => t.characterId === KULU)
     expect(kulu?.team).toBe(Team.ALLY)
-    for (const id of [18, 19, 20, 21]) expect(b!.grid.getTileById(id).state).toBe(State.BLOCKED)
-    expect(b!.grid.getTileById(23).state).toBe(State.BLOCKED_BREAKABLE)
+    for (const id of [18, 19, 20, 21, 23]) expect(b!.getTileColorModifier(id)).toBeDefined()
 
-    // Source board's zone is clear again, not ghost-blocked.
-    for (const id of [18, 19, 20, 21]) expect(a!.grid.getTileById(id).state).toBe(State.DEFAULT)
-    expect(a!.grid.getTileById(23).state).toBe(State.DEFAULT)
+    // Source board has no leftover paint.
+    for (const id of [18, 19, 20, 21, 23]) expect(a!.getTileColorModifier(id)).toBeUndefined()
     expect(getTilesWithCharacters(a!.grid)).toHaveLength(0)
   })
 

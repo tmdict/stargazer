@@ -51,24 +51,6 @@ describe('gridStateSerializer', () => {
       })
     })
 
-    it('records tiles at their base state, dropping skill tiles that become default', () => {
-      // baseTileState models a skill (e.g. Kulu): tile 18 reverts to the bare map
-      // (default, so it drops out), tile 20 reverts to an available map tile.
-      const tiles: GridTile[] = [
-        createMockTile(18, State.BLOCKED),
-        createMockTile(20, State.BLOCKED),
-        createMockTile(4, State.BLOCKED),
-      ]
-      const baseTileState = (hexId: number, s: number) =>
-        hexId === 18 ? State.DEFAULT : hexId === 20 ? State.AVAILABLE_ALLY : s
-      const result = serializeGridState(tiles, null, null, undefined, baseTileState)
-
-      expect(result.t).toEqual([
-        [20, State.AVAILABLE_ALLY],
-        [4, State.BLOCKED],
-      ])
-    })
-
     it('serializes characters with positions and teams', () => {
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),

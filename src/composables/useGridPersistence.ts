@@ -68,7 +68,6 @@ export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersisten
         artifactStore.allyArtifactId,
         artifactStore.enemyArtifactId,
         getFlags(),
-        gridStore.getBaseTileState,
       ),
     ),
   )
@@ -83,7 +82,6 @@ export function useTeamsPersistence(getFlags: () => DisplayFlags): GridPersisten
           tiles: ctx.grid.getAllTiles(),
           allyArtifact: ctx.artifacts.ally,
           enemyArtifact: ctx.artifacts.enemy,
-          baseTileState: ctx.getBaseTileState,
         })),
         grids.activeId,
         getFlags(),
