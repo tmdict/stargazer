@@ -107,7 +107,6 @@ Key methods:
 - `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
 - `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
 - `setTileFillModifier()` / `getTileFillModifier()` - Manages tile fill colors (an independent channel rendered as a tinted cell fill instead of a border)
-- `claimTileState()` / `releaseTileState()` - Saves and restores tile states altered by skills. Multiple skills can claim the same tile (e.g. both teams' Kulu zones overlap on the middle tiles); the original state is captured at first claim and the tile is restored only when the last claimant releases
 
 #### 4. Characters Operations (`/src/lib/characters/`)
 
@@ -241,7 +240,7 @@ registerSkill(
 
 ### Pattern 4: custom lifecycle (multi-tile zones, etc.)
 
-When no factory fits — multi-tile state changes, multi-tile highlights — pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object, and use the SkillManager's `claimTileState`/`releaseTileState` for tile-state changes so overlapping zones restore correctly (see Kulu):
+When no factory fits (multi-tile highlights, companion spawning), pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object, and drive visuals through the SkillManager's `setTileColorModifier`/`setTileFillModifier` (or `paintTiles` for a multi-tile set). Kulu paints its cosmetic demolition zone this way, leaving tile state untouched so the tiles stay placeable:
 
 ```typescript
 import { registerSkill } from '../registry'
@@ -256,7 +255,7 @@ registerSkill({
 
   onActivate(context: SkillContext) {
     const { grid, team, characterId, skillManager } = context
-    // Claim + modify tiles, etc.
+    // Paint tiles, spawn companions, etc.
     // Use skillManager.setTileColorModifier(hexId, TILE_COLOR) for tiles
   },
 

@@ -24,26 +24,19 @@ export interface DisplayFlags {
   wrap?: boolean
 }
 
-/* Create compact serialized state for URL generation.
- *
- * Tile states are recorded through `baseTileState`, which peels skill-driven
- * states (e.g. Kulu's blocked zone) back to the underlying map. A skill
- * re-applies its own tiles when its character is placed on restore, so baking
- * the live state in would strand it on the board after that character leaves.
- * Defaults to identity for callers with no active skills (e.g. tests). */
+/* Create compact serialized state for URL generation. */
 export function serializeGridState(
   allTiles: GridTile[],
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: DisplayFlags,
-  baseTileState: (hexId: number, state: number) => number = (_, s) => s,
 ): GridState {
   const state: GridState = {}
 
-  // Compact format [hexId, state], resolved to the base map and keeping only
-  // non-default tiles (a skill tile may resolve back to default and drop out).
+  // Compact format [hexId, state], keeping only non-default tiles. Skills never
+  // mutate tile state, so the live state is already the bare map.
   const nonDefaultTiles = allTiles
-    .map((tile) => [tile.hex.getId(), baseTileState(tile.hex.getId(), tile.state)])
+    .map((tile) => [tile.hex.getId(), tile.state])
     .filter((tile) => tile[1] !== State.DEFAULT)
 
   if (nonDefaultTiles.length > 0) {
@@ -96,8 +89,7 @@ export function serializeGridState(
  * placements). Character and phantimal hexes are mirrored (via the injected
  * `mirror`, so this stays grid-agnostic) with teams flipped, artifact slots swap,
  * and display flags pass through. Entries whose mirror is off-grid (asymmetric
- * custom maps) are dropped. Input tile states are already the bare map, since
- * serializeGridState peels skill modifications off when producing this state. */
+ * custom maps) are dropped. */
 export function mirrorGridState(
   state: GridState,
   mirror: (hexId: number) => number | undefined,
@@ -152,8 +144,6 @@ export interface BoardInput {
   tiles: GridTile[]
   allyArtifact: number | null
   enemyArtifact: number | null
-  // Peels skill-modified tiles back to the bare map (see serializeGridState).
-  baseTileState?: (hexId: number, state: number) => number
 }
 
 export function serializeMultiGridState(
@@ -162,9 +152,7 @@ export function serializeMultiGridState(
   displayFlags?: DisplayFlags,
 ): MultiGridState {
   const state: MultiGridState = {
-    boards: boards.map((b) =>
-      serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact, undefined, b.baseTileState),
-    ),
+    boards: boards.map((b) => serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact)),
   }
   if (activeId) state.active = activeId
   if (displayFlags) state.d = packDisplayFlags(displayFlags)

@@ -39,15 +39,8 @@ export function generateShareableUrl(
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: DisplayFlags,
-  baseTileState?: (hexId: number, state: number) => number,
 ): string {
-  const gridState = serializeGridState(
-    allTiles,
-    allyArtifact,
-    enemyArtifact,
-    displayFlags,
-    baseTileState,
-  )
+  const gridState = serializeGridState(allTiles, allyArtifact, enemyArtifact, displayFlags)
 
   const encodedState = encodeGridStateToUrl(gridState)
 

@@ -297,23 +297,22 @@ describe('urlStateStore.swapTeamsAllBoards', () => {
     expect(s.artifact.enemyArtifactId).toBe(3)
   })
 
-  it('re-derives a tile-blocking skill zone on the new side, leaving no ghost', () => {
-    const KULU = 80 // skill blocks the demolition zone: ally 18-24, enemy 22-28
+  it('re-derives a cosmetic skill zone on the new side, leaving no ghost', () => {
+    const KULU = 80 // cosmetic demolition zone: ally 18-24, enemy 22-28
     const s = createStores()
-    // Hex 1 is an ally spawn outside the zone, so Kulu is not relocated.
+    const board = useGrids().active!
+    // Hex 1 is an ally spawn outside the zone.
     expect(s.character.placeCharacterOnHex(1, KULU, Team.ALLY)).toBe(true)
-    expect(s.grid.getTile(18).state).toBe(State.BLOCKED)
-    expect(s.grid.getTile(23).state).toBe(State.BLOCKED_BREAKABLE)
+    expect(board.getTileColorModifier(18)).toBeDefined()
 
     s.urlState.swapTeamsAllBoards()
 
     // Kulu rotated to the enemy side (1 -> 45); her zone re-derives there.
     expect(s.grid.getTile(45).characterId).toBe(KULU)
     expect(s.grid.getTile(45).team).toBe(Team.ENEMY)
-    for (const id of [25, 26, 27, 28]) expect(s.grid.getTile(id).state).toBe(State.BLOCKED)
-    expect(s.grid.getTile(23).state).toBe(State.BLOCKED_BREAKABLE)
-    // The old ally-only zone tiles are clear again, not ghost-blocked.
-    for (const id of [18, 19, 20, 21]) expect(s.grid.getTile(id).state).toBe(State.DEFAULT)
+    for (const id of [25, 26, 27, 28, 23]) expect(board.getTileColorModifier(id)).toBeDefined()
+    // The old ally-only zone tiles have no leftover paint.
+    for (const id of [18, 19, 20, 21]) expect(board.getTileColorModifier(id)).toBeUndefined()
   })
 
   it('keeps a companion unit and a colliding neighbor through an invert', () => {
