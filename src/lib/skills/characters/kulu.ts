@@ -1,160 +1,39 @@
-import {
-  findCharacterHex,
-  getCharacter,
-  getCharacterTeam,
-  hasCharacter,
-} from '../../characters/character'
-import { getMainCharacterId, isCompanionId } from '../../characters/companion'
-import { performPlace } from '../../characters/place'
-import { performRemove } from '../../characters/remove'
-import { State } from '../../types/state'
 import { Team } from '../../types/team'
-import { hasSkill, registerSkill } from '../registry'
-import { type SkillContext } from '../skill'
+import { registerSkill } from '../registry'
+import type { SkillContext, TilePaint } from '../skill'
 
-const TILE_COLOR = '#a47fb8'
+// Cosmetic "demolition zone": paints the tiles but never changes their state, so
+// they stay placeable and pathfinding ignores them.
+const ZONE_COLOR = '#565b63'
+const BREAKABLE_COLOR = '#a47fb8'
 
-// Tile IDs that become BLOCKED/BREAKABLE per team
 const ALLY_AFFECTED = { blocked: [18, 19, 20, 21, 22, 24], breakable: [23] }
 const ENEMY_AFFECTED = { blocked: [25, 26, 27, 28, 22, 24], breakable: [23] }
 
-function getAffectedConfig(team: Team) {
-  return team === Team.ALLY ? ALLY_AFFECTED : ENEMY_AFFECTED
+function zoneTiles(team: Team): TilePaint[] {
+  const config = team === Team.ALLY ? ALLY_AFFECTED : ENEMY_AFFECTED
+  const paint = (hexId: number, color: string): TilePaint[] => [
+    { hexId, color },
+    { hexId, color, fill: true },
+  ]
+  return [
+    ...config.blocked.flatMap((id) => paint(id, ZONE_COLOR)),
+    ...config.breakable.flatMap((id) => paint(id, BREAKABLE_COLOR)),
+  ]
 }
 
-function getAllAffectedIds(team: Team): number[] {
-  const config = getAffectedConfig(team)
-  return [...config.blocked, ...config.breakable]
+function paintZone({ skillManager, characterId, team }: SkillContext): void {
+  skillManager.paintTiles(characterId, team, zoneTiles(team))
 }
 
-// Convert OCCUPIED states to their AVAILABLE equivalents for restoration
-function getRestorableState(state: State): State {
-  if (state === State.OCCUPIED_ALLY) return State.AVAILABLE_ALLY
-  if (state === State.OCCUPIED_ENEMY) return State.AVAILABLE_ENEMY
-  return state
-}
-
-// Remove a character from a tile, deactivating its skill if active
-function removeCharacterFromAffectedTile(
-  { grid, skillManager }: SkillContext,
-  hexId: number,
-  kuluCharacterId: number,
-): void {
-  const charId = getCharacter(grid, hexId)
-  const charTeam = getCharacterTeam(grid, hexId)
-  if (!charId || !charTeam || charId === kuluCharacterId) return
-
-  // If companion, remove the main character instead (cascades to companions)
-  if (isCompanionId(grid, charId)) {
-    const mainCharId = getMainCharacterId(grid, charId)
-    const mainHexId = findCharacterHex(grid, mainCharId, charTeam)
-    if (mainHexId !== null) {
-      if (hasSkill(mainCharId)) {
-        skillManager.deactivateCharacterSkill(mainCharId, mainHexId, charTeam, grid)
-      }
-      if (hasCharacter(grid, mainHexId)) {
-        performRemove(grid, mainHexId)
-      }
-    }
-    // Companion may already be removed by skill deactivation; clean up if not
-    if (hasCharacter(grid, hexId)) {
-      performRemove(grid, hexId)
-    }
-    return
-  }
-
-  // Regular character
-  if (hasSkill(charId)) {
-    skillManager.deactivateCharacterSkill(charId, hexId, charTeam, grid)
-  }
-  if (hasCharacter(grid, hexId)) {
-    performRemove(grid, hexId)
-  }
-}
-
-// Blocks a fixed set of nearby tiles and removes any characters standing on them.
-// The zone is cleared when Kulu leaves the battlefield.
 registerSkill({
   id: 'kulu',
   characterId: 80,
-
-  onActivate(context: SkillContext): void {
-    const { grid, hexId, team, characterId, skillManager } = context
-    const affectedIds = getAllAffectedIds(team)
-    const config = getAffectedConfig(team)
-    const kuluOnAffectedTile = affectedIds.includes(hexId)
-
-    // Pre-check: if kulu needs relocation, verify there's somewhere to go
-    if (kuluOnAffectedTile) {
-      const affectedSet = new Set(affectedIds)
-      const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-      const hasRelocationTarget = grid
-        .getAllTiles()
-        .some(
-          (tile) =>
-            tile.state === availableState &&
-            !tile.characterId &&
-            !affectedSet.has(tile.hex.getId()),
-        )
-      if (!hasRelocationTarget) {
-        throw new Error('No available tile for kulu relocation')
-      }
-    }
-
-    // Claim original tile states (convert OCCUPIED to AVAILABLE for restoration).
-    // The shared middle tiles may already be claimed by the other team's zone;
-    // the first claim's original state wins
-    for (const id of affectedIds) {
-      const tile = grid.getTileById(id)
-      skillManager.claimTileState(id, characterId, team, getRestorableState(tile.state))
-    }
-
-    // Remove characters from affected tiles (except kulu)
-    for (const id of affectedIds) {
-      removeCharacterFromAffectedTile(context, id, characterId)
-    }
-
-    // Set affected tiles to BLOCKED / BREAKABLE with color border
-    for (const id of config.blocked) {
-      grid.setState(grid.getHexById(id), State.BLOCKED)
-      skillManager.setTileColorModifier(id, TILE_COLOR)
-    }
-    for (const id of config.breakable) {
-      grid.setState(grid.getHexById(id), State.BLOCKED_BREAKABLE)
-      skillManager.setTileColorModifier(id, TILE_COLOR)
-    }
-
-    // Relocate kulu if she was on an affected tile
-    if (kuluOnAffectedTile) {
-      const availableState = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
-      const availableTiles = grid
-        .getAllTiles()
-        .filter((tile) => tile.state === availableState && !tile.characterId)
-
-      if (availableTiles.length === 0) {
-        // Shouldn't happen due to pre-check, but handle gracefully
-        throw new Error('No available tile for kulu relocation')
-      }
-
-      const randomIndex = Math.floor(Math.random() * availableTiles.length)
-      const newHexId = availableTiles[randomIndex]!.hex.getId()
-
-      performRemove(grid, hexId)
-      performPlace(grid, newHexId, characterId, team)
-    }
-  },
-
-  onDeactivate(context: SkillContext): void {
-    const { grid, team, characterId, skillManager } = context
-
-    // Release this zone's claims. A tile shared with the other team's zone is
-    // restored (and its highlight removed) only when the last claim is released
-    for (const hexId of getAllAffectedIds(team)) {
-      const originalState = skillManager.releaseTileState(hexId, characterId, team)
-      if (originalState !== undefined) {
-        skillManager.removeTileColorModifier(hexId, TILE_COLOR)
-        grid.setState(grid.getHexById(hexId), originalState)
-      }
-    }
+  onActivate: paintZone,
+  // Repaint on update so tiles shared by both zones (22/23/24) survive one team's
+  // Kulu leaving: the color channel dedupes, so the surviving Kulu must re-add them.
+  onUpdate: paintZone,
+  onDeactivate({ skillManager, characterId, team }: SkillContext): void {
+    skillManager.clearPaintedTiles(characterId, team)
   },
 })

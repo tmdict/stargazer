@@ -170,7 +170,6 @@ const handleCopyLink = () => {
     tiles: ctx.grid.getAllTiles(),
     allyArtifact: ctx.artifacts.ally,
     enemyArtifact: ctx.artifacts.enemy,
-    baseTileState: ctx.getBaseTileState,
   }))
   const encoded = encodeMultiGridStateToUrl(
     serializeMultiGridState(boards, grids.activeId, currentFlags()),

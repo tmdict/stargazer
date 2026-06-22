@@ -215,8 +215,6 @@ export const useUrlStateStore = defineStore('urlState', () => {
         ctx.grid.getAllTiles(),
         ctx.artifacts.ally,
         ctx.artifacts.enemy,
-        undefined,
-        ctx.getBaseTileState,
       )
       if (!state.c && !state.p && !state.a) return // nothing to swap on this board
       const mirrored = mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))
