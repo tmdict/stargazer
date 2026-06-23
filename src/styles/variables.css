@@ -33,6 +33,12 @@
   --color-text-secondary: #666;
   --color-text-muted: #484848;
 
+  /* Roster "already placed on the board" state, shared by the character,
+     phantimal, and artifact icons: desaturate the icon and dim the fill with an
+     inset overlay, leaving the white border/ring untouched. */
+  --placed-filter: grayscale(1);
+  --placed-overlay: rgba(0, 0, 0, 0.12);
+
   /* Border Radius */
   --radius-small: 4px;
   --radius-medium: 6px;

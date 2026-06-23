@@ -140,8 +140,18 @@ const handleClick = () => {
   transform: scale(1.05);
 }
 
+/* Placed on either team: desaturate + dim the fill like the character roster,
+   keeping the white border/ring. */
 .artifact.placed {
-  box-shadow: 0 0 0 2px var(--color-danger);
+  filter: var(--placed-filter);
+}
+.artifact.placed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--placed-overlay);
+  pointer-events: none;
 }
 
 /* Simple tooltip - just name */
