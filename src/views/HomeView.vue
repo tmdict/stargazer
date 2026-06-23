@@ -13,7 +13,7 @@ import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
-import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
 import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -27,7 +27,6 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { useUrlStateStore } from '@/stores/urlState'
-import type { DisplayFlags } from '@/utils/gridStateSerializer'
 import { generateShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 // Perspective Mode Configuration
@@ -50,7 +49,6 @@ const mapEditorStore = useMapEditorStore()
 const { success, error } = useToast()
 const router = useRouter()
 const route = useRoute()
-const { showPerspective } = useBreakpoint()
 const { copyToClipboard, downloadAsImage } = useGridExport()
 const shareLink = useShareLink()
 
@@ -99,7 +97,7 @@ watch(targetHexId, (id) => {
 })
 
 // Mobile: a component (e.g. an on-grid artifact cell) requesting the roster open
-// on a specific tab — switch to it and expand the sheet.
+// on a specific tab: switch to it and expand the sheet.
 watch(tabRequest, (req) => {
   if (!req) return
   activeTab.value = req.tab
@@ -117,24 +115,8 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-const showArrows = ref(false)
-const showHexIds = ref(false)
-const showSkills = ref(true)
-
-// Team view toggle (single source of truth lives in gridStore so layer components
-// reading viewBoxBounds/visibleHexes stay in sync). When team view turns on,
-// auto-uncheck skills/targeting — they're disabled in the controls panel
-// while it's active and stay off when team view exits (manual re-enable).
-// (Debug is a tab, hidden while team view is active, so no reset needed for it.)
-watch(
-  () => gridStore.teamView,
-  (active) => {
-    if (active) {
-      showSkills.value = false
-      showArrows.value = false
-    }
-  },
-)
+const { showArrows, showHexIds, showSkills, showPerspective, toFlags, applyFlags } =
+  useDisplayFlags()
 
 const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
 
@@ -160,7 +142,7 @@ const applyTabResets = (tab: string) => {
 const handleTabChange = (tab: string) => {
   activeTab.value = tab
 
-  // Push so each tab switch is a history entry — back/forward navigates tabs.
+  // Push so each tab switch is a history entry, so back/forward navigates tabs.
   router.push({
     query: {
       ...route.query,
@@ -191,23 +173,7 @@ watch(
 gameDataStore.initializeData()
 i18nStore.initialize()
 
-const arenaPersistence = useArenaPersistence(() => ({
-  showHexIds: showHexIds.value,
-  showArrows: showArrows.value,
-  showPerspective: showPerspective.value,
-  showSkills: showSkills.value,
-  teamView: gridStore.teamView,
-  inverted: gridStore.inverted,
-}))
-
-const applyDisplayFlags = (flags: DisplayFlags) => {
-  showHexIds.value = flags.showHexIds ?? false
-  showArrows.value = flags.showArrows ?? false
-  showPerspective.value = flags.showPerspective ?? false
-  showSkills.value = flags.showSkills ?? true
-  gridStore.teamView = flags.teamView ?? false
-  gridStore.inverted = flags.inverted ?? false
-}
+const arenaPersistence = useArenaPersistence(toFlags)
 
 // A ?g= link takes priority and is applied in setup (before paint, matching the
 // existing share behavior); the autosave on mount then overwrites the saved arena
@@ -216,7 +182,7 @@ const sharedLink = gameDataStore.dataLoaded ? getEncodedStateFromUrl() : null
 if (sharedLink) {
   const result = urlStateStore.restoreFromEncodedState(sharedLink)
   if (result.success && result.displayFlags) {
-    applyDisplayFlags(result.displayFlags)
+    applyFlags(result.displayFlags)
     // The restore replaced the board; drop any stale mobile tap/lift selection.
     clearTargetHex()
     clearLiftedHex()
@@ -227,7 +193,7 @@ if (sharedLink) {
 }
 
 // The initial tab comes straight from ?t= without passing through handleTabChange,
-// so enforce its display resets here — after a restore, which can introduce the
+// so enforce its display resets here, after a restore, which can introduce the
 // conflicting flags (e.g. team view in a share link while ?t=mapEditor).
 applyTabResets(activeTab.value)
 
@@ -240,7 +206,7 @@ onMounted(() => {
     if (saved) {
       const result = urlStateStore.restoreFromEncodedState(saved)
       if (result.success && result.displayFlags) {
-        applyDisplayFlags(result.displayFlags)
+        applyFlags(result.displayFlags)
         applyTabResets(activeTab.value)
       }
     }
@@ -256,14 +222,7 @@ const handleCopyLink = () => {
     gridStore.getAllTiles,
     artifactStore.allyArtifactId,
     artifactStore.enemyArtifactId,
-    {
-      showHexIds: showHexIds.value,
-      showArrows: showArrows.value,
-      showPerspective: showPerspective.value,
-      showSkills: showSkills.value,
-      teamView: gridStore.teamView,
-      inverted: gridStore.inverted,
-    },
+    toFlags(),
   )
   const encodedState = new URLSearchParams(shareableUrl.split('?')[1]).get('g') ?? ''
   return shareLink(encodedState)
@@ -322,7 +281,7 @@ const handleResetMap = () => {
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"
             v-model:team-view="gridStore.teamView"
-            :hide-team-view="activeTab === 'mapEditor' || activeTab === 'debug'"
+            :disable-team-view="activeTab === 'mapEditor' || activeTab === 'debug'"
             :hide-team-controls="activeTab === 'mapEditor' || activeTab === 'debug'"
             @copy-link="handleCopyLink"
             @copy-image="handleCopyImage"
@@ -403,7 +362,7 @@ const handleResetMap = () => {
 
    NOTE: this breakpoint must stay in sync with the @media rules in each
    tab-content panel component (CharacterSelection, SeasonalSelection,
-   MapEditor, DebugPanel) — they own the flex-fill + internal scroll on the same
+   MapEditor, DebugPanel): they own the flex-fill + internal scroll on the same
    condition (TabView provides the flex shell; the panels scroll). */
 @media (min-width: 1220px) {
   .sections-container {
