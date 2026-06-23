@@ -18,6 +18,8 @@ const props = defineProps<{
   slotTags?: { name: string; label: string }[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
+  /** Levels to accent as the ones that earn an active tag (guide view). */
+  highlightLevels?: number[]
 }>()
 
 const rendered = computed(() =>
@@ -25,6 +27,7 @@ const rendered = computed(() =>
     level: l.level,
     html: highlightSkillText(l.description),
     isUpgrade: l.level > 1,
+    isTagged: props.highlightLevels?.includes(l.level) ?? false,
   })),
 )
 
@@ -55,7 +58,7 @@ const renderedRefinements = computed(() =>
         v-for="row in rendered"
         :key="row.level"
         class="skill-level"
-        :class="{ upgrade: row.isUpgrade }"
+        :class="{ upgrade: row.isUpgrade, tagged: row.isTagged }"
       >
         <div v-if="row.isUpgrade" class="skill-level-row">
           <span class="skill-level-badge">LV {{ row.level }}</span>
@@ -120,6 +123,13 @@ const renderedRefinements = computed(() =>
 .skill-level:first-child {
   padding-top: 0;
   border-top: none;
+}
+
+/* Accent the level(s) responsible for the active tag in the guide view:
+   background tint only, matching the content snippets (no left bar, square). */
+.skill-level.tagged {
+  padding: 6px var(--spacing-md);
+  background: rgba(95, 196, 187, 0.08);
 }
 
 /* Badge + description form a sub-row so chips (when present) sit above as a

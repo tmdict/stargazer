@@ -26,10 +26,9 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
   },
   {
-    path: '/en/guide/:name?',
+    path: '/en/guide',
     name: 'guide-en',
     component: () => import('@/views/GuideView.vue'),
-    props: true,
   },
   {
     path: '/wandwars',
@@ -55,10 +54,9 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
   },
   {
-    path: '/zh/guide/:name?',
+    path: '/zh/guide',
     name: 'guide-zh',
     component: () => import('@/views/GuideView.vue'),
-    props: true,
   },
   // Unknown URLs (stale links, typos) redirect home instead of rendering a
   // blank router-view. Dynamic path: skipped by SSG pre-rendering.

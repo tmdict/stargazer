@@ -1,22 +1,16 @@
 <script setup lang="ts">
-import {
-  computed,
-  defineAsyncComponent,
-  provide,
-  ref,
-  shallowRef,
-  type Component,
-  type Ref,
-} from 'vue'
+import { computed, defineAsyncComponent, provide, ref, type Component } from 'vue'
 
 import SkillSection from './SkillSection.vue'
 import { useSkillTags } from '@/composables/useSkillTags'
+import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
 import type { Locale } from '@/lib/types/i18n'
-import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
+import { SLOT_ORDER } from '@/lib/types/skill'
 import { setupSkillContentMeta } from '@/utils/contentMeta'
-import { loadAppLocales, loadCharacterLocales, loadSkillLocales } from '@/utils/dataLoader'
+import { loadCharacterLocales, loadSkillLocales } from '@/utils/dataLoader'
 import { formatToCamelCase } from '@/utils/nameFormatting'
-import { SkillLangKey, SkillSnippetAnchorsKey } from './snippetKeys'
+import { appLabel, headingFor } from '@/utils/skillLabels'
+import { SkillLangKey } from './snippetKeys'
 
 const props = defineProps<{
   slug: string
@@ -29,39 +23,7 @@ setupSkillContentMeta(props.slug, props.lang)
 const locale = computed(() => loadSkillLocales()[props.lang][props.slug])
 const { perLevel, perCharacter } = useSkillTags(props.slug)
 
-// Resolves against `props.lang` (not the global i18n store) so chips stay in
-// sync with the modal's local locale toggle and SSR-rendered URL locale.
-function tagLabel(tag: string): string {
-  return loadAppLocales()[tag]?.[props.lang] ?? tag
-}
-
 const heroName = computed(() => loadCharacterLocales()[props.slug]?.[props.lang] ?? props.slug)
-
-// Heading composition per slot:
-//   ultimate / ex        →  "<prefix>: <name>"   (prefix from app locale)
-//   skill2 / skill3      →  just <name>           (name carries the slot)
-//   mastery / awakening  →  app-locale name       (invariant across heroes)
-const PREFIX_LABEL_KEY: Partial<Record<SlotKey, string>> = {
-  ultimate: 'ultimate',
-  ex: 'ex-skill',
-}
-
-const INVARIANT_NAME_KEY: Partial<Record<SlotKey, string>> = {
-  mastery: 'hero-focus',
-  awakening: 'enhance-force',
-}
-
-function headingFor(slotKey: SlotKey, name: string | null | undefined): string {
-  const app = loadAppLocales()
-  const invariantKey = INVARIANT_NAME_KEY[slotKey]
-  if (invariantKey) return app[invariantKey]?.[props.lang] ?? invariantKey
-
-  const trimmedName = name?.trim() ?? ''
-  const prefixKey = PREFIX_LABEL_KEY[slotKey]
-  if (!prefixKey) return trimmedName || slotKey
-  const prefix = app[prefixKey]?.[props.lang] ?? prefixKey
-  return trimmedName ? `${prefix}: ${trimmedName}` : prefix
-}
 
 const activeChips = ref<Set<string>>(new Set(props.initialChip ? [props.initialChip] : []))
 
@@ -94,7 +56,7 @@ const sections = computed(() => {
     const slotTagsSet = new Set<string>()
     for (const l of rawLevels) for (const t of l.rawTags) slotTagsSet.add(t)
     // Keep the raw tag name (for the browser filter link) next to its label.
-    const slotTags = [...slotTagsSet].map((t) => ({ name: t, label: tagLabel(t) }))
+    const slotTags = [...slotTagsSet].map((t) => ({ name: t, label: appLabel(t, props.lang) }))
     const levels = rawLevels
       .filter((l) => filter.size === 0 || l.rawTags.some((t) => filter.has(t)))
       .map((l) => ({ level: l.level, description: l.description }))
@@ -103,18 +65,17 @@ const sections = computed(() => {
     const refinements =
       filter.size === 0 ? (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d })) : []
     if (levels.length === 0 && refinements.length === 0) return null
-    return { slotKey, heading: headingFor(slotKey, slot.n), slotTags, levels, refinements }
+    return {
+      slotKey,
+      heading: headingFor(slotKey, slot.n, props.lang),
+      slotTags,
+      levels,
+      refinements,
+    }
   }).filter((s): s is NonNullable<typeof s> => s !== null)
 })
 
-const anchors = SLOT_ORDER.reduce(
-  (acc, key) => {
-    acc[key] = shallowRef<HTMLElement | null>(null)
-    return acc
-  },
-  {} as Record<SlotKey, Ref<HTMLElement | null>>,
-)
-provide(SkillSnippetAnchorsKey, anchors)
+const anchors = useSnippetAnchors()
 provide(
   SkillLangKey,
   computed(() => props.lang),
@@ -146,7 +107,7 @@ const snippetComp = computed(() => {
           :class="{ 'is-active': activeChips.has(tag) }"
           @click.stop="toggleChip(tag)"
         >
-          {{ tagLabel(tag) }}
+          {{ appLabel(tag, lang) }}
         </button>
       </div>
     </div>

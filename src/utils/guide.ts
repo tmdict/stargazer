@@ -1,7 +1,7 @@
 import type { Component } from 'vue'
 
 import type { Locale } from '@/lib/types/i18n'
-import { loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
+import { loadCharacterLocales } from '@/utils/dataLoader'
 
 export interface GuideEntry {
   slug: string
@@ -51,8 +51,4 @@ export function guideEntries(): GuideEntry[] {
 
 export function heroName(slug: string, lang: Locale): string {
   return loadCharacterLocales()[slug]?.[lang] ?? slug
-}
-
-export function heroPortrait(slug: string): string {
-  return loadCharacterImages()[slug] ?? ''
 }
