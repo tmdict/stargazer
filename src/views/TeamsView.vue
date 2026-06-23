@@ -16,7 +16,7 @@ import TeamsBoards from '@/components/teams/TeamsBoards.vue'
 import TeamsRoster from '@/components/teams/TeamsRoster.vue'
 import TabView from '@/components/ui/TabView.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
-import { useBreakpoint } from '@/composables/useBreakpoint'
+import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
 import { useTeamsPersistence } from '@/composables/useGridPersistence'
 import { useGridSwap } from '@/composables/useGridSwap'
@@ -28,7 +28,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
-import { serializeMultiGridState, type DisplayFlags } from '@/utils/gridStateSerializer'
+import { serializeMultiGridState } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { encodeMultiGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
@@ -38,7 +38,6 @@ const i18n = useI18nStore()
 const urlStateStore = useUrlStateStore()
 const { copyToClipboard, downloadAsImage } = useGridExport()
 const { success, error } = useToast()
-const { currentBreakpoint } = useBreakpoint({ autoFlattenOnMobile: false })
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
@@ -56,12 +55,17 @@ const tabs = computed(() => [
 ])
 
 // Display flags drive every board (global controls); the share link serializes them.
-const showArrows = ref(false)
-const showHexIds = ref(false)
-const showPerspective = ref(false)
-const showSkills = ref(true)
 // 3-2 "wrap" boards layout vs one row; serialized with the other display flags.
 const wrapBoards = ref(false)
+const {
+  showArrows,
+  showHexIds,
+  showSkills,
+  showPerspective,
+  currentBreakpoint,
+  toFlags,
+  applyFlags,
+} = useDisplayFlags({ wrap: wrapBoards })
 
 // At sheet widths (<= tablet) the roster is a pull-up sheet and boards place via
 // the cell-tap flow; on desktop the roster is a card and cells use the on-grid popup.
@@ -102,28 +106,7 @@ watch(
 )
 watch(currentBreakpoint, applySize)
 
-// Display flags shared by the localStorage autosave and the share link.
-const currentFlags = (): DisplayFlags => ({
-  showHexIds: showHexIds.value,
-  showArrows: showArrows.value,
-  showPerspective: showPerspective.value,
-  showSkills: showSkills.value,
-  teamView: grids.teamView,
-  inverted: grids.inverted,
-  wrap: wrapBoards.value,
-})
-
-const teamsPersistence = useTeamsPersistence(currentFlags)
-
-const applyDisplayFlags = (flags: DisplayFlags) => {
-  showHexIds.value = flags.showHexIds ?? false
-  showArrows.value = flags.showArrows ?? false
-  showPerspective.value = flags.showPerspective ?? false
-  showSkills.value = flags.showSkills ?? true
-  grids.teamView = flags.teamView ?? false
-  grids.inverted = flags.inverted ?? false
-  wrapBoards.value = flags.wrap ?? false
-}
+const teamsPersistence = useTeamsPersistence(toFlags)
 
 // A ?g= link overwrites the saved boards; otherwise restore them. Then mirror
 // every later change to localStorage.
@@ -133,7 +116,7 @@ if (gameDataStore.dataLoaded) {
   if (source) {
     const result = urlStateStore.restoreMultiFromEncodedState(source)
     if (result.success && result.displayFlags) {
-      applyDisplayFlags(result.displayFlags)
+      applyFlags(result.displayFlags)
       if (sharedLink) success(i18n.t('app.grid-loaded'))
     } else if (sharedLink && result.error && result.error !== 'No state provided') {
       error(i18n.t('app.invalid-url'))
@@ -172,7 +155,7 @@ const handleCopyLink = () => {
     enemyArtifact: ctx.artifacts.enemy,
   }))
   const encoded = encodeMultiGridStateToUrl(
-    serializeMultiGridState(boards, grids.activeId, currentFlags()),
+    serializeMultiGridState(boards, grids.activeId, toFlags()),
   )
   return shareLink(encoded)
 }

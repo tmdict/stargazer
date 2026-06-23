@@ -23,6 +23,14 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 
 const skillTargets = computed(() => ctx.skillTargets)
 
+// Team view crops to the shown team's tiles, so a skill arrow/line touching a
+// hidden (enemy-side) hex would point at a cropped-out tile. Keep only visuals
+// whose endpoints are both in the shown region; outside team view visibleHexes is
+// the whole grid, so this passes everything.
+const visibleHexIds = computed(() => new Set(ctx.visibleHexes.map((hex) => hex.getId())))
+const bothVisible = (fromHexId: number, toHexId: number): boolean =>
+  visibleHexIds.value.has(fromHexId) && visibleHexIds.value.has(toHexId)
+
 function parseSkillKey(key: string): { characterId: number; team: string } | null {
   const parts = key.split('-')
   if (parts.length !== 2) return null
@@ -70,6 +78,7 @@ const arrowsToRender = computed(() => {
     if (targetInfo.metadata?.arrows) {
       const color = getTargetingColor(key)
       targetInfo.metadata.arrows.forEach((arrow, idx) => {
+        if (!bothVisible(arrow.fromHexId, arrow.toHexId)) return
         arrows.push({
           key: `${key}-arrow-${idx}`,
           fromHexId: arrow.fromHexId,
@@ -84,8 +93,10 @@ const arrowsToRender = computed(() => {
 })
 
 // Lines carry their own color, so (unlike arrows) they render for any skill, not
-// just targeting ones.
-const linesToRender = computed(() => ctx.skillLines)
+// just targeting ones, but still only within the shown team's region.
+const linesToRender = computed(() =>
+  ctx.skillLines.filter((line) => bothVisible(line.fromHexId, line.toHexId)),
+)
 </script>
 
 <template>
