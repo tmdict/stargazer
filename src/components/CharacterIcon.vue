@@ -242,8 +242,22 @@ const handleDragEnd = (event: DragEvent) => {
   cursor: grabbing;
 }
 
+/* Placed on the board: desaturate the icon and dim only the fill (the ::after
+   overlay) so the white ring survives, since a whole-element filter/opacity
+   would dim it too. Distinct from the red selected ring; --placed-* tokens are
+   shared with the phantimal/artifact rosters. */
 .character-display.placed {
-  box-shadow: 0 0 0 5px #c05b4d;
+  filter: var(--placed-filter);
+}
+.character-display.placed::after {
+  /* Clipped to the circle by the parent's overflow: hidden; z-index clears the
+     z-index:1 portrait. */
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--placed-overlay);
+  pointer-events: none;
 }
 
 .character-display.selected {
@@ -358,10 +372,6 @@ const handleDragEnd = (event: DragEvent) => {
     width: 50px;
     height: 50px;
     box-shadow: 0 0 0 3px #fff;
-  }
-
-  .character-display.placed {
-    box-shadow: 0 0 0 3px #c05b4d;
   }
 
   .portrait {
