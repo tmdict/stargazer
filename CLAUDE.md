@@ -14,8 +14,9 @@
 Add a comment only when the code can't tell the story itself: a non-obvious mechanic, something that looks wrong but is intentional, a cross-file contract, or a real gotcha. If a competent reader could already know it from the code, omit it.
 
 - Navigation aids are welcome: a short file-level header (overall purpose/architecture), and section markers that group related code.
-- Don't narrate what the code already shows — a name, a type, or what the CSS/markup visibly does.
-- Capture the decision (the _why_), not the _what_, so a later edit doesn't undo it and reintroduce a bug.
+- Don't narrate what the code already shows: a name, a type, what the CSS/markup renders, or what a line or branch plainly computes.
+- Lead with the _why_, not the _what_, so a later edit doesn't undo the decision and reintroduce a bug. A comment that opens by restating the mechanism is still narration even with a reason tacked on: `// adds a unit, so it needs capacity` over a `canPlaceCharacterOnTeam(...)` call says nothing the call doesn't. Give the reason or the non-obvious constraint instead, and if a line or branch is self-evident, leave it bare.
+- One comment per idea, not per branch: when branches share a rule or only one case is subtle, write a single comment for that rule or case instead of tagging each branch.
 - Keep comments concise, neutral, and current-state: no editorializing, and no past-state or migration notes ("now", "previously", "replaces", "hoisted from", etc.).
 
 ## DOCUMENTATION

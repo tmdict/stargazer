@@ -257,8 +257,8 @@ export function createGridContext(
     return executeAutoPlaceCharacter(grid, skillManager, phantimalId, team)
   }
 
-  // Single-board drop: a grid-source drop moves or swaps; a selection drop
-  // validates team capacity then places. Cross-board routing is one level up.
+  // Same-board drop dispatch: grid-source drags move or swap, roster drops place
+  // and replace any occupant. Cross-board routing is one level up.
   const handleDrop = (
     payload: { character: CharacterType; characterId: number },
     targetHexId: number,
@@ -285,7 +285,11 @@ export function createGridContext(
     if (isPhantimalId(characterId)) {
       return placePhantimal(targetHexId, characterId, team)
     }
-    if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
+    // Replacing an occupant frees the slot it fills, so the capacity gate only
+    // needs to block an add onto an empty tile.
+    if (!hasCharacter(grid, targetHexId) && !canPlaceCharacterOnTeam(grid, characterId, team)) {
+      return false
+    }
     return place(targetHexId, characterId, team)
   }
 

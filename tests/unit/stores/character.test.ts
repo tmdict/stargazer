@@ -2,7 +2,7 @@ import { nextTick } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getAvailableTeamSize, getMaxTeamSize } from '@/lib/characters/character'
+import { getAvailableTeamSize, getMaxTeamSize, isCharacterOnTeam } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
@@ -51,7 +51,7 @@ beforeEach(() => {
 // the app reaches it via grids.routeDrop's same-board path. These exercise that
 // handler on the active board directly (sourceHexId without sourceGridId = a
 // same-board move, which is handleDrop's contract, not routeDrop's).
-describe('active grid — drop routing (handleDrop)', () => {
+describe('active grid: drop routing (handleDrop)', () => {
   describe('selection drop (no sourceHexId)', () => {
     it.each([
       [Team.ALLY, State.AVAILABLE_ALLY, 101],
@@ -98,6 +98,25 @@ describe('active grid — drop routing (handleDrop)', () => {
       )
 
       expect(ok).toBe(false)
+    })
+
+    it('replaces an occupant on a full team (drop onto an occupied tile)', () => {
+      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
+      const maxAlly = getMaxTeamSize(grids.active!.grid, Team.ALLY)
+      const allyHexIds = allyTiles.slice(0, maxAlly).map((h) => h.getId())
+      allyHexIds.forEach((id, i) => store.placeCharacterOnHex(id, 100 + i, Team.ALLY))
+      expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
+
+      const targetHexId = allyHexIds[0]!
+      const ok = grids.active!.handleDrop(
+        { character: buildCharacter(999), characterId: 999 },
+        targetHexId,
+      )
+
+      expect(ok).toBe(true)
+      expect(gridStore.getTile(targetHexId).characterId).toBe(999)
+      expect(isCharacterOnTeam(grids.active!.grid, 100, Team.ALLY)).toBe(false)
+      expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
     })
   })
 
@@ -254,7 +273,7 @@ describe('characterStore phantimal faction rule', () => {
     store.placePhantimalOnHex(target.getId(), toPhantimalId(1), Team.ALLY)
     expect(gridStore.getTile(target.getId()).characterId).toBe(toPhantimalId(1))
 
-    // Removing a lightbearer drops the count to 2 — the phantimal must leave.
+    // Removing a lightbearer drops the count to 2, so the phantimal must leave.
     store.removeCharacterFromHex(heroHexes[0]!)
     await nextTick()
 

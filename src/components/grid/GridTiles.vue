@@ -5,7 +5,11 @@ import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { canPlaceCharacterOnTeam, hasCharacter } from '@/lib/characters/character'
+import {
+  canPlaceCharacterOnTeam,
+  hasCharacter,
+  isCharacterOnTeam,
+} from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
@@ -291,12 +295,14 @@ const getHexDropClass = (hex: Hex) => {
     // Check if tile accepts characters
     const tileTeam = getTeamFromTileState(state)
     if (tileTeam !== null) {
-      // Grid moves: always allow (just repositioning existing characters)
+      // Match handleDrop so the hover never promises a drop that would fail. The
+      // subtlety: a roster drop onto an occupant is a replace, which frees the slot
+      // it fills, so it skips the capacity check an empty-tile add still needs.
       if (draggedCharacter.value.sourceHexId !== undefined) {
-        // This is a character being moved from another hex on the grid
         validDropZone = true
+      } else if (isOccupied) {
+        validDropZone = !isCharacterOnTeam(ctx.grid, draggedCharacter.value.id, tileTeam)
       } else {
-        // Character selection: check team capacity
         validDropZone = canPlaceCharacterOnTeam(ctx.grid, draggedCharacter.value.id, tileTeam)
       }
     }
@@ -586,7 +592,7 @@ onUnmounted(() => {
     stroke-width 0.2s ease;
 }
 
-/* Hover overlay — single neutral tint that lightens any tile color.
+/* Hover overlay: a single neutral tint that lightens any tile color.
    Per-state stroke and drop-shadow below carry the validity signal. */
 .grid-event-layer.drop-target.drag-hover polygon,
 .grid-event-layer.drop-target:not(.drag-hover).hover polygon {
@@ -613,7 +619,7 @@ onUnmounted(() => {
   stroke: #36958e;
 }
 
-/* Mobile: the tile tapped to target placement — a persistent gold highlight
+/* Mobile: the tile tapped to target placement gets a persistent gold highlight
    until a hero fills it. */
 .grid-event-layer.targeted polygon {
   fill: rgba(247, 216, 124, 0.35);
