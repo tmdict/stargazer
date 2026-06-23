@@ -5,8 +5,8 @@ import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
 import { SkillSnippetAnchorsKey } from './snippetKeys'
 
 // Root of a per-hero snippet file. With skill-section anchors injected (the
-// hero skill page) each named slot teleports into its matching section. Without
-// anchors (the guide compendium) the slots render inline, in skill order.
+// hero skill page and the guide panels) each named slot teleports into its
+// matching section. Without anchors the slots render inline, in skill order.
 
 const slots = useSlots()
 const anchors = inject(SkillSnippetAnchorsKey, null)
