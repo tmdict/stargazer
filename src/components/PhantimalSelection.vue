@@ -210,6 +210,7 @@ const openModal = (phantimal: PhantimalType) => {
 .phantimal {
   width: 70px;
   height: 70px;
+  position: relative;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-white);
   background: #fff;
@@ -232,10 +233,18 @@ const openModal = (phantimal: PhantimalType) => {
   transform: scale(1.05);
 }
 
-/* Placed on either team: match the character roster's red ring. */
+/* Placed on either team: desaturate + dim the fill like the character roster,
+   keeping the white border/ring. */
 .phantimal.placed {
-  box-shadow: 0 0 0 2px #c05b4d;
-  border-color: #c05b4d;
+  filter: var(--placed-filter);
+}
+.phantimal.placed::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: var(--placed-overlay);
+  pointer-events: none;
 }
 
 .phantimal-tooltip {
