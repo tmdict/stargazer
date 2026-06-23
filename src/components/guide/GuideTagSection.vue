@@ -10,7 +10,7 @@ import { appLabel } from '@/utils/skillLabels'
 
 defineProps<{ tag: string; characters: readonly CharacterType[]; lang: Locale }>()
 
-// One open panel per section; clicking the open icon collapses it.
+// One open panel per section.
 const expanded = ref<string | null>(null)
 const toggle = (slug: string) => {
   expanded.value = expanded.value === slug ? null : slug
@@ -36,10 +36,10 @@ const toggle = (slug: string) => {
       />
     </CharacterGrid>
 
-    <!-- All panels render (hidden) so the static HTML carries every expansion. -->
-    <template v-for="c in characters" :key="`panel-${c.id}`">
-      <GuideCharacterPanel v-show="expanded === c.name" :slug="c.name" :tag :lang />
-    </template>
+    <!-- Mount only the expanded panel (keyed so switching characters remounts
+         cleanly). The per-hero skill pages already pre-render this skill content,
+         so the guide needn't bake every collapsed expansion into static HTML. -->
+    <GuideCharacterPanel v-if="expanded" :key="expanded" :slug="expanded" :tag :lang />
   </section>
 </template>
 

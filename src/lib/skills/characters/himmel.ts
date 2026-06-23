@@ -2,7 +2,7 @@ import { registerSkill } from '../registry'
 import type { SkillContext, TilePaint } from '../skill'
 import { rowScan, ScanDirection } from '../utils/ring'
 
-const TILE_COLOR = '#7badc4'
+const TILE_COLOR = '#0288d1'
 
 // One unit of each of these classes is highlighted; if any is absent among the
 // neighbors the skill highlights nothing.

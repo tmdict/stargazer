@@ -17,9 +17,9 @@ const gameDataStore = useGameDataStore()
 const character = computed(() => loadCharacters().find((c) => c.name === props.slug))
 const name = computed(() => heroName(props.slug, props.lang))
 
-// Eager (SSG-baked) prose snippet when the hero has a written guide. Its
-// per-slot pieces teleport into the anchors below, so each note lands under the
-// skill section it documents (as on the skill page).
+// Prose snippet when the hero has a written guide; its per-slot pieces teleport
+// into the anchors below, so each note lands under the skill section it
+// documents (as on the skill page).
 const proseComp = computed(() => {
   const entry = guideEntries().find((e) => e.slug === props.slug)
   return entry ? (entry.components[props.lang] ?? entry.components.en) : null
@@ -31,7 +31,7 @@ const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 const energyStat = computed(() => {
   const [base = 0, ...bonuses] = character.value?.energy ?? []
   const bonus = bonuses.reduce((sum, n) => sum + n, 0)
-  return bonus ? `${base} (+${bonus})` : String(base)
+  return bonus ? `${base} (${bonus})` : String(base)
 })
 
 // The tagged slot section(s): the full slot, with tag-bearing levels accented.

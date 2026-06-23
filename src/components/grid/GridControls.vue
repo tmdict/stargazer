@@ -21,8 +21,9 @@ const teamView = defineModel<boolean>('teamView')
 const wrap = defineModel<boolean>('wrap')
 
 defineProps<{
-  // When true, the Team View toggle is hidden (e.g. Map Editor and Debug tabs).
-  hideTeamView?: boolean
+  // When true, the Team View toggle is shown but locked (Map Editor / Debug tabs,
+  // where team view doesn't apply).
+  disableTeamView?: boolean
   // Hides Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
   // Lay every control out in one wrapping row (the wide 5 v 5 page) instead of
@@ -61,17 +62,17 @@ const flatView = computed({
         <input type="checkbox" v-model="showHexIds" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
       </label>
-      <label v-if="!hideTeamView" class="grid-toggle-btn" :class="{ active: teamView }">
-        <input type="checkbox" v-model="teamView" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
-      </label>
-      <label class="grid-toggle-btn" :class="{ active: showSkills, disabled: teamView }">
+      <label class="grid-toggle-btn" :class="{ active: teamView, disabled: disableTeamView }">
         <input
           type="checkbox"
-          v-model="showSkills"
-          :disabled="teamView"
+          v-model="teamView"
+          :disabled="disableTeamView"
           class="grid-toggle-checkbox"
         />
+        <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
+      </label>
+      <label class="grid-toggle-btn" :class="{ active: showSkills }">
+        <input type="checkbox" v-model="showSkills" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
       </label>
       <label class="grid-toggle-btn" :class="{ active: showArrows, disabled: teamView }">
@@ -212,7 +213,7 @@ const flatView = computed({
   flex-shrink: 0;
 }
 
-/* Mobile: a native-first toolbar — display toggles become filled/outlined
+/* Mobile: a native-first toolbar. Display toggles become filled/outlined
    choice chips (the fill is the on/off state, so the checkbox is dropped) and
    the link/copy/download actions become icon-only round buttons. */
 @media (max-width: 768px) {
@@ -220,7 +221,7 @@ const flatView = computed({
     gap: var(--spacing-sm);
   }
   /* The wide single-row layout reverts to the stacked two-row toolbar on mobile
-     (display toggles, then team + actions + clear) — same as the Arena. */
+     (display toggles, then team + actions + clear), same as the Arena. */
   .grid-controls.single-row {
     flex-direction: column;
     gap: var(--spacing-sm);
