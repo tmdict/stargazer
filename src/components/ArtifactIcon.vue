@@ -2,13 +2,12 @@
 import { computed, ref } from 'vue'
 
 import ArtifactImage from './ArtifactImage.vue'
+import ArtifactTooltip from './ArtifactTooltip.vue'
 import ArtifactModal from './modals/ArtifactModal.vue'
 import InfoPill from './ui/InfoPill.vue'
-import TooltipPopup from './ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useI18nStore } from '@/stores/i18n'
-import { formatArtifactStats } from '@/utils/artifactStats'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const i18n = useI18nStore()
@@ -30,8 +29,6 @@ const artifactElement = ref<HTMLElement>()
 const formattedArtifactName = computed(() =>
   localizedDisplayName(i18n.t, 'artifact', props.artifact.name),
 )
-
-const formattedStats = computed(() => formatArtifactStats(props.artifact.stats, i18n.currentLocale))
 
 // Effects live in a popup modal (info button), not the hover tooltip.
 const showInfoModal = ref(false)
@@ -64,36 +61,12 @@ const handleClick = () => {
     <!-- Effects modal -->
     <ArtifactModal :show="showInfoModal" :artifact @close="showInfoModal = false" />
 
-    <!-- Tooltip -->
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="showTooltip && artifactElement"
-        :target-element="artifactElement"
-        :variant="showSimpleTooltip ? 'simple' : 'detailed'"
-        :offset="10"
-      >
-        <template #content>
-          <!-- Simple tooltip - just the name -->
-          <div v-if="showSimpleTooltip" class="simple-tooltip">{{ formattedArtifactName }}</div>
-          <!-- Detailed tooltip - name + stats -->
-          <template v-else>
-            <div class="tooltip-header">
-              <div class="tooltip-name">{{ formattedArtifactName }}</div>
-            </div>
-            <div class="tooltip-info">
-              <div class="tooltip-row">
-                <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
-                <span class="tooltip-value">{{ artifact.season }}</span>
-              </div>
-              <div v-for="stat in formattedStats" :key="stat.key" class="tooltip-row">
-                <span class="tooltip-label">{{ stat.label }}:</span>
-                <span class="tooltip-value">{{ stat.value }}</span>
-              </div>
-            </div>
-          </template>
-        </template>
-      </TooltipPopup>
-    </Teleport>
+    <ArtifactTooltip
+      v-if="showTooltip && artifactElement"
+      :artifact
+      :target-element="artifactElement"
+      :variant="showSimpleTooltip ? 'simple' : 'detailed'"
+    />
   </div>
 </template>
 
@@ -152,46 +125,5 @@ const handleClick = () => {
   z-index: 2;
   background: var(--placed-overlay);
   pointer-events: none;
-}
-
-/* Simple tooltip - just name */
-.simple-tooltip {
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* Tooltip styles */
-.tooltip-header {
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tooltip-name {
-  font-size: 16px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.tooltip-info {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  column-gap: 16px;
-  row-gap: 6px;
-  font-size: 13px;
-}
-
-.tooltip-row {
-  display: contents;
-}
-
-.tooltip-label {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.tooltip-value {
-  font-weight: 500;
 }
 </style>

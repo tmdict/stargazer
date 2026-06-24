@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import CharacterTooltip from '../CharacterTooltip.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
+import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { getCharacterTeam } from '@/lib/characters/character'
+import { getCharacterTeam, isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
@@ -31,8 +33,21 @@ const gameDataStore = useGameDataStore()
 const gridEvents = useGridEvents()
 
 const { startDrag, endDrag } = useDragDrop()
-
 const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelectionState()
+
+// Hover tooltip: the same character card as the roster, for a plainly-hovered base
+// hero (companions and phantimals have no roster card, so they're skipped). Dismissed
+// on any placement change, since an icon removed/swapped from under a still cursor
+// fires no mouseleave.
+const {
+  hoveredEl,
+  hovered: hoveredCharacter,
+  show,
+  hide: hideTooltip,
+} = useGridHoverTooltip<CharacterType>(() => ctx.placements)
+
+const baseCharacterAt = (characterId: number): CharacterType | undefined =>
+  isBaseHeroId(characterId) ? props.characters.find((c) => c.id === characterId) : undefined
 
 const getCharacterName = (characterId: number, hexId: number): string => {
   // Check if this character has a custom image modifier
@@ -123,6 +138,7 @@ const getCharacterStyle = (hexId: number) => {
 
 const handleDragStart = (event: DragEvent, hexId: number, characterId: number) => {
   if (props.isMapEditorMode) return
+  hideTooltip()
 
   // Phantimals carry a minimal payload (the drop handler only needs id +
   // sourceHexId); their image comes from the remote phantimal sources.
@@ -163,6 +179,7 @@ const handleDragEnd = (event: DragEvent) => {
 
 const handleClick = (hexId: number) => {
   if (props.isMapEditorMode) return
+  hideTooltip()
 
   // Mobile/tablet: tap-lift / tap-drop. Tapping a hero lifts it for moving;
   // tapping it again removes it; tapping a different hero while one is lifted
@@ -190,16 +207,18 @@ const handleClick = (hexId: number) => {
 }
 
 // Handle mouse hover to trigger tile hover effect
-const handleMouseEnter = (hexId: number) => {
-  if (!props.readonly) {
-    gridEvents.emit('character:mouseenter', hexId)
-  }
+const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
+  if (props.readonly) return
+  gridEvents.emit('character:mouseenter', hexId)
+  // show() ignores a null payload, an in-flight drag, and touch; currentTarget is the
+  // .character wrapper, the popup anchor.
+  show(event, baseCharacterAt(characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
-  if (!props.readonly) {
-    gridEvents.emit('character:mouseleave', hexId)
-  }
+  if (props.readonly) return
+  gridEvents.emit('character:mouseleave', hexId)
+  hideTooltip()
 }
 
 // In team view, only render characters on the team shown as ally.
@@ -229,7 +248,7 @@ const visiblePlacements = computed(() => {
       @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
       @dragend="!readonly && handleDragEnd($event)"
       @click="!readonly && handleClick(hexId)"
-      @mouseenter="handleMouseEnter(hexId)"
+      @mouseenter="handleMouseEnter($event, hexId, characterId)"
       @mouseleave="handleMouseLeave(hexId)"
     >
       <div class="character-content" :class="{ companion: isCompanion(characterId) }">
@@ -258,6 +277,13 @@ const visiblePlacements = computed(() => {
         <div v-if="showPerspective" class="character-pointer" />
       </div>
     </div>
+
+    <CharacterTooltip
+      v-if="hoveredEl && hoveredCharacter"
+      :character="hoveredCharacter"
+      :target-element="hoveredEl"
+      variant="detailed"
+    />
   </div>
 </template>
 

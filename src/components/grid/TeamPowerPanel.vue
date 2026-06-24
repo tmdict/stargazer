@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridContext } from '@/composables/useGridContext'
+import { useTouchDetection } from '@/composables/useTouchDetection'
 import { getTilesWithCharactersByTeam, isBaseHeroId } from '@/lib/characters/character'
 import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
@@ -48,8 +50,9 @@ const heroesFor = (team: Team): PanelHero[] =>
 const allyHeroes = computed(() => heroesFor(Team.ALLY))
 const enemyHeroes = computed(() => heroesFor(Team.ENEMY))
 
-// The enemy net is the negation of allyNet (the two mirror), so sides reuses it.
-const allyNet = computed(() =>
+// Net Rivalry-mode stat (Inspiration minus the enemy's Intimidation). The enemy's is
+// the negation of the ally's (the two mirror), so sides reuses it.
+const allyRivalryStat = computed(() =>
   teamPowerNet(
     allyHeroes.value.map((h) => h.level),
     enemyHeroes.value.map((h) => h.level),
@@ -57,12 +60,17 @@ const allyNet = computed(() =>
 )
 
 const sides = computed(() => [
-  { team: Team.ALLY, klass: 'ally', heroes: allyHeroes.value, net: allyNet.value },
-  { team: Team.ENEMY, klass: 'enemy', heroes: enemyHeroes.value, net: -allyNet.value },
+  { team: Team.ALLY, klass: 'ally', heroes: allyHeroes.value, rivalryStat: allyRivalryStat.value },
+  {
+    team: Team.ENEMY,
+    klass: 'enemy',
+    heroes: enemyHeroes.value,
+    rivalryStat: -allyRivalryStat.value,
+  },
 ])
 
 // Team view crops the grid to the ally side, so the panel drops the enemy column to
-// match. The ally net still accounts for the (now hidden) enemy's paragon.
+// match. The ally stat still accounts for the (now hidden) enemy's paragon.
 const visibleSides = computed(() =>
   props.context.teamView ? sides.value.filter((side) => side.team === Team.ALLY) : sides.value,
 )
@@ -76,15 +84,40 @@ const badgeStyle = (level: number) => {
   return { background: c.bg, color: c.fg }
 }
 
-const netClass = (net: number): string => (net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero')
+const rivalryStatClass = (stat: number): string => (stat > 0 ? 'pos' : stat < 0 ? 'neg' : 'zero')
 
-const netLabel = (net: number): string =>
-  net > 0 ? i18n.t('app.inspiration') : net < 0 ? i18n.t('app.intimidation') : i18n.t('app.even')
+const rivalryStatName = (stat: number): string =>
+  stat > 0 ? i18n.t('app.inspiration') : stat < 0 ? i18n.t('app.intimidation') : i18n.t('app.even')
 
-const formatNet = (net: number): string => {
-  const magnitude = Number.isInteger(net) ? String(Math.abs(net)) : Math.abs(net).toFixed(1)
-  const sign = net > 0 ? '+' : net < 0 ? '-' : ''
+// The tooltip explains whichever stat the name shows (the game defines them
+// separately); an even row defaults to the Inspiration side.
+const rivalryStatInfo = (stat: number): string =>
+  stat < 0 ? i18n.t('app.intimidation-info') : i18n.t('app.inspiration-info')
+
+const formatRivalryStat = (stat: number): string => {
+  const magnitude = Number.isInteger(stat) ? String(Math.abs(stat)) : Math.abs(stat).toFixed(1)
+  const sign = stat > 0 ? '+' : stat < 0 ? '-' : ''
   return `${sign}${magnitude}%`
+}
+
+// One shared TooltipPopup follows the hovered stat label, matching the roster
+// tooltips instead of a bespoke bubble. Suppressed on touch like the others. The
+// hovered side is tracked (not its value), so the tip text stays live if the stat
+// flips sign while hovered.
+const { isTouchDevice } = useTouchDetection()
+const hoveredStatEl = ref<HTMLElement | null>(null)
+const hoveredTeam = ref<Team | null>(null)
+const hoveredStat = computed(
+  () => sides.value.find((side) => side.team === hoveredTeam.value)?.rivalryStat ?? 0,
+)
+const onStatEnter = (event: MouseEvent, team: Team): void => {
+  if (isTouchDevice.value) return
+  hoveredStatEl.value = event.currentTarget as HTMLElement
+  hoveredTeam.value = team
+}
+const onStatLeave = (): void => {
+  hoveredStatEl.value = null
+  hoveredTeam.value = null
 }
 </script>
 
@@ -92,12 +125,15 @@ const formatNet = (net: number): string => {
   <div class="team-power" :class="{ single: visibleSides.length === 1 }">
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
       <div class="tp-head">
-        <span class="net" :class="netClass(side.net)">
-          <span class="net-label" tabindex="0">
-            {{ netLabel(side.net) }}
-            <span class="net-tip">{{ i18n.t('app.team-power-info') }}</span>
+        <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
+          <span
+            class="stat-label"
+            @mouseenter="onStatEnter($event, side.team)"
+            @mouseleave="onStatLeave"
+          >
+            {{ rivalryStatName(side.rivalryStat) }}
           </span>
-          <span class="net-num">{{ formatNet(side.net) }}</span>
+          <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
       </div>
       <div class="heroes">
@@ -120,6 +156,20 @@ const formatNet = (net: number): string => {
         </button>
       </div>
     </div>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="hoveredStatEl"
+        :target-element="hoveredStatEl"
+        variant="detailed"
+        :offset="10"
+        max-width="260px"
+      >
+        <template #content>
+          <p class="stat-tip">{{ rivalryStatInfo(hoveredStat) }}</p>
+        </template>
+      </TooltipPopup>
+    </Teleport>
   </div>
 </template>
 
@@ -165,18 +215,17 @@ const formatNet = (net: number): string => {
 .tp-block.enemy .tp-head {
   justify-content: flex-end;
 }
-.tp-block.enemy .net {
+.tp-block.enemy .stat {
   flex-direction: row-reverse;
 }
 
-.net {
+.stat {
   display: inline-flex;
   align-items: baseline;
   gap: var(--spacing-sm);
 }
 /* Subtle: the label is a quiet caption and the tooltip handle, not the headline. */
-.net-label {
-  position: relative;
+.stat-label {
   font-size: 0.62rem;
   font-weight: 600;
   letter-spacing: 0.05em;
@@ -184,54 +233,31 @@ const formatNet = (net: number): string => {
   color: var(--color-text-secondary);
   border-bottom: 1px dotted var(--color-border-primary);
   cursor: help;
-  outline: none;
 }
-/* Pronounced: the number is the headline, colored by sign (buff teal / debuff red). */
-.net-num {
-  font-weight: 800;
+/* Headline number, colored by sign. The negative uses the calmer danger red (not the
+   alert enemy red) so it balances the teal rather than dominating it. */
+.stat-num {
+  font-weight: 700;
   font-size: 1.05rem;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
   line-height: 1;
 }
-.net.pos .net-num {
+.stat.pos .stat-num {
   color: var(--color-success);
 }
-.net.neg .net-num {
-  color: var(--color-enemy);
+.stat.neg .stat-num {
+  color: var(--color-danger);
 }
-.net.zero .net-num {
+.stat.zero .stat-num {
   color: var(--color-text-secondary);
 }
 
-.net-tip {
-  position: absolute;
-  top: 150%;
-  left: 0;
-  width: 240px;
-  background: #2b2b2b;
-  color: #f3f3f3;
-  font-size: 0.72rem;
-  font-weight: 400;
-  letter-spacing: normal;
-  text-transform: none;
+/* Tooltip body text; the frosted background, blur, and color come from TooltipPopup. */
+.stat-tip {
+  margin: 0;
+  font-size: 0.85rem;
   line-height: 1.45;
-  padding: var(--spacing-sm) var(--spacing-md);
-  border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-medium);
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.12s ease;
-  z-index: 30;
-  text-align: left;
-}
-.tp-block.enemy .net-tip {
-  left: auto;
-  right: 0;
-}
-.net-label:hover .net-tip,
-.net-label:focus .net-tip {
-  opacity: 1;
-  visibility: visible;
 }
 
 .heroes {
@@ -321,14 +347,14 @@ const formatNet = (net: number): string => {
   text-overflow: ellipsis;
 }
 
-/* Wider container (the Arena): roomier padding, a bigger net number, and visible
+/* Wider container (the Arena): roomier padding, a bigger stat number, and visible
    hero names. Icon sizing stays flex-driven so the row never wraps. */
 @container (min-width: 480px) {
   .tp-block {
     padding: var(--spacing-md) var(--spacing-lg);
   }
-  .net-num {
-    font-size: 1.5rem;
+  .stat-num {
+    font-size: 1.3rem;
   }
   .hero-name {
     display: block;

@@ -2,14 +2,12 @@
 import { computed, ref } from 'vue'
 
 import CharacterInfoIcons from './CharacterInfoIcons.vue'
-import TooltipPopup from './ui/TooltipPopup.vue'
+import CharacterTooltip from './CharacterTooltip.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { usePressClick } from '@/composables/usePressClick'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
-import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   character: CharacterType
@@ -26,37 +24,16 @@ const emit = defineEmits<{
 }>()
 
 const gameDataStore = useGameDataStore()
-const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
 const { onMouseDown, onMouseUp } = usePressClick(() => emit('characterClick', props.character))
 const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
 
 const characterElement = ref<HTMLElement>()
 
-const formattedCharacterName = computed(() =>
-  localizedDisplayName(i18n.t, 'character', props.character.name),
-)
-
-const damageIcon = computed(() => {
-  return gameDataStore.getIcon(`damage-${props.character.damage}`)
-})
-
-const energyIcon = computed(() => {
-  return gameDataStore.getIcon('initial-energy')
-})
+const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 
 // Show the energy badge when the initial-energy-300 filter is active
-const showEnergy = computed(() => {
-  return props.selectedFilter === 'initial-energy-300'
-})
-
-// Tooltip: "base (bonus)" when skill grants extra starting energy; else just "base"
-const formattedEnergy = computed(() => {
-  const [base = 0, ...bonuses] = props.character.energy
-  if (bonuses.length === 0) return String(base)
-  const bonus = bonuses.reduce((sum, n) => sum + n, 0)
-  return `${base} (${bonus})`
-})
+const showEnergy = computed(() => props.selectedFilter === 'initial-energy-300')
 
 // Under-icon badge: single summed value to keep the grid layout tight
 const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum + n, 0))
@@ -110,83 +87,12 @@ const handleDragEnd = (event: DragEvent) => {
       <span class="energy-value">{{ totalEnergy }}</span>
     </div>
 
-    <!-- Tooltip -->
-    <Teleport to="body">
-      <TooltipPopup
-        v-if="showTooltip && characterElement"
-        :target-element="characterElement"
-        :variant="showSimpleTooltip ? 'simple' : 'detailed'"
-        :offset="10"
-      >
-        <template #content>
-          <!-- Simple tooltip - just the name -->
-          <div v-if="showSimpleTooltip" class="simple-tooltip">
-            {{ formattedCharacterName }}
-          </div>
-
-          <!-- Detailed tooltip - full info -->
-          <template v-else>
-            <div class="tooltip-header">
-              <h3>{{ formattedCharacterName }}</h3>
-            </div>
-
-            <div class="tooltip-content">
-              <div class="tooltip-row">
-                <img
-                  :src="gameDataStore.getIcon(`faction-${character.faction}`)"
-                  :alt="character.faction"
-                  class="tooltip-icon"
-                />
-                <span class="tooltip-label">{{ i18n.t('game.faction') }}:</span>
-                <span class="tooltip-value">{{ i18n.t(`game.${character.faction}`) }}</span>
-              </div>
-
-              <div class="tooltip-row">
-                <img
-                  :src="gameDataStore.getIcon(`class-${character.class}`)"
-                  :alt="character.class"
-                  class="tooltip-icon"
-                />
-                <span class="tooltip-label">{{ i18n.t('game.class') }}:</span>
-                <span class="tooltip-value">{{ i18n.t(`game.${character.class}`) }}</span>
-              </div>
-
-              <div class="tooltip-row">
-                <img
-                  v-if="damageIcon"
-                  :src="damageIcon"
-                  :alt="String(character.damage)"
-                  class="tooltip-icon"
-                />
-                <span class="tooltip-label">{{ i18n.t('game.damage') }}:</span>
-                <span class="tooltip-value">{{ i18n.t(`game.${character.damage}`) }}</span>
-              </div>
-
-              <div class="tooltip-row">
-                <img
-                  v-if="energyIcon"
-                  :src="energyIcon"
-                  :alt="formattedEnergy"
-                  class="tooltip-icon energy-icon"
-                />
-                <span class="tooltip-label">{{ i18n.t('game.energy') }}:</span>
-                <span class="tooltip-value">{{ formattedEnergy }}</span>
-              </div>
-
-              <div class="tooltip-row">
-                <span class="tooltip-label">{{ i18n.t('game.range') }}:</span>
-                <span class="tooltip-value">{{ character.range }}</span>
-              </div>
-
-              <div class="tooltip-row">
-                <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
-                <span class="tooltip-value">{{ character.season }}</span>
-              </div>
-            </div>
-          </template>
-        </template>
-      </TooltipPopup>
-    </Teleport>
+    <CharacterTooltip
+      v-if="showTooltip && characterElement"
+      :character
+      :target-element="characterElement"
+      :variant="showSimpleTooltip ? 'simple' : 'detailed'"
+    />
   </div>
 </template>
 
@@ -262,68 +168,6 @@ const handleDragEnd = (event: DragEvent) => {
 
 .character-display.selected {
   box-shadow: 0 0 0 5px #c05b4d;
-}
-
-/* Simple tooltip - just name */
-.simple-tooltip {
-  font-size: 14px;
-  font-weight: 600;
-  text-align: center;
-  white-space: nowrap;
-}
-
-/* Tooltip styles */
-.tooltip-header {
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tooltip-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.tooltip-content {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tooltip-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.tooltip-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.tooltip-icon.energy-icon {
-  filter: brightness(1.5);
-}
-
-.tooltip-label {
-  color: rgba(255, 255, 255, 0.7);
-  min-width: 60px;
-}
-
-.tooltip-value {
-  font-weight: 500;
-  text-transform: capitalize;
-}
-
-/* Special styling for rows without icons */
-.tooltip-row:not(:has(.tooltip-icon)) .tooltip-label {
-  margin-left: 28px; /* 20px icon + 8px gap */
 }
 
 /* Energy Display */
