@@ -3,9 +3,12 @@ import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
+import ArtifactTooltip from '@/components/ArtifactTooltip.vue'
 import { useGridContext } from '@/composables/useGridContext'
+import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { Hex } from '@/lib/hex'
+import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
@@ -27,6 +30,20 @@ const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const grids = useGrids()
 const { setArtifactTarget, requestTab } = useSelectionState()
+
+// Hover tooltip: the same artifact card as the roster, shown only on a still hover.
+// Native HTML5 drag suppresses mouse events, so it can't appear mid-drag; the click
+// and dragstart handlers also dismiss it, and it clears on any artifact change.
+const {
+  hoveredEl,
+  hovered: hoveredArtifact,
+  show,
+  hide: hideArtifactTooltip,
+} = useGridHoverTooltip<ArtifactType>(() => [props.allyArtifactId, props.enemyArtifactId])
+
+const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null) => {
+  if (!props.readonly) show(event, artifact)
+}
 
 // This board's host-cell SVG, used to anchor the artifact popup to the clicked
 // board (its coordinate space matches the layout, like GridTiles).
@@ -171,6 +188,7 @@ const closePopup = () => {
 }
 
 const handleArtifactClick = (team: Team) => {
+  hideArtifactTooltip()
   ctx.removeArtifact(team)
 }
 
@@ -190,6 +208,7 @@ const enemyDroppable = computed(
 // team is the cell's fixed engine team (Team.ALLY / Team.ENEMY), never the
 // invert-derived display team; invert flips rendering only.
 const handleArtifactDragStart = (event: DragEvent, team: Team) => {
+  hideArtifactTooltip()
   if (!canDrag.value || !event.dataTransfer) return
   const payload: ArtifactDragPayload = { sourceCtxId: ctx.id, sourceTeam: team }
   event.dataTransfer.setData(ARTIFACT_MIME, JSON.stringify(payload))
@@ -283,6 +302,8 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @dragstart="handleArtifactDragStart($event, Team.ALLY)"
       @dragover="allowArtifactDrop"
       @drop="handleArtifactDrop($event, Team.ALLY)"
+      @mouseenter="showArtifactTooltip($event, allyArtifact)"
+      @mouseleave="hideArtifactTooltip"
     >
       <div class="artifact-circle">
         <ArtifactImage :artifact="allyArtifact" />
@@ -302,12 +323,21 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @dragstart="handleArtifactDragStart($event, Team.ENEMY)"
       @dragover="allowArtifactDrop"
       @drop="handleArtifactDrop($event, Team.ENEMY)"
+      @mouseenter="showArtifactTooltip($event, enemyArtifact)"
+      @mouseleave="hideArtifactTooltip"
     >
       <div class="artifact-circle">
         <ArtifactImage :artifact="enemyArtifact" />
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
     </div>
+
+    <ArtifactTooltip
+      v-if="hoveredEl && hoveredArtifact"
+      :artifact="hoveredArtifact"
+      :target-element="hoveredEl"
+      variant="detailed"
+    />
 
     <Teleport to="body">
       <ArtifactSelectionPopup
