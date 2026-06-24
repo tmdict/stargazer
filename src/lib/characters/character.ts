@@ -1,4 +1,4 @@
-import type { Grid, GridTile } from '../grid'
+import { COMPANION_ID_OFFSET, type Grid, type GridTile } from '../grid'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { isPhantimalId } from './phantimal'
@@ -56,6 +56,13 @@ export function getTilesWithCharacters(grid: Grid): GridTile[] {
 
 export function getTilesWithCharactersByTeam(grid: Grid, team: Team): GridTile[] {
   return getTilesWithCharacters(grid).filter((tile) => tile.team === team)
+}
+
+// A base hero, as opposed to a skill-spawned companion or a seasonal phantimal. One
+// comparison covers both: companion ids are N * COMPANION_ID_OFFSET + base and
+// phantimal ids sit higher still, so every non-base unit lands at or above the offset.
+export function isBaseHeroId(characterId: number): boolean {
+  return characterId < COMPANION_ID_OFFSET
 }
 
 // Team management

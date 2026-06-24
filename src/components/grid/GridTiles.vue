@@ -25,7 +25,7 @@ interface Props {
   hexes: Hex[]
   layout: Layout
   height: number
-  showHexIds: boolean
+  showGridInfo: boolean
   showCoordinates: boolean
   isMapEditorMode: boolean
   selectedMapEditorState: State
@@ -494,7 +494,7 @@ onUnmounted(() => {
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
         <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">
           <text
-            v-if="showHexIds && shouldShowHexId(hex)"
+            v-if="showGridInfo && shouldShowHexId(hex)"
             :x="ctx.layout.hexToPixel(hex).x"
             :y="ctx.layout.hexToPixel(hex).y + 6"
             text-anchor="middle"

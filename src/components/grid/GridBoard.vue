@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 
 import GridContainer from '@/components/grid/GridContainer.vue'
+import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
@@ -18,11 +19,11 @@ import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
-const { context, showArrows, showHexIds, showSkills, showPerspective, tapMode } = defineProps<{
+const { context, showArrows, showGridInfo, showSkills, showPerspective, tapMode } = defineProps<{
   context: GridContext
   characters: readonly CharacterType[]
   showArrows: boolean
-  showHexIds: boolean
+  showGridInfo: boolean
   showSkills: boolean
   showPerspective: boolean
   // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid
@@ -44,6 +45,7 @@ const isSwapSource = computed(() => sourceId.value === context.id)
 const boardImageOptions = () => ({
   showPerspective,
   target: `[data-grid-board-id="${context.id}"] .perspective-container`,
+  appendTarget: `[data-grid-board-id="${context.id}"] .team-power`,
   filePrefix: 'team',
 })
 const handleCopyImage = () => copyToClipboard(boardImageOptions())
@@ -61,12 +63,14 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
       :context
       :characters
       :show-arrows
-      :show-hex-ids
+      :show-grid-info
       :show-debug="false"
       :show-skills
       :show-perspective
       :tap-mode
     />
+
+    <TeamPowerPanel v-if="showGridInfo" :context />
 
     <div class="board-actions">
       <button
