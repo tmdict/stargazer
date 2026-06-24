@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import IconReset from '@/components/ui/IconReset.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridContext } from '@/composables/useGridContext'
 import { useTouchDetection } from '@/composables/useTouchDetection'
@@ -50,6 +51,10 @@ const heroesFor = (team: Team): PanelHero[] =>
 const allyHeroes = computed(() => heroesFor(Team.ALLY))
 const enemyHeroes = computed(() => heroesFor(Team.ENEMY))
 
+// Grid Info gates the panel, but an empty grid has nothing to show, so the panel
+// only renders once a hero is placed.
+const hasHeroes = computed(() => allyHeroes.value.length > 0 || enemyHeroes.value.length > 0)
+
 // Net Rivalry-mode stat (Inspiration minus the enemy's Intimidation). The enemy's is
 // the negation of the ally's (the two mirror), so sides reuses it.
 const allyRivalryStat = computed(() =>
@@ -77,6 +82,12 @@ const visibleSides = computed(() =>
 
 const cycle = (team: Team, hero: PanelHero): void => {
   props.context.setParagon(team, hero.characterId, (hero.level + 1) % (PARAGON_MAX_LEVEL + 1))
+}
+
+const hasParagon = (heroes: PanelHero[]): boolean => heroes.some((hero) => hero.level > 0)
+
+const resetParagons = (team: Team, heroes: PanelHero[]): void => {
+  heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, 0))
 }
 
 const badgeStyle = (level: number) => {
@@ -121,7 +132,7 @@ const onStatLeave = (): void => {
 </script>
 
 <template>
-  <div class="team-power" :class="{ single: visibleSides.length === 1 }">
+  <div v-if="hasHeroes" class="team-power" :class="{ single: visibleSides.length === 1 }">
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
       <div class="tp-head">
         <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
@@ -135,6 +146,16 @@ const onStatLeave = (): void => {
           </span>
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
+        <button
+          v-if="hasParagon(side.heroes)"
+          type="button"
+          class="stat-reset"
+          :aria-label="i18n.t('app.reset-paragons')"
+          :title="i18n.t('app.reset-paragons')"
+          @click="resetParagons(side.team, side.heroes)"
+        >
+          <IconReset :size="11" />
+        </button>
       </div>
       <div class="heroes">
         <button
@@ -207,12 +228,15 @@ const onStatLeave = (): void => {
 
 .tp-head {
   display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   min-height: 28px;
-  margin-bottom: var(--spacing-sm);
+  margin-bottom: var(--spacing-md);
 }
-/* Mirror the enemy header: number inward, label at the outer edge. */
+/* Reverse the enemy header so its label and reset button sit at the outer edge with
+   the number inward, mirroring the ally side. */
 .tp-block.enemy .tp-head {
-  justify-content: flex-end;
+  flex-direction: row-reverse;
 }
 .tp-block.enemy .stat {
   flex-direction: row-reverse;
@@ -250,6 +274,26 @@ const onStatLeave = (): void => {
 }
 .stat.zero .stat-num {
   color: var(--color-text-secondary);
+}
+
+.stat-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+.stat-reset:hover {
+  background: rgba(0, 0, 0, 0.11);
+  color: var(--color-text-primary);
 }
 
 /* Tooltip body text; the frosted background, blur, and color come from TooltipPopup. */
