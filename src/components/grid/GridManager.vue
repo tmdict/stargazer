@@ -27,7 +27,7 @@ interface Props {
   characters: readonly CharacterType[]
   // Display toggle props
   showArrows: boolean
-  showHexIds: boolean
+  showGridInfo: boolean
   showDebug: boolean
   showSkills: boolean
   // Map editor props
@@ -260,7 +260,7 @@ defineExpose({
       :hexes="ctx.visibleHexes"
       :layout="ctx.layout"
       :height="defaultSvgHeight"
-      :show-hex-ids="showHexIds"
+      :show-grid-info="showGridInfo"
       :show-coordinates="showDebug"
       :is-map-editor-mode="isMapEditorMode"
       :selected-map-editor-state="selectedMapEditorState"

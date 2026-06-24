@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
-import type { GridTile } from '@/lib/grid'
+import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -32,6 +32,37 @@ describe('gridStateSerializer', () => {
       const tiles: GridTile[] = []
       const result = serializeGridState(tiles, null, null)
       expect(result).toEqual({})
+    })
+
+    it('serializes paragon for base heroes, skipping zero, companions, and phantimals', () => {
+      const companionId = COMPANION_ID_OFFSET + 100
+      const tiles: GridTile[] = [
+        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
+        createMockTile(2, State.OCCUPIED_ALLY, 101, Team.ALLY), // left at level 0
+        createMockTile(3, State.OCCUPIED_ENEMY, 200, Team.ENEMY),
+        createMockTile(4, State.OCCUPIED_ALLY, companionId, Team.ALLY), // companion
+        createMockTile(5, State.OCCUPIED_ALLY, toPhantimalId(1), Team.ALLY), // phantimal
+      ]
+      const levels = new Map<string, number>([
+        [`${Team.ALLY}:100`, 4],
+        [`${Team.ENEMY}:200`, 2],
+        [`${Team.ALLY}:${companionId}`, 3],
+        [`${Team.ALLY}:${toPhantimalId(1)}`, 3],
+      ])
+      const getParagon = (team: Team, characterId: number): number =>
+        levels.get(`${team}:${characterId}`) ?? 0
+
+      const result = serializeGridState(tiles, null, null, undefined, getParagon)
+      expect(result.pr).toEqual([
+        [Team.ALLY, 100, 4],
+        [Team.ENEMY, 200, 2],
+      ])
+    })
+
+    it('omits pr without getParagon or when every level is zero', () => {
+      const tiles: GridTile[] = [createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY)]
+      expect(serializeGridState(tiles, null, null).pr).toBeUndefined()
+      expect(serializeGridState(tiles, null, null, undefined, () => 0).pr).toBeUndefined()
     })
 
     it('filters out default state tiles', () => {
@@ -112,7 +143,7 @@ describe('gridStateSerializer', () => {
     it('serializes display flags', () => {
       const tiles: GridTile[] = []
       const displayFlags = {
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: false,
         showPerspective: true,
         showSkills: false,
@@ -124,7 +155,7 @@ describe('gridStateSerializer', () => {
     it('serializes teamView in display flags (bit 4)', () => {
       const tiles: GridTile[] = []
       const result = serializeGridState(tiles, null, null, {
-        showHexIds: false,
+        showGridInfo: false,
         showArrows: false,
         showPerspective: false,
         showSkills: false,
@@ -140,7 +171,7 @@ describe('gridStateSerializer', () => {
         createMockTile(3, State.BLOCKED),
       ]
       const displayFlags = {
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: true,
         showPerspective: false,
         showSkills: true,
@@ -233,6 +264,23 @@ describe('gridStateSerializer', () => {
       expect(result.c).toEqual([[44, 100, Team.ENEMY]])
     })
 
+    it('mirrors paragon entries (team flipped), dropping any whose hero is off-grid', () => {
+      const result = mirrorGridState(
+        {
+          c: [
+            [1, 100, Team.ALLY],
+            [99, 200, Team.ENEMY], // 99 off-grid, so hero 200 is dropped
+          ],
+          pr: [
+            [Team.ALLY, 100, 3],
+            [Team.ENEMY, 200, 4],
+          ],
+        },
+        mirror,
+      )
+      expect(result.pr).toEqual([[Team.ENEMY, 100, 3]])
+    })
+
     it('round-trips: mirroring twice restores the original', () => {
       const state = {
         c: [
@@ -248,9 +296,9 @@ describe('gridStateSerializer', () => {
   })
 
   describe('unpackDisplayFlags', () => {
-    // All six flags off; spread overrides on top for each case.
+    // All flags off; spread overrides on top for each case.
     const off = {
-      showHexIds: false,
+      showGridInfo: false,
       showArrows: false,
       showPerspective: false,
       showSkills: false,
@@ -262,7 +310,7 @@ describe('gridStateSerializer', () => {
     it('returns the defaults when undefined', () => {
       expect(unpackDisplayFlags(undefined)).toEqual({
         ...off,
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: true,
         showPerspective: true,
         showSkills: true,
@@ -271,7 +319,7 @@ describe('gridStateSerializer', () => {
 
     it.each([
       [0b000000, off],
-      [0b000001, { ...off, showHexIds: true }],
+      [0b000001, { ...off, showGridInfo: true }],
       [0b000010, { ...off, showArrows: true }],
       [0b000100, { ...off, showPerspective: true }],
       [0b001000, { ...off, showSkills: true }],
@@ -281,7 +329,7 @@ describe('gridStateSerializer', () => {
       [
         0b111111,
         {
-          showHexIds: true,
+          showGridInfo: true,
           showArrows: true,
           showPerspective: true,
           showSkills: true,
@@ -296,7 +344,7 @@ describe('gridStateSerializer', () => {
 
     it('ignores bits beyond the first 7', () => {
       expect(unpackDisplayFlags(0b11111111)).toEqual({
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: true,
         showPerspective: true,
         showSkills: true,
@@ -309,7 +357,7 @@ describe('gridStateSerializer', () => {
     it('round-trips all flags through pack and unpack', () => {
       const tiles: GridTile[] = []
       const original = {
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: false,
         showPerspective: true,
         showSkills: false,
@@ -325,7 +373,7 @@ describe('gridStateSerializer', () => {
       // An old packed value that used only bits 0-3.
       const legacyPacked = 0b01111
       expect(unpackDisplayFlags(legacyPacked)).toEqual({
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: true,
         showPerspective: true,
         showSkills: true,

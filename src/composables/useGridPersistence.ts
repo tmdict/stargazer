@@ -61,6 +61,7 @@ const createPersistence = (key: string, snapshot: () => string): GridPersistence
 export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersistence {
   const gridStore = useGridStore()
   const artifactStore = useArtifactStore()
+  const grids = useGrids()
   return createPersistence(ARENA_KEY, () =>
     encodeGridStateToUrl(
       serializeGridState(
@@ -68,6 +69,7 @@ export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersisten
         artifactStore.allyArtifactId,
         artifactStore.enemyArtifactId,
         getFlags(),
+        grids.active?.getParagon,
       ),
     ),
   )
@@ -82,6 +84,7 @@ export function useTeamsPersistence(getFlags: () => DisplayFlags): GridPersisten
           tiles: ctx.grid.getAllTiles(),
           allyArtifact: ctx.artifacts.ally,
           enemyArtifact: ctx.artifacts.enemy,
+          getParagon: ctx.getParagon,
         })),
         grids.activeId,
         getFlags(),

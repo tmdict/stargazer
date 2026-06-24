@@ -1,4 +1,5 @@
 import type { GridTile } from '@/lib/grid'
+import { Team } from '@/lib/types/team'
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
 import {
   serializeGridState,
@@ -39,8 +40,15 @@ export function generateShareableUrl(
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: DisplayFlags,
+  getParagon?: (team: Team, characterId: number) => number,
 ): string {
-  const gridState = serializeGridState(allTiles, allyArtifact, enemyArtifact, displayFlags)
+  const gridState = serializeGridState(
+    allTiles,
+    allyArtifact,
+    enemyArtifact,
+    displayFlags,
+    getParagon,
+  )
 
   const encodedState = encodeGridStateToUrl(gridState)
 

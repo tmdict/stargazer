@@ -94,6 +94,29 @@ describe('binaryEncoder', () => {
           d: 0b1010,
         },
       ],
+      [
+        'paragon levels with characters',
+        {
+          c: [
+            [2, 100, 1],
+            [6, 200, 2],
+          ],
+          pr: [
+            [1, 100, 4],
+            [2, 200, 2],
+          ],
+        },
+      ],
+      ['only paragon', { pr: [[1, 33, 3]] }],
+      [
+        'paragon with phantimals and display flags',
+        {
+          c: [[2, 100, 1]],
+          p: [[7, 1, 2]],
+          pr: [[1, 100, 4]],
+          d: 0b1,
+        },
+      ],
     ])('encodes and decodes %s', (_, state) => {
       const encoded = encodeToBinary(state as GridState)
       const decoded = decodeFromBinary(encoded)

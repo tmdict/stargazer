@@ -92,7 +92,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     source.artifact.placeArtifact(5, Team.ENEMY)
 
     const flags: DisplayFlags = {
-      showHexIds: true,
+      showGridInfo: true,
       showArrows: false,
       showPerspective: false,
       showSkills: true,
@@ -117,6 +117,33 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(restored.grid.getTile(23).state).toBe(State.BLOCKED_BREAKABLE)
     expect(restored.artifact.allyArtifactId).toBe(3)
     expect(restored.artifact.enemyArtifactId).toBe(5)
+  })
+
+  it('round-trips paragon levels into the restored board', () => {
+    const source = createStores()
+    const sourceGrids = useGrids()
+    expect(source.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
+    expect(source.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)
+    sourceGrids.active!.setParagon(Team.ALLY, ALLY_A, 4)
+    sourceGrids.active!.setParagon(Team.ENEMY, ENEMY_A, 2)
+
+    const encoded = encodeGridStateToUrl(
+      serializeGridState(
+        source.grid.getAllTiles,
+        source.artifact.allyArtifactId,
+        source.artifact.enemyArtifactId,
+        undefined,
+        sourceGrids.active!.getParagon,
+      ),
+    )
+
+    const target = createStores()
+    const targetGrids = useGrids()
+    expect(target.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(targetGrids.active!.getParagon(Team.ALLY, ALLY_A)).toBe(4)
+    expect(targetGrids.active!.getParagon(Team.ENEMY, ENEMY_A)).toBe(2)
+    // A hero with no stored level defaults to 0.
+    expect(targetGrids.active!.getParagon(Team.ALLY, ALLY_B)).toBe(0)
   })
 
   it('restores a moved companion at its encoded hex, not the auto-spawn hex', () => {
@@ -230,7 +257,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(result.success).toBe(true)
     // No flags were encoded, so the store reports the defaults.
     expect(result.displayFlags).toEqual({
-      showHexIds: true,
+      showGridInfo: true,
       showArrows: true,
       showPerspective: true,
       showSkills: true,
