@@ -18,7 +18,7 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   const { currentBreakpoint, showPerspective } = useBreakpoint()
 
   const showArrows = ref(false)
-  const showGridInfo = ref(false)
+  const showGridInfo = ref(true)
   const showSkills = ref(true)
 
   // Targeting arrows connect ally and enemy units, but team view shows only the
@@ -42,7 +42,7 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   })
 
   const applyFlags = (flags: DisplayFlags): void => {
-    showGridInfo.value = flags.showGridInfo ?? false
+    showGridInfo.value = flags.showGridInfo ?? true
     showArrows.value = flags.showArrows ?? false
     showPerspective.value = flags.showPerspective ?? false
     showSkills.value = flags.showSkills ?? true
