@@ -25,7 +25,7 @@ const formattedStats = computed(() => formatArtifactStats(artifact.stats, i18n.c
 
 <template>
   <Teleport to="body">
-    <TooltipPopup :target-element="targetElement" :variant="variant" :offset="10">
+    <TooltipPopup :target-element="targetElement" :variant="variant">
       <template #content>
         <div v-if="variant === 'simple'" class="simple-tooltip">{{ formattedName }}</div>
 

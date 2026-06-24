@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 
 import SkillModal from './modals/SkillModal.vue'
 import IconInfo from './ui/IconInfo.vue'
-import TooltipPopup from './ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -23,24 +22,9 @@ const hasDocumentedSkill = computed(() => hasSkillLocale(props.character.name))
 const showSkillModal = ref(false)
 const selectedSkillName = ref('')
 
-const showTooltip = ref(false)
-const buttonElement = ref<HTMLElement>()
-
 const openSkillModal = () => {
   selectedSkillName.value = props.character.name
   showSkillModal.value = true
-}
-
-const handleMouseEnter = (event: MouseEvent) => {
-  if (event.currentTarget instanceof HTMLElement) {
-    buttonElement.value = event.currentTarget
-  }
-  showTooltip.value = true
-}
-
-const handleMouseLeave = () => {
-  showTooltip.value = false
-  buttonElement.value = undefined
 }
 </script>
 
@@ -53,10 +37,8 @@ const handleMouseLeave = () => {
     />
     <button
       v-if="hasDocumentedSkill"
-      ref="buttonElement"
+      :title="i18n.t('app.info')"
       @click="openSkillModal"
-      @mouseenter="handleMouseEnter"
-      @mouseleave="handleMouseLeave"
       class="skill-button hide-on-mobile"
     >
       <IconInfo class="icon skill-info-icon" />
@@ -69,23 +51,12 @@ const handleMouseLeave = () => {
     />
   </div>
 
-  <!-- Skill Modal -->
   <SkillModal
     :show="showSkillModal"
     :skill-name="selectedSkillName"
     :initial-chip="selectedFilter"
     @close="showSkillModal = false"
   />
-
-  <!-- Tooltip -->
-  <Teleport to="body">
-    <TooltipPopup
-      v-if="showTooltip && buttonElement"
-      :target-element="buttonElement"
-      :text="i18n.t('app.info')"
-      variant="simple"
-    />
-  </Teleport>
 </template>
 
 <style scoped>

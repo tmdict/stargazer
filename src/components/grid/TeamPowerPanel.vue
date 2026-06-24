@@ -70,7 +70,7 @@ const sides = computed(() => [
 ])
 
 // Team view crops the grid to the ally side, so the panel drops the enemy column to
-// match. The ally stat still accounts for the (now hidden) enemy's paragon.
+// match. The ally stat still accounts for the hidden enemy's paragon.
 const visibleSides = computed(() =>
   props.context.teamView ? sides.value.filter((side) => side.team === Team.ALLY) : sides.value,
 )
@@ -86,11 +86,12 @@ const badgeStyle = (level: number) => {
 
 const rivalryStatClass = (stat: number): string => (stat > 0 ? 'pos' : stat < 0 ? 'neg' : 'zero')
 
+// The label is hidden when the stat is 0 (the v-if), so only the two signs reach here.
 const rivalryStatName = (stat: number): string =>
-  stat > 0 ? i18n.t('app.inspiration') : stat < 0 ? i18n.t('app.intimidation') : i18n.t('app.even')
+  stat > 0 ? i18n.t('app.inspiration') : i18n.t('app.intimidation')
 
-// The tooltip explains whichever stat the name shows (the game defines them
-// separately); an even row defaults to the Inspiration side.
+// Inspiration (positive) and Intimidation (negative) have separate in-game
+// descriptions; the panel hides the tooltip at 0, so even never reaches here.
 const rivalryStatInfo = (stat: number): string =>
   stat < 0 ? i18n.t('app.intimidation-info') : i18n.t('app.inspiration-info')
 
@@ -100,10 +101,8 @@ const formatRivalryStat = (stat: number): string => {
   return `${sign}${magnitude}%`
 }
 
-// One shared TooltipPopup follows the hovered stat label, matching the roster
-// tooltips instead of a bespoke bubble. Suppressed on touch like the others. The
-// hovered side is tracked (not its value), so the tip text stays live if the stat
-// flips sign while hovered.
+// Track the hovered side, not its value, so the tooltip text stays live if the stat
+// flips sign while the label is hovered. Touch-suppressed like the roster tooltips.
 const { isTouchDevice } = useTouchDetection()
 const hoveredStatEl = ref<HTMLElement | null>(null)
 const hoveredTeam = ref<Team | null>(null)
@@ -127,6 +126,7 @@ const onStatLeave = (): void => {
       <div class="tp-head">
         <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
           <span
+            v-if="side.rivalryStat !== 0"
             class="stat-label"
             @mouseenter="onStatEnter($event, side.team)"
             @mouseleave="onStatLeave"
@@ -159,10 +159,9 @@ const onStatLeave = (): void => {
 
     <Teleport to="body">
       <TooltipPopup
-        v-if="hoveredStatEl"
+        v-if="hoveredStatEl && hoveredStat !== 0"
         :target-element="hoveredStatEl"
         variant="detailed"
-        :offset="10"
         max-width="260px"
       >
         <template #content>

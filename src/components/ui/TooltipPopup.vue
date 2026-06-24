@@ -16,7 +16,7 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  offset: 8,
+  offset: 10,
   placement: 'auto',
   minWidth: 'auto',
   maxWidth: '300px',

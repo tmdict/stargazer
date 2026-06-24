@@ -5,12 +5,12 @@ import { useTouchDetection } from './useTouchDetection'
 
 /**
  * Hover-tooltip state shared by the grid overlays (placed characters, artifacts):
- * tracks the hovered element + its payload and shows the tooltip only on a plain,
+ * tracks the hovered element and its payload, showing the tooltip only on a plain,
  * still hover. Suppressed during a drag and on touch, and dismissed both when a drag
- * starts and whenever `dismissWhenChanges` updates — an icon pulled out from under a
- * stationary cursor (removal, swap, team-view crop) fires no mouseleave.
+ * starts and when `dismissWhenChanges` updates: an icon pulled out from under a still
+ * cursor (removal, swap, team-view crop) fires no mouseleave.
  *
- * Touch suppression leans on useTouchDetection's global flag already being set when the
+ * Touch suppression relies on useTouchDetection's global flag already being set when the
  * synthetic post-tap mouseenter fires; the roster icons instead track touch
  * per-interaction via useHoverTooltip, whose single-element model doesn't fit a
  * many-icon overlay.
