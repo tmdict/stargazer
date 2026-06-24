@@ -162,12 +162,7 @@ const openModal = (phantimal: PhantimalType) => {
     />
 
     <Teleport to="body">
-      <TooltipPopup
-        v-if="hovered && hoveredEl"
-        :target-element="hoveredEl"
-        variant="simple"
-        :offset="10"
-      >
+      <TooltipPopup v-if="hovered && hoveredEl" :target-element="hoveredEl" variant="simple">
         <template #content>
           <div class="phantimal-tooltip">{{ tooltipText }}</div>
         </template>

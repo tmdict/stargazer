@@ -206,12 +206,9 @@ const handleClick = (hexId: number) => {
   ctx.remove(hexId)
 }
 
-// Handle mouse hover to trigger tile hover effect
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
   if (props.readonly) return
   gridEvents.emit('character:mouseenter', hexId)
-  // show() ignores a null payload, an in-flight drag, and touch; currentTarget is the
-  // .character wrapper, the popup anchor.
   show(event, baseCharacterAt(characterId))
 }
 
