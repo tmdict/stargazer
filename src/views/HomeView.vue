@@ -8,6 +8,7 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
+import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import MapEditor from '@/components/MapEditor.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
@@ -115,7 +116,7 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-const { showArrows, showHexIds, showSkills, showPerspective, toFlags, applyFlags } =
+const { showArrows, showGridInfo, showSkills, showPerspective, toFlags, applyFlags } =
   useDisplayFlags()
 
 const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
@@ -125,7 +126,7 @@ const selectedMapEditorState = ref<State>(State.DEFAULT)
 // Map editor mode is incompatible with these display modes; force them off when entering.
 const resetForMapEditor = () => {
   showArrows.value = false
-  showHexIds.value = false
+  showGridInfo.value = false
   gridStore.teamView = false
 }
 
@@ -223,6 +224,7 @@ const handleCopyLink = () => {
     artifactStore.allyArtifactId,
     artifactStore.enemyArtifactId,
     toFlags(),
+    activeContext.value.getParagon,
   )
   const encodedState = new URLSearchParams(shareableUrl.split('?')[1]).get('g') ?? ''
   return shareLink(encodedState)
@@ -232,6 +234,7 @@ const handleCopyImage = async () => {
   await copyToClipboard({
     showPerspective: showPerspective.value,
     perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
+    appendTarget: '.team-power',
   })
 }
 
@@ -240,6 +243,7 @@ const handleDownload = async () => {
     showPerspective: showPerspective.value,
     perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
     filePrefix: 'team',
+    appendTarget: '.team-power',
   })
 }
 
@@ -265,7 +269,7 @@ const handleResetMap = () => {
             :context="activeContext"
             :characters="gameDataStore.characters"
             :show-arrows="showArrows"
-            :show-hex-ids="showHexIds"
+            :show-grid-info="showGridInfo"
             :show-debug="showDebug"
             :show-skills="showSkills"
             :is-map-editor-mode="activeTab === 'mapEditor'"
@@ -275,9 +279,13 @@ const handleResetMap = () => {
             :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
+          <TeamPowerPanel
+            v-if="showGridInfo && activeTab !== 'mapEditor'"
+            :context="activeContext"
+          />
           <GridControls
             v-model:show-arrows="showArrows"
-            v-model:show-hex-ids="showHexIds"
+            v-model:show-grid-info="showGridInfo"
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"
             v-model:team-view="gridStore.teamView"

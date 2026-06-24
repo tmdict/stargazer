@@ -46,6 +46,7 @@ interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy]
   p?: number[][] // phantimals: [hexId, localPhantimalId, team]
+  pr?: number[][] // paragon: [team, characterId, level]
   d?: number // display flags (bit-packed)
 }
 ```
@@ -64,11 +65,12 @@ interface GridState {
 [Extended Header (if bit 7 set): 8+ bits]
   - Extended flags byte:
     - Bit 0: Needs extended counts
-    - Bits 1-5: reserved
+    - Bit 1: Has paragon (paragon section present after phantimals)
+    - Bits 2-5: reserved
     - Bit 6: Has phantimals (phantimal section present after artifacts)
     - Bit 7: Has display flags (a dedicated display-flags byte follows)
   - Display flags byte (if extended bit 7 set): bit 0 Grid Info, 1 Targeting,
-    2 Flat, 3 Skills, 4 Team View, 5 Invert (bits 6-7 spare)
+    2 Flat, 3 Skills, 4 Team View, 5 Invert, 6 Wrap (bit 7 spare)
   - Additional tile count byte (if extended bit 0 set)
   - Additional character count byte (if extended bit 0 set)
 
@@ -88,6 +90,10 @@ interface GridState {
 [Phantimals (if extended flags bit 6 set, after artifacts)]
   - Count (4 bits): Range 0-15
   - Each entry (11 bits): hex ID (6) + local phantimal ID (4) + team (1)
+
+[Paragon (if extended flags bit 1 set, after phantimals)]
+  - Count (5 bits): Range 0-31
+  - Each entry (20 bits): team (1) + character ID (16) + level (3)
 ```
 
 Only non-default hex states are stored, significantly reducing size.
@@ -101,6 +107,7 @@ Before encoding, `validateGridState()` filters invalid entries:
 - **Character IDs**: Must be 1-65535 (16-bit limit)
 - **Artifact IDs**: Must be null or 1-63 (6-bit limit); out-of-range IDs become null
 - **Phantimal entries**: Local ID 1-15, capped at 15 entries (4-bit count field)
+- **Paragon entries**: Level 1-7, capped at 31 entries (5-bit count field)
 - **Team Values**: Must be 1 (ALLY) or 2 (ENEMY)
 - **Maximum Counts**: 262 tiles or characters (7 in header + 255 in extended)
 

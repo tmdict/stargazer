@@ -13,7 +13,7 @@ const i18n = useI18nStore()
 const { handleClearAll } = useSelectionState()
 
 const showArrows = defineModel<boolean>('showArrows', { required: true })
-const showHexIds = defineModel<boolean>('showHexIds', { required: true })
+const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills')
 const teamView = defineModel<boolean>('teamView')
@@ -58,8 +58,8 @@ const flatView = computed({
         <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
       </label>
-      <label class="grid-toggle-btn" :class="{ active: showHexIds }">
-        <input type="checkbox" v-model="showHexIds" class="grid-toggle-checkbox" />
+      <label class="grid-toggle-btn" :class="{ active: showGridInfo }">
+        <input type="checkbox" v-model="showGridInfo" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
       </label>
       <label class="grid-toggle-btn" :class="{ active: teamView, disabled: disableTeamView }">

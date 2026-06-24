@@ -104,10 +104,13 @@ describe('urlStateManager', () => {
     })
 
     it.each([
-      [{ showHexIds: true, showArrows: false, showPerspective: true, showSkills: false }, 0b00101],
+      [
+        { showGridInfo: true, showArrows: false, showPerspective: true, showSkills: false },
+        0b00101,
+      ],
       [
         {
-          showHexIds: false,
+          showGridInfo: false,
           showArrows: false,
           showPerspective: false,
           showSkills: false,
@@ -195,7 +198,7 @@ describe('urlStateManager', () => {
         createMockTile(4, State.BLOCKED),
       ]
       const displayFlags = {
-        showHexIds: true,
+        showGridInfo: true,
         showArrows: true,
         showPerspective: false,
         showSkills: true,

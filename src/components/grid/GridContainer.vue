@@ -14,7 +14,7 @@ interface Props {
   characters: readonly CharacterType[]
   // Display toggle props
   showArrows: boolean
-  showHexIds: boolean
+  showGridInfo: boolean
   showDebug: boolean
   showSkills: boolean
   // Map editor props
@@ -117,7 +117,7 @@ const shiftStyle = computed(() => {
           <GridManager
             :characters
             :show-arrows
-            :show-hex-ids
+            :show-grid-info
             :show-debug
             :show-skills
             :is-map-editor-mode

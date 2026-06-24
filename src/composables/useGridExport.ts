@@ -9,6 +9,9 @@ interface ExportOptions {
   // Element to capture; defaults to the single grid's perspective container.
   // 5 v 5 passes the boards row to capture all five at once.
   target?: string
+  // Optional element captured flat and stacked below the grid image (the Team Power
+  // panel), so the grid's perspective crop never clips it. Skipped when absent.
+  appendTarget?: string
   // html-to-image node filter (return false to drop a node from the capture).
   filter?: (node: HTMLElement) => boolean
   // Download filename prefix (timestamped); unused by copyToClipboard.
@@ -67,6 +70,21 @@ export function useGridExport() {
         dataUrl = await cropPerspectiveImage(dataUrl, options.perspectiveCompression ?? 0.55)
       }
 
+      // Stack an extra element (the Team Power panel) below the grid. Captured flat
+      // and appended after the crop so the perspective math never touches it.
+      if (options.appendTarget) {
+        const appendElement = document.querySelector<HTMLElement>(options.appendTarget)
+        if (appendElement) {
+          const appendUrl = await toPng(appendElement, {
+            quality: 1.0,
+            pixelRatio: 2,
+            backgroundColor: 'transparent',
+            filter: options.filter,
+          })
+          dataUrl = await stackImagesVertically(dataUrl, appendUrl)
+        }
+      }
+
       return dataUrl
     } finally {
       restoreBoards.forEach((restore) => restore())
@@ -80,12 +98,7 @@ export function useGridExport() {
     dataUrl: string,
     compressionRatio: number,
   ): Promise<string> => {
-    // Load image into canvas for cropping
-    const img = new Image()
-    img.src = dataUrl
-    await new Promise((resolve) => {
-      img.onload = resolve
-    })
+    const img = await loadImage(dataUrl)
 
     const canvas = document.createElement('canvas')
     const ctx = canvas.getContext('2d')
@@ -117,6 +130,29 @@ export function useGridExport() {
       cropHeight, // Destination width, height
     )
 
+    return canvas.toDataURL('image/png', 1.0)
+  }
+
+  const loadImage = (src: string): Promise<HTMLImageElement> => {
+    const img = new Image()
+    img.src = src
+    return new Promise((resolve) => {
+      img.onload = () => resolve(img)
+    })
+  }
+
+  // Stack two PNG data URLs into one image, the second centered below the first.
+  const stackImagesVertically = async (topUrl: string, bottomUrl: string): Promise<string> => {
+    const [top, bottom] = await Promise.all([loadImage(topUrl), loadImage(bottomUrl)])
+    const gap = 24
+    const width = Math.max(top.width, bottom.width)
+    const canvas = document.createElement('canvas')
+    canvas.width = width
+    canvas.height = top.height + gap + bottom.height
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return topUrl
+    ctx.drawImage(top, Math.round((width - top.width) / 2), 0)
+    ctx.drawImage(bottom, Math.round((width - bottom.width) / 2), top.height + gap)
     return canvas.toDataURL('image/png', 1.0)
   }
 

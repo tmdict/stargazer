@@ -59,7 +59,7 @@ const tabs = computed(() => [
 const wrapBoards = ref(false)
 const {
   showArrows,
-  showHexIds,
+  showGridInfo,
   showSkills,
   showPerspective,
   currentBreakpoint,
@@ -153,6 +153,7 @@ const handleCopyLink = () => {
     tiles: ctx.grid.getAllTiles(),
     allyArtifact: ctx.artifacts.ally,
     enemyArtifact: ctx.artifacts.enemy,
+    getParagon: ctx.getParagon,
   }))
   const encoded = encodeMultiGridStateToUrl(
     serializeMultiGridState(boards, grids.activeId, toFlags()),
@@ -188,7 +189,7 @@ onUnmounted(() => mq?.removeEventListener('change', enforceMobileTab))
             <template #fiveVFive>
               <TeamsBoards
                 v-model:show-arrows="showArrows"
-                v-model:show-hex-ids="showHexIds"
+                v-model:show-grid-info="showGridInfo"
                 v-model:show-perspective="showPerspective"
                 v-model:show-skills="showSkills"
                 v-model:wrap="wrapBoards"

@@ -38,6 +38,7 @@ import {
   hasCharacter,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
+import { PARAGON_MAX_LEVEL } from '@/lib/characters/paragon'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import {
   countTeamFaction,
@@ -130,6 +131,8 @@ export interface GridContext {
   seedPhantimalBaseline: () => void
   setArtifact: (team: Team, artifactId: number) => void
   removeArtifact: (team: Team) => void
+  getParagon: (team: Team, characterId: number) => number
+  setParagon: (team: Team, characterId: number, level: number) => void
   handleDrop: (
     payload: { character: CharacterType; characterId: number },
     targetHexId: number,
@@ -162,6 +165,23 @@ export function createGridContext(
 
   const currentMap = ref(mapKey)
   const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }
+
+  // Paragon levels (0..PARAGON_MAX_LEVEL) per placed hero, keyed by team + character
+  // rather than hex, so a level follows its hero across moves and each team tracks a
+  // hero independently. Sparse: only non-zero levels are stored, and a removed hero's
+  // entry lingers harmlessly (neither rendered nor serialized) until the hero returns;
+  // bulk resets (clear, map switch) drop the lot.
+  const paragon = reactive(new Map<string, number>())
+  const paragonKey = (team: Team, characterId: number): string => `${team}:${characterId}`
+  const getParagon = (team: Team, characterId: number): number =>
+    paragon.get(paragonKey(team, characterId)) ?? 0
+  const setParagon = (team: Team, characterId: number, level: number): void => {
+    const clamped = Math.max(0, Math.min(PARAGON_MAX_LEVEL, Math.round(level)))
+    const key = paragonKey(team, characterId)
+    if (clamped > 0) paragon.set(key, clamped)
+    else paragon.delete(key)
+  }
+  const clearParagon = (): void => paragon.clear()
 
   const scope = effectScope(true)
 
@@ -313,11 +333,13 @@ export function createGridContext(
     skillManager.reset()
     grid.skillManager = skillManager
     currentMap.value = mapKey
+    clearParagon()
     return true
   }
 
   const clearCharacters = (): void => {
     executeClearAllCharacters(grid, skillManager)
+    clearParagon()
   }
 
   const clearArtifacts = (): void => {
@@ -536,6 +558,8 @@ export function createGridContext(
     seedPhantimalBaseline,
     setArtifact,
     removeArtifact,
+    getParagon,
+    setParagon,
     handleDrop,
     switchMap,
     clearCharacters,

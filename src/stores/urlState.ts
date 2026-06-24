@@ -144,6 +144,20 @@ export const useUrlStateStore = defineStore('urlState', () => {
       })
     }
 
+    // Restore paragon levels from compact format: [team, characterId, level].
+    // Characters are already placed; setParagon keys by team + character, so it
+    // doesn't depend on hex placement.
+    if (gridState.pr) {
+      const ctx = grids.active!
+      gridState.pr.forEach((entry) => {
+        const team = entry[0]
+        const characterId = entry[1]
+        const level = entry[2]
+        if (team === undefined || characterId === undefined || level === undefined) return
+        ctx.setParagon(team, characterId, level)
+      })
+    }
+
     // Restore artifacts from compact format: [ally, enemy]
     if (gridState.a) {
       const allyArtifact = gridState.a[0] ?? null // null: no ally artifact
@@ -215,6 +229,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
         ctx.grid.getAllTiles(),
         ctx.artifacts.ally,
         ctx.artifacts.enemy,
+        undefined,
+        ctx.getParagon,
       )
       if (!state.c && !state.p && !state.a) return // nothing to swap on this board
       const mirrored = mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))

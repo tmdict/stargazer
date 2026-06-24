@@ -1,3 +1,4 @@
+import { isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import type { GridTile } from '@/lib/grid'
 import { State } from '@/lib/types/state'
@@ -9,12 +10,13 @@ export interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   p?: number[][] // phantimals: [hexId, localPhantimalId, team] (kept out of c, ids 100000+ don't fit the character field)
-  d?: number // display flags: bit-packed (showHexIds, showArrows, showPerspective, showSkills, teamView, inverted)
+  pr?: number[][] // paragon: [team, characterId, level] for placed heroes with level > 0
+  d?: number // display flags: bit-packed (showGridInfo, showArrows, showPerspective, showSkills, teamView, inverted)
 }
 
 /* The user-facing display toggles carried in the URL's bit-packed `d` field */
 export interface DisplayFlags {
-  showHexIds?: boolean
+  showGridInfo?: boolean
   showArrows?: boolean
   showPerspective?: boolean
   showSkills?: boolean
@@ -30,6 +32,7 @@ export function serializeGridState(
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: DisplayFlags,
+  getParagon?: (team: Team, characterId: number) => number,
 ): GridState {
   const state: GridState = {}
 
@@ -67,6 +70,23 @@ export function serializeGridState(
 
   if (phantimals.length > 0) {
     state.p = phantimals
+  }
+
+  // Paragon levels keyed by team + character; only base heroes carry them and only
+  // non-zero levels are emitted.
+  if (getParagon) {
+    const paragons = allTiles
+      .filter(
+        (tile) =>
+          tile.characterId !== undefined &&
+          tile.team !== undefined &&
+          isBaseHeroId(tile.characterId),
+      )
+      .map((tile) => [tile.team!, tile.characterId!, getParagon(tile.team!, tile.characterId!)])
+      .filter((entry) => entry[2]! > 0)
+    if (paragons.length > 0) {
+      state.pr = paragons
+    }
   }
 
   // Convert artifacts to compact format: [ally, enemy]
@@ -113,16 +133,23 @@ export function mirrorGridState(
   if (c?.length) result.c = c
   const p = state.p?.map(mirrorEntry).filter((e): e is number[] => e !== null)
   if (p?.length) result.p = p
+  // Paragon is keyed by team + character, not hex, so flip the team; drop any whose
+  // hero fell off-grid in the c mirror, so no level outlives its character.
+  const survivors = new Set((c ?? []).map((entry) => `${entry[2]!}:${entry[1]!}`))
+  const pr = state.pr
+    ?.map((entry) => [flip(entry[0]!), entry[1]!, entry[2]!])
+    .filter((entry) => survivors.has(`${entry[0]!}:${entry[1]!}`))
+  if (pr?.length) result.pr = pr
   if (state.a) result.a = [state.a[1] ?? null, state.a[0] ?? null]
   return result
 }
 
 /* Pack the display toggles into one number.
- * Bit 0: showHexIds, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills,
- * 4: teamView, 5: inverted */
+ * Bit 0: showGridInfo, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills,
+ * 4: teamView, 5: inverted, 6: wrap */
 export function packDisplayFlags(flags: DisplayFlags): number {
   let packed = 0
-  if (flags.showHexIds) packed |= 1 << 0
+  if (flags.showGridInfo) packed |= 1 << 0
   if (flags.showArrows) packed |= 1 << 1
   if (flags.showPerspective) packed |= 1 << 2
   if (flags.showSkills) packed |= 1 << 3
@@ -144,6 +171,7 @@ export interface BoardInput {
   tiles: GridTile[]
   allyArtifact: number | null
   enemyArtifact: number | null
+  getParagon?: (team: Team, characterId: number) => number
 }
 
 export function serializeMultiGridState(
@@ -152,7 +180,9 @@ export function serializeMultiGridState(
   displayFlags?: DisplayFlags,
 ): MultiGridState {
   const state: MultiGridState = {
-    boards: boards.map((b) => serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact)),
+    boards: boards.map((b) =>
+      serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact, undefined, b.getParagon),
+    ),
   }
   if (activeId) state.active = activeId
   if (displayFlags) state.d = packDisplayFlags(displayFlags)
@@ -164,7 +194,7 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
   if (packed === undefined) {
     // Return defaults if no flags are stored
     return {
-      showHexIds: true,
+      showGridInfo: true,
       showArrows: true,
       showPerspective: true,
       showSkills: true,
@@ -175,7 +205,7 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
   }
 
   return {
-    showHexIds: !!(packed & (1 << 0)),
+    showGridInfo: !!(packed & (1 << 0)),
     showArrows: !!(packed & (1 << 1)),
     showPerspective: !!(packed & (1 << 2)),
     showSkills: !!(packed & (1 << 3)),

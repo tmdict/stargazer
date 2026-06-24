@@ -23,7 +23,7 @@ defineProps<{
 // Display flags are owned by TeamsView (the share link serializes them, the URL
 // restore sets them); GridControls writes them and every board reads them.
 const showArrows = defineModel<boolean>('showArrows', { required: true })
-const showHexIds = defineModel<boolean>('showHexIds', { required: true })
+const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills', { required: true })
 // 3-2 "wrap" boards layout vs one row. Owned by TeamsView and serialized with the
@@ -44,7 +44,7 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
       :show-wrap-toggle="canWrap"
       v-model:wrap="wrap"
       v-model:show-arrows="showArrows"
-      v-model:show-hex-ids="showHexIds"
+      v-model:show-grid-info="showGridInfo"
       v-model:show-perspective="showPerspective"
       v-model:show-skills="showSkills"
       v-model:team-view="grids.teamView"
@@ -60,7 +60,7 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
         :context="ctx"
         :characters="characters"
         :show-arrows="showArrows"
-        :show-hex-ids="showHexIds"
+        :show-grid-info="showGridInfo"
         :show-skills="showSkills"
         :show-perspective="showPerspective"
         :tap-mode="tapMode"

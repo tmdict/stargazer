@@ -12,6 +12,10 @@ const PHANTIMAL_ID_BITS = 4 // Supports local phantimal IDs 1-15
 const MAX_PHANTIMAL_ID = (1 << PHANTIMAL_ID_BITS) - 1 // 15
 const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
 const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
+const PARAGON_LEVEL_BITS = 3 // Paragon levels 1-4 (0 = absent, never stored)
+const MAX_PARAGON_LEVEL = (1 << PARAGON_LEVEL_BITS) - 1 // 7 (game caps levels at 4)
+const PARAGON_COUNT_BITS = 5 // Supports up to 31 paragon entries
+const MAX_PARAGON_COUNT = (1 << PARAGON_COUNT_BITS) - 1 // 31
 
 /**
  * Binary encoding utilities for ultra-compact URL serialization
@@ -27,12 +31,13 @@ const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
  * Extended header (if bit 7 is set):
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
- *   - Bits 1-5: reserved
+ *   - Bit 1: Has paragon (paragon section present after phantimals)
+ *   - Bits 2-5: reserved
  *   - Bit 6: Has phantimals (phantimal section present after artifacts)
  *   - Bit 7: Has display flags (a dedicated display-flags byte follows)
  * - If bit 7 of extended flags is set:
- *   - Next byte: Display flags (bit 0 showHexIds, 1 showArrows, 2 showPerspective,
- *     3 showSkills, 4 teamView, 5 inverted; bits 6-7 spare)
+ *   - Next byte: Display flags (bit 0 showGridInfo, 1 showArrows, 2 showPerspective,
+ *     3 showSkills, 4 teamView, 5 inverted, 6 wrap; bit 7 spare)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
@@ -49,7 +54,7 @@ const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
  * Note: This field also carries companion IDs (N * companionIdOffset + base, see
  * grid.ts), which the restore path uses to reposition companions after their main
  * character is placed. 16 bits covers companion index N up to 6 for base IDs below
- * 5536. Phantimal IDs (100000+) never reach this field — they serialize via their
+ * 5536. Phantimal IDs (100000+) never reach this field; they serialize via their
  * 4-bit local ID below.
  *
  * Artifacts (12 bits):
@@ -59,6 +64,10 @@ const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
  * Phantimals (only if extended flag bit 6 is set, written after artifacts):
  * - Count (4 bits, 0-15)
  * - Each entry (11 bits): hexId (6) + local phantimal ID (4) + team (1)
+ *
+ * Paragon (only if extended flag bit 1 is set, written after phantimals):
+ * - Count (5 bits, 0-31)
+ * - Each entry (20 bits): team (1) + characterId (16) + level (3)
  */
 
 /**
@@ -127,7 +136,7 @@ export function validateGridState(state: GridState): GridState {
   }
 
   // Artifacts: must be array with exactly 2 elements; each element null or an ID
-  // within the 6-bit field (1-63). Out-of-range IDs become null — writeBits would
+  // within the 6-bit field (1-63). Out-of-range IDs become null; writeBits would
   // otherwise silently truncate them to a different artifact's ID.
   if (state.a && Array.isArray(state.a) && state.a.length === 2) {
     validated.a = state.a.map((id) => {
@@ -155,7 +164,7 @@ export function validateGridState(state: GridState): GridState {
       }
       return isValid
     })
-    // Cap at the 4-bit count field's maximum — a longer list would wrap the
+    // Cap at the 4-bit count field's maximum; a longer list would wrap the
     // encoded count and desync the decoder.
     if (validPhantimals.length > MAX_PHANTIMAL_COUNT) {
       console.warn(
@@ -165,6 +174,35 @@ export function validateGridState(state: GridState): GridState {
     }
     if (validPhantimals.length > 0) {
       validated.p = validPhantimals
+    }
+  }
+
+  // Validate paragon entries: team 1-2, charId 1-65535, level 1-7
+  if (state.pr && Array.isArray(state.pr)) {
+    let validParagons = state.pr.filter((entry) => {
+      const [team, charId, level] = entry
+      const isValid =
+        (team === 1 || team === 2) &&
+        charId != null &&
+        charId > 0 &&
+        charId <= MAX_CHARACTER_ID &&
+        level != null &&
+        level > 0 &&
+        level <= MAX_PARAGON_LEVEL
+      if (!isValid) {
+        console.warn('Invalid paragon entry:', entry)
+      }
+      return isValid
+    })
+    // Cap at the count field's maximum so the encoded count can't wrap.
+    if (validParagons.length > MAX_PARAGON_COUNT) {
+      console.warn(
+        `Too many paragon entries (${validParagons.length}), keeping first ${MAX_PARAGON_COUNT}`,
+      )
+      validParagons = validParagons.slice(0, MAX_PARAGON_COUNT)
+    }
+    if (validParagons.length > 0) {
+      validated.pr = validParagons
     }
   }
 
@@ -244,11 +282,12 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const hasArtifacts = validState.a !== undefined
   const hasDisplayFlags = validState.d !== undefined
   const hasPhantimals = validState.p !== undefined && validState.p.length > 0
+  const hasParagon = validState.pr !== undefined && validState.pr.length > 0
 
   // Extended header is needed if we have >7 entries OR display flags OR phantimals
-  // This optimization keeps URLs short for small grids
+  // OR paragon. This optimization keeps URLs short for small grids
   const needsExtendedCounts = tileCount > 7 || charCount > 7
-  const needsExtended = needsExtendedCounts || hasDisplayFlags || hasPhantimals
+  const needsExtended = needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasParagon
 
   // Write header byte (8 bits total)
   let header = 0
@@ -274,6 +313,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
     }
     if (hasPhantimals) {
       extendedFlags |= 0x40 // Bit 6: has phantimals
+    }
+    if (hasParagon) {
+      extendedFlags |= 0x02 // Bit 1: has paragon
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -342,6 +384,20 @@ export function encodeToBinary(state: GridState): Uint8Array {
     }
   }
 
+  // Write paragon (after phantimals): count, then team + character ID + level each
+  if (hasParagon && validState.pr) {
+    writer.writeBits(validState.pr.length, PARAGON_COUNT_BITS)
+    for (const entry of validState.pr) {
+      const team = entry[0]! // Guaranteed valid (1 or 2) by validation
+      const charId = entry[1]! // Guaranteed valid (1-65535) by validation
+      const level = entry[2]! // Guaranteed valid (1-7) by validation
+
+      writer.writeBits(team - 1, TEAM_BITS) // 1 bit for team
+      writer.writeBits(charId, CHARACTER_ID_BITS) // 16 bits for character ID
+      writer.writeBits(level, PARAGON_LEVEL_BITS) // 3 bits for paragon level
+    }
+  }
+
   return writer.getBytes()
 }
 
@@ -367,9 +423,10 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     const hasArtifacts = (header & 0x40) !== 0 // Bit 6
     const hasExtended = (header & 0x80) !== 0 // Bit 7
 
-    // Phantimals can be the sole reason for an extended header; track it so the
-    // section after artifacts is read.
+    // Phantimals / paragon can be the sole reason for an extended header; track
+    // them so the sections after artifacts are read.
     let hasPhantimals = false
+    let hasParagon = false
 
     // Read extended header if present
     if (hasExtended) {
@@ -377,6 +434,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const extendedFlags = reader.readBits(8)
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
       hasPhantimals = (extendedFlags & 0x40) !== 0 // Bit 6
+      hasParagon = (extendedFlags & 0x02) !== 0 // Bit 1
 
       // Bit 7 explicitly marks display flags as present, so d=0 (all flags off)
       // is distinguishable from "no display flags encoded" (d stays undefined).
@@ -436,6 +494,20 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
           const localId = reader.readBits(PHANTIMAL_ID_BITS) // 4 bits
           const teamBit = reader.readBits(TEAM_BITS) // 1 bit
           state.p.push([hexId, localId, teamBit + 1])
+        }
+      }
+    }
+
+    // Read paragon (after phantimals) if the extended flag marked it present
+    if (hasParagon) {
+      const paragonCount = reader.readBits(PARAGON_COUNT_BITS)
+      if (paragonCount > 0) {
+        state.pr = []
+        for (let i = 0; i < paragonCount; i++) {
+          const teamBit = reader.readBits(TEAM_BITS) // 1 bit
+          const charId = reader.readBits(CHARACTER_ID_BITS) // 16 bits
+          const level = reader.readBits(PARAGON_LEVEL_BITS) // 3 bits
+          state.pr.push([teamBit + 1, charId, level])
         }
       }
     }

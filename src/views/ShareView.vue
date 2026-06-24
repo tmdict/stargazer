@@ -62,7 +62,7 @@ watch(currentBreakpoint, applyMultiSize)
 
 const hasValidGrid = ref(false)
 const showArrows = ref(false)
-const showHexIds = ref(false)
+const showGridInfo = ref(false)
 const showPerspective = ref(false) // Default to flat view
 const showSkills = ref(true)
 const wrapBoards = ref(false) // 5 v 5 only: 3-2 layout vs one row
@@ -80,7 +80,7 @@ const restoreStateFromUrl = () => {
   if (result.success) {
     // Apply display flags if present
     if (result.displayFlags) {
-      showHexIds.value = result.displayFlags.showHexIds ?? false
+      showGridInfo.value = result.displayFlags.showGridInfo ?? false
       showArrows.value = result.displayFlags.showArrows ?? false
       showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
@@ -149,7 +149,7 @@ const editLink = computed(() =>
             :context="ctx"
             :characters="gameDataStore.characters"
             :show-arrows
-            :show-hex-ids
+            :show-grid-info
             :show-debug="false"
             :show-skills
             :show-perspective
@@ -161,7 +161,7 @@ const editLink = computed(() =>
           :context="activeContext"
           :characters="gameDataStore.characters"
           :show-arrows
-          :show-hex-ids
+          :show-grid-info
           :show-debug="false"
           :show-skills
           :show-perspective
