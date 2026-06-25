@@ -5,6 +5,7 @@ import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
+import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
@@ -143,10 +144,23 @@ const editLink = computed(() =>
       <DragDropProvider>
         <!-- Multi (5 v 5) reuses the Teams boards row, including the 3-2 wrap layout. -->
         <BoardsRow v-if="isMultiBoard" :wrap="wrapBoards" :can-wrap>
+          <div v-for="ctx in grids.contexts" :key="ctx.id" class="share-board">
+            <GridContainer
+              :context="ctx"
+              :characters="gameDataStore.characters"
+              :show-arrows
+              :show-grid-info
+              :show-debug="false"
+              :show-skills
+              :show-perspective
+              :readonly="true"
+            />
+            <TeamPowerPanel v-if="showGridInfo" :context="ctx" readonly />
+          </div>
+        </BoardsRow>
+        <div v-else class="share-board">
           <GridContainer
-            v-for="ctx in grids.contexts"
-            :key="ctx.id"
-            :context="ctx"
+            :context="activeContext"
             :characters="gameDataStore.characters"
             :show-arrows
             :show-grid-info
@@ -155,18 +169,8 @@ const editLink = computed(() =>
             :show-perspective
             :readonly="true"
           />
-        </BoardsRow>
-        <GridContainer
-          v-else
-          :context="activeContext"
-          :characters="gameDataStore.characters"
-          :show-arrows
-          :show-grid-info
-          :show-debug="false"
-          :show-skills
-          :show-perspective
-          :readonly="true"
-        />
+          <TeamPowerPanel v-if="showGridInfo" :context="activeContext" readonly />
+        </div>
       </DragDropProvider>
     </div>
 
@@ -206,6 +210,20 @@ const editLink = computed(() =>
 .grid-wrapper.multi {
   display: block;
   max-width: 95vw;
+}
+
+/* Each board stacks its grid over its read-only team-power panel. */
+.share-board {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* The panel is built for light pages; on the dark share modal give it a translucent
+   light surface so the captions and numbers stay legible without glaring white. */
+.share-board :deep(.team-power) {
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 6px;
 }
 
 /* Empty state styling */
