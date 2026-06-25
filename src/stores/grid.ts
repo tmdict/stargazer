@@ -90,6 +90,17 @@ export const useGridStore = defineStore('grid', () => {
     return active().layout.getLinePath(startHex, endHex, characterRadius)
   }
 
+  const getCornerLinePath = (
+    startHexId: number,
+    startCorner: number,
+    endHexId: number,
+    endCorner: number,
+  ): string => {
+    const startHex = active().grid.getHexById(startHexId)
+    const endHex = active().grid.getHexById(endHexId)
+    return active().layout.getCornerLinePath(startHex, startCorner, endHex, endCorner)
+  }
+
   // No-op while the page pins a fixed hex size (5 v 5); honored on the Arena.
   const updateBreakpoint = (breakpoint: Breakpoint): void => {
     if (grids.hexSizeMode !== 'breakpoint') return
@@ -116,6 +127,7 @@ export const useGridStore = defineStore('grid', () => {
     getCurrentMapConfig,
     getArrowPath,
     getLinePath,
+    getCornerLinePath,
     updateBreakpoint,
     getHexScale,
     _getGrid: () => active().grid,

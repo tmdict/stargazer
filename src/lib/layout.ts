@@ -175,4 +175,13 @@ export class Layout {
     const ey = end.y - dirY * characterRadius
     return `M ${sx} ${sy} L ${ex} ${ey}`
   }
+
+  // Straight line between two specific hex corners, with no border pullback: the
+  // exact-edge counterpart to getLinePath (e.g. a wedge/band boundary).
+  getCornerLinePath(startHex: Hex, startCorner: number, endHex: Hex, endCorner: number): string {
+    const start = this.polygonCorners(startHex)[startCorner]
+    const end = this.polygonCorners(endHex)[endCorner]
+    if (!start || !end) return ''
+    return `M ${start.x} ${start.y} L ${end.x} ${end.y}`
+  }
 }

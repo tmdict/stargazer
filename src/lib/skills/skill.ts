@@ -40,11 +40,15 @@ export interface TilePaint {
   fill?: boolean
 }
 
-// A straight connection line a skill draws between two hexes (border to border).
+// A straight line a skill draws between two hexes: border to border between their
+// centers by default, or between two specific hex corners (an exact edge line, e.g. a
+// wedge boundary) when fromCorner/toCorner are set.
 export interface SkillLine {
   fromHexId: number
   toHexId: number
   color: string
+  fromCorner?: number
+  toCorner?: number
 }
 
 export interface SkillTargetInfo {
