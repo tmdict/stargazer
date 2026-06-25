@@ -74,7 +74,7 @@ const onToggle = () => {
     background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     padding: 5px 11px;
-    min-height: 0;
+    min-height: 34px;
     gap: 0;
     font-size: 0.78rem;
     font-weight: 500;
@@ -91,6 +91,7 @@ const onToggle = () => {
 @media (max-width: 480px) {
   .invert-toggle {
     padding: 4px 10px;
+    min-height: 30px;
     font-size: 0.74rem;
   }
 }

@@ -58,8 +58,8 @@ const handleClick = () => {
   .clear-all-btn {
     border-radius: 999px;
     padding: 0;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     margin: 0;
     justify-content: center;
   }
@@ -74,8 +74,8 @@ const handleClick = () => {
 
 @media (max-width: 480px) {
   .clear-all-btn {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
   .clear-all-btn .btn-icon {
     width: 16px;
