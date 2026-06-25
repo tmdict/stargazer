@@ -194,25 +194,7 @@ main {
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
 
-/* WandWars section heading. */
-.ww-section-title {
-  margin: 0;
-  font-size: 1.1rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  color: var(--color-text-secondary);
-  letter-spacing: 0.05em;
-  display: flex;
-  align-items: center;
-}
-
-@media (max-width: 1280px) {
-  .ww-section-title {
-    font-size: 1.05rem;
-  }
-}
-
-/* Tooltip body text — shared across WandWars tooltip popups. */
+/* Tooltip body text, shared across WandWars tooltip popups. */
 .ww-tooltip-text {
   margin: 0;
   font-size: 0.85rem;
