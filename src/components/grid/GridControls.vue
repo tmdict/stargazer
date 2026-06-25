@@ -218,13 +218,13 @@ const flatView = computed({
    the link/copy/download actions become icon-only round buttons. */
 @media (max-width: 768px) {
   .grid-controls {
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
   /* The wide single-row layout reverts to the stacked two-row toolbar on mobile
      (display toggles, then team + actions + clear), same as the Arena. */
   .grid-controls.single-row {
     flex-direction: column;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-md);
   }
   .grid-controls.single-row .controls-row {
     display: flex;
@@ -245,7 +245,8 @@ const flatView = computed({
     background: var(--color-bg-secondary);
     color: var(--color-text-secondary);
     padding: 5px 11px;
-    min-height: 0;
+    /* Shared with the round action buttons so the rows align. */
+    min-height: 34px;
     gap: 0;
     font-size: 0.78rem;
     font-weight: 500;
@@ -262,8 +263,8 @@ const flatView = computed({
   .action-btn {
     border-radius: 999px;
     padding: 0;
-    width: 40px;
-    height: 40px;
+    width: 34px;
+    height: 34px;
     min-height: 0;
     justify-content: center;
   }
@@ -285,11 +286,12 @@ const flatView = computed({
   }
   .grid-toggle-btn {
     padding: 4px 10px;
+    min-height: 30px;
     font-size: 0.74rem;
   }
   .action-btn {
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
   }
   .action-btn .btn-icon {
     width: 16px;

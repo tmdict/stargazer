@@ -33,11 +33,20 @@ const { context, showArrows, showGridInfo, showSkills, showPerspective, tapMode 
 
 const grids = useGrids()
 const i18n = useI18nStore()
-const { isSwapping, sourceId, startFromButton, selectTarget } = useGridSwap()
+const {
+  isSwapping,
+  sourceId,
+  pendingId,
+  startFromButton,
+  onOverlayDown,
+  onOverlayUp,
+  clearOverlayPress,
+} = useGridSwap()
 const { copyToClipboard, downloadAsImage } = useGridExport()
 
 const isActive = computed(() => grids.activeId === context.id)
 const isSwapSource = computed(() => sourceId.value === context.id)
+const isSwapPending = computed(() => pendingId.value === context.id)
 
 // Export only this board: its .perspective-container holds the grid without the
 // active ring (on .grid-board) or these action buttons (siblings), so it needs no
@@ -112,16 +121,21 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
       </button>
     </div>
 
-    <!-- During a swap every board shows a pickable overlay; the source is the
-         cancel zone, the others are swap targets. It also blocks cell input while
-         a swap is being aimed. -->
+    <!-- A pickable overlay over every board during a swap (source = cancel zone, others
+         = targets) that also blocks cell input. Resolving on a tap rather than a press
+         lets a swipe scroll the row instead of selecting; on the tap layout the first
+         tap previews and a second confirms. -->
     <div
       v-if="isSwapping"
       class="board-swap-overlay"
-      :class="{ source: isSwapSource }"
-      @pointerdown.stop="selectTarget(context.id)"
+      :class="{ source: isSwapSource, pending: isSwapPending }"
+      @pointerdown.stop="onOverlayDown(context.id, $event)"
+      @pointerup="onOverlayUp(context.id, $event)"
+      @pointercancel="clearOverlayPress"
     >
-      <span v-if="!isSwapSource" class="board-swap-hint">{{ i18n.t('app.swap') }}</span>
+      <span v-if="!isSwapSource" class="board-swap-hint">
+        {{ isSwapPending ? i18n.t('app.swap-confirm') : i18n.t('app.swap') }}
+      </span>
     </div>
   </div>
 </template>
@@ -223,6 +237,13 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
 
 .board-swap-overlay:hover {
   background: rgba(54, 149, 142, 0.22);
+}
+
+/* Tap layout: the previewed target awaiting its confirming tap, the touch counterpart
+   of the desktop drag-over hover. A solid border sets it apart from the dashed targets. */
+.board-swap-overlay.pending {
+  background: rgba(54, 149, 142, 0.22);
+  border-style: solid;
 }
 
 .board-swap-overlay.source {
