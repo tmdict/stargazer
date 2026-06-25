@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 
 import WandWarsHeroAdjustments from './WandWarsHeroAdjustments.vue'
 import WandWarsHeroGrid from './WandWarsHeroGrid.vue'
-import WandWarsMetaTeams from './WandWarsMetaTeams.vue'
 import WandWarsPickSlots from './WandWarsPickSlots.vue'
 import WandWarsPoolImport from './WandWarsPoolImport.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
@@ -11,8 +10,7 @@ import TabView from '@/components/ui/TabView.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
-import type { InsightCategory } from '@/wandwars/insights'
-import type { AnalysisData, MatchResult, PickSide, PickState } from '@/wandwars/types'
+import type { PickSide, PickState } from '@/wandwars/types'
 
 defineProps<{
   pickState: PickState
@@ -21,9 +19,6 @@ defineProps<{
   allHeroes: string[]
   availableHeroes: string[]
   characterImages: Record<string, string>
-  matchData: MatchResult[]
-  analysisData: AnalysisData
-  poolFilter: string[] | null
 }>()
 
 const emit = defineEmits<{
@@ -32,7 +27,6 @@ const emit = defineEmits<{
   reset: []
   undo: []
   setPool: [pool: string[]]
-  clearPool: []
 }>()
 
 const showPoolImport = ref(false)
@@ -46,13 +40,10 @@ function handlePoolApply(pool: string[]) {
 
 const i18n = useI18nStore()
 
-type MainTab = 'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'
+type MainTab = 'draft' | 'hero-adjustments'
 
 const tabs = computed(() => [
   { key: 'draft', label: i18n.t('wandwars.draft') },
-  { key: 'units', label: i18n.t('wandwars.units') },
-  { key: 'teams', label: i18n.t('wandwars.teams') },
-  { key: 'synergy', label: i18n.t('wandwars.synergy') },
   { key: 'hero-adjustments', label: i18n.t('wandwars.hero-adjustments') },
 ])
 
@@ -140,15 +131,6 @@ const activeTab = defineModel<MainTab>('activeTab', { default: 'draft' })
 
       <template #hero-adjustments>
         <WandWarsHeroAdjustments :character-images="characterImages" />
-      </template>
-
-      <template #default>
-        <WandWarsMetaTeams
-          :category="activeTab as InsightCategory"
-          :match-data="matchData"
-          :analysis-data="analysisData"
-          :character-images="characterImages"
-        />
       </template>
     </TabView>
   </section>

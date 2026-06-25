@@ -263,7 +263,7 @@ export function loadAppLocales(): Record<string, LocaleData> {
   // `**` includes subfolders, but `app` keys stay flat (filename only): it's the
   // global namespace, with some keys resolved dynamically as `app.<key>`, so
   // folders are organization only. (WandWars instead prefixes keys by folder, in
-  // loadWandWarsLocales, to avoid collisions across its messages/ and insights/.)
+  // loadWandWarsLocales, to avoid collisions across its messages/ subfolder.)
   appLocalesCache = buildLocaleDict(
     import.meta.glob<LocaleData>('@/locales/app/**/*.json', { eager: true, import: 'default' }),
   )
@@ -334,7 +334,7 @@ export function loadWandWarsLocales(): Record<string, LocaleData> {
       eager: true,
       import: 'default',
     }),
-    // Files in subfolders (e.g., messages/, insights/) are prefixed with the folder name.
+    // Files in subfolders (e.g., messages/) are prefixed with the folder name.
     (path) => {
       const parts = path.split('/')
       const folder = parts[parts.length - 2]
