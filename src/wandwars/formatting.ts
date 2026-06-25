@@ -72,20 +72,6 @@ export function formatNoteHtml(
   })
 }
 
-export function formatInsightHtml(
-  text: string,
-  characterImages: Record<string, string> = {},
-): string {
-  return escapeHtml(text).replace(/\{([^}]+)\}/g, (_, name: string) => {
-    const imgSrc = characterImages[name]
-    const formattedName = formatName(name)
-    const imgTag = imgSrc
-      ? `<img src="${imgSrc}" alt="${formattedName}" class="insight-hero-img"/>`
-      : ''
-    return `${imgTag}<strong class="insight-hero-name">${formattedName}</strong>`
-  })
-}
-
 export function signClass(value: number | undefined): string {
   if (value === undefined || value === 0) return ''
   return value > 0 ? 'positive' : 'negative'

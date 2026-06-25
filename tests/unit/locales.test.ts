@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest'
  *
  * Key resolution mirrors dataLoader: app/character/artifact/game keys are flat
  * filenames (subfolders are organizational); wandwars prefixes subfolder files
- * with the folder name (`messages/...`, `insights/...`).
+ * with the folder name (`messages/...`).
  *
  * Dynamically-built keys (`app.${tag}`, `wandwars.messages/confidence-…`) are
  * out of scope here — only literal call sites are checked.
@@ -89,12 +89,6 @@ describe('locale files', () => {
       // identifiers that merely end in t (formatPercent, parseFloat, .at)
       for (const m of content.matchAll(/[^a-zA-Z]t\(\s*'([a-z][a-z0-9-]*\.[A-Za-z0-9/_-]+)'/g)) {
         used.add(m[1]!)
-      }
-      // ti('name') in the insights builders resolves to wandwars.insights/<name>
-      if (file.includes('wandwars/insights')) {
-        for (const m of content.matchAll(/\bti\(\s*'([a-z0-9-]+)'/g)) {
-          used.add(`wandwars.insights/${m[1]!}`)
-        }
       }
     }
 

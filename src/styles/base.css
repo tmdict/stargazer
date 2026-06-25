@@ -194,17 +194,7 @@ main {
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
 
-/* WandWars sub-section chrome for grouped blocks of content (Insights cards,
-   Meta tab tables); pairs with .ww-section-title. */
-.ww-section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--spacing-md);
-  background: var(--color-bg-light-gray);
-  padding: var(--spacing-md);
-  border-radius: var(--radius-medium);
-}
-
+/* WandWars section heading. */
 .ww-section-title {
   margin: 0;
   font-size: 1.1rem;

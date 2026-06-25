@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
-import WandWarsInsights from '@/components/wandwars/WandWarsInsights.vue'
 import WandWarsMain from '@/components/wandwars/WandWarsMain.vue'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -22,7 +21,7 @@ useHead({
   link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/wandwars' }],
 })
 
-const mainTab = ref<'draft' | 'units' | 'teams' | 'synergy' | 'hero-adjustments'>('draft')
+const mainTab = ref<'draft' | 'hero-adjustments'>('draft')
 
 const pickState = ref<PickState>({
   left: [null, null, null],
@@ -105,10 +104,6 @@ const characters = computed(() =>
 
 function handleSetPool(pool: string[]) {
   poolFilter.value = pool
-}
-
-function handleClearPool() {
-  poolFilter.value = null
 }
 
 const currentDraftIndex = computed(() => {
@@ -204,20 +199,15 @@ function handleExport() {
         :all-heroes="allHeroes"
         :available-heroes="availableHeroes"
         :character-images="gameDataStore.characterImages"
-        :match-data="matchData"
-        :analysis-data="analysisData"
-        :pool-filter="poolFilter"
         @pick-hero="handlePickHero"
         @unpick-slot="handleUnpickSlot"
         @reset="handleReset"
         @undo="handleUndo"
         @set-pool="handleSetPool"
-        @clear-pool="handleClearPool"
       />
 
-      <aside v-if="mainTab !== 'hero-adjustments'" class="wandwars-side">
+      <aside v-if="mainTab === 'draft'" class="wandwars-side">
         <WandWarsAnalysis
-          v-if="mainTab === 'draft'"
           :pick-state="pickState"
           :current-pick-side="currentPickSide"
           :match-data="matchData"
@@ -231,13 +221,6 @@ function handleExport() {
           @import-records="handleImportRecords"
           @update-record="handleUpdateRecord"
         />
-        <WandWarsInsights
-          v-else
-          :category="mainTab"
-          :match-data="matchData"
-          :analysis-data="analysisData"
-          :character-images="gameDataStore.characterImages"
-        />
       </aside>
     </div>
   </main>
@@ -250,10 +233,9 @@ function handleExport() {
 }
 
 /* WandWarsMain (left) is fluid; the aside (right) is fixed-width 780px.
-   Drafting and meta tables benefit from horizontal room; analysis cards
-   have natural max-widths. Stacks single-column below 1220px. The
-   Adjustments tab hides the aside, leaving the lone fluid child to fill
-   the row. */
+   Drafting benefits from horizontal room; analysis cards have natural
+   max-widths. Stacks single-column below 1220px. The Adjustments tab
+   hides the aside, leaving the lone fluid child to fill the row. */
 .wandwars-layout {
   display: flex;
   flex-direction: column;
@@ -293,18 +275,14 @@ function handleExport() {
     min-height: 0;
   }
 
-  /* Release the cap when the aside hosts naturally-sized content:
-     - `.matchup-section` → full match prediction view (all 6 picked) so
-       the matchup cards + record form flow without an inner scrollbar
-     - `.insights-panel` → meta pages (Units / Teams / Synergy) own their
-       own variable-length section layout */
-  .wandwars-layout > .wandwars-side:has(.matchup-section),
-  .wandwars-layout > .wandwars-side:has(.insights-panel) {
+  /* Release the cap when the aside hosts the full match prediction view
+     (all 6 picked) so the matchup cards + record form flow without an
+     inner scrollbar. */
+  .wandwars-layout > .wandwars-side:has(.matchup-section) {
     max-height: none;
   }
 
-  .wandwars-layout > .wandwars-side:has(.matchup-section) > *,
-  .wandwars-layout > .wandwars-side:has(.insights-panel) > * {
+  .wandwars-layout > .wandwars-side:has(.matchup-section) > * {
     flex: initial;
     min-height: initial;
   }
