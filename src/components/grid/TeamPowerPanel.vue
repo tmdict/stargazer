@@ -12,7 +12,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
-const props = defineProps<{ context: GridContext }>()
+const props = defineProps<{ context: GridContext; readonly?: boolean }>()
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
@@ -147,7 +147,7 @@ const onStatLeave = (): void => {
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
         <button
-          v-if="hasParagon(side.heroes)"
+          v-if="hasParagon(side.heroes) && !readonly"
           type="button"
           class="stat-reset"
           :aria-label="i18n.t('app.reset-paragons')"
@@ -163,9 +163,10 @@ const onStatLeave = (): void => {
           :key="hero.characterId"
           type="button"
           class="hero"
+          :class="{ readonly }"
           :aria-label="`${hero.name}, paragon ${hero.level}`"
-          :title="i18n.t('app.paragon-cycle')"
-          @click="cycle(side.team, hero)"
+          :title="readonly ? undefined : i18n.t('app.paragon-cycle')"
+          @click="!readonly && cycle(side.team, hero)"
         >
           <span class="portrait-wrap">
             <span class="portrait">
@@ -361,6 +362,13 @@ const onStatLeave = (): void => {
 }
 .hero:hover .portrait {
   transform: scale(1.06);
+}
+/* Read-only (share view): the hero is shown, not cyclable. */
+.hero.readonly {
+  cursor: default;
+}
+.hero.readonly:hover .portrait {
+  transform: none;
 }
 /* Sized in cqw (a share of the icon width) so it stays a corner badge as the icon
    scales, with px floors that keep "P#" legible on the smallest boards. */
