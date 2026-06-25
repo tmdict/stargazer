@@ -6,6 +6,7 @@ import GridLine from './grid/GridLine.vue'
 import { useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterSkill } from '@/lib/skills/skill'
+import { clipLaneBoundary } from '@/lib/skills/utils/line'
 
 interface Props {
   showPerspective: boolean
@@ -92,10 +93,19 @@ const arrowsToRender = computed(() => {
   return arrows
 })
 
-// Lines carry their own color, so (unlike arrows) they render for any skill, not
-// just targeting ones, but still only within the shown team's region.
+// Lines carry their own color, so (unlike arrows) they render for any skill, not just
+// targeting ones. A corner (lane-boundary) line spans the visible cells of its lane and
+// the adjacent lane it borders, so it runs edge to edge across the shown region (the
+// whole grid outside team view); a center line drops when either end is cropped.
 const linesToRender = computed(() =>
-  ctx.skillLines.filter((line) => bothVisible(line.fromHexId, line.toHexId)),
+  ctx.skillLines.flatMap((line) => {
+    if (line.fromCorner === undefined || line.toCorner === undefined) {
+      return bothVisible(line.fromHexId, line.toHexId) ? [line] : []
+    }
+    const laneS = ctx.grid.getHexById(line.fromHexId).s
+    const clip = clipLaneBoundary(ctx.visibleHexes, laneS, line.fromCorner)
+    return clip ? [{ ...line, ...clip }] : []
+  }),
 )
 </script>
 
@@ -112,6 +122,8 @@ const linesToRender = computed(() =>
         :key="`line-${idx}`"
         :start-hex-id="line.fromHexId"
         :end-hex-id="line.toHexId"
+        :start-corner="line.fromCorner"
+        :end-corner="line.toCorner"
         :color="line.color"
         :stroke-width="arrowStyle.strokeWidth"
       />

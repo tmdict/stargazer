@@ -1,7 +1,7 @@
 <script setup lang="ts">
-/* A straight connection line between two hexes, border to border. Mirrors
-   GridArrow's stroke styling (white shadow + colored line) but with no curve and
-   no arrowhead. */
+/* A straight connection line between two hexes: center to center (border to border),
+   or corner to corner when startCorner/endCorner are given. Mirrors GridArrow's stroke
+   styling (white shadow + colored line) but with no curve and no arrowhead. */
 
 import { computed } from 'vue'
 
@@ -13,16 +13,21 @@ interface Props {
   color: string
   strokeWidth: number
   characterRadius?: number
+  // When both are set, the line runs corner to corner (an exact edge) with no pullback.
+  startCorner?: number
+  endCorner?: number
 }
 
-const { startHexId, endHexId, characterRadius = 30 } = defineProps<Props>()
+const { startHexId, endHexId, characterRadius = 30, startCorner, endCorner } = defineProps<Props>()
 
 const gridStore = useGridStore()
 
 const scaledCharacterRadius = computed(() => characterRadius * gridStore.getHexScale())
 
 const pathData = computed(() =>
-  gridStore.getLinePath(startHexId, endHexId, scaledCharacterRadius.value),
+  startCorner !== undefined && endCorner !== undefined
+    ? gridStore.getCornerLinePath(startHexId, startCorner, endHexId, endCorner)
+    : gridStore.getLinePath(startHexId, endHexId, scaledCharacterRadius.value),
 )
 </script>
 
