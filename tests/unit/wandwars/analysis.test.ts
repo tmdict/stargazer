@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { analyzeMatches, computeTeamRecords } from '@/wandwars/prediction/analysis'
+import { analyzeMatches } from '@/wandwars/prediction/analysis'
 import type { MatchResult } from '@/wandwars/types'
 
 // All smoothed rates below use META_BAYESIAN_PRIOR = 3:
@@ -164,33 +164,5 @@ describe('draw handling', () => {
     expect(trio.wins).toBe(1)
     expect(trio.losses).toBe(0)
     expect(trio.winRate).toBeCloseTo(4 / 7, 12)
-  })
-})
-
-describe('computeTeamRecords', () => {
-  const MATCHES = [
-    m(['a', 'b', 'c'], ['x', 'y', 'z'], 'left'),
-    m(['x', 'y', 'z'], ['c', 'a', 'b'], 'right', 2),
-    m(['a', 'b', 'c'], ['x', 'y', 'z'], 'right'),
-    m(['a', 'b', 'c'], ['x', 'y', 'z'], 'draw'),
-  ]
-  const records = computeTeamRecords(MATCHES)
-
-  it('merges roster orderings into one sorted record per team, counting both sides', () => {
-    expect(records).toHaveLength(2)
-    expect(records.find((r) => r.team.join() === 'a,b,c')).toMatchObject({
-      wins: 2,
-      losses: 1,
-      draws: 1,
-      total: 4,
-    })
-  })
-
-  it('smooths winRate over unweighted decisive results — draws stay in the record, not the rate', () => {
-    // abc: 2W 1L → (2+3)/(3+6) = 5/9; xyz: 1W 2L → (1+3)/(3+6) = 4/9
-    const abc = records.find((r) => r.team.join() === 'a,b,c')!
-    const xyz = records.find((r) => r.team.join() === 'x,y,z')!
-    expect(abc.winRate).toBeCloseTo(5 / 9, 12)
-    expect(xyz.winRate).toBeCloseTo(4 / 9, 12)
   })
 })

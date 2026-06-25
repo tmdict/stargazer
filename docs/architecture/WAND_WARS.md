@@ -69,7 +69,7 @@ The parser has two modes selected by the optional `fallbackPatch` argument:
 
 Why directives in a text blob (instead of a structured format like JSON-lines or a sidecar metadata file): the runtime browser only ever sees the encoded blob — folder structure isn't available — so patch identity has to ride along somehow. Directives keep the format plain-text and minimize encoder/parser complexity, at the cost of one documented convention. Same pattern as `# coding: utf-8` in Python or `// @ts-check` in TS.
 
-Currently no consumer reads `MatchResult.patch`; it's wired through for future patch-aware analysis (decay weighting, drift detection — see §10).
+Currently no consumer reads `MatchResult.patch`; it's wired through for future patch-aware analysis (decay weighting, drift detection — see §9).
 
 ## 3. Architecture
 
@@ -316,7 +316,7 @@ Two toggle buttons ("Left Team" / "Right Team") allow locking recommendations to
 
 All models implement `RecommendationModel` with `recommend()` and `predictMatchup()`. They run independently in separate tabs. Pick order does not affect predictions — all models evaluate teams as unordered sets.
 
-Tab order: **Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records**. Individual match-prediction cards follow the same model order. (Meta and Hero Adjustments are separate main-panel views, not model tabs.)
+Tab order: **Popular Pick** (default) | **Hero Synergy** (Composite) | **Team Power** (Bradley-Terry) | **Adaptive ML** | **Records**. Individual match-prediction cards follow the same model order. (Hero Adjustments is a separate main-panel view, not a model tab.)
 
 ### Model A: Popular Pick (`popularPick.ts`)
 
@@ -808,17 +808,7 @@ Three honest scenarios were on the table while the dataset was growing:
 
 **Verdict at dataset close (1,737 matches):** scenarios 2 and 3 are both consistent with the final results — the four models converged into a 58.9–61.1% band with Adaptive ML still trailing. The NN never crossed over. Whether that's because the dataset is signal-bounded (scenario 2) or because the hand-crafted priors are genuinely well-matched (scenario 3) can't be teased apart from this data alone. The aggregate weights below preserve the bet's structure (NN gets meaningful but not dominant share at high data counts), which remains the right call: NN provides ensemble diversity even when individually weaker, and credibility weighting downweights its vote on matchups where its self-confidence is low. If the dataset reopens, the "Future Improvements" bullets in §5 (larger embeddings, deeper network, separate offense/defense embeddings) become the relevant levers — adding capacity within the current 1.7k-match envelope would just overfit.
 
-## 8. Meta Insights
-
-Three sub-tabs: **Units** | **Synergy** | **Teams**. Main panel: sortable tables. Side panel: auto-generated insights including ML-powered analysis from the Adaptive ML model's learned embeddings.
-
-**Units insights**: Best Openers, Best Responses, **Similar Heroes** (embedding cosine similarity), and **Class composition** patterns (e.g., "Teams with 2+ tank overperform").
-
-**Synergy insights**: ~10 most impactful pair insights (strongest/weakest pair, most played, best/worst team player, opponent diversity, undefeated pairs), and **Unexplored Synergies** (pairs the NN predicts will perform well but have < 5 actual matches).
-
-**Teams insights**: Team counter matchups, sweep stats, side win rate advantage, **ML Top Teams** (strongest trios by neural network), and **Composition patterns** — damage type balance (all physical/magic/mixed), range balance (all melee/ranged/mixed), and energy level effects. Shown when > 5% deviation from 50% with 20+ teams.
-
-## 9. Pool Restriction
+## 8. Pool Restriction
 
 Upload a screenshot of the game's 4×5 hero pool to restrict picks and recommendations to those 20 heroes.
 
@@ -826,7 +816,7 @@ Upload a screenshot of the game's 4×5 hero pool to restrict picks and recommend
 
 **Signatures**: Base64-encoded in `heroPortraitSignatures.ts`. Generated in-browser from reference portraits normalized via `scripts/normalize-references.ts` (gold-border crop → 170×230 resize → grey background flatten). Dev tools in the pool import modal for generating and uploading signature sets.
 
-## 10. Handling Balance Patches & Hero Rotations
+## 9. Handling Balance Patches & Hero Rotations
 
 The game's developers have announced a future rotation system: hero pool, hero strength, maps, and global battlefield effects will periodically rotate. This puts WandWars in a **non-stationary environment** — historical match data ages over time, sometimes gracefully, sometimes catastrophically, depending on what changed. This section captures the strategy for handling drift without throwing away the dataset every patch.
 
