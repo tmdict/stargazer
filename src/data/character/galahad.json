@@ -10,8 +10,7 @@
   "season": 5,
   "tags": {
     "initial-energy-300": [],
-    "summon": [{ "ultimate": 1 }, { "ex": 1 }],
-    "temp-buff": [{ "skill3": 1 }],
+    "summon": [{ "ex": 1 }],
     "tile-effect": [{ "ex": 1 }]
   }
 }

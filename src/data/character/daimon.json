@@ -9,6 +9,7 @@
   "range": 3,
   "season": 4,
   "tags": {
+    "summon": [{ "ultimate": 1 }],
     "temp-buff": [{ "skill3": 1 }],
     "tile-effect": [{ "skill3": 1 }]
   }

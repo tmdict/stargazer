@@ -9,6 +9,6 @@
   "range": 1,
   "season": 1,
   "tags": {
-    "summon": [{ "ultimate": 1 }, { "ex": 4 }]
+    "summon": [{ "ex": 4 }]
   }
 }

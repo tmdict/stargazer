@@ -10,6 +10,6 @@
   "season": 0,
   "tags": {
     "execute": [{ "ex": 3 }, { "ex": 4 }],
-    "temp-buff": [{ "skill3": 1 }, { "awakening": 2 }]
+    "temp-buff": [{ "skill3": 1 }, { "skill3": 4 }]
   }
 }
