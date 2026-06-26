@@ -9,6 +9,6 @@
   "range": 1,
   "season": 1,
   "tags": {
-    "temp-buff": [{ "skill2": 1 }, { "skill3": 1 }]
+    "temp-buff": [{ "ultimate": 1 }, { "skill2": 1 }, { "skill3": 1 }]
   }
 }
