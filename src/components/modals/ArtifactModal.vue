@@ -37,7 +37,7 @@ const stats = computed(() => formatArtifactStats(props.artifact.stats, displayLo
 
 // Effect descriptions become a level ladder; SkillSection renders them with
 // the same badges/highlighting/typography as character skills (level 1 is the
-// base effect, 2+ are upgrades) — shared styling, no bespoke drift.
+// base effect, 2+ are upgrades). Shared styling, no bespoke drift.
 const effectLevels = computed(() =>
   gameDataStore.getArtifactEffects(props.artifact.name).map((effect, i) => ({
     level: i + 1,

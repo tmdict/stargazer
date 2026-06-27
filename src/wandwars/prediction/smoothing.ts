@@ -4,7 +4,7 @@
  *
  * This is the single implementation of the rate formula for the analysis
  * layer, Popular Pick, and team suggestions. The denominator is derived from
- * the two evidence arguments, so draws are excluded by construction — a draw
+ * the two evidence arguments, so draws are excluded by construction: a draw
  * can only influence a rate if a caller miscounts it as a win or a loss.
  *
  * Zero evidence returns exactly 0.5 (requires prior > 0).

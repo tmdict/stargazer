@@ -21,7 +21,6 @@ export function executeSwapCharacters(
   // Basic validation
   if (fromHexId == toHexId) return false
 
-  // Get character and team info
   const fromChar = getCharacter(grid, fromHexId)
   const toChar = getCharacter(grid, toHexId)
   const fromTeam = getCharacterTeam(grid, fromHexId)
@@ -112,7 +111,6 @@ function performSwap(
   fromCharOriginalTeam: Team,
   toCharOriginalTeam: Team,
 ): boolean {
-  // Execute swap as transaction
   const result = executeTransaction(
     // Operations to execute
     [

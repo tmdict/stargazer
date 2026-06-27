@@ -1,5 +1,5 @@
 /**
- * Probability calibration — maps raw model outputs to empirically-calibrated
+ * Probability calibration: maps raw model outputs to empirically-calibrated
  * probabilities fit from held-out benchmark data.
  *
  * Calibration is fit offline by `benchmark.ts` via 5-fold CV and exported as

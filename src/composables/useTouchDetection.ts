@@ -1,12 +1,12 @@
 import { ref } from 'vue'
 
 /**
- * Detects whether the user is using touch or mouse input — drives whether to
+ * Detects whether the user is using touch or mouse input: drives whether to
  * show hover tooltips (mouse) or suppress them (touch).
  *
  * State and listeners are module-level singletons: input modality is a
- * device-global fact, and this composable is called by every roster icon —
- * per-instance document listeners would pile up hundreds of identical
+ * device-global fact, and this composable is called by every roster icon.
+ * Per-instance document listeners would pile up hundreds of identical
  * handlers. The listeners live for the app's lifetime.
  */
 const isTouchDevice = ref(false)
@@ -17,7 +17,7 @@ const handleTouchStart = () => {
   hasTouched.value = true
 }
 
-// Only mark as mouse device if we haven't seen touch events — handles devices
+// Only mark as mouse device if we haven't seen touch events: handles devices
 // with both touch and mouse (like laptops with touchscreens)
 const handleMouseMove = () => {
   if (!hasTouched.value) {

@@ -336,7 +336,6 @@ function confirm() {
   resetState()
 }
 
-// Clear all import state back to the upload phase
 function resetState() {
   detections.value = []
   activePicker.value = null

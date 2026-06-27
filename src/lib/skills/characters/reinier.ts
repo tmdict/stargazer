@@ -46,15 +46,12 @@ function getAdjacentAllies(context: SkillContext): Array<{ hexId: number; positi
 function findSymmetricalEnemy(context: SkillContext, allyHexId: number): number | null {
   const { grid, team } = context
 
-  // Get the symmetrical hex ID
   const symmetricalHexId = getSymmetricalHexId(grid, allyHexId)
   if (!symmetricalHexId) return null
 
-  // Check if there's an enemy on the symmetrical tile
   const symmetricalTile = grid.getTileById(symmetricalHexId)
   if (!symmetricalTile) return null
 
-  // Check if it has an enemy character
   const enemyTeam = team === Team.ALLY ? Team.ENEMY : Team.ALLY
   if (symmetricalTile.characterId && symmetricalTile.team === enemyTeam) {
     return symmetricalHexId

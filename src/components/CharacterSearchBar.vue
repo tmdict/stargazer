@@ -34,7 +34,6 @@ defineProps<{
   padding: 0.45rem 0.9rem;
   font: inherit;
   font-size: 1rem;
-  /* Soft corners + faint inset + muted text; full-weight border keeps the edge clear. */
   color: #5a5a5a;
   background: var(--color-bg-white);
   border: 1px solid var(--color-border-primary);

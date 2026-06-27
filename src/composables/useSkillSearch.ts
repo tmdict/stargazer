@@ -31,7 +31,7 @@ interface DeepEntry {
   text: string
 }
 
-// Per-language index, built lazily on first query. ~2.5k entries — trivial.
+// Per-language index, built lazily on first query. ~2.5k entries, trivial.
 const indexCache: Record<Locale, { names: NameEntry[]; deep: DeepEntry[] } | undefined> = {
   en: undefined,
   zh: undefined,
@@ -64,7 +64,7 @@ function buildIndex(lang: Locale) {
           text: cleanSkillText(rawDesc),
         })
       })
-      // EX refinement tiers — indexed so queries like "Rivalry Mode" or
+      // EX refinement tiers: indexed so queries like "Rivalry Mode" or
       // "DEF Penetration" surface relevant heroes. `tier` (not level) marks
       // these as Refine rows so the result label reads "Refine 2" not "LV 2".
       for (const r of slotData.r ?? []) {

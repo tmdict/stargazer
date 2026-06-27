@@ -88,7 +88,7 @@ export function executePlaceCharacter(
       },
     ],
     [
-      // Rollback: remove the new character first, then restore the occupant —
+      // Rollback: remove the new character first, then restore the occupant:
       // re-place, re-activate its skill, and return companions to their tiles
       () => {
         if (placed && hasCharacter(grid, hexId)) {
@@ -196,7 +196,7 @@ export function performPlace(
   // skill-aware composite in executePlaceCharacter, swaps clear both tiles first
   if (tile.characterId) return false
 
-  // Set character on tile (merged from setCharacterOnTile)
+  // Set character on tile
   tile.characterId = characterId
   tile.team = team
   tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY

@@ -242,7 +242,7 @@ let wandwarsLocalesCache: Record<string, LocaleData> | null = null
 let skillLocalesCache: Record<Locale, Record<string, SkillLocaleFile>> | null = null
 
 // Vite's import.meta.glob requires a string literal for the pattern, so the glob calls
-// can't be parameterized — but the post-processing (filename → key) can.
+// can't be parameterized, but the post-processing (filename → key) can.
 function buildLocaleDict<T = LocaleData>(
   modules: Record<string, T>,
   keyFn: (path: string) => string = extractFileName,

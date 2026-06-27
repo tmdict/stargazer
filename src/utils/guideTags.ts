@@ -7,7 +7,6 @@ export interface GuideTagGroup {
   characters: CharacterType[]
 }
 
-// Every tag found in the character data, alphabetically, with its members.
 export function guideTagGroups(): GuideTagGroup[] {
   const characters = loadCharacters()
   const tags = new Set<string>()

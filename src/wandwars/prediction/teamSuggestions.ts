@@ -70,7 +70,7 @@ export function getExactTrios(teammates: string[], matches: MatchResult[]): Team
 // ---- Per-model "team quality" scoring for constructed suggestions ----
 // Each function returns a [0, 1] probability that [a, b, c] is a strong trio
 // against a generic opponent. All constructed suggestions are scored this way
-// so the displayed percentage is always probability-scale — `predictMatchup`
+// so the displayed percentage is always probability-scale: `predictMatchup`
 // can't be used here because it requires a specific opponent.
 
 function bradleyTerryTeamQuality(
@@ -114,7 +114,7 @@ function compositeTeamQuality(team: [string, string, string], analysis: Analysis
 
 function popularPickTeamQuality(team: [string, string, string], analysis: AnalysisData): number {
   // Average individual win rate + average pairwise win rate (from synergy
-  // matrix's pair records — same underlying pair stats, just reused here).
+  // matrix's pair records, same underlying pair stats, just reused here).
   let indiv = 0
   for (const h of team) indiv += analysis.heroStats[h]?.winRate ?? 0.5
   indiv /= 3

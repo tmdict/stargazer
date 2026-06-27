@@ -55,10 +55,8 @@ const handleClick = () => {
       <ArtifactImage :artifact />
     </div>
 
-    <!-- Info pill (effects open in a modal) -->
     <InfoPill :label="formattedArtifactName" @click="openInfoModal" />
 
-    <!-- Effects modal -->
     <ArtifactModal :show="showInfoModal" :artifact @close="showInfoModal = false" />
 
     <ArtifactTooltip

@@ -1,5 +1,5 @@
 /**
- * Adaptive ML model — learned hero embeddings with a small neural network.
+ * Adaptive ML model: learned hero embeddings with a small neural network.
  * Weights are pre-trained offline and loaded at runtime.
  */
 
@@ -33,7 +33,7 @@ export function predictVsAverage(teamHeroes: string[]): number {
   const teamIdx = heroNamesToIndices(teamHeroes, NN_WEIGHTS.heroIndex)
   if (teamIdx.length === 0) return 0.5
 
-  // Use all heroes as a "generic" opponent pool — average over multiple random trios
+  // Use all heroes as a "generic" opponent pool: average over multiple random trios
   // Simplified: predict vs the zero-difference baseline (team vs itself ≈ 0.5),
   // then shift by how much the team embedding deviates from average
   const numHeroes = Object.keys(NN_WEIGHTS.heroIndex).length

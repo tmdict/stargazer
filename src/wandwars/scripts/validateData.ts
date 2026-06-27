@@ -3,12 +3,12 @@
  * merging it into the training set.
  *
  * Output is structured as:
- *   1. VERDICT — single PASS/WARN/FAIL line based on held-out prediction
+ *   1. VERDICT: single PASS/WARN/FAIL line based on held-out prediction
  *      accuracy (the strongest signal that new data behaves like baseline).
  *   2. Parse + coverage checks.
  *   3. Distribution summary (left-win rate, draws, sweep rate) with drift notes.
  *   4. Held-out prediction table (models trained on baseline only).
- *   5. Per-hero shifts — only heroes whose candidate win rate falls outside
+ *   5. Per-hero shifts: only heroes whose candidate win rate falls outside
  *      the baseline's 95% Wilson interval. Small-sample noise filtered out.
  *
  * Usage: npm run ww:validate <filename>.data
@@ -225,7 +225,7 @@ const btPairs = collect(
 
 const avgAccuracy = (accuracy(ppPairs) + accuracy(coPairs) + accuracy(btPairs)) / 3
 
-// Verdict — PASS/WARN/FAIL based on average accuracy vs. a baseline CV floor.
+// Verdict: PASS/WARN/FAIL based on average accuracy vs. a baseline CV floor.
 // WAND_WARS.md docs baseline CV ≈ 58%; we allow up to 5pp below before WARN.
 const PASS_THRESHOLD = 0.55
 const WARN_THRESHOLD = 0.48
@@ -330,7 +330,7 @@ if (newHeroes.length > 0) {
   console.log(`✓ Hero coverage: all ${candidateHeroes.size} candidate heroes exist in baseline`)
 }
 
-// Distribution shifts — use Wilson interval containment so small-N doesn't
+// Distribution shifts: use Wilson interval containment so small-N doesn't
 // falsely report tiny deltas (e.g. draw rate 0.0% vs 1.8% at n=32 is noise,
 // not a "shift") and so any callout we do make is statistically grounded.
 console.log(`\n----- Distribution -----`)

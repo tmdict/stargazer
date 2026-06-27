@@ -33,7 +33,7 @@ const {
   min-height: var(--panel-min-height);
 }
 
-/* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
+/* See CharacterSelection.vue: wide-screen flex-fill with own scroll, narrow
    stacks naturally and lets the page scroll. */
 @media (min-width: 1220px) {
   .seasonal-selection.scrollable {
