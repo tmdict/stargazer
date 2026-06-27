@@ -9,6 +9,7 @@
   "range": 20,
   "season": 4,
   "tags": {
+    "dot": [{ "awakening": 1 }],
     "summon": [{ "skill2": 1 }]
   }
 }

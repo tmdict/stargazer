@@ -9,6 +9,7 @@
   "range": 1,
   "season": 3,
   "tags": {
+    "dot": [{ "awakening": 1 }],
     "initial-energy-300": []
   }
 }

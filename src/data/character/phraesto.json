@@ -9,6 +9,7 @@
   "range": 1,
   "season": 1,
   "tags": {
+    "dot": [{ "skill3": 1 }],
     "summon": [{ "ex": 4 }]
   }
 }

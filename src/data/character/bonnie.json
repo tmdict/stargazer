@@ -9,6 +9,7 @@
   "range": 7,
   "season": 2,
   "tags": {
+    "dot": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }]
   }
 }
