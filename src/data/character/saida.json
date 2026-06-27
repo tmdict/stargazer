@@ -9,6 +9,7 @@
   "range": 1,
   "season": 4,
   "tags": {
+    "dot": [{ "ultimate": 1 }, { "ex": 1 }],
     "energy-denial": [{ "ultimate": 1 }],
     "initial-energy-300": []
   }
