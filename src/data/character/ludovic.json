@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 6,
   "season": 1,
-  "tags": {}
+  "tags": {
+    "dot": [{ "skill2": 1 }]
+  }
 }
