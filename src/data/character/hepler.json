@@ -10,6 +10,7 @@
   "season": 6,
   "tags": {
     "cheat-death": [{ "ex": 1 }],
-    "initial-energy-300": []
+    "initial-energy-300": [],
+    "tile-effect": [{ "ex": 1 }]
   }
 }
