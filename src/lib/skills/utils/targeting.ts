@@ -64,7 +64,6 @@ export function getCandidates(
 ): TargetCandidate[] {
   const candidates = getTeamTargetCandidates(grid, targetTeam)
 
-  // Filter out excluded character if specified
   if (excludeCharacterId !== undefined) {
     return candidates.filter((c) => c.characterId !== excludeCharacterId)
   }

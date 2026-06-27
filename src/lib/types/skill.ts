@@ -11,11 +11,11 @@ export type CharacterTags = Readonly<Record<string, readonly TagAttachment[]>>
 
 // On-disk shape of src/locales/skill/<lang>/<slug>.json (auto-managed by the
 // importer). `n` is omitted for slots whose name is invariant across heroes
-// (mastery, awakening) — those names live in app locales. `r` carries EX
+// (mastery, awakening). Those names live in app locales. `r` carries EX
 // refinement tiers (Refine 2, Refine 4) and is only emitted on the `ex` slot
 // when the source data has them.
 export interface SkillRefineEntry {
-  t: number // tier — 2 or 4 in current data
+  t: number // tier: 2 or 4 in current data
   d: string // pre-rendered body text in the entry's locale
 }
 

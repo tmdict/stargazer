@@ -44,7 +44,7 @@ function slotLabel(slot: SlotKey): string {
   return app[SLOT_LABEL_KEY[slot]]?.[props.lang] ?? slot
 }
 
-// null for name matches — already highlighted in the displayed name. Labels
+// null for name matches: already highlighted in the displayed name. Labels
 // mirror the skills page: "LV n" for skill levels, "REFINE n" for EX tiers.
 function locText(hit: SearchHit): string | null {
   const { loc, slot } = hit

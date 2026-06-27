@@ -1,5 +1,5 @@
 /**
- * Per-model self-confidence signals — each model answers the question:
+ * Per-model self-confidence signals. Each model answers the question:
  * "Do I have the ingredients I need to make a reliable prediction for this
  * specific matchup?"
  *
@@ -14,7 +14,7 @@
  *   - Team Power  → inverse of pair-interaction-residual magnitude
  *   - Adaptive ML → avg teammate-pair co-occurrence (combinatorial familiarity)
  *
- * Every signal is empirically validated by `benchmark.ts` — the tuner
+ * Every signal is empirically validated by `benchmark.ts`: the tuner
  * verifies that the "low self-confidence" subset is actually ≥ 1pp less
  * accurate than the typical subset on held-out CV. Signals that don't
  * clear that check get replaced.
@@ -31,7 +31,7 @@
 import type { AnalysisData } from '../types'
 import type { BradleyTerryFit } from './bradleyTerry'
 
-// Normalization constants — each picked for the signal's natural scale at
+// Normalization constants: each picked for the signal's natural scale at
 // the current dataset size. The benchmark tuner picks per-model thresholds
 // over these normalized [0,1] values, so the exact constants here just
 // affect the shape of the signal, not the final badge cutoffs.
@@ -39,13 +39,13 @@ const POPULAR_PICK_FULL_PAIR_MATCHES = 10
 const COMPOSITE_FULL_DATA_STRENGTH = 10
 // B-T signal: exp(−α × Σ|pair-residual|) over the 6 teammate pairs.
 // α = 6 gives sumAbs = 0 → 1.0, 0.1 → 0.55, 0.2 → 0.30, 0.3 (max) → 0.17.
-// B-T's pair residuals are structurally bimodal at current data size —
+// B-T's pair residuals are structurally bimodal at current data size:
 // ~40% of matchups have clean additive fits, ~60% have significant pair
 // overrides, with a ~5pp accuracy gap. The tuner lets LOW land wherever
 // the data supports it; see WAND_WARS.md §7 for the shape.
 const BRADLEY_TERRY_RESIDUAL_ALPHA = 6
 // NN signal: avg teammate-pair co-occurrence, normalized by 5 matches.
-// Avg (not min) gives a smoother distribution — min collapses to 0 for
+// Avg (not min) gives a smoother distribution: min collapses to 0 for
 // any matchup where a single pair never co-occurred, flattening the
 // signal into two bins. Avg spreads the signal continuously.
 const ADAPTIVE_ML_FULL_PAIR_MATCHES = 5
@@ -53,7 +53,7 @@ const ADAPTIVE_ML_FULL_PAIR_MATCHES = 5
 /**
  * Popular Pick relies on pair records and contextual win rates. Its self-
  * confidence tracks how many matches we've actually seen with these specific
- * teammate pairs — when the pair record is thin, PP falls back to overall
+ * teammate pairs. When the pair record is thin, PP falls back to overall
  * win rates and its answer is weaker.
  *
  * Signal: average (teammate) pair match count across the 6 team pairs,
@@ -78,7 +78,7 @@ export function popularPickSelfConfidence(
  * Composite explicitly scales its synergy/counter weights by a per-pair
  * `dataStrength = min(1, matchCount / 10)`. When a pair hasn't co-occurred
  * enough, the synergy weight collapses and weight flows to the base win
- * rate — the model literally tells us it's "guessing from individuals".
+ * rate: the model literally tells us it's "guessing from individuals".
  *
  * Signal: average of (synergy data strength, counter data strength) across
  * the 6 teammate pairs and 9 opposing-hero matchups.
@@ -115,13 +115,13 @@ export function compositeSelfConfidence(
  * Bradley-Terry fits team strengths additively (Σλ), then computes pair
  * interaction *residuals* that capture what the additive model misses.
  * Large residuals mean "pair data strongly disagrees with additive-strength
- * prediction" — B-T's two sub-components are fighting and the answer is
+ * prediction": B-T's two sub-components are fighting and the answer is
  * less reliable.
  *
  * Signal: `exp(−α × Σ|residual|)` across 6 teammate pairs. High = additive
  * strengths fit cleanly; low = pair data is overriding heavily.
  *
- * Why not data-quantity (match counts)? Tried and empirically failed —
+ * Why not data-quantity (match counts)? Tried and empirically failed:
  * low-data B-T predictions regularize toward 50% and are "accidentally
  * right" on close matches, so match-count signals don't correlate with
  * held-out accuracy. Residual magnitude is a genuine per-matchup
@@ -148,13 +148,13 @@ export function bradleyTerrySelfConfidence(
 
 /**
  * Adaptive ML's 16-dim embeddings are trained team-wise (leftSum − rightSum),
- * so the axis that matters is *combinatorial* — how well has the NN seen
+ * so the axis that matters is *combinatorial*: how well has the NN seen
  * these specific hero *interactions*, not just each hero in isolation.
  *
  * Signal: avg teammate-pair co-occurrence (synergy matrix match counts)
  * across the 6 pairs, normalized by ADAPTIVE_ML_FULL_PAIR_MATCHES.
  *
- * Why not per-hero match count? Tried and empirically failed — same
+ * Why not per-hero match count? Tried and empirically failed: same
  * regularization-to-50% artifact as B-T above. Pair co-occurrence better
  * matches what team-sum embeddings actually depend on.
  */

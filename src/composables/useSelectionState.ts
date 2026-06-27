@@ -11,7 +11,7 @@ import { invertTeam } from '@/utils/tileStateFormatting'
 const targetArtifactTeam = ref<Team | null>(null)
 
 // Mobile: the grid cell a tapped roster character should fill. Board-qualified
-// (gridId) so only the tapped board highlights it — every board shares the same
+// (gridId) so only the tapped board highlights it: every board shares the same
 // hex ids. Set by tapping an empty tile (GridManager), read + cleared by the roster.
 const targetHexId = ref<number | null>(null)
 const targetGridId = ref<number | null>(null)

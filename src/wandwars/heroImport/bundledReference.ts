@@ -4,7 +4,7 @@
  * The default set is pre-computed and shipped via `heroPortraitSignatures.ts`
  * (base64-encoded Float32Arrays committed to the repo). The user can
  * temporarily replace it at runtime via the "Override Reference" flow in the
- * pool import UI — helpful when the game art has changed and you haven't
+ * pool import UI, helpful when the game art has changed and you haven't
  * regenerated the committed signatures yet.
  */
 

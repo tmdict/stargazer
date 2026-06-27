@@ -8,7 +8,7 @@ export interface GuideEntry {
   components: Partial<Record<Locale, Component>>
 }
 
-// Eager so the compendium renders into static HTML at SSG time (synchronous —
+// Eager so the compendium renders into static HTML at SSG time (synchronous:
 // no async component, no <Suspense>). These chunks land only in the guide
 // page bundle; skill pages keep their own lazy snippet glob in SkillSections.
 const snippetModules = import.meta.glob<{ default: Component }>('@/content/skill/*/*.vue', {
@@ -32,7 +32,6 @@ function hasUniqueContent(path: string): boolean {
 
 let cache: GuideEntry[] | null = null
 
-/** All snippet heroes, sorted by slug, with their per-language components. */
 export function guideEntries(): GuideEntry[] {
   if (cache) return cache
   const bySlug: Record<string, GuideEntry> = {}

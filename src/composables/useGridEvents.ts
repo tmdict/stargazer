@@ -16,7 +16,7 @@ export interface GridEvents {
 
 /**
  * Pure pub/sub grid event system using provide/inject. Emitting only notifies
- * subscribers — all state changes live in the subscribing components.
+ * subscribers: all state changes live in the subscribing components.
  */
 export interface GridEventAPI {
   emit: <K extends keyof GridEvents>(event: K, ...args: Parameters<GridEvents[K]>) => void
@@ -24,7 +24,6 @@ export interface GridEventAPI {
   off: <K extends keyof GridEvents>(event: K, handler: GridEvents[K]) => void
 }
 
-// Injection key
 export const GridEventKey: InjectionKey<GridEventAPI> = Symbol('grid-events')
 
 /**
@@ -64,9 +63,6 @@ export function useGridEvents(): GridEventAPI {
   return api
 }
 
-/**
- * Provide grid events to children
- */
 export function provideGridEvents() {
   const api = createGridEvents()
   provide(GridEventKey, api)

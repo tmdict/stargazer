@@ -76,7 +76,6 @@ export const useUrlStateStore = defineStore('urlState', () => {
       return { hexId, characterId, team }
     }
 
-    // Clear existing state first: characters, artifacts, and all tile states
     characterStore.clearAllCharacters()
     artifactStore.clearAllArtifacts()
     gridStore.resetAllTiles()

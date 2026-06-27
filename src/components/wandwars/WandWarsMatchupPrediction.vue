@@ -16,7 +16,7 @@ defineProps<{
 
 const i18n = useI18nStore()
 
-// Confidence-badge tooltip — shared between aggregate and per-model badges.
+// Confidence-badge tooltip: shared between aggregate and per-model badges.
 const confidenceTooltipText = ref<string>('')
 const confidenceTooltipTarget = ref<HTMLElement | null>(null)
 

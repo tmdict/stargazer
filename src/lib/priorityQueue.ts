@@ -97,7 +97,6 @@ export class PriorityQueue<T> {
         break
       }
 
-      // Swap with parent
       const temp = this.heap[index]
       if (!temp) {
         console.warn('priorityQueue: Temp element undefined during swap in bubbleUp', {
@@ -146,7 +145,6 @@ export class PriorityQueue<T> {
 
       if (smallest === index) break
 
-      // Swap with smallest child
       const temp = this.heap[index]
       const smallestChild = this.heap[smallest]
       if (!temp || !smallestChild) {

@@ -7,7 +7,7 @@
  * - Medium ("moderate"):  interval width < 0.35 (~12–15 matches near 50% WR)
  * - Low ("sparse"):       wide interval or too few samples
  *
- * Wilson is absolute — these thresholds don't change with dataset size, but
+ * Wilson is absolute: these thresholds don't change with dataset size, but
  * the distribution of heroes across the three bands does. Revisit thresholds
  * at major dataset doublings (e.g. ~5,000 matches) if most heroes drift into
  * a single band.

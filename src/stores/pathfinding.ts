@@ -79,7 +79,6 @@ export const usePathfindingStore = defineStore('pathfinding', () => {
     return results
   }
 
-  // Debug pathfinding results for visualization
   const debugPathfindingResults = computed(() => {
     // Only compute when there are characters on the grid
     if (characterStore.charactersPlaced === 0) {

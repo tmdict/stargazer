@@ -1,7 +1,7 @@
 /**
  * Combine every *.data file under `src/wandwars/data/raw/<patch>/` into one
  * base64-encoded blob at `src/wandwars/data/data`. Patch folders are named by
- * the patch identifier (e.g. `202604_1.6.3` — date YYYYMM, underscore,
+ * the patch identifier (e.g. `202604_1.6.3`: date YYYYMM, underscore,
  * game version). Within a patch, file names are arbitrary so contributors can
  * name uploads after themselves; the encoded output is agnostic of origin.
  *
@@ -25,7 +25,7 @@ import { join } from 'node:path'
 const RAW_DIR = join(import.meta.dirname!, '../data/raw')
 const OUT_FILE = join(import.meta.dirname!, '../data/data')
 
-// Patch folders look like `202604_1.6.3` — YYYYMM date, underscore, semver-ish.
+// Patch folders look like `202604_1.6.3`: YYYYMM date, underscore, semver-ish.
 const PATCH_DIR_RE = /^\d{6}_\d+(?:\.\d+)*$/
 
 const patchDirs = readdirSync(RAW_DIR, { withFileTypes: true })

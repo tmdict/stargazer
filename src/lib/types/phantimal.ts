@@ -10,7 +10,7 @@ export interface PhantimalType {
   faction: string // faction slug → game.<faction> label + faction-<faction> icon
 }
 
-// src/locales/seasonal/phantimal/<name>.json — full localized content.
+// src/locales/seasonal/phantimal/<name>.json: full localized content.
 export interface PhantimalSkillLocale {
   name: LocaleData
   levels: LocaleData[]

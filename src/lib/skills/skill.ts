@@ -101,7 +101,6 @@ export class SkillManager {
   // cell fill. A skill picks one (see TilePaint.fill).
   private tileColorModifiers: Map<number, string[]> = new Map()
   private tileFillModifiers: Map<number, string[]> = new Map()
-  // Track skill targeting information
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Tiles each skill instance (characterId-team) has painted, for diff-based cleanup
   private skillPaintedTiles: Map<string, TilePaint[]> = new Map()
@@ -155,10 +154,8 @@ export class SkillManager {
       this.deactivateCharacterSkill(characterId, hexId, team, grid)
     }
 
-    // Track the active skill
     this.activeSkills[skillKey] = { characterId, hexId, team }
 
-    // Create context and activate
     const context: SkillContext = {
       grid,
       hexId,
@@ -187,10 +184,8 @@ export class SkillManager {
 
     const skillKey = this.getSkillKey(characterId, team)
 
-    // Remove from tracking
     delete this.activeSkills[skillKey]
 
-    // Create context and deactivate
     const context: SkillContext = {
       grid,
       hexId,
