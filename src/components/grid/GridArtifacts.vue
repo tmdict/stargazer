@@ -51,7 +51,7 @@ const cellLayerRef = ref<SVGSVGElement | null>(null)
 
 // Purely-visual host cells: the left/right neighbours of real cells 1 (ally) and
 // 45 (enemy). Not part of the grid simulation (no tile, pathfinding, or drop
-// target) — just an SVG outline + the icon, tracking the layout/scale.
+// target): just an SVG outline + the icon, tracking the layout/scale.
 const ghostCell = (baseId: number, direction: number): Hex | null => {
   try {
     return ctx.grid.getHexById(baseId).neighbor(direction)
@@ -100,7 +100,7 @@ const artifactDimensions = computed(() => {
 })
 
 // Center the icon on its host cell. In perspective, lift it and counter-scale
-// vertically — the same transform GridCharacters applies — so it reads as an
+// vertically (the same transform GridCharacters applies) so it reads as an
 // isometric token standing in the cell while the cell beneath it compresses.
 const iconStyle = (center: { x: number; y: number }) => {
   const { containerSize, borderWidth } = artifactDimensions.value
@@ -442,7 +442,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   background: #fff;
 }
 
-/* Mirrors GridCharacters' .character-pointer — the isometric "foot" in perspective. */
+/* Mirrors GridCharacters' .character-pointer: the isometric "foot" in perspective. */
 .artifact-pointer {
   position: absolute;
   bottom: -8px;

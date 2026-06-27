@@ -36,7 +36,7 @@ const MIN_CALIBRATION_SAMPLES = 100
 const TARGET_BINS = 12
 
 /**
- * Confidence threshold tuning — data-driven, no hardcoded accuracy targets.
+ * Confidence threshold tuning: data-driven, no hardcoded accuracy targets.
  *
  * The tuner picks cutoffs on each model's self-confidence distribution (and
  * on `(stddev, avgSelfConf)` pairs for the aggregate) that satisfy three
@@ -74,17 +74,17 @@ const PER_MODEL_MEDIUM_MIN_COVERAGE = 0.3
 
 // Aggregate is already smoothing across models. Keep LOW drop small (1pp)
 // so the bottom warning tier enables at realistic data sizes. HIGH lift
-// matches per-model (2pp) — marginal 0.2pp-over-MEDIUM "HIGH" tiers are
+// matches per-model (2pp): marginal 0.2pp-over-MEDIUM "HIGH" tiers are
 // within run-variance and would flicker on/off, so require the same
 // meaningful lift as individual models.
-const AGGREGATE_HIGH_LIFT_OVER_OVERALL = 0.02 // match per-model — HIGH must meaningfully beat overall
+const AGGREGATE_HIGH_LIFT_OVER_OVERALL = 0.02 // match per-model: HIGH must meaningfully beat overall
 const AGGREGATE_LOW_DROP_BELOW_MEDIUM = 0.01
 const AGGREGATE_HIGH_MIN_COVERAGE = 0.02
 const AGGREGATE_HIGH_MAX_COVERAGE = 0.15
 const AGGREGATE_MEDIUM_TARGET_ACC = 0.58
 const AGGREGATE_MEDIUM_MIN_COVERAGE = 0.3
 
-// UX preferences — applied on top of the statistical constraints above.
+// UX preferences: applied on top of the statistical constraints above.
 // Every candidate cutoff considered already passed the statistical checks,
 // so the selected cutoff remains empirically justified.
 const TARGET_LOW_COVERAGE = 0.25 // preferred LOW coverage share
@@ -270,7 +270,7 @@ interface AggregateTuned {
  * Grid of self-confidence cutoff candidates, descending. Each model publishes
  * selfConf ∈ [0, 1]; we pick thresholds from this grid. Finer resolution at
  * the top end (0.95 → 0.99) gives the HIGH picker more options to hit the
- * ≤ 15% max-coverage cap — some signals (PP's avg pair match count, NN's
+ * ≤ 15% max-coverage cap: some signals (PP's avg pair match count, NN's
  * avg pair co-occurrence) saturate near 1.0 so 0.95 alone would sweep up
  * 30 %+ of predictions.
  */
@@ -315,13 +315,13 @@ function tunePerModel(
     }
   }
 
-  // MEDIUM tuning — among all cutoffs that (a) meet the accuracy floor and
+  // MEDIUM tuning: among all cutoffs that (a) meet the accuracy floor and
   // (b) have a statistically-justified LOW drop, pick the one whose LOW
   // coverage is closest to TARGET_LOW_COVERAGE. This keeps LOW meaningful
   // (neither vanishingly rare nor overwhelming) while staying empirically
   // justified.
   //
-  // If no cutoff satisfies (b), fall back to plain max-coverage — LOW just
+  // If no cutoff satisfies (b), fall back to plain max-coverage: LOW just
   // won't appear because the signal doesn't correlate with accuracy at the
   // bottom. Never fabricate LOW.
   let mediumPicked: {
@@ -345,7 +345,7 @@ function tunePerModel(
     if (!mediumFallback || above.coverage > mediumFallback.above.coverage) {
       mediumFallback = { cutoff: T, above, below }
     }
-    // Prefer cutoffs that justify LOW — below-bucket has ≥ drop threshold AND ≥ 20 samples
+    // Prefer cutoffs that justify LOW: below-bucket has ≥ drop threshold AND ≥ 20 samples
     if (below.n >= 20 && above.acc - below.acc >= PER_MODEL_LOW_DROP_BELOW_MEDIUM) {
       const distance = Math.abs(below.coverage - TARGET_LOW_COVERAGE)
       if (distance < mediumPickedDistance) {
@@ -400,7 +400,7 @@ function tunePerModel(
     }
   }
 
-  // Default framing — MEDIUM+LOW. Runtime MEDIUM cutoff only > 0 when LOW
+  // Default framing: MEDIUM+LOW. Runtime MEDIUM cutoff only > 0 when LOW
   // is empirically justified; otherwise 0 and no LOW shows. The fallback
   // stats are diagnostic-only.
   const runtimeMediumCutoff = mediumPicked?.cutoff ?? 0
@@ -458,7 +458,7 @@ function tuneAggregate(
     for (const std of stddevGrid) {
       for (const conf of selfConfGrid) {
         // "strictlyTighterThan" ensures HIGH's cutoffs are at least as strict
-        // as MEDIUM's in both dims AND stricter in at least one — so every
+        // as MEDIUM's in both dims AND stricter in at least one, so every
         // HIGH prediction also passes MEDIUM (HIGH ⊂ MEDIUM).
         if (options.strictlyTighterThan) {
           const t = options.strictlyTighterThan
@@ -496,9 +496,9 @@ function tuneAggregate(
     }
   }
 
-  // MEDIUM tuning — prefer max coverage that (a) meets accuracy floor,
+  // MEDIUM tuning: prefer max coverage that (a) meets accuracy floor,
   // (b) below-bucket is meaningfully less accurate (justifies a LOW band).
-  // If no cutoff satisfies (b), fall back to plain max-coverage — LOW
+  // If no cutoff satisfies (b), fall back to plain max-coverage: LOW
   // won't show because the signal doesn't correlate at the bottom.
   let mediumPicked: {
     std: number
@@ -547,7 +547,7 @@ function tuneAggregate(
 
   // Relabel: if the best MEDIUM+LOW split puts > LOW_INVERT_THRESHOLD in
   // LOW AND the above-bucket passes HIGH's overall-acc + lift criterion,
-  // relabel — above-bucket becomes HIGH, below-bucket becomes MEDIUM, no
+  // relabel: above-bucket becomes HIGH, below-bucket becomes MEDIUM, no
   // LOW. Same statistically justified split, different framing.
   if (
     mediumPicked &&
@@ -558,7 +558,7 @@ function tuneAggregate(
     return {
       highStddev: mediumPicked.std,
       highAvgSelfConf: mediumPicked.conf,
-      mediumStddev: 1, // permissive — everything not HIGH becomes MEDIUM
+      mediumStddev: 1, // permissive: everything not HIGH becomes MEDIUM
       mediumAvgSelfConf: 0,
       highAcc: mediumPicked.above.acc,
       highCoverage: mediumPicked.above.coverage,
@@ -569,7 +569,7 @@ function tuneAggregate(
     }
   }
 
-  // Default framing — MEDIUM+LOW. Runtime MEDIUM thresholds only active
+  // Default framing: MEDIUM+LOW. Runtime MEDIUM thresholds only active
   // when LOW is justified. Otherwise permissive (everything = MEDIUM).
   const runtimeMediumStddev = mediumPicked?.std ?? 1
   const runtimeMediumAvgSelfConf = mediumPicked?.conf ?? 0
@@ -591,7 +591,7 @@ function tuneAggregate(
 
 // Popular Pick and Composite read per-fold analysisData but don't refit
 // anything heavy inside predictMatchup, so per-match predictMatchup is fine.
-// Bradley-Terry and Adaptive ML both need explicit per-fold caching — see
+// Bradley-Terry and Adaptive ML both need explicit per-fold caching. See
 // the fold loop below.
 const LIGHT_MODELS: { id: string; model: RecommendationModel }[] = [
   { id: 'popular-pick', model: popularPickModel },
@@ -643,7 +643,7 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     process.stdout.write(`Fold ${fold + 1}/${NUM_FOLDS}: `)
 
     // Fit Bradley-Terry once per fold (strengths + pair interactions) and
-    // reuse the result across all test-match predictions — the BT fit only
+    // reuse the result across all test-match predictions: the BT fit only
     // depends on the training set, so per-prediction refits are unnecessary.
     const btStart = Date.now()
     const btFit = fitBradleyTerry(trainMatches, foldAnalysis)
@@ -677,7 +677,7 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
         modelProbs[id] = pred.leftWinProbability
       }
 
-      // Bradley-Terry via cached fit — no refit per match.
+      // Bradley-Terry via cached fit: no refit per match.
       const btProb = btFit.predict([...match.left], [...match.right])
       rawPairs['bradley-terry']!.push({ x: btProb, y: actual })
       modelProbs['bradley-terry'] = btProb
@@ -771,7 +771,7 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
     return raw
   }
 
-  // Per-match aggregate snapshot via the shared blend (credibilityBlend.ts) —
+  // Per-match aggregate snapshot via the shared blend (credibilityBlend.ts):
   // the same function the runtime uses, so the tuned thresholds map directly
   // to the runtime badge logic by construction.
   const aggregatePairs = aggregateData.map((d) => {
@@ -800,7 +800,7 @@ export function runBenchmarkAndCalibrate(allMatches: MatchResult[], allHeroes: s
       selfConf: d.modelSelfConf[id]!,
       actual: d.actual,
       // For per-model tuning, predicted outcome is that model's own raw prob
-      // (calibrated — so tuning aligns with runtime behavior).
+      // (calibrated, so tuning aligns with runtime behavior).
       predicted: applyCal(id, d.modelProbs[id]!) >= 0.5 ? 1 : 0,
     }))
     const decisivePairs = pairs.filter((p) => p.actual !== 0.5)

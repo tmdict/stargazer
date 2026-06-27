@@ -120,7 +120,7 @@ const getPreviewFillColor = (state: State): string => {
   min-height: var(--panel-min-height);
 }
 
-/* See CharacterSelection.vue — wide-screen flex-fill with own scroll, narrow
+/* See CharacterSelection.vue: wide-screen flex-fill with own scroll, narrow
    stacks naturally. */
 @media (min-width: 1220px) {
   .map-editor {

@@ -22,15 +22,12 @@ export function executeMoveCharacter(
   // Basic validation
   if (fromHexId == toHexId) return false
 
-  // Validate character ID matches
   const actualCharacterId = getCharacter(grid, fromHexId)
   if (actualCharacterId != characterId) return false
 
-  // Get character team info
   const fromTeam = getCharacterTeam(grid, fromHexId)
   if (!fromTeam) return false
 
-  // Determine target team from destination tile
   const toTile = grid.getTileById(toHexId)
   const toTeam = getTeamFromTileState(toTile.state)
   if (!toTeam) return false

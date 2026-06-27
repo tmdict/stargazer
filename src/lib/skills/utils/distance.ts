@@ -57,7 +57,6 @@ function applyHexIdTieBreaker(
 ): TargetCandidate | null {
   if (sortedCandidates.length === 0) return null
 
-  // Get all candidates at the best distance
   const firstCandidate = sortedCandidates[0]
   if (!firstCandidate) {
     console.warn('targeting: First candidate is undefined in resolveTies', {
@@ -105,7 +104,6 @@ export function findTarget(
   const { grid, team, hexId, characterId } = context
   const referenceHexId = options.referenceHexId ?? hexId
 
-  // Get candidates based on target team
   const candidates = getCandidates(
     grid,
     options.targetTeam,
@@ -114,7 +112,6 @@ export function findTarget(
 
   if (candidates.length === 0) return null
 
-  // Calculate distances
   calculateDistances(candidates, [referenceHexId], grid)
 
   // Sort by targeting method (closest/furthest)
@@ -158,7 +155,6 @@ export function findRearmostTarget(
 ): SkillTargetInfo | null {
   const { grid, team, hexId, characterId } = context
 
-  // Get all candidates on the target team
   let candidates = getTeamTargetCandidates(grid, targetTeam)
 
   // Exclude self if requested and targeting the same team

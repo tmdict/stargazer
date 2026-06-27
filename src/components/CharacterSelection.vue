@@ -58,7 +58,7 @@ const placedTeam = (characterId: number): Team | null => {
 const isCharacterPlaced = (characterId: number): boolean => placedTeam(characterId) !== null
 
 const handleCharacterClick = (character: CharacterType) => {
-  // Mobile: a tapped tile targets a specific cell on the active board — place the
+  // Mobile: a tapped tile targets a specific cell on the active board. Place the
   // hero there using that tile's team.
   if (targetHexId.value !== null) {
     const team = getTeamFromTileState(gridStore.getTile(targetHexId.value).state)
@@ -142,7 +142,7 @@ const handleResultSelect = (slug: string) => {
    panel flex-fills the column and owns its own scroll; at the scroll boundary
    the wheel chains to the page (default overscroll behavior). On narrow screens
    (column-stacked layout) the panel grows to natural content height and the
-   page handles scrolling — no internal scrollbar. */
+   page handles scrolling: no internal scrollbar. */
 @media (min-width: 1220px) {
   .character-selection.scrollable {
     flex: 1;

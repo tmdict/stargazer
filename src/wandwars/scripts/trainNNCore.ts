@@ -49,7 +49,7 @@ interface AdamState {
   t: number
 }
 
-// Seeded PRNG (mulberry32) — shared across training runs. The caller should
+// Seeded PRNG (mulberry32): shared across training runs. The caller should
 // call `seedRng()` before each run for reproducibility.
 let rngState = 0
 export function seedRng(seed: number): void {

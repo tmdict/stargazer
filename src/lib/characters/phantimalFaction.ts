@@ -9,7 +9,7 @@ import { isPhantimalId } from './phantimal'
 export const PHANTIMAL_FACTION_REQUIREMENT = 3
 
 // Phantimals normally require their own faction. Overrides (keyed by phantimal
-// name) count several factions toward the total — e.g. midnight-hunter draws on
+// name) count several factions toward the total, e.g. midnight-hunter draws on
 // both hypogean and celestial.
 const FACTION_OVERRIDES: Record<string, readonly string[]> = {
   'midnight-hunter': ['hypogean', 'celestial'],
@@ -20,7 +20,7 @@ export function requiredFactions(name: string, faction: string): readonly string
 }
 
 // Counts distinct hero units on a team whose faction is in `factions`. Only main
-// characters count — companions and phantimals are excluded. `factionOf` resolves
+// characters count: companions and phantimals are excluded. `factionOf` resolves
 // a character's faction; it lives in the data store, so it's injected to keep this
 // pure.
 export function countTeamFaction(

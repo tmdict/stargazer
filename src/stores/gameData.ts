@@ -51,7 +51,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   }
 
   // SSG-safe loader for content pages (the skill browser): runs during SSG too
-  // so the character grid — and its crawlable skill links — is baked into the
+  // so the character grid (and its crawlable skill links) is baked into the
   // static HTML and hydrates without a mismatch.
   const initializeContentData = () => {
     if (dataLoaded.value) {
@@ -64,7 +64,6 @@ export const useGameDataStore = defineStore('gameData', () => {
     }
   }
 
-  // Helper to get character range by ID
   const getCharacterRange = (characterId: number): number => {
     // Phantimals carry their own range in data; fall back to melee if missing.
     if (isPhantimalId(characterId)) {

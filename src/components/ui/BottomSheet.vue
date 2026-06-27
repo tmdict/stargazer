@@ -73,7 +73,7 @@ const onScrimClick = () => {
   emit('dismiss')
 }
 
-// Imperative open for "tap the empty content to reveal the roster" — a no-op on
+// Imperative open for "tap the empty content to reveal the roster": a no-op on
 // desktop, where the roster column is always visible (there's no sheet).
 const expand = () => {
   if (isMobile.value) sheetExpanded.value = true
@@ -93,7 +93,6 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
 </script>
 
 <template>
-  <!-- Tap-scrim behind the expanded sheet (mobile only); a tap collapses it. -->
   <div v-if="expanded && isMobile" class="sheet-scrim" @click="onScrimClick" />
   <div
     class="bottom-sheet"
@@ -145,12 +144,11 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
   --tabview-inset-x: var(--content-padding-x);
 }
 
-/* The drag handle only exists in the mobile sheet mode. */
 .sheet-handle-area {
   display: none;
 }
 
-/* display: contents — hosts the drag listeners without affecting layout, so the
+/* display: contents. Hosts the drag listeners without affecting layout, so the
    slotted content stays a direct flex child with its own fill/scroll. */
 .sheet-content {
   display: contents;
@@ -216,7 +214,7 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
   .bottom-sheet.is-snapping {
     transition: none;
   }
-  /* Collapsed peek is drag-only — block native scroll so a swipe there drives the
+  /* Collapsed peek is drag-only: block native scroll so a swipe there drives the
      sheet, not the page (iOS ignores overscroll-behavior on the non-scrollable peek). */
   .bottom-sheet.is-collapsed {
     touch-action: none;

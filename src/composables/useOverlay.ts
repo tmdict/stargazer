@@ -16,8 +16,8 @@ const DEFAULT_DELAY_MS = 50
  * Escape-to-close + click-outside-to-close for modal-style surfaces.
  *
  * The click-outside listener is re-armed (with a small delay) on every
- * false→true transition of `isOpen`. The opening click — e.g. on a sibling
- * "info" button — keeps bubbling up to the document-level listener in the
+ * false→true transition of `isOpen`. The opening click (e.g. on a sibling
+ * "info" button) keeps bubbling up to the document-level listener in the
  * same event, and Vue's prop propagation across parent→child can race that
  * bubble. Without the delay the panel can close itself on the click that
  * opened it. The delay defers attachment past the open-click rather than

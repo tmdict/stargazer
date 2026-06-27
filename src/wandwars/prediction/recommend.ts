@@ -103,7 +103,7 @@ export interface ModelPrediction {
   id: string
   name: string
   prediction: CalibratedMatchupPrediction
-  /** Per-model self-confidence [0, 1] — how well the data supports this model's answer. */
+  /** Per-model self-confidence [0, 1]: how well the data supports this model's answer. */
   selfConfidence: number
 }
 
@@ -134,7 +134,7 @@ export interface AggregatePrediction {
   /**
    * Credibility-weighted stddev across model probabilities. Each model's
    * contribution to disagreement is weighted by its aggregate share × its
-   * own self-confidence — so a sparse-data outlier counts less.
+   * own self-confidence, so a sparse-data outlier counts less.
    */
   weightedStddev: number
   /** Weighted mean of per-model self-confidences. */
@@ -145,7 +145,7 @@ export interface AggregatePrediction {
 }
 
 /**
- * Per-model confidence badge — reflects how well this model's data supports
+ * Per-model confidence badge: reflects how well this model's data supports
  * its answer for THIS specific matchup (see `modelConfidence.ts`). Each
  * model has its own thresholds because each measures a different signal.
  */
@@ -158,7 +158,7 @@ function perModelConfidence(modelId: string, selfConfidence: number): 'high' | '
 }
 
 /**
- * Aggregate confidence — two signals:
+ * Aggregate confidence. Two signals:
  *   1. Credibility-weighted variance of model probabilities. Models that
  *      have low self-confidence or low aggregate weight contribute less to
  *      the "disagreement" metric, so a sparse-data outlier doesn't torpedo
@@ -188,7 +188,7 @@ export function getAggregatePrediction(predictions: ModelPrediction[]): Aggregat
   const baseWeights = getAdaptiveAggregateWeights(matchCount)
 
   // The blend math lives in credibilityBlend.ts, shared with the benchmark's
-  // threshold tuning — the badge calibration depends on the two staying identical.
+  // threshold tuning: the badge calibration depends on the two staying identical.
   const {
     probability: leftWinProbability,
     weightedStddev,

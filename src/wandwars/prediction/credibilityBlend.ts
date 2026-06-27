@@ -8,7 +8,7 @@ export interface ModelVote {
 export interface CredibilityBlend {
   /** Credibility-weighted mean probability */
   probability: number
-  /** Weighted stddev of the votes around the mean — the disagreement metric */
+  /** Weighted stddev of the votes around the mean: the disagreement metric */
   weightedStddev: number
   /** Weighted mean of per-model self-confidences */
   avgSelfConfidence: number
@@ -18,7 +18,7 @@ export interface CredibilityBlend {
 const DEFAULT_WEIGHT = 0.25
 
 /**
- * Credibility-weighted blend of model predictions — the single definition of
+ * Credibility-weighted blend of model predictions: the single definition of
  * the aggregate math shared by the runtime (getAggregatePrediction) and the
  * benchmark's threshold tuning. The confidence thresholds in
  * calibrationData.ts are fit against exactly this computation, so the badge

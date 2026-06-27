@@ -12,7 +12,7 @@ import { smoothedWinRate } from './smoothing'
 const BAYESIAN_PRIOR = META_BAYESIAN_PRIOR
 
 // Draw convention: draws count toward match totals (data volume) but never
-// reach a rate — every rate goes through smoothedWinRate, whose denominator
+// reach a rate: every rate goes through smoothedWinRate, whose denominator
 // is built from win/loss evidence only. Bradley–Terry and the NN handle
 // draws separately (half-win credit).
 

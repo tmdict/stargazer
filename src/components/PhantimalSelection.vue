@@ -31,7 +31,7 @@ const { isTouchDevice } = useTouchDetection()
 
 const sorted = computed(() => [...phantimals].sort((a, b) => a.id - b.id))
 
-// "Season 7 Phantimals" — season number comes from the data.
+// "Season 7 Phantimals": season number comes from the data.
 const heading = computed(() => {
   const season = sorted.value[0]?.season ?? 0
   return `${i18n.t('game.season')} ${season} ${i18n.t('game.phantimal')}`
@@ -54,7 +54,7 @@ const isPlaced = (phantimal: PhantimalType): boolean => placedHex(phantimal) !==
 
 const handlePhantimalClick = (phantimal: PhantimalType) => {
   const id = toPhantimalId(phantimal.id)
-  // Mobile: a tapped tile targets a specific cell — place there using its team.
+  // Mobile: a tapped tile targets a specific cell. Place there using its team.
   if (targetHexId.value !== null) {
     const team = getTeamFromTileState(gridStore.getTile(targetHexId.value).state)
     if (team !== null) characterStore.placePhantimalOnHex(targetHexId.value, id, team)

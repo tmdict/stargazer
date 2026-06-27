@@ -1,7 +1,7 @@
 /**
  * Crop each hero reference PNG to the bounding box of its gold border,
  * then resize to a uniform 170x230. Writes to a sibling `portraits_normalized/`
- * folder — review, then rename/replace `portraits/` when satisfied.
+ * folder. Review, then rename/replace `portraits/` when satisfied.
  *
  * Usage: npx tsx src/wandwars/scripts/normalize-references.ts
  * Requires: sharp (already installed)
@@ -26,7 +26,7 @@ const TARGET_H = 230
 
 /**
  * Classify a pixel as part of the gold border. Uses hue + saturation
- * thresholds in HSV — orange-yellow with enough vibrance to exclude skin
+ * thresholds in HSV: orange-yellow with enough vibrance to exclude skin
  * tones and background beige. Shares the POOL_GOLD_* thresholds with the
  * runtime detector (poolDetect.isGoldPixel) so the normalizer crops the
  * same border the detector finds.

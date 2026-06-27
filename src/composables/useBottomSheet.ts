@@ -5,7 +5,7 @@ import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 interface Options {
   /** Collapsed (peek) visible height, in px. */
   peek: number
-  /** Expanded visible height — a fraction of the viewport (<1) or px (>=1). */
+  /** Expanded visible height: a fraction of the viewport (<1) or px (>=1). */
   expanded: number
   /** Start expanded (vs. peek) when first mounted on a mobile viewport. */
   initialExpanded?: boolean
@@ -89,7 +89,7 @@ export function useBottomSheet(opts: Options) {
   function dragEnd(allowTap = true) {
     if (!dragging.value) return
     dragging.value = false
-    // A flick (quick release) wins first — open/close in its direction even on a
+    // A flick (quick release) wins first: open/close in its direction even on a
     // short swipe. Ignore stale velocity from a finger that paused before lifting.
     const isFlick = Date.now() - lastMoveTime < 100 && Math.abs(velocity) >= FLICK_VELOCITY
     if (isFlick) {
@@ -138,7 +138,7 @@ export function useBottomSheet(opts: Options) {
   }
 
   function onMouseDown(e: MouseEvent) {
-    // Skip the emulated mouse event a touch device fires right after a tap —
+    // Skip the emulated mouse event a touch device fires right after a tap,
     // otherwise dragEnd runs twice (touch + mouse) and the toggle snaps back.
     if (Date.now() - lastTouchEnd < 700) return
     dragStart(e.clientY)
@@ -177,12 +177,12 @@ export function useBottomSheet(opts: Options) {
   }
 
   // Drives a content gesture frame. Returns true when the caller should suppress
-  // native scroll because the sheet — not the content — is handling the gesture.
+  // native scroll because the sheet (not the content) is handling the gesture.
   //
   // Native scroll is allowed in just two cases, both while expanded: the content
   // is scrolled below its top, or the finger is moving up at the top. Otherwise
-  // the sheet owns the gesture — collapsed (swipe up to expand) or an at-top
-  // downward pull (swipe down to collapse) — so it suppresses scroll from the
+  // the sheet owns the gesture, collapsed (swipe up to expand) or an at-top
+  // downward pull (swipe down to collapse), so it suppresses scroll from the
   // first move (the page never drags) and engages the drag past the threshold.
   function contentDragStep(clientY: number): boolean {
     if (dragging.value) {

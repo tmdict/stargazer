@@ -81,7 +81,7 @@ gridEvents.on('hex:click', (hex: Hex) => {
     const hexId = hex.getId()
     mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
   } else {
-    // Normal mode — open the character picker for a tile that can take a unit.
+    // Normal mode: open the character picker for a tile that can take a unit.
     const tile = ctx.grid.getTileById(hex.getId())
     const tileTeam = getTeamFromTileState(tile.state)
     const scale = ctx.hexScale
@@ -99,7 +99,7 @@ gridEvents.on('hex:click', (hex: Hex) => {
       const grid = ctx.grid
       // Drop a hero lifted from THIS board onto the empty cell (cross-board moves
       // go through drag, so a stale lift from another board is dropped below).
-      // Allowed even when the team is full — a move adds no unit.
+      // Allowed even when the team is full: a move adds no unit.
       if (
         liftedHexId.value !== null &&
         liftedGridId.value === ctx.id &&
@@ -113,7 +113,7 @@ gridEvents.on('hex:click', (hex: Hex) => {
         return
       }
       // Otherwise target this empty tile so a roster tap fills it (dropping any
-      // stale lift from another board). Allowed even when the team is full — a
+      // stale lift from another board). Allowed even when the team is full: a
       // phantimal can still be placed there, and the roster re-checks character
       // capacity before placing a character.
       if (tile.characterId === undefined) {
@@ -123,14 +123,14 @@ gridEvents.on('hex:click', (hex: Hex) => {
       return
     }
 
-    // Desktop: clicking a placed hero's tile removes it — moves use drag, and
+    // Desktop: clicking a placed hero's tile removes it. Moves use drag, and
     // the picker below can only add.
     if (tile.characterId !== undefined) {
       ctx.remove(hex.getId())
       return
     }
 
-    // Desktop popup can only add — skip a tile whose team is already full.
+    // Desktop popup can only add: skip a tile whose team is already full.
     if (getAvailableTeamSize(ctx.grid, tileTeam) <= 0) return
 
     // Desktop: anchor the popup near the tapped hex. The perspective transform

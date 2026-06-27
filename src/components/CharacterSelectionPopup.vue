@@ -16,7 +16,7 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
-  // The tapped tile — determines the team and where the chosen hero is placed.
+  // The tapped tile: determines the team and where the chosen hero is placed.
   hex: Hex
   characters: readonly CharacterType[]
   position: { x: number; y: number }

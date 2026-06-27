@@ -32,7 +32,6 @@ export function useToast() {
 
     state.toasts.push(toast)
 
-    // Auto-remove after duration
     setTimeout(() => {
       remove(toast.id)
     }, duration)

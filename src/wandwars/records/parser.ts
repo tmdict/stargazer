@@ -45,7 +45,7 @@ const PATCH_DIRECTIVE_RE = /@patch\s+(\S+)/
  *     where the encoded blob always carries directives.
  *
  *   - **Lenient** (`fallbackPatch` provided): match lines before any directive
- *     are tagged with the fallback. Used by the Records UI import path —
+ *     are tagged with the fallback. Used by the Records UI import path:
  *     user-facing files have no patch context and don't need one (records
  *     are display-only, never feed predictions).
  */

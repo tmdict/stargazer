@@ -126,7 +126,7 @@ const PAIR_DATA_STRENGTH_FULL = 10
 /**
  * Compute pair interaction scores as residuals from the additive model.
  * For each hero pair that appears on the same team, compare their actual
- * win rate to the B-T model's prediction — the difference is the synergy
+ * win rate to the B-T model's prediction: the difference is the synergy
  * or clash that the additive model misses.
  */
 function computePairInteractions(
@@ -167,7 +167,7 @@ function computePairInteractions(
     const regWeight = PAIR_REGULARIZATION_STRENGTH / (1 + totalWeight)
     // Residual: how much better (positive) or worse (negative) than expected
     const residual = (actual - expected) / (totalWeight + regWeight)
-    // Clamp to ±5% per pair — 3 pairs per team means ±15% max team adjustment
+    // Clamp to ±5% per pair: 3 pairs per team means ±15% max team adjustment
     const clamped = Math.max(-0.05, Math.min(0.05, residual * dataStr))
     interactions.set(key, clamped)
   }
@@ -228,10 +228,10 @@ export interface BradleyTerryFit {
 /**
  * Fit Bradley-Terry strengths + pair interaction residuals for a given match
  * set and analysis snapshot. Returns a reusable fit that can be called many
- * times without refitting — used by the benchmark to cache per-fold fits,
+ * times without refitting, used by the benchmark to cache per-fold fits,
  * and by the production model paths below.
  *
- * For the production app, prefer `getCachedBradleyTerryFit` — the fit is
+ * For the production app, prefer `getCachedBradleyTerryFit`: the fit is
  * deterministic for given match data, so refitting on every hero pick is
  * wasted work. The benchmark deliberately calls this function directly to
  * keep per-fold fits independent.
@@ -255,7 +255,7 @@ export function fitBradleyTerry(
 // Match data is static for the lifetime of a browser session (inlined at
 // build time, recorded matches live separately in localStorage), so one fit
 // is reusable across every call site. Reference identity on `matches` is a
-// sufficient invalidation key — if the array reference ever changes (new
+// sufficient invalidation key: if the array reference ever changes (new
 // data bundled in a fresh build, HMR reload, future "include recorded
 // matches" feature), the next caller refits automatically.
 

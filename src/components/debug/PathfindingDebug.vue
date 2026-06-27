@@ -15,10 +15,8 @@ const props = defineProps<Props>()
 const gridStore = useGridStore()
 const pathfindingStore = usePathfindingStore()
 
-// Get debug pathfinding results from the store
 const pathfindingResults = computed(() => pathfindingStore.debugPathfindingResults)
 
-// Dynamic stroke properties based on grid scale
 const strokeProps = computed(() => {
   const scale = gridStore.getHexScale()
   return {
@@ -27,7 +25,6 @@ const strokeProps = computed(() => {
   }
 })
 
-// Generate SVG path strings for each pathfinding result
 const pathElements = computed(() => {
   return pathfindingResults.value
     .filter((result) => {

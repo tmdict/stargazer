@@ -188,7 +188,7 @@ const snippetComp = computed(() => {
 }
 
 .skill-snippet-anchor {
-  /* Teleport target — empty when no snippet present. */
+  /* Teleport target: empty when no snippet present. */
 }
 
 .skill-snippet-host {

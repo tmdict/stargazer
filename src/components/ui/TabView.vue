@@ -82,7 +82,7 @@ if (import.meta.env.DEV) {
   padding: var(--spacing-2xl) var(--content-padding-x);
 }
 
-/* Just the flex shell — each slotted panel owns its own internal scroll. */
+/* Just the flex shell: each slotted panel owns its own internal scroll. */
 .tab-view.fill .tab-content {
   flex: 1;
   min-height: 0;

@@ -88,7 +88,7 @@ const opponentTeam = computed(() => {
 })
 
 // Per-card counter data, keyed by candidate hero. Computed so the single-pass
-// scans refresh on draft changes — not on sort/filter re-renders, which a
+// scans refresh on draft changes, not on sort/filter re-renders, which a
 // per-card template method call would.
 const teamCounterByHero = computed(() =>
   buildTeamCounterMap(getMatchData(), currentTeammates.value, opponentTeam.value),

@@ -143,7 +143,6 @@ export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] 
 export function clearCharacterFromTile(tile: GridTile): void {
   const currentState = tile.state
 
-  // Delete character data
   delete tile.characterId
   delete tile.team
 

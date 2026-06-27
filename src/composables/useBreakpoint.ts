@@ -13,7 +13,7 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
 
   // matchMedia (not window.innerWidth) drives the breakpoint: it reflects the
   // live viewport even when innerWidth lags (e.g. DevTools emulation), and its
-  // change events fire exactly on threshold crossings — no resize-timing race.
+  // change events fire exactly on threshold crossings: no resize-timing race.
   let mqMobile: MediaQueryList | null = null
   let mqTablet: MediaQueryList | null = null
 
@@ -39,7 +39,7 @@ export function useBreakpoint(options: { autoFlattenOnMobile?: boolean } = {}) {
     mqMobile = window.matchMedia(`(max-width: ${MOBILE_MAX_WIDTH}px)`)
     mqTablet = window.matchMedia(`(max-width: ${TABLET_MAX_WIDTH}px)`)
 
-    // Initial sync — currentBreakpoint starts at 'desktop', so apply directly.
+    // Initial sync: currentBreakpoint starts at 'desktop', so apply directly.
     currentBreakpoint.value = read()
     gridStore.updateBreakpoint(currentBreakpoint.value)
     if (autoFlattenOnMobile && currentBreakpoint.value === 'mobile') showPerspective.value = false

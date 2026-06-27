@@ -27,7 +27,7 @@ const modelValue = defineModel<string>({ required: true })
 const iconSize = computed(() => Math.round(props.size * 0.78))
 const factionIconSize = computed(() => Math.round(props.size * 0.89))
 const borderWidth = computed(() => (props.size >= 36 ? 4 : 3))
-// "All" is a text button, not a portrait — keep its underline slimmer than
+// "All" is a text button, not a portrait. Keep its underline slimmer than
 // the icon borders so it reads as a delicate accent.
 const clearBorderWidth = computed(() => (props.size >= 36 ? 2 : 2))
 

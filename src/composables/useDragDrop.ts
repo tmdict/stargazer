@@ -40,7 +40,7 @@ const hoveredHexId = ref<number | null>(null)
 // Board under the pointer during a drag; pairs with hoveredHexId so each board
 // only reacts to a hover on its own cells.
 const hoveredGridId = ref<number | null>(null)
-// Hex that received the last drop — consumed (read + cleared) by GridTiles to
+// Hex that received the last drop, consumed (read + cleared) by GridTiles to
 // restore the hover highlight once its post-drag grace period ends.
 const lastDropHexId = ref<number | null>(null)
 const lastDropGridId = ref<number | null>(null)
@@ -71,7 +71,7 @@ const handleGlobalDrag = (event: DragEvent) => {
 
 const endDrag = (event: DragEvent) => {
   // The source's own @dragend and the document-level safety net can both fire
-  // for the same drag — the second call is a no-op.
+  // for the same drag. The second call is a no-op.
   if (!isDragging.value) return
 
   isDragging.value = false
@@ -84,7 +84,6 @@ const endDrag = (event: DragEvent) => {
   hoveredHexId.value = null
   hoveredGridId.value = null
 
-  // Reset visual feedback
   if (event.target instanceof HTMLElement) {
     event.target.style.opacity = '1'
   }
@@ -125,7 +124,6 @@ const startDrag = (
     event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
   }
 
-  // Add visual feedback to original element
   if (event.target instanceof HTMLElement) {
     event.target.style.opacity = '0.5'
   }
@@ -147,7 +145,6 @@ const handleDragOver = (event: DragEvent) => {
   }
 }
 
-// Handle drop
 const handleDrop = (event: DragEvent): CharacterDragPayload | null => {
   event.preventDefault()
 
@@ -214,7 +211,7 @@ export const useDragDrop = () => {
 // Provider registration channel
 //
 // The grid registers its pointer→hex detector and drop handler with
-// DragDropProvider, whose document-level listeners are scoped to its mount —
+// DragDropProvider, whose document-level listeners are scoped to its mount:
 // its global dragover preventDefault must not outlive the drag UI, so this
 // stays a component-provided API rather than module state. Mirrors the
 // useGridEvents provide/inject pattern.

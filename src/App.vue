@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
+import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
 import rowanGif from '@/assets/rowan.gif'
@@ -24,7 +25,7 @@ i18n.initialize()
 
 // Locale-prefixed routes are authoritative: keep the store in sync with the
 // path so the header and skill browser render in the URL's language (during
-// SSG and client navigation alike). URL-derived locale is display-only —
+// SSG and client navigation alike). URL-derived locale is display-only:
 // following a shared /zh/... link must not overwrite the saved preference
 // (only the language toggle and ?l= persist).
 watch(
@@ -108,9 +109,6 @@ onUnmounted(() => {
       </div>
       <ul class="menu">
         <li>
-          <LanguageToggle class="icon-link" />
-        </li>
-        <li>
           <button
             @click="showAboutModal = true"
             class="icon-link icon-button"
@@ -118,6 +116,18 @@ onUnmounted(() => {
           >
             <IconInfo />
           </button>
+        </li>
+        <li>
+          <a
+            href="https://github.com/tmdict/stargazer/"
+            class="icon-link"
+            :title="i18n.t('app.code')"
+          >
+            <IconGitHub />
+          </a>
+        </li>
+        <li>
+          <LanguageToggle class="icon-link" />
         </li>
       </ul>
     </nav>
@@ -238,8 +248,8 @@ nav ul li {
   transition: color 0.2s ease;
 }
 
-/* Mobile: two rows — logo + icons on top, a full-width segmented tab strip
-   below — instead of cramming everything into one shrunken row. The icons
+/* Mobile: two rows (logo + icons on top, a full-width segmented tab strip
+   below) instead of cramming everything into one shrunken row. The icons
    (order 1) stay on the logo row; the tabs (order 2, full-width) wrap beneath. */
 @media (max-width: 768px) {
   nav {

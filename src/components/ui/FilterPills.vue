@@ -11,7 +11,6 @@ defineProps<{
 const modelValue = defineModel<string | null>({ default: null })
 
 const handlePillClick = (pillName: string) => {
-  // Toggle: deselect if already selected, otherwise select the clicked pill
   modelValue.value = modelValue.value === pillName ? null : pillName
 }
 </script>

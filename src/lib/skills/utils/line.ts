@@ -14,7 +14,7 @@ export function hexesBetween(a: Hex, b: Hex): Hex[] {
   const ds = b.s - a.s
 
   // Collinear iff one delta is 0 (cube coords sum to 0, so a shared coordinate
-  // leaves the other two as +/- of each other — a single axis).
+  // leaves the other two as +/- of each other, a single axis).
   if (dq !== 0 && dr !== 0 && ds !== 0) return []
 
   const steps = Math.max(Math.abs(dq), Math.abs(dr), Math.abs(ds))

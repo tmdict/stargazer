@@ -106,7 +106,6 @@ export function performClearAll(grid: Grid): boolean {
     team: tile.team!,
   }))
 
-  // If no characters to clear, return success immediately
   if (currentPlacements.length === 0) {
     return true
   }
@@ -116,7 +115,6 @@ export function performClearAll(grid: Grid): boolean {
     // Operations to execute
     [
       () => {
-        // Clear all character data
         for (const tile of grid.getAllTiles()) {
           if (tile.characterId) {
             clearCharacterFromTile(tile)

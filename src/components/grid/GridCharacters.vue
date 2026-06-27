@@ -252,7 +252,7 @@ const visiblePlacements = computed(() => {
         <div class="character-background" :style="getCharacterColors(characterId)" />
         <!-- draggable=false keeps the wrapper div as the drag source. Images are
              draggable by default, and a swap can replace this node mid-drag
-             (character↔phantimal flips the v-if branch) — dragend fired on a
+             (character↔phantimal flips the v-if branch). Dragend fired on a
              detached source never reaches the wrapper or document listeners,
              leaving the drag ghost stuck. -->
         <img

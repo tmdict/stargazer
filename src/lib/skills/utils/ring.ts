@@ -123,7 +123,6 @@ export function spiralSearchFromTile(
 export function searchByRow(context: SkillContext, targetTeam: Team): SkillTargetInfo | null {
   const { grid, hexId, characterId, team } = context
 
-  // Get all ally candidates
   const candidates = getCandidates(grid, targetTeam, characterId)
   if (candidates.length === 0) return null
 
@@ -135,16 +134,14 @@ export function searchByRow(context: SkillContext, targetTeam: Team): SkillTarge
 
   if (sameRowCandidates.length === 0) return null
 
-  // Calculate distances for same-row candidates
   calculateDistances(sameRowCandidates, [hexId], grid)
 
-  // Sort by distance (closest first), then by hex ID for ties
   sameRowCandidates.sort((a, b) => {
     const distA = a.distances.get(hexId) ?? Infinity
     const distB = b.distances.get(hexId) ?? Infinity
 
     if (distA !== distB) {
-      return distA - distB // Closer distance wins
+      return distA - distB
     }
 
     // Team-aware tie-breaking: ally prefers higher hex ID, enemy prefers lower

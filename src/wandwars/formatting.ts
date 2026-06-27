@@ -46,7 +46,7 @@ export function formatName(name: string): string {
 }
 
 // Escape HTML-significant characters so user-provided text rendered via v-html stays inert.
-// Tokens like `{hero}` survive because `{` and `}` are not escaped — the regex pass below
+// Tokens like `{hero}` survive because `{` and `}` are not escaped: the regex pass below
 // re-introduces controlled markup for those.
 function escapeHtml(text: string): string {
   return text

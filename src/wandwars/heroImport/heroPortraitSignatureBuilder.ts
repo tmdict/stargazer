@@ -3,9 +3,9 @@
  * image files chosen by the user (via `<input webkitdirectory>`). Used by the
  * pool-import UI for two flows:
  *
- *   1. "Generate Signatures" — compute + download a TypeScript module that
+ *   1. "Generate Signatures": compute + download a TypeScript module that
  *      can be committed as `heroPortraitSignatures.ts`.
- *   2. "Override Reference" — compute and hold in-memory to replace the
+ *   2. "Override Reference": compute and hold in-memory to replace the
  *      bundled signatures at runtime without a file save.
  *
  * Both flows share `buildSignaturesFromFiles`; they diverge only in what

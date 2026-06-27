@@ -268,7 +268,7 @@ function handleExport() {
   }
 
   /* Fill the column height so the aside's child (.analysis) handles long
-     lists via its own internal .tab-content scroll — tabs stay pinned at
+     lists via its own internal .tab-content scroll. Tabs stay pinned at
      the top instead of scrolling away with the page. */
   .wandwars-layout > .wandwars-side > * {
     flex: 1;

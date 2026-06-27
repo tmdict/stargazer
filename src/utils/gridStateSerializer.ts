@@ -26,7 +26,6 @@ export interface DisplayFlags {
   wrap?: boolean
 }
 
-/* Create compact serialized state for URL generation. */
 export function serializeGridState(
   allTiles: GridTile[],
   allyArtifact: number | null,
@@ -189,7 +188,6 @@ export function serializeMultiGridState(
   return state
 }
 
-/* Unpack display flags from bit-packed number */
 export function unpackDisplayFlags(packed: number | undefined): Required<DisplayFlags> {
   if (packed === undefined) {
     // Return defaults if no flags are stored

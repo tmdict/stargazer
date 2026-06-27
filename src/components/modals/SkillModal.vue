@@ -19,7 +19,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-// Tell descendant content components they're embedded — suppresses page-level meta writes
+// Tell descendant content components they're embedded: suppresses page-level meta writes
 provide(ContentInModalKey, true)
 
 // Modal-local locale: overrides global without mutating it

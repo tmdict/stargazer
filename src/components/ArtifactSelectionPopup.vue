@@ -25,7 +25,7 @@ const gameDataStore = useGameDataStore()
 const artifactStore = useArtifactStore()
 const grids = useGrids()
 
-// Pre-season first, then by id — mirrors the Seasonal tab ordering.
+// Pre-season first, then by id: mirrors the Seasonal tab ordering.
 const sortedArtifacts = computed(() =>
   [...gameDataStore.artifacts].sort((a, b) => a.season - b.season || a.id - b.id),
 )
@@ -80,7 +80,7 @@ const handleSelect = (artifact: ArtifactType) => {
   filter: brightness(1.2);
 }
 
-/* Compact: drop the name pill — the hover tooltip still shows the name. */
+/* Compact: drop the name pill. The hover tooltip still shows the name. */
 .artifact-item :deep(.info-pill-wrap) {
   display: none;
 }

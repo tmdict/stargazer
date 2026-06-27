@@ -27,7 +27,7 @@ export interface PoolDetection {
 }
 
 export interface CropRect {
-  /** Ratios in [0,1] — fractions of the image's natural width/height. */
+  /** Ratios in [0,1]: fractions of the image's natural width/height. */
   x: number
   y: number
   w: number
@@ -55,7 +55,7 @@ function isGoldPixel(r: number, g: number, b: number): boolean {
 /**
  * Heuristically locate the 4×5 card grid inside an arbitrary screenshot
  * (which may contain game UI, status bars, buttons, etc.). Uses the density
- * of gold-border pixels along each axis — the grid is the axis range with
+ * of gold-border pixels along each axis: the grid is the axis range with
  * highest gold density. Falls back to the full image if nothing convincing
  * is found.
  */
@@ -119,7 +119,7 @@ export async function suggestGridCrop(source: File | HTMLImageElement): Promise<
     }
   }
 
-  // Trim low-density tails from both axes — the initial detection may
+  // Trim low-density tails from both axes: the initial detection may
   // overshoot past the grid edge where sparse gold pixels exist.
   trimRangeEdges(rowGold, rowRange)
   trimRangeEdges(colGold, colRange)
@@ -182,7 +182,7 @@ function largestDenseRange(
 
 /**
  * Trim low-density tails from a detected range. Compares a 3-pixel average
- * at each edge against 20% of the interior mean density — card borders are
+ * at each edge against 20% of the interior mean density: card borders are
  * far denser than background, so this reliably stops at the grid edge.
  */
 function trimRangeEdges(counts: number[], range: { start: number; end: number }): void {

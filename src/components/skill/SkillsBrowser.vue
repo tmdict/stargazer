@@ -33,7 +33,7 @@ watch(
   (slug) => {
     expanded.value = false
     // Narrow-desktop stacked layout only: the roster sits below the reader, so
-    // selecting a hero leaves the user scrolled past the content — jump back to
+    // selecting a hero leaves the user scrolled past the content. Jump back to
     // the top to reveal it. Side-by-side (>= SPLIT_MIN_WIDTH) keeps the reader
     // in view, and the mobile sheet (<= TABLET_MAX_WIDTH) collapses to reveal
     // it, so both skip the scroll.

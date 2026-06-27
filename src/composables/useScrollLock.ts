@@ -1,6 +1,6 @@
 import { onBeforeUnmount, watch, type Ref } from 'vue'
 
-// Locks page scroll while `active` is true — for modal overlays. Two parts:
+// Locks page scroll while `active` is true, for modal overlays. Two parts:
 //  - `position: fixed` on <body> (with scroll restore) freezes content scroll,
 //    the only method iOS Safari honors reliably.
 //  - `overscroll-behavior: none` on <html> stops the document's own pull-to-

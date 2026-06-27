@@ -34,7 +34,6 @@ export function decodeGridStateFromUrl(encodedState: string): GridState | null {
   }
 }
 
-/* Generate shareable URL with compressed grid state */
 export function generateShareableUrl(
   allTiles: GridTile[],
   allyArtifact: number | null,
