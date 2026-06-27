@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 4,
   "season": 2,
-  "tags": {}
+  "tags": {
+    "dot": [{ "ultimate": 1 }]
+  }
 }
