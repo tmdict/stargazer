@@ -17,6 +17,9 @@ import {
 const i18n = useI18nStore()
 const grids = useGrids()
 
+// Gates the grid's paint mode; HomeView binds this via v-model.
+const editorEnabled = defineModel<boolean>('enabled', { default: false })
+
 const selectedState = ref<State>(State.DEFAULT)
 
 interface StateOption {
@@ -74,7 +77,13 @@ const getPreviewFillColor = (state: State): string => {
   <div v-scroll-chain class="map-editor">
     <section class="map-section">
       <h3 class="section-title">{{ i18n.t('app.editor') }}</h3>
-      <p class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
+
+      <label class="editor-toggle">
+        <input v-model="editorEnabled" type="checkbox" class="editor-toggle-checkbox" />
+        <span>{{ i18n.t('app.edit-tiles') }}</span>
+      </label>
+
+      <p v-if="editorEnabled" class="editor-description">{{ i18n.t('app.editor-tip') }}</p>
 
       <div class="state-options">
         <button
@@ -82,6 +91,7 @@ const getPreviewFillColor = (state: State): string => {
           :key="option.state"
           class="state-button"
           :class="{ active: selectedState === option.state }"
+          :disabled="!editorEnabled"
           @click="selectState(option.state)"
         >
           <div class="hex-preview">
@@ -99,10 +109,12 @@ const getPreviewFillColor = (state: State): string => {
       </div>
 
       <div class="map-editor-actions">
-        <button class="fill-button" @click="handleApplyAllTiles">
+        <button class="fill-button" :disabled="!editorEnabled" @click="handleApplyAllTiles">
           <IconFill :size="14" /> {{ i18n.t('app.fill') }}
         </button>
-        <button class="clear-button" @click="handleResetMap">{{ i18n.t('app.clear') }}</button>
+        <button class="clear-button" :disabled="!editorEnabled" @click="handleResetMap">
+          {{ i18n.t('app.clear') }}
+        </button>
       </div>
     </section>
 
@@ -148,6 +160,40 @@ const getPreviewFillColor = (state: State): string => {
   margin-bottom: 1.25rem;
 }
 
+.editor-toggle {
+  display: flex;
+  width: fit-content;
+  margin: 0 auto 1rem;
+  align-items: center;
+  gap: var(--spacing-xs);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  user-select: none;
+  border: 2px solid var(--color-border-primary);
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-xs) var(--spacing-md);
+  color: var(--color-text-secondary);
+  background: var(--color-bg-primary);
+  transition: all var(--transition-fast);
+}
+
+/* Checkbox carries the on state (matches the grid-control toggles); the button
+   itself only reacts to hover. */
+.editor-toggle:hover {
+  background: var(--color-bg-tertiary);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.editor-toggle-checkbox {
+  width: 0.9rem;
+  height: 0.9rem;
+  cursor: pointer;
+  accent-color: var(--color-primary);
+  margin: 0;
+}
+
 .editor-description {
   margin-bottom: 1rem;
   text-align: center;
@@ -178,10 +224,17 @@ const getPreviewFillColor = (state: State): string => {
   max-width: 120px;
 }
 
-.state-button:hover {
+.state-button:not(:disabled):hover {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.2);
   transform: translateY(-1px);
+}
+
+.state-button:disabled,
+.fill-button:disabled,
+.clear-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .state-button.active {
@@ -237,7 +290,7 @@ const getPreviewFillColor = (state: State): string => {
   border-color: var(--color-primary);
 }
 
-.fill-button:hover {
+.fill-button:not(:disabled):hover {
   background: var(--color-primary-hover);
   border-color: var(--color-primary-hover);
 }
@@ -247,7 +300,7 @@ const getPreviewFillColor = (state: State): string => {
   border-color: #c05b4d;
 }
 
-.clear-button:hover {
+.clear-button:not(:disabled):hover {
   background: #b91c1c;
   border-color: #b91c1c;
 }
