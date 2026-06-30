@@ -208,8 +208,10 @@ onUnmounted(() => mq?.removeEventListener('change', enforceMobileTab))
           </TabView>
         </section>
 
+        <!-- TeamsRoster's root is BottomSheet, a multi-root (fragment) component that
+             v-show can't bind to, so gate visibility with v-if. -->
         <TeamsRoster
-          v-show="isGridTab"
+          v-if="isGridTab"
           :characters="gameDataStore.characters"
           :artifacts="gameDataStore.artifacts"
           :phantimals="gameDataStore.phantimals"

@@ -28,7 +28,7 @@ export function useImageStitch() {
   const images = ref<StitchImage[]>([])
 
   const settings = ref<StitchSettings>({
-    direction: 'horizontal',
+    direction: 'vertical',
     gap: 0,
     background: 'transparent',
     fit: 'original',
