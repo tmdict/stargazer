@@ -123,12 +123,22 @@ const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
 
 const selectedMapEditorState = ref<State>(State.DEFAULT)
 
-// Map editor mode is incompatible with these display modes; force them off when entering.
+// Opt-in tile painting, off by default: a Map-tab click then places a character like
+// the other tabs, and only turning this on makes clicks paint the selected tile. The
+// editor lives only in the Map tab, so painting is gated on both.
+const editorEnabled = ref(false)
+const mapEditorActive = computed(() => activeTab.value === 'mapEditor' && editorEnabled.value)
+
+// Tile painting is incompatible with these display modes; force them off when the
+// editor turns on (not on Map-tab entry, so placing characters there keeps them).
 const resetForMapEditor = () => {
   showArrows.value = false
   showGridInfo.value = false
   gridStore.teamView = false
 }
+watch(mapEditorActive, (active) => {
+  if (active) resetForMapEditor()
+})
 
 // Debug shows the full grid, so team view (which crops to ally tiles) doesn't apply.
 const resetForDebug = () => {
@@ -136,8 +146,7 @@ const resetForDebug = () => {
 }
 
 const applyTabResets = (tab: string) => {
-  if (tab === 'mapEditor') resetForMapEditor()
-  else if (tab === 'debug') resetForDebug()
+  if (tab === 'debug') resetForDebug()
 }
 
 const handleTabChange = (tab: string) => {
@@ -195,7 +204,7 @@ if (sharedLink) {
 
 // The initial tab comes straight from ?t= without passing through handleTabChange,
 // so enforce its display resets here, after a restore, which can introduce the
-// conflicting flags (e.g. team view in a share link while ?t=mapEditor).
+// conflicting flags (e.g. team view in a share link while ?t=debug).
 applyTabResets(activeTab.value)
 
 // No share link: restore the saved arena. Done on mount because localStorage is
@@ -272,25 +281,22 @@ const handleResetMap = () => {
             :show-grid-info="showGridInfo"
             :show-debug="showDebug"
             :show-skills="showSkills"
-            :is-map-editor-mode="activeTab === 'mapEditor'"
+            :is-map-editor-mode="mapEditorActive"
             :selected-map-editor-state="selectedMapEditorState"
             :show-perspective
             :debug-panel-ref
             :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
-          <TeamPowerPanel
-            v-if="showGridInfo && activeTab !== 'mapEditor'"
-            :context="activeContext"
-          />
+          <TeamPowerPanel v-if="showGridInfo && !mapEditorActive" :context="activeContext" />
           <GridControls
             v-model:show-arrows="showArrows"
             v-model:show-grid-info="showGridInfo"
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"
             v-model:team-view="gridStore.teamView"
-            :disable-team-view="activeTab === 'mapEditor' || activeTab === 'debug'"
-            :hide-team-controls="activeTab === 'mapEditor' || activeTab === 'debug'"
+            :disable-team-view="mapEditorActive || activeTab === 'debug'"
+            :hide-team-controls="mapEditorActive || activeTab === 'debug'"
             @copy-link="handleCopyLink"
             @copy-image="handleCopyImage"
             @download="handleDownload"
@@ -318,6 +324,7 @@ const handleResetMap = () => {
             </template>
             <template #mapEditor>
               <MapEditor
+                v-model:enabled="editorEnabled"
                 @state-selected="handleMapEditorStateSelected"
                 @apply-all-tiles="handleApplyAllTiles"
                 @reset-map="handleResetMap"
