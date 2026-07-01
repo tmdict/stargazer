@@ -8,5 +8,7 @@
   "energy": [300],
   "range": 1,
   "season": 3,
-  "tags": {}
+  "tags": {
+    "cheat-death": [{ "ultimate": 1 }]
+  }
 }
