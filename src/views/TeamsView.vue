@@ -106,6 +106,12 @@ watch(
 )
 watch(currentBreakpoint, applySize)
 
+// Display globals on the grids store are page state; start clean so a first-ever
+// visit doesn't inherit team view or invert left by another page (a restore below
+// overwrites them anyway).
+grids.teamView = false
+grids.inverted = false
+
 const teamsPersistence = useTeamsPersistence(toFlags)
 
 // A ?g= link overwrites the saved boards; otherwise restore them. Then mirror

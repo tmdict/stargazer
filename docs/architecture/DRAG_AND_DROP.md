@@ -24,17 +24,22 @@ the typed registration channel:
 
 ```typescript
 // provided under a typed InjectionKey (useDragDrop.ts), consumed via
-// useDragDropRegistration() — throws outside a DragDropProvider
+// useDragDropRegistration(), which throws outside a DragDropProvider.
+// Each board registers under its own gridId so multiple boards coexist;
+// the provider probes every detector to find the board (and hex) under
+// the pointer.
 interface DragDropRegistration {
-  registerHexDetector: (detector: (x: number, y: number) => number | null) => void
-  registerDropHandler: (handler: (event: DragEvent) => void) => void
+  registerHexDetector: (gridId: number, detector: HexDetector) => void
+  unregisterHexDetector: (gridId: number) => void
+  registerDropHandler: (gridId: number, handler: DropHandler) => void
+  unregisterDropHandler: (gridId: number) => void
 }
 ```
 
 GridManager registers its pointer→hex detector (built on the SVG element that
 GridTiles exposes via `defineExpose`) and its drop handler on mount, skipping
-both in readonly grids. All other drag state and actions come straight from
-`useDragDrop()` — components don't inject them.
+both in readonly grids, and unregisters on unmount. All other drag state and
+actions come straight from `useDragDrop()`; components don't inject them.
 
 ### useDragDrop Composable (`/src/composables/useDragDrop.ts`)
 
@@ -192,18 +197,20 @@ function validateDrop(hexId: number, character: CharacterType): boolean {
 
 ### Cross-board drag (multigrid)
 
-On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`:
+On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`.
 
-- **Roster or same-board drop** — handled by the target board's own context (place / move / swap), unchanged from single-board.
-- **Cross-board drop** — a compensating transaction across two `Grid` instances (validate the destination, remove from the source, place on the target, restore the source on failure), since the single-board atomic `move.ts` wrapper can't span two grids. Dropping onto an occupied cell is a paired swap with the same envelope. A successful cross-board drop makes the target board active.
+Every drop first passes `canDropCharacter(characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)`, the routing-layer gate covering page-wide per-team uniqueness (including same-board cross-team moves and swaps), companions staying on their main's board, destination capacity, and phantimal faction. GridTiles reads the same gate for the drag-hover cue, so hover and drop agree by construction; the engine's per-grid checks still run at drop time and a mid-transaction failure resolves as a silent no-op. Paragon levels move with a hero across boards.
 
-Drop handlers register by `gridId`, so every board's `GridManager` resolves hovers/drops against its own context (see the multigrid section in [`GRID.md`](./GRID.md)).
+- **Roster or same-board drop**: handled by the target board's own context (place / move / swap).
+- **Cross-board drop**: a compensating transaction across two `Grid` instances (remove from the source, place on the target, restore the source on failure), since the single-board atomic `move.ts` wrapper can't span two grids. Dropping onto an occupied cell is a paired swap with the same envelope.
+
+A successful drop of any kind (including a roster drop) makes the target board active. Drop handlers register by `gridId`, so every board's `GridManager` resolves hovers/drops against its own context (see the multigrid section in [`GRID.md`](./GRID.md)).
 
 ### Artifact drag (cross-team / cross-board)
 
-Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so they bypass the hex-detection pipeline entirely and use native element-level drag instead. A filled artifact icon is the drag source; an empty host-cell polygon and a filled icon are the drop targets (the same two-surface split as the click affordances, with the inner `<img>` set `draggable="false"` so the keyed wrapper stays the source). The drag carries `{ sourceCtxId, sourceTeam }` (engine team, not the invert-derived display team) under a distinct `application/artifact` MIME, and the drop handler calls `stopPropagation()` so it never reaches the character pipeline's global drop.
+Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so they bypass the hex-detection pipeline entirely and use native element-level drag instead. A filled artifact icon is the drag source; an empty host-cell polygon and a filled icon are the drop targets (the same two-surface split as the click affordances, with the inner `<img>` set `draggable="false"` so the keyed wrapper stays the source). The drag carries `{ sourceCtxId, sourceTeam }` (engine team, not the invert-derived display team) under a distinct `application/artifact` MIME. Because `dataTransfer` data is unreadable during `dragover`, the in-flight payload is also mirrored in `useDragDrop`'s `artifactDragPayload`: a target the router would reject refuses the drop at `dragover` (native not-allowed cursor plus an `invalid-drop` cue), and an accepted drop calls `stopPropagation()` so it never reaches the character pipeline's global drop.
 
-`useGrids.routeArtifactDrop(payload, targetCtxId, targetTeam)` resolves every drop with one rule, identical on the Arena (1 board) and Teams (5 boards): an empty target moves, an occupied target swaps, and page-wide per-team uniqueness (`isArtifactUsed`) is re-checked only when the team changes, excluding each artifact's **destination** board so a copy on the other team of either board still counts. A rejected drop is a silent no-op; a successful one makes the target board active. Team view renders one slot per board, so cross-team artifact swaps are structurally unavailable there.
+`useGrids.routeArtifactDrop(payload, targetCtxId, targetTeam)` resolves every drop with one rule (`resolveArtifactDrop`, also exposed as the `canDropArtifact` predicate driving the drag-over feedback), identical on the Arena (1 board) and Teams (5 boards): an empty target moves, an occupied target swaps, and page-wide per-team uniqueness (`isArtifactUsed`) is re-checked only when the team changes, excluding each artifact's **destination** board so a copy on the other team of either board still counts. A rejected drop is a silent no-op; a successful one makes the target board active. Team view renders one slot per board, so cross-team artifact swaps are structurally unavailable there.
 
 ## Layer Implementation Details
 
@@ -211,7 +218,7 @@ Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so t
 
 **GridManager**: Orchestrates all layers and registers position-based detection
 **GridTiles**: Renders hexes with three-layer SVG structure and invisible events
-**GridArtifacts**: Shows team artifacts in their visual-only host cells — dashed cells beside grid cells 1 (ally) and 45 (enemy), not part of the grid simulation (renders before characters)
+**GridArtifacts**: Shows team artifacts in their host cells, dashed cells beside grid cells 1 (ally) and 45 (enemy): outside the grid simulation and the hex pipeline, with their own artifact drag surfaces (renders before characters)
 **GridCharacters**: Positions character portraits with absolute positioning
 **GridArrows**: Displays pathfinding visualization with SVG arrows
 **SkillTargeting**: Shows skill-specific targeting arrows (e.g., Silvina's First Strike)
@@ -293,12 +300,12 @@ Floating character portrait that follows cursor:
 Custom data format prevents conflicts:
 
 ```typescript
-const CHAR_DATA_TYPE = 'application/x-stargazer-character'
+const CHARACTER_MIME_TYPE = 'application/character'
 
 // Transfer structure
 interface DragData {
-  character: CharacterType
-  sourceHexId?: number // Present for moves/swaps
+  character: CharacterType // carries sourceHexId/sourceGridId for moves/swaps
+  characterId: number
 }
 ```
 

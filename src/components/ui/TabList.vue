@@ -11,11 +11,19 @@ export interface TabItem {
 <script setup lang="ts" generic="T extends string">
 import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 
-const { tabs } = defineProps<{ tabs: TabItem[] }>()
+const { tabs, ariaId } = defineProps<{
+  tabs: TabItem[]
+  // Prefix linking each tab button to its TabView pane (aria-controls).
+  ariaId?: string
+}>()
 
 const active = defineModel<T>({ required: true })
 
 const showStrip = computed(() => tabs.length > 1)
+
+// A strip whose hideMobile tabs leave at most one visible button is pure chrome
+// on mobile; hide it entirely there (CSS, so SSG markup stays viewport-agnostic).
+const stripHiddenOnMobile = computed(() => tabs.filter((t) => !t.hideMobile).length <= 1)
 
 // Keys come from the host's own tabs array, so they satisfy the host's model type.
 const select = (tab: TabItem) => {
@@ -45,14 +53,16 @@ watchEffect(() => {
 </script>
 
 <template>
-  <div v-if="showStrip" class="tab-bar">
+  <div v-if="showStrip" class="tab-bar" :class="{ 'mobile-hidden': stripHiddenOnMobile }">
     <div class="tab-buttons" role="tablist">
       <button
         v-for="tab in tabs"
+        :id="ariaId ? `${ariaId}-tab-${tab.key}` : undefined"
         :key="tab.key"
         type="button"
         role="tab"
         :aria-selected="active === tab.key"
+        :aria-controls="ariaId ? `${ariaId}-panel-${tab.key}` : undefined"
         :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
         @click="select(tab)"
       >
@@ -149,7 +159,8 @@ watchEffect(() => {
 }
 
 @media (max-width: 768px) {
-  .hide-mobile {
+  .hide-mobile,
+  .tab-bar.mobile-hidden {
     display: none;
   }
 

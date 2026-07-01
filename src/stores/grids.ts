@@ -1,10 +1,11 @@
 /* Collection store for one or more grid boards.
  *
  * Owns the array of GridContext boards, the active-board pointer, and the global
- * state shared by every board (hex size, team-view flag). Per-board state and
+ * state shared by every board (hex size, team view, invert). Per-board state and
  * operations live on each GridContext (see useGridContext); this store holds only
  * what spans boards: the array, the active pointer, and the cross-board rules
- * (page-wide character + artifact uniqueness, place-on-active, remove-from-any-board).
+ * (page-wide character + artifact uniqueness, drop routing and its validation
+ * gates, place-on-active, remove-from-any-board).
  *
  * The single-grid Arena is setGridCount(1); the 5 v 5 page is setGridCount(5).
  */
@@ -14,6 +15,7 @@ import { defineStore } from 'pinia'
 
 import { createGridContext, findCharacterHex, type GridContext } from '@/composables/useGridContext'
 import {
+  canPlaceCharacterOnTeam,
   getAvailableTeamSize,
   getCharacter,
   getCharacterTeam,
@@ -190,8 +192,9 @@ export const useGrids = defineStore('grids', () => {
   const placeUnit = (ctx: GridContext, hexId: number, unitId: number, team: Team): boolean =>
     isPhantimalId(unitId) ? ctx.placePhantimal(hexId, unitId, team) : ctx.place(hexId, unitId, team)
 
-  // Cross-board move onto an empty cell: validate the destination, remove from
-  // the source, place on the target; restore the source if the place fails.
+  // Cross-board move onto an empty cell: remove from the source, place on the
+  // target, restore the source if the place fails. Routing-layer validation
+  // (uniqueness, capacity, phantimal faction) ran in canDropCharacter.
   const crossGridMove = (
     sourceCtx: GridContext,
     sourceHexId: number,
@@ -202,15 +205,6 @@ export const useGrids = defineStore('grids', () => {
   ): boolean => {
     const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
     if (sourceTeam === undefined) return false
-    if (isPhantimalId(characterId)) {
-      if (!targetCtx.phantimalCanJoinTeam(characterId, destTeam)) return false
-    } else {
-      // Only a team change can break per-team uniqueness. The destination board is
-      // excluded to match the swap legs (see isUsed); a duplicate there is caught
-      // by the engine's per-grid check at place time.
-      if (sourceTeam !== destTeam && isUsed(characterId, destTeam, targetCtx.id)) return false
-      if (getAvailableTeamSize(targetCtx.grid, destTeam) <= 0) return false
-    }
     if (!sourceCtx.remove(sourceHexId)) return false
     if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) {
       // Paragon follows the hero to its destination board and team.
@@ -222,8 +216,9 @@ export const useGrids = defineStore('grids', () => {
     return false
   }
 
-  // Cross-board swap of two occupied cells: validate both destinations, remove
-  // both, place each on the other's cell; restore both originals on any failure.
+  // Cross-board swap of two occupied cells: remove both, place each on the
+  // other's cell, restore both originals on any failure. Routing-layer validation
+  // (uniqueness, companions, phantimal faction) ran in canDropCharacter.
   const crossGridSwap = (
     sourceCtx: GridContext,
     sourceHexId: number,
@@ -237,17 +232,6 @@ export const useGrids = defineStore('grids', () => {
     if (aId === undefined || bId === undefined || aTeam === undefined || bTeam === undefined) {
       return false
     }
-    if (isCompanion(aId) || isCompanion(bId)) return false
-    // After the swap A sits on the target team and B on the source team. Enforce
-    // phantimal faction on each destination and page-wide uniqueness for any
-    // character whose team changes, excluding that unit's destination board: its
-    // current occupant is the counterpart unit, which is itself vacating (and is
-    // the same character when one hero's two legal placements are swapped).
-    if (isPhantimalId(aId) && !targetCtx.phantimalCanJoinTeam(aId, bTeam)) return false
-    if (isPhantimalId(bId) && !sourceCtx.phantimalCanJoinTeam(bId, aTeam)) return false
-    if (!isPhantimalId(aId) && aTeam !== bTeam && isUsed(aId, bTeam, targetCtx.id)) return false
-    if (!isPhantimalId(bId) && aTeam !== bTeam && isUsed(bId, aTeam, sourceCtx.id)) return false
-
     if (!sourceCtx.remove(sourceHexId)) return false
     if (!targetCtx.remove(targetHexId)) {
       placeUnit(sourceCtx, sourceHexId, aId, aTeam) // rollback
@@ -307,12 +291,11 @@ export const useGrids = defineStore('grids', () => {
   // Exchange two boards' rosters (with paragon levels) and artifacts, keeping each
   // unit/artifact's team (ally <-> ally, enemy <-> enemy). Only directly-placed
   // mains move; companions, faction phantimals, and tile zones (e.g. Kulu's) are
-  // skill-derived, so
-  // clearing deactivates them on the source and autoPlace re-derives them on the
-  // destination. Nothing skill-driven is serialized or carried, so none is left
-  // stranded (no ghost zones, no orphaned companions). Placement picks random
-  // available tiles, so formations aren't preserved. The target board becomes
-  // active.
+  // skill-derived, so clearing deactivates them on the source and autoPlace
+  // re-derives them on the destination. Nothing skill-driven is serialized or
+  // carried, so none is left stranded (no ghost zones, no orphaned companions).
+  // Placement picks random available tiles, so formations aren't preserved. The
+  // target board becomes active.
   const swapBoards = (sourceId: number, targetId: number): boolean => {
     if (sourceId === targetId) return false
     const source = contexts.value[sourceId]
@@ -386,9 +369,88 @@ export const useGrids = defineStore('grids', () => {
     return true
   }
 
+  // Read-only mirror of routeDrop's routing-layer validation, shared with the
+  // drag hover cue (GridTiles) so hover never promises a drop the router rejects.
+  // The engine's per-grid checks still have the last word at drop time: a
+  // per-board rejection (a full team on a same-board team change, a companion
+  // changing teams) or a mid-transaction failure resolves as a silent no-op.
+  const canDropCharacter = (
+    characterId: number,
+    sourceGridId: number | undefined,
+    sourceHexId: number | undefined,
+    targetCtxId: number,
+    targetHexId: number,
+  ): boolean => {
+    const targetCtx = getContext(targetCtxId)
+    if (!targetCtx) return false
+    const destTeam = getTeamFromTileState(targetCtx.grid.getTileById(targetHexId).state)
+    if (destTeam === null) return false
+
+    // Roster placement. An occupied target is a replace, which frees the slot it
+    // fills, so capacity only gates an empty tile.
+    if (sourceGridId === undefined || sourceHexId === undefined) {
+      if (isPhantimalId(characterId)) return targetCtx.phantimalCanJoinTeam(characterId, destTeam)
+      if (isUsed(characterId, destTeam)) return false
+      return (
+        hasCharacter(targetCtx.grid, targetHexId) ||
+        canPlaceCharacterOnTeam(targetCtx.grid, characterId, destTeam)
+      )
+    }
+
+    if (sourceGridId === targetCtxId) {
+      return sameBoardDropKeepsUniqueness(targetCtxId, sourceHexId, targetHexId)
+    }
+
+    // Cross-board: the live source cell is authoritative, not the payload.
+    const sourceCtx = getContext(sourceGridId)
+    if (!sourceCtx) return false
+    const movingId = getCharacter(sourceCtx.grid, sourceHexId)
+    const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
+    if (movingId === undefined || sourceTeam === undefined) return false
+    if (isCompanion(movingId)) return false // companions can't leave their main's board
+
+    const residentId = getCharacter(targetCtx.grid, targetHexId)
+    if (residentId === undefined) {
+      if (isPhantimalId(movingId)) return targetCtx.phantimalCanJoinTeam(movingId, destTeam)
+      if (sourceTeam !== destTeam && isUsed(movingId, destTeam, targetCtxId)) return false
+      return getAvailableTeamSize(targetCtx.grid, destTeam) > 0
+    }
+
+    // Swap: the mover lands on the resident's team and vice versa. Enforce
+    // phantimal faction on each destination and page-wide uniqueness for any
+    // unit whose team changes, excluding that unit's destination board: its
+    // current occupant is the counterpart unit, which is itself vacating (and is
+    // the same character when one hero's two legal placements are swapped).
+    const residentTeam = getCharacterTeam(targetCtx.grid, targetHexId)
+    if (residentTeam === undefined) return false
+    if (isCompanion(residentId)) return false
+    if (isPhantimalId(movingId) && !targetCtx.phantimalCanJoinTeam(movingId, residentTeam)) {
+      return false
+    }
+    if (isPhantimalId(residentId) && !sourceCtx.phantimalCanJoinTeam(residentId, sourceTeam)) {
+      return false
+    }
+    if (
+      !isPhantimalId(movingId) &&
+      sourceTeam !== residentTeam &&
+      isUsed(movingId, residentTeam, targetCtxId)
+    ) {
+      return false
+    }
+    if (
+      !isPhantimalId(residentId) &&
+      sourceTeam !== residentTeam &&
+      isUsed(residentId, sourceTeam, sourceGridId)
+    ) {
+      return false
+    }
+    return true
+  }
+
   // Resolve a drop onto a board. Roster and same-board drops use the board's own
-  // handler (place/move/swap); cross-board drops compose remove + place. A
-  // successful drop makes the destination board active (active follows
+  // handler (place/move/swap); cross-board drops compose remove + place. All
+  // routing-layer validation is canDropCharacter, the same gate the hover cue
+  // reads. A successful drop makes the destination board active (active follows
   // interaction, so a roster drop targets the board it just landed on).
   const routeDrop = (
     payload: { character: CharacterType; characterId: number },
@@ -398,29 +460,19 @@ export const useGrids = defineStore('grids', () => {
     const targetCtx = getContext(targetCtxId)
     if (!targetCtx) return false
     const sourceGridId = payload.character.sourceGridId
+    const sourceHexId = payload.character.sourceHexId
+    if (
+      !canDropCharacter(payload.characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)
+    ) {
+      return false
+    }
     if (sourceGridId === undefined || sourceGridId === targetCtxId) {
-      // Roster drops (new placements) must respect page-wide character uniqueness.
-      if (sourceGridId === undefined && !isPhantimalId(payload.characterId)) {
-        const destTeam = getTeamFromTileState(targetCtx.grid.getTileById(targetHexId).state)
-        if (destTeam !== null && isUsed(payload.characterId, destTeam)) return false
-      }
-      // Same-board drags must too when the drop changes the unit's team.
-      const sourceHexId = payload.character.sourceHexId
-      if (
-        sourceGridId !== undefined &&
-        sourceHexId !== undefined &&
-        !sameBoardDropKeepsUniqueness(targetCtxId, sourceHexId, targetHexId)
-      ) {
-        return false
-      }
       const ok = targetCtx.handleDrop(payload, targetHexId)
       if (ok) activeId.value = targetCtxId
       return ok
     }
     const sourceCtx = getContext(sourceGridId)
-    const sourceHexId = payload.character.sourceHexId
     if (!sourceCtx || sourceHexId === undefined) return false
-    if (isCompanion(payload.characterId)) return false // companions can't leave their main's board
     const destTeam = getTeamFromTileState(targetCtx.grid.getTileById(targetHexId).state)
     if (destTeam === null) return false
     const ok = hasCharacter(targetCtx.grid, targetHexId)
@@ -430,13 +482,10 @@ export const useGrids = defineStore('grids', () => {
     return ok
   }
 
-  // Resolve an artifact dropped onto a visible artifact cell (same or other board,
-  // either team). An empty target moves, an occupied target swaps: whatever the
-  // target held (possibly nothing) returns to the source slot. Per-team uniqueness is
-  // re-checked only on a team change, excluding each artifact's destination board so a
-  // copy on the other team of either board still counts; a rejected drop is a silent
-  // no-op. Arena is the sourceCtxId === targetCtxId case and Teams adds cross-board,
-  // with no board-count branch. A successful drop makes the target board active.
+  // The rules for an artifact dropped onto a visible artifact cell (same or other
+  // board, either team), shared by routeArtifactDrop and canDropArtifact. Per-team
+  // uniqueness is re-checked only on a team change, excluding each artifact's
+  // destination board so a copy on the other team of either board still counts.
   const resolveArtifactDrop = (
     payload: ArtifactDragPayload,
     targetCtxId: number,
@@ -475,6 +524,11 @@ export const useGrids = defineStore('grids', () => {
     targetTeam: Team,
   ): boolean => resolveArtifactDrop(payload, targetCtxId, targetTeam) !== null
 
+  // An empty target moves, an occupied target swaps: whatever the target held
+  // (possibly nothing) returns to the source slot; a rejected drop is a silent
+  // no-op. Arena is the sourceCtxId === targetCtxId case and Teams adds
+  // cross-board, with no board-count branch. A successful drop makes the target
+  // board active.
   const routeArtifactDrop = (
     payload: ArtifactDragPayload,
     targetCtxId: number,
@@ -514,6 +568,7 @@ export const useGrids = defineStore('grids', () => {
     isArtifactUsed,
     removeArtifactFromAnyBoard,
     sameBoardDropKeepsUniqueness,
+    canDropCharacter,
     routeDrop,
     canDropArtifact,
     routeArtifactDrop,

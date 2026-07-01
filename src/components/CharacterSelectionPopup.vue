@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
+import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
@@ -12,7 +13,6 @@ import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName } from '@/utils/nameFormatting'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -61,14 +61,14 @@ const factionFiltered = computed(() =>
     : sortedCharacters.value,
 )
 
-// Name search composes on top of the faction filter.
+// Name search composes on top of the faction filter, matching any locale's
+// display name like the main roster search does.
 const searchQuery = ref('')
 const filteredCharacters = computed(() => {
-  const q = searchQuery.value.trim().toLowerCase()
+  const q = searchQuery.value.trim()
   if (!q) return factionFiltered.value
-  return factionFiltered.value.filter((c) =>
-    localizedDisplayName(i18n.t, 'character', c.name).toLowerCase().includes(q),
-  )
+  const matches = matchCharacterNames(q)
+  return factionFiltered.value.filter((c) => matches.has(c.name))
 })
 
 function handleSelect(character: CharacterType) {
@@ -84,7 +84,12 @@ function handleSelect(character: CharacterType) {
 <template>
   <SelectionPopup :position @close="emit('close')">
     <!-- type="search" for the native clear button. -->
-    <input v-model="searchQuery" type="search" class="search-input" placeholder="Search…" />
+    <input
+      v-model="searchQuery"
+      type="search"
+      class="search-input"
+      :placeholder="i18n.t('app.search-heroes-placeholder')"
+    />
     <div class="filter-row">
       <FilterIcons
         v-model="factionFilter"
@@ -104,7 +109,7 @@ function handleSelect(character: CharacterType) {
         <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true" />
       </div>
       <div v-if="filteredCharacters.length === 0" class="no-characters">
-        No available characters
+        {{ i18n.t('app.no-available-heroes') }}
       </div>
     </div>
   </SelectionPopup>

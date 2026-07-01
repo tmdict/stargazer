@@ -108,8 +108,6 @@ onMounted(() => {
   }
 })
 
-const emptyMessage = encodedAtLoad ? 'Invalid grid data' : 'No grid data provided'
-
 // The pencil opens this shared setup in its editable page (Arena for a single
 // board, the 5 v 5 boards for multi), which overwrites that page's saved state.
 // Dismissing (backdrop / close) instead goes to the bare page, leaving it untouched.
@@ -176,7 +174,7 @@ const editLink = computed(() =>
 
     <!-- Empty state -->
     <div v-else class="empty-state">
-      <p>{{ emptyMessage }}</p>
+      <p>{{ i18nStore.t('app.share-invalid') }}</p>
       <a href="/" class="rowan-link" aria-label="Stargazer" title="Stargazer">
         <img src="@/assets/rowan.gif" alt="logo" class="rowan-gif" />
       </a>

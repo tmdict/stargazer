@@ -301,7 +301,8 @@ export function encodeToBinary(state: GridState): Uint8Array {
   if (needsExtended) {
     // Extended flags byte layout:
     // Bit 0: needs extended counts (1 if >7 entries)
-    // Bits 1-5: reserved
+    // Bit 1: has paragon
+    // Bits 2-5: reserved
     // Bit 6: has phantimals
     // Bit 7: has display flags (a dedicated byte follows; lets an explicit d=0 round-trip)
     let extendedFlags = 0

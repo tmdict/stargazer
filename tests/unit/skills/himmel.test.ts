@@ -15,6 +15,7 @@ const CLASS_BY_ID: Record<number, string> = {
   3: 'support',
   4: 'tank', // second tank, for tiebreaks
   5: 'warrior', // a class the skill ignores
+  10001: 'tank', // a companion: the data resolver maps summons to their main's class
 }
 const classOf = (id: number): string | undefined => CLASS_BY_ID[id]
 
@@ -41,6 +42,18 @@ describe('himmel class-trio highlighting', () => {
 
   it('highlights one tank, mage, and support among the neighbors', () => {
     placeOnTile(grid, 16, 1, Team.ALLY) // tank
+    placeOnTile(grid, 12, 2, Team.ALLY) // mage
+    placeOnTile(grid, 6, 3, Team.ALLY) // support
+
+    himmel().onActivate(ctx())
+
+    expect(skillManager.getTileFillModifier(16)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(12)).toHaveLength(1)
+    expect(skillManager.getTileFillModifier(6)).toHaveLength(1)
+  })
+
+  it('counts a companion toward the trio via its main hero class', () => {
+    placeOnTile(grid, 16, 10001, Team.ALLY) // companion whose main is a tank
     placeOnTile(grid, 12, 2, Team.ALLY) // mage
     placeOnTile(grid, 6, 3, Team.ALLY) // support
 
