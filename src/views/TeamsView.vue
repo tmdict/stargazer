@@ -109,18 +109,22 @@ watch(currentBreakpoint, applySize)
 const teamsPersistence = useTeamsPersistence(toFlags)
 
 // A ?g= link overwrites the saved boards; otherwise restore them. Then mirror
-// every later change to localStorage.
+// every later change to localStorage. A link that fails to decode is treated as
+// absent (falling back to the saved boards), so the autosave can't wipe them
+// with the empty defaults.
 if (gameDataStore.dataLoaded) {
+  const restore = (encoded: string | null): boolean => {
+    if (!encoded) return false
+    const result = urlStateStore.restoreMultiFromEncodedState(encoded)
+    if (result.success && result.displayFlags) applyFlags(result.displayFlags)
+    return result.success
+  }
   const sharedLink = getEncodedStateFromUrl()
-  const source = sharedLink ?? teamsPersistence.load()
-  if (source) {
-    const result = urlStateStore.restoreMultiFromEncodedState(source)
-    if (result.success && result.displayFlags) {
-      applyFlags(result.displayFlags)
-      if (sharedLink) success(i18n.t('app.grid-loaded'))
-    } else if (sharedLink && result.error && result.error !== 'No state provided') {
-      error(i18n.t('app.invalid-url'))
-    }
+  if (sharedLink && restore(sharedLink)) {
+    success(i18n.t('app.grid-loaded'))
+  } else {
+    if (sharedLink) error(i18n.t('app.invalid-url'))
+    restore(teamsPersistence.load())
   }
   teamsPersistence.startAutosave()
 }
@@ -153,6 +157,7 @@ const handleCopyLink = () => {
     tiles: ctx.grid.getAllTiles(),
     allyArtifact: ctx.artifacts.ally,
     enemyArtifact: ctx.artifacts.enemy,
+    map: ctx.currentMap,
     getParagon: ctx.getParagon,
   }))
   const encoded = encodeMultiGridStateToUrl(

@@ -5,14 +5,15 @@ import ArtifactIcon from './ArtifactIcon.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
-import { useGrids } from '@/stores/grids'
+import { artifactSlot, useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]
 }>()
 
-const { fillOrder, targetArtifactTeam, clearArtifactTarget, artifactStore } = useSelectionState()
+const { fillOrder, targetArtifactTeam, targetArtifactGridId, clearArtifactTarget, artifactStore } =
+  useSelectionState()
 const grids = useGrids()
 const i18n = useI18nStore()
 
@@ -30,14 +31,16 @@ const placedTeam = (artifactId: number): Team | null => {
 const isArtifactPlaced = (artifactId: number): boolean => placedTeam(artifactId) !== null
 
 const handleArtifactClick = (artifact: ArtifactType) => {
-  // Tapping an on-grid artifact cell targets that cell's team (mobile); the pick
-  // toggles that slot directly.
+  // Tapping an on-grid artifact cell targets that cell's team on its board
+  // (mobile); the pick toggles that slot directly.
   const targeted = targetArtifactTeam.value
-  if (targeted !== null) {
-    if (slotArtifactId(targeted) === artifact.id) artifactStore.removeArtifact(targeted)
+  const targetCtx =
+    targetArtifactGridId.value !== null ? grids.getContext(targetArtifactGridId.value) : undefined
+  if (targeted !== null && targetCtx) {
+    if (artifactSlot(targetCtx, targeted) === artifact.id) targetCtx.removeArtifact(targeted)
     // Block a duplicate of an artifact already on this team's slot on another board.
     else if (!grids.isArtifactUsed(artifact.id, targeted))
-      artifactStore.placeArtifact(artifact.id, targeted)
+      targetCtx.setArtifact(targeted, artifact.id)
     clearArtifactTarget()
     return
   }

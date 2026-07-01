@@ -84,6 +84,7 @@ export function useTeamsPersistence(getFlags: () => DisplayFlags): GridPersisten
           tiles: ctx.grid.getAllTiles(),
           allyArtifact: ctx.artifacts.ally,
           enemyArtifact: ctx.artifacts.enemy,
+          map: ctx.currentMap,
           getParagon: ctx.getParagon,
         })),
         grids.activeId,

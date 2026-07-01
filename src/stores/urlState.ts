@@ -15,7 +15,7 @@ import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/url
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
-import { useGrids } from './grids'
+import { MAX_GRID_COUNT, useGrids } from './grids'
 
 interface UrlRestoreResult {
   success: boolean
@@ -202,12 +202,21 @@ export const useUrlStateStore = defineStore('urlState', () => {
         return { success: false, error: 'Invalid state data' }
       }
 
-      grids.setGridCount(multi.boards.length)
-      multi.boards.forEach((boardState, i) => {
+      // Boards beyond the supported maximum (a crafted URL) are dropped.
+      const boards = multi.boards.slice(0, MAX_GRID_COUNT)
+      grids.setGridCount(
+        boards.length,
+        boards.map((b) => b.m),
+      )
+      boards.forEach((boardState, i) => {
         grids.setActive(i)
         applyGridState(boardState)
       })
-      grids.setActive(Math.min(Math.max(multi.active ?? 0, 0), multi.boards.length - 1))
+      grids.setActive(Math.min(Math.max(multi.active ?? 0, 0), boards.length - 1))
+      // The per-board apply can only validate per grid, so a crafted URL could
+      // restore the same hero twice on one team across boards; repair page-wide
+      // uniqueness once every board is in.
+      grids.dedupeCharacters()
 
       return { success: true, displayFlags: unpackDisplayFlags(multi.d) }
     } catch (err) {
@@ -223,7 +232,11 @@ export const useUrlStateStore = defineStore('urlState', () => {
   // phantimal baseline. Pairs with the global `inverted` presentation flip.
   const swapTeamsAllBoards = (): void => {
     const previousActive = grids.activeId
-    grids.contexts.forEach((ctx, i) => {
+    // Snapshot and mirror every board before rebuilding any, then empty all
+    // artifact slots: the restore path places artifacts through the page-wide
+    // uniqueness guard, which would otherwise reject a mirrored artifact against
+    // its own not-yet-mirrored copy on a later board and silently drop it.
+    const mirrored = grids.contexts.map((ctx) => {
       const state = serializeGridState(
         ctx.grid.getAllTiles(),
         ctx.artifacts.ally,
@@ -231,10 +244,17 @@ export const useUrlStateStore = defineStore('urlState', () => {
         undefined,
         ctx.getParagon,
       )
-      if (!state.c && !state.p && !state.a) return // nothing to swap on this board
-      const mirrored = mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))
+      if (!state.c && !state.p && !state.a) return null // nothing to swap on this board
+      return mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))
+    })
+    grids.contexts.forEach((ctx) => {
+      ctx.removeArtifact(Team.ALLY)
+      ctx.removeArtifact(Team.ENEMY)
+    })
+    mirrored.forEach((state, i) => {
+      if (!state) return
       grids.setActive(i)
-      applyGridState(mirrored)
+      applyGridState(state)
     })
     grids.setActive(previousActive)
   }

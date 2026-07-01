@@ -171,7 +171,7 @@ const openPopup = (team: Team, center: { x: number; y: number }) => {
   // Tap-to-sheet (mobile / small grids) vs the desktop popup; the page can force
   // the popup (5 v 5 boards are small but use the on-grid popup).
   if (props.tapMode ?? scale < 1) {
-    setArtifactTarget(team)
+    setArtifactTarget(team, ctx.id)
     requestTab('seasonal')
     return
   }

@@ -158,10 +158,14 @@ export function packDisplayFlags(flags: DisplayFlags): number {
   return packed
 }
 
-/* Multi-board state (5 v 5): one GridState per board, the active board, and the
- * global display flags. Boards carry their own map via their tile states. */
+/* One board's GridState plus its map key, so a restore can rebuild the board on
+ * the map it was configured with (tile states carry only the edits). */
+export type BoardState = GridState & { m?: string }
+
+/* Multi-board state (5 v 5): one BoardState per board, the active board, and the
+ * global display flags. */
 export interface MultiGridState {
-  boards: GridState[]
+  boards: BoardState[]
   active?: number
   d?: number
 }
@@ -170,6 +174,7 @@ export interface BoardInput {
   tiles: GridTile[]
   allyArtifact: number | null
   enemyArtifact: number | null
+  map: string
   getParagon?: (team: Team, characterId: number) => number
 }
 
@@ -179,9 +184,10 @@ export function serializeMultiGridState(
   displayFlags?: DisplayFlags,
 ): MultiGridState {
   const state: MultiGridState = {
-    boards: boards.map((b) =>
-      serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact, undefined, b.getParagon),
-    ),
+    boards: boards.map((b) => ({
+      ...serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact, undefined, b.getParagon),
+      m: b.map,
+    })),
   }
   if (activeId) state.active = activeId
   if (displayFlags) state.d = packDisplayFlags(displayFlags)

@@ -187,11 +187,14 @@ const arenaPersistence = useArenaPersistence(toFlags)
 
 // A ?g= link takes priority and is applied in setup (before paint, matching the
 // existing share behavior); the autosave on mount then overwrites the saved arena
-// with it.
+// with it. A link that fails to decode is treated as absent, so the saved arena
+// still loads and the autosave can't wipe it with the empty board.
 const sharedLink = gameDataStore.dataLoaded ? getEncodedStateFromUrl() : null
+let sharedLinkRestored = false
 if (sharedLink) {
   const result = urlStateStore.restoreFromEncodedState(sharedLink)
   if (result.success && result.displayFlags) {
+    sharedLinkRestored = true
     applyFlags(result.displayFlags)
     // The restore replaced the board; drop any stale mobile tap/lift selection.
     clearTargetHex()
@@ -207,11 +210,12 @@ if (sharedLink) {
 // conflicting flags (e.g. team view in a share link while ?t=debug).
 applyTabResets(activeTab.value)
 
-// No share link: restore the saved arena. Done on mount because localStorage is
-// unavailable during SSG, so the pre-rendered empty grid hydrates cleanly first.
-// Autosave starts after the restore so the restore isn't what triggers a write.
+// No restored share link: restore the saved arena. Done on mount because
+// localStorage is unavailable during SSG, so the pre-rendered empty grid hydrates
+// cleanly first. Autosave starts after the restore so the restore isn't what
+// triggers a write.
 onMounted(() => {
-  if (!sharedLink && gameDataStore.dataLoaded) {
+  if (!sharedLinkRestored && gameDataStore.dataLoaded) {
     const saved = arenaPersistence.load()
     if (saved) {
       const result = urlStateStore.restoreFromEncodedState(saved)

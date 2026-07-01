@@ -98,9 +98,10 @@ export class SkillManager {
   private characterImageModifiers: Record<string, string> = {}
   // Two independent tile-paint channels, each keyed by hex id and holding the
   // colors painted there: borders render as the tile stroke, fills as a tinted
-  // cell fill. A skill picks one (see TilePaint.fill).
-  private tileColorModifiers: Map<number, string[]> = new Map()
-  private tileFillModifiers: Map<number, string[]> = new Map()
+  // cell fill. A skill picks one (see TilePaint.fill). Each color carries a
+  // refcount so independent skills can paint the same color on one tile.
+  private tileColorModifiers: Map<number, Map<string, number>> = new Map()
+  private tileFillModifiers: Map<number, Map<string, number>> = new Map()
   private skillTargets: Map<string, SkillTargetInfo> = new Map()
   // Tiles each skill instance (characterId-team) has painted, for diff-based cleanup
   private skillPaintedTiles: Map<string, TilePaint[]> = new Map()
@@ -255,22 +256,30 @@ export class SkillManager {
   }
 
   // Both paint channels support multiple colors per tile and share these helpers.
-  private addTileColor(map: Map<number, string[]>, hexId: number, color: string): void {
-    const existing = map.get(hexId)
-    if (existing) {
-      if (!existing.includes(color)) existing.push(color)
-    } else {
-      map.set(hexId, [color])
-    }
+  // A color is refcounted per tile so one skill's cleanup never deletes a color
+  // another skill still paints (e.g. a target highlight sharing a zone outline's
+  // color); it disappears only when its last painter removes it.
+  private addTileColor(map: Map<number, Map<string, number>>, hexId: number, color: string): void {
+    const counts = map.get(hexId) ?? new Map<string, number>()
+    counts.set(color, (counts.get(color) ?? 0) + 1)
+    map.set(hexId, counts)
     this.targetVersion++ // Trigger reactivity
   }
 
-  private removeTileColor(map: Map<number, string[]>, hexId: number, color: string): void {
-    const existing = map.get(hexId)
-    if (!existing) return
-    const index = existing.indexOf(color)
-    if (index !== -1) existing.splice(index, 1)
-    if (existing.length === 0) map.delete(hexId)
+  private removeTileColor(
+    map: Map<number, Map<string, number>>,
+    hexId: number,
+    color: string,
+  ): void {
+    const counts = map.get(hexId)
+    const count = counts?.get(color)
+    if (counts === undefined || count === undefined) return
+    if (count > 1) {
+      counts.set(color, count - 1)
+    } else {
+      counts.delete(color)
+      if (counts.size === 0) map.delete(hexId)
+    }
     this.targetVersion++ // Trigger reactivity
   }
 
@@ -284,12 +293,14 @@ export class SkillManager {
   }
 
   getTileColorModifier(hexId: number): string[] | undefined {
-    const colors = this.tileColorModifiers.get(hexId)
-    return colors && colors.length > 0 ? colors : undefined
+    const counts = this.tileColorModifiers.get(hexId)
+    return counts && counts.size > 0 ? [...counts.keys()] : undefined
   }
 
   getTileColorModifiers(): Map<number, string[]> {
-    return new Map(this.tileColorModifiers)
+    return new Map(
+      [...this.tileColorModifiers].map(([hexId, counts]) => [hexId, [...counts.keys()]]),
+    )
   }
 
   clearTileColorModifiers(): void {
@@ -307,12 +318,14 @@ export class SkillManager {
   }
 
   getTileFillModifier(hexId: number): string[] | undefined {
-    const colors = this.tileFillModifiers.get(hexId)
-    return colors && colors.length > 0 ? colors : undefined
+    const counts = this.tileFillModifiers.get(hexId)
+    return counts && counts.size > 0 ? [...counts.keys()] : undefined
   }
 
   getTileFillModifiers(): Map<number, string[]> {
-    return new Map(this.tileFillModifiers)
+    return new Map(
+      [...this.tileFillModifiers].map(([hexId, counts]) => [hexId, [...counts.keys()]]),
+    )
   }
 
   // Paint exactly `tiles` for this skill instance, first removing the tiles it

@@ -8,10 +8,14 @@ import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
 import { useGridStore } from '@/stores/grid'
-import { useGrids } from '@/stores/grids'
+import { MAX_GRID_COUNT, useGrids } from '@/stores/grids'
 import { useUrlStateStore } from '@/stores/urlState'
-import { serializeGridState, type DisplayFlags } from '@/utils/gridStateSerializer'
-import { encodeGridStateToUrl } from '@/utils/urlStateManager'
+import {
+  serializeGridState,
+  serializeMultiGridState,
+  type DisplayFlags,
+} from '@/utils/gridStateSerializer'
+import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 /**
  * Round-trip tests for the urlState store's restore path: state is built with
@@ -276,6 +280,61 @@ describe('urlStateStore.restoreFromEncodedState', () => {
   })
 })
 
+describe('urlStateStore.restoreMultiFromEncodedState', () => {
+  const encodeBoards = (grids: ReturnType<typeof useGrids>): string =>
+    encodeMultiGridStateToUrl(
+      serializeMultiGridState(
+        grids.contexts.map((ctx) => ({
+          tiles: ctx.grid.getAllTiles(),
+          allyArtifact: ctx.artifacts.ally,
+          enemyArtifact: ctx.artifacts.enemy,
+          map: ctx.currentMap,
+          getParagon: ctx.getParagon,
+        })),
+        grids.activeId,
+      ),
+    )
+
+  it('restores each board with its serialized map key', () => {
+    createStores()
+    const grids = useGrids()
+    grids.setGridCount(2, ['arena2', 'preset-sr1'])
+    const encoded = encodeBoards(grids)
+
+    const restored = createStores()
+    expect(restored.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(useGrids().contexts.map((ctx) => ctx.currentMap)).toEqual(['arena2', 'preset-sr1'])
+  })
+
+  it('caps a crafted URL at the supported board count', () => {
+    const s = createStores()
+    const encoded = encodeMultiGridStateToUrl({
+      boards: Array.from({ length: MAX_GRID_COUNT + 3 }, () => ({})),
+    })
+
+    expect(s.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(useGrids().contexts).toHaveLength(MAX_GRID_COUNT)
+  })
+
+  it('dedupes a character restored on the same team of two boards, keeping the first', () => {
+    createStores()
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    // ctx.place validates per grid only, so the page-wide duplicate can be built
+    // and serialized; restore must repair it.
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(b!.place(2, ALLY_A, Team.ALLY)).toBe(true)
+    const encoded = encodeBoards(grids)
+
+    const restored = createStores()
+    expect(restored.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    const fresh = useGrids()
+    expect(fresh.contexts[0]!.grid.getTileById(1).characterId).toBe(ALLY_A)
+    expect(fresh.contexts[1]!.grid.getTileById(2).characterId).toBeUndefined()
+  })
+})
+
 describe('urlStateStore.swapTeamsAllBoards', () => {
   afterEach(() => {
     vi.restoreAllMocks()
@@ -387,5 +446,30 @@ describe('urlStateStore.swapTeamsAllBoards', () => {
     expect(snapshotTiles(s.grid)).toEqual(before)
     expect(s.artifact.allyArtifactId).toBe(3)
     expect(s.artifact.enemyArtifactId).toBeNull()
+  })
+
+  it('keeps an artifact placed on opposite teams of two boards through an invert', () => {
+    const s = createStores()
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    // Legal page-wide: artifact uniqueness is per (artifact, team), so the same
+    // id may sit on a's ally slot and b's enemy slot at once.
+    a!.setArtifact(Team.ALLY, 7)
+    b!.setArtifact(Team.ENEMY, 7)
+
+    s.urlState.swapTeamsAllBoards()
+
+    expect(a!.artifacts.ally).toBeNull()
+    expect(a!.artifacts.enemy).toBe(7)
+    expect(b!.artifacts.ally).toBe(7)
+    expect(b!.artifacts.enemy).toBeNull()
+
+    s.urlState.swapTeamsAllBoards()
+
+    expect(a!.artifacts.ally).toBe(7)
+    expect(a!.artifacts.enemy).toBeNull()
+    expect(b!.artifacts.ally).toBeNull()
+    expect(b!.artifacts.enemy).toBe(7)
   })
 })

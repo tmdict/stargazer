@@ -13,7 +13,7 @@ import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
-import { useGridStore } from '@/stores/grid'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -24,8 +24,8 @@ const { phantimals, isDraggable = false } = defineProps<{
 }>()
 
 const i18n = useI18nStore()
-const gridStore = useGridStore()
-const { fillOrder, targetHexId, clearTargetHex, characterStore } = useSelectionState()
+const grids = useGrids()
+const { fillOrder, targetHexId, targetGridId, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
 const { isTouchDevice } = useTouchDetection()
 
@@ -54,10 +54,14 @@ const isPlaced = (phantimal: PhantimalType): boolean => placedHex(phantimal) !==
 
 const handlePhantimalClick = (phantimal: PhantimalType) => {
   const id = toPhantimalId(phantimal.id)
-  // Mobile: a tapped tile targets a specific cell. Place there using its team.
-  if (targetHexId.value !== null) {
-    const team = getTeamFromTileState(gridStore.getTile(targetHexId.value).state)
-    if (team !== null) characterStore.placePhantimalOnHex(targetHexId.value, id, team)
+  // Mobile: a tapped tile targets a specific cell on its board. Place there using
+  // its team, on that board (not whichever board is active).
+  if (targetHexId.value !== null && targetGridId.value !== null) {
+    const ctx = grids.getContext(targetGridId.value)
+    if (ctx) {
+      const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
+      if (team !== null) ctx.placePhantimal(targetHexId.value, id, team)
+    }
     clearTargetHex()
     return
   }
