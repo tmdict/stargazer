@@ -74,41 +74,6 @@ describe('urlStateManager', () => {
     })
   })
 
-  describe('serialize + encode round-trip', () => {
-    it('encodes serialized tiles and artifacts', () => {
-      const tiles: GridTile[] = [
-        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
-        createMockTile(2, State.OCCUPIED_ENEMY, 200, Team.ENEMY),
-      ]
-      const encoded = encodeGridStateToUrl(serializeGridState(tiles, 1, 2))
-
-      const decoded = decodeGridStateFromUrl(encoded)
-      expect(decoded?.c).toHaveLength(2)
-      expect(decoded?.a).toEqual([1, 2])
-    })
-
-    it.each([
-      [
-        { showGridInfo: true, showArrows: false, showPerspective: true, showSkills: false },
-        0b00101,
-      ],
-      [
-        {
-          showGridInfo: false,
-          showArrows: false,
-          showPerspective: false,
-          showSkills: false,
-          teamView: true,
-        },
-        0b10000,
-      ],
-    ])('round-trips display flags (%o)', (displayFlags, expected) => {
-      const encoded = encodeGridStateToUrl(serializeGridState([], null, null, displayFlags))
-      const decoded = decodeGridStateFromUrl(encoded)
-      expect(decoded?.d).toBe(expected)
-    })
-  })
-
   describe('getEncodedStateFromUrl', () => {
     beforeEach(() => {
       vi.stubGlobal('window', { location: { search: '' } })

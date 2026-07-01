@@ -65,8 +65,8 @@ Selects targets by comparing distances from a reference point:
 Expands outward ring by ring from a center hex, checking tiles in order:
 
 - **spiralSearchFromTile()**: Spiral walk by angle from a center tile, team-specific direction (clockwise for ally, counter-clockwise for enemy). Used by Silvina/Nara from a symmetrical tile.
-- **searchByRow()**: The closest unit in the caster's _own_ diagonal row (higher hex id on a tie for an ally). Used by Aliceth/Alna.
-- **rowScan()**: The diagonal-row scan below. Used by Faramor, Cassadee, Galahad, Himmel, and Aliceth's fallback.
+- **searchByRow()**: The closest unit in the caster's _own_ diagonal row, tie-broken target-relative like `rowScan` (the searched team's frontmost unit wins: higher hex id for ally, lower for enemy). Used by Aliceth/Alna.
+- **rowScan()**: The diagonal-row scan below. Used by Faramor, Cassadee, Galahad, Himmel, Hepler, and Aliceth's fallback.
 
 ### Diagonal-row scan (`rowScan`)
 
@@ -75,12 +75,12 @@ The arena's only meaningful "row" is the **diagonal row**: `Hex.getDiagonal() = 
 - **rowDirection**: which diagonal rows first (`REARMOST` = the team's back rows).
 - **withinRowDirection**: which unit of a shared row first (`REARMOST` = the lower hex id). Defaults to `rowDirection`; set it explicitly only for a mixed scan.
 
-Scan key: `(distance asc, diagonal by rowDirection, hex id by withinRowDirection)`. Because ids run in diagonal-row order, when the two directions agree the scan is equivalently a plain hex-id sort; only the mixed pair needs the explicit diagonal tier.
+Scan key: `(distance asc, diagonal by rowDirection, hex id by withinRowDirection)`. Because ids run in diagonal-row order, when the two directions agree the ordering within each distance ring reduces to a plain hex-id sort (distance still ranks first); only the mixed pair needs the explicit diagonal tier.
 
 |                     | within: REARMOST (lower id) | within: FRONTMOST (higher id) |
 | ------------------- | --------------------------- | ----------------------------- |
 | **rows: REARMOST**  | Faramor, Cassadee, Galahad  | Himmel                        |
-| **rows: FRONTMOST** | (valid, currently unused)   | Aliceth fallback              |
+| **rows: FRONTMOST** | (valid, currently unused)   | Aliceth fallback, Hepler      |
 
 Options: `{ team, rowDirection, withinRowDirection?, maxDistance?, filter? }`. `maxDistance: 1` limits the scan to adjacent tiles; `filter` keeps only candidates whose id passes a predicate (class selection for Himmel, companion exclusion for Galahad).
 

@@ -5,21 +5,13 @@ import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
-import {
-  canPlaceCharacterOnTeam,
-  hasCharacter,
-  isCharacterOnTeam,
-} from '@/lib/characters/character'
+import { hasCharacter } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import {
-  getInvertedState,
-  getTeamFromTileState,
-  getTileFillColor,
-} from '@/utils/tileStateFormatting'
+import { getInvertedState, getTileFillColor } from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
@@ -286,26 +278,18 @@ const getHexDropClass = (hex: Hex) => {
   const isDragHover =
     isDragging.value && hoveredGridId.value === ctx.id && hoveredHexId.value === hexId
 
-  // Validate drop zone for visual feedback
+  // canDropCharacter is routeDrop's own gate, so the hover cue matches the drop
+  // for every routing-layer rejection; per-grid engine rejections and
+  // mid-transaction failures still resolve at drop time as silent no-ops.
   let validDropZone = false
   if (isDragHover && draggedCharacter.value) {
-    const tile = ctx.grid.getTileById(hexId)
-    const state = tile.state
-
-    // Check if tile accepts characters
-    const tileTeam = getTeamFromTileState(state)
-    if (tileTeam !== null) {
-      // Match handleDrop so the hover never promises a drop that would fail. The
-      // subtlety: a roster drop onto an occupant is a replace, which frees the slot
-      // it fills, so it skips the capacity check an empty-tile add still needs.
-      if (draggedCharacter.value.sourceHexId !== undefined) {
-        validDropZone = true
-      } else if (isOccupied) {
-        validDropZone = !isCharacterOnTeam(ctx.grid, draggedCharacter.value.id, tileTeam)
-      } else {
-        validDropZone = canPlaceCharacterOnTeam(ctx.grid, draggedCharacter.value.id, tileTeam)
-      }
-    }
+    validDropZone = grids.canDropCharacter(
+      draggedCharacter.value.id,
+      draggedCharacter.value.sourceGridId,
+      draggedCharacter.value.sourceHexId,
+      ctx.id,
+      hexId,
+    )
   }
 
   return {

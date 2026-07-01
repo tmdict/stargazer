@@ -371,6 +371,44 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(b!.grid.getTileById(41).team).toBe(Team.ENEMY)
   })
 
+  it('rejects a companion dragged to another board', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, PHRAESTO, Team.ALLY)).toBe(true)
+    const companionHex = getTilesWithCharacters(a!.grid)
+      .find((t) => t.characterId === PHRAESTO_COMPANION)!
+      .hex.getId()
+
+    expect(grids.routeDrop(dragPayload(0, companionHex, PHRAESTO_COMPANION), 1, 2)).toBe(false)
+
+    expect(getCharacter(a!.grid, companionHex)).toBe(PHRAESTO_COMPANION)
+    expect(b!.grid.getTileById(2).characterId).toBeUndefined()
+  })
+
+  it('rejects a cross-board move into a full team', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    // Fill b's ally team to BASE_TEAM_SIZE (5).
+    for (const [hexId, id] of [
+      [2, 30],
+      [3, 31],
+      [4, 32],
+      [5, 33],
+      [6, 34],
+    ]) {
+      expect(b!.place(hexId!, id!, Team.ALLY)).toBe(true)
+    }
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 7)).toBe(false)
+
+    expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
+    expect(b!.grid.getTileById(7).characterId).toBeUndefined()
+  })
+
   it('makes the destination board active on a roster drop', () => {
     const grids = useGrids()
     grids.setGridCount(2)

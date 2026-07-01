@@ -18,11 +18,14 @@ The URL serialization system enables sharing game state through compact URLs usi
 
 ### URL State Management (`/src/utils/urlStateManager.ts`, `/src/stores/urlState.ts`)
 
-Handles URL generation, parsing, and state restoration through a unified API:
+Handles encoding, decoding, and state restoration:
 
-- **`generateShareableUrl()`**: Creates shareable URLs with compressed state
-- **`restoreFromEncodedState()`**: Restores grid from URL parameters
-- **`updateUrlWithGridState()`**: Updates browser URL without navigation
+- **`encodeGridStateToUrl()` / `decodeGridStateFromUrl()`**: Single-board binary encoding to/from a URL-safe string
+- **`encodeMultiGridStateToUrl()` / `decodeMultiGridStateFromUrl()`**: Multi-board url-safe base64 JSON (see Multi-board state)
+- **`getEncodedStateFromUrl()` / `getEncodedStateFromRoute()`**: Read the `?g=` parameter from `window.location` or a route query
+- **`restoreFromEncodedState()` / `restoreMultiFromEncodedState()`**: Store actions that decode and apply state to the boards
+
+The `useShareLink` composable (`/src/composables/useShareLink.ts`) copies a read-only `/share?g=<encoded>` link to the clipboard and opens the share page.
 
 Decoding rejects any input that yields zero bytes (a valid encoding always
 carries at least one header byte), so truncated links fail with an error
@@ -69,8 +72,8 @@ interface GridState {
     - Bits 2-5: reserved
     - Bit 6: Has phantimals (phantimal section present after artifacts)
     - Bit 7: Has display flags (a dedicated display-flags byte follows)
-  - Display flags byte (if extended bit 7 set): bit 0 Grid Info, 1 Targeting,
-    2 Flat, 3 Skills, 4 Team View, 5 Invert, 6 Wrap (bit 7 spare)
+  - Display flags byte (if extended bit 7 set): bit 0 showGridInfo, 1 showArrows,
+    2 showPerspective, 3 showSkills, 4 teamView, 5 inverted, 6 wrap (bit 7 spare)
   - Additional tile count byte (if extended bit 0 set)
   - Additional character count byte (if extended bit 0 set)
 
@@ -111,7 +114,7 @@ Before encoding, `validateGridState()` filters invalid entries:
 - **Team Values**: Must be 1 (ALLY) or 2 (ENEMY)
 - **Maximum Counts**: 262 tiles or characters (7 in header + 255 in extended)
 
-Invalid entries are filtered with console warnings, ensuring header counts match actual data written and preventing encoding/decoding mismatches. Every field validated here must stay in sync with its bit width — `writeBits` silently truncates oversized values, which would alias them to different IDs on decode.
+Invalid entries are filtered with console warnings, ensuring header counts match actual data written and preventing encoding/decoding mismatches. Every field validated here must stay in sync with its bit width: `writeBits` silently truncates oversized values, which would alias them to different IDs on decode.
 
 ### Extended Mode
 
@@ -120,6 +123,7 @@ Extended mode activates when:
 - More than 7 tile entries (modified hexes) OR more than 7 character entries
 - Display flags are explicitly provided (even if all false)
 - Phantimals are present
+- Paragon entries are present
 
 Display flags are only stored when explicitly provided (`d !== undefined`). Extended flags bit 7 marks their presence and is followed by a dedicated display-flags byte, so an explicit `d=0` (all toggles off) survives the round trip even when extended counts or phantimals also require the extended header.
 
@@ -127,12 +131,10 @@ Display flags are only stored when explicitly provided (`d !== undefined`). Exte
 
 ### Encoding Process
 
-1. Collect non-default hex states and character placements
-2. Validate entries with `validateGridState()` (filters invalid data)
-3. Serialize to GridState format via `serializeGridState()`
-4. Binary encode with bit packing via `encodeToBinary()`
-5. Convert to URL-safe string via `bytesToUrlSafe()`
-6. Append as query parameter: `?g=<encoded>`
+1. Serialize board state to GridState via `serializeGridState()` (only non-default tile states are kept)
+2. Binary encode with bit packing via `encodeToBinary()`, which first filters invalid entries via `validateGridState()`
+3. Convert to URL-safe string via `bytesToUrlSafe()`
+4. Append as query parameter: `?g=<encoded>`
 
 Example: `https://<url>/?g=AQIDBAUGBwgJCg`
 
@@ -158,17 +160,19 @@ if (result.success) {
 ### Character Restoration
 
 - **Standard characters (ID < 10000)**: Direct placement
-- **Companions (ID ≥ 10000)**: Two-phase - place mains first (triggers skills), then reposition companions
+- **Companions (ID ≥ 10000)**: Settled per main: each main is placed (its skill spawns the companions), then those companions are repositioned onto their saved hexes before the next main is placed
 - **Phantimals (ID ≥ 100000)**: Serialized separately in the `p` section via 4-bit local IDs
 
 **Note**: Character IDs are limited to 65,535 (16-bit encoding). Companion IDs are `N * 10000 + base`, so the field covers companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). IDs exceeding the limit are filtered during validation.
 
 ## Multi-board state (5 v 5)
 
-The Teams page shares N boards in one link. Five boards plus an active-id and global flags are too varied for the single-board binary packing — and there is no back-compat constraint — so multi-board state is encoded as **url-safe base64 of JSON** instead:
+The Teams page shares N boards in one link. Five boards plus an active id and global flags are too varied for the single-board binary packing, and there is no back-compat constraint, so multi-board state is encoded as **url-safe base64 of JSON** instead:
 
 - `serializeMultiGridState(boards, activeId, displayFlags)` → `MultiGridState` (`/src/utils/gridStateSerializer.ts`)
-- `generateMultiShareableUrl(...)` → `…/teams?g=<base64-json>` (`/src/utils/urlStateManager.ts`)
+- `encodeMultiGridStateToUrl(state)` → the `g` value carried by `/teams?g=` and `/share?g=` links (`/src/utils/urlStateManager.ts`)
 - `TeamsView` restores it on load via `useUrlStateStore.restoreMultiFromEncodedState`, rebuilding each board.
 
-The single-board binary format above still serves the Arena (`?g=` on `/`).
+`MultiGridState` is `{ boards, active?, d? }`. Each board record is a `BoardState` `{t, c, p, a, pr, m}`: the single-board `GridState` plus `m`, the board's map key. Restore caps boards at `MAX_GRID_COUNT` (5), passes the map keys into `setGridCount`, then applies each board in order: tiles, mains (companions settled per main), paragon, artifacts, phantimals, then `seedPhantimalBaseline()`. After all boards, `grids.dedupeCharacters()` repairs page-wide hero uniqueness that per-board validation cannot see.
+
+The single-board binary format above serves the Arena (`?g=` on `/`).

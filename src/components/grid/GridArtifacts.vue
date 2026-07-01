@@ -51,9 +51,10 @@ const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null) =
 // board (its coordinate space matches the layout, like GridTiles).
 const cellLayerRef = ref<SVGSVGElement | null>(null)
 
-// Purely-visual host cells: the left/right neighbours of real cells 1 (ally) and
-// 45 (enemy). Not part of the grid simulation (no tile, pathfinding, or drop
-// target): just an SVG outline + the icon, tracking the layout/scale.
+// Host cells: the left/right neighbours of real cells 1 (ally) and 45 (enemy).
+// Not part of the grid simulation (no tile, no pathfinding, never a hex-pipeline
+// drop target): an SVG outline + the icon, tracking the layout/scale. They do
+// accept artifact drops, via the separate artifact pipeline below.
 const ghostCell = (baseId: number, direction: number): Hex | null => {
   try {
     return ctx.grid.getHexById(baseId).neighbor(direction)

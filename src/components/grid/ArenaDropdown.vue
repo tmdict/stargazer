@@ -19,7 +19,10 @@ const dropdownRef = ref<HTMLElement>()
 const showMenu = ref(false)
 
 // Opens on hover or click. The brief close delay lets the cursor cross the gap
-// from the button to the list without the menu snapping shut.
+// from the button to the list without the menu snapping shut. Hover-open is for
+// mouse pointers only: a touch tap synthesizes mouseenter before click, which
+// would open the menu and then immediately toggle it closed.
+const canHover = !import.meta.env.SSR && window.matchMedia('(hover: hover)').matches
 let closeTimer: ReturnType<typeof setTimeout> | null = null
 const cancelClose = () => {
   if (closeTimer) clearTimeout(closeTimer)
@@ -48,7 +51,12 @@ onUnmounted(cancelClose)
 </script>
 
 <template>
-  <div ref="dropdownRef" class="arena-dropdown" @mouseenter="open" @mouseleave="closeSoon">
+  <div
+    ref="dropdownRef"
+    class="arena-dropdown"
+    @mouseenter="canHover && open()"
+    @mouseleave="canHover && closeSoon()"
+  >
     <button type="button" class="arena-dropdown-btn" :aria-expanded="showMenu" @click="toggle">
       {{ i18nStore.t('app.arena') }} {{ currentArenaName }}
       <span class="arena-dropdown-caret">▾</span>
