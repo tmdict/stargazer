@@ -30,9 +30,8 @@ registerSkill({
   id: 'kulu',
   characterId: 80,
   onActivate: paintZone,
-  // Repaint on update so tiles shared by both zones (22/23/24) survive one team's
-  // Kulu leaving: the color channel dedupes, so the surviving Kulu must re-add them.
-  onUpdate: paintZone,
+  // Tiles shared by both zones (22/23/24) survive one team's Kulu leaving via the
+  // paint channels' per-color refcounts, so no repaint on update is needed.
   onDeactivate({ skillManager, characterId, team }: SkillContext): void {
     skillManager.clearPaintedTiles(characterId, team)
   },

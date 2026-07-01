@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { performPlace } from '@/lib/characters/place'
+import { executeMoveCharacter } from '@/lib/characters/move'
+import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -119,6 +120,34 @@ describe('skill', () => {
         skillManager.setTileColorModifier(1, '#ff0000')
         skillManager.setTileColorModifier(1, '#ff0000')
         expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
+      })
+
+      it('refcounts a color shared by two painters, dropping it only with the last', () => {
+        skillManager.setTileColorModifier(1, '#ff0000')
+        skillManager.setTileColorModifier(1, '#ff0000')
+
+        skillManager.removeTileColorModifier(1, '#ff0000')
+        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
+
+        skillManager.removeTileColorModifier(1, '#ff0000')
+        expect(skillManager.getTileColorModifier(1)).toBeUndefined()
+      })
+
+      it('keeps another skill same-color paint when a highlight moves off its tile', () => {
+        // Ally Evie (113) outlines enemy-zone tiles around her mirror cell (40 among
+        // them); enemy Cassadee (10) highlights her nearest teammate's tile with the
+        // same color. Moving the teammate off 40 makes Cassadee unpaint it mid-sweep,
+        // after Evie already repainted; the refcount keeps Evie's outline alive.
+        const arena = new Grid()
+        const sm = new SkillManager()
+        arena.skillManager = sm
+        expect(executePlaceCharacter(arena, sm, 9, 113, Team.ALLY)).toBe(true)
+        expect(sm.getTileColorModifier(40)).toBeDefined()
+        expect(executePlaceCharacter(arena, sm, 43, 10, Team.ENEMY)).toBe(true)
+        expect(executePlaceCharacter(arena, sm, 40, 21, Team.ENEMY)).toBe(true)
+
+        expect(executeMoveCharacter(arena, sm, 40, 45, 21)).toBe(true)
+        expect(sm.getTileColorModifier(40)).toBeDefined()
       })
 
       it('handles removing a color that is not on the tile', () => {

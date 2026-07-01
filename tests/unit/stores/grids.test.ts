@@ -353,3 +353,99 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(a!.grid.getTileById(1).characterId).toBeUndefined()
   })
 })
+
+describe('useGrids paragon carry-over', () => {
+  it('carries paragon levels through a board swap', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    a!.setParagon(Team.ALLY, ALLY_A, 3)
+    expect(b!.place(41, ENEMY_B, Team.ENEMY)).toBe(true)
+    b!.setParagon(Team.ENEMY, ENEMY_B, 4)
+
+    grids.swapBoards(0, 1)
+
+    expect(b!.getParagon(Team.ALLY, ALLY_A)).toBe(3)
+    expect(a!.getParagon(Team.ENEMY, ENEMY_B)).toBe(4)
+    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+    expect(b!.getParagon(Team.ENEMY, ENEMY_B)).toBe(0)
+  })
+
+  it('moves a paragon level with its hero to the destination board and team', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    a!.setParagon(Team.ALLY, ALLY_A, 4)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
+
+    expect(b!.getParagon(Team.ENEMY, ALLY_A)).toBe(4)
+    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+  })
+
+  it('swaps paragon levels with the swapped heroes', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    a!.setParagon(Team.ALLY, ALLY_A, 2)
+    expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
+    b!.setParagon(Team.ENEMY, ENEMY_A, 4)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
+
+    expect(b!.getParagon(Team.ENEMY, ALLY_A)).toBe(2)
+    expect(a!.getParagon(Team.ALLY, ENEMY_A)).toBe(4)
+    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+    expect(b!.getParagon(Team.ENEMY, ENEMY_A)).toBe(0)
+  })
+})
+
+describe('useGrids.routeDrop same-board uniqueness', () => {
+  it('rejects a same-board cross-team move that would duplicate a character on a team', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(b!.place(41, ALLY_A, Team.ENEMY)).toBe(true)
+
+    // Moving a's ally copy onto one of a's own enemy tiles would put ALLY_A on
+    // the enemy team of both boards.
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 40)).toBe(false)
+
+    expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
+    expect(a!.grid.getTileById(40).characterId).toBeUndefined()
+  })
+
+  it('rejects a same-board swap whose displaced unit would duplicate on a team', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(a!.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
+    expect(b!.place(2, ENEMY_A, Team.ALLY)).toBe(true)
+
+    // The swap sends ENEMY_A to a's ally team, where board b already has a copy.
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 40)).toBe(false)
+
+    expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
+    expect(getCharacter(a!.grid, 40)).toBe(ENEMY_A)
+  })
+
+  it('allows a same-board cross-team move and swap when uniqueness holds', () => {
+    const grids = useGrids() // defaults to 1 board
+    const a = grids.contexts[0]!
+    expect(a.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(a.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 40)).toBe(true)
+    expect(getCharacter(a.grid, 40)).toBe(ALLY_A)
+    expect(getCharacter(a.grid, 1)).toBe(ENEMY_A)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ENEMY_A), 0, 41)).toBe(true)
+    expect(getCharacter(a.grid, 41)).toBe(ENEMY_A)
+    expect(a.grid.getTileById(1).characterId).toBeUndefined()
+  })
+})

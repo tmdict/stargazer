@@ -106,7 +106,12 @@ gridEvents.on('hex:click', (hex: Hex) => {
         tile.characterId === undefined
       ) {
         const characterId = getCharacter(grid, liftedHexId.value)
-        if (characterId !== undefined) {
+        // A tap-move onto the other team's tile must keep page-wide character
+        // uniqueness, like a drag; a violation silently no-ops.
+        if (
+          characterId !== undefined &&
+          grids.sameBoardDropKeepsUniqueness(ctx.id, liftedHexId.value, hex.getId())
+        ) {
           ctx.move(liftedHexId.value, hex.getId(), characterId)
         }
         clearLiftedHex()
