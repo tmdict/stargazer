@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 2,
   "season": 6,
-  "tags": {}
+  "tags": {
+    "cheat-death": [{ "awakening": 1 }]
+  }
 }
