@@ -11,7 +11,6 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
-import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -28,8 +27,7 @@ const {
   scrollable?: boolean
 }>()
 
-const { fillOrder, targetHexId, clearTargetHex, characterStore } = useSelectionState()
-const gridStore = useGridStore()
+const { fillOrder, targetHexId, targetGridId, clearTargetHex } = useSelectionState()
 const grids = useGrids()
 const i18n = useI18nStore()
 
@@ -58,16 +56,19 @@ const placedTeam = (characterId: number): Team | null => {
 const isCharacterPlaced = (characterId: number): boolean => placedTeam(characterId) !== null
 
 const handleCharacterClick = (character: CharacterType) => {
-  // Mobile: a tapped tile targets a specific cell on the active board. Place the
-  // hero there using that tile's team.
-  if (targetHexId.value !== null) {
-    const team = getTeamFromTileState(gridStore.getTile(targetHexId.value).state)
-    if (
-      team &&
-      !grids.isUsed(character.id, team) &&
-      canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, team)
-    ) {
-      characterStore.placeCharacterOnHex(targetHexId.value, character.id, team)
+  // Mobile: a tapped tile targets a specific cell on its board. Place the hero
+  // there using that tile's team, on that board (not whichever board is active).
+  if (targetHexId.value !== null && targetGridId.value !== null) {
+    const ctx = grids.getContext(targetGridId.value)
+    if (ctx) {
+      const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
+      if (
+        team &&
+        !grids.isUsed(character.id, team) &&
+        canPlaceCharacterOnTeam(ctx.grid, character.id, team)
+      ) {
+        ctx.place(targetHexId.value, character.id, team)
+      }
     }
     clearTargetHex()
     return

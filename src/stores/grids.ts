@@ -29,6 +29,10 @@ import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 export type HexSizeMode = 'breakpoint' | 'fixed-medium'
 
+// Largest supported board configuration (5 v 5). setGridCount clamps to it so a
+// crafted share URL can't build an arbitrary number of boards.
+export const MAX_GRID_COUNT = 5
+
 // Payload for an artifact dragged between artifact cells. It carries no artifact id:
 // routeArtifactDrop reads the live source slot, which is authoritative at drop time.
 export interface ArtifactDragPayload {
@@ -36,7 +40,7 @@ export interface ArtifactDragPayload {
   sourceTeam: Team
 }
 
-const artifactSlot = (ctx: GridContext, team: Team): number | null =>
+export const artifactSlot = (ctx: GridContext, team: Team): number | null =>
   team === Team.ALLY ? ctx.artifacts.ally : ctx.artifacts.enemy
 
 export const useGrids = defineStore('grids', () => {
@@ -81,14 +85,16 @@ export const useGrids = defineStore('grids', () => {
     return minY === Infinity ? null : { minX, maxX, minY, maxY }
   })
 
-  // (Re)build to exactly `count` boards. Disposes prior boards so their reactive
-  // effects (per-board phantimal watchers) don't leak across reconfiguration.
-  const setGridCount = (count: number, maps?: string[]): void => {
+  // (Re)build to exactly `count` boards (clamped to [1, MAX_GRID_COUNT]). Disposes
+  // prior boards so their reactive effects (per-board phantimal watchers) don't
+  // leak across reconfiguration.
+  const setGridCount = (count: number, maps?: (string | undefined)[]): void => {
+    const clamped = Math.min(Math.max(count, 1), MAX_GRID_COUNT)
     contexts.value.forEach((ctx) => ctx.dispose())
-    contexts.value = Array.from({ length: count }, (_, i) =>
+    contexts.value = Array.from({ length: clamped }, (_, i) =>
       createGridContext(i, maps?.[i] ?? 'arena1', { hexSize, teamView, inverted, sharedCrop }),
     )
-    if (activeId.value >= count) activeId.value = 0
+    if (activeId.value >= clamped) activeId.value = 0
   }
 
   const setActive = (id: number): void => {
@@ -157,6 +163,24 @@ export const useGrids = defineStore('grids', () => {
 
   const clearAll = (): void => contexts.value.forEach((ctx) => ctx.clear())
 
+  // Repair page-wide (character, team) uniqueness after a bulk restore: keep each
+  // pair's first placement (board order) and remove later copies. Companions
+  // re-derive from their mains and phantimals are one-per-team per board, so both
+  // are skipped.
+  const dedupeCharacters = (): void => {
+    const seen = new Set<string>()
+    for (const ctx of contexts.value) {
+      for (const tile of getTilesWithCharacters(ctx.grid)) {
+        const characterId = tile.characterId
+        if (characterId === undefined || tile.team === undefined) continue
+        if (isCompanion(characterId) || isPhantimalId(characterId)) continue
+        const key = `${tile.team}:${characterId}`
+        if (seen.has(key)) ctx.remove(tile.hex.getId())
+        else seen.add(key)
+      }
+    }
+  }
+
   const isCompanion = (id: number): boolean => id >= COMPANION_ID_OFFSET && !isPhantimalId(id)
 
   const placeUnit = (ctx: GridContext, hexId: number, unitId: number, team: Team): boolean =>
@@ -183,7 +207,12 @@ export const useGrids = defineStore('grids', () => {
       if (getAvailableTeamSize(targetCtx.grid, destTeam) <= 0) return false
     }
     if (!sourceCtx.remove(sourceHexId)) return false
-    if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) return true
+    if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) {
+      // Paragon follows the hero to its destination board and team.
+      targetCtx.setParagon(destTeam, characterId, sourceCtx.getParagon(sourceTeam, characterId))
+      sourceCtx.setParagon(sourceTeam, characterId, 0)
+      return true
+    }
     placeUnit(sourceCtx, sourceHexId, characterId, sourceTeam) // rollback
     return false
   }
@@ -220,7 +249,17 @@ export const useGrids = defineStore('grids', () => {
     }
     const placedA = placeUnit(targetCtx, targetHexId, aId, bTeam)
     const placedB = placeUnit(sourceCtx, sourceHexId, bId, aTeam)
-    if (placedA && placedB) return true
+    if (placedA && placedB) {
+      // Paragon follows each hero. Clear both old keys before writing the new
+      // ones: a same-hero cross-team swap (aId === bId) reuses a key.
+      const aLevel = sourceCtx.getParagon(aTeam, aId)
+      const bLevel = targetCtx.getParagon(bTeam, bId)
+      sourceCtx.setParagon(aTeam, aId, 0)
+      targetCtx.setParagon(bTeam, bId, 0)
+      targetCtx.setParagon(bTeam, aId, aLevel)
+      sourceCtx.setParagon(aTeam, bId, bLevel)
+      return true
+    }
     if (placedA) targetCtx.remove(targetHexId)
     if (placedB) sourceCtx.remove(sourceHexId)
     placeUnit(sourceCtx, sourceHexId, aId, aTeam) // rollback to originals
@@ -228,9 +267,12 @@ export const useGrids = defineStore('grids', () => {
     return false
   }
 
-  // A board's directly-placed roster: the main characters, dropping skill-derived
-  // units (companions, faction phantimals) since those re-derive from the roster.
-  const collectMainUnits = (ctx: GridContext): { characterId: number; team: Team }[] =>
+  // A board's directly-placed roster: the main characters with their paragon
+  // levels, dropping skill-derived units (companions, faction phantimals) since
+  // those re-derive from the roster.
+  const collectMainUnits = (
+    ctx: GridContext,
+  ): { characterId: number; team: Team; paragon: number }[] =>
     getTilesWithCharacters(ctx.grid)
       .filter(
         (tile) =>
@@ -239,7 +281,11 @@ export const useGrids = defineStore('grids', () => {
           !isCompanion(tile.characterId) &&
           !isPhantimalId(tile.characterId),
       )
-      .map((tile) => ({ characterId: tile.characterId!, team: tile.team! }))
+      .map((tile) => ({
+        characterId: tile.characterId!,
+        team: tile.team!,
+        paragon: ctx.getParagon(tile.team!, tile.characterId!),
+      }))
 
   const applyArtifacts = (
     ctx: GridContext,
@@ -252,9 +298,10 @@ export const useGrids = defineStore('grids', () => {
     }
   }
 
-  // Exchange two boards' rosters and artifacts, keeping each unit/artifact's team
-  // (ally <-> ally, enemy <-> enemy). Only directly-placed mains move; companions,
-  // faction phantimals, and tile zones (e.g. Kulu's) are skill-derived, so
+  // Exchange two boards' rosters (with paragon levels) and artifacts, keeping each
+  // unit/artifact's team (ally <-> ally, enemy <-> enemy). Only directly-placed
+  // mains move; companions, faction phantimals, and tile zones (e.g. Kulu's) are
+  // skill-derived, so
   // clearing deactivates them on the source and autoPlace re-derives them on the
   // destination. Nothing skill-driven is serialized or carried, so none is left
   // stranded (no ghost zones, no orphaned companions). Placement picks random
@@ -281,13 +328,55 @@ export const useGrids = defineStore('grids', () => {
     source.seedPhantimalBaseline()
     target.seedPhantimalBaseline()
 
-    fromTarget.forEach((unit) => source.autoPlace(unit.characterId, unit.team))
-    fromSource.forEach((unit) => target.autoPlace(unit.characterId, unit.team))
+    // clearCharacters wiped both paragon maps, so restore each hero's level with it.
+    fromTarget.forEach((unit) => {
+      if (source.autoPlace(unit.characterId, unit.team)) {
+        source.setParagon(unit.team, unit.characterId, unit.paragon)
+      }
+    })
+    fromSource.forEach((unit) => {
+      if (target.autoPlace(unit.characterId, unit.team)) {
+        target.setParagon(unit.team, unit.characterId, unit.paragon)
+      }
+    })
 
     applyArtifacts(source, targetArtifacts)
     applyArtifacts(target, sourceArtifacts)
 
     activeId.value = targetId
+    return true
+  }
+
+  // A move or swap that stays on one board can still change a unit's team, which
+  // risks the same page-wide duplicate as a cross-board transfer: a copy already
+  // on the destination team of another board. Mirrors crossGridMove/crossGridSwap:
+  // each unit is checked against its destination team excluding this board (an
+  // on-board conflict is already rejected by the engine's per-grid check), and
+  // phantimals are exempt (capped at one per team per board instead).
+  const sameBoardDropKeepsUniqueness = (
+    ctxId: number,
+    sourceHexId: number,
+    targetHexId: number,
+  ): boolean => {
+    const ctx = getContext(ctxId)
+    if (!ctx) return false
+    const movingId = getCharacter(ctx.grid, sourceHexId)
+    const movingTeam = getCharacterTeam(ctx.grid, sourceHexId)
+    if (movingId === undefined || movingTeam === undefined) return true
+    const residentId = getCharacter(ctx.grid, targetHexId)
+    const destTeam =
+      residentId !== undefined
+        ? getCharacterTeam(ctx.grid, targetHexId)
+        : getTeamFromTileState(ctx.grid.getTileById(targetHexId).state)
+    if (destTeam === undefined || destTeam === null || destTeam === movingTeam) return true
+    if (!isPhantimalId(movingId) && isUsed(movingId, destTeam, ctxId)) return false
+    if (
+      residentId !== undefined &&
+      !isPhantimalId(residentId) &&
+      isUsed(residentId, movingTeam, ctxId)
+    ) {
+      return false
+    }
     return true
   }
 
@@ -303,11 +392,19 @@ export const useGrids = defineStore('grids', () => {
     if (!targetCtx) return false
     const sourceGridId = payload.character.sourceGridId
     if (sourceGridId === undefined || sourceGridId === targetCtxId) {
-      // Roster drops (new placements) must respect page-wide character uniqueness;
-      // same-board drags are moves/swaps and don't add a unit.
+      // Roster drops (new placements) must respect page-wide character uniqueness.
       if (sourceGridId === undefined && !isPhantimalId(payload.characterId)) {
         const destTeam = getTeamFromTileState(targetCtx.grid.getTileById(targetHexId).state)
         if (destTeam !== null && isUsed(payload.characterId, destTeam)) return false
+      }
+      // Same-board drags must too when the drop changes the unit's team.
+      const sourceHexId = payload.character.sourceHexId
+      if (
+        sourceGridId !== undefined &&
+        sourceHexId !== undefined &&
+        !sameBoardDropKeepsUniqueness(targetCtxId, sourceHexId, targetHexId)
+      ) {
+        return false
       }
       return targetCtx.handleDrop(payload, targetHexId)
     }
@@ -379,9 +476,11 @@ export const useGrids = defineStore('grids', () => {
     isUsed,
     placeOnActive,
     removeFromAnyBoard,
+    dedupeCharacters,
     findArtifactPlacement,
     isArtifactUsed,
     removeArtifactFromAnyBoard,
+    sameBoardDropKeepsUniqueness,
     routeDrop,
     routeArtifactDrop,
     swapBoards,
