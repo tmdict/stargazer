@@ -37,6 +37,8 @@ const indexCache: Record<Locale, { names: NameEntry[]; deep: DeepEntry[] } | und
   zh: undefined,
 }
 
+const LOCALES = Object.keys(indexCache) as Locale[]
+
 function buildIndex(lang: Locale) {
   const charLocales = loadCharacterLocales()
   const skills = loadSkillLocales()[lang]
@@ -88,7 +90,8 @@ function getIndex(lang: Locale) {
 }
 
 /** Empty query → `null`. ≥1 char → name match. ≥3 chars → +skill names &
- * descriptions. Hits per hero capped at 3; results ordered by hit count. */
+ * descriptions. Matches every locale so a hero surfaces regardless of the UI
+ * language. Hits per hero capped at 3; results ordered by hit count. */
 export function useSkillSearch(
   query: Ref<string>,
   lang: Ref<Locale>,
@@ -99,12 +102,13 @@ export function useSkillSearch(
 
     const lc = q.toLowerCase()
     const includesQuery = (s: string) => s.toLowerCase().includes(lc)
-    const { names, deep } = getIndex(lang.value)
 
     const perSlug = new Map<string, SearchHit[]>()
     // At most one hit per (slug, slot). Entries are pushed in slot+level
     // order, so the first survivor per slot is the lowest level.
     const seenSlots = new Map<string, Set<SlotKey>>()
+    // One name hit per hero, even when the name matches in several locales.
+    const namedSlugs = new Set<string>()
     const pushHit = (slug: string, hit: SearchHit) => {
       if (hit.slot) {
         const seen = seenSlots.get(slug) ?? new Set<SlotKey>()
@@ -117,25 +121,35 @@ export function useSkillSearch(
       perSlug.set(slug, list)
     }
 
-    for (const e of names) {
-      if (!includesQuery(e.text)) continue
-      const s = renderSnippet(e.text, q)
-      if (!s) continue
-      pushHit(e.slug, { loc: 'name', snippet: s })
-    }
+    // Selected locale first: its hit wins the per-slot/name dedup, so the shown
+    // snippet is in the UI language whenever the hero also matches there.
+    const locales = [lang.value, ...LOCALES.filter((l) => l !== lang.value)]
 
-    if (q.length >= 3) {
-      for (const e of deep) {
+    for (const locale of locales) {
+      for (const e of getIndex(locale).names) {
+        if (namedSlugs.has(e.slug)) continue
         if (!includesQuery(e.text)) continue
         const s = renderSnippet(e.text, q)
         if (!s) continue
-        pushHit(e.slug, {
-          loc: e.loc,
-          slot: e.slot,
-          level: e.level,
-          tier: e.tier,
-          snippet: s,
-        })
+        namedSlugs.add(e.slug)
+        pushHit(e.slug, { loc: 'name', snippet: s })
+      }
+    }
+
+    if (q.length >= 3) {
+      for (const locale of locales) {
+        for (const e of getIndex(locale).deep) {
+          if (!includesQuery(e.text)) continue
+          const s = renderSnippet(e.text, q)
+          if (!s) continue
+          pushHit(e.slug, {
+            loc: e.loc,
+            slot: e.slot,
+            level: e.level,
+            tier: e.tier,
+            snippet: s,
+          })
+        }
       }
     }
 
