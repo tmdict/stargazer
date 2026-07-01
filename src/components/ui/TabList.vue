@@ -4,37 +4,61 @@ export interface TabItem {
   key: string
   label: string
   badge?: number | string
-  hidden?: boolean
   hideMobile?: boolean
 }
 </script>
 
-<script setup lang="ts">
-import { computed } from 'vue'
+<script setup lang="ts" generic="T extends string">
+import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
 
 const { tabs } = defineProps<{ tabs: TabItem[] }>()
 
-const active = defineModel<string>({ required: true })
+const active = defineModel<T>({ required: true })
 
-const showStrip = computed(() => tabs.filter((t) => !t.hidden).length > 1)
+const showStrip = computed(() => tabs.length > 1)
+
+// Keys come from the host's own tabs array, so they satisfy the host's model type.
+const select = (tab: TabItem) => {
+  active.value = tab.key as T
+}
+
+// hideMobile hides a tab's button with CSS, but the ACTIVE tab must never be a
+// hidden one (no highlighted button, and its pane would stay live); when the
+// viewport crosses into mobile, fall back to the first visible tab.
+const isMobile = ref(false)
+let mq: MediaQueryList | undefined
+const syncMobile = () => {
+  isMobile.value = mq?.matches ?? false
+}
+onMounted(() => {
+  mq = window.matchMedia('(max-width: 768px)')
+  syncMobile()
+  mq.addEventListener('change', syncMobile)
+})
+onUnmounted(() => mq?.removeEventListener('change', syncMobile))
+watchEffect(() => {
+  if (!isMobile.value) return
+  if (!tabs.find((t) => t.key === active.value)?.hideMobile) return
+  const fallback = tabs.find((t) => !t.hideMobile)
+  if (fallback) select(fallback)
+})
 </script>
 
 <template>
   <div v-if="showStrip" class="tab-bar">
     <div class="tab-buttons" role="tablist">
-      <template v-for="tab in tabs" :key="tab.key">
-        <button
-          v-if="!tab.hidden"
-          type="button"
-          role="tab"
-          :aria-selected="active === tab.key"
-          :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
-          @click="active = tab.key"
-        >
-          {{ tab.label }}
-          <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
-        </button>
-      </template>
+      <button
+        v-for="tab in tabs"
+        :key="tab.key"
+        type="button"
+        role="tab"
+        :aria-selected="active === tab.key"
+        :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
+        @click="select(tab)"
+      >
+        {{ tab.label }}
+        <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
+      </button>
     </div>
     <div v-if="$slots.actions" class="tab-actions">
       <slot name="actions" />

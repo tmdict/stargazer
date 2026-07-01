@@ -7,7 +7,7 @@
    TabView (grid modes / Image Stitcher) inside a card, plus the roster as a separate
    sibling card shown for any grid tab. */
 
-import { computed, onMounted, onScopeDispose, onUnmounted, ref, watch } from 'vue'
+import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
@@ -165,19 +165,6 @@ const handleCopyLink = () => {
   )
   return shareLink(encoded)
 }
-
-// Image Stitcher is wide-window-only; if the viewport narrows while it's active,
-// fall back to 5 v 5 (its tab is hidden, so it would otherwise be a stranded panel).
-let mq: MediaQueryList | null = null
-const enforceMobileTab = () => {
-  if (mq?.matches && activeTab.value === 'imageStitcher') activeTab.value = 'fiveVFive'
-}
-onMounted(() => {
-  mq = window.matchMedia('(max-width: 768px)')
-  enforceMobileTab()
-  mq.addEventListener('change', enforceMobileTab)
-})
-onUnmounted(() => mq?.removeEventListener('change', enforceMobileTab))
 </script>
 
 <template>

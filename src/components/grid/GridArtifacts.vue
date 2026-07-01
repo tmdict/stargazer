@@ -4,6 +4,7 @@ import { computed, ref } from 'vue'
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import ArtifactTooltip from '@/components/ArtifactTooltip.vue'
+import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -30,6 +31,7 @@ const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
 const grids = useGrids()
 const { setArtifactTarget, requestTab } = useSelectionState()
+const { artifactDragPayload } = useDragDrop()
 
 // Hover tooltip: the same artifact card as the roster, shown only on a still hover.
 // Native HTML5 drag suppresses mouse events, so it can't appear mid-drag; the click
@@ -213,10 +215,38 @@ const handleArtifactDragStart = (event: DragEvent, team: Team) => {
   const payload: ArtifactDragPayload = { sourceCtxId: ctx.id, sourceTeam: team }
   event.dataTransfer.setData(ARTIFACT_MIME, JSON.stringify(payload))
   event.dataTransfer.effectAllowed = 'move'
+  artifactDragPayload.value = payload
 }
 
-const allowArtifactDrop = (event: DragEvent) => {
-  if (canDrag.value && event.dataTransfer?.types.includes(ARTIFACT_MIME)) event.preventDefault()
+const handleArtifactDragEnd = () => {
+  artifactDragPayload.value = null
+  invalidDropTeam.value = null
+}
+
+// The hovered cell the router would reject. Gating the styling on the mirrored
+// payload drops it everywhere the moment the drag ends, so a board whose
+// dragleave never fired can't keep a stale highlight.
+const invalidDropTeam = ref<Team | null>(null)
+const invalidDrop = (team: Team): boolean =>
+  artifactDragPayload.value !== null && invalidDropTeam.value === team
+
+const clearInvalidDrop = () => {
+  invalidDropTeam.value = null
+}
+
+// A valid target accepts the drop; a rejectable one refuses it (not-allowed
+// cursor + invalid-drop styling), and stopping propagation keeps the document
+// level dragover from accepting it anyway.
+const allowArtifactDrop = (event: DragEvent, team: Team) => {
+  if (!canDrag.value || !event.dataTransfer?.types.includes(ARTIFACT_MIME)) return
+  const payload = artifactDragPayload.value
+  if (payload && !grids.canDropArtifact(payload, ctx.id, team)) {
+    invalidDropTeam.value = team
+    event.stopPropagation()
+    return
+  }
+  invalidDropTeam.value = null
+  event.preventDefault()
 }
 
 const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
@@ -225,6 +255,8 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   event.stopPropagation()
   event.preventDefault()
   grids.routeArtifactDrop(JSON.parse(raw) as ArtifactDragPayload, ctx.id, targetTeam)
+  artifactDragPayload.value = null
+  invalidDropTeam.value = null
 }
 </script>
 
@@ -271,20 +303,30 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
         v-if="showAllyCell"
         class="artifact-cell"
         fill="transparent"
-        :class="{ clickable: allyCellClickable, droppable: allyDroppable }"
+        :class="{
+          clickable: allyCellClickable,
+          droppable: allyDroppable,
+          'invalid-drop': invalidDrop(Team.ALLY),
+        }"
         :points="allyCellPoints"
         @click="allyCellClickable && openPopup(Team.ALLY, allyCenter)"
-        @dragover="allowArtifactDrop"
+        @dragover="allowArtifactDrop($event, Team.ALLY)"
+        @dragleave="clearInvalidDrop"
         @drop="handleArtifactDrop($event, Team.ALLY)"
       />
       <polygon
         v-if="showEnemyCell"
         class="artifact-cell"
         fill="transparent"
-        :class="{ clickable: enemyCellClickable, droppable: enemyDroppable }"
+        :class="{
+          clickable: enemyCellClickable,
+          droppable: enemyDroppable,
+          'invalid-drop': invalidDrop(Team.ENEMY),
+        }"
         :points="enemyCellPoints"
         @click="enemyCellClickable && openPopup(Team.ENEMY, enemyCenter)"
-        @dragover="allowArtifactDrop"
+        @dragover="allowArtifactDrop($event, Team.ENEMY)"
+        @dragleave="clearInvalidDrop"
         @drop="handleArtifactDrop($event, Team.ENEMY)"
       />
     </svg>
@@ -295,12 +337,14 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
     <div
       v-if="allyArtifact && allySlotVisible"
       class="grid-artifact"
-      :class="{ readonly, front: allySlotInFront }"
+      :class="{ readonly, front: allySlotInFront, 'invalid-drop': invalidDrop(Team.ALLY) }"
       :style="getAllyStyles"
       :draggable="canDrag"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
       @dragstart="handleArtifactDragStart($event, Team.ALLY)"
-      @dragover="allowArtifactDrop"
+      @dragend="handleArtifactDragEnd"
+      @dragover="allowArtifactDrop($event, Team.ALLY)"
+      @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ALLY)"
       @mouseenter="showArtifactTooltip($event, allyArtifact)"
       @mouseleave="hideArtifactTooltip"
@@ -316,12 +360,14 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
     <div
       v-if="enemyArtifact && enemySlotVisible"
       class="grid-artifact"
-      :class="{ readonly, front: enemySlotInFront }"
+      :class="{ readonly, front: enemySlotInFront, 'invalid-drop': invalidDrop(Team.ENEMY) }"
       :style="getEnemyStyles"
       :draggable="canDrag"
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
       @dragstart="handleArtifactDragStart($event, Team.ENEMY)"
-      @dragover="allowArtifactDrop"
+      @dragend="handleArtifactDragEnd"
+      @dragover="allowArtifactDrop($event, Team.ENEMY)"
+      @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ENEMY)"
       @mouseenter="showArtifactTooltip($event, enemyArtifact)"
       @mouseleave="hideArtifactTooltip"
@@ -405,6 +451,17 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
    .clickable coincide by construction. */
 .artifact-cell.droppable {
   pointer-events: auto;
+}
+
+/* Hovered drop target the router would reject (mirrors the tiles' invalid-drop cue). */
+.artifact-cell.invalid-drop {
+  stroke: #c05b4d;
+  stroke-width: 3;
+  filter: drop-shadow(0 0 8px rgba(244, 67, 54, 0.4));
+}
+
+.grid-artifact.invalid-drop {
+  opacity: 0.55;
 }
 
 .grid-artifact {

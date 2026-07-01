@@ -167,15 +167,16 @@ main {
 }
 
 .section {
-  padding: 2em;
+  /* The inset vars ARE the surface's padding; TabView reads them to bleed its
+     strip to the surface edge, so the two can't drift apart. */
+  --tabview-inset-y: 2em;
+  --tabview-inset-x: 2em;
+  padding: var(--tabview-inset-y) var(--tabview-inset-x);
   width: 100%;
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-large);
   display: flex;
   flex-direction: column;
-  /* TabView reads these to bleed its strip to the surface edge. */
-  --tabview-inset-y: 2em;
-  --tabview-inset-x: 2em;
 }
 
 @media (max-width: 768px) {

@@ -420,35 +420,40 @@ export class SkillManager {
     return this.targetVersion
   }
 
-  // Update all active skills
+  // Update all active skills. Each skill is isolated: one throwing onUpdate (or
+  // vanish-cleanup) must not abort the sweep and leave the remaining skills stale.
   updateActiveSkills(grid: Grid): void {
     for (const info of Object.values(this.activeSkills)) {
-      const skill = getCharacterSkill(info.characterId)
+      try {
+        const skill = getCharacterSkill(info.characterId)
 
-      const currentHexId = findCharacterHex(grid, info.characterId, info.team)
-      if (currentHexId === null) {
-        // Character vanished without going through removal, so run full
-        // deactivation so modifiers, companions, and team-size changes are
-        // cleaned up rather than leaked
-        this.deactivateCharacterSkill(info.characterId, info.hexId, info.team, grid)
-        continue
-      }
-
-      // Update stored position if it changed
-      if (info.hexId !== currentHexId) {
-        info.hexId = currentHexId
-      }
-
-      if (skill?.onUpdate) {
-        const context: SkillContext = {
-          grid,
-          hexId: currentHexId,
-          team: info.team,
-          characterId: info.characterId,
-          skillManager: this,
-          lookups: this.lookups,
+        const currentHexId = findCharacterHex(grid, info.characterId, info.team)
+        if (currentHexId === null) {
+          // Character vanished without going through removal, so run full
+          // deactivation so modifiers, companions, and team-size changes are
+          // cleaned up rather than leaked
+          this.deactivateCharacterSkill(info.characterId, info.hexId, info.team, grid)
+          continue
         }
-        skill.onUpdate(context)
+
+        // Update stored position if it changed
+        if (info.hexId !== currentHexId) {
+          info.hexId = currentHexId
+        }
+
+        if (skill?.onUpdate) {
+          const context: SkillContext = {
+            grid,
+            hexId: currentHexId,
+            team: info.team,
+            characterId: info.characterId,
+            skillManager: this,
+            lookups: this.lookups,
+          }
+          skill.onUpdate(context)
+        }
+      } catch (error) {
+        console.error('Skill update failed:', error)
       }
     }
   }

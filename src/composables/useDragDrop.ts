@@ -13,6 +13,7 @@ import { inject, provide, ref, type InjectionKey } from 'vue'
 
 import type { CharacterType } from '@/lib/types/character'
 import { useGridStore } from '@/stores/grid'
+import type { ArtifactDragPayload } from '@/stores/grids'
 
 // MIME type for character drag data - prevents conflicts with other drag operations
 const CHARACTER_MIME_TYPE = 'application/character'
@@ -35,6 +36,11 @@ const draggedCharacter = ref<CharacterType | null>(null)
 const draggedImageSrc = ref<string>('')
 const dragPreviewPosition = ref({ x: 0, y: 0 })
 const dropHandled = ref(false)
+
+// Artifact drags ride the native HTML5 pipeline (distinct MIME, no preview or hex
+// detection), but dataTransfer data is unreadable during dragover, so the in-flight
+// payload is mirrored here for hover-validity checks on any board.
+const artifactDragPayload = ref<ArtifactDragPayload | null>(null)
 
 const hoveredHexId = ref<number | null>(null)
 // Board under the pointer during a drag; pairs with hoveredHexId so each board
@@ -189,6 +195,7 @@ export const useDragDrop = () => {
     draggedCharacter,
     draggedImageSrc,
     dragPreviewPosition,
+    artifactDragPayload,
     hoveredHexId,
     hoveredGridId,
     lastDropHexId,

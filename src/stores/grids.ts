@@ -40,8 +40,10 @@ export interface ArtifactDragPayload {
   sourceTeam: Team
 }
 
-export const artifactSlot = (ctx: GridContext, team: Team): number | null =>
-  team === Team.ALLY ? ctx.artifacts.ally : ctx.artifacts.enemy
+export const artifactSlot = (
+  slots: { ally: number | null; enemy: number | null },
+  team: Team,
+): number | null => (team === Team.ALLY ? slots.ally : slots.enemy)
 
 export const useGrids = defineStore('grids', () => {
   const contexts = shallowRef<GridContext[]>([])
@@ -117,9 +119,12 @@ export const useGrids = defineStore('grids', () => {
     return null
   }
 
-  // `exceptCtxId` excludes one board from the scan. Callers validating a move/swap
-  // pass the character's DESTINATION board, so the slot it is about to occupy is not
-  // counted as a conflict (a copy on the other team of either board still is).
+  // `exceptCtxId` excludes one board from the scan. Move/swap validators pass each
+  // unit's DESTINATION board: in a swap the destination cell's current occupant is
+  // itself vacating, and may even be the same character (one hero legally on both
+  // teams of two boards), so counting it would false-reject a legal swap. A real
+  // duplicate elsewhere on the destination board slips this pre-check but is
+  // rejected by the engine's per-grid check at place time, with rollback.
   const isUsed = (characterId: number, team: Team, exceptCtxId?: number): boolean => {
     const placement = findPlacement(characterId, team)
     return placement !== null && placement.ctxId !== exceptCtxId
@@ -140,8 +145,7 @@ export const useGrids = defineStore('grids', () => {
   // boards), mirroring findPlacement/isUsed/removeFromAnyBoard for characters.
   const findArtifactPlacement = (artifactId: number, team: Team): { ctxId: number } | null => {
     for (const ctx of contexts.value) {
-      const id = team === Team.ALLY ? ctx.artifacts.ally : ctx.artifacts.enemy
-      if (id === artifactId) return { ctxId: ctx.id }
+      if (artifactSlot(ctx.artifacts, team) === artifactId) return { ctxId: ctx.id }
     }
     return null
   }
@@ -201,8 +205,9 @@ export const useGrids = defineStore('grids', () => {
     if (isPhantimalId(characterId)) {
       if (!targetCtx.phantimalCanJoinTeam(characterId, destTeam)) return false
     } else {
-      // Only a team change can break per-team uniqueness; exclude the destination
-      // board so a copy on the other team of the source board is still counted.
+      // Only a team change can break per-team uniqueness. The destination board is
+      // excluded to match the swap legs (see isUsed); a duplicate there is caught
+      // by the engine's per-grid check at place time.
       if (sourceTeam !== destTeam && isUsed(characterId, destTeam, targetCtx.id)) return false
       if (getAvailableTeamSize(targetCtx.grid, destTeam) <= 0) return false
     }
@@ -235,8 +240,9 @@ export const useGrids = defineStore('grids', () => {
     if (isCompanion(aId) || isCompanion(bId)) return false
     // After the swap A sits on the target team and B on the source team. Enforce
     // phantimal faction on each destination and page-wide uniqueness for any
-    // character whose team changes, excluding that character's destination board so
-    // a copy on the other team of either board is still counted.
+    // character whose team changes, excluding that unit's destination board: its
+    // current occupant is the counterpart unit, which is itself vacating (and is
+    // the same character when one hero's two legal placements are swapped).
     if (isPhantimalId(aId) && !targetCtx.phantimalCanJoinTeam(aId, bTeam)) return false
     if (isPhantimalId(bId) && !sourceCtx.phantimalCanJoinTeam(bId, aTeam)) return false
     if (!isPhantimalId(aId) && aTeam !== bTeam && isUsed(aId, bTeam, targetCtx.id)) return false
@@ -292,7 +298,7 @@ export const useGrids = defineStore('grids', () => {
     artifacts: { ally: number | null; enemy: number | null },
   ): void => {
     for (const team of [Team.ALLY, Team.ENEMY]) {
-      const id = team === Team.ALLY ? artifacts.ally : artifacts.enemy
+      const id = artifactSlot(artifacts, team)
       if (id !== null) ctx.setArtifact(team, id)
       else ctx.removeArtifact(team)
     }
@@ -381,8 +387,9 @@ export const useGrids = defineStore('grids', () => {
   }
 
   // Resolve a drop onto a board. Roster and same-board drops use the board's own
-  // handler (place/move/swap); cross-board drops compose remove + place. The
-  // destination board becomes active (decision: active follows a cross-grid drop).
+  // handler (place/move/swap); cross-board drops compose remove + place. A
+  // successful drop makes the destination board active (active follows
+  // interaction, so a roster drop targets the board it just landed on).
   const routeDrop = (
     payload: { character: CharacterType; characterId: number },
     targetCtxId: number,
@@ -406,7 +413,9 @@ export const useGrids = defineStore('grids', () => {
       ) {
         return false
       }
-      return targetCtx.handleDrop(payload, targetHexId)
+      const ok = targetCtx.handleDrop(payload, targetHexId)
+      if (ok) activeId.value = targetCtxId
+      return ok
     }
     const sourceCtx = getContext(sourceGridId)
     const sourceHexId = payload.character.sourceHexId
@@ -428,31 +437,55 @@ export const useGrids = defineStore('grids', () => {
   // copy on the other team of either board still counts; a rejected drop is a silent
   // no-op. Arena is the sourceCtxId === targetCtxId case and Teams adds cross-board,
   // with no board-count branch. A successful drop makes the target board active.
+  const resolveArtifactDrop = (
+    payload: ArtifactDragPayload,
+    targetCtxId: number,
+    targetTeam: Team,
+  ): {
+    sourceCtx: GridContext
+    targetCtx: GridContext
+    moving: number
+    resident: number | null
+  } | null => {
+    const { sourceCtxId, sourceTeam } = payload
+    const sourceCtx = getContext(sourceCtxId)
+    const targetCtx = getContext(targetCtxId)
+    if (!sourceCtx || !targetCtx) return null
+    if (sourceCtxId === targetCtxId && sourceTeam === targetTeam) return null
+
+    // The live slot is authoritative, not the payload: it can change between
+    // dragstart and drop.
+    const moving = artifactSlot(sourceCtx.artifacts, sourceTeam)
+    if (moving === null) return null
+    const resident = artifactSlot(targetCtx.artifacts, targetTeam)
+    if (resident === moving) return null
+
+    if (sourceTeam !== targetTeam) {
+      if (isArtifactUsed(moving, targetTeam, targetCtxId)) return null
+      if (resident !== null && isArtifactUsed(resident, sourceTeam, sourceCtxId)) return null
+    }
+    return { sourceCtx, targetCtx, moving, resident }
+  }
+
+  // True if routeArtifactDrop would act on this drop; drives drag-over feedback so
+  // hover never promises a drop the router rejects.
+  const canDropArtifact = (
+    payload: ArtifactDragPayload,
+    targetCtxId: number,
+    targetTeam: Team,
+  ): boolean => resolveArtifactDrop(payload, targetCtxId, targetTeam) !== null
+
   const routeArtifactDrop = (
     payload: ArtifactDragPayload,
     targetCtxId: number,
     targetTeam: Team,
   ): boolean => {
-    const { sourceCtxId, sourceTeam } = payload
-    const sourceCtx = getContext(sourceCtxId)
-    const targetCtx = getContext(targetCtxId)
-    if (!sourceCtx || !targetCtx) return false
-    if (sourceCtxId === targetCtxId && sourceTeam === targetTeam) return false
-
-    const moving = artifactSlot(sourceCtx, sourceTeam)
-    if (moving === null) return false
-    const resident = artifactSlot(targetCtx, targetTeam)
-    if (resident === moving) return false
-
-    if (sourceTeam !== targetTeam) {
-      if (isArtifactUsed(moving, targetTeam, targetCtxId)) return false
-      if (resident !== null && isArtifactUsed(resident, sourceTeam, sourceCtxId)) return false
-    }
-
-    // Values captured above, so write order is safe and the swap is atomic.
-    targetCtx.setArtifact(targetTeam, moving)
-    if (resident !== null) sourceCtx.setArtifact(sourceTeam, resident)
-    else sourceCtx.removeArtifact(sourceTeam)
+    const drop = resolveArtifactDrop(payload, targetCtxId, targetTeam)
+    if (!drop) return false
+    // Slots resolved before any write, so write order is safe and a swap is atomic.
+    drop.targetCtx.setArtifact(targetTeam, drop.moving)
+    if (drop.resident !== null) drop.sourceCtx.setArtifact(payload.sourceTeam, drop.resident)
+    else drop.sourceCtx.removeArtifact(payload.sourceTeam)
     activeId.value = targetCtxId
     return true
   }
@@ -482,6 +515,7 @@ export const useGrids = defineStore('grids', () => {
     removeArtifactFromAnyBoard,
     sameBoardDropKeepsUniqueness,
     routeDrop,
+    canDropArtifact,
     routeArtifactDrop,
     swapBoards,
     clearAll,
