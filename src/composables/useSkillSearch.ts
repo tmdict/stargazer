@@ -149,8 +149,8 @@ export function useSkillSearch(
       }
     }
 
-    // CJK packs meaning densely, so two characters are already a specific query;
-    // Latin needs three to avoid flooding on fragments.
+    // Han characters (the zh locale) pack meaning densely, so two are already a
+    // specific query; Latin needs three to avoid flooding on fragments.
     const deepMinLength = /[一-鿿]/.test(q) ? 2 : 3
     if (q.length >= deepMinLength) {
       for (const locale of locales) {

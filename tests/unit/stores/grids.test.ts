@@ -359,6 +359,11 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     const [a, b] = grids.contexts
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(b!.place(41, ALLY_A, Team.ENEMY)).toBe(true)
+    // The swap leaves global placement state unchanged, so distinct paragon
+    // levels are what prove the two copies actually traded boards (and that the
+    // reused paragon key is cleared before it is rewritten).
+    a!.setParagon(Team.ALLY, ALLY_A, 2)
+    b!.setParagon(Team.ENEMY, ALLY_A, 4)
 
     // The destination-board exclusion in isUsed exists for exactly this: each
     // leg's scan would otherwise find the counterpart copy, which is itself
@@ -369,6 +374,8 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(a!.grid.getTileById(1).team).toBe(Team.ALLY)
     expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
     expect(b!.grid.getTileById(41).team).toBe(Team.ENEMY)
+    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(4)
+    expect(b!.getParagon(Team.ENEMY, ALLY_A)).toBe(2)
   })
 
   it('rejects a companion dragged to another board', () => {
