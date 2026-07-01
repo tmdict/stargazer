@@ -116,12 +116,13 @@ export function spiralSearchFromTile(
 }
 
 /**
- * Search for ally characters in the same diagonal row as the caster.
- * Prioritizes by closest distance, then team-aware hex ID tie-breaking:
- * ally caster prefers higher hex ID, enemy caster prefers lower.
+ * Search for characters on `targetTeam` in the same diagonal row as the caster.
+ * Prioritizes by closest distance, then a target-relative tie-break (the frame
+ * rowScan and distance.ts use): the searched team's frontmost unit wins, higher
+ * hex ID for ally, lower for enemy.
  */
 export function searchByRow(context: SkillContext, targetTeam: Team): SkillTargetInfo | null {
-  const { grid, hexId, characterId, team } = context
+  const { grid, hexId, characterId } = context
 
   const candidates = getCandidates(grid, targetTeam, characterId)
   if (candidates.length === 0) return null
@@ -144,8 +145,8 @@ export function searchByRow(context: SkillContext, targetTeam: Team): SkillTarge
       return distA - distB
     }
 
-    // Team-aware tie-breaking: ally prefers higher hex ID, enemy prefers lower
-    return team === Team.ALLY ? b.hexId - a.hexId : a.hexId - b.hexId
+    // Target-relative tie-break: the searched team's frontmost unit wins.
+    return targetTeam === Team.ALLY ? b.hexId - a.hexId : a.hexId - b.hexId
   })
 
   const target = sameRowCandidates[0]

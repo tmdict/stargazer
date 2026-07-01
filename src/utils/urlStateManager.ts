@@ -1,12 +1,5 @@
-import type { GridTile } from '@/lib/grid'
-import { Team } from '@/lib/types/team'
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
-import {
-  serializeGridState,
-  type DisplayFlags,
-  type GridState,
-  type MultiGridState,
-} from './gridStateSerializer'
+import type { GridState, MultiGridState } from './gridStateSerializer'
 
 export function encodeGridStateToUrl(gridState: GridState): string {
   try {
@@ -32,28 +25,6 @@ export function decodeGridStateFromUrl(encodedState: string): GridState | null {
     console.warn('Failed to decode grid state from URL:', error)
     return null
   }
-}
-
-export function generateShareableUrl(
-  allTiles: GridTile[],
-  allyArtifact: number | null,
-  enemyArtifact: number | null,
-  displayFlags?: DisplayFlags,
-  getParagon?: (team: Team, characterId: number) => number,
-): string {
-  const gridState = serializeGridState(
-    allTiles,
-    allyArtifact,
-    enemyArtifact,
-    displayFlags,
-    getParagon,
-  )
-
-  const encodedState = encodeGridStateToUrl(gridState)
-
-  // Generate full URL with query parameter format
-  const baseUrl = `${window.location.origin}${window.location.pathname}`
-  return `${baseUrl}?g=${encodedState}`
 }
 
 /* Multi-board (5 v 5) state is encoded as url-safe base64 of JSON: five boards

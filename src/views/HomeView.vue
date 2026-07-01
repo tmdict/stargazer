@@ -28,7 +28,8 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { useUrlStateStore } from '@/stores/urlState'
-import { generateShareableUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
+import { serializeGridState } from '@/utils/gridStateSerializer'
+import { encodeGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 // Perspective Mode Configuration
 const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
@@ -232,14 +233,15 @@ onMounted(() => {
 
 const handleCopyLink = () => {
   // Serialize the board exactly as it appears, then copy + open the read-only share.
-  const shareableUrl = generateShareableUrl(
-    gridStore.getAllTiles,
-    artifactStore.allyArtifactId,
-    artifactStore.enemyArtifactId,
-    toFlags(),
-    activeContext.value.getParagon,
+  const encodedState = encodeGridStateToUrl(
+    serializeGridState(
+      gridStore.getAllTiles,
+      artifactStore.allyArtifactId,
+      artifactStore.enemyArtifactId,
+      toFlags(),
+      activeContext.value.getParagon,
+    ),
   )
-  const encodedState = new URLSearchParams(shareableUrl.split('?')[1]).get('g') ?? ''
   return shareLink(encodedState)
 }
 

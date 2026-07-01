@@ -133,15 +133,16 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
 /* Desktop: a plain card column (matches base.css `.section` chrome). */
 .bottom-sheet {
   width: 100%;
-  /* Horizontal uses the shared token so a plain roster's inset matches a TabView's. */
-  padding: 2em var(--content-padding-x);
+  /* The inset vars ARE the card's padding (horizontal uses the shared token so a
+     plain roster's inset matches a TabView's); TabView reads them to bleed its
+     strip to the card edge, so the two can't drift apart. */
+  --tabview-inset-y: 2em;
+  --tabview-inset-x: var(--content-padding-x);
+  padding: var(--tabview-inset-y) var(--tabview-inset-x);
   background-color: var(--color-bg-primary);
   border-radius: var(--radius-large);
   display: flex;
   flex-direction: column;
-  /* TabView reads these to bleed its strip to the card edge. */
-  --tabview-inset-y: 2em;
-  --tabview-inset-x: var(--content-padding-x);
 }
 
 .sheet-handle-area {
@@ -194,8 +195,7 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
     right: 0;
     bottom: 0;
     height: var(--sheet-expanded);
-    padding: 0;
-    /* Mobile sheet has no padding to escape. */
+    /* Mobile sheet has no padding to escape (zero vars zero the padding too). */
     --tabview-inset-y: 0;
     --tabview-inset-x: 0;
     border-radius: var(--radius-large) var(--radius-large) 0 0;

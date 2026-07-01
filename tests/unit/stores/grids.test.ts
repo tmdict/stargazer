@@ -352,6 +352,37 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(getCharacter(b!.grid, 2)).toBe(ALLY_A)
     expect(a!.grid.getTileById(1).characterId).toBeUndefined()
   })
+
+  it('allows swapping the same hero between its two legal cross-board placements', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(b!.place(41, ALLY_A, Team.ENEMY)).toBe(true)
+
+    // The destination-board exclusion in isUsed exists for exactly this: each
+    // leg's scan would otherwise find the counterpart copy, which is itself
+    // vacating, and false-reject the swap.
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
+
+    expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
+    expect(a!.grid.getTileById(1).team).toBe(Team.ALLY)
+    expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
+    expect(b!.grid.getTileById(41).team).toBe(Team.ENEMY)
+  })
+
+  it('makes the destination board active on a roster drop', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    grids.setActive(0)
+
+    // Roster payload: no sourceGridId/sourceHexId.
+    const payload = { character: {} as CharacterType, characterId: ALLY_A }
+    expect(grids.routeDrop(payload, 1, 2)).toBe(true)
+
+    expect(getCharacter(grids.contexts[1]!.grid, 2)).toBe(ALLY_A)
+    expect(grids.activeId).toBe(1)
+  })
 })
 
 describe('useGrids paragon carry-over', () => {
