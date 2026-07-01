@@ -194,17 +194,18 @@ export const useGrids = defineStore('grids', () => {
 
   // Cross-board move onto an empty cell: remove from the source, place on the
   // target, restore the source if the place fails. Routing-layer validation
-  // (uniqueness, capacity, phantimal faction) ran in canDropCharacter.
+  // (uniqueness, capacity, phantimal faction) ran in canDropCharacter; the moved
+  // id is read from the live cell, the same authority the gate validated.
   const crossGridMove = (
     sourceCtx: GridContext,
     sourceHexId: number,
     targetCtx: GridContext,
     targetHexId: number,
-    characterId: number,
     destTeam: Team,
   ): boolean => {
+    const characterId = getCharacter(sourceCtx.grid, sourceHexId)
     const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
-    if (sourceTeam === undefined) return false
+    if (characterId === undefined || sourceTeam === undefined) return false
     if (!sourceCtx.remove(sourceHexId)) return false
     if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) {
       // Paragon follows the hero to its destination board and team.
@@ -336,10 +337,10 @@ export const useGrids = defineStore('grids', () => {
     return true
   }
 
-  // A move or swap that stays on one board can still change a unit's team, which
-  // risks the same page-wide duplicate as a cross-board transfer: a copy already
-  // on the destination team of another board. Mirrors crossGridMove/crossGridSwap:
-  // each unit is checked against its destination team excluding this board (an
+  // canDropCharacter's same-board leg: a move or swap that stays on one board can
+  // still change a unit's team, which risks the same page-wide duplicate as a
+  // cross-board transfer, a copy already on the destination team of another board.
+  // Each unit is checked against its destination team excluding this board (an
   // on-board conflict is already rejected by the engine's per-grid check), and
   // phantimals are exempt (capped at one per team per board instead).
   const sameBoardDropKeepsUniqueness = (
@@ -477,7 +478,7 @@ export const useGrids = defineStore('grids', () => {
     if (destTeam === null) return false
     const ok = hasCharacter(targetCtx.grid, targetHexId)
       ? crossGridSwap(sourceCtx, sourceHexId, targetCtx, targetHexId)
-      : crossGridMove(sourceCtx, sourceHexId, targetCtx, targetHexId, payload.characterId, destTeam)
+      : crossGridMove(sourceCtx, sourceHexId, targetCtx, targetHexId, destTeam)
     if (ok) activeId.value = targetCtxId
     return ok
   }
@@ -567,7 +568,6 @@ export const useGrids = defineStore('grids', () => {
     findArtifactPlacement,
     isArtifactUsed,
     removeArtifactFromAnyBoard,
-    sameBoardDropKeepsUniqueness,
     canDropCharacter,
     routeDrop,
     canDropArtifact,

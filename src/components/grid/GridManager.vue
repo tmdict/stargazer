@@ -110,7 +110,7 @@ gridEvents.on('hex:click', (hex: Hex) => {
         // uniqueness, like a drag; a violation silently no-ops.
         if (
           characterId !== undefined &&
-          grids.sameBoardDropKeepsUniqueness(ctx.id, liftedHexId.value, hex.getId())
+          grids.canDropCharacter(characterId, ctx.id, liftedHexId.value, ctx.id, hex.getId())
         ) {
           ctx.move(liftedHexId.value, hex.getId(), characterId)
         }
