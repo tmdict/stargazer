@@ -37,7 +37,8 @@ const handleArtifactClick = (artifact: ArtifactType) => {
   const targetCtx =
     targetArtifactGridId.value !== null ? grids.getContext(targetArtifactGridId.value) : undefined
   if (targeted !== null && targetCtx) {
-    if (artifactSlot(targetCtx, targeted) === artifact.id) targetCtx.removeArtifact(targeted)
+    if (artifactSlot(targetCtx.artifacts, targeted) === artifact.id)
+      targetCtx.removeArtifact(targeted)
     // Block a duplicate of an artifact already on this team's slot on another board.
     else if (!grids.isArtifactUsed(artifact.id, targeted))
       targetCtx.setArtifact(targeted, artifact.id)

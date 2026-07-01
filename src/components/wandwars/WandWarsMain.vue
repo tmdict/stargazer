@@ -52,11 +52,7 @@ const activeTab = defineModel<MainTab>('activeTab', { default: 'draft' })
 
 <template>
   <section class="section">
-    <TabView
-      :tabs="tabs"
-      :model-value="activeTab"
-      @update:model-value="activeTab = $event as MainTab"
-    >
+    <TabView v-model="activeTab" :tabs="tabs">
       <template #draft>
         <WandWarsPickSlots
           :pick-state="pickState"

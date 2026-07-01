@@ -4,11 +4,10 @@ import type { GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import type { GridState } from '@/utils/gridStateSerializer'
+import { serializeGridState, type GridState } from '@/utils/gridStateSerializer'
 import {
   decodeGridStateFromUrl,
   encodeGridStateToUrl,
-  generateShareableUrl,
   getEncodedStateFromRoute,
   getEncodedStateFromUrl,
 } from '@/utils/urlStateManager'
@@ -75,30 +74,15 @@ describe('urlStateManager', () => {
     })
   })
 
-  describe('generateShareableUrl', () => {
-    beforeEach(() => {
-      vi.stubGlobal('window', {
-        location: {
-          origin: 'http://localhost:3000',
-          pathname: '/app',
-        },
-      })
-    })
-
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
-    it('generates URL with grid state', () => {
+  describe('serialize + encode round-trip', () => {
+    it('encodes serialized tiles and artifacts', () => {
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
         createMockTile(2, State.OCCUPIED_ENEMY, 200, Team.ENEMY),
       ]
-      const url = generateShareableUrl(tiles, 1, 2)
+      const encoded = encodeGridStateToUrl(serializeGridState(tiles, 1, 2))
 
-      const match = url.match(/\?g=(.+)$/)
-      expect(match).toBeTruthy()
-      const decoded = decodeGridStateFromUrl(match![1])
+      const decoded = decodeGridStateFromUrl(encoded)
       expect(decoded?.c).toHaveLength(2)
       expect(decoded?.a).toEqual([1, 2])
     })
@@ -118,24 +102,10 @@ describe('urlStateManager', () => {
         },
         0b10000,
       ],
-    ])('round-trips display flags through the generated URL (%o)', (displayFlags, expected) => {
-      const url = generateShareableUrl([], null, null, displayFlags)
-      const match = url.match(/\?g=(.+)$/)
-      const decoded = decodeGridStateFromUrl(match![1])
+    ])('round-trips display flags (%o)', (displayFlags, expected) => {
+      const encoded = encodeGridStateToUrl(serializeGridState([], null, null, displayFlags))
+      const decoded = decodeGridStateFromUrl(encoded)
       expect(decoded?.d).toBe(expected)
-    })
-
-    it('uses correct base URL from window.location', () => {
-      vi.stubGlobal('window', {
-        location: {
-          origin: 'https://example.com',
-          pathname: '/game/board',
-        },
-      })
-
-      const tiles: GridTile[] = []
-      const url = generateShareableUrl(tiles, null, null)
-      expect(url).toMatch(/^https:\/\/example\.com\/game\/board\?g=/)
     })
   })
 
@@ -177,19 +147,6 @@ describe('urlStateManager', () => {
   })
 
   describe('Integration tests', () => {
-    beforeEach(() => {
-      vi.stubGlobal('window', {
-        location: {
-          origin: 'http://localhost:3000',
-          pathname: '/',
-        },
-      })
-    })
-
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
     it('complete round-trip: tiles -> URL -> tiles', () => {
       const originalTiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
@@ -204,11 +161,9 @@ describe('urlStateManager', () => {
         showSkills: true,
       }
 
-      const url = generateShareableUrl(originalTiles, 3, 5, displayFlags)
-      const match = url.match(/\?g=(.+)$/)
-      expect(match).toBeTruthy()
+      const encoded = encodeGridStateToUrl(serializeGridState(originalTiles, 3, 5, displayFlags))
 
-      const decoded = decodeGridStateFromUrl(match![1])
+      const decoded = decodeGridStateFromUrl(encoded)
       expect(decoded).not.toBeNull()
       expect(decoded?.t).toHaveLength(3)
       expect(decoded?.c).toHaveLength(2)
@@ -226,11 +181,9 @@ describe('urlStateManager', () => {
         ),
       )
 
-      const url = generateShareableUrl(tiles, 1, 2)
-      const match = url.match(/\?g=(.+)$/)
-      expect(match).toBeTruthy()
+      const encoded = encodeGridStateToUrl(serializeGridState(tiles, 1, 2))
 
-      const decoded = decodeGridStateFromUrl(match![1])
+      const decoded = decodeGridStateFromUrl(encoded)
       expect(decoded).not.toBeNull()
       expect(decoded?.d).toBeUndefined()
       // 66 non-default tiles and 50 characters force the extended header

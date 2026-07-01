@@ -1,56 +1,28 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 
-import { isPhantimalId } from '@/lib/characters/phantimal'
 import type { GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
-import {
-  defaultCanTraverse,
-  findClosestTarget,
-  findPathAStar,
-  getClosestTargetMap,
-} from '@/lib/pathfinding'
+import { defaultCanTraverse, findClosestTarget, findPathAStar } from '@/lib/pathfinding'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from './character'
 import { useGameDataStore } from './gameData'
 import { useGridStore } from './grid'
+import { useGrids } from './grids'
 
 export const usePathfindingStore = defineStore('pathfinding', () => {
   // Store instances created once at store level
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
   const gameDataStore = useGameDataStore()
+  const grids = useGrids()
+  const active = () => grids.active!
 
-  // The static range map is keyed by character id; phantimals carry their range in
-  // their own data, so add an entry for each on-grid phantimal as a targeting source.
-  const buildUnitRanges = (tiles: GridTile[]): Map<number, number> => {
-    const ranges = new Map(gameDataStore.characterRanges)
-    for (const tile of tiles) {
-      if (tile.characterId !== undefined && isPhantimalId(tile.characterId)) {
-        ranges.set(tile.characterId, gameDataStore.getCharacterRange(tile.characterId))
-      }
-    }
-    return ranges
-  }
-
-  // Computed properties memoize these maps: they recompute only when the reactive
-  // grid state they read (placements, tile states, ranges) actually changes.
-  const makeClosestMap = (sourceTeam: Team, targetTeam: Team) =>
-    computed(() => {
-      const tilesWithCharacters = characterStore.getTilesWithCharacters()
-      const characterRanges = buildUnitRanges(tilesWithCharacters)
-      const grid = gridStore._getGrid()
-      return getClosestTargetMap(
-        tilesWithCharacters,
-        sourceTeam,
-        targetTeam,
-        (hex) => grid.getTileOrUndefined(hex),
-        characterRanges,
-      )
-    })
-
-  const closestEnemyMap = makeClosestMap(Team.ALLY, Team.ENEMY)
-  const closestAllyMap = makeClosestMap(Team.ENEMY, Team.ALLY)
+  // Closest-target maps adapt the active board: GridContext owns the per-board
+  // computation (GridArrows reads its own context), and this store serves only
+  // the debug panel.
+  const closestEnemyMap = computed(() => active().closestEnemyMap)
+  const closestAllyMap = computed(() => active().closestAllyMap)
 
   // One direction of the debug visualization: each source character's closest
   // target and the A* path to it

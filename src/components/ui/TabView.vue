@@ -1,32 +1,28 @@
-<script setup lang="ts">
-import { computed, useSlots, watchEffect } from 'vue'
+<script setup lang="ts" generic="T extends string">
+import { useSlots, watchEffect } from 'vue'
 
 import TabList, { type TabItem } from './TabList.vue'
 
-// Slots are named by tab.key; the default slot is the fallback for an unnamed
-// tab (and the whole body when there are no tabs).
+// Slots are named by tab.key; the default slot is the fallback for unnamed tabs.
 const {
-  tabs = [],
+  tabs,
   fill = false,
   eager = false,
 } = defineProps<{
-  tabs?: TabItem[]
+  tabs: TabItem[]
   // Content flex-fills the host and scrolls internally; false = flows at natural height.
   fill?: boolean
   // Keep all panels mounted (v-show) to persist state/scroll; false = active only (v-if).
   eager?: boolean
 }>()
 
-const active = defineModel<string>({ default: '' })
-
-const renderTabs = computed(() => tabs.filter((t) => !t.hidden))
-const hasTabs = computed(() => renderTabs.value.length > 0)
+const active = defineModel<T>({ required: true })
 
 // A renamed/typo'd key would silently render a blank panel; warn in dev.
 const slots = useSlots()
 if (import.meta.env.DEV) {
   watchEffect(() => {
-    for (const tab of renderTabs.value) {
+    for (const tab of tabs) {
       if (!slots[tab.key] && !slots.default) {
         console.warn(`[TabView] no content slot for tab "${tab.key}"`)
       }
@@ -41,23 +37,15 @@ if (import.meta.env.DEV) {
       <template v-if="$slots.actions" #actions><slot name="actions" /></template>
     </TabList>
     <div class="tab-content" :class="{ fill }">
-      <template v-if="hasTabs">
-        <template v-if="eager">
-          <div
-            v-for="tab in renderTabs"
-            v-show="active === tab.key"
-            :key="tab.key"
-            class="tab-pane"
-          >
-            <slot :name="tab.key" :active />
-          </div>
-        </template>
-        <div v-else class="tab-pane">
-          <slot v-if="$slots[active]" :name="active" :active />
-          <slot v-else :active />
+      <template v-if="eager">
+        <div v-for="tab in tabs" v-show="active === tab.key" :key="tab.key" class="tab-pane">
+          <slot :name="tab.key" :active />
         </div>
       </template>
-      <slot v-else />
+      <div v-else class="tab-pane">
+        <slot v-if="$slots[active]" :name="active" :active />
+        <slot v-else :active />
+      </div>
     </div>
   </div>
 </template>
