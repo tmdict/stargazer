@@ -7,12 +7,13 @@ import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { getCharacterTeam, isBaseHeroId } from '@/lib/characters/character'
+import { getCharacter, getCharacterTeam, isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
+import { useGrids } from '@/stores/grids'
 import { phantimalImageUrl } from '@/utils/artifactImage'
 import { invertTeam } from '@/utils/tileStateFormatting'
 
@@ -30,6 +31,7 @@ const props = defineProps<Props>()
 
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
+const grids = useGrids()
 const gridEvents = useGridEvents()
 
 const { startDrag, endDrag } = useDragDrop()
@@ -195,7 +197,15 @@ const handleClick = (hexId: number) => {
       ctx.remove(hexId)
       clearLiftedHex()
     } else if (liftedHexId.value !== null) {
-      ctx.swap(liftedHexId.value, hexId)
+      // Like a drag, a tap-swap that changes teams must keep page-wide character
+      // uniqueness; a violation silently no-ops (the lift is consumed either way).
+      const liftedId = getCharacter(ctx.grid, liftedHexId.value)
+      if (
+        liftedId !== undefined &&
+        grids.canDropCharacter(liftedId, ctx.id, liftedHexId.value, ctx.id, hexId)
+      ) {
+        ctx.swap(liftedHexId.value, hexId)
+      }
       clearLiftedHex()
     } else {
       setLiftedHex(hexId, ctx.id)
