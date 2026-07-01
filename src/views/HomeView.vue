@@ -37,11 +37,13 @@ const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
 
 const gridStore = useGridStore()
 const grids = useGrids()
-// The Arena is the single-board case. Start from a clean single board so it never
-// inherits state left in the shared store by /share or the 5 v 5 page; the saved
-// arena (or a ?g= link) is applied on top below.
+// The Arena is the single-board case. Start from a clean single board and default
+// display globals so it never inherits state left in the shared store by /share
+// or the 5 v 5 page; the saved arena (or a ?g= link) is applied on top below.
 grids.setGridCount(1)
 grids.hexSizeMode = 'breakpoint'
+grids.teamView = false
+grids.inverted = false
 const activeContext = computed(() => grids.active!)
 const gameDataStore = useGameDataStore()
 const i18nStore = useI18nStore()

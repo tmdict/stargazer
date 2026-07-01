@@ -89,9 +89,22 @@ function getIndex(lang: Locale) {
   return indexCache[lang]!
 }
 
-/** Empty query → `null`. ≥1 char → name match. ≥3 chars → +skill names &
- * descriptions. Matches every locale so a hero surfaces regardless of the UI
- * language. Hits per hero capped at 3; results ordered by hit count. */
+/** Slugs whose display name matches the query in any locale: the same name index
+ * the roster search uses, for name-only consumers (the on-grid picker popup). */
+export function matchCharacterNames(query: string): Set<string> {
+  const lc = query.toLowerCase()
+  const slugs = new Set<string>()
+  for (const locale of LOCALES) {
+    for (const e of getIndex(locale).names) {
+      if (e.text.toLowerCase().includes(lc)) slugs.add(e.slug)
+    }
+  }
+  return slugs
+}
+
+/** Empty query → `null`. ≥1 char → name match. ≥3 chars (≥2 for CJK) → +skill
+ * names & descriptions. Matches every locale so a hero surfaces regardless of
+ * the UI language. Hits per hero capped at 3; results ordered by hit count. */
 export function useSkillSearch(
   query: Ref<string>,
   lang: Ref<Locale>,
@@ -136,7 +149,10 @@ export function useSkillSearch(
       }
     }
 
-    if (q.length >= 3) {
+    // CJK packs meaning densely, so two characters are already a specific query;
+    // Latin needs three to avoid flooding on fragments.
+    const deepMinLength = /[一-鿿]/.test(q) ? 2 : 3
+    if (q.length >= deepMinLength) {
       for (const locale of locales) {
         for (const e of getIndex(locale).deep) {
           if (!includesQuery(e.text)) continue

@@ -116,15 +116,10 @@ describe('skill', () => {
         expect(skillManager.getTileColorModifier(1)).toBeUndefined()
       })
 
-      it('does not duplicate the same color on a tile', () => {
+      it('refcounts a color shared by two painters, listing it once and dropping it with the last', () => {
         skillManager.setTileColorModifier(1, '#ff0000')
         skillManager.setTileColorModifier(1, '#ff0000')
         expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
-      })
-
-      it('refcounts a color shared by two painters, dropping it only with the last', () => {
-        skillManager.setTileColorModifier(1, '#ff0000')
-        skillManager.setTileColorModifier(1, '#ff0000')
 
         skillManager.removeTileColorModifier(1, '#ff0000')
         expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])

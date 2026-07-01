@@ -124,6 +124,22 @@ describe('rowScan (diagonal-row scan)', () => {
     ).toBe(6)
   })
 
+  it('mirrors the diagonal-row order for an enemy caster', () => {
+    // Different diagonals (unlike 6/7 above), so this pins the row-axis flip:
+    // an enemy's rear is the high-diagonal end an ally calls its front.
+    placeOnTile(grid, 4, 201, Team.ENEMY) // diagonal row -6: an enemy's front
+    placeOnTile(grid, 16, 202, Team.ENEMY) // diagonal row -2: an enemy's rear
+
+    expect(
+      rowScan(enemy(), { team: Team.ENEMY, rowDirection: REAR, withinRowDirection: REAR })
+        ?.targetHexId,
+    ).toBe(16)
+    expect(
+      rowScan(enemy(), { team: Team.ENEMY, rowDirection: FRONT, withinRowDirection: FRONT })
+        ?.targetHexId,
+    ).toBe(4)
+  })
+
   it('expands to the next ring when the nearest is empty', () => {
     placeOnTile(grid, 1, 101, Team.ALLY) // distance 2
 

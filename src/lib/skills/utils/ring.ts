@@ -190,8 +190,9 @@ export interface RowScanOptions {
  * both the diagonal and hex-id directions flipped when scanning the enemy team.
  *
  * Hex ids increase along the diagonal rows, so when the two directions agree the
- * scan is equivalently a plain hex-id sort; only a mixed pair (e.g. rear rows but
- * the front of each row) needs the diagonal ordering to be explicit.
+ * ordering within each distance ring reduces to a plain hex-id sort (distance
+ * still ranks first); only a mixed pair (e.g. rear rows but the front of each
+ * row) needs the diagonal ordering to be explicit.
  */
 export function rowScan(ctx: SkillContext, options: RowScanOptions): SkillTargetInfo | null {
   const { grid, hexId, characterId } = ctx

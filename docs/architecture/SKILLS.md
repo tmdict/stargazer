@@ -240,7 +240,7 @@ registerSkill(
 
 ### Pattern 4: custom lifecycle (multi-tile zones, etc.)
 
-When no factory fits (multi-tile highlights, companion spawning), pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object, and drive visuals through the SkillManager's `setTileColorModifier`/`setTileFillModifier` (or `paintTiles` for a multi-tile set). Kulu paints its cosmetic demolition zone this way, leaving tile state untouched so the tiles stay placeable:
+When no factory fits (multi-tile highlights, companion spawning), pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object, and drive visuals through the SkillManager's `setTileColorModifier`/`setTileFillModifier` (or `paintTiles` for a multi-tile set). Both paint channels refcount per (tile, color), so independent skills can paint the same color on a shared tile and one skill's cleanup never clears another's; each remove call must still mirror its add. Kulu paints its cosmetic demolition zone this way, leaving tile state untouched so the tiles stay placeable:
 
 ```typescript
 import { registerSkill } from '../registry'

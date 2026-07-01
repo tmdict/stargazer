@@ -1,5 +1,5 @@
 <script setup lang="ts" generic="T extends string">
-import { useSlots, watchEffect } from 'vue'
+import { useId, useSlots, watchEffect } from 'vue'
 
 import TabList, { type TabItem } from './TabList.vue'
 
@@ -18,12 +18,17 @@ const {
 
 const active = defineModel<T>({ required: true })
 
-// A renamed/typo'd key would silently render a blank panel; warn in dev.
+// Links each pane to its TabList button (aria-controls / aria-labelledby).
+const uid = useId()
+
+// Eager renders named slots only, so a renamed/typo'd key is a permanently blank
+// pane; non-eager falls back to the default slot by design (a shared pane), so
+// warn only when that fallback doesn't exist either.
 const slots = useSlots()
 if (import.meta.env.DEV) {
   watchEffect(() => {
     for (const tab of tabs) {
-      if (!slots[tab.key] && !slots.default) {
+      if (!slots[tab.key] && (eager || !slots.default)) {
         console.warn(`[TabView] no content slot for tab "${tab.key}"`)
       }
     }
@@ -33,16 +38,30 @@ if (import.meta.env.DEV) {
 
 <template>
   <div class="tab-view" :class="{ fill }">
-    <TabList v-model="active" :tabs>
+    <TabList v-model="active" :tabs :aria-id="uid">
       <template v-if="$slots.actions" #actions><slot name="actions" /></template>
     </TabList>
     <div class="tab-content" :class="{ fill }">
       <template v-if="eager">
-        <div v-for="tab in tabs" v-show="active === tab.key" :key="tab.key" class="tab-pane">
+        <div
+          v-for="tab in tabs"
+          v-show="active === tab.key"
+          :id="`${uid}-panel-${tab.key}`"
+          :key="tab.key"
+          class="tab-pane"
+          role="tabpanel"
+          :aria-labelledby="`${uid}-tab-${tab.key}`"
+        >
           <slot :name="tab.key" :active />
         </div>
       </template>
-      <div v-else class="tab-pane">
+      <div
+        v-else
+        :id="`${uid}-panel-${active}`"
+        class="tab-pane"
+        role="tabpanel"
+        :aria-labelledby="`${uid}-tab-${active}`"
+      >
         <slot v-if="$slots[active]" :name="active" :active />
         <slot v-else :active />
       </div>
