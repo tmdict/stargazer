@@ -346,7 +346,7 @@ const inputRef = ref<HTMLInputElement | null>(null)
 
 useScrollLock(isOpen)
 
-// The overlay is the topmost layer (it can open above SkillModal via ⌘K), so
+// The overlay is the topmost layer (the shortcut can open it above SkillModal),
 // Escape is handled in capture phase and stopped before any other listener,
 // document-level ones included: one press closes only the overlay, never
 // what sits beneath.
@@ -403,7 +403,7 @@ const onGlobalKeydown = (e: KeyboardEvent) => {
     return
   }
   // Bare `/` only: not while typing elsewhere, and not as part of a browser
-  // chord (⌘+/ etc.).
+  // chord (Ctrl+/ or ⌘+/).
   if (e.key === '/' && !isOpen.value && !e.metaKey && !e.ctrlKey && !e.altKey) {
     const t = e.target
     const typing =
