@@ -165,7 +165,7 @@ onUnmounted(() => {
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
 
-  <!-- ⌘K skill search; renders nothing until opened -->
+  <!-- Global skill search overlay; renders nothing until opened -->
   <SkillSearchOverlay />
 </template>
 

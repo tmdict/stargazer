@@ -24,7 +24,7 @@ const props = defineProps<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-// Text search lives in the ⌘K overlay (SkillSearchOverlay); the panel keeps
+// Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters))
