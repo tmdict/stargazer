@@ -34,7 +34,6 @@ import { STAT_TAG_RE } from '../src/utils/textHighlight.ts'
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
-const CHARACTER_LOCALE_DIR = join(PROJECT_ROOT, 'src', 'locales', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
 
 // Default local source: the sibling afkj-data-viewer checkout, which emits
@@ -135,19 +134,6 @@ async function loadCharacters(): Promise<CharacterListing[]> {
   for (const f of files) {
     const file = JSON.parse(await readFile(join(CHARACTER_DIR, f), 'utf8')) as CharacterFile
     out.push({ slug: basename(f, '.json'), file })
-  }
-  return out
-}
-
-// Curated en/zh hero names, for the feed-divergence warning only.
-async function loadCharacterNames(): Promise<Record<string, Partial<Record<'en' | 'zh', string>>>> {
-  const out: Record<string, Partial<Record<'en' | 'zh', string>>> = {}
-  if (!existsSync(CHARACTER_LOCALE_DIR)) return out
-  const files = (await readdir(CHARACTER_LOCALE_DIR)).filter((f) => f.endsWith('.json'))
-  for (const f of files) {
-    out[basename(f, '.json')] = JSON.parse(
-      await readFile(join(CHARACTER_LOCALE_DIR, f), 'utf8'),
-    ) as Partial<Record<'en' | 'zh', string>>
   }
   return out
 }
@@ -311,7 +297,6 @@ interface RunSummary {
   missingFromFeed: string[] // character file present, no entry in the skill feed (any locale)
   availableNotAdded: string[] // feed entry present, no character file
   orphans: OrphanTag[]
-  nameDivergences: string[] // feed en/zh hero name differs from the curated character locale
   unknownDirs: string[] // locale dirs on disk that are not in SKILL_LOCALES
 }
 
@@ -342,14 +327,12 @@ async function main() {
 
   const characters = await loadCharacters()
   console.log(`import-skills: ${characters.length} character files found`)
-  const characterNames = await loadCharacterNames()
 
   const summary: RunSummary = {
     imported: [],
     missingFromFeed: [],
     availableNotAdded: [],
     orphans: [],
-    nameDivergences: [],
     unknownDirs: [],
   }
 
@@ -374,15 +357,6 @@ async function main() {
     for (const { code } of SKILL_LOCALES) {
       const hero = bulks[code].heroes[slug]
       if (!hero) continue
-      // Drift check for en only: curated zh names intentionally differ from
-      // the feed (nicknames appended, feed titles stripped).
-      if (code === 'en' && hero.name) {
-        const curated = characterNames[slug]?.en
-        const feedName = hero.name.trim()
-        if (curated && curated !== feedName) {
-          summary.nameDivergences.push(`[${slug}] en: feed "${feedName}" vs curated "${curated}"`)
-        }
-      }
       const data = projectLocale(hero, termsByCode[code])
       const slots = SLOT_ORDER.filter((k) => k in data).join(',')
       if (code === 'en') enSlots = slots
@@ -445,11 +419,6 @@ async function main() {
     for (const o of summary.orphans) {
       console.warn(`    - [${o.slug}] tag "${o.tag}" → ${o.attachment}: ${o.reason}`)
     }
-  }
-
-  if (summary.nameDivergences.length > 0) {
-    console.warn(`\n  ${summary.nameDivergences.length} hero name divergence(s) (feed vs curated):`)
-    for (const d of summary.nameDivergences) console.warn(`    - ${d}`)
   }
 
   if (summary.unknownDirs.length > 0) {

@@ -1,4 +1,4 @@
-import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
+import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 import type { SkillLocaleFile, SlotKey } from '@/lib/types/skill'
 import { getSkillFile, loadAppLocales, loadCharacterLocales } from '@/utils/dataLoader'
 
@@ -7,14 +7,13 @@ export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
 }
 
-/** Hero display name in a skill-text language: curated character locales for
- * en/zh, the feed's `_hero.name` elsewhere (falling back to curated en, then
- * the slug). The single copy of this fallback chain, shared by the skill
- * header, search index, and page meta. */
+/** Hero display name in a skill-text language: the feed's `_hero.name` in
+ * every language (falling back to the curated en name, then the slug). The
+ * single copy of this fallback chain, shared by the skill header, search
+ * index, and page meta. Curated character-locale names stay on chrome
+ * surfaces (roster, search-result cards) and as search aliases. */
 export function heroDisplayName(slug: string, lang: SkillLocale): string {
-  const curated = loadCharacterLocales()[slug]
-  if (isAppLocale(lang)) return curated?.[lang] ?? slug
-  return getSkillFile(lang, slug)?._hero?.name ?? curated?.en ?? slug
+  return getSkillFile(lang, slug)?._hero?.name ?? loadCharacterLocales()[slug]?.en ?? slug
 }
 
 // Heading composition per slot. Skill content is feed-sourced end to end:

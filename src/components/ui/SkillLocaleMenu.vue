@@ -2,6 +2,7 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
+import IconGlobe from './IconGlobe.vue'
 import { SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -70,19 +71,7 @@ onUnmounted(() => {
       :aria-expanded="open"
       @click="open = !open"
     >
-      <svg
-        width="16"
-        height="16"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        stroke-width="1.6"
-        aria-hidden="true"
-      >
-        <circle cx="12" cy="12" r="9" />
-        <path d="M3 12h18" />
-        <path d="M12 3c3 3.2 3 14.8 0 18M12 3c-3 3.2-3 14.8 0 18" />
-      </svg>
+      <IconGlobe :size="16" aria-hidden="true" />
       <span class="trigger-label">{{ currentDef?.native ?? current }}</span>
       <span class="trigger-caret" aria-hidden="true">{{ open ? '▴' : '▾' }}</span>
     </button>
