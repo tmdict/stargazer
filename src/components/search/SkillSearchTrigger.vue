@@ -23,7 +23,9 @@ const onClick = () => {
   <button type="button" class="search-trigger" aria-haspopup="dialog" @click="onClick">
     <IconSearch :size="17" class="trigger-icon" />
     <span class="trigger-label">{{ i18n.t('app.skill-search-placeholder') }}</span>
-    <kbd class="trigger-kbd">{{ shortcut }}</kbd>
+    <!-- The keyboard shortcut opens the navigate flavor, so a select-mode
+         trigger must not advertise it. -->
+    <kbd v-if="!select" class="trigger-kbd">{{ shortcut }}</kbd>
   </button>
 </template>
 

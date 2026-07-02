@@ -32,7 +32,7 @@ const grids = useGrids()
 const i18n = useI18nStore()
 const toast = useToast()
 
-// Text search lives in the ⌘K overlay (select mode: a picked hero is placed,
+// Text search lives in the search overlay (select mode: a picked hero is placed,
 // not navigated to); the panel keeps only the icon filters.
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => characters))

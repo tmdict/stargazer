@@ -147,6 +147,13 @@ onUnmounted(() => {
   opacity: 0.8;
 }
 
+/* The globe alone reads as a menu button on mobile. */
+@media (max-width: 768px) {
+  .trigger-caret {
+    display: none;
+  }
+}
+
 .panel {
   position: absolute;
   right: 0;
