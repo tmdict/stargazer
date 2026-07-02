@@ -7,9 +7,9 @@ import type { AppLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { loadCharacters, loadSkillLocales } from '@/utils/dataLoader'
-import { guideEntries, heroName } from '@/utils/guide'
+import { guideEntries } from '@/utils/guide'
 import { taggedSlots } from '@/utils/guideTags'
-import { appLabel, headingFor } from '@/utils/skillLabels'
+import { appLabel, curatedHeroName, headingFor } from '@/utils/skillLabels'
 
 const props = defineProps<{ slug: string; tag: string; lang: AppLocale }>()
 
@@ -20,7 +20,7 @@ const i18n = useI18nStore()
 const skillHref = computed(() => `/${i18n.effectiveSkillLocale}/skill/${props.slug}`)
 
 const character = computed(() => loadCharacters().find((c) => c.name === props.slug))
-const name = computed(() => heroName(props.slug, props.lang))
+const name = computed(() => curatedHeroName(props.slug, props.lang))
 
 // Prose snippet when the hero has a written guide; its per-slot pieces teleport
 // into the anchors below, so each note lands under the skill section it

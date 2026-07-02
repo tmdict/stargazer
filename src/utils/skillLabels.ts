@@ -7,6 +7,20 @@ export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
 }
 
+// Chrome labels for slot chips (search-result cards, the search overlay).
+const SLOT_LABEL_KEY: Record<SlotKey, string> = {
+  ultimate: 'ultimate',
+  skill2: 'skill-2',
+  skill3: 'skill-3',
+  mastery: 'hero-focus',
+  ex: 'ex-skill',
+  awakening: 'enhance-force',
+}
+
+export function slotLabel(slot: SlotKey, lang: AppLocale): string {
+  return appLabel(SLOT_LABEL_KEY[slot], lang)
+}
+
 /** Hero display name in a skill-text language: the feed's `_hero.name` in
  * every language (falling back to the curated en name, then the slug). The
  * single copy of this fallback chain, shared by the skill header, search
@@ -14,6 +28,12 @@ export function appLabel(key: string, lang: AppLocale): string {
  * surfaces (roster, search-result cards) and as search aliases. */
 export function heroDisplayName(slug: string, lang: SkillLocale): string {
   return getSkillFile(lang, slug)?._hero?.name ?? loadCharacterLocales()[slug]?.en ?? slug
+}
+
+/** Curated chrome-locale hero name, for surfaces that speak the app language
+ * (guide panels, search-overlay alt text and recents, result ordering). */
+export function curatedHeroName(slug: string, lang: AppLocale): string {
+  return loadCharacterLocales()[slug]?.[lang] ?? slug
 }
 
 // Heading composition per slot. Skill content is feed-sourced end to end:

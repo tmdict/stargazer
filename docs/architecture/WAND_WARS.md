@@ -898,3 +898,13 @@ Once decay + warm-start are in place:
 - **Don't retrain the NN without warm-starting** unless an architecture change forces it. Random init discards still-valid embedding knowledge.
 - **Don't tune `τ` aggressively without evidence.** Let the drift sensor tell you when decay is too lax; over-decay is harder to detect because it just makes everything sparse and low-confidence.
 - **Don't filter out-of-rotation heroes' historical matches from training.** Their pair/counter data still shapes in-rotation heroes' embeddings.
+
+### Hero Adjustments View
+
+`WandWarsHeroAdjustments.vue` renders the per-mode stat tuning from `src/data/wandwars/hero-buffs.json` (latest patch only) as a heatmap wall: one row per hero with HP / ATK / Phys Def / Magic Def cells plus a Σ total column. Cell fills are binned pastel steps of the site's success teal (buffs) and error red (nerfs), with the value printed in every non-zero cell, so color carries relative magnitude and text carries precision. Three orderings share one grid structure (each mode computes columns of sections of rows):
+
+- **Ranked**: side-by-side columns sorted descending by any stat (click a column header; Σ is the default).
+- **Faction**: banded sections in `FACTION_ORDER`, each with a member count and mean Σ pill.
+- **Profile**: heroes with identical stat vectors collapse into a single ×N row (hover lists members), with one-off tunings after; a typical patch reduces ~87 heroes to ~28 rows.
+
+All modes balance their sections across one to three columns based on the measured panel width (reading order preserved); a section too long for its column splits, with its band or heading repeated on the continuation. Σ = HP + ATK + PhysDef + MagicDef, an equal-weight display index used only for ordering in this view; no prediction model consumes it. The faction filter row composes with all three orderings.

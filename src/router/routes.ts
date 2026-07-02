@@ -1,4 +1,4 @@
-import type { RouteLocationNormalized, RouteRecordRaw } from 'vue-router'
+import type { RouteLocationNormalized, RouteRecordRaw, RouterScrollBehavior } from 'vue-router'
 
 import { SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
@@ -42,6 +42,18 @@ export async function warmSkillLocale(
       return false
     }
   }
+}
+
+// Back/forward restores the reader's position (providing scrollBehavior at
+// all flips history.scrollRestoration to manual, so the saved position must
+// win even on hash-bearing URLs); fresh hash links (search-overlay deep
+// links to a skill section) scroll to their anchor. Everything else is left
+// alone, so hero-to-hero roster browsing keeps the current scroll as before.
+// Shared by both entries like the routes and the warm-up guard.
+export const scrollBehavior: RouterScrollBehavior = (to, _from, savedPosition) => {
+  if (savedPosition) return savedPosition
+  if (to.hash) return { el: to.hash }
+  return false
 }
 
 export const routes: RouteRecordRaw[] = [

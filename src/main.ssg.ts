@@ -3,7 +3,7 @@ import { ViteSSG } from 'vite-ssg'
 
 import App from './App.vue'
 import { vScrollChain } from '@/directives/scrollChain'
-import { routes, warmSkillLocale } from '@/router/routes'
+import { routes, scrollBehavior, warmSkillLocale } from '@/router/routes'
 
 import './styles/base.css'
 import './styles/variables.css'
@@ -20,7 +20,7 @@ import './styles/variables.css'
  * Chrome locale comes from the en/zh URL prefix (App.vue store sync); skill
  * pages read their text locale from the :textLocale route param.
  */
-export const createApp = ViteSSG(App, { routes }, async ({ app, router }) => {
+export const createApp = ViteSSG(App, { routes, scrollBehavior }, async ({ app, router }) => {
   app.use(createPinia())
   app.directive('scroll-chain', vScrollChain)
   // Awaited by each pre-render's navigation, so baked pages carry real text.
