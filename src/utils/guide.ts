@@ -1,7 +1,6 @@
 import type { Component } from 'vue'
 
 import type { AppLocale } from '@/lib/types/i18n'
-import { loadCharacterLocales } from '@/utils/dataLoader'
 
 export interface GuideEntry {
   slug: string
@@ -46,8 +45,4 @@ export function guideEntries(): GuideEntry[] {
   }
   cache = Object.values(bySlug).sort((a, b) => a.slug.localeCompare(b.slug))
   return cache
-}
-
-export function heroName(slug: string, lang: AppLocale): string {
-  return loadCharacterLocales()[slug]?.[lang] ?? slug
 }
