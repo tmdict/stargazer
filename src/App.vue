@@ -85,8 +85,6 @@ onUnmounted(() => {
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
       </RouterLink>
 
-      <!-- Leads the right-side cluster; on mobile it collapses to an icon and
-           joins the utility row. -->
       <HeaderSearchTrigger class="nav-search" />
 
       <div class="nav-tabs">
@@ -284,9 +282,16 @@ nav ul li {
 
   .menu {
     order: 1;
-    /* .nav-search ahead of the cluster carries the auto push here too. */
     margin-left: 1rem;
     gap: 1rem;
+  }
+
+  /* This row centers vertically: neutralize base.css's prose li metrics
+     (4px top margin + a 1.6 line-height strut), which otherwise sink the
+     utility icons a few px below the search icon's center. */
+  .menu li {
+    margin: 0;
+    display: flex;
   }
 
   .nav-tabs {
