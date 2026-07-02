@@ -25,10 +25,11 @@ const shortcut = useShortcutLabel()
 </template>
 
 <style scoped>
-/* Dressed in the header's own component language (nav-pill surface, gold
-   hover); the overlay's teal stays the identity of the opened panel. The
-   nav-cluster push (margin-left: auto) lives on App.vue's .nav-search class,
-   with the rest of the header's layout. */
+/* Wide headers only: App.vue swaps this pill for a plain utility-cluster
+   icon below 921px (see .nav-search / .menu-search there, which also own
+   the nav push). Dressed in the header's own component language (nav-pill
+   surface, gold hover); the overlay's teal stays the identity of the opened
+   panel. */
 .header-search {
   display: flex;
   align-items: center;
@@ -82,53 +83,6 @@ const shortcut = useShortcutLabel()
 
 /* Shortcut chips mean nothing on touch devices. */
 @media (hover: none) {
-  .search-kbd {
-    display: none;
-  }
-}
-
-/* Narrow desktop: the full pill pushes the header's natural width past the
-   viewport (~836px with en labels), wrapping the utility icons onto a stray
-   second row. Collapse to an icon-only pill until there is room. The label
-   goes zero-width rather than display: none: its line box is what makes the
-   pill the same height as the .nav-text-link neighbors (same font metrics),
-   so it keeps setting the height while contributing no width. */
-@media (min-width: 769px) and (max-width: 920px) {
-  .header-search {
-    gap: 0;
-  }
-
-  .search-label {
-    width: 0;
-    overflow: hidden;
-  }
-
-  .search-kbd {
-    display: none;
-  }
-}
-
-/* ≤768px the header reflows to logo + icons over a segmented tab strip with
-   no room for a pill: collapse to an icon matching the utility cluster. */
-@media (max-width: 768px) {
-  .header-search {
-    margin-bottom: 0;
-    padding: 0;
-    background: none;
-    color: #ddd;
-  }
-
-  .header-search:hover {
-    background: none;
-    color: #f7d87c;
-  }
-
-  .search-icon {
-    width: 21px;
-    height: 21px;
-  }
-
-  .search-label,
   .search-kbd {
     display: none;
   }
