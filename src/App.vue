@@ -42,6 +42,7 @@ watch(
 // (the post-mount swap updates text and link hrefs alike). Prefixed routes are
 // language-pinned by the path via the watcher above.
 onMounted(() => {
+  i18n.initializeSkillLocale()
   if (!splitLocalePath(window.location.pathname).locale) {
     i18n.initializeLocale()
   }
@@ -67,7 +68,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <header>
+  <!-- Chrome renders in the app locale even when the page's html lang is a
+       skill-text locale (content owns <html lang> on skill routes); the
+       explicit lang keeps screen readers and the browser's per-language font
+       fallback on the chrome language. -->
+  <header :lang="i18n.currentLocale">
     <nav>
       <RouterLink
         to="/"

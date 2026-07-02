@@ -5,7 +5,7 @@ import IconClose from '@/components/ui/IconClose.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import { useOverlay } from '@/composables/useOverlay'
 import { useScrollLock } from '@/composables/useScrollLock'
-import type { Locale } from '@/lib/types/i18n'
+import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
 import '@/styles/modal.css'
@@ -17,7 +17,7 @@ interface Props {
   // Hero slug for the permalink button; omit to hide the button (e.g. the
   // about modal, which has no standalone page).
   linkParam?: string
-  localeOverride?: Locale
+  localeOverride?: SkillLocale
   // Anchor to viewport top instead of centering. Use when content height can
   // change at runtime so the top edge stays put.
   topAnchor?: boolean

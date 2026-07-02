@@ -1,29 +1,41 @@
 <script setup lang="ts">
-import { computed, defineAsyncComponent, provide, ref, type Component } from 'vue'
+import { computed, defineAsyncComponent, inject, provide, ref, type Component } from 'vue'
 
 import SkillSection from './SkillSection.vue'
+import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useSkillTags } from '@/composables/useSkillTags'
 import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
-import type { Locale } from '@/lib/types/i18n'
+import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER } from '@/lib/types/skill'
-import { setupSkillContentMeta } from '@/utils/contentMeta'
-import { loadCharacterLocales, loadSkillLocales } from '@/utils/dataLoader'
+import { useI18nStore } from '@/stores/i18n'
+import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
+import { getSkillFile } from '@/utils/dataLoader'
 import { formatToCamelCase } from '@/utils/nameFormatting'
-import { appLabel, headingFor } from '@/utils/skillLabels'
+import { appLabel, headingFor, heroDisplayName } from '@/utils/skillLabels'
 import { SkillLangKey } from './snippetKeys'
 
 const props = defineProps<{
   slug: string
-  lang: Locale
+  // Skill-text language for the body text and hero name; slot/chip labels
+  // render in the chrome locale (the store).
+  lang: SkillLocale
   initialChip?: string | null
 }>()
 
 setupSkillContentMeta(props.slug, props.lang)
 
-const locale = computed(() => loadSkillLocales()[props.lang][props.slug])
+const i18n = useI18nStore()
+const appLang = computed<AppLocale>(() => i18n.currentLocale)
+const inModal = inject(ContentInModalKey, false)
+
+// The locale is warm before mount (route guard on pages, ready gate in the
+// modal); the en fallback covers a failed chunk fetch on a cold initial load.
+const locale = computed(
+  () => getSkillFile(props.lang, props.slug) ?? getSkillFile('en', props.slug),
+)
 const { perLevel, perCharacter } = useSkillTags(props.slug)
 
-const heroName = computed(() => loadCharacterLocales()[props.slug]?.[props.lang] ?? props.slug)
+const heroName = computed(() => heroDisplayName(props.slug, props.lang))
 
 const activeChips = ref<Set<string>>(new Set(props.initialChip ? [props.initialChip] : []))
 
@@ -56,7 +68,7 @@ const sections = computed(() => {
     const slotTagsSet = new Set<string>()
     for (const l of rawLevels) for (const t of l.rawTags) slotTagsSet.add(t)
     // Keep the raw tag name (for the browser filter link) next to its label.
-    const slotTags = [...slotTagsSet].map((t) => ({ name: t, label: appLabel(t, props.lang) }))
+    const slotTags = [...slotTagsSet].map((t) => ({ name: t, label: appLabel(t, appLang.value) }))
     const levels = rawLevels
       .filter((l) => filter.size === 0 || l.rawTags.some((t) => filter.has(t)))
       .map((l) => ({ level: l.level, description: l.description }))
@@ -67,7 +79,7 @@ const sections = computed(() => {
     if (levels.length === 0 && refinements.length === 0) return null
     return {
       slotKey,
-      heading: headingFor(slotKey, slot.n, props.lang),
+      heading: headingFor(slotKey, slot.n, appLang.value, locale.value!._terms),
       slotTags,
       levels,
       refinements,
@@ -76,27 +88,53 @@ const sections = computed(() => {
 })
 
 const anchors = useSnippetAnchors()
-provide(
-  SkillLangKey,
-  computed(() => props.lang),
-)
 
 // Optional per-hero snippet at src/content/skill/<slug>/<HeroName>.<lang>.vue.
+// Deep-dive essays exist only in the app locales: the text locale wins when
+// it is one, otherwise the chrome locale's essay renders under the foreign
+// text (same fallback rule as the rest of the chrome).
 const snippetModules = import.meta.glob<{ default: Component }>('@/content/skill/*/*.vue')
+const snippetPath = (l: AppLocale) =>
+  `/src/content/skill/${props.slug}/${formatToCamelCase(props.slug)}.${l}.vue`
+const snippetLocale = computed<AppLocale | null>(() => {
+  const candidates: AppLocale[] = []
+  if (isAppLocale(props.lang)) candidates.push(props.lang)
+  if (!candidates.includes(appLang.value)) candidates.push(appLang.value)
+  if (!candidates.includes('en')) candidates.push('en')
+  return candidates.find((l) => snippetPath(l) in snippetModules) ?? null
+})
 const snippetComp = computed(() => {
-  const heroName = formatToCamelCase(props.slug)
-  const target = `/src/content/skill/${props.slug}/${heroName}.${props.lang}.vue`
-  const loader = snippetModules[target]
+  const l = snippetLocale.value
+  if (!l) return null
+  const loader = snippetModules[snippetPath(l)]
   if (!loader) return null
   return defineAsyncComponent(async () => (await loader()).default)
 })
+
+// Snippets resolve their strings from app locales, so they receive the locale
+// of the essay actually rendered.
+provide(
+  SkillLangKey,
+  computed(() => snippetLocale.value ?? appLang.value),
+)
 </script>
 
 <template>
   <div v-if="!locale" class="skill-empty">No skill data available for this character.</div>
   <article v-else class="skill-sections">
     <div class="skill-header" :class="{ resettable: activeChips.size > 0 }" @click="clearChips">
-      <h1 class="skill-hero-name">{{ heroName }}</h1>
+      <div class="skill-title-row">
+        <h1 class="skill-hero-name">{{ heroName }}</h1>
+        <!-- Page-only: the modal hosts its own globe in the header cluster. -->
+        <SkillLocaleMenu
+          v-if="!inModal"
+          class="skill-locale-menu"
+          mode="links"
+          :current="lang"
+          :slug
+          @click.stop
+        />
+      </div>
 
       <div v-if="perCharacter.length > 0" class="skill-chips">
         <button
@@ -107,7 +145,7 @@ const snippetComp = computed(() => {
           :class="{ 'is-active': activeChips.has(tag) }"
           @click.stop="toggleChip(tag)"
         >
-          {{ appLabel(tag, lang) }}
+          {{ appLabel(tag, appLang) }}
         </button>
       </div>
     </div>
@@ -140,6 +178,16 @@ const snippetComp = computed(() => {
   opacity: 0.6;
 }
 
+.skill-title-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-md);
+}
+
+.skill-locale-menu {
+  margin-left: auto;
+}
+
 .skill-hero-name {
   margin: 0 0 var(--spacing-md);
   font-size: 24px;
@@ -166,9 +214,9 @@ const snippetComp = computed(() => {
 .skill-chip {
   padding: 4px 12px;
   border-radius: 999px;
-  border: 1px solid rgba(95, 196, 187, 0.4);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
   background: transparent;
-  color: #5fc4bb;
+  color: var(--color-accent);
   font-size: 12px;
   line-height: 1.4;
   cursor: pointer;
@@ -178,13 +226,13 @@ const snippetComp = computed(() => {
 }
 
 .skill-chip:hover {
-  background: rgba(95, 196, 187, 0.1);
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
 }
 
 .skill-chip.is-active {
-  background: #3a8a83;
+  background: var(--color-accent-active);
   color: #fff;
-  border-color: #3a8a83;
+  border-color: var(--color-accent-active);
 }
 
 .skill-snippet-anchor {

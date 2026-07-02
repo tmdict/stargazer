@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import IconLocaleEn from './IconLocaleEn.vue'
 import IconLocaleZh from './IconLocaleZh.vue'
-import type { Locale } from '@/lib/types/i18n'
+import type { AppLocale } from '@/lib/types/i18n'
 
-// Modal header en/中 toggle, shared by the skill/artifact/phantimal modals.
-const locale = defineModel<Locale>({ required: true })
+// Modal header en/中 toggle, shared by the artifact/phantimal modals (the
+// skill modal uses the SkillLocaleMenu globe instead).
+const locale = defineModel<AppLocale>({ required: true })
 
 const toggle = () => {
   locale.value = locale.value === 'en' ? 'zh' : 'en'

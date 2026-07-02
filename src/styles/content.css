@@ -71,7 +71,7 @@
 }
 
 .content a {
-  color: #5fc4bb;
+  color: var(--color-accent);
   text-decoration: none;
   font-weight: 500;
   transition: color 0.2s ease;
@@ -87,7 +87,7 @@
 }
 
 .content .skill-highlight {
-  color: #5fc4bb;
+  color: var(--color-accent);
 }
 
 .content .skill-stat-tag {

@@ -3,16 +3,21 @@ import { computed } from 'vue'
 
 import SkillSection from '@/components/skill/SkillSection.vue'
 import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
-import type { Locale } from '@/lib/types/i18n'
+import type { AppLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { loadCharacters, loadSkillLocales } from '@/utils/dataLoader'
 import { guideEntries, heroName } from '@/utils/guide'
 import { taggedSlots } from '@/utils/guideTags'
 import { appLabel, headingFor } from '@/utils/skillLabels'
 
-const props = defineProps<{ slug: string; tag: string; lang: Locale }>()
+const props = defineProps<{ slug: string; tag: string; lang: AppLocale }>()
 
 const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
+
+// Entry into a skill page starts the reader in the saved skill-text language.
+const skillHref = computed(() => `/${i18n.effectiveSkillLocale}/skill/${props.slug}`)
 
 const character = computed(() => loadCharacters().find((c) => c.name === props.slug))
 const name = computed(() => heroName(props.slug, props.lang))
@@ -45,7 +50,7 @@ const sections = computed(() => {
       if (!slot) return null
       return {
         slotKey,
-        heading: headingFor(slotKey, slot.n, props.lang),
+        heading: headingFor(slotKey, slot.n, props.lang, file._terms),
         levels: slot.d.map((description, i) => ({ level: i + 1, description })),
         highlightLevels,
       }
@@ -62,7 +67,7 @@ const anchors = useSnippetAnchors()
   <div class="char-panel">
     <div class="char-panel-head">
       <h3 class="char-panel-name">{{ name }}</h3>
-      <a :href="`/${lang}/skill/${slug}`" class="char-panel-go">{{ appLabel('skills', lang) }}</a>
+      <a :href="skillHref" class="char-panel-go">{{ appLabel('skills', lang) }}</a>
     </div>
 
     <div v-if="isEnergyTag" class="char-energy">
@@ -116,17 +121,17 @@ const anchors = useSnippetAnchors()
   margin-left: auto;
   font-size: 0.78rem;
   font-weight: 600;
-  color: #5fc4bb;
+  color: var(--color-accent);
   text-decoration: none;
   white-space: nowrap;
   padding: 0.25rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(95, 196, 187, 0.4);
+  border: 1px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
   transition: background-color 0.15s;
 }
 .char-panel-go:hover {
-  background: rgba(95, 196, 187, 0.1);
-  color: #5fc4bb;
+  background: color-mix(in srgb, var(--color-accent) 10%, transparent);
+  color: var(--color-accent);
   text-decoration: none;
 }
 

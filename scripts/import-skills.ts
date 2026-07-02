@@ -1,15 +1,17 @@
 // Skill data importer.
 //
 // Character files are the source of truth for which heroes exist. This script
-// reads N per-locale skill-data feeds (one per language we render), and writes
-// per-language locale files at `src/locales/skill/{en,zh}/<slug>.json`.
+// reads one per-locale skill-data feed for every language in SKILL_LOCALES and
+// writes per-language locale files at `src/locales/skill/<code>/<slug>.json`,
+// plus (for non-en/zh locales) a per-dir `index.ts` chunk module that the app
+// dynamically imports as one lazy chunk per language.
 //
 // Read-only against character files. The only write target is the locale dir.
 //
 // Usage:
-//   npm run import:skills                          # reads from DEFAULT_SOURCE/<lang>/skills.json
-//   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<lang>/skills.json
-//   npm run import:skills -- --url-base <URL>      # remote: <URL>/<lang>/skills.json
+//   npm run import:skills                          # reads from DEFAULT_SOURCE/<feed>/skills.json
+//   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<feed>/skills.json
+//   npm run import:skills -- --url-base <URL>      # remote: <URL>/<feed>/skills.json
 
 import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
@@ -17,6 +19,7 @@ import { resolve, join, dirname, basename } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { argv } from 'node:process'
 
+import { isAppLocale, SKILL_LOCALES, type SkillLocale } from '../src/lib/types/i18n.ts'
 import {
   SLOT_ORDER,
   type SlotKey,
@@ -26,22 +29,16 @@ import {
 } from '../src/lib/types/skill.ts'
 import { STAT_TAG_RE } from '../src/utils/textHighlight.ts'
 
-// ---------- locales we render ----------
-
-// Languages Stargazer's UI ships. Add to extend — the per-locale feed
-// schema is identical, no other importer changes needed.
-const LOCALES = ['en', 'zh'] as const
-type Locale = (typeof LOCALES)[number]
-
 // ---------- paths ----------
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
+const CHARACTER_LOCALE_DIR = join(PROJECT_ROOT, 'src', 'locales', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
 
 // Default local source: the sibling afkj-data-viewer checkout, which emits
-// `static/api/<locale>/skills.json`. Resolved against this repo root so it
+// `static/api/<feed>/skills.json`. Resolved against this repo root so it
 // holds regardless of CWD as long as the two repos are siblings. Override at
 // runtime with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
 const DEFAULT_SRC_DIR = '../afkj-data-viewer/static/api'
@@ -74,9 +71,16 @@ interface HeroEntry {
 }
 
 interface SkillsBulk {
-  _meta: { generatedAt: string; locale: string; heroCount: number }
+  _meta: {
+    generatedAt: string
+    locale: string
+    heroCount: number
+    terms?: { ultimate: string; exclusiveEquipment: string }
+  }
   heroes: Record<string, HeroEntry>
 }
+
+type SlotTerms = NonNullable<SkillLocaleFile['_terms']>
 
 type LocaleFile = SkillLocaleFile
 
@@ -93,20 +97,20 @@ const SRC_DIR_FLAG = arg('src-dir')
 
 // ---------- io helpers ----------
 
-async function loadSkillsBulk(lang: Locale): Promise<SkillsBulk> {
+async function loadSkillsBulk(feed: string): Promise<SkillsBulk> {
   if (URL_BASE_FLAG) {
-    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${lang}/skills.json`
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/${feed}/skills.json`
     console.log(`import-skills: fetching ${url}`)
     const res = await fetch(url)
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as SkillsBulk
   }
   const base = SRC_DIR_FLAG ? resolve(SRC_DIR_FLAG) : join(PROJECT_ROOT, DEFAULT_SRC_DIR)
-  const path = join(base, lang, 'skills.json')
+  const path = join(base, feed, 'skills.json')
   if (!existsSync(path)) {
     throw new Error(
       `skill data feed not found at ${path}\n` +
-        `  Place the per-locale skill JSON under <src-dir>/<locale>/skills.json,\n` +
+        `  Place the per-locale skill JSON under <src-dir>/<feed>/skills.json,\n` +
         `  or pass --src-dir <PATH> / --url-base <URL>.`,
     )
   }
@@ -135,10 +139,22 @@ async function loadCharacters(): Promise<CharacterListing[]> {
   return out
 }
 
-// Write only when content differs so re-runs produce no git diff.
-// Compact (no indent) — these files are auto-managed, not hand-read.
-async function writeJsonIfChanged(path: string, value: unknown): Promise<boolean> {
-  const next = JSON.stringify(value) + '\n'
+// Curated en/zh hero names, for the feed-divergence warning only.
+async function loadCharacterNames(): Promise<Record<string, Partial<Record<'en' | 'zh', string>>>> {
+  const out: Record<string, Partial<Record<'en' | 'zh', string>>> = {}
+  if (!existsSync(CHARACTER_LOCALE_DIR)) return out
+  const files = (await readdir(CHARACTER_LOCALE_DIR)).filter((f) => f.endsWith('.json'))
+  for (const f of files) {
+    out[basename(f, '.json')] = JSON.parse(
+      await readFile(join(CHARACTER_LOCALE_DIR, f), 'utf8'),
+    ) as Partial<Record<'en' | 'zh', string>>
+  }
+  return out
+}
+
+// Write only when content differs so re-runs produce no git diff. Compact,
+// auto-managed output; the dir is prettier-ignored so this stays stable.
+async function writeTextIfChanged(path: string, next: string): Promise<boolean> {
   if (existsSync(path)) {
     const prev = await readFile(path, 'utf8')
     if (prev === next) return false
@@ -148,12 +164,11 @@ async function writeJsonIfChanged(path: string, value: unknown): Promise<boolean
   return true
 }
 
-// ---------- projection ----------
+async function writeJsonIfChanged(path: string, value: unknown): Promise<boolean> {
+  return writeTextIfChanged(path, JSON.stringify(value) + '\n')
+}
 
-// Slots whose name is invariant across all heroes — the renderer reads these
-// from app locales (`hero-focus.json` / `enhance-force.json`) instead of
-// repeating the same string in every per-hero locale file.
-const NAME_INVARIANT_SLOTS = new Set<SlotKey>(['mastery', 'awakening'])
+// ---------- projection ----------
 
 // Reorder adjacent <STAT>[[value]] pairs to [[value]]<STAT>, which reads more
 // naturally in both EN and ZH ("40% of ATK" rather than "ATK 40%"). Standalone
@@ -177,8 +192,12 @@ function cleanDescription(text: string): string {
   return reorderStatValuePairs(stripSpriteTags(text))
 }
 
-function projectLocale(hero: HeroEntry): LocaleFile {
+function projectLocale(hero: HeroEntry, terms: SlotTerms): LocaleFile {
   const out: LocaleFile = {}
+  // Trimmed: the feed carries stray whitespace on some names.
+  const heroName = hero.name?.trim()
+  if (heroName) out._hero = { name: heroName }
+  out._terms = terms
   for (const slotKey of SLOT_ORDER) {
     const slot = hero.skills[slotKey]
     if (!slot) continue
@@ -190,16 +209,54 @@ function projectLocale(hero: HeroEntry): LocaleFile {
       .filter((r): r is { tier: number; description: string } => r.description != null)
       .map((r) => ({ t: r.tier, d: cleanDescription(r.description) }))
     if (descriptions.length === 0 && refinements.length === 0) continue
-    const entry: NonNullable<LocaleFile[typeof slotKey]> = NAME_INVARIANT_SLOTS.has(slotKey)
-      ? { d: descriptions }
-      : { n: slot.name, d: descriptions }
+    const entry: NonNullable<LocaleFile[typeof slotKey]> = { n: slot.name, d: descriptions }
     if (refinements.length > 0) entry.r = refinements
     out[slotKey] = entry
   }
   return out
 }
 
-// ---------- validation: orphan tag attachments ----------
+// One lazy chunk per non-app locale: the eager same-dir glob inlines every
+// JSON in the dir into the module's chunk, so `import('…/<lang>/index.ts')`
+// fetches the whole language at once (shared by skill pages and search).
+const CHUNK_MODULE_SOURCE = `// Auto-generated by scripts/import-skills.ts; do not edit.
+// Importing this module loads every skill locale file in this directory as
+// one chunk; see loadSkillLocale() in src/utils/dataLoader.ts.
+import type { SkillLocaleFile } from '../../../lib/types/skill'
+
+const modules = import.meta.glob<SkillLocaleFile>('./*.json', {
+  eager: true,
+  import: 'default',
+})
+
+const dict: Record<string, SkillLocaleFile> = {}
+for (const [path, file] of Object.entries(modules)) {
+  dict[path.slice(2, -'.json'.length)] = file
+}
+
+export default dict
+`
+
+// ---------- validation ----------
+
+// Every locale must cover exactly the en hero set: the app treats coverage as
+// uniform (hasSkillLocale answers from en presence; hreflang emits all
+// languages per hero), so drift here must stop the import, not degrade
+// silently at runtime.
+function assertUniformCoverage(bulks: Record<SkillLocale, SkillsBulk>): void {
+  const enSlugs = new Set(Object.keys(bulks.en.heroes))
+  const problems: string[] = []
+  for (const { code } of SKILL_LOCALES) {
+    const slugs = Object.keys(bulks[code].heroes)
+    const missing = [...enSlugs].filter((s) => !(s in bulks[code].heroes))
+    const extra = slugs.filter((s) => !enSlugs.has(s))
+    if (missing.length > 0) problems.push(`  [${code}] missing: ${missing.join(', ')}`)
+    if (extra.length > 0) problems.push(`  [${code}] extra: ${extra.join(', ')}`)
+  }
+  if (problems.length > 0) {
+    throw new Error(`feed coverage is not uniform across locales:\n${problems.join('\n')}`)
+  }
+}
 
 interface OrphanTag {
   slug: string
@@ -215,7 +272,7 @@ function validateTagAttachments(slug: string, char: CharacterFile, hero: HeroEnt
     if (!Array.isArray(attachments)) continue
     for (const att of attachments) {
       const entries = Object.entries(att)
-      if (entries.length === 0) continue // explicit character-level — always valid
+      if (entries.length === 0) continue // explicit character-level: always valid
       for (const [slotKey, level] of entries) {
         const slot = hero.skills[slotKey as SlotKey]
         if (!slot) {
@@ -254,31 +311,54 @@ interface RunSummary {
   missingFromFeed: string[] // character file present, no entry in the skill feed (any locale)
   availableNotAdded: string[] // feed entry present, no character file
   orphans: OrphanTag[]
+  nameDivergences: string[] // feed en/zh hero name differs from the curated character locale
+  unknownDirs: string[] // locale dirs on disk that are not in SKILL_LOCALES
 }
 
 async function main() {
   const t0 = Date.now()
 
   // Load one bulk per locale. Tag-attachment validation is locale-agnostic
-  // (kits are language-independent), so we validate against the EN bulk and
-  // assume slot shapes match across languages. The producer's per-hero slug
-  // is EN-derived, so all per-locale bulks share the same slug set.
-  const bulks: Record<Locale, SkillsBulk> = {} as Record<Locale, SkillsBulk>
-  for (const lang of LOCALES) bulks[lang] = await loadSkillsBulk(lang)
-  const heroCount = Object.keys(bulks[LOCALES[0]].heroes).length
+  // (kits are language-independent), so we validate against the EN bulk. The
+  // producer's per-hero slug is EN-derived; assertUniformCoverage guarantees
+  // all per-locale bulks share the same slug set.
+  const bulks = {} as Record<SkillLocale, SkillsBulk>
+  for (const { feed, code } of SKILL_LOCALES) bulks[code] = await loadSkillsBulk(feed)
+  assertUniformCoverage(bulks)
+
+  // Official slot-type labels per locale, stamped into every written file so
+  // skill headings render entirely from game data. Their absence means the
+  // feed predates the producer's terms export.
+  const termsByCode = {} as Record<SkillLocale, SlotTerms>
+  for (const { code } of SKILL_LOCALES) {
+    const terms = bulks[code]._meta.terms
+    if (!terms?.ultimate || !terms?.exclusiveEquipment) {
+      throw new Error(`[${code}] feed lacks _meta.terms; re-run the producer's build:data export`)
+    }
+    termsByCode[code] = { ultimate: terms.ultimate, ex: terms.exclusiveEquipment }
+  }
+  const heroCount = Object.keys(bulks.en.heroes).length
   console.log(`import-skills: bulks have ${heroCount} heroes (per locale)`)
 
   const characters = await loadCharacters()
   console.log(`import-skills: ${characters.length} character files found`)
+  const characterNames = await loadCharacterNames()
 
   const summary: RunSummary = {
     imported: [],
     missingFromFeed: [],
     availableNotAdded: [],
     orphans: [],
+    nameDivergences: [],
+    unknownDirs: [],
   }
 
   const knownSlugs = new Set(characters.map((c) => c.slug))
+
+  // Slot-level drift (a language's feed carrying no content for a slot en
+  // has) would silently render pages missing a section; fail like the
+  // hero-set assertion does.
+  const slotMismatches: string[] = []
 
   for (const { slug, file } of characters) {
     const enHero = bulks.en.heroes[slug]
@@ -290,11 +370,26 @@ async function main() {
 
     let written = 0
     let unchanged = 0
-    for (const lang of LOCALES) {
-      const hero = bulks[lang].heroes[slug]
+    let enSlots: string | null = null
+    for (const { code } of SKILL_LOCALES) {
+      const hero = bulks[code].heroes[slug]
       if (!hero) continue
-      const data = projectLocale(hero)
-      const path = join(LOCALES_DIR, lang, `${slug}.json`)
+      // Drift check for en only: curated zh names intentionally differ from
+      // the feed (nicknames appended, feed titles stripped).
+      if (code === 'en' && hero.name) {
+        const curated = characterNames[slug]?.en
+        const feedName = hero.name.trim()
+        if (curated && curated !== feedName) {
+          summary.nameDivergences.push(`[${slug}] en: feed "${feedName}" vs curated "${curated}"`)
+        }
+      }
+      const data = projectLocale(hero, termsByCode[code])
+      const slots = SLOT_ORDER.filter((k) => k in data).join(',')
+      if (code === 'en') enSlots = slots
+      else if (slots !== enSlots) {
+        slotMismatches.push(`[${slug}] ${code}: slots (${slots}) differ from en (${enSlots})`)
+      }
+      const path = join(LOCALES_DIR, code, `${slug}.json`)
       const changed = await writeJsonIfChanged(path, data)
       if (changed) written++
       else unchanged++
@@ -302,9 +397,29 @@ async function main() {
     summary.imported.push({ slug, written, unchanged })
   }
 
-  // Discovery hint — heroes that the producer publishes but Stargazer hasn't
-  // added a character/ entry for yet. Reported off the EN bulk; the slug set
-  // is the same across locales.
+  if (slotMismatches.length > 0) {
+    throw new Error(`feed slot coverage is not uniform across locales:\n  ${slotMismatches.join('\n  ')}`)
+  }
+
+  // Chunk modules for the non-app locales (en/zh are eagerly bundled; a chunk
+  // there would ship the same JSON twice).
+  let chunksWritten = 0
+  for (const { code } of SKILL_LOCALES) {
+    if (isAppLocale(code)) continue
+    if (await writeTextIfChanged(join(LOCALES_DIR, code, 'index.ts'), CHUNK_MODULE_SOURCE)) {
+      chunksWritten++
+    }
+  }
+
+  // A dir not in the table is a removed (or misnamed) language: it would still
+  // be globbed by the app, so flag it for deletion.
+  const validDirs = new Set<string>(SKILL_LOCALES.map((l) => l.code))
+  for (const entry of await readdir(LOCALES_DIR, { withFileTypes: true })) {
+    if (entry.isDirectory() && !validDirs.has(entry.name)) summary.unknownDirs.push(entry.name)
+  }
+
+  // Discovery hint: heroes that the producer publishes but Stargazer hasn't
+  // added a character/ entry for yet.
   for (const slug of Object.keys(bulks.en.heroes)) {
     if (!knownSlugs.has(slug)) summary.availableNotAdded.push(slug)
   }
@@ -316,6 +431,7 @@ async function main() {
   const written = summary.imported.reduce((n, r) => n + r.written, 0)
   const unchanged = summary.imported.reduce((n, r) => n + r.unchanged, 0)
   console.log(`  locale files: ${written} written, ${unchanged} unchanged`)
+  if (chunksWritten > 0) console.log(`  chunk modules: ${chunksWritten} written`)
 
   if (summary.missingFromFeed.length > 0) {
     console.warn(
@@ -327,8 +443,18 @@ async function main() {
   if (summary.orphans.length > 0) {
     console.warn(`\n  ${summary.orphans.length} orphan tag attachment(s):`)
     for (const o of summary.orphans) {
-      console.warn(`    - [${o.slug}] tag "${o.tag}" → ${o.attachment} — ${o.reason}`)
+      console.warn(`    - [${o.slug}] tag "${o.tag}" → ${o.attachment}: ${o.reason}`)
     }
+  }
+
+  if (summary.nameDivergences.length > 0) {
+    console.warn(`\n  ${summary.nameDivergences.length} hero name divergence(s) (feed vs curated):`)
+    for (const d of summary.nameDivergences) console.warn(`    - ${d}`)
+  }
+
+  if (summary.unknownDirs.length > 0) {
+    console.warn(`\n  ${summary.unknownDirs.length} locale dir(s) not in SKILL_LOCALES (delete?):`)
+    for (const d of summary.unknownDirs) console.warn(`    - ${d}`)
   }
 
   if (summary.availableNotAdded.length > 0) {

@@ -6,7 +6,9 @@ import SkillsBrowser from '@/components/skill/SkillsBrowser.vue'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
-const lang = computed(() => i18n.currentLocale)
+// Roster tiles link into skill pages: start the reader in the saved
+// skill-text language (falls back to the app locale).
+const lang = computed(() => i18n.effectiveSkillLocale)
 
 useHead({
   link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/skills' }],

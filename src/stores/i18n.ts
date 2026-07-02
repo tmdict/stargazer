@@ -1,20 +1,58 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
-import type { Locale, LocaleDictionary } from '@/lib/types/i18n'
+import {
+  isAppLocale,
+  isSkillLocale,
+  type AppLocale,
+  type LocaleDictionary,
+  type SkillLocale,
+} from '@/lib/types/i18n'
 import { loadAllLocales } from '@/utils/dataLoader'
 import { interpolate } from '@/utils/interpolate'
 
 // Constants
 const LOCALE_STORAGE_KEY = 'stargazer.locale'
-const VALID_LOCALES = ['en', 'zh']
+const SKILL_LOCALE_STORAGE_KEY = 'stargazer.skillLocale'
 
 export const useI18nStore = defineStore('i18n', () => {
   // State
-  const currentLocale = ref<Locale>('en')
+  const currentLocale = ref<AppLocale>('en')
   const translations = ref<LocaleDictionary>({})
   const loaded = ref(false)
   const error = ref<string | null>(null)
+
+  // Saved skill-text preference; null = follow the app locale. Written only by
+  // explicit globe picks (URL visits never persist, mirroring the chrome
+  // prefix contract).
+  const skillLocale = ref<SkillLocale | null>(null)
+
+  // On skill routes the content locale owns <html lang> (the page is mostly
+  // skill text), overriding the chrome locale that setLocale would write.
+  // Owner-token clearing survives keyed remounts in either mount/unmount
+  // order: only the latest setter's token can clear.
+  const htmlLangOverride = ref<SkillLocale | null>(null)
+  let htmlLangOwner: symbol | null = null
+
+  const applyDocumentLang = () => {
+    if (import.meta.env.SSR) return
+    document.documentElement.lang = htmlLangOverride.value ?? currentLocale.value
+  }
+
+  const setHtmlLangOverride = (locale: SkillLocale): symbol => {
+    const token = Symbol('htmlLang')
+    htmlLangOwner = token
+    htmlLangOverride.value = locale
+    applyDocumentLang()
+    return token
+  }
+
+  const clearHtmlLangOverride = (token: symbol) => {
+    if (htmlLangOwner !== token) return
+    htmlLangOwner = null
+    htmlLangOverride.value = null
+    applyDocumentLang()
+  }
 
   // Actions (defined early for use in initialization)
   /**
@@ -28,12 +66,12 @@ export const useI18nStore = defineStore('i18n', () => {
    *
    * @param locale - The locale to set ('en' or 'zh')
    */
-  const setLocale = (locale: Locale, { persist = true }: { persist?: boolean } = {}) => {
+  const setLocale = (locale: AppLocale, { persist = true }: { persist?: boolean } = {}) => {
     currentLocale.value = locale
 
     // Only access DOM/localStorage on client
     if (!import.meta.env.SSR) {
-      document.documentElement.lang = locale
+      applyDocumentLang()
 
       if (persist) {
         // Try to persist to localStorage, but don't fail if it's not available
@@ -60,8 +98,8 @@ export const useI18nStore = defineStore('i18n', () => {
     // Load saved locale from localStorage with error handling
     try {
       const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
-      if (savedLocale && VALID_LOCALES.includes(savedLocale)) {
-        currentLocale.value = savedLocale as Locale
+      if (savedLocale && isAppLocale(savedLocale)) {
+        currentLocale.value = savedLocale
       }
     } catch (e) {
       // If localStorage is not available (private browsing, disabled, etc.),
@@ -75,13 +113,43 @@ export const useI18nStore = defineStore('i18n', () => {
     // preference.
     const urlParams = new URLSearchParams(window.location.search)
     const localeParam = urlParams.get('l')
-    if (localeParam && VALID_LOCALES.includes(localeParam)) {
-      setLocale(localeParam as Locale)
+    if (localeParam && isAppLocale(localeParam)) {
+      setLocale(localeParam)
     } else {
       // Set the HTML lang attribute for the initial locale
-      document.documentElement.lang = currentLocale.value
+      applyDocumentLang()
     }
   }
+
+  // Read post-mount (like initializeLocale) so link hrefs baked into static
+  // HTML hydrate unchanged before the saved preference swaps them.
+  const initializeSkillLocale = () => {
+    if (import.meta.env.SSR) return
+    try {
+      const saved = localStorage.getItem(SKILL_LOCALE_STORAGE_KEY)
+      // Validated on read: a removed locale or garbage falls through to the
+      // app locale via effectiveSkillLocale.
+      if (saved && isSkillLocale(saved)) skillLocale.value = saved
+    } catch (e) {
+      console.warn('Could not access localStorage for skill locale preference:', e)
+    }
+  }
+
+  const setSkillLocale = (locale: SkillLocale) => {
+    skillLocale.value = locale
+    if (!import.meta.env.SSR) {
+      try {
+        localStorage.setItem(SKILL_LOCALE_STORAGE_KEY, locale)
+      } catch (e) {
+        console.warn('Could not save skill locale preference to localStorage:', e)
+      }
+    }
+  }
+
+  // Skill-text language for surfaces with no content context: /skills roster
+  // tiles, guide panel links, and modal seeding. Skill pages themselves read
+  // the URL prefix instead.
+  const effectiveSkillLocale = computed<SkillLocale>(() => skillLocale.value ?? currentLocale.value)
 
   // Getters
   const t = computed(() => {
@@ -146,16 +214,22 @@ export const useI18nStore = defineStore('i18n', () => {
   return {
     // State (readonly through refs)
     currentLocale,
+    skillLocale,
     loaded,
     error,
 
     // Getters
     t,
+    effectiveSkillLocale,
 
     // Actions
     initialize,
     initializeLocale,
+    initializeSkillLocale,
     setLocale,
+    setSkillLocale,
+    setHtmlLangOverride,
+    clearHtmlLangOverride,
     toggleLocale,
   }
 })

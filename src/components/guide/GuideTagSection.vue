@@ -5,10 +5,10 @@ import CharacterGrid from '@/components/CharacterGrid.vue'
 import CharacterIcon from '@/components/CharacterIcon.vue'
 import GuideCharacterPanel from '@/components/guide/GuideCharacterPanel.vue'
 import type { CharacterType } from '@/lib/types/character'
-import type { Locale } from '@/lib/types/i18n'
+import type { AppLocale } from '@/lib/types/i18n'
 import { appLabel } from '@/utils/skillLabels'
 
-defineProps<{ tag: string; characters: readonly CharacterType[]; lang: Locale }>()
+defineProps<{ tag: string; characters: readonly CharacterType[]; lang: AppLocale }>()
 
 // One open panel per section.
 const expanded = ref<string | null>(null)
