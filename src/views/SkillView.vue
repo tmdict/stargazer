@@ -2,12 +2,13 @@
 import { computed } from 'vue'
 
 import SkillsBrowser from '@/components/skill/SkillsBrowser.vue'
-import { useRouteLocale } from '@/composables/useRouteLocale'
+import type { SkillLocale } from '@/lib/types/i18n'
 
-// `name` is the route param (route has `props: true`).
-const props = defineProps<{ name?: string }>()
+// Route params (route has `props: true`); the prefix is the skill-text
+// language, already validated by the route's param regex.
+const props = defineProps<{ name?: string; textLocale?: string }>()
 
-const lang = useRouteLocale()
+const lang = computed<SkillLocale>(() => (props.textLocale ?? 'en') as SkillLocale)
 const slug = computed(() => (props.name ?? '').toLowerCase())
 </script>
 

@@ -1,6 +1,14 @@
+import { reactive } from 'vue'
+
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
-import type { Locale, LocaleData, LocaleDictionary } from '@/lib/types/i18n'
+import {
+  isAppLocale,
+  type AppLocale,
+  type LocaleData,
+  type LocaleDictionary,
+  type SkillLocale,
+} from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
 import type { SkillLocaleFile } from '@/lib/types/skill'
 
@@ -239,7 +247,7 @@ let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
 let wandwarsLocalesCache: Record<string, LocaleData> | null = null
-let skillLocalesCache: Record<Locale, Record<string, SkillLocaleFile>> | null = null
+let skillLocalesCache: Record<AppLocale, Record<string, SkillLocaleFile>> | null = null
 
 // Vite's import.meta.glob requires a string literal for the pattern, so the glob calls
 // can't be parameterized, but the post-processing (filename → key) can.
@@ -292,8 +300,10 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
   return artifactLocalesCache
 }
 
-/** Per-language skill text, keyed by character slug (filename basename). */
-export function loadSkillLocales(): Record<Locale, Record<string, SkillLocaleFile>> {
+/** Per-language skill text for the app locales (en/zh), keyed by character
+ * slug (filename basename). Eager: the search index, the guide panels, and
+ * the en fallback all read it synchronously. */
+export function loadSkillLocales(): Record<AppLocale, Record<string, SkillLocaleFile>> {
   if (skillLocalesCache) return skillLocalesCache
   skillLocalesCache = {
     en: buildLocaleDict<SkillLocaleFile>(
@@ -312,9 +322,55 @@ export function loadSkillLocales(): Record<Locale, Record<string, SkillLocaleFil
   return skillLocalesCache
 }
 
-/** True iff the importer has produced an `en` locale file for `slug`. Used as
- * a UI gate (info button / route validator) so a character JSON without a
- * matching locale file doesn't surface a dead modal or route. */
+// Non-app skill locales ship as one lazy chunk per language: each locale dir
+// holds an importer-emitted index.ts whose eager same-dir glob inlines that
+// dir's JSON into a single chunk. Loading is promise-cached per locale; the
+// route warm-up guard, the skill modal, and the search index all share it.
+const skillLocaleChunks = import.meta.glob<Record<string, SkillLocaleFile>>(
+  '@/locales/skill/*/index.ts',
+  { import: 'default' },
+)
+// Reactive so a chunk that arrives after a failed warm-up (offline first
+// load, later retried by search) re-renders anything computed from it.
+const warmedSkillLocales = reactive(new Map<SkillLocale, Record<string, SkillLocaleFile>>())
+const skillLocalePromises = new Map<SkillLocale, Promise<Record<string, SkillLocaleFile>>>()
+
+export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, SkillLocaleFile>> {
+  if (isAppLocale(lang)) return Promise.resolve(loadSkillLocales()[lang])
+  const pending = skillLocalePromises.get(lang)
+  if (pending) return pending
+  const loader = skillLocaleChunks[`/src/locales/skill/${lang}/index.ts`]
+  if (!loader) return Promise.reject(new Error(`No skill locale chunk for "${lang}"`))
+  const promise = loader().then((dict) => {
+    warmedSkillLocales.set(lang, dict)
+    return dict
+  })
+  // A failed fetch must not poison the cache; the next call retries.
+  promise.catch(() => skillLocalePromises.delete(lang))
+  skillLocalePromises.set(lang, promise)
+  return promise
+}
+
+/** Sync read of a whole locale; null until loadSkillLocale has resolved.
+ * en/zh are always warm (eager). */
+export function getSkillLocaleDict(lang: SkillLocale): Record<string, SkillLocaleFile> | null {
+  if (isAppLocale(lang)) return loadSkillLocales()[lang]
+  return warmedSkillLocales.get(lang) ?? null
+}
+
+/** Sync read of one hero's file; null until the locale is warmed. Page loads
+ * are warmed by the skill route's guard; the modal and search await
+ * loadSkillLocale explicitly. */
+export function getSkillFile(lang: SkillLocale, slug: string): SkillLocaleFile | null {
+  return getSkillLocaleDict(lang)?.[slug] ?? null
+}
+
+/** True iff the importer has produced an `en` locale file for `slug`. Gates
+ * the surfaces where a missing locale would surface a dead link (the info
+ * button, the modal, the reader's visibleSlug) so a character JSON without a
+ * matching locale file degrades gracefully. Coverage across languages is
+ * asserted at import time (every locale's slug set equals en's), so en
+ * presence answers for all 16 locales. */
 export function hasSkillLocale(slug: string): boolean {
   return !!loadSkillLocales().en[slug]
 }

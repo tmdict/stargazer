@@ -3,10 +3,10 @@ import { computed, provide } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSections from '@/components/skill/SkillSections.vue'
-import ModalLocaleToggle from '@/components/ui/ModalLocaleToggle.vue'
-import { useModalLocale } from '@/composables/useModalLocale'
+import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
+import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import { ContentInModalKey } from '@/utils/contentMeta'
-import { loadSkillLocales } from '@/utils/dataLoader'
+import { hasSkillLocale } from '@/utils/dataLoader'
 
 interface Props {
   show: boolean
@@ -22,30 +22,33 @@ const emit = defineEmits<{
 // Tell descendant content components they're embedded: suppresses page-level meta writes
 provide(ContentInModalKey, true)
 
-// Modal-local locale: overrides global without mutating it
-const displayLocale = useModalLocale(() => props.show)
+// Modal-local skill-text locale, seeded from the saved preference; `applied`
+// gates rendering on the locale chunk being warm. The permalink follows
+// `selected` (the user's choice, warm or not); the target page handles its
+// own loading.
+const { selected, applied, apply } = useModalSkillLocale(() => props.show)
 
-const hasLocaleData = computed(() => !!loadSkillLocales()[displayLocale.value]?.[props.skillName])
+const hasLocaleData = computed(() => hasSkillLocale(props.skillName))
 </script>
 
 <template>
   <BaseModal
     :show="show"
     :link-param="skillName"
-    :locale-override="displayLocale"
+    :locale-override="selected"
     max-width="960px"
     :top-anchor="true"
     @close="emit('close')"
   >
     <template #header-buttons>
-      <ModalLocaleToggle v-model="displayLocale" />
+      <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
     <SkillSections
-      v-if="hasLocaleData"
+      v-if="hasLocaleData && applied"
       :slug="skillName"
-      :lang="displayLocale"
+      :lang="applied"
       :initial-chip="initialChip"
     />
-    <div v-else>Content not found for skill: {{ skillName }}</div>
+    <div v-else-if="!hasLocaleData">Content not found for skill: {{ skillName }}</div>
   </BaseModal>
 </template>

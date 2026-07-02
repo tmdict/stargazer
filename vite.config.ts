@@ -1,4 +1,5 @@
-import { readdirSync } from 'node:fs'
+import { existsSync, readdirSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
@@ -6,30 +7,43 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
+import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n'
+
 // SSG Helpers
 
-// Derive skill list from the locale dir — every hero with skill text gets a
-// route. Optional `<HeroName>.<lang>.vue` snippet files in src/content/skill/
-// are discovered at runtime via import.meta.glob; they don't gate routing.
-const skillLocaleDir = fileURLToPath(new URL('./src/locales/skill/en', import.meta.url))
-const skillIds = readdirSync(skillLocaleDir)
-  .filter((f) => f.endsWith('.json'))
-  .map((f) => f.replace(/\.json$/, ''))
-  .sort()
+// Skill routes derive from the locale dirs: every (language, hero) file on
+// disk gets a route. Optional `<HeroName>.<lang>.vue` snippet files in
+// src/content/skill/ are discovered at runtime via import.meta.glob; they
+// don't gate routing.
+const skillLocaleRoot = fileURLToPath(new URL('./src/locales/skill', import.meta.url))
 
-const locales = ['en', 'zh']
+// Any valid skill-text prefix (used to stamp <html lang> and to scope the
+// description extraction to skill pages).
+const localePattern = SKILL_LOCALES.map((l) => l.code).join('|')
+const LOCALE_PREFIX_RE = new RegExp(`^\\/(${localePattern})\\/`)
+const SKILL_ROUTE_RE = new RegExp(`^\\/(${localePattern})\\/skill\\/`)
 
 /** Returns all routes to pre-render during SSG */
 function getSSGRoutes(): string[] {
   // Pre-render static HTML so canonical/meta are correct without JS.
   const routes: string[] = ['/', '/share', '/skills', '/wandwars']
 
-  locales.forEach((locale) => {
-    routes.push(`/${locale}/guide`)
-    skillIds.forEach((skillId) => {
-      routes.push(`/${locale}/skill/${skillId}`)
-    })
-  })
+  // Guide pages exist only in the app locales.
+  APP_LOCALES.forEach((locale) => routes.push(`/${locale}/guide`))
+
+  for (const { code } of SKILL_LOCALES) {
+    const dir = join(skillLocaleRoot, code)
+    // SKILL_LOCALES is the contract; a missing dir means the importer hasn't
+    // run for a newly added language, and continuing would silently ship a
+    // build whose menu and hreflang link to pages that don't exist.
+    if (!existsSync(dir)) {
+      throw new Error(`[ssg] missing skill locale dir "${code}"; run npm run import:skills`)
+    }
+    readdirSync(dir)
+      .filter((f) => f.endsWith('.json'))
+      .sort()
+      .forEach((f) => routes.push(`/${code}/skill/${f.replace(/\.json$/, '')}`))
+  }
 
   return routes
 }
@@ -39,7 +53,8 @@ function extractContentDescription(html: string): string | null {
   const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/)
   if (!articleMatch) return null
 
-  const paragraphs = [...articleMatch[1].matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]
+  // `<p` must be followed by whitespace or `>` so `<path>` (svg) doesn't match.
+  const paragraphs = [...articleMatch[1].matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/g)]
   if (paragraphs.length === 0) return null
 
   const text = paragraphs
@@ -76,16 +91,38 @@ function dedupeAssetLinks(html: string): string {
   )
 }
 
+// The lazy locale chunk is imported by the route guard only after the app
+// bundle executes; preloading it on its own pages saves a round trip on cold
+// loads (the primary path for shared/SEO links into non-en/zh pages).
+let assetFiles: string[] | null = null
+function localeChunkHref(code: string): string | null {
+  if (!assetFiles) {
+    const assetsDir = fileURLToPath(new URL('./dist/assets', import.meta.url))
+    assetFiles = existsSync(assetsDir) ? readdirSync(assetsDir) : []
+  }
+  const chunkRe = new RegExp(`^${code}-[\\w-]+\\.js$`)
+  const file = assetFiles.find((f) => chunkRe.test(f))
+  return file ? `/assets/${file}` : null
+}
+
 /** Post-processes SSG-rendered pages: sets lang attribute and derives skill descriptions */
 function processRenderedPage(route: string, html: string): string {
-  const match = route.match(/^\/(en|zh)\//)
+  const match = route.match(LOCALE_PREFIX_RE)
   if (match) {
     html = html.replace(/<html[^>]*>/, `<html lang="${match[1]}">`)
   }
 
   html = dedupeAssetLinks(html)
 
-  if (route.match(/^\/(en|zh)\/skill\//)) {
+  const skillMatch = route.match(SKILL_ROUTE_RE)
+  if (skillMatch && !(APP_LOCALES as readonly string[]).includes(skillMatch[1])) {
+    const href = localeChunkHref(skillMatch[1])
+    if (href) {
+      html = html.replace('</head>', `<link rel="modulepreload" crossorigin href="${href}"></head>`)
+    }
+  }
+
+  if (skillMatch) {
     const description = extractContentDescription(html)
     if (description) {
       const escaped = description.replace(/"/g, '&quot;')
@@ -99,7 +136,7 @@ function processRenderedPage(route: string, html: string): string {
       )
     } else {
       console.warn(
-        `[ssg] extractContentDescription found nothing on ${route} — meta description falling back to template default.`,
+        `[ssg] extractContentDescription found nothing on ${route}; meta description falling back to template default.`,
       )
     }
   }

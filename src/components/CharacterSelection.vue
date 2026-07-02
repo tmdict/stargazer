@@ -42,6 +42,7 @@ const {
 } = useCharacterRoster(
   computed(() => characters),
   computed(() => i18n.currentLocale),
+  computed(() => i18n.effectiveSkillLocale),
 )
 
 // Placement, uniqueness, and removal are page-wide (across every board); on the
@@ -123,7 +124,6 @@ const handleResultSelect = (slug: string) => {
     <CharacterSearchResults
       v-else
       :results="visibleSearchResults"
-      :lang="i18n.currentLocale"
       :query="searchQuery"
       mode="action"
       @select="handleResultSelect"

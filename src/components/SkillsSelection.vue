@@ -9,23 +9,21 @@ import CharacterSearchBar from './CharacterSearchBar.vue'
 import CharacterSearchResults from './CharacterSearchResults.vue'
 import { useCharacterRoster } from '@/composables/useCharacterRoster'
 import type { CharacterType } from '@/lib/types/character'
-import type { Locale } from '@/lib/types/i18n'
+import type { SkillLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  lang: Locale
+  /** Skill-text language the tiles link into: the route prefix on skill
+   * pages (browsing keeps the reading language), the saved pref on the
+   * /skills index. Display strings stay in the chrome locale. */
+  linkLocale: SkillLocale
   currentSlug?: string | null
-  /** Route segment the roster links into (`skill` or `guide`). */
-  routeBase?: string
 }>()
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
-
-const lang = computed<Locale>(() => props.lang)
-const base = computed(() => props.routeBase ?? 'skill')
 
 const {
   factionFilter,
@@ -37,7 +35,8 @@ const {
   visibleSearchResults,
 } = useCharacterRoster(
   computed(() => props.characters),
-  lang,
+  computed(() => i18n.currentLocale),
+  computed(() => props.linkLocale),
 )
 
 // Seed the tag filter from `/skills?tag=<name>` (e.g. a clicked skill chip).
@@ -52,7 +51,10 @@ watch(
 </script>
 
 <template>
-  <div v-scroll-chain class="skills-selection">
+  <!-- Roster text (names, filters, results chrome) is app-locale even on
+       exotic skill pages, so it carries its own lang under the content-locale
+       <html lang> (fonts + screen readers follow the chrome language). -->
+  <div v-scroll-chain class="skills-selection" :lang="i18n.currentLocale">
     <CharacterSearchBar
       v-model="searchQuery"
       :placeholder="i18n.t('app.skill-search-placeholder')"
@@ -73,7 +75,7 @@ watch(
       <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
-        :to="`/${lang}/${base}/${character.name}`"
+        :to="`/${linkLocale}/skill/${character.name}`"
         class="character-cell"
       >
         <CharacterIcon
@@ -100,10 +102,8 @@ watch(
     <CharacterSearchResults
       v-else
       :results="visibleSearchResults"
-      :lang
       :query="searchQuery"
       mode="link"
-      :link-base="base"
       :current-slug="currentSlug"
     />
   </div>

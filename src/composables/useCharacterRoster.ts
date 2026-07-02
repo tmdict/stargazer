@@ -3,17 +3,24 @@ import { computed, onUnmounted, ref, watch, type Ref } from 'vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSkillSearch, type SearchResult } from '@/composables/useSkillSearch'
 import type { CharacterType } from '@/lib/types/character'
-import type { Locale } from '@/lib/types/i18n'
+import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 
 const SEARCH_DEBOUNCE_MS = 150
 
 /**
- * Roster state shared by the arena, /skills, and /guide rosters: the
+ * Roster state shared by the arena and /skills rosters: the
  * faction/class/damage/tag filters plus debounced name + skill-text search.
- * `visibleSearchResults` is the search hits intersected with the active filters,
- * or null when the query is empty (callers render the filtered grid instead).
+ * `appLang` drives display (labels, result ordering); `textLang` is the
+ * active skill-text language, which wins the search's snippet priority.
+ * `visibleSearchResults` is the search hits intersected with the active
+ * filters, or null when the query is empty (callers render the filtered grid
+ * instead).
  */
-export function useCharacterRoster(characters: Ref<readonly CharacterType[]>, lang: Ref<Locale>) {
+export function useCharacterRoster(
+  characters: Ref<readonly CharacterType[]>,
+  appLang: Ref<AppLocale>,
+  textLang: Ref<SkillLocale>,
+) {
   const filters = useCharacterFilters(characters)
 
   const searchQuery = ref('')
@@ -37,7 +44,7 @@ export function useCharacterRoster(characters: Ref<readonly CharacterType[]>, la
     if (debounceTimer) clearTimeout(debounceTimer)
   })
 
-  const searchResults = useSkillSearch(debouncedQuery, lang)
+  const searchResults = useSkillSearch(debouncedQuery, appLang, textLang)
 
   // Search ∩ filters; results keep useSkillSearch's hit-count ordering.
   const visibleSearchResults = computed<SearchResult[] | null>(() => {

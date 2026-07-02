@@ -5,6 +5,16 @@
   --color-danger: #c05b4d;
   --color-danger-hover: #a04936;
 
+  /* Brand accent on the dark content surfaces (skill reader/modal/menu,
+     guide panels): the primary teal lifted from 40% to 57% lightness, since
+     #36958e fails AA contrast (~4.2:1) on the near-black cards. Tints derive
+     with color-mix at call sites so the shade retunes in one place. */
+  --color-accent: #5fc4bb;
+  /* Selected/active fill behind white text on those surfaces. */
+  --color-accent-active: #3a8a83;
+  /* Soft teal text on accent-tinted chips (globe trigger, hint bar). */
+  --color-accent-text: #cdeeea;
+
   /* Team Colors */
   --color-ally: #36958e;
   --color-enemy: #c82333;
