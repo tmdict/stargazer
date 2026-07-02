@@ -48,7 +48,7 @@ const resolvedBody = computed(() => {
 .skill-snippet {
   margin-top: var(--spacing-sm);
   padding: var(--spacing-sm) var(--spacing-md);
-  border-left: 3px solid rgba(95, 196, 187, 0.4);
+  border-left: 3px solid color-mix(in srgb, var(--color-accent) 40%, transparent);
   background: rgba(140, 185, 180, 0.04);
   border-radius: 0 4px 4px 0;
 }
@@ -59,7 +59,7 @@ const resolvedBody = computed(() => {
   border-bottom: none;
   font-size: 13px;
   font-weight: 600;
-  color: #5fc4bb;
+  color: var(--color-accent);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }

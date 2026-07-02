@@ -4,7 +4,7 @@ import { ref, watch } from 'vue'
 import SkillReader from '@/components/skill/SkillReader.vue'
 import SkillsSelection from '@/components/SkillsSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
-import type { Locale } from '@/lib/types/i18n'
+import type { SkillLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
@@ -16,7 +16,9 @@ const SPLIT_MIN_WIDTH = 1220
 const props = defineProps<{
   // null on the /skills index (empty reader); a hero slug on a skill page.
   slug: string | null
-  lang: Locale
+  // Skill-text language: the route prefix on skill pages, the effective
+  // preference on the /skills index. Chrome labels come from the store.
+  lang: SkillLocale
 }>()
 
 // initializeContentData (unlike initializeData) runs during SSG too, so the
@@ -28,9 +30,11 @@ gameDataStore.initializeContentData()
 // stays peeked on a hero page (so it doesn't cover the reader), and collapses
 // when navigating to a hero. Tapping the empty reader re-reveals it.
 const expanded = ref(false)
+// Keyed on slug AND lang: a search result can land on the same hero in
+// another language, which should collapse the sheet like any navigation.
 watch(
-  () => props.slug,
-  (slug) => {
+  () => [props.slug, props.lang] as const,
+  ([slug]) => {
     expanded.value = false
     // Narrow-desktop stacked layout only: the roster sits below the reader, so
     // selecting a hero leaves the user scrolled past the content. Jump back to
@@ -52,7 +56,11 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
     <div class="skills-layout">
       <SkillReader class="skills-reader" :slug :lang @empty-click="sheet?.expand()" />
       <BottomSheet ref="sheet" v-model:expanded="expanded" :initial-expanded="!slug">
-        <SkillsSelection :characters="gameDataStore.characters" :lang :current-slug="slug" />
+        <SkillsSelection
+          :characters="gameDataStore.characters"
+          :link-locale="lang"
+          :current-slug="slug"
+        />
       </BottomSheet>
     </div>
   </main>

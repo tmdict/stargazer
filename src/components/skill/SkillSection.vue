@@ -129,7 +129,7 @@ const renderedRefinements = computed(() =>
    background tint only, matching the content snippets (no left bar, square). */
 .skill-level.tagged {
   padding: 6px var(--spacing-md);
-  background: rgba(95, 196, 187, 0.08);
+  background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
 /* Badge + description form a sub-row so chips (when present) sit above as a
@@ -145,8 +145,8 @@ const renderedRefinements = computed(() =>
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 12px;
-  background: rgba(95, 196, 187, 0.18);
-  color: #5fc4bb;
+  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  color: var(--color-accent);
   text-decoration: none;
   transition: background-color 0.15s;
 }
@@ -154,8 +154,8 @@ const renderedRefinements = computed(() =>
 /* Override content.css's global `.content a:hover` (red + underline) so the
    chip just lifts its background and keeps its teal text. */
 .skill-level-chip:hover {
-  background: rgba(95, 196, 187, 0.28);
-  color: #5fc4bb;
+  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
+  color: var(--color-accent);
   text-decoration: none;
 }
 
@@ -175,7 +175,7 @@ const renderedRefinements = computed(() =>
    different tier class from the numeric LV badges above without competing
    with the per-section chip strip. */
 .skill-level-badge.refine-badge {
-  color: #5fc4bb;
+  color: var(--color-accent);
 }
 
 .skill-level-desc {

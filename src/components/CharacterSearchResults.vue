@@ -2,21 +2,17 @@
 import { RouterLink } from 'vue-router'
 
 import type { SearchHit, SearchResult } from '@/composables/useSkillSearch'
-import type { Locale } from '@/lib/types/i18n'
 import type { SlotKey } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { loadAppLocales, loadCharacterLocales } from '@/utils/dataLoader'
 
-const props = defineProps<{
+defineProps<{
   results: SearchResult[]
-  lang: Locale
   /** Current query, for the no-matches message. */
   query: string
   /** `link` wraps each card in a RouterLink; `action` makes it a button. */
   mode: 'link' | 'action'
-  /** Link mode: route segment the cards link into (`skill` or `guide`). */
-  linkBase?: string
   /** Link mode: slug of the open page, highlighted as active. */
   currentSlug?: string | null
 }>()
@@ -26,8 +22,11 @@ const emit = defineEmits<{ select: [slug: string] }>()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
+// Display strings render in the chrome locale; link prefixes come from each
+// result's matched locale instead, so the snippet clicked is the content
+// landed on.
 function heroName(slug: string): string {
-  return loadCharacterLocales()[slug]?.[props.lang] ?? slug
+  return loadCharacterLocales()[slug]?.[i18n.currentLocale] ?? slug
 }
 
 const SLOT_LABEL_KEY: Record<SlotKey, string> = {
@@ -41,7 +40,7 @@ const SLOT_LABEL_KEY: Record<SlotKey, string> = {
 
 function slotLabel(slot: SlotKey): string {
   const app = loadAppLocales()
-  return app[SLOT_LABEL_KEY[slot]]?.[props.lang] ?? slot
+  return app[SLOT_LABEL_KEY[slot]]?.[i18n.currentLocale] ?? slot
 }
 
 // null for name matches: already highlighted in the displayed name. Labels
@@ -66,7 +65,7 @@ function locText(hit: SearchHit): string | null {
       :is="mode === 'link' ? RouterLink : 'button'"
       v-for="result in results"
       :key="result.slug"
-      :to="mode === 'link' ? `/${lang}/${linkBase}/${result.slug}` : undefined"
+      :to="mode === 'link' ? `/${result.locale}/skill/${result.slug}` : undefined"
       :type="mode === 'action' ? 'button' : undefined"
       class="result-row"
       :class="{
