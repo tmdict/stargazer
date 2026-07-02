@@ -26,10 +26,11 @@ export interface SkillLocaleSlot {
   r?: SkillRefineEntry[]
 }
 
-// `_hero` is the feed's localized hero display name: skill pages read it for
-// languages the curated character locales (en/zh) cannot cover. `_terms` is
-// the game's official "Ultimate" / "Exclusive Equipment" labels in the file's
-// language, used as heading prefixes for those slots.
+// `_hero` is the feed's localized hero display name: skill pages and the
+// search index read it in every language (curated character locales stay on
+// chrome surfaces and as search aliases). `_terms` is the game's official
+// "Ultimate" / "Exclusive Equipment" labels in the file's language, used as
+// heading prefixes for those slots.
 export type SkillLocaleFile = {
   _hero?: { name: string }
   _terms?: { ultimate: string; ex: string }

@@ -1,6 +1,6 @@
 import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 
-import { SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
+import { isAppLocale, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
 import { getSkillLocaleDict, loadCharacterLocales, loadSkillLocale } from '@/utils/dataLoader'
 import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
@@ -68,7 +68,15 @@ function buildIndex(lang: SkillLocale, dict: NonNullable<ReturnType<typeof getSk
 
   for (const slug of Object.keys(dict)) {
     const locale = dict[slug]
-    names.push({ slug, text: heroDisplayName(slug, lang) })
+    const display = heroDisplayName(slug, lang)
+    names.push({ slug, text: display })
+    // Curated app-locale names are indexed as aliases: zh carries community
+    // nicknames ("阿尔萨 (滚滚)") that players actually type. Display entries
+    // come first so an official-name match snippets the official name.
+    if (isAppLocale(lang)) {
+      const curated = loadCharacterLocales()[slug]?.[lang]
+      if (curated && curated !== display) names.push({ slug, text: curated })
+    }
 
     for (const slot of SLOT_ORDER) {
       const slotData = locale[slot]
