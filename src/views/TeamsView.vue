@@ -51,7 +51,7 @@ const activeTab = ref('fiveVFive')
 // Image Stitcher is a wide-window-only tool: its tab is hidden on mobile.
 const tabs = computed(() => [
   { key: 'fiveVFive', label: i18n.t('app.5-v-5') },
-  { key: 'imageStitcher', label: 'Image Stitcher', hideMobile: true },
+  { key: 'imageStitcher', label: i18n.t('app.image-stitcher'), hideMobile: true },
 ])
 
 // Display flags drive every board (global controls); the share link serializes them.
@@ -200,7 +200,7 @@ const handleCopyLink = () => {
               />
             </template>
             <template #imageStitcher>
-              <h1 class="page-title">Image Stitcher</h1>
+              <h1 class="page-title">{{ i18n.t('app.image-stitcher') }}</h1>
               <ImageStitcher />
             </template>
           </TabView>

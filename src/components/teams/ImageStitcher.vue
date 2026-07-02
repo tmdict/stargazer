@@ -7,6 +7,7 @@ import StitchSettings from './StitchSettings.vue'
 import StitchThumbnailList from './StitchThumbnailList.vue'
 import { useImageStitch } from '@/composables/useImageStitch'
 import { useToast } from '@/composables/useToast'
+import { useI18nStore } from '@/stores/i18n'
 
 const {
   images,
@@ -21,6 +22,7 @@ const {
 } = useImageStitch()
 
 const { error } = useToast()
+const i18n = useI18nStore()
 
 const hasImages = computed(() => images.value.length > 0)
 
@@ -29,7 +31,7 @@ const previewCanvas = computed(() => render())
 
 const handleAdd = async (files: File[]) => {
   const added = await addFiles(files)
-  if (added === 0) error('No valid images found')
+  if (added === 0) error(i18n.t('app.no-valid-images'))
 }
 </script>
 
