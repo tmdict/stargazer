@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue'
 
 import SkillSections from './SkillSections.vue'
+import IconGlobe from '@/components/ui/IconGlobe.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
@@ -63,6 +64,7 @@ watch(
     <div class="content">
       <!-- Chrome-language sentence inside the content region: own lang. -->
       <div v-if="visibleSlug && showLocaleHint" class="locale-hint" :lang="i18n.currentLocale">
+        <IconGlobe :size="15" class="locale-hint-icon" aria-hidden="true" />
         <span>{{ i18n.t('app.skill-locale-hint') }}</span>
         <button
           type="button"
@@ -77,6 +79,12 @@ watch(
       <div v-else class="empty-state" @click="emit('emptyClick')">
         <IconInfo :size="40" class="empty-icon" />
         <p class="empty-tip">{{ i18n.t('app.skill-empty-hint') }}</p>
+        <!-- Permanent counterpart of the locale-hint banner: states the fact
+             without naming the globe menu, which isn't on screen here. -->
+        <p class="empty-locale">
+          <IconGlobe :size="14" aria-hidden="true" />
+          {{ i18n.t('app.skill-locale-empty') }}
+        </p>
       </div>
     </div>
   </div>
@@ -109,8 +117,17 @@ watch(
 
 .empty-tip {
   margin: 0;
-  font-size: 0.95rem;
+  font-size: 1rem;
   max-width: 320px;
+}
+
+.empty-locale {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: var(--spacing-sm) 0 0;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
 }
 
 .locale-hint {
@@ -124,6 +141,10 @@ watch(
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
   color: var(--color-accent-text);
   font-size: 12.5px;
+}
+
+.locale-hint-icon {
+  flex-shrink: 0;
 }
 
 .locale-hint-dismiss {
