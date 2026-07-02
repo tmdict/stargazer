@@ -2,17 +2,25 @@
  * and Intimidation. Because the two stats are symmetric, a team's net stat
  * modifier is its paragon total minus the enemy's (one side's Inspiration is
  * exactly the other side's Intimidation), so the two teams' nets always mirror.
- * Levels run from 0 (off) to PARAGON_MAX_LEVEL. */
+ * Faction picks the ramp: Celestials and Hypogeans start from a nonzero base
+ * (P0 is not "off" for them) with a shallower step, and both ramps converge to
+ * the same value at PARAGON_MAX_LEVEL. */
 
 export const PARAGON_MAX_LEVEL = 4
 
-// Inspiration / Intimidation points granted per paragon level.
-export const PARAGON_STEP = 4.5
+export interface ParagonHero {
+  level: number
+  faction?: string
+}
 
-export const paragonStatValue = (level: number): number => level * PARAGON_STEP
+const isCelestialOrHypogean = (faction?: string): boolean =>
+  faction === 'celestial' || faction === 'hypogean'
 
-export const teamPowerTotal = (levels: number[]): number =>
-  levels.reduce((sum, level) => sum + paragonStatValue(level), 0)
+export const paragonStatValue = (level: number, faction?: string): number =>
+  isCelestialOrHypogean(faction) ? 4 + level * 3.5 : level * 4.5
 
-export const teamPowerNet = (allyLevels: number[], enemyLevels: number[]): number =>
-  teamPowerTotal(allyLevels) - teamPowerTotal(enemyLevels)
+export const teamPowerTotal = (heroes: ParagonHero[]): number =>
+  heroes.reduce((sum, hero) => sum + paragonStatValue(hero.level, hero.faction), 0)
+
+export const teamPowerNet = (allyHeroes: ParagonHero[], enemyHeroes: ParagonHero[]): number =>
+  teamPowerTotal(allyHeroes) - teamPowerTotal(enemyHeroes)

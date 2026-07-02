@@ -4,15 +4,13 @@ import { computed } from 'vue'
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
-import CharacterSearchBar from './CharacterSearchBar.vue'
-import CharacterSearchResults from './CharacterSearchResults.vue'
-import { useCharacterRoster } from '@/composables/useCharacterRoster'
+import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
+import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
-import { useI18nStore } from '@/stores/i18n'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const {
@@ -29,21 +27,11 @@ const {
 
 const { fillOrder, targetHexId, targetGridId, clearTargetHex } = useSelectionState()
 const grids = useGrids()
-const i18n = useI18nStore()
 
-const {
-  factionFilter,
-  classFilter,
-  damageFilter,
-  selectedTagNames,
-  filteredCharacters,
-  searchQuery,
-  visibleSearchResults,
-} = useCharacterRoster(
-  computed(() => characters),
-  computed(() => i18n.currentLocale),
-  computed(() => i18n.effectiveSkillLocale),
-)
+// Text search lives in the ⌘K overlay (select mode: a picked hero is placed,
+// not navigated to); the panel keeps only the icon filters.
+const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
+  useCharacterFilters(computed(() => characters))
 
 // Placement, uniqueness, and removal are page-wide (across every board); on the
 // single Arena board this is identical to a per-board check. A hero is "placed"
@@ -85,21 +73,22 @@ const handleCharacterClick = (character: CharacterType) => {
   }
 }
 
-// A search result places its hero exactly like clicking the roster icon would.
+// A search result places its hero like a roster-icon click, minus the
+// click's remove-toggle: the roster is hidden behind the overlay, so
+// "select" must never act as removal. Targeted-tile placement still applies.
 const handleResultSelect = (slug: string) => {
   const character = characters.find((c) => c.name === slug)
-  if (character) handleCharacterClick(character)
+  if (!character) return
+  if (targetHexId.value === null && isCharacterPlaced(character.id)) return
+  handleCharacterClick(character)
 }
 </script>
 
 <template>
   <div v-scroll-chain class="character-selection" :class="{ scrollable }">
-    <CharacterSearchBar
-      v-model="searchQuery"
-      :placeholder="i18n.t('app.skill-search-placeholder')"
-      :count="visibleSearchResults?.length ?? null"
-      :count-label="i18n.t('app.skill-results')"
-    />
+    <div class="search-row">
+      <SkillSearchTrigger :select="handleResultSelect" />
+    </div>
 
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
@@ -109,7 +98,7 @@ const handleResultSelect = (slug: string) => {
       :characters
     />
 
-    <CharacterGrid v-if="!visibleSearchResults">
+    <CharacterGrid>
       <CharacterIcon
         v-for="character in filteredCharacters"
         :key="character.id"
@@ -120,14 +109,6 @@ const handleResultSelect = (slug: string) => {
         @character-click="handleCharacterClick"
       />
     </CharacterGrid>
-
-    <CharacterSearchResults
-      v-else
-      :results="visibleSearchResults"
-      :query="searchQuery"
-      mode="action"
-      @select="handleResultSelect"
-    />
   </div>
 </template>
 
@@ -137,6 +118,27 @@ const handleResultSelect = (slug: string) => {
   flex-direction: column;
   gap: var(--spacing-lg);
   min-height: var(--panel-min-height);
+}
+
+/* Clear the panel's scrollbar on desktop. */
+.search-row {
+  display: flex;
+  padding-right: var(--spacing-lg);
+}
+
+@media (max-width: 768px) {
+  .search-row {
+    padding: var(--spacing-sm) var(--spacing-md) 0;
+  }
+  .search-row :deep(.search-trigger) {
+    max-width: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-row {
+    padding: var(--spacing-sm) var(--spacing-sm) 0;
+  }
 }
 
 /* On wide screens the right column is height-capped to the viewport, so the

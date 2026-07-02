@@ -31,6 +31,7 @@ interface PanelHero {
   name: string
   image: string
   level: number
+  faction?: string
 }
 
 // Only base heroes carry paragon; companions and phantimals are excluded.
@@ -45,6 +46,7 @@ const heroesFor = (team: Team): PanelHero[] =>
         name: localizedDisplayName(i18n.t, 'character', canonicalName),
         image: gameData.getCharacterImage(canonicalName),
         level: props.context.getParagon(team, characterId),
+        faction: gameData.getCharacterFaction(characterId),
       }
     })
 
@@ -57,12 +59,7 @@ const hasHeroes = computed(() => allyHeroes.value.length > 0 || enemyHeroes.valu
 
 // Net Rivalry-mode stat (Inspiration minus the enemy's Intimidation). The enemy's is
 // the negation of the ally's (the two mirror), so sides reuses it.
-const allyRivalryStat = computed(() =>
-  teamPowerNet(
-    allyHeroes.value.map((h) => h.level),
-    enemyHeroes.value.map((h) => h.level),
-  ),
-)
+const allyRivalryStat = computed(() => teamPowerNet(allyHeroes.value, enemyHeroes.value))
 
 const sides = computed(() => [
   { team: Team.ALLY, klass: 'ally', heroes: allyHeroes.value, rivalryStat: allyRivalryStat.value },

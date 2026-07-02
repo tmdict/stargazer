@@ -151,7 +151,9 @@ provide(
     </div>
 
     <template v-for="section in sections" :key="section.slotKey">
+      <!-- id anchors the search overlay's deep links (#ultimate, #ex, …). -->
       <SkillSection
+        :id="section.slotKey"
         :heading="section.heading"
         :slot-tags="section.slotTags"
         :levels="section.levels"

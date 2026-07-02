@@ -5,9 +5,8 @@ import { useRoute } from 'vue-router'
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
-import CharacterSearchBar from './CharacterSearchBar.vue'
-import CharacterSearchResults from './CharacterSearchResults.vue'
-import { useCharacterRoster } from '@/composables/useCharacterRoster'
+import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
+import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
@@ -25,19 +24,10 @@ const props = defineProps<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-const {
-  factionFilter,
-  classFilter,
-  damageFilter,
-  selectedTagNames,
-  filteredCharacters,
-  searchQuery,
-  visibleSearchResults,
-} = useCharacterRoster(
-  computed(() => props.characters),
-  computed(() => i18n.currentLocale),
-  computed(() => props.linkLocale),
-)
+// Text search lives in the ⌘K overlay (SkillSearchOverlay); the panel keeps
+// only the icon filters, so the grid is always visible.
+const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
+  useCharacterFilters(computed(() => props.characters))
 
 // Seed the tag filter from `/skills?tag=<name>` (e.g. a clicked skill chip).
 const route = useRoute()
@@ -55,12 +45,9 @@ watch(
        exotic skill pages, so it carries its own lang under the content-locale
        <html lang> (fonts + screen readers follow the chrome language). -->
   <div v-scroll-chain class="skills-selection" :lang="i18n.currentLocale">
-    <CharacterSearchBar
-      v-model="searchQuery"
-      :placeholder="i18n.t('app.skill-search-placeholder')"
-      :count="visibleSearchResults?.length ?? null"
-      :count-label="i18n.t('app.skill-results')"
-    />
+    <div class="search-row">
+      <SkillSearchTrigger />
+    </div>
 
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
@@ -71,7 +58,7 @@ watch(
     />
 
     <!-- Meta row mirrors CharacterInfoIcons; wider gap replaces info button. -->
-    <CharacterGrid v-if="!visibleSearchResults">
+    <CharacterGrid>
       <RouterLink
         v-for="character in filteredCharacters"
         :key="character.id"
@@ -98,14 +85,6 @@ watch(
         </div>
       </RouterLink>
     </CharacterGrid>
-
-    <CharacterSearchResults
-      v-else
-      :results="visibleSearchResults"
-      :query="searchQuery"
-      mode="link"
-      :current-slug="currentSlug"
-    />
   </div>
 </template>
 
@@ -125,6 +104,12 @@ watch(
     min-height: 0;
     overflow-y: auto;
   }
+}
+
+/* Clear the panel's scrollbar on desktop (mobile sets its own inset below). */
+.search-row {
+  display: flex;
+  padding-right: var(--spacing-lg);
 }
 
 .character-cell {
@@ -169,12 +154,19 @@ watch(
 @media (max-width: 768px) {
   /* Fill the mobile roster sheet and scroll within it. No panel inset: the grid
      insets itself (CharacterGrid) and the filter/results go edge-to-edge; the
-     search row keeps its own horizontal inset (CharacterSearchBar). */
+     search row keeps its own horizontal inset (see .search-row below). */
   .skills-selection {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
     padding: 0 0 var(--spacing-lg);
+  }
+  /* The panel goes edge-to-edge in the sheet; inset the trigger row itself. */
+  .search-row {
+    padding: var(--spacing-sm) var(--spacing-md) 0;
+  }
+  .search-row :deep(.search-trigger) {
+    max-width: none;
   }
 }
 
@@ -182,6 +174,9 @@ watch(
   .skills-selection {
     gap: var(--spacing-sm);
     padding: 0 0 var(--spacing-md);
+  }
+  .search-row {
+    padding: var(--spacing-sm) var(--spacing-sm) 0;
   }
   /* Match CharacterInfoIcons mobile sizing. */
   .meta-row {

@@ -6,12 +6,7 @@ import SkillsSelection from '@/components/SkillsSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
-import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
-
-// At/above this width the reader and roster sit side by side; below it the
-// roster stacks under the reader. Mirrors the `@media (min-width: 1220px)`
-// row switch in this file's styles (and BottomSheet's).
-const SPLIT_MIN_WIDTH = 1220
+import { SPLIT_MIN_WIDTH, TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
 const props = defineProps<{
   // null on the /skills index (empty reader); a hero slug on a skill page.

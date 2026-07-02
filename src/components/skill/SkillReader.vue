@@ -4,6 +4,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import SkillSections from './SkillSections.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import { useRecentHeroes } from '@/composables/useRecentHeroes'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { hasSkillLocale } from '@/utils/dataLoader'
@@ -23,6 +24,12 @@ const i18n = useI18nStore()
 
 // hasSkillLocale also covers the null-selection case (the /skills index).
 const visibleSlug = computed(() => (props.slug && hasSkillLocale(props.slug) ? props.slug : null))
+
+// Feeds the search overlay's empty state. Post-mount: SSG must not record.
+const { record: recordRecentHero } = useRecentHeroes()
+onMounted(() => {
+  watch(visibleSlug, (slug) => slug && recordRecentHero(slug), { immediate: true })
+})
 
 // Remount per hero AND per text locale: SkillSections writes head meta and
 // the html-lang override in setup, so a locale switch must re-run it.

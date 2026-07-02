@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
+import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
@@ -145,6 +146,9 @@ onUnmounted(() => {
 
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
+
+  <!-- ⌘K skill search; renders nothing until opened -->
+  <SkillSearchOverlay />
 </template>
 
 <style scoped>

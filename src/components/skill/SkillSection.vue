@@ -40,6 +40,7 @@ const renderedRefinements = computed(() =>
 </script>
 
 <template>
+  <!-- scroll-margin keeps hash-targeted sections clear of the sticky chrome. -->
   <section class="skill-section">
     <header v-if="heading || slotTags?.length" class="skill-section-header">
       <h2 v-if="heading" class="skill-section-heading">{{ heading }}</h2>
@@ -83,6 +84,7 @@ const renderedRefinements = computed(() =>
 <style scoped>
 .skill-section {
   margin: var(--spacing-lg) 0;
+  scroll-margin-top: 80px;
 }
 
 /* Border lives on the wrapper (not the h2) so it spans full section width. */

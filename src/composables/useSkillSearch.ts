@@ -4,21 +4,23 @@ import { isAppLocale, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
 import { getSkillLocaleDict, loadCharacterLocales, loadSkillLocale } from '@/utils/dataLoader'
 import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
-import { heroDisplayName } from '@/utils/skillLabels'
+import { curatedHeroName, heroDisplayName } from '@/utils/skillLabels'
 
 export interface SearchHit {
   loc: 'name' | 'skill-name' | 'description'
   slot?: SlotKey
   level?: number
   tier?: number // EX refinement tier (Refine 2/4); set instead of level for refine rows
+  /** Language this hit's text matched in. Per-slot dedup spans the locale
+   * loop, so later hits can come from a different language than the hero's
+   * first; links, lang attributes, and text lookups must use this. */
+  locale: SkillLocale
   snippet: Snippet
 }
 
 export interface SearchResult {
   slug: string
-  /** Language of the first (highest-priority) hit: result links target it, so
-   * the snippet shown is the content clicked through to. */
-  locale: SkillLocale
+  /** Priority-ordered; each hit links to its own matched language. */
   hits: SearchHit[]
 }
 
@@ -149,8 +151,16 @@ export function matchCharacterNames(query: string): Set<string> {
   return slugs
 }
 
-/** Empty query → `null`. ≥1 char → name match. ≥3 chars (≥2 for CJK) → +skill
- * names & descriptions. Matches every warm locale so a hero surfaces
+/** CJK characters pack meaning densely, so two are already a specific query;
+ * Latin needs three to avoid flooding on fragments. Covers Han, kana, and
+ * Hangul so 召唤, かばう, and 소환 all clear the bar at two characters. The
+ * overlay reads this too (its short-query hint must match reality). */
+export function deepSearchMinLength(query: string): number {
+  return /[぀-ヿ一-鿿가-힯]/.test(query) ? 2 : 3
+}
+
+/** Empty query → `null`. ≥1 char → name match. ≥`deepSearchMinLength` chars →
+ * +skill names & descriptions. Matches every warm locale so a hero surfaces
  * regardless of language; the first query streams the missing corpora in and
  * results refine live as they land. Hits per hero capped at 3; results
  * ordered by hit count. */
@@ -174,14 +184,12 @@ export function useSkillSearch(
     const includesQuery = (s: string) => s.toLowerCase().includes(lc)
 
     const perSlug = new Map<string, SearchHit[]>()
-    // The language of a hero's first hit; its result links there (WYSIWYG).
-    const localeOf = new Map<string, SkillLocale>()
     // At most one hit per (slug, slot). Entries are pushed in slot+level
     // order, so the first survivor per slot is the lowest level.
     const seenSlots = new Map<string, Set<SlotKey>>()
     // One name hit per hero, even when the name matches in several locales.
     const namedSlugs = new Set<string>()
-    const pushHit = (slug: string, hit: SearchHit, locale: SkillLocale) => {
+    const pushHit = (slug: string, hit: Omit<SearchHit, 'locale'>, locale: SkillLocale) => {
       if (hit.slot) {
         const seen = seenSlots.get(slug) ?? new Set<SlotKey>()
         if (seen.has(hit.slot)) return
@@ -189,9 +197,8 @@ export function useSkillSearch(
         seenSlots.set(slug, seen)
       }
       const list = perSlug.get(slug) ?? []
-      if (list.length < 3) list.push(hit)
+      if (list.length < 3) list.push({ ...hit, locale })
       perSlug.set(slug, list)
-      if (!localeOf.has(slug)) localeOf.set(slug, locale)
     }
 
     const locales = localesInPriority(textLang.value, appLang.value)
@@ -207,10 +214,7 @@ export function useSkillSearch(
       }
     }
 
-    // Han characters (the zh locale) pack meaning densely, so two are already a
-    // specific query; Latin needs three to avoid flooding on fragments.
-    const deepMinLength = /[一-鿿]/.test(q) ? 2 : 3
-    if (q.length >= deepMinLength) {
+    if (q.length >= deepSearchMinLength(q)) {
       for (const locale of locales) {
         for (const e of getIndex(locale)!.deep) {
           if (!includesQuery(e.text)) continue
@@ -231,14 +235,13 @@ export function useSkillSearch(
       }
     }
 
-    const charLocales = loadCharacterLocales()
     return [...perSlug.entries()]
-      .map(([slug, hits]) => ({ slug, locale: localeOf.get(slug) ?? textLang.value, hits }))
+      .map(([slug, hits]) => ({ slug, hits }))
       .sort((a, b) => {
         if (b.hits.length !== a.hits.length) return b.hits.length - a.hits.length
-        const na = charLocales[a.slug]?.[appLang.value] ?? a.slug
-        const nb = charLocales[b.slug]?.[appLang.value] ?? b.slug
-        return na.localeCompare(nb)
+        return curatedHeroName(a.slug, appLang.value).localeCompare(
+          curatedHeroName(b.slug, appLang.value),
+        )
       })
   })
 }
