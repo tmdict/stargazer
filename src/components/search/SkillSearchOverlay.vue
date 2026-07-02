@@ -50,7 +50,6 @@ onUnmounted(() => wideMq?.removeEventListener('change', onWideChange))
 // activating a row hands the slug to the opener instead of navigating.
 const selectMode = computed(() => selectHandler.value !== null)
 
-// Same debounce feel as the roster search.
 const debounced = ref('')
 let debounceTimer: ReturnType<typeof setTimeout> | null = null
 watch(query, (q) => {
@@ -279,8 +278,8 @@ const countsText = computed(() =>
 )
 
 // The first query streams the missing locale chunks in; surface the progress
-// quietly. If chunks fail the note persists, which stays honest: those
-// languages are not being searched (they retry on the next query).
+// quietly. Failed chunks keep the note up: those languages are not being
+// searched until the next query retries them.
 const warmLocales = computed(
   () => SKILL_LOCALES.filter(({ code }) => getSkillLocaleDict(code) !== null).length,
 )
@@ -299,8 +298,8 @@ function scrollSelectedIntoView(): void {
   })
 }
 
-// New-tab always opens the skill page (a handy preview even in select mode);
-// otherwise select mode hands the slug to the opener, navigate mode routes.
+// New-tab always opens the skill page, select mode included; otherwise
+// select mode hands the slug to the opener and navigate mode routes.
 function activate(slug: string, href: string, newTab: boolean): void {
   if (newTab) {
     window.open(router.resolve(href).href, '_blank', 'noopener')
@@ -931,17 +930,19 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   color: #6b7079;
 }
 
-/* Flex-centered fixed-height chips: arrow glyphs (↑ ↵ ⇥) carry lopsided font
-   metrics that otherwise sit off-center in a padding-sized box. */
+/* system-ui rather than the content font: Verdana lacks ↵ and ⇥, so those
+   chips would fall back to a font with different metrics than ↑ ↓; one
+   family gives every glyph the same box and baseline. */
 .sso-foot kbd {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-width: 18px;
-  height: 17px;
-  padding: 0 4px;
+  height: 18px;
+  padding: 0 5px;
   line-height: 1;
-  font-family: inherit;
+  font-family: system-ui, sans-serif;
+  font-size: 0.72rem;
   background: #2c3037;
   border: 1px solid #3f444d;
   border-radius: 4px;

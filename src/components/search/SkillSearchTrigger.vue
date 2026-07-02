@@ -28,7 +28,7 @@ const onClick = () => {
 </template>
 
 <style scoped>
-/* Dressed as the search input it replaces (CharacterSelection's real one). */
+/* A button dressed as a search input; the real input lives in the overlay. */
 .search-trigger {
   display: flex;
   align-items: center;
@@ -74,8 +74,7 @@ const onClick = () => {
   text-overflow: ellipsis;
 }
 
-/* Flat, minimal chip: one quiet pill, no key-cap borders. The min-width
-   absorbs the Ctrl K → ⌘ K swap on Macs. */
+/* The min-width absorbs the "Ctrl K" to "⌘ K" swap on Macs. */
 .trigger-kbd {
   flex-shrink: 0;
   min-width: 46px;

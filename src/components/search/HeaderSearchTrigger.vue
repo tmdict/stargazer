@@ -89,9 +89,20 @@ const shortcut = useShortcutLabel()
 
 /* Narrow desktop: the full pill pushes the header's natural width past the
    viewport (~836px with en labels), wrapping the utility icons onto a stray
-   second row. Collapse to an icon-only pill until there is room. */
+   second row. Collapse to an icon-only pill until there is room. The label
+   goes zero-width rather than display: none: its line box is what makes the
+   pill the same height as the .nav-text-link neighbors (same font metrics),
+   so it keeps setting the height while contributing no width. */
 @media (min-width: 769px) and (max-width: 920px) {
-  .search-label,
+  .header-search {
+    gap: 0;
+  }
+
+  .search-label {
+    width: 0;
+    overflow: hidden;
+  }
+
   .search-kbd {
     display: none;
   }
