@@ -8,10 +8,12 @@ import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import IconSearch from '@/components/ui/IconSearch.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
 import { useLocaleToggle } from '@/composables/useLocaleToggle'
+import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
 
@@ -20,6 +22,7 @@ const showAboutModal = ref(false)
 const i18n = useI18nStore()
 const route = useRoute()
 const toggleLocale = useLocaleToggle()
+const { open: openSearch } = useSearchOverlay()
 
 // Header renders on every route; init here so SSG-only routes whose views
 // don't call initialize (about, skill/*) still get translations. Idempotent.
@@ -117,6 +120,18 @@ onUnmounted(() => {
         >
       </div>
       <ul class="menu">
+        <li class="menu-search">
+          <button
+            type="button"
+            class="icon-link icon-button"
+            aria-haspopup="dialog"
+            :aria-label="i18n.t('app.skill-search-placeholder')"
+            :title="i18n.t('app.skill-search-placeholder')"
+            @click="openSearch"
+          >
+            <IconSearch :size="22" />
+          </button>
+        </li>
         <li>
           <button
             @click="showAboutModal = true"
@@ -217,8 +232,10 @@ nav ul li {
   color: #f7d87c;
 }
 
-/* The search trigger leads the right-side cluster: its auto margin is the
-   push that separates the logo from everything else, on all breakpoints. */
+/* Wide headers: the search pill leads the right-side cluster and its auto
+   margin is the push off the logo. Below 921px the full pill overflows the
+   bar (natural width ~836px), so search swaps to the .menu-search icon in
+   the utility cluster and the push returns to the tab row. */
 .nav-search {
   margin-left: auto;
 }
@@ -229,6 +246,22 @@ nav ul li {
   align-items: flex-end;
   gap: 1.5rem;
   margin-left: 1.5rem;
+}
+
+@media (max-width: 920px) {
+  .nav-search {
+    display: none;
+  }
+
+  .nav-tabs {
+    margin-left: auto;
+  }
+}
+
+@media (min-width: 921px) {
+  .menu-search {
+    display: none;
+  }
 }
 
 .nav-text-link {
@@ -282,13 +315,13 @@ nav ul li {
 
   .menu {
     order: 1;
-    margin-left: 1rem;
+    margin-left: auto;
     gap: 1rem;
   }
 
   /* This row centers vertically: neutralize base.css's prose li metrics
      (4px top margin + a 1.6 line-height strut), which otherwise sink the
-     utility icons a few px below the search icon's center. */
+     icons a few px below the row's center. */
   .menu li {
     margin: 0;
     display: flex;
