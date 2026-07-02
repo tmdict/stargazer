@@ -64,8 +64,12 @@ const download = () => {
 <template>
   <div class="preview">
     <div v-if="oversized" class="preview-warning">
-      Result is too large to render ({{ dimensions?.width }} × {{ dimensions?.height }} px). Remove
-      images or switch direction.
+      {{
+        i18n.t('app.stitch-oversized', {
+          width: dimensions?.width ?? 0,
+          height: dimensions?.height ?? 0,
+        })
+      }}
     </div>
     <div v-else ref="previewBox" class="preview-box">
       <span v-if="dimensions" class="dim-badge"
@@ -74,13 +78,18 @@ const download = () => {
     </div>
 
     <div class="actions">
-      <button class="action-btn" :disabled="!canvas" title="Copy" @click="copy">
+      <button class="action-btn" :disabled="!canvas" :title="i18n.t('app.copy')" @click="copy">
         <IconCopy :size="14" class="btn-icon" />
-        <span class="btn-text">Copy</span>
+        <span class="btn-text">{{ i18n.t('app.copy') }}</span>
       </button>
-      <button class="action-btn" :disabled="!canvas" title="Download" @click="download">
+      <button
+        class="action-btn"
+        :disabled="!canvas"
+        :title="i18n.t('app.download')"
+        @click="download"
+      >
         <IconDownload :size="14" class="btn-icon" />
-        <span class="btn-text">Download</span>
+        <span class="btn-text">{{ i18n.t('app.download') }}</span>
       </button>
       <ClearButton @click="emit('clear')" />
     </div>

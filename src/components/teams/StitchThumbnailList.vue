@@ -3,6 +3,7 @@ import { ref } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
 import type { StitchImage } from '@/composables/useImageStitch'
+import { useI18nStore } from '@/stores/i18n'
 
 defineProps<{
   images: StitchImage[]
@@ -12,6 +13,8 @@ const emit = defineEmits<{
   remove: [id: string]
   reorder: [from: number, to: number]
 }>()
+
+const i18n = useI18nStore()
 
 const dragIndex = ref<number | null>(null)
 const overIndex = ref<number | null>(null)
@@ -43,7 +46,7 @@ const handleDrop = (to: number) => {
       <span class="thumb-index">{{ index + 1 }}</span>
       <button
         class="thumb-remove"
-        :title="`Remove ${image.name}`"
+        :title="i18n.t('app.remove-image', { name: image.name })"
         @click="emit('remove', image.id)"
       >
         <IconClose :size="12" />

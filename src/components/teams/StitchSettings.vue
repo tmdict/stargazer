@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import type { StitchDirection, StitchFit } from '@/composables/useImageStitch'
+import { useI18nStore } from '@/stores/i18n'
+
+const i18n = useI18nStore()
 
 const direction = defineModel<StitchDirection>('direction', { required: true })
 const gap = defineModel<number>('gap', { required: true })
@@ -10,35 +13,35 @@ const fit = defineModel<StitchFit>('fit', { required: true })
 <template>
   <div class="settings">
     <div class="setting">
-      <span class="setting-label">Direction</span>
+      <span class="setting-label">{{ i18n.t('app.direction') }}</span>
       <div class="segmented">
         <button
           class="seg-btn"
           :class="{ active: direction === 'horizontal' }"
           @click="direction = 'horizontal'"
         >
-          Horizontal
+          {{ i18n.t('app.horizontal') }}
         </button>
         <button
           class="seg-btn"
           :class="{ active: direction === 'vertical' }"
           @click="direction = 'vertical'"
         >
-          Vertical
+          {{ i18n.t('app.vertical') }}
         </button>
       </div>
     </div>
 
     <div class="setting">
-      <span class="setting-label">Fit</span>
+      <span class="setting-label">{{ i18n.t('app.fit') }}</span>
       <select v-model="fit" class="setting-input">
-        <option value="original">Keep original</option>
-        <option value="scale">Scale to match</option>
+        <option value="original">{{ i18n.t('app.fit-original') }}</option>
+        <option value="scale">{{ i18n.t('app.fit-scale') }}</option>
       </select>
     </div>
 
     <div class="setting">
-      <span class="setting-label">Gap</span>
+      <span class="setting-label">{{ i18n.t('app.gap') }}</span>
       <div class="gap-input">
         <input v-model.number="gap" type="number" min="0" max="200" class="setting-input gap" />
         <span class="unit">px</span>
@@ -46,11 +49,11 @@ const fit = defineModel<StitchFit>('fit', { required: true })
     </div>
 
     <div class="setting">
-      <span class="setting-label">Background</span>
+      <span class="setting-label">{{ i18n.t('app.background') }}</span>
       <select v-model="background" class="setting-input">
-        <option value="transparent">Transparent</option>
-        <option value="#ffffff">White</option>
-        <option value="#000000">Black</option>
+        <option value="transparent">{{ i18n.t('app.transparent') }}</option>
+        <option value="#ffffff">{{ i18n.t('app.white') }}</option>
+        <option value="#000000">{{ i18n.t('app.black') }}</option>
       </select>
     </div>
   </div>
