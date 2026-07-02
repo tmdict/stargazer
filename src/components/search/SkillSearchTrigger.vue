@@ -1,8 +1,6 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-
 import IconSearch from '@/components/ui/IconSearch.vue'
-import { useSearchOverlay } from '@/composables/useSearchOverlay'
+import { useSearchOverlay, useShortcutLabel } from '@/composables/useSearchOverlay'
 import { useI18nStore } from '@/stores/i18n'
 
 // With `select`, the overlay opens in select mode and hands the chosen slug
@@ -13,18 +11,12 @@ const { select } = defineProps<{
 
 const { open, openSelect } = useSearchOverlay()
 const i18n = useI18nStore()
+const shortcut = useShortcutLabel()
 
 const onClick = () => {
   if (select) openSelect(select)
   else open()
 }
-
-// SSG bakes the majority label; Macs swap after mount. Post-hydration and
-// min-width'd in CSS, so the swap neither mismatches nor shifts layout.
-const shortcut = ref('Ctrl K')
-onMounted(() => {
-  if (/Mac|iPhone|iPad/.test(navigator.platform)) shortcut.value = '⌘ K'
-})
 </script>
 
 <template>
@@ -86,7 +78,7 @@ onMounted(() => {
    absorbs the Ctrl K → ⌘ K swap on Macs. */
 .trigger-kbd {
   flex-shrink: 0;
-  min-width: 40px;
+  min-width: 46px;
   text-align: center;
   font-family: inherit;
   font-size: 0.68rem;

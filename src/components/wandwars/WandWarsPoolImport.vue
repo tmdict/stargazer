@@ -562,7 +562,7 @@ function cancel() {
           <input
             v-model="pickerQuery"
             type="text"
-            :placeholder="i18n.t('wandwars.search-hero')"
+            :placeholder="i18n.t('app.search-heroes-placeholder')"
             class="picker-search"
             @keydown.esc="activePicker = null"
           />

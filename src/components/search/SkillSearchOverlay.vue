@@ -352,7 +352,7 @@ useScrollLock(isOpen)
 // document-level ones included: one press closes only the overlay, never
 // what sits beneath.
 const onCaptureKeydown = (e: KeyboardEvent) => {
-  if (e.key !== 'Escape' || !isOpen.value || e.isComposing) return
+  if (e.key !== 'Escape' || !isOpen.value || e.isComposing || e.keyCode === 229) return
   e.stopImmediatePropagation()
   close()
 }

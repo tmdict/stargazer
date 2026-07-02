@@ -7,10 +7,12 @@ import CharacterIcon from './CharacterIcon.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useToast } from '@/composables/useToast'
 import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const {
@@ -27,6 +29,8 @@ const {
 
 const { fillOrder, targetHexId, targetGridId, clearTargetHex } = useSelectionState()
 const grids = useGrids()
+const i18n = useI18nStore()
+const toast = useToast()
 
 // Text search lives in the ⌘K overlay (select mode: a picked hero is placed,
 // not navigated to); the panel keeps only the icon filters.
@@ -79,7 +83,11 @@ const handleCharacterClick = (character: CharacterType) => {
 const handleResultSelect = (slug: string) => {
   const character = characters.find((c) => c.name === slug)
   if (!character) return
-  if (targetHexId.value === null && isCharacterPlaced(character.id)) return
+  if (targetHexId.value === null && isCharacterPlaced(character.id)) {
+    // The overlay has already closed; without feedback the no-op reads as a bug.
+    toast.show(i18n.t('app.search-already-placed'), 'info')
+    return
+  }
   handleCharacterClick(character)
 }
 </script>

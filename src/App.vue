@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
+import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
@@ -83,6 +84,10 @@ onUnmounted(() => {
       >
         <img alt="logo" class="logo" :src="isLogoHovered ? rowanGif : rowanSvg" />
       </RouterLink>
+
+      <!-- Leads the right-side cluster; on mobile it collapses to an icon and
+           joins the utility row. -->
+      <HeaderSearchTrigger class="nav-search" />
 
       <div class="nav-tabs">
         <RouterLink to="/" class="nav-text-link" :class="{ active: route.path === '/' }">{{
@@ -214,12 +219,18 @@ nav ul li {
   color: #f7d87c;
 }
 
+/* The search trigger leads the right-side cluster: its auto margin is the
+   push that separates the logo from everything else, on all breakpoints. */
+.nav-search {
+  margin-left: auto;
+}
+
 /* Section tabs; sit at the right ahead of the icons on desktop. */
 .nav-tabs {
   display: flex;
   align-items: flex-end;
   gap: 1.5rem;
-  margin-left: auto;
+  margin-left: 1.5rem;
 }
 
 .nav-text-link {
@@ -273,7 +284,8 @@ nav ul li {
 
   .menu {
     order: 1;
-    margin-left: auto;
+    /* .nav-search ahead of the cluster carries the auto push here too. */
+    margin-left: 1rem;
     gap: 1rem;
   }
 
