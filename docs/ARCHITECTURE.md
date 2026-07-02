@@ -92,7 +92,7 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 - `useScrollLock`: Locks the page behind an open modal: `position: fixed` body (freezes content scroll) + `overscroll-behavior: none` on `<html>` (stops the document's pull-to-refresh / rubber-band); ref-counted for stacked modals. Used by `BaseModal`
 - `useCharacterFilters`: Shared faction/class/damage/tag filter state for the Characters tab and `/skills`
 - `useSkillSearch`: Lazy per-language skill-text index across all 16 skill locales (en/zh from the eager bundle; the rest stream in on first query), backing the global ⌘K overlay (`SkillSearchOverlay`); `matchCharacterNames` also serves the on-grid picker popup
-- `useSearchOverlay`: Shared open/query/select-handler state for the ⌘K overlay; `open()` is the navigate flavor, `openSelect(handler)` the pick-a-hero flavor (arena roster placement)
+- `useSearchOverlay`: Shared open/query/select-handler state for the ⌘K overlay; `open()` is the navigate flavor, `openSelect(handler)` the pick-a-hero flavor (arena roster placement); also exports `useShortcutLabel`, the platform-aware shortcut chip label shared by the triggers
 - `useRecentHeroes`: Recently viewed skill pages (localStorage `stargazer.recentHeroes`, capped at 5), recorded by `SkillReader` and shown in the overlay's empty state
 - `useLocaleToggle`: Chrome-language switch that navigates between `/en`↔`/zh` URLs on app-locale-prefixed routes, otherwise flips the global locale (non-en/zh skill prefixes parse as unprefixed, so there it flips chrome in place without rewriting the content URL)
 - `useToast`: Global toast queue (success/error), rendered by `ToastContainer`

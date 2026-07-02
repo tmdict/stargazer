@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 // Shared state for the skill search overlay. Module scope: the triggers (in
 // the roster panels) and the overlay (mounted at App root) sit far apart in
@@ -13,6 +13,17 @@ import { ref } from 'vue'
 const isOpen = ref(false)
 const query = ref('')
 const selectHandler = ref<((slug: string) => void) | null>(null)
+
+/** Platform-aware shortcut chip label for the triggers. SSG bakes the
+ * majority label; Macs swap after mount (post-hydration, and the chips carry
+ * a min-width so the swap doesn't shift layout). */
+export function useShortcutLabel() {
+  const shortcut = ref('Ctrl K')
+  onMounted(() => {
+    if (/Mac|iPhone|iPad/.test(navigator.platform)) shortcut.value = '⌘ K'
+  })
+  return shortcut
+}
 
 export function useSearchOverlay() {
   const open = () => {
