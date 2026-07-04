@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mock — Teams tab: mode controls row</title>
+    <style>
+      /* ============================================================
+     MOCK ONLY — review artifact for docs/design/TEAM_MODES_AND_SAVED_TEAMS.md
+     Tokens copied from src/styles/variables.css; tab strip from TabList.vue;
+     control buttons from GridControls.vue; card from App.vue `.section`.
+     Interactive: click the mode picker to switch 3v3 / 5v5 / 5v5 SL.
+     ============================================================ */
+      :root {
+        --color-primary: #36958e;
+        --color-primary-hover: #2a7a73;
+        --color-danger: #c05b4d;
+        --color-ally: #36958e;
+        --color-enemy: #c82333;
+        --color-bg-primary: #f7f2ec;
+        --color-bg-secondary: #ebe6db;
+        --color-bg-tertiary: #f0ebe0;
+        --color-border-primary: #d4cfc0;
+        --color-border-light: #ddd;
+        --color-text-primary: #333;
+        --color-text-secondary: #666;
+        --color-text-muted: #484848;
+        --radius-medium: 6px;
+        --radius-large: 8px;
+        --spacing-xs: 0.25rem;
+        --spacing-sm: 0.5rem;
+        --spacing-md: 0.75rem;
+        --spacing-lg: 1rem;
+        --spacing-xl: 1.5rem;
+        --transition-fast: 0.2s ease;
+        --tab-font-size: 0.85rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #20232a;
+        font-family: sans-serif;
+        font-size: 15px;
+        color: #333;
+        line-height: 1.6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1.5rem 4rem;
+        gap: 1.25rem;
+      }
+      .mock-note {
+        color: #9aa3b2;
+        font-size: 0.8rem;
+        max-width: 1100px;
+        width: 100%;
+      }
+      .mock-note strong {
+        color: #f7d87c;
+      }
+
+      /* ---- the boards card (`.section`) -------------------------------- */
+      .section {
+        width: 100%;
+        max-width: 1100px;
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-large);
+        padding: 2em;
+        display: flex;
+        flex-direction: column;
+      }
+
+      /* ---- outer tab strip (TabList desktop underline style) ----------- */
+      .tab-bar {
+        display: flex;
+        margin: -2em -2em 0;
+        padding: 0 var(--spacing-md);
+        border-bottom: 1px solid var(--color-border-light);
+      }
+      .tab-btn {
+        background: transparent;
+        border: none;
+        border-bottom: 2.5px solid transparent;
+        margin-bottom: -1px;
+        padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+        color: var(--color-text-secondary);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: var(--tab-font-size);
+        cursor: pointer;
+      }
+      .tab-btn.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+      }
+      .tab-btn:hover:not(.active) {
+        color: var(--color-text-primary);
+        border-bottom-color: var(--color-border-primary);
+      }
+
+      /* ---- NEW: team mode controls row ---------------------------------- */
+      .team-mode-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-md) var(--spacing-xl);
+        padding: var(--spacing-lg) 0 var(--spacing-md);
+        position: relative;
+      }
+      .new-badge {
+        position: absolute;
+        left: 0;
+        top: var(--spacing-lg);
+        font-size: 0.62rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        color: #fff;
+        background: #b4884f;
+        border-radius: 3px;
+        padding: 1px 6px;
+        text-transform: uppercase;
+      }
+
+      /* segmented mode picker */
+      .mode-picker {
+        display: inline-flex;
+        background: var(--color-bg-secondary);
+        border: 2px solid var(--color-border-primary);
+        border-radius: 999px;
+        padding: 3px;
+        gap: 2px;
+      }
+      .mode-seg {
+        border: none;
+        background: transparent;
+        border-radius: 999px;
+        padding: 5px 16px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+      }
+      .mode-seg:hover:not(.active) {
+        color: var(--color-primary);
+        background: var(--color-bg-tertiary);
+      }
+      .mode-seg.active {
+        background: var(--color-primary);
+        color: #fff;
+      }
+
+      /* action buttons (match GridControls .action-btn) */
+      .mode-actions {
+        display: flex;
+        gap: var(--spacing-lg);
+        align-items: center;
+      }
+      .action-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        border: 2px solid var(--color-primary);
+        background: var(--color-primary);
+        color: #fff;
+        border-radius: var(--radius-medium);
+        padding: var(--spacing-xs) var(--spacing-md);
+        min-height: 36px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        white-space: nowrap;
+      }
+      .action-btn:hover {
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+      }
+      .action-btn.secondary {
+        background: var(--color-bg-primary);
+        color: var(--color-text-secondary);
+        border-color: var(--color-border-primary);
+      }
+      .action-btn.secondary:hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+        background: var(--color-bg-tertiary);
+      }
+      .action-btn svg {
+        flex-shrink: 0;
+      }
+
+      /* ---- existing controls row (unchanged, for placement context) ---- */
+      .grid-controls {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: var(--spacing-md) var(--spacing-lg);
+        padding-bottom: var(--spacing-sm);
+        opacity: 0.92;
+      }
+      .grid-toggle-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        border: 2px solid var(--color-border-primary);
+        background: var(--color-bg-primary);
+        color: var(--color-text-secondary);
+        border-radius: var(--radius-medium);
+        padding: var(--spacing-xs) var(--spacing-md);
+        min-height: 36px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+      }
+      .grid-toggle-btn:hover {
+        background: var(--color-bg-tertiary);
+        border-color: var(--color-primary);
+        color: var(--color-primary);
+      }
+      .grid-toggle-btn input {
+        accent-color: var(--color-primary);
+        width: 0.9rem;
+        height: 0.9rem;
+        margin: 0;
+        cursor: pointer;
+      }
+      .clear-btn {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
+        color: #fff;
+      }
+      .clear-btn:hover {
+        background: #a04936;
+        border-color: #a04936;
+        color: #fff;
+      }
+
+      /* ---- boards row placeholder --------------------------------------- */
+      .boards {
+        display: flex;
+        justify-content: center;
+        overflow-x: auto;
+        padding: var(--spacing-lg) 0 var(--spacing-md);
+      }
+      .boards-track {
+        display: flex;
+        gap: var(--spacing-md);
+      }
+      .board {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        border: 2.5px solid transparent;
+        border-radius: var(--radius-large);
+        padding: 6px 10px;
+      }
+      .board.active {
+        border-color: var(--color-primary);
+      }
+      .board svg {
+        display: block;
+      }
+      .board-caption {
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+      }
+
+      .footnotes {
+        max-width: 1100px;
+        width: 100%;
+        color: #9aa3b2;
+        font-size: 0.82rem;
+      }
+      .footnotes b {
+        color: #d7dce6;
+      }
+      .footnotes ol {
+        margin: 0.4rem 0 0 1.2rem;
+        padding: 0;
+      }
+      .footnotes li {
+        margin-bottom: 0.35rem;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="mock-note">
+      <strong>MOCK</strong> — Teams tab with the new <b>mode controls row</b> (segmented mode picker
+      + Save / Export / Import) above the existing display-toggle row. The picker is clickable: try
+      3v3 vs 5v5 — note the board count, default maps, and the Wrap toggle disappearing for 3v3.
+    </p>
+
+    <section class="section">
+      <div class="tab-bar">
+        <button class="tab-btn active">Teams</button>
+        <button class="tab-btn">Image Stitcher</button>
+      </div>
+
+      <!-- NEW ROW -->
+      <div class="team-mode-controls">
+        <span class="new-badge">new</span>
+        <div class="mode-picker" id="modePicker">
+          <button class="mode-seg" data-mode="3v3">3v3</button>
+          <button class="mode-seg" data-mode="5v5">5v5</button>
+          <button class="mode-seg active" data-mode="5v5sl">5v5 Supreme League</button>
+        </div>
+        <div class="mode-actions">
+          <button class="action-btn" title="Save current team to Saved Teams">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+              <polyline points="17 21 17 13 7 13 7 21" />
+              <polyline points="7 3 7 8 15 8" />
+            </svg>
+            Save
+          </button>
+          <button class="action-btn secondary" title="Export all saved teams as JSON">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export
+          </button>
+          <button class="action-btn secondary" title="Import saved teams from a JSON export">
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.4"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="17 8 12 3 7 8" />
+              <line x1="12" y1="3" x2="12" y2="15" />
+            </svg>
+            Import
+          </button>
+        </div>
+      </div>
+
+      <!-- EXISTING ROW (unchanged; Wrap hides in 3v3) -->
+      <div class="grid-controls">
+        <label class="grid-toggle-btn" id="wrapToggle"><input type="checkbox" /> Wrap</label>
+        <label class="grid-toggle-btn"><input type="checkbox" checked /> Flat</label>
+        <label class="grid-toggle-btn"><input type="checkbox" checked /> Grid Info</label>
+        <label class="grid-toggle-btn"><input type="checkbox" /> Team View</label>
+        <label class="grid-toggle-btn"><input type="checkbox" checked /> Skills</label>
+        <label class="grid-toggle-btn"><input type="checkbox" /> Targeting</label>
+        <label class="grid-toggle-btn"><input type="checkbox" /> Invert</label>
+        <button class="action-btn">Link</button>
+        <button class="action-btn">Copy</button>
+        <button class="action-btn">Download</button>
+        <button class="action-btn clear-btn">Clear</button>
+      </div>
+
+      <div class="boards"><div class="boards-track" id="boardsTrack"></div></div>
+    </section>
+
+    <div class="footnotes">
+      <b>Notes for review</b>
+      <ol>
+        <li>
+          The outer tab is renamed <b>5 v 5 → Teams</b> (existing i18n key <code>app.teams</code>).
+        </li>
+        <li>
+          Mode picker is a segmented control fed by the <code>TEAM_MODES</code> registry — adding a
+          2- or 4-grid mode later is one registry entry, no new UI.
+        </li>
+        <li>
+          Switching modes is instant and lossless: each mode autosaves to its own localStorage slot,
+          so no confirmation dialog is needed.
+        </li>
+        <li>
+          <b>Save</b> snapshots the current boards into the Saved Teams list (see
+          <code>saved-teams-tab.html</code>); Export/Import operate on that list as a JSON backup
+          file.
+        </li>
+        <li><b>Wrap</b> renders only for 5-board modes; 3 boards always fit one row.</li>
+        <li>
+          Default maps: 3v3 and 5v5 = Arena I on every board; 5v5 Supreme League keeps today's list
+          (Arena I–III, Preset SR11, SR1).
+        </li>
+        <li>
+          Everything below the new row is untouched (display toggles, invert,
+          link/copy/download/clear, boards, per-board actions).
+        </li>
+      </ol>
+    </div>
+
+    <script>
+      /* Mini hex-board renderer (stylized stand-in for GridBoard). */
+      const SQRT3 = Math.sqrt(3)
+      function hexPoints(cx, cy, s) {
+        const pts = []
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI / 180) * (60 * i - 30)
+          pts.push((cx + s * Math.cos(a)).toFixed(1) + ',' + (cy + s * Math.sin(a)).toFixed(1))
+        }
+        return pts.join(' ')
+      }
+      /* Occupancy patterns (deterministic, per board index) */
+      const DOTS = [
+        [
+          [0, 2],
+          [-1, 2],
+          [1, 1],
+          [0, -2],
+          [1, -2],
+        ],
+        [
+          [-1, 3],
+          [0, 2],
+          [2, -3],
+          [0, -2],
+          [-2, 3],
+          [1, -3],
+        ],
+        [
+          [0, 3],
+          [1, 2],
+          [-1, -2],
+          [0, -3],
+        ],
+        [
+          [2, 1],
+          [-2, 3],
+          [0, -2],
+          [1, -1],
+        ],
+        [
+          [0, 2],
+          [-1, 3],
+          [2, -2],
+          [0, -3],
+          [1, -2],
+        ],
+      ]
+      function boardSvg(idx, blocked) {
+        const R = 3,
+          s = 11
+        const w = s * SQRT3 * (2 * R + 1.2),
+          h = s * (1.5 * 2 * R + 2.6)
+        let polys = ''
+        for (let r = -R; r <= R; r++) {
+          for (let q = Math.max(-R, -r - R); q <= Math.min(R, -r + R); q++) {
+            const cx = w / 2 + s * SQRT3 * (q + r / 2)
+            const cy = h / 2 + s * 1.5 * r
+            let fill = 'rgba(0,0,0,0.05)'
+            if (r > 0) fill = 'rgba(54,149,142,0.30)'
+            if (r < 0) fill = 'rgba(200,35,51,0.28)'
+            if (blocked && ((q === 2 && r === 0) || (q === -2 && r === 0)))
+              fill = 'rgba(128,128,128,0.45)'
+            polys += `<polygon points="${hexPoints(cx, cy, s)}" fill="${fill}" stroke="rgba(0,0,0,0.12)" stroke-width="1"/>`
+          }
+        }
+        for (const [q, r] of DOTS[idx % DOTS.length]) {
+          const cx = w / 2 + s * SQRT3 * (q + r / 2)
+          const cy = h / 2 + s * 1.5 * r
+          const c = r > 0 ? '#36958e' : '#c82333'
+          polys += `<circle cx="${cx}" cy="${cy}" r="${s * 0.52}" fill="${c}" stroke="#fff" stroke-width="1.6"/>`
+        }
+        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">${polys}</svg>`
+      }
+
+      const MODES = {
+        '3v3': { count: 3, maps: ['Arena I', 'Arena I', 'Arena I'], canWrap: false },
+        '5v5': {
+          count: 5,
+          maps: ['Arena I', 'Arena I', 'Arena I', 'Arena I', 'Arena I'],
+          canWrap: true,
+        },
+        '5v5sl': {
+          count: 5,
+          maps: ['Arena I', 'Arena II', 'Arena III', 'Preset SR11', 'Preset SR1'],
+          canWrap: true,
+        },
+      }
+      function render(modeKey) {
+        const mode = MODES[modeKey]
+        const track = document.getElementById('boardsTrack')
+        track.innerHTML = ''
+        for (let i = 0; i < mode.count; i++) {
+          const div = document.createElement('div')
+          div.className = 'board' + (i === 0 ? ' active' : '')
+          div.innerHTML = boardSvg(i, i >= 3) + `<span class="board-caption">${mode.maps[i]}</span>`
+          track.appendChild(div)
+        }
+        document.getElementById('wrapToggle').style.display = mode.canWrap ? '' : 'none'
+      }
+      document.querySelectorAll('.mode-seg').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.mode-seg').forEach((b) => b.classList.remove('active'))
+          btn.classList.add('active')
+          render(btn.dataset.mode)
+        })
+      })
+      render('5v5sl')
+    </script>
+  </body>
+</html>
