@@ -159,7 +159,10 @@ export function packDisplayFlags(flags: DisplayFlags): number {
 }
 
 /* One board's GridState plus its map key, so a restore can rebuild the board on
- * the map it was configured with (tile states carry only the edits). */
+ * the map it was configured with. Note `t` is not edits-only: it carries every
+ * non-default tile including the map's baseline available hexes, because restore
+ * resets all tiles to DEFAULT and replays `t`; `m` mainly keeps currentMap honest
+ * for UI highlight and re-serialization. */
 export type BoardState = GridState & { m?: string }
 
 /* Multi-board state (Teams page): one BoardState per board, the active board,
