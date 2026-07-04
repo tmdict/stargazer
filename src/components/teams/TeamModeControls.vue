@@ -8,7 +8,9 @@
 
 import { nextTick, ref } from 'vue'
 
+import IconDownload from '@/components/ui/IconDownload.vue'
 import IconSave from '@/components/ui/IconSave.vue'
+import IconUpload from '@/components/ui/IconUpload.vue'
 import {
   MAX_TEAM_NAME_LENGTH,
   TEAM_MODE_ORDER,
@@ -31,9 +33,22 @@ const emit = defineEmits<{
   switchMode: [mode: TeamModeKey]
   save: []
   saveAsNew: [name: string]
+  exportTeams: []
+  // The chosen backup file's text; the caller parses/merges and reports.
+  importFile: [raw: string]
 }>()
 
 const i18n = useI18nStore()
+
+const fileInput = ref<HTMLInputElement>()
+
+const handleFileChosen = async (event: Event): Promise<void> => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // allow re-importing the same file
+  if (!file) return
+  emit('importFile', await file.text())
+}
 
 const popoverOpen = ref(false)
 const popoverName = ref('')
@@ -116,7 +131,21 @@ const handleSave = (): void => {
           </div>
         </div>
       </span>
-      <slot name="transfer" />
+      <button type="button" class="action-btn secondary" @click="emit('exportTeams')">
+        <IconDownload :size="14" class="btn-icon" />
+        <span class="btn-text">{{ i18n.t('app.export') }}</span>
+      </button>
+      <button type="button" class="action-btn secondary" @click="fileInput?.click()">
+        <IconUpload :size="14" class="btn-icon" />
+        <span class="btn-text">{{ i18n.t('app.import') }}</span>
+      </button>
+      <input
+        ref="fileInput"
+        type="file"
+        accept="application/json,.json"
+        class="file-input"
+        @change="handleFileChosen"
+      />
     </div>
   </div>
 </template>
@@ -238,6 +267,10 @@ const handleSave = (): void => {
 .popover-anchor {
   position: relative;
   display: inline-flex;
+}
+
+.file-input {
+  display: none;
 }
 
 .name-popover {
