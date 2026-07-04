@@ -1,0 +1,523 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mock — Saved Teams roster tab</title>
+    <style>
+      /* ============================================================
+     MOCK ONLY — review artifact for docs/design/TEAM_MODES_AND_SAVED_TEAMS.md
+     The roster card gains a 4th tab, "Saved Teams", next to
+     Characters / Seasonal / Maps. Cards show SVG thumbnails rendered
+     from team data (no stored images), a mode chip, inline rename,
+     and Select / Duplicate / Delete actions.
+     Interactive: rename (click the name), two-step Delete, Select.
+     ============================================================ */
+      :root {
+        --color-primary: #36958e;
+        --color-primary-hover: #2a7a73;
+        --color-danger: #c05b4d;
+        --color-danger-hover: #a04936;
+        --color-bg-primary: #f7f2ec;
+        --color-bg-secondary: #ebe6db;
+        --color-bg-tertiary: #f0ebe0;
+        --color-border-primary: #d4cfc0;
+        --color-border-light: #ddd;
+        --color-text-primary: #333;
+        --color-text-secondary: #666;
+        --radius-medium: 6px;
+        --radius-large: 8px;
+        --spacing-xs: 0.25rem;
+        --spacing-sm: 0.5rem;
+        --spacing-md: 0.75rem;
+        --spacing-lg: 1rem;
+        --spacing-xl: 1.5rem;
+        --transition-fast: 0.2s ease;
+        --tab-font-size: 0.85rem;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: #20232a;
+        font-family: sans-serif;
+        font-size: 15px;
+        color: #333;
+        line-height: 1.6;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem 1.5rem 4rem;
+        gap: 1.25rem;
+      }
+      .mock-note {
+        color: #9aa3b2;
+        font-size: 0.8rem;
+        max-width: 1100px;
+        width: 100%;
+      }
+      .mock-note strong {
+        color: #f7d87c;
+      }
+
+      .section {
+        width: 100%;
+        max-width: 1100px;
+        background: var(--color-bg-primary);
+        border-radius: var(--radius-large);
+        padding: 2em;
+      }
+
+      /* ---- roster tab strip (TabList desktop underline style) ---------- */
+      .tab-bar {
+        display: flex;
+        margin: -2em -2em 1.25em;
+        padding: 0 var(--spacing-md);
+        border-bottom: 1px solid var(--color-border-light);
+      }
+      .tab-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: var(--spacing-xs);
+        background: transparent;
+        border: none;
+        border-bottom: 2.5px solid transparent;
+        margin-bottom: -1px;
+        padding: var(--spacing-lg) var(--spacing-lg) var(--spacing-md);
+        color: var(--color-text-secondary);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: var(--tab-font-size);
+        cursor: pointer;
+      }
+      .tab-btn.active {
+        color: var(--color-primary);
+        border-bottom-color: var(--color-primary);
+      }
+      .tab-btn:hover:not(.active) {
+        color: var(--color-text-primary);
+        border-bottom-color: var(--color-border-primary);
+      }
+      .tab-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 4px;
+        border-radius: 9px;
+        background: var(--color-primary);
+        color: #fff;
+        font-size: 0.65rem;
+        font-weight: 700;
+      }
+
+      /* ---- library header ------------------------------------------------ */
+      .library-bar {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: var(--spacing-lg);
+        margin-bottom: var(--spacing-lg);
+        flex-wrap: wrap;
+      }
+      .library-count {
+        font-size: 0.85rem;
+        color: var(--color-text-secondary);
+        font-weight: 600;
+      }
+      .library-hint {
+        font-size: 0.78rem;
+        color: var(--color-text-secondary);
+      }
+
+      /* ---- card grid ------------------------------------------------------ */
+      .team-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: var(--spacing-lg);
+      }
+      .team-card {
+        background: var(--color-bg-secondary);
+        border: 1.5px solid var(--color-border-primary);
+        border-radius: var(--radius-large);
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        transition: all var(--transition-fast);
+      }
+      .team-card:hover {
+        border-color: var(--color-primary);
+        transform: translateY(-1px);
+      }
+
+      .thumb-row {
+        display: flex;
+        gap: 4px;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: var(--radius-medium);
+        padding: 6px 4px;
+      }
+      .thumb-row svg {
+        display: block;
+      }
+
+      .card-title-row {
+        display: flex;
+        align-items: center;
+        gap: var(--spacing-sm);
+      }
+      .team-name {
+        font-weight: 700;
+        font-size: 0.95rem;
+        color: var(--color-text-primary);
+        border: 1px dashed transparent;
+        border-radius: 4px;
+        padding: 0 4px;
+        cursor: text;
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .team-name:hover {
+        border-color: var(--color-border-primary);
+        background: var(--color-bg-tertiary);
+      }
+      .team-name:focus {
+        outline: none;
+        border-color: var(--color-primary);
+        background: #fff;
+      }
+      .mode-chip {
+        font-size: 0.65rem;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        color: var(--color-primary);
+        border: 1.5px solid var(--color-primary);
+        border-radius: 999px;
+        padding: 1px 8px;
+        white-space: nowrap;
+        text-transform: uppercase;
+      }
+      .card-meta {
+        font-size: 0.72rem;
+        color: var(--color-text-secondary);
+      }
+
+      .card-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+        margin-top: 2px;
+      }
+      .card-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--spacing-xs);
+        border-radius: var(--radius-medium);
+        padding: 5px 12px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all var(--transition-fast);
+        border: 2px solid var(--color-border-primary);
+        background: var(--color-bg-primary);
+        color: var(--color-text-secondary);
+      }
+      .card-btn.primary {
+        flex: 1;
+        background: var(--color-primary);
+        border-color: var(--color-primary);
+        color: #fff;
+      }
+      .card-btn.primary:hover {
+        background: var(--color-primary-hover);
+        border-color: var(--color-primary-hover);
+      }
+      .card-btn:not(.primary):hover {
+        color: var(--color-primary);
+        border-color: var(--color-primary);
+        background: var(--color-bg-tertiary);
+      }
+      .card-btn.danger:hover {
+        color: var(--color-danger);
+        border-color: var(--color-danger);
+      }
+      .card-btn.armed {
+        background: var(--color-danger);
+        border-color: var(--color-danger);
+        color: #fff;
+      }
+      .card-btn.armed:hover {
+        background: var(--color-danger-hover);
+        border-color: var(--color-danger-hover);
+        color: #fff;
+      }
+
+      /* ---- empty state ---------------------------------------------------- */
+      .empty-state {
+        border: 2px dashed var(--color-border-primary);
+        border-radius: var(--radius-large);
+        padding: var(--spacing-xl);
+        text-align: center;
+        color: var(--color-text-secondary);
+        font-size: 0.9rem;
+      }
+      .empty-state b {
+        color: var(--color-text-primary);
+      }
+
+      .footnotes {
+        max-width: 1100px;
+        width: 100%;
+        color: #9aa3b2;
+        font-size: 0.82rem;
+      }
+      .footnotes b {
+        color: #d7dce6;
+      }
+      .footnotes ol {
+        margin: 0.4rem 0 0 1.2rem;
+        padding: 0;
+      }
+      .footnotes li {
+        margin-bottom: 0.35rem;
+      }
+      .divider-label {
+        max-width: 1100px;
+        width: 100%;
+        color: #6d7688;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+    </style>
+  </head>
+  <body>
+    <p class="mock-note">
+      <strong>MOCK</strong> — the roster card's new <b>Saved Teams</b> tab (4th tab, with count
+      badge). Thumbnails are SVG mini-boards rendered live from each team's serialized data — no
+      images are stored. Try it: click a name to rename, click Delete twice (two-step confirm),
+      click Select.
+    </p>
+
+    <section class="section">
+      <div class="tab-bar">
+        <button class="tab-btn">Characters</button>
+        <button class="tab-btn">Seasonal</button>
+        <button class="tab-btn">Maps</button>
+        <button class="tab-btn active">
+          Saved Teams <span class="tab-badge" id="countBadge">4</span>
+        </button>
+      </div>
+
+      <div class="library-bar">
+        <span class="library-count" id="countLabel">4 / 50 teams</span>
+        <span class="library-hint"
+          >Select loads a team into the boards (replacing that mode's current team). Backups: Export
+          / Import in the controls row above the boards.</span
+        >
+      </div>
+
+      <div class="team-grid" id="teamGrid"></div>
+    </section>
+
+    <div class="divider-label">Empty state (first visit)</div>
+    <section class="section">
+      <div class="tab-bar">
+        <button class="tab-btn">Characters</button>
+        <button class="tab-btn">Seasonal</button>
+        <button class="tab-btn">Maps</button>
+        <button class="tab-btn active">Saved Teams</button>
+      </div>
+      <div class="empty-state">
+        No saved teams yet.<br />
+        Set up your boards, then hit <b>Save</b> in the controls row — the current team is
+        snapshotted here and the boards stay untouched.
+      </div>
+    </section>
+
+    <div class="footnotes">
+      <b>Notes for review</b>
+      <ol>
+        <li>Cards are sorted by <i>last updated</i>; the tab badge shows the count.</li>
+        <li>
+          Thumbnail = one mini map per board (same SVG technique as the Maps tab previews) +
+          team-colored dots for occupied tiles. Character portraits are a possible v2 refinement.
+        </li>
+        <li>
+          <b>Select</b> switches the mode picker to the team's mode, loads the snapshot into the
+          boards, and overwrites that mode's active team (toast: "Team loaded"). No modal —
+          consistent with the app's toast-first style.
+        </li>
+        <li>
+          <b>Delete</b> is a two-step inline confirm (arms for 3 s) instead of a modal dialog.
+        </li>
+        <li><b>Duplicate</b> copies the snapshot as "&lt;name&gt; (copy)".</li>
+        <li>
+          Rename is inline (click the name; Enter/blur commits, Esc cancels) — this is the "Edit"
+          affordance.
+        </li>
+        <li>
+          Cap indicator appears in the header once the library reaches 80% of the 50-team soft cap.
+        </li>
+        <li>
+          On mobile this panel lives in the same pull-up sheet as the other roster tabs; selecting a
+          team collapses the sheet so the loaded boards are visible (same pattern as placing a
+          character).
+        </li>
+      </ol>
+    </div>
+
+    <script>
+      /* Mini thumbnail renderer — stylized stand-in for TeamPreview.vue. */
+      const SQRT3 = Math.sqrt(3)
+      function hexPoints(cx, cy, s) {
+        const pts = []
+        for (let i = 0; i < 6; i++) {
+          const a = (Math.PI / 180) * (60 * i - 30)
+          pts.push((cx + s * Math.cos(a)).toFixed(1) + ',' + (cy + s * Math.sin(a)).toFixed(1))
+        }
+        return pts.join(' ')
+      }
+      function boardSvg(dots, blocked) {
+        const R = 2,
+          s = 6.5
+        const w = s * SQRT3 * (2 * R + 1.2),
+          h = s * (1.5 * 2 * R + 2.6)
+        let out = ''
+        for (let r = -R; r <= R; r++) {
+          for (let q = Math.max(-R, -r - R); q <= Math.min(R, -r + R); q++) {
+            const cx = w / 2 + s * SQRT3 * (q + r / 2)
+            const cy = h / 2 + s * 1.5 * r
+            let fill = 'rgba(0,0,0,0.05)'
+            if (r > 0) fill = 'rgba(54,149,142,0.30)'
+            if (r < 0) fill = 'rgba(200,35,51,0.28)'
+            if (blocked && q === 0 && r === 0) fill = 'rgba(128,128,128,0.45)'
+            out += `<polygon points="${hexPoints(cx, cy, s)}" fill="${fill}" stroke="rgba(0,0,0,0.12)" stroke-width="0.8"/>`
+          }
+        }
+        for (const [q, r] of dots) {
+          const cx = w / 2 + s * SQRT3 * (q + r / 2)
+          const cy = h / 2 + s * 1.5 * r
+          out += `<circle cx="${cx}" cy="${cy}" r="${s * 0.55}" fill="${r > 0 ? '#36958e' : '#c82333'}" stroke="#fff" stroke-width="1.1"/>`
+        }
+        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"></svg>`.replace(
+          '></svg>',
+          '>' + out + '</svg>',
+        )
+      }
+
+      const TEAMS = [
+        { name: 'AFK Push — S47', mode: '5v5 SL', boards: 5, updated: 'Updated 2 h ago' },
+        { name: 'Arena counters', mode: '3v3', boards: 3, updated: 'Updated yesterday' },
+        { name: 'Guild war A-team', mode: '5v5', boards: 5, updated: 'Updated 3 d ago' },
+        { name: 'Lightbearer meme comp', mode: '3v3', boards: 3, updated: 'Updated 2 w ago' },
+      ]
+      const PATTERNS = [
+        [
+          [0, 1],
+          [1, 1],
+          [-1, 2],
+          [0, -1],
+          [1, -2],
+        ],
+        [
+          [0, 2],
+          [-1, 1],
+          [1, -1],
+          [0, -2],
+        ],
+        [
+          [1, 1],
+          [-1, 1],
+          [0, -1],
+        ],
+        [
+          [0, 1],
+          [-1, 2],
+          [2, -2],
+          [0, -1],
+          [1, -1],
+        ],
+        [
+          [1, 2],
+          [0, 1],
+          [-1, -1],
+          [0, -2],
+        ],
+      ]
+
+      const grid = document.getElementById('teamGrid')
+      TEAMS.forEach((team, ti) => {
+        const card = document.createElement('div')
+        card.className = 'team-card'
+
+        let thumbs = ''
+        for (let b = 0; b < team.boards; b++) {
+          thumbs += boardSvg(PATTERNS[(ti + b) % PATTERNS.length], (ti + b) % 3 === 2)
+        }
+
+        card.innerHTML = `
+    <div class="thumb-row">${thumbs}</div>
+    <div class="card-title-row">
+      <span class="team-name" contenteditable="true" spellcheck="false" title="Click to rename">${team.name}</span>
+      <span class="mode-chip">${team.mode}</span>
+    </div>
+    <span class="card-meta">${team.updated}</span>
+    <div class="card-actions">
+      <button class="card-btn primary">Select</button>
+      <button class="card-btn" title="Duplicate this team">Duplicate</button>
+      <button class="card-btn danger delete-btn" title="Delete this team">Delete</button>
+    </div>`
+        grid.appendChild(card)
+
+        /* two-step delete demo */
+        const del = card.querySelector('.delete-btn')
+        let armed = false,
+          timer
+        del.addEventListener('click', () => {
+          if (!armed) {
+            armed = true
+            del.textContent = 'Confirm?'
+            del.classList.add('armed')
+            timer = setTimeout(() => {
+              armed = false
+              del.textContent = 'Delete'
+              del.classList.remove('armed')
+            }, 3000)
+          } else {
+            clearTimeout(timer)
+            card.remove()
+            const left = document.querySelectorAll('.team-card').length
+            document.getElementById('countBadge').textContent = left
+            document.getElementById('countLabel').textContent = left + ' / 50 teams'
+          }
+        })
+        /* select demo */
+        card.querySelector('.primary').addEventListener('click', () => {
+          card.style.borderColor = 'var(--color-primary)'
+          card.style.boxShadow = '0 0 0 1px var(--color-primary)'
+          setTimeout(() => {
+            card.style.boxShadow = ''
+          }, 600)
+        })
+        /* rename demo: Enter commits */
+        const nameEl = card.querySelector('.team-name')
+        nameEl.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault()
+            nameEl.blur()
+          }
+        })
+      })
+    </script>
+  </body>
+</html>
