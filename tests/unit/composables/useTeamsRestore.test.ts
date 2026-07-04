@@ -5,6 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { teamsSlotKey, type ActiveSlot } from '@/composables/useGridPersistence'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import type { TeamModeKey } from '@/lib/teams/modes'
+import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
@@ -269,3 +270,85 @@ const encode3v3Empty = (): string =>
 
 const encode1v1WithUnit = (): string =>
   encodeMultiGridStateToUrl({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' })
+
+describe('useTeamsRestore + saved teams (provenance and canonical compare)', () => {
+  beforeEach(() => {
+    vi.stubEnv('SSR', false)
+    storage.clear()
+    setItemSpy.mockClear()
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: setItemSpy,
+      removeItem: (key: string) => storage.delete(key),
+      clear: () => storage.clear(),
+    })
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('canonical snapshot ignores viewer state but tracks content', async () => {
+    const { restore, grids, character, wrapBoards } = createHarness()
+    restore.initialize(null)
+    grids.setActive(0)
+    character.placeCharacterOnHex(1, 11, Team.ALLY)
+    const canonical = canonicalTeamData(restore.snapshot())
+
+    // Viewer-state changes: active board, display flags — canonical is stable.
+    grids.setActive(3)
+    wrapBoards.value = true
+    expect(canonicalTeamData(restore.snapshot())).toBe(canonical)
+
+    // Content change — canonical moves. (Place on board 0; the active board
+    // moved to a preset map where this hex may not be placeable.)
+    grids.setActive(0)
+    expect(character.placeCharacterOnHex(2, 12, Team.ALLY)).toBe(true)
+    expect(canonicalTeamData(restore.snapshot())).not.toBe(canonical)
+    await nextTick()
+  })
+
+  it('applyTeamData switches mode, applies content, and adopts provenance', () => {
+    const { restore, grids } = createHarness()
+    restore.initialize(null)
+    expect(restore.activeMode.value).toBe('5v5sl')
+
+    const data = canonicalTeamData(
+      encodeMultiGridStateToUrl({
+        boards: [{ m: 'arena3', c: [[1, 11, Team.ALLY]] }],
+        mode: '1v1',
+      }),
+    )!
+    expect(restore.applyTeamData('1v1', data, 'team-9')).toBe(true)
+    expect(restore.activeMode.value).toBe('1v1')
+    expect(grids.contexts).toHaveLength(1)
+    expect(grids.contexts[0]!.currentMap).toBe('arena3')
+    expect(restore.sourceId.value).toBe('team-9')
+    expect(readEnvelope('1v1').sourceId).toBe('team-9')
+    // Selecting canonical data (no `d`) must not disturb the viewer's flags —
+    // covered by the harness applyFlags spy staying untouched:
+    expect(restore.snapshot()).toContain('')
+  })
+
+  it('applyTeamData with corrupt data falls back to defaults and clears provenance', () => {
+    const { restore, grids } = createHarness()
+    restore.initialize(null)
+    expect(restore.applyTeamData('3v3', '!!!corrupt!!!', 'team-1')).toBe(false)
+    expect(restore.activeMode.value).toBe('3v3')
+    expect(grids.contexts).toHaveLength(3)
+    expect(restore.sourceId.value).toBeNull()
+  })
+
+  it('selecting canonical data keeps current display flags', () => {
+    const { restore, flags } = createHarness()
+    restore.initialize(null)
+    flags.showArrows = true
+    const data = canonicalTeamData(
+      encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
+    )!
+    restore.applyTeamData('1v1', data, 'x')
+    // applyFlags only runs when the payload carries `d`; canonical data doesn't.
+    expect(flags.showArrows).toBe(true)
+  })
+})

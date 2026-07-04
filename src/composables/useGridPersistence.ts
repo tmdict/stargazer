@@ -24,6 +24,7 @@ import {
   serializeMultiGridState,
   type DisplayFlags,
 } from '@/utils/gridStateSerializer'
+import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
 import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 const ARENA_KEY = 'stargazer.arena'
@@ -42,33 +43,6 @@ export interface ActiveSlot {
   sourceId: string | null
 }
 
-const readSlot = (key: string): string | null => {
-  if (import.meta.env.SSR) return null
-  try {
-    return localStorage.getItem(key)
-  } catch {
-    return null
-  }
-}
-
-const writeSlot = (key: string, value: string): void => {
-  if (import.meta.env.SSR) return
-  try {
-    localStorage.setItem(key, value)
-  } catch {
-    // Best-effort: private mode, disabled storage, or quota. Persistence is optional.
-  }
-}
-
-const removeSlot = (key: string): void => {
-  if (import.meta.env.SSR) return
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    // Best-effort, as above.
-  }
-}
-
 interface GridPersistence {
   load: () => string | null
   startAutosave: () => void
@@ -77,13 +51,13 @@ interface GridPersistence {
 // `snapshot` reads reactive board state, so the watch fires on any content/flag
 // change; the encoded string is the watch value, so it fires only on real changes.
 const createPersistence = (key: string, snapshot: () => string): GridPersistence => ({
-  load: () => readSlot(key),
+  load: () => readStorage(key),
   startAutosave: () => {
     // Write once up front so a just-restored `?g=` link overwrites the saved slot,
     // then mirror every later change. Call after the initial restore so the restore
     // itself isn't double-counted.
-    writeSlot(key, snapshot())
-    watch(snapshot, (encoded) => writeSlot(key, encoded))
+    writeStorage(key, snapshot())
+    watch(snapshot, (encoded) => writeStorage(key, encoded))
   },
 })
 
@@ -110,6 +84,8 @@ export interface TeamsPersistence {
   persistMode: (mode: TeamModeKey) => void
   // The mode's stored envelope, or null when absent/corrupt/wrong version.
   load: (mode: TeamModeKey) => ActiveSlot | null
+  // The live boards as an encoded string (reactive reads — usable in computeds).
+  snapshot: () => string
   // Write the current snapshot to the LIVE mode's slot immediately.
   flush: () => void
   setPaused: (paused: boolean) => void
@@ -125,7 +101,7 @@ export function useTeamsPersistence(
   const paused = ref(false)
   let started = false
 
-  removeSlot(LEGACY_TEAMS_KEY)
+  removeStorage(LEGACY_TEAMS_KEY)
 
   const snapshot = (): string =>
     encodeMultiGridStateToUrl(
@@ -145,17 +121,17 @@ export function useTeamsPersistence(
 
   const write = (encoded: string): void => {
     const slot: ActiveSlot = { v: 1, data: encoded, sourceId: sourceId.value }
-    writeSlot(teamsSlotKey(mode.value), JSON.stringify(slot))
+    writeStorage(teamsSlotKey(mode.value), JSON.stringify(slot))
   }
 
   return {
     loadMode: () => {
-      const stored = readSlot(TEAMS_MODE_KEY)
+      const stored = readStorage(TEAMS_MODE_KEY)
       return isTeamModeKey(stored) ? stored : null
     },
-    persistMode: (next) => writeSlot(TEAMS_MODE_KEY, next),
+    persistMode: (next) => writeStorage(TEAMS_MODE_KEY, next),
     load: (target) => {
-      const raw = readSlot(teamsSlotKey(target))
+      const raw = readStorage(teamsSlotKey(target))
       if (!raw) return null
       try {
         const slot = JSON.parse(raw) as ActiveSlot
@@ -169,6 +145,7 @@ export function useTeamsPersistence(
         return null
       }
     },
+    snapshot,
     flush: () => write(snapshot()),
     setPaused: (value) => {
       paused.value = value

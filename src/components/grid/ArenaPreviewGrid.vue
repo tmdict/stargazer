@@ -1,11 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { Grid } from '@/lib/grid'
-import { Layout, POINTY } from '@/lib/layout'
-import { getMapByKey, getMapNames } from '@/lib/maps'
-import { FULL_GRID } from '@/lib/types/grid'
-import { State } from '@/lib/types/state'
+import BoardThumbnail from '@/components/grid/BoardThumbnail.vue'
+import { getMapNames } from '@/lib/maps'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -16,41 +13,17 @@ const emit = defineEmits<{
   arenaSelected: [mapKey: string]
 }>()
 
+// Historical framing of the maps tab: a 170px square with the board centered.
 const SIZE = 170
 const HEX_SIZE = 10
 
-const layout = new Layout(POINTY, { x: HEX_SIZE, y: HEX_SIZE }, { x: SIZE / 2, y: SIZE / 2 })
-
-const arenas = computed(() => {
-  return getMapNames().map(({ key, name }) => {
-    const config = getMapByKey(key)!
-    const grid = new Grid(FULL_GRID, config)
-    const tiles = grid.getAllTiles().map((tile) => ({
-      points: layout
-        .polygonCorners(tile.hex)
-        .map((p) => `${p.x},${p.y}`)
-        .join(' '),
-      fill: getTileFill(tile.state),
-    }))
-    const labelKey = key.startsWith('preset') ? 'app.preset' : 'app.arena'
-    return { key, name, tiles, labelKey }
-  })
-})
-
-function getTileFill(state: State): string {
-  switch (state) {
-    case State.AVAILABLE_ALLY:
-      return 'rgba(54, 149, 142, 0.35)'
-    case State.AVAILABLE_ENEMY:
-      return 'rgba(200, 35, 51, 0.35)'
-    case State.BLOCKED:
-      return 'rgba(128, 128, 128, 0.45)'
-    case State.BLOCKED_BREAKABLE:
-      return 'rgba(128, 128, 128, 0.28)'
-    default:
-      return 'rgba(255, 255, 255, 0.08)'
-  }
-}
+const arenas = computed(() =>
+  getMapNames().map(({ key, name }) => ({
+    key,
+    name,
+    labelKey: key.startsWith('preset') ? 'app.preset' : 'app.arena',
+  })),
+)
 
 const handleArenaClick = (mapKey: string) => {
   emit('arenaSelected', mapKey)
@@ -67,16 +40,12 @@ const handleArenaClick = (mapKey: string) => {
         :class="{ active: gridStore.currentMap === arena.key }"
         @click="handleArenaClick(arena.key)"
       >
-        <svg class="arena-svg" :viewBox="`0 0 ${SIZE} ${SIZE}`">
-          <polygon
-            v-for="(tile, index) in arena.tiles"
-            :key="index"
-            :points="tile.points"
-            :fill="tile.fill"
-            stroke="rgba(0, 0, 0, 0.1)"
-            stroke-width="1"
-          />
-        </svg>
+        <BoardThumbnail
+          class="arena-svg"
+          :map-key="arena.key"
+          :hex-size="HEX_SIZE"
+          :view-box-size="SIZE"
+        />
         <span class="arena-name">{{ `${i18n.t(arena.labelKey)} ${arena.name}` }}</span>
       </button>
     </div>
