@@ -143,3 +143,66 @@ describe('useTeamLibrary', () => {
     expect(library.teams).toHaveLength(3)
   })
 })
+
+describe('useTeamLibrary export/import', () => {
+  beforeEach(() => {
+    vi.stubEnv('SSR', false)
+    storage.clear()
+    vi.stubGlobal('localStorage', {
+      getItem: (key: string) => storage.get(key) ?? null,
+      setItem: (key: string, value: string) => storage.set(key, value),
+      removeItem: (key: string) => storage.delete(key),
+      clear: () => storage.clear(),
+    })
+    setActivePinia(createPinia())
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('export -> wipe -> import restores the library (fresh ids)', () => {
+    seed([record('a', 'Alpha'), record('b', 'Bravo')])
+    const library = useTeamLibrary()
+    const file = JSON.stringify(library.exportAll())
+
+    library.removeAll()
+    expect(library.count).toBe(0)
+
+    const result = library.importTeams(file)
+    expect(result).toEqual({ imported: 2, skipped: 0, invalid: false })
+    expect(library.teams.map((t) => t.name).sort()).toEqual(['Alpha', 'Bravo'])
+    expect(stored().map((t) => t.id)).not.toContain('a')
+  })
+
+  it('import merges and skips duplicates of current records', () => {
+    seed([record('a', 'Alpha')])
+    const library = useTeamLibrary()
+    const file = JSON.stringify(library.exportAll())
+    const result = library.importTeams(file)
+    expect(result).toEqual({ imported: 0, skipped: 1, invalid: false })
+    expect(library.count).toBe(1)
+  })
+
+  it('rejects invalid envelopes without touching the library', () => {
+    seed([record('a', 'Alpha')])
+    const library = useTeamLibrary()
+    expect(library.importTeams('nope')).toEqual({ imported: 0, skipped: 0, invalid: true })
+    expect(library.count).toBe(1)
+  })
+
+  it('counts cap overflow as skipped', () => {
+    seed(Array.from({ length: MAX_SAVED_TEAMS - 1 }, (_, i) => record(`id-${i}`, `Team ${i + 1}`)))
+    const library = useTeamLibrary()
+    const file = JSON.stringify({
+      app: 'stargazer',
+      kind: 'saved-teams',
+      version: 1,
+      teams: [record('x', 'New One'), record('y', 'New Two')],
+    })
+    const result = library.importTeams(file)
+    expect(result).toEqual({ imported: 1, skipped: 1, invalid: false })
+    expect(library.count).toBe(MAX_SAVED_TEAMS)
+  })
+})
