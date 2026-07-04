@@ -1,21 +1,22 @@
 # Design: Team Modes (N-Grid) & Saved Teams
 
-> **Status**: Rev 2 — decisions resolved, awaiting final review
-> **Scope**: Teams page (`/teams`) only. The Arena (`/`), Map Editor, and WandWars are untouched.
+> **Status**: Rev 3 — independently audited (Staff Engineer + Architect personas, findings verified against source); ready for implementation approval
+> **Scope**: Teams page (`/teams`) only. The Arena (`/`), Map Editor behavior, and WandWars are untouched (the Map Editor's preset picker shares the refactored preview component, §3.5, with identical rendering).
 > **Companion mocks**: [`mocks/saved-teams-tab.html`](./mocks/saved-teams-tab.html), [`mocks/team-mode-controls.html`](./mocks/team-mode-controls.html)
-> **Rev 2 changes**: all §6 open questions resolved (see §7); added 1v1 mode; Save-updates / Save-as-New semantics with provenance + unsaved-changes indicator; named saves (≤ 60 chars); cap raised to 200; shared `BoardThumbnail` renderer with hero portraits; Delete-all; lib code moved to `src/lib/teams/`; legacy migration dropped (clean-slate storage schema).
+> **Rev 3 changes** (from the persona audit, §6): canonical team data (view-state stripped) fixes the dirty-check and import round-trip; `?g=` mode/count contradiction + padding rules implemented via `normalizeTeamPayload`; lazy mount + rendering budget for the Saved Teams panel; single-rebuild switch sequence; store/toast layering fix; `sourceId` self-heal; virgin-mode flag policy; hydration/version policy; multi-tab decision; test-harness constraints; Appendix C (rejected alternatives).
+> **Rev 2 changes**: all Rev 1 open questions resolved (§7); 1v1 mode; Save-updates / Save-as-New with provenance + unsaved-changes indicator; named saves (≤ 60 chars); cap 200; shared `BoardThumbnail` renderer with hero portraits; Delete-all; `src/lib/teams/` layout; legacy migration dropped.
 
 ## Overview
 
 This design generalizes the 5v5 tab into a **Teams** tab that supports a configurable number of boards ("team modes": 1v1, 3v3, 5v5, 5v5 Supreme League), with fully independent persisted state per mode. On top of that it adds a **Saved Teams** library: named snapshots of any N-grid team that can be selected, updated, duplicated, deleted, exported to JSON, and imported back.
 
-Both features reuse the existing multi-grid serialization codec (`MultiGridState`) as the single snapshot format — the same string that powers share links and localStorage autosave becomes the unit of "a saved team".
+Both features reuse the existing multi-grid serialization codec (`MultiGridState`) as the snapshot format — the same string that powers share links and localStorage autosave becomes the unit of "a saved team" (in a **canonical, view-state-free form**, §3.4).
 
 ---
 
 ## 1. Current Architecture (Investigation Findings)
 
-Everything below was verified against the current `main` (`0dc6101`).
+Everything below was verified against the current `main` (`0dc6101`), and re-verified independently during the Rev 3 audit.
 
 ### 1.1 The board array is a single global instance
 
@@ -39,10 +40,10 @@ Everything below was verified against the current `main` (`0dc6101`).
 
 ### 1.3 Persistence & URL serialization
 
-- **Snapshot format**: `MultiGridState = { boards: BoardState[], active?, d? }` where `BoardState = GridState & { m?: string }` (per-board map key). It is **already count-agnostic** — `boards` is an array (`gridStateSerializer.ts:163-171`).
+- **Snapshot format**: `MultiGridState = { boards: BoardState[], active?, d? }` where `BoardState = GridState & { m?: string }` (per-board map key). It is **already count-agnostic** — `boards` is an array (`gridStateSerializer.ts:163-171`). Note `serializeMultiGridState` embeds the **active board index** and the **packed display flags** (`gridStateSerializer.ts:192-193`) — i.e. viewer state travels inside the snapshot; §3.4 defines a canonical form without it.
 - **Encoding**: URL-safe base64 of JSON (`encodeMultiGridStateToUrl`, `urlStateManager.ts:33-35`). The single-board Arena uses a separate binary codec; multi-board deliberately does not (`urlStateManager.ts:30-32`).
 - **localStorage**: `useGridPersistence.ts` writes the _same encoded string_ a share link carries to fixed keys: `stargazer.arena`, `stargazer.teams`. Autosave = one immediate write + a `watch` on the encoded snapshot (`useGridPersistence.ts:50-59`). All reads/writes are SSR-guarded and quota-tolerant (best-effort try/catch).
-- **Restore**: `useUrlStateStore.restoreMultiFromEncodedState` (`urlState.ts:194-226`) decodes, clamps `boards.slice(0, MAX_GRID_COUNT)`, calls `setGridCount(boards.length, maps)`, applies each board by temporarily making it active, then `dedupeCharacters()` repairs page-wide uniqueness against crafted URLs.
+- **Restore**: `useUrlStateStore.restoreMultiFromEncodedState` (`urlState.ts:194-226`) decodes, clamps `boards.slice(0, MAX_GRID_COUNT)`, calls `setGridCount(boards.length, maps)` — **exactly the payload's count, no padding** — applies each board by temporarily making it active, then `dedupeCharacters()` repairs page-wide uniqueness against crafted URLs.
 - **Priority**: on `/teams` load, `?g=` wins over the saved slot; a failed decode falls back to the slot; `startAutosave()`'s initial write is what commits the `?g=` payload over the slot (`TeamsView.vue:121-136`). The autosave watch has no stop/dispose handle — it lives until the page's setup scope dies.
 - **Measured sizes** (ran the repo's own encoder): a fully-populated board ≈ 460 JSON bytes ≈ 612 encoded chars; a full 5-board team ≈ **3,060 encoded chars (~6 KB as UTF-16 in localStorage)**; an empty 5-board slate ≈ 126 chars. Note `t` is not edits-only — it re-emits the map's baseline available tiles (~26 entries/board), because restore resets all tiles to `DEFAULT` then replays `t`; the per-board `m` key mainly keeps `currentMap` honest for UI highlight.
 - **No versioning anywhere**: neither codec has a version field; the de-facto strategy is additive evolution + graceful decode failure (null → treated as absent). Any new persistent structure should carry an explicit version from day one.
@@ -51,7 +52,7 @@ Everything below was verified against the current `main` (`0dc6101`).
 
 ### 1.4 The roster panel and its tabs
 
-`TeamsRoster.vue` renders a `TabView` with `characters` / `seasonal` / `maps` tabs inside a `BottomSheet` (desktop card / mobile pull-up sheet). The Maps tab is `ArenaPreviewGrid`, which renders **each map as a small inline SVG of hex polygons** (`ArenaPreviewGrid.vue:22-38`). The guide pages have a richer variant, `GridSnippet.vue`, which additionally renders **hero portraits as SVG `<image>` elements clipped to hex shapes** (`GridSnippet.vue:180-205`). Together these are the in-repo precedent the thumbnail design consolidates (§3.5). Map selection calls `gridStore.switchMap(mapKey)` on the _active_ board.
+`TeamsRoster.vue` renders a `TabView` with `characters` / `seasonal` / `maps` tabs inside a `BottomSheet` (desktop card / mobile pull-up sheet). The roster `TabView` is **`eager`** — every panel mounts at page load and inactive ones hide via `v-show` (`TabView.vue:45-57`); §3.9's rendering budget exists because of this. The Maps tab is `ArenaPreviewGrid`, which renders **each map as a small inline SVG of hex polygons** (`ArenaPreviewGrid.vue:22-38`). The guide pages have a richer variant, `GridSnippet.vue`, which additionally renders **hero portraits as SVG `<image>` elements clipped to hex shapes** (`GridSnippet.vue:180-205`). Together these are the in-repo precedent the thumbnail design consolidates (§3.5). Map selection calls `gridStore.switchMap(mapKey)` on the _active_ board.
 
 ### 1.5 Why the previous 3v3 tab failed (reconstruction)
 
@@ -66,11 +67,11 @@ Git history has been squashed ("clean up" commits), so the buggy attempt itself 
 ### 1.6 Misc facts the design depends on
 
 - i18n: one JSON file per key in `src/locales/app/` with `{ "en": …, "zh": … }` values; `app.teams` ("Teams"/"阵容") already exists. Basenames must be unique across `app/` and `app/messages/` (loader flattens subfolders and warn-overwrites duplicates, `dataLoader.ts:255-279`).
-- Export precedent: `downloadBlob` + `timestampedName` (`src/utils/download.ts`); toasts via `useToast`. File-import precedent: WandWars records (`WandWarsView.vue:186` area) — export via `downloadBlob(new Blob([...], { type: 'text/plain' }))`, import via a hidden `<input type="file">` behind a button + `await file.text()` + per-entry validation with invalid entries dropped — exactly the shape §3.7 needs. There is no confirm-dialog precedent (destructive actions like Clear act immediately; `BaseModal` is a dark glass overlay that would clash on the cream card).
+- Export precedent: `downloadBlob` + `timestampedName` (`src/utils/download.ts`); toasts via `useToast`. File-import precedent: WandWars records (`WandWarsView.vue:186` area) — export via `downloadBlob(new Blob([...], { type: 'text/plain' }))`, import via a hidden `<input type="file">` behind a button + `await file.text()` + per-entry validation with invalid entries dropped, **result surfaced by the calling component, not a store** — exactly the shape §3.7 needs. There is no confirm-dialog precedent (destructive actions like Clear act immediately; `BaseModal` is a dark glass overlay that would clash on the cream card).
 - Icons are per-glyph SFCs (`src/components/ui/Icon*.vue`, feather-style, `currentColor`): `IconTrash` = delete, `IconCopy` = duplicate, `IconDownload` = export, `IconEdit` = rename already exist; only Save (and optionally an upload/import glyph) are new.
-- Character portraits: `loadCharacterImages()` (`dataLoader.ts:88-102`) provides `Record<name, url>` (100×135 webp, bottom-fit); `gameDataStore.getCharacterById(id)` resolves id → `CharacterType` (name), `gameDataStore.getCharacterImage(name)` resolves name → url. `GridSnippet.vue` shows the SVG clip-path portrait technique.
+- Character portraits: `loadCharacterImages()` (`dataLoader.ts:88-102`) provides `Record<name, url>` (100×135 webp, bottom-fit); `gameDataStore.getCharacterById(id)` resolves id → `CharacterType` (name), `gameDataStore.getCharacterImage(name)` resolves name → url. `GridSnippet.vue` shows the SVG clip-path portrait technique. `FULL_GRID` is 45 hexes per board (`src/lib/types/grid.ts`).
 - `/teams` is not SSG pre-rendered (SPA-only route; Netlify `_redirects` SPA fallback preserves `?g=`), and all storage code is SSR-guarded, so no new constraints.
-- Tests live in `tests/unit/**` mirroring `src/` (existing suites for `grids`, `urlState`, `gridStateSerializer`, `urlStateManager`) and run via `vitest`.
+- Tests live in `tests/unit/**` mirroring `src/` (existing suites for `grids`, `urlState`, `gridStateSerializer`, `urlStateManager`) and run via `vitest` **in the node environment — no jsdom, no `@vue/test-utils`** (§5 harness constraints).
 
 ---
 
@@ -88,7 +89,7 @@ Git history has been squashed ("clean up" commits), so the buggy attempt itself 
 
 **Four modes** (1v1 added per review): the segmented control reads `1v1 · 3v3 · 5v5 · 5v5 Supreme League`. Alternatives considered for crowding (dropdown, two-row chips): rejected — four short labels fit a single segmented control on desktop, and on mobile the segments wrap naturally in the controls column; a dropdown would hide the available modes and add a tap. Revisit only if the mode list grows past ~5.
 
-**Tab rename**: the outer tab `5 v 5` → **Teams** (reuse existing `app.teams` key). The Image Stitcher tab is unchanged.
+**Tab rename**: the outer tab `5 v 5` → **Teams** (reuse existing `app.teams` key; the `fiveVFive` slot key is referenced only in `TeamsView.vue` + one comment — verified, minimal blast radius). The Image Stitcher tab is unchanged.
 
 ---
 
@@ -96,18 +97,18 @@ Git history has been squashed ("clean up" commits), so the buggy attempt itself 
 
 ### 3.0 Code layout (`src/lib/teams/`)
 
-All new non-UI logic lives in a dedicated **`src/lib/teams/`** folder (per review). UI stays where the repo's conventions put it:
+All new non-UI logic lives in a dedicated **`src/lib/teams/`** folder. UI stays where the repo's conventions put it:
 
-| Layer       | Location                                                                                     | Contents                                                                     |
-| ----------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Pure lib    | `src/lib/teams/modes.ts`                                                                     | mode registry, `resolveTeamMode`, constants                                  |
-| Pure lib    | `src/lib/teams/savedTeam.ts`                                                                 | `SavedTeam` type, name rules, record validation                              |
-| Pure lib    | `src/lib/teams/transfer.ts`                                                                  | export envelope build + import validation (pure, exhaustively unit-testable) |
-| Pinia store | `src/stores/teamLibrary.ts`                                                                  | thin reactive wrapper: state + persistence + toasts; delegates logic to lib  |
-| Composables | `src/composables/useGridPersistence.ts` (rework), `src/composables/useTeamsRestore.ts` (new) | per-mode slots, restore orchestration                                        |
-| Components  | `src/components/teams/*`, `src/components/grid/BoardThumbnail.vue`                           | UI                                                                           |
+| Layer       | Location                                                                                     | Contents                                                                                 |
+| ----------- | -------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| Pure lib    | `src/lib/teams/modes.ts`                                                                     | mode registry, `resolveTeamMode`, `normalizeTeamPayload`, constants                      |
+| Pure lib    | `src/lib/teams/savedTeam.ts`                                                                 | `SavedTeam` type, name rules, record validation, `canonicalTeamData`                     |
+| Pure lib    | `src/lib/teams/transfer.ts`                                                                  | export envelope build + import validation (pure, exhaustively unit-testable)             |
+| Pinia store | `src/stores/teamLibrary.ts`                                                                  | thin reactive wrapper: state + persistence; **returns typed results — no toasts** (§3.4) |
+| Composables | `src/composables/useGridPersistence.ts` (rework), `src/composables/useTeamsRestore.ts` (new) | per-mode slots, restore/switch orchestration; **toasts live here or in components**      |
+| Components  | `src/components/teams/*`, `src/components/grid/BoardThumbnail.vue`                           | UI                                                                                       |
 
-This respects the documented layering rule (composables may call stores; stores must never call composables; lib imports neither).
+This respects the documented layering rule (composables may call stores; **stores must never call composables** — so `useToast` is invoked by callers, never by `teamLibrary`; lib imports neither).
 
 ### 3.1 Team mode registry
 
@@ -164,21 +165,29 @@ export const MAX_TEAM_NAME_LENGTH = 60
 export const isTeamModeKey = (k: unknown): k is TeamModeKey =>
   typeof k === 'string' && k in TEAM_MODES
 
-// Mode for a decoded MultiGridState without a `mode` field (or with an unknown one):
-// 5 boards → '5v5sl' (all such links predate the mode field and are today's SL page);
+// Mode for a decoded MultiGridState. A present `mode` is honored ONLY when
+// boards.length === TEAM_MODES[mode].boardCount; a contradictory or unknown mode
+// is treated as absent (fall through to count inference). Inference: 5 boards →
+// '5v5sl' (all mode-less 5-board links predate the field and are today's SL page);
 // otherwise the first mode in TEAM_MODE_ORDER with boardCount >= boards.length.
 export function resolveTeamMode(state: MultiGridState): TeamModeKey
+
+// Normalize a decoded payload to its resolved mode's shape: truncate boards to
+// boardCount, or pad with empty boards `{ m: defaultMaps[i] }`. Teams-page ingress
+// only (§3.8) — /share stays lenient and renders payloads as-is.
+export function normalizeTeamPayload(state: MultiGridState, mode: TeamModeKey): MultiGridState
 ```
 
 Notes:
 
 - `MAX_GRID_COUNT` stays 5 and stays the clamp for crafted URLs.
 - 1v1 gets the full Teams treatment (mode slot, saved teams, share links). It coexists with the Arena home page: the Arena remains the free-form single-board editor with its own binary codec and `stargazer.arena` slot; teams-page 1v1 is "a saved-able one-board team" using the multi codec. No interaction between the two.
+- **Modes are add-only.** Removing a mode key requires a written migration for slots/library/exports referencing it — recorded here so it is a conscious act, not an accident (§3.4 hydration policy is the safety net).
 - Adding a future mode = one entry here + one i18n file. Nothing else.
 
 ### 3.2 Per-mode active team state (localStorage)
 
-Clean-slate schema (per review, **no legacy migration**: the old `stargazer.teams` key is simply ignored and removed; pre-existing autosaves are not carried over):
+Clean-slate schema (**no legacy migration**: the old `stargazer.teams` key is deleted unread; pre-existing autosaves are not carried over):
 
 | Key                                | Content                                                               |
 | ---------------------------------- | --------------------------------------------------------------------- |
@@ -191,14 +200,18 @@ Clean-slate schema (per review, **no legacy migration**: the old `stargazer.team
 // stargazer.teams.active.<mode> — versioned from day one
 interface ActiveSlot {
   v: 1
-  data: string // encoded MultiGridState (same codec as share links)
+  data: string // encoded MultiGridState (full snapshot incl. view state — this is the autosave)
   sourceId: string | null // SavedTeam.id this active team was loaded from / last saved to
 }
 ```
 
-The envelope exists because Save-updates-selected (§3.4) needs **provenance**: the active team must remember which saved team it belongs to. `sourceId` is cleared when no source exists (fresh slate) and re-pointed on Select / Save as New. A slot that fails `JSON.parse` or whose `data` fails decode is treated as absent (fresh defaults) — same graceful-failure policy as everything else.
+The envelope exists because Save-updates-selected (§3.4) needs **provenance**: the active team must remember which saved team it belongs to.
 
-On first visit after deploy, all keys are absent → the page opens on `DEFAULT_TEAM_MODE` with default boards. `stargazer.teams` (old key) is deleted if present, without being read.
+- **`sourceId` self-heal**: on slot adoption (§3.3 step 5), a `sourceId` that does not resolve in the library is normalized to `null` before the baseline write — covering deletes made while another mode was active, Delete all, cross-tab deletes, and library restores from backup. The rule everywhere is `source ≡ library.get(sourceId) ?? null`; label, dirty, and Save all derive from the resolved source.
+- **Version policy**: an envelope (or library blob) whose `v` is not a known version is treated as absent (slot) / empty (library) — never shape-read. A slot that fails `JSON.parse` or whose `data` fails decode is likewise treated as absent.
+- **Multi-tab**: out of scope, last-writer-wins per key, no `storage` event handling — this is a single-user tool and cross-tab sync isn't worth the complexity. Store actions perform read-modify-write against the freshly-read stored array (rather than trusting the in-memory copy) to narrow the clobber window cheaply; that is the full extent of v1's concession. Recorded so implementation doesn't relitigate.
+
+On first visit after deploy, all keys are absent → the page opens on `DEFAULT_TEAM_MODE` with default boards.
 
 ### 3.3 The mode switch sequence (the critical invariant)
 
@@ -212,26 +225,27 @@ const keyFor = (m: TeamModeKey) => `stargazer.teams.active.${m}`
 watch([snapshot, sourceId], ([encoded, src]) => {
   if (!paused.value)
     writeSlot(keyFor(modeKey.value), JSON.stringify({ v: 1, data: encoded, sourceId: src }))
-})
+}) // default (pre) flush — see semantics note below
 ```
 
-`TeamsView` owns `activeMode = ref<TeamModeKey>(…)` and performs every switch in this exact order:
+**Watcher flush semantics (pinned):** the watcher keeps Vue's default `pre` flush, matching today's autosave. Because every step of the switch sequence below is synchronous, the watcher callback runs once, _after_ the whole sequence, when `modeKey`/`snapshot`/`paused` already hold the new mode's values — so correctness of the final state does not depend on the pause flag today. The pause flag is **mandatory defense-in-depth**: it is what keeps the sequence safe if any step ever becomes async (a `nextTick`, a dynamic import) or the flush mode changes. Do not remove it as dead code, and do not switch to `flush: 'sync'` (that would run encode+write on every intermediate mutation of a restore). The Phase 1 regression test asserts, via write spies, that **no write to the old mode's key occurs after step 2 and no write to the new mode's key occurs before step 7**.
+
+`TeamsView` owns `activeMode = ref<TeamModeKey>(…)`; `useTeamsRestore` performs every switch in this exact order:
 
 1. `paused = true`
 2. flush: write current snapshot → `keyFor(oldMode)` _(normally a no-op — autosave already mirrored it)_
 3. `activeMode = newMode`; persist `stargazer.teams.mode`
-4. `grids.setGridCount(cfg.boardCount, cfg.defaultMaps)`; `clearTargetHex()`; `clearLiftedHex()` _(same hygiene as today's tab watcher, `TeamsView.vue:96-101`)_
-5. restore `keyFor(newMode)` via `urlStateStore.restoreMultiFromEncodedState(slot.data)` if present (apply its display flags, adopt its `sourceId`); otherwise the fresh defaults from step 4 stand with `sourceId = null`
-6. if `!TEAM_MODES[newMode].canWrap`, force `wrapBoards = false` (keeps the serialized `d` bit-6 at 0 for non-wrap modes)
+4. **restore-or-default (single rebuild)**: read + decode `keyFor(newMode)`. If the slot yields a decodable payload → `restoreMultiFromEncodedState(slot.data)` (which itself rebuilds the board array to the payload's shape — that internal `setGridCount` is part of this orchestrated path, not a second writer). Otherwise → `grids.setGridCount(cfg.boardCount, cfg.defaultMaps)` for a fresh slate. Either way: `clearTargetHex()`; `clearLiftedHex()`.
+5. adopt `sourceId` from the slot envelope, **normalized through the self-heal rule** (§3.2): unresolvable → `null`
+6. display flags: if the slot's payload carried `d`, apply its flags; a **virgin mode keeps the current page flags** (flags are viewer preferences, and carrying them matches how the page already treats them as page-level state — they get baked into the new slot's baseline, which is fine). Then, if `!TEAM_MODES[newMode].canWrap`, force `wrapBoards = false`. Re-assert `hexSizeMode = 'fixed-medium'` + `applySize()` (the sizing the tab watcher pins today, `TeamsView.vue:102-103` — cheap, and keeps the sequence self-contained).
 7. `paused = false`; write one baseline snapshot to `keyFor(newMode)`
 
 This ordering is what makes "edit 5v5 → switch to 3v3 (clean slate) → switch back (edits intact)" hold by construction: a mode's slot is only ever written while that mode's boards are live. **A dedicated regression test for this sequence is part of Phase 1** (§5) — it is the exact failure of the previous attempt.
 
-> ⚠️ **Equal-count trap**: today's tab watcher skips the rebuild when the target count equals `contexts.length` (`TeamsView.vue:97`) — an optimization for the Image Stitcher round-trip. A mode switch must **not** inherit that check: `5v5 → 5v5sl` keeps the count at 5 but changes maps and state, so step 4 always rebuilds. (Toggling to the Image Stitcher tab and back is not a mode switch and still leaves boards untouched.)
+> ⚠️ **Equal-count trap**: today's tab watcher skips the rebuild when the target count equals `contexts.length` (`TeamsView.vue:97`) — an optimization for the Image Stitcher round-trip. A mode switch must **not** inherit that check: `5v5 → 5v5sl` keeps the count at 5 but changes maps and state, so step 4 always rebuilds (via restore or via defaults). (Toggling to the Image Stitcher tab and back is not a mode switch and still leaves boards untouched.)
 
-Three details of the sequence, verified against current behavior:
+Two details of the sequence, verified against current behavior:
 
-- **Restore → `applyFlags` → arm autosave, in that order** (today's order, `TeamsView.vue:124-135`): the baseline write must reflect the restored display flags, or it persists stale ones.
 - **`activeId` is not reset by `setGridCount` when still in range** (`grids.ts:101`) — switching 5v5 (active board 2) → 3v3 keeps board 2 active; the restore then applies the snapshot's own `active` field. Don't assume a reset.
 - **Corrupt-slot asymmetry (existing behavior, inherited)**: a bad `?g=` preserves the saved slot (decode failure → fallback), but a corrupt _slot_ is overwritten with fresh defaults by the baseline write. Acceptable (the slot was unreadable anyway), but worth knowing when debugging.
 
@@ -246,15 +260,21 @@ export interface SavedTeam {
   id: string // crypto.randomUUID()
   name: string // 1..60 chars (MAX_TEAM_NAME_LENGTH), trimmed
   mode: TeamModeKey
-  data: string // encoded MultiGridState — same codec as share links/autosave
+  data: string // CANONICAL encoded MultiGridState (see below)
   createdAt: number // epoch ms
   updatedAt: number
 }
 
+// Canonical team data: decode → drop `active` and `d` (viewer state) → re-encode
+// through this serializer. Team CONTENT only: boards + mode. One function, used by
+// Save, Save as New, Duplicate, Import, and the dirty compare — so equal content
+// is always byte-equal.
+export function canonicalTeamData(encoded: string): string | null // null = undecodable
+
 // stored under 'stargazer.teams.saved' as { v: 1, teams: SavedTeam[] }
 
 export const useTeamLibrary = defineStore('teamLibrary', () => {
-  const teams = ref<SavedTeam[]>([]) // hydrated once from storage, mirrored on change
+  const teams = ref<SavedTeam[]>([]) // hydrated once from storage; mutations do read-modify-write (§3.2)
   const get = (id: string) => SavedTeam | undefined
   const saveAsNew = (mode, data, name) => SavedTeam | null // null when at cap
   const update = (id, data) => boolean // updates data + updatedAt; keeps name/createdAt
@@ -265,22 +285,28 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const exportAll = () => TeamsExportFile
   const importTeams = (raw: string) => { imported: number; skipped: number; error?: string }
 })
+// NOTE (layering): the store returns typed results and NEVER toasts — useToast is a
+// composable and stores must not call composables. Calling components/composables
+// own user feedback, same as the WandWars import precedent.
 ```
+
+**Canonical data is the load-bearing idea** (from the audit): `serializeMultiGridState` embeds the active-board index and the packed display flags — viewer state, not team content. If saved teams stored raw snapshots, clicking a different board or toggling Flat would mark a just-saved team "dirty", Save would bake viewer state into the record, and imported records (different key order / missing fields) would never byte-match. Canonicalizing at every write **and** on the live side of the compare makes the dirty check trustworthy and import round-trip-stable.
 
 Semantics (per resolved decisions):
 
-- **Save** (primary): if the active slot's `sourceId` resolves to an existing saved team, **update it in place** (`data` + `updatedAt`; name and `createdAt` keep). Toast: "Saved to ⟨name⟩". If `sourceId` is null or the source was deleted, Save degrades to Save as New (below).
-- **Save as New**: opens a lightweight name popover anchored to the button — a text input prefilled with the next auto-name (`Team N`), max 60 chars, Enter commits / Esc cancels (mock shows it). Creates the record and points the active slot's `sourceId` at it, so subsequent Saves update it.
-- **Select** (on a card): loads the team into the active slot — switch `activeMode` to `team.mode` (full §3.3 sequence), `restoreMultiFromEncodedState(team.data)`, set `sourceId = team.id`, baseline-write. Overwrites that mode's current active team (per spec); toast "Team loaded". Selection from the mobile sheet collapses the sheet.
-- **Unsaved-changes indicator**: the active team is _dirty_ when `activeEncoded !== get(sourceId)?.data` (a plain string compare — both sides are the same codec). The controls row shows the **active team label** — the source team's name, or "Unsaved team" when `sourceId` is null — with a dot when dirty. This is what makes Save-updates-selected legible.
-- **Delete** (per card): two-step inline confirm (button arms → "Confirm?" for ~3 s), no modal. If the deleted team is the active `sourceId`, the active boards are untouched but `sourceId` becomes null (label reverts to "Unsaved team").
-- **Delete all** (tab header, next to the count): same two-step confirm, clears the library. Complements merge-only import: "replace all" = Delete all + Import.
+- **Save** (primary): if the resolved source (§3.2 rule) exists, **update it in place** (`data = canonicalTeamData(activeEncoded)`, `updatedAt`; name and `createdAt` keep). Toast (from the caller): "Saved to ⟨name⟩". If the source is null, Save degrades to Save as New.
+- **Save as New**: opens a lightweight name popover anchored to the button — a text input prefilled with the next auto-name (`Team N`), max 60 chars, Enter commits / Esc cancels (mock shows it). Creates the record (canonical data) and points the active slot's `sourceId` at it, so subsequent Saves update it.
+- **Select** (on a card): loads the team into the active slot — switch `activeMode` to `team.mode` (full §3.3 sequence), apply `team.data` through the single restore path, set `sourceId = team.id`, baseline-write. Because canonical data carries no `d`, **Select applies board content only — the viewer's current display flags are untouched** (`useTeamsRestore` applies flags only when the payload has `d`; §3.8), and the active-board pointer resets to board 0 (restore's existing `multi.active ?? 0`). Overwrites that mode's current active team (per spec); toast "Team loaded". Selection from the mobile sheet collapses the sheet. Select sits behind the page's `gameDataStore.dataLoaded` gate.
+- **Unsaved-changes indicator**: dirty ≡ `canonicalTeamData(activeEncoded) !== source.data`. Both sides canonical: the compare reflects **content** changes only — board clicks, Flat/Grid Info/Team View/wrap toggles, and viewport changes do not trip it. The live side is a memoized computed (decode+strip+re-encode of ≤ ~6 KB — trivial); the saved side is already canonical. The controls row shows the **active team label** — the resolved source's name, or "Unsaved team" — with a dot when dirty.
+- **Delete** (per card): two-step inline confirm (button arms → "Confirm?" for ~3 s), no modal. If the deleted team is the active source, the boards are untouched and the label reverts to "Unsaved team" (the resolved source is now null); other modes' slots self-heal on their next adoption (§3.2).
+- **Delete all** (tab header): same two-step confirm, clears the library. Complements merge-only import: "replace all" = Delete all + Import.
 - **Duplicate**: copy with fresh id, name `"<name> (copy)"` clamped to 60.
 - **Rename**: inline on the card (click name; Enter/blur commits, Esc cancels).
+- **Hydration policy**: records failing per-record validation (same rules as import, §3.7 — including unknown `mode`) are dropped with a `console.warn`; a `v !== 1` library blob is treated as empty. Under the add-only mode rule (§3.1) this drop path should never fire for mode reasons in practice; it is the safety net, not the migration strategy.
 
-**Why store the encoded string (not raw JSON)?** It reuses the exact codec + validation path of share links (`decodeMultiGridStateFromUrl` is the integrity check), keeps the library entries directly shareable (`/share?g=<data>` works verbatim, enabling a per-team Share action later), and makes export/import trivially round-trippable.
+**Why store the encoded string (not raw JSON)?** It reuses the exact codec + validation path of share links (`decodeMultiGridStateFromUrl` is the integrity check), keeps the library entries directly shareable (`/share?g=<data>` works verbatim — canonical data simply renders with `/share`'s defaults, enabling a per-team Share action later), and makes export/import trivially round-trippable.
 
-**Size & limits**: **measured with the repo's own encoder**, a fully-populated 5-board team is ≈ 3,060 encoded chars ≈ **6 KB** as stored (localStorage is UTF-16); smaller modes proportionally less. `MAX_SAVED_TEAMS = 200` (per review) ≈ 1.2 MB worst-case against the typical ~5 MB/origin quota — safe, with headroom left for the rest of the app's keys. The cap is enforced in `saveAsNew`/`duplicate`/`importTeams` with a toast. The quota risk would only appear if thumbnails were ever _stored_ as images (20–100 KB+ each) — which §3.5 deliberately avoids. Quota errors are already handled as best-effort (silent catch) in the storage helpers; the library additionally surfaces an error toast on a failed save (unlike autosave, the user explicitly asked for it).
+**Size & limits**: **measured with the repo's own encoder**, a fully-populated 5-board team is ≈ 3,060 encoded chars ≈ **6 KB** as stored (localStorage is UTF-16); smaller modes proportionally less. `MAX_SAVED_TEAMS = 200` ≈ 1.2 MB worst-case against the typical ~5 MB/origin quota — safe, with headroom left for the rest of the app's keys. The cap is enforced in `saveAsNew`/`duplicate`/`importTeams`. The quota risk would only appear if thumbnails were ever _stored_ as images (20–100 KB+ each) — which §3.5 deliberately avoids. Quota errors are already handled as best-effort (silent catch) in the storage helpers; a failed explicit save additionally surfaces an error toast (from the caller).
 
 ### 3.5 Thumbnails — shared `BoardThumbnail` renderer with hero portraits
 
@@ -301,10 +327,16 @@ defineProps<{
 }>()
 ```
 
-- **`TeamPreview.vue`** (saved-team card) decodes `team.data` once (memoized computed) and renders one `BoardThumbnail` per board: `mapKey` from `m`; `units` from `c` (characterId → `gameDataStore.getCharacterById(id)?.name` → `getCharacterImage(name)`) and `p` (phantimals → their icon via the same asset dictionaries, or dot fallback). Corrupt records render a fallback tile with a warning glyph instead of breaking the list.
-- **Portraits are v1** (per review). Unresolvable ids (data from a future version, missing image) fall back to the team-colored dot, so a thumbnail never breaks.
-- **`ArenaPreviewGrid` is refactored to render through `BoardThumbnail`** (no `units`), keeping its own card chrome/selection ring. Its per-map throwaway-`Grid` logic moves into the shared component. This is a small, mechanical refactor with an existing visual to pixel-match; do it in the same phase so there are two consumers from day one.
-- **`GridSnippet` stays as-is** for now — it has guide-specific features (highlight groups, numeric labels, imaginary hexes) and name-keyed configs; converging it onto `BoardThumbnail` is a follow-up, not part of this feature. Noted in the doc so the third copy doesn't proliferate further.
+- **`TeamPreview.vue`** (saved-team card) decodes `team.data` once (memoized computed) and renders one `BoardThumbnail` per board: `mapKey` from `m`; `units` from `c` (characterId → `gameDataStore.getCharacterById(id)?.name` → `getCharacterImage(name)`) and `p` (phantimals → their icon via the same asset dictionaries, or dot fallback). The data→units mapping lives in `src/lib/teams/` so it is unit-testable headless. Corrupt records render a fallback tile with a warning glyph instead of breaking the list.
+- **Portraits are v1**. Unresolvable ids (data from a future version, missing image) fall back to the team-colored dot, so a thumbnail never breaks.
+- **Rendering budget** (audit-confirmed: `FULL_GRID` = 45 hexes/board → 200 teams × 5 boards ≈ 45,000 polygons if naive):
+  - Hex geometry is computed **once at module level** (the polygon-points strings depend only on `FULL_GRID` + `hexSize`, identical for every board) — thumbnails share it instead of recomputing per instance.
+  - `clipPath` defs are emitted **only for occupied hexes** (units), not all 45 (GridSnippet emits one per hex — don't copy that).
+  - Cards get `content-visibility: auto` + `contain-intrinsic-size` so offscreen cards skip layout/paint; opening the tab renders roughly a screenful.
+  - The panel itself mounts lazily (§3.9).
+- **`ArenaPreviewGrid` is refactored to render through `BoardThumbnail`** (no `units`), keeping its own card chrome/selection ring. This changes the shared component under the **Map Editor's** preset picker too — behavior identical, and the QA checklist pixel-checks both consumers.
+- **`GridSnippet` stays as-is** for now — it has guide-specific features (highlight groups, numeric labels, imaginary hexes) and name-keyed configs; converging it onto `BoardThumbnail` is a follow-up. Noted so the third copy doesn't proliferate further.
+- Thumbnails render the map baseline from `m`; `t` divergence (possible only via hand-crafted imports) is intentionally not rendered — the Select path remains the source of truth.
 - The DOM-capture path (`useGridExport` / html-to-image) is **not** viable for thumbnails: it only captures mounted DOM, and saved teams are by definition not the live boards. Data→SVG is the only correct source, and nothing image-like is ever stored.
 
 ### 3.6 New controls row (TeamModeControls)
@@ -312,7 +344,7 @@ defineProps<{
 New component `src/components/teams/TeamModeControls.vue`, rendered by `TeamsBoards.vue` **above** the existing `GridControls` row:
 
 - **Mode picker** — segmented control: `1v1 · 3v3 · 5v5 · 5v5 Supreme League` (from `TEAM_MODES`/`TEAM_MODE_ORDER`). Switching is instant and lossless (each mode keeps its own state), so no confirmation is needed.
-- **Active team label** — the source team's name (or "Unsaved team"), with an unsaved-changes dot (§3.4). Read-only in v1 (rename lives on the card).
+- **Active team label** — the resolved source's name (or "Unsaved team"), with the unsaved-changes dot (§3.4). Read-only in v1 (rename lives on the card).
 - **Save** — primary button; updates the source team, or degrades to Save as New when there is none (§3.4).
 - **Save as New** — secondary button; opens the name popover (§3.4).
 - **Export** — downloads all saved teams as JSON (§3.7).
@@ -337,26 +369,28 @@ Deferred (unchanged from Rev 1): Reset-team button (Clear covers most of it), pe
 }
 ```
 
-Export's purpose is **backup** (per review): it always contains the whole library.
+Export's purpose is **backup**: it always contains the whole library.
 
-Import validation (pure function in `src/lib/teams/transfer.ts`), in order: envelope shape (`app`/`kind`/`version` known) → per-record: `mode` passes `isTeamModeKey`, `name` is a non-empty string (trim, clamp 60), `data` decodes via `decodeMultiGridStateFromUrl`, `boards.length === TEAM_MODES[mode].boardCount`, **every board's `m` key exists in `MAPS`** (an unknown `m` would build the default layout while `currentMap` names a nonexistent map — a known footgun in `createGridContext`), **and `d` is present — normalize to `packDisplayFlags` defaults if missing** (`unpackDisplayFlags(undefined)` defaults `showArrows` to **true**, so a hand-crafted record omitting `d` would flip targeting arrows on at load). Valid records are **merged** (never replace): fresh `id`s are assigned; records whose `data` + `name` exactly match an existing team are skipped as duplicates; cap 200 enforced. Result toast: "Imported N teams (M skipped)". A malformed file → error toast, library untouched. Import never touches the active boards. "Replace all" = Delete all (§3.4) + Import.
+Import validation (pure function in `src/lib/teams/transfer.ts`), in order: envelope shape (`app`/`kind`/`version` known) → per-record: `mode` passes `isTeamModeKey`, `name` is a non-empty string (trim, clamp 60), `data` decodes via `decodeMultiGridStateFromUrl`, `boards.length === TEAM_MODES[mode].boardCount`, **every board's `m` key exists in `MAPS`** (an unknown `m` would build the default layout while `currentMap` names a nonexistent map — a known footgun in `createGridContext`) → finally **`data` is canonicalized** (`canonicalTeamData`, §3.4) before storing, which simultaneously strips stray viewer state (`d`, `active`), normalizes key order, and guarantees the record byte-round-trips against the dirty compare. (Canonicalization also disposes of the missing-`d`/`showArrows`-defaults-true trap: canonical data never has `d`, and Select never applies flags from it.) Valid records are **merged** (never replace): fresh `id`s are assigned; records whose canonical `data` + `name` exactly match an existing team are skipped as duplicates; cap 200 enforced. Result toast (from the caller): "Imported N teams (M skipped)". A malformed file → error toast, library untouched. Import never touches the active boards. "Replace all" = Delete all (§3.4) + Import.
 
-Two deliberate non-goals: we do not deep-validate `t` tile entries against `m` (a hand-edited mismatch renders `t`'s layout — same lenient behavior as share URLs), and hand-crafted duplicate heroes are handled by the existing restore-time repair (`dedupeCharacters`) when the team is _selected_, exactly like a crafted share URL.
+Deliberate non-goal: we do not deep-validate `t` tile entries against `m` (a hand-edited mismatch renders `t`'s layout — same lenient behavior as share URLs); duplicate heroes in hand-crafted data are handled by the existing restore-time repair (`dedupeCharacters`) when the team is _selected_, exactly like a crafted share URL.
 
 ### 3.8 URL serialization & share links
 
 - `MultiGridState` gains an optional `mode?: TeamModeKey` field, **always written** by the serializer from now on; the decoder tolerates absence (no version bump needed — the format is self-describing JSON and existing links must keep decoding).
-- **Mode resolution for links without `mode`** (`resolveTeamMode`, §3.1): 5 boards → `5v5sl` (all such links are today's SL page); otherwise the first mode in `TEAM_MODE_ORDER` with `boardCount ≥ boards.length`, padding missing boards with the mode's default maps; the existing clamp (`urlState.ts:206`) handles the too-many case.
-- `/teams?g=<encoded>` → decode, resolve mode, **switch the mode picker to it**, and overwrite that mode's active slot with `sourceId = null` (a shared link is nobody's saved team). Decode failure → error toast → fall back to `stargazer.teams.mode` + its slot (existing priority logic generalizes unchanged).
-- `/share` (read-only) needs no functional change (it renders `boards.length` boards already — including one board, which decodes as multi and renders a single-board row). A 3-board payload with the wrap bit set already degrades gracefully; the Phase-4 "gate wrap on `boards.length === 5`" item is cosmetic hardening only.
+- **Mode resolution** (`resolveTeamMode`, §3.1): a present `mode` is honored only when it matches `boards.length`; contradictory/unknown/absent modes are inferred from the count (5 → `5v5sl`; else first mode with `boardCount ≥ boards.length`). **Count normalization** (`normalizeTeamPayload`, §3.1): the teams-page ingress (`useTeamsRestore`) decodes once, resolves the mode, normalizes the payload to the mode's exact board count (truncate, or pad with empty boards on the mode's default maps), re-encodes, and applies it through the single restore path — so a 2-board crafted link can never leave a 2-board array in the 3v3 slot. This closes the ingress asymmetry the audit found (import validated the count invariant; `?g=` didn't).
+- `restoreMultiFromEncodedState`'s result gains **`hasDisplayFlags`** (`multi.d !== undefined`); callers apply display flags **only when true**. This is what lets canonical team data (no `d`) restore content without clobbering the viewer's flags — and it removes the existing quirk where a payload without `d` would apply `unpackDisplayFlags(undefined)` defaults (targeting arrows on).
+- `/teams?g=<encoded>` → decode, resolve mode, normalize, **switch the mode picker to it**, and overwrite that mode's active slot with `sourceId = null` (a shared link is nobody's saved team). Decode failure → error toast → fall back to `stargazer.teams.mode` + its slot (existing priority logic generalizes unchanged).
+- `/share` (read-only) needs no functional change and **stays lenient** — it renders `boards.length` boards exactly as the payload says (including 1-board multi payloads), with no normalization. A 3-board payload with the wrap bit set already degrades gracefully; the Phase-4 "gate wrap on `boards.length === 5`" item is cosmetic hardening only.
 - **In-app navigation caveat**: today every entry into `/teams?g=` is a hard navigation (ShareView's Edit pencil is a plain `<a href>`), so the direct `window.location.search` read is always current. If a future feature navigates in-app (e.g. per-saved-team "open in editor" via `router.push`), it must read `getEncodedStateFromRoute` or force a reload — and note `?g=` is never stripped after restore, so a reload re-applies and re-overwrites (existing behavior).
 
 ### 3.9 Saved Teams tab (roster panel)
 
-`TeamsRoster.vue` gains a fourth tab: `characters / seasonal / maps / saved` (label `app.saved-teams`, with a count badge via `TabItem.badge`). Panel component `src/components/teams/SavedTeamsList.vue`:
+`TeamsRoster.vue` gains a fourth tab: `characters / seasonal / maps / saved` (label `app.saved-teams`, with a count badge via `TabItem.badge` — reactive through the existing `tabs` computed). Panel component `src/components/teams/SavedTeamsList.vue`:
 
+- **Lazy mount**: the roster `TabView` is `eager` (all panels mount at page load, §1.4), which at the 200-team cap would create tens of thousands of SVG nodes for a tab the user may never open. The panel body is therefore gated on **first activation**: TabView already passes an `:active` scoped-slot prop (`TabView.vue:55`); `SavedTeamsList` uses a sticky `v-if` (mounts on first `active === true`, stays mounted after for scroll/rename state). Combined with §3.5's `content-visibility` budget, opening the tab lays out roughly a screenful of cards.
 - Header row: count (`N / 200`), **Delete all** (two-step confirm), cap warning when ≥ 80% full.
-- Responsive card grid; each card: `TeamPreview` thumbnail (portraits, §3.5), mode chip (`1v1` / `3v3` / `5v5` / `5v5 SL`), name (inline-editable), relative updated time, and actions **Select** / **Duplicate** / **Delete** — rendered at **equal width** (3-column grid within the card, per review) with Select visually primary.
+- Responsive card grid; each card: `TeamPreview` thumbnail (portraits, §3.5), mode chip (`1v1` / `3v3` / `5v5` / `5v5 SL`), name (inline-editable), relative updated time, and actions **Select** / **Duplicate** / **Delete** — rendered at **equal width** (3-column grid within the card) with Select visually primary.
 - Empty state: hint text pointing at the Save buttons.
 - Selecting from the mobile sheet collapses the sheet (same pattern as character placement, `TeamsRoster.vue:44-51`).
 
@@ -366,16 +400,18 @@ See the HTML mock for the exact look.
 
 These are documented (GRID.md / ARCHITECTURE.md) or load-bearing behaviors; the design deliberately routes around all of them — an implementer must not "simplify" across them:
 
-1. **Bulk state application goes through `restoreMultiFromEncodedState` — never a bespoke loader.** The existing path encapsulates non-obvious ordering: per-board apply via temporary `setActive`, companions settled per-main, `dedupeCharacters()` after _all_ boards (per-board checks can't see cross-board duplicates), `seedPhantimalBaseline()` last (phantimal auto-placement is edge-triggered; a restore must not read as a transition). Saved-team Select and mode-switch restore both reuse it and inherit all of this for free.
-2. **Exactly one writer of the board count on the page** (`TeamsView.vue:2-8` header contract). The mode switcher takes over that role from the tab watcher; nothing else may call `setGridCount` on `/teams`.
+1. **Bulk state application goes through `restoreMultiFromEncodedState` — never a bespoke loader.** The existing path encapsulates non-obvious ordering: per-board apply via temporary `setActive`, companions settled per-main, `dedupeCharacters()` after _all_ boards (per-board checks can't see cross-board duplicates), `seedPhantimalBaseline()` last (phantimal auto-placement is edge-triggered; a restore must not read as a transition). Saved-team Select, `?g=` ingress, and mode-switch restore all reuse it and inherit this for free.
+2. **Exactly one orchestrator initiates board-count changes on `/teams`**: `useTeamsRestore` (switch/Select/`?g=` ingress). `restoreMultiFromEncodedState`'s internal `setGridCount` is that orchestrator's delegated mechanism, not a second writer; components never call `setGridCount` directly.
 3. **Mode switch always rebuilds; Image-Stitcher tab round-trip never rebuilds.** Two different semantics currently share one watcher (the §3.3 equal-count trap) — keep them as two separate code paths.
-4. **`onScopeDispose` still resets to `setGridCount(1)` on leave** (Arena handoff, HMR-safe). Per-mode slots are already flushed by then because the autosave watcher was armed on the correct key the whole time.
+4. **`onScopeDispose` still resets to `setGridCount(1)` on leave** (Arena handoff, HMR-safe). Per-mode slots are already flushed by then because the autosave watcher was armed on the correct key the whole time (and effect scopes stop watchers before dispose callbacks run, so the leave-time reset is never autosaved).
 5. **`MAX_GRID_COUNT = 5` clamps everything** (crafted URLs and imports must not build arbitrary board counts).
 6. **Page-wide (character, team) and (artifact, team) uniqueness across boards** — never place around it; always go through the store APIs that enforce it.
 7. **Display globals (`teamView`, `inverted`) are reset at page setup** so a first visit never inherits another page's toggles; a restored `inverted` flag only relabels — it must never re-trigger the unit mirror-swap.
 8. **Selection state is board-qualified and boards share hex ids** — `clearTargetHex()` / `clearLiftedHex()` after every rebuild (§3.3 step 4).
-9. **Layering rule** (ARCHITECTURE.md): composables may call stores; stores must never call composables; `src/lib/teams/*` imports neither. `useTeamLibrary` is a store (no composable imports); the switch/restore orchestration lives in `useTeamsRestore` (composable) or the view.
+9. **Layering rule** (ARCHITECTURE.md): composables may call stores; stores must never call composables; `src/lib/teams/*` imports neither. Concretely: `teamLibrary` returns typed results and never toasts (§3.4); orchestration lives in `useTeamsRestore`.
 10. **`startAutosave`'s initial unconditional write is load-bearing** — it is what commits a `?g=` payload over the slot. Keep the order: restore first, then arm autosave (which writes the baseline).
+11. **`source ≡ library.get(sourceId) ?? null`** — label, dirty, and Save derive from the resolved source only; unresolvable `sourceId`s are normalized to null at slot adoption (§3.2).
+12. **All saved-team `data` is canonical** (`canonicalTeamData`) — every write path (Save, Save as New, Duplicate, Import) canonicalizes; the dirty compare canonicalizes its live side. No raw snapshot ever enters the library.
 
 ---
 
@@ -385,7 +421,7 @@ These are documented (GRID.md / ARCHITECTURE.md) or load-bearing behaviors; the 
 
 - `GRID_TABS` → `TEAM_MODES` registry (same idea, promoted to `src/lib/teams/` with types).
 - Single teams storage slot → keyed slots + explicit switch protocol (the one genuinely missing piece).
-- Snapshot string → reused as the saved-team payload (zero new codecs).
+- Snapshot string → reused as the saved-team payload, in canonical form (one new pure function, zero new codecs).
 - Two hand-rolled SVG board renderers → one shared `BoardThumbnail` with two consumers (three when guides converge later).
 
 Deliberately **not** done (over-engineering for current needs):
@@ -393,6 +429,7 @@ Deliberately **not** done (over-engineering for current needs):
 - No IndexedDB (localStorage volumes are trivial, §3.4); revisit only if thumbnails ever become stored images.
 - No arbitrary-N UI (registry supports it; product doesn't need it yet — `MAX_GRID_COUNT` guard stays).
 - No GridSnippet convergence in this feature (§3.5).
+- No cross-tab `storage` sync (§3.2 — documented decision).
 - No new global event bus, no changes to drag & drop, uniqueness, phantimals, or skills — all verified count-agnostic.
 
 One small cleanup **is** included while touching `TeamsView`: extract the `?g=`-vs-slot restore priority logic (currently inline, `TeamsView.vue:121-136`) into `useTeamsRestore` so the mode-switch path, the saved-team Select path, and the initial-load path share one restore implementation. This keeps the critical sequence (§3.3) in exactly one place.
@@ -403,55 +440,59 @@ One small cleanup **is** included while touching `TeamsView`: extract the `?g=`-
 
 Four phases, each independently shippable and reviewable. After each phase: `npm run lint && npm run type-check && npm run test`.
 
+> **Test-harness constraints (pinned)**: vitest runs in the **node environment — no jsdom, no `@vue/test-utils`**. Everything the test plan below names must therefore be drivable headless: `localStorage` is stubbed (follow the existing store tests' pattern), the switch/Select orchestration is plain composable functions over Pinia stores (`createPinia` + `setActivePinia`), display-flag getters are parameterized functions, and the thumbnail data→units mapping lives in `src/lib/teams/` precisely so it tests without mounting a component. Slot-write assertions use spies on the storage helpers.
+
 ### Phase 1 — Mode foundation (1v1 + 3v3 support, rename, per-mode persistence)
 
 _Deliverable: Teams tab with a working 1v1 / 3v3 / 5v5 / 5v5 SL picker, independent per-mode state, wrap hidden for non-5-board modes._
 
-1. **Create `src/lib/teams/modes.ts`** — registry as specified in §3.1 (types, `TEAM_MODES`, `TEAM_MODE_ORDER`, `DEFAULT_TEAM_MODE`, `MAX_SAVED_TEAMS`, `MAX_TEAM_NAME_LENGTH`, `isTeamModeKey`, `resolveTeamMode`).
+1. **Create `src/lib/teams/modes.ts`** — registry per §3.1 (types, `TEAM_MODES`, `TEAM_MODE_ORDER`, `DEFAULT_TEAM_MODE`, `MAX_SAVED_TEAMS`, `MAX_TEAM_NAME_LENGTH`, `isTeamModeKey`, `resolveTeamMode` with the contradiction rule, `normalizeTeamPayload`).
 2. **Rework `src/composables/useGridPersistence.ts`**:
-   - Add `TEAMS_MODE_KEY = 'stargazer.teams.mode'`, slot helper `teamsSlotKey(mode)`; `ActiveSlot` envelope read/write (JSON parse/stringify around the encoded string + `sourceId`).
-   - `useTeamsPersistence(mode, sourceId, getFlags)` returning `{ loadMode(), load(mode), flush(), setPaused(paused), startAutosave() }` per §3.3; keep `useArenaPersistence` untouched. Replaces the stop-handle-less watch with a single pausable watcher keyed by the live mode ref — guard against double registration.
+   - Add `TEAMS_MODE_KEY = 'stargazer.teams.mode'`, slot helper `teamsSlotKey(mode)`; `ActiveSlot` envelope read/write (versioned; unknown `v` → absent).
+   - `useTeamsPersistence(mode, sourceId, getFlags)` returning `{ loadMode(), load(mode), flush(), setPaused(paused), startAutosave() }` per §3.3, **default (pre) flush + pause flag with the pinned semantics** — do not remove the pause as dead code; guard against double registration. Keep `useArenaPersistence` untouched.
    - Delete the legacy `stargazer.teams` key on init (no read, no migration).
-3. **Update `src/utils/gridStateSerializer.ts`**: add `mode?: string` to `MultiGridState`; `serializeMultiGridState` gains a `mode` arg (always written). `resolveTeamMode` lives in `lib/teams/modes.ts` next to the registry.
-4. **Update `src/stores/urlState.ts`**: `restoreMultiFromEncodedState` returns the resolved mode in its result so callers can sync the picker.
-5. **Rewire `src/views/TeamsView.vue`**:
+3. **Update `src/utils/gridStateSerializer.ts`**: add `mode?: string` to `MultiGridState`; `serializeMultiGridState` gains a `mode` arg (always written).
+4. **Update `src/stores/urlState.ts`**: `restoreMultiFromEncodedState` result gains the resolved `mode` and **`hasDisplayFlags`** (§3.8).
+5. **Create `src/composables/useTeamsRestore.ts`** and **rewire `src/views/TeamsView.vue`**:
    - Tab defs: `fiveVFive` key → `teams`, label `i18n.t('app.teams')`; delete `GRID_TABS` in favor of `activeMode = ref(DEFAULT_TEAM_MODE)` + `TEAM_MODES`.
-   - **Create `src/composables/useTeamsRestore.ts`** (per §4) and implement `switchMode(next)` exactly per §3.3; initial load order: `?g=` (sets mode per payload, `sourceId = null`) → `stargazer.teams.mode` + its slot → default mode. **Do not reuse the current count-equality rebuild check** (`TeamsView.vue:97`) for mode switches — see the §3.3 equal-count trap.
+   - `switchMode(next)` exactly per §3.3 (restore-or-default single rebuild; `sourceId` self-heal; virgin-flag policy; wrap reset; hex-size re-assert). **Do not reuse the count-equality rebuild check** (`TeamsView.vue:97`) — §3.3 equal-count trap.
+   - `?g=` ingress: decode → `resolveTeamMode` → `normalizeTeamPayload` → re-encode → apply via the single restore path, `sourceId = null`. Initial load order: `?g=` → `stargazer.teams.mode` + its slot → default mode. Apply display flags only when `hasDisplayFlags`.
    - Wrap: pass `:can-wrap="!isSheet && TEAM_MODES[activeMode].canWrap"`.
 6. **Create `src/components/teams/TeamModeControls.vue`** (mode picker + active-team label placeholder in this phase) and render it in `TeamsBoards.vue` above `GridControls`; segmented-control markup/styles per mock.
 7. **Verify `BoardsRow` wrap CSS** no-ops for 1 and 3 boards (the `:nth-child(4)/(5)` selectors match nothing — verify, then document in place).
 8. **i18n**: `mode-1v1.json`, `mode-3v3.json`, `mode-5v5.json`, `mode-5v5-sl.json` (en + zh).
 9. **Tests** (`tests/unit/`):
-   - `lib/teams/modes.test.ts`: registry invariants (`defaultMaps.length === boardCount`, all maps exist in `MAPS`, counts ≤ `MAX_GRID_COUNT`); `resolveTeamMode` inference table (1, 3, 5, absent mode, unknown mode, crafted 2/4/7).
-   - `composables/useGridPersistence.test.ts`: slot routing per mode; envelope round-trip (incl. `sourceId`); corrupt envelope → absent; pause semantics; legacy-key deletion.
-   - **The regression test**: build 5v5sl state → switch to 3v3 → assert 3v3 slot untouched & boards default → switch back → assert 5v5sl state restored byte-identical. This encodes the previous attempt's failure as a permanent guard. Include the 5v5 ↔ 5v5sl equal-count case.
-   - `utils/gridStateSerializer.test.ts`: `mode` round-trip.
+   - `lib/teams/modes.test.ts`: registry invariants (`defaultMaps.length === boardCount`, all maps exist in `MAPS`, counts ≤ `MAX_GRID_COUNT`); `resolveTeamMode` table (1/3/5 boards, absent mode, unknown mode, **contradictory mode+count**, crafted 2/4/7); `normalizeTeamPayload` (truncate, pad, pad-maps correctness).
+   - `composables/useGridPersistence.test.ts`: slot routing per mode; envelope round-trip (incl. `sourceId`); corrupt/`v`-mismatch envelope → absent; pause semantics; legacy-key deletion.
+   - **The regression test**: build 5v5sl state → switch to 3v3 → assert 3v3 slot untouched & boards default → switch back → assert 5v5sl state restored byte-identical; include the 5v5 ↔ 5v5sl equal-count case; **assert via write-spies that no old-key write occurs after flush and no new-key write occurs before the baseline** (§3.3).
+   - `utils/gridStateSerializer.test.ts`: `mode` round-trip; `hasDisplayFlags` behavior.
+   - Ingress test: crafted 2-board `?g=` → 3v3 mode, 3 boards (third on `arena1`), slot holds 3-board payload.
 
 ### Phase 2 — Saved Teams library (store, tab, Save/Save-as-New, thumbnails)
 
 _Deliverable: Save + Save as New with provenance; Saved Teams roster tab with portrait thumbnails, Select / Duplicate / Delete / Delete all / rename._
 
-1. **Create `src/lib/teams/savedTeam.ts`** (types, name normalization/clamping, auto-name `Team N`, duplicate naming) and **`src/stores/teamLibrary.ts`** per §3.4 (hydrate-once + mirror-on-change watch; cap 200; storage `{ v: 1, teams }`; corrupt JSON → empty + console.warn). Select must sit behind the page's `gameDataStore.dataLoaded` gate (`TeamsView.vue:121`).
-2. **Create `src/components/grid/BoardThumbnail.vue`** per §3.5 (map polygons + clipped portrait images + team ring + dot fallback; throwaway `Grid` per `mapKey`, memoized). **Refactor `ArenaPreviewGrid.vue` to render through it** (pixel-match the current look; keep its selection chrome).
-3. **Create `src/components/teams/TeamPreview.vue`** per §3.5 (decode memoized; `c`/`p` → `ThumbnailUnit[]` via `gameDataStore.getCharacterById` + `getCharacterImage`; corrupt-record fallback tile).
-4. **Create `src/components/teams/SavedTeamsList.vue`** per §3.9 (header with count + Delete all; card grid with equal-width actions; inline rename; two-step deletes; empty state; emits `select(team)`).
-5. **Wire selection + provenance**: `TeamsRoster` adds the `saved` tab (badge = count); Select flows through `useTeamsRestore` (sets `sourceId`); collapse sheet on mobile.
-6. **Extend `TeamModeControls`**: active-team label + dirty dot (string compare per §3.4); Save (update-or-degrade) + Save as New with name popover (new small component or inline; prefilled auto-name; Enter/Esc; 60-char clamp). New `src/components/ui/IconSave.vue`; reuse `IconCopy`/`IconTrash`/`IconDownload`.
-7. **i18n**: `saved-teams.json`, `save.json`, `save-as-new.json`, `team-name.json` (popover label/placeholder), `unsaved-team.json`, `team-saved.json`, `team-loaded.json`, `team-deleted.json`, `delete-all.json`, `duplicate.json`, `confirm.json`, `teams-limit.json`, `saved-teams-empty.json` (+zh). Basenames verified unique across `app/` and `app/messages/`.
-8. **Tests**: `lib/teams/savedTeam.test.ts` (naming rules, clamping); `stores/teamLibrary.test.ts` (CRUD incl. update/removeAll, cap 200, corrupt-storage hydration, duplicate naming); store-level integration: save-as-new → edit boards → dirty flag on → Save updates source → Select another team switches mode + repoints `sourceId`; delete source → `sourceId` null.
+1. **Create `src/lib/teams/savedTeam.ts`** (types; name normalization/clamping; auto-name `Team N`; duplicate naming; **`canonicalTeamData`**; per-record validation shared with import) and **`src/stores/teamLibrary.ts`** per §3.4 (hydrate-once with validation; read-modify-write mutations; cap 200; `{ v: 1, teams }`; corrupt/`v`-mismatch → empty + console.warn; **typed results, no toasts**).
+2. **Create `src/components/grid/BoardThumbnail.vue`** per §3.5 (module-level shared hex geometry; clipPaths for occupied hexes only; portraits + dot fallback). **Refactor `ArenaPreviewGrid.vue` to render through it** (pixel-match; keep selection chrome; QA covers the Map Editor consumer too).
+3. **Create `src/components/teams/TeamPreview.vue`** per §3.5 (decode memoized; data→units mapping from `lib/teams`; corrupt-record fallback tile).
+4. **Create `src/components/teams/SavedTeamsList.vue`** per §3.9 (sticky-`v-if` lazy mount on first activation; header with count + Delete all; card grid with equal-width actions + `content-visibility: auto`; inline rename; two-step deletes; empty state; emits `select(team)`; toasts fired here).
+5. **Wire selection + provenance**: `TeamsRoster` adds the `saved` tab (badge = count); Select flows through `useTeamsRestore` (sets `sourceId`, flags untouched per §3.4); collapse sheet on mobile.
+6. **Extend `TeamModeControls`**: active-team label + dirty dot (canonical compare, memoized); Save (update-or-degrade) + Save as New with name popover (prefilled auto-name; Enter/Esc; 60-char clamp); toasts fired here. New `src/components/ui/IconSave.vue`; reuse `IconCopy`/`IconTrash`/`IconDownload`.
+7. **i18n**: `saved-teams.json`, `save.json`, `save-as-new.json`, `team-name.json`, `unsaved-team.json`, `team-saved.json`, `team-loaded.json`, `team-deleted.json`, `delete-all.json`, `duplicate.json`, `confirm.json`, `teams-limit.json`, `saved-teams-empty.json` (+zh). Basenames verified unique across `app/` and `app/messages/`.
+8. **Tests**: `lib/teams/savedTeam.test.ts` (naming rules, clamping, **canonicalTeamData: strips `d`/`active`, keeps `mode`, idempotent, byte-stable round-trip**); `stores/teamLibrary.test.ts` (CRUD incl. update/removeAll, cap 200, corrupt-storage + unknown-mode hydration drops, duplicate naming, read-modify-write); integration (store-level, headless): save-as-new → edit boards → dirty on → **click another board / toggle a display flag → dirty stays off for content-identical state** → Save updates source → Select another team switches mode + repoints `sourceId` → delete source (incl. **from another mode / Delete all**) → resolved source null, label "Unsaved team".
 
 ### Phase 3 — Export / import
 
-1. **Create `src/lib/teams/transfer.ts`**: `buildExport(teams)` and `parseImport(raw)` as pure functions per §3.7.
+1. **Create `src/lib/teams/transfer.ts`**: `buildExport(teams)` and `parseImport(raw)` as pure functions per §3.7 (validation pipeline ending in canonicalization).
 2. **Wire export**: `downloadBlob(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }), timestampedName('stargazer-teams', 'json'))`.
-3. **Wire import**: hidden file input in `TeamModeControls` (WandWars pattern); `await file.text()` → `parseImport` → merge; result toast.
-4. **Tests**: exhaust `parseImport` (bad envelope, bad mode, undecodable data, count mismatch, unknown map key, missing `d` normalization, name clamping, dup skip, cap overflow) — it is the only place untrusted file content enters the app.
+3. **Wire import**: hidden file input in `TeamModeControls` (WandWars pattern); `await file.text()` → `parseImport` → merge; result toast from the component.
+4. **Tests**: exhaust `parseImport` (bad envelope, bad mode, undecodable data, count mismatch, unknown map key, name clamping, dup skip, cap overflow, **canonicalization: imported data round-trips to itself; a record with stray `d`/`active` is stored stripped and is not dirty after Select**) — it is the only place untrusted file content enters the app.
 5. **i18n**: `export.json`, `import.json`, `import-success.json`, `import-invalid.json` (+zh).
 
 ### Phase 4 — Polish & docs
 
 1. `/share` wrap gating on `boards.length === 5` (cosmetic hardening — verify, then decide if the line is worth it).
-2. Docs: update `docs/architecture/GRID.md` (board array + modes), `URL_SERIALIZATION.md` (`mode` field, saved-team reuse of the codec), add `SAVED_TEAMS.md` if warranted; follow `STYLE_GUIDE.md`. Also fix the misleading comment at `gridStateSerializer.ts:161-162` ("tile states carry only the edits" — they carry every non-default tile including the map baseline).
+2. Docs: update `docs/architecture/GRID.md` (board array + modes), `URL_SERIALIZATION.md` (`mode` field, canonical saved-team reuse of the codec), add `SAVED_TEAMS.md` if warranted; follow `STYLE_GUIDE.md`. Also fix the misleading comment at `gridStateSerializer.ts:161-162` ("tile states carry only the edits" — they carry every non-default tile including the map baseline).
 3. Sweep: `npm run prep` (format + type-check + lint + test), manual pass over the QA checklist below.
 
 ### QA checklist (manual)
@@ -460,70 +501,89 @@ _Deliverable: Save + Save as New with provenance; Saved Teams roster tab with po
 - [ ] 5v5 ↔ 5v5sl switch (equal board count) rebuilds maps + state correctly
 - [ ] Reload restores last mode and its state; first-ever visit lands on 5v5 SL defaults; old `stargazer.teams` key is removed and ignored
 - [ ] Old (pre-feature) share links open correctly and select 5v5 SL
+- [ ] Crafted short link (2 boards) → 3v3 with a padded third board on Arena I; slot holds 3 boards
 - [ ] New share link from each mode → `/share` renders the right board count; Edit pencil lands on `/teams` in that mode with payload applied
 - [ ] `?g=` overwrite semantics per mode (`sourceId` cleared); invalid `?g=` → error toast + saved state intact
-- [ ] Save updates the source team; Save as New pops the name input (prefill, 60-char clamp, Enter/Esc); dirty dot appears on edit, clears on Save/Select
-- [ ] Select/Duplicate/Delete/Delete-all/rename; select from another mode switches the picker; deleting the source team nulls the label
-- [ ] Thumbnails show portraits on the right hexes/teams; corrupt record falls back gracefully; Maps tab (refactored ArenaPreviewGrid) is pixel-identical
-- [ ] Export → clear browser storage → import → library identical (200-cap respected)
+- [ ] Save updates the source team; Save as New pops the name input (prefill, 60-char clamp, Enter/Esc); dirty dot appears on **content** edit only — board clicks and Flat/Grid Info/Team View/wrap toggles do **not** trip it — and clears on Save/Select
+- [ ] Select applies team content without changing the current display toggles
+- [ ] Select/Duplicate/Delete/Delete-all/rename; select from another mode switches the picker; deleting the source team (any mode, incl. Delete all) reverts the label to "Unsaved team" after switch-back
+- [ ] Thumbnails show portraits on the right hexes/teams; corrupt record falls back gracefully; roster Maps tab **and Map Editor preset picker** (both on refactored `BoardThumbnail`) are pixel-identical
+- [ ] Saved Teams tab with ~200 teams: page load is unaffected (panel not mounted); opening the tab stays responsive (content-visibility)
+- [ ] Export → clear browser storage → import → library identical (200-cap respected); re-imported teams are not dirty after Select
 - [ ] Wrap toggle only in 5-board modes; wrap flag round-trips for them
 - [ ] Cross-board drag, page-wide uniqueness, swap, team view, invert — unchanged in 1v1/3v3 (1 and 3 boards)
 - [ ] Private-mode/quota-disabled storage: page functional, saves silently skipped, Save shows error toast
 
 ---
 
-## 6. Review Findings (Staff Engineer + Architect audit)
+## 6. Review Findings (Staff Engineer + Architect audit — Rev 3 resolutions)
 
-_This section is populated by the independent persona reviews; see revision history._
+Two independent persona reviews audited Rev 2 against the source; every blocker/major finding was then **adversarially verified by a separate agent reading the cited code** (all five confirmed). Both reviewers' overall verdicts: the investigation is accurate in every spot-checked citation and the architecture is sound; the majors below required a Rev 3, not a redesign.
 
----
+| #   | Severity | Finding (verified)                                                                                                                                                                       | Resolution in Rev 3                                                                                                                                   |
+| --- | -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | major    | Dirty check compared raw encodings that embed the active-board index + display flags — clicking a board or toggling Flat marked a saved team dirty; Save baked viewer state into records | **Canonical team data** (§3.4): one normalizer strips `d`/`active`; used by every library write and both sides of the dirty compare (invariant 12)    |
+| 2   | major    | `?g=` ingress trusted a payload's `mode` without checking board count, and the promised short-link padding had no implementing phase step — a slot-corruption path                       | `resolveTeamMode` contradiction rule + `normalizeTeamPayload`, applied at the teams ingress in `useTeamsRestore` (§3.8, Phase 1 step 5, ingress test) |
+| 3   | major    | Saved Teams panel mounts inside the roster's eager `TabView` → ~45k SVG polygons at cap on page load, tab never opened                                                                   | Lazy mount on first activation + `content-visibility` budget + shared hex geometry + occupied-only clipPaths (§3.5, §3.9)                             |
+| 4   | minor    | Pause flag as sketched never gates anything under pre-flush timing; risk of "simplifying away" or of a future async step breaking silently                                               | Flush semantics pinned in §3.3 (pre-flush + pause as mandatory defense-in-depth); write-spy regression assertions                                     |
+| 5   | minor    | Dangling `sourceId`s (delete from another mode, Delete all, cross-tab, backup restore) unspecified                                                                                       | Self-heal rule at slot adoption; `source ≡ get(sourceId) ?? null` (§3.2, invariant 11); cross-mode delete test                                        |
+| 6   | minor    | Imported records never byte-match re-encodes → permanently dirty                                                                                                                         | Import canonicalizes `data` (§3.7); round-trip test                                                                                                   |
+| 7   | minor    | `teamLibrary` store specified to toast — violates the layering rule the doc itself restates                                                                                              | Store returns typed results; callers toast (§3.0, §3.4, invariant 9)                                                                                  |
+| 8   | minor    | Switch sequence rebuilt boards twice (defaults, then restore's own rebuild); invariant 2 wording contradicted the restore path                                                           | Restore-or-default single rebuild (§3.3 step 4); invariant 2 reworded to "one orchestrator, delegated mechanism"                                      |
+| 9   | minor    | Sequence dropped hex-size pinning; virgin-mode display-flag policy undefined                                                                                                             | Step 6: hex-size re-assert + virgin mode keeps current flags (§3.3)                                                                                   |
+| 10  | minor    | Unknown-mode / `v`-mismatch hydration unspecified (future mode removal)                                                                                                                  | Add-only mode rule (§3.1); hydration drops invalid records with warn, unknown `v` → empty (§3.4)                                                      |
+| 11  | minor    | Multi-tab clobbering undocumented/undecided                                                                                                                                              | Documented decision: out of scope, last-writer-wins; read-modify-write mutations narrow the window (§3.2)                                             |
+| 12  | minor    | ArenaPreviewGrid refactor also changes the Map Editor, which the scope statement declared untouched                                                                                      | Scope line amended; QA pixel-checks both consumers                                                                                                    |
+| 13  | minor    | Test plan assumed jsdom/test-utils; the repo's vitest is node-env only                                                                                                                   | Harness constraints pinned in §5; orchestration and thumbnail mapping designed headless-testable                                                      |
+| 14  | nit      | Thumbnails ignore `t` divergence from `m` (hand-crafted imports preview ≠ select)                                                                                                        | Documented as intentional leniency (§3.5)                                                                                                             |
+| 15  | nit      | Rejected alternatives not recorded — invites relitigation                                                                                                                                | Appendix C                                                                                                                                            |
 
 ## 7. Resolved Decisions (Rev 2)
 
-| #   | Question (Rev 1)          | Decision                                                                                                      |
-| --- | ------------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 1   | "Edit" control            | **Select** (load as active) + inline rename on the card                                                       |
-| 2   | Save semantics            | **Save updates the currently-selected (source) team; Save as New creates a copy** — provenance via `sourceId` |
-| 3   | Overwrite guard on Select | No confirm for now; toast + dirty-dot make state legible                                                      |
-| 4   | Mode memory               | Yes — persist last-used mode; first visit defaults to 5v5 Supreme League                                      |
-| 5   | Cap                       | **200**                                                                                                       |
-| 6   | Naming                    | Auto-name + **user-entered name on Save as New**, max **60 chars**; inline rename stays                       |
-| 7   | Thumbnails                | **Hero portraits in v1** via shared `BoardThumbnail` (ArenaPreviewGrid refactored onto it)                    |
-| 8   | Import policy             | Merge + skip duplicates + fresh ids; **Delete all** added so "replace" = Delete all + Import                  |
-| 9   | Mode set                  | Confirmed, **plus 1v1**: `1v1 / 3v3 / 5v5 / 5v5 Supreme League`, segmented control (revisit if list grows)    |
-| 10  | Export scope              | All teams — backup is the purpose                                                                             |
-| —   | Directory layout          | Non-UI logic in **`src/lib/teams/`**; components in `components/teams/`; store in `stores/`                   |
-| —   | Legacy/migration          | **Dropped** — clean-slate storage schema; old `stargazer.teams` key deleted unread                            |
-| —   | Card action sizing        | Select / Duplicate / Delete at equal width on the card                                                        |
+| #   | Question (Rev 1) | Decision                                                                                                      |
+| --- | ---------------- | ------------------------------------------------------------------------------------------------------------- |
+| 1   | "Edit" control   | **Select** (load as active) + inline rename on the card                                                       |
+| 2   | Save semantics   | **Save updates the currently-selected (source) team; Save as New creates a copy** — provenance via `sourceId` |
+| 3   | Overwrite guard  | No confirm on Select for now; toast + dirty-dot make state legible                                            |
+| 4   | Mode memory      | Yes — persist last-used mode; first visit defaults to 5v5 Supreme League                                      |
+| 5   | Cap              | **200**                                                                                                       |
+| 6   | Naming           | Auto-name + **user-entered name on Save as New**, max **60 chars**; inline rename stays                       |
+| 7   | Thumbnails       | **Hero portraits in v1** via shared `BoardThumbnail` (ArenaPreviewGrid refactored onto it)                    |
+| 8   | Import policy    | Merge + skip duplicates + fresh ids; **Delete all** added so "replace" = Delete all + Import                  |
+| 9   | Mode set         | Confirmed, **plus 1v1**: `1v1 / 3v3 / 5v5 / 5v5 Supreme League`, segmented control (revisit if list grows)    |
+| 10  | Export scope     | All teams — backup is the purpose                                                                             |
+| —   | Directory layout | Non-UI logic in **`src/lib/teams/`**; components in `components/teams/`; store in `stores/`                   |
+| —   | Legacy/migration | **Dropped** — clean-slate storage schema; old `stargazer.teams` key deleted unread                            |
+| —   | Card actions     | Select / Duplicate / Delete at equal width on the card                                                        |
 
 ---
 
 ## Appendix A — File touch list
 
-| File                                        | Phase | Change                                                               |
-| ------------------------------------------- | ----- | -------------------------------------------------------------------- |
-| `src/lib/teams/modes.ts`                    | 1     | **new** — mode registry, `resolveTeamMode`, constants                |
-| `src/lib/teams/savedTeam.ts`                | 2     | **new** — SavedTeam type, naming rules                               |
-| `src/lib/teams/transfer.ts`                 | 3     | **new** — export/import pure functions                               |
-| `src/composables/useGridPersistence.ts`     | 1     | per-mode `ActiveSlot` envelope slots, pause/flush, legacy-key delete |
-| `src/composables/useTeamsRestore.ts`        | 1     | **new** — shared restore/switch orchestration                        |
-| `src/utils/gridStateSerializer.ts`          | 1     | `MultiGridState.mode?` (always written)                              |
-| `src/stores/urlState.ts`                    | 1     | return resolved mode from multi-restore                              |
-| `src/views/TeamsView.vue`                   | 1     | tab rename, `activeMode`, switch sequence, `?g=` mode sync           |
-| `src/components/teams/TeamsBoards.vue`      | 1–2   | render `TeamModeControls`; wrap gating                               |
-| `src/components/teams/TeamModeControls.vue` | 1–3   | **new** — picker + label; then Save/Save-as-New; then Export/Import  |
-| `src/components/teams/BoardsRow.vue`        | 1     | verify/document 1-/3-board no-op of wrap CSS                         |
-| `src/stores/teamLibrary.ts`                 | 2–3   | **new** — library state + persistence (logic in lib)                 |
-| `src/components/grid/BoardThumbnail.vue`    | 2     | **new** — shared SVG board renderer (portraits)                      |
-| `src/components/grid/ArenaPreviewGrid.vue`  | 2     | refactor to render through `BoardThumbnail`                          |
-| `src/components/teams/TeamPreview.vue`      | 2     | **new** — saved-team thumbnail (decode → BoardThumbnails)            |
-| `src/components/teams/SavedTeamsList.vue`   | 2     | **new** — cards + actions + Delete all                               |
-| `src/components/teams/TeamsRoster.vue`      | 2     | fourth tab (`saved`, badge)                                          |
-| `src/components/ui/IconSave.vue`            | 2     | **new**                                                              |
-| `src/locales/app/*.json`                    | 1–3   | ~20 new keys (en + zh)                                               |
-| `src/views/ShareView.vue`                   | 4     | wrap gating for non-5-board payloads (cosmetic)                      |
-| `tests/unit/…`                              | 1–3   | new suites per phase; regression test §5-P1-9                        |
-| `docs/architecture/…`                       | 4     | GRID.md, URL_SERIALIZATION.md updates; serializer comment fix        |
+| File                                        | Phase | Change                                                                          |
+| ------------------------------------------- | ----- | ------------------------------------------------------------------------------- |
+| `src/lib/teams/modes.ts`                    | 1     | **new** — mode registry, `resolveTeamMode`, `normalizeTeamPayload`, constants   |
+| `src/lib/teams/savedTeam.ts`                | 2     | **new** — SavedTeam type, naming rules, `canonicalTeamData`, record validation  |
+| `src/lib/teams/transfer.ts`                 | 3     | **new** — export/import pure functions (validate + canonicalize)                |
+| `src/composables/useGridPersistence.ts`     | 1     | per-mode `ActiveSlot` envelope slots, pause/flush, legacy-key delete            |
+| `src/composables/useTeamsRestore.ts`        | 1     | **new** — restore/switch/ingress orchestration (the sole board-count initiator) |
+| `src/utils/gridStateSerializer.ts`          | 1     | `MultiGridState.mode?` (always written)                                         |
+| `src/stores/urlState.ts`                    | 1     | multi-restore result gains `mode` + `hasDisplayFlags`                           |
+| `src/views/TeamsView.vue`                   | 1     | tab rename, `activeMode`, switch sequence, `?g=` mode sync                      |
+| `src/components/teams/TeamsBoards.vue`      | 1–2   | render `TeamModeControls`; wrap gating                                          |
+| `src/components/teams/TeamModeControls.vue` | 1–3   | **new** — picker + label; then Save/Save-as-New; then Export/Import             |
+| `src/components/teams/BoardsRow.vue`        | 1     | verify/document 1-/3-board no-op of wrap CSS                                    |
+| `src/stores/teamLibrary.ts`                 | 2–3   | **new** — library state + persistence (typed results, no toasts)                |
+| `src/components/grid/BoardThumbnail.vue`    | 2     | **new** — shared SVG board renderer (portraits, shared geometry)                |
+| `src/components/grid/ArenaPreviewGrid.vue`  | 2     | refactor to render through `BoardThumbnail` (Maps tab + Map Editor)             |
+| `src/components/teams/TeamPreview.vue`      | 2     | **new** — saved-team thumbnail (decode → BoardThumbnails)                       |
+| `src/components/teams/SavedTeamsList.vue`   | 2     | **new** — lazy-mounted cards + actions + Delete all                             |
+| `src/components/teams/TeamsRoster.vue`      | 2     | fourth tab (`saved`, badge)                                                     |
+| `src/components/ui/IconSave.vue`            | 2     | **new**                                                                         |
+| `src/locales/app/*.json`                    | 1–3   | ~21 new keys (en + zh)                                                          |
+| `src/views/ShareView.vue`                   | 4     | wrap gating for non-5-board payloads (cosmetic)                                 |
+| `tests/unit/…`                              | 1–3   | new suites per phase; §5 regression + write-spy + canonicalization tests        |
+| `docs/architecture/…`                       | 4     | GRID.md, URL_SERIALIZATION.md updates; serializer comment fix                   |
 
 ## Appendix B — localStorage schema after this design
 
@@ -534,6 +594,21 @@ stargazer.teams.active.1v1          { v: 1, data: <encoded MultiGridState>, sour
 stargazer.teams.active.3v3          { v: 1, data: …, sourceId: … }
 stargazer.teams.active.5v5          { v: 1, data: …, sourceId: … }
 stargazer.teams.active.5v5sl        { v: 1, data: …, sourceId: … }
-stargazer.teams.saved               { v: 1, teams: SavedTeam[] }        (≤ 200 teams)
+stargazer.teams.saved               { v: 1, teams: SavedTeam[] }   (≤ 200; SavedTeam.data is canonical)
 stargazer.teams                     (legacy) deleted unread on first visit
 ```
+
+## Appendix C — Considered and rejected
+
+Recorded so implementation doesn't relitigate:
+
+1. **Sibling tab per mode** — re-creates the shared-instance/single-slot failure class; makes a mobile tab strip appear for the first time (§2).
+2. **Dropdown mode picker** — hides the available modes and adds a tap; four short segments fit (§2).
+3. **IndexedDB for the library** — measured volumes (~6 KB/team) make localStorage ample; IndexedDB adds async complexity everywhere (§3.4).
+4. **Stored image thumbnails** (canvas/html-to-image) — 20–100 KB+ each would dominate quota; DOM capture can't see non-live teams anyway; data→SVG is strictly better (§3.5).
+5. **Per-team localStorage keys** (`stargazer.teams.saved.<id>`) — enumeration + atomicity headaches for zero benefit at these sizes; one versioned blob with read-modify-write is simpler (§3.2/§3.4).
+6. **Cross-tab `storage`-event sync** — real complexity (event replay, merge policy) for a single-user tool; last-writer-wins documented instead (§3.2).
+7. **Raw JSON (not encoded string) as SavedTeam.data** — loses the free share-link compatibility and the single validated decode path; canonical encoding keeps both (§3.4).
+8. **`flush: 'sync'` autosave watcher** — would encode+write on every intermediate mutation of a restore; pre-flush + pause is strictly better (§3.3).
+9. **Save always creates new (Rev 1 semantics)** — replaced by user decision: Save updates source, Save as New copies (§7 #2).
+10. **GridSnippet convergence onto BoardThumbnail now** — guide-specific features (highlights, labels, imaginary hexes) make it a separate change; deferred (§3.5).
