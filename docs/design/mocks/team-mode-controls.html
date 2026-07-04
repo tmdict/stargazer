@@ -155,11 +155,98 @@
         color: #fff;
       }
 
+      /* active team label + unsaved-changes dot */
+      .active-team-label {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--color-text-secondary);
+        background: var(--color-bg-secondary);
+        border: 1.5px dashed var(--color-border-primary);
+        border-radius: var(--radius-medium);
+        padding: 5px 12px;
+        max-width: 220px;
+      }
+      .team-label-name {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .dirty-dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #f9a825;
+        flex-shrink: 0;
+      }
+
       /* action buttons (match GridControls .action-btn) */
       .mode-actions {
         display: flex;
         gap: var(--spacing-lg);
         align-items: center;
+      }
+      .save-as-new-wrap {
+        position: relative;
+        display: inline-flex;
+      }
+
+      /* Save-as-New name popover */
+      .name-popover[hidden] {
+        display: none;
+      }
+      .name-popover {
+        position: absolute;
+        top: calc(100% + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 50;
+        background: var(--color-bg-primary);
+        border: 1.5px solid var(--color-border-primary);
+        border-radius: var(--radius-large);
+        box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+        padding: var(--spacing-md);
+        display: flex;
+        flex-direction: column;
+        gap: var(--spacing-sm);
+        width: 240px;
+      }
+      .name-popover-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: var(--color-text-secondary);
+      }
+      .name-popover-input {
+        font: inherit;
+        font-size: 0.85rem;
+        padding: 6px 8px;
+        border: 1.5px solid var(--color-border-primary);
+        border-radius: var(--radius-medium);
+        background: #fff;
+        color: var(--color-text-primary);
+      }
+      .name-popover-input:focus {
+        outline: none;
+        border-color: var(--color-primary);
+      }
+      .name-popover-actions {
+        display: flex;
+        gap: var(--spacing-sm);
+      }
+      .name-popover-actions .action-btn {
+        flex: 1;
+        justify-content: center;
+        min-height: 30px;
+        padding: 4px 8px;
+        font-size: 0.8rem;
+      }
+      .name-popover-hint {
+        font-size: 0.68rem;
+        color: var(--color-text-secondary);
       }
       .action-btn {
         display: inline-flex;
@@ -295,9 +382,10 @@
   </head>
   <body>
     <p class="mock-note">
-      <strong>MOCK</strong> — Teams tab with the new <b>mode controls row</b> (segmented mode picker
-      + Save / Export / Import) above the existing display-toggle row. The picker is clickable: try
-      3v3 vs 5v5 — note the board count, default maps, and the Wrap toggle disappearing for 3v3.
+      <strong>MOCK (Rev 2)</strong> — Teams tab with the new <b>mode controls row</b>: segmented
+      mode picker (1v1 / 3v3 / 5v5 / 5v5 SL), active-team label with unsaved-changes dot, Save /
+      Save as New (with name popover) / Export / Import — all above the existing display-toggle row.
+      Everything is clickable: switch modes, hit Save, open Save as New.
     </p>
 
     <section class="section">
@@ -310,12 +398,20 @@
       <div class="team-mode-controls">
         <span class="new-badge">new</span>
         <div class="mode-picker" id="modePicker">
+          <button class="mode-seg" data-mode="1v1">1v1</button>
           <button class="mode-seg" data-mode="3v3">3v3</button>
           <button class="mode-seg" data-mode="5v5">5v5</button>
           <button class="mode-seg active" data-mode="5v5sl">5v5 Supreme League</button>
         </div>
+        <span
+          class="active-team-label"
+          title="The saved team you're editing; the dot marks unsaved changes"
+        >
+          <span class="team-label-name" id="activeTeamName">AFK Push — S47</span>
+          <span class="dirty-dot" id="dirtyDot" title="Unsaved changes"></span>
+        </span>
         <div class="mode-actions">
-          <button class="action-btn" title="Save current team to Saved Teams">
+          <button class="action-btn" id="saveBtn" title="Save changes to the selected team">
             <svg
               width="14"
               height="14"
@@ -332,6 +428,42 @@
             </svg>
             Save
           </button>
+          <span class="save-as-new-wrap">
+            <button class="action-btn secondary" id="saveAsNewBtn" title="Save as a new team">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.4"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                <line x1="12" y1="10" x2="12" y2="16" />
+                <line x1="9" y1="13" x2="15" y2="13" />
+              </svg>
+              Save as New
+            </button>
+            <!-- Name popover (opens on click) -->
+            <div class="name-popover" id="namePopover" hidden>
+              <label class="name-popover-label" for="teamNameInput">Team name</label>
+              <input
+                id="teamNameInput"
+                class="name-popover-input"
+                type="text"
+                maxlength="60"
+                value="Team 5"
+                spellcheck="false"
+              />
+              <div class="name-popover-actions">
+                <button class="action-btn name-popover-save" id="popoverSave">Save</button>
+                <button class="action-btn secondary" id="popoverCancel">Cancel</button>
+              </div>
+              <span class="name-popover-hint">Enter to save · Esc to cancel · max 60 chars</span>
+            </div>
+          </span>
           <button class="action-btn secondary" title="Export all saved teams as JSON">
             <svg
               width="14"
@@ -388,28 +520,36 @@
     </section>
 
     <div class="footnotes">
-      <b>Notes for review</b>
+      <b>Notes for review (Rev 2)</b>
       <ol>
         <li>
           The outer tab is renamed <b>5 v 5 → Teams</b> (existing i18n key <code>app.teams</code>).
         </li>
         <li>
-          Mode picker is a segmented control fed by the <code>TEAM_MODES</code> registry — adding a
-          2- or 4-grid mode later is one registry entry, no new UI.
+          Mode picker now has four segments: <b>1v1 · 3v3 · 5v5 · 5v5 Supreme League</b>, fed by the
+          <code>TEAM_MODES</code> registry — a future mode is one registry entry, no new UI.
+        </li>
+        <li>
+          The <b>active team label</b> shows which saved team you're editing ("Unsaved team" when
+          none); the amber dot marks unsaved changes. Try it: click Save (dot clears), or switch
+          modes (each mode remembers its own team).
+        </li>
+        <li>
+          <b>Save</b> updates the selected team in place; <b>Save as New</b> opens the name popover
+          (prefilled auto-name, max 60 chars, Enter/Esc) and creates a copy. Try both.
         </li>
         <li>
           Switching modes is instant and lossless: each mode autosaves to its own localStorage slot,
           so no confirmation dialog is needed.
         </li>
+        <li><b>Wrap</b> renders only for 5-board modes; 1 or 3 boards always fit one row.</li>
         <li>
-          <b>Save</b> snapshots the current boards into the Saved Teams list (see
-          <code>saved-teams-tab.html</code>); Export/Import operate on that list as a JSON backup
-          file.
+          Default maps: 1v1, 3v3, and 5v5 = Arena I on every board; 5v5 Supreme League keeps today's
+          list (Arena I–III, Preset SR11, SR1).
         </li>
-        <li><b>Wrap</b> renders only for 5-board modes; 3 boards always fit one row.</li>
         <li>
-          Default maps: 3v3 and 5v5 = Arena I on every board; 5v5 Supreme League keeps today's list
-          (Arena I–III, Preset SR11, SR1).
+          Export/Import operate on the saved-teams library as a JSON backup file (see
+          <code>saved-teams-tab.html</code>).
         </li>
         <li>
           Everything below the new row is untouched (display toggles, invert,
@@ -494,6 +634,7 @@
       }
 
       const MODES = {
+        '1v1': { count: 1, maps: ['Arena I'], canWrap: false },
         '3v3': { count: 3, maps: ['Arena I', 'Arena I', 'Arena I'], canWrap: false },
         '5v5': {
           count: 5,
@@ -506,6 +647,13 @@
           canWrap: true,
         },
       }
+      /* Per-mode active-team label demo (source team name or "Unsaved team") */
+      const ACTIVE_TEAM = {
+        '1v1': null,
+        '3v3': 'Arena counters',
+        '5v5': null,
+        '5v5sl': 'AFK Push — S47',
+      }
       function render(modeKey) {
         const mode = MODES[modeKey]
         const track = document.getElementById('boardsTrack')
@@ -517,6 +665,10 @@
           track.appendChild(div)
         }
         document.getElementById('wrapToggle').style.display = mode.canWrap ? '' : 'none'
+        const src = ACTIVE_TEAM[modeKey]
+        document.getElementById('activeTeamName').textContent = src ?? 'Unsaved team'
+        // demo: the 5v5sl team has unsaved edits; others are clean/unsaved
+        document.getElementById('dirtyDot').style.display = modeKey === '5v5sl' ? '' : 'none'
       }
       document.querySelectorAll('.mode-seg').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -526,6 +678,37 @@
         })
       })
       render('5v5sl')
+
+      /* Save demo: clears the dirty dot ("saved to source team") */
+      document.getElementById('saveBtn').addEventListener('click', () => {
+        document.getElementById('dirtyDot').style.display = 'none'
+      })
+
+      /* Save-as-New name popover demo */
+      const popover = document.getElementById('namePopover')
+      const nameInput = document.getElementById('teamNameInput')
+      const closePopover = () => {
+        popover.hidden = true
+      }
+      document.getElementById('saveAsNewBtn').addEventListener('click', () => {
+        popover.hidden = !popover.hidden
+        if (!popover.hidden) {
+          nameInput.focus()
+          nameInput.select()
+        }
+      })
+      const commitName = () => {
+        const name = nameInput.value.trim().slice(0, 60) || 'Team 5'
+        document.getElementById('activeTeamName').textContent = name
+        document.getElementById('dirtyDot').style.display = 'none'
+        closePopover()
+      }
+      document.getElementById('popoverSave').addEventListener('click', commitName)
+      document.getElementById('popoverCancel').addEventListener('click', closePopover)
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') commitName()
+        if (e.key === 'Escape') closePopover()
+      })
     </script>
   </body>
 </html>

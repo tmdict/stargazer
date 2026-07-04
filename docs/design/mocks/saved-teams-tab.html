@@ -210,8 +210,10 @@
         color: var(--color-text-secondary);
       }
 
+      /* Equal-width actions: 3-column grid so Select/Duplicate/Delete align across cards. */
       .card-actions {
-        display: flex;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: var(--spacing-sm);
         margin-top: 2px;
       }
@@ -221,7 +223,7 @@
         justify-content: center;
         gap: var(--spacing-xs);
         border-radius: var(--radius-medium);
-        padding: 5px 12px;
+        padding: 5px 8px;
         font-size: 0.8rem;
         font-weight: 600;
         cursor: pointer;
@@ -229,12 +231,23 @@
         border: 2px solid var(--color-border-primary);
         background: var(--color-bg-primary);
         color: var(--color-text-secondary);
+        white-space: nowrap;
       }
       .card-btn.primary {
-        flex: 1;
         background: var(--color-primary);
         border-color: var(--color-primary);
         color: #fff;
+      }
+      .delete-all-btn {
+        margin-left: auto;
+        padding: 4px 12px;
+        font-size: 0.75rem;
+      }
+      .delete-all-btn:hover,
+      .delete-all-btn.armed {
+        color: #fff;
+        background: var(--color-danger);
+        border-color: var(--color-danger);
       }
       .card-btn.primary:hover {
         background: var(--color-primary-hover);
@@ -302,10 +315,11 @@
   </head>
   <body>
     <p class="mock-note">
-      <strong>MOCK</strong> — the roster card's new <b>Saved Teams</b> tab (4th tab, with count
-      badge). Thumbnails are SVG mini-boards rendered live from each team's serialized data — no
-      images are stored. Try it: click a name to rename, click Delete twice (two-step confirm),
-      click Select.
+      <strong>MOCK (Rev 2)</strong> — the roster card's new <b>Saved Teams</b> tab (4th tab, with
+      count badge). Thumbnails are SVG mini-boards rendered live from each team's serialized data
+      with <b>hero portraits</b> hex-clipped onto occupied tiles (initial-letter discs stand in for
+      the real webp portraits here). Try it: rename a name, two-step Delete (per card or Delete
+      all), Select.
     </p>
 
     <section class="section">
@@ -319,11 +333,18 @@
       </div>
 
       <div class="library-bar">
-        <span class="library-count" id="countLabel">4 / 50 teams</span>
+        <span class="library-count" id="countLabel">4 / 200 teams</span>
         <span class="library-hint"
           >Select loads a team into the boards (replacing that mode's current team). Backups: Export
           / Import in the controls row above the boards.</span
         >
+        <button
+          class="card-btn danger delete-all-btn"
+          id="deleteAllBtn"
+          title="Delete all saved teams"
+        >
+          Delete all
+        </button>
       </div>
 
       <div class="team-grid" id="teamGrid"></div>
@@ -339,34 +360,40 @@
       </div>
       <div class="empty-state">
         No saved teams yet.<br />
-        Set up your boards, then hit <b>Save</b> in the controls row — the current team is
-        snapshotted here and the boards stay untouched.
+        Set up your boards, then hit <b>Save as New</b> in the controls row — name it and the
+        current team is snapshotted here, with the boards untouched.
       </div>
     </section>
 
     <div class="footnotes">
-      <b>Notes for review</b>
+      <b>Notes for review (Rev 2)</b>
       <ol>
-        <li>Cards are sorted by <i>last updated</i>; the tab badge shows the count.</li>
+        <li>Cards are sorted by <i>last updated</i>; the tab badge shows the count (cap 200).</li>
         <li>
-          Thumbnail = one mini map per board (same SVG technique as the Maps tab previews) +
-          team-colored dots for occupied tiles. Character portraits are a possible v2 refinement.
+          Thumbnail = one mini map per board rendered by the shared <code>BoardThumbnail</code>
+          component (extracted from the Maps-tab previews + guide-page snippets), with
+          <b>hero portraits clipped to hexes</b> and a team-colored ring. In the real app these are
+          the actual character webp portraits; unresolvable units fall back to a team-colored dot.
         </li>
         <li>
           <b>Select</b> switches the mode picker to the team's mode, loads the snapshot into the
-          boards, and overwrites that mode's active team (toast: "Team loaded"). No modal —
-          consistent with the app's toast-first style.
+          boards, overwrites that mode's active team, and makes this team the Save target (see the
+          active-team label in <code>team-mode-controls.html</code>). Toast, no modal.
         </li>
         <li>
-          <b>Delete</b> is a two-step inline confirm (arms for 3 s) instead of a modal dialog.
-        </li>
-        <li><b>Duplicate</b> copies the snapshot as "&lt;name&gt; (copy)".</li>
-        <li>
-          Rename is inline (click the name; Enter/blur commits, Esc cancels) — this is the "Edit"
-          affordance.
+          <b>Select / Duplicate / Delete</b> render at equal width (3-column grid) so actions align
+          across cards.
         </li>
         <li>
-          Cap indicator appears in the header once the library reaches 80% of the 50-team soft cap.
+          <b>Delete</b> (per card) and <b>Delete all</b> (header) both use the two-step inline
+          confirm (arms for 3 s). "Replace library" = Delete all + Import.
+        </li>
+        <li>
+          <b>Duplicate</b> copies the snapshot as "&lt;name&gt; (copy)" (clamped to 60 chars).
+        </li>
+        <li>Rename is inline (click the name; Enter/blur commits, Esc cancels), max 60 chars.</li>
+        <li>
+          Cap indicator appears in the header once the library reaches 80% of the 200-team cap.
         </li>
         <li>
           On mobile this panel lives in the same pull-up sheet as the other roster tabs; selecting a
@@ -387,12 +414,17 @@
         }
         return pts.join(' ')
       }
-      function boardSvg(dots, blocked) {
+      /* Units render as "portraits": a hex-clipped disc with the hero's initial and a
+         team-colored ring — a stand-in for the real hex-clipped webp portraits
+         (BoardThumbnail renders <image clip-path="hex"> like the guide pages). */
+      let uid = 0
+      function boardSvg(units, blocked) {
         const R = 2,
-          s = 6.5
+          s = 8
         const w = s * SQRT3 * (2 * R + 1.2),
           h = s * (1.5 * 2 * R + 2.6)
-        let out = ''
+        let defs = '',
+          out = ''
         for (let r = -R; r <= R; r++) {
           for (let q = Math.max(-R, -r - R); q <= Math.min(R, -r + R); q++) {
             const cx = w / 2 + s * SQRT3 * (q + r / 2)
@@ -404,54 +436,59 @@
             out += `<polygon points="${hexPoints(cx, cy, s)}" fill="${fill}" stroke="rgba(0,0,0,0.12)" stroke-width="0.8"/>`
           }
         }
-        for (const [q, r] of dots) {
+        for (const [q, r, initial] of units) {
           const cx = w / 2 + s * SQRT3 * (q + r / 2)
           const cy = h / 2 + s * 1.5 * r
-          out += `<circle cx="${cx}" cy="${cy}" r="${s * 0.55}" fill="${r > 0 ? '#36958e' : '#c82333'}" stroke="#fff" stroke-width="1.1"/>`
+          const team = r > 0 ? '#36958e' : '#c82333'
+          const id = 'u' + uid++
+          defs += `<clipPath id="${id}"><polygon points="${hexPoints(cx, cy, s * 0.92)}"/></clipPath>`
+          out +=
+            `<g clip-path="url(#${id})">` +
+            `<polygon points="${hexPoints(cx, cy, s * 0.92)}" fill="#efe7d9"/>` +
+            `<text x="${cx}" y="${cy + s * 0.42}" text-anchor="middle" font-size="${s * 1.15}" font-weight="700" fill="#5a5145" font-family="sans-serif">${initial}</text>` +
+            `</g>` +
+            `<polygon points="${hexPoints(cx, cy, s * 0.92)}" fill="none" stroke="${team}" stroke-width="1.4"/>`
         }
-        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"></svg>`.replace(
-          '></svg>',
-          '>' + out + '</svg>',
-        )
+        return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}"><defs>${defs}</defs>${out}</svg>`
       }
 
       const TEAMS = [
         { name: 'AFK Push — S47', mode: '5v5 SL', boards: 5, updated: 'Updated 2 h ago' },
         { name: 'Arena counters', mode: '3v3', boards: 3, updated: 'Updated yesterday' },
         { name: 'Guild war A-team', mode: '5v5', boards: 5, updated: 'Updated 3 d ago' },
-        { name: 'Lightbearer meme comp', mode: '3v3', boards: 3, updated: 'Updated 2 w ago' },
+        { name: 'Duel practice', mode: '1v1', boards: 1, updated: 'Updated 2 w ago' },
       ]
       const PATTERNS = [
         [
-          [0, 1],
-          [1, 1],
-          [-1, 2],
-          [0, -1],
-          [1, -2],
+          [0, 1, 'V'],
+          [1, 1, 'R'],
+          [-1, 2, 'T'],
+          [0, -1, 'C'],
+          [1, -2, 'S'],
         ],
         [
-          [0, 2],
-          [-1, 1],
-          [1, -1],
-          [0, -2],
+          [0, 2, 'H'],
+          [-1, 1, 'K'],
+          [1, -1, 'M'],
+          [0, -2, 'D'],
         ],
         [
-          [1, 1],
-          [-1, 1],
-          [0, -1],
+          [1, 1, 'A'],
+          [-1, 1, 'L'],
+          [0, -1, 'P'],
         ],
         [
-          [0, 1],
-          [-1, 2],
-          [2, -2],
-          [0, -1],
-          [1, -1],
+          [0, 1, 'E'],
+          [-1, 2, 'B'],
+          [2, -2, 'N'],
+          [0, -1, 'G'],
+          [1, -1, 'F'],
         ],
         [
-          [1, 2],
-          [0, 1],
-          [-1, -1],
-          [0, -2],
+          [1, 2, 'O'],
+          [0, 1, 'W'],
+          [-1, -1, 'Y'],
+          [0, -2, 'Z'],
         ],
       ]
 
@@ -496,9 +533,7 @@
           } else {
             clearTimeout(timer)
             card.remove()
-            const left = document.querySelectorAll('.team-card').length
-            document.getElementById('countBadge').textContent = left
-            document.getElementById('countLabel').textContent = left + ' / 50 teams'
+            syncCount()
           }
         })
         /* select demo */
@@ -517,6 +552,37 @@
             nameEl.blur()
           }
         })
+      })
+
+      function syncCount() {
+        const left = document.querySelectorAll('.team-card').length
+        document.getElementById('countBadge').textContent = left
+        document.getElementById('countLabel').textContent = left + ' / 200 teams'
+      }
+      syncCount()
+
+      /* Delete all: same two-step confirm as per-card delete */
+      const delAll = document.getElementById('deleteAllBtn')
+      let allArmed = false,
+        allTimer
+      delAll.addEventListener('click', () => {
+        if (!allArmed) {
+          allArmed = true
+          delAll.textContent = 'Confirm?'
+          delAll.classList.add('armed')
+          allTimer = setTimeout(() => {
+            allArmed = false
+            delAll.textContent = 'Delete all'
+            delAll.classList.remove('armed')
+          }, 3000)
+        } else {
+          clearTimeout(allTimer)
+          document.querySelectorAll('.team-card').forEach((c) => c.remove())
+          allArmed = false
+          delAll.textContent = 'Delete all'
+          delAll.classList.remove('armed')
+          syncCount()
+        }
       })
     </script>
   </body>
