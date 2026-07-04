@@ -166,6 +166,10 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     initialize,
     switchMode,
     applyTeamData,
+    // The live boards as an encoded string; reactive reads, usable in computeds
+    // (the dirty compare canonicalizes this and matches it against the source
+    // team's canonical data).
+    snapshot: () => persistence.snapshot(),
     flush: () => persistence.flush(),
   }
 }

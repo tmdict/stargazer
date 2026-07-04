@@ -17,6 +17,11 @@ import { useI18nStore } from '@/stores/i18n'
 defineProps<{
   characters: readonly CharacterType[]
   activeMode: TeamModeKey
+  // Active-team provenance for the mode row: source name (null = unsaved),
+  // content-dirty flag, and the popover's suggested auto-name.
+  sourceName: string | null
+  dirty: boolean
+  suggestedName: string
   // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid popup.
   tapMode: boolean
   // Wrap is a desktop-only, 5-board-only layout: its toggle is hidden and the row
@@ -39,6 +44,8 @@ const emit = defineEmits<{
   copyImage: []
   download: []
   switchMode: [mode: TeamModeKey]
+  save: []
+  saveAsNew: [name: string]
 }>()
 
 const grids = useGrids()
@@ -48,7 +55,17 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 <template>
   <div class="teams-boards">
-    <TeamModeControls :active-mode @switch-mode="emit('switchMode', $event)" />
+    <TeamModeControls
+      :active-mode
+      :source-name
+      :dirty
+      :suggested-name
+      @switch-mode="emit('switchMode', $event)"
+      @save="emit('save')"
+      @save-as-new="emit('saveAsNew', $event)"
+    >
+      <template #transfer><slot name="transfer" /></template>
+    </TeamModeControls>
 
     <GridControls
       :single-row="true"
