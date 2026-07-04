@@ -1,6 +1,6 @@
 # Design: Team Modes (N-Grid) & Saved Teams
 
-> **Status**: Rev 3 — independently audited (Staff Engineer + Architect personas, findings verified against source); ready for implementation approval
+> **Status**: Rev 4 — **implemented** (all four phases, on this branch); §8 is the implementation report. Rev 3 was the audited pre-implementation design.
 > **Scope**: Teams page (`/teams`) only. The Arena (`/`), Map Editor behavior, and WandWars are untouched (the Map Editor's preset picker shares the refactored preview component, §3.5, with identical rendering).
 > **Companion mocks**: [`mocks/saved-teams-tab.html`](./mocks/saved-teams-tab.html), [`mocks/team-mode-controls.html`](./mocks/team-mode-controls.html)
 > **Rev 3 changes** (from the persona audit, §6): canonical team data (view-state stripped) fixes the dirty-check and import round-trip; `?g=` mode/count contradiction + padding rules implemented via `normalizeTeamPayload`; lazy mount + rendering budget for the Saved Teams panel; single-rebuild switch sequence; store/toast layering fix; `sourceId` self-heal; virgin-mode flag policy; hydration/version policy; multi-tab decision; test-harness constraints; Appendix C (rejected alternatives).
@@ -555,6 +555,39 @@ Two independent persona reviews audited Rev 2 against the source; every blocker/
 | —   | Directory layout | Non-UI logic in **`src/lib/teams/`**; components in `components/teams/`; store in `stores/`                   |
 | —   | Legacy/migration | **Dropped** — clean-slate storage schema; old `stargazer.teams` key deleted unread                            |
 | —   | Card actions     | Select / Duplicate / Delete at equal width on the card                                                        |
+
+---
+
+## 8. Implementation Report (Rev 4)
+
+All four phases are implemented on this branch, one commit per phase (`Teams phase 1..3` + the polish commit this report ships in). Validation per phase: `npm run lint`, `npm run type-check`, the full vitest suite, and a real-browser (Playwright/Chromium) walkthrough against the dev server; final sweep ran `npm run prep`.
+
+### What shipped, by phase
+
+- **Phase 1** — `src/lib/teams/modes.ts` (registry + `resolveTeamMode` + `normalizeTeamPayload`), per-mode `ActiveSlot` persistence with pause/flush, `useTeamsRestore` (switch sequence + `?g=` ingress), `MultiGridState.mode`, `hasDisplayFlags` in the restore result, mode picker UI, tab rename. Browser-verified: 4 segments, per-mode board counts/maps, wrap gating, reload restores last mode, exact storage schema.
+- **Phase 2** — canonical team data (`savedTeam.ts`), `teamLibrary` store (validated hydration, read-modify-write, cap 200), `BoardThumbnail` (shared geometry, occupied-only clipPaths, portraits + dot fallback), `ArenaPreviewGrid` refactored onto it (Maps tab + Map Editor), `TeamPreview`, lazy-mounted `SavedTeamsList` (badge, Delete all, equal-width actions, inline rename, `content-visibility`), Save / Save-as-New with provenance + dirty dot. Browser-verified end-to-end, including: dirty appears on content edit only (board clicks and flag toggles do not trip it), Save-with-source updates in place without the popover, portraits render on the right hexes.
+- **Phase 3** — `transfer.ts` (`buildExport` / `parseImport`), store `exportAll` / `importTeams`, Export/Import buttons + hidden file input. Browser-verified: download → Delete all → import restores; re-import skips duplicates; malformed file rejects with the library untouched.
+- **Phase 4** — `/share` wrap gating (cosmetic), `gridStateSerializer.ts` misleading comment fixed, GRID.md + URL_SERIALIZATION.md updated, new `docs/architecture/SAVED_TEAMS.md`, CLAUDE.md index entry.
+
+### Deviations from the Rev 3 spec (all minor)
+
+1. **`src/utils/storage.ts` (new)** — the SSR-guarded localStorage helpers were extracted from `useGridPersistence` so the library _store_ can use them without importing from a composable module (layering rule). Not in the Rev 3 file list.
+2. **`src/lib/teams/preview.ts` (new)** — the record→thumbnail-units mapping got its own lib module (Rev 3 said "lives in `src/lib/teams/`" without naming a file).
+3. **Export/Import wiring** — implemented as emits on `TeamModeControls` (`exportTeams`, `importFile(raw)`) with the file read in the component and all store access + toasts in `TeamsView`, instead of a slotted sub-component. Same behavior, simpler tree. `IconUpload.vue` added for the Import glyph.
+4. **`importTeams` result** — returns `{ imported, skipped, invalid }` (boolean) rather than an error string; the caller maps it to the invalid-file toast.
+5. **Auto-name semantics** — `nextAutoName` is "count + 1, skip taken names" (deleting teams can leave gaps in numbering; a freed low number is not reused). Cosmetic; pinned by test.
+6. **Canonicalization detail beyond spec** — `canonicalTeamData` rebuilds each board's keys in the serializer's emission order (t, c, p, pr, a, m) and re-resolves `mode`, so hand-ordered imports are byte-identical to fresh serializes. This was implied by the audit's "make the compare symmetric" and is pinned by tests.
+7. **`initialize` also persists the mode key on the no-link path** — a gap the regression tests caught (a first visit would otherwise not write `stargazer.teams.mode` until the first switch).
+8. **Data-load failure fallback** — with `gameDataStore.dataLoaded` false, TeamsView builds the default mode's empty boards with no persistence (the old page showed boards in this state too; Rev 3 didn't specify it).
+9. **Phantimal portraits** resolve through the existing remote `phantimalImageUrl` helper (same as the boards themselves); unresolvable ones fall back to the team dot as specced.
+
+### Test coverage added
+
+`tests/unit/lib/teams/{modes,savedTeam,transfer}.test.ts`, `tests/unit/composables/{useGridPersistence,useTeamsRestore}.test.ts`, `tests/unit/stores/teamLibrary.test.ts` — 60 new tests, 729 total passing. The §3.3 write-spy regression suite (per-mode round-trips byte-identical, equal-count rebuild, no old-slot write after flush / no new-slot write before baseline) encodes the old 3v3 failure permanently.
+
+### QA checklist status
+
+Everything browser-verifiable headlessly was walked through and passes (desktop 1400px + mobile 390px viewports): mode round-trips, equal-count switch, reload/mode memory, crafted 2-board link padding, `?g=` overwrite + invalid-link fallback, Save/Save-as-New/Select/Duplicate/Delete/Delete-all/rename, dirty-dot content-only behavior, portraits, Maps tab + Map Editor previews, export→wipe→import round-trip, wrap gating per mode, saved-tab lazy mount. Not exercised in this environment: real share-link navigation to `/share` (route works, visual spot-check recommended), drag-and-drop across boards in 1v1/3v3 (engine is count-agnostic and unchanged; unit-covered), private-mode/quota-disabled storage, and a true 200-team library under `content-visibility` (typing/perf feel). Suggested manual pass: the four items above, on your hardware.
 
 ---
 
