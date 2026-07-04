@@ -24,10 +24,12 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
-import { TEAM_MODES } from '@/lib/teams/modes'
+import { MAX_SAVED_TEAMS, TEAM_MODES } from '@/lib/teams/modes'
+import { canonicalTeamData, nextAutoName, type SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { useTeamLibrary } from '@/stores/teamLibrary'
 import { serializeMultiGridState } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { encodeMultiGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
@@ -85,15 +87,54 @@ watch(currentBreakpoint, applySize)
 grids.teamView = false
 grids.inverted = false
 
+const teamLibrary = useTeamLibrary()
 const teamsRestore = useTeamsRestore({
   getFlags: toFlags,
   applyFlags,
   wrapBoards,
   applySize,
+  // Stale provenance (deleted teams, restored backups) self-heals to null.
+  resolveSourceId: (id) => (id !== null && teamLibrary.get(id) ? id : null),
 })
 const { activeMode } = teamsRestore
 
 const canWrap = computed(() => !isSheet.value && TEAM_MODES[activeMode.value].canWrap)
+
+// The Save button's target and the unsaved-changes indicator. Both sides of the
+// dirty compare are canonical (viewer state stripped), so board clicks and
+// display toggles never read as team edits.
+const sourceTeam = computed(() => teamLibrary.get(teamsRestore.sourceId.value))
+const canonicalActive = computed(() => canonicalTeamData(teamsRestore.snapshot()))
+const dirty = computed(
+  () => sourceTeam.value !== undefined && canonicalActive.value !== sourceTeam.value.data,
+)
+const suggestedName = computed(() => nextAutoName(teamLibrary.teams.map((team) => team.name)))
+
+const handleSave = () => {
+  const canonical = canonicalActive.value
+  const source = sourceTeam.value
+  if (!canonical || !source) return
+  teamLibrary.update(source.id, canonical)
+  success(i18n.t('app.team-saved', { name: source.name }))
+}
+
+const handleSaveAsNew = (name: string) => {
+  const canonical = canonicalActive.value
+  if (!canonical) return
+  const team = teamLibrary.saveAsNew(activeMode.value, canonical, name)
+  if (!team) {
+    error(i18n.t('app.teams-limit', { max: String(MAX_SAVED_TEAMS) }))
+    return
+  }
+  teamsRestore.sourceId.value = team.id
+  success(i18n.t('app.team-saved', { name: team.name }))
+}
+
+const handleSelectTeam = (team: SavedTeam) => {
+  if (!gameDataStore.dataLoaded) return
+  teamsRestore.applyTeamData(team.mode, team.data, team.id)
+  success(i18n.t('app.team-loaded'))
+}
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
 // otherwise the last-used mode and its boards are restored. Then every later
@@ -168,9 +209,14 @@ const handleCopyLink = () => {
                 v-model:wrap="wrapBoards"
                 :characters="gameDataStore.characters"
                 :active-mode="activeMode"
+                :source-name="sourceTeam?.name ?? null"
+                :dirty="dirty"
+                :suggested-name="suggestedName"
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
                 @switch-mode="teamsRestore.switchMode($event)"
+                @save="handleSave"
+                @save-as-new="handleSaveAsNew"
                 @copy-link="handleCopyLink"
                 @copy-image="handleCopyImage"
                 @download="handleDownload"
@@ -190,6 +236,7 @@ const handleCopyLink = () => {
           :characters="gameDataStore.characters"
           :artifacts="gameDataStore.artifacts"
           :phantimals="gameDataStore.phantimals"
+          @select-team="handleSelectTeam"
         />
       </div>
     </DragDropProvider>
