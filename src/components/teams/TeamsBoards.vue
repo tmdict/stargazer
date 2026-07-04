@@ -46,6 +46,8 @@ const emit = defineEmits<{
   switchMode: [mode: TeamModeKey]
   save: []
   saveAsNew: [name: string]
+  exportTeams: []
+  importFile: [raw: string]
 }>()
 
 const grids = useGrids()
@@ -63,9 +65,9 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
       @switch-mode="emit('switchMode', $event)"
       @save="emit('save')"
       @save-as-new="emit('saveAsNew', $event)"
-    >
-      <template #transfer><slot name="transfer" /></template>
-    </TeamModeControls>
+      @export-teams="emit('exportTeams')"
+      @import-file="emit('importFile', $event)"
+    />
 
     <GridControls
       :single-row="true"

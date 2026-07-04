@@ -19,6 +19,7 @@ import {
   validateSavedTeam,
   type SavedTeam,
 } from '@/lib/teams/savedTeam'
+import { buildExport, parseImport, type TeamsExportFile } from '@/lib/teams/transfer'
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const LIBRARY_KEY = 'stargazer.teams.saved'
@@ -137,6 +138,27 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       return copy
     })
 
+  const exportAll = (): TeamsExportFile => buildExport(teams.value, new Date().toISOString())
+
+  /* Merge an export file's records. `imported: 0, skipped: 0, invalid: true`
+   * means the envelope itself was rejected (library untouched); records past the
+   * cap count as skipped. */
+  const importTeams = (raw: string): { imported: number; skipped: number; invalid: boolean } =>
+    mutate((fresh) => {
+      const parsed = parseImport(raw, fresh)
+      if (!parsed.ok) return { imported: 0, skipped: 0, invalid: true }
+      let imported = 0
+      let skipped = parsed.skipped
+      for (const team of parsed.teams) {
+        if (fresh.length >= MAX_SAVED_TEAMS) skipped++
+        else {
+          fresh.push(team)
+          imported++
+        }
+      }
+      return { imported, skipped, invalid: false }
+    })
+
   return {
     teams,
     count,
@@ -148,5 +170,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     remove,
     removeAll,
     duplicate,
+    exportAll,
+    importTeams,
   }
 })
