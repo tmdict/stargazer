@@ -162,12 +162,15 @@ export function packDisplayFlags(flags: DisplayFlags): number {
  * the map it was configured with (tile states carry only the edits). */
 export type BoardState = GridState & { m?: string }
 
-/* Multi-board state (5 v 5): one BoardState per board, the active board, and the
- * global display flags. */
+/* Multi-board state (Teams page): one BoardState per board, the active board,
+ * the global display flags, and the team mode the boards belong to. `mode` is
+ * always written by the serializer but optional on decode (links predating it
+ * infer their mode from the board count — see lib/teams/modes.ts). */
 export interface MultiGridState {
   boards: BoardState[]
   active?: number
   d?: number
+  mode?: string
 }
 
 export interface BoardInput {
@@ -182,6 +185,7 @@ export function serializeMultiGridState(
   boards: BoardInput[],
   activeId: number,
   displayFlags?: DisplayFlags,
+  mode?: string,
 ): MultiGridState {
   const state: MultiGridState = {
     boards: boards.map((b) => ({
@@ -191,6 +195,7 @@ export function serializeMultiGridState(
   }
   if (activeId) state.active = activeId
   if (displayFlags) state.d = packDisplayFlags(displayFlags)
+  if (mode) state.mode = mode
   return state
 }
 
