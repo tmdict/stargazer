@@ -1,11 +1,12 @@
 <script setup lang="ts">
 /* The Teams page orchestrator (mirrors WandWarsView): owns the outer tab state and
-   the boards. The active tab selects the board count (GRID_TABS), so a future grid
-   mode (e.g. 3 v 3) drops in as one entry + a tab + a panel. A single watch on the
-   active tab is the only writer of the count; onScopeDispose resets to the Arena's
-   one board on leave (synchronously, so an HMR reload can't clobber it). Renders one
-   TabView (grid modes / Image Stitcher) inside a card, plus the roster as a separate
-   sibling card shown for any grid tab. */
+   the boards. The grid tab is mode-driven: a TEAM_MODES entry selects the board
+   count + default maps, and useTeamsRestore is the only initiator of board-count
+   changes (per-mode persistence slots, the pause/flush/rebuild/restore/resume
+   switch sequence, and ?g= ingress routing all live there). onScopeDispose resets
+   to the Arena's one board on leave (synchronously, so an HMR reload can't clobber
+   it). Renders one TabView (Teams / Image Stitcher) inside a card, plus the roster
+   as a separate sibling card shown for the grid tab. */
 
 import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
@@ -18,16 +19,15 @@ import TabView from '@/components/ui/TabView.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
-import { useTeamsPersistence } from '@/composables/useGridPersistence'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
+import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
-import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
+import { TEAM_MODES } from '@/lib/teams/modes'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { useUrlStateStore } from '@/stores/urlState'
 import { serializeMultiGridState } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { encodeMultiGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
@@ -35,7 +35,6 @@ import { encodeMultiGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlSt
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
-const urlStateStore = useUrlStateStore()
 const { copyToClipboard, downloadAsImage } = useGridExport()
 const { success, error } = useToast()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
@@ -47,12 +46,13 @@ i18n.initialize()
 
 useHead({ title: 'Teams · Stargazer' })
 
-const activeTab = ref('fiveVFive')
+const activeTab = ref('teams')
 // Image Stitcher is a wide-window-only tool: its tab is hidden on mobile.
 const tabs = computed(() => [
-  { key: 'fiveVFive', label: i18n.t('app.5-v-5') },
+  { key: 'teams', label: i18n.t('app.teams') },
   { key: 'imageStitcher', label: i18n.t('app.image-stitcher'), hideMobile: true },
 ])
+const isGridTab = computed(() => activeTab.value === 'teams')
 
 // Display flags drive every board (global controls); the share link serializes them.
 // 3-2 "wrap" boards layout vs one row; serialized with the other display flags.
@@ -74,36 +74,9 @@ const isSheet = computed(() => currentBreakpoint.value !== 'desktop')
 // Grid tabs pin their own size per breakpoint, not the breakpoint-driven Arena
 // sizing; hexSizeMode tells useBreakpoint to leave the size alone.
 const applySize = () => {
+  grids.hexSizeMode = 'fixed-medium'
   grids.hexSize = teamsBoardSize(currentBreakpoint.value)
 }
-
-// Board count per grid tab; the active tab is the selector, so a future mode (e.g.
-// 3 v 3) drops in as one entry. Non-grid tabs (Image Stitcher) aren't listed and
-// leave the boards untouched.
-const GRID_TABS: Record<string, { count: number; maps: string[] } | undefined> = {
-  fiveVFive: { count: FIVE_V_FIVE_DEFAULT_MAPS.length, maps: FIVE_V_FIVE_DEFAULT_MAPS },
-}
-const isGridTab = computed(() => GRID_TABS[activeTab.value] !== undefined)
-
-// The only writer of the board count. Rebuilds only when the active grid tab needs a
-// different count (so toggling Image Stitcher and back preserves board state), then
-// pins the medium sizing. A rebuild drops any stale tap-target/lift pointing at the
-// replaced boards (boards share hex ids).
-watch(
-  activeTab,
-  (tab) => {
-    const cfg = GRID_TABS[tab]
-    if (!cfg) return
-    if (grids.contexts.length !== cfg.count) {
-      grids.setGridCount(cfg.count, cfg.maps)
-      clearTargetHex()
-      clearLiftedHex()
-    }
-    grids.hexSizeMode = 'fixed-medium'
-    applySize()
-  },
-  { immediate: true },
-)
 watch(currentBreakpoint, applySize)
 
 // Display globals on the grids store are page state; start clean so a first-ever
@@ -112,27 +85,29 @@ watch(currentBreakpoint, applySize)
 grids.teamView = false
 grids.inverted = false
 
-const teamsPersistence = useTeamsPersistence(toFlags)
+const teamsRestore = useTeamsRestore({
+  getFlags: toFlags,
+  applyFlags,
+  wrapBoards,
+  applySize,
+})
+const { activeMode } = teamsRestore
 
-// A ?g= link overwrites the saved boards; otherwise restore them. Then mirror
-// every later change to localStorage. A link that fails to decode is treated as
-// absent (falling back to the saved boards), so the autosave can't wipe them
-// with the empty defaults.
+const canWrap = computed(() => !isSheet.value && TEAM_MODES[activeMode.value].canWrap)
+
+// A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
+// otherwise the last-used mode and its boards are restored. Then every later
+// change mirrors to the mode's slot. A link that fails to decode is treated as
+// absent (falling back to the saved boards), so autosave can't wipe them.
 if (gameDataStore.dataLoaded) {
-  const restore = (encoded: string | null): boolean => {
-    if (!encoded) return false
-    const result = urlStateStore.restoreMultiFromEncodedState(encoded)
-    if (result.success && result.displayFlags) applyFlags(result.displayFlags)
-    return result.success
-  }
-  const sharedLink = getEncodedStateFromUrl()
-  if (sharedLink && restore(sharedLink)) {
-    success(i18n.t('app.grid-loaded'))
-  } else {
-    if (sharedLink) error(i18n.t('app.invalid-url'))
-    restore(teamsPersistence.load())
-  }
-  teamsPersistence.startAutosave()
+  const { linkLoaded, linkFailed } = teamsRestore.initialize(getEncodedStateFromUrl())
+  if (linkLoaded) success(i18n.t('app.grid-loaded'))
+  else if (linkFailed) error(i18n.t('app.invalid-url'))
+} else {
+  // Data failed to load: show the default mode's empty boards, no persistence.
+  const cfg = TEAM_MODES[activeMode.value]
+  grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
+  applySize()
 }
 
 // Reset to the Arena's single board on leave. onScopeDispose runs synchronously on
@@ -146,7 +121,7 @@ onScopeDispose(() => {
   cancelSwap() // drop any in-flight swap + its document listeners on leave
 })
 
-// Capture all five boards as one image (the full-width track, so boards scrolled
+// Capture all boards as one image (the full-width track, so boards scrolled
 // out of view are still included; drop the per-board action buttons).
 const boardCapture = {
   showPerspective: false,
@@ -157,7 +132,7 @@ const boardCapture = {
 const handleCopyImage = () => copyToClipboard(boardCapture)
 const handleDownload = () => downloadAsImage(boardCapture)
 
-// Mirror the Arena: copy a read-only /share link for all five boards and open it.
+// Mirror the Arena: copy a read-only /share link for all boards and open it.
 const handleCopyLink = () => {
   const boards = grids.contexts.map((ctx) => ({
     tiles: ctx.grid.getAllTiles(),
@@ -167,7 +142,7 @@ const handleCopyLink = () => {
     getParagon: ctx.getParagon,
   }))
   const encoded = encodeMultiGridStateToUrl(
-    serializeMultiGridState(boards, grids.activeId, toFlags()),
+    serializeMultiGridState(boards, grids.activeId, toFlags(), activeMode.value),
   )
   return shareLink(encoded)
 }
@@ -184,7 +159,7 @@ const handleCopyLink = () => {
                lives in the store, but this avoids remount churn + keeps the export
                target rendered). -->
           <TabView v-model="activeTab" :tabs="tabs" eager>
-            <template #fiveVFive>
+            <template #teams>
               <TeamsBoards
                 v-model:show-arrows="showArrows"
                 v-model:show-grid-info="showGridInfo"
@@ -192,8 +167,10 @@ const handleCopyLink = () => {
                 v-model:show-skills="showSkills"
                 v-model:wrap="wrapBoards"
                 :characters="gameDataStore.characters"
+                :active-mode="activeMode"
                 :tap-mode="isSheet"
-                :can-wrap="!isSheet"
+                :can-wrap="canWrap"
+                @switch-mode="teamsRestore.switchMode($event)"
                 @copy-link="handleCopyLink"
                 @copy-image="handleCopyImage"
                 @download="handleDownload"
