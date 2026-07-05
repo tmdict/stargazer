@@ -31,9 +31,8 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { downloadBlob, timestampedName } from '@/utils/download'
-import { serializeMultiGridState } from '@/utils/gridStateSerializer'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
-import { encodeMultiGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateManager'
+import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
@@ -165,9 +164,7 @@ if (gameDataStore.dataLoaded) {
   else if (linkFailed) error(i18n.t('app.invalid-url'))
 } else {
   // Data failed to load: show the default mode's empty boards, no persistence.
-  const cfg = TEAM_MODES[activeMode.value]
-  grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
-  applySize()
+  teamsRestore.buildDefaults()
 }
 
 // Reset to the Arena's single board on leave. onScopeDispose runs synchronously on
@@ -193,19 +190,9 @@ const handleCopyImage = () => copyToClipboard(boardCapture)
 const handleDownload = () => downloadAsImage(boardCapture)
 
 // Mirror the Arena: copy a read-only /share link for all boards and open it.
-const handleCopyLink = () => {
-  const boards = grids.contexts.map((ctx) => ({
-    tiles: ctx.grid.getAllTiles(),
-    allyArtifact: ctx.artifacts.ally,
-    enemyArtifact: ctx.artifacts.enemy,
-    map: ctx.currentMap,
-    getParagon: ctx.getParagon,
-  }))
-  const encoded = encodeMultiGridStateToUrl(
-    serializeMultiGridState(boards, grids.activeId, toFlags(), activeMode.value),
-  )
-  return shareLink(encoded)
-}
+// The persistence snapshot is exactly the shareable encoding (boards + active
+// + flags + mode), so there is a single serialization path.
+const handleCopyLink = () => shareLink(teamsRestore.snapshot())
 </script>
 
 <template>

@@ -165,6 +165,13 @@ export function packDisplayFlags(flags: DisplayFlags): number {
  * for UI highlight and re-serialization. */
 export type BoardState = GridState & { m?: string }
 
+/* Every board-level key that carries team content, in the serializer's emission
+ * order. Canonical saved-team data (lib/teams/savedTeam) rebuilds boards from
+ * exactly this list, so a new GridState section must be registered here too or
+ * saved teams would silently drop it — the serializer contract test pins the
+ * two together. `d` is deliberately absent: it is viewer state, not content. */
+export const BOARD_CONTENT_KEYS = ['t', 'c', 'p', 'pr', 'a', 'm'] as const
+
 /* Multi-board state (Teams page): one BoardState per board, the active board,
  * the global display flags, and the team mode the boards belong to. `mode` is
  * always written by the serializer but optional on decode (links predating it

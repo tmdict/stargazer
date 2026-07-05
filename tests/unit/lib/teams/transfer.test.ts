@@ -70,12 +70,13 @@ describe('parseImport record validation', () => {
         record({ mode: '9v9' as never }),
         record({ data: 'undecodable' }),
         record({ data: encode({ boards: [{ m: 'arena1' }], mode: '1v1' }) }), // count mismatch vs 3v3
+        record({ data: encode({ boards: [null, {}, {}] } as never) }), // non-object board entry
         record({ name: '   ' }),
         'not-an-object',
       ]),
       [],
     )
-    expect(result).toMatchObject({ ok: true, skipped: 5, teams: [expect.any(Object)] })
+    expect(result).toMatchObject({ ok: true, skipped: 6, teams: [expect.any(Object)] })
   })
 
   it('canonicalizes accepted data (viewer state stripped, byte-stable)', () => {

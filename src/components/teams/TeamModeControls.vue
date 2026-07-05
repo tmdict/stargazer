@@ -75,13 +75,15 @@ const handleSave = (): void => {
 
 <template>
   <div class="team-mode-controls">
-    <div class="mode-picker" role="radiogroup">
+    <!-- Toggle-button semantics (not radiogroup): plain buttons already give the
+         full keyboard interaction, where role="radio" would promise the roving
+         arrow-key pattern without delivering it. -->
+    <div class="mode-picker" role="group" :aria-label="i18n.t('app.teams')">
       <button
         v-for="key in TEAM_MODE_ORDER"
         :key="key"
         type="button"
-        role="radio"
-        :aria-checked="activeMode === key"
+        :aria-pressed="activeMode === key"
         class="mode-seg"
         :class="{ active: activeMode === key }"
         @click="emit('switchMode', key)"
@@ -104,7 +106,12 @@ const handleSave = (): void => {
         <button type="button" class="action-btn secondary" @click="openPopover">
           {{ i18n.t('app.save-as-new') }}
         </button>
-        <div v-if="popoverOpen" class="name-popover">
+        <div
+          v-if="popoverOpen"
+          class="name-popover"
+          role="dialog"
+          :aria-label="i18n.t('app.team-name')"
+        >
           <label class="name-popover-label" for="team-name-input">
             {{ i18n.t('app.team-name') }}
           </label>
