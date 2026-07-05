@@ -51,14 +51,12 @@ export function canonicalTeamData(encoded: string): string | null {
   return encodeMultiGridStateToUrl(canonical)
 }
 
-/* Trimmed, clamped name, or null when nothing is left. */
 export function sanitizeTeamName(raw: unknown): string | null {
   if (typeof raw !== 'string') return null
   const name = raw.trim().slice(0, MAX_TEAM_NAME_LENGTH)
   return name.length > 0 ? name : null
 }
 
-/* Next free auto-name: "Team 1", "Team 2", … skipping names already in use. */
 export function nextAutoName(existingNames: readonly string[]): string {
   const taken = new Set(existingNames)
   let n = existingNames.length + 1

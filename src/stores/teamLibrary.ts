@@ -62,8 +62,8 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const get = (id: string | null): SavedTeam | undefined =>
     id === null ? undefined : teams.value.find((team) => team.id === id)
 
-  // Every mutation goes through here: re-read the stored blob (narrowing the
-  // multi-tab clobber window to a single mutation), apply, persist, publish.
+  // Mutations re-read the stored blob first so a second tab's writes survive
+  // (clobber window narrows to one mutation).
   const mutate = <T>(action: (fresh: SavedTeam[]) => T): T => {
     const fresh = readLibrary()
     const result = action(fresh)
@@ -72,8 +72,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     return result
   }
 
-  /* Create a new record from canonical data. `name` is sanitized; empty/absent
-   * falls back to the next auto-name. Null when the library is at cap. */
+  /* An empty/absent name falls back to the next auto-name; null when at cap. */
   const saveAsNew = (mode: TeamModeKey, data: string, name?: string): SavedTeam | null =>
     mutate((fresh) => {
       if (fresh.length >= MAX_SAVED_TEAMS) return null
@@ -90,7 +89,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       return team
     })
 
-  /* Update an existing record's content in place (name and createdAt keep). */
+  /* Content-only update: name and createdAt keep. */
   const update = (id: string, data: string): boolean =>
     mutate((fresh) => {
       const team = fresh.find((t) => t.id === id)
@@ -140,9 +139,8 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
 
   const exportAll = (): TeamsExportFile => buildExport(teams.value, new Date().toISOString())
 
-  /* Merge an export file's records. `imported: 0, skipped: 0, invalid: true`
-   * means the envelope itself was rejected (library untouched); records past the
-   * cap count as skipped. */
+  /* Merge-only: `invalid` means the envelope itself was rejected (library
+   * untouched); records past the cap count as skipped. */
   const importTeams = (raw: string): { imported: number; skipped: number; invalid: boolean } =>
     mutate((fresh) => {
       const parsed = parseImport(raw, fresh)

@@ -67,8 +67,6 @@ const commitPopover = (): void => {
   emit('saveAsNew', popoverName.value)
 }
 
-// Save updates the source team; without one there is nothing to update, so the
-// button opens the naming popover instead.
 const handleSave = (): void => {
   if (sourceName !== null) emit('save')
   else void openPopover()
@@ -107,7 +105,7 @@ const handleSave = (): void => {
           {{ i18n.t('app.save-as-new') }}
         </button>
         <div v-if="popoverOpen" class="name-popover">
-          <label class="name-popover-label" :for="`team-name-input`">
+          <label class="name-popover-label" for="team-name-input">
             {{ i18n.t('app.team-name') }}
           </label>
           <input
