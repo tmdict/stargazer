@@ -23,8 +23,8 @@ TEAM_MODE_ORDER // picker order, ascending board count
 DEFAULT_TEAM_MODE = '5v5sl'
 ```
 
-- Default maps only seed **fresh slates** (a mode with no slot) and pad short crafted links. Persisted state — active slots and saved teams — carries its own per-board `m` keys, so changing a mode's default list never touches existing data.
-- Modes and arena JSON files are add-only: removing either would orphan persisted records (hydration drops records referencing unknown modes/maps as its safety net).
+- Default maps seed **fresh slates** (a mode with no slot) and pad short crafted links. Each active slot records a **fingerprint of its mode's default maps**; changing a mode's default list (e.g. a new Supreme League season) invalidates that mode's slot on next load — a deliberate hard reset onto the new defaults. Saved teams are untouched: their boards' tile states travel inside `data`.
+- Serialized `t` tile states are **authoritative and self-sufficient** (restore resets all tiles and replays `t`; even an "empty" board serializes its ~26 baseline tiles). Map config JSONs are only needed to build empty boards and to power the Maps-tab picker/`switchMap` — a saved team referencing a retired map still restores, previews, and re-exports correctly (the Maps tab just highlights nothing). Modes remain add-only (removing a mode key orphans slots/records).
 - `resolveTeamMode(state)` maps a decoded payload to a mode: a declared `mode` is honored only when its board count matches; otherwise the count decides (5 boards → Supreme League, else the smallest fitting mode). `normalizeTeamPayload` truncates/pads a payload to the mode's exact shape (teams-page ingress only; `/share` renders payloads as-is).
 
 ## Per-mode persistence
@@ -33,11 +33,11 @@ DEFAULT_TEAM_MODE = '5v5sl'
 
 ```
 stargazer.teams.mode                 last-used TeamModeKey
-stargazer.teams.active.<mode>        { v: 1, data: <encoded MultiGridState>, sourceId }
+stargazer.teams.active.<mode>        { v: 1, data: <encoded MultiGridState>, sourceId, defaults }
 stargazer.teams.saved                { v: 1, teams: SavedTeam[] }
 ```
 
-`sourceId` is the saved team the active boards were loaded from / last saved to (null = unsaved). Unknown envelope versions and undecodable payloads are treated as absent. The autosave watcher (default pre-flush, one per page instance) routes writes to the live mode's slot; a pause flag gates it during switches as defense-in-depth for any future async step.
+`sourceId` is the saved team the active boards were loaded from / last saved to (null = unsaved); `defaults` is the mode's default-map fingerprint at write time (stale → slot discarded, hard reset). Unknown envelope versions and undecodable payloads are treated as absent. The autosave watcher (default pre-flush, one per page instance) routes writes to the live mode's slot; a pause flag gates it during switches as defense-in-depth for any future async step.
 
 `useTeamsRestore` (`/src/composables/useTeamsRestore.ts`) owns every switch:
 
@@ -52,7 +52,7 @@ A `?g=` link resolves + normalizes first, then applies through the same path wit
 
 ## Saved-team library
 
-`useTeamLibrary` (`/src/stores/teamLibrary.ts`) holds `SavedTeam` records (`/src/lib/teams/savedTeam.ts`): id, name (≤ 60 chars), mode, canonical `data`, timestamps; capped at `MAX_SAVED_TEAMS` (200, ≈ 6 KB per full team). Hydration and import validate every record through `validateSavedTeam` (known mode, board count matches, map keys exist, data canonicalizes). Mutations re-read the stored blob first (read-modify-write); cross-tab sync is deliberately out of scope beyond that.
+`useTeamLibrary` (`/src/stores/teamLibrary.ts`) holds `SavedTeam` records (`/src/lib/teams/savedTeam.ts`): id, name (≤ 60 chars), mode, canonical `data`, timestamps; capped at `MAX_SAVED_TEAMS` (200, ≈ 6 KB per full team). Hydration and import validate every record through `validateSavedTeam` (known mode, board count matches, data canonicalizes; map keys are deliberately not checked — `t` is authoritative). Mutations re-read the stored blob first (read-modify-write); cross-tab sync is deliberately out of scope beyond that.
 
 Semantics wired in `TeamsView`:
 
@@ -63,7 +63,7 @@ Semantics wired in `TeamsView`:
 
 ## Thumbnails
 
-`BoardThumbnail` (`/src/components/grid/BoardThumbnail.vue`) renders any map + unit set as pure data → SVG: hex geometry is memoized at module level per hex size, map tile states per map key, portraits are hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units), and `clipPath` defs exist only for occupied hexes. `ArenaPreviewGrid` (Maps tab + Map Editor) renders through it with its historical square framing; `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders one thumbnail per board. The Saved Teams roster panel mounts on first activation and its cards use `content-visibility: auto`, so a full library never taxes page load.
+`BoardThumbnail` (`/src/components/grid/BoardThumbnail.vue`) renders any map + unit set as pure data → SVG: hex geometry is memoized at module level per hex size, map tile states per map key, portraits are hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units), and `clipPath` defs exist only for occupied hexes. `ArenaPreviewGrid` (Maps tab + Map Editor) renders through it with its historical square framing; `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders one thumbnail per board **from the record's own `t` tile states** (matching exactly what Select produces, config-independent); the map-config baseline is used only when a board has no `t` (empty padded boards, map pickers). The Saved Teams roster panel mounts on first activation and its cards use `content-visibility: auto`, so a full library never taxes page load.
 
 ## Backup files
 

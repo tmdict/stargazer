@@ -96,14 +96,20 @@ describe('validateSavedTeam', () => {
     expect(valid!.data).toBe(canonicalTeamData(encode(THREE_BOARDS)))
   })
 
-  it('rejects unknown modes, count mismatches, and unknown map keys', () => {
+  it('rejects unknown modes and count mismatches', () => {
     expect(validateSavedTeam(record({ mode: '9v9' }))).toBeNull()
     expect(validateSavedTeam(record({ mode: '5v5' }))).toBeNull()
-    expect(
-      validateSavedTeam(
-        record({ data: encode({ boards: [{ m: 'nope' }, { m: 'arena1' }, { m: 'arena1' }] }) }),
-      ),
-    ).toBeNull()
+  })
+
+  it('accepts records referencing retired/unknown maps — t tile states are authoritative', () => {
+    const valid = validateSavedTeam(
+      record({
+        data: encode({
+          boards: [{ m: 'retired-map', t: [[1, 1]] }, { m: 'arena1' }, { m: 'arena1' }],
+        }),
+      }),
+    )
+    expect(valid).not.toBeNull()
   })
 
   it('rejects structural garbage', () => {

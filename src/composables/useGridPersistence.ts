@@ -15,7 +15,7 @@
 
 import { ref, watch, type Ref } from 'vue'
 
-import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
+import { isTeamModeKey, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
@@ -34,14 +34,21 @@ const TEAMS_MODE_KEY = 'stargazer.teams.mode'
 
 export const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.active.${mode}`
 
-/* A mode's persisted active team: the encoded snapshot plus which saved team it
- * was loaded from / last saved to (null = not a saved team). Versioned so a
- * future shape change can be detected instead of shape-read. */
+/* A mode's persisted active team: the encoded snapshot, which saved team it was
+ * loaded from / last saved to (null = not a saved team), and a fingerprint of the
+ * mode's default maps at write time. A slot whose fingerprint no longer matches
+ * the registry is discarded on load — updating a mode's default map list (e.g. a
+ * new Supreme League season) hard-resets that mode's active boards to the new
+ * defaults, while saved teams are untouched. Versioned so a future shape change
+ * can be detected instead of shape-read. */
 export interface ActiveSlot {
   v: 1
   data: string
   sourceId: string | null
+  defaults: string
 }
+
+const defaultsFingerprint = (mode: TeamModeKey): string => TEAM_MODES[mode].defaultMaps.join(',')
 
 interface GridPersistence {
   load: () => string | null
@@ -120,7 +127,12 @@ export function useTeamsPersistence(
     )
 
   const write = (encoded: string): void => {
-    const slot: ActiveSlot = { v: 1, data: encoded, sourceId: sourceId.value }
+    const slot: ActiveSlot = {
+      v: 1,
+      data: encoded,
+      sourceId: sourceId.value,
+      defaults: defaultsFingerprint(mode.value),
+    }
     writeStorage(teamsSlotKey(mode.value), JSON.stringify(slot))
   }
 
@@ -136,10 +148,14 @@ export function useTeamsPersistence(
       try {
         const slot = JSON.parse(raw) as ActiveSlot
         if (slot.v !== 1 || typeof slot.data !== 'string') return null
+        // Stale defaults = the mode's map list changed since this slot was
+        // written; discard so the mode hard-resets onto the new defaults.
+        if (slot.defaults !== defaultsFingerprint(target)) return null
         return {
           v: 1,
           data: slot.data,
           sourceId: typeof slot.sourceId === 'string' ? slot.sourceId : null,
+          defaults: slot.defaults,
         }
       } catch {
         return null

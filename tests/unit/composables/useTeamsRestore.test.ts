@@ -183,6 +183,28 @@ describe('useTeamsRestore', () => {
     expect(setItemSpy.mock.calls.every(([key]) => key !== oldKey)).toBe(true)
   })
 
+  it('hard-resets a slot whose default-map fingerprint is stale', () => {
+    const { restore, grids } = createHarness()
+    // A 1v1 slot written when the mode's default list was different: discarded,
+    // fresh defaults built instead (saved teams are unaffected by design).
+    storage.set(
+      teamsSlotKey('1v1'),
+      JSON.stringify({
+        v: 1,
+        data: encode1v1WithUnit(),
+        sourceId: 'team-1',
+        defaults: 'old-arena',
+      } satisfies ActiveSlot),
+    )
+    restore.initialize(null)
+    restore.switchMode('1v1')
+    expect(grids.contexts).toHaveLength(1)
+    expect(grids.contexts[0]!.currentMap).toBe('arena1')
+    expect(restore.sourceId.value).toBeNull()
+    const rewritten = JSON.parse(storage.get(teamsSlotKey('1v1'))!) as ActiveSlot
+    expect(rewritten.defaults).toBe('arena1')
+  })
+
   it('forces wrap off when entering a non-wrap mode', () => {
     const { restore, wrapBoards } = createHarness()
     restore.initialize(null)
@@ -196,7 +218,12 @@ describe('useTeamsRestore', () => {
     const { restore } = createHarness(resolver)
     storage.set(
       teamsSlotKey('3v3'),
-      JSON.stringify({ v: 1, data: encode3v3Empty(), sourceId: 'dead' } satisfies ActiveSlot),
+      JSON.stringify({
+        v: 1,
+        data: encode3v3Empty(),
+        sourceId: 'dead',
+        defaults: 'arena1,arena1,arena1',
+      } satisfies ActiveSlot),
     )
     restore.initialize(null)
     restore.switchMode('3v3')
@@ -250,7 +277,12 @@ describe('useTeamsRestore', () => {
     const { restore } = createHarness()
     storage.set(
       teamsSlotKey('1v1'),
-      JSON.stringify({ v: 1, data: encode1v1WithUnit(), sourceId: 'team-1' } satisfies ActiveSlot),
+      JSON.stringify({
+        v: 1,
+        data: encode1v1WithUnit(),
+        sourceId: 'team-1',
+        defaults: 'arena1',
+      } satisfies ActiveSlot),
     )
     const link = encodeMultiGridStateToUrl({ boards: [{ m: 'arena4' }], mode: '1v1' })
     restore.initialize(link)

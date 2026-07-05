@@ -37,6 +37,7 @@ const boards = computed(() => {
   if (!decoded) return null
   return decoded.map((board) => ({
     mapKey: board.mapKey,
+    tiles: board.tiles,
     units: board.units.map(
       (unit): ThumbnailUnit => ({
         hexId: unit.hexId,
@@ -56,6 +57,7 @@ const boards = computed(() => {
         :key="index"
         class="board-thumb"
         :map-key="board.mapKey"
+        :tiles="board.tiles"
         :units="board.units"
         :hex-size="7"
       />
