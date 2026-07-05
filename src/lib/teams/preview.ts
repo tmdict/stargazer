@@ -17,6 +17,9 @@ export interface PreviewUnit {
 
 export interface PreviewBoard {
   mapKey: string
+  // The board's serialized tile states — authoritative for rendering (an empty
+  // array means an all-default board; undefined means no t section was present).
+  tiles?: number[][]
   units: PreviewUnit[]
 }
 
@@ -37,6 +40,6 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       if (hexId === undefined || phantimalId === undefined || team === undefined) continue
       units.push({ hexId, team: team as Team, phantimalId })
     }
-    return { mapKey: board.m ?? 'arena1', units }
+    return { mapKey: board.m ?? 'arena1', tiles: board.t, units }
   })
 }
