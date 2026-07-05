@@ -399,6 +399,14 @@ const totalHeaderTitle = computed(
   margin-top: calc(-1 * var(--spacing-md));
 }
 
+/* TabView's mobile insets are already smaller than the pull-up, which would
+   swallow the gap below the tab strip entirely. */
+@media (max-width: 768px) {
+  .adjustments-panel {
+    margin-top: 0;
+  }
+}
+
 .filters-row {
   display: flex;
   gap: var(--spacing-md);
