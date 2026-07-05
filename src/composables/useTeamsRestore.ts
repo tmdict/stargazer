@@ -139,8 +139,10 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
         const mode = resolveTeamMode(decoded)
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
-        persistence.persistMode(mode)
         if (applyEncoded(normalized)) {
+          // Persisted only on success: a link that decodes but fails to apply
+          // must not leave its mode as the remembered one for the fallback.
+          persistence.persistMode(mode)
           afterRebuild(mode)
           sourceId.value = null
           persistence.startAutosave()
@@ -157,10 +159,20 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     return { linkLoaded: false, linkFailed }
   }
 
+  /* Degraded startup (game data failed to load): build the active mode's
+   * default boards with no persistence reads or writes — the boards are
+   * display-only placeholders and must not touch any mode's slot. */
+  const buildDefaults = (): void => {
+    const cfg = TEAM_MODES[activeMode.value]
+    grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
+    afterRebuild(activeMode.value)
+  }
+
   return {
     activeMode,
     sourceId,
     initialize,
+    buildDefaults,
     switchMode,
     applyTeamData,
     // Reactive reads — usable in computeds (the dirty compare's live side).

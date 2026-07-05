@@ -1,6 +1,7 @@
 # Design: Team Modes (N-Grid) & Saved Teams
 
-> **Status**: Rev 5 — **implemented** (all four phases + post-review refinements, on this branch); §8 is the implementation report. Rev 3 was the audited pre-implementation design.
+> **Status**: Rev 6 — **implemented and audited** (all four phases + post-review refinements + the three-persona implementation audit's fixes, on this branch); §8 is the implementation report, §10 the audit results. Rev 3 was the audited pre-implementation design.
+> **Rev 6 changes** (three-persona implementation audit, §10): four confirmed defects fixed — NUL-byte dedupe keys made the transfer module a binary file; crafted payloads with non-object board entries threw past the decode boundary; one poison library record could hide (and, via the next write, wipe) the whole library; a degraded page could flush placeholder boards over a mode's slot — plus the `BOARD_CONTENT_KEYS` serializer contract and a batch of verified minors.
 > **Rev 5 changes** (post-implementation review Q&A): active slots carry a default-maps fingerprint — updating a mode's default list hard-resets that mode's active boards (saved teams untouched); serialized `t` recognized as authoritative — unknown/retired map keys no longer reject records, and thumbnails render from the record's `t` instead of the map config.
 > **Scope**: Teams page (`/teams`) only. The Arena (`/`), Map Editor behavior, and WandWars are untouched (the Map Editor's preset picker shares the refactored preview component, §3.5, with identical rendering).
 > **Companion mocks**: [`mocks/saved-teams-tab.html`](./mocks/saved-teams-tab.html), [`mocks/team-mode-controls.html`](./mocks/team-mode-controls.html)
@@ -670,6 +671,52 @@ Everything below is what automated validation could **not** fully cover — visu
 
 ---
 
+## 10. Post-Implementation Audit (Rev 6 — three personas)
+
+Independent senior-engineer, staff-engineer, and architect reviews of the implemented feature; every blocker/major candidate was then adversarially verified (attempted refutation against the actual code) before being accepted. Six findings were confirmed, collapsing to the four distinct defects below (two were double-reported across personas).
+
+### Verdicts
+
+- **Senior engineer** — ship after fixing two majors (the NUL-byte dedupe keys; the crafted-payload throw).
+- **Staff engineer** — not as-is; three majors (adds the degraded-mode flush overwrite).
+- **Architect** — ship; the one required change is making `canonicalTeamData`'s key list an explicit serializer contract. The architecture itself (mode registry, orchestrator ownership of rebuilds, canonical data, store/toast layering) was endorsed by all three.
+
+### Confirmed defects — all fixed in this revision
+
+1. **`transfer.ts` was a binary file.** The import dedupe keys embedded literal NUL bytes, so git classified the source as binary (no diffs, no blame) and ripgrep silently skipped it. Fixed with a hoisted `dedupeKey` helper joined on `'|'` — unambiguous because canonical `data` is url-safe base64 and can never contain that character.
+2. **Crafted payloads threw past the decode boundary.** A `?g=` link or import record whose `boards` contained non-object entries (`[null]`, `[[1,2]]`, `["x"]`) threw inside `canonicalTeamData` / `validateSavedTeam` / restore. `decodeMultiGridStateFromUrl` now requires every board entry to be a plain object — one boundary fix covers every consumer. Pinned by decode, canonicalization, validation, and import tests.
+3. **One poison record could take out the library.** `readLibrary`'s single try/catch returned `[]` if any record threw during validation, and the next mutation would then persist that empty array — a silent wipe. Hydration now isolates failures per record (drop + warn, keep the rest); with fix 2 the known throw class is gone anyway, so this is defense in depth. Pinned by a poison-record test.
+4. **Degraded pages could overwrite slots.** With game data failed to load, `initialize` is skipped but the mode picker still worked, and `switchMode`'s `flush()` would write placeholder boards over the target mode's persisted slot. `flush()` is now inert until `startAutosave()` marks the instance as the slot's writer, and the degraded path routes through a new `useTeamsRestore.buildDefaults()` that never touches persistence. Pinned by test.
+5. **`canonicalTeamData`'s key whitelist was an unenforced copy** of the serializer's emission set — adding a new `GridState` section without updating it would silently strip that section from every saved team on the next save. `BOARD_CONTENT_KEYS` is now exported from `gridStateSerializer.ts` beside `BoardState`, canonicalization iterates it, and a contract test serializes a maximal board and requires the emitted keys to equal the registered list exactly.
+
+### Verified minors — fixed
+
+- `duplicateName` truncates the base, not the suffix, so a max-length name still yields a visibly distinct copy.
+- Inline-rename commit is a no-op when the name is unchanged — blur alone no longer bumps `updatedAt` and re-sorts the card grid under the pointer.
+- Delete all shows a plural toast (`teams-deleted`) instead of "Team deleted".
+- Records with `updatedAt` 0 (imports without timestamps) show no "updated" stamp instead of "52 weeks ago".
+- The rename input's function ref ignores unmount nulls (mount/unmount call order isn't guaranteed; a stale element is harmless).
+- `writeStorage` reports success; a failed library write logs a warning instead of silently claiming persistence. A full quota-failure toast pipeline was considered and deferred — persistence is best-effort app-wide (see `src/utils/storage.ts`), and the library blob is a few KB.
+- An unknown-(likely newer-)version library blob is preserved under `stargazer.teams.saved.backup` before this version's first mutation can clobber the live key. Pinned by test.
+- `saveAsNew` / `update` canonicalize their input inside the store — the canonical-`data` invariant is enforced by its owner rather than trusted from callers (idempotent for the already-canonical strings the view passes). Pinned by test.
+- Shared-link ingress persists the mode key only after the payload actually applies, so a decodable-but-unappliable link can't change the remembered mode.
+- `handleCopyLink` reuses the persistence snapshot — one serialization path instead of a hand-assembled duplicate.
+- Dead `mode` field removed from `UrlRestoreResult` (added for the ingress design, never consumed — `resolveTeamMode` runs in `useTeamsRestore` instead).
+- Mode picker switched to honest `aria-pressed` toggle-button semantics (it was `role="radio"` without the roving arrow-key pattern that role promises); the Save-as-New popover carries `role="dialog"`.
+- A tautological test assertion (`expect(...).toContain('')`) removed.
+
+### Noted, deliberately unchanged
+
+- Popover click-away doesn't dismiss (Esc/Cancel do) — already flagged in §9.2 as a product call.
+- Degraded mode leaves the picker enabled; switching rebuilds placeholder boards but (with fix 4) can no longer write any slot.
+- Cross-tab sync stays last-writer-wins per mutation (documented store scope, Appendix C).
+
+### Validation
+
+`npm run prep` green — 948 tests (9 added across decode hardening, poison record, version backup, store canonicalization, flush gating, the key contract, and duplicate-name distinctness). Chromium smoke pass: picker `aria-pressed` semantics, Save-as-New popover with dialog role, no-op rename commit leaving the card's "updated" stamp untouched, real rename, Delete-all plural toast.
+
+---
+
 ## Appendix A — File touch list
 
 | File                                        | Phase | Change                                                                          |
@@ -707,6 +754,7 @@ stargazer.teams.active.3v3          { v: 1, data: …, sourceId: … }
 stargazer.teams.active.5v5          { v: 1, data: …, sourceId: … }
 stargazer.teams.active.5v5sl        { v: 1, data: …, sourceId: … }
 stargazer.teams.saved               { v: 1, teams: SavedTeam[] }   (≤ 200; SavedTeam.data is canonical)
+stargazer.teams.saved.backup        unknown-version library blob, preserved before v1 writes (§10)
 stargazer.teams                     (legacy) deleted unread on first visit
 ```
 

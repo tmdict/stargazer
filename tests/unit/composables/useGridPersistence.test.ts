@@ -55,10 +55,18 @@ describe('useTeamsPersistence', () => {
     expect(storage.has('stargazer.teams')).toBe(false)
   })
 
+  it('flush is inert before startAutosave (degraded page must not overwrite slots)', () => {
+    storage.set(teamsSlotKey('3v3'), 'existing-slot')
+    const persistence = useTeamsPersistence(ref<TeamModeKey>('3v3'), ref(null), FLAGS)
+    persistence.flush()
+    expect(storage.get(teamsSlotKey('3v3'))).toBe('existing-slot')
+  })
+
   it('routes flush writes to the live mode slot with a versioned envelope', () => {
     const mode = ref<TeamModeKey>('3v3')
     const sourceId = ref<string | null>('team-42')
     const persistence = useTeamsPersistence(mode, sourceId, FLAGS)
+    persistence.startAutosave()
 
     persistence.flush()
     const slot = readEnvelope('3v3')
@@ -76,7 +84,7 @@ describe('useTeamsPersistence', () => {
   it('load round-trips the envelope and rejects corrupt or wrong-version slots', () => {
     const mode = ref<TeamModeKey>('1v1')
     const persistence = useTeamsPersistence(mode, ref('abc'), FLAGS)
-    persistence.flush()
+    persistence.startAutosave()
 
     const loaded = persistence.load('1v1')
     expect(loaded).not.toBeNull()

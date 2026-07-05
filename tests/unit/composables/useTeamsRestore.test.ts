@@ -358,9 +358,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(grids.contexts[0]!.currentMap).toBe('arena3')
     expect(restore.sourceId.value).toBe('team-9')
     expect(readEnvelope('1v1').sourceId).toBe('team-9')
-    // Selecting canonical data (no `d`) must not disturb the viewer's flags —
-    // covered by the harness applyFlags spy staying untouched:
-    expect(restore.snapshot()).toContain('')
   })
 
   it('applyTeamData with corrupt data falls back to defaults and clears provenance', () => {

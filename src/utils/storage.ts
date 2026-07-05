@@ -11,12 +11,15 @@ export const readStorage = (key: string): string | null => {
   }
 }
 
-export const writeStorage = (key: string, value: string): void => {
-  if (import.meta.env.SSR) return
+// Returns whether the write landed, for callers that want to report data loss
+// (the saved-team library); board autosave callers ignore it.
+export const writeStorage = (key: string, value: string): boolean => {
+  if (import.meta.env.SSR) return false
   try {
     localStorage.setItem(key, value)
+    return true
   } catch {
-    // Best-effort.
+    return false
   }
 }
 

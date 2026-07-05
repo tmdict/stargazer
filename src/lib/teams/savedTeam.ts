@@ -7,7 +7,11 @@
  * which is what makes the unsaved-changes compare and import dedupe trustworthy.
  */
 
-import type { MultiGridState } from '@/utils/gridStateSerializer'
+import {
+  BOARD_CONTENT_KEYS,
+  type BoardState,
+  type MultiGridState,
+} from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import {
   isTeamModeKey,
@@ -27,23 +31,20 @@ export interface SavedTeam {
   updatedAt: number
 }
 
-/* Strip viewer state and re-encode. Boards are rebuilt key-by-key in the
- * serializer's emission order (t, c, p, pr, a, m) so a hand-ordered import and a
- * fresh serialize of the same content produce identical bytes. The mode is
- * re-resolved so a canonical string is total and self-consistent even for
- * hand-crafted input. Null = undecodable. */
+/* Strip viewer state and re-encode. Boards are rebuilt key-by-key from
+ * BOARD_CONTENT_KEYS (the serializer's emission order) so a hand-ordered import
+ * and a fresh serialize of the same content produce identical bytes, and any
+ * unregistered key is dropped. The mode is re-resolved so a canonical string is
+ * total and self-consistent even for hand-crafted input. Null = undecodable. */
 export function canonicalTeamData(encoded: string): string | null {
   const decoded = decodeMultiGridStateFromUrl(encoded)
   if (!decoded || decoded.boards.length === 0) return null
   const canonical: MultiGridState = {
     boards: decoded.boards.map((board) => {
-      const ordered: typeof board = {}
-      if (board.t !== undefined) ordered.t = board.t
-      if (board.c !== undefined) ordered.c = board.c
-      if (board.p !== undefined) ordered.p = board.p
-      if (board.pr !== undefined) ordered.pr = board.pr
-      if (board.a !== undefined) ordered.a = board.a
-      if (board.m !== undefined) ordered.m = board.m
+      const ordered: BoardState = {}
+      for (const key of BOARD_CONTENT_KEYS) {
+        if (board[key] !== undefined) (ordered as Record<string, unknown>)[key] = board[key]
+      }
       return ordered
     }),
     mode: resolveTeamMode(decoded),
@@ -65,7 +66,9 @@ export function nextAutoName(existingNames: readonly string[]): string {
 }
 
 export function duplicateName(name: string): string {
-  return `${name} (copy)`.slice(0, MAX_TEAM_NAME_LENGTH)
+  // Truncate the base, not the suffix, so a max-length name still gets a
+  // visibly distinct copy name.
+  return `${name.slice(0, MAX_TEAM_NAME_LENGTH - 7)} (copy)`
 }
 
 /* Validate one record from untrusted storage (hydration) or an import file.
