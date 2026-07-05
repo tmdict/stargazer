@@ -54,6 +54,12 @@ describe('canonicalTeamData', () => {
     expect(canonicalTeamData('!!!')).toBeNull()
     expect(canonicalTeamData(encode({ boards: [] }))).toBeNull()
   })
+
+  it('returns null when a crafted payload has non-object board entries', () => {
+    expect(canonicalTeamData(encode({ boards: [null] } as never))).toBeNull()
+    expect(canonicalTeamData(encode({ boards: [[1, 2]] } as never))).toBeNull()
+    expect(canonicalTeamData(encode({ boards: ['x', {}] } as never))).toBeNull()
+  })
 })
 
 describe('team naming', () => {
@@ -74,7 +80,10 @@ describe('team naming', () => {
 
   it('duplicateName appends (copy) within the length cap', () => {
     expect(duplicateName('Alpha')).toBe('Alpha (copy)')
-    expect(duplicateName('x'.repeat(60))).toHaveLength(60)
+    const maxed = 'x'.repeat(60)
+    // The base is truncated, not the suffix, so the copy stays distinct.
+    expect(duplicateName(maxed)).toBe(`${'x'.repeat(53)} (copy)`)
+    expect(duplicateName(maxed)).not.toBe(maxed)
   })
 })
 
@@ -118,6 +127,9 @@ describe('validateSavedTeam', () => {
     expect(validateSavedTeam(record({ id: '' }))).toBeNull()
     expect(validateSavedTeam(record({ name: '  ' }))).toBeNull()
     expect(validateSavedTeam(record({ data: 'garbage' }))).toBeNull()
+    expect(
+      validateSavedTeam(record({ data: encode({ boards: [null, {}, {}] } as never) })),
+    ).toBeNull()
   })
 
   it('normalizes non-numeric timestamps to 0', () => {

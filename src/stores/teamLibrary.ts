@@ -13,6 +13,7 @@ import { defineStore } from 'pinia'
 
 import { MAX_SAVED_TEAMS, type TeamModeKey } from '@/lib/teams/modes'
 import {
+  canonicalTeamData,
   duplicateName,
   nextAutoName,
   sanitizeTeamName,
@@ -23,6 +24,7 @@ import { buildExport, parseImport, type TeamsExportFile } from '@/lib/teams/tran
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const LIBRARY_KEY = 'stargazer.teams.saved'
+const BACKUP_KEY = `${LIBRARY_KEY}.backup`
 const LIBRARY_VERSION = 1
 
 interface LibraryBlob {
@@ -33,24 +35,39 @@ interface LibraryBlob {
 const readLibrary = (): SavedTeam[] => {
   const raw = readStorage(LIBRARY_KEY)
   if (!raw) return []
+  let blob: LibraryBlob
   try {
-    const blob = JSON.parse(raw) as LibraryBlob
-    // An unknown version is treated as empty, never shape-read.
-    if (blob.v !== LIBRARY_VERSION || !Array.isArray(blob.teams)) return []
-    const teams: SavedTeam[] = []
-    for (const record of blob.teams) {
-      const valid = validateSavedTeam(record)
-      if (valid) teams.push(valid)
-      else console.warn('Dropping invalid saved team record:', record)
-    }
-    return teams
+    blob = JSON.parse(raw) as LibraryBlob
   } catch {
     return []
   }
+  if (typeof blob !== 'object' || blob === null) return []
+  if (blob.v !== LIBRARY_VERSION || !Array.isArray(blob.teams)) {
+    // An unknown version is treated as empty, never shape-read — but it is
+    // likely a NEWER app version's library, and this version's next mutation
+    // will overwrite the live key, so preserve the blob under a backup key.
+    if (readStorage(BACKUP_KEY) === null) writeStorage(BACKUP_KEY, raw)
+    return []
+  }
+  const teams: SavedTeam[] = []
+  for (const record of blob.teams) {
+    // Per-record isolation: one malformed record must drop alone, never hide
+    // (or, via the next write, wipe) the rest of the library.
+    try {
+      const valid = validateSavedTeam(record)
+      if (valid) teams.push(valid)
+      else console.warn('Dropping invalid saved team record:', record)
+    } catch {
+      console.warn('Dropping invalid saved team record:', record)
+    }
+  }
+  return teams
 }
 
 const writeLibrary = (teams: SavedTeam[]): void => {
-  writeStorage(LIBRARY_KEY, JSON.stringify({ v: LIBRARY_VERSION, teams }))
+  if (!writeStorage(LIBRARY_KEY, JSON.stringify({ v: LIBRARY_VERSION, teams }))) {
+    console.warn('Saved-teams library write failed; changes are in-memory only')
+  }
 }
 
 export const useTeamLibrary = defineStore('teamLibrary', () => {
@@ -72,16 +89,21 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     return result
   }
 
-  /* An empty/absent name falls back to the next auto-name; null when at cap. */
+  /* An empty/absent name falls back to the next auto-name; null when at cap
+   * or when the data doesn't canonicalize. Canonical `data` is this store's
+   * invariant, so it is enforced here rather than trusted from callers
+   * (idempotent for the already-canonical strings they normally pass). */
   const saveAsNew = (mode: TeamModeKey, data: string, name?: string): SavedTeam | null =>
     mutate((fresh) => {
       if (fresh.length >= MAX_SAVED_TEAMS) return null
+      const canonical = canonicalTeamData(data)
+      if (!canonical) return null
       const now = Date.now()
       const team: SavedTeam = {
         id: crypto.randomUUID(),
         name: sanitizeTeamName(name) ?? nextAutoName(fresh.map((t) => t.name)),
         mode,
-        data,
+        data: canonical,
         createdAt: now,
         updatedAt: now,
       }
@@ -93,8 +115,9 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const update = (id: string, data: string): boolean =>
     mutate((fresh) => {
       const team = fresh.find((t) => t.id === id)
-      if (!team) return false
-      team.data = data
+      const canonical = canonicalTeamData(data)
+      if (!team || !canonical) return false
+      team.data = canonical
       team.updatedAt = Date.now()
       return true
     })

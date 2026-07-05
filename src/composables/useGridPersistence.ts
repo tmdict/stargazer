@@ -161,7 +161,12 @@ export function useTeamsPersistence(
       }
     },
     snapshot,
-    flush: () => write(snapshot()),
+    // Inert until startAutosave marks this instance as the slot's writer: on a
+    // degraded page (data never loaded, initialize skipped) a flush would
+    // overwrite a mode's persisted boards with placeholder state.
+    flush: () => {
+      if (started) write(snapshot())
+    },
     setPaused: (value) => {
       paused.value = value
     },

@@ -3,7 +3,6 @@ import { defineStore } from 'pinia'
 import { repositionCompanions } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { resolveTeamMode, type TeamModeKey } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
 import {
   mirrorGridState,
@@ -25,8 +24,6 @@ interface UrlRestoreResult {
   // keep the viewer's current flags instead of applying unpack defaults (canonical
   // saved-team data deliberately has no `d` — see lib/teams).
   hasDisplayFlags?: boolean
-  // Multi-board only: the payload's resolved team mode.
-  mode?: TeamModeKey
   error?: string
 }
 
@@ -229,7 +226,6 @@ export const useUrlStateStore = defineStore('urlState', () => {
         success: true,
         displayFlags: unpackDisplayFlags(multi.d),
         hasDisplayFlags: multi.d !== undefined,
-        mode: resolveTeamMode(multi),
       }
     } catch (err) {
       console.error('Failed to restore multi state from encoded string:', err)

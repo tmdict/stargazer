@@ -73,6 +73,50 @@ describe('useTeamLibrary', () => {
     expect(useTeamLibrary().teams).toHaveLength(0)
   })
 
+  it('preserves an unknown-version blob under the backup key before overwriting it', () => {
+    seed([record('a', 'Alpha')], 2)
+    const library = useTeamLibrary()
+    expect(library.teams).toHaveLength(0)
+
+    library.saveAsNew('3v3', CANONICAL_3V3, 'New')
+    expect(JSON.parse(storage.get(LIBRARY_KEY)!).v).toBe(1)
+    const backup = JSON.parse(storage.get(`${LIBRARY_KEY}.backup`)!) as {
+      v: number
+      teams: unknown[]
+    }
+    expect(backup.v).toBe(2)
+    expect(backup.teams).toHaveLength(1)
+  })
+
+  it('one poison record drops alone without hiding the rest of the library', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    seed([
+      record('a', 'Alpha'),
+      { ...record('p', 'Poison'), data: encodeMultiGridStateToUrl({ boards: [null] } as never) },
+    ])
+    const library = useTeamLibrary()
+    expect(library.teams.map((t) => t.id)).toEqual(['a'])
+    warn.mockRestore()
+  })
+
+  it('saveAsNew and update canonicalize data and reject garbage', () => {
+    const library = useTeamLibrary()
+    const withViewerState = encodeMultiGridStateToUrl({
+      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
+      active: 2,
+      d: 127,
+      mode: '3v3',
+    })
+    const team = library.saveAsNew('3v3', withViewerState)!
+    expect(team.data).toBe(canonicalTeamData(withViewerState))
+
+    expect(library.update(team.id, withViewerState)).toBe(true)
+    expect(library.get(team.id)!.data).toBe(canonicalTeamData(withViewerState))
+
+    expect(library.saveAsNew('3v3', 'garbage')).toBeNull()
+    expect(library.update(team.id, 'garbage')).toBe(false)
+  })
+
   it('saveAsNew assigns auto-names and sanitizes custom names', () => {
     const library = useTeamLibrary()
     const first = library.saveAsNew('3v3', CANONICAL_3V3)!

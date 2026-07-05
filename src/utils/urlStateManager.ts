@@ -39,7 +39,14 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
     const bytes = urlSafeToBytes(encoded)
     if (!bytes || bytes.length === 0) return null
     const parsed = JSON.parse(new TextDecoder().decode(bytes)) as MultiGridState
-    return Array.isArray(parsed.boards) ? parsed : null
+    if (!Array.isArray(parsed.boards)) return null
+    // Every board must be a plain object: consumers (canonicalization,
+    // validation, restore) read board keys directly past this boundary, so a
+    // null/array entry in a crafted payload would throw deep inside them.
+    const plainObjects = parsed.boards.every(
+      (board) => typeof board === 'object' && board !== null && !Array.isArray(board),
+    )
+    return plainObjects ? parsed : null
   } catch (error) {
     console.warn('Failed to decode multi-grid state from URL:', error)
     return null

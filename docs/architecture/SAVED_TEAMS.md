@@ -35,6 +35,7 @@ DEFAULT_TEAM_MODE = '5v5sl'
 stargazer.teams.mode                 last-used TeamModeKey
 stargazer.teams.active.<mode>        { v: 1, data: <encoded MultiGridState>, sourceId, defaults }
 stargazer.teams.saved                { v: 1, teams: SavedTeam[] }
+stargazer.teams.saved.backup         an unknown-version library blob, preserved before v1 writes
 ```
 
 `sourceId` is the saved team the active boards were loaded from / last saved to (null = unsaved); `defaults` is the mode's default-map fingerprint at write time (stale → slot discarded, hard reset). Unknown envelope versions and undecodable payloads are treated as absent. The autosave watcher (default pre-flush, one per page instance) routes writes to the live mode's slot; a pause flag gates it during switches as defense-in-depth for any future async step.
@@ -52,7 +53,7 @@ A `?g=` link resolves + normalizes first, then applies through the same path wit
 
 ## Saved-team library
 
-`useTeamLibrary` (`/src/stores/teamLibrary.ts`) holds `SavedTeam` records (`/src/lib/teams/savedTeam.ts`): id, name (≤ 60 chars), mode, canonical `data`, timestamps; capped at `MAX_SAVED_TEAMS` (200, ≈ 6 KB per full team). Hydration and import validate every record through `validateSavedTeam` (known mode, board count matches, data canonicalizes; map keys are deliberately not checked — `t` is authoritative). Mutations re-read the stored blob first (read-modify-write); cross-tab sync is deliberately out of scope beyond that.
+`useTeamLibrary` (`/src/stores/teamLibrary.ts`) holds `SavedTeam` records (`/src/lib/teams/savedTeam.ts`): id, name (≤ 60 chars), mode, canonical `data`, timestamps; capped at `MAX_SAVED_TEAMS` (200, ≈ 6 KB per full team). Hydration and import validate every record through `validateSavedTeam` (known mode, board count matches, data canonicalizes; map keys are deliberately not checked — `t` is authoritative); a record that fails drops alone, never the library. `saveAsNew`/`update` canonicalize their input, so the canonical-`data` invariant is enforced by the store rather than trusted from callers. Canonicalization rebuilds each board from `BOARD_CONTENT_KEYS` (exported beside `BoardState` in the serializer, contract-tested) — a new `GridState` section must be registered there to survive in saved teams. Mutations re-read the stored blob first (read-modify-write); cross-tab sync is deliberately out of scope beyond that.
 
 Semantics wired in `TeamsView`:
 

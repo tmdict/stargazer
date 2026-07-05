@@ -10,7 +10,7 @@ import { computed, nextTick, onScopeDispose, ref } from 'vue'
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
-import type { SavedTeam } from '@/lib/teams/savedTeam'
+import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 
@@ -27,6 +27,9 @@ const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].label
 
 // Relative "updated" stamp in the chrome locale (coarsest unit: weeks).
 const updatedLabel = (team: SavedTeam): string => {
+  // 0 = record predates timestamps (validation's fallback); no stamp beats
+  // "52 weeks ago".
+  if (team.updatedAt === 0) return ''
   const seconds = Math.round((team.updatedAt - Date.now()) / 1000)
   const table: [Intl.RelativeTimeFormatUnit, number][] = [
     ['minute', 60],
@@ -78,7 +81,7 @@ const handleDeleteAll = (): void => {
   clearTimeout(disarmTimer)
   armed.value = null
   library.removeAll()
-  success(i18n.t('app.team-deleted'))
+  success(i18n.t('app.teams-deleted'))
 }
 
 const handleDuplicate = (team: SavedTeam): void => {
@@ -89,10 +92,12 @@ const handleDuplicate = (team: SavedTeam): void => {
 const editingId = ref<string | null>(null)
 const editingName = ref('')
 // Function ref: a string ref inside v-for binds as an array, which would make
-// focus/select silent no-ops. Only one rename input exists at a time.
+// focus/select silent no-ops. Only one rename input exists at a time; the
+// unmounting input's null call is ignored because its order against the next
+// input's mount call isn't guaranteed (a stale element is harmless).
 const nameInput = ref<HTMLInputElement | null>(null)
 const setNameInput = (el: unknown): void => {
-  nameInput.value = (el as HTMLInputElement) ?? null
+  if (el) nameInput.value = el as HTMLInputElement
 }
 
 const startRename = async (team: SavedTeam): Promise<void> => {
@@ -104,8 +109,13 @@ const startRename = async (team: SavedTeam): Promise<void> => {
 }
 
 const commitRename = (): void => {
-  if (editingId.value !== null) library.rename(editingId.value, editingName.value)
+  const id = editingId.value
   editingId.value = null
+  if (id === null) return
+  // An unchanged name skips the write: blur alone must not bump updatedAt and
+  // re-sort the grid under the pointer.
+  if (sanitizeTeamName(editingName.value) === library.get(id)?.name) return
+  library.rename(id, editingName.value)
 }
 
 const cancelRename = (): void => {
