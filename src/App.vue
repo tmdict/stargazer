@@ -264,6 +264,13 @@ nav ul li {
   }
 }
 
+/* The magnifier's bounding box centers in the row, but its handle hangs
+   bottom-right, leaving the circle — what the eye reads — about a pixel above
+   the box-centered sibling icons; nudge down to optically align. */
+.menu-search svg {
+  transform: translateY(1px);
+}
+
 .nav-text-link {
   font-size: 0.85rem;
   font-weight: 600;
