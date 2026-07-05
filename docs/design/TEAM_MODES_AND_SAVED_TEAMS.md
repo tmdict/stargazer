@@ -600,6 +600,76 @@ Everything browser-verifiable headlessly was walked through and passes (desktop 
 
 ---
 
+## 9. Manual Verification Guide
+
+Everything below is what automated validation could **not** fully cover — visual quality, input feel, real-browser/OS integration — plus a quick confidence pass over the core loop. Steps assume `npm run dev` and a clean profile (DevTools → Application → Local Storage → clear `stargazer.*` keys to reset; the relevant keys are `stargazer.teams.mode`, `stargazer.teams.active.<mode>`, `stargazer.teams.saved`).
+
+### 9.1 Five-minute smoke (start here)
+
+1. Open `/teams` → expect 5 Supreme League boards (Arena I–III, SR11, SR1), picker on "5v5 Supreme League", label "Unsaved team".
+2. Place 2–3 heroes → **Save** → popover prefilled "Team 1" → Enter. Label becomes "Team 1", no dot.
+3. Move a hero → amber dot appears. Click another board / toggle Flat → dot must **not** appear from those alone. **Save** → dot clears (no popover).
+4. Switch 3v3 → clean slate, no Wrap toggle. Switch back → your boards exactly as left.
+5. Saved Teams tab → card with portrait thumbnail → Duplicate → Delete the copy (two taps) → Select "Team 1" from 3v3 mode → mode flips back, boards load.
+
+### 9.2 Visual / feel (needs human eyes)
+
+- [ ] **Mode row layout** at various window widths: picker + label + 4 buttons wrap gracefully; nothing overlaps the toggles row below.
+- [ ] **Thumbnails**: portraits look right (crop, ring color per team, dot fallback for phantimals whose remote image is slow/missing); blocked tiles (SR maps) read correctly in the minis.
+- [ ] **Maps tab and Map Editor preset picker** look pixel-identical to before (both render through the new shared `BoardThumbnail`).
+- [ ] **Name popover**: focus lands in the input pre-selected; Enter/Esc; click-away currently does NOT close it (only Cancel/Esc) — decide if you care.
+- [ ] **Inline rename** on cards: click name → input; Enter/blur commits; Esc cancels; 60-char clamp.
+- [ ] **Toasts** read well in zh locale too (my zh strings for the ~20 new keys deserve a native-speaker glance — e.g. 另存为 / 未保存的阵容 / 巅峰联赛).
+
+### 9.3 Flows automation only partially exercised
+
+- [ ] **Cross-board drag & drop in 1v1 and 3v3** (mouse + touch): drag between boards, swaps, page-wide uniqueness, phantimals — the engine is count-agnostic and unchanged, but drag itself wasn't driven headlessly.
+- [ ] **Share loop**: Link button from 3v3 → `/share` shows 3 boards read-only → Edit pencil → `/teams` opens in 3v3 with the payload applied and picker synced. Repeat once from 1v1.
+- [ ] **Old link compatibility**: any pre-existing 5v5 share link (no mode field) opens into Supreme League mode.
+- [ ] **Mobile device (not just narrow window)**: mode picker tap targets; roster sheet → Saved Teams tab; Select collapses the sheet and shows the loaded boards; save popover usable with the on-screen keyboard.
+- [ ] **Export/Import on your OS**: exported filename `stargazer-teams-YYYYMMDD-HHMMSS.json`; re-import after clearing storage restores everything; importing a random `.json` shows the error toast.
+
+### 9.4 Defaults hard reset (simulate a new SL season)
+
+1. Put units on the 5v5 SL boards (autosaves).
+2. Edit `src/lib/teams/modes.ts` → in `'5v5sl'`, change `defaultMaps` to e.g. `['arena1', 'arena2', 'arena3', 'preset-sr11', 'preset-sr2']`.
+3. Reload `/teams` → SL boards reset to the new map list, label "Unsaved team". Saved teams (including SL ones) unaffected; selecting one still loads its own maps.
+4. Revert the edit → boards reset again (fingerprint differs again) — expected; a real season change happens once.
+
+### 9.5 Robustness spot-checks
+
+- [ ] **Private/incognito window** (Safari if handy — strictest): page fully usable; saves just don't survive reload; no crashes/toast spam.
+- [ ] **~200-team feel**: paste into the console on `/teams`, reload, open Saved Teams:
+
+  ```js
+  const t = JSON.parse(localStorage.getItem('stargazer.teams.saved')).teams[0]
+  localStorage.setItem(
+    'stargazer.teams.saved',
+    JSON.stringify({
+      v: 1,
+      teams: Array.from({ length: 200 }, (_, i) => ({
+        ...t,
+        id: crypto.randomUUID(),
+        name: `Team ${i + 1}`,
+      })),
+    }),
+  )
+  ```
+
+  (needs one saved team first). Expect: page load unaffected (tab is lazy), tab opens smoothly, scrolling is fine, badge/count show 200, Save as New refuses with the limit toast.
+
+- [ ] **Two tabs open on `/teams`**: last writer wins per key by design — just confirm nothing crashes and a reload reconciles.
+
+### 9.6 Known/accepted behaviors (verify they feel OK, not bugs)
+
+- Selecting a team resets the active-board highlight to board 1 and keeps your current display toggles (canonical data carries no viewer state).
+- Deleting the source team keeps the boards; label reverts to "Unsaved team".
+- Auto-numbering can skip numbers after deletes ("count+1, skip taken").
+- Import always merges; "replace everything" = Delete all + Import.
+- A stray `?g=` stays in the URL after load, so refreshing re-applies it (pre-existing behavior).
+
+---
+
 ## Appendix A — File touch list
 
 | File                                        | Phase | Change                                                                          |
