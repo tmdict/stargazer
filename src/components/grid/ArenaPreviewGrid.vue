@@ -13,7 +13,7 @@ const emit = defineEmits<{
   arenaSelected: [mapKey: string]
 }>()
 
-// Historical framing of the maps tab: a 170px square with the board centered.
+// The maps tab's square framing: the board centered in a 170px viewBox.
 const SIZE = 170
 const HEX_SIZE = 10
 

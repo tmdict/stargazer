@@ -23,9 +23,8 @@ interface Geometry {
 }
 
 /* Hex geometry depends only on hexSize (+ optional square viewBox), never on the
-   map, so it's computed once at module level and shared by every thumbnail —
-   at the saved-teams cap that's 1,000 boards reusing one polygon set instead of
-   recomputing 45 corners each. */
+   map, so it's cached at module level: a full saved-teams library renders
+   hundreds of boards from one polygon set. */
 const geometryCache = new Map<string, Geometry>()
 
 function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
@@ -123,8 +122,8 @@ const {
   tiles?: number[][]
   units?: ThumbnailUnit[]
   hexSize?: number
-  // Square viewBox with a centered board (the maps tab's historical framing);
-  // omitted = tight-fit bounds, the right default for card thumbnails.
+  // Square viewBox with a centered board (the maps tab's framing); omitted =
+  // tight-fit bounds, the right default for card thumbnails.
   viewBoxSize?: number
 }>()
 

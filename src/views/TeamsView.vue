@@ -124,7 +124,7 @@ const handleSaveAsNew = (name: string) => {
   if (!canonical) return
   const team = teamLibrary.saveAsNew(activeMode.value, canonical, name)
   if (!team) {
-    error(i18n.t('app.teams-limit', { max: String(MAX_SAVED_TEAMS) }))
+    error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
     return
   }
   teamsRestore.sourceId.value = team.id
@@ -152,12 +152,7 @@ const handleImportFile = (raw: string) => {
     error(i18n.t('app.import-invalid'))
     return
   }
-  success(
-    i18n.t('app.import-success', {
-      imported: String(result.imported),
-      skipped: String(result.skipped),
-    }),
-  )
+  success(i18n.t('app.import-success', { imported: result.imported, skipped: result.skipped }))
 }
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;

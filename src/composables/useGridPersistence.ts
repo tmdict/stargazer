@@ -7,7 +7,7 @@
  * multi-board string plus the saved-team provenance (sourceId). The autosave
  * watcher routes writes to the live mode's slot; the mode-switch sequence in
  * useTeamsRestore pauses it around rebuilds so a mode's slot is only ever written
- * while that mode's boards are live (the failure of the old single-slot design).
+ * while that mode's boards are live.
  *
  * A `?g=` link takes priority and overwrites the slot (the first autosave write
  * does this); the readonly /share view never starts autosave, so it can't persist.
@@ -28,19 +28,18 @@ import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
 import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 const ARENA_KEY = 'stargazer.arena'
-// Pre-mode single-slot key: deleted unread (clean-slate schema, no migration).
+// Obsolete single-slot key; deleted on sight so stale data can't linger.
 const LEGACY_TEAMS_KEY = 'stargazer.teams'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
 
 export const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.active.${mode}`
 
-/* A mode's persisted active team: the encoded snapshot, which saved team it was
- * loaded from / last saved to (null = not a saved team), and a fingerprint of the
- * mode's default maps at write time. A slot whose fingerprint no longer matches
- * the registry is discarded on load — updating a mode's default map list (e.g. a
- * new Supreme League season) hard-resets that mode's active boards to the new
- * defaults, while saved teams are untouched. Versioned so a future shape change
- * can be detected instead of shape-read. */
+/* A mode's persisted active team: the encoded snapshot, the saved team it was
+ * loaded from / last saved to (null = not a saved team), and a fingerprint of
+ * the mode's default maps at write time. A stale fingerprint discards the slot
+ * on load — updating a mode's default map list (a new Supreme League season)
+ * deliberately hard-resets that mode's active boards while saved teams keep
+ * their own data. Versioned so a future shape change is detected, not shape-read. */
 export interface ActiveSlot {
   v: 1
   data: string

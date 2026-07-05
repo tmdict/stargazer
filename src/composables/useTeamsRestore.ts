@@ -60,9 +60,8 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   const resolveSource = (id: string | null): string | null =>
     options.resolveSourceId ? options.resolveSourceId(id) : id
 
-  // Apply an encoded payload through the single restore path. Flags are adopted
-  // only when the payload actually carries them (canonical saved-team data does
-  // not, so Select never clobbers the viewer's toggles).
+  // Flags are adopted only when the payload carries them: canonical saved-team
+  // data has no `d`, so Select must not clobber the viewer's toggles.
   const applyEncoded = (encoded: string): boolean => {
     const result = urlStateStore.restoreMultiFromEncodedState(encoded)
     if (result.success && result.hasDisplayFlags && result.displayFlags) {
@@ -80,9 +79,9 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     options.applySize()
   }
 
-  // Restore the mode's slot, or build the mode's fresh defaults when the slot is
-  // absent/corrupt. Exactly one rebuild either way (the restore path rebuilds
-  // internally as this orchestrator's delegated mechanism).
+  // Exactly one rebuild either way: a successful restore rebuilds internally (as
+  // this orchestrator's delegated mechanism), so defaults are built only when it
+  // didn't run.
   const restoreOrDefault = (mode: TeamModeKey): void => {
     const slot = persistence.load(mode)
     const restored = slot !== null && applyEncoded(slot.data)
@@ -94,9 +93,8 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
   }
 
-  /* Switch to another mode. Always rebuilds — even between equal-count modes
-   * (5v5 ↔ 5v5sl differ in maps and state), unlike the old tab watcher's
-   * count-equality optimization. */
+  /* Always rebuilds — equal-count modes (5v5 ↔ 5v5sl) still differ in maps and
+   * state, so a count-equality shortcut would silently share boards. */
   const switchMode = (next: TeamModeKey): void => {
     if (next === activeMode.value) return
     persistence.setPaused(true)
@@ -108,10 +106,9 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     persistence.flush()
   }
 
-  /* Replace the active team with an encoded payload (a saved team's canonical
-   * data), switching mode first when needed. `source` becomes the provenance the
-   * Save button updates. Falls back to the mode's defaults if the payload fails
-   * to decode (corrupt record), returning false. */
+  /* Load a saved team as the active team. `source` becomes the provenance the
+   * Save button updates; a corrupt payload falls back to the mode's defaults
+   * with provenance cleared (returns false). */
   const applyTeamData = (mode: TeamModeKey, encoded: string, source: string | null): boolean => {
     persistence.setPaused(true)
     persistence.flush()
@@ -129,9 +126,9 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     return applied
   }
 
-  /* Initial page load: a ?g= link (mode-routed and shape-normalized) wins over the
-   * last-used mode's slot; a link that fails to decode falls back to the slot so
-   * autosave can't wipe it. Arms the autosave, whose first write commits whatever
+  /* Initial page load: a ?g= link (mode-routed, shape-normalized) wins over the
+   * last-used mode's slot; a link that fails to decode is treated as absent so
+   * autosave can't wipe the slot. The autosave's first write commits whatever
    * was restored. */
   const initialize = (sharedLink: string | null): InitializeResult => {
     let linkFailed = false
@@ -166,10 +163,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     initialize,
     switchMode,
     applyTeamData,
-    // The live boards as an encoded string; reactive reads, usable in computeds
-    // (the dirty compare canonicalizes this and matches it against the source
-    // team's canonical data).
+    // Reactive reads — usable in computeds (the dirty compare's live side).
     snapshot: () => persistence.snapshot(),
-    flush: () => persistence.flush(),
   }
 }
