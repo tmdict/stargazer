@@ -487,16 +487,14 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                 />
                 <span v-else class="sso-indent" aria-hidden="true"></span>
                 <span v-if="row.nameText" class="sso-snip">{{ row.nameText }}</span>
-                <span v-else-if="row.hit" class="sso-snip" :lang="row.lang">
-                  <span v-if="row.hit.loc === 'skill-name'" class="sso-skill"
-                    >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
-                    >{{ row.hit.snippet.post }}</span
-                  >
-                  <template v-else
-                    >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
-                    >{{ row.hit.snippet.post }}</template
-                  >
-                </span>
+                <span
+                  v-else-if="row.hit"
+                  class="sso-snip"
+                  :class="{ 'sso-skill': row.hit.loc === 'skill-name' }"
+                  :lang="row.lang"
+                  >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
+                  >{{ row.hit.snippet.post }}</span
+                >
                 <span v-if="row.more" class="sso-more">+{{ row.more }}</span>
                 <span v-if="row.chip" class="sso-chip">{{ row.chip }}</span>
               </a>
@@ -852,8 +850,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   font-weight: 700;
 }
 
-.sso-row.sel .sso-snip,
-.sso-row.sel .sso-skill {
+.sso-row.sel .sso-snip {
   color: #fff;
 }
 
@@ -1001,8 +998,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   .sso-portrait {
     height: 42px;
   }
-  /* The matched text is why the user is here; on a phone-width row the slot
-     chip costs too much of it. */
+  /* Matched text outranks the slot label when row width is scarce. */
   .sso-chip {
     display: none;
   }

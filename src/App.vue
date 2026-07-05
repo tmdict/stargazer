@@ -264,9 +264,9 @@ nav ul li {
   }
 }
 
-/* The magnifier's bounding box centers in the row, but its handle hangs
-   bottom-right, leaving the circle — what the eye reads — about a pixel above
-   the box-centered sibling icons; nudge down to optically align. */
+/* The magnifier's handle hangs bottom-right, so box-centering leaves the
+   circle — what the eye reads — ~1px above its siblings; nudge to optically
+   align. */
 .menu-search svg {
   transform: translateY(1px);
 }
