@@ -25,8 +25,7 @@ const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
 
 const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].labelKey)
 
-// Relative "updated" stamp in the chrome locale; falls back to a date for
-// anything older than a month.
+// Relative "updated" stamp in the chrome locale (coarsest unit: weeks).
 const updatedLabel = (team: SavedTeam): string => {
   const seconds = Math.round((team.updatedAt - Date.now()) / 1000)
   const table: [Intl.RelativeTimeFormatUnit, number][] = [
@@ -87,10 +86,14 @@ const handleDuplicate = (team: SavedTeam): void => {
   if (!copy) error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
 }
 
-/* Inline rename: the name swaps to an input; Enter/blur commits, Esc cancels. */
 const editingId = ref<string | null>(null)
 const editingName = ref('')
-const nameInput = ref<HTMLInputElement>()
+// Function ref: a string ref inside v-for binds as an array, which would make
+// focus/select silent no-ops. Only one rename input exists at a time.
+const nameInput = ref<HTMLInputElement | null>(null)
+const setNameInput = (el: unknown): void => {
+  nameInput.value = (el as HTMLInputElement) ?? null
+}
 
 const startRename = async (team: SavedTeam): Promise<void> => {
   editingId.value = team.id
@@ -138,7 +141,7 @@ const cancelRename = (): void => {
         <div class="card-title-row">
           <input
             v-if="editingId === team.id"
-            ref="nameInput"
+            :ref="setNameInput"
             v-model="editingName"
             class="team-name-input"
             type="text"
