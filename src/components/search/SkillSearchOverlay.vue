@@ -87,7 +87,6 @@ interface OverlayRow {
   portrait: boolean
   alt: string
   hit?: SearchHit
-  skillName: string | null
   chip: string
   nameText?: string
   /** Wide mode: count of this hero's further hits (shown in the pane). */
@@ -106,12 +105,6 @@ const hitRows = computed<OverlayRow[]>(() => {
       portrait: i === 0,
       alt: heroName(r.slug),
       hit,
-      // Description hits lead with the skill's name in the hit's language;
-      // name and skill-name hits already carry their name as the snippet.
-      skillName:
-        hit.loc === 'description' && hit.slot
-          ? (getSkillFile(hit.locale, r.slug)?.[hit.slot]?.n?.trim() ?? null)
-          : null,
       chip: hit.slot ? slotLabel(hit.slot, appLang.value) : '',
     })),
   )
@@ -127,7 +120,6 @@ const recentRows = computed<OverlayRow[]>(() =>
       lang: textLang.value,
       portrait: true,
       alt: heroName(slug),
-      skillName: null,
       chip: '',
       nameText: heroName(slug),
     })),
@@ -150,7 +142,6 @@ const heroRows = computed<OverlayRow[]>(() => {
         portrait: true,
         alt: heroName(r.slug),
         hit,
-        skillName: null,
         chip: '',
         more: r.hits.length > 1 ? r.hits.length - 1 : undefined,
       },
@@ -501,13 +492,10 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                     >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
                     >{{ row.hit.snippet.post }}</span
                   >
-                  <template v-else>
-                    <template v-if="row.skillName"
-                      ><span class="sso-skill">{{ row.skillName }}</span> ·
-                    </template>
-                    {{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
-                    >{{ row.hit.snippet.post }}
-                  </template>
+                  <template v-else
+                    >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
+                    >{{ row.hit.snippet.post }}</template
+                  >
                 </span>
                 <span v-if="row.more" class="sso-more">+{{ row.more }}</span>
                 <span v-if="row.chip" class="sso-chip">{{ row.chip }}</span>
@@ -1012,6 +1000,11 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   }
   .sso-portrait {
     height: 42px;
+  }
+  /* The matched text is why the user is here; on a phone-width row the slot
+     chip costs too much of it. */
+  .sso-chip {
+    display: none;
   }
   .sso-foot {
     display: none;
