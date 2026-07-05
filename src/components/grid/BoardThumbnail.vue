@@ -110,11 +110,17 @@ const UNIT_SCALE = 0.92
 
 const {
   mapKey,
+  tiles,
   units = [],
   hexSize = 7,
   viewBoxSize,
 } = defineProps<{
   mapKey: string
+  // Explicit [hexId, state] tile states (a record's serialized `t`) — the
+  // authoritative source when present, matching restore semantics (all tiles
+  // default except these). Omitted = the map config's baseline (empty boards,
+  // map pickers).
+  tiles?: number[][]
   units?: ThumbnailUnit[]
   hexSize?: number
   // Square viewBox with a centered board (the maps tab's historical framing);
@@ -125,9 +131,17 @@ const {
 const uid = useId()
 
 const geometry = computed(() => getGeometry(hexSize, viewBoxSize))
-const states = computed(() => getMapStates(mapKey))
+const states = computed(() => {
+  if (!tiles) return getMapStates(mapKey)
+  const explicit = new Map<number, State>()
+  for (const entry of tiles) {
+    const [hexId, state] = entry
+    if (hexId !== undefined && state !== undefined) explicit.set(hexId, state)
+  }
+  return explicit
+})
 
-const tiles = computed(() =>
+const renderTiles = computed(() =>
   [...geometry.value.points.entries()].map(([hexId, points]) => ({
     hexId,
     points,
@@ -175,7 +189,7 @@ const placedUnits = computed(() =>
     </defs>
 
     <polygon
-      v-for="tile in tiles"
+      v-for="tile in renderTiles"
       :key="tile.hexId"
       :points="tile.points"
       :fill="tile.fill"

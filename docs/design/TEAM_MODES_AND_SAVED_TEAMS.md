@@ -1,6 +1,7 @@
 # Design: Team Modes (N-Grid) & Saved Teams
 
-> **Status**: Rev 4 — **implemented** (all four phases, on this branch); §8 is the implementation report. Rev 3 was the audited pre-implementation design.
+> **Status**: Rev 5 — **implemented** (all four phases + post-review refinements, on this branch); §8 is the implementation report. Rev 3 was the audited pre-implementation design.
+> **Rev 5 changes** (post-implementation review Q&A): active slots carry a default-maps fingerprint — updating a mode's default list hard-resets that mode's active boards (saved teams untouched); serialized `t` recognized as authoritative — unknown/retired map keys no longer reject records, and thumbnails render from the record's `t` instead of the map config.
 > **Scope**: Teams page (`/teams`) only. The Arena (`/`), Map Editor behavior, and WandWars are untouched (the Map Editor's preset picker shares the refactored preview component, §3.5, with identical rendering).
 > **Companion mocks**: [`mocks/saved-teams-tab.html`](./mocks/saved-teams-tab.html), [`mocks/team-mode-controls.html`](./mocks/team-mode-controls.html)
 > **Rev 3 changes** (from the persona audit, §6): canonical team data (view-state stripped) fixes the dirty-check and import round-trip; `?g=` mode/count contradiction + padding rules implemented via `normalizeTeamPayload`; lazy mount + rendering budget for the Saved Teams panel; single-rebuild switch sequence; store/toast layering fix; `sourceId` self-heal; virgin-mode flag policy; hydration/version policy; multi-tab decision; test-harness constraints; Appendix C (rejected alternatives).
@@ -584,6 +585,14 @@ All four phases are implemented on this branch, one commit per phase (`Teams pha
 ### Test coverage added
 
 `tests/unit/lib/teams/{modes,savedTeam,transfer}.test.ts`, `tests/unit/composables/{useGridPersistence,useTeamsRestore}.test.ts`, `tests/unit/stores/teamLibrary.test.ts` — 60 new tests, 729 total passing. The §3.3 write-spy regression suite (per-mode round-trips byte-identical, equal-count rebuild, no old-slot write after flush / no new-slot write before baseline) encodes the old 3v3 failure permanently.
+
+### Rev 5 addendum (post-review refinements)
+
+Three refinements from the post-implementation review discussion:
+
+1. **Defaults-change hard reset**: `ActiveSlot` gained a required `defaults` fingerprint (the mode's `defaultMaps` joined). `load()` discards a slot whose fingerprint doesn't match the registry, so shipping a new Supreme League map list resets users' active 5v5 SL boards onto it (label reverts to "Unsaved team"; saved teams unaffected). Pinned by test.
+2. **`t` is authoritative — map configs are optional for persisted data**: the serializer emits every non-default tile (~26 even for an empty board) and restore replays them over a tile reset, so persisted/imported boards never need the arena JSON for correctness. Accordingly, `validateSavedTeam` no longer rejects unknown map keys (a retired map's teams keep working; only the Maps-tab highlight has nothing to point at), and the earlier "keep retired arena JSONs around" caveat is withdrawn. Configs remain necessary only for empty boards (fresh slates, padded links) and the map-picker UI.
+3. **Thumbnails render from `t`**: `BoardThumbnail` accepts explicit tile states and `TeamPreview` passes the record's own `t`, so previews match exactly what Select produces — including hand-crafted `t`/`m` divergence and retired maps (this also resolves Rev 3 finding #14's accepted limitation).
 
 ### QA checklist status
 
