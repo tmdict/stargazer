@@ -18,7 +18,7 @@ import {
   loadCharacters,
   loadIcons,
 } from '@/utils/dataLoader'
-import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
+import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, slotLabel } from '@/utils/skillLabels'
 
 const { isOpen, query, selectHandler, open, close } = useSearchOverlay()
@@ -182,13 +182,12 @@ interface PaneHit {
   href: string
   /** Language of this hit's title and body text. */
   lang: SkillLocale
-  /** Highlighted title (name and skill-name hits carry the match). */
+  /** Highlighted hero-name title (name hits); slot hits are titled by typeLine. */
   title: Snippet | null
-  /** Plain title (description hits: the skill's name). */
-  titleText: string | null
+  /** Chrome-language slot + level heading, e.g. "Ultimate · LV 2". */
   typeLine: string
-  /** Matched text in full, highlight included; d[0] as context for name hits. */
-  body: Snippet | null
+  /** Matched text in full, token-styled; d[0] as context for skill-name hits. */
+  body: RichPiece[] | null
 }
 
 const paneHero = computed(() =>
@@ -225,18 +224,13 @@ const paneHits = computed<PaneHit[]>(() => {
         bodyText = slotData.d[0] ?? null
       }
     }
-    const cleaned = bodyText ? cleanSkillText(bodyText) : null
-    const body = cleaned
-      ? (renderSnippet(cleaned, q, cleaned.length) ?? { pre: cleaned, match: '', post: '' })
-      : null
     return {
       key: `${hero.slug}:${slot ?? 'name'}:${i}`,
       href: `/${hit.locale}/skill/${hero.slug}${slot ? `#${slot}` : ''}`,
       lang: hit.locale,
-      title: hit.loc === 'description' ? null : hit.snippet,
-      titleText: hit.loc === 'description' ? (slotData?.n?.trim() ?? typeLine) : null,
+      title: hit.loc === 'name' ? hit.snippet : null,
       typeLine,
-      body,
+      body: bodyText ? renderRichText(bodyText, q) : null,
     }
   })
 })
@@ -532,21 +526,27 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                   "
                   @mousemove="paneHitIndex = hi"
                 >
-                  <span class="sso-pane-skill" :lang="paneHit.lang">
-                    <template v-if="paneHit.title"
-                      >{{ paneHit.title.pre }}<mark>{{ paneHit.title.match }}</mark
-                      >{{ paneHit.title.post }}</template
-                    >
-                    <template v-else>{{ paneHit.titleText }}</template>
-                  </span>
-                  <!-- Chrome-language slot label inside content-language text. -->
-                  <span v-if="paneHit.typeLine" class="sso-pane-type" :lang="i18n.currentLocale"
-                    >({{ paneHit.typeLine }})</span
+                  <span v-if="paneHit.title" class="sso-pane-title" :lang="paneHit.lang"
+                    >{{ paneHit.title.pre }}<mark>{{ paneHit.title.match }}</mark
+                    >{{ paneHit.title.post }}</span
                   >
+                  <!-- Chrome-language slot label heading content-language text. -->
+                  <span v-else class="sso-pane-title" :lang="i18n.currentLocale">{{
+                    paneHit.typeLine
+                  }}</span>
                   <p v-if="paneHit.body" class="sso-pane-desc" :lang="paneHit.lang">
-                    {{ paneHit.body.pre
-                    }}<mark v-if="paneHit.body.match">{{ paneHit.body.match }}</mark
-                    >{{ paneHit.body.post }}
+                    <template v-for="(piece, pi) in paneHit.body" :key="pi">
+                      <span
+                        v-if="piece.kind === 'stat'"
+                        :class="['skill-stat-tag', `skill-stat-${piece.tag}`]"
+                        >{{ piece.text }}</span
+                      >
+                      <mark v-else-if="piece.marked">{{ piece.text }}</mark>
+                      <span v-else-if="piece.kind === 'value'" class="skill-highlight">{{
+                        piece.text
+                      }}</span>
+                      <template v-else>{{ piece.text }}</template>
+                    </template>
                   </p>
                 </a>
               </template>
@@ -731,8 +731,8 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 }
 
 .sso-pane-badge {
-  width: 17px;
-  height: 17px;
+  width: 21px;
+  height: 21px;
   border-radius: 50%;
   border: 1px solid #4a4f58;
 }
@@ -749,17 +749,10 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   border-left-color: var(--color-accent);
 }
 
-.sso-pane-skill {
+.sso-pane-title {
   color: var(--color-accent);
   font-weight: 700;
   font-size: 0.9rem;
-}
-
-.sso-pane-type {
-  margin-left: 6px;
-  color: #7a8089;
-  font-size: 0.7rem;
-  font-style: italic;
 }
 
 .sso-pane-desc {
@@ -769,11 +762,39 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   line-height: 1.6;
 }
 
-.sso-pane-skill mark,
+.sso-pane-title mark,
 .sso-pane-desc mark {
   background: none;
   color: #f2c94c;
   font-weight: 700;
+}
+
+/* Skill-text tokens, mirroring the reader's palette (content.css). */
+.sso-pane-desc .skill-highlight {
+  color: var(--color-accent);
+}
+
+.sso-pane-desc .skill-stat-tag {
+  display: inline-block;
+  padding: 0 5px;
+  margin: 0 1px;
+  border-radius: 3px;
+  font-size: 0.82em;
+  font-weight: 600;
+  vertical-align: 1px;
+  white-space: nowrap;
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.sso-pane-desc .skill-stat-atk {
+  background: rgba(196, 128, 128, 0.12);
+  color: #c98080;
+}
+
+.sso-pane-desc .skill-stat-hp {
+  background: rgba(148, 178, 125, 0.12);
+  color: #b0c79a;
 }
 
 .sso-pane-div {
