@@ -76,6 +76,15 @@ function heroName(slug: string): string {
   return curatedHeroName(slug, appLang.value)
 }
 
+function heroBadges(slug: string): string[] {
+  const character = loadCharacters().find((c) => c.name === slug)
+  if (!character) return []
+  const icons = loadIcons()
+  return [icons[`faction-${character.faction}`], icons[`class-${character.class}`]].filter(
+    (icon): icon is string => Boolean(icon),
+  )
+}
+
 // One row per hit; the first row of a hero group carries the portrait and
 // the rest indent under it (grouped, always expanded).
 interface OverlayRow {
@@ -89,8 +98,8 @@ interface OverlayRow {
   hit?: SearchHit
   chip: string
   nameText?: string
-  /** Wide mode: count of this hero's further hits (shown in the pane). */
-  more?: number
+  /** Wide mode: faction/class icons rendered instead of a snippet. */
+  badges?: string[]
 }
 
 const hitRows = computed<OverlayRow[]>(() => {
@@ -125,8 +134,8 @@ const recentRows = computed<OverlayRow[]>(() =>
     })),
 )
 
-// Wide mode collapses the list to one row per hero (best hit + "+N"); the
-// pane shows everything about the selection, so nothing is hidden.
+// Wide mode collapses the list to icon-only hero rows; the pane carries all
+// the text, so nothing is hidden.
 const heroRows = computed<OverlayRow[]>(() => {
   const rs = results.value
   if (!rs) return []
@@ -141,9 +150,8 @@ const heroRows = computed<OverlayRow[]>(() => {
         lang: hit.locale,
         portrait: true,
         alt: heroName(r.slug),
-        hit,
         chip: '',
-        more: r.hits.length > 1 ? r.hits.length - 1 : undefined,
+        badges: heroBadges(r.slug),
       },
     ]
   })
@@ -238,16 +246,10 @@ const paneHits = computed<PaneHit[]>(() => {
 const paneMeta = computed(() => {
   const hero = paneHero.value
   if (!hero) return null
-  const character = loadCharacters().find((c) => c.name === hero.slug)
-  const icons = loadIcons()
   return {
     portrait: loadCharacterImages()[hero.slug] ?? '',
     alt: heroName(hero.slug),
-    badges: character
-      ? [icons[`faction-${character.faction}`], icons[`class-${character.class}`]].filter(
-          (icon): icon is string => Boolean(icon),
-        )
-      : [],
+    badges: heroBadges(hero.slug),
   }
 })
 
@@ -480,7 +482,10 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                   class="sso-portrait"
                 />
                 <span v-else class="sso-indent" aria-hidden="true"></span>
-                <span v-if="row.nameText" class="sso-snip">{{ row.nameText }}</span>
+                <span v-if="row.badges" class="sso-row-badges" aria-hidden="true">
+                  <img v-for="(badge, bi) in row.badges" :key="bi" :src="badge" alt="" />
+                </span>
+                <span v-else-if="row.nameText" class="sso-snip">{{ row.nameText }}</span>
                 <span
                   v-else-if="row.hit"
                   class="sso-snip"
@@ -489,7 +494,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                   >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
                   >{{ row.hit.snippet.post }}</span
                 >
-                <span v-if="row.more" class="sso-more">+{{ row.more }}</span>
                 <span v-if="row.chip" class="sso-chip">{{ row.chip }}</span>
               </a>
 
@@ -702,8 +706,20 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 }
 
 .sso-list.side {
-  flex: 0 0 45%;
+  flex: 0 0 128px;
   border-right: 1px solid #33373f;
+}
+
+.sso-row-badges {
+  display: inline-flex;
+  gap: 4px;
+}
+
+.sso-row-badges img {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid #4a4f58;
 }
 
 /* ---------- detail pane (≥1220px) ---------- */
@@ -801,22 +817,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   height: 1px;
   margin: 8px 0;
   background: linear-gradient(to right, transparent, #4a4f58, transparent);
-}
-
-.sso-more {
-  flex-shrink: 0;
-  font-size: 0.63rem;
-  font-weight: 700;
-  color: #8a8f98;
-  border: 1px solid #3f444d;
-  padding: 1px 6px;
-  border-radius: 999px;
-}
-
-.sso-row.sel .sso-more {
-  border-color: transparent;
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
 }
 
 .sso-row {
