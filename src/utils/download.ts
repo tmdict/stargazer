@@ -13,11 +13,10 @@ export function downloadUrl(href: string, filename: string): void {
 
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
-  try {
-    downloadUrl(url, filename)
-  } finally {
-    URL.revokeObjectURL(url)
-  }
+  downloadUrl(url, filename)
+  // WebKit dereferences the href asynchronously after the click; revoking
+  // in the same tick aborts the download.
+  setTimeout(() => URL.revokeObjectURL(url), 40_000)
 }
 
 // Local-time `prefix-YYYYMMDD-HHMMSS.ext` for collision-resistant export names.

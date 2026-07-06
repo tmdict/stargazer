@@ -15,11 +15,12 @@ import {
   getSkillLocaleDict,
   hasSkillLocale,
   loadCharacterImages,
-  loadCharacters,
-  loadIcons,
 } from '@/utils/dataLoader'
-import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
+import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, slotLabel } from '@/utils/skillLabels'
+
+// The pane's skill-text tokens are styled by content.css's unscoped rules.
+import '@/styles/content.css'
 
 const { isOpen, query, selectHandler, open, close } = useSearchOverlay()
 const i18n = useI18nStore()
@@ -87,11 +88,8 @@ interface OverlayRow {
   portrait: boolean
   alt: string
   hit?: SearchHit
-  skillName: string | null
   chip: string
   nameText?: string
-  /** Wide mode: count of this hero's further hits (shown in the pane). */
-  more?: number
 }
 
 const hitRows = computed<OverlayRow[]>(() => {
@@ -106,12 +104,6 @@ const hitRows = computed<OverlayRow[]>(() => {
       portrait: i === 0,
       alt: heroName(r.slug),
       hit,
-      // Description hits lead with the skill's name in the hit's language;
-      // name and skill-name hits already carry their name as the snippet.
-      skillName:
-        hit.loc === 'description' && hit.slot
-          ? (getSkillFile(hit.locale, r.slug)?.[hit.slot]?.n?.trim() ?? null)
-          : null,
       chip: hit.slot ? slotLabel(hit.slot, appLang.value) : '',
     })),
   )
@@ -127,20 +119,20 @@ const recentRows = computed<OverlayRow[]>(() =>
       lang: textLang.value,
       portrait: true,
       alt: heroName(slug),
-      skillName: null,
       chip: '',
       nameText: heroName(slug),
     })),
 )
 
-// Wide mode collapses the list to one row per hero (best hit + "+N"); the
-// pane shows everything about the selection, so nothing is hidden.
+// Wide mode collapses the list to one portrait + name row per hero; the pane
+// carries the hit text, so nothing is hidden.
 const heroRows = computed<OverlayRow[]>(() => {
   const rs = results.value
   if (!rs) return []
   return rs.flatMap((r) => {
     const hit = r.hits[0]
     if (!hit) return []
+    const name = heroName(r.slug)
     return [
       {
         key: `hero:${r.slug}`,
@@ -148,11 +140,9 @@ const heroRows = computed<OverlayRow[]>(() => {
         href: `/${hit.locale}/skill/${r.slug}${hit.slot ? `#${hit.slot}` : ''}`,
         lang: hit.locale,
         portrait: true,
-        alt: heroName(r.slug),
-        hit,
-        skillName: null,
+        alt: name,
         chip: '',
-        more: r.hits.length > 1 ? r.hits.length - 1 : undefined,
+        nameText: name,
       },
     ]
   })
@@ -191,13 +181,13 @@ interface PaneHit {
   href: string
   /** Language of this hit's title and body text. */
   lang: SkillLocale
-  /** Highlighted title (name and skill-name hits carry the match). */
+  /** Highlighted title when the match is itself a name (hero or skill name);
+   * description hits are titled by typeLine. */
   title: Snippet | null
-  /** Plain title (description hits: the skill's name). */
-  titleText: string | null
+  /** Chrome-language slot + level heading, e.g. "Ultimate · LV 2". */
   typeLine: string
-  /** Matched text in full, highlight included; d[0] as context for name hits. */
-  body: Snippet | null
+  /** Matched text in full, token-styled; d[0] as context for skill-name hits. */
+  body: RichPiece[] | null
 }
 
 const paneHero = computed(() =>
@@ -234,36 +224,15 @@ const paneHits = computed<PaneHit[]>(() => {
         bodyText = slotData.d[0] ?? null
       }
     }
-    const cleaned = bodyText ? cleanSkillText(bodyText) : null
-    const body = cleaned
-      ? (renderSnippet(cleaned, q, cleaned.length) ?? { pre: cleaned, match: '', post: '' })
-      : null
     return {
       key: `${hero.slug}:${slot ?? 'name'}:${i}`,
       href: `/${hit.locale}/skill/${hero.slug}${slot ? `#${slot}` : ''}`,
       lang: hit.locale,
       title: hit.loc === 'description' ? null : hit.snippet,
-      titleText: hit.loc === 'description' ? (slotData?.n?.trim() ?? typeLine) : null,
       typeLine,
-      body,
+      body: bodyText ? renderRichText(bodyText, q) : null,
     }
   })
-})
-
-const paneMeta = computed(() => {
-  const hero = paneHero.value
-  if (!hero) return null
-  const character = loadCharacters().find((c) => c.name === hero.slug)
-  const icons = loadIcons()
-  return {
-    portrait: loadCharacterImages()[hero.slug] ?? '',
-    alt: heroName(hero.slug),
-    badges: character
-      ? [icons[`faction-${character.faction}`], icons[`class-${character.class}`]].filter(
-          (icon): icon is string => Boolean(icon),
-        )
-      : [],
-  }
 })
 
 // Below the deep-search threshold only hero names match; say so instead of
@@ -496,20 +465,14 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                 />
                 <span v-else class="sso-indent" aria-hidden="true"></span>
                 <span v-if="row.nameText" class="sso-snip">{{ row.nameText }}</span>
-                <span v-else-if="row.hit" class="sso-snip" :lang="row.lang">
-                  <span v-if="row.hit.loc === 'skill-name'" class="sso-skill"
-                    >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
-                    >{{ row.hit.snippet.post }}</span
-                  >
-                  <template v-else>
-                    <template v-if="row.skillName"
-                      ><span class="sso-skill">{{ row.skillName }}</span> ·
-                    </template>
-                    {{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
-                    >{{ row.hit.snippet.post }}
-                  </template>
-                </span>
-                <span v-if="row.more" class="sso-more">+{{ row.more }}</span>
+                <span
+                  v-else-if="row.hit"
+                  class="sso-snip"
+                  :class="{ 'sso-skill': row.hit.loc === 'skill-name' }"
+                  :lang="row.lang"
+                  >{{ row.hit.snippet.pre }}<mark>{{ row.hit.snippet.match }}</mark
+                  >{{ row.hit.snippet.post }}</span
+                >
                 <span v-if="row.chip" class="sso-chip">{{ row.chip }}</span>
               </a>
 
@@ -522,17 +485,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
               </div>
             </div>
 
-            <div v-if="paneVisible && paneMeta" class="sso-pane">
-              <div class="sso-pane-meta">
-                <img class="sso-pane-portrait" :src="paneMeta.portrait" :alt="paneMeta.alt" />
-                <img
-                  v-for="(badge, bi) in paneMeta.badges"
-                  :key="bi"
-                  class="sso-pane-badge"
-                  :src="badge"
-                  alt=""
-                />
-              </div>
+            <div v-if="paneVisible" class="sso-pane">
               <template v-for="(paneHit, hi) in paneHits" :key="paneHit.key">
                 <div v-if="hi > 0" class="sso-pane-div"></div>
                 <a
@@ -546,21 +499,27 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                   "
                   @mousemove="paneHitIndex = hi"
                 >
-                  <span class="sso-pane-skill" :lang="paneHit.lang">
-                    <template v-if="paneHit.title"
-                      >{{ paneHit.title.pre }}<mark>{{ paneHit.title.match }}</mark
-                      >{{ paneHit.title.post }}</template
-                    >
-                    <template v-else>{{ paneHit.titleText }}</template>
-                  </span>
-                  <!-- Chrome-language slot label inside content-language text. -->
-                  <span v-if="paneHit.typeLine" class="sso-pane-type" :lang="i18n.currentLocale"
-                    >({{ paneHit.typeLine }})</span
+                  <span v-if="paneHit.title" class="sso-pane-title" :lang="paneHit.lang"
+                    >{{ paneHit.title.pre }}<mark>{{ paneHit.title.match }}</mark
+                    >{{ paneHit.title.post }}</span
                   >
+                  <!-- Chrome-language heading above content-language body. -->
+                  <span v-else class="sso-pane-title" :lang="i18n.currentLocale">{{
+                    paneHit.typeLine
+                  }}</span>
                   <p v-if="paneHit.body" class="sso-pane-desc" :lang="paneHit.lang">
-                    {{ paneHit.body.pre
-                    }}<mark v-if="paneHit.body.match">{{ paneHit.body.match }}</mark
-                    >{{ paneHit.body.post }}
+                    <template v-for="(piece, pi) in paneHit.body" :key="pi">
+                      <span
+                        v-if="piece.kind === 'stat'"
+                        :class="['skill-stat-tag', `skill-stat-${piece.tag}`]"
+                        >{{ piece.text }}</span
+                      >
+                      <mark v-else-if="piece.marked">{{ piece.text }}</mark>
+                      <span v-else-if="piece.kind === 'value'" class="skill-highlight">{{
+                        piece.text
+                      }}</span>
+                      <template v-else>{{ piece.text }}</template>
+                    </template>
                   </p>
                 </a>
               </template>
@@ -716,7 +675,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 }
 
 .sso-list.side {
-  flex: 0 0 45%;
+  flex: 0 0 200px;
   border-right: 1px solid #33373f;
 }
 
@@ -727,28 +686,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   min-width: 0;
   overflow-y: auto;
   padding: 14px 16px;
-}
-
-.sso-pane-meta {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 10px;
-}
-
-.sso-pane-portrait {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  object-fit: cover;
-  object-position: center 15%;
-}
-
-.sso-pane-badge {
-  width: 17px;
-  height: 17px;
-  border-radius: 50%;
-  border: 1px solid #4a4f58;
 }
 
 .sso-pane-hit {
@@ -763,17 +700,10 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   border-left-color: var(--color-accent);
 }
 
-.sso-pane-skill {
+.sso-pane-title {
   color: var(--color-accent);
   font-weight: 700;
   font-size: 0.9rem;
-}
-
-.sso-pane-type {
-  margin-left: 6px;
-  color: #7a8089;
-  font-size: 0.7rem;
-  font-style: italic;
 }
 
 .sso-pane-desc {
@@ -783,7 +713,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   line-height: 1.6;
 }
 
-.sso-pane-skill mark,
+.sso-pane-title mark,
 .sso-pane-desc mark {
   background: none;
   color: #f2c94c;
@@ -794,22 +724,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   height: 1px;
   margin: 8px 0;
   background: linear-gradient(to right, transparent, #4a4f58, transparent);
-}
-
-.sso-more {
-  flex-shrink: 0;
-  font-size: 0.63rem;
-  font-weight: 700;
-  color: #8a8f98;
-  border: 1px solid #3f444d;
-  padding: 1px 6px;
-  border-radius: 999px;
-}
-
-.sso-row.sel .sso-more {
-  border-color: transparent;
-  background: rgba(255, 255, 255, 0.18);
-  color: #fff;
 }
 
 .sso-row {
@@ -864,8 +778,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   font-weight: 700;
 }
 
-.sso-row.sel .sso-snip,
-.sso-row.sel .sso-skill {
+.sso-row.sel .sso-snip {
   color: #fff;
 }
 
@@ -1012,6 +925,10 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   }
   .sso-portrait {
     height: 42px;
+  }
+  /* Matched text outranks the slot label when row width is scarce. */
+  .sso-chip {
+    display: none;
   }
   .sso-foot {
     display: none;

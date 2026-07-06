@@ -20,12 +20,17 @@ const STAT_LABEL: Record<string, string> = {
 export const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
 export const STAT_TAG_RE = /<([A-Z][A-Za-z0-9_]*)>/g
 
+export function statLabel(tag: string): string {
+  return STAT_LABEL[tag] ?? tag
+}
+
 export function highlightSkillText(text: string): string {
   if (!text) return text
   let out = text.replace(HIGHLIGHT_RE, '<span class="skill-highlight">$1</span>')
-  out = out.replace(STAT_TAG_RE, (_m, tag: string) => {
-    const label = STAT_LABEL[tag] ?? tag
-    return `<span class="skill-stat-tag skill-stat-${tag.toLowerCase()}">${label}</span>`
-  })
+  out = out.replace(
+    STAT_TAG_RE,
+    (_m, tag: string) =>
+      `<span class="skill-stat-tag skill-stat-${tag.toLowerCase()}">${statLabel(tag)}</span>`,
+  )
   return out
 }

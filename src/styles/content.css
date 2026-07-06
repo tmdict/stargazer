@@ -86,11 +86,13 @@
   font-weight: 600;
 }
 
-.content .skill-highlight {
+/* Skill-text tokens (highlightSkillText / renderRichText output). Unscoped:
+   the search overlay's detail pane renders them outside `.content`. */
+.skill-highlight {
   color: var(--color-accent);
 }
 
-.content .skill-stat-tag {
+.skill-stat-tag {
   display: inline-block;
   padding: 0 5px;
   margin: 0 1px;
@@ -103,17 +105,17 @@
 
 /* Stat-tag colors are kept distinct from the teal [[…]] highlight so values
    and stats read as separate inline tokens. */
-.content .skill-stat-atk {
+.skill-stat-atk {
   background: rgba(196, 128, 128, 0.12);
   color: #c98080;
 }
 
-.content .skill-stat-hp {
+.skill-stat-hp {
   background: rgba(148, 178, 125, 0.12);
   color: #b0c79a;
 }
 
-.content .skill-stat-tag:not(.skill-stat-atk):not(.skill-stat-hp) {
+.skill-stat-tag:not(.skill-stat-atk):not(.skill-stat-hp) {
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.85);
 }

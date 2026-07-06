@@ -495,7 +495,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   justify-content: center;
   overflow: hidden;
   border: var(--artifact-border-width, 2px) solid var(--color-bg-white);
-  box-shadow: 0 0 0 2px #fff;
   /* White backing for every season (icons may have transparency). */
   background: #fff;
 }
