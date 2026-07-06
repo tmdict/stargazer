@@ -23,11 +23,40 @@ describe('renderRichText', () => {
     ])
   })
 
-  it('marks a stat chip whole on any overlap', () => {
-    const pieces = renderRichText('<ATK> up', 'atk up')
+  it('skips chip labels when matching, like the search corpus does', () => {
+    const pieces = renderRichText('raises <ATK> by [[5]], ATK up', 'atk')
     expect(pieces).toEqual([
-      { text: 'ATK', kind: 'stat', tag: 'atk', marked: true },
-      { text: ' up', kind: 'plain', marked: true },
+      { text: 'raises ', kind: 'plain', marked: false },
+      { text: 'ATK', kind: 'stat', tag: 'atk', marked: false },
+      { text: ' by ', kind: 'plain', marked: false },
+      { text: '5', kind: 'value', marked: false },
+      { text: ', ', kind: 'plain', marked: false },
+      { text: 'ATK', kind: 'plain', marked: true },
+      { text: ' up', kind: 'plain', marked: false },
+    ])
+  })
+
+  it('marks a phrase spanning an interleaved chip', () => {
+    expect(renderRichText('[[150%]]<ATK> damage', '150% damage')).toEqual([
+      { text: '150%', kind: 'value', marked: true },
+      { text: 'ATK', kind: 'stat', tag: 'atk', marked: false },
+      { text: ' damage', kind: 'plain', marked: true },
+    ])
+  })
+
+  it('collapses whitespace runs so corpus matches still mark', () => {
+    expect(renderRichText('summons Elona. \nActive. Bryon', 'elona. active')).toEqual([
+      { text: 'summons ', kind: 'plain', marked: false },
+      { text: 'Elona. Active', kind: 'plain', marked: true },
+      { text: '. Bryon', kind: 'plain', marked: false },
+    ])
+  })
+
+  it('keeps mark offsets exact after length-changing case folds', () => {
+    expect(renderRichText('İlk vuruş kalıcı hasar', 'kalıcı')).toEqual([
+      { text: 'İlk vuruş ', kind: 'plain', marked: false },
+      { text: 'kalıcı', kind: 'plain', marked: true },
+      { text: ' hasar', kind: 'plain', marked: false },
     ])
   })
 

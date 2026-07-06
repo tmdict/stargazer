@@ -21,6 +21,9 @@ import {
 import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, slotLabel } from '@/utils/skillLabels'
 
+// The pane's skill-text tokens are styled by content.css's unscoped rules.
+import '@/styles/content.css'
+
 const { isOpen, query, selectHandler, open, close } = useSearchOverlay()
 const i18n = useI18nStore()
 const route = useRoute()
@@ -190,7 +193,8 @@ interface PaneHit {
   href: string
   /** Language of this hit's title and body text. */
   lang: SkillLocale
-  /** Highlighted hero-name title (name hits); slot hits are titled by typeLine. */
+  /** Highlighted title for hits whose match IS a name (hero or skill name);
+   * description hits are titled by typeLine instead. */
   title: Snippet | null
   /** Chrome-language slot + level heading, e.g. "Ultimate · LV 2". */
   typeLine: string
@@ -236,7 +240,7 @@ const paneHits = computed<PaneHit[]>(() => {
       key: `${hero.slug}:${slot ?? 'name'}:${i}`,
       href: `/${hit.locale}/skill/${hero.slug}${slot ? `#${slot}` : ''}`,
       lang: hit.locale,
-      title: hit.loc === 'name' ? hit.snippet : null,
+      title: hit.loc === 'description' ? null : hit.snippet,
       typeLine,
       body: bodyText ? renderRichText(bodyText, q) : null,
     }
@@ -783,34 +787,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   background: none;
   color: #f2c94c;
   font-weight: 700;
-}
-
-/* Skill-text tokens, mirroring the reader's palette (content.css). */
-.sso-pane-desc .skill-highlight {
-  color: var(--color-accent);
-}
-
-.sso-pane-desc .skill-stat-tag {
-  display: inline-block;
-  padding: 0 5px;
-  margin: 0 1px;
-  border-radius: 3px;
-  font-size: 0.82em;
-  font-weight: 600;
-  vertical-align: 1px;
-  white-space: nowrap;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.sso-pane-desc .skill-stat-atk {
-  background: rgba(196, 128, 128, 0.12);
-  color: #c98080;
-}
-
-.sso-pane-desc .skill-stat-hp {
-  background: rgba(148, 178, 125, 0.12);
-  color: #b0c79a;
 }
 
 .sso-pane-div {
