@@ -101,8 +101,6 @@ interface OverlayRow {
   hit?: SearchHit
   chip: string
   nameText?: string
-  /** Wide mode: faction/class icons rendered instead of a snippet. */
-  badges?: string[]
 }
 
 const hitRows = computed<OverlayRow[]>(() => {
@@ -137,8 +135,8 @@ const recentRows = computed<OverlayRow[]>(() =>
     })),
 )
 
-// Wide mode collapses the list to icon-only hero rows; the pane carries all
-// the text, so nothing is hidden.
+// Wide mode collapses the list to one portrait + name row per hero; the pane
+// carries the hit text, so nothing is hidden.
 const heroRows = computed<OverlayRow[]>(() => {
   const rs = results.value
   if (!rs) return []
@@ -154,7 +152,7 @@ const heroRows = computed<OverlayRow[]>(() => {
         portrait: true,
         alt: heroName(r.slug),
         chip: '',
-        badges: heroBadges(r.slug),
+        nameText: heroName(r.slug),
       },
     ]
   })
@@ -247,15 +245,7 @@ const paneHits = computed<PaneHit[]>(() => {
   })
 })
 
-const paneMeta = computed(() => {
-  const hero = paneHero.value
-  if (!hero) return null
-  return {
-    portrait: loadCharacterImages()[hero.slug] ?? '',
-    alt: heroName(hero.slug),
-    badges: heroBadges(hero.slug),
-  }
-})
+const paneBadges = computed(() => (paneHero.value ? heroBadges(paneHero.value.slug) : []))
 
 // Below the deep-search threshold only hero names match; say so instead of
 // looking mysteriously thin.
@@ -486,10 +476,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                   class="sso-portrait"
                 />
                 <span v-else class="sso-indent" aria-hidden="true"></span>
-                <span v-if="row.badges" class="sso-row-badges" aria-hidden="true">
-                  <img v-for="(badge, bi) in row.badges" :key="bi" :src="badge" alt="" />
-                </span>
-                <span v-else-if="row.nameText" class="sso-snip">{{ row.nameText }}</span>
+                <span v-if="row.nameText" class="sso-snip">{{ row.nameText }}</span>
                 <span
                   v-else-if="row.hit"
                   class="sso-snip"
@@ -510,11 +497,10 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
               </div>
             </div>
 
-            <div v-if="paneVisible && paneMeta" class="sso-pane">
-              <div class="sso-pane-meta">
-                <img class="sso-pane-portrait" :src="paneMeta.portrait" :alt="paneMeta.alt" />
+            <div v-if="paneVisible" class="sso-pane">
+              <div v-if="paneBadges.length" class="sso-pane-meta">
                 <img
-                  v-for="(badge, bi) in paneMeta.badges"
+                  v-for="(badge, bi) in paneBadges"
                   :key="bi"
                   class="sso-pane-badge"
                   :src="badge"
@@ -710,20 +696,8 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 }
 
 .sso-list.side {
-  flex: 0 0 128px;
+  flex: 0 0 200px;
   border-right: 1px solid #33373f;
-}
-
-.sso-row-badges {
-  display: inline-flex;
-  gap: 4px;
-}
-
-.sso-row-badges img {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 1px solid #4a4f58;
 }
 
 /* ---------- detail pane (≥1220px) ---------- */
@@ -740,14 +714,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   align-items: center;
   gap: 9px;
   margin-bottom: 10px;
-}
-
-.sso-pane-portrait {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  object-fit: cover;
-  object-position: center 15%;
 }
 
 .sso-pane-badge {
