@@ -15,8 +15,6 @@ import {
   getSkillLocaleDict,
   hasSkillLocale,
   loadCharacterImages,
-  loadCharacters,
-  loadIcons,
 } from '@/utils/dataLoader'
 import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, slotLabel } from '@/utils/skillLabels'
@@ -77,15 +75,6 @@ const queryActive = computed(() => trimmedQuery.value.length > 0)
 
 function heroName(slug: string): string {
   return curatedHeroName(slug, appLang.value)
-}
-
-function heroBadges(slug: string): string[] {
-  const character = loadCharacters().find((c) => c.name === slug)
-  if (!character) return []
-  const icons = loadIcons()
-  return [icons[`faction-${character.faction}`], icons[`class-${character.class}`]].filter(
-    (icon): icon is string => Boolean(icon),
-  )
 }
 
 // One row per hit; the first row of a hero group carries the portrait and
@@ -245,8 +234,6 @@ const paneHits = computed<PaneHit[]>(() => {
     }
   })
 })
-
-const paneBadges = computed(() => (paneHero.value ? heroBadges(paneHero.value.slug) : []))
 
 // Below the deep-search threshold only hero names match; say so instead of
 // looking mysteriously thin.
@@ -499,15 +486,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
             </div>
 
             <div v-if="paneVisible" class="sso-pane">
-              <div v-if="paneBadges.length" class="sso-pane-meta">
-                <img
-                  v-for="(badge, bi) in paneBadges"
-                  :key="bi"
-                  class="sso-pane-badge"
-                  :src="badge"
-                  alt=""
-                />
-              </div>
               <template v-for="(paneHit, hi) in paneHits" :key="paneHit.key">
                 <div v-if="hi > 0" class="sso-pane-div"></div>
                 <a
@@ -708,20 +686,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   min-width: 0;
   overflow-y: auto;
   padding: 14px 16px;
-}
-
-.sso-pane-meta {
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  margin-bottom: 10px;
-}
-
-.sso-pane-badge {
-  width: 21px;
-  height: 21px;
-  border-radius: 50%;
-  border: 1px solid #4a4f58;
 }
 
 .sso-pane-hit {
