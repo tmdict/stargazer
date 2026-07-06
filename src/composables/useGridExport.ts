@@ -1,7 +1,40 @@
 import { useI18nStore } from '@/stores/i18n'
 import { copyImageBlob } from '@/utils/clipboard'
-import { downloadUrl, timestampedName } from '@/utils/download'
+import { downloadBlob, timestampedName } from '@/utils/download'
 import { useToast } from './useToast'
+
+// True WebKit only: Safari on any platform, plus every iOS/iPadOS browser
+// (all WKWebView). Blink UAs also claim "AppleWebKit", so Chrome-likes must
+// be excluded; iPadOS reports a Mac platform, hence the touch-points check.
+function isWebKit(): boolean {
+  return (
+    /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform)) ||
+    (/AppleWebKit/.test(navigator.userAgent) && !/Chrom|Edg|OPR/.test(navigator.userAgent))
+  )
+}
+
+const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => (await fetch(dataUrl)).blob()
+
+// Export-only style overrides: html-to-image styles its clone from each node's
+// computed style, so overrides are set inline (always reflected by
+// getComputedStyle); the returned restore puts the previous inline values back.
+function overrideForCapture(
+  root: HTMLElement,
+  selector: string,
+  overrides: Record<string, string>,
+): () => void {
+  const restores = Array.from(root.querySelectorAll<HTMLElement>(selector)).map((el) => {
+    const style = el.style as CSSStyleDeclaration & Record<string, string>
+    const prev: Record<string, string> = {}
+    for (const [key, value] of Object.entries(overrides)) {
+      prev[key] = style[key]
+      style[key] = value
+    }
+    return () => Object.assign(style, prev)
+  })
+  return () => restores.forEach((restore) => restore())
+}
 
 interface ExportOptions {
   showPerspective: boolean
@@ -35,35 +68,31 @@ export function useGridExport() {
       throw new Error(`Capture target not found: ${selector}`)
     }
 
-    // Hide the 5 v 5 active-board ring / hover tint in the export. html-to-image styles
-    // its clone from each node's computed style, so set the override inline (always
-    // reflected by getComputedStyle); transition: none keeps it instant so the border
-    // isn't captured mid-fade. Restored in finally.
-    const boards = Array.from(containerElement.querySelectorAll<HTMLElement>('.grid-board'))
-    const restoreBoards = boards.map((el) => {
-      const prev = {
-        transition: el.style.transition,
-        borderColor: el.style.borderColor,
-        background: el.style.background,
-      }
-      el.style.transition = 'none'
-      el.style.borderColor = 'transparent'
-      el.style.background = 'transparent'
-      return () => {
-        el.style.transition = prev.transition
-        el.style.borderColor = prev.borderColor
-        el.style.background = prev.background
-      }
+    // Hide the 5 v 5 active-board ring / hover tint; transition: none keeps it
+    // instant so the border isn't captured mid-fade.
+    const restoreBoards = overrideForCapture(containerElement, '.grid-board', {
+      transition: 'none',
+      borderColor: 'transparent',
+      background: 'transparent',
     })
 
+    const toPngOptions = {
+      quality: 1.0,
+      pixelRatio: 2,
+      backgroundColor: 'transparent',
+      filter: options.filter,
+    }
+
+    // WebKit rasterizes the foreignObject snapshot before its embedded images
+    // finish decoding (WebKit bug 99677) and drops the slowest — the remote
+    // artifact WebP; a throwaway pass primes the image cache for the kept pass.
+    const capture = async (element: HTMLElement): Promise<string> => {
+      if (isWebKit()) await toPng(element, toPngOptions)
+      return toPng(element, toPngOptions)
+    }
+
     try {
-      // Generate PNG from the target (includes all transforms)
-      let dataUrl = await toPng(containerElement, {
-        quality: 1.0,
-        pixelRatio: 2, // Higher quality export
-        backgroundColor: 'transparent', // Transparent background
-        filter: options.filter,
-      })
+      let dataUrl = await capture(containerElement)
 
       // If in perspective mode, crop the image to remove empty space
       if (options.showPerspective) {
@@ -75,19 +104,14 @@ export function useGridExport() {
       if (options.appendTarget) {
         const appendElement = document.querySelector<HTMLElement>(options.appendTarget)
         if (appendElement) {
-          const appendUrl = await toPng(appendElement, {
-            quality: 1.0,
-            pixelRatio: 2,
-            backgroundColor: 'transparent',
-            filter: options.filter,
-          })
+          const appendUrl = await capture(appendElement)
           dataUrl = await stackImagesVertically(dataUrl, appendUrl)
         }
       }
 
       return dataUrl
     } finally {
-      restoreBoards.forEach((restore) => restore())
+      restoreBoards()
     }
   }
 
@@ -162,7 +186,7 @@ export function useGridExport() {
   const copyToClipboard = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-      const blob = await (await fetch(dataUrl)).blob()
+      const blob = await dataUrlToBlob(dataUrl)
       await copyImageBlob(blob)
       success(i18n.t('app.copied-clipboard'))
     } catch (err) {
@@ -177,7 +201,9 @@ export function useGridExport() {
   const downloadAsImage = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-      downloadUrl(dataUrl, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
+      // iPadOS Safari silently drops <a download> clicks on multi-MB data: URLs.
+      const blob = await dataUrlToBlob(dataUrl)
+      downloadBlob(blob, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
       success(i18n.t('app.grid-downloaded'))
     } catch (err) {
       console.error('Failed to export grid:', err)
