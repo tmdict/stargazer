@@ -69,6 +69,18 @@ export function useGridExport() {
       }
     })
 
+    // WebKit's SVG-image rasterizer paints box-shadow without the element's
+    // border-radius, leaving the artifact halo as a white square behind the
+    // icon; exports drop the halo on every engine so they render alike.
+    const halos = Array.from(containerElement.querySelectorAll<HTMLElement>('.artifact-circle'))
+    const restoreHalos = halos.map((el) => {
+      const prev = el.style.boxShadow
+      el.style.boxShadow = 'none'
+      return () => {
+        el.style.boxShadow = prev
+      }
+    })
+
     const toPngOptions = {
       quality: 1.0,
       pixelRatio: 2,
@@ -105,6 +117,7 @@ export function useGridExport() {
       return dataUrl
     } finally {
       restoreBoards.forEach((restore) => restore())
+      restoreHalos.forEach((restore) => restore())
     }
   }
 
