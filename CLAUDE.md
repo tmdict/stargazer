@@ -19,6 +19,11 @@ Add a comment only when the code can't tell the story itself: a non-obvious mech
 - One comment per idea, not per branch: when branches share a rule or only one case is subtle, write a single comment for that rule or case instead of tagging each branch.
 - Keep comments concise, neutral, and current-state: no editorializing, and no past-state or migration notes ("now", "previously", "replaces", "hoisted from", etc.).
 
+### Commit Messages
+
+- Keep them concise: a short imperative subject line, plus a brief body only when the why isn't visible in the diff. The comment guidelines above apply: lead with the why, no editorializing, no narrating the diff.
+- No attribution or tool metadata: omit Co-Authored-By trailers, AI session links, and similar boilerplate.
+
 ## DOCUMENTATION
 
 For comprehensive project documentation, see:
