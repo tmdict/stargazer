@@ -38,11 +38,11 @@ export interface RichPiece {
   marked: boolean
 }
 
-/** Renders raw skill text with its token styling intact, marking the first
- * query match. Matching runs on the corpus view of the text — chip labels
- * skipped and whitespace runs collapsed, as in {@link cleanSkillText} — so
- * the pane marks what the search actually hit; residual disagreements (a
- * whitespace run split across a chip) render unmarked rather than mis-marked. */
+/** Renders raw skill text as styled pieces with the first query match marked.
+ * Matching runs on the corpus view of the text — chip labels skipped and
+ * whitespace runs collapsed, as in {@link cleanSkillText} — so the mark lands
+ * where the search hit; residual mismatches (a run split across a chip)
+ * render unmarked. */
 export function renderRichText(raw: string, query: string): RichPiece[] {
   const segments: Omit<RichPiece, 'marked'>[] = []
   const pushText = (text: string, kind: 'plain' | 'value') =>

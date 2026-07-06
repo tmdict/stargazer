@@ -143,6 +143,7 @@ const heroRows = computed<OverlayRow[]>(() => {
   return rs.flatMap((r) => {
     const hit = r.hits[0]
     if (!hit) return []
+    const name = heroName(r.slug)
     return [
       {
         key: `hero:${r.slug}`,
@@ -150,9 +151,9 @@ const heroRows = computed<OverlayRow[]>(() => {
         href: `/${hit.locale}/skill/${r.slug}${hit.slot ? `#${hit.slot}` : ''}`,
         lang: hit.locale,
         portrait: true,
-        alt: heroName(r.slug),
+        alt: name,
         chip: '',
-        nameText: heroName(r.slug),
+        nameText: name,
       },
     ]
   })
@@ -191,8 +192,8 @@ interface PaneHit {
   href: string
   /** Language of this hit's title and body text. */
   lang: SkillLocale
-  /** Highlighted title for hits whose match IS a name (hero or skill name);
-   * description hits are titled by typeLine instead. */
+  /** Highlighted title when the match is itself a name (hero or skill name);
+   * description hits are titled by typeLine. */
   title: Snippet | null
   /** Chrome-language slot + level heading, e.g. "Ultimate · LV 2". */
   typeLine: string
@@ -524,7 +525,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                     >{{ paneHit.title.pre }}<mark>{{ paneHit.title.match }}</mark
                     >{{ paneHit.title.post }}</span
                   >
-                  <!-- Chrome-language slot label heading content-language text. -->
+                  <!-- Chrome-language heading above content-language body. -->
                   <span v-else class="sso-pane-title" :lang="i18n.currentLocale">{{
                     paneHit.typeLine
                   }}</span>
