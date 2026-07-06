@@ -16,6 +16,26 @@ function isWebKit(): boolean {
 
 const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => (await fetch(dataUrl)).blob()
 
+// Export-only style overrides: html-to-image styles its clone from each node's
+// computed style, so overrides are set inline (always reflected by
+// getComputedStyle); the returned restore puts the previous inline values back.
+function overrideForCapture(
+  root: HTMLElement,
+  selector: string,
+  overrides: Record<string, string>,
+): () => void {
+  const restores = Array.from(root.querySelectorAll<HTMLElement>(selector)).map((el) => {
+    const style = el.style as CSSStyleDeclaration & Record<string, string>
+    const prev: Record<string, string> = {}
+    for (const [key, value] of Object.entries(overrides)) {
+      prev[key] = style[key]
+      style[key] = value
+    }
+    return () => Object.assign(style, prev)
+  })
+  return () => restores.forEach((restore) => restore())
+}
+
 interface ExportOptions {
   showPerspective: boolean
   perspectiveCompression?: number
@@ -48,37 +68,19 @@ export function useGridExport() {
       throw new Error(`Capture target not found: ${selector}`)
     }
 
-    // Hide the 5 v 5 active-board ring / hover tint in the export. html-to-image styles
-    // its clone from each node's computed style, so set the override inline (always
-    // reflected by getComputedStyle); transition: none keeps it instant so the border
-    // isn't captured mid-fade. Restored in finally.
-    const boards = Array.from(containerElement.querySelectorAll<HTMLElement>('.grid-board'))
-    const restoreBoards = boards.map((el) => {
-      const prev = {
-        transition: el.style.transition,
-        borderColor: el.style.borderColor,
-        background: el.style.background,
-      }
-      el.style.transition = 'none'
-      el.style.borderColor = 'transparent'
-      el.style.background = 'transparent'
-      return () => {
-        el.style.transition = prev.transition
-        el.style.borderColor = prev.borderColor
-        el.style.background = prev.background
-      }
+    // Hide the 5 v 5 active-board ring / hover tint; transition: none keeps it
+    // instant so the border isn't captured mid-fade.
+    const restoreBoards = overrideForCapture(containerElement, '.grid-board', {
+      transition: 'none',
+      borderColor: 'transparent',
+      background: 'transparent',
     })
 
     // WebKit's SVG-image rasterizer paints box-shadow without the element's
     // border-radius, leaving the artifact halo as a white square behind the
     // icon; exports drop the halo on every engine so they render alike.
-    const halos = Array.from(containerElement.querySelectorAll<HTMLElement>('.artifact-circle'))
-    const restoreHalos = halos.map((el) => {
-      const prev = el.style.boxShadow
-      el.style.boxShadow = 'none'
-      return () => {
-        el.style.boxShadow = prev
-      }
+    const restoreHalos = overrideForCapture(containerElement, '.artifact-circle', {
+      boxShadow: 'none',
     })
 
     const toPngOptions = {
@@ -116,8 +118,8 @@ export function useGridExport() {
 
       return dataUrl
     } finally {
-      restoreBoards.forEach((restore) => restore())
-      restoreHalos.forEach((restore) => restore())
+      restoreBoards()
+      restoreHalos()
     }
   }
 
