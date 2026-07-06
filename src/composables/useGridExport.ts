@@ -71,22 +71,20 @@ export function useGridExport() {
 
     const toPngOptions = {
       quality: 1.0,
-      pixelRatio: 2, // Higher quality export
-      backgroundColor: 'transparent', // Transparent background
+      pixelRatio: 2,
+      backgroundColor: 'transparent',
       filter: options.filter,
     }
 
     // WebKit rasterizes the foreignObject snapshot before its embedded images
-    // finish decoding (WebKit bug 99677), dropping the slowest one — in practice
-    // the remote artifact WebP, whose white backing circle then paints alone. A
-    // throwaway pass primes the image cache so the kept pass paints completely.
+    // finish decoding (WebKit bug 99677) and drops the slowest — the remote
+    // artifact WebP; a throwaway pass primes the image cache for the kept pass.
     const capture = async (element: HTMLElement): Promise<string> => {
       if (isWebKit()) await toPng(element, toPngOptions)
       return toPng(element, toPngOptions)
     }
 
     try {
-      // Generate PNG from the target (includes all transforms)
       let dataUrl = await capture(containerElement)
 
       // If in perspective mode, crop the image to remove empty space
@@ -196,8 +194,7 @@ export function useGridExport() {
   const downloadAsImage = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-      // Via a blob: URL — iPadOS Safari silently drops <a download> clicks on
-      // multi-megabyte data: URLs.
+      // iPadOS Safari silently drops <a download> clicks on multi-MB data: URLs.
       const blob = await dataUrlToBlob(dataUrl)
       downloadBlob(blob, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
       success(i18n.t('app.grid-downloaded'))
