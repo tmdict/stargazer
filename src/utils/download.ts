@@ -14,8 +14,8 @@ export function downloadUrl(href: string, filename: string): void {
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob)
   downloadUrl(url, filename)
-  // WebKit dereferences the href asynchronously after the click, so a same-tick
-  // revoke aborts the download; revoke on a generous delay instead.
+  // WebKit dereferences the href asynchronously after the click; revoking
+  // in the same tick aborts the download.
   setTimeout(() => URL.revokeObjectURL(url), 40_000)
 }
 
