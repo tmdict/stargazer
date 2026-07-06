@@ -1,7 +1,20 @@
 import { useI18nStore } from '@/stores/i18n'
 import { copyImageBlob } from '@/utils/clipboard'
-import { downloadUrl, timestampedName } from '@/utils/download'
+import { downloadBlob, timestampedName } from '@/utils/download'
 import { useToast } from './useToast'
+
+// True WebKit only: Safari on any platform, plus every iOS/iPadOS browser
+// (all WKWebView). Blink UAs also claim "AppleWebKit", so Chrome-likes must
+// be excluded; iPadOS reports a Mac platform, hence the touch-points check.
+function isWebKit(): boolean {
+  return (
+    /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.platform)) ||
+    (/AppleWebKit/.test(navigator.userAgent) && !/Chrom|Edg|OPR/.test(navigator.userAgent))
+  )
+}
+
+const dataUrlToBlob = async (dataUrl: string): Promise<Blob> => (await fetch(dataUrl)).blob()
 
 interface ExportOptions {
   showPerspective: boolean
@@ -56,14 +69,25 @@ export function useGridExport() {
       }
     })
 
+    const toPngOptions = {
+      quality: 1.0,
+      pixelRatio: 2, // Higher quality export
+      backgroundColor: 'transparent', // Transparent background
+      filter: options.filter,
+    }
+
+    // WebKit rasterizes the foreignObject snapshot before its embedded images
+    // finish decoding (WebKit bug 99677), dropping the slowest one — in practice
+    // the remote artifact WebP, whose white backing circle then paints alone. A
+    // throwaway pass primes the image cache so the kept pass paints completely.
+    const capture = async (element: HTMLElement): Promise<string> => {
+      if (isWebKit()) await toPng(element, toPngOptions)
+      return toPng(element, toPngOptions)
+    }
+
     try {
       // Generate PNG from the target (includes all transforms)
-      let dataUrl = await toPng(containerElement, {
-        quality: 1.0,
-        pixelRatio: 2, // Higher quality export
-        backgroundColor: 'transparent', // Transparent background
-        filter: options.filter,
-      })
+      let dataUrl = await capture(containerElement)
 
       // If in perspective mode, crop the image to remove empty space
       if (options.showPerspective) {
@@ -75,12 +99,7 @@ export function useGridExport() {
       if (options.appendTarget) {
         const appendElement = document.querySelector<HTMLElement>(options.appendTarget)
         if (appendElement) {
-          const appendUrl = await toPng(appendElement, {
-            quality: 1.0,
-            pixelRatio: 2,
-            backgroundColor: 'transparent',
-            filter: options.filter,
-          })
+          const appendUrl = await capture(appendElement)
           dataUrl = await stackImagesVertically(dataUrl, appendUrl)
         }
       }
@@ -162,7 +181,7 @@ export function useGridExport() {
   const copyToClipboard = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-      const blob = await (await fetch(dataUrl)).blob()
+      const blob = await dataUrlToBlob(dataUrl)
       await copyImageBlob(blob)
       success(i18n.t('app.copied-clipboard'))
     } catch (err) {
@@ -177,7 +196,10 @@ export function useGridExport() {
   const downloadAsImage = async (options: ExportOptions): Promise<void> => {
     try {
       const dataUrl = await captureGrid(options)
-      downloadUrl(dataUrl, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
+      // Via a blob: URL — iPadOS Safari silently drops <a download> clicks on
+      // multi-megabyte data: URLs.
+      const blob = await dataUrlToBlob(dataUrl)
+      downloadBlob(blob, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
       success(i18n.t('app.grid-downloaded'))
     } catch (err) {
       console.error('Failed to export grid:', err)
