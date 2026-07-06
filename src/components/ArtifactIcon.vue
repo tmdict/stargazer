@@ -89,7 +89,6 @@ const handleClick = () => {
   justify-content: center;
   position: relative;
   overflow: hidden;
-  box-shadow: 0 0 0 2px var(--color-bg-white);
   font-size: 1rem;
   font-weight: 600;
   text-align: center;

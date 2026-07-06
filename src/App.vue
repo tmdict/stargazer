@@ -264,6 +264,13 @@ nav ul li {
   }
 }
 
+/* The magnifier's handle hangs bottom-right, so box-centering leaves the
+   circle — what the eye reads — ~1px above its siblings; nudge to optically
+   align. */
+.menu-search svg {
+  transform: translateY(1px);
+}
+
 .nav-text-link {
   font-size: 0.85rem;
   font-weight: 600;
