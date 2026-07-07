@@ -1,0 +1,14 @@
+{
+  "id": 118,
+  "name": "lamentis",
+  "level": "s",
+  "faction": "hypogean",
+  "class": "marksman",
+  "damage": "magic",
+  "energy": [600],
+  "range": 7,
+  "season": 7,
+  "tags": {
+    "initial-energy-300": []
+  }
+}

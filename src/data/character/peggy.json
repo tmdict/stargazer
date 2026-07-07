@@ -1,0 +1,14 @@
+{
+  "id": 119,
+  "name": "peggy",
+  "level": "s",
+  "faction": "lightbearer",
+  "class": "support",
+  "damage": "physical",
+  "energy": [600],
+  "range": 6,
+  "season": 7,
+  "tags": {
+    "initial-energy-300": []
+  }
+}
