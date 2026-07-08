@@ -159,15 +159,28 @@ export function packDisplayFlags(flags: DisplayFlags): number {
 }
 
 /* One board's GridState plus its map key, so a restore can rebuild the board on
- * the map it was configured with (tile states carry only the edits). */
+ * the map it was configured with. Note `t` is not edits-only: it carries every
+ * non-default tile including the map's baseline available hexes, because restore
+ * resets all tiles to DEFAULT and replays `t`; `m` mainly keeps currentMap honest
+ * for UI highlight and re-serialization. */
 export type BoardState = GridState & { m?: string }
 
-/* Multi-board state (5 v 5): one BoardState per board, the active board, and the
- * global display flags. */
+/* Every board-level key that carries team content, in the serializer's emission
+ * order. Canonical saved-team data (lib/teams/savedTeam) rebuilds boards from
+ * exactly this list, so a new GridState section must be registered here too or
+ * saved teams would silently drop it — the serializer contract test pins the
+ * two together. `d` is deliberately absent: it is viewer state, not content. */
+export const BOARD_CONTENT_KEYS = ['t', 'c', 'p', 'pr', 'a', 'm'] as const
+
+/* Multi-board state (Teams page): one BoardState per board, the active board,
+ * the global display flags, and the team mode the boards belong to. `mode` is
+ * always written by the serializer but optional on decode (links predating it
+ * infer their mode from the board count — see lib/teams/modes.ts). */
 export interface MultiGridState {
   boards: BoardState[]
   active?: number
   d?: number
+  mode?: string
 }
 
 export interface BoardInput {
@@ -182,6 +195,7 @@ export function serializeMultiGridState(
   boards: BoardInput[],
   activeId: number,
   displayFlags?: DisplayFlags,
+  mode?: string,
 ): MultiGridState {
   const state: MultiGridState = {
     boards: boards.map((b) => ({
@@ -191,6 +205,7 @@ export function serializeMultiGridState(
   }
   if (activeId) state.active = activeId
   if (displayFlags) state.d = packDisplayFlags(displayFlags)
+  if (mode) state.mode = mode
   return state
 }
 

@@ -20,6 +20,10 @@ import { MAX_GRID_COUNT, useGrids } from './grids'
 interface UrlRestoreResult {
   success: boolean
   displayFlags?: DisplayFlags
+  // Multi-board only: false when the payload carried no `d` field, so callers can
+  // keep the viewer's current flags instead of applying unpack defaults (canonical
+  // saved-team data deliberately has no `d` — see lib/teams).
+  hasDisplayFlags?: boolean
   error?: string
 }
 
@@ -218,7 +222,11 @@ export const useUrlStateStore = defineStore('urlState', () => {
       // uniqueness once every board is in.
       grids.dedupeCharacters()
 
-      return { success: true, displayFlags: unpackDisplayFlags(multi.d) }
+      return {
+        success: true,
+        displayFlags: unpackDisplayFlags(multi.d),
+        hasDisplayFlags: multi.d !== undefined,
+      }
     } catch (err) {
       console.error('Failed to restore multi state from encoded string:', err)
       return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }

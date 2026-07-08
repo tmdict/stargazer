@@ -1,22 +1,31 @@
 <script setup lang="ts">
-/* The 5 v 5 grid panel: the global control bar plus the horizontally-scrolling row
-   of five boards. It's the #fiveVFive panel of TeamsView's outer TabView; the tab
-   strip and the roster live in TeamsView. Boards bind to their own context. */
+/* The Teams grid panel: the mode row (picker + team actions), the global control
+   bar, and the horizontally-scrolling row of boards. It's the #teams panel of
+   TeamsView's outer TabView; the tab strip and the roster live in TeamsView.
+   Boards bind to their own context. */
 
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
+import TeamModeControls from '@/components/teams/TeamModeControls.vue'
 import { useGridSwap } from '@/composables/useGridSwap'
+import type { TeamModeKey } from '@/lib/teams/modes'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 defineProps<{
   characters: readonly CharacterType[]
+  activeMode: TeamModeKey
+  // Active-team provenance for the mode row: source name (null = unsaved),
+  // content-dirty flag, and the popover's suggested auto-name.
+  sourceName: string | null
+  dirty: boolean
+  suggestedName: string
   // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid popup.
   tapMode: boolean
-  // Wrap is a desktop-only layout: its toggle is hidden and the row stays single on
-  // the narrow (sheet) view.
+  // Wrap is a desktop-only, 5-board-only layout: its toggle is hidden and the row
+  // stays single on the narrow (sheet) view and in smaller modes.
   canWrap: boolean
 }>()
 
@@ -30,7 +39,16 @@ const showSkills = defineModel<boolean>('showSkills', { required: true })
 // other display flags, so a share link reproduces it.
 const wrap = defineModel<boolean>('wrap', { required: true })
 
-const emit = defineEmits<{ copyLink: []; copyImage: []; download: [] }>()
+const emit = defineEmits<{
+  copyLink: []
+  copyImage: []
+  download: []
+  switchMode: [mode: TeamModeKey]
+  save: []
+  saveAsNew: [name: string]
+  exportTeams: []
+  importFile: [raw: string]
+}>()
 
 const grids = useGrids()
 const i18n = useI18nStore()
@@ -39,6 +57,18 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 <template>
   <div class="teams-boards">
+    <TeamModeControls
+      :active-mode
+      :source-name
+      :dirty
+      :suggested-name
+      @switch-mode="emit('switchMode', $event)"
+      @save="emit('save')"
+      @save-as-new="emit('saveAsNew', $event)"
+      @export-teams="emit('exportTeams')"
+      @import-file="emit('importFile', $event)"
+    />
+
     <GridControls
       :single-row="true"
       :show-wrap-toggle="canWrap"
