@@ -49,7 +49,7 @@ const tabs = computed(() => [
 ])
 
 // The roster TabView is eager (all panels mount at page load), but the saved
-// panel can hold hundreds of SVG thumbnails — mount it on first activation only
+// panel can hold hundreds of SVG thumbnails; mount it on first activation only
 // (sticky, so scroll/rename state survives later tab switches).
 const savedTabSeen = ref(false)
 watch(

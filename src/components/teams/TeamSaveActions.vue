@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* The team actions in the controls' action row, in File-menu order (New, Save,
    Save as New, Import, Export). New detaches from the source team; Save
-   updates it, degrading to Save as New when there is none — its name popover
+   updates it, degrading to Save as New when there is none; its name popover
    creates a new record (Enter commits, Esc cancels). The root is
    display: contents, so every control sits directly in the action row's flex
    flow with its spacing. */

@@ -17,7 +17,7 @@ export interface PreviewUnit {
 
 export interface PreviewBoard {
   mapKey: string
-  // The board's serialized tile states — authoritative for rendering (an empty
+  // The board's serialized tile states, authoritative for rendering (an empty
   // array means an all-default board; undefined means no t section was present).
   tiles?: number[][]
   units: PreviewUnit[]

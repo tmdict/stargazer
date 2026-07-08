@@ -136,7 +136,7 @@ const handleSelectTeam = (team: SavedTeam) => {
   success(i18n.t('app.team-loaded'))
 }
 
-// Backup file of the whole library; import merges (never replaces) — "replace
+// Backup file of the whole library; import merges (never replaces); "replace
 // all" is Delete all + Import.
 const handleExportTeams = () => {
   downloadBlob(

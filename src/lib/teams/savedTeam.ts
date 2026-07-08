@@ -3,7 +3,7 @@
  *
  * `data` is always CANONICAL: the encoded MultiGridState stripped of viewer
  * state (`active` board pointer and `d` display flags) and re-encoded through
- * this codebase's serializer. Team content only — so equal content is byte-equal,
+ * this codebase's serializer. Team content only, so equal content is byte-equal,
  * which is what makes the unsaved-changes compare and import dedupe trustworthy.
  */
 
@@ -72,11 +72,11 @@ export function duplicateName(name: string): string {
 }
 
 /* Validate one record from untrusted storage (hydration) or an import file.
- * Returns a normalized record — name sanitized, data canonicalized — or null.
+ * Returns a normalized record (name sanitized, data canonicalized) or null.
  * Rules: known mode; decodable data whose board count matches the mode. Map keys
  * are NOT checked against the map registry: the serialized `t` tile states are
  * authoritative (restore resets tiles and replays them), so a record referencing
- * a retired map still restores and previews correctly — only the Maps-tab
+ * a retired map still restores and previews correctly; only the Maps-tab
  * highlight has nothing to point at. */
 export function validateSavedTeam(record: unknown): SavedTeam | null {
   if (typeof record !== 'object' || record === null) return null

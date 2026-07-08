@@ -115,7 +115,7 @@ const {
   viewBoxSize,
 } = defineProps<{
   mapKey: string
-  // Explicit [hexId, state] tile states (a record's serialized `t`) — the
+  // Explicit [hexId, state] tile states (a record's serialized `t`), the
   // authoritative source when present, matching restore semantics (all tiles
   // default except these). Omitted = the map config's baseline (empty boards,
   // map pickers).

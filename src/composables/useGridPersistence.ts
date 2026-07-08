@@ -37,7 +37,7 @@ export const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.acti
 /* A mode's persisted active team: the encoded snapshot, the saved team it was
  * loaded from / last saved to (null = not a saved team), and a fingerprint of
  * the mode's default maps at write time. A stale fingerprint discards the slot
- * on load — updating a mode's default map list (a new Supreme League season)
+ * on load: updating a mode's default map list (a new Supreme League season)
  * deliberately hard-resets that mode's active boards while saved teams keep
  * their own data. Versioned so a future shape change is detected, not shape-read. */
 export interface ActiveSlot {
@@ -90,7 +90,7 @@ export interface TeamsPersistence {
   persistMode: (mode: TeamModeKey) => void
   // The mode's stored envelope, or null when absent/corrupt/wrong version.
   load: (mode: TeamModeKey) => ActiveSlot | null
-  // The live boards as an encoded string (reactive reads — usable in computeds).
+  // The live boards as an encoded string (reactive reads, usable in computeds).
   snapshot: () => string
   // Write the current snapshot to the LIVE mode's slot immediately.
   flush: () => void
@@ -179,7 +179,7 @@ export function useTeamsPersistence(
       // Default (pre) flush, matching the Arena autosave: with the synchronous
       // switch sequence the callback coalesces to one post-sequence run that
       // already sees the new mode. The pause flag is defense-in-depth for any
-      // future async step in the sequence — do not remove it as dead code.
+      // future async step in the sequence; do not remove it as dead code.
       watch([snapshot, sourceId], ([encoded]) => {
         if (!paused.value) write(encoded)
       })

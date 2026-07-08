@@ -88,7 +88,7 @@ const restoreStateFromUrl = () => {
       gridStore.teamView = result.displayFlags.teamView ?? false
       gridStore.inverted = result.displayFlags.inverted ?? false
       // Wrap is a 5-board layout; a stray wrap bit on a smaller payload is
-      // ignored (BoardsRow degrades gracefully anyway — this is cosmetic).
+      // ignored (BoardsRow degrades gracefully anyway; this is cosmetic).
       wrapBoards.value = (result.displayFlags.wrap ?? false) && grids.contexts.length === 5
     }
 
