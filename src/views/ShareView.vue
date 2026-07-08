@@ -12,6 +12,7 @@ import IconEdit from '@/components/ui/IconEdit.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useToast } from '@/composables/useToast'
+import { SITE_ORIGIN } from '@/lib/site'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
@@ -49,7 +50,8 @@ const activeContext = computed(() => grids.active!)
 // Set canonical link for share page
 useHead({
   title: 'Share | Stargazer',
-  link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/share' }],
+  meta: [{ property: 'og:url', content: `${SITE_ORIGIN}/share` }],
+  link: [{ rel: 'canonical', href: `${SITE_ORIGIN}/share` }],
 })
 
 // Breakpoint drives responsive sizing only (don't auto-flatten on mobile). Multi

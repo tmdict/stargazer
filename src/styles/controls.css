@@ -1,0 +1,88 @@
+/* Control-bar action buttons, shared by GridControls and the components that
+   render into its rows (ClearButton, TeamSaveActions). One design decision in
+   one place: filled 36px buttons that collapse to round icon-only buttons on
+   mobile. Buttons outside the control bar (popovers, cards) must not use this
+   class, or the mobile collapse would hide their text. */
+
+.control-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-medium);
+  padding: var(--spacing-xs) var(--spacing-md);
+  min-height: 36px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.control-btn:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+.control-btn:active {
+  transform: scale(0.95);
+}
+
+.control-btn.secondary {
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-primary);
+}
+
+.control-btn.secondary:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.control-btn.danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #fff;
+}
+
+.control-btn.danger:hover {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+}
+
+.control-btn .btn-icon {
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .control-btn {
+    border-radius: 999px;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    min-height: 0;
+    justify-content: center;
+  }
+  .control-btn .btn-text {
+    display: none;
+  }
+  .control-btn .btn-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .control-btn {
+    width: 30px;
+    height: 30px;
+  }
+  .control-btn .btn-icon {
+    width: 16px;
+    height: 16px;
+  }
+}

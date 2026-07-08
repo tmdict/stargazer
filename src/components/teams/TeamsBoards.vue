@@ -19,8 +19,8 @@ import { useI18nStore } from '@/stores/i18n'
 defineProps<{
   characters: readonly CharacterType[]
   activeMode: TeamModeKey
-  // Active-team provenance for the mode row: source name (null = unsaved),
-  // content-dirty flag, and the popover's suggested auto-name.
+  // Title-line and save-action state: source name (null = unsaved), content-dirty
+  // flag, and the popover's suggested auto-name.
   sourceName: string | null
   dirty: boolean
   suggestedName: string
@@ -72,7 +72,6 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
       </span>
     </div>
 
-    <!-- Row 1: mode picker + display toggles; row 2: team actions + share actions. -->
     <GridControls
       :show-wrap-toggle="canWrap"
       v-model:wrap="wrap"

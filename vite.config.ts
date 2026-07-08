@@ -7,6 +7,7 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
+import { SITE_ORIGIN } from './src/lib/site'
 import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n'
 
 // SSG Helpers
@@ -114,15 +115,6 @@ function processRenderedPage(route: string, html: string): string {
 
   html = dedupeAssetLinks(html)
 
-  // The template carries the root og:url; point it at the rendered route so
-  // shares of inner pages resolve to the page itself. Only the root-URL tag is
-  // rewritten: pages that set their own og:url (skill heroes) keep theirs.
-  const pageUrl = `https://stargazer.tmdict.com${route === '/' ? '/' : route}`
-  html = html.replace(
-    /<meta property="og:url" content="https:\/\/stargazer\.tmdict\.com\/"\s*\/?>/,
-    `<meta property="og:url" content="${pageUrl}">`,
-  )
-
   const skillMatch = route.match(SKILL_ROUTE_RE)
   if (skillMatch && !(APP_LOCALES as readonly string[]).includes(skillMatch[1])) {
     const href = localeChunkHref(skillMatch[1])
@@ -172,7 +164,7 @@ export default defineConfig({
     onPageRendered: processRenderedPage,
     onFinished() {
       generateSitemap({
-        hostname: 'https://stargazer.tmdict.com',
+        hostname: SITE_ORIGIN,
         changefreq: 'monthly',
         priority: 0.8,
         generateRobotsTxt: true,
