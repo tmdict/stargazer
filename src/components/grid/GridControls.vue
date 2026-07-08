@@ -17,7 +17,7 @@ const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills')
 const teamView = defineModel<boolean>('teamView')
-// Boards-layout toggle, bound only by the 5 v 5 page (gated by showWrapToggle).
+// Boards-layout toggle, bound only by the Teams page (gated by showWrapToggle).
 const wrap = defineModel<boolean>('wrap')
 
 defineProps<{
@@ -26,10 +26,7 @@ defineProps<{
   disableTeamView?: boolean
   // Hides Clear (Map Editor / Debug don't place characters).
   hideTeamControls?: boolean
-  // Lay every control out in one wrapping row (the wide 5 v 5 page) instead of
-  // the default two stacked rows.
-  singleRow?: boolean
-  // Shows the "Wrap" boards-layout toggle (5 v 5 only); the Arena never renders it.
+  // Shows the "Wrap" boards-layout toggle (Teams only); the Arena never renders it.
   showWrapToggle?: boolean
 }>()
 
@@ -47,9 +44,10 @@ const flatView = computed({
 </script>
 
 <template>
-  <div class="grid-controls" :class="{ 'single-row': singleRow }">
-    <!-- Row 1: grid display toggles -->
+  <div class="grid-controls">
+    <!-- Row 1: grid display toggles (plus the page's own, e.g. the mode picker) -->
     <div class="controls-row">
+      <slot name="toggles-start" />
       <label v-if="showWrapToggle" class="grid-toggle-btn" :class="{ active: wrap }">
         <input type="checkbox" v-model="wrap" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.wrap') }}</span>
@@ -84,11 +82,12 @@ const flatView = computed({
         />
         <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
       </label>
+      <MapInvertToggle />
     </div>
 
-    <!-- Row 2: invert + action buttons + clear -->
+    <!-- Row 2: action buttons (plus the page's own, e.g. team save actions) -->
     <div class="controls-row controls-actions">
-      <MapInvertToggle />
+      <slot name="actions-start" />
       <button @click="emit('copyLink')" class="action-btn" :title="i18n.t('app.link')">
         <IconLink :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.link') }}</span>
@@ -113,22 +112,6 @@ const flatView = computed({
   align-items: center;
   gap: var(--spacing-md);
   margin-top: var(--spacing-lg);
-}
-
-/* One wrapping row: flatten both rows (display: contents) so every control is a
-   direct flex child laid out together. */
-/* 5 v 5 sits the controls at the top of the grid card, which already has its own
-   top padding, so drop the extra margin the Arena uses below its grid. */
-.grid-controls.single-row {
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: var(--spacing-md) var(--spacing-lg);
-  margin-top: 0;
-}
-
-.grid-controls.single-row .controls-row {
-  display: contents;
 }
 
 .controls-row {
@@ -219,15 +202,6 @@ const flatView = computed({
 @media (max-width: 768px) {
   .grid-controls {
     gap: var(--spacing-md);
-  }
-  /* The wide single-row layout reverts to the stacked two-row toolbar on mobile
-     (display toggles, then team + actions + clear), same as the Arena. */
-  .grid-controls.single-row {
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-  .grid-controls.single-row .controls-row {
-    display: flex;
   }
   .controls-row {
     gap: 6px;

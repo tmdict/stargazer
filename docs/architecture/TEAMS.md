@@ -20,8 +20,8 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 └──────────┬────────────────────────────────────┬────────────────┘
            ▼                                    ▼
 ┌─ TeamsBoards ──────────────┐    ┌─ TeamsRoster ────────────────┐
-│ - TeamModeControls         │    │ - characters/seasonal/maps   │
-│ - GridControls (flags)     │    │ - SavedTeamsList (lazy)      │
+│ - GridControls + picker    │    │ - characters/seasonal/maps   │
+│   and team save actions    │    │ - SavedTeamsList (lazy)      │
 │ - BoardsRow → GridBoard ×N │    │   → TeamPreview thumbnails   │
 └──────────┬─────────────────┘    └──────────────┬───────────────┘
            ▼                                     ▼
@@ -46,17 +46,22 @@ The page orchestrator: an outer TabView (Teams grid / Image Stitcher — hidden 
 
 ### TeamsBoards (`/src/components/teams/TeamsBoards.vue`)
 
-The grid panel: mode row, global control bar, and a horizontally scrolling row of boards, each bound to its own `GridContext`.
+The grid panel: a two-row control bar (`GridControls` with teams content slotted in), then a horizontally scrolling row of boards, each bound to its own `GridContext`.
 
+- **Row 1 (configure)**: mode picker, then the display toggles (wrap, flat, grid info, team view, skills, targeting, invert)
+- **Row 2 (act)**: editing label + team actions, then the share actions (link, copy, download, clear)
 - **Per-board actions**: swap (drag to reorder, via `useGridSwap`), copy image, download image, clear
-- **Wrap**: the 3-2 two-row layout; 5-board modes on desktop only, serialized with the display flags
+- **Wrap**: the 3-2 two-row boards layout; 5-board modes on desktop only, serialized with the display flags
 
-### TeamModeControls (`/src/components/teams/TeamModeControls.vue`)
+### TeamModePicker (`/src/components/teams/TeamModePicker.vue`)
 
-The mode row above the control bar:
+Segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`, slotted at the head of the toggles row.
 
-- **Mode picker**: segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`
-- **Active-team label**: source team name or "Unsaved team", with a content-dirty dot
+### TeamSaveActions (`/src/components/teams/TeamSaveActions.vue`)
+
+The team half of the action row:
+
+- **Editing label**: "Editing" prefix + source team name (or "Unsaved team"), with a content-dirty dot
 - **Save actions**: Save, and Save as New with a name popover (Enter commits, Esc cancels)
 - **Backup actions**: Export, and Import through a hidden file input
 
