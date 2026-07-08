@@ -3,9 +3,9 @@ import { computed } from 'vue'
 
 import ArtifactIcon from './ArtifactIcon.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
+import { useGridContext } from '@/composables/useGridContext'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { Team } from '@/lib/types/team'
-import { useArtifactStore } from '@/stores/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 
@@ -22,8 +22,11 @@ const emit = defineEmits<{
 }>()
 
 const gameDataStore = useGameDataStore()
-const artifactStore = useArtifactStore()
 const grids = useGrids()
+// The board that opened the popup (injected through GridArtifacts). Picks must
+// land on this board, not the page-wide active board, which any interaction on
+// another board can move while the popup is open.
+const ctx = useGridContext()
 
 // Pre-season first, then by id: mirrors the Seasonal tab ordering.
 const sortedArtifacts = computed(() =>
@@ -37,8 +40,13 @@ const availableArtifacts = computed(() =>
 )
 
 const handleSelect = (artifact: ArtifactType) => {
-  // The store enforces per-team uniqueness; close only on a successful placement.
-  if (artifactStore.placeArtifact(artifact.id, props.team)) emit('close')
+  // Re-check page-wide per-team uniqueness at pick time; the list filter can be
+  // stale by the time the click lands. Close only on a successful placement.
+  if (grids.isArtifactUsed(artifact.id, props.team)) return
+  ctx.setArtifact(props.team, artifact.id)
+  // Active follows interaction, matching drop routing.
+  grids.setActive(ctx.id)
+  emit('close')
 }
 </script>
 

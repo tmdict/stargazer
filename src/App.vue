@@ -14,6 +14,7 @@ import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
 import { useLocaleToggle } from '@/composables/useLocaleToggle'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
+import { useLiftGuard } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
 
@@ -23,6 +24,7 @@ const i18n = useI18nStore()
 const route = useRoute()
 const toggleLocale = useLocaleToggle()
 const { open: openSearch } = useSearchOverlay()
+useLiftGuard()
 
 // Header renders on every route; init here so SSG-only routes whose views
 // don't call initialize (about, skill/*) still get translations. Idempotent.
