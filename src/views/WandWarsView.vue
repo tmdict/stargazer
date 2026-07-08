@@ -4,6 +4,7 @@ import { useHead } from '@unhead/vue'
 
 import WandWarsAnalysis from '@/components/wandwars/WandWarsAnalysis.vue'
 import WandWarsMain from '@/components/wandwars/WandWarsMain.vue'
+import { SITE_ORIGIN } from '@/lib/site'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { downloadBlob } from '@/utils/download'
@@ -19,7 +20,8 @@ useI18nStore().initialize()
 
 useHead({
   title: 'Wand Wars | Stargazer',
-  link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/wandwars' }],
+  meta: [{ property: 'og:url', content: `${SITE_ORIGIN}/wandwars` }],
+  link: [{ rel: 'canonical', href: `${SITE_ORIGIN}/wandwars` }],
 })
 
 const mainTab = ref<'draft' | 'hero-adjustments'>('draft')

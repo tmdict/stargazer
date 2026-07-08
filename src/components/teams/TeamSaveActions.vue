@@ -73,7 +73,7 @@ const handleSave = (): void => {
     <!-- Danger-styled like Clear: both discard the boards' current content. -->
     <button
       type="button"
-      class="team-btn danger"
+      class="control-btn danger"
       :title="i18n.t('app.tooltip-new')"
       :aria-label="i18n.t('app.new')"
       @click="emit('newTeam')"
@@ -83,7 +83,7 @@ const handleSave = (): void => {
     </button>
     <button
       type="button"
-      class="team-btn"
+      class="control-btn"
       :title="
         sourceName !== null
           ? i18n.t('app.tooltip-save', { name: sourceName })
@@ -98,7 +98,7 @@ const handleSave = (): void => {
     <span class="popover-anchor">
       <button
         type="button"
-        class="team-btn secondary"
+        class="control-btn secondary"
         :title="i18n.t('app.tooltip-save-as-new')"
         :aria-label="i18n.t('app.save-as-new')"
         @click="openPopover"
@@ -127,10 +127,10 @@ const handleSave = (): void => {
           @keydown.esc="popoverOpen = false"
         />
         <div class="name-popover-actions">
-          <button type="button" class="team-btn popover-save" @click="commitPopover">
+          <button type="button" class="popover-btn" @click="commitPopover">
             {{ i18n.t('app.save') }}
           </button>
-          <button type="button" class="team-btn secondary" @click="popoverOpen = false">
+          <button type="button" class="popover-btn secondary" @click="popoverOpen = false">
             {{ i18n.t('app.cancel') }}
           </button>
         </div>
@@ -138,7 +138,7 @@ const handleSave = (): void => {
     </span>
     <button
       type="button"
-      class="team-btn secondary"
+      class="control-btn secondary"
       :title="i18n.t('app.tooltip-import')"
       :aria-label="i18n.t('app.import')"
       @click="fileInput?.click()"
@@ -148,7 +148,7 @@ const handleSave = (): void => {
     </button>
     <button
       type="button"
-      class="team-btn secondary"
+      class="control-btn secondary"
       :title="i18n.t('app.tooltip-export')"
       :aria-label="i18n.t('app.export')"
       @click="emit('exportTeams')"
@@ -169,54 +169,6 @@ const handleSave = (): void => {
 <style scoped>
 .team-save-actions {
   display: contents;
-}
-
-.team-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-xs);
-  border: 2px solid var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-medium);
-  padding: var(--spacing-xs) var(--spacing-md);
-  min-height: 36px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all var(--transition-fast);
-  white-space: nowrap;
-}
-
-.team-btn:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.team-btn.secondary {
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
-  border-color: var(--color-border-primary);
-}
-
-.team-btn.secondary:hover {
-  color: var(--color-primary);
-  border-color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
-.team-btn.danger {
-  background: var(--color-danger);
-  border-color: var(--color-danger);
-}
-
-.team-btn.danger:hover {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-}
-
-.btn-icon {
-  flex-shrink: 0;
 }
 
 .popover-anchor {
@@ -273,45 +225,39 @@ const handleSave = (): void => {
   gap: var(--spacing-sm);
 }
 
-.name-popover-actions .team-btn {
+/* Compact dialog buttons; deliberately not .control-btn, so the control bar's
+   mobile icon-only collapse never applies inside the popover. */
+.popover-btn {
   flex: 1;
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-medium);
   min-height: 30px;
   padding: 4px 8px;
   font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
 }
 
-/* Mobile matches the control bar's round icon-only actions. Direct-child
-   selectors keep the popover's text buttons out of the icon-only treatment. */
-@media (max-width: 768px) {
-  .team-save-actions > .team-btn,
-  .popover-anchor > .team-btn {
-    border-radius: 999px;
-    padding: 0;
-    width: 34px;
-    height: 34px;
-    min-height: 0;
-    justify-content: center;
-  }
-  .team-save-actions > .team-btn .btn-text,
-  .popover-anchor > .team-btn .btn-text {
-    display: none;
-  }
-  .team-btn .btn-icon {
-    width: 18px;
-    height: 18px;
-  }
+.popover-btn:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
-@media (max-width: 480px) {
-  .team-save-actions > .team-btn,
-  .popover-anchor > .team-btn {
-    width: 30px;
-    height: 30px;
-  }
-  .team-btn .btn-icon {
-    width: 16px;
-    height: 16px;
-  }
+.popover-btn.secondary {
+  background: var(--color-bg-primary);
+  color: var(--color-text-secondary);
+  border-color: var(--color-border-primary);
+}
+
+.popover-btn.secondary:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-bg-tertiary);
 }
 </style>

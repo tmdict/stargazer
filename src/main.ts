@@ -7,6 +7,7 @@ import { vScrollChain } from '@/directives/scrollChain'
 import router from '@/router'
 
 import './styles/base.css'
+import './styles/controls.css'
 import './styles/variables.css'
 
 const app = createApp(App)
