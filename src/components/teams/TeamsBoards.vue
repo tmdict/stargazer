@@ -1,13 +1,14 @@
 <script setup lang="ts">
-/* The Teams grid panel: the mode row (picker + team actions), the global control
-   bar, and the horizontally-scrolling row of boards. It's the #teams panel of
-   TeamsView's outer TabView; the tab strip and the roster live in TeamsView.
-   Boards bind to their own context. */
+/* The Teams grid panel: the control bar (mode picker + display toggles, then
+   team save actions + share actions) and the horizontally-scrolling row of
+   boards. It's the #teams panel of TeamsView's outer TabView; the tab strip and
+   the roster live in TeamsView. Boards bind to their own context. */
 
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
-import TeamModeControls from '@/components/teams/TeamModeControls.vue'
+import TeamModePicker from '@/components/teams/TeamModePicker.vue'
+import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import { useGridSwap } from '@/composables/useGridSwap'
 import type { TeamModeKey } from '@/lib/teams/modes'
 import type { CharacterType } from '@/lib/types/character'
@@ -57,20 +58,8 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 <template>
   <div class="teams-boards">
-    <TeamModeControls
-      :active-mode
-      :source-name
-      :dirty
-      :suggested-name
-      @switch-mode="emit('switchMode', $event)"
-      @save="emit('save')"
-      @save-as-new="emit('saveAsNew', $event)"
-      @export-teams="emit('exportTeams')"
-      @import-file="emit('importFile', $event)"
-    />
-
+    <!-- Row 1: mode picker + display toggles; row 2: team actions + share actions. -->
     <GridControls
-      :single-row="true"
       :show-wrap-toggle="canWrap"
       v-model:wrap="wrap"
       v-model:show-arrows="showArrows"
@@ -81,7 +70,22 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
       @copy-link="emit('copyLink')"
       @copy-image="emit('copyImage')"
       @download="emit('download')"
-    />
+    >
+      <template #toggles-start>
+        <TeamModePicker :active-mode @switch-mode="emit('switchMode', $event)" />
+      </template>
+      <template #actions-start>
+        <TeamSaveActions
+          :source-name
+          :dirty
+          :suggested-name
+          @save="emit('save')"
+          @save-as-new="emit('saveAsNew', $event)"
+          @export-teams="emit('exportTeams')"
+          @import-file="emit('importFile', $event)"
+        />
+      </template>
+    </GridControls>
 
     <BoardsRow :wrap :can-wrap>
       <GridBoard
@@ -112,6 +116,12 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 </template>
 
 <style scoped>
+/* The card's own padding already spaces the controls; the margin GridControls
+   carries for the Arena (where it sits below the grid) would double it. */
+.teams-boards :deep(.grid-controls) {
+  margin-top: 0;
+}
+
 /* Floating label that tracks the cursor during a swap drag (desktop only). */
 .swap-drag-ghost {
   position: fixed;
