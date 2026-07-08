@@ -290,7 +290,7 @@ const cancelRename = (): void => {
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
 }
@@ -306,7 +306,7 @@ const cancelRename = (): void => {
   transition: border-color var(--transition-fast);
   /* Offscreen cards skip layout/paint; the placeholder box keeps scroll stable. */
   content-visibility: auto;
-  contain-intrinsic-size: 220px;
+  contain-intrinsic-size: 300px;
 }
 
 .team-card:hover {

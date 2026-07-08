@@ -11,6 +11,7 @@ const i18n = useI18nStore()
 const lang = computed(() => i18n.effectiveSkillLocale)
 
 useHead({
+  title: 'Skills | Stargazer',
   link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/skills' }],
 })
 </script>
