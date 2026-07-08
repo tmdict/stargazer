@@ -20,9 +20,11 @@
         preview skills and targeting, and share formations.
       </li>
       <li>
-        <strong>Teams:</strong> Plan a 5v5 across five arena boards at once, dragging heroes between
-        boards and sharing or exporting all five together. Also includes an Image Stitcher to
-        combine separate screenshots.
+        <strong>Teams:</strong> Build teams in 1v1, 3v3, 5v5, and 5v5 Supreme League layouts,
+        dragging heroes across boards. Each mode remembers its own boards between visits, and the
+        saved-team library keeps named snapshots with thumbnails that you can reload, duplicate,
+        rename, and back up to a file. Also includes an Image Stitcher to combine separate
+        screenshots.
       </li>
       <li>
         <strong>Skills:</strong> Search every hero by name or skill text and read full skill
@@ -47,6 +49,11 @@
       <li>
         Share the board with <strong>Link</strong> (URL), or <strong>Copy</strong> /
         <strong>Download</strong> to export an image.
+      </li>
+      <li>
+        On the Teams page, <strong>Save</strong> updates the team you loaded and
+        <strong>New</strong> starts fresh boards; saved teams live in your browser, so use
+        <strong>Export</strong> occasionally to keep a backup.
       </li>
       <li>
         Press <strong>Alt + L</strong> (or <strong>Option + L</strong> on Mac) to switch language.
