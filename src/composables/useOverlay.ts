@@ -35,14 +35,22 @@ export function useOverlay({
     onClose()
   }
 
+  // A click target detached mid-bubble (a pick removing itself from a list, a
+  // hero removed by the click) can't be attributed by contains(), so record
+  // where the press started on capture, before any handler can detach it, and
+  // attribute the click to that.
+  let pressStartedInside = false
+
+  const handlePointerDown = (e: PointerEvent) => {
+    const el = elementRef.value
+    pressStartedInside = !!el && e.target instanceof Node && el.contains(e.target)
+  }
+
   const handleClickOutside = (e: MouseEvent) => {
     if (isOpen && !isOpen.value) return
     const el = elementRef.value
     if (!el || !(e.target instanceof Node)) return
-    // A target detached mid-bubble (a pick removing itself from a list) can't
-    // be attributed to any surface; contains() would misread it as outside.
-    if (!e.target.isConnected) return
-    if (el.contains(e.target)) return
+    if (e.target.isConnected ? el.contains(e.target) : pressStartedInside) return
     onClose()
   }
 
@@ -52,6 +60,7 @@ export function useOverlay({
   const attachClick = () => {
     pendingTimer = null
     if (clickAttached) return
+    document.addEventListener('pointerdown', handlePointerDown, true)
     document.addEventListener('click', handleClickOutside)
     clickAttached = true
   }
@@ -62,6 +71,7 @@ export function useOverlay({
       pendingTimer = null
     }
     if (clickAttached) {
+      document.removeEventListener('pointerdown', handlePointerDown, true)
       document.removeEventListener('click', handleClickOutside)
       clickAttached = false
     }

@@ -142,6 +142,9 @@ const getCharacterStyle = (hexId: number) => {
 const handleDragStart = (event: DragEvent, hexId: number, characterId: number) => {
   if (props.isMapEditorMode) return
   hideTooltip()
+  // Starting a drag abandons any pending lift; a stale lift would otherwise
+  // still fire on the next empty-cell tap.
+  clearLiftedHex()
 
   // Phantimals carry a minimal payload (the drop handler only needs id +
   // sourceHexId); their image comes from the remote phantimal sources.
@@ -216,6 +219,9 @@ const handleClick = (event: MouseEvent, hexId: number) => {
     return
   }
 
+  // Removing the lifted hero ends its lift, so the lift can't survive its
+  // subject and hijack the next hero placed on that hex.
+  if (liftedHexId.value === hexId && liftedGridId.value === ctx.id) clearLiftedHex()
   ctx.remove(hexId)
 }
 
@@ -338,9 +344,8 @@ const visiblePlacements = computed(() => {
   transition: transform 0.15s ease-out;
 }
 
-/* "Picked up" affordance for a lifted hero: raised, shadowed, gently bobbing
-   while it waits for a destination. On the inner element because the wrapper's
-   inline transform carries the perspective skew. */
+/* Lift styling lives on the inner element because the wrapper's inline
+   transform carries the perspective skew. */
 .character.lifted .character-content {
   filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
   animation: lifted-bob 1.2s ease-in-out infinite alternate;

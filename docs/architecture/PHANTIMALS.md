@@ -100,7 +100,7 @@ enforces it at five points:
 
 - **Placement gate** — `placePhantimalOnHex` / `autoPlacePhantimal` return `false`
   if the team is short, so a click or drop simply does nothing.
-- **Cross-team gate** — `handleCharacterDrop` blocks moving a phantimal to an
+- **Cross-team gate** — `GridContext.handleDrop` blocks moving a phantimal to an
   empty tile on the other team unless that team qualifies; the phantimal stays
   put. Dropping a phantimal on an occupied tile on the other team is a
   cross-team swap, which `executeSwapCharacters` rejects outright.

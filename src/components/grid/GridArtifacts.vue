@@ -156,8 +156,10 @@ const showEnemyCell = computed(
 )
 
 // An empty host cell opens the artifact picker; a filled cell's icon handles
-// removal (handleArtifactClick), mirroring the character flow (empty hex → picker,
-// placed hero → remove).
+// removal (handleArtifactClick), mirroring the mouse character flow (empty hex
+// → picker, placed hero → remove). Unlike heroes, artifacts have no tap-lift:
+// a touch tap on a filled cell also removes, so touch can add and delete
+// artifacts but only a mouse drag repositions one (an intended scope cut).
 const allyCellClickable = computed(
   () => showPlaceholders.value && allySlotVisible.value && !allyArtifact.value,
 )
