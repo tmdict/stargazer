@@ -3,7 +3,7 @@
  * and the mode-aware persistence, and runs the critical switch sequence:
  *
  *   pause → flush old slot → set mode → restore-or-default (single rebuild) →
- *   adopt sourceId → flags/wrap/sizing → resume + baseline write.
+ *   adopt sourceId → orientation/sizing → resume + baseline write.
  *
  * A mode's slot is only ever written while that mode's boards are live, which is
  * the invariant that keeps per-mode state independent. All bulk state application
@@ -12,7 +12,7 @@
  * and the phantimal baseline re-seed.
  */
 
-import { ref, type Ref } from 'vue'
+import { ref } from 'vue'
 
 import { useSelectionState } from '@/composables/useSelectionState'
 import {
@@ -31,9 +31,8 @@ import { useTeamsPersistence } from './useGridPersistence'
 export interface TeamsRestoreOptions {
   getFlags: () => DisplayFlags
   applyFlags: (flags: DisplayFlags) => void
-  // The wrap toggle's model: forced off when the target mode can't wrap, so the
-  // serialized wrap bit stays 0 for non-wrap modes.
-  wrapBoards: Ref<boolean>
+  // Content orientation only: set alongside board content (see applyEncoded).
+  applyInverted: (value: boolean) => void
   // Page sizing re-asserted after every rebuild (hexSizeMode pinning).
   applySize: () => void
   // Resolves a stored sourceId against the saved-team library; unresolvable ids
@@ -60,23 +59,38 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   const resolveSource = (id: string | null): string | null =>
     options.resolveSourceId ? options.resolveSourceId(id) : id
 
-  // Flags are adopted only when the payload carries them: canonical saved-team
-  // data has no `d`, so Select must not clobber the viewer's toggles.
-  const applyEncoded = (encoded: string): boolean => {
+  /* View toggles are device-level preferences, so a mode slot's `d` field is
+   * honored only for `inverted`: that bit is content orientation (the boards
+   * were mirror-swapped under it) and must travel with each mode's content, or
+   * restored units would sit under the wrong labels. A `?g=` link still adopts
+   * every flag (`adopt: 'all'`): sharing the sharer's exact view is the point
+   * of a link. Canonical saved-team data has no `d`, so Select applies nothing
+   * on either policy. The slot keeps writing full flags regardless: its
+   * snapshot doubles as the share payload (one serialization path). */
+  const applyEncoded = (encoded: string, adopt: 'all' | 'inverted-only'): boolean => {
     const result = urlStateStore.restoreMultiFromEncodedState(encoded)
     if (result.success && result.hasDisplayFlags && result.displayFlags) {
-      options.applyFlags(result.displayFlags)
+      if (adopt === 'all') options.applyFlags(result.displayFlags)
+      else options.applyInverted(result.displayFlags.inverted ?? false)
     }
     return result.success
   }
 
   // Rebuild hygiene shared by every path: boards share hex ids so stale selection
-  // must drop, wrap is a 5-board-only layout, and the page pins its own sizing.
-  const afterRebuild = (mode: TeamModeKey): void => {
+  // must drop, and the page pins its own sizing. A stray wrap bit needs no reset
+  // here: every wrap consumer gates on the mode's canWrap / board count.
+  const afterRebuild = (): void => {
     clearTargetHex()
     clearLiftedHex()
-    if (!TEAM_MODES[mode].canWrap) options.wrapBoards.value = false
     options.applySize()
+  }
+
+  // Default boards are un-inverted by construction, so any carryover orientation
+  // flag from the previous content must drop with them.
+  const buildModeDefaults = (mode: TeamModeKey): void => {
+    const cfg = TEAM_MODES[mode]
+    grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
+    options.applyInverted(false)
   }
 
   // Exactly one rebuild either way: a successful restore rebuilds internally (as
@@ -84,12 +98,9 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   // didn't run.
   const restoreOrDefault = (mode: TeamModeKey): void => {
     const slot = persistence.load(mode)
-    const restored = slot !== null && applyEncoded(slot.data)
-    if (!restored) {
-      const cfg = TEAM_MODES[mode]
-      grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
-    }
-    afterRebuild(mode)
+    const restored = slot !== null && applyEncoded(slot.data, 'inverted-only')
+    if (!restored) buildModeDefaults(mode)
+    afterRebuild()
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
   }
 
@@ -108,18 +119,17 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
 
   /* Load a saved team as the active team. `source` becomes the provenance the
    * Save button updates; a corrupt payload falls back to the mode's defaults
-   * with provenance cleared (returns false). */
+   * with provenance cleared (returns false). Canonical data carries no
+   * orientation flag, so the boards it loads are read as un-inverted. */
   const applyTeamData = (mode: TeamModeKey, encoded: string, source: string | null): boolean => {
     persistence.setPaused(true)
     persistence.flush()
     activeMode.value = mode
     persistence.persistMode(mode)
-    const applied = applyEncoded(encoded)
-    if (!applied) {
-      const cfg = TEAM_MODES[mode]
-      grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
-    }
-    afterRebuild(mode)
+    const applied = applyEncoded(encoded, 'inverted-only')
+    if (applied) options.applyInverted(false)
+    else buildModeDefaults(mode)
+    afterRebuild()
     sourceId.value = applied ? source : null
     persistence.setPaused(false)
     persistence.flush()
@@ -139,11 +149,11 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
         const mode = resolveTeamMode(decoded)
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
-        if (applyEncoded(normalized)) {
+        if (applyEncoded(normalized, 'all')) {
           // Persisted only on success: a link that decodes but fails to apply
           // must not leave its mode as the remembered one for the fallback.
           persistence.persistMode(mode)
-          afterRebuild(mode)
+          afterRebuild()
           sourceId.value = null
           persistence.startAutosave()
           return { linkLoaded: true, linkFailed: false }
@@ -163,9 +173,8 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
    * default boards with no persistence reads or writes; the boards are
    * display-only placeholders and must not touch any mode's slot. */
   const buildDefaults = (): void => {
-    const cfg = TEAM_MODES[activeMode.value]
-    grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
-    afterRebuild(activeMode.value)
+    buildModeDefaults(activeMode.value)
+    afterRebuild()
   }
 
   /* File → New: fresh default boards with provenance detached, so Save can no

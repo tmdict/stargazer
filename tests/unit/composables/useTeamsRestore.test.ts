@@ -9,7 +9,11 @@ import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
-import type { DisplayFlags, MultiGridState } from '@/utils/gridStateSerializer'
+import {
+  packDisplayFlags,
+  type DisplayFlags,
+  type MultiGridState,
+} from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 /* The mode-switch regression suite: encodes the failure of the old single-slot
@@ -38,6 +42,7 @@ interface Harness {
   character: ReturnType<typeof useCharacterStore>
   flags: DisplayFlags
   wrapBoards: ReturnType<typeof ref<boolean>>
+  inverted: ReturnType<typeof ref<boolean>>
   applySize: ReturnType<typeof vi.fn>
 }
 
@@ -47,18 +52,22 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
   const character = useCharacterStore()
   const flags: DisplayFlags = { showGridInfo: true, showArrows: false, wrap: false }
   const wrapBoards = ref(false)
+  const inverted = ref(false)
   const applySize = vi.fn()
   const restore = useTeamsRestore({
-    getFlags: () => ({ ...flags, wrap: wrapBoards.value }),
+    getFlags: () => ({ ...flags, wrap: wrapBoards.value, inverted: inverted.value }),
     applyFlags: (next) => {
       Object.assign(flags, next)
       wrapBoards.value = next.wrap ?? false
+      inverted.value = next.inverted ?? false
     },
-    wrapBoards,
+    applyInverted: (value) => {
+      inverted.value = value
+    },
     applySize,
     resolveSourceId,
   })
-  return { restore, grids, character, flags, wrapBoards, applySize }
+  return { restore, grids, character, flags, wrapBoards, inverted, applySize }
 }
 
 describe('useTeamsRestore', () => {
@@ -205,12 +214,56 @@ describe('useTeamsRestore', () => {
     expect(rewritten.defaults).toBe('arena1')
   })
 
-  it('forces wrap off when entering a non-wrap mode', () => {
+  it('wrap survives entering a non-wrap mode (render gating is the layout side)', () => {
     const { restore, wrapBoards } = createHarness()
     restore.initialize(null)
     wrapBoards.value = true
     restore.switchMode('3v3')
+    expect(wrapBoards.value).toBe(true)
+  })
+
+  it('slot restore adopts only the inverted bit from stored display flags', () => {
+    const { restore, flags, inverted, wrapBoards } = createHarness()
+    storage.set(
+      teamsSlotKey('3v3'),
+      JSON.stringify({
+        v: 1,
+        data: encodeMultiGridStateToUrl({
+          boards: [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }],
+          mode: '3v3',
+          d: packDisplayFlags({ showGridInfo: false, teamView: true, inverted: true }),
+        }),
+        sourceId: null,
+        defaults: 'arena1,arena1,arena1',
+      } satisfies ActiveSlot),
+    )
+    restore.initialize(null)
+    restore.switchMode('3v3')
+    expect(inverted.value).toBe(true)
+    // View toggles are device prefs: the slot's stored bits must not clobber them.
+    expect(flags.showGridInfo).toBe(true)
+    expect(flags.teamView).toBeUndefined()
     expect(wrapBoards.value).toBe(false)
+  })
+
+  it('switching to a slotless mode resets inverted with the default boards', () => {
+    const { restore, inverted } = createHarness()
+    restore.initialize(null)
+    inverted.value = true
+    restore.switchMode('3v3')
+    expect(inverted.value).toBe(false)
+  })
+
+  it('ingress: a shared link adopts all display flags', () => {
+    const { restore, flags, inverted } = createHarness()
+    const link = encodeMultiGridStateToUrl({
+      boards: [{ m: 'arena1' }],
+      mode: '1v1',
+      d: packDisplayFlags({ showGridInfo: false, inverted: true }),
+    })
+    restore.initialize(link)
+    expect(flags.showGridInfo).toBe(false)
+    expect(inverted.value).toBe(true)
   })
 
   it('normalizes stale sourceIds through the resolver at slot adoption', () => {
@@ -402,5 +455,17 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     restore.applyTeamData('1v1', data, 'x')
     // applyFlags only runs when the payload carries `d`; canonical data doesn't.
     expect(flags.showArrows).toBe(true)
+  })
+
+  it('selecting canonical data reads the content as un-inverted', () => {
+    const { restore, inverted } = createHarness()
+    restore.initialize(null)
+    inverted.value = true
+    const data = canonicalTeamData(
+      encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
+    )!
+    restore.applyTeamData('1v1', data, 'x')
+    // Canonical data carries no orientation flag: its boards are un-inverted.
+    expect(inverted.value).toBe(false)
   })
 })
