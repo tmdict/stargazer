@@ -48,6 +48,7 @@ const activeContext = computed(() => grids.active!)
 
 // Set canonical link for share page
 useHead({
+  title: 'Share | Stargazer',
   link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/share' }],
 })
 

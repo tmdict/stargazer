@@ -61,12 +61,14 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 <template>
   <div class="teams-boards">
     <div class="team-title-row">
-      <span class="team-title" :class="{ unsaved: sourceName === null }">
-        {{ sourceName ?? i18n.t('app.unsaved-team') }}
-      </span>
-      <span v-if="dirty" class="team-title-status">
-        <span class="dirty-dot" />
-        {{ i18n.t('app.unsaved-changes') }}
+      <span class="team-title-wrap">
+        <span class="team-title" :class="{ unsaved: sourceName === null }">
+          {{ sourceName ?? i18n.t('app.unsaved-team') }}
+        </span>
+        <span v-if="dirty" class="team-title-status" :title="i18n.t('app.unsaved-changes')">
+          <span class="dirty-dot" />
+          <span class="status-text">{{ i18n.t('app.unsaved-changes') }}</span>
+        </span>
       </span>
     </div>
 
@@ -131,35 +133,45 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 /* Document-style title: plain text, deliberately unlike the buttons below it. */
 .team-title-row {
   display: flex;
-  align-items: baseline;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: var(--spacing-md);
-  padding-bottom: var(--spacing-sm);
+  padding-bottom: var(--spacing-lg);
+}
+
+.team-title-wrap {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: min(60vw, 480px);
 }
 
 .team-title {
-  font-size: 1.05rem;
+  font-size: 1.3rem;
   font-weight: 700;
+  letter-spacing: 0.01em;
   color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  max-width: min(60vw, 480px);
 }
 
 .team-title.unsaved {
   color: var(--color-text-secondary);
-  font-weight: 600;
 }
 
+/* Anchored beside the title, out of flow, so appearing/disappearing never
+   shifts the centered name. */
 .team-title-status {
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   gap: 6px;
   font-size: 0.78rem;
   font-weight: 600;
   color: var(--color-text-secondary);
+  white-space: nowrap;
 }
 
 .dirty-dot {
@@ -172,7 +184,12 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 @media (max-width: 768px) {
   .team-title {
-    font-size: 0.95rem;
+    font-size: 1.05rem;
+  }
+  /* The dot alone signals unsaved changes: the text would overflow narrow
+     viewports from its out-of-flow anchor. */
+  .team-title-status .status-text {
+    display: none;
   }
 }
 
