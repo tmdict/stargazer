@@ -1,9 +1,8 @@
 <script setup lang="ts">
 /* The team actions in the controls' action row, in File-menu order (New, Save,
-   Save as New, Import, Export) behind the editing label (which saved team Save
-   targets, with an unsaved-changes dot). New detaches from the source team;
-   Save updates it, degrading to Save as New when there is none — its name
-   popover creates a new record (Enter commits, Esc cancels). The root is
+   Save as New, Import, Export). New detaches from the source team; Save
+   updates it, degrading to Save as New when there is none — its name popover
+   creates a new record (Enter commits, Esc cancels). The root is
    display: contents, so every control sits directly in the action row's flex
    flow with its spacing. */
 
@@ -18,10 +17,9 @@ import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
 const { sourceName, suggestedName } = defineProps<{
-  // The resolved source team's name; null renders as "Unsaved team".
+  // The resolved source team's name Save targets; null degrades Save to
+  // Save as New.
   sourceName: string | null
-  // Content differs from the source team (never set while sourceName is null).
-  dirty: boolean
   // Prefill for the Save-as-New popover ("Team N").
   suggestedName: string
 }>()
@@ -72,12 +70,6 @@ const handleSave = (): void => {
 
 <template>
   <div class="team-save-actions">
-    <span class="active-team-label">
-      <span class="team-label-prefix">{{ i18n.t('app.editing') }}</span>
-      <span class="team-label-name">{{ sourceName ?? i18n.t('app.unsaved-team') }}</span>
-      <span v-if="dirty" class="dirty-dot" :title="i18n.t('app.unsaved-changes')" />
-    </span>
-
     <button
       type="button"
       class="team-btn secondary"
@@ -176,45 +168,6 @@ const handleSave = (): void => {
 <style scoped>
 .team-save-actions {
   display: contents;
-}
-
-.active-team-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 36px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--color-text-secondary);
-  background: var(--color-bg-secondary);
-  border: 1.5px dashed var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  padding: 5px 12px;
-  max-width: 260px;
-}
-
-.team-label-prefix {
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
-  opacity: 0.7;
-  flex-shrink: 0;
-}
-
-.team-label-name {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.dirty-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--color-warning);
-  flex-shrink: 0;
 }
 
 .team-btn {
@@ -317,14 +270,9 @@ const handleSave = (): void => {
   font-size: 0.8rem;
 }
 
-/* Mobile matches the control bar's round icon-only actions; the editing label
-   is dropped for room (the dirty state travels with it — Save always works, so
-   nothing is lost but the reminder). Direct-child selectors keep the popover's
-   text buttons out of the icon-only treatment. */
+/* Mobile matches the control bar's round icon-only actions. Direct-child
+   selectors keep the popover's text buttons out of the icon-only treatment. */
 @media (max-width: 768px) {
-  .active-team-label {
-    display: none;
-  }
   .team-save-actions > .team-btn,
   .popover-anchor > .team-btn {
     border-radius: 999px;

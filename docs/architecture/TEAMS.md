@@ -46,10 +46,11 @@ The page orchestrator: an outer TabView (Teams grid / Image Stitcher — hidden 
 
 ### TeamsBoards (`/src/components/teams/TeamsBoards.vue`)
 
-The grid panel: a two-row control bar (`GridControls` with teams content slotted in), then a horizontally scrolling row of boards, each bound to its own `GridContext`.
+The grid panel: a document-style title line, a two-row control bar (`GridControls` with teams content slotted in), then a horizontally scrolling row of boards, each bound to its own `GridContext`.
 
+- **Title line**: the source team's name (or "Unsaved team") as plain centered text, with a dot + "Unsaved changes" beside it while the boards differ from the saved copy
 - **Row 1 (configure)**: mode picker, then the display toggles (wrap, flat, grid info, team view, skills, targeting, invert)
-- **Row 2 (act)**: editing label + team actions, then the share actions (link, copy, download, clear)
+- **Row 2 (act)**: team actions, then the share actions (link, copy, download, clear)
 - **Per-board actions**: swap (drag to reorder, via `useGridSwap`), copy image, download image, clear
 - **Wrap**: the 3-2 two-row boards layout; 5-board modes on desktop only, serialized with the display flags
 
@@ -59,9 +60,8 @@ Segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`, slotted at the hea
 
 ### TeamSaveActions (`/src/components/teams/TeamSaveActions.vue`)
 
-The team half of the action row, in File-menu order (New, Save, Save as New, Import, Export):
+The team half of the action row, in File-menu order (New, Save, Save as New, Import, Export), collapsing to round icons on mobile:
 
-- **Editing label**: "Editing" prefix + source team name (or "Unsaved team"), with a content-dirty dot; hidden on mobile, where the buttons collapse to round icons
 - **New**: fresh default boards, detached from any saved team
 - **Save actions**: Save, and Save as New with a name popover (Enter commits, Esc cancels)
 - **Backup actions**: Import and Export through plain-language tooltips + a hidden file input
