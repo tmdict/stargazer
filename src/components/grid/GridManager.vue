@@ -13,7 +13,7 @@ import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { getAvailableTeamSize, getCharacter } from '@/lib/characters/character'
+import { getAvailableTeamSize } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
@@ -97,35 +97,12 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
     return
   }
 
-  // Drop a lifted hero onto the empty cell — same board directly (allowed even
-  // when the team is full: a move adds no unit), another board through the drag
-  // router, which owns cross-board compose and capacity rules. Either way the
-  // page-wide uniqueness gate decides, like a drag; a violation silently no-ops.
+  // Drop a lifted hero onto the empty cell through the drop router, so a tap
+  // shares every drag gate (page-wide uniqueness, capacity, phantimal team
+  // rules). A rejected drop is a silent no-op; either way the lift ends.
   if (liftedHexId.value !== null && tile.characterId === undefined) {
-    const fromId = liftedGridId.value
-    const from = grids.contexts.find((c) => c.id === fromId)
-    const characterId = from ? getCharacter(from.grid, liftedHexId.value) : undefined
-    if (
-      fromId !== null &&
-      characterId !== undefined &&
-      grids.canDropCharacter(characterId, fromId, liftedHexId.value, ctx.id, hex.getId())
-    ) {
-      if (fromId === ctx.id) {
-        ctx.move(liftedHexId.value, hex.getId(), characterId)
-      } else {
-        grids.routeDrop(
-          {
-            character: {
-              id: characterId,
-              sourceHexId: liftedHexId.value,
-              sourceGridId: fromId,
-            } as unknown as CharacterType,
-            characterId,
-          },
-          ctx.id,
-          hex.getId(),
-        )
-      }
+    if (liftedGridId.value !== null) {
+      grids.routeLiftDrop(liftedGridId.value, liftedHexId.value, ctx.id, hex.getId())
     }
     clearLiftedHex()
     return
@@ -145,8 +122,13 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
   // Wide layout: a mouse click on a placed hero's tile removes it (moves use
   // drag); a touch tap does nothing here, since hero taps belong to the
   // character layer's lift flow and a tile-sliver tap must not delete.
+  // Removing the lifted hero ends its lift, so the lift can't survive its
+  // subject and hijack the next hero placed on that hex.
   if (tile.characterId !== undefined) {
-    if (!isTouchClick(event)) ctx.remove(hex.getId())
+    if (!isTouchClick(event)) {
+      if (liftedGridId.value === ctx.id && liftedHexId.value === hex.getId()) clearLiftedHex()
+      ctx.remove(hex.getId())
+    }
     return
   }
 
