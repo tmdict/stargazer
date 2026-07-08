@@ -39,6 +39,9 @@ export function useOverlay({
     if (isOpen && !isOpen.value) return
     const el = elementRef.value
     if (!el || !(e.target instanceof Node)) return
+    // A target detached mid-bubble (a pick removing itself from a list) can't
+    // be attributed to any surface; contains() would misread it as outside.
+    if (!e.target.isConnected) return
     if (el.contains(e.target)) return
     onClose()
   }
