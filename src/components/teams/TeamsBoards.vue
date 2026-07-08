@@ -45,6 +45,7 @@ const emit = defineEmits<{
   copyImage: []
   download: []
   switchMode: [mode: TeamModeKey]
+  newTeam: []
   save: []
   saveAsNew: [name: string]
   exportTeams: []
@@ -79,6 +80,7 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
           :source-name
           :dirty
           :suggested-name
+          @new-team="emit('newTeam')"
           @save="emit('save')"
           @save-as-new="emit('saveAsNew', $event)"
           @export-teams="emit('exportTeams')"

@@ -9,6 +9,7 @@ import { computed, nextTick, onScopeDispose, ref } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
 import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
@@ -127,8 +128,18 @@ const cancelRename = (): void => {
 <template>
   <div class="saved-teams">
     <div class="library-bar">
-      <span class="library-count" :class="{ warn: nearCap }">
-        {{ library.count }} / {{ MAX_SAVED_TEAMS }}
+      <span class="library-info">
+        <span class="library-count" :class="{ warn: nearCap }">
+          {{ library.count }} / {{ MAX_SAVED_TEAMS }}
+        </span>
+        <span
+          class="storage-hint"
+          :title="i18n.t('app.storage-hint')"
+          :aria-label="i18n.t('app.storage-hint')"
+          tabindex="0"
+        >
+          <IconInfo :size="15" />
+        </span>
       </span>
       <button
         v-if="library.count > 0"
@@ -219,10 +230,29 @@ const cancelRename = (): void => {
   gap: var(--spacing-lg);
 }
 
+.library-info {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
 .library-count {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--color-text-secondary);
+}
+
+.storage-hint {
+  display: inline-flex;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  cursor: help;
+}
+
+.storage-hint:hover,
+.storage-hint:focus-visible {
+  opacity: 1;
+  color: var(--color-primary);
 }
 
 .library-count.warn {
@@ -298,7 +328,9 @@ const cancelRename = (): void => {
   border-radius: var(--radius-small);
   padding: 0 4px;
   cursor: text;
-  flex: 1;
+  /* Shrink-to-fit so the rename pencil sits right after the text; only a
+     too-long name pushes it to the card edge (and ellipsizes). */
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
