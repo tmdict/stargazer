@@ -59,11 +59,12 @@ Segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`, slotted at the hea
 
 ### TeamSaveActions (`/src/components/teams/TeamSaveActions.vue`)
 
-The team half of the action row:
+The team half of the action row, in File-menu order (New, Save, Save as New, Import, Export):
 
-- **Editing label**: "Editing" prefix + source team name (or "Unsaved team"), with a content-dirty dot
+- **Editing label**: "Editing" prefix + source team name (or "Unsaved team"), with a content-dirty dot; hidden on mobile, where the buttons collapse to round icons
+- **New**: fresh default boards, detached from any saved team
 - **Save actions**: Save, and Save as New with a name popover (Enter commits, Esc cancels)
-- **Backup actions**: Export, and Import through a hidden file input
+- **Backup actions**: Import and Export through plain-language tooltips + a hidden file input
 
 ### TeamsRoster (`/src/components/teams/TeamsRoster.vue`)
 
@@ -148,6 +149,7 @@ Key rules:
 
 Semantics wired in `TeamsView`:
 
+- **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
 - **Select**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched (canonical data has no `d`)
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data` — board clicks and display toggles never trip it

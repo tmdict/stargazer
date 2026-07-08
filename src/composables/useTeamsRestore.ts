@@ -168,11 +168,23 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     afterRebuild(activeMode.value)
   }
 
+  /* File → New: fresh default boards with provenance detached, so Save can no
+   * longer overwrite the team the boards came from. Clear stays a content-only
+   * operation that keeps the tie. */
+  const newTeam = (): void => {
+    persistence.setPaused(true)
+    buildDefaults()
+    sourceId.value = null
+    persistence.setPaused(false)
+    persistence.flush()
+  }
+
   return {
     activeMode,
     sourceId,
     initialize,
     buildDefaults,
+    newTeam,
     switchMode,
     applyTeamData,
     // Reactive reads — usable in computeds (the dirty compare's live side).
