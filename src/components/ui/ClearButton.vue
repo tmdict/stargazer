@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import IconTrash from './IconTrash.vue'
-import { useArmedAction } from '@/composables/useArmedAction'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
@@ -9,19 +8,15 @@ const emit = defineEmits<{
   click: []
 }>()
 
-const { armed, trigger } = useArmedAction(() => emit('click'))
+const handleClick = () => {
+  emit('click')
+}
 </script>
 
 <template>
-  <button
-    @click="trigger"
-    class="clear-all-btn"
-    :class="{ armed }"
-    :title="i18n.t(armed ? 'app.confirm' : 'app.clear')"
-    :aria-label="i18n.t(armed ? 'app.confirm' : 'app.clear')"
-  >
+  <button @click="handleClick" class="clear-all-btn" :title="i18n.t('app.clear')">
     <IconTrash :size="14" class="btn-icon" />
-    <span class="btn-text">{{ i18n.t(armed ? 'app.confirm' : 'app.clear') }}</span>
+    <span class="btn-text">{{ i18n.t('app.clear') }}</span>
   </button>
 </template>
 
@@ -49,13 +44,6 @@ const { armed, trigger } = useArmedAction(() => emit('click'))
 .clear-all-btn:hover {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
-}
-
-/* Armed = darker + halo, legible even in the icon-only mobile shape. */
-.clear-all-btn.armed {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-  box-shadow: 0 0 0 3px rgba(200, 35, 51, 0.3);
 }
 
 .clear-all-btn:active {
