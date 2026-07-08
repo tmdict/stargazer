@@ -70,9 +70,10 @@ const handleSave = (): void => {
 
 <template>
   <div class="team-save-actions">
+    <!-- Danger-styled like Clear: both discard the boards' current content. -->
     <button
       type="button"
-      class="team-btn secondary"
+      class="team-btn danger"
       :title="i18n.t('app.tooltip-new')"
       :aria-label="i18n.t('app.new')"
       @click="emit('newTeam')"
@@ -202,6 +203,16 @@ const handleSave = (): void => {
   color: var(--color-primary);
   border-color: var(--color-primary);
   background: var(--color-bg-tertiary);
+}
+
+.team-btn.danger {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.team-btn.danger:hover {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
 }
 
 .btn-icon {
