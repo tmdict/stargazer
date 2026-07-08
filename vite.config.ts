@@ -114,6 +114,15 @@ function processRenderedPage(route: string, html: string): string {
 
   html = dedupeAssetLinks(html)
 
+  // The template carries the root og:url; point it at the rendered route so
+  // shares of inner pages resolve to the page itself. Only the root-URL tag is
+  // rewritten: pages that set their own og:url (skill heroes) keep theirs.
+  const pageUrl = `https://stargazer.tmdict.com${route === '/' ? '/' : route}`
+  html = html.replace(
+    /<meta property="og:url" content="https:\/\/stargazer\.tmdict\.com\/"\s*\/?>/,
+    `<meta property="og:url" content="${pageUrl}">`,
+  )
+
   const skillMatch = route.match(SKILL_ROUTE_RE)
   if (skillMatch && !(APP_LOCALES as readonly string[]).includes(skillMatch[1])) {
     const href = localeChunkHref(skillMatch[1])
