@@ -73,11 +73,11 @@ const filteredCharacters = computed(() => {
   return factionFiltered.value.filter((c) => matches.has(c.name))
 })
 
-/* Multi-add palette: the first pick fills the tapped tile, later picks flow to
- * the team's next free tile, and the popup stays open (dismissal is mouse-leave,
- * Esc, or an outside tap) so several heroes can be placed in a row. Placed
- * heroes drop out of the list, and a full team closes the popup since every
- * further pick would be a silent no-op. */
+/* Multi-add palette: the first pick fills the tapped tile, later picks
+ * auto-place onto a free tile of the same team, and the popup stays open
+ * (dismissal is mouse-leave, Esc, or an outside tap) so several heroes can be
+ * placed in a row. Placed heroes drop out of the list, and a full team closes
+ * the popup since every further pick would be a silent no-op. */
 function handleSelect(character: CharacterType) {
   const t = team.value
   if (!t || grids.isUsed(character.id, t)) return

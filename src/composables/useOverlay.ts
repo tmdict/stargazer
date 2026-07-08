@@ -60,6 +60,9 @@ export function useOverlay({
   const attachClick = () => {
     pendingTimer = null
     if (clickAttached) return
+    // A press from before this arm (or during its delay) was not observed for
+    // this surface; treat it as outside rather than trusting a stale flag.
+    pressStartedInside = false
     document.addEventListener('pointerdown', handlePointerDown, true)
     document.addEventListener('click', handleClickOutside)
     clickAttached = true

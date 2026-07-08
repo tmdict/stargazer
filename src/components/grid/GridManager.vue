@@ -122,13 +122,8 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
   // Wide layout: a mouse click on a placed hero's tile removes it (moves use
   // drag); a touch tap does nothing here, since hero taps belong to the
   // character layer's lift flow and a tile-sliver tap must not delete.
-  // Removing the lifted hero ends its lift, so the lift can't survive its
-  // subject and hijack the next hero placed on that hex.
   if (tile.characterId !== undefined) {
-    if (!isTouchClick(event)) {
-      if (liftedGridId.value === ctx.id && liftedHexId.value === hex.getId()) clearLiftedHex()
-      ctx.remove(hex.getId())
-    }
+    if (!isTouchClick(event)) ctx.remove(hex.getId())
     return
   }
 
