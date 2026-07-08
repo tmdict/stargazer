@@ -13,7 +13,6 @@ import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
-import { useArmedAction } from '@/composables/useArmedAction'
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -67,24 +66,20 @@ const handleSave = (): void => {
   if (sourceName !== null) emit('save')
   else void openPopover()
 }
-
-const { armed: newArmed, trigger: triggerNew } = useArmedAction(() => emit('newTeam'))
 </script>
 
 <template>
   <div class="team-save-actions">
-    <!-- Danger-styled + two-step confirm like Clear: both discard the boards'
-         current content. -->
+    <!-- Danger-styled like Clear: both discard the boards' current content. -->
     <button
       type="button"
       class="team-btn danger"
-      :class="{ armed: newArmed }"
-      :title="newArmed ? i18n.t('app.confirm') : i18n.t('app.tooltip-new')"
-      :aria-label="i18n.t(newArmed ? 'app.confirm' : 'app.new')"
-      @click="triggerNew"
+      :title="i18n.t('app.tooltip-new')"
+      :aria-label="i18n.t('app.new')"
+      @click="emit('newTeam')"
     >
       <IconFilePlus :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t(newArmed ? 'app.confirm' : 'app.new') }}</span>
+      <span class="btn-text">{{ i18n.t('app.new') }}</span>
     </button>
     <button
       type="button"
@@ -218,13 +213,6 @@ const { armed: newArmed, trigger: triggerNew } = useArmedAction(() => emit('newT
 .team-btn.danger:hover {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
-}
-
-/* Armed = darker + halo, legible even in the icon-only mobile shape. */
-.team-btn.danger.armed {
-  background: var(--color-danger-hover);
-  border-color: var(--color-danger-hover);
-  box-shadow: 0 0 0 3px rgba(200, 35, 51, 0.3);
 }
 
 .btn-icon {
