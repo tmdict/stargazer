@@ -1,8 +1,9 @@
 <script setup lang="ts">
-/* The Teams grid panel: the control bar (mode picker + display toggles, then
-   team save actions + share actions) and the horizontally-scrolling row of
-   boards. It's the #teams panel of TeamsView's outer TabView; the tab strip and
-   the roster live in TeamsView. Boards bind to their own context. */
+/* The Teams grid panel: the team title line (document-style name + save
+   state), the control bar (mode picker + display toggles, then team save
+   actions + share actions), and the horizontally-scrolling row of boards. It's
+   the #teams panel of TeamsView's outer TabView; the tab strip and the roster
+   live in TeamsView. Boards bind to their own context. */
 
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
@@ -59,6 +60,16 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 <template>
   <div class="teams-boards">
+    <div class="team-title-row">
+      <span class="team-title" :class="{ unsaved: sourceName === null }">
+        {{ sourceName ?? i18n.t('app.unsaved-team') }}
+      </span>
+      <span v-if="dirty" class="team-title-status">
+        <span class="dirty-dot" />
+        {{ i18n.t('app.unsaved-changes') }}
+      </span>
+    </div>
+
     <!-- Row 1: mode picker + display toggles; row 2: team actions + share actions. -->
     <GridControls
       :show-wrap-toggle="canWrap"
@@ -78,7 +89,6 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
       <template #actions-start>
         <TeamSaveActions
           :source-name
-          :dirty
           :suggested-name
           @new-team="emit('newTeam')"
           @save="emit('save')"
@@ -118,6 +128,54 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 </template>
 
 <style scoped>
+/* Document-style title: plain text, deliberately unlike the buttons below it. */
+.team-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+}
+
+.team-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: min(60vw, 480px);
+}
+
+.team-title.unsaved {
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+.team-title-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+
+.dirty-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-warning);
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .team-title {
+    font-size: 0.95rem;
+  }
+}
+
 /* The card's own padding already spaces the controls; the margin GridControls
    carries for the Arena (where it sits below the grid) would double it. */
 .teams-boards :deep(.grid-controls) {
