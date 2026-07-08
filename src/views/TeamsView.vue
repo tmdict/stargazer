@@ -221,6 +221,7 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
                 @switch-mode="teamsRestore.switchMode($event)"
+                @new-team="teamsRestore.newTeam()"
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"
                 @export-teams="handleExportTeams"

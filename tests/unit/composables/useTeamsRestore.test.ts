@@ -360,6 +360,29 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(readEnvelope('1v1').sourceId).toBe('team-9')
   })
 
+  it('newTeam rebuilds the mode defaults and detaches provenance', () => {
+    const { restore, grids } = createHarness()
+    restore.initialize(null)
+    const data = canonicalTeamData(
+      encodeMultiGridStateToUrl({
+        boards: [{ m: 'arena3', c: [[1, 11, Team.ALLY]] }],
+        mode: '1v1',
+      }),
+    )!
+    restore.applyTeamData('1v1', data, 'team-9')
+    expect(restore.sourceId.value).toBe('team-9')
+
+    restore.newTeam()
+    expect(restore.activeMode.value).toBe('1v1')
+    expect(grids.contexts).toHaveLength(1)
+    expect(grids.contexts[0]!.currentMap).toBe('arena1')
+    expect(restore.sourceId.value).toBeNull()
+    // The slot mirrors the fresh boards, so a reload cannot resurrect the tie.
+    const slot = readEnvelope('1v1')
+    expect(slot.sourceId).toBeNull()
+    expect(decodeBoards(slot.data).boards[0]!.c).toBeUndefined()
+  })
+
   it('applyTeamData with corrupt data falls back to defaults and clears provenance', () => {
     const { restore, grids } = createHarness()
     restore.initialize(null)

@@ -1,14 +1,16 @@
 <script setup lang="ts">
-/* The team actions in the controls' action row: the editing label (which saved
-   team Save targets, with an unsaved-changes dot) and the save/backup buttons.
-   Save updates the source team; with no source it degrades to Save as New,
-   whose name popover creates a new record (Enter commits, Esc cancels). The
-   root is display: contents, so every control sits directly in the action
-   row's flex flow with its spacing. */
+/* The team actions in the controls' action row, in File-menu order (New, Save,
+   Save as New, Import, Export) behind the editing label (which saved team Save
+   targets, with an unsaved-changes dot). New detaches from the source team;
+   Save updates it, degrading to Save as New when there is none — its name
+   popover creates a new record (Enter commits, Esc cancels). The root is
+   display: contents, so every control sits directly in the action row's flex
+   flow with its spacing. */
 
 import { nextTick, ref } from 'vue'
 
 import IconDownload from '@/components/ui/IconDownload.vue'
+import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
@@ -25,6 +27,7 @@ const { sourceName, suggestedName } = defineProps<{
 }>()
 
 const emit = defineEmits<{
+  newTeam: []
   save: []
   saveAsNew: [name: string]
   exportTeams: []
@@ -75,6 +78,16 @@ const handleSave = (): void => {
       <span v-if="dirty" class="dirty-dot" :title="i18n.t('app.unsaved-changes')" />
     </span>
 
+    <button
+      type="button"
+      class="team-btn secondary"
+      :title="i18n.t('app.tooltip-new')"
+      :aria-label="i18n.t('app.new')"
+      @click="emit('newTeam')"
+    >
+      <IconFilePlus :size="14" class="btn-icon" />
+      <span class="btn-text">{{ i18n.t('app.new') }}</span>
+    </button>
     <button
       type="button"
       class="team-btn"
@@ -133,22 +146,22 @@ const handleSave = (): void => {
     <button
       type="button"
       class="team-btn secondary"
-      :title="i18n.t('app.tooltip-export')"
-      :aria-label="i18n.t('app.export')"
-      @click="emit('exportTeams')"
-    >
-      <IconDownload :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t('app.export') }}</span>
-    </button>
-    <button
-      type="button"
-      class="team-btn secondary"
       :title="i18n.t('app.tooltip-import')"
       :aria-label="i18n.t('app.import')"
       @click="fileInput?.click()"
     >
       <IconUpload :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.import') }}</span>
+    </button>
+    <button
+      type="button"
+      class="team-btn secondary"
+      :title="i18n.t('app.tooltip-export')"
+      :aria-label="i18n.t('app.export')"
+      @click="emit('exportTeams')"
+    >
+      <IconDownload :size="14" class="btn-icon" />
+      <span class="btn-text">{{ i18n.t('app.export') }}</span>
     </button>
     <input
       ref="fileInput"
