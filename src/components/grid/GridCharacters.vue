@@ -344,17 +344,8 @@ const visiblePlacements = computed(() => {
 /* Lift styling lives on the inner element because the wrapper's inline
    transform carries the perspective skew. */
 .character.lifted .character-content {
-  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
-  animation: lifted-bob 1.2s ease-in-out infinite alternate;
-}
-
-@keyframes lifted-bob {
-  from {
-    transform: translateY(-6px) scale(1.08);
-  }
-  to {
-    transform: translateY(-11px) scale(1.08);
-  }
+  transform: scale(1.08);
+  filter: brightness(1.15) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
 }
 
 .character-background {
