@@ -82,7 +82,7 @@ export function resolveTeamMode(state: MultiGridState): TeamModeKey {
 
 /* Normalize a decoded payload to its mode's exact shape: truncate extra boards,
  * pad missing ones as empty boards on the mode's default maps. Teams-page ingress
- * only — /share stays lenient and renders payloads as-is. */
+ * only; /share stays lenient and renders payloads as-is. */
 export function normalizeTeamPayload(state: MultiGridState, mode: TeamModeKey): MultiGridState {
   const { boardCount, defaultMaps } = TEAM_MODES[mode]
   const boards = state.boards.slice(0, boardCount)

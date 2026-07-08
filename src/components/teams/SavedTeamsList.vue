@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* The Saved Teams roster panel: header (count, cap warning, Delete all) plus a
-   card grid — thumbnail, mode chip, inline-renamable name, relative updated
+   card grid: thumbnail, mode chip, inline-renamable name, relative updated
    time, and equal-width Select / Duplicate / Delete actions. Destructive
    actions use the app's no-modal style: a two-step inline confirm that arms
    for a few seconds. User feedback (toasts) is fired here, not in the store. */

@@ -1,4 +1,4 @@
-/* The Teams page's restore/switch orchestrator — the sole initiator of board-count
+/* The Teams page's restore/switch orchestrator, the sole initiator of board-count
  * changes on /teams. Owns the active mode, the saved-team provenance (sourceId),
  * and the mode-aware persistence, and runs the critical switch sequence:
  *
@@ -93,7 +93,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
   }
 
-  /* Always rebuilds — equal-count modes (5v5 ↔ 5v5sl) still differ in maps and
+  /* Always rebuilds: equal-count modes (5v5 ↔ 5v5sl) still differ in maps and
    * state, so a count-equality shortcut would silently share boards. */
   const switchMode = (next: TeamModeKey): void => {
     if (next === activeMode.value) return
@@ -160,7 +160,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   }
 
   /* Degraded startup (game data failed to load): build the active mode's
-   * default boards with no persistence reads or writes — the boards are
+   * default boards with no persistence reads or writes; the boards are
    * display-only placeholders and must not touch any mode's slot. */
   const buildDefaults = (): void => {
     const cfg = TEAM_MODES[activeMode.value]
@@ -187,7 +187,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     newTeam,
     switchMode,
     applyTeamData,
-    // Reactive reads — usable in computeds (the dirty compare's live side).
+    // Reactive reads, usable in computeds (the dirty compare's live side).
     snapshot: () => persistence.snapshot(),
   }
 }

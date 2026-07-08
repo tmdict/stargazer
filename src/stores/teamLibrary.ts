@@ -1,7 +1,7 @@
 /* The saved-teams library: named canonical snapshots of N-grid teams, persisted
  * under one versioned localStorage blob.
  *
- * Layering: this store returns typed results and never surfaces user feedback —
+ * Layering: this store returns typed results and never surfaces user feedback;
  * toasts belong to the calling components/composables (stores must not call
  * composables). Mutations re-read the stored blob first (read-modify-write) so
  * two same-origin tabs clobber each other per-mutation rather than resurrecting
@@ -43,7 +43,7 @@ const readLibrary = (): SavedTeam[] => {
   }
   if (typeof blob !== 'object' || blob === null) return []
   if (blob.v !== LIBRARY_VERSION || !Array.isArray(blob.teams)) {
-    // An unknown version is treated as empty, never shape-read — but it is
+    // An unknown version is treated as empty, never shape-read, but it is
     // likely a NEWER app version's library, and this version's next mutation
     // will overwrite the live key, so preserve the blob under a backup key.
     if (readStorage(BACKUP_KEY) === null) writeStorage(BACKUP_KEY, raw)

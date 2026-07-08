@@ -6,7 +6,7 @@ import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-/* parseImport is the only place untrusted file content enters the app — this
+/* parseImport is the only place untrusted file content enters the app; this
  * suite exhausts its rejection paths, plus the merge/dedupe/fresh-id rules. */
 
 const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)

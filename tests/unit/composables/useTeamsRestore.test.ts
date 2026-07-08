@@ -328,12 +328,12 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     character.placeCharacterOnHex(1, 11, Team.ALLY)
     const canonical = canonicalTeamData(restore.snapshot())
 
-    // Viewer-state changes: active board, display flags — canonical is stable.
+    // Viewer-state changes: active board, display flags: canonical is stable.
     grids.setActive(3)
     wrapBoards.value = true
     expect(canonicalTeamData(restore.snapshot())).toBe(canonical)
 
-    // Content change — canonical moves. (Place on board 0; the active board
+    // Content change: canonical moves. (Place on board 0; the active board
     // moved to a preset map where this hex may not be placeable.)
     grids.setActive(0)
     expect(character.placeCharacterOnHex(2, 12, Team.ALLY)).toBe(true)
