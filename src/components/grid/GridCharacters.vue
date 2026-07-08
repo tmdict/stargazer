@@ -342,10 +342,11 @@ const visiblePlacements = computed(() => {
 }
 
 /* Lift styling lives on the inner element because the wrapper's inline
-   transform carries the perspective skew. */
+   transform carries the perspective skew. No color or brightness change:
+   elevation is conveyed only by the slight scale and a soft diffuse shadow. */
 .character.lifted .character-content {
-  transform: scale(1.08);
-  filter: brightness(1.15) drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+  transform: scale(1.06);
+  filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
 }
 
 .character-background {
