@@ -188,7 +188,7 @@ const handleDragEnd = (event: DragEvent) => {
  * Sheet layouts use this flow for every pointer; wide layouts split by gesture:
  * touch and pen lift (HTML5 drag is mouse-only), while a mouse click removes,
  * mirroring the game. */
-const handleClick = (event: MouseEvent, hexId: number) => {
+const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
   if (props.isMapEditorMode) return
   hideTooltip()
 
@@ -196,7 +196,7 @@ const handleClick = (event: MouseEvent, hexId: number) => {
     // A lift is scoped to its board; tapping a hero on a different board starts a
     // fresh lift there (cross-board hero-to-hero stays a re-lift, not a swap).
     if (liftedHexId.value !== null && liftedGridId.value !== ctx.id) {
-      setLiftedHex(hexId, ctx.id)
+      setLiftedHex(hexId, ctx.id, characterId)
       return
     }
     if (liftedHexId.value === hexId) {
@@ -214,14 +214,11 @@ const handleClick = (event: MouseEvent, hexId: number) => {
       }
       clearLiftedHex()
     } else {
-      setLiftedHex(hexId, ctx.id)
+      setLiftedHex(hexId, ctx.id, characterId)
     }
     return
   }
 
-  // Removing the lifted hero ends its lift, so the lift can't survive its
-  // subject and hijack the next hero placed on that hex.
-  if (liftedHexId.value === hexId && liftedGridId.value === ctx.id) clearLiftedHex()
   ctx.remove(hexId)
 }
 
@@ -267,7 +264,7 @@ const visiblePlacements = computed(() => {
       :draggable="!isMapEditorMode && !readonly"
       @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
       @dragend="!readonly && handleDragEnd($event)"
-      @click="!readonly && handleClick($event, hexId)"
+      @click="!readonly && handleClick($event, hexId, characterId)"
       @mouseenter="handleMouseEnter($event, hexId, characterId)"
       @mouseleave="handleMouseLeave(hexId)"
     >

@@ -1,5 +1,6 @@
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
+import { getCharacter } from '@/lib/characters/character'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
@@ -19,11 +20,46 @@ const targetArtifactGridId = ref<number | null>(null)
 const targetHexId = ref<number | null>(null)
 const targetGridId = ref<number | null>(null)
 
-// Mobile: the grid cell of a placed hero "lifted" for moving (tap a hero to lift,
-// tap an empty cell on the same board to drop). Board-qualified so a lift stays
-// scoped to its board. Set/cleared by GridCharacters + GridManager.
+// The grid cell of a placed hero "lifted" for moving (tap a hero to lift, tap an
+// empty cell to drop, same or another board). Board-qualified so a lift stays
+// scoped to its board, and unit-qualified so useLiftGuard can tell "still the
+// lifted hero" from "removed, or replaced by a hero the user never lifted".
 const liftedHexId = ref<number | null>(null)
 const liftedGridId = ref<number | null>(null)
+const liftedCharacterId = ref<number | null>(null)
+
+const setLiftedHex = (hexId: number, gridId: number, characterId: number) => {
+  liftedHexId.value = hexId
+  liftedGridId.value = gridId
+  liftedCharacterId.value = characterId
+}
+
+const clearLiftedHex = () => {
+  liftedHexId.value = null
+  liftedGridId.value = null
+  liftedCharacterId.value = null
+}
+
+/* Gesture handlers clear the lift on taps and drags, but placements also change
+ * under it programmatically (roster remove, map switch, board swap, phantimal
+ * reconciliation, companion cascade). Installed once at the app root, this
+ * watcher drops the lift as soon as its cell stops holding the lifted unit, so
+ * a stale lift can never eat a tap or move a hero the user didn't lift. */
+export function useLiftGuard(): void {
+  const grids = useGrids()
+  watch(
+    () => {
+      if (liftedHexId.value === null || liftedGridId.value === null) return true
+      const ctx = grids.getContext(liftedGridId.value)
+      return (
+        ctx !== undefined && getCharacter(ctx.grid, liftedHexId.value) === liftedCharacterId.value
+      )
+    },
+    (liftIntact) => {
+      if (!liftIntact) clearLiftedHex()
+    },
+  )
+}
 
 // Mobile: a deep component asking HomeView to open the roster sheet on a given
 // tab (e.g. an on-grid artifact cell → Seasonal tab). A fresh object per call so
@@ -57,8 +93,7 @@ export function useSelectionState() {
     grids.clearAll()
     targetHexId.value = null
     targetGridId.value = null
-    liftedHexId.value = null
-    liftedGridId.value = null
+    clearLiftedHex()
     targetArtifactTeam.value = null
     targetArtifactGridId.value = null
   }
@@ -77,16 +112,6 @@ export function useSelectionState() {
   const clearTargets = () => {
     clearTargetHex()
     clearArtifactTarget()
-  }
-
-  const setLiftedHex = (hexId: number, gridId: number) => {
-    liftedHexId.value = hexId
-    liftedGridId.value = gridId
-  }
-
-  const clearLiftedHex = () => {
-    liftedHexId.value = null
-    liftedGridId.value = null
   }
 
   const requestTab = (tab: string) => {
