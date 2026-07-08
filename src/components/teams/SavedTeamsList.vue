@@ -8,6 +8,7 @@
 import { computed, nextTick, onScopeDispose, ref } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
+import IconEdit from '@/components/ui/IconEdit.vue'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
 import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
@@ -161,13 +162,26 @@ const cancelRename = (): void => {
             @keydown.esc="cancelRename"
             @blur="commitRename"
           />
-          <button v-else type="button" class="team-name" @click="startRename(team)">
-            {{ team.name }}
-          </button>
-          <span class="mode-chip">{{ modeChip(team) }}</span>
+          <template v-else>
+            <button type="button" class="team-name" @click="startRename(team)">
+              {{ team.name }}
+            </button>
+            <button
+              type="button"
+              class="rename-btn"
+              :title="i18n.t('app.rename')"
+              :aria-label="i18n.t('app.rename')"
+              @click="startRename(team)"
+            >
+              <IconEdit :size="13" />
+            </button>
+          </template>
         </div>
 
-        <span class="card-meta">{{ updatedLabel(team) }}</span>
+        <div class="card-meta-row">
+          <span class="mode-chip">{{ modeChip(team) }}</span>
+          <span class="card-meta">{{ updatedLabel(team) }}</span>
+        </div>
 
         <div class="card-actions">
           <button type="button" class="card-btn primary" @click="emit('select', team)">
@@ -312,6 +326,35 @@ const cancelRename = (): void => {
 
 .team-name-input:focus {
   outline: none;
+}
+
+.rename-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  border: none;
+  background: none;
+  border-radius: var(--radius-small);
+  color: var(--color-text-secondary);
+  opacity: 0.55;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.rename-btn:hover {
+  opacity: 1;
+  color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.card-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
 }
 
 .mode-chip {
