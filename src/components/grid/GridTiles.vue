@@ -69,7 +69,7 @@ const mapEditorStore = useMapEditorStore()
 // Mobile: the tile tapped to target placement (highlighted until a hero fills it).
 // Board-qualified so only this board's tapped tile lights up, not the same hex id
 // on every 5 v 5 board.
-const { targetHexId, targetGridId } = useSelectionState()
+const { targetHexId, targetGridId, liftedHexId, liftedGridId } = useSelectionState()
 
 // Track which hex is currently being hovered (non-drag)
 const hoveredHex = ref<number | null>(null)
@@ -299,6 +299,7 @@ const getHexDropClass = (hex: Hex) => {
     'invalid-drop': isDragHover && !validDropZone,
     hover: hoveredHex.value === hexId,
     targeted: targetHexId.value === hexId && targetGridId.value === ctx.id,
+    lifted: liftedHexId.value === hexId && liftedGridId.value === ctx.id,
   }
 }
 
@@ -526,7 +527,7 @@ onUnmounted(() => {
             fill="transparent"
             stroke="transparent"
             stroke-width="0"
-            @click="!readonly && gridEvents.emit('hex:click', hex)"
+            @click="!readonly && gridEvents.emit('hex:click', hex, $event)"
             @mouseenter="!readonly && handleHexMouseEnter(hex)"
             @mouseleave="!readonly && handleHexMouseLeave(hex)"
             @dragover="!readonly && handleHexDragOver($event, hex)"
@@ -608,6 +609,14 @@ onUnmounted(() => {
 .grid-event-layer.targeted polygon {
   fill: rgba(247, 216, 124, 0.35);
   stroke: #f7d87c;
+  stroke-width: 3;
+}
+
+/* A lifted hero's source tile, teal so it can't be confused with the gold
+   placement target. */
+.grid-event-layer.lifted polygon {
+  fill: rgba(54, 149, 142, 0.3);
+  stroke: #36958e;
   stroke-width: 3;
 }
 </style>

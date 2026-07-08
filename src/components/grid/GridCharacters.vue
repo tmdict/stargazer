@@ -15,6 +15,7 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { phantimalImageUrl } from '@/utils/artifactImage'
+import { isTouchClick } from '@/utils/pointer'
 import { invertTeam } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -179,16 +180,18 @@ const handleDragEnd = (event: DragEvent) => {
   endDrag(event)
 }
 
-const handleClick = (hexId: number) => {
+/* Tap-lift / tap-drop: tapping a hero lifts it for moving; tapping it again
+ * removes it; tapping a different hero while one is lifted swaps the two.
+ * Sheet layouts use this flow for every pointer; wide layouts split by gesture:
+ * touch and pen lift (HTML5 drag is mouse-only), while a mouse click removes,
+ * mirroring the game. */
+const handleClick = (event: MouseEvent, hexId: number) => {
   if (props.isMapEditorMode) return
   hideTooltip()
 
-  // Mobile/tablet: tap-lift / tap-drop. Tapping a hero lifts it for moving;
-  // tapping it again removes it; tapping a different hero while one is lifted
-  // swaps the two. (Desktop moves via drag, so a tap there just removes.)
-  if (props.tapMode ?? ctx.hexScale < 1) {
+  if ((props.tapMode ?? ctx.hexScale < 1) || isTouchClick(event)) {
     // A lift is scoped to its board; tapping a hero on a different board starts a
-    // fresh lift there (cross-board moves use drag).
+    // fresh lift there (cross-board hero-to-hero stays a re-lift, not a swap).
     if (liftedHexId.value !== null && liftedGridId.value !== ctx.id) {
       setLiftedHex(hexId, ctx.id)
       return
@@ -249,12 +252,16 @@ const visiblePlacements = computed(() => {
       v-for="[hexId, characterId] in visiblePlacements"
       :key="hexId"
       class="character"
-      :class="{ 'map-editor-disabled': isMapEditorMode, readonly: readonly }"
+      :class="{
+        'map-editor-disabled': isMapEditorMode,
+        readonly: readonly,
+        lifted: liftedHexId === hexId && liftedGridId === ctx.id,
+      }"
       :style="getCharacterStyle(hexId)"
       :draggable="!isMapEditorMode && !readonly"
       @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
       @dragend="!readonly && handleDragEnd($event)"
-      @click="!readonly && handleClick(hexId)"
+      @click="!readonly && handleClick($event, hexId)"
       @mouseenter="handleMouseEnter($event, hexId, characterId)"
       @mouseleave="handleMouseLeave(hexId)"
     >
@@ -328,6 +335,24 @@ const visiblePlacements = computed(() => {
   width: 100%;
   height: 100%;
   position: relative;
+  transition: transform 0.15s ease-out;
+}
+
+/* "Picked up" affordance for a lifted hero: raised, shadowed, gently bobbing
+   while it waits for a destination. On the inner element because the wrapper's
+   inline transform carries the perspective skew. */
+.character.lifted .character-content {
+  filter: drop-shadow(0 6px 6px rgba(0, 0, 0, 0.35));
+  animation: lifted-bob 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes lifted-bob {
+  from {
+    transform: translateY(-6px) scale(1.08);
+  }
+  to {
+    transform: translateY(-11px) scale(1.08);
+  }
 }
 
 .character-background {

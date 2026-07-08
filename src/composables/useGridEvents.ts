@@ -6,8 +6,9 @@ import type { Hex } from '@/lib/hex'
  * Grid event types with namespacing
  */
 export interface GridEvents {
-  // Hex interactions
-  'hex:click': (hex: Hex) => void
+  // Hex interactions; the DOM event travels along so handlers can tell touch
+  // gestures from mouse clicks.
+  'hex:click': (hex: Hex, event: MouseEvent) => void
 
   // Character interactions
   'character:mouseenter': (hexId: number) => void
