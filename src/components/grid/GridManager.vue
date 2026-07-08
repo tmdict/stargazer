@@ -20,6 +20,7 @@ import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
+import { isTouchClick } from '@/utils/pointer'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -68,11 +69,11 @@ const modalPosition = ref({ x: 0, y: 0 })
 // or drops a lifted hero onto it. The desktop popup is used only at full scale.
 const { liftedHexId, liftedGridId, setTargetHex, clearLiftedHex } = useSelectionState()
 
-// Map editor integration - handle hex clicks for painting tiles
-// All hex-click semantics live here: map-editor paint, the mobile tap flow
-// (lift/drop/target), and desktop remove-or-pick.
-gridEvents.on('hex:click', (hex: Hex) => {
-  // Skip all interactions if readonly
+/* All hex-click semantics live here: map-editor paint, the lifted-hero drop,
+ * the sheet-layout tap-target flow, and wide-layout remove-or-pick. A lift
+ * exists on any layout (touch gestures lift everywhere), so the drop runs
+ * before the layout branch. */
+gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
   if (props.readonly) {
     return
   }
@@ -80,75 +81,88 @@ gridEvents.on('hex:click', (hex: Hex) => {
   if (props.isMapEditorMode) {
     const hexId = hex.getId()
     mapEditorStore.setHexState(hexId, props.selectedMapEditorState)
-  } else {
-    // Normal mode: open the character picker for a tile that can take a unit.
-    const tile = ctx.grid.getTileById(hex.getId())
-    const tileTeam = getTeamFromTileState(tile.state)
-    const scale = ctx.hexScale
-    // Tap-to-place (mobile sheet / small grids) vs the desktop popup. The page can
-    // force the popup: 5 v 5 boards are small but use the on-grid popup, not the
-    // shared tap-target state (which would highlight every board's same hex).
-    const tap = props.tapMode ?? scale < 1
-    if (tileTeam === null) {
-      // Tapping a non-placement tile cancels a pending lift on mobile.
-      if (tap) clearLiftedHex()
-      return
-    }
+    return
+  }
 
-    if (tap) {
-      const grid = ctx.grid
-      // Drop a hero lifted from THIS board onto the empty cell (cross-board moves
-      // go through drag, so a stale lift from another board is dropped below).
-      // Allowed even when the team is full: a move adds no unit.
-      if (
-        liftedHexId.value !== null &&
-        liftedGridId.value === ctx.id &&
-        tile.characterId === undefined
-      ) {
-        const characterId = getCharacter(grid, liftedHexId.value)
-        // A tap-move onto the other team's tile must keep page-wide character
-        // uniqueness, like a drag; a violation silently no-ops.
-        if (
-          characterId !== undefined &&
-          grids.canDropCharacter(characterId, ctx.id, liftedHexId.value, ctx.id, hex.getId())
-        ) {
-          ctx.move(liftedHexId.value, hex.getId(), characterId)
-        }
-        clearLiftedHex()
-        return
+  const tile = ctx.grid.getTileById(hex.getId())
+  const tileTeam = getTeamFromTileState(tile.state)
+  const scale = ctx.hexScale
+  // Tap-to-place (mobile sheet / small grids) vs the desktop popup. The page can
+  // force the popup: 5 v 5 boards are small but use the on-grid popup, not the
+  // shared tap-target state (which would highlight every board's same hex).
+  const tap = props.tapMode ?? scale < 1
+  if (tileTeam === null) {
+    // A non-placement tile cancels a pending lift.
+    clearLiftedHex()
+    return
+  }
+
+  // Drop a lifted hero onto the empty cell — same board directly (allowed even
+  // when the team is full: a move adds no unit), another board through the drag
+  // router, which owns cross-board compose and capacity rules. Either way the
+  // page-wide uniqueness gate decides, like a drag; a violation silently no-ops.
+  if (liftedHexId.value !== null && tile.characterId === undefined) {
+    const fromId = liftedGridId.value
+    const from = grids.contexts.find((c) => c.id === fromId)
+    const characterId = from ? getCharacter(from.grid, liftedHexId.value) : undefined
+    if (
+      fromId !== null &&
+      characterId !== undefined &&
+      grids.canDropCharacter(characterId, fromId, liftedHexId.value, ctx.id, hex.getId())
+    ) {
+      if (fromId === ctx.id) {
+        ctx.move(liftedHexId.value, hex.getId(), characterId)
+      } else {
+        grids.routeDrop(
+          {
+            character: {
+              id: characterId,
+              sourceHexId: liftedHexId.value,
+              sourceGridId: fromId,
+            } as unknown as CharacterType,
+            characterId,
+          },
+          ctx.id,
+          hex.getId(),
+        )
       }
-      // Otherwise target this empty tile so a roster tap fills it (dropping any
-      // stale lift from another board). Allowed even when the team is full: a
-      // phantimal can still be placed there, and the roster re-checks character
-      // capacity before placing a character.
-      if (tile.characterId === undefined) {
-        clearLiftedHex()
-        setTargetHex(hex.getId(), ctx.id)
-      }
-      return
     }
+    clearLiftedHex()
+    return
+  }
 
-    // Desktop: clicking a placed hero's tile removes it. Moves use drag, and
-    // the picker below can only add.
-    if (tile.characterId !== undefined) {
-      ctx.remove(hex.getId())
-      return
+  if (tap) {
+    // Target this empty tile so a roster tap fills it. Allowed even when the
+    // team is full: a phantimal can still be placed there, and the roster
+    // re-checks character capacity before placing a character.
+    if (tile.characterId === undefined) {
+      clearLiftedHex()
+      setTargetHex(hex.getId(), ctx.id)
     }
+    return
+  }
 
-    // Desktop popup can only add: skip a tile whose team is already full.
-    if (getAvailableTeamSize(ctx.grid, tileTeam) <= 0) return
+  // Wide layout: a mouse click on a placed hero's tile removes it (moves use
+  // drag); a touch tap does nothing here, since hero taps belong to the
+  // character layer's lift flow and a tile-sliver tap must not delete.
+  if (tile.characterId !== undefined) {
+    if (!isTouchClick(event)) ctx.remove(hex.getId())
+    return
+  }
 
-    // Desktop: anchor the popup near the tapped hex. The perspective transform
-    // scales Y, but svgPointToScreen (getScreenCTM) already accounts for it.
-    const screenPt = svgPointToScreen(ctx.layout.hexToPixel(hex), gridTilesRef.value?.svgEl)
-    if (screenPt) {
-      modalPosition.value = {
-        x: screenPt.x + 30 * scale,
-        y: screenPt.y - 50 * scale,
-      }
-      modalHex.value = hex
-      showCharacterModal.value = true
+  // The picker can only add: skip a tile whose team is already full.
+  if (getAvailableTeamSize(ctx.grid, tileTeam) <= 0) return
+
+  // Anchor the popup near the tapped hex. The perspective transform scales Y,
+  // but svgPointToScreen (getScreenCTM) already accounts for it.
+  const screenPt = svgPointToScreen(ctx.layout.hexToPixel(hex), gridTilesRef.value?.svgEl)
+  if (screenPt) {
+    modalPosition.value = {
+      x: screenPt.x + 30 * scale,
+      y: screenPt.y - 50 * scale,
     }
+    modalHex.value = hex
+    showCharacterModal.value = true
   }
 })
 
