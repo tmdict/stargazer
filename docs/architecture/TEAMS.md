@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry entry selects how many boards are live (1v1, 3v3, 5v5, 5v5 Supreme League) and each mode persists its own active team independently. On top sits the saved-team library — named canonical snapshots with portrait thumbnails that can be selected, updated, duplicated, renamed, deleted, and backed up to a JSON file.
+The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry entry selects how many boards are live (1v1, 3v3, 5v5, 5v5 Supreme League) and each mode persists its own active team independently. On top sits the saved-team library: named canonical snapshots with portrait thumbnails that can be selected, updated, duplicated, renamed, deleted, and backed up to a JSON file.
 
 ## Design Principles
 
@@ -36,7 +36,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 
 ### TeamsView (`/src/views/TeamsView.vue`)
 
-The page orchestrator: an outer TabView (Teams grid / Image Stitcher — hidden on mobile) inside one card, with the roster as a sibling card.
+The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter hidden on mobile) inside one card, with the roster as a sibling card.
 
 - **Display flags**: owns the global toggles (arrows, grid info, skills, perspective, wrap); share links serialize them and a URL restore applies them
 - **Board sizing**: pins its own hex size per breakpoint (`/src/utils/teamsBoardSize.ts`)
@@ -92,7 +92,7 @@ DEFAULT_TEAM_MODE = '5v5sl'
 ```
 
 - **Default maps**: seed fresh slates and pad short crafted links; 1v1/3v3/5v5 default every board to `arena1`, Supreme League uses the season's map list
-- **Defaults fingerprint**: each active slot records its mode's default maps at write time; changing the list (a new Supreme League season) invalidates the slot on next load — a deliberate hard reset, with saved teams untouched
+- **Defaults fingerprint**: each active slot records its mode's default maps at write time; changing the list (a new Supreme League season) invalidates the slot on next load: a deliberate hard reset, with saved teams untouched
 - **`t` is authoritative**: serialized tile states are self-sufficient (restore resets all tiles and replays `t`), so records referencing retired maps still restore, preview, and re-export; map configs are needed only for empty boards and the Maps-tab picker
 - **`resolveTeamMode(state)`**: a declared `mode` is honored only when its board count matches; otherwise the count decides (5 boards → Supreme League, else the smallest fitting mode)
 - **`normalizeTeamPayload`**: truncates/pads a payload to the mode's exact shape (teams-page ingress only; `/share` renders payloads as-is)
@@ -115,7 +115,7 @@ stargazer.teams.saved.backup         an unknown-version library blob, preserved 
 
 1. Pause autosave, flush the old mode's slot
 2. Set + persist the new mode
-3. Restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults — exactly one rebuild, always (equal-count modes still differ in maps and state)
+3. Restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults; exactly one rebuild, always (equal-count modes still differ in maps and state)
 4. Clear board-qualified selection, force wrap off for non-wrap modes, re-assert page sizing
 5. Adopt the slot's `sourceId`, normalized through the library (unresolvable → null)
 6. Resume autosave, write the baseline
@@ -152,7 +152,7 @@ Semantics wired in `TeamsView`:
 - **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
 - **Select**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched (canonical data has no `d`)
-- **Dirty**: `canonicalTeamData(live snapshot) !== source.data` — board clicks and display toggles never trip it
+- **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 
 ## Thumbnails
@@ -162,7 +162,7 @@ Semantics wired in `TeamsView`:
 - **Geometry cache**: hex polygons are memoized at module level per hex size, so a full library renders hundreds of boards from one polygon set
 - **Map-state cache**: baseline tile states are memoized per map key
 - **Portraits**: hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units); `clipPath` defs exist only for occupied hexes
-- **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states — exactly what Select produces; the map-config baseline applies only when a board has no `t`
+- **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states, exactly what Select produces; the map-config baseline applies only when a board has no `t`
 - **Reuse**: `ArenaPreviewGrid` (Maps tab + Map Editor preset picker) renders through the same component with its square framing
 
 The saved-teams panel mounts on first activation and its cards use `content-visibility: auto`, so a full library never taxes page load.

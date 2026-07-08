@@ -33,7 +33,7 @@ describe('canonicalTeamData', () => {
     const canonical = canonicalTeamData(encode(THREE_BOARDS))!
     expect(canonicalTeamData(canonical)).toBe(canonical)
 
-    // Same content, hand-ordered keys (m before c) — must produce identical bytes.
+    // Same content, hand-ordered keys (m before c): must produce identical bytes.
     const reordered = encode({
       boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena2' }, { m: 'arena3' }].map(
         (board) => (board.c ? { m: board.m, c: board.c } : board),
@@ -110,7 +110,7 @@ describe('validateSavedTeam', () => {
     expect(validateSavedTeam(record({ mode: '5v5' }))).toBeNull()
   })
 
-  it('accepts records referencing retired/unknown maps — t tile states are authoritative', () => {
+  it('accepts records referencing retired/unknown maps: t tile states are authoritative', () => {
     const valid = validateSavedTeam(
       record({
         data: encode({

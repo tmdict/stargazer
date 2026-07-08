@@ -22,7 +22,7 @@ interface UrlRestoreResult {
   displayFlags?: DisplayFlags
   // Multi-board only: false when the payload carried no `d` field, so callers can
   // keep the viewer's current flags instead of applying unpack defaults (canonical
-  // saved-team data deliberately has no `d` — see lib/teams).
+  // saved-team data deliberately has no `d`; see lib/teams).
   hasDisplayFlags?: boolean
   error?: string
 }
