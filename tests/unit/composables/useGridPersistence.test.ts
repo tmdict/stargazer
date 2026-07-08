@@ -3,6 +3,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  loadTeamsDisplayPrefs,
+  saveTeamsDisplayPrefs,
   teamsSlotKey,
   useTeamsPersistence,
   type ActiveSlot,
@@ -149,5 +151,40 @@ describe('useTeamsPersistence', () => {
     await nextTick()
     const slotWrites = setItemSpy.mock.calls.filter(([key]) => key === teamsSlotKey('1v1'))
     expect(slotWrites).toHaveLength(1)
+  })
+})
+
+describe('teams display prefs', () => {
+  beforeEach(() => {
+    vi.stubEnv('SSR', false)
+    stubStorage()
+  })
+
+  afterEach(() => {
+    vi.unstubAllEnvs()
+    vi.unstubAllGlobals()
+  })
+
+  it('round-trips the view toggles with inverted masked out both ways', () => {
+    saveTeamsDisplayPrefs({
+      showGridInfo: false,
+      showArrows: true,
+      teamView: true,
+      wrap: true,
+      inverted: true,
+    })
+    const loaded = loadTeamsDisplayPrefs()
+    expect(loaded).not.toBeNull()
+    expect(loaded!.showGridInfo).toBe(false)
+    expect(loaded!.showArrows).toBe(true)
+    expect(loaded!.teamView).toBe(true)
+    expect(loaded!.wrap).toBe(true)
+    expect(loaded!.inverted).toBe(false)
+  })
+
+  it('returns null when absent or corrupt', () => {
+    expect(loadTeamsDisplayPrefs()).toBeNull()
+    storage.set('stargazer.teams.display', 'garbage')
+    expect(loadTeamsDisplayPrefs()).toBeNull()
   })
 })

@@ -20,8 +20,10 @@ import { useArtifactStore } from '@/stores/artifact'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import {
+  packDisplayFlags,
   serializeGridState,
   serializeMultiGridState,
+  unpackDisplayFlags,
   type DisplayFlags,
 } from '@/utils/gridStateSerializer'
 import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
@@ -31,8 +33,26 @@ const ARENA_KEY = 'stargazer.arena'
 // Obsolete single-slot key; deleted on sight so stale data can't linger.
 const LEGACY_TEAMS_KEY = 'stargazer.teams'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
+const TEAMS_DISPLAY_KEY = 'stargazer.teams.display'
 
 export const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.active.${mode}`
+
+/* Device-level Teams view preferences: the display toggles, shared across every
+ * team mode (they are reading preferences, not board content). Stored as the
+ * same packed byte the share-link `d` field uses so there is one flag schema.
+ * `inverted` is masked out both ways: it is content orientation (the boards
+ * were mirror-swapped under it), so it travels with each mode's slot instead. */
+export const saveTeamsDisplayPrefs = (flags: DisplayFlags): void => {
+  writeStorage(TEAMS_DISPLAY_KEY, String(packDisplayFlags({ ...flags, inverted: false })))
+}
+
+export const loadTeamsDisplayPrefs = (): Required<DisplayFlags> | null => {
+  const raw = readStorage(TEAMS_DISPLAY_KEY)
+  if (raw === null) return null
+  const packed = Number(raw)
+  if (!Number.isInteger(packed)) return null
+  return { ...unpackDisplayFlags(packed), inverted: false }
+}
 
 /* A mode's persisted active team: the encoded snapshot, the saved team it was
  * loaded from / last saved to (null = not a saved team), and a fingerprint of
