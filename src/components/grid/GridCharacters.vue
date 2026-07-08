@@ -345,7 +345,7 @@ const visiblePlacements = computed(() => {
    transform carries the perspective skew. No color or brightness change:
    elevation is conveyed only by the slight scale and a soft diffuse shadow. */
 .character.lifted .character-content {
-  transform: scale(1.14);
+  transform: scale(1.1);
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28));
 }
 
