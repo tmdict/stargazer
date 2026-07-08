@@ -5,7 +5,7 @@ import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
-import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
+import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
@@ -71,13 +71,20 @@ const filteredCharacters = computed(() => {
   return factionFiltered.value.filter((c) => matches.has(c.name))
 })
 
+/* Multi-add palette: the first pick fills the tapped tile, later picks flow to
+ * the team's next free tile, and the popup stays open (dismissal is mouse-leave
+ * or an outside tap) so several heroes can be placed in a row. Placed heroes
+ * drop out of the list, and a full team closes the popup since every further
+ * pick would be a silent no-op. */
 function handleSelect(character: CharacterType) {
   const t = team.value
   if (!t || grids.isUsed(character.id, t)) return
   if (!canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, t)) return
-  if (characterStore.placeCharacterOnHex(props.hex.getId(), character.id, t)) {
-    emit('close')
-  }
+  const anchorFree = gridStore.getTile(props.hex.getId()).characterId === undefined
+  const placed = anchorFree
+    ? characterStore.placeCharacterOnHex(props.hex.getId(), character.id, t)
+    : grids.placeOnActive(character.id, t)
+  if (placed && getAvailableTeamSize(gridStore._getGrid(), t) <= 0) emit('close')
 }
 </script>
 
