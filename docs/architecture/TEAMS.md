@@ -62,7 +62,7 @@ Segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`, slotted at the hea
 
 The team half of the action row, in File-menu order (New, Save, Save as New, Import, Export), collapsing to round icons on mobile:
 
-- **New**: fresh default boards, detached from any saved team; two-step confirm, shared with Clear via `useArmedAction`
+- **New**: fresh default boards, detached from any saved team
 - **Save actions**: Save, and Save as New with a name popover (Enter commits, Esc cancels)
 - **Backup actions**: Import and Export through plain-language tooltips + a hidden file input
 
