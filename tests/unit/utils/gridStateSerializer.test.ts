@@ -6,8 +6,10 @@ import { Hex } from '@/lib/hex'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import {
+  BOARD_CONTENT_KEYS,
   mirrorGridState,
   serializeGridState,
+  serializeMultiGridState,
   unpackDisplayFlags,
 } from '@/utils/gridStateSerializer'
 
@@ -381,6 +383,25 @@ describe('gridStateSerializer', () => {
         inverted: false,
         wrap: false,
       })
+    })
+  })
+
+  describe('BOARD_CONTENT_KEYS contract', () => {
+    it('a maximal board emits exactly the registered content keys', () => {
+      // Canonical saved-team data is rebuilt from BOARD_CONTENT_KEYS, so a new
+      // GridState section that isn't registered there would be silently dropped
+      // from every saved team. This board exercises every content section; when
+      // adding a section, extend the fixture AND the key list together.
+      const tiles: GridTile[] = [
+        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
+        createMockTile(2, State.OCCUPIED_ALLY, toPhantimalId(1), Team.ALLY),
+        createMockTile(3, State.BLOCKED),
+      ]
+      const state = serializeMultiGridState(
+        [{ tiles, allyArtifact: 2, enemyArtifact: null, map: 'arena1', getParagon: () => 3 }],
+        0,
+      )
+      expect(Object.keys(state.boards[0]!).sort()).toEqual([...BOARD_CONTENT_KEYS].sort())
     })
   })
 })

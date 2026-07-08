@@ -1,0 +1,71 @@
+/* Saved-team backup files: a versioned JSON envelope holding the whole library.
+ * Import is merge-only (never replaces the library): records are re-validated
+ * and canonicalized through the same rules as hydration, duplicates of existing
+ * teams are skipped, and every accepted record gets a fresh id. This is the only
+ * place untrusted file content enters the app, so parsing is exhaustive and a
+ * malformed envelope rejects the whole file rather than half-importing. */
+
+import { validateSavedTeam, type SavedTeam } from './savedTeam'
+
+export interface TeamsExportFile {
+  app: 'stargazer'
+  kind: 'saved-teams'
+  version: 1
+  exportedAt: string
+  teams: SavedTeam[]
+}
+
+/* `data` is url-safe base64, so '|' can never appear in it and the key splits
+ * unambiguously even when the name contains '|'. */
+const dedupeKey = (team: Pick<SavedTeam, 'data' | 'name'>): string => `${team.data}|${team.name}`
+
+export function buildExport(teams: readonly SavedTeam[], exportedAt: string): TeamsExportFile {
+  return {
+    app: 'stargazer',
+    kind: 'saved-teams',
+    version: 1,
+    exportedAt,
+    teams: [...teams],
+  }
+}
+
+export type ImportParseResult = { ok: true; teams: SavedTeam[]; skipped: number } | { ok: false }
+
+/* Parse an export file against the current library. Accepted records carry
+ * fresh ids (an import must never collide with or overwrite existing records);
+ * timestamps are preserved from the file. `skipped` counts invalid records and
+ * duplicates (same canonical data + name as an existing or already-accepted
+ * team). Cap enforcement stays with the caller, which owns the library size. */
+export function parseImport(raw: string, existing: readonly SavedTeam[]): ImportParseResult {
+  let envelope: unknown
+  try {
+    envelope = JSON.parse(raw)
+  } catch {
+    return { ok: false }
+  }
+  if (typeof envelope !== 'object' || envelope === null) return { ok: false }
+  const { app, kind, version, teams } = envelope as Record<string, unknown>
+  if (app !== 'stargazer' || kind !== 'saved-teams' || version !== 1) return { ok: false }
+  if (!Array.isArray(teams)) return { ok: false }
+
+  const seen = new Set(existing.map(dedupeKey))
+  const accepted: SavedTeam[] = []
+  let skipped = 0
+
+  for (const record of teams) {
+    const valid = validateSavedTeam(record)
+    if (!valid) {
+      skipped++
+      continue
+    }
+    const key = dedupeKey(valid)
+    if (seen.has(key)) {
+      skipped++
+      continue
+    }
+    seen.add(key)
+    accepted.push({ ...valid, id: crypto.randomUUID() })
+  }
+
+  return { ok: true, teams: accepted, skipped }
+}
