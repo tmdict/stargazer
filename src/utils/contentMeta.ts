@@ -1,6 +1,7 @@
 import { inject, onUnmounted, type InjectionKey } from 'vue'
 import { useHead } from '@unhead/vue'
 
+import { SITE_ORIGIN } from '@/lib/site'
 import { SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
@@ -9,7 +10,7 @@ import { heroDisplayName } from '@/utils/skillLabels'
 /** Provide(true) when rendering skill content inside a modal to suppress page-level meta writes. */
 export const ContentInModalKey: InjectionKey<boolean> = Symbol('ContentInModal')
 
-const ORIGIN = 'https://stargazer.tmdict.com'
+const ORIGIN = SITE_ORIGIN
 const BASE_KEYWORDS = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远征']
 
 /**

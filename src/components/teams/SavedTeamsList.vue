@@ -27,22 +27,29 @@ const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
 
 const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].labelKey)
 
+const UPDATED_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
+  ['minute', 60],
+  ['hour', 3600],
+  ['day', 86400],
+  ['week', 604800],
+]
+
+// Cached per locale: the label runs for every card on each re-render, and the
+// formatter's construction is the expensive part.
+const updatedFormatter = computed(
+  () => new Intl.RelativeTimeFormat(i18n.currentLocale, { numeric: 'auto' }),
+)
+
 // Relative "updated" stamp in the chrome locale (coarsest unit: weeks).
 const updatedLabel = (team: SavedTeam): string => {
   // 0 = record predates timestamps (validation's fallback); no stamp beats
   // "52 weeks ago".
   if (team.updatedAt === 0) return ''
   const seconds = Math.round((team.updatedAt - Date.now()) / 1000)
-  const table: [Intl.RelativeTimeFormatUnit, number][] = [
-    ['minute', 60],
-    ['hour', 3600],
-    ['day', 86400],
-    ['week', 604800],
-  ]
-  const rtf = new Intl.RelativeTimeFormat(i18n.currentLocale, { numeric: 'auto' })
+  const rtf = updatedFormatter.value
   if (-seconds < 60) return i18n.t('app.updated', { time: rtf.format(0, 'minute') })
-  for (let i = table.length - 1; i >= 0; i--) {
-    const [unit, size] = table[i]!
+  for (let i = UPDATED_UNITS.length - 1; i >= 0; i--) {
+    const [unit, size] = UPDATED_UNITS[i]!
     if (-seconds >= size || i === 0) {
       return i18n.t('app.updated', { time: rtf.format(Math.ceil(seconds / size), unit) })
     }

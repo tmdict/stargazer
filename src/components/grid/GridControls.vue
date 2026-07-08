@@ -88,15 +88,15 @@ const flatView = computed({
     <!-- Row 2: action buttons (plus the page's own, e.g. team save actions) -->
     <div class="controls-row controls-actions">
       <slot name="actions-start" />
-      <button @click="emit('copyLink')" class="action-btn" :title="i18n.t('app.link')">
+      <button @click="emit('copyLink')" class="control-btn" :title="i18n.t('app.link')">
         <IconLink :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.link') }}</span>
       </button>
-      <button @click="emit('copyImage')" class="action-btn" :title="i18n.t('app.copy')">
+      <button @click="emit('copyImage')" class="control-btn" :title="i18n.t('app.copy')">
         <IconCopy :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.copy') }}</span>
       </button>
-      <button @click="emit('download')" class="action-btn" :title="i18n.t('app.download')">
+      <button @click="emit('download')" class="control-btn" :title="i18n.t('app.download')">
         <IconDownload :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.download') }}</span>
       </button>
@@ -122,9 +122,8 @@ const flatView = computed({
   gap: var(--spacing-lg);
 }
 
-/* Base button styles shared by all control buttons */
-.grid-toggle-btn,
-.action-btn {
+/* Sized like .control-btn (controls.css) so both rows stay 36px. */
+.grid-toggle-btn {
   display: flex;
   align-items: center;
   gap: var(--spacing-xs);
@@ -133,21 +132,15 @@ const flatView = computed({
   font-size: 0.85rem;
   font-weight: 600;
   user-select: none;
-  border: 2px solid;
+  border: 2px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   transition: all var(--transition-fast);
   min-height: 36px;
   flex-shrink: 0;
   white-space: nowrap;
-}
-
-/* Toggle button specific styles. Padding is inherited from the shared base so the
-   height matches the action buttons and the invert toggle (all 36px). */
-.grid-toggle-btn {
   color: var(--color-text-secondary);
   background: var(--color-bg-primary);
-  border-color: var(--color-border-primary);
 }
 
 .grid-toggle-btn:hover {
@@ -162,22 +155,6 @@ const flatView = computed({
   pointer-events: none;
 }
 
-/* Action button specific styles */
-.action-btn {
-  background: var(--color-primary);
-  color: white;
-  border-color: var(--color-primary);
-}
-
-.action-btn:hover {
-  background: var(--color-primary-hover);
-  border-color: var(--color-primary-hover);
-}
-
-.action-btn:active {
-  transform: scale(0.95);
-}
-
 /* Checkbox inside toggle buttons */
 .grid-toggle-checkbox {
   width: 0.9rem;
@@ -190,10 +167,6 @@ const flatView = computed({
 /* Text elements in buttons */
 .grid-toggle-text {
   font-weight: 600;
-}
-
-.btn-icon {
-  flex-shrink: 0;
 }
 
 /* Mobile: a native-first toolbar. Display toggles become filled/outlined
@@ -233,22 +206,6 @@ const flatView = computed({
   .grid-toggle-checkbox {
     display: none;
   }
-
-  .action-btn {
-    border-radius: 999px;
-    padding: 0;
-    width: 34px;
-    height: 34px;
-    min-height: 0;
-    justify-content: center;
-  }
-  .action-btn .btn-text {
-    display: none;
-  }
-  .action-btn .btn-icon {
-    width: 18px;
-    height: 18px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -262,14 +219,6 @@ const flatView = computed({
     padding: 4px 10px;
     min-height: 30px;
     font-size: 0.74rem;
-  }
-  .action-btn {
-    width: 30px;
-    height: 30px;
-  }
-  .action-btn .btn-icon {
-    width: 16px;
-    height: 16px;
   }
 }
 </style>

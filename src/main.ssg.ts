@@ -6,6 +6,7 @@ import { vScrollChain } from '@/directives/scrollChain'
 import { routes, scrollBehavior, warmSkillLocale } from '@/router/routes'
 
 import './styles/base.css'
+import './styles/controls.css'
 import './styles/variables.css'
 
 /**

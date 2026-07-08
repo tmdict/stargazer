@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import SkillsBrowser from '@/components/skill/SkillsBrowser.vue'
+import { SITE_ORIGIN } from '@/lib/site'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
@@ -12,7 +13,8 @@ const lang = computed(() => i18n.effectiveSkillLocale)
 
 useHead({
   title: 'Skills | Stargazer',
-  link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/skills' }],
+  meta: [{ property: 'og:url', content: `${SITE_ORIGIN}/skills` }],
+  link: [{ rel: 'canonical', href: `${SITE_ORIGIN}/skills` }],
 })
 </script>
 
