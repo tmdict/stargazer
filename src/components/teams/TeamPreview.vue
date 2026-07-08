@@ -69,20 +69,22 @@ const boards = computed(() => {
 <style scoped>
 .team-preview {
   display: flex;
-  gap: 4px;
+  flex-wrap: wrap;
+  gap: 6px;
   justify-content: center;
   align-items: center;
   background: rgba(0, 0, 0, 0.05);
   border-radius: var(--radius-medium);
-  padding: 6px 4px;
-  min-height: 72px;
+  padding: 8px 6px;
+  min-height: 84px;
 }
 
-/* Boards split the row evenly; the SVG scales through its viewBox. */
+/* Boards wrap at three per row (5v5 renders 3+2), keeping every board near the
+   single-board reference size instead of shrinking to fit one row. */
 .board-thumb {
-  flex: 1 1 0;
+  flex: 0 1 30%;
   min-width: 0;
-  max-width: 96px;
+  max-width: 108px;
   height: auto;
 }
 

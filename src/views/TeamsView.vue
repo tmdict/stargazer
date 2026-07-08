@@ -46,7 +46,7 @@ const shareLink = useShareLink()
 gameDataStore.initializeData()
 i18n.initialize()
 
-useHead({ title: 'Teams · Stargazer' })
+useHead({ title: 'Teams | Stargazer' })
 
 const activeTab = ref('teams')
 // Image Stitcher is a wide-window-only tool: its tab is hidden on mobile.

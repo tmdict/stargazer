@@ -18,6 +18,7 @@ gameDataStore.initializeData()
 useI18nStore().initialize()
 
 useHead({
+  title: 'Wand Wars | Stargazer',
   link: [{ rel: 'canonical', href: 'https://stargazer.tmdict.com/wandwars' }],
 })
 
