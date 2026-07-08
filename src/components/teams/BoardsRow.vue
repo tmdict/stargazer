@@ -61,7 +61,9 @@ const { wrap, canWrap } = defineProps<{
 
 /* "Wrap" layout: the five boards as 3 then 2 over two rows. Board size and the
    horizontal scroll are unchanged; only the arrangement differs, and the capture
-   root stays this element so Copy/Download still include all five. */
+   root stays this element so Copy/Download still include all five. With fewer
+   than 4 slotted boards (the 1v1/3v3 modes) the :nth-child(4)/(5) rules match
+   nothing, so a stray wrap flag degrades to the plain 3-column grid. */
 .boards-track.wrap {
   display: grid;
   grid-template-columns: repeat(3, max-content);

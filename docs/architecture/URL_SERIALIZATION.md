@@ -165,14 +165,16 @@ if (result.success) {
 
 **Note**: Character IDs are limited to 65,535 (16-bit encoding). Companion IDs are `N * 10000 + base`, so the field covers companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). IDs exceeding the limit are filtered during validation.
 
-## Multi-board state (5 v 5)
+## Multi-board state (Teams)
 
-The Teams page shares N boards in one link. Five boards plus an active id and global flags are too varied for the single-board binary packing, and there is no back-compat constraint, so multi-board state is encoded as **url-safe base64 of JSON** instead:
+The Teams page shares N boards in one link. Several boards plus an active id and global flags are too varied for the single-board binary packing, and there is no back-compat constraint, so multi-board state is encoded as **url-safe base64 of JSON** instead:
 
-- `serializeMultiGridState(boards, activeId, displayFlags)` → `MultiGridState` (`/src/utils/gridStateSerializer.ts`)
+- `serializeMultiGridState(boards, activeId, displayFlags, mode)` → `MultiGridState` (`/src/utils/gridStateSerializer.ts`)
 - `encodeMultiGridStateToUrl(state)` → the `g` value carried by `/teams?g=` and `/share?g=` links (`/src/utils/urlStateManager.ts`)
-- `TeamsView` restores it on load via `useUrlStateStore.restoreMultiFromEncodedState`, rebuilding each board.
+- `TeamsView` restores it on load via `useTeamsRestore`, which resolves the payload's team mode, normalizes the board count to the mode's shape, and applies it through `useUrlStateStore.restoreMultiFromEncodedState`.
 
-`MultiGridState` is `{ boards, active?, d? }`. Each board record is a `BoardState` `{t, c, p, a, pr, m}`: the single-board `GridState` plus `m`, the board's map key. Restore caps boards at `MAX_GRID_COUNT` (5), passes the map keys into `setGridCount`, then applies each board in order: tiles, mains (companions settled per main), paragon, artifacts, phantimals, then `seedPhantimalBaseline()`. After all boards, `grids.dedupeCharacters()` repairs page-wide hero uniqueness that per-board validation cannot see.
+`MultiGridState` is `{ boards, active?, d?, mode? }`. Each board record is a `BoardState` `{t, c, p, a, pr, m}`: the single-board `GridState` plus `m`, the board's map key. `mode` is always written by the serializer; links predating it (or carrying a mode that contradicts the board count) resolve their mode from the count via `resolveTeamMode` (`/src/lib/teams/modes.ts`) — five boards belong to the Supreme League page, otherwise the smallest fitting mode. Restore caps boards at `MAX_GRID_COUNT` (5), passes the map keys into `setGridCount`, then applies each board in order: tiles, mains (companions settled per main), paragon, artifacts, phantimals, then `seedPhantimalBaseline()`. After all boards, `grids.dedupeCharacters()` repairs page-wide hero uniqueness that per-board validation cannot see. The restore result reports `hasDisplayFlags` so payloads without a `d` field (canonical saved-team data) apply board content without touching the viewer's display toggles.
+
+The same encoding, in a **canonical form** stripped of viewer state (`active` and `d`, boards rebuilt in fixed key order), is the payload of saved teams — see [Teams](./TEAMS.md). A saved team's `data` string works verbatim as a `/share?g=` value.
 
 The single-board binary format above serves the Arena (`?g=` on `/`).

@@ -37,6 +37,7 @@ For comprehensive project documentation, see:
 ### Architecture Deep Dives
 
 - [Grid & Character System](./docs/architecture/GRID.md) - Hexagonal grid and character management
+- [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, boards, saved-team library
 - [Phantimals](./docs/architecture/PHANTIMALS.md) - Seasonal phantimal grid units
 - [Skills](./docs/architecture/SKILLS.md) - Character abilities and visual effects
 - [Pathfinding](./docs/architecture/PATHFINDING.md) - Targeting and movement algorithms
