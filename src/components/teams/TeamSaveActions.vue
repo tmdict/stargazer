@@ -10,6 +10,7 @@ import { nextTick, ref } from 'vue'
 
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconSave from '@/components/ui/IconSave.vue'
+import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
@@ -74,13 +75,30 @@ const handleSave = (): void => {
       <span v-if="dirty" class="dirty-dot" :title="i18n.t('app.unsaved-changes')" />
     </span>
 
-    <button type="button" class="team-btn" @click="handleSave">
+    <button
+      type="button"
+      class="team-btn"
+      :title="
+        sourceName !== null
+          ? i18n.t('app.tooltip-save', { name: sourceName })
+          : i18n.t('app.tooltip-save-as-new')
+      "
+      :aria-label="i18n.t('app.save')"
+      @click="handleSave"
+    >
       <IconSave :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.save') }}</span>
     </button>
     <span class="popover-anchor">
-      <button type="button" class="team-btn secondary" @click="openPopover">
-        {{ i18n.t('app.save-as-new') }}
+      <button
+        type="button"
+        class="team-btn secondary"
+        :title="i18n.t('app.tooltip-save-as-new')"
+        :aria-label="i18n.t('app.save-as-new')"
+        @click="openPopover"
+      >
+        <IconSavePlus :size="14" class="btn-icon" />
+        <span class="btn-text">{{ i18n.t('app.save-as-new') }}</span>
       </button>
       <div
         v-if="popoverOpen"
@@ -112,11 +130,23 @@ const handleSave = (): void => {
         </div>
       </div>
     </span>
-    <button type="button" class="team-btn secondary" @click="emit('exportTeams')">
+    <button
+      type="button"
+      class="team-btn secondary"
+      :title="i18n.t('app.tooltip-export')"
+      :aria-label="i18n.t('app.export')"
+      @click="emit('exportTeams')"
+    >
       <IconDownload :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.export') }}</span>
     </button>
-    <button type="button" class="team-btn secondary" @click="fileInput?.click()">
+    <button
+      type="button"
+      class="team-btn secondary"
+      :title="i18n.t('app.tooltip-import')"
+      :aria-label="i18n.t('app.import')"
+      @click="fileInput?.click()"
+    >
       <IconUpload :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.import') }}</span>
     </button>
@@ -274,18 +304,42 @@ const handleSave = (): void => {
   font-size: 0.8rem;
 }
 
+/* Mobile matches the control bar's round icon-only actions; the editing label
+   is dropped for room (the dirty state travels with it — Save always works, so
+   nothing is lost but the reminder). Direct-child selectors keep the popover's
+   text buttons out of the icon-only treatment. */
 @media (max-width: 768px) {
   .active-team-label {
-    max-width: 180px;
-    min-height: 34px;
+    display: none;
   }
-  /* Match the control bar's mobile icon-only round actions; Save as New has no
-     icon, so it stays a text pill. */
-  .team-btn {
+  .team-save-actions > .team-btn,
+  .popover-anchor > .team-btn {
     border-radius: 999px;
-    min-height: 34px;
-    padding: 4px 12px;
-    font-size: 0.78rem;
+    padding: 0;
+    width: 34px;
+    height: 34px;
+    min-height: 0;
+    justify-content: center;
+  }
+  .team-save-actions > .team-btn .btn-text,
+  .popover-anchor > .team-btn .btn-text {
+    display: none;
+  }
+  .team-btn .btn-icon {
+    width: 18px;
+    height: 18px;
+  }
+}
+
+@media (max-width: 480px) {
+  .team-save-actions > .team-btn,
+  .popover-anchor > .team-btn {
+    width: 30px;
+    height: 30px;
+  }
+  .team-btn .btn-icon {
+    width: 16px;
+    height: 16px;
   }
 }
 </style>
