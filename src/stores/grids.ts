@@ -13,7 +13,12 @@
 import { computed, ref, shallowRef } from 'vue'
 import { defineStore } from 'pinia'
 
-import { createGridContext, findCharacterHex, type GridContext } from '@/composables/useGridContext'
+import {
+  createGridContext,
+  findCharacterHex,
+  type CharacterDropPayload,
+  type GridContext,
+} from '@/composables/useGridContext'
 import {
   canPlaceCharacterOnTeam,
   getAvailableTeamSize,
@@ -25,7 +30,6 @@ import {
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
-import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
@@ -454,7 +458,7 @@ export const useGrids = defineStore('grids', () => {
   // reads. A successful drop makes the destination board active (active follows
   // interaction, so a roster drop targets the board it just landed on).
   const routeDrop = (
-    payload: { character: CharacterType; characterId: number },
+    payload: CharacterDropPayload,
     targetCtxId: number,
     targetHexId: number,
   ): boolean => {
@@ -481,6 +485,26 @@ export const useGrids = defineStore('grids', () => {
       : crossGridMove(sourceCtx, sourceHexId, targetCtx, targetHexId, destTeam)
     if (ok) activeId.value = targetCtxId
     return ok
+  }
+
+  // Tap-lift drops go through routeDrop so they share every drag gate, including
+  // handleDrop's same-board team-change rules (phantimal faction, one per team)
+  // that a bare ctx.move would skip. The payload is built from the lifted cell.
+  const routeLiftDrop = (
+    fromCtxId: number,
+    fromHexId: number,
+    targetCtxId: number,
+    targetHexId: number,
+  ): boolean => {
+    const fromCtx = getContext(fromCtxId)
+    if (!fromCtx) return false
+    const characterId = getCharacter(fromCtx.grid, fromHexId)
+    if (characterId === undefined) return false
+    return routeDrop(
+      { character: { sourceHexId: fromHexId, sourceGridId: fromCtxId }, characterId },
+      targetCtxId,
+      targetHexId,
+    )
   }
 
   // The rules for an artifact dropped onto a visible artifact cell (same or other
@@ -570,6 +594,7 @@ export const useGrids = defineStore('grids', () => {
     removeArtifactFromAnyBoard,
     canDropCharacter,
     routeDrop,
+    routeLiftDrop,
     canDropArtifact,
     routeArtifactDrop,
     swapBoards,

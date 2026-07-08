@@ -4,13 +4,12 @@ import { computed, ref } from 'vue'
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
+import { useGridContext } from '@/composables/useGridContext'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
-import { useCharacterStore } from '@/stores/character'
-import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -28,12 +27,15 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const characterStore = useCharacterStore()
-const gridStore = useGridStore()
+// The board that opened the popup (injected through GridManager, which
+// declares this component, so Teleport doesn't break it). Picks must resolve
+// against this board, not the page-wide active board, which any interaction
+// on another board can move while the popup is open.
+const ctx = useGridContext()
 const grids = useGrids()
 const i18n = useI18nStore()
 
-const team = computed(() => getTeamFromTileState(gridStore.getTile(props.hex.getId()).state))
+const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.getId()).state))
 
 // Heroes not already on this team on any board (page-wide uniqueness; on the
 // single Arena board this is just the one board).
@@ -72,19 +74,23 @@ const filteredCharacters = computed(() => {
 })
 
 /* Multi-add palette: the first pick fills the tapped tile, later picks flow to
- * the team's next free tile, and the popup stays open (dismissal is mouse-leave
- * or an outside tap) so several heroes can be placed in a row. Placed heroes
- * drop out of the list, and a full team closes the popup since every further
- * pick would be a silent no-op. */
+ * the team's next free tile, and the popup stays open (dismissal is mouse-leave,
+ * Esc, or an outside tap) so several heroes can be placed in a row. Placed
+ * heroes drop out of the list, and a full team closes the popup since every
+ * further pick would be a silent no-op. */
 function handleSelect(character: CharacterType) {
   const t = team.value
   if (!t || grids.isUsed(character.id, t)) return
-  if (!canPlaceCharacterOnTeam(gridStore._getGrid(), character.id, t)) return
-  const anchorFree = gridStore.getTile(props.hex.getId()).characterId === undefined
+  if (!canPlaceCharacterOnTeam(ctx.grid, character.id, t)) return
+  const anchorFree = ctx.grid.getTileById(props.hex.getId()).characterId === undefined
   const placed = anchorFree
-    ? characterStore.placeCharacterOnHex(props.hex.getId(), character.id, t)
-    : grids.placeOnActive(character.id, t)
-  if (placed && getAvailableTeamSize(gridStore._getGrid(), t) <= 0) emit('close')
+    ? ctx.place(props.hex.getId(), character.id, t)
+    : ctx.autoPlace(character.id, t)
+  if (placed) {
+    // Active follows interaction, matching drop routing.
+    grids.setActive(ctx.id)
+    if (getAvailableTeamSize(ctx.grid, t) <= 0) emit('close')
+  }
 }
 </script>
 

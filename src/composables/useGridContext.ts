@@ -86,6 +86,14 @@ export interface GridContextGlobals {
   sharedCrop?: Ref<{ minX: number; maxX: number; minY: number; maxY: number } | null>
 }
 
+// The drop chain (routeDrop -> handleDrop) reads only the drag-source
+// coordinates from the payload; live cells are authoritative for everything
+// else at drop time. Absent coordinates mean a roster placement.
+export interface CharacterDropPayload {
+  character: Pick<CharacterType, 'sourceHexId' | 'sourceGridId'>
+  characterId: number
+}
+
 // A reactive board entity (store-like): refs and computeds are unwrapped on
 // access, so consumers read `ctx.currentMap` / `ctx.viewBoxBounds` without
 // `.value`, and `ctx.grid` is the reactive grid proxy.
@@ -133,10 +141,7 @@ export interface GridContext {
   removeArtifact: (team: Team) => void
   getParagon: (team: Team, characterId: number) => number
   setParagon: (team: Team, characterId: number, level: number) => void
-  handleDrop: (
-    payload: { character: CharacterType; characterId: number },
-    targetHexId: number,
-  ) => boolean
+  handleDrop: (payload: CharacterDropPayload, targetHexId: number) => boolean
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
   clearArtifacts: () => void
@@ -279,10 +284,7 @@ export function createGridContext(
 
   // Same-board drop dispatch: grid-source drags move or swap, roster drops place
   // and replace any occupant. Cross-board routing is one level up.
-  const handleDrop = (
-    payload: { character: CharacterType; characterId: number },
-    targetHexId: number,
-  ): boolean => {
+  const handleDrop = (payload: CharacterDropPayload, targetHexId: number): boolean => {
     const { character, characterId } = payload
     if (character.sourceHexId !== undefined) {
       if (hasCharacter(grid, targetHexId)) {

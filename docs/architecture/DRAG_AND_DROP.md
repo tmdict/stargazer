@@ -197,7 +197,7 @@ function validateDrop(hexId: number, character: CharacterType): boolean {
 
 ### Cross-board drag (multigrid)
 
-On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`.
+On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`. Drag is not the only caller: tap-lift drops (see the placement-interaction section in [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)) reach the same router through `routeLiftDrop`, which builds the payload from the lifted cell, so taps and drags share every gate below.
 
 Every drop first passes `canDropCharacter(characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)`, the routing-layer gate covering page-wide per-team uniqueness (including same-board cross-team moves and swaps), companions staying on their main's board, destination capacity, and phantimal faction. GridTiles reads the same gate for the drag-hover cue, so hover and drop agree for every routing-layer rule. The engine's per-grid checks still have the last word at drop time: the gate's same-board leg checks only the page-wide rule, so a same-board engine rejection (a full team on a team change, a companion changing teams, a phantimal cross-team swap) or a mid-transaction failure resolves as a silent no-op. Paragon levels move with a hero across boards.
 
@@ -341,5 +341,5 @@ interface DragData {
 
 - **HTML5 Drag API**: Supported in all modern browsers (mouse-only — `dataTransfer` doesn't fire on touch)
 - **SVG Events**: Pointer events with proper configuration
-- **Touch**: Drag is desktop-only; mobile placement is tap-based instead (tap a tile to target it, then tap a roster character) — see [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)
+- **Touch**: Drag never fires on touch, so touch interactions are tap-based on every layout, split by pointer type (`isTouchClick`), not by viewport: narrow layouts add via the tap-target + roster sheet, wide layouts add via the on-grid picker, and a placed hero moves (including cross-board), swaps, or removes via the tap-lift flow. Artifacts are the exception: they have no tap-lift, so touch adds and deletes them but only a mouse drag repositions one. See [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)
 - **Fallback Handling**: Graceful degradation for older browsers
