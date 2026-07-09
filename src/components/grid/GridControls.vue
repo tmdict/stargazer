@@ -28,6 +28,8 @@ defineProps<{
   hideTeamControls?: boolean
   // Shows the "Wrap" boards-layout toggle (Teams only); the Arena never renders it.
   showWrapToggle?: boolean
+  // Two-step confirm on Clear (Teams only; the Arena clears instantly).
+  confirmClear?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -100,7 +102,7 @@ const flatView = computed({
         <IconDownload :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.download') }}</span>
       </button>
-      <ClearButton v-if="!hideTeamControls" @click="handleClearAll" />
+      <ClearButton v-if="!hideTeamControls" :confirm-first="confirmClear" @click="handleClearAll" />
     </div>
   </div>
 </template>
