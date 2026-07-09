@@ -72,7 +72,7 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
   }
   // Fill the displayed-ally side first, then the displayed enemy side; each attempt
   // fails if that team lacks the faction requirement, falling through to the next.
-  for (const team of fillOrder.value) {
+  for (const team of fillOrder) {
     if (characterStore.autoPlacePhantimal(id, team)) break
   }
 }
@@ -115,7 +115,7 @@ const tooltipText = computed(() => {
   if (!phantimal) return ''
   const count = characterStore.phantimalFactionCount(
     toPhantimalId(phantimal.id),
-    fillOrder.value[0],
+    fillOrder[0],
   )
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
   const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'

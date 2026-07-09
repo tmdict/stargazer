@@ -14,7 +14,6 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
-import { invertTeam } from '@/utils/tileStateFormatting'
 
 const props = defineProps<{
   allyArtifactId?: number | null
@@ -135,14 +134,13 @@ const enemyArtifact = computed(() => {
   return gameDataStore.getArtifactById(props.enemyArtifactId) ?? null
 })
 
-// Each host cell stays anchored to its engine team, but its displayed team follows
-// invert: the slot shown as ally renders in front and is the one kept in team view.
-const allySlotDisplayTeam = computed(() => invertTeam(Team.ALLY, ctx.inverted))
-const enemySlotDisplayTeam = computed(() => invertTeam(Team.ENEMY, ctx.inverted))
-const allySlotInFront = computed(() => allySlotDisplayTeam.value === Team.ALLY)
-const enemySlotInFront = computed(() => enemySlotDisplayTeam.value === Team.ALLY)
-const allySlotVisible = computed(() => !ctx.teamView || allySlotDisplayTeam.value === Team.ALLY)
-const enemySlotVisible = computed(() => !ctx.teamView || enemySlotDisplayTeam.value === Team.ALLY)
+// "Front" is the slot that renders at the screen-bottom (near) edge, which must
+// sit above the sprites behind it; the inverted view rotates the enemy cell down
+// there. Team view always keeps the ally slot (it shows your team).
+const allySlotInFront = computed(() => !ctx.inverted)
+const enemySlotInFront = computed(() => ctx.inverted)
+const allySlotVisible = computed(() => true)
+const enemySlotVisible = computed(() => !ctx.teamView)
 
 // The empty dashed cell is an "add artifact here" affordance, shown only on the
 // interactive grid; a filled cell always frames its artifact. A slot shown as
