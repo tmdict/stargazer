@@ -50,7 +50,6 @@ const handleResetMap = () => {
 const handleArenaSelected = (mapKey: string) => {
   emit('arenaSelected', mapKey)
 }
-
 </script>
 
 <template>

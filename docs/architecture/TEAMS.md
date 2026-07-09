@@ -38,7 +38,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 
 The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter hidden on mobile) inside one card, with the roster as a sibling card.
 
-- **Display flags**: owns the view toggles (arrows, grid info, skills, perspective, team view, wrap) as device-level preferences shared by every team mode: restored from `stargazer.teams.display` at setup and mirrored on every change. Share links serialize them and a `?g=` restore applies them (adopting the sharer's view is the point of a link); mode slots also carry them but only their `inverted` bit is honored on restore, since invert is content orientation, not a view preference
+- **Display flags**: owns the view toggles (arrows, grid info, skills, perspective, team view, invert, wrap) as device-level preferences shared by every team mode: restored from `stargazer.teams.display` at setup and mirrored on every change. Share links serialize them and a `?g=` restore applies them (adopting the sharer's view is the point of a link); mode slots also carry them but restores ignore them entirely
 - **Board sizing**: pins its own hex size per breakpoint (`/src/utils/teamsBoardSize.ts`)
 - **Startup**: a `?g=` link overwrites the routed mode's slot; otherwise the last-used mode restores
 - **Degraded startup**: if game data failed to load, `buildDefaults()` shows placeholder boards with no persistence reads or writes
@@ -115,7 +115,7 @@ stargazer.teams.saved.backup         an unknown-version library blob, preserved 
 
 1. Pause autosave, flush the old mode's slot
 2. Set + persist the new mode
-3. Restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults; exactly one rebuild, always (equal-count modes still differ in maps and state). A slot restore adopts only the payload's `inverted` bit (view toggles are device prefs); default boards reset it, being un-inverted by construction
+3. Restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults; exactly one rebuild, always (equal-count modes still differ in maps and state). A slot restore ignores the payload's display flags: view toggles are device prefs
 4. Clear board-qualified selection, re-assert page sizing
 5. Adopt the slot's `sourceId`, normalized through the library (unresolvable → null)
 6. Resume autosave, write the baseline
@@ -151,7 +151,7 @@ Semantics wired in `TeamsView`:
 
 - **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
-- **Select**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched (canonical data has no `d`), and invert resets to false since flagless content is un-inverted by definition
+- **Select**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 

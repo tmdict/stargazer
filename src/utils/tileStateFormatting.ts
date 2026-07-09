@@ -59,4 +59,3 @@ export const getTeamFromTileState = (state: State): Team | null => {
   if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
   return null
 }
-
