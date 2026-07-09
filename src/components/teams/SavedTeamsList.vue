@@ -277,9 +277,10 @@ const cancelRename = (): void => {
 
 .team-grid {
   display: grid;
-  /* Capped at three columns: fewer, larger cards give the preview boards the
-     width they need for legible hero portraits. */
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* The column minimum keeps cards wide enough for legible thumbnail heroes
+     (three columns on an 11-inch iPad Pro); larger monitors fit more columns
+     of the same card size rather than stretching three. */
+  grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
 }
