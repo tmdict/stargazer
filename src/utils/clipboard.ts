@@ -1,5 +1,8 @@
-/** Copy a PNG/image blob to the system clipboard. Throws if unsupported or denied. */
-export async function copyImageBlob(blob: Blob): Promise<void> {
+/** Copy a PNG/image blob to the system clipboard. Throws if unsupported or denied.
+ * Takes a promise: Safari invalidates the user activation across an await, so the
+ * ClipboardItem must be handed the pending capture inside the click's own task
+ * and the browser awaits the blob itself. */
+export async function copyImageBlob(blob: Promise<Blob>): Promise<void> {
   if (!navigator.clipboard || !window.ClipboardItem) {
     throw new Error('Clipboard not supported')
   }
