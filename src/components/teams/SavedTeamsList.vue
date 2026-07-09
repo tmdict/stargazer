@@ -5,11 +5,12 @@
    actions use the app's no-modal style: a two-step inline confirm that arms
    for a few seconds. User feedback (toasts) is fired here, not in the store. */
 
-import { computed, nextTick, onScopeDispose, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
 import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
@@ -57,38 +58,17 @@ const updatedLabel = (team: SavedTeam): string => {
   return ''
 }
 
-/* Two-step confirms: one armed target at a time ('all' = the Delete all button),
-   disarmed automatically after a beat. */
-const armed = ref<string | null>(null)
-let disarmTimer: ReturnType<typeof setTimeout> | undefined
-onScopeDispose(() => clearTimeout(disarmTimer))
-
-const arm = (target: string): void => {
-  armed.value = target
-  clearTimeout(disarmTimer)
-  disarmTimer = setTimeout(() => {
-    armed.value = null
-  }, 3000)
-}
+// 'all' = the Delete all button; team ids arm the per-card Delete.
+const { armed, confirm } = useArmedConfirm()
 
 const handleDelete = (team: SavedTeam): void => {
-  if (armed.value !== team.id) {
-    arm(team.id)
-    return
-  }
-  clearTimeout(disarmTimer)
-  armed.value = null
+  if (!confirm(team.id)) return
   library.remove(team.id)
   success(i18n.t('app.team-deleted'))
 }
 
 const handleDeleteAll = (): void => {
-  if (armed.value !== 'all') {
-    arm('all')
-    return
-  }
-  clearTimeout(disarmTimer)
-  armed.value = null
+  if (!confirm('all')) return
   library.removeAll()
   success(i18n.t('app.teams-deleted'))
 }

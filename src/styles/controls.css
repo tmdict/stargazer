@@ -54,6 +54,15 @@
   border-color: var(--color-danger-hover);
 }
 
+/* Armed step of a two-step confirm: darkened with a ring so the state still
+   reads when the label collapses to an icon on mobile. */
+.control-btn.danger.armed,
+.control-btn.danger.armed:hover {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+  box-shadow: 0 0 0 2px rgba(192, 91, 77, 0.4);
+}
+
 .control-btn .btn-icon {
   flex-shrink: 0;
 }

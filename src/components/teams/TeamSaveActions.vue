@@ -13,6 +13,7 @@ import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
+import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -66,6 +67,14 @@ const handleSave = (): void => {
   if (sourceName !== null) emit('save')
   else void openPopover()
 }
+
+// New discards the boards' current content, so it confirms like Clear does.
+const { armed, confirm } = useArmedConfirm()
+
+const handleNew = (): void => {
+  if (!confirm('new')) return
+  emit('newTeam')
+}
 </script>
 
 <template>
@@ -74,12 +83,13 @@ const handleSave = (): void => {
     <button
       type="button"
       class="control-btn danger"
+      :class="{ armed: armed !== null }"
       :title="i18n.t('app.tooltip-new')"
       :aria-label="i18n.t('app.new')"
-      @click="emit('newTeam')"
+      @click="handleNew"
     >
       <IconFilePlus :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t('app.new') }}</span>
+      <span class="btn-text">{{ i18n.t(armed !== null ? 'app.confirm' : 'app.new') }}</span>
     </button>
     <button
       type="button"
