@@ -74,6 +74,7 @@ const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
     <GridControls
       :show-wrap-toggle="canWrap"
+      confirm-clear
       v-model:wrap="wrap"
       v-model:show-arrows="showArrows"
       v-model:show-grid-info="showGridInfo"
