@@ -61,9 +61,6 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
       wrapBoards.value = next.wrap ?? false
       inverted.value = next.inverted ?? false
     },
-    applyInverted: (value) => {
-      inverted.value = value
-    },
     applySize,
     resolveSourceId,
   })
@@ -222,7 +219,7 @@ describe('useTeamsRestore', () => {
     expect(wrapBoards.value).toBe(true)
   })
 
-  it('slot restore adopts only the inverted bit from stored display flags', () => {
+  it('slot restore ignores stored display flags entirely (device prefs win)', () => {
     const { restore, flags, inverted, wrapBoards } = createHarness()
     storage.set(
       teamsSlotKey('3v3'),
@@ -239,19 +236,18 @@ describe('useTeamsRestore', () => {
     )
     restore.initialize(null)
     restore.switchMode('3v3')
-    expect(inverted.value).toBe(true)
-    // View toggles are device prefs: the slot's stored bits must not clobber them.
     expect(flags.showGridInfo).toBe(true)
     expect(flags.teamView).toBeUndefined()
+    expect(inverted.value).toBe(false)
     expect(wrapBoards.value).toBe(false)
   })
 
-  it('switching to a slotless mode resets inverted with the default boards', () => {
+  it('mode switches leave the view toggles untouched (inverted included)', () => {
     const { restore, inverted } = createHarness()
     restore.initialize(null)
     inverted.value = true
     restore.switchMode('3v3')
-    expect(inverted.value).toBe(false)
+    expect(inverted.value).toBe(true)
   })
 
   it('ingress: a shared link adopts all display flags', () => {
@@ -457,7 +453,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(flags.showArrows).toBe(true)
   })
 
-  it('selecting canonical data reads the content as un-inverted', () => {
+  it('selecting a team leaves the view rotation untouched', () => {
     const { restore, inverted } = createHarness()
     restore.initialize(null)
     inverted.value = true
@@ -465,7 +461,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
       encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
     )!
     restore.applyTeamData('1v1', data, 'x')
-    // Canonical data carries no orientation flag: its boards are un-inverted.
-    expect(inverted.value).toBe(false)
+    expect(inverted.value).toBe(true)
   })
 })

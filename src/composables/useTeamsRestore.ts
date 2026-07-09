@@ -3,7 +3,7 @@
  * and the mode-aware persistence, and runs the critical switch sequence:
  *
  *   pause → flush old slot → set mode → restore-or-default (single rebuild) →
- *   adopt sourceId → orientation/sizing → resume + baseline write.
+ *   adopt sourceId → sizing → resume + baseline write.
  *
  * A mode's slot is only ever written while that mode's boards are live, which is
  * the invariant that keeps per-mode state independent. All bulk state application
@@ -31,8 +31,6 @@ import { useTeamsPersistence } from './useGridPersistence'
 export interface TeamsRestoreOptions {
   getFlags: () => DisplayFlags
   applyFlags: (flags: DisplayFlags) => void
-  // Content orientation only: set alongside board content (see applyEncoded).
-  applyInverted: (value: boolean) => void
   // Page sizing re-asserted after every rebuild (hexSizeMode pinning).
   applySize: () => void
   // Resolves a stored sourceId against the saved-team library; unresolvable ids
@@ -59,19 +57,15 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   const resolveSource = (id: string | null): string | null =>
     options.resolveSourceId ? options.resolveSourceId(id) : id
 
-  /* View toggles are device-level preferences, so a mode slot's `d` field is
-   * honored only for `inverted`: that bit is content orientation (the boards
-   * were mirror-swapped under it) and must travel with each mode's content, or
-   * restored units would sit under the wrong labels. A `?g=` link still adopts
-   * every flag (`adopt: 'all'`): sharing the sharer's exact view is the point
-   * of a link. Canonical saved-team data has no `d`, so Select applies nothing
-   * on either policy. The slot keeps writing full flags regardless: its
-   * snapshot doubles as the share payload (one serialization path). */
-  const applyEncoded = (encoded: string, adopt: 'all' | 'inverted-only'): boolean => {
+  /* Display flags are device-level view preferences, so slot and saved-team
+   * restores ignore a payload's `d` entirely (adoptFlags false); only a `?g=`
+   * link adopts it, since sharing the sharer's exact view is the point of a
+   * link. Slots keep writing full flags regardless: the snapshot doubles as the
+   * share payload (one serialization path). */
+  const applyEncoded = (encoded: string, adoptFlags: boolean): boolean => {
     const result = urlStateStore.restoreMultiFromEncodedState(encoded)
-    if (result.success && result.hasDisplayFlags && result.displayFlags) {
-      if (adopt === 'all') options.applyFlags(result.displayFlags)
-      else options.applyInverted(result.displayFlags.inverted ?? false)
+    if (adoptFlags && result.success && result.hasDisplayFlags && result.displayFlags) {
+      options.applyFlags(result.displayFlags)
     }
     return result.success
   }
@@ -85,12 +79,9 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     options.applySize()
   }
 
-  // Default boards are un-inverted by construction, so any carryover orientation
-  // flag from the previous content must drop with them.
   const buildModeDefaults = (mode: TeamModeKey): void => {
     const cfg = TEAM_MODES[mode]
     grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
-    options.applyInverted(false)
   }
 
   // Exactly one rebuild either way: a successful restore rebuilds internally (as
@@ -98,7 +89,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   // didn't run.
   const restoreOrDefault = (mode: TeamModeKey): void => {
     const slot = persistence.load(mode)
-    const restored = slot !== null && applyEncoded(slot.data, 'inverted-only')
+    const restored = slot !== null && applyEncoded(slot.data, false)
     if (!restored) buildModeDefaults(mode)
     afterRebuild()
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
@@ -119,16 +110,14 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
 
   /* Load a saved team as the active team. `source` becomes the provenance the
    * Save button updates; a corrupt payload falls back to the mode's defaults
-   * with provenance cleared (returns false). Canonical data carries no
-   * orientation flag, so the boards it loads are read as un-inverted. */
+   * with provenance cleared (returns false). */
   const applyTeamData = (mode: TeamModeKey, encoded: string, source: string | null): boolean => {
     persistence.setPaused(true)
     persistence.flush()
     activeMode.value = mode
     persistence.persistMode(mode)
-    const applied = applyEncoded(encoded, 'inverted-only')
-    if (applied) options.applyInverted(false)
-    else buildModeDefaults(mode)
+    const applied = applyEncoded(encoded, false)
+    if (!applied) buildModeDefaults(mode)
     afterRebuild()
     sourceId.value = applied ? source : null
     persistence.setPaused(false)
@@ -149,7 +138,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
         const mode = resolveTeamMode(decoded)
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
-        if (applyEncoded(normalized, 'all')) {
+        if (applyEncoded(normalized, true)) {
           // Persisted only on success: a link that decodes but fails to apply
           // must not leave its mode as the remembered one for the fallback.
           persistence.persistMode(mode)
