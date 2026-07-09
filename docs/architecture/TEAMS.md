@@ -154,6 +154,7 @@ Semantics wired in `TeamsView`:
 - **Select**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
+- **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
 
 ## Thumbnails
 
