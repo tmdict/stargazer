@@ -27,6 +27,8 @@ defineProps<{
   characters: readonly CharacterType[]
   artifacts: readonly ArtifactType[]
   phantimals: readonly PhantimalType[]
+  // The saved team the boards were loaded from (badges its card in the list).
+  loadedTeamId: string | null
 }>()
 
 const emit = defineEmits<{ selectTeam: [team: SavedTeam] }>()
@@ -115,7 +117,7 @@ const handleArenaSelected = (mapKey: string) => {
         </div>
       </template>
       <template #saved>
-        <SavedTeamsList v-if="savedTabSeen" @select="handleSelectTeam" />
+        <SavedTeamsList v-if="savedTabSeen" :loaded-team-id @select="handleSelectTeam" />
       </template>
     </TabView>
   </BottomSheet>

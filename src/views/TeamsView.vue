@@ -254,6 +254,7 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
           :characters="gameDataStore.characters"
           :artifacts="gameDataStore.artifacts"
           :phantimals="gameDataStore.phantimals"
+          :loaded-team-id="sourceTeam?.id ?? null"
           @select-team="handleSelectTeam"
         />
       </div>

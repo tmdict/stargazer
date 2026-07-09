@@ -21,6 +21,12 @@ import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { readStorage, writeStorage } from '@/utils/storage'
 
+const { loadedTeamId } = defineProps<{
+  // The team the live boards were loaded from / last saved to; its card gets
+  // the "Loaded" ring (the same provenance the Unsaved-changes indicator uses).
+  loadedTeamId: string | null
+}>()
+
 const emit = defineEmits<{ select: [team: SavedTeam] }>()
 
 const i18n = useI18nStore()
@@ -101,6 +107,8 @@ const cardImageOptions = (team: SavedTeam) => ({
   showPerspective: false,
   target: `[data-team-card-id="${team.id}"] .team-preview`,
   filePrefix: team.name,
+  // The on-screen thumbnail is small; capture at full-grid resolution.
+  pixelRatio: 6,
 })
 
 const handleDuplicate = (team: SavedTeam): void => {
@@ -192,7 +200,13 @@ const cancelRename = (): void => {
     </p>
 
     <div v-else class="team-grid">
-      <div v-for="team in sorted" :key="team.id" class="team-card" :data-team-card-id="team.id">
+      <div
+        v-for="team in sorted"
+        :key="team.id"
+        class="team-card"
+        :class="{ loaded: team.id === loadedTeamId }"
+        :data-team-card-id="team.id"
+      >
         <TeamPreview :team />
 
         <div class="card-title-row">
@@ -226,6 +240,9 @@ const cancelRename = (): void => {
 
         <div class="card-meta-row">
           <span class="mode-chip">{{ modeChip(team) }}</span>
+          <span v-if="team.id === loadedTeamId" class="loaded-chip">{{
+            i18n.t('app.loaded')
+          }}</span>
           <span class="card-meta">{{ updatedLabel(team) }}</span>
         </div>
 
@@ -411,6 +428,10 @@ const cancelRename = (): void => {
   contain-intrinsic-size: 300px;
 }
 
+.team-card.loaded {
+  border-color: var(--color-primary);
+}
+
 .card-title-row {
   display: flex;
   align-items: center;
@@ -484,11 +505,11 @@ const cancelRename = (): void => {
 .card-meta-row {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: var(--spacing-sm);
 }
 
-.mode-chip {
+.mode-chip,
+.loaded-chip {
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -500,9 +521,15 @@ const cancelRename = (): void => {
   text-transform: uppercase;
 }
 
+.loaded-chip {
+  background: var(--color-primary);
+  color: #fff;
+}
+
 .card-meta {
   font-size: 0.72rem;
   color: var(--color-text-secondary);
+  margin-left: auto;
 }
 
 /* Equal-width actions so Select/Duplicate/Delete align across cards. */

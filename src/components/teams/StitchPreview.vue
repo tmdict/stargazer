@@ -40,16 +40,18 @@ const mountCanvas = (canvas: HTMLCanvasElement | null) => {
 onMounted(() => mountCanvas(props.canvas))
 watch(() => props.canvas, mountCanvas, { flush: 'post' })
 
-const copy = () => {
-  props.canvas?.toBlob(async (blob) => {
-    if (!blob) return error(i18n.t('app.copy-image-failed'))
-    try {
-      await copyImageBlob(blob)
-      success(i18n.t('app.copied-clipboard'))
-    } catch {
-      error(i18n.t('app.copy-image-failed'))
-    }
+const copy = async () => {
+  const canvas = props.canvas
+  if (!canvas) return error(i18n.t('app.copy-image-failed'))
+  const blob = new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))))
   })
+  try {
+    await copyImageBlob(blob)
+    success(i18n.t('app.copied-clipboard'))
+  } catch {
+    error(i18n.t('app.copy-image-failed'))
+  }
 }
 
 const download = () => {
