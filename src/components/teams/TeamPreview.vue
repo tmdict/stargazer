@@ -79,10 +79,11 @@ const boards = computed(() => {
   min-height: 120px;
 }
 
-/* Boards wrap at two per row (5v5 renders 2+2+1) so each board stays large
-   enough that the hero portraits inside its hexes read at a glance. */
+/* Boards wrap at three per row (5v5 renders 3+2); the card grid is capped at
+   three columns so each board still renders large enough that the hero
+   portraits inside its hexes read at a glance. */
 .board-thumb {
-  flex: 0 1 45%;
+  flex: 0 1 30%;
   min-width: 0;
   max-width: 165px;
   height: auto;
