@@ -277,10 +277,23 @@ const cancelRename = (): void => {
 
 .team-grid {
   display: grid;
-  /* 3 columns on an 11-inch iPad Pro (1194px landscape). */
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  /* Capped at three columns: fewer, larger cards give the preview boards the
+     width they need for legible hero portraits. */
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
+}
+
+@media (max-width: 1100px) {
+  .team-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .team-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .team-card {
