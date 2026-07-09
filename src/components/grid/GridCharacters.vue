@@ -16,7 +16,6 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { phantimalImageUrl } from '@/utils/artifactImage'
 import { isTouchClick } from '@/utils/pointer'
-import { invertTeam } from '@/utils/tileStateFormatting'
 
 interface Props {
   characters: readonly CharacterType[]
@@ -234,18 +233,20 @@ const handleMouseLeave = (hexId: number) => {
   hideTooltip()
 }
 
-// In team view, only render characters on the team shown as ally.
+// Team view renders only the ally team. Sprites are unstacked siblings, so the
+// painter's order must be ascending rendered y (near rows over far rows); grid
+// storage order only happens to match on the canonical view, and the inverted
+// view reverses it, so sort by the rendered position explicitly.
 const visiblePlacements = computed(() => {
-  const all = ctx.placements
-  if (!ctx.teamView) return all
-  const shownTeam = invertTeam(Team.ALLY, ctx.inverted)
-  const filtered = new Map<number, number>()
-  for (const [hexId, characterId] of all) {
-    if (getCharacterTeam(ctx.grid, hexId) === shownTeam) {
-      filtered.set(hexId, characterId)
-    }
-  }
-  return filtered
+  const all = [...ctx.placements]
+  const filtered = ctx.teamView
+    ? all.filter(([hexId]) => getCharacterTeam(ctx.grid, hexId) === Team.ALLY)
+    : all
+  return filtered.sort(
+    ([a], [b]) =>
+      ctx.layout.hexToPixel(ctx.grid.getHexById(a)).y -
+      ctx.layout.hexToPixel(ctx.grid.getHexById(b)).y,
+  )
 })
 </script>
 

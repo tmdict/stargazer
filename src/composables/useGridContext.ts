@@ -58,7 +58,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { getTeamFromTileState, invertTeam } from '@/utils/tileStateFormatting'
+import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 // Crop padding for team view, as multipliers on hexRadius. The top multiplier
 // covers the perspective-mode character sprite stretch in the worst case (topmost
@@ -355,31 +355,32 @@ export function createGridContext(
   }
 
   const ctx = scope.run(() => {
+    // Invert renders the board rotated 180 degrees: the layout is rebuilt with
+    // the rotation flag, and every consumer (tiles, sprites, arrows, crops,
+    // hit-testing) follows it because they all derive from this computed.
     const layout = computed(() => {
       const scale = hexSize.value.x / 40
       const origin: Point = { x: 300 * scale, y: 300 * scale }
-      return new Layout(POINTY, hexSize.value, origin)
+      return new Layout(POINTY, hexSize.value, origin, inverted.value)
     })
 
-    // Team view narrows to the tiles of whichever engine team is shown as ally.
+    // Team view narrows to the ally team's tiles (rendered at the top when the
+    // view is inverted: team view shows your team from whichever seat you sit).
     const visibleHexes = computed<Hex[]>(() => {
       if (!teamView.value) return grid.keys()
-      const shownTeam = invertTeam(Team.ALLY, inverted.value)
       return grid
         .getAllTiles()
-        .filter((tile) => getTeamFromTileState(tile.state) === shownTeam)
+        .filter((tile) => getTeamFromTileState(tile.state) === Team.ALLY)
         .map((tile) => tile.hex)
     })
 
-    // The crop must also contain the shown team's artifact host cell: the ghost
-    // cell beside hex 1 (ally) or 45 (enemy), which renders in team view and can
-    // sit at the formation's edge on maps with a sparse front line.
+    // The crop must also contain the ally artifact host cell: the ghost cell
+    // beside hex 1, which renders in team view and can sit at the formation's
+    // edge on maps with a sparse front line.
     const cropHexes = computed<Hex[]>(() => {
       if (!teamView.value) return visibleHexes.value
-      const shownTeam = invertTeam(Team.ALLY, inverted.value)
-      const [hostId, direction] = shownTeam === Team.ALLY ? [1, 4] : [45, 1]
       try {
-        return [...visibleHexes.value, grid.getHexById(hostId).neighbor(direction)]
+        return [...visibleHexes.value, grid.getHexById(1).neighbor(4)]
       } catch {
         return visibleHexes.value
       }

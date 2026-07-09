@@ -11,7 +11,7 @@ import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import { getInvertedState, getTileFillColor } from '@/utils/tileStateFormatting'
+import { getTileFillColor } from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
@@ -109,8 +109,7 @@ const mixHexColors = (base: string, overlay: string, ratio: number): string => {
 
 const getHexFill = (hex: Hex) => {
   const state = ctx.grid.getTile(hex).state
-  const displayState = ctx.inverted ? getInvertedState(state) : state
-  const baseFill = getTileFillColor(displayState) || HEX_FILL_COLOR
+  const baseFill = getTileFillColor(state) || HEX_FILL_COLOR
   if (props.showSkills) {
     const fills = ctx.getTileFillModifier(hex.getId())
     if (fills) return mixHexColors(baseFill, fills[0]!, SKILL_FILL_RATIO)
