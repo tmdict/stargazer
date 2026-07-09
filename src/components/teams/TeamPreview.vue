@@ -59,7 +59,7 @@ const boards = computed(() => {
         :map-key="board.mapKey"
         :tiles="board.tiles"
         :units="board.units"
-        :hex-size="8"
+        :hex-size="10"
       />
     </template>
     <span v-else class="preview-broken" title="Unreadable team data">⚠</span>
@@ -76,15 +76,15 @@ const boards = computed(() => {
   background: rgba(0, 0, 0, 0.05);
   border-radius: var(--radius-medium);
   padding: 8px 6px;
-  min-height: 96px;
+  min-height: 120px;
 }
 
-/* Boards wrap at three per row (5v5 renders 3+2), keeping every board near the
-   single-board reference size instead of shrinking to fit one row. */
+/* Boards wrap at two per row (5v5 renders 2+2+1) so each board stays large
+   enough that the hero portraits inside its hexes read at a glance. */
 .board-thumb {
-  flex: 0 1 30%;
+  flex: 0 1 45%;
   min-width: 0;
-  max-width: 124px;
+  max-width: 165px;
   height: auto;
 }
 
