@@ -58,18 +58,57 @@ describe('Layout', () => {
     })
   })
 
-  describe('hexToScreen', () => {
+  describe('rotated layout (the invert view)', () => {
     const size = { x: 10, y: 10 }
-    const layoutOrigin = { x: 100, y: 100 }
-    const layout = new Layout(POINTY, size, layoutOrigin)
+    const origin = { x: 300, y: 300 }
+    const canonical = new Layout(POINTY, size, origin)
+    const rotated = new Layout(POINTY, size, origin, true)
+    const hexes = [new Hex(0, 0, 0), new Hex(1, 0, -1), new Hex(-2, 3, -1), new Hex(4, -1, -3)]
 
-    it('should add screen origin offset', () => {
-      const hex = new Hex(0, 0, 0)
-      const screenOrigin = { x: 50, y: 50 }
-      const screen = layout.hexToScreen(hex, screenOrigin)
+    it('reflects every hex center through the origin', () => {
+      for (const hex of hexes) {
+        const p = canonical.hexToPixel(hex)
+        const r = rotated.hexToPixel(hex)
+        expect(r.x).toBeCloseTo(2 * origin.x - p.x)
+        expect(r.y).toBeCloseTo(2 * origin.y - p.y)
+      }
+    })
 
-      expect(screen.x).toBeCloseTo(150)
-      expect(screen.y).toBeCloseTo(150)
+    it('matches the (-q,-r,-s) hex rotation: rotated(h) lands on canonical(-h)', () => {
+      for (const hex of hexes) {
+        const r = rotated.hexToPixel(hex)
+        const opposite = canonical.hexToPixel(new Hex(-hex.q, -hex.r, -hex.s))
+        expect(r.x).toBeCloseTo(opposite.x)
+        expect(r.y).toBeCloseTo(opposite.y)
+      }
+    })
+
+    it('reflects corner index i to the rotated position of canonical corner i', () => {
+      for (const hex of hexes) {
+        const p = canonical.polygonCorners(hex)
+        const r = rotated.polygonCorners(hex)
+        for (let i = 0; i < 6; i++) {
+          expect(r[i]!.x).toBeCloseTo(2 * origin.x - p[i]!.x)
+          expect(r[i]!.y).toBeCloseTo(2 * origin.y - p[i]!.y)
+        }
+      }
+    })
+
+    it('defaults to unrotated and keeps canonical output bit-identical', () => {
+      const plain = new Layout(POINTY, size, origin)
+      expect(plain.rotated).toBe(false)
+      for (const hex of hexes) {
+        expect(plain.hexToPixel(hex)).toEqual(canonical.hexToPixel(hex))
+      }
+    })
+
+    it('reflects arrow endpoints through the origin', () => {
+      const path = rotated.getLinePath(hexes[1]!, hexes[2]!)
+      const canonicalPath = canonical.getLinePath(
+        new Hex(-1, 0, 1),
+        new Hex(2, -3, 1),
+      )
+      expect(path).toBe(canonicalPath)
     })
   })
 
