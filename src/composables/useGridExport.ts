@@ -49,6 +49,9 @@ interface ExportOptions {
   filter?: (node: HTMLElement) => boolean
   // Download filename prefix (timestamped); unused by copyToClipboard.
   filePrefix?: string
+  // Capture resolution multiplier (default 2). Card exports raise it so a
+  // small on-screen thumbnail still exports at full-grid size.
+  pixelRatio?: number
 }
 
 export function useGridExport() {
@@ -78,7 +81,7 @@ export function useGridExport() {
 
     const toPngOptions = {
       quality: 1.0,
-      pixelRatio: 2,
+      pixelRatio: options.pixelRatio ?? 2,
       backgroundColor: 'transparent',
       filter: options.filter,
     }
