@@ -1,16 +1,19 @@
 <script setup lang="ts">
 /* The Saved Teams roster panel: header (count, cap warning, sort, Delete all)
    plus a card grid: thumbnail, mode chip, inline-renamable name, relative updated
-   time, and equal-width Select / Duplicate / Delete actions. Destructive
+   time, and Load / Duplicate / Copy / Download / Delete actions. Destructive
    actions use the app's no-modal style: a two-step inline confirm that arms
    for a few seconds. User feedback (toasts) is fired here, not in the store. */
 
 import { computed, nextTick, ref, watch } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
+import IconCopy from '@/components/ui/IconCopy.vue'
+import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useGridExport } from '@/composables/useGridExport'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
 import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
@@ -90,6 +93,15 @@ const handleDeleteAll = (): void => {
   library.removeAll()
   success(i18n.t('app.teams-deleted'))
 }
+
+// The card's thumbnail is the capture target: it already renders the saved
+// data faithfully, so exporting needs no board loading.
+const { copyToClipboard, downloadAsImage } = useGridExport()
+const cardImageOptions = (team: SavedTeam) => ({
+  showPerspective: false,
+  target: `[data-team-card-id="${team.id}"] .team-preview`,
+  filePrefix: team.name,
+})
 
 const handleDuplicate = (team: SavedTeam): void => {
   const copy = library.duplicate(team.id)
@@ -180,7 +192,7 @@ const cancelRename = (): void => {
     </p>
 
     <div v-else class="team-grid">
-      <div v-for="team in sorted" :key="team.id" class="team-card">
+      <div v-for="team in sorted" :key="team.id" class="team-card" :data-team-card-id="team.id">
         <TeamPreview :team />
 
         <div class="card-title-row">
@@ -219,10 +231,28 @@ const cancelRename = (): void => {
 
         <div class="card-actions">
           <button type="button" class="card-btn primary" @click="emit('select', team)">
-            {{ i18n.t('app.select') }}
+            {{ i18n.t('app.load') }}
           </button>
           <button type="button" class="card-btn" @click="handleDuplicate(team)">
             {{ i18n.t('app.duplicate') }}
+          </button>
+          <button
+            type="button"
+            class="card-btn icon"
+            :title="i18n.t('app.copy')"
+            :aria-label="i18n.t('app.copy')"
+            @click="copyToClipboard(cardImageOptions(team))"
+          >
+            <IconCopy :size="14" />
+          </button>
+          <button
+            type="button"
+            class="card-btn icon"
+            :title="i18n.t('app.download')"
+            :aria-label="i18n.t('app.download')"
+            @click="downloadAsImage(cardImageOptions(team))"
+          >
+            <IconDownload :size="14" />
           </button>
           <button
             type="button"
@@ -381,10 +411,6 @@ const cancelRename = (): void => {
   contain-intrinsic-size: 300px;
 }
 
-.team-card:hover {
-  border-color: var(--color-primary);
-}
-
 .card-title-row {
   display: flex;
   align-items: center;
@@ -481,10 +507,18 @@ const cancelRename = (): void => {
 
 /* Equal-width actions so Select/Duplicate/Delete align across cards. */
 .card-actions {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  display: flex;
   gap: var(--spacing-sm);
   margin-top: 2px;
+}
+
+.card-actions .card-btn {
+  flex: 1;
+}
+
+.card-actions .card-btn.icon {
+  flex: 0 0 auto;
+  padding: 5px 9px;
 }
 
 .card-btn {
