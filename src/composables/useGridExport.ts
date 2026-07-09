@@ -49,6 +49,9 @@ interface ExportOptions {
   filter?: (node: HTMLElement) => boolean
   // Download filename prefix (timestamped); unused by copyToClipboard.
   filePrefix?: string
+  // Capture resolution multiplier (default 2). Card exports raise it so a
+  // small on-screen thumbnail still exports at full-grid size.
+  pixelRatio?: number
 }
 
 export function useGridExport() {
@@ -78,7 +81,7 @@ export function useGridExport() {
 
     const toPngOptions = {
       quality: 1.0,
-      pixelRatio: 2,
+      pixelRatio: options.pixelRatio ?? 2,
       backgroundColor: 'transparent',
       filter: options.filter,
     }
@@ -185,9 +188,10 @@ export function useGridExport() {
    */
   const copyToClipboard = async (options: ExportOptions): Promise<void> => {
     try {
-      const dataUrl = await captureGrid(options)
-      const blob = await dataUrlToBlob(dataUrl)
-      await copyImageBlob(blob)
+      // The pending capture is handed to the clipboard un-awaited: Safari
+      // treats an awaited gap as the end of the user activation and denies
+      // the write, so the browser must await the blob itself.
+      await copyImageBlob(captureGrid(options).then(dataUrlToBlob))
       success(i18n.t('app.copied-clipboard'))
     } catch (err) {
       console.error('Failed to copy grid image:', err)
