@@ -4,18 +4,10 @@ import { ref } from 'vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
 import IconFill from '@/components/ui/IconFill.vue'
 import { State } from '@/lib/types/state'
-import { Team } from '@/lib/types/team'
-import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import {
-  getInvertedState,
-  getTeamFromTileState,
-  getTileFillColor,
-  invertTeam,
-} from '@/utils/tileStateFormatting'
+import { getTileFillColor } from '@/utils/tileStateFormatting'
 
 const i18n = useI18nStore()
-const grids = useGrids()
 
 // Gates the grid's paint mode; HomeView binds this via v-model.
 const editorEnabled = defineModel<boolean>('enabled', { default: false })
@@ -34,14 +26,6 @@ const stateOptions: StateOption[] = [
   { state: State.BLOCKED, labelKey: 'app.blocked' },
   { state: State.BLOCKED_BREAKABLE, labelKey: 'app.breakable' },
 ]
-
-// Ally/enemy tile labels follow the displayed team so they match the preview
-// colour; other states keep their fixed label.
-const stateLabel = (option: StateOption): string => {
-  const team = getTeamFromTileState(option.state)
-  if (team === null) return i18n.t(option.labelKey)
-  return i18n.t(invertTeam(team, grids.inverted) === Team.ALLY ? 'app.ally-tile' : 'app.enemy-tile')
-}
 
 const emit = defineEmits<{
   stateSelected: [state: State]
@@ -67,10 +51,6 @@ const handleArenaSelected = (mapKey: string) => {
   emit('arenaSelected', mapKey)
 }
 
-const getPreviewFillColor = (state: State): string => {
-  const displayState = grids.inverted ? getInvertedState(state) : state
-  return getTileFillColor(displayState)
-}
 </script>
 
 <template>
@@ -98,13 +78,13 @@ const getPreviewFillColor = (state: State): string => {
             <svg width="60" height="60" viewBox="0 0 60 60">
               <polygon
                 points="30,7 46,15 46,37 30,45 14,37 14,15"
-                :fill="getPreviewFillColor(option.state)"
+                :fill="getTileFillColor(option.state)"
                 stroke="#888888"
                 stroke-width="2"
               />
             </svg>
           </div>
-          <span class="state-label">{{ stateLabel(option) }}</span>
+          <span class="state-label">{{ i18n.t(option.labelKey) }}</span>
         </button>
       </div>
 

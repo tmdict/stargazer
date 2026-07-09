@@ -52,7 +52,7 @@ const handleArtifactClick = (artifact: ArtifactType) => {
     return
   }
   // Otherwise fill the first side with a free slot (displayed ally, then enemy).
-  const target = fillOrder.value.find((team) => slotArtifactId(team) === null)
+  const target = fillOrder.find((team) => slotArtifactId(team) === null)
   if (target !== undefined) artifactStore.placeArtifact(artifact.id, target)
 }
 

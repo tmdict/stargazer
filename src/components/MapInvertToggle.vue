@@ -1,19 +1,15 @@
 <script setup lang="ts">
-/* Invert toggle in the grid controls: a labeled checkbox. Flips the global
-   ally/enemy presentation AND mirror-swaps every board's units to the opposite
-   team, so a formation rotates to the other side keeping its shape and colour. */
+/* Invert toggle in the grid controls: a labeled checkbox. Rotates the rendered
+   board 180 degrees (a pure view transform); content stays canonical. */
 
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
-import { useUrlStateStore } from '@/stores/urlState'
 
 const i18n = useI18nStore()
 const grids = useGrids()
-const urlState = useUrlStateStore()
 
 const onToggle = () => {
   grids.inverted = !grids.inverted
-  urlState.swapTeamsAllBoards()
 }
 </script>
 

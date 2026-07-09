@@ -72,7 +72,7 @@ const handleCharacterClick = (character: CharacterType) => {
     return
   }
   // Fill the displayed-ally side first, then the displayed enemy side.
-  for (const team of fillOrder.value) {
+  for (const team of fillOrder) {
     if (grids.placeOnActive(character.id, team)) break
   }
 }
