@@ -165,7 +165,7 @@ describe('teams display prefs', () => {
     vi.unstubAllGlobals()
   })
 
-  it('round-trips the view toggles with inverted masked out both ways', () => {
+  it('round-trips every view toggle, inverted included', () => {
     saveTeamsDisplayPrefs({
       showGridInfo: false,
       showArrows: true,
@@ -179,7 +179,7 @@ describe('teams display prefs', () => {
     expect(loaded!.showArrows).toBe(true)
     expect(loaded!.teamView).toBe(true)
     expect(loaded!.wrap).toBe(true)
-    expect(loaded!.inverted).toBe(false)
+    expect(loaded!.inverted).toBe(true)
   })
 
   it('returns null when absent or corrupt', () => {

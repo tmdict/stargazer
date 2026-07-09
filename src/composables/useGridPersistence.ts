@@ -37,13 +37,11 @@ const TEAMS_DISPLAY_KEY = 'stargazer.teams.display'
 
 export const teamsSlotKey = (mode: TeamModeKey): string => `stargazer.teams.active.${mode}`
 
-/* Device-level Teams view preferences: the display toggles, shared across every
+/* Device-level Teams view preferences: all display toggles, shared across every
  * team mode (they are reading preferences, not board content). Stored as the
- * same packed byte the share-link `d` field uses so there is one flag schema.
- * `inverted` is masked out both ways: it is content orientation (the boards
- * were mirror-swapped under it), so it travels with each mode's slot instead. */
+ * same packed byte the share-link `d` field uses so there is one flag schema. */
 export const saveTeamsDisplayPrefs = (flags: DisplayFlags): void => {
-  writeStorage(TEAMS_DISPLAY_KEY, String(packDisplayFlags({ ...flags, inverted: false })))
+  writeStorage(TEAMS_DISPLAY_KEY, String(packDisplayFlags(flags)))
 }
 
 export const loadTeamsDisplayPrefs = (): Required<DisplayFlags> | null => {
@@ -51,7 +49,7 @@ export const loadTeamsDisplayPrefs = (): Required<DisplayFlags> | null => {
   if (raw === null) return null
   const packed = Number(raw)
   if (!Number.isInteger(packed)) return null
-  return { ...unpackDisplayFlags(packed), inverted: false }
+  return unpackDisplayFlags(packed)
 }
 
 /* A mode's persisted active team: the encoded snapshot, the saved team it was
