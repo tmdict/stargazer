@@ -277,7 +277,8 @@ const cancelRename = (): void => {
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  /* 3 columns on an 11-inch iPad Pro (1194px landscape). */
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
 }
