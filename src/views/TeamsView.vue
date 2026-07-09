@@ -82,17 +82,17 @@ const applySize = () => {
 }
 watch(currentBreakpoint, applySize)
 
-// Display globals on the grids store are page state; start clean so a first-ever
-// visit doesn't inherit team view or invert left by another page.
+// Display globals on the grids store are page state; start clean so a first
+// visit with no stored prefs doesn't inherit them from another page.
 grids.teamView = false
 grids.inverted = false
 
-// View toggles are device-level preferences shared by every team mode (board
-// content stays per-mode; the slot restore below applies only its inverted bit).
-// Restore them before the boards so the restore renders under the user's
-// toggles, then mirror every change. A ?g= link's flags apply during initialize
-// and get committed as the new prefs by the same watcher (adopting the sharer's
-// view is the point of a link).
+// Display toggles are device-level preferences shared by every team mode (board
+// content stays per-mode; slot restores never touch them). Restore them before
+// the boards so the restore renders under the user's toggles, then mirror every
+// change. A ?g= link's flags apply during initialize and get committed as the
+// new prefs by the same watcher (adopting the sharer's view is the point of a
+// link).
 const storedPrefs = loadTeamsDisplayPrefs()
 if (storedPrefs) applyFlags(storedPrefs)
 watch(toFlags, saveTeamsDisplayPrefs)
@@ -101,9 +101,6 @@ const teamLibrary = useTeamLibrary()
 const teamsRestore = useTeamsRestore({
   getFlags: toFlags,
   applyFlags,
-  applyInverted: (value) => {
-    grids.inverted = value
-  },
   applySize,
   // Stale provenance (deleted teams, restored backups) self-heals to null.
   resolveSourceId: (id) => (id !== null && teamLibrary.get(id) ? id : null),
