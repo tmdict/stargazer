@@ -62,9 +62,8 @@ export class Layout {
     }
   }
 
-  // Calculate offset used to get corner location relative to center. Rotation
-  // negates the offset so corner index i keeps naming the same physical corner
-  // of the hex (corner-indexed paths like getCornerLinePath rely on that).
+  // Rotation negates the offset so corner index i keeps naming the same physical
+  // corner of the hex (corner-indexed paths like getCornerLinePath rely on that).
   hexCornerOffset(corner: number): Point {
     const angle = (2 * Math.PI * (this.orientation.startAngle + corner)) / 6
     const sign = this.rotated ? -1 : 1

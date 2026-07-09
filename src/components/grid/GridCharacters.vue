@@ -233,10 +233,10 @@ const handleMouseLeave = (hexId: number) => {
   hideTooltip()
 }
 
-// Team view renders only the ally team. Sprites are unstacked siblings, so the
-// painter's order must be ascending rendered y (near rows over far rows); grid
-// storage order only happens to match on the canonical view, and the inverted
-// view reverses it, so sort by the rendered position explicitly.
+// Sprites are unstacked siblings, so the painter's order must be ascending
+// rendered y (near rows over far rows); grid storage order only happens to
+// match on the canonical view, and the inverted view reverses it, so sort by
+// the rendered position explicitly.
 const visiblePlacements = computed(() => {
   const all = [...ctx.placements]
   const filtered = ctx.teamView

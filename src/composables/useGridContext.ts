@@ -364,8 +364,8 @@ export function createGridContext(
       return new Layout(POINTY, hexSize.value, origin, inverted.value)
     })
 
-    // Team view narrows to the ally team's tiles (rendered at the top when the
-    // view is inverted: team view shows your team from whichever seat you sit).
+    // Team view always shows the ally team; under invert the same crop simply
+    // renders at the top (your team, from whichever seat you sit).
     const visibleHexes = computed<Hex[]>(() => {
       if (!teamView.value) return grid.keys()
       return grid

@@ -51,7 +51,6 @@ const handleArtifactClick = (artifact: ArtifactType) => {
     grids.removeArtifactFromAnyBoard(artifact.id, placed)
     return
   }
-  // Otherwise fill the first side with a free slot (displayed ally, then enemy).
   const target = fillOrder.find((team) => slotArtifactId(team) === null)
   if (target !== undefined) artifactStore.placeArtifact(artifact.id, target)
 }

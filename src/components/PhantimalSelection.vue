@@ -70,8 +70,8 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
     characterStore.removeCharacterFromHex(hex)
     return
   }
-  // Fill the displayed-ally side first, then the displayed enemy side; each attempt
-  // fails if that team lacks the faction requirement, falling through to the next.
+  // Each attempt fails if that team lacks the faction requirement, falling
+  // through to the next.
   for (const team of fillOrder) {
     if (characterStore.autoPlacePhantimal(id, team)) break
   }
@@ -94,8 +94,8 @@ const handleDragEnd = (event: DragEvent) => {
 }
 
 // Hover tooltip: whether the phantimal can currently be deployed on the primary
-// (displayed-ally) fill target, with the faction unit count. One shared popup
-// follows the hovered icon.
+// (ally) fill target, with the faction unit count. One shared popup follows the
+// hovered icon.
 const hovered = ref<PhantimalType | null>(null)
 const hoveredEl = ref<HTMLElement | null>(null)
 
