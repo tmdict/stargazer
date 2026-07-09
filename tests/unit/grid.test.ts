@@ -161,26 +161,4 @@ describe('Grid', () => {
     })
   })
 
-  describe('getRotatedHexId (180-degree rotation)', () => {
-    it('pairs each tile with the diagonally-opposite one (1 <-> 45) and fixes the centre', () => {
-      grid = new Grid()
-      expect(grid.getRotatedHexId(1)).toBe(45)
-      expect(grid.getRotatedHexId(45)).toBe(1)
-      expect(grid.getRotatedHexId(2)).toBe(44)
-      expect(grid.getRotatedHexId(23)).toBe(23) // board centre maps to itself
-    })
-
-    it('is an involution and a bijection across all 45 tiles', () => {
-      grid = new Grid()
-      const targets = new Set<number>()
-      for (const tile of grid.getAllTiles()) {
-        const id = tile.hex.getId()
-        const rotated = grid.getRotatedHexId(id)
-        expect(rotated).toBeDefined()
-        expect(grid.getRotatedHexId(rotated!)).toBe(id)
-        targets.add(rotated!)
-      }
-      expect(targets.size).toBe(45)
-    })
-  })
 })

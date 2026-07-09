@@ -60,24 +60,3 @@ export const getTeamFromTileState = (state: State): Team | null => {
   return null
 }
 
-// The invert relabel: maps between the engine's canonical team (ally = low hex id,
-// fixed targeting rules) and the team shown to the user. Display-only and an
-// involution, so the same call converts either direction. (The invert toggle also
-// physically mirror-swaps units; that is a separate engine mutation.)
-export const invertTeam = (team: Team, inverted: boolean): Team =>
-  inverted ? (team === Team.ALLY ? Team.ENEMY : Team.ALLY) : team
-
-export const getInvertedState = (state: State): State => {
-  switch (state) {
-    case State.AVAILABLE_ALLY:
-      return State.AVAILABLE_ENEMY
-    case State.AVAILABLE_ENEMY:
-      return State.AVAILABLE_ALLY
-    case State.OCCUPIED_ALLY:
-      return State.OCCUPIED_ENEMY
-    case State.OCCUPIED_ENEMY:
-      return State.OCCUPIED_ALLY
-    default:
-      return state
-  }
-}

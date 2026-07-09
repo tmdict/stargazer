@@ -4,13 +4,7 @@ import { repositionCompanions } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
-import {
-  mirrorGridState,
-  serializeGridState,
-  unpackDisplayFlags,
-  type DisplayFlags,
-  type GridState,
-} from '@/utils/gridStateSerializer'
+import { unpackDisplayFlags, type DisplayFlags, type GridState } from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
@@ -233,43 +227,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
   }
 
-  // Mirror every board's units onto the opposite team at their 180-degree-rotated
-  // tiles (tile 1 <-> 45), so the formation rotates to the other side keeping its
-  // shape. Each board is serialized, mirrored, and rebuilt through the same restore
-  // path as a URL load, which already repositions companions and re-seeds the
-  // phantimal baseline. Pairs with the global `inverted` presentation flip.
-  const swapTeamsAllBoards = (): void => {
-    const previousActive = grids.activeId
-    // Snapshot and mirror every board before rebuilding any, then empty all
-    // artifact slots: the restore path places artifacts through the page-wide
-    // uniqueness guard, which would otherwise reject a mirrored artifact against
-    // its own not-yet-mirrored copy on a later board and silently drop it.
-    const mirrored = grids.contexts.map((ctx) => {
-      const state = serializeGridState(
-        ctx.grid.getAllTiles(),
-        ctx.artifacts.ally,
-        ctx.artifacts.enemy,
-        undefined,
-        ctx.getParagon,
-      )
-      if (!state.c && !state.p && !state.a) return null // nothing to swap on this board
-      return mirrorGridState(state, (hexId) => ctx.grid.getRotatedHexId(hexId))
-    })
-    grids.contexts.forEach((ctx) => {
-      ctx.removeArtifact(Team.ALLY)
-      ctx.removeArtifact(Team.ENEMY)
-    })
-    mirrored.forEach((state, i) => {
-      if (!state) return
-      grids.setActive(i)
-      applyGridState(state)
-    })
-    grids.setActive(previousActive)
-  }
-
   return {
     restoreFromEncodedState,
     restoreMultiFromEncodedState,
-    swapTeamsAllBoards,
   }
 })
