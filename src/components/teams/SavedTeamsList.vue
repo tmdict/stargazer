@@ -297,7 +297,7 @@ const cancelRename = (): void => {
 
 .team-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
 }
@@ -323,7 +323,8 @@ const cancelRename = (): void => {
 .card-title-row {
   display: flex;
   align-items: center;
-  gap: var(--spacing-sm);
+  /* The name's own 4px side padding already separates it from the pencil. */
+  gap: 2px;
 }
 
 .team-name {
