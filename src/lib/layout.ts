@@ -33,34 +33,44 @@ export class Layout {
   orientation: Orientation
   size: Point
   origin: Point
+  rotated: boolean
 
   constructor(
     orientation: Orientation, // hex orientation (pointy-top or flat-top)
     size: Point, // size of a hex (radius)
     origin: Point, // pixel origin (center of Hex(0,0,0))
+    // Render the board rotated 180 degrees about the origin (the invert view).
+    // Pure view transform: hexes keep their engine ids, only positions reflect,
+    // so hit-testing against the same layout stays consistent by construction.
+    rotated: boolean = false,
   ) {
     this.orientation = orientation
     this.size = size
     this.origin = origin
+    this.rotated = rotated
   }
 
   // Convert hex to pixel (center)
   hexToPixel(hex: Hex): Point {
     const M = this.orientation
-    const x = (M.f0 * hex.q + M.f1 * hex.r) * this.size.x
-    const y = (M.f2 * hex.q + M.f3 * hex.r) * this.size.y
+    const sign = this.rotated ? -1 : 1
+    const x = (M.f0 * hex.q + M.f1 * hex.r) * this.size.x * sign
+    const y = (M.f2 * hex.q + M.f3 * hex.r) * this.size.y * sign
     return {
       x: x + this.origin.x,
       y: y + this.origin.y,
     }
   }
 
-  // Calculate offset used to get corner location relative to center
+  // Calculate offset used to get corner location relative to center. Rotation
+  // negates the offset so corner index i keeps naming the same physical corner
+  // of the hex (corner-indexed paths like getCornerLinePath rely on that).
   hexCornerOffset(corner: number): Point {
     const angle = (2 * Math.PI * (this.orientation.startAngle + corner)) / 6
+    const sign = this.rotated ? -1 : 1
     return {
-      x: this.size.x * Math.cos(angle),
-      y: this.size.y * Math.sin(angle),
+      x: this.size.x * Math.cos(angle) * sign,
+      y: this.size.y * Math.sin(angle) * sign,
     }
   }
 
@@ -76,15 +86,6 @@ export class Layout {
       })
     }
     return corners
-  }
-
-  // Convert hex to screen coordinates (includes origin offset)
-  hexToScreen(hex: Hex, origin: Point): Point {
-    const pixel = this.hexToPixel(hex)
-    return {
-      x: pixel.x + origin.x,
-      y: pixel.y + origin.y,
-    }
   }
 
   // Calculate curved arrow path between two hexes
