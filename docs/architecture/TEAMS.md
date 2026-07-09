@@ -71,7 +71,7 @@ The team half of the action row, in File-menu order (New, Save, Save as New, Imp
 A desktop card below the boards / a mobile pull-up sheet:
 
 - **Tabs**: characters, seasonal, and maps act on the active board; saved teams manages the library
-- **Select**: loads a whole team (all boards, switching mode if needed) and collapses the sheet
+- **Load**: applies a whole team (all boards, switching mode if needed) and collapses the sheet
 - **Badge**: the saved-teams tab shows the library count
 
 Placement modes (on-grid popup vs. cell-tap flow) and the shared `BottomSheet` are covered in GRID.md.
@@ -151,7 +151,8 @@ Semantics wired in `TeamsView`:
 
 - **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
-- **Select**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
+- **Load**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
+- **Copy / Download**: exports the card's thumbnail as a PNG (the thumbnail is already a faithful render of the saved data, so no board loading)
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
