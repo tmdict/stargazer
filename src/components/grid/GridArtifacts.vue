@@ -136,19 +136,15 @@ const enemyArtifact = computed(() => {
 
 // "Front" is the slot that renders at the screen-bottom (near) edge, which must
 // sit above the sprites behind it; the inverted view rotates the enemy cell down
-// there. Team view always keeps the ally slot (it shows your team).
+// there. The ally slot is always visible: team view shows your team.
 const allySlotInFront = computed(() => !ctx.inverted)
 const enemySlotInFront = computed(() => ctx.inverted)
-const allySlotVisible = computed(() => true)
 const enemySlotVisible = computed(() => !ctx.teamView)
 
 // The empty dashed cell is an "add artifact here" affordance, shown only on the
-// interactive grid; a filled cell always frames its artifact. A slot shown as
-// enemy is hidden in team view.
+// interactive grid; a filled cell always frames its artifact.
 const showPlaceholders = computed(() => !props.readonly && !props.isMapEditorMode)
-const showAllyCell = computed(
-  () => allySlotVisible.value && (!!allyArtifact.value || showPlaceholders.value),
-)
+const showAllyCell = computed(() => !!allyArtifact.value || showPlaceholders.value)
 const showEnemyCell = computed(
   () => enemySlotVisible.value && (!!enemyArtifact.value || showPlaceholders.value),
 )
@@ -158,9 +154,7 @@ const showEnemyCell = computed(
 // → picker, placed hero → remove). Unlike heroes, artifacts have no tap-lift:
 // a touch tap on a filled cell also removes, so touch can add and delete
 // artifacts but only a mouse drag repositions one (an intended scope cut).
-const allyCellClickable = computed(
-  () => showPlaceholders.value && allySlotVisible.value && !allyArtifact.value,
-)
+const allyCellClickable = computed(() => showPlaceholders.value && !allyArtifact.value)
 const enemyCellClickable = computed(
   () => showPlaceholders.value && enemySlotVisible.value && !enemyArtifact.value,
 )
@@ -203,13 +197,11 @@ const handleArtifactClick = (team: Team) => {
 const ARTIFACT_MIME = 'application/artifact'
 
 const canDrag = computed(() => showPlaceholders.value && !(props.tapMode ?? ctx.hexScale < 1))
-const allyDroppable = computed(() => canDrag.value && allySlotVisible.value && !allyArtifact.value)
+const allyDroppable = computed(() => canDrag.value && !allyArtifact.value)
 const enemyDroppable = computed(
   () => canDrag.value && enemySlotVisible.value && !enemyArtifact.value,
 )
 
-// team is the cell's fixed engine team (Team.ALLY / Team.ENEMY), never the
-// invert-derived display team; invert flips rendering only.
 const handleArtifactDragStart = (event: DragEvent, team: Team) => {
   hideArtifactTooltip()
   if (!canDrag.value || !event.dataTransfer) return
@@ -333,10 +325,10 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
     </svg>
 
     <!-- Ally artifact (host cell: left of cell 1). `front` lifts it above the
-         character layer so the lifted icon isn't covered in perspective; it tracks
-         the slot shown as ally. -->
+         character layer so the icon isn't covered in perspective; it applies to
+         whichever cell renders at the near (screen-bottom) edge. -->
     <div
-      v-if="allyArtifact && allySlotVisible"
+      v-if="allyArtifact"
       class="grid-artifact"
       :class="{ readonly, front: allySlotInFront, 'invalid-drop': invalidDrop(Team.ALLY) }"
       :style="getAllyStyles"
@@ -357,7 +349,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
     </div>
 
     <!-- Enemy artifact (host cell: right of cell 45). Behind the character layer
-         (DOM order) unless invert shows this slot as ally, when it lifts to front. -->
+         (DOM order) unless the inverted view rotates it to the near edge. -->
     <div
       v-if="enemyArtifact && enemySlotVisible"
       class="grid-artifact"
