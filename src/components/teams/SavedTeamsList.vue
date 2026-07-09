@@ -488,11 +488,6 @@ const cancelRename = (): void => {
   text-transform: uppercase;
 }
 
-.loaded-chip {
-  background: var(--color-primary);
-  color: #fff;
-}
-
 .card-meta {
   font-size: 0.72rem;
   color: var(--color-text-secondary);
