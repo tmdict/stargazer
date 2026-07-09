@@ -59,7 +59,7 @@ const boards = computed(() => {
         :map-key="board.mapKey"
         :tiles="board.tiles"
         :units="board.units"
-        :hex-size="7"
+        :hex-size="8"
       />
     </template>
     <span v-else class="preview-broken" title="Unreadable team data">⚠</span>
@@ -76,7 +76,7 @@ const boards = computed(() => {
   background: rgba(0, 0, 0, 0.05);
   border-radius: var(--radius-medium);
   padding: 8px 6px;
-  min-height: 84px;
+  min-height: 96px;
 }
 
 /* Boards wrap at three per row (5v5 renders 3+2), keeping every board near the
@@ -84,7 +84,7 @@ const boards = computed(() => {
 .board-thumb {
   flex: 0 1 30%;
   min-width: 0;
-  max-width: 108px;
+  max-width: 124px;
   height: auto;
 }
 
