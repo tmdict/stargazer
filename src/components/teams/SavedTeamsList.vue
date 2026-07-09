@@ -1,11 +1,11 @@
 <script setup lang="ts">
-/* The Saved Teams roster panel: header (count, cap warning, Delete all) plus a
-   card grid: thumbnail, mode chip, inline-renamable name, relative updated
+/* The Saved Teams roster panel: header (count, cap warning, sort, Delete all)
+   plus a card grid: thumbnail, mode chip, inline-renamable name, relative updated
    time, and equal-width Select / Duplicate / Delete actions. Destructive
    actions use the app's no-modal style: a two-step inline confirm that arms
    for a few seconds. User feedback (toasts) is fired here, not in the store. */
 
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
@@ -16,6 +16,7 @@ import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/m
 import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { readStorage, writeStorage } from '@/utils/storage'
 
 const emit = defineEmits<{ select: [team: SavedTeam] }>()
 
@@ -23,7 +24,24 @@ const i18n = useI18nStore()
 const library = useTeamLibrary()
 const { success, error } = useToast()
 
-const sorted = computed(() => [...library.teams].sort((a, b) => b.updatedAt - a.updatedAt))
+// Device-level sort preference: last-modified first (the default) or by name.
+const SORT_STORAGE_KEY = 'stargazer.teams.sort'
+type SortKey = 'recent' | 'name'
+const SORT_KEYS: SortKey[] = ['recent', 'name']
+const sortBy = ref<SortKey>(readStorage(SORT_STORAGE_KEY) === 'name' ? 'name' : 'recent')
+watch(sortBy, (value) => writeStorage(SORT_STORAGE_KEY, value))
+
+// numeric:true keeps auto-names in counting order ("Team 2" before "Team 10").
+const nameCollator = computed(
+  () => new Intl.Collator(i18n.currentLocale, { numeric: true, sensitivity: 'base' }),
+)
+
+const sorted = computed(() => {
+  const teams = [...library.teams]
+  return sortBy.value === 'name'
+    ? teams.sort((a, b) => nameCollator.value.compare(a.name, b.name) || b.updatedAt - a.updatedAt)
+    : teams.sort((a, b) => b.updatedAt - a.updatedAt)
+})
 const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
 
 const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].labelKey)
@@ -127,6 +145,24 @@ const cancelRename = (): void => {
         >
           <IconInfo :size="15" />
         </span>
+        <div
+          v-if="library.count > 1"
+          class="sort-picker"
+          role="group"
+          :aria-label="i18n.t('app.sort')"
+        >
+          <button
+            v-for="key in SORT_KEYS"
+            :key
+            type="button"
+            :aria-pressed="sortBy === key"
+            class="sort-seg"
+            :class="{ active: sortBy === key }"
+            @click="sortBy = key"
+          >
+            {{ i18n.t(`app.sort-${key}`) }}
+          </button>
+        </div>
       </span>
       <button
         v-if="library.count > 0"
@@ -244,6 +280,40 @@ const cancelRename = (): void => {
 
 .library-count.warn {
   color: var(--color-warning);
+}
+
+/* Sized down from TeamModePicker's segmented style to fit the library bar. */
+.sort-picker {
+  display: inline-flex;
+  margin-left: var(--spacing-sm);
+  background: var(--color-bg-secondary);
+  border: 1.5px solid var(--color-border-primary);
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+}
+
+.sort-seg {
+  border: none;
+  background: transparent;
+  border-radius: 999px;
+  padding: 3px 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.sort-seg:hover:not(.active) {
+  color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.sort-seg.active {
+  background: var(--color-primary);
+  color: #fff;
 }
 
 .delete-all-btn {
