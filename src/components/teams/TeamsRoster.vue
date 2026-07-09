@@ -64,7 +64,7 @@ watch(
 
 const sheetExpanded = ref(false)
 
-// Selecting a team collapses the sheet so the loaded boards are visible (same
+// Loading a team collapses the sheet so the loaded boards are visible (same
 // pattern as placing a character).
 const handleSelectTeam = (team: SavedTeam) => {
   sheetExpanded.value = false

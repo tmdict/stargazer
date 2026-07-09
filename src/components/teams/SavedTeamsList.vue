@@ -494,7 +494,7 @@ const cancelRename = (): void => {
   margin-left: auto;
 }
 
-/* Equal-width actions so Select/Duplicate/Delete align across cards. */
+/* Equal-width actions so Load/Duplicate/Delete align across cards. */
 .card-actions {
   display: flex;
   gap: var(--spacing-sm);
