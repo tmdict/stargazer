@@ -102,47 +102,6 @@ export function serializeGridState(
   return state
 }
 
-/* Reflect a board's units onto the opposite team at their mirror tiles. The map
- * itself doesn't move: tile states stay at their hexes but occupied ones are
- * demoted to available (occupancy is re-established by the mirrored `c`/`p`
- * placements). Character and phantimal hexes are mirrored (via the injected
- * `mirror`, so this stays grid-agnostic) with teams flipped, artifact slots swap,
- * and display flags pass through. Entries whose mirror is off-grid (asymmetric
- * custom maps) are dropped. */
-export function mirrorGridState(
-  state: GridState,
-  mirror: (hexId: number) => number | undefined,
-): GridState {
-  const flip = (team: number): number => (team === Team.ALLY ? Team.ENEMY : Team.ALLY)
-  const mirrorEntry = (entry: number[]): number[] | null => {
-    const dest = mirror(entry[0])
-    return dest === undefined ? null : [dest, entry[1], flip(entry[2])]
-  }
-  const vacate = (s: number): number =>
-    s === State.OCCUPIED_ALLY
-      ? State.AVAILABLE_ALLY
-      : s === State.OCCUPIED_ENEMY
-        ? State.AVAILABLE_ENEMY
-        : s
-
-  const result: GridState = {}
-  if (state.t) result.t = state.t.map((entry) => [entry[0], vacate(entry[1])])
-  if (state.d !== undefined) result.d = state.d
-  const c = state.c?.map(mirrorEntry).filter((e): e is number[] => e !== null)
-  if (c?.length) result.c = c
-  const p = state.p?.map(mirrorEntry).filter((e): e is number[] => e !== null)
-  if (p?.length) result.p = p
-  // Paragon is keyed by team + character, not hex, so flip the team; drop any whose
-  // hero fell off-grid in the c mirror, so no level outlives its character.
-  const survivors = new Set((c ?? []).map((entry) => `${entry[2]!}:${entry[1]!}`))
-  const pr = state.pr
-    ?.map((entry) => [flip(entry[0]!), entry[1]!, entry[2]!])
-    .filter((entry) => survivors.has(`${entry[0]!}:${entry[1]!}`))
-  if (pr?.length) result.pr = pr
-  if (state.a) result.a = [state.a[1] ?? null, state.a[0] ?? null]
-  return result
-}
-
 /* Pack the display toggles into one number.
  * Bit 0: showGridInfo, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills,
  * 4: teamView, 5: inverted, 6: wrap */

@@ -7,7 +7,6 @@ import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import {
   BOARD_CONTENT_KEYS,
-  mirrorGridState,
   serializeGridState,
   serializeMultiGridState,
   unpackDisplayFlags,
@@ -189,111 +188,6 @@ describe('gridStateSerializer', () => {
         a: [1, 2],
         d: 0b01011,
       })
-    })
-  })
-
-  describe('mirrorGridState', () => {
-    // Fixed mirror for the tests (a symmetric pairing); anything else is off-grid.
-    const PAIRS = new Map([
-      [1, 44],
-      [2, 45],
-      [5, 40],
-      [44, 1],
-      [45, 2],
-      [40, 5],
-    ])
-    const mirror = (hexId: number) => PAIRS.get(hexId)
-
-    it('mirrors character hexes and flips their teams', () => {
-      const result = mirrorGridState(
-        {
-          c: [
-            [1, 100, Team.ALLY],
-            [44, 200, Team.ENEMY],
-          ],
-        },
-        mirror,
-      )
-      expect(result.c).toEqual([
-        [44, 100, Team.ENEMY],
-        [1, 200, Team.ALLY],
-      ])
-    })
-
-    it('mirrors phantimal hexes and flips teams, keeping local ids', () => {
-      const result = mirrorGridState({ p: [[5, 3, Team.ALLY]] }, mirror)
-      expect(result.p).toEqual([[40, 3, Team.ENEMY]])
-    })
-
-    it('swaps the artifact slots', () => {
-      expect(mirrorGridState({ a: [7, 9] }, mirror).a).toEqual([9, 7])
-      expect(mirrorGridState({ a: [3, null] }, mirror).a).toEqual([null, 3])
-    })
-
-    it('keeps tile states at their hexes but vacates occupied ones, and passes d through', () => {
-      const result = mirrorGridState(
-        {
-          t: [
-            [1, State.OCCUPIED_ALLY],
-            [44, State.OCCUPIED_ENEMY],
-            [2, State.AVAILABLE_ALLY],
-            [10, State.BLOCKED],
-          ],
-          d: 0b10101,
-        },
-        mirror,
-      )
-      // Map doesn't move; occupied -> available so placement re-sets occupancy.
-      expect(result.t).toEqual([
-        [1, State.AVAILABLE_ALLY],
-        [44, State.AVAILABLE_ENEMY],
-        [2, State.AVAILABLE_ALLY],
-        [10, State.BLOCKED],
-      ])
-      expect(result.d).toBe(0b10101)
-    })
-
-    it('drops units whose mirror is off-grid', () => {
-      const result = mirrorGridState(
-        {
-          c: [
-            [1, 100, Team.ALLY],
-            [99, 200, Team.ENEMY], // 99 has no mirror
-          ],
-        },
-        mirror,
-      )
-      expect(result.c).toEqual([[44, 100, Team.ENEMY]])
-    })
-
-    it('mirrors paragon entries (team flipped), dropping any whose hero is off-grid', () => {
-      const result = mirrorGridState(
-        {
-          c: [
-            [1, 100, Team.ALLY],
-            [99, 200, Team.ENEMY], // 99 off-grid, so hero 200 is dropped
-          ],
-          pr: [
-            [Team.ALLY, 100, 3],
-            [Team.ENEMY, 200, 4],
-          ],
-        },
-        mirror,
-      )
-      expect(result.pr).toEqual([[Team.ENEMY, 100, 3]])
-    })
-
-    it('round-trips: mirroring twice restores the original', () => {
-      const state = {
-        c: [
-          [1, 100, Team.ALLY],
-          [45, 200, Team.ENEMY],
-        ],
-        a: [7, 9],
-      }
-      const twice = mirrorGridState(mirrorGridState(state, mirror), mirror)
-      expect(twice.c).toEqual(state.c)
-      expect(twice.a).toEqual(state.a)
     })
   })
 
