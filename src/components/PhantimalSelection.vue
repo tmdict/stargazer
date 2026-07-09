@@ -113,10 +113,7 @@ const onPortraitLeave = () => {
 const tooltipText = computed(() => {
   const phantimal = hovered.value
   if (!phantimal) return ''
-  const count = characterStore.phantimalFactionCount(
-    toPhantimalId(phantimal.id),
-    fillOrder[0],
-  )
+  const count = characterStore.phantimalFactionCount(toPhantimalId(phantimal.id), fillOrder[0])
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
   const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
   return i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT })

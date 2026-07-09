@@ -160,5 +160,4 @@ describe('Grid', () => {
       expect(tile2.team).toBe(Team.ALLY)
     })
   })
-
 })

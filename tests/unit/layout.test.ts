@@ -104,10 +104,7 @@ describe('Layout', () => {
 
     it('reflects arrow endpoints through the origin', () => {
       const path = rotated.getLinePath(hexes[1]!, hexes[2]!)
-      const canonicalPath = canonical.getLinePath(
-        new Hex(-1, 0, 1),
-        new Hex(2, -3, 1),
-      )
+      const canonicalPath = canonical.getLinePath(new Hex(-1, 0, 1), new Hex(2, -3, 1))
       expect(path).toBe(canonicalPath)
     })
   })
