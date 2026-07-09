@@ -153,7 +153,6 @@ Semantics wired in `TeamsView`:
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
 - **Load**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
 - **Loaded badge**: the card matching `sourceId` gets a ring + chip, the same provenance the unsaved-changes indicator reads
-- **Copy / Download**: exports the card's thumbnail as a PNG (the thumbnail is already a faithful render of the saved data, so no board loading); captured at a raised `pixelRatio` so the small on-screen SVG still exports at full-grid resolution
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
