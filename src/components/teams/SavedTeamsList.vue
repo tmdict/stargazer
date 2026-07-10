@@ -13,7 +13,7 @@ import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import { useGridExport } from '@/composables/useGridExport'
+import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
 import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
@@ -102,14 +102,8 @@ const handleDeleteAll = (): void => {
 
 // The card's thumbnail is the capture target: it already renders the saved
 // data faithfully, so exporting needs no board loading.
-const { copyToClipboard, downloadAsImage } = useGridExport()
-const cardImageOptions = (team: SavedTeam) => ({
-  showPerspective: false,
-  target: `[data-team-card-id="${team.id}"] .team-preview`,
-  filePrefix: team.name,
-  // The on-screen thumbnail is small; capture at full-grid resolution.
-  pixelRatio: 6,
-})
+const { copyToClipboard, downloadAsImage } = useThumbnailExport()
+const cardSelector = (team: SavedTeam): string => `[data-team-card-id="${team.id}"] .team-preview`
 
 const handleDuplicate = (team: SavedTeam): void => {
   const copy = library.duplicate(team.id)
@@ -258,7 +252,7 @@ const cancelRename = (): void => {
             class="card-btn icon"
             :title="i18n.t('app.copy')"
             :aria-label="i18n.t('app.copy')"
-            @click="copyToClipboard(cardImageOptions(team))"
+            @click="copyToClipboard(cardSelector(team))"
           >
             <IconCopy :size="14" />
           </button>
@@ -267,7 +261,7 @@ const cancelRename = (): void => {
             class="card-btn icon"
             :title="i18n.t('app.download')"
             :aria-label="i18n.t('app.download')"
-            @click="downloadAsImage(cardImageOptions(team))"
+            @click="downloadAsImage(cardSelector(team), team.name)"
           >
             <IconDownload :size="14" />
           </button>
