@@ -142,3 +142,14 @@ on `isPhantimalId` or living in a dedicated file. To retire the feature:
 
 The `GridTile` model, targeting, pathfinding, move, and the `c` URL section
 were never modified for phantimals, so nothing there needs reverting.
+
+## Retirement
+
+Deleting a season's phantimal data files (and artifact JSONs) is safe: the
+binary format is positional, so encoded teams, links, and backups keep
+decoding. Unknown ids render as question-mark placeholders on boards (with a
+"no longer available" tooltip) and question-marked dots in thumbnails; retired
+artifacts occupy their slot as a question-mark circle. All of them stay
+removable/replaceable, and the ids survive load/save round-trips until edited
+away. The `s` board section and its decode path are file format, not season
+data: they stay even if phantimals are replaced by a new seasonal unit type.

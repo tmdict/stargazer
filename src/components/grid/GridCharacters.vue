@@ -14,6 +14,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
 import { isTouchClick } from '@/utils/pointer'
 
@@ -31,6 +32,7 @@ const props = defineProps<Props>()
 
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
 const grids = useGrids()
 const gridEvents = useGridEvents()
 
@@ -76,6 +78,11 @@ const phantimalUrl = (characterId: number) =>
 
 const phantimalName = (characterId: number): string =>
   gameDataStore.getPhantimalById(characterId)?.name ?? 'Phantimal'
+
+// A phantimal id with no data is retired seasonal content: the id stays in the
+// team (removable/replaceable like any unit) and renders as a placeholder.
+const isRetiredPhantimal = (characterId: number): boolean =>
+  isPhantimalId(characterId) && !gameDataStore.getPhantimalById(characterId)
 
 // Neutral disc behind every placed hero (one color for all, not the roster's
 // per-level gold/purple). Phantimals keep their own grey; skill-driven colors
@@ -276,8 +283,16 @@ const visiblePlacements = computed(() => {
              (character↔phantimal flips the v-if branch). Dragend fired on a
              detached source never reaches the wrapper or document listeners,
              leaving the drag ghost stuck. -->
+        <span
+          v-if="isRetiredPhantimal(characterId)"
+          class="character-image retired-unit"
+          :style="{ fontSize: `${characterDimensions.size * 0.4}px` }"
+          :title="i18n.t('app.retired')"
+        >
+          ?
+        </span>
         <img
-          v-if="isPhantimalId(characterId)"
+          v-else-if="isPhantimalId(characterId)"
           :src="phantimalUrl(characterId)"
           :alt="phantimalName(characterId)"
           class="character-image"
@@ -357,6 +372,15 @@ const visiblePlacements = computed(() => {
   border-radius: 50%;
   border: var(--character-border-width, 3px) solid;
   border-color: #fff;
+}
+
+.retired-unit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 700;
+  user-select: none;
 }
 
 .character-image {
