@@ -53,7 +53,7 @@ describe('binaryEncoder', () => {
         'display flags zero with extended counts',
         { t: Array.from({ length: 10 }, (_, i) => [i + 1, 1]), d: 0 },
       ],
-      ['display flags zero with phantimals', { p: [[5, 1, 1]], d: 0 }],
+      ['display flags zero with phantimals', { s: [[5, 1, 1]], d: 0 }],
       [
         'complete state',
         {
@@ -71,7 +71,7 @@ describe('binaryEncoder', () => {
       [
         'only phantimals',
         {
-          p: [
+          s: [
             [1, 3, 1],
             [5, 2, 2],
           ],
@@ -82,14 +82,14 @@ describe('binaryEncoder', () => {
         {
           c: [[2, 100, 1]],
           a: [2, 4],
-          p: [[7, 1, 2]],
+          s: [[7, 1, 2]],
         },
       ],
       [
         'phantimals with display flags',
         {
           t: [[1, 1]],
-          p: [[3, 4, 1]],
+          s: [[3, 4, 1]],
           d: 0b1010,
         },
       ],
@@ -111,7 +111,7 @@ describe('binaryEncoder', () => {
         'paragon with phantimals and display flags',
         {
           c: [[2, 100, 1]],
-          p: [[7, 1, 2]],
+          s: [[7, 1, 2]],
           pr: [[1, 100, 4]],
           d: 0b1,
         },
@@ -161,11 +161,11 @@ describe('binaryEncoder', () => {
 
       it('round-trips the maximum phantimal count (15)', () => {
         const state: GridState = {
-          p: Array.from({ length: 15 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
+          s: Array.from({ length: 15 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
         }
         const encoded = encodeToBinary(state)
         const decoded = decodeFromBinary(encoded)
-        expect(decoded?.p).toEqual(state.p)
+        expect(decoded?.s).toEqual(state.s)
       })
     })
 
@@ -184,7 +184,7 @@ describe('binaryEncoder', () => {
           [10, 10089, 1],
         ],
         a: [3, 18],
-        p: [[7, 2, 2]],
+        s: [[7, 2, 2]],
         d: 0b10110,
       }
       const GOLDEN_ENCODED = '2sAWgYoJZAAMZIBK2olBikMC'
@@ -308,10 +308,10 @@ describe('binaryEncoder', () => {
     it('caps phantimal entries at the 4-bit count limit (15)', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const state: GridState = {
-        p: Array.from({ length: 16 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
+        s: Array.from({ length: 16 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
       }
       const result = validateGridState(state)
-      expect(result.p).toHaveLength(15)
+      expect(result.s).toHaveLength(15)
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })

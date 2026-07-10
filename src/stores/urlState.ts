@@ -168,8 +168,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
 
     // Restore phantimals from compact format: [hexId, localPhantimalId, team]
-    if (gridState.p) {
-      gridState.p.forEach((entry) => {
+    if (gridState.s) {
+      gridState.s.forEach((entry) => {
         const hexId = entry[0]
         const localId = entry[1]
         const team = entry[2]
