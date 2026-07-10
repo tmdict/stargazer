@@ -148,6 +148,7 @@ const openModal = (phantimal: PhantimalType) => {
             :alt="phantimal.name"
             class="portrait"
             loading="lazy"
+            decoding="async"
             crossorigin="anonymous"
           />
         </div>

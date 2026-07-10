@@ -75,6 +75,8 @@ const handleDragEnd = (event: DragEvent) => {
     >
       <img
         :src="gameDataStore.getCharacterImage(character.name)"
+        loading="lazy"
+        decoding="async"
         :alt="character.name"
         class="portrait"
       />
