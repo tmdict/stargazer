@@ -533,7 +533,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
           <div class="sso-foot">
             <span><kbd>↑</kbd><kbd>↓</kbd> {{ i18n.t('app.search-navigate') }}</span>
-            <span v-if="paneVisible"><kbd>⇥</kbd> {{ i18n.t('app.search-cycle') }}</span>
+            <span v-if="paneVisible"><kbd>Tab</kbd> {{ i18n.t('app.search-cycle') }}</span>
             <span
               ><kbd>↵</kbd> {{ i18n.t(selectMode ? 'app.search-select' : 'app.search-open') }}</span
             >
@@ -698,6 +698,9 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   cursor: pointer;
 }
 
+/* The row cursor above stays visible everywhere (arrow keys work with the
+   hardware keyboards tablets often have); this secondary Tab cursor hides on
+   hover-less devices, where it reads as a stuck selection. */
 @media (hover: hover) {
   .sso-pane-hit.on {
     border-left-color: var(--color-accent);
@@ -743,13 +746,8 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   background: #2c3037;
 }
 
-/* Keyboard-cursor visuals live behind (hover: hover): on touch the cursor
-   can't move (no hover to follow, taps navigate immediately), so the
-   highlight would read as a stuck selection. */
-@media (hover: hover) {
-  .sso-row.sel {
-    background: var(--color-accent-active);
-  }
+.sso-row.sel {
+  background: var(--color-accent-active);
 }
 
 .sso-portrait {
@@ -787,16 +785,14 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   font-weight: 700;
 }
 
-@media (hover: hover) {
-  .sso-row.sel .sso-snip {
-    color: #fff;
-  }
+.sso-row.sel .sso-snip {
+  color: #fff;
+}
 
-  .sso-row.sel .sso-snip mark {
-    color: #fff;
-    text-decoration: underline;
-    text-underline-offset: 2px;
-  }
+.sso-row.sel .sso-snip mark {
+  color: #fff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }
 
 .sso-chip {
@@ -811,11 +807,9 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   border-radius: 999px;
 }
 
-@media (hover: hover) {
-  .sso-row.sel .sso-chip {
-    background: rgba(255, 255, 255, 0.18);
-    color: #fff;
-  }
+.sso-row.sel .sso-chip {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff;
 }
 
 .sso-nores {
