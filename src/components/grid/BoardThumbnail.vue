@@ -174,7 +174,7 @@ const placedUnits = computed(() =>
       :key="tile.hexId"
       :points="tile.points"
       :fill="tile.fill"
-      stroke="#ccc"
+      stroke="#aaa"
       stroke-width="1"
     />
 
