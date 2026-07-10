@@ -152,7 +152,7 @@ Semantics wired in `TeamsView`:
 - **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
 - **Load**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
-- **Loaded badge**: the card matching `sourceId` gets a ring + chip, the same provenance the unsaved-changes indicator reads
+- **Loaded badge**: the card matching `sourceId` gets a border ring, the same provenance the unsaved-changes indicator reads
 - **Copy / Download**: exports the card's thumbnail as a PNG via `useThumbnailExport`, which serializes the boards' SVGs and rasterizes them onto one canvas (WebKit fails on DOM-snapshot capture of SVG content, and the vectors upscale losslessly to full-grid resolution)
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"

@@ -234,9 +234,6 @@ const cancelRename = (): void => {
 
         <div class="card-meta-row">
           <span class="mode-chip">{{ modeChip(team) }}</span>
-          <span v-if="team.id === loadedTeamId" class="loaded-chip">{{
-            i18n.t('app.loaded')
-          }}</span>
           <span class="card-meta">{{ updatedLabel(team) }}</span>
         </div>
 
@@ -502,8 +499,7 @@ const cancelRename = (): void => {
   gap: var(--spacing-sm);
 }
 
-.mode-chip,
-.loaded-chip {
+.mode-chip {
   font-size: 0.65rem;
   font-weight: 700;
   letter-spacing: 0.04em;
