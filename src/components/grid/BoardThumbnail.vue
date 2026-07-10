@@ -169,6 +169,8 @@ const placedUnits = computed(() =>
       </clipPath>
     </defs>
 
+    <!-- Opaque so shared edges don't double-composite darker; a step below the
+         live grid's #ccc because hairlines need more contrast at this scale. -->
     <polygon
       v-for="tile in renderTiles"
       :key="tile.hexId"
