@@ -26,7 +26,7 @@ const handleClick = (): void => {
     @click="handleClick"
     class="control-btn danger clear-all-btn"
     :class="{ armed: armed !== null }"
-    :title="i18n.t('app.clear')"
+    :title="i18n.t(armed !== null ? 'app.confirm' : 'app.clear')"
   >
     <IconTrash :size="14" class="btn-icon" />
     <span class="btn-text">{{ i18n.t(armed !== null ? 'app.confirm' : 'app.clear') }}</span>
