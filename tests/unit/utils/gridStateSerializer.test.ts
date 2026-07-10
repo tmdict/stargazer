@@ -131,14 +131,14 @@ describe('gridStateSerializer', () => {
       expect(result).toEqual({ a: expected })
     })
 
-    it('extracts phantimals into p with local IDs, keeping them out of c', () => {
+    it('extracts phantimals into s with local IDs, keeping them out of c', () => {
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
         createMockTile(5, State.OCCUPIED_ENEMY, toPhantimalId(3), Team.ENEMY),
       ]
       const result = serializeGridState(tiles, null, null)
       expect(result.c).toEqual([[1, 100, Team.ALLY]])
-      expect(result.p).toEqual([[5, 3, Team.ENEMY]])
+      expect(result.s).toEqual([[5, 3, Team.ENEMY]])
     })
 
     it('serializes display flags', () => {

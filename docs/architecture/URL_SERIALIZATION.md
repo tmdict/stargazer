@@ -48,7 +48,7 @@ interface GridState {
   t?: number[][] // tiles: [hexId, state]
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy]
-  p?: number[][] // phantimals: [hexId, localPhantimalId, team]
+  s?: number[][] // seasonal units (phantimals today): [hexId, localUnitId, team]
   pr?: number[][] // paragon: [team, characterId, level]
   d?: number // display flags (bit-packed)
 }
@@ -161,7 +161,7 @@ if (result.success) {
 
 - **Standard characters (ID < 10000)**: Direct placement
 - **Companions (ID ≥ 10000)**: Settled per main: each main is placed (its skill spawns the companions), then those companions are repositioned onto their saved hexes before the next main is placed
-- **Phantimals (ID ≥ 100000)**: Serialized separately in the `p` section via 4-bit local IDs
+- **Phantimals (ID ≥ 100000)**: Serialized separately in the `s` section via 4-bit local IDs
 
 **Note**: Character IDs are limited to 65,535 (16-bit encoding). Companion IDs are `N * 10000 + base`, so the field covers companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). IDs exceeding the limit are filtered during validation.
 
