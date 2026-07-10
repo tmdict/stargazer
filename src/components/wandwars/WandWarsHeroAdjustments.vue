@@ -366,6 +366,8 @@ const totalHeaderTitle = computed(
             <img
               v-if="characterImages[row.hero]"
               :src="characterImages[row.hero]"
+              loading="lazy"
+              decoding="async"
               :alt="row.label"
               class="hero-portrait"
             />

@@ -460,6 +460,8 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                 <img
                   v-if="row.portrait"
                   :src="loadCharacterImages()[row.slug]"
+                  loading="lazy"
+                  decoding="async"
                   :alt="row.alt"
                   class="sso-portrait"
                 />

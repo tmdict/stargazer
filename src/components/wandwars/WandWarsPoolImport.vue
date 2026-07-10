@@ -534,7 +534,14 @@ function cancel() {
         >
           <img :src="d.crop" alt="" class="cell-crop" />
           <div class="cell-label">
-            <img v-if="d.hero" :src="characterImages[d.hero]" :alt="d.hero" class="cell-portrait" />
+            <img
+              v-if="d.hero"
+              :src="characterImages[d.hero]"
+              :alt="d.hero"
+              class="cell-portrait"
+              loading="lazy"
+              decoding="async"
+            />
             <span v-else class="cell-unknown">?</span>
             <span class="cell-name">{{
               d.hero ? formatName(d.hero) : i18n.t('wandwars.unknown')
