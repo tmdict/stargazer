@@ -130,4 +130,12 @@ const handleArenaSelected = (mapKey: string) => {
   align-items: center;
   gap: var(--spacing-lg);
 }
+
+/* The mobile sheet zeroes the card inset, so the panel owns its side padding
+   (the same 1rem the Home page's maps tab gets from MapEditor's root). */
+@media (max-width: 768px) {
+  .maps-tab {
+    padding: 0 var(--spacing-lg);
+  }
+}
 </style>
