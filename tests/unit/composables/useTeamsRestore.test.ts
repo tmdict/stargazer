@@ -370,7 +370,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     vi.unstubAllGlobals()
   })
 
-  it('canonical snapshot ignores viewer state but tracks content', async () => {
+  it('canonical snapshot ignores viewer state but tracks content', () => {
     const { restore, grids, character, wrapBoards } = createHarness()
     restore.initialize(null)
     grids.setActive(0)
@@ -387,7 +387,6 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     grids.setActive(0)
     expect(character.placeCharacterOnHex(2, 12, Team.ALLY)).toBe(true)
     expect(canonicalTeamData(restore.snapshot())).not.toBe(canonical)
-    await nextTick()
   })
 
   it('applyTeamData switches mode, applies content, and adopts provenance', () => {
@@ -449,7 +448,7 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
       encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
     )!
     restore.applyTeamData('1v1', data, 'x')
-    // applyFlags only runs when the payload carries `d`; canonical data doesn't.
+    // applyTeamData restores with adoptFlags=false, so a payload's `d` is ignored.
     expect(flags.showArrows).toBe(true)
   })
 

@@ -192,7 +192,7 @@ describe('pathfinding', () => {
       expect(result).toBeNull()
     })
 
-    it('handles ranged units correctly', () => {
+    it('requires no movement when target is within attack range', () => {
       const sourceTile = occupy(1, Team.ALLY)
       const targetTile = occupy(3, Team.ENEMY, 100)
 

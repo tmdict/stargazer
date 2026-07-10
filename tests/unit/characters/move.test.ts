@@ -5,7 +5,6 @@ import { executeMoveCharacter } from '@/lib/characters/move'
 import { performPlace } from '@/lib/characters/place'
 import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
-// Import skill functions for mocking
 import { getCharacterSkill, hasCompanionSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -19,7 +18,8 @@ vi.mock('@/lib/skills/skill', () => ({
   SkillManager: vi.fn(),
 }))
 
-// Don't mock performRemove globally - import the real implementation
+// performRemove/performPlace stay unmocked: the companion-rollback test relies
+// on their real semantics to displace and restore the companion
 
 describe('move.ts', () => {
   let grid: Grid
@@ -39,7 +39,8 @@ describe('move.ts', () => {
       addCharacterColorModifier: vi.fn(),
     } as unknown as SkillManager
 
-    // Set skillManager on grid for some tests
+    // executeMoveCharacter notifies skills through grid.skillManager, so this
+    // wiring is load-bearing
     grid.skillManager = skillManager
 
     // Default: characters don't have skills
@@ -279,7 +280,7 @@ describe('move.ts', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle move on empty grid', () => {
+    it('throws when the source hex does not exist', () => {
       const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
       emptyGrid.skillManager = skillManager
 
@@ -289,7 +290,7 @@ describe('move.ts', () => {
       )
     })
 
-    it('should handle invalid hex IDs', () => {
+    it('throws when the destination hex does not exist', () => {
       performPlace(grid, 1, 100, Team.ALLY)
 
       expect(() => executeMoveCharacter(grid, skillManager, 1, 999, 100)).toThrow()

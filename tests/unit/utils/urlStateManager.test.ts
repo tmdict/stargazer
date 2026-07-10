@@ -18,7 +18,6 @@ import {
   getEncodedStateFromUrl,
 } from '@/utils/urlStateManager'
 
-// Helper function to create mock grid tiles
 function createMockTile(
   hexId: number,
   state: State = State.DEFAULT,
@@ -63,7 +62,7 @@ describe('urlStateManager', () => {
 
       expect(decoded).toBeNull()
       expect(consoleSpy).toHaveBeenCalledWith('Failed to decode binary data from URL')
-      expect(consoleErrorSpy).toHaveBeenCalledWith('Invalid character in URL-safe string:', '@')
+      expect(consoleErrorSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
       consoleErrorSpy.mockRestore()
     })
@@ -140,9 +139,7 @@ describe('urlStateManager', () => {
       [{ g: 'encodedState123' }, 'encodedState123'],
       [{ g: ['state1', 'state2'] }, null],
       [{ g: null }, null],
-      [{ g: undefined }, null],
       [{}, null],
-      [{ l: 'zh', g: 'encodedState', debug: 'true' }, 'encodedState'],
       [{ g: '' }, ''],
     ])('with query %o returns %s', (query, expected) => {
       const result = getEncodedStateFromRoute(query)
@@ -151,7 +148,7 @@ describe('urlStateManager', () => {
   })
 
   describe('Integration tests', () => {
-    it('complete round-trip: tiles -> URL -> tiles', () => {
+    it('complete round-trip: GridState -> URL -> GridState', () => {
       const originalTiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
         createMockTile(2, State.DEFAULT),

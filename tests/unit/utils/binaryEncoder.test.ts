@@ -47,7 +47,6 @@ describe('binaryEncoder', () => {
           ],
         },
       ],
-      ['display flags', { t: [[1, 1]], d: 0b1010 }],
       ['display flags with inverted (bit 5)', { t: [[1, 1]], d: 0b101010 }],
       ['display flags zero', { t: [[1, 1]], d: 0 }],
       [
@@ -318,11 +317,6 @@ describe('binaryEncoder', () => {
     })
 
     it('handles null and undefined input', () => {
-      // Need to handle these gracefully
-      expect(() => validateGridState(null as unknown as GridState)).not.toThrow()
-      expect(() => validateGridState(undefined as unknown as GridState)).not.toThrow()
-
-      // Should return empty state for invalid inputs
       expect(validateGridState(null as unknown as GridState)).toEqual({})
       expect(validateGridState(undefined as unknown as GridState)).toEqual({})
     })

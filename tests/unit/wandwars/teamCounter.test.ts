@@ -47,8 +47,8 @@ describe('buildTeamCounterMap', () => {
     expect(buildTeamCounterMap(MATCHES, TEAMMATES, ['x']).size).toBe(0)
   })
 
-  // The map replaced a per-candidate scan in WandWarsAnalysis.vue; this oracle
-  // is that original algorithm, kept to pin the loop-inversion equivalence.
+  // Oracle: a naive per-candidate scan must agree with the counter map,
+  // pinning the loop-inversion equivalence.
   it('matches the per-candidate scan it replaced, for every hero', () => {
     const oracle = (hero: string): TeamCounterInfo | null => {
       const myTeam = [...TEAMMATES, hero]

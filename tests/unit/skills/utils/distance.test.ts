@@ -200,7 +200,7 @@ describe('distance targeting', () => {
       expect(findRearmostTarget(context, Team.ENEMY)).toBeNull()
     })
 
-    it('should exclude self when excludeSelf is true and targeting same team', () => {
+    it('excludes self when excludeSelf is true and targeting same team', () => {
       placeOnTile(grid, 2, 102, Team.ALLY)
       placeOnTile(grid, 4, 104, Team.ALLY)
       placeOnTile(grid, 5, 105, Team.ALLY)
@@ -226,7 +226,7 @@ describe('distance targeting', () => {
       expect(resultWithSelfAtRear?.targetCharacterId).toBe(102)
     })
 
-    it('should not exclude self when targeting different team even with excludeSelf true', () => {
+    it('does not exclude self when targeting different team even with excludeSelf true', () => {
       const context = makeSkillContext(grid, 3, Team.ALLY, 101)
 
       const result = findRearmostTarget(context, Team.ENEMY, true)

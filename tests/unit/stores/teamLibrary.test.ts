@@ -37,24 +37,24 @@ const seed = (teams: SavedTeam[], version = 1): void => {
 
 const stored = (): SavedTeam[] => JSON.parse(storage.get(LIBRARY_KEY)!).teams as SavedTeam[]
 
+beforeEach(() => {
+  vi.stubEnv('SSR', false)
+  storage.clear()
+  vi.stubGlobal('localStorage', {
+    getItem: (key: string) => storage.get(key) ?? null,
+    setItem: (key: string, value: string) => storage.set(key, value),
+    removeItem: (key: string) => storage.delete(key),
+    clear: () => storage.clear(),
+  })
+  setActivePinia(createPinia())
+})
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
+})
+
 describe('useTeamLibrary', () => {
-  beforeEach(() => {
-    vi.stubEnv('SSR', false)
-    storage.clear()
-    vi.stubGlobal('localStorage', {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => storage.set(key, value),
-      removeItem: (key: string) => storage.delete(key),
-      clear: () => storage.clear(),
-    })
-    setActivePinia(createPinia())
-  })
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    vi.unstubAllGlobals()
-  })
-
   it('hydrates valid records and drops invalid ones with a warning', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     seed([record('a', 'Alpha'), { ...record('b', 'Broken'), mode: '9v9' } as never])
@@ -189,23 +189,6 @@ describe('useTeamLibrary', () => {
 })
 
 describe('useTeamLibrary export/import', () => {
-  beforeEach(() => {
-    vi.stubEnv('SSR', false)
-    storage.clear()
-    vi.stubGlobal('localStorage', {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: (key: string, value: string) => storage.set(key, value),
-      removeItem: (key: string) => storage.delete(key),
-      clear: () => storage.clear(),
-    })
-    setActivePinia(createPinia())
-  })
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    vi.unstubAllGlobals()
-  })
-
   it('export -> wipe -> import restores the library (fresh ids)', () => {
     seed([record('a', 'Alpha'), record('b', 'Bravo')])
     const library = useTeamLibrary()

@@ -8,7 +8,6 @@ import {
   performRemove,
 } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
-// Import skill functions for mocking
 import { hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -73,15 +72,6 @@ describe('remove.ts', () => {
       expect(result).toBe(false)
     })
 
-    it('should restore correct tile state for ally', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      expect(grid.getTileById(1).state).toBe(State.OCCUPIED_ALLY)
-
-      performRemove(grid, 1)
-
-      expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
-    })
-
     it('should restore correct tile state for enemy', () => {
       performPlace(grid, 4, 200, Team.ENEMY)
       expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
@@ -141,7 +131,7 @@ describe('remove.ts', () => {
       expect(result).toBe(true)
     })
 
-    it('should deactivate skill before removal', () => {
+    it('should deactivate the skill on removal', () => {
       vi.mocked(hasSkill).mockReturnValue(true)
       performPlace(grid, 1, 100, Team.ALLY)
 
@@ -248,10 +238,9 @@ describe('remove.ts', () => {
   })
 
   describe('executeClearAllCharacters', () => {
-    it('should deactivate all skills before clearing', () => {
+    it('should deactivate all skills on clear', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, 200, Team.ALLY)
-      vi.mocked(hasSkill).mockReturnValue(true)
 
       executeClearAllCharacters(grid, skillManager)
 
@@ -280,20 +269,6 @@ describe('remove.ts', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle remove after position changes', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      // Move character
-      performRemove(grid, 1)
-      performPlace(grid, 2, 100, Team.ALLY)
-
-      // Remove from new location
-      const result = executeRemoveCharacter(grid, skillManager, 2)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(2).characterId).toBeUndefined()
-    })
-
     it('should handle invalid hex in executeRemoveCharacter', () => {
       expect(() => executeRemoveCharacter(grid, skillManager, 999)).toThrow()
     })

@@ -36,7 +36,7 @@ describe('computeCredibilityBlend', () => {
     expect(blend.avgSelfConfidence).toBe(0)
   })
 
-  it('uses the 0.25 default for ids missing from the weight table', () => {
+  it('gives ids missing from the weight table a nonzero default weight', () => {
     const blend = computeCredibilityBlend(
       [
         { id: 'x', probability: 0.7, selfConfidence: 0.5 },

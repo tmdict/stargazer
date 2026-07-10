@@ -52,7 +52,7 @@ describe('ravion (Designated Duty)', () => {
       expect(executePlaceCharacter(grid, skillManager, hexId, 200 + i, Team.ENEMY)).toBe(true)
     }
 
-    expect(arrowTargets(Team.ENEMY)).toEqual([ids.at(-2), ids.at(-1)].sort((a, b) => a! - b!))
+    expect(arrowTargets(Team.ENEMY)).toEqual([ids.at(-2), ids.at(-1)])
   })
 
   it('never targets himself even when he sits on the rearmost tile', () => {
