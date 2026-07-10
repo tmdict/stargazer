@@ -13,6 +13,7 @@ import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type ArtifactDragPayload } from '@/stores/grids'
+import { useI18nStore } from '@/stores/i18n'
 import { svgPointToScreen } from '@/utils/gridScreenPosition'
 
 const props = defineProps<{
@@ -28,6 +29,7 @@ const props = defineProps<{
 
 const ctx = useGridContext()
 const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
 const grids = useGrids()
 const { setArtifactTarget, requestTab } = useSelectionState()
 const { artifactDragPayload } = useDragDrop()
@@ -133,6 +135,17 @@ const enemyArtifact = computed(() => {
   if (props.enemyArtifactId === null || props.enemyArtifactId === undefined) return null
   return gameDataStore.getArtifactById(props.enemyArtifactId) ?? null
 })
+
+// An id with no record is retired seasonal content: the slot stays occupied
+// (click still removes, placing another artifact still replaces) and renders a
+// placeholder instead of nothing.
+const allyRetired = computed(
+  () => props.allyArtifactId !== null && props.allyArtifactId !== undefined && !allyArtifact.value,
+)
+const enemyRetired = computed(
+  () =>
+    props.enemyArtifactId !== null && props.enemyArtifactId !== undefined && !enemyArtifact.value,
+)
 
 // "Front" is the slot that renders at the screen-bottom (near) edge, which must
 // sit above the sprites behind it; the inverted view rotates the enemy cell down
@@ -328,22 +341,23 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
          character layer so the icon isn't covered in perspective; it applies to
          whichever cell renders at the near (screen-bottom) edge. -->
     <div
-      v-if="allyArtifact"
+      v-if="allyArtifact || allyRetired"
       class="grid-artifact"
       :class="{ readonly, front: allySlotInFront, 'invalid-drop': invalidDrop(Team.ALLY) }"
       :style="getAllyStyles"
-      :draggable="canDrag"
+      :draggable="canDrag && !!allyArtifact"
       @click="!readonly && handleArtifactClick(Team.ALLY)"
       @dragstart="handleArtifactDragStart($event, Team.ALLY)"
       @dragend="handleArtifactDragEnd"
       @dragover="allowArtifactDrop($event, Team.ALLY)"
       @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ALLY)"
-      @mouseenter="showArtifactTooltip($event, allyArtifact)"
+      @mouseenter="allyArtifact && showArtifactTooltip($event, allyArtifact)"
       @mouseleave="hideArtifactTooltip"
     >
       <div class="artifact-circle">
-        <ArtifactImage :artifact="allyArtifact" />
+        <ArtifactImage v-if="allyArtifact" :artifact="allyArtifact" />
+        <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
     </div>
@@ -351,22 +365,23 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
     <!-- Enemy artifact (host cell: right of cell 45). Behind the character layer
          (DOM order) unless the inverted view rotates it to the near edge. -->
     <div
-      v-if="enemyArtifact && enemySlotVisible"
+      v-if="(enemyArtifact || enemyRetired) && enemySlotVisible"
       class="grid-artifact"
       :class="{ readonly, front: enemySlotInFront, 'invalid-drop': invalidDrop(Team.ENEMY) }"
       :style="getEnemyStyles"
-      :draggable="canDrag"
+      :draggable="canDrag && !!enemyArtifact"
       @click="!readonly && handleArtifactClick(Team.ENEMY)"
       @dragstart="handleArtifactDragStart($event, Team.ENEMY)"
       @dragend="handleArtifactDragEnd"
       @dragover="allowArtifactDrop($event, Team.ENEMY)"
       @dragleave="clearInvalidDrop"
       @drop="handleArtifactDrop($event, Team.ENEMY)"
-      @mouseenter="showArtifactTooltip($event, enemyArtifact)"
+      @mouseenter="enemyArtifact && showArtifactTooltip($event, enemyArtifact)"
       @mouseleave="hideArtifactTooltip"
     >
       <div class="artifact-circle">
-        <ArtifactImage :artifact="enemyArtifact" />
+        <ArtifactImage v-if="enemyArtifact" :artifact="enemyArtifact" />
+        <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
     </div>
@@ -478,6 +493,13 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 
 /* The circular, clipped visual. The wrapper stays overflow-visible so the
    perspective pointer can extend below it. */
+.retired-artifact {
+  color: var(--color-text-secondary);
+  font-size: 1.1rem;
+  font-weight: 700;
+  user-select: none;
+}
+
 .artifact-circle {
   width: 100%;
   height: 100%;
