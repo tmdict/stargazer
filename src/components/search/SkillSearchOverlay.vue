@@ -533,7 +533,9 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 
           <div class="sso-foot">
             <span><kbd>↑</kbd><kbd>↓</kbd> {{ i18n.t('app.search-navigate') }}</span>
-            <span v-if="paneVisible"><kbd>Tab</kbd> {{ i18n.t('app.search-cycle') }}</span>
+            <span v-if="paneVisible"
+              ><kbd class="tall">tab</kbd> {{ i18n.t('app.search-cycle') }}</span
+            >
             <span
               ><kbd>↵</kbd> {{ i18n.t(selectMode ? 'app.search-select' : 'app.search-open') }}</span
             >
@@ -853,6 +855,12 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 /* system-ui rather than the content font: Verdana lacks ↵ and ⇥, so those
    chips would fall back to a font with different metrics than ↑ ↓; one
    family gives every glyph the same box and baseline. */
+/* Ascender-only key names (tab) carry their ink high in the box, unlike
+   x-height names (esc); the padding re-centers the ink optically. */
+.sso-foot kbd.tall {
+  padding-top: 2px;
+}
+
 .sso-foot kbd {
   display: inline-flex;
   align-items: center;
