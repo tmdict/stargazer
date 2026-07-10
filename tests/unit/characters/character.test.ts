@@ -22,7 +22,7 @@ import {
   setMaxTeamSize,
   tileHasCharacter,
 } from '@/lib/characters/character'
-import { Grid } from '@/lib/grid'
+import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
@@ -96,7 +96,6 @@ describe('character.ts', () => {
 
       const placements = getCharacterPlacements(grid)
       expect(placements.size).toBe(2)
-      // Note: getCharacterPlacements returns Map<hexId, characterId> not Map<characterId, hexId>
       expect(placements.get(1)).toBe(100)
       expect(placements.get(3)).toBe(200)
     })
@@ -157,9 +156,8 @@ describe('character.ts', () => {
     })
 
     it('should handle team size limits', () => {
-      // Default team size is based on grid size
       const defaultSize = getMaxTeamSize(grid, Team.ALLY)
-      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(defaultSize)
+      expect(defaultSize).toBe(BASE_TEAM_SIZE)
       expect(getMaxTeamSize(grid, Team.ENEMY)).toBe(defaultSize)
 
       setMaxTeamSize(grid, Team.ALLY, 3)
@@ -247,7 +245,6 @@ describe('character.ts', () => {
     })
 
     it('should check if character can be placed on tile', () => {
-      // Note: canPlaceCharacterOnTile takes (grid, hexId, team) not (tile, team)
       // Available tiles
       expect(canPlaceCharacterOnTile(grid, 1, Team.ALLY)).toBe(true)
       expect(canPlaceCharacterOnTile(grid, 3, Team.ENEMY)).toBe(true)

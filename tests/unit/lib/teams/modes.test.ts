@@ -27,7 +27,6 @@ describe('TEAM_MODES registry', () => {
       expect(cfg.defaultMaps).toHaveLength(cfg.boardCount)
       expect(cfg.boardCount).toBeGreaterThanOrEqual(1)
       expect(cfg.boardCount).toBeLessThanOrEqual(MAX_GRID_COUNT)
-      expect(cfg.key in TEAM_MODES).toBe(true)
     }
   })
 

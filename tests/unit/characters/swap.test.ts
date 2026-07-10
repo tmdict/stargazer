@@ -5,7 +5,6 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { performPlace } from '@/lib/characters/place'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { Grid } from '@/lib/grid'
-// Import skill functions for mocking
 import { hasCompanionSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -379,9 +378,8 @@ describe('swap.ts', () => {
     })
 
     it('should leave a full team fully intact when swapping a character onto its phantimal', () => {
-      // Phantimals are exempt from team-size tracking, so swapping a character
-      // onto a full team's phantimal frees no slot and the swap cannot succeed.
-      // The guard must reject it up front with zero state changes.
+      // Phantimals are tied to their team's faction hero count, so the
+      // cross-team guard must reject the swap up front with zero state changes.
       const tGrid = new Grid(TARGETING_GRID, TARGETING_ARENA)
       tGrid.skillManager = skillManager
 

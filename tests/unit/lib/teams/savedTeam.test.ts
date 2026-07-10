@@ -33,10 +33,10 @@ describe('canonicalTeamData', () => {
     const canonical = canonicalTeamData(encode(THREE_BOARDS))!
     expect(canonicalTeamData(canonical)).toBe(canonical)
 
-    // Same content, hand-ordered keys (m before c): must produce identical bytes.
+    // Same content, hand-ordered keys (c before m): must produce identical bytes.
     const reordered = encode({
       boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena2' }, { m: 'arena3' }].map(
-        (board) => (board.c ? { m: board.m, c: board.c } : board),
+        (board) => (board.c ? { c: board.c, m: board.m } : board),
       ),
       mode: '3v3',
     })

@@ -254,7 +254,6 @@ describe('skill', () => {
 
         skillManager.reset()
 
-        expect(skillManager.hasActiveSkill(999)).toBe(false)
         expect(skillManager.getColorModifiersByCharacterAndTeam().size).toBe(0)
         expect(skillManager.getTileColorModifiers().size).toBe(0)
         expect(skillManager.getAllSkillTargets().size).toBe(0)

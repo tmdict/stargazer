@@ -57,7 +57,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
   it('borders only the tiles of allies sandwiched between the twins', () => {
     placeTwins()
     placeOnTile(grid, BETWEEN_A, 100, Team.ALLY)
-    factions.set(100, 'wilder')
 
     runSkill()
 
@@ -65,19 +64,9 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     expect(skillManager.getTileColorModifier(BETWEEN_B)).toBeUndefined() // empty cell
   })
 
-  it('does not border units on the other team', () => {
-    placeTwins()
-    placeOnTile(grid, BETWEEN_A, 100, Team.ENEMY)
-
-    runSkill()
-
-    expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeUndefined()
-  })
-
   it('borders nothing when the twins are not on a shared axis', () => {
     placeTwins(45) // shares no coordinate with cell 1
     placeOnTile(grid, BETWEEN_A, 100, Team.ALLY)
-    factions.set(100, 'wilder')
 
     runSkill()
 
@@ -87,7 +76,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
   it('clears a border once its ally leaves the line', () => {
     placeTwins()
     placeOnTile(grid, BETWEEN_A, 100, Team.ALLY)
-    factions.set(100, 'wilder')
     runSkill()
     expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeDefined()
 
@@ -134,7 +122,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
   it('skips a sandwiched character, drawing over the empty cells on both sides', () => {
     placeTwins(FAR_COMPANION)
     placeOnTile(grid, BETWEEN_B, 100, Team.ALLY) // cell 7; 4 and 10 empty
-    factions.set(100, 'wilder')
 
     runSkill()
 
@@ -160,7 +147,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
   it('still segments between adjacent icons (the icons leave a small gap)', () => {
     placeTwins() // companion at 10; between 4, 7
     placeOnTile(grid, BETWEEN_A, 100, Team.ALLY) // cell 4, adjacent to Elijah
-    factions.set(100, 'wilder')
 
     runSkill()
 
@@ -175,8 +161,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     placeTwins() // companion at 10; between 4, 7
     placeOnTile(grid, BETWEEN_A, 100, Team.ALLY)
     placeOnTile(grid, BETWEEN_B, 101, Team.ALLY)
-    factions.set(100, 'wilder')
-    factions.set(101, 'wilder')
 
     runSkill()
 

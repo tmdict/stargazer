@@ -1,9 +1,11 @@
 # Integration Test Suite
 
-This directory contains fixture-driven integration tests for skill targeting.
-Each case runs a real skill (Silvina for the symmetrical spiral, Aliceth for
-the row scan, Ravion for multi-target arrows) through the `SkillManager` on a
-real `Grid` built from the fixture's arena map — see `helpers.ts`.
+This directory contains integration tests for skill targeting. Each case runs
+a real skill (Silvina for the symmetrical spiral, Aliceth for the row scan,
+Ravion for multi-target arrows) through the `SkillManager` on a real `Grid`.
+The Silvina and Aliceth suites are fixture-driven — their grids are built from
+each fixture's arena map via `helpers.ts` — while `multiTarget.test.ts` sets
+up its grids in code.
 
 ## Structure
 

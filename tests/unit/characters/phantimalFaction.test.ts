@@ -21,7 +21,14 @@ describe('phantimalFaction', () => {
   describe('countTeamFaction', () => {
     let grid: Grid
     const factionOf = (id: number): string | undefined =>
-      ({ 100: 'lightbearer', 101: 'lightbearer', 102: 'mauler', 200: 'lightbearer' })[id]
+      ({
+        100: 'lightbearer',
+        101: 'lightbearer',
+        102: 'mauler',
+        200: 'lightbearer',
+        10100: 'lightbearer',
+        [toPhantimalId(1)]: 'lightbearer',
+      })[id]
 
     beforeEach(() => {
       grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
@@ -42,14 +49,17 @@ describe('phantimalFaction', () => {
     })
 
     it('excludes phantimals from the count', () => {
-      // The enemy phantimal at hex 5 is ignored even if its faction would match.
+      // The enemy phantimal at hex 5 resolves to a matching faction, so this
+      // fails if the isPhantimalId guard is removed.
       expect(countTeamFaction(grid, Team.ENEMY, ['lightbearer', 'graveborn'], factionOf)).toBe(1)
     })
 
     it('excludes companions — only distinct heroes count', () => {
       const g = new Grid(STANDARD_GRID, STANDARD_ARENA)
       performPlace(g, 1, 100, Team.ALLY) // lightbearer hero
-      performPlace(g, 2, 10100, Team.ALLY) // companion (10000+), must not count
+      // The companion resolves to a matching faction, so this fails if the
+      // isCompanionId guard is removed.
+      performPlace(g, 2, 10100, Team.ALLY)
       expect(countTeamFaction(g, Team.ALLY, ['lightbearer'], factionOf)).toBe(1)
     })
   })

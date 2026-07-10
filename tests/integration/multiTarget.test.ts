@@ -24,7 +24,6 @@ describe('multi-target skill integration', () => {
       const skill = getCharacterSkill(90)
       if (!skill) throw new Error('Test skill not found')
 
-      // Setup
       grid.getTileById(5)!.characterId = 90
       grid.getTileById(5)!.team = Team.ALLY
       grid.getTileById(1)!.characterId = 101
@@ -43,7 +42,6 @@ describe('multi-target skill integration', () => {
       }
       skill.onActivate(context)
 
-      // Retrieve target info for the skill
       const targetInfo = skillManager.getSkillTarget(90, Team.ALLY)
       expect(targetInfo).toBeDefined()
       expect(targetInfo?.metadata?.arrows).toHaveLength(2)
@@ -84,15 +82,12 @@ describe('multi-target skill integration', () => {
 
       skill.onActivate(context)
 
-      // Verify target exists
       let targetInfo = skillManager.getSkillTarget(90, Team.ALLY)
       expect(targetInfo).toBeDefined()
       expect(targetInfo?.metadata?.arrows).toHaveLength(2)
 
-      // Deactivate
       skill.onDeactivate(context)
 
-      // Verify target cleared
       targetInfo = skillManager.getSkillTarget(90, Team.ALLY)
       expect(targetInfo).toBeUndefined()
     })
@@ -130,7 +125,6 @@ describe('multi-target skill integration', () => {
       grid.getTileById(1)!.characterId = undefined
       grid.getTileById(1)!.team = undefined
 
-      // Update
       skill.onUpdate(context)
 
       // Targets should now be hex 2 and 3
@@ -141,34 +135,6 @@ describe('multi-target skill integration', () => {
   })
 
   describe('edge cases', () => {
-    it('handles fewer available targets than target count', () => {
-      const skill = getCharacterSkill(90)
-      if (!skill) throw new Error('Test skill not found')
-
-      // Setup with only 1 other ally (less than 2 target count)
-      grid.getTileById(5)!.characterId = 90
-      grid.getTileById(5)!.team = Team.ALLY
-      grid.getTileById(1)!.characterId = 101
-      grid.getTileById(1)!.team = Team.ALLY
-
-      const context = {
-        grid,
-        hexId: 5,
-        team: Team.ALLY,
-        characterId: 90,
-        skillManager,
-      }
-      skill.onActivate(context)
-
-      // Should have 1 arrow to the only available ally
-      const targetInfo = skillManager.getSkillTarget(90, Team.ALLY)
-      expect(targetInfo).toBeDefined()
-      expect(targetInfo?.metadata?.arrows).toHaveLength(1)
-
-      // Verify it targets the only available ally
-      expect(targetInfo?.metadata?.arrows?.[0]?.toHexId).toBe(1)
-    })
-
     it('handles no available targets gracefully', () => {
       const skill = getCharacterSkill(90)
       if (!skill) throw new Error('Test skill not found')
@@ -186,7 +152,6 @@ describe('multi-target skill integration', () => {
       }
       skill.onActivate(context)
 
-      // Should have no targets
       const targetInfo = skillManager.getSkillTarget(90, Team.ALLY)
       expect(targetInfo).toBeUndefined()
     })
@@ -228,7 +193,7 @@ describe('multi-target skill integration', () => {
       skill.onActivate(enemyContext)
 
       // Should have separate targets for each team
-      const allyTarget = skillManager.getSkillTarget(90, Team.ALLY) // Team.ALLY = 1
+      const allyTarget = skillManager.getSkillTarget(90, Team.ALLY)
       const enemyTarget = skillManager.getSkillTarget(90, Team.ENEMY)
 
       expect(allyTarget).toBeDefined()

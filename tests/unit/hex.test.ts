@@ -23,11 +23,10 @@ describe('Hex', () => {
       expect(hex1.equals(hex1)).toBe(true)
     })
 
-    it('performs arithmetic operations', () => {
+    it('adds hex coordinates', () => {
       const hex1 = new Hex(1, -2, 1)
       const hex2 = new Hex(2, -1, -1)
 
-      // Add
       const sum = hex1.add(hex2)
       expect(sum.q).toBe(3)
       expect(sum.r).toBe(-3)

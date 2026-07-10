@@ -12,7 +12,6 @@ import {
   unpackDisplayFlags,
 } from '@/utils/gridStateSerializer'
 
-// Helper function to create mock grid tiles
 function createMockTile(
   hexId: number,
   state: State = State.DEFAULT,
@@ -84,11 +83,12 @@ describe('gridStateSerializer', () => {
     })
 
     it('serializes characters with positions and teams', () => {
+      const companionId = COMPANION_ID_OFFSET + 1
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
         createMockTile(2, State.DEFAULT),
         createMockTile(3, State.OCCUPIED_ENEMY, 200, Team.ENEMY),
-        createMockTile(4, State.OCCUPIED_ALLY, 10001, Team.ALLY), // Companion
+        createMockTile(4, State.OCCUPIED_ALLY, companionId, Team.ALLY),
       ]
       const result = serializeGridState(tiles, null, null)
 
@@ -101,7 +101,7 @@ describe('gridStateSerializer', () => {
         c: [
           [1, 100, Team.ALLY],
           [3, 200, Team.ENEMY],
-          [4, 10001, Team.ALLY],
+          [4, companionId, Team.ALLY],
         ],
       })
     })

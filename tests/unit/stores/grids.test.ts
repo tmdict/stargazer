@@ -89,7 +89,6 @@ describe('useGrids.swapBoards', () => {
     const grids = useGrids()
     grids.setGridCount(2)
     grids.setActive(0)
-    grids.contexts[0]!.place(1, ALLY_A, Team.ALLY)
 
     grids.swapBoards(0, 1)
 

@@ -15,14 +15,10 @@ import { Team } from '@/lib/types/team'
 const CHARACTER_ID = 999
 const CASTER_HEX = 5
 
-const buildContext = (
-  grid: Grid,
-  skillManager: SkillManager,
-  team: Team = Team.ALLY,
-): SkillContext => ({
+const buildContext = (grid: Grid, skillManager: SkillManager): SkillContext => ({
   grid,
   hexId: CASTER_HEX,
-  team,
+  team: Team.ALLY,
   characterId: CHARACTER_ID,
   skillManager,
 })
@@ -266,7 +262,7 @@ describe('createCompanionSkill', () => {
     grid.skillManager = skillManager
   })
 
-  const makeSkill = (overrides: Parameters<typeof createCompanionSkill>[0] | object = {}) =>
+  const makeSkill = (overrides: Partial<Parameters<typeof createCompanionSkill>[0]> = {}) =>
     createCompanionSkill({
       id: 'test-companion',
       characterId: CHARACTER_ID,
@@ -275,10 +271,10 @@ describe('createCompanionSkill', () => {
       ...overrides,
     })
 
-  const context = (team: Team = Team.ALLY): SkillContext => ({
+  const context = (): SkillContext => ({
     grid,
     hexId: CASTER_HEX,
-    team,
+    team: Team.ALLY,
     characterId: CHARACTER_ID,
     skillManager,
   })

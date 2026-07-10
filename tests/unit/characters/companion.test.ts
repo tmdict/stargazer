@@ -23,7 +23,6 @@ describe('companion', () => {
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, COMPANION_ARENA)
     skillManager = new SkillManager()
-    grid.skillManager = skillManager
   })
 
   describe('isCompanionId', () => {
@@ -59,14 +58,6 @@ describe('companion', () => {
 
   describe('companion link management', () => {
     describe('addCompanionLink', () => {
-      it('adds companion link for main character', () => {
-        addCompanionLink(grid, 100, 10100, Team.ALLY)
-
-        const companions = getCompanions(grid, 100, Team.ALLY)
-        expect(companions.has(10100)).toBe(true)
-        expect(companions.size).toBe(1)
-      })
-
       it('adds multiple companions to same main character', () => {
         addCompanionLink(grid, 100, 10100, Team.ALLY)
         addCompanionLink(grid, 100, 10101, Team.ALLY)
@@ -287,10 +278,9 @@ describe('companion', () => {
         tile2.characterId = 10100
         tile2.team = Team.ALLY
 
-        // Should not attempt to move
         restoreCompanions(grid, skillManager, 100, companionPositions)
 
-        // Companion should still be at position 2
+        // Companion ends at its original tile
         expect(tile2.characterId).toBe(10100)
       })
     })

@@ -204,7 +204,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(snapshotTiles(restored.grid)).toEqual(expected)
   })
 
-  it('fails without applying anything when no state is provided', () => {
+  it('fails when no state is provided', () => {
     const stores = createStores()
     const result = stores.urlState.restoreFromEncodedState(null)
     expect(result).toEqual({ success: false, error: 'No state provided' })

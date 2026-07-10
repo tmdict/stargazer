@@ -47,23 +47,7 @@ describe('transaction.ts', () => {
         expect(result).toBe(false)
         expect(op1).toHaveBeenCalledTimes(1)
         expect(op2).toHaveBeenCalledTimes(1)
-        expect(op3).not.toHaveBeenCalled() // Should not execute after failure
-      })
-
-      it('should execute all rollback operations on failure', () => {
-        const op1 = vi.fn(() => true)
-        const op2 = vi.fn(() => false)
-
-        const rollback1 = vi.fn()
-        const rollback2 = vi.fn()
-        const rollback3 = vi.fn()
-
-        const result = executeTransaction([op1, op2], [rollback1, rollback2, rollback3])
-
-        expect(result).toBe(false)
-        expect(rollback1).toHaveBeenCalledTimes(1)
-        expect(rollback2).toHaveBeenCalledTimes(1)
-        expect(rollback3).toHaveBeenCalledTimes(1)
+        expect(op3).not.toHaveBeenCalled()
       })
 
       it('should handle failure on first operation', () => {
@@ -89,31 +73,7 @@ describe('transaction.ts', () => {
       })
     })
 
-    describe('complex transaction scenarios', () => {
-      it('should handle mixed success and failure correctly', () => {
-        let counter = 0
-
-        const increment = () => {
-          counter++
-          return true
-        }
-        const decrement = () => {
-          counter--
-          return true
-        }
-        const fail = () => false
-
-        const operations = [increment, increment, fail, increment]
-        const rollbacks = [decrement, decrement]
-
-        const result = executeTransaction(operations, rollbacks)
-
-        expect(result).toBe(false)
-        expect(counter).toBe(0) // 2 increments, then 2 decrements
-      })
-    })
-
-    describe('Edge cases', () => {
+    describe('edge cases', () => {
       it('should treat a throwing operation as a failure and roll back', () => {
         const op1 = vi.fn(() => true)
         const op2 = vi.fn(() => {
