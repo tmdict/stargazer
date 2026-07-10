@@ -26,7 +26,6 @@ const onToggle = () => {
   align-items: center;
   gap: var(--spacing-xs);
   cursor: pointer;
-  font-family: sans-serif;
   font-size: 0.85rem;
   font-weight: 600;
   user-select: none;
