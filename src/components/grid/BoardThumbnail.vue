@@ -98,8 +98,9 @@ function getTileFill(state: State | undefined): string {
 
 const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c82333')
 
-// The unit's inner hex (portrait clip + ring) is slightly inset from the tile.
-const UNIT_SCALE = 0.92
+// The unit's inner hex (portrait clip + ring) is a hair inside the tile so the
+// portrait reads as large as possible without bleeding onto neighbours.
+const UNIT_SCALE = 0.97
 </script>
 
 <script setup lang="ts">
@@ -207,12 +208,9 @@ const placedUnits = computed(() =>
           preserveAspectRatio="xMidYMid slice"
           :clip-path="`url(#${uid}-u-${unit.hexId})`"
         />
-        <polygon
-          :points="unit.corners"
-          fill="none"
-          :stroke="unit.color"
-          :stroke-width="Math.max(1, hexSize * 0.16)"
-        />
+        <!-- Team ring at the tiles' own stroke width: a heavier ring shrinks
+             the already-small portraits. -->
+        <polygon :points="unit.corners" fill="none" :stroke="unit.color" stroke-width="1" />
       </template>
       <circle
         v-else
