@@ -49,7 +49,7 @@ interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy]
   s?: number[][] // seasonal units (phantimals today): [hexId, localUnitId, team]
-  pr?: number[][] // paragon: [team, characterId, level]
+  p?: number[][] // paragon: [team, characterId, level]
   d?: number // display flags (bit-packed)
 }
 ```

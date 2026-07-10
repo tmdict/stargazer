@@ -178,8 +178,8 @@ export function validateGridState(state: GridState): GridState {
   }
 
   // Validate paragon entries: team 1-2, charId 1-65535, level 1-7
-  if (state.pr && Array.isArray(state.pr)) {
-    let validParagons = state.pr.filter((entry) => {
+  if (state.p && Array.isArray(state.p)) {
+    let validParagons = state.p.filter((entry) => {
       const [team, charId, level] = entry
       const isValid =
         (team === 1 || team === 2) &&
@@ -202,7 +202,7 @@ export function validateGridState(state: GridState): GridState {
       validParagons = validParagons.slice(0, MAX_PARAGON_COUNT)
     }
     if (validParagons.length > 0) {
-      validated.pr = validParagons
+      validated.p = validParagons
     }
   }
 
@@ -282,7 +282,7 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const hasArtifacts = validState.a !== undefined
   const hasDisplayFlags = validState.d !== undefined
   const hasPhantimals = validState.s !== undefined && validState.s.length > 0
-  const hasParagon = validState.pr !== undefined && validState.pr.length > 0
+  const hasParagon = validState.p !== undefined && validState.p.length > 0
 
   // Extended header is needed if we have >7 entries OR display flags OR phantimals
   // OR paragon. This optimization keeps URLs short for small grids
@@ -386,9 +386,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
   }
 
   // Write paragon (after phantimals): count, then team + character ID + level each
-  if (hasParagon && validState.pr) {
-    writer.writeBits(validState.pr.length, PARAGON_COUNT_BITS)
-    for (const entry of validState.pr) {
+  if (hasParagon && validState.p) {
+    writer.writeBits(validState.p.length, PARAGON_COUNT_BITS)
+    for (const entry of validState.p) {
       const team = entry[0]! // Guaranteed valid (1 or 2) by validation
       const charId = entry[1]! // Guaranteed valid (1-65535) by validation
       const level = entry[2]! // Guaranteed valid (1-7) by validation
@@ -503,12 +503,12 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     if (hasParagon) {
       const paragonCount = reader.readBits(PARAGON_COUNT_BITS)
       if (paragonCount > 0) {
-        state.pr = []
+        state.p = []
         for (let i = 0; i < paragonCount; i++) {
           const teamBit = reader.readBits(TEAM_BITS) // 1 bit
           const charId = reader.readBits(CHARACTER_ID_BITS) // 16 bits
           const level = reader.readBits(PARAGON_LEVEL_BITS) // 3 bits
-          state.pr.push([teamBit + 1, charId, level])
+          state.p.push([teamBit + 1, charId, level])
         }
       }
     }
