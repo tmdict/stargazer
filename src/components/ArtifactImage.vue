@@ -25,6 +25,7 @@ const remoteUrl = computed(() => seasonArtifactImageUrl(props.artifact.name))
     :alt="artifact.name"
     crossorigin="anonymous"
     loading="lazy"
+    decoding="async"
     draggable="false"
   />
   <img
@@ -32,6 +33,8 @@ const remoteUrl = computed(() => seasonArtifactImageUrl(props.artifact.name))
     class="artifact-img"
     :src="gameDataStore.getArtifactImage(artifact.name)"
     :alt="artifact.name"
+    loading="lazy"
+    decoding="async"
     draggable="false"
   />
 </template>

@@ -48,6 +48,8 @@ const dataDepthLabel = computed(
       <img
         v-if="characterImages[recommendation.hero]"
         :src="characterImages[recommendation.hero]"
+        loading="lazy"
+        decoding="async"
         :alt="recommendation.hero"
         class="hero-portrait"
       />

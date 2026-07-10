@@ -70,6 +70,8 @@ function isAvailable(hero: string): boolean {
           <img
             v-if="characterImages[char.name]"
             :src="characterImages[char.name]"
+            loading="lazy"
+            decoding="async"
             :alt="char.name"
             class="portrait-img"
           />
