@@ -1,0 +1,5 @@
+# Hashed build output never changes behind a URL, so returning visitors can
+# reuse it without revalidating. index.html and other unhashed public/ files
+# stay on Netlify's default always-revalidate behavior.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
