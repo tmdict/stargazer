@@ -148,8 +148,8 @@ export function validateGridState(state: GridState): GridState {
   }
 
   // Validate phantimal entries: hexId 1-63, local id 1-15, team 1-2
-  if (state.p && Array.isArray(state.p)) {
-    let validPhantimals = state.p.filter((entry) => {
+  if (state.s && Array.isArray(state.s)) {
+    let validPhantimals = state.s.filter((entry) => {
       const [hexId, localId, team] = entry
       const isValid =
         hexId != null &&
@@ -173,7 +173,7 @@ export function validateGridState(state: GridState): GridState {
       validPhantimals = validPhantimals.slice(0, MAX_PHANTIMAL_COUNT)
     }
     if (validPhantimals.length > 0) {
-      validated.p = validPhantimals
+      validated.s = validPhantimals
     }
   }
 
@@ -281,7 +281,7 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const charCount = validState.c?.length || 0
   const hasArtifacts = validState.a !== undefined
   const hasDisplayFlags = validState.d !== undefined
-  const hasPhantimals = validState.p !== undefined && validState.p.length > 0
+  const hasPhantimals = validState.s !== undefined && validState.s.length > 0
   const hasParagon = validState.pr !== undefined && validState.pr.length > 0
 
   // Extended header is needed if we have >7 entries OR display flags OR phantimals
@@ -372,9 +372,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
   }
 
   // Write phantimals (after artifacts): count, then hexId + local id + team each
-  if (hasPhantimals && validState.p) {
-    writer.writeBits(validState.p.length, PHANTIMAL_COUNT_BITS)
-    for (const entry of validState.p) {
+  if (hasPhantimals && validState.s) {
+    writer.writeBits(validState.s.length, PHANTIMAL_COUNT_BITS)
+    for (const entry of validState.s) {
       const hexId = entry[0]! // Guaranteed valid (1-63) by validation
       const localId = entry[1]! // Guaranteed valid (1-15) by validation
       const team = entry[2]! // Guaranteed valid (1 or 2) by validation
@@ -489,12 +489,12 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     if (hasPhantimals) {
       const phantimalCount = reader.readBits(PHANTIMAL_COUNT_BITS)
       if (phantimalCount > 0) {
-        state.p = []
+        state.s = []
         for (let i = 0; i < phantimalCount; i++) {
           const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
           const localId = reader.readBits(PHANTIMAL_ID_BITS) // 4 bits
           const teamBit = reader.readBits(TEAM_BITS) // 1 bit
-          state.p.push([hexId, localId, teamBit + 1])
+          state.s.push([hexId, localId, teamBit + 1])
         }
       }
     }

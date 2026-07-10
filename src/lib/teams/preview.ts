@@ -35,7 +35,7 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       if (hexId === undefined || characterId === undefined || team === undefined) continue
       units.push({ hexId, team: team as Team, characterId })
     }
-    for (const entry of board.p ?? []) {
+    for (const entry of board.s ?? []) {
       const [hexId, phantimalId, team] = entry
       if (hexId === undefined || phantimalId === undefined || team === undefined) continue
       units.push({ hexId, team: team as Team, phantimalId })
