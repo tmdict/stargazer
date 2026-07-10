@@ -4,10 +4,9 @@ import { onMounted, ref, watch } from 'vue'
 import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
-import { useToast } from '@/composables/useToast'
+import { useImageExportActions } from '@/composables/useImageExportActions'
 import { useI18nStore } from '@/stores/i18n'
-import { copyImageBlob } from '@/utils/clipboard'
-import { downloadBlob, timestampedName } from '@/utils/download'
+import { canvasToBlob } from '@/utils/image'
 
 const props = defineProps<{
   canvas: HTMLCanvasElement | null
@@ -19,7 +18,6 @@ const emit = defineEmits<{
   clear: []
 }>()
 
-const { success, error } = useToast()
 const i18n = useI18nStore()
 
 const previewBox = ref<HTMLElement>()
@@ -40,27 +38,13 @@ const mountCanvas = (canvas: HTMLCanvasElement | null) => {
 onMounted(() => mountCanvas(props.canvas))
 watch(() => props.canvas, mountCanvas, { flush: 'post' })
 
-const copy = async () => {
-  const canvas = props.canvas
-  if (!canvas) return error(i18n.t('app.copy-image-failed'))
-  const blob = new Promise<Blob>((resolve, reject) => {
-    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('toBlob failed'))))
-  })
-  try {
-    await copyImageBlob(blob)
-    success(i18n.t('app.copied-clipboard'))
-  } catch {
-    error(i18n.t('app.copy-image-failed'))
-  }
-}
+const { copyImage, downloadImage } = useImageExportActions()
 
-const download = () => {
-  props.canvas?.toBlob((blob) => {
-    if (!blob) return error(i18n.t('app.download-failed'))
-    downloadBlob(blob, timestampedName('teams', 'png'))
-    success(i18n.t('app.image-downloaded'))
-  })
-}
+const stitchedBlob = (): Promise<Blob> =>
+  props.canvas ? canvasToBlob(props.canvas) : Promise.reject(new Error('No stitched canvas'))
+
+const copy = () => copyImage(stitchedBlob())
+const download = () => downloadImage(stitchedBlob(), 'teams')
 </script>
 
 <template>

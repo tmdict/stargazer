@@ -7,8 +7,6 @@
 import { computed } from 'vue'
 
 import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { getCharacterSkill } from '@/lib/skills/skill'
 import { teamPreviewBoards, type PreviewUnit } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
@@ -20,22 +18,11 @@ const { team } = defineProps<{
 
 const gameData = useGameDataStore()
 
-// Companions (id = main + offset) render their main hero's portrait unless the
-// skill defines a custom companion image (e.g. Zanie's turret), mirroring the
-// live grid's image modifiers without needing live skill state.
-const characterImageName = (characterId: number): string | undefined => {
-  if (characterId >= COMPANION_ID_OFFSET) {
-    const mainId = characterId % COMPANION_ID_OFFSET
-    return (
-      getCharacterSkill(mainId)?.companionImageModifier ?? gameData.getCharacterById(mainId)?.name
-    )
-  }
-  return gameData.getCharacterById(characterId)?.name
-}
-
 const resolveImage = (unit: PreviewUnit): string | undefined => {
   if (unit.characterId !== undefined) {
-    const name = characterImageName(unit.characterId)
+    // Companion-aware: the store maps companion ids to the main hero's
+    // portrait or the skill's custom companion image.
+    const name = gameData.getCharacterImageNameById(unit.characterId)
     const image = name ? gameData.getCharacterImage(name) : ''
     return image || undefined
   }
