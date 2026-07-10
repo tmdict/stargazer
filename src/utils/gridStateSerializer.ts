@@ -10,7 +10,7 @@ export interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   s?: number[][] // seasonal units, phantimals today: [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
-  pr?: number[][] // paragon: [team, characterId, level] for placed heroes with level > 0
+  p?: number[][] // paragon: [team, characterId, level] for placed heroes with level > 0
   d?: number // display flags: bit-packed (showGridInfo, showArrows, showPerspective, showSkills, teamView, inverted)
 }
 
@@ -84,7 +84,7 @@ export function serializeGridState(
       .map((tile) => [tile.team!, tile.characterId!, getParagon(tile.team!, tile.characterId!)])
       .filter((entry) => entry[2]! > 0)
     if (paragons.length > 0) {
-      state.pr = paragons
+      state.p = paragons
     }
   }
 
@@ -129,7 +129,7 @@ export type BoardState = GridState & { m?: string }
  * exactly this list, so a new GridState section must be registered here too or
  * saved teams would silently drop it; the serializer contract test pins the
  * two together. `d` is deliberately absent: it is viewer state, not content. */
-export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'pr', 'a', 'm'] as const
+export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'p', 'a', 'm'] as const
 
 /* Multi-board state (Teams page): one BoardState per board, the active board,
  * the global display flags, and the team mode the boards belong to. `mode` is

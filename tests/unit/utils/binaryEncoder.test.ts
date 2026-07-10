@@ -100,19 +100,19 @@ describe('binaryEncoder', () => {
             [2, 100, 1],
             [6, 200, 2],
           ],
-          pr: [
+          p: [
             [1, 100, 4],
             [2, 200, 2],
           ],
         },
       ],
-      ['only paragon', { pr: [[1, 33, 3]] }],
+      ['only paragon', { p: [[1, 33, 3]] }],
       [
         'paragon with phantimals and display flags',
         {
           c: [[2, 100, 1]],
           s: [[7, 1, 2]],
-          pr: [[1, 100, 4]],
+          p: [[1, 100, 4]],
           d: 0b1,
         },
       ],

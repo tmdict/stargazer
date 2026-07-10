@@ -144,9 +144,9 @@ export const useUrlStateStore = defineStore('urlState', () => {
     // Restore paragon levels from compact format: [team, characterId, level].
     // Characters are already placed; setParagon keys by team + character, so it
     // doesn't depend on hex placement.
-    if (gridState.pr) {
+    if (gridState.p) {
       const ctx = grids.active!
-      gridState.pr.forEach((entry) => {
+      gridState.p.forEach((entry) => {
         const team = entry[0]
         const characterId = entry[1]
         const level = entry[2]

@@ -53,16 +53,16 @@ describe('gridStateSerializer', () => {
         levels.get(`${team}:${characterId}`) ?? 0
 
       const result = serializeGridState(tiles, null, null, undefined, getParagon)
-      expect(result.pr).toEqual([
+      expect(result.p).toEqual([
         [Team.ALLY, 100, 4],
         [Team.ENEMY, 200, 2],
       ])
     })
 
-    it('omits pr without getParagon or when every level is zero', () => {
+    it('omits p without getParagon or when every level is zero', () => {
       const tiles: GridTile[] = [createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY)]
-      expect(serializeGridState(tiles, null, null).pr).toBeUndefined()
-      expect(serializeGridState(tiles, null, null, undefined, () => 0).pr).toBeUndefined()
+      expect(serializeGridState(tiles, null, null).p).toBeUndefined()
+      expect(serializeGridState(tiles, null, null, undefined, () => 0).p).toBeUndefined()
     })
 
     it('filters out default state tiles', () => {
