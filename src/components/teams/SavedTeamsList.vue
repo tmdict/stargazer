@@ -292,6 +292,14 @@ const cancelRename = (): void => {
   min-height: var(--panel-min-height);
 }
 
+/* The mobile sheet zeroes the card inset, so the panel owns its side padding
+   (the same inset as the sibling maps tab). */
+@media (max-width: 768px) {
+  .saved-teams {
+    padding: 0 var(--spacing-lg);
+  }
+}
+
 .library-bar {
   display: flex;
   align-items: center;
