@@ -73,6 +73,21 @@ async function rasterizeSvg(
   }
 }
 
+// The preview's on-screen backdrop is a translucent wash over ancestor
+// backgrounds, so the export composites the ancestor colors down to the first
+// opaque one; the result matches the page (and follows the theme).
+function backgroundLayers(el: HTMLElement): string[] {
+  const layers: string[] = []
+  for (let node: HTMLElement | null = el; node; node = node.parentElement) {
+    const color = getComputedStyle(node).backgroundColor
+    const alpha = color.startsWith('rgba') ? Number(color.slice(5, -1).split(',')[3]) : 1
+    if (alpha === 0) continue
+    layers.unshift(color)
+    if (alpha >= 1) break
+  }
+  return layers
+}
+
 async function captureBoards(selector: string): Promise<Blob> {
   const container = document.querySelector<HTMLElement>(selector)
   if (!container) throw new Error(`Capture target not found: ${selector}`)
@@ -85,6 +100,11 @@ async function captureBoards(selector: string): Promise<Blob> {
   canvas.height = Math.round(bounds.height * CAPTURE_SCALE)
   const context = canvas.getContext('2d')
   if (!context) throw new Error('Failed to get canvas context')
+
+  for (const layer of backgroundLayers(container)) {
+    context.fillStyle = layer
+    context.fillRect(0, 0, canvas.width, canvas.height)
+  }
 
   const boards = await Promise.all(
     svgs.map(async (svg) => {
