@@ -6,7 +6,7 @@ import { directlyBehindHexId, findUnitBehind } from '@/lib/skills/utils/targetin
 import { Team } from '@/lib/types/team'
 import { placeOnTile } from '../fixtures/skills'
 
-// Characters whose skill highlights the unit directly behind them.
+// Several heroes share the behind-highlight skill; Gunnar stands in for all of them here.
 const GUNNAR = 106
 
 describe('directlyBehindHexId', () => {

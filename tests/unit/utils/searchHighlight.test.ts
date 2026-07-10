@@ -60,7 +60,7 @@ describe('renderRichText', () => {
     ])
   })
 
-  it('renders unmarked when the query is absent', () => {
+  it('renders unmarked when the query has no match', () => {
     const pieces = renderRichText('restores [[300]] HP', 'nothing')
     expect(pieces.every((p) => !p.marked)).toBe(true)
   })

@@ -61,7 +61,7 @@ describe('Layout', () => {
   describe('rotated layout (the invert view)', () => {
     const size = { x: 10, y: 10 }
     const origin = { x: 300, y: 300 }
-    const canonical = new Layout(POINTY, size, origin)
+    const canonical = new Layout(POINTY, size, origin, false)
     const rotated = new Layout(POINTY, size, origin, true)
     const hexes = [new Hex(0, 0, 0), new Hex(1, 0, -1), new Hex(-2, 3, -1), new Hex(4, -1, -3)]
 
@@ -102,7 +102,7 @@ describe('Layout', () => {
       }
     })
 
-    it('reflects arrow endpoints through the origin', () => {
+    it('reflects line path endpoints through the origin', () => {
       const path = rotated.getLinePath(hexes[1]!, hexes[2]!)
       const canonicalPath = canonical.getLinePath(new Hex(-1, 0, 1), new Hex(2, -3, 1))
       expect(path).toBe(canonicalPath)

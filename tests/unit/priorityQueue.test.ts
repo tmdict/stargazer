@@ -26,16 +26,6 @@ describe('PriorityQueue', () => {
       expect(queue.isEmpty()).toBe(true)
     })
 
-    it('dequeues items in priority order (min-heap)', () => {
-      queue.enqueue(3, 3)
-      queue.enqueue(1, 1)
-      queue.enqueue(2, 2)
-
-      expect(queue.dequeue()).toBe(1) // Priority 1
-      expect(queue.dequeue()).toBe(2) // Priority 2
-      expect(queue.dequeue()).toBe(3) // Priority 3
-    })
-
     it('handles items with same priority', () => {
       queue.enqueue('a', 1)
       queue.enqueue('b', 1)
@@ -99,9 +89,9 @@ describe('PriorityQueue', () => {
 
       queue.updatePriority('c', 1, (a, b) => a === b)
 
-      expect(queue.dequeue()).toBe('c') // Now has priority 1
-      expect(queue.dequeue()).toBe('b') // Priority 3
-      expect(queue.dequeue()).toBe('a') // Priority 5
+      expect(queue.dequeue()).toBe('c')
+      expect(queue.dequeue()).toBe('b')
+      expect(queue.dequeue()).toBe('a')
     })
 
     it('updates existing item to higher priority', () => {
@@ -111,9 +101,9 @@ describe('PriorityQueue', () => {
 
       queue.updatePriority('a', 10, (a, b) => a === b)
 
-      expect(queue.dequeue()).toBe('b') // Priority 3
-      expect(queue.dequeue()).toBe('c') // Priority 5
-      expect(queue.dequeue()).toBe('a') // Now has priority 10
+      expect(queue.dequeue()).toBe('b')
+      expect(queue.dequeue()).toBe('c')
+      expect(queue.dequeue()).toBe('a')
     })
 
     it('adds item if not exists', () => {
@@ -163,7 +153,7 @@ describe('PriorityQueue', () => {
     })
   })
 
-  describe('edge cases', () => {
+  describe('stress', () => {
     it('dequeues a large randomized set in priority order', () => {
       // Item value === its priority, so heap order is directly observable
       const count = 1000

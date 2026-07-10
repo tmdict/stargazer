@@ -7,13 +7,11 @@ import {
 } from '@/lib/characters/place'
 import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
-// Import hasSkill directly for mocking
 import { hasSkill, SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
-// Mock hasSkill to control skill behavior
 vi.mock('@/lib/skills/skill', () => ({
   hasSkill: vi.fn(),
   hasCompanionSkill: vi.fn(),
@@ -29,10 +27,8 @@ describe('place.ts', () => {
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
 
-    // Reset mocks
     vi.clearAllMocks()
 
-    // Create mock skill manager
     skillManager = {
       activateCharacterSkill: vi.fn().mockReturnValue(true),
       deactivateCharacterSkill: vi.fn(),
@@ -40,10 +36,8 @@ describe('place.ts', () => {
       hasActiveSkill: vi.fn().mockReturnValue(false),
     } as unknown as SkillManager
 
-    // Set skillManager on grid for some tests
     grid.skillManager = skillManager
 
-    // Default: characters don't have skills
     vi.mocked(hasSkill).mockReturnValue(false)
   })
 

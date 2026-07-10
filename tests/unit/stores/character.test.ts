@@ -154,7 +154,6 @@ describe('active grid: drop routing (handleDrop)', () => {
       )
 
       expect(ok).toBe(true)
-      // Both characters still placed, positions swapped
       expect(gridStore.getTile(sourceId).characterId).toBe(202)
       expect(gridStore.getTile(targetId).characterId).toBe(101)
     })
@@ -236,7 +235,7 @@ describe('characterStore phantimal faction rule', () => {
     vi.spyOn(gameData, 'getPhantimalById').mockReturnValue(aurelian)
   })
 
-  // Field `count` faction heroes on a team, returning the used hex ids
+  // Field the given hero ids on a team, returning the used hex ids
   const fieldHeroes = (team: Team, ids: number[]): number[] => {
     const state = team === Team.ALLY ? State.AVAILABLE_ALLY : State.AVAILABLE_ENEMY
     const tiles = tilesByState(state)
