@@ -7,8 +7,8 @@ import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 
-/* One unit on a thumbnail: a portrait clipped to its hex (dot fallback when the
-   image is unresolvable) with a team-colored ring. */
+/* One unit on a thumbnail: a portrait clipped to its hex, or a question-marked
+   dot when the unit is unresolvable (retired seasonal content). */
 export interface ThumbnailUnit {
   hexId: number
   team: Team
@@ -195,15 +195,28 @@ const placedUnits = computed(() =>
              width: a heavier ring shrinks the already-small portraits. -->
         <polygon :points="unit.corners" fill="none" :stroke="unit.color" stroke-width="1" />
       </template>
-      <circle
-        v-else
-        :cx="unit.center.x"
-        :cy="unit.center.y"
-        :r="hexSize * 0.55"
-        :fill="unit.color"
-        stroke="#fff"
-        :stroke-width="Math.max(1, hexSize * 0.14)"
-      />
+      <template v-else>
+        <circle
+          :cx="unit.center.x"
+          :cy="unit.center.y"
+          :r="hexSize * 0.55"
+          :fill="unit.color"
+          stroke="#fff"
+          :stroke-width="Math.max(1, hexSize * 0.14)"
+        />
+        <text
+          :x="unit.center.x"
+          :y="unit.center.y"
+          fill="#fff"
+          :font-size="hexSize * 0.8"
+          font-weight="700"
+          font-family="sans-serif"
+          text-anchor="middle"
+          dominant-baseline="central"
+        >
+          ?
+        </text>
+      </template>
     </g>
   </svg>
 </template>
