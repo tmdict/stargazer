@@ -60,7 +60,7 @@
 .control-btn.danger.armed:hover {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
-  box-shadow: 0 0 0 2px rgba(192, 91, 77, 0.4);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
 }
 
 .control-btn .btn-icon {

@@ -4,7 +4,7 @@
    board. The mobile tap flow drives the sheet, so the selection watches + sheet
    state live here alongside the BottomSheet they control: a targeted cell opens it
    on Characters, an on-grid artifact opens it on Seasonal, lifting a hero collapses
-   it, and selecting a saved team collapses it so the loaded boards show. */
+   it, and loading a saved team collapses it so the loaded boards show. */
 
 import { computed, ref, watch } from 'vue'
 
@@ -31,7 +31,7 @@ defineProps<{
   loadedTeamId: string | null
 }>()
 
-const emit = defineEmits<{ selectTeam: [team: SavedTeam] }>()
+const emit = defineEmits<{ loadTeam: [team: SavedTeam] }>()
 
 const i18n = useI18nStore()
 const gridStore = useGridStore()
@@ -66,9 +66,9 @@ const sheetExpanded = ref(false)
 
 // Loading a team collapses the sheet so the loaded boards are visible (same
 // pattern as placing a character).
-const handleSelectTeam = (team: SavedTeam) => {
+const handleLoadTeam = (team: SavedTeam) => {
   sheetExpanded.value = false
-  emit('selectTeam', team)
+  emit('loadTeam', team)
 }
 
 // Tapping a cell targets it: open the sheet on Characters; placing clears the
@@ -117,7 +117,7 @@ const handleArenaSelected = (mapKey: string) => {
         </div>
       </template>
       <template #saved>
-        <SavedTeamsList v-if="savedTabSeen" :loaded-team-id @select="handleSelectTeam" />
+        <SavedTeamsList v-if="savedTabSeen" :loaded-team-id @load="handleLoadTeam" />
       </template>
     </TabView>
   </BottomSheet>

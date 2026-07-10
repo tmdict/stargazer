@@ -1,7 +1,5 @@
-import { useI18nStore } from '@/stores/i18n'
-import { copyImageBlob } from '@/utils/clipboard'
-import { downloadBlob, timestampedName } from '@/utils/download'
-import { useToast } from './useToast'
+import { canvasToBlob, loadImage } from '@/utils/image'
+import { useImageExportActions } from './useImageExportActions'
 
 /* Exports a saved-team card's thumbnail as a PNG. The preview is a row of
  * self-contained BoardThumbnail SVGs (presentation attributes only, internal
@@ -23,7 +21,12 @@ function toDataUrl(url: string): Promise<string> {
   const cached = dataUrlCache.get(url)
   if (cached) return cached
   const pending = fetch(url)
-    .then((response) => response.blob())
+    .then((response) => {
+      // fetch resolves on HTTP errors; without this check a 404 page would be
+      // inlined (and cached) as the portrait.
+      if (!response.ok) throw new Error(`Failed to fetch ${url}: ${response.status}`)
+      return response.blob()
+    })
     .then(
       (blob) =>
         new Promise<string>((resolve, reject) => {
@@ -36,15 +39,6 @@ function toDataUrl(url: string): Promise<string> {
   pending.catch(() => dataUrlCache.delete(url))
   dataUrlCache.set(url, pending)
   return pending
-}
-
-function loadImage(src: string): Promise<HTMLImageElement> {
-  return new Promise((resolve, reject) => {
-    const img = new Image()
-    img.onload = () => resolve(img)
-    img.onerror = () => reject(new Error('Failed to rasterize board SVG'))
-    img.src = src
-  })
 }
 
 // Explicit width/height go on the clone because Safari rasterizes an SVG
@@ -88,9 +82,8 @@ function backgroundLayers(el: HTMLElement): string[] {
   return layers
 }
 
-async function captureBoards(selector: string): Promise<Blob> {
-  const container = document.querySelector<HTMLElement>(selector)
-  if (!container) throw new Error(`Capture target not found: ${selector}`)
+async function captureBoards(container: HTMLElement | undefined): Promise<Blob> {
+  if (!container) throw new Error('Capture target missing')
   const svgs = Array.from(container.querySelectorAll('svg'))
   if (svgs.length === 0) throw new Error('No boards to capture')
 
@@ -124,40 +117,17 @@ async function captureBoards(selector: string): Promise<Blob> {
     context.drawImage(board.image, board.x, board.y)
   }
 
-  return new Promise((resolve, reject) => {
-    canvas.toBlob(
-      (blob) => (blob ? resolve(blob) : reject(new Error('Canvas export failed'))),
-      'image/png',
-    )
-  })
+  return canvasToBlob(canvas)
 }
 
 export function useThumbnailExport() {
-  const { success, error } = useToast()
-  const i18n = useI18nStore()
+  const { copyImage, downloadImage } = useImageExportActions()
 
-  const copyToClipboard = async (selector: string): Promise<void> => {
-    try {
-      // The pending capture is handed to the clipboard un-awaited so the write
-      // starts inside the user activation (same contract as useGridExport).
-      await copyImageBlob(captureBoards(selector))
-      success(i18n.t('app.copied-clipboard'))
-    } catch (err) {
-      console.error('Failed to copy thumbnail:', err)
-      error(i18n.t('app.copy-image-failed'))
-    }
-  }
+  const copyToClipboard = (container: HTMLElement | undefined): Promise<void> =>
+    copyImage(captureBoards(container))
 
-  const downloadAsImage = async (selector: string, filePrefix: string): Promise<void> => {
-    try {
-      const blob = await captureBoards(selector)
-      downloadBlob(blob, timestampedName(filePrefix, 'png'))
-      success(i18n.t('app.grid-downloaded'))
-    } catch (err) {
-      console.error('Failed to download thumbnail:', err)
-      error(i18n.t('app.download-failed'))
-    }
-  }
+  const downloadAsImage = (container: HTMLElement | undefined, filePrefix: string): Promise<void> =>
+    downloadImage(captureBoards(container), filePrefix)
 
   return { copyToClipboard, downloadAsImage }
 }

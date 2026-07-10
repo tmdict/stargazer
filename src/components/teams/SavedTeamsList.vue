@@ -5,7 +5,7 @@
    actions use the app's no-modal style: a two-step inline confirm that arms
    for a few seconds. User feedback (toasts) is fired here, not in the store. */
 
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch, type ComponentPublicInstance } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
@@ -27,7 +27,7 @@ const { loadedTeamId } = defineProps<{
   loadedTeamId: string | null
 }>()
 
-const emit = defineEmits<{ select: [team: SavedTeam] }>()
+const emit = defineEmits<{ load: [team: SavedTeam] }>()
 
 const i18n = useI18nStore()
 const library = useTeamLibrary()
@@ -100,10 +100,16 @@ const handleDeleteAll = (): void => {
   success(i18n.t('app.teams-deleted'))
 }
 
-// The card's thumbnail is the capture target: it already renders the saved
-// data faithfully, so exporting needs no board loading.
+// The card's own thumbnail is the capture target: it already renders the
+// saved data faithfully, so exporting needs no board loading. Function refs
+// keyed by team id because a plain ref inside v-for binds as an array.
 const { copyToClipboard, downloadAsImage } = useThumbnailExport()
-const cardSelector = (team: SavedTeam): string => `[data-team-card-id="${team.id}"] .team-preview`
+const previewEls = new Map<string, HTMLElement>()
+const setPreviewEl = (id: string, instance: Element | ComponentPublicInstance | null): void => {
+  const el = instance instanceof Element ? instance : instance?.$el
+  if (el instanceof HTMLElement) previewEls.set(id, el)
+  else previewEls.delete(id)
+}
 
 const handleDuplicate = (team: SavedTeam): void => {
   const copy = library.duplicate(team.id)
@@ -199,9 +205,8 @@ const cancelRename = (): void => {
         :key="team.id"
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
-        :data-team-card-id="team.id"
       >
-        <TeamPreview :team />
+        <TeamPreview :team :ref="(instance) => setPreviewEl(team.id, instance)" />
 
         <div class="card-title-row">
           <input
@@ -219,6 +224,9 @@ const cancelRename = (): void => {
           <template v-else>
             <button type="button" class="team-name" @click="startRename(team)">
               {{ team.name }}
+              <span v-if="team.id === loadedTeamId" class="visually-hidden">
+                ({{ i18n.t('app.loaded') }})
+              </span>
             </button>
             <button
               type="button"
@@ -238,7 +246,7 @@ const cancelRename = (): void => {
         </div>
 
         <div class="card-actions">
-          <button type="button" class="card-btn primary" @click="emit('select', team)">
+          <button type="button" class="card-btn primary" @click="emit('load', team)">
             {{ i18n.t('app.load') }}
           </button>
           <button type="button" class="card-btn" @click="handleDuplicate(team)">
@@ -249,7 +257,7 @@ const cancelRename = (): void => {
             class="card-btn icon"
             :title="i18n.t('app.copy')"
             :aria-label="i18n.t('app.copy')"
-            @click="copyToClipboard(cardSelector(team))"
+            @click="copyToClipboard(previewEls.get(team.id))"
           >
             <IconCopy :size="14" />
           </button>
@@ -258,7 +266,7 @@ const cancelRename = (): void => {
             class="card-btn icon"
             :title="i18n.t('app.download')"
             :aria-label="i18n.t('app.download')"
-            @click="downloadAsImage(cardSelector(team), team.name)"
+            @click="downloadAsImage(previewEls.get(team.id), team.name)"
           >
             <IconDownload :size="14" />
           </button>
@@ -385,9 +393,9 @@ const cancelRename = (): void => {
 
 .team-grid {
   display: grid;
-  /* The column minimum keeps cards wide enough for legible thumbnail heroes
-     (three columns on an 11-inch iPad Pro); larger monitors fit more columns
-     of the same card size rather than stretching three. */
+  /* The column minimum keeps cards wide enough for legible thumbnail heroes;
+     wide monitors fit more columns of the same card size rather than
+     stretching a fixed count. */
   grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
   gap: var(--spacing-lg);
   align-content: start;
@@ -414,13 +422,23 @@ const cancelRename = (): void => {
   flex-direction: column;
   gap: var(--spacing-sm);
   transition: border-color var(--transition-fast);
-  /* Offscreen cards skip layout/paint; the placeholder box keeps scroll stable. */
+  /* Offscreen cards skip layout/paint; the placeholder box keeps scroll stable
+     (auto remembers each card's real rendered size after first paint). */
   content-visibility: auto;
-  contain-intrinsic-size: 300px;
+  contain-intrinsic-size: auto 460px;
 }
 
 .team-card.loaded {
   border-color: var(--color-primary);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .card-title-row {

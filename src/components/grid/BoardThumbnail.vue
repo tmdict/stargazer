@@ -2,7 +2,6 @@
 import { computed, useId } from 'vue'
 
 import { Grid } from '@/lib/grid'
-import { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
@@ -97,11 +96,6 @@ function getTileFill(state: State | undefined): string {
 }
 
 const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c82333')
-
-// The unit's hex (portrait clip + ring) coincides with the tile itself: any
-// inset puts the ring parallel to the tile border and the two hairlines blur
-// into one thick-looking band.
-const UNIT_SCALE = 1
 </script>
 
 <script setup lang="ts">
@@ -150,33 +144,19 @@ const renderTiles = computed(() =>
   })),
 )
 
-const unitScale = computed(() => {
-  const layout = new Layout(
-    POINTY,
-    { x: hexSize * UNIT_SCALE, y: hexSize * UNIT_SCALE },
-    { x: 0, y: 0 },
-  )
-  return layout
-})
-
+// The unit's hex (portrait clip + ring) is the tile polygon itself: any inset
+// puts the ring parallel to the tile border and the two hairlines blur into
+// one thick-looking band.
 const placedUnits = computed(() =>
   units
     .filter((unit) => geometry.value.centers.has(unit.hexId))
-    .map((unit) => {
-      const center = geometry.value.centers.get(unit.hexId)!
-      // Inner hex corners around the unit's center, for the clip and the ring.
-      const corners = unitScale.value
-        .polygonCorners(new Hex(0, 0, 0))
-        .map((p) => `${(center.x + p.x).toFixed(1)},${(center.y + p.y).toFixed(1)}`)
-        .join(' ')
-      return {
-        ...unit,
-        center,
-        corners,
-        color: teamColor(unit.team),
-        imageSize: hexSize * 2.2,
-      }
-    }),
+    .map((unit) => ({
+      ...unit,
+      center: geometry.value.centers.get(unit.hexId)!,
+      corners: geometry.value.points.get(unit.hexId)!,
+      color: teamColor(unit.team),
+      imageSize: hexSize * 2.2,
+    })),
 )
 </script>
 

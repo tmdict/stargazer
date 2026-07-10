@@ -1,7 +1,5 @@
-import { useI18nStore } from '@/stores/i18n'
-import { copyImageBlob } from '@/utils/clipboard'
-import { downloadBlob, timestampedName } from '@/utils/download'
-import { useToast } from './useToast'
+import { loadImage } from '@/utils/image'
+import { useImageExportActions } from './useImageExportActions'
 
 // True WebKit only: Safari on any platform, plus every iOS/iPadOS browser
 // (all WKWebView). Blink UAs also claim "AppleWebKit", so Chrome-likes must
@@ -52,8 +50,7 @@ interface ExportOptions {
 }
 
 export function useGridExport() {
-  const { success, error } = useToast()
-  const i18n = useI18nStore()
+  const { copyImage, downloadImage } = useImageExportActions()
 
   /**
    * Captures the grid as a PNG data URL, with optional perspective cropping
@@ -157,14 +154,6 @@ export function useGridExport() {
     return canvas.toDataURL('image/png', 1.0)
   }
 
-  const loadImage = (src: string): Promise<HTMLImageElement> => {
-    const img = new Image()
-    img.src = src
-    return new Promise((resolve) => {
-      img.onload = () => resolve(img)
-    })
-  }
-
   // Stack two PNG data URLs into one image, the second centered below the first.
   const stackImagesVertically = async (topUrl: string, bottomUrl: string): Promise<string> => {
     const [top, bottom] = await Promise.all([loadImage(topUrl), loadImage(bottomUrl)])
@@ -180,37 +169,17 @@ export function useGridExport() {
     return canvas.toDataURL('image/png', 1.0)
   }
 
-  /**
-   * Copies the grid image to clipboard
-   */
-  const copyToClipboard = async (options: ExportOptions): Promise<void> => {
-    try {
-      // The pending capture is handed to the clipboard un-awaited: Safari
-      // treats an awaited gap as the end of the user activation and denies
-      // the write, so the browser must await the blob itself.
-      await copyImageBlob(captureGrid(options).then(dataUrlToBlob))
-      success(i18n.t('app.copied-clipboard'))
-    } catch (err) {
-      console.error('Failed to copy grid image:', err)
-      error(i18n.t('app.copy-image-failed'))
-    }
-  }
+  const copyToClipboard = (options: ExportOptions): Promise<void> =>
+    copyImage(captureGrid(options).then(dataUrlToBlob))
 
-  /**
-   * Downloads the grid image as a PNG file
-   */
-  const downloadAsImage = async (options: ExportOptions): Promise<void> => {
-    try {
-      const dataUrl = await captureGrid(options)
-      // iPadOS Safari silently drops <a download> clicks on multi-MB data: URLs.
-      const blob = await dataUrlToBlob(dataUrl)
-      downloadBlob(blob, timestampedName(options.filePrefix ?? 'stargazer', 'png'))
-      success(i18n.t('app.grid-downloaded'))
-    } catch (err) {
-      console.error('Failed to export grid:', err)
-      error(i18n.t('app.download-failed'))
-    }
-  }
+  // Downloads go through a Blob: iPadOS Safari silently drops <a download>
+  // clicks on multi-MB data: URLs.
+  const downloadAsImage = (options: ExportOptions): Promise<void> =>
+    downloadImage(
+      captureGrid(options).then(dataUrlToBlob),
+      options.filePrefix ?? 'stargazer',
+      'app.grid-downloaded',
+    )
 
   return {
     captureGrid,

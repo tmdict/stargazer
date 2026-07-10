@@ -2,21 +2,21 @@
 
 ## Overview
 
-The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry entry selects how many boards are live (1v1, 3v3, 5v5, 5v5 Supreme League) and each mode persists its own active team independently. On top sits the saved-team library: named canonical snapshots with portrait thumbnails that can be selected, updated, duplicated, renamed, deleted, and backed up to a JSON file.
+The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry entry selects how many boards are live (1v1, 3v3, 5v5, 5v5 Supreme League) and each mode persists its own active team independently. On top sits the saved-team library: named canonical snapshots with portrait thumbnails that can be loaded, updated, duplicated, renamed, deleted, and backed up to a JSON file.
 
 ## Design Principles
 
 1. **One format everywhere**: live boards, autosave slots, share links, backup files, and saved teams all serialize to the same encoded `MultiGridState` string
 2. **Mode is data, not a tab**: one registry (`TEAM_MODES`) and one orchestrator reconfigure the single board array; there are never two writers to the live boards
 3. **One slot per mode**: each mode autosaves to its own versioned localStorage envelope, so switching modes is lossless by construction
-4. **One restore path**: every bulk apply (slot restore, mode switch, saved-team select, `?g=` ingress) goes through `restoreMultiFromEncodedState`
+4. **One restore path**: every bulk apply (slot restore, mode switch, saved-team load, `?g=` ingress) goes through `restoreMultiFromEncodedState`
 5. **Canonical team data**: saved-team payloads are viewer-state-free with fixed key order, so equal content is byte-equal
 
 ## Architecture
 
 ```
 ┌────────────────────────── TeamsView ───────────────────────────┐
-│ tab state · display flags · save/select/import/export handlers │
+│ tab state · display flags · save/load/import/export handlers   │
 └──────────┬────────────────────────────────────┬────────────────┘
            ▼                                    ▼
 ┌─ TeamsBoards ──────────────┐    ┌─ TeamsRoster ────────────────┐
@@ -26,7 +26,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 └──────────┬─────────────────┘    └──────────────┬───────────────┘
            ▼                                     ▼
 ┌─ useTeamsRestore ──────────────────┐    ┌─ teamLibrary ────────┐
-│ - switch/select/?g= sequences      │    │ - SavedTeam records  │
+│ - switch/load/?g= sequences        │    │ - SavedTeam records  │
 │ - useTeamsPersistence (mode slots) │    │ - import/export      │
 └──────────┬─────────────────────────┘    └──────────────────────┘
            ▼ useGrids: N GridContexts (see GRID.md)
@@ -164,8 +164,8 @@ Semantics wired in `TeamsView`:
 
 - **Geometry cache**: hex polygons are memoized at module level per hex size, so a full library renders hundreds of boards from one polygon set
 - **Map-state cache**: baseline tile states are memoized per map key
-- **Portraits**: hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units); `clipPath` defs exist only for occupied hexes
-- **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states, exactly what Select produces; the map-config baseline applies only when a board has no `t`
+- **Portraits**: hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units); `clipPath` defs exist only for occupied hexes; companion ids resolve through `gameData.getCharacterImageNameById` (the skill's custom companion image or the main hero's portrait)
+- **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states, exactly what Load produces; the map-config baseline applies only when a board has no `t`
 - **Reuse**: `ArenaPreviewGrid` (Maps tab + Map Editor preset picker) renders through the same component with its square framing
 
 The saved-teams panel mounts on first activation and its cards use `content-visibility: auto`, so a full library never taxes page load.

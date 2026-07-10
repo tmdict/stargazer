@@ -139,7 +139,7 @@ const handleSaveAsNew = (name: string) => {
   success(i18n.t('app.team-saved', { name: team.name }))
 }
 
-const handleSelectTeam = (team: SavedTeam) => {
+const handleLoadTeam = (team: SavedTeam) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.applyTeamData(team.mode, team.data, team.id)
   success(i18n.t('app.team-loaded'))
@@ -255,7 +255,7 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
           :artifacts="gameDataStore.artifacts"
           :phantimals="gameDataStore.phantimals"
           :loaded-team-id="sourceTeam?.id ?? null"
-          @select-team="handleSelectTeam"
+          @load-team="handleLoadTeam"
         />
       </div>
     </DragDropProvider>

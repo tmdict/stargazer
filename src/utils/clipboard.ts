@@ -4,6 +4,8 @@
  * and the browser awaits the blob itself. */
 export async function copyImageBlob(blob: Promise<Blob>): Promise<void> {
   if (!navigator.clipboard || !window.ClipboardItem) {
+    // The capture is already running; abandon it without an unhandled rejection.
+    blob.catch(() => {})
     throw new Error('Clipboard not supported')
   }
   await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })])

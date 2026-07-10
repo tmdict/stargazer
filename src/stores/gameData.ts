@@ -102,6 +102,17 @@ export const useGameDataStore = defineStore('gameData', () => {
     return character?.name
   }
 
+  // Portrait image name for a unit id: a companion uses its skill's static
+  // companion image when one is defined (e.g. Zanie's turret), otherwise its
+  // main hero's portrait, matching what the live grid renders.
+  const getCharacterImageNameById = (characterId: number): string | undefined => {
+    if (!isPhantimalId(characterId) && characterId >= COMPANION_ID_OFFSET) {
+      const custom = getCharacterSkill(characterId % COMPANION_ID_OFFSET)?.companionImageModifier
+      if (custom) return custom
+    }
+    return getCharacterNameById(characterId)
+  }
+
   const getArtifactById = (artifactId: number): ArtifactType | undefined => {
     return artifacts.value.find((artifact) => artifact.id === artifactId)
   }
@@ -164,6 +175,7 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterRange,
     getCharacterById,
     getCharacterNameById,
+    getCharacterImageNameById,
     getArtifactById,
     getPhantimalById,
     getCharacterFaction,

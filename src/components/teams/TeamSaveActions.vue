@@ -84,8 +84,8 @@ const handleNew = (): void => {
       type="button"
       class="control-btn danger"
       :class="{ armed: armed !== null }"
-      :title="i18n.t('app.tooltip-new')"
-      :aria-label="i18n.t('app.new')"
+      :title="i18n.t(armed !== null ? 'app.confirm' : 'app.tooltip-new')"
+      :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.new')"
       @click="handleNew"
     >
       <IconFilePlus :size="14" class="btn-icon" />
