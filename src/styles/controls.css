@@ -14,9 +14,6 @@
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   min-height: 36px;
-  /* Buttons don't inherit the page font; without this the row renders in the
-     UA button font and reads smaller than the toggles beside it. */
-  font-family: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;

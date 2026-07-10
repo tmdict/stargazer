@@ -26,6 +26,12 @@ dd {
   padding: 0;
 }
 
+/* Buttons don't inherit the page font (the UA stylesheet sets its own); keep
+   them on the body font so button text matches the labels beside it. */
+button {
+  font-family: inherit;
+}
+
 /* Reset font-weight only for elements that should be normal, not buttons or their children */
 p,
 div,
