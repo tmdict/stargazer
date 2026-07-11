@@ -3,7 +3,7 @@ import { ViteSSG } from 'vite-ssg'
 
 import App from './App.vue'
 import { vScrollChain } from '@/directives/scrollChain'
-import { routes, scrollBehavior, warmSkillLocale } from '@/router/routes'
+import { installChunkErrorRecovery, routes, scrollBehavior, warmSkillLocale } from '@/router/routes'
 
 import './styles/base.css'
 import './styles/controls.css'
@@ -26,4 +26,5 @@ export const createApp = ViteSSG(App, { routes, scrollBehavior }, async ({ app, 
   app.directive('scroll-chain', vScrollChain)
   // Awaited by each pre-render's navigation, so baked pages carry real text.
   router.beforeResolve(warmSkillLocale)
+  installChunkErrorRecovery(router)
 })

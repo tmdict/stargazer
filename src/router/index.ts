@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
-import { routes, scrollBehavior, warmSkillLocale } from './routes'
+import { installChunkErrorRecovery, routes, scrollBehavior, warmSkillLocale } from './routes'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -9,5 +9,6 @@ const router = createRouter({
 })
 
 router.beforeResolve(warmSkillLocale)
+installChunkErrorRecovery(router)
 
 export default router

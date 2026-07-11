@@ -1,4 +1,9 @@
-import type { RouteLocationNormalized, RouteRecordRaw, RouterScrollBehavior } from 'vue-router'
+import type {
+  RouteLocationNormalized,
+  Router,
+  RouteRecordRaw,
+  RouterScrollBehavior,
+} from 'vue-router'
 
 import { SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
@@ -25,6 +30,40 @@ const SKILL_LOCALE_PATTERN = SKILL_LOCALE_CODES.join('|')
 // main.ssg.ts), not as beforeEnter on the record: beforeEnter skips
 // param-only navigation, and the globe menu's locale switch is exactly that
 // (same record, new :textLocale).
+// Import-failure wording differs per engine (Chrome "Failed to fetch
+// dynamically imported module", Safari "Importing a module script failed",
+// Firefox "error loading dynamically imported module", plus the module-MIME
+// variant the SPA rewrite produces), so match the family.
+const CHUNK_ERROR_RE =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
+
+// A deploy purges the previous build's hashed chunks, so a stale tab's next
+// lazy route import fails (the SPA rewrite answers the miss with index.html)
+// and vue-router would swallow the aborted navigation: header clicks die
+// until a hard refresh. Recover by completing the click as a full navigation
+// onto the new build. Remembering the last recovered URL keeps a persistent
+// failure (offline, a blocked chunk) from looping: its second failure falls
+// back to today's dead click. Route chunks are the only unhandled dynamic
+// imports (skill locales recover in warmSkillLocale, html-to-image failures
+// toast), so no vite:preloadError backstop: it would fire first, and
+// preventing its rethrow starves this handler of the destination. Registered
+// by BOTH entries, like warmSkillLocale.
+const CHUNK_RECOVERY_KEY = 'stargazer.chunk-recovery'
+
+export function installChunkErrorRecovery(router: Router): void {
+  if (import.meta.env.SSR) return
+  router.onError((error, to) => {
+    if (!(error instanceof Error) || !CHUNK_ERROR_RE.test(error.message)) return
+    try {
+      if (sessionStorage.getItem(CHUNK_RECOVERY_KEY) === to.fullPath) return
+      sessionStorage.setItem(CHUNK_RECOVERY_KEY, to.fullPath)
+    } catch {
+      return
+    }
+    window.location.assign(to.fullPath)
+  })
+}
+
 export async function warmSkillLocale(
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
