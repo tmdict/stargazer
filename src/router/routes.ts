@@ -26,45 +26,10 @@ const SKILL_LOCALE_PATTERN = SKILL_LOCALE_CODES.join('|')
 // would be scraped from the wrong language). Client navigation shares the
 // warm-up, so SkillSections stays a synchronous component.
 //
-// Registered as a global beforeResolve in BOTH entries (router/index.ts and
-// main.ssg.ts), not as beforeEnter on the record: beforeEnter skips
+// A global beforeResolve, not beforeEnter on the record: beforeEnter skips
 // param-only navigation, and the globe menu's locale switch is exactly that
 // (same record, new :textLocale).
-// Import-failure wording differs per engine (Chrome "Failed to fetch
-// dynamically imported module", Safari "Importing a module script failed",
-// Firefox "error loading dynamically imported module", plus the module-MIME
-// variant the SPA rewrite produces), so match the family.
-const CHUNK_ERROR_RE =
-  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
-
-// A deploy purges the previous build's hashed chunks, so a stale tab's next
-// lazy route import fails (the SPA rewrite answers the miss with index.html)
-// and vue-router would swallow the aborted navigation: header clicks die
-// until a hard refresh. Recover by completing the click as a full navigation
-// onto the new build. Remembering the last recovered URL keeps a persistent
-// failure (offline, a blocked chunk) from looping: its second failure falls
-// back to today's dead click. Route chunks are the only unhandled dynamic
-// imports (skill locales recover in warmSkillLocale, html-to-image failures
-// toast), so no vite:preloadError backstop: it would fire first, and
-// preventing its rethrow starves this handler of the destination. Registered
-// by BOTH entries, like warmSkillLocale.
-const CHUNK_RECOVERY_KEY = 'stargazer.chunk-recovery'
-
-export function installChunkErrorRecovery(router: Router): void {
-  if (import.meta.env.SSR) return
-  router.onError((error, to) => {
-    if (!(error instanceof Error) || !CHUNK_ERROR_RE.test(error.message)) return
-    try {
-      if (sessionStorage.getItem(CHUNK_RECOVERY_KEY) === to.fullPath) return
-      sessionStorage.setItem(CHUNK_RECOVERY_KEY, to.fullPath)
-    } catch {
-      return
-    }
-    window.location.assign(to.fullPath)
-  })
-}
-
-export async function warmSkillLocale(
+async function warmSkillLocale(
   to: RouteLocationNormalized,
   from: RouteLocationNormalized,
 ): Promise<boolean | void> {
@@ -81,6 +46,47 @@ export async function warmSkillLocale(
       return false
     }
   }
+}
+
+// Import-failure wording differs per engine (Chrome "Failed to fetch
+// dynamically imported module", Safari "Importing a module script failed",
+// Firefox "error loading dynamically imported module", plus the module-MIME
+// variant the SPA rewrite produces), so match the family.
+const CHUNK_ERROR_RE =
+  /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module|Failed to load module script/i
+
+// A deploy purges the previous build's hashed chunks, so a stale tab's next
+// lazy route import fails (the SPA rewrite answers the miss with index.html)
+// and vue-router would swallow the aborted navigation: header clicks die
+// until a hard refresh. Recover by completing the click as a full navigation
+// onto the new build. Remembering the last recovered URL keeps a persistent
+// failure (offline, a blocked chunk) from looping: its second failure stays
+// a dead click. Route chunks are the only unhandled dynamic imports (skill
+// locales recover in warmSkillLocale, html-to-image failures toast), so no
+// vite:preloadError backstop: it would fire first, and preventing its
+// rethrow starves this handler of the destination.
+const CHUNK_RECOVERY_KEY = 'stargazer.chunk-recovery'
+
+function installChunkErrorRecovery(router: Router): void {
+  if (import.meta.env.SSR) return
+  router.onError((error, to) => {
+    if (!(error instanceof Error) || !CHUNK_ERROR_RE.test(error.message)) return
+    try {
+      if (sessionStorage.getItem(CHUNK_RECOVERY_KEY) === to.fullPath) return
+      sessionStorage.setItem(CHUNK_RECOVERY_KEY, to.fullPath)
+    } catch {
+      return
+    }
+    window.location.assign(to.fullPath)
+  })
+}
+
+// One installer for both entries (SPA router/index.ts, SSG main.ssg.ts), so
+// the guard set cannot drift between them.
+export function installRouterGuards(router: Router): void {
+  // Awaited by each pre-render's navigation, so baked pages carry real text.
+  router.beforeResolve(warmSkillLocale)
+  installChunkErrorRecovery(router)
 }
 
 // Back/forward restores the reader's position (providing scrollBehavior at
