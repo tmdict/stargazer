@@ -139,6 +139,12 @@ const handleSaveAsNew = (name: string) => {
   success(i18n.t('app.team-saved', { name: team.name }))
 }
 
+const handleRename = (name: string) => {
+  const source = sourceTeam.value
+  if (!source) return
+  teamLibrary.rename(source.id, name)
+}
+
 const handleLoadTeam = (team: SavedTeam) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.applyTeamData(team.mode, team.data, team.id)
@@ -233,6 +239,7 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
                 @new-team="teamsRestore.newTeam()"
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"
+                @rename="handleRename"
                 @export-teams="handleExportTeams"
                 @import-file="handleImportFile"
                 @copy-link="handleCopyLink"
