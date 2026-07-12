@@ -1,11 +1,10 @@
 <script setup lang="ts">
-/* The Teams grid panel: the team title line (document-style name + save
-   state, with inline rename of the source team), the control bar (mode picker + display toggles, then team save
-   actions + share actions), and the horizontally-scrolling row of boards. It's
+/* The Teams grid panel: the team title line (document-style name with inline
+   source-team rename, plus save state), the control bar (mode picker + display
+   toggles, then team save actions + share actions), and the
+   horizontally-scrolling row of boards. It's
    the #teams panel of TeamsView's outer TabView; the tab strip and the roster
    live in TeamsView. Boards bind to their own context. */
-
-import { nextTick, ref } from 'vue'
 
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
@@ -14,8 +13,8 @@ import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import { useGridSwap } from '@/composables/useGridSwap'
+import { useInlineRename } from '@/composables/useInlineRename'
 import { MAX_TEAM_NAME_LENGTH, type TeamModeKey } from '@/lib/teams/modes'
-import { sanitizeTeamName } from '@/lib/teams/savedTeam'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -62,34 +61,22 @@ const grids = useGrids()
 const i18n = useI18nStore()
 const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
-// Inline rename of the source team, mirroring the saved-card flow (Enter/blur
-// commit, Esc cancels). Only a saved source has a name to edit.
-const renaming = ref(false)
-const renameValue = ref('')
-const renameInput = ref<HTMLInputElement>()
+// The title is a single rename target, so the composable's per-card key is a
+// constant. Only a saved source has a name to edit.
+const {
+  editingKey: renaming,
+  editingName: renameValue,
+  setInput: setRenameInput,
+  start,
+  commit: commitRename,
+  cancel: cancelRename,
+} = useInlineRename({
+  currentName: () => sourceName,
+  rename: (_key, name) => emit('rename', name),
+})
 
-const startRename = async (): Promise<void> => {
-  if (sourceName === null) return
-  renameValue.value = sourceName
-  renaming.value = true
-  await nextTick()
-  renameInput.value?.focus()
-  renameInput.value?.select()
-}
-
-// The renaming guard also swallows the blur that follows an Enter or Esc
-// commit, so a rename never fires twice.
-const commitRename = (): void => {
-  if (!renaming.value) return
-  renaming.value = false
-  // An unchanged name skips the write: blur alone must not bump the team's
-  // updatedAt.
-  if (sanitizeTeamName(renameValue.value) === sourceName) return
-  emit('rename', renameValue.value)
-}
-
-const cancelRename = (): void => {
-  renaming.value = false
+const startRename = (): void => {
+  if (sourceName !== null) void start('source', sourceName)
 }
 </script>
 
@@ -98,8 +85,8 @@ const cancelRename = (): void => {
     <div class="team-title-row">
       <span class="team-title-wrap">
         <input
-          v-if="renaming"
-          ref="renameInput"
+          v-if="renaming !== null"
+          :ref="setRenameInput"
           v-model="renameValue"
           class="team-title-input"
           type="text"
