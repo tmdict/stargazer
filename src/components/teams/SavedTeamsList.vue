@@ -5,7 +5,7 @@
    actions use the app's no-modal style: a two-step inline confirm that arms
    for a few seconds. User feedback (toasts) is fired here, not in the store. */
 
-import { computed, nextTick, ref, watch, type ComponentPublicInstance } from 'vue'
+import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
@@ -13,10 +13,11 @@ import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useInlineRename } from '@/composables/useInlineRename'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
-import { sanitizeTeamName, type SavedTeam } from '@/lib/teams/savedTeam'
+import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { readStorage, writeStorage } from '@/utils/storage'
@@ -116,38 +117,19 @@ const handleDuplicate = (team: SavedTeam): void => {
   if (!copy) error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
 }
 
-const editingId = ref<string | null>(null)
-const editingName = ref('')
-// Function ref: a string ref inside v-for binds as an array, which would make
-// focus/select silent no-ops. Only one rename input exists at a time; the
-// unmounting input's null call is ignored because its order against the next
-// input's mount call isn't guaranteed (a stale element is harmless).
-const nameInput = ref<HTMLInputElement | null>(null)
-const setNameInput = (el: unknown): void => {
-  if (el) nameInput.value = el as HTMLInputElement
-}
+const {
+  editingKey: editingId,
+  editingName,
+  setInput: setNameInput,
+  start,
+  commit: commitRename,
+  cancel: cancelRename,
+} = useInlineRename({
+  currentName: (id) => library.get(id)?.name,
+  rename: (id, name) => library.rename(id, name),
+})
 
-const startRename = async (team: SavedTeam): Promise<void> => {
-  editingId.value = team.id
-  editingName.value = team.name
-  await nextTick()
-  nameInput.value?.focus()
-  nameInput.value?.select()
-}
-
-const commitRename = (): void => {
-  const id = editingId.value
-  editingId.value = null
-  if (id === null) return
-  // An unchanged name skips the write: blur alone must not bump updatedAt and
-  // re-sort the grid under the pointer.
-  if (sanitizeTeamName(editingName.value) === library.get(id)?.name) return
-  library.rename(id, editingName.value)
-}
-
-const cancelRename = (): void => {
-  editingId.value = null
-}
+const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name)
 </script>
 
 <template>
