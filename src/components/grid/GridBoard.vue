@@ -49,8 +49,8 @@ const isSwapSource = computed(() => sourceId.value === context.id)
 const isSwapPending = computed(() => pendingId.value === context.id)
 
 // Export only this board: its .perspective-container holds the grid without the
-// active ring (on .grid-board) or these action buttons (siblings), so it needs no
-// strip/filter. Mirrors the single-grid copy/download.
+// active ring (on .grid-board) or these action buttons (siblings). Mirrors the
+// single-grid copy/download.
 const boardImageOptions = () => ({
   showPerspective,
   target: `[data-grid-board-id="${context.id}"] .perspective-container`,
