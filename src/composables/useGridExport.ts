@@ -49,7 +49,8 @@ interface ExportOptions {
 
 // On-screen chrome marked with this class (per-board action buttons, the Team
 // Power batch/reset buttons) is dropped from every image export.
-const CAPTURE_EXCLUDE_CLASS = 'capture-exclude'
+const excludeMarkedChrome = (node: HTMLElement): boolean =>
+  !node.classList?.contains('capture-exclude')
 
 export function useGridExport() {
   const { copyImage, downloadImage } = useImageExportActions()
@@ -79,7 +80,7 @@ export function useGridExport() {
       quality: 1.0,
       pixelRatio: 2,
       backgroundColor: 'transparent',
-      filter: (node: HTMLElement) => !node.classList?.contains(CAPTURE_EXCLUDE_CLASS),
+      filter: excludeMarkedChrome,
     }
 
     // WebKit rasterizes the foreignObject snapshot before its embedded images
