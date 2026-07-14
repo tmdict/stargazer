@@ -81,7 +81,7 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
 
     <TeamPowerPanel v-if="showGridInfo" :context />
 
-    <div class="board-actions">
+    <div class="board-actions capture-exclude">
       <button
         type="button"
         class="board-action board-swap"
