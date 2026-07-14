@@ -43,11 +43,13 @@ interface ExportOptions {
   // Optional element captured flat and stacked below the grid image (the Team Power
   // panel), so the grid's perspective crop never clips it. Skipped when absent.
   appendTarget?: string
-  // html-to-image node filter (return false to drop a node from the capture).
-  filter?: (node: HTMLElement) => boolean
   // Download filename prefix (timestamped); unused by copyToClipboard.
   filePrefix?: string
 }
+
+// On-screen chrome marked with this class (per-board action buttons, the Team
+// Power batch/reset buttons) is dropped from every image export.
+const CAPTURE_EXCLUDE_CLASS = 'capture-exclude'
 
 export function useGridExport() {
   const { copyImage, downloadImage } = useImageExportActions()
@@ -77,7 +79,7 @@ export function useGridExport() {
       quality: 1.0,
       pixelRatio: 2,
       backgroundColor: 'transparent',
-      filter: options.filter,
+      filter: (node: HTMLElement) => !node.classList?.contains(CAPTURE_EXCLUDE_CLASS),
     }
 
     // WebKit rasterizes the foreignObject snapshot before its embedded images

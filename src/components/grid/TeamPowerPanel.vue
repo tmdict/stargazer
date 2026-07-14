@@ -87,6 +87,17 @@ const resetParagons = (team: Team, heroes: PanelHero[]): void => {
   heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, 0))
 }
 
+// Clamped, unlike the per-hero cycle: a batch wrap would zero a maxed team.
+// Hidden at all-P4 (nothing to raise), mirroring how reset hides at all-P0.
+const canRaise = (heroes: PanelHero[]): boolean =>
+  heroes.some((hero) => hero.level < PARAGON_MAX_LEVEL)
+
+const raiseAll = (team: Team, heroes: PanelHero[]): void => {
+  heroes.forEach((hero) =>
+    props.context.setParagon(team, hero.characterId, Math.min(hero.level + 1, PARAGON_MAX_LEVEL)),
+  )
+}
+
 const badgeStyle = (level: number) => {
   const c = PARAGON_COLORS[level] ?? PARAGON_COLORS[0]!
   return { background: c.bg, color: c.fg }
@@ -144,9 +155,19 @@ const onStatLeave = (): void => {
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
         <button
+          v-if="canRaise(side.heroes) && !readonly"
+          type="button"
+          class="stat-plus capture-exclude"
+          :aria-label="i18n.t('app.raise-paragons')"
+          :title="i18n.t('app.raise-paragons')"
+          @click="raiseAll(side.team, side.heroes)"
+        >
+          +1
+        </button>
+        <button
           v-if="hasParagon(side.heroes) && !readonly"
           type="button"
-          class="stat-reset"
+          class="stat-reset capture-exclude"
           :aria-label="i18n.t('app.reset-paragons')"
           :title="i18n.t('app.reset-paragons')"
           @click="resetParagons(side.team, side.heroes)"
@@ -290,6 +311,30 @@ const onStatLeave = (): void => {
   transition: all var(--transition-fast);
 }
 .stat-reset:hover {
+  background: rgba(0, 0, 0, 0.11);
+  color: var(--color-text-primary);
+}
+
+.stat-plus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-secondary);
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.stat-plus:hover {
   background: rgba(0, 0, 0, 0.11);
   color: var(--color-text-primary);
 }

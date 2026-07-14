@@ -194,11 +194,10 @@ onScopeDispose(() => {
 })
 
 // Capture all boards as one image (the full-width track, so boards scrolled
-// out of view are still included; drop the per-board action buttons).
+// out of view are still included).
 const boardCapture = {
   showPerspective: false,
   target: '.boards-track',
-  filter: (node: HTMLElement) => !node.classList?.contains('board-actions'),
   filePrefix: 'teams',
 }
 const handleCopyImage = () => copyToClipboard(boardCapture)
