@@ -155,7 +155,7 @@ const handleLoadTeam = (team: SavedTeam) => {
 // all" is Delete all + Import.
 const handleExportTeams = () => {
   downloadBlob(
-    new Blob([JSON.stringify(teamLibrary.exportAll(), null, 2)], { type: 'application/json' }),
+    new Blob([JSON.stringify(teamLibrary.exportAll())], { type: 'application/json' }),
     timestampedName('stargazer-teams', 'json'),
   )
 }
