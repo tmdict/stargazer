@@ -55,7 +55,8 @@ const handleArtifactClick = (artifact: ArtifactType) => {
   if (target !== undefined) artifactStore.placeArtifact(artifact.id, target)
 }
 
-// Group artifacts into their own section per season (pre-season first).
+// Group artifacts into their own section per season, newest season first, so
+// current seasonal content leads and the evergreen pre-season set closes.
 const seasonGroups = computed(() => {
   const bySeason = new Map<number, ArtifactType[]>()
   for (const artifact of props.artifacts) {
@@ -64,7 +65,7 @@ const seasonGroups = computed(() => {
     bySeason.set(artifact.season, list)
   }
   return [...bySeason.entries()]
-    .sort(([a], [b]) => a - b)
+    .sort(([a], [b]) => b - a)
     .map(([season, artifacts]) => ({
       season,
       artifacts: [...artifacts].sort((a, b) => a.id - b.id),
