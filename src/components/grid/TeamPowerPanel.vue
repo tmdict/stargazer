@@ -295,13 +295,12 @@ const onStatLeave = (): void => {
   color: var(--color-text-secondary);
 }
 
+.stat-plus,
 .stat-reset {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 18px;
-  height: 18px;
   padding: 0;
   border: none;
   border-radius: 999px;
@@ -310,31 +309,19 @@ const onStatLeave = (): void => {
   cursor: pointer;
   transition: all var(--transition-fast);
 }
-.stat-reset:hover {
-  background: rgba(0, 0, 0, 0.11);
-  color: var(--color-text-primary);
-}
-
 .stat-plus {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
   width: 20px;
   height: 20px;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--color-text-secondary);
   font-size: 0.62rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  cursor: pointer;
-  transition: all var(--transition-fast);
 }
-
-.stat-plus:hover {
+.stat-reset {
+  width: 18px;
+  height: 18px;
+}
+.stat-plus:hover,
+.stat-reset:hover {
   background: rgba(0, 0, 0, 0.11);
   color: var(--color-text-primary);
 }
