@@ -20,8 +20,8 @@ const {
 
 <template>
   <div v-scroll-chain class="seasonal-selection" :class="{ scrollable }">
-    <ArtifactSelection :artifacts />
     <PhantimalSelection :phantimals :is-draggable />
+    <ArtifactSelection :artifacts />
   </div>
 </template>
 
