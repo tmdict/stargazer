@@ -276,6 +276,14 @@ const onStatLeave = (): void => {
   border-bottom: 1px dotted var(--color-border-primary);
   cursor: help;
 }
+/* Mobile: the caption would crowd the header and shove the +1/reset buttons to
+   the block's far side; the number alone carries the stat (the caption's
+   tooltip is touch-suppressed anyway). */
+@media (max-width: 768px) {
+  .stat-label {
+    display: none;
+  }
+}
 /* Headline number, colored by sign. The negative uses the calmer danger red (not the
    alert enemy red) so it balances the teal rather than dominating it. */
 .stat-num {
