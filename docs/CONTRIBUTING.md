@@ -109,9 +109,11 @@ maintained locally.
   `effects/[name].json` (per-level descriptions); phantimals use a single
   `src/locales/seasonal/phantimal/[name].json` (name + skills + levels).
 - **Icons:** pre-season artifacts ship local images; seasonal artifacts and
-  phantimals load **remotely** from afkj-data-viewer
-  (`utils/artifactImage.ts`), so those icons require afkj-data-viewer to be
-  deployed.
+  phantimals load **remotely** from
+  `chaldea.tmdict.com/img/seasonal/{artifact,phantimal}/<name>.webp`
+  (`utils/artifactImage.ts`). The chaldea repo's `_redirects` exempts `/img/*`
+  from its catch-all redirect and its `_headers` sends the CORS header the
+  `crossorigin="anonymous"` consumers require.
 - **Each new season:** remove the previous season's entries and add the new
   ones (re-run afkj-data-viewer's `export:api`, then regenerate these files).
 

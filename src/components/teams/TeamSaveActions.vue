@@ -6,13 +6,14 @@
    display: contents, so every control sits directly in the action row's flex
    flow with its spacing. */
 
-import { nextTick, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
@@ -51,6 +52,7 @@ const popoverName = ref('')
 const nameInput = ref<HTMLInputElement>()
 
 const openPopover = async (): Promise<void> => {
+  hideTip()
   popoverName.value = suggestedName
   popoverOpen.value = true
   await nextTick()
@@ -75,6 +77,38 @@ const handleNew = (): void => {
   if (!confirm('new')) return
   emit('newTeam')
 }
+
+// One shared popup serves all five actions. The hovered action's id is stored
+// (not its text) so the text stays live: arming New flips it to Confirm while
+// still hovered.
+type TipId = 'new' | 'save' | 'save-as-new' | 'import' | 'export'
+const tip = ref<TipId | null>(null)
+const tipTarget = ref<HTMLElement | null>(null)
+
+const showTip = (id: TipId, event: MouseEvent): void => {
+  tip.value = id
+  tipTarget.value = event.currentTarget as HTMLElement
+}
+const hideTip = (): void => {
+  tip.value = null
+}
+
+const tipText = computed((): string => {
+  switch (tip.value) {
+    case 'new':
+      return i18n.t(armed.value !== null ? 'app.confirm' : 'app.tooltip-new')
+    case 'save':
+      return i18n.t('app.tooltip-save')
+    case 'save-as-new':
+      return i18n.t('app.tooltip-save-as-new')
+    case 'import':
+      return i18n.t('app.tooltip-import')
+    case 'export':
+      return i18n.t('app.tooltip-export')
+    default:
+      return ''
+  }
+})
 </script>
 
 <template>
@@ -84,9 +118,10 @@ const handleNew = (): void => {
       type="button"
       class="control-btn danger"
       :class="{ armed: armed !== null }"
-      :title="i18n.t(armed !== null ? 'app.confirm' : 'app.tooltip-new')"
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.new')"
       @click="handleNew"
+      @mouseenter="showTip('new', $event)"
+      @mouseleave="hideTip"
     >
       <IconFilePlus :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t(armed !== null ? 'app.confirm' : 'app.new') }}</span>
@@ -94,13 +129,10 @@ const handleNew = (): void => {
     <button
       type="button"
       class="control-btn"
-      :title="
-        sourceName !== null
-          ? i18n.t('app.tooltip-save', { name: sourceName })
-          : i18n.t('app.tooltip-save-as-new')
-      "
       :aria-label="i18n.t('app.save')"
       @click="handleSave"
+      @mouseenter="showTip('save', $event)"
+      @mouseleave="hideTip"
     >
       <IconSave :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.save') }}</span>
@@ -109,9 +141,10 @@ const handleNew = (): void => {
       <button
         type="button"
         class="control-btn secondary"
-        :title="i18n.t('app.tooltip-save-as-new')"
         :aria-label="i18n.t('app.save-as-new')"
         @click="openPopover"
+        @mouseenter="showTip('save-as-new', $event)"
+        @mouseleave="hideTip"
       >
         <IconSavePlus :size="14" class="btn-icon" />
         <span class="btn-text">{{ i18n.t('app.save-as-new') }}</span>
@@ -149,9 +182,10 @@ const handleNew = (): void => {
     <button
       type="button"
       class="control-btn secondary"
-      :title="i18n.t('app.tooltip-import')"
       :aria-label="i18n.t('app.import')"
       @click="fileInput?.click()"
+      @mouseenter="showTip('import', $event)"
+      @mouseleave="hideTip"
     >
       <IconUpload :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.import') }}</span>
@@ -159,9 +193,10 @@ const handleNew = (): void => {
     <button
       type="button"
       class="control-btn secondary"
-      :title="i18n.t('app.tooltip-export')"
       :aria-label="i18n.t('app.export')"
       @click="emit('exportTeams')"
+      @mouseenter="showTip('export', $event)"
+      @mouseleave="hideTip"
     >
       <IconDownload :size="14" class="btn-icon" />
       <span class="btn-text">{{ i18n.t('app.export') }}</span>
@@ -173,12 +208,24 @@ const handleNew = (): void => {
       class="file-input"
       @change="handleFileChosen"
     />
+    <Teleport to="body">
+      <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
+        <template #content>
+          <div class="action-tip">{{ tipText }}</div>
+        </template>
+      </TooltipPopup>
+    </Teleport>
   </div>
 </template>
 
 <style scoped>
 .team-save-actions {
   display: contents;
+}
+
+.action-tip {
+  line-height: 1.4;
+  font-size: 0.85rem;
 }
 
 .popover-anchor {
