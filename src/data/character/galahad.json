@@ -10,7 +10,7 @@
   "season": 5,
   "tags": {
     "initial-energy-300": [],
-    "summon": [{ "ex": 1 }],
-    "tile-effect": [{ "ex": 1 }]
+    "special-target": [{ "ex": 1 }],
+    "summon": [{ "ex": 1 }]
   }
 }
