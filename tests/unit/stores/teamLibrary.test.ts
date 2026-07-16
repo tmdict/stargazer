@@ -113,8 +113,10 @@ describe('useTeamLibrary', () => {
     expect(library.update(team.id, withViewerState)).toBe(true)
     expect(library.get(team.id)!.data).toBe(canonicalTeamData(withViewerState))
 
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(library.saveAsNew('3v3', 'garbage')).toBeNull()
     expect(library.update(team.id, 'garbage')).toBe(false)
+    warn.mockRestore()
   })
 
   it('saveAsNew assigns auto-names and sanitizes custom names', () => {

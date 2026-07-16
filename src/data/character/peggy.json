@@ -9,6 +9,7 @@
   "range": 6,
   "season": 7,
   "tags": {
-    "initial-energy-300": []
+    "initial-energy-300": [],
+    "summon": [{ "ultimate": 1 }, { "skill3": 1 }]
   }
 }
