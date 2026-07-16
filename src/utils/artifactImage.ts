@@ -4,16 +4,16 @@
 //
 // Served as WebP and consumed via a plain <img crossorigin="anonymous">: the
 // crossorigin keeps the icon CORS-clean so the canvas-based image export can read
-// it, and a single <img> (not <picture>) is what html-to-image reliably inlines.
-const REMOTE_BASE = 'IMAGE_HOST_REMOVED'
+// it (the host must send Access-Control-Allow-Origin, see the image host's _headers),
+// and a single <img> (not <picture>) is what html-to-image reliably inlines.
+const REMOTE_BASE = 'IMAGE_HOST_REMOVED/seasonal'
 
 // Pre-season uses local bundled images; every other season uses remote assets.
 export const isRemoteArtifact = (season: number): boolean => season !== 0
 
 // WebP icon URL for a seasonal artifact, by artifact name (slug).
 export const seasonArtifactImageUrl = (name: string): string =>
-  `${REMOTE_BASE}/artifacts/season/${name}.webp`
+  `${REMOTE_BASE}/artifact/${name}.webp`
 
 // WebP icon URL for a seasonal phantimal, by phantimal name (slug).
-export const phantimalImageUrl = (name: string): string =>
-  `${REMOTE_BASE}/seasonal/phantimal/${name}.webp`
+export const phantimalImageUrl = (name: string): string => `${REMOTE_BASE}/phantimal/${name}.webp`

@@ -109,9 +109,11 @@ maintained locally.
   `effects/[name].json` (per-level descriptions); phantimals use a single
   `src/locales/seasonal/phantimal/[name].json` (name + skills + levels).
 - **Icons:** pre-season artifacts ship local images; seasonal artifacts and
-  phantimals load **remotely** from the image host
-  (`utils/artifactImage.ts`), so those icons require the image host to be
-  deployed.
+  phantimals load **remotely** from
+  `IMAGE_HOST_REMOVED/seasonal/{artifact,phantimal}/<name>.webp`
+  (`utils/artifactImage.ts`). The image host's `_redirects` exempts `/img/*`
+  from its catch-all redirect and its `_headers` sends the CORS header the
+  `crossorigin="anonymous"` consumers require.
 - **Each new season:** remove the previous season's entries and add the new
   ones (rebuild the upstream data feed, then regenerate these files).
 
