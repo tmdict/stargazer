@@ -18,10 +18,9 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { sourceName, suggestedName } = defineProps<{
-  // The resolved source team's name Save targets; null degrades Save to
-  // Save as New.
-  sourceName: string | null
+const { hasSource, suggestedName } = defineProps<{
+  // Whether Save has a source team to update; false degrades Save to Save as New.
+  hasSource: boolean
   // Prefill for the Save-as-New popover ("Team N").
   suggestedName: string
 }>()
@@ -66,7 +65,7 @@ const commitPopover = (): void => {
 }
 
 const handleSave = (): void => {
-  if (sourceName !== null) emit('save')
+  if (hasSource) emit('save')
   else void openPopover()
 }
 
