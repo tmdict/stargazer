@@ -137,7 +137,7 @@ const startRename = (): void => {
       </template>
       <template #actions-start>
         <TeamSaveActions
-          :source-name
+          :has-source="sourceName !== null"
           :suggested-name
           @new-team="emit('newTeam')"
           @save="emit('save')"

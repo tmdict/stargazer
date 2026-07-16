@@ -21,6 +21,7 @@ import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/m
 import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { renderSnippet, type Snippet } from '@/utils/searchHighlight'
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const { loadedTeamId } = defineProps<{
@@ -53,6 +54,22 @@ const sorted = computed(() => {
     ? teams.sort((a, b) => nameCollator.value.compare(a.name, b.name) || b.updatedAt - a.updatedAt)
     : teams.sort((a, b) => b.updatedAt - a.updatedAt)
 })
+
+// The box hides below 2 teams and the filter follows it, so a leftover query
+// can never strand the list on "no matches" with no visible way to clear it.
+// Filtering and highlighting share renderSnippet: a card is visible exactly
+// when its name carries a mark. Context = max name length, so the snippet is
+// always the whole name (no ellipses).
+const searchQuery = ref('')
+const searchVisible = computed(() => library.count > 1)
+const visibleTeams = computed((): { team: SavedTeam; snippet: Snippet | null }[] => {
+  const query = searchQuery.value.trim()
+  if (!searchVisible.value || !query) return sorted.value.map((team) => ({ team, snippet: null }))
+  return sorted.value
+    .map((team) => ({ team, snippet: renderSnippet(team.name, query, MAX_TEAM_NAME_LENGTH) }))
+    .filter((entry) => entry.snippet !== null)
+})
+
 const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
 
 const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].labelKey)
@@ -132,8 +149,7 @@ const {
 
 const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name)
 
-// Focus handlers included: the hint is tabindex'd, so keyboard users get the
-// popup too.
+// The hint is keyboard-focusable, so focus/blur mirror the hover handlers.
 const storageHintEl = ref<HTMLElement | null>(null)
 const showStorageHint = ref(false)
 </script>
@@ -175,6 +191,15 @@ const showStorageHint = ref(false)
             {{ i18n.t(`app.sort-${key}`) }}
           </button>
         </div>
+        <input
+          v-if="searchVisible"
+          v-model="searchQuery"
+          class="team-search"
+          type="search"
+          :placeholder="i18n.t('app.search-label')"
+          :aria-label="i18n.t('app.search-label')"
+          spellcheck="false"
+        />
       </span>
       <button
         v-if="library.count > 0"
@@ -191,9 +216,13 @@ const showStorageHint = ref(false)
       {{ i18n.t('app.saved-teams-empty') }}
     </p>
 
+    <p v-else-if="visibleTeams.length === 0" class="empty-state">
+      {{ i18n.t('app.teams-no-matches') }}
+    </p>
+
     <div v-else class="team-grid">
       <div
-        v-for="team in sorted"
+        v-for="{ team, snippet } in visibleTeams"
         :key="team.id"
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
@@ -215,7 +244,11 @@ const showStorageHint = ref(false)
           />
           <template v-else>
             <button type="button" class="team-name" @click="startRename(team)">
-              {{ team.name }}
+              <template v-if="snippet"
+                >{{ snippet.pre }}<mark>{{ snippet.match }}</mark
+                >{{ snippet.post }}</template
+              >
+              <template v-else>{{ team.name }}</template>
               <span v-if="team.id === loadedTeamId" class="visually-hidden">
                 ({{ i18n.t('app.loaded') }})
               </span>
@@ -367,6 +400,29 @@ const showStorageHint = ref(false)
   cursor: pointer;
   transition: all var(--transition-fast);
   white-space: nowrap;
+}
+
+.team-search {
+  flex: 0 1 150px;
+  min-width: 70px;
+  margin-left: var(--spacing-sm);
+  font: inherit;
+  font-size: 0.8rem;
+  padding: 4px 12px;
+  border: 1.5px solid var(--color-border-primary);
+  border-radius: 999px;
+  background: var(--color-bg-white);
+  color: var(--color-text-primary);
+}
+
+.team-search:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.team-name mark {
+  background: none;
+  color: var(--color-primary);
 }
 
 .sort-seg:hover:not(.active) {

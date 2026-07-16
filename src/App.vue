@@ -8,6 +8,7 @@ import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import IconMail from '@/components/ui/IconMail.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
 import rowanGif from '@/assets/rowan.gif'
@@ -150,6 +151,15 @@ onUnmounted(() => {
             :title="i18n.t('app.code')"
           >
             <IconGitHub />
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://chaldea.tmdict.com/sendMessage/"
+            class="icon-link"
+            :title="i18n.t('app.contact')"
+          >
+            <IconMail />
           </a>
         </li>
         <li>
