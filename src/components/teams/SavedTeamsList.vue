@@ -12,6 +12,7 @@ import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
@@ -130,6 +131,11 @@ const {
 })
 
 const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name)
+
+// Focus handlers included: the hint is tabindex'd, so keyboard users get the
+// popup too.
+const storageHintEl = ref<HTMLElement | null>(null)
+const showStorageHint = ref(false)
 </script>
 
 <template>
@@ -140,10 +146,14 @@ const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name
           {{ library.count }} / {{ MAX_SAVED_TEAMS }}
         </span>
         <span
+          ref="storageHintEl"
           class="storage-hint"
-          :title="i18n.t('app.storage-hint')"
           :aria-label="i18n.t('app.storage-hint')"
           tabindex="0"
+          @mouseenter="showStorageHint = true"
+          @mouseleave="showStorageHint = false"
+          @focus="showStorageHint = true"
+          @blur="showStorageHint = false"
         >
           <IconInfo :size="15" />
         </span>
@@ -263,6 +273,18 @@ const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name
         </div>
       </div>
     </div>
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="showStorageHint && storageHintEl"
+        :target-element="storageHintEl"
+        variant="detailed"
+        max-width="320px"
+      >
+        <template #content>
+          <div class="storage-tip">{{ i18n.t('app.storage-hint') }}</div>
+        </template>
+      </TooltipPopup>
+    </Teleport>
   </div>
 </template>
 
@@ -312,6 +334,11 @@ const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name
 .storage-hint:focus-visible {
   opacity: 1;
   color: var(--color-primary);
+}
+
+.storage-tip {
+  line-height: 1.4;
+  font-size: 0.85rem;
 }
 
 .library-count.warn {
