@@ -11,6 +11,7 @@
   "tags": {
     "anti-heal": [{ "awakening": 1 }],
     "cheat-death": [{ "ex": 4 }],
+    "dot": [{ "ultimate": 1 }],
     "temp-buff": [{ "ultimate": 1 }, { "skill3": 1 }],
     "temp-buff-instant": [{ "ultimate": 1 }],
     "tile-effect": [{ "ultimate": 1 }]

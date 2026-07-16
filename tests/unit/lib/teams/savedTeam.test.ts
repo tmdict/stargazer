@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import {
   canonicalTeamData,
@@ -51,8 +51,10 @@ describe('canonicalTeamData', () => {
   })
 
   it('returns null for undecodable or empty payloads', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     expect(canonicalTeamData('!!!')).toBeNull()
     expect(canonicalTeamData(encode({ boards: [] }))).toBeNull()
+    error.mockRestore()
   })
 
   it('returns null when a crafted payload has non-object board entries', () => {
@@ -122,6 +124,7 @@ describe('validateSavedTeam', () => {
   })
 
   it('rejects structural garbage', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(validateSavedTeam(null)).toBeNull()
     expect(validateSavedTeam('x')).toBeNull()
     expect(validateSavedTeam(record({ id: '' }))).toBeNull()
@@ -130,6 +133,7 @@ describe('validateSavedTeam', () => {
     expect(
       validateSavedTeam(record({ data: encode({ boards: [null, {}, {}] } as never) })),
     ).toBeNull()
+    warn.mockRestore()
   })
 
   it('normalizes non-numeric timestamps to 0', () => {

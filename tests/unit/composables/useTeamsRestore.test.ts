@@ -281,6 +281,8 @@ describe('useTeamsRestore', () => {
   })
 
   it('ingress: a crafted 2-board link routes to 3v3 and is padded to shape', () => {
+    // The unit lands on a non-placeable hex of arena2; restore warns and skips it.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     const link = encodeMultiGridStateToUrl({
       boards: [{ m: 'arena2', c: [[1, 11, Team.ALLY]] }, { m: 'arena3' }],
@@ -294,6 +296,7 @@ describe('useTeamsRestore', () => {
     const slot = decodeBoards(readEnvelope('3v3').data)
     expect(slot.boards).toHaveLength(3)
     expect(slot.mode).toBe('3v3')
+    warn.mockRestore()
   })
 
   it('ingress: a contradictory declared mode is overridden by the board count', () => {
@@ -315,11 +318,13 @@ describe('useTeamsRestore', () => {
     }
     const saved = readEnvelope('5v5sl').data
 
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { restore } = createHarness()
     const result = restore.initialize('!!!not-a-payload!!!')
     expect(result).toEqual({ linkLoaded: false, linkFailed: true })
     expect(restore.activeMode.value).toBe('5v5sl')
     expect(readEnvelope('5v5sl').data).toBe(saved)
+    error.mockRestore()
   })
 
   it('a shared link overwrites the routed mode slot with sourceId null', () => {
@@ -390,6 +395,8 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
   })
 
   it('applyTeamData switches mode, applies content, and adopts provenance', () => {
+    // The unit lands on a non-placeable hex of arena3; restore warns and skips it.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     restore.initialize(null)
     expect(restore.activeMode.value).toBe('5v5sl')
@@ -406,9 +413,11 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     expect(grids.contexts[0]!.currentMap).toBe('arena3')
     expect(restore.sourceId.value).toBe('team-9')
     expect(readEnvelope('1v1').sourceId).toBe('team-9')
+    warn.mockRestore()
   })
 
   it('newTeam rebuilds the mode defaults and detaches provenance', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     restore.initialize(null)
     const data = canonicalTeamData(
@@ -429,15 +438,18 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     const slot = readEnvelope('1v1')
     expect(slot.sourceId).toBeNull()
     expect(decodeBoards(slot.data).boards[0]!.c).toBeUndefined()
+    warn.mockRestore()
   })
 
   it('applyTeamData with corrupt data falls back to defaults and clears provenance', () => {
+    const error = vi.spyOn(console, 'error').mockImplementation(() => {})
     const { restore, grids } = createHarness()
     restore.initialize(null)
     expect(restore.applyTeamData('3v3', '!!!corrupt!!!', 'team-1')).toBe(false)
     expect(restore.activeMode.value).toBe('3v3')
     expect(grids.contexts).toHaveLength(3)
     expect(restore.sourceId.value).toBeNull()
+    error.mockRestore()
   })
 
   it('selecting canonical data keeps current display flags', () => {
