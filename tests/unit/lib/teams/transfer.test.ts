@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildExport, parseImport } from '@/lib/teams/transfer'
@@ -64,6 +64,7 @@ describe('parseImport envelope rejection', () => {
 
 describe('parseImport record validation', () => {
   it('skips invalid records without rejecting the file', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const result = parseImport(
       envelope([
         record(),
@@ -77,6 +78,7 @@ describe('parseImport record validation', () => {
       [],
     )
     expect(result).toMatchObject({ ok: true, skipped: 6, teams: [expect.any(Object)] })
+    warn.mockRestore()
   })
 
   it('canonicalizes accepted data (viewer state stripped, byte-stable)', () => {
