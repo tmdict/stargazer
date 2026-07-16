@@ -9,6 +9,6 @@
   "range": 3,
   "season": 0,
   "tags": {
-    "tile-effect": [{ "skill3": 1 }]
+    "special-target": [{ "skill3": 1 }]
   }
 }

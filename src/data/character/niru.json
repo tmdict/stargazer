@@ -10,6 +10,7 @@
   "season": 0,
   "tags": {
     "cheat-death": [{ "ultimate": 1 }],
-    "instant-ult": [{ "ex": 1 }]
+    "instant-ult": [{ "ex": 1 }],
+    "special-target": [{ "ex": 1 }]
   }
 }

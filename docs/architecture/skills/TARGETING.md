@@ -66,7 +66,7 @@ Expands outward ring by ring from a center hex, checking tiles in order:
 
 - **spiralSearchFromTile()**: Spiral walk by angle from a center tile, team-specific direction (clockwise for ally, counter-clockwise for enemy). Used by Silvina/Nara from a symmetrical tile.
 - **searchByRow()**: The closest unit in the caster's _own_ diagonal row, tie-broken target-relative like `rowScan` (the searched team's frontmost unit wins: higher hex id for ally, lower for enemy). Used by Aliceth/Alna.
-- **rowScan()**: The diagonal-row scan below. Used by Faramor, Cassadee, Galahad, Himmel, Hepler, and Aliceth's fallback.
+- **rowScan()**: The diagonal-row scan below. Used by Faramor, Cassadee, Galahad, Niru, Himmel, Hepler, and Aliceth's fallback.
 
 ### Diagonal-row scan (`rowScan`)
 
@@ -79,7 +79,7 @@ Scan key: `(distance asc, diagonal by rowDirection, hex id by withinRowDirection
 
 |                     | within: REARMOST (lower id) | within: FRONTMOST (higher id) |
 | ------------------- | --------------------------- | ----------------------------- |
-| **rows: REARMOST**  | Faramor, Cassadee, Galahad  | Himmel                        |
+| **rows: REARMOST**  | Faramor, Cassadee, Galahad  | Himmel, Niru                  |
 | **rows: FRONTMOST** | (valid, currently unused)   | Aliceth fallback, Hepler      |
 
 Options: `{ team, rowDirection, withinRowDirection?, maxDistance?, filter? }`. `maxDistance: 1` limits the scan to adjacent tiles; `filter` keeps only candidates whose id passes a predicate (class selection for Himmel, companion exclusion for Galahad).
@@ -103,7 +103,7 @@ onDeactivate: clearSkillTarget()
 Visual feedback options:
 
 - **Arrow color**: Via `targetingColorModifier` (e.g., Dunlingr, Aliceth)
-- **Tile border color**: Via `setTileColorModifier()` on the SkillManager (e.g., Reinier, Cassadee)
+- **Tile border color**: Via `setTileColorModifier()` on the SkillManager (e.g., Reinier, Evie)
 
 ## Adding New Targeting Skills
 
