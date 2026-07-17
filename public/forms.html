@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- Hidden twin of the contact form, published so form detection at deploy
+     registers it; the field names must match what ContactForm.vue submits.
+     Standalone page so only this one file carries a form. -->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="robots" content="noindex" />
+    <title>Contact form</title>
+  </head>
+  <body>
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <textarea name="message"></textarea>
+      <input name="bot-field" />
+    </form>
+  </body>
+</html>
