@@ -4,7 +4,6 @@ import { useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 
 interface Props {
-  showArrows: boolean
   showPerspective: boolean
   defaultSvgHeight: number
 }
@@ -30,12 +29,7 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 </script>
 
 <template>
-  <svg
-    v-if="showArrows"
-    class="arrow-layer"
-    :width="svgDimensions.width"
-    :height="svgDimensions.height"
-  >
+  <svg class="arrow-layer" :width="svgDimensions.width" :height="svgDimensions.height">
     <g :transform="layerTransform">
       <!-- Ally to Enemy arrows (teal) -->
       <GridArrow

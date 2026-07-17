@@ -59,15 +59,8 @@ const isGridTab = computed(() => activeTab.value === 'teams')
 // Display flags drive every board (global controls); the share link serializes them.
 // 3-2 "wrap" boards layout vs one row; serialized with the other display flags.
 const wrapBoards = ref(false)
-const {
-  showArrows,
-  showGridInfo,
-  showSkills,
-  showPerspective,
-  currentBreakpoint,
-  toFlags,
-  applyFlags,
-} = useDisplayFlags({ wrap: wrapBoards })
+const { showGridInfo, showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } =
+  useDisplayFlags({ wrap: wrapBoards })
 
 // At sheet widths (<= tablet) the roster is a pull-up sheet and boards place via
 // the cell-tap flow; on desktop the roster is a card and cells use the on-grid popup.
@@ -221,7 +214,6 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
           <TabView v-model="activeTab" :tabs="tabs" eager>
             <template #teams>
               <TeamsBoards
-                v-model:show-arrows="showArrows"
                 v-model:show-grid-info="showGridInfo"
                 v-model:show-perspective="showPerspective"
                 v-model:show-skills="showSkills"

@@ -150,7 +150,7 @@ GridContainer (Reusable grid wrapper)
     └── SkillTargeting (SVG overlay)
 ```
 
-GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view. Artifacts sit in purely-visual host cells (dashed hexes beside grid cells 1 and 45) that are excluded from the grid simulation. Skill-highlighted hexes render above elevated hexes to ensure skill borders are always visible. SkillTargeting renders above arrows for targeting skills like Silvina's First Strike.
+GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view. Artifacts sit in purely-visual host cells (dashed hexes beside grid cells 1 and 45) that are excluded from the grid simulation. Skill-highlighted hexes render above elevated hexes to ensure skill borders are always visible. SkillTargeting renders above arrows for targeting skills like Silvina's First Strike. GridArrows (closest-target arrows) is a debug-level visual, rendered only while the Arena's Debug tab is active.
 
 ### Utility Layer (`/src/utils/`)
 

@@ -64,7 +64,6 @@ applyMultiSize()
 watch(currentBreakpoint, applyMultiSize)
 
 const hasValidGrid = ref(false)
-const showArrows = ref(false)
 const showGridInfo = ref(false)
 const showPerspective = ref(false) // Default to flat view
 const showSkills = ref(true)
@@ -84,7 +83,6 @@ const restoreStateFromUrl = () => {
     // Apply display flags if present
     if (result.displayFlags) {
       showGridInfo.value = result.displayFlags.showGridInfo ?? false
-      showArrows.value = result.displayFlags.showArrows ?? false
       showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
       gridStore.teamView = result.displayFlags.teamView ?? false
@@ -150,7 +148,6 @@ const editLink = computed(() =>
             <GridContainer
               :context="ctx"
               :characters="gameDataStore.characters"
-              :show-arrows
               :show-grid-info
               :show-debug="false"
               :show-skills
@@ -164,7 +161,6 @@ const editLink = computed(() =>
           <GridContainer
             :context="activeContext"
             :characters="gameDataStore.characters"
-            :show-arrows
             :show-grid-info
             :show-debug="false"
             :show-skills
@@ -184,8 +180,6 @@ const editLink = computed(() =>
       </a>
     </div>
   </div>
-
-  <!-- Toast Container -->
 </template>
 
 <style scoped>

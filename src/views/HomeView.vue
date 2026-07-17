@@ -118,8 +118,7 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-const { showArrows, showGridInfo, showSkills, showPerspective, toFlags, applyFlags } =
-  useDisplayFlags()
+const { showGridInfo, showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
 
 const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
 
@@ -134,7 +133,6 @@ const mapEditorActive = computed(() => activeTab.value === 'mapEditor' && editor
 // Tile painting is incompatible with these display modes; force them off when the
 // editor turns on (not on Map-tab entry, so placing characters there keeps them).
 const resetForMapEditor = () => {
-  showArrows.value = false
   showGridInfo.value = false
   gridStore.teamView = false
 }
@@ -284,7 +282,6 @@ const handleResetMap = () => {
           <GridContainer
             :context="activeContext"
             :characters="gameDataStore.characters"
-            :show-arrows="showArrows"
             :show-grid-info="showGridInfo"
             :show-debug="showDebug"
             :show-skills="showSkills"
@@ -297,7 +294,6 @@ const handleResetMap = () => {
           />
           <TeamPowerPanel v-if="showGridInfo && !mapEditorActive" :context="activeContext" />
           <GridControls
-            v-model:show-arrows="showArrows"
             v-model:show-grid-info="showGridInfo"
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"

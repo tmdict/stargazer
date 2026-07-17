@@ -19,10 +19,9 @@ import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
-const { context, showArrows, showGridInfo, showSkills, showPerspective, tapMode } = defineProps<{
+const { context, showGridInfo, showSkills, showPerspective, tapMode } = defineProps<{
   context: GridContext
   characters: readonly CharacterType[]
-  showArrows: boolean
   showGridInfo: boolean
   showSkills: boolean
   showPerspective: boolean
@@ -71,7 +70,6 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
     <GridContainer
       :context
       :characters
-      :show-arrows
       :show-grid-info
       :show-debug="false"
       :show-skills
