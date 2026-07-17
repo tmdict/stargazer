@@ -13,7 +13,6 @@ import MapEditor from '@/components/MapEditor.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
-import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
 import { useArenaPersistence } from '@/composables/useGridPersistence'
@@ -351,7 +350,6 @@ const handleResetMap = () => {
     </DragDropProvider>
 
     <!-- Toast Container -->
-    <ToastContainer />
   </main>
 </template>
 

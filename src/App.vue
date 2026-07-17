@@ -6,11 +6,13 @@ import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
+import ContactForm from '@/components/ui/ContactForm.vue'
 import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import IconMail from '@/components/ui/IconMail.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import LanguageToggle from '@/components/ui/LanguageToggle.vue'
+import ToastContainer from '@/components/ui/ToastContainer.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
 import { useLocaleToggle } from '@/composables/useLocaleToggle'
@@ -21,6 +23,8 @@ import { splitLocalePath } from '@/utils/routeLocale'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
+const contactOpen = ref(false)
+const contactButton = ref<HTMLElement | null>(null)
 const i18n = useI18nStore()
 const route = useRoute()
 const toggleLocale = useLocaleToggle()
@@ -154,13 +158,17 @@ onUnmounted(() => {
           </a>
         </li>
         <li>
-          <a
-            href="https://chaldea.tmdict.com/sendMessage/"
-            class="icon-link"
+          <button
+            ref="contactButton"
+            type="button"
+            class="icon-link icon-button"
             :title="i18n.t('app.contact')"
+            :aria-label="i18n.t('app.contact')"
+            :aria-expanded="contactOpen"
+            @click="contactOpen = !contactOpen"
           >
             <IconMail />
-          </a>
+          </button>
         </li>
         <li>
           <LanguageToggle class="icon-link" />
@@ -176,6 +184,10 @@ onUnmounted(() => {
 
   <!-- About modal -->
   <AboutModal :show="showAboutModal" @close="showAboutModal = false" />
+
+  <ContactForm v-model:open="contactOpen" :trigger="contactButton" />
+
+  <ToastContainer />
 
   <!-- Global skill search overlay; renders nothing until opened -->
   <SkillSearchOverlay />

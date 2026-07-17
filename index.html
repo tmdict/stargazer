@@ -28,6 +28,14 @@
     <meta property="og:site_name" content="Stargazer" />
   </head>
   <body>
+    <!-- Netlify registers forms by scanning the deployed HTML; the live form is
+         rendered on demand by ContactForm.vue and submits these field names via
+         fetch, so this hidden twin is what makes detection work. -->
+    <form name="contact" data-netlify="true" netlify-honeypot="bot-field" hidden>
+      <input type="text" name="name" />
+      <textarea name="message"></textarea>
+      <input name="bot-field" />
+    </form>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>
