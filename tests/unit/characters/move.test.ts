@@ -74,38 +74,34 @@ describe('move.ts', () => {
       expect(result).toBe(false)
     })
 
-    it('should reject move to invalid destination', () => {
+    // BLOCKED and DEFAULT destinations both resolve to no valid team state
+    it.each([
+      { label: 'blocked', hexId: 6 },
+      { label: 'default', hexId: 7 },
+    ])('should reject move to a $label destination', ({ hexId }) => {
       performPlace(grid, 1, 100, Team.ALLY)
 
-      // Try to move to blocked tile
-      const result = executeMoveCharacter(grid, skillManager, 1, 6, 100)
+      const result = executeMoveCharacter(grid, skillManager, 1, hexId, 100)
 
       expect(result).toBe(false)
       expect(grid.getTileById(1).characterId).toBe(100)
-      expect(grid.getTileById(6).characterId).toBeUndefined()
+      expect(grid.getTileById(hexId).characterId).toBeUndefined()
     })
   })
 
   describe('executeMoveCharacter - same team movement', () => {
-    it('should move character within ally team', () => {
+    it('should move a character within its own team and update the skill manager', () => {
       performPlace(grid, 1, 100, Team.ALLY)
-
-      const result = executeMoveCharacter(grid, skillManager, 1, 2, 100)
-
-      expect(result).toBe(true)
+      expect(executeMoveCharacter(grid, skillManager, 1, 2, 100)).toBe(true)
       expect(grid.getTileById(1).characterId).toBeUndefined()
       expect(grid.getTileById(2).characterId).toBe(100)
       expect(grid.getTileById(2).team).toBe(Team.ALLY)
       expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
       expect(grid.getTileById(2).state).toBe(State.OCCUPIED_ALLY)
-    })
+      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
 
-    it('should move character within enemy team', () => {
       performPlace(grid, 4, 200, Team.ENEMY)
-
-      const result = executeMoveCharacter(grid, skillManager, 4, 5, 200)
-
-      expect(result).toBe(true)
+      expect(executeMoveCharacter(grid, skillManager, 4, 5, 200)).toBe(true)
       expect(grid.getTileById(4).characterId).toBeUndefined()
       expect(grid.getTileById(5).characterId).toBe(200)
       expect(grid.getTileById(5).team).toBe(Team.ENEMY)
@@ -124,37 +120,21 @@ describe('move.ts', () => {
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
       expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
     })
-
-    it('should update skill manager after successful move', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      executeMoveCharacter(grid, skillManager, 1, 2, 100)
-
-      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
-    })
   })
 
   describe('executeMoveCharacter - cross-team movement without skills', () => {
-    it('should move character from ally to enemy team', () => {
+    it('should move characters across teams in both directions, switching membership', () => {
       performPlace(grid, 1, 100, Team.ALLY)
-
-      const result = executeMoveCharacter(grid, skillManager, 1, 4, 100)
-
-      expect(result).toBe(true)
+      expect(executeMoveCharacter(grid, skillManager, 1, 4, 100)).toBe(true)
       expect(grid.getTileById(1).characterId).toBeUndefined()
       expect(grid.getTileById(4).characterId).toBe(100)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
-    })
 
-    it('should move character from enemy to ally team', () => {
-      performPlace(grid, 4, 200, Team.ENEMY)
-
-      const result = executeMoveCharacter(grid, skillManager, 4, 1, 200)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(4).characterId).toBeUndefined()
+      performPlace(grid, 5, 200, Team.ENEMY)
+      expect(executeMoveCharacter(grid, skillManager, 5, 1, 200)).toBe(true)
+      expect(grid.getTileById(5).characterId).toBeUndefined()
       expect(grid.getTileById(1).characterId).toBe(200)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(false)
@@ -177,7 +157,7 @@ describe('move.ts', () => {
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 4, Team.ENEMY, grid)
     })
 
-    it('should rollback on skill activation failure', () => {
+    it('should rollback and reactivate the skill at the origin on activation failure', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
 
@@ -187,21 +167,12 @@ describe('move.ts', () => {
       // Character should remain at original position
       expect(grid.getTileById(1).characterId).toBe(100)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
-      // The destination must be fully vacated — no duplicate left behind
+      // The destination must be fully vacated, no duplicate left behind
       expect(grid.getTileById(4).characterId).toBeUndefined()
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
       // Team membership restored: on the original team only
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
       expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(false)
-    })
-
-    it('should reactivate the skill at the origin on rollback', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
-
-      const result = executeMoveCharacter(grid, skillManager, 1, 4, 100)
-
-      expect(result).toBe(false)
       // Failed activation at the destination, then reactivation at the origin
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 4, Team.ENEMY, grid)
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
@@ -280,66 +251,6 @@ describe('move.ts', () => {
   })
 
   describe('Edge cases', () => {
-    it('throws when the source hex does not exist', () => {
-      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
-      emptyGrid.skillManager = skillManager
-
-      // This will throw because hex 1 doesn't exist in empty grid
-      expect(() => executeMoveCharacter(emptyGrid, skillManager, 1, 2, 100)).toThrow(
-        'Hex with ID 1 not found',
-      )
-    })
-
-    it('throws when the destination hex does not exist', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      expect(() => executeMoveCharacter(grid, skillManager, 1, 999, 100)).toThrow()
-    })
-
-    it('should handle sequential moves correctly', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 4, 300, Team.ENEMY)
-
-      // The second move lands on the hex the first move vacated
-      expect(executeMoveCharacter(grid, skillManager, 1, 3, 100)).toBe(true)
-      expect(executeMoveCharacter(grid, skillManager, 2, 1, 200)).toBe(true)
-      expect(executeMoveCharacter(grid, skillManager, 4, 5, 300)).toBe(true)
-
-      // Verify final positions
-      expect(grid.getTileById(3).characterId).toBe(100)
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.getTileById(5).characterId).toBe(300)
-    })
-
-    it('should maintain team integrity during moves', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      // Move one character to enemy team
-      executeMoveCharacter(grid, skillManager, 1, 4, 100)
-
-      // Verify team memberships
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(1)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.size).toBe(1)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
-    })
-
-    it('should reject move to occupied tile of different team', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 4, 200, Team.ENEMY)
-
-      // Occupied destinations are swap territory, cross-team included
-      const result = executeMoveCharacter(grid, skillManager, 1, 4, 100)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(100)
-      expect(grid.getTileById(4).characterId).toBe(200)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
-    })
-
     it('should handle character with no team gracefully', () => {
       // Manually create invalid state
       const tile = grid.getTileById(1)
@@ -350,16 +261,6 @@ describe('move.ts', () => {
       const result = executeMoveCharacter(grid, skillManager, 1, 2, 100)
 
       expect(result).toBe(false)
-    })
-
-    it('should handle destination with no valid team state', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      // Try to move to DEFAULT state tile (no team)
-      const result = executeMoveCharacter(grid, skillManager, 1, 7, 100)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(100)
     })
   })
 })

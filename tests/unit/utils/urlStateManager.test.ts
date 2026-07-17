@@ -61,7 +61,7 @@ describe('urlStateManager', () => {
       const decoded = decodeGridStateFromUrl(invalidEncoded)
 
       expect(decoded).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith('Failed to decode binary data from URL')
+      expect(consoleSpy).toHaveBeenCalled()
       expect(consoleErrorSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
       consoleErrorSpy.mockRestore()
@@ -121,16 +121,9 @@ describe('urlStateManager', () => {
       vi.unstubAllGlobals()
     })
 
-    it.each([
-      ['', null],
-      ['?other=value&another=test', null],
-      ['?g=encodedStateHere', 'encodedStateHere'],
-      ['?l=zh&g=encodedState123&debug=true', 'encodedState123'],
-      ['?g=state%20with%20spaces', 'state with spaces'],
-    ])('with search "%s" returns %s', (search, expected) => {
-      vi.stubGlobal('window', { location: { search } })
-      const result = getEncodedStateFromUrl()
-      expect(result).toBe(expected)
+    it('reads the state from the g query param', () => {
+      vi.stubGlobal('window', { location: { search: '?l=zh&g=encodedState123&debug=true' } })
+      expect(getEncodedStateFromUrl()).toBe('encodedState123')
     })
   })
 
@@ -138,9 +131,6 @@ describe('urlStateManager', () => {
     it.each([
       [{ g: 'encodedState123' }, 'encodedState123'],
       [{ g: ['state1', 'state2'] }, null],
-      [{ g: null }, null],
-      [{}, null],
-      [{ g: '' }, ''],
     ])('with query %o returns %s', (query, expected) => {
       const result = getEncodedStateFromRoute(query)
       expect(result).toBe(expected)

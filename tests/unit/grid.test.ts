@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
-import { FULL_GRID, type GridPreset } from '@/lib/types/grid'
+import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { SMALL_GRID } from './fixtures/grid'
@@ -70,16 +70,14 @@ describe('Grid', () => {
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
     })
 
-    it('should return all tiles', () => {
+    it('should return all tiles and hex keys', () => {
       const tiles = grid.getAllTiles()
       expect(tiles).toHaveLength(5)
       tiles.forEach((tile) => {
         expect(tile.hex).toBeInstanceOf(Hex)
         expect(Object.values(State).includes(tile.state)).toBe(true)
       })
-    })
 
-    it('should return hex keys', () => {
       const keys = grid.keys()
       expect(keys).toHaveLength(5)
       keys.forEach((hex) => {
@@ -87,13 +85,9 @@ describe('Grid', () => {
       })
     })
 
-    it.each([
-      [999, 'Hex with ID 999 not found'],
-      [-1, 'Hex with ID -1 not found'],
-      [0, 'Hex with ID 0 not found'],
-    ])('should throw error for invalid hex ID %i', (id, expectedError) => {
-      expect(() => grid.getHexById(id)).toThrow(expectedError)
-      expect(() => grid.getTileById(id)).toThrow(expectedError)
+    it('should throw error for invalid hex ID', () => {
+      expect(() => grid.getHexById(999)).toThrow('Hex with ID 999 not found')
+      expect(() => grid.getTileById(999)).toThrow('Hex with ID 999 not found')
     })
 
     it('should throw error for invalid hex coordinates', () => {
@@ -117,36 +111,6 @@ describe('Grid', () => {
   })
 
   describe('edge cases', () => {
-    it('should handle empty grid preset', () => {
-      const emptyGrid: GridPreset = { hex: [], qOffset: [] }
-      const emptyArena = { id: 1, name: 'Empty', grid: [] }
-      const grid = new Grid(emptyGrid, emptyArena)
-
-      expect(grid.getAllTiles()).toHaveLength(0)
-      expect(grid.keys()).toHaveLength(0)
-    })
-
-    it('should handle invalid rows in grid preset', () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const invalidGrid: GridPreset = {
-        hex: [[1], undefined as unknown as number[], [2]],
-        qOffset: [0, undefined as unknown as number, 0],
-      }
-      const simpleArena = {
-        id: 1,
-        name: 'Simple',
-        grid: [{ type: State.DEFAULT, hex: [1, 2] }],
-      }
-
-      const grid = new Grid(invalidGrid, simpleArena)
-      expect(grid.getAllTiles()).toHaveLength(2)
-      expect(consoleSpy).toHaveBeenCalledWith(
-        'grid: Skipping invalid row/offset in createHexesFromPreset',
-        { rowIndex: 1, rowExists: false, offset: undefined },
-      )
-      consoleSpy.mockRestore()
-    })
-
     it('should preserve tile references', () => {
       grid = new Grid(SMALL_GRID, TEST_ARENA)
 

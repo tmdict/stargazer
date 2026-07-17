@@ -18,12 +18,9 @@ describe('skill', () => {
   })
 
   describe('Skill Registry', () => {
-    it('returns undefined for unregistered characters', () => {
+    it('reports no skill for unregistered characters', () => {
       expect(getCharacterSkill(999)).toBeUndefined()
       expect(getCharacterSkill(0)).toBeUndefined()
-    })
-
-    it('correctly identifies characters without skills', () => {
       expect(hasSkill(999)).toBe(false)
       expect(hasSkill(0)).toBe(false)
     })
@@ -178,23 +175,13 @@ describe('skill', () => {
         }
 
         skillManager.setSkillTarget(100, Team.ALLY, targetInfo)
-        const retrieved = skillManager.getSkillTarget(100, Team.ALLY)
+        expect(skillManager.getSkillTarget(100, Team.ALLY)).toEqual(targetInfo)
 
-        expect(retrieved).toEqual(targetInfo)
+        skillManager.setSkillTarget(150, Team.ENEMY, { targetHexId: 2, targetCharacterId: 300 })
+        expect(skillManager.getAllSkillTargets().size).toBe(2)
 
         skillManager.clearSkillTarget(100, Team.ALLY)
         expect(skillManager.getSkillTarget(100, Team.ALLY)).toBeUndefined()
-      })
-
-      it('tracks multiple skill targets', () => {
-        const target1 = { targetHexId: 5, targetCharacterId: 200 }
-        const target2 = { targetHexId: 2, targetCharacterId: 300 }
-
-        skillManager.setSkillTarget(100, Team.ALLY, target1)
-        skillManager.setSkillTarget(150, Team.ENEMY, target2)
-
-        const allTargets = skillManager.getAllSkillTargets()
-        expect(allTargets.size).toBe(2)
       })
 
       it('increments version on target changes', () => {

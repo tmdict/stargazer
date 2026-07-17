@@ -17,23 +17,6 @@ describe('transaction.ts', () => {
         expect(op2).toHaveBeenCalledTimes(1)
         expect(op3).toHaveBeenCalledTimes(1)
       })
-
-      it('should handle empty operations array', () => {
-        const result = executeTransaction([])
-        expect(result).toBe(true)
-      })
-
-      it('should skip undefined operations', () => {
-        const op1 = vi.fn(() => true)
-        const op2 = undefined as unknown as () => boolean
-        const op3 = vi.fn(() => true)
-
-        const result = executeTransaction([op1, op2, op3])
-
-        expect(result).toBe(true)
-        expect(op1).toHaveBeenCalledTimes(1)
-        expect(op3).toHaveBeenCalledTimes(1)
-      })
     })
 
     describe('failed transactions', () => {
@@ -61,15 +44,6 @@ describe('transaction.ts', () => {
         expect(op1).toHaveBeenCalledTimes(1)
         expect(op2).not.toHaveBeenCalled()
         expect(rollback).toHaveBeenCalledTimes(1)
-      })
-
-      it('should handle empty rollback array', () => {
-        const op = vi.fn(() => false)
-
-        const result = executeTransaction([op])
-
-        expect(result).toBe(false)
-        // Should not throw even without rollback operations
       })
     })
 

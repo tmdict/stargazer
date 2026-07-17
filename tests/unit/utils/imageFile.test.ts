@@ -12,10 +12,6 @@ describe('imageFilesFromDrop', () => {
     } as unknown as DragEvent
     expect(imageFilesFromDrop(event).map((f) => f.name)).toEqual(['a.png'])
   })
-
-  it('returns [] when there is no dataTransfer', () => {
-    expect(imageFilesFromDrop({} as DragEvent)).toEqual([])
-  })
 })
 
 describe('imageFilesFromPaste', () => {
@@ -32,10 +28,6 @@ describe('imageFilesFromPaste', () => {
     } as unknown as ClipboardEvent
     expect(imageFilesFromPaste(event)).toEqual([img])
   })
-
-  it('returns [] when there is no clipboardData', () => {
-    expect(imageFilesFromPaste({} as ClipboardEvent)).toEqual([])
-  })
 })
 
 describe('imageFilesFromInput', () => {
@@ -45,8 +37,10 @@ describe('imageFilesFromInput', () => {
     } as unknown as Event
     expect(imageFilesFromInput(event).map((f) => f.name)).toEqual(['a.jpg'])
   })
+})
 
-  it('returns [] when the input has no files', () => {
-    expect(imageFilesFromInput({ target: { files: null } } as unknown as Event)).toEqual([])
-  })
+it('returns [] when the intake event carries no dataTransfer, clipboardData, or files', () => {
+  expect(imageFilesFromDrop({} as DragEvent)).toEqual([])
+  expect(imageFilesFromPaste({} as ClipboardEvent)).toEqual([])
+  expect(imageFilesFromInput({ target: { files: null } } as unknown as Event)).toEqual([])
 })

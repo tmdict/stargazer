@@ -378,8 +378,8 @@ export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, Skill
   return promise
 }
 
-/** Sync read of a whole locale; null until loadSkillLocale has resolved.
- * en/zh are always warm (eager). */
+/** Sync read of a language's hero dict; null until loadSkillLocale has
+ * resolved. en/zh are always warm (eager). */
 export function getSkillLocaleDict(lang: SkillLocale): Record<string, SkillLocaleFile> | null {
   if (isAppLocale(lang)) return loadSkillLocales()[lang]
   return warmedSkillLocales.get(lang) ?? null

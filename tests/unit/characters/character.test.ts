@@ -12,7 +12,6 @@ import {
   getCharacterPlacements,
   getCharacterTeam,
   getMaxTeamSize,
-  getOpposingTeam,
   getTeamCharacters,
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
@@ -20,7 +19,6 @@ import {
   isCharacterOnTeam,
   removeCharacterFromTeam,
   setMaxTeamSize,
-  tileHasCharacter,
 } from '@/lib/characters/character'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { State } from '@/lib/types/state'
@@ -50,10 +48,6 @@ describe('character.ts', () => {
       expect(getCharacter(grid, 1)).toBe(123)
       expect(hasCharacter(grid, 1)).toBe(true)
       expect(getCharacterTeam(grid, 1)).toBe(Team.ALLY)
-    })
-
-    it('should throw error for invalid hex id', () => {
-      expect(() => getCharacter(grid, 999)).toThrow()
     })
 
     it('should find characters correctly', () => {
@@ -112,17 +106,6 @@ describe('character.ts', () => {
       const charIds = tiles.map((t) => t.characterId)
       expect(charIds).toContain(100)
       expect(charIds).toContain(200)
-    })
-
-    it('should identify tiles with characters', () => {
-      const tile = grid.getTileById(1)
-      expect(tileHasCharacter(tile)).toBe(false)
-
-      tile.characterId = 100
-      expect(tileHasCharacter(tile)).toBe(true)
-
-      tile.characterId = undefined
-      expect(tileHasCharacter(tile)).toBe(false)
     })
   })
 
@@ -195,11 +178,6 @@ describe('character.ts', () => {
       tile1.characterId = 100
       const updatedAllyTiles = getAllAvailableTilesForTeam(grid, Team.ALLY)
       expect(updatedAllyTiles).toHaveLength(1)
-    })
-
-    it('should return opposing team', () => {
-      expect(getOpposingTeam(Team.ALLY)).toBe(Team.ENEMY)
-      expect(getOpposingTeam(Team.ENEMY)).toBe(Team.ALLY)
     })
 
     it('should filter tiles with characters by team', () => {

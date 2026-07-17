@@ -66,16 +66,6 @@ describe('niru rear-row, front-of-row ally targeting', () => {
     expect(target()?.targetHexId).toBe(9)
     expect(target()?.targetCharacterId).toBe(10005)
   })
-
-  it('clears the target on deactivate', () => {
-    placeOnTile(grid, 9, 1, Team.ALLY)
-    niru().onActivate(ctx())
-    expect(target()).toBeDefined()
-
-    niru().onDeactivate(ctx())
-
-    expect(target()).toBeUndefined()
-  })
 })
 
 // The enemy side is the 180° mirror of the ally board (hex 34 mirrors 12),

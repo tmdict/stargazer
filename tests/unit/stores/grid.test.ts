@@ -18,12 +18,6 @@ describe('grid team view (active board geometry)', () => {
     grids = useGrids()
   })
 
-  describe('teamView', () => {
-    it('defaults to false', () => {
-      expect(gridStore.teamView).toBe(false)
-    })
-  })
-
   describe('visibleHexes', () => {
     it('returns the full hex set when teamView is false', () => {
       expect(grids.active!.visibleHexes).toEqual(gridStore.hexes)

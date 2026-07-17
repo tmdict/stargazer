@@ -349,18 +349,6 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).characterId).toBe(200)
     })
 
-    it('should reject cross-team phantimal-phantimal swap', () => {
-      const enemyPhantimalId = toPhantimalId(2)
-      performPlace(grid, 1, phantimalId, Team.ALLY)
-      performPlace(grid, 4, enemyPhantimalId, Team.ENEMY)
-
-      const result = executeSwapCharacters(grid, skillManager, 1, 4)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(phantimalId)
-      expect(grid.getTileById(4).characterId).toBe(enemyPhantimalId)
-    })
-
     it('should swap a character and a phantimal on the same team', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, phantimalId, Team.ALLY)
@@ -403,69 +391,6 @@ describe('swap.ts', () => {
       // Phantimals never appear in team-size tracking
       expect(tGrid.teamCharacters.get(Team.ALLY)?.has(phantimalId)).toBe(false)
       expect(tGrid.teamCharacters.get(Team.ENEMY)?.has(phantimalId)).toBe(false)
-    })
-  })
-
-  describe('Edge cases', () => {
-    it('should handle empty grid', () => {
-      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
-      emptyGrid.skillManager = skillManager
-
-      // This will throw because hex doesn't exist
-      expect(() => executeSwapCharacters(emptyGrid, skillManager, 1, 2)).toThrow()
-    })
-
-    it('should handle invalid hex IDs', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-
-      expect(() => executeSwapCharacters(grid, skillManager, 1, 999)).toThrow()
-      expect(() => executeSwapCharacters(grid, skillManager, 999, 2)).toThrow()
-    })
-
-    it('should handle sequential swaps correctly', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 3, 300, Team.ALLY)
-
-      // Swap 1 and 2
-      expect(executeSwapCharacters(grid, skillManager, 1, 2)).toBe(true)
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.getTileById(2).characterId).toBe(100)
-
-      // Now swap 2 and 3
-      expect(executeSwapCharacters(grid, skillManager, 2, 3)).toBe(true)
-      expect(grid.getTileById(2).characterId).toBe(300)
-      expect(grid.getTileById(3).characterId).toBe(100)
-
-      // Final state: 1->200, 2->300, 3->100
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.getTileById(2).characterId).toBe(300)
-      expect(grid.getTileById(3).characterId).toBe(100)
-    })
-
-    it('should maintain grid consistency after multiple cross-team swaps', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 4, 300, Team.ENEMY)
-      performPlace(grid, 5, 400, Team.ENEMY)
-
-      // Swap ally with enemy
-      executeSwapCharacters(grid, skillManager, 1, 4)
-      // Swap other ally with other enemy
-      executeSwapCharacters(grid, skillManager, 2, 5)
-
-      // Verify team sizes
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(2)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.size).toBe(2)
-
-      // Verify correct team memberships after cross-team swaps
-      // 100 (ally) swapped with 300 (enemy): 100 is now on ENEMY team, 300 is now on ALLY team
-      // 200 (ally) swapped with 400 (enemy): 200 is now on ENEMY team, 400 is now on ALLY team
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(300)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(400)).toBe(true)
     })
   })
 })

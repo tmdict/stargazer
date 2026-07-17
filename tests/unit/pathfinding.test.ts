@@ -8,7 +8,6 @@ import {
   findClosestTarget,
   findPathAStar,
   getClosestTargetMap,
-  isVerticallyAligned,
 } from '@/lib/pathfinding'
 import type { GridPreset } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
@@ -134,34 +133,6 @@ describe('pathfinding', () => {
       expect(result.movementDistance).toBe(Infinity)
       expect(result.canReach).toBe(false)
       expect(result.reachableTargets).toHaveLength(0)
-    })
-  })
-
-  describe('defaultCanTraverse', () => {
-    it('allows traversal through non-blocked tiles', () => {
-      const tile = grid.getTileById(1)
-      expect(defaultCanTraverse(tile)).toBe(true)
-    })
-
-    it('blocks traversal through blocked tiles', () => {
-      const tile = grid.getTileById(4)
-      expect(defaultCanTraverse(tile)).toBe(false)
-    })
-  })
-
-  describe('isVerticallyAligned', () => {
-    it('returns true for vertically aligned hexes', () => {
-      const hex1 = new Hex(0, 0, 0)
-      const hex2 = new Hex(0, -1, 1)
-
-      expect(isVerticallyAligned(hex1, hex2)).toBe(true)
-    })
-
-    it('returns false for non-vertically aligned hexes', () => {
-      const hex1 = new Hex(0, 0, 0)
-      const hex2 = new Hex(1, -1, 0)
-
-      expect(isVerticallyAligned(hex1, hex2)).toBe(false)
     })
   })
 

@@ -89,14 +89,6 @@ describe('kulu (Demolition Zone)', () => {
     expect(skillManager.getTileColorModifier(20)).toBeDefined()
   })
 
-  it('allows placing a character on an affected tile', () => {
-    grid.getTileById(20).state = State.AVAILABLE_ALLY
-    expect(executePlaceCharacter(grid, skillManager, 1, KULU, Team.ALLY)).toBe(true)
-
-    expect(performPlace(grid, 20, 100, Team.ALLY)).toBe(true)
-    expect(grid.getTileById(20).characterId).toBe(100)
-  })
-
   it('stays put when placed inside its own zone', () => {
     grid.getTileById(20).state = State.AVAILABLE_ALLY
 

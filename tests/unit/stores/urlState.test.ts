@@ -210,7 +210,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(result).toEqual({ success: false, error: 'No state provided' })
   })
 
-  it('rejects a garbage encoded string and leaves existing state untouched', () => {
+  it('rejects garbage encoded strings and leaves existing state untouched', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {})
     vi.spyOn(console, 'warn').mockImplementation(() => {})
 
@@ -219,29 +219,17 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     stores.artifact.placeArtifact(3, Team.ALLY)
     const before = snapshotTiles(stores.grid)
 
-    // '!' and '$' are outside the URL-safe alphabet, so decoding fails outright.
-    const result = stores.urlState.restoreFromEncodedState('!!!not-an-encoded-state$$$')
+    // '!' and '$' are outside the URL-safe alphabet, so decoding fails outright;
+    // 'A' is inside the alphabet but too short to decode to a single byte.
+    for (const garbage of ['!!!not-an-encoded-state$$$', 'A']) {
+      const result = stores.urlState.restoreFromEncodedState(garbage)
 
-    expect(result.success).toBe(false)
-    expect(result.error).toBe('Invalid state data')
-    expect(result.displayFlags).toBeUndefined()
-    expect(snapshotTiles(stores.grid)).toEqual(before)
+      expect(result.success).toBe(false)
+      expect(result.error).toBe('Invalid state data')
+      expect(result.displayFlags).toBeUndefined()
+      expect(snapshotTiles(stores.grid)).toEqual(before)
+    }
     expect(stores.artifact.allyArtifactId).toBe(3)
-  })
-
-  it('rejects valid-alphabet garbage that decodes to zero bytes, leaving state untouched', () => {
-    vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-    const stores = createStores()
-    expect(stores.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
-    const before = snapshotTiles(stores.grid)
-
-    // 'A' is inside the URL-safe alphabet but too short to decode to any bytes
-    const result = stores.urlState.restoreFromEncodedState('A')
-
-    expect(result.success).toBe(false)
-    expect(result.error).toBe('Invalid state data')
-    expect(snapshotTiles(stores.grid)).toEqual(before)
   })
 
   it('clears pre-existing state before applying the encoded state', () => {

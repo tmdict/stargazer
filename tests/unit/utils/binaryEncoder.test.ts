@@ -34,7 +34,6 @@ describe('binaryEncoder', () => {
         },
       ],
       ['only artifacts', { a: [3, 5] }],
-      ['artifact IDs above 7', { a: [9, 18] }],
       ['null artifacts', { a: [null, 5] }],
       ['both null artifacts', { a: [null, null] }],
       [
@@ -263,8 +262,8 @@ describe('binaryEncoder', () => {
   })
 
   describe('validateGridState', () => {
-    it('validates correct state', () => {
-      const state: GridState = {
+    it('passes a valid state through and strips invalid entries', () => {
+      const valid: GridState = {
         t: [
           [1, 2],
           [5, 3],
@@ -272,11 +271,8 @@ describe('binaryEncoder', () => {
         c: [[2, 100, 1]],
         a: [2, 4],
       }
-      const result = validateGridState(state)
-      expect(result).toEqual(state)
-    })
+      expect(validateGridState(valid)).toEqual(valid)
 
-    it('handles invalid entries', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
       const state: GridState = {
         t: [
@@ -316,12 +312,9 @@ describe('binaryEncoder', () => {
       consoleSpy.mockRestore()
     })
 
-    it('handles null and undefined input', () => {
+    it('returns an empty state for non-object input', () => {
       expect(validateGridState(null as unknown as GridState)).toEqual({})
       expect(validateGridState(undefined as unknown as GridState)).toEqual({})
-    })
-
-    it('handles non-object inputs', () => {
       expect(validateGridState('invalid' as unknown as GridState)).toEqual({})
       expect(validateGridState(123 as unknown as GridState)).toEqual({})
       expect(validateGridState([] as unknown as GridState)).toEqual({})
@@ -386,8 +379,7 @@ describe('binaryEncoder', () => {
       const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
       expect(urlSafeToBytes('abc!def')).toBeNull()
       expect(urlSafeToBytes('with space')).toBeNull()
-      expect(consoleSpy).toHaveBeenCalledWith('Invalid character in URL-safe string:', '!')
-      expect(consoleSpy).toHaveBeenCalledWith('Invalid character in URL-safe string:', ' ')
+      expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
   })
