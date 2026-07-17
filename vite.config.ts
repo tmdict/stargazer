@@ -41,7 +41,9 @@ function getSSGRoutes(): string[] {
       throw new Error(`[ssg] missing skill locale dir "${code}"; run npm run import:skills`)
     }
     readdirSync(dir)
-      .filter((f) => f.endsWith('.json'))
+      // Underscore-prefixed files are per-language data (the `_keywords`
+      // glossary), not hero pages.
+      .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
       .sort()
       .forEach((f) => routes.push(`/${code}/skill/${f.replace(/\.json$/, '')}`))
   }
@@ -63,7 +65,11 @@ function extractContentDescription(html: string): string | null {
     .map((m) =>
       m[1]
         .replace(/<[^>]+>/g, '') // Strip HTML tags
-        .replace(/\[\[(.+?)\]\]/g, '$1') // Strip [[]] skill markers (mirrors HIGHLIGHT_RE in src/utils/textHighlight.ts)
+        // Strip [[]] skill markers, dropping a keyword token's `|key` suffix
+        // (mirrors HIGHLIGHT_RE + splitHighlightToken in src/utils/textHighlight.ts)
+        .replace(/\[\[(.+?)\]\]/g, (_, inner: string) =>
+          inner.replace(/\|[A-Za-z][A-Za-z0-9_]*$/, ''),
+        )
         .replace(/\s+/g, ' ')
         .trim(),
     )

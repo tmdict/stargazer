@@ -1,8 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 
 interface Props {
-  targetElement: HTMLElement
+  // Only read via getBoundingClientRect, so SVG triggers (icon components)
+  // anchor as well as HTML ones.
+  targetElement: Element
   // Visual variants
   variant: 'simple' | 'detailed'
   // Content props for simple text mode
@@ -57,6 +59,10 @@ const updatePosition = () => {
 
   position.value = { x, y }
 }
+
+// Callers may retarget a mounted instance (e.g. hovering across keyword
+// spans); flush post so the measurement sees the re-rendered content.
+watch(() => props.targetElement, updatePosition, { flush: 'post' })
 
 onMounted(() => {
   updatePosition()

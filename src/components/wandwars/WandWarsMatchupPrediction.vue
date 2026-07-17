@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useI18nStore } from '@/stores/i18n'
 import { formatNoteHtml, formatPercent, joinLocale } from '@/wandwars/formatting'
 import type { AggregatePrediction, ModelPrediction } from '@/wandwars/prediction/recommend'
@@ -16,28 +17,34 @@ defineProps<{
 
 const i18n = useI18nStore()
 
-// Confidence-badge tooltip: shared between aggregate and per-model badges.
-const confidenceTooltipText = ref<string>('')
-const confidenceTooltipTarget = ref<HTMLElement | null>(null)
+// Confidence-badge tooltip, shared between the aggregate and per-model
+// badges; the payload is the resolved text.
+const {
+  anchor: confidenceTipAnchor,
+  payload: confidenceTipText,
+  hoverOpen: confidenceTipOpen,
+  hoverClose: confidenceTipClose,
+  toggle: confidenceTipToggle,
+  onTouchStart: confidenceTipTouchStart,
+} = useInfoTip<string>()
 
-function showConfidenceTooltip(
+function confidenceTipFor(
   scope: 'aggregate' | { modelId: string },
   level: 'high' | 'medium' | 'low',
-  event: MouseEvent,
-) {
+): string {
   const keyPrefix = scope === 'aggregate' ? 'aggregate' : scope.modelId
-  confidenceTooltipText.value = i18n.t(`wandwars.messages/confidence-${keyPrefix}-${level}`)
-  confidenceTooltipTarget.value = event.currentTarget as HTMLElement
-}
-
-function hideConfidenceTooltip() {
-  confidenceTooltipText.value = ''
-  confidenceTooltipTarget.value = null
+  return i18n.t(`wandwars.messages/confidence-${keyPrefix}-${level}`)
 }
 
 // Per-model description tooltip (info icon next to each model title).
-const tooltipModelId = ref<string | null>(null)
-const tooltipTarget = ref<HTMLElement | null>(null)
+const {
+  anchor: modelTipAnchor,
+  payload: modelTipId,
+  hoverOpen: modelTipOpen,
+  hoverClose: modelTipClose,
+  toggle: modelTipToggle,
+  onTouchStart: modelTipTouchStart,
+} = useInfoTip<string>()
 
 const modelDescriptions = computed<Record<string, string>>(() => ({
   'popular-pick': i18n.t('wandwars.messages/tooltip-model-popular-pick'),
@@ -45,16 +52,6 @@ const modelDescriptions = computed<Record<string, string>>(() => ({
   'bradley-terry': i18n.t('wandwars.messages/tooltip-model-bradley-terry'),
   'adaptive-ml': i18n.t('wandwars.messages/tooltip-model-adaptive-ml'),
 }))
-
-function showModelTooltip(modelId: string, event: MouseEvent) {
-  tooltipModelId.value = modelId
-  tooltipTarget.value = event.currentTarget as HTMLElement
-}
-
-function hideModelTooltip() {
-  tooltipModelId.value = null
-  tooltipTarget.value = null
-}
 
 function modelTabLabel(id: string): string {
   if (id === 'composite') return joinLocale(i18n.t('wandwars.hero'), i18n.t('wandwars.synergy'))
@@ -73,8 +70,17 @@ function modelTabLabel(id: string): string {
         <h3 class="matchup-title">{{ i18n.t('wandwars.matchup-prediction') }}</h3>
         <span
           :class="['confidence-badge', aggregatePrediction.confidence]"
-          @mouseenter="showConfidenceTooltip('aggregate', aggregatePrediction.confidence, $event)"
-          @mouseleave="hideConfidenceTooltip"
+          @mouseenter="
+            confidenceTipOpen($event, confidenceTipFor('aggregate', aggregatePrediction.confidence))
+          "
+          @mouseleave="confidenceTipClose"
+          @click="
+            confidenceTipToggle(
+              $event,
+              confidenceTipFor('aggregate', aggregatePrediction.confidence),
+            )
+          "
+          @touchstart.passive="confidenceTipTouchStart"
         >
           {{ i18n.t(`wandwars.${aggregatePrediction.confidence}-confidence`) }}
         </span>
@@ -133,15 +139,27 @@ function modelTabLabel(id: string): string {
         <IconInfo
           class="model-info-icon"
           :size="14"
-          @mouseenter="showModelTooltip(pred.id, $event)"
-          @mouseleave="hideModelTooltip"
+          @mouseenter="modelTipOpen($event, pred.id)"
+          @mouseleave="modelTipClose"
+          @click="modelTipToggle($event, pred.id)"
+          @touchstart.passive="modelTipTouchStart"
         />
         <span
           :class="['confidence-badge', pred.prediction.confidence]"
           @mouseenter="
-            showConfidenceTooltip({ modelId: pred.id }, pred.prediction.confidence, $event)
+            confidenceTipOpen(
+              $event,
+              confidenceTipFor({ modelId: pred.id }, pred.prediction.confidence),
+            )
           "
-          @mouseleave="hideConfidenceTooltip"
+          @mouseleave="confidenceTipClose"
+          @click="
+            confidenceTipToggle(
+              $event,
+              confidenceTipFor({ modelId: pred.id }, pred.prediction.confidence),
+            )
+          "
+          @touchstart.passive="confidenceTipTouchStart"
         >
           {{ i18n.t(`wandwars.${pred.prediction.confidence}-confidence`) }}
         </span>
@@ -170,20 +188,23 @@ function modelTabLabel(id: string): string {
 
     <Teleport to="body">
       <TooltipPopup
-        v-if="tooltipModelId && tooltipTarget"
-        :target-element="tooltipTarget"
+        v-if="modelTipAnchor && modelTipId"
+        :target-element="modelTipAnchor"
         variant="detailed"
-        :text="modelDescriptions[tooltipModelId]"
-        :max-width="'260px'"
-      />
+        max-width="260px"
+      >
+        <template #content>
+          <div class="matchup-tip">{{ modelDescriptions[modelTipId] }}</div>
+        </template>
+      </TooltipPopup>
       <TooltipPopup
-        v-if="confidenceTooltipText && confidenceTooltipTarget"
-        :target-element="confidenceTooltipTarget"
+        v-if="confidenceTipAnchor && confidenceTipText"
+        :target-element="confidenceTipAnchor"
         variant="detailed"
         max-width="300px"
       >
         <template #content>
-          <div class="confidence-tooltip">{{ confidenceTooltipText }}</div>
+          <div class="matchup-tip">{{ confidenceTipText }}</div>
         </template>
       </TooltipPopup>
     </Teleport>
@@ -254,7 +275,7 @@ function modelTabLabel(id: string): string {
   cursor: help;
 }
 
-.confidence-tooltip {
+.matchup-tip {
   line-height: 1.4;
   font-size: 0.85rem;
 }

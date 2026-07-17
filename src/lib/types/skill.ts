@@ -35,3 +35,9 @@ export type SkillLocaleFile = {
   _hero?: { name: string }
   _terms?: { ultimate: string; ex: string }
 } & Partial<Record<SlotKey, SkillLocaleSlot>>
+
+// On-disk shape of src/locales/skill/<lang>/_keywords.json: glossary key →
+// tooltip text in that language, resolving the `[[label|key]]` tokens in slot
+// text. Lives beside the hero files so each language chunk carries its own
+// glossary; the underscore keeps it out of the hero-slug namespace.
+export type SkillKeywords = Record<string, string>

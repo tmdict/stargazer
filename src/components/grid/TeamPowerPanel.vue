@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import IconReset from '@/components/ui/IconReset.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridContext } from '@/composables/useGridContext'
-import { useTouchDetection } from '@/composables/useTouchDetection'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { getTilesWithCharactersByTeam, isBaseHeroId } from '@/lib/characters/character'
 import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
@@ -121,22 +121,18 @@ const formatRivalryStat = (stat: number): string => {
 }
 
 // Track the hovered side, not its value, so the tooltip text stays live if the stat
-// flips sign while the label is hovered. Touch-suppressed like the roster tooltips.
-const { isTouchDevice } = useTouchDetection()
-const hoveredStatEl = ref<HTMLElement | null>(null)
-const hoveredTeam = ref<Team | null>(null)
+// flips sign while the label is hovered.
+const {
+  anchor: hoveredStatEl,
+  payload: hoveredTeam,
+  hoverOpen: onStatEnter,
+  hoverClose: onStatLeave,
+  toggle: onStatToggle,
+  onTouchStart: onStatTouchStart,
+} = useInfoTip<Team>()
 const hoveredStat = computed(
   () => sides.value.find((side) => side.team === hoveredTeam.value)?.rivalryStat ?? 0,
 )
-const onStatEnter = (event: MouseEvent, team: Team): void => {
-  if (isTouchDevice.value) return
-  hoveredStatEl.value = event.currentTarget as HTMLElement
-  hoveredTeam.value = team
-}
-const onStatLeave = (): void => {
-  hoveredStatEl.value = null
-  hoveredTeam.value = null
-}
 </script>
 
 <template>
@@ -149,6 +145,8 @@ const onStatLeave = (): void => {
             class="stat-label"
             @mouseenter="onStatEnter($event, side.team)"
             @mouseleave="onStatLeave"
+            @click="onStatToggle($event, side.team)"
+            @touchstart.passive="onStatTouchStart"
           >
             {{ rivalryStatName(side.rivalryStat) }}
           </span>
@@ -277,8 +275,7 @@ const onStatLeave = (): void => {
   cursor: help;
 }
 /* Mobile: the caption would crowd the header and shove the +1/reset buttons to
-   the block's far side; the number alone carries the stat (the caption's
-   tooltip is touch-suppressed anyway). */
+   the block's far side; the number alone carries the stat. */
 @media (max-width: 768px) {
   .stat-label {
     display: none;

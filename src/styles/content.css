@@ -92,6 +92,15 @@
   color: var(--color-accent);
 }
 
+/* Glossary keyword (a [[label|key]] token): the underline signals the tooltip
+   SkillKeywordTooltip drives via the span's data-kw key. */
+.skill-keyword {
+  color: var(--color-accent);
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  cursor: help;
+}
+
 .skill-stat-tag {
   display: inline-block;
   padding: 0 5px;

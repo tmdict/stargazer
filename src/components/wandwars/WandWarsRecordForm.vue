@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useI18nStore } from '@/stores/i18n'
 import type { PickState, RecordedMatch } from '@/wandwars/types'
 
@@ -20,9 +21,13 @@ const winner = ref<'left' | 'right' | 'draw'>('left')
 const dominant = ref(false)
 const notes = ref('')
 
-const showTooltip = ref(false)
-const iconEl = ref<InstanceType<typeof IconInfo> | null>(null)
-const titleEl = computed(() => iconEl.value?.$el as HTMLElement | undefined)
+const {
+  anchor: sweepTipAnchor,
+  hoverOpen: sweepTipOpen,
+  hoverClose: sweepTipClose,
+  toggle: sweepTipToggle,
+  onTouchStart: sweepTipTouchStart,
+} = useInfoTip()
 
 const resultKey = computed(() => {
   if (winner.value === 'draw') return 'draw'
@@ -53,11 +58,12 @@ function handleSubmit() {
     <h4 class="record-form-title">
       {{ i18n.t('wandwars.record-match') }}
       <IconInfo
-        ref="iconEl"
         :size="14"
         class="record-info-icon"
-        @mouseenter="showTooltip = true"
-        @mouseleave="showTooltip = false"
+        @mouseenter="sweepTipOpen"
+        @mouseleave="sweepTipClose"
+        @click="sweepTipToggle"
+        @touchstart.passive="sweepTipTouchStart"
       />
     </h4>
     <div class="result-buttons">
@@ -105,12 +111,15 @@ function handleSubmit() {
 
     <Teleport to="body">
       <TooltipPopup
-        v-if="showTooltip && titleEl"
-        :target-element="titleEl"
+        v-if="sweepTipAnchor"
+        :target-element="sweepTipAnchor"
         variant="detailed"
-        :text="i18n.t('wandwars.messages/tooltip-sweep')"
         max-width="260px"
-      />
+      >
+        <template #content>
+          <div class="sweep-tip">{{ i18n.t('wandwars.messages/tooltip-sweep') }}</div>
+        </template>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>
@@ -143,6 +152,11 @@ function handleSubmit() {
   cursor: help;
   opacity: 0.5;
   transition: opacity var(--transition-fast);
+}
+
+.sweep-tip {
+  line-height: 1.4;
+  font-size: 0.85rem;
 }
 
 .record-info-icon:hover {
