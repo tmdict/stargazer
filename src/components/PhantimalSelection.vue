@@ -5,9 +5,9 @@ import PhantimalModal from './modals/PhantimalModal.vue'
 import InfoPill from './ui/InfoPill.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { useTouchDetection } from '@/composables/useTouchDetection'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction'
 import type { CharacterType } from '@/lib/types/character'
@@ -27,7 +27,6 @@ const i18n = useI18nStore()
 const grids = useGrids()
 const { fillOrder, targetHexId, targetGridId, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
-const { isTouchDevice } = useTouchDetection()
 
 const sorted = computed(() => [...phantimals].sort((a, b) => a.id - b.id))
 
@@ -95,20 +94,14 @@ const handleDragEnd = (event: DragEvent) => {
 
 // Hover tooltip: whether the phantimal can currently be deployed on the primary
 // (ally) fill target, with the faction unit count. One shared popup follows the
-// hovered icon.
-const hovered = ref<PhantimalType | null>(null)
-const hoveredEl = ref<HTMLElement | null>(null)
-
-const onPortraitEnter = (event: MouseEvent, phantimal: PhantimalType) => {
-  if (isTouchDevice.value) return
-  hovered.value = phantimal
-  hoveredEl.value = event.currentTarget as HTMLElement
-}
-
-const onPortraitLeave = () => {
-  hovered.value = null
-  hoveredEl.value = null
-}
+// hovered icon; portraits are action triggers (tap places), so touch gets none.
+const {
+  anchor: hoveredEl,
+  payload: hovered,
+  onMouseEnter: onPortraitEnter,
+  onMouseLeave: onPortraitLeave,
+  onTouchStart: onPortraitTouchStart,
+} = useHoverTooltip<PhantimalType>()
 
 const tooltipText = computed(() => {
   const phantimal = hovered.value
@@ -142,6 +135,7 @@ const openModal = (phantimal: PhantimalType) => {
           @mouseup="onMouseUp(phantimal)"
           @mouseenter="onPortraitEnter($event, phantimal)"
           @mouseleave="onPortraitLeave"
+          @touchstart.passive="onPortraitTouchStart"
         >
           <img
             :src="phantimalImageUrl(phantimal.name)"

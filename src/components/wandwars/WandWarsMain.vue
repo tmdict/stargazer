@@ -8,6 +8,7 @@ import WandWarsPoolImport from './WandWarsPoolImport.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TabView from '@/components/ui/TabView.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
 import type { PickSide, PickState } from '@/wandwars/types'
@@ -30,8 +31,13 @@ const emit = defineEmits<{
 }>()
 
 const showPoolImport = ref(false)
-const showPoolInfo = ref(false)
-const poolInfoEl = ref<InstanceType<typeof IconInfo> | null>(null)
+const {
+  anchor: poolInfoAnchor,
+  hoverOpen: poolInfoOpen,
+  hoverClose: poolInfoClose,
+  toggle: poolInfoToggle,
+  onTouchStart: poolInfoTouchStart,
+} = useInfoTip()
 
 function handlePoolApply(pool: string[]) {
   emit('setPool', pool)
@@ -84,11 +90,12 @@ const activeTab = defineModel<MainTab>('activeTab', { default: 'draft' })
               <span class="pool-modal-title">
                 {{ i18n.t('wandwars.restrict-to-pool') }}
                 <IconInfo
-                  ref="poolInfoEl"
                   :size="16"
                   class="pool-modal-info"
-                  @mouseenter="showPoolInfo = true"
-                  @mouseleave="showPoolInfo = false"
+                  @mouseenter="poolInfoOpen"
+                  @mouseleave="poolInfoClose"
+                  @click="poolInfoToggle"
+                  @touchstart.passive="poolInfoTouchStart"
                 />
               </span>
               <span class="pool-modal-close" @click="showPoolImport = false">✕</span>
@@ -104,8 +111,8 @@ const activeTab = defineModel<MainTab>('activeTab', { default: 'draft' })
 
         <Teleport to="body">
           <TooltipPopup
-            v-if="showPoolInfo && poolInfoEl?.$el"
-            :target-element="poolInfoEl.$el"
+            v-if="poolInfoAnchor"
+            :target-element="poolInfoAnchor"
             variant="detailed"
             max-width="420px"
           >

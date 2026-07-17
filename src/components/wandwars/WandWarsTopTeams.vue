@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useI18nStore } from '@/stores/i18n'
 import { formatName } from '@/wandwars/formatting'
 import { getTopTeams } from '@/wandwars/prediction/teamSuggestions'
@@ -18,10 +19,16 @@ const props = defineProps<{
 const i18n = useI18nStore()
 const result = computed(() => getTopTeams(props.teammates, props.matches, props.excludeHeroes))
 
-const showDataTooltip = ref(false)
-const dataTitleEl = ref<HTMLElement | null>(null)
-const showSuggestedTooltip = ref(false)
-const suggestedTitleEl = ref<HTMLElement | null>(null)
+// One popup serves both section labels; the payload is the message key, so
+// the text resolves live in the chrome locale.
+const {
+  anchor: labelTipAnchor,
+  payload: labelTipKey,
+  hoverOpen: labelTipOpen,
+  hoverClose: labelTipClose,
+  toggle: labelTipToggle,
+  onTouchStart: labelTipTouchStart,
+} = useInfoTip<string>()
 
 function orderedTeam(team: string[]): string[] {
   // Picked heroes first (in pick order), then remaining heroes alphabetically
@@ -36,10 +43,11 @@ function orderedTeam(team: string[]): string[] {
     <!-- Data-backed teams -->
     <div v-if="result.dataTeams.length > 0" class="team-section">
       <h4
-        ref="dataTitleEl"
         class="top-teams-label"
-        @mouseenter="showDataTooltip = true"
-        @mouseleave="showDataTooltip = false"
+        @mouseenter="labelTipOpen($event, 'wandwars.messages/tooltip-top-teams')"
+        @mouseleave="labelTipClose"
+        @click="labelTipToggle($event, 'wandwars.messages/tooltip-top-teams')"
+        @touchstart.passive="labelTipTouchStart"
       >
         {{ i18n.t('wandwars.top-teams') }}
         <IconInfo :size="12" class="info-icon" />
@@ -70,10 +78,11 @@ function orderedTeam(team: string[]): string[] {
     <!-- Constructed teams -->
     <div v-if="result.suggestedTeams.length > 0" class="team-section">
       <h4
-        ref="suggestedTitleEl"
         class="top-teams-label suggested"
-        @mouseenter="showSuggestedTooltip = true"
-        @mouseleave="showSuggestedTooltip = false"
+        @mouseenter="labelTipOpen($event, 'wandwars.messages/tooltip-suggested-teams')"
+        @mouseleave="labelTipClose"
+        @click="labelTipToggle($event, 'wandwars.messages/tooltip-suggested-teams')"
+        @touchstart.passive="labelTipTouchStart"
       >
         {{ i18n.t('wandwars.suggested-teams') }}
         <IconInfo :size="12" class="info-icon" />
@@ -99,19 +108,15 @@ function orderedTeam(team: string[]): string[] {
 
     <Teleport to="body">
       <TooltipPopup
-        v-if="showDataTooltip && dataTitleEl"
-        :target-element="dataTitleEl"
+        v-if="labelTipAnchor && labelTipKey"
+        :target-element="labelTipAnchor"
         variant="detailed"
-        :text="i18n.t('wandwars.messages/tooltip-top-teams')"
         max-width="240px"
-      />
-      <TooltipPopup
-        v-if="showSuggestedTooltip && suggestedTitleEl"
-        :target-element="suggestedTitleEl"
-        variant="detailed"
-        :text="i18n.t('wandwars.messages/tooltip-suggested-teams')"
-        max-width="240px"
-      />
+      >
+        <template #content>
+          <div class="label-tip">{{ i18n.t(labelTipKey) }}</div>
+        </template>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>
@@ -147,6 +152,11 @@ function orderedTeam(team: string[]): string[] {
 
 .top-teams-label.suggested {
   color: var(--color-primary);
+}
+
+.label-tip {
+  line-height: 1.4;
+  font-size: 0.85rem;
 }
 
 .info-icon {

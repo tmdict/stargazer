@@ -10,7 +10,7 @@ import {
   type SkillLocale,
 } from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
-import type { SkillLocaleFile } from '@/lib/types/skill'
+import type { SkillKeywords, SkillLocaleFile } from '@/lib/types/skill'
 
 export interface ArenaJson {
   name: string
@@ -363,6 +363,14 @@ export function getSkillLocaleDict(lang: SkillLocale): Record<string, SkillLocal
  * loadSkillLocale explicitly. */
 export function getSkillFile(lang: SkillLocale, slug: string): SkillLocaleFile | null {
   return getSkillLocaleDict(lang)?.[slug] ?? null
+}
+
+/** Sync read of a language's keyword glossary (tooltip text for the
+ * `[[label|key]]` tokens in skill text); null until the locale is warmed.
+ * The glossary lives in the locale dict under the reserved `_keywords`
+ * basename, hence the cast: that one entry is a glossary, not a hero file. */
+export function getSkillKeywords(lang: SkillLocale): SkillKeywords | null {
+  return (getSkillLocaleDict(lang)?.['_keywords'] as SkillKeywords | undefined) ?? null
 }
 
 /** True iff the importer has produced an `en` locale file for `slug`. Gates

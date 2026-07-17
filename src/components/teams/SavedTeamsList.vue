@@ -14,6 +14,7 @@ import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
@@ -152,8 +153,13 @@ const {
 const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name)
 
 // The hint is keyboard-focusable, so focus/blur mirror the hover handlers.
-const storageHintEl = ref<HTMLElement | null>(null)
-const showStorageHint = ref(false)
+const {
+  anchor: storageHintAnchor,
+  hoverOpen: storageHintOpen,
+  hoverClose: storageHintClose,
+  toggle: storageHintToggle,
+  onTouchStart: storageHintTouchStart,
+} = useInfoTip()
 </script>
 
 <template>
@@ -164,14 +170,15 @@ const showStorageHint = ref(false)
           {{ library.count }} / {{ MAX_SAVED_TEAMS }}
         </span>
         <span
-          ref="storageHintEl"
           class="storage-hint"
           :aria-label="i18n.t('app.storage-hint')"
           tabindex="0"
-          @mouseenter="showStorageHint = true"
-          @mouseleave="showStorageHint = false"
-          @focus="showStorageHint = true"
-          @blur="showStorageHint = false"
+          @mouseenter="storageHintOpen"
+          @mouseleave="storageHintClose"
+          @focus="storageHintOpen"
+          @blur="storageHintClose"
+          @click="storageHintToggle"
+          @touchstart.passive="storageHintTouchStart"
         >
           <IconInfo :size="15" />
         </span>
@@ -307,8 +314,8 @@ const showStorageHint = ref(false)
     </div>
     <Teleport to="body">
       <TooltipPopup
-        v-if="showStorageHint && storageHintEl"
-        :target-element="storageHintEl"
+        v-if="storageHintAnchor"
+        :target-element="storageHintAnchor"
         variant="detailed"
         max-width="320px"
       >

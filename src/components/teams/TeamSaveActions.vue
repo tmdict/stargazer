@@ -15,6 +15,7 @@ import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -77,20 +78,18 @@ const handleNew = (): void => {
   emit('newTeam')
 }
 
-// One shared popup serves all five actions. The hovered action's id is stored
+// One shared popup serves all five actions; the hovered action's id is stored
 // (not its text) so the text stays live: arming New flips it to Confirm while
-// still hovered.
+// still hovered. Action buttons are hover-only: on touch the tap acts, so the
+// composable suppresses the tooltip there.
 type TipId = 'new' | 'save' | 'save-as-new' | 'import' | 'export'
-const tip = ref<TipId | null>(null)
-const tipTarget = ref<HTMLElement | null>(null)
-
-const showTip = (id: TipId, event: MouseEvent): void => {
-  tip.value = id
-  tipTarget.value = event.currentTarget as HTMLElement
-}
-const hideTip = (): void => {
-  tip.value = null
-}
+const {
+  anchor: tipTarget,
+  payload: tip,
+  onMouseEnter: showTip,
+  onMouseLeave: hideTip,
+  onTouchStart: tipTouchStart,
+} = useHoverTooltip<TipId>()
 
 const tipText = computed((): string => {
   switch (tip.value) {
@@ -119,7 +118,8 @@ const tipText = computed((): string => {
       :class="{ armed: armed !== null }"
       :aria-label="i18n.t(armed !== null ? 'app.confirm' : 'app.new')"
       @click="handleNew"
-      @mouseenter="showTip('new', $event)"
+      @mouseenter="showTip($event, 'new')"
+      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconFilePlus :size="14" class="btn-icon" />
@@ -130,7 +130,8 @@ const tipText = computed((): string => {
       class="control-btn"
       :aria-label="i18n.t('app.save')"
       @click="handleSave"
-      @mouseenter="showTip('save', $event)"
+      @mouseenter="showTip($event, 'save')"
+      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconSave :size="14" class="btn-icon" />
@@ -142,7 +143,8 @@ const tipText = computed((): string => {
         class="control-btn secondary"
         :aria-label="i18n.t('app.save-as-new')"
         @click="openPopover"
-        @mouseenter="showTip('save-as-new', $event)"
+        @mouseenter="showTip($event, 'save-as-new')"
+        @touchstart.passive="tipTouchStart"
         @mouseleave="hideTip"
       >
         <IconSavePlus :size="14" class="btn-icon" />
@@ -183,7 +185,8 @@ const tipText = computed((): string => {
       class="control-btn secondary"
       :aria-label="i18n.t('app.import')"
       @click="fileInput?.click()"
-      @mouseenter="showTip('import', $event)"
+      @mouseenter="showTip($event, 'import')"
+      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconUpload :size="14" class="btn-icon" />
@@ -194,7 +197,8 @@ const tipText = computed((): string => {
       class="control-btn secondary"
       :aria-label="i18n.t('app.export')"
       @click="emit('exportTeams')"
-      @mouseenter="showTip('export', $event)"
+      @mouseenter="showTip($event, 'export')"
+      @touchstart.passive="tipTouchStart"
       @mouseleave="hideTip"
     >
       <IconDownload :size="14" class="btn-icon" />

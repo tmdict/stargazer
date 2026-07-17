@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
 import TooltipPopup from './TooltipPopup.vue'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { CLASS_ORDER, compareByOrder, FACTION_ORDER } from '@/lib/filterOrder'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -47,22 +48,19 @@ const getIconPath = (iconPrefix: string, option: string): string => {
   return gameDataStore.getIcon(iconKey)
 }
 
-// Tooltip state
-const hoveredOption = ref<string | null>(null)
-const hoveredElement = ref<HTMLElement | null>(null)
+// Filter buttons are action triggers: hover-only labels, suppressed on touch
+// (the tap toggles the filter).
+const {
+  anchor: hoveredElement,
+  payload: hoveredOption,
+  onMouseEnter,
+  onMouseLeave: handleMouseLeave,
+  onTouchStart,
+} = useHoverTooltip<string>()
 
 const handleMouseEnter = (option: string, event: MouseEvent) => {
   if (!props.showTooltip) return
-  hoveredOption.value = option
-  if (event.currentTarget instanceof HTMLElement) {
-    hoveredElement.value = event.currentTarget
-  }
-}
-
-const handleMouseLeave = () => {
-  if (!props.showTooltip) return
-  hoveredOption.value = null
-  hoveredElement.value = null
+  onMouseEnter(event, option)
 }
 </script>
 
@@ -99,6 +97,7 @@ const handleMouseLeave = () => {
         @click="modelValue = modelValue === option ? '' : option"
         @mouseenter="handleMouseEnter(option, $event)"
         @mouseleave="handleMouseLeave"
+        @touchstart.passive="onTouchStart"
       >
         <img
           :src="getIconPath(iconPrefix, option)"
