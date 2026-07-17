@@ -21,7 +21,9 @@ const strokeProps = computed(() => {
   const scale = gridStore.getHexScale()
   return {
     strokeWidth: Math.max(2, 3 * scale), // Min 2px
-    dashArray: `${8 * scale},${4 * scale}`,
+    // Near-zero dashes render as round-cap dots, keeping these lines visually
+    // distinct from the targeting arrows' dashes in the shared debug view.
+    dashArray: `0.1,${7 * scale}`,
   }
 })
 

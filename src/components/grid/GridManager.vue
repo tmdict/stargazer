@@ -286,22 +286,13 @@ defineExpose({
       :tap-mode
     />
 
-    <!-- Arrow layer (above characters): closest-target arrows are a
-         debug-level visual, shown only while the Debug tab is active. -->
-    <GridArrows
-      v-if="showDebug"
-      :show-perspective="showPerspective"
-      :default-svg-height="defaultSvgHeight"
-    />
-
-    <!-- Skill targeting layer (above arrows) -->
     <SkillTargeting
       v-if="showSkills"
       :show-perspective="showPerspective"
       :default-svg-height="defaultSvgHeight"
     />
 
-    <!-- Debug layer (controlled by Debug View toggle) -->
+    <!-- Debug layer (Debug tab only) -->
     <svg
       v-if="showDebug"
       :width="600 * ctx.hexScale"
@@ -312,6 +303,14 @@ defineExpose({
         <PathfindingDebug :debug-panel-ref="props.debugPanelRef" />
       </g>
     </svg>
+
+    <!-- Closest-target arrows, a debug-level visual: last in the stack so
+         they stay readable over the pathfinding debug lines. -->
+    <GridArrows
+      v-if="showDebug"
+      :show-perspective="showPerspective"
+      :default-svg-height="defaultSvgHeight"
+    />
   </div>
 
   <!-- Character Selection Modal - Outside of map container to avoid transform issues -->
