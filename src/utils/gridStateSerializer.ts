@@ -11,13 +11,12 @@ export interface GridState {
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   s?: number[][] // seasonal units, phantimals today: [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
   p?: number[][] // paragon: [team, characterId, level] for placed heroes with level > 0
-  d?: number // display flags: bit-packed (showGridInfo, showArrows, showPerspective, showSkills, teamView, inverted)
+  d?: number // display flags: bit-packed (showGridInfo, showPerspective, showSkills, teamView, inverted, wrap)
 }
 
 /* The user-facing display toggles carried in the URL's bit-packed `d` field */
 export interface DisplayFlags {
   showGridInfo?: boolean
-  showArrows?: boolean
   showPerspective?: boolean
   showSkills?: boolean
   teamView?: boolean
@@ -103,17 +102,16 @@ export function serializeGridState(
 }
 
 /* Pack the display toggles into one number.
- * Bit 0: showGridInfo, 1: showArrows, 2: showPerspective (!Flat), 3: showSkills,
- * 4: teamView, 5: inverted, 6: wrap */
+ * Bit 0: showGridInfo, 1: showPerspective (!Flat), 2: showSkills,
+ * 3: teamView, 4: inverted, 5: wrap */
 export function packDisplayFlags(flags: DisplayFlags): number {
   let packed = 0
   if (flags.showGridInfo) packed |= 1 << 0
-  if (flags.showArrows) packed |= 1 << 1
-  if (flags.showPerspective) packed |= 1 << 2
-  if (flags.showSkills) packed |= 1 << 3
-  if (flags.teamView) packed |= 1 << 4
-  if (flags.inverted) packed |= 1 << 5
-  if (flags.wrap) packed |= 1 << 6
+  if (flags.showPerspective) packed |= 1 << 1
+  if (flags.showSkills) packed |= 1 << 2
+  if (flags.teamView) packed |= 1 << 3
+  if (flags.inverted) packed |= 1 << 4
+  if (flags.wrap) packed |= 1 << 5
   return packed
 }
 
@@ -173,7 +171,6 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
     // Return defaults if no flags are stored
     return {
       showGridInfo: true,
-      showArrows: true,
       showPerspective: true,
       showSkills: true,
       teamView: false,
@@ -184,11 +181,10 @@ export function unpackDisplayFlags(packed: number | undefined): Required<Display
 
   return {
     showGridInfo: !!(packed & (1 << 0)),
-    showArrows: !!(packed & (1 << 1)),
-    showPerspective: !!(packed & (1 << 2)),
-    showSkills: !!(packed & (1 << 3)),
-    teamView: !!(packed & (1 << 4)),
-    inverted: !!(packed & (1 << 5)),
-    wrap: !!(packed & (1 << 6)),
+    showPerspective: !!(packed & (1 << 1)),
+    showSkills: !!(packed & (1 << 2)),
+    teamView: !!(packed & (1 << 3)),
+    inverted: !!(packed & (1 << 4)),
+    wrap: !!(packed & (1 << 5)),
   }
 }

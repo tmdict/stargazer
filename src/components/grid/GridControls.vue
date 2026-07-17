@@ -12,7 +12,6 @@ import { useI18nStore } from '@/stores/i18n'
 const i18n = useI18nStore()
 const { handleClearAll } = useSelectionState()
 
-const showArrows = defineModel<boolean>('showArrows', { required: true })
 const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills')
@@ -74,15 +73,6 @@ const flatView = computed({
       <label class="grid-toggle-btn" :class="{ active: showSkills }">
         <input type="checkbox" v-model="showSkills" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
-      </label>
-      <label class="grid-toggle-btn" :class="{ active: showArrows, disabled: teamView }">
-        <input
-          type="checkbox"
-          v-model="showArrows"
-          :disabled="teamView"
-          class="grid-toggle-checkbox"
-        />
-        <span class="grid-toggle-text">{{ i18n.t('app.targeting') }}</span>
       </label>
       <MapInvertToggle />
     </div>

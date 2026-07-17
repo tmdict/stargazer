@@ -145,24 +145,22 @@ describe('gridStateSerializer', () => {
       const tiles: GridTile[] = []
       const displayFlags = {
         showGridInfo: true,
-        showArrows: false,
         showPerspective: true,
         showSkills: false,
       }
       const result = serializeGridState(tiles, null, null, displayFlags)
-      expect(result).toEqual({ d: 0b00101 })
+      expect(result).toEqual({ d: 0b011 })
     })
 
-    it('serializes teamView in display flags (bit 4)', () => {
+    it('serializes teamView in display flags (bit 3)', () => {
       const tiles: GridTile[] = []
       const result = serializeGridState(tiles, null, null, {
         showGridInfo: false,
-        showArrows: false,
         showPerspective: false,
         showSkills: false,
         teamView: true,
       })
-      expect(result).toEqual({ d: 0b10000 })
+      expect(result).toEqual({ d: 0b1000 })
     })
 
     it('serializes complete state with all components', () => {
@@ -173,7 +171,6 @@ describe('gridStateSerializer', () => {
       ]
       const displayFlags = {
         showGridInfo: true,
-        showArrows: true,
         showPerspective: false,
         showSkills: true,
       }
@@ -186,7 +183,7 @@ describe('gridStateSerializer', () => {
         ],
         c: [[1, 100, Team.ALLY]],
         a: [1, 2],
-        d: 0b01011,
+        d: 0b101,
       })
     })
   })
@@ -195,7 +192,6 @@ describe('gridStateSerializer', () => {
     // All flags off; spread overrides on top for each case.
     const off = {
       showGridInfo: false,
-      showArrows: false,
       showPerspective: false,
       showSkills: false,
       teamView: false,
@@ -207,7 +203,6 @@ describe('gridStateSerializer', () => {
       expect(unpackDisplayFlags(undefined)).toEqual({
         ...off,
         showGridInfo: true,
-        showArrows: true,
         showPerspective: true,
         showSkills: true,
       })
@@ -216,17 +211,15 @@ describe('gridStateSerializer', () => {
     it.each([
       [0b000000, off],
       [0b000001, { ...off, showGridInfo: true }],
-      [0b000010, { ...off, showArrows: true }],
-      [0b000100, { ...off, showPerspective: true }],
-      [0b001000, { ...off, showSkills: true }],
-      [0b010000, { ...off, teamView: true }],
-      [0b100000, { ...off, inverted: true }],
-      [0b1000000, { ...off, wrap: true }],
+      [0b000010, { ...off, showPerspective: true }],
+      [0b000100, { ...off, showSkills: true }],
+      [0b001000, { ...off, teamView: true }],
+      [0b010000, { ...off, inverted: true }],
+      [0b100000, { ...off, wrap: true }],
       [
-        0b111111,
+        0b011111,
         {
           showGridInfo: true,
-          showArrows: true,
           showPerspective: true,
           showSkills: true,
           teamView: true,
@@ -238,10 +231,9 @@ describe('gridStateSerializer', () => {
       expect(unpackDisplayFlags(flags)).toEqual(expected)
     })
 
-    it('ignores bits beyond the first 7', () => {
+    it('ignores bits beyond the first 6', () => {
       expect(unpackDisplayFlags(0b11111111)).toEqual({
         showGridInfo: true,
-        showArrows: true,
         showPerspective: true,
         showSkills: true,
         teamView: true,
@@ -254,7 +246,6 @@ describe('gridStateSerializer', () => {
       const tiles: GridTile[] = []
       const original = {
         showGridInfo: true,
-        showArrows: false,
         showPerspective: true,
         showSkills: false,
         teamView: true,

@@ -49,7 +49,7 @@ The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter
 The grid panel: a document-style title line, a two-row control bar (`GridControls` with teams content slotted in), then a horizontally scrolling row of boards, each bound to its own `GridContext`.
 
 - **Title line**: the source team's name (or "Unsaved team") as plain centered text, with a dot + "Unsaved changes" beside it while the boards differ from the saved copy
-- **Row 1 (configure)**: mode picker, then the display toggles (wrap, flat, grid info, team view, skills, targeting, invert)
+- **Row 1 (configure)**: mode picker, then the display toggles (wrap, flat, grid info, team view, skills, invert)
 - **Row 2 (act)**: team actions, then the share actions (link, copy, download, clear)
 - **Per-board actions**: swap (drag to reorder, via `useGridSwap`), copy image, download image, clear
 - **Wrap**: the 3-2 two-row boards layout; rendered for 5-board modes on desktop only (every consumer gates on `canWrap` / board count, so the preference survives visits to non-wrap modes), serialized with the display flags

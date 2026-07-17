@@ -147,7 +147,6 @@ describe('urlStateManager', () => {
       ]
       const displayFlags = {
         showGridInfo: true,
-        showArrows: true,
         showPerspective: false,
         showSkills: true,
       }
@@ -159,7 +158,7 @@ describe('urlStateManager', () => {
       expect(decoded?.t).toHaveLength(3)
       expect(decoded?.c).toHaveLength(2)
       expect(decoded?.a).toEqual([3, 5])
-      expect(decoded?.d).toBe(0b1011)
+      expect(decoded?.d).toBe(0b101)
     })
 
     it('handles large grid states', () => {

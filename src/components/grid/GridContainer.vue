@@ -13,7 +13,6 @@ interface Props {
   // Data props
   characters: readonly CharacterType[]
   // Display toggle props
-  showArrows: boolean
   showGridInfo: boolean
   showDebug: boolean
   showSkills: boolean
@@ -116,7 +115,6 @@ const shiftStyle = computed(() => {
         <div :style="shiftStyle">
           <GridManager
             :characters
-            :show-arrows
             :show-grid-info
             :show-debug
             :show-skills

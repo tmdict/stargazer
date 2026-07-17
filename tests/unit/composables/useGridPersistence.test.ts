@@ -34,7 +34,7 @@ function stubStorage() {
   })
 }
 
-const FLAGS = () => ({ showGridInfo: true, showArrows: false })
+const FLAGS = () => ({ showGridInfo: true, showSkills: false })
 
 const readEnvelope = (mode: TeamModeKey): ActiveSlot =>
   JSON.parse(storage.get(teamsSlotKey(mode))!) as ActiveSlot
@@ -168,7 +168,7 @@ describe('teams display prefs', () => {
   it('round-trips every view toggle, inverted included', () => {
     saveTeamsDisplayPrefs({
       showGridInfo: false,
-      showArrows: true,
+      showSkills: false,
       teamView: true,
       wrap: true,
       inverted: true,
@@ -176,7 +176,7 @@ describe('teams display prefs', () => {
     const loaded = loadTeamsDisplayPrefs()
     expect(loaded).not.toBeNull()
     expect(loaded!.showGridInfo).toBe(false)
-    expect(loaded!.showArrows).toBe(true)
+    expect(loaded!.showSkills).toBe(false)
     expect(loaded!.teamView).toBe(true)
     expect(loaded!.wrap).toBe(true)
     expect(loaded!.inverted).toBe(true)

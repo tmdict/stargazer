@@ -38,7 +38,6 @@ const { sourceName } = defineProps<{
 
 // Display flags are owned by TeamsView (the share link serializes them, the URL
 // restore sets them); GridControls writes them and every board reads them.
-const showArrows = defineModel<boolean>('showArrows', { required: true })
 const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills', { required: true })
@@ -142,7 +141,6 @@ const {
       :show-wrap-toggle="canWrap"
       confirm-clear
       v-model:wrap="wrap"
-      v-model:show-arrows="showArrows"
       v-model:show-grid-info="showGridInfo"
       v-model:show-perspective="showPerspective"
       v-model:show-skills="showSkills"
@@ -173,7 +171,6 @@ const {
         :key="ctx.id"
         :context="ctx"
         :characters="characters"
-        :show-arrows="showArrows"
         :show-grid-info="showGridInfo"
         :show-skills="showSkills"
         :show-perspective="showPerspective"

@@ -27,7 +27,6 @@ interface Props {
   // Data props
   characters: readonly CharacterType[]
   // Display toggle props
-  showArrows: boolean
   showGridInfo: boolean
   showDebug: boolean
   showSkills: boolean
@@ -287,9 +286,10 @@ defineExpose({
       :tap-mode
     />
 
-    <!-- Arrow layer (above characters) -->
+    <!-- Arrow layer (above characters): closest-target arrows are a
+         debug-level visual, shown only while the Debug tab is active. -->
     <GridArrows
-      :show-arrows="showArrows"
+      v-if="showDebug"
       :show-perspective="showPerspective"
       :default-svg-height="defaultSvgHeight"
     />

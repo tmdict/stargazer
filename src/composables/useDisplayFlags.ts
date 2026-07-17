@@ -1,4 +1,4 @@
-import { ref, watch, type Ref } from 'vue'
+import { ref, type Ref } from 'vue'
 
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useGrids } from '@/stores/grids'
@@ -17,23 +17,11 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   const grids = useGrids()
   const { currentBreakpoint, showPerspective } = useBreakpoint()
 
-  const showArrows = ref(false)
   const showGridInfo = ref(true)
   const showSkills = ref(true)
 
-  // Targeting arrows connect ally and enemy units, but team view shows only the
-  // ally side, so force them off on entry (the controls also lock the toggle).
-  // Skills stay user-controlled: many skill visuals are ally-side tile highlights.
-  watch(
-    () => grids.teamView,
-    (on) => {
-      if (on) showArrows.value = false
-    },
-  )
-
   const toFlags = (): DisplayFlags => ({
     showGridInfo: showGridInfo.value,
-    showArrows: showArrows.value,
     showPerspective: showPerspective.value,
     showSkills: showSkills.value,
     teamView: grids.teamView,
@@ -43,7 +31,6 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
 
   const applyFlags = (flags: DisplayFlags): void => {
     showGridInfo.value = flags.showGridInfo ?? true
-    showArrows.value = flags.showArrows ?? false
     showPerspective.value = flags.showPerspective ?? false
     showSkills.value = flags.showSkills ?? true
     grids.teamView = flags.teamView ?? false
@@ -52,7 +39,6 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   }
 
   return {
-    showArrows,
     showGridInfo,
     showSkills,
     showPerspective,

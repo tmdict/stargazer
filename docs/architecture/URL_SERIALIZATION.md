@@ -72,8 +72,8 @@ interface GridState {
     - Bits 2-5: reserved
     - Bit 6: Has phantimals (phantimal section present after artifacts)
     - Bit 7: Has display flags (a dedicated display-flags byte follows)
-  - Display flags byte (if extended bit 7 set): bit 0 showGridInfo, 1 showArrows,
-    2 showPerspective, 3 showSkills, 4 teamView, 5 inverted, 6 wrap (bit 7 spare)
+  - Display flags byte (if extended bit 7 set): bit 0 showGridInfo, 1 showPerspective,
+    2 showSkills, 3 teamView, 4 inverted, 5 wrap (bits 6-7 spare)
   - Additional tile count byte (if extended bit 0 set)
   - Additional character count byte (if extended bit 0 set)
 
