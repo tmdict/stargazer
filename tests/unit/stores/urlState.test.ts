@@ -97,7 +97,6 @@ describe('urlStateStore.restoreFromEncodedState', () => {
 
     const flags: DisplayFlags = {
       showGridInfo: true,
-      showArrows: false,
       showPerspective: false,
       showSkills: true,
       teamView: true,
@@ -250,7 +249,6 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     // No flags were encoded, so the store reports the defaults.
     expect(result.displayFlags).toEqual({
       showGridInfo: true,
-      showArrows: true,
       showPerspective: true,
       showSkills: true,
       teamView: false,

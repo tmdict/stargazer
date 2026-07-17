@@ -50,7 +50,7 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
   setActivePinia(createPinia())
   const grids = useGrids()
   const character = useCharacterStore()
-  const flags: DisplayFlags = { showGridInfo: true, showArrows: false, wrap: false }
+  const flags: DisplayFlags = { showGridInfo: true, wrap: false }
   const wrapBoards = ref(false)
   const inverted = ref(false)
   const applySize = vi.fn()
@@ -450,14 +450,14 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
   it('selecting a team keeps current display flags and view rotation', () => {
     const { restore, flags, inverted } = createHarness()
     restore.initialize(null)
-    flags.showArrows = true
+    flags.showGridInfo = false
     inverted.value = true
     const data = canonicalTeamData(
       encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
     )!
     restore.applyTeamData('1v1', data, 'x')
     // applyTeamData restores with adoptFlags=false, so a payload's `d` is ignored.
-    expect(flags.showArrows).toBe(true)
+    expect(flags.showGridInfo).toBe(false)
     expect(inverted.value).toBe(true)
   })
 })

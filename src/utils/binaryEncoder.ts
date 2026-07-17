@@ -36,8 +36,8 @@ const MAX_PARAGON_COUNT = (1 << PARAGON_COUNT_BITS) - 1 // 31
  *   - Bit 6: Has phantimals (phantimal section present after artifacts)
  *   - Bit 7: Has display flags (a dedicated display-flags byte follows)
  * - If bit 7 of extended flags is set:
- *   - Next byte: Display flags (bit 0 showGridInfo, 1 showArrows, 2 showPerspective,
- *     3 showSkills, 4 teamView, 5 inverted, 6 wrap; bit 7 spare)
+ *   - Next byte: Display flags (bit 0 showGridInfo, 1 showPerspective,
+ *     2 showSkills, 3 teamView, 4 inverted, 5 wrap; bits 6-7 spare)
  * - If bit 0 of extended flags is set:
  *   - Next byte: Additional tile count (0-255, add to first 7)
  *   - Next byte: Additional character count (0-255, add to first 7)
