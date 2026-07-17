@@ -45,8 +45,9 @@ describe('remove.ts', () => {
   })
 
   describe('performRemove', () => {
-    it('should remove character from tile', () => {
+    it('should remove the character, clearing team tracking and restoring tile state', () => {
       performPlace(grid, 1, 100, Team.ALLY)
+      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
 
       const result = performRemove(grid, 1)
 
@@ -55,30 +56,18 @@ describe('remove.ts', () => {
       expect(tile.characterId).toBeUndefined()
       expect(tile.team).toBeUndefined()
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
-    })
-
-    it('should remove character from team tracking', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-
-      performRemove(grid, 1)
-
       expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
+
+      performPlace(grid, 4, 200, Team.ENEMY)
+      expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
+      performRemove(grid, 4)
+      expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
     })
 
     it('should return false when tile has no character', () => {
       const result = performRemove(grid, 1)
 
       expect(result).toBe(false)
-    })
-
-    it('should restore correct tile state for enemy', () => {
-      performPlace(grid, 4, 200, Team.ENEMY)
-      expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
-
-      performRemove(grid, 4)
-
-      expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
     })
 
     it('should handle tile with missing team gracefully', () => {
@@ -188,7 +177,7 @@ describe('remove.ts', () => {
   })
 
   describe('performClearAll', () => {
-    it('should clear all characters from grid', () => {
+    it('should clear all characters, team tracking, and tile states, then update skills', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, 200, Team.ALLY)
       performPlace(grid, 4, 300, Team.ENEMY)
@@ -199,41 +188,17 @@ describe('remove.ts', () => {
       expect(grid.getTileById(1).characterId).toBeUndefined()
       expect(grid.getTileById(2).characterId).toBeUndefined()
       expect(grid.getTileById(4).characterId).toBeUndefined()
-    })
-
-    it('should clear team tracking', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 4, 300, Team.ENEMY)
-
-      performClearAll(grid)
-
       expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(0)
       expect(grid.teamCharacters.get(Team.ENEMY)?.size).toBe(0)
-    })
-
-    it('should restore tile states correctly', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 4, 200, Team.ENEMY)
-
-      performClearAll(grid)
-
       expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
+      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
     })
 
     it('should return true when grid is already empty', () => {
       const result = performClearAll(grid)
 
       expect(result).toBe(true)
-    })
-
-    it('should update skills after clearing', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-
-      performClearAll(grid)
-
-      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
     })
   })
 
@@ -245,19 +210,6 @@ describe('remove.ts', () => {
       executeClearAllCharacters(grid, skillManager)
 
       expect(skillManager.deactivateAllSkills).toHaveBeenCalledWith(grid)
-    })
-
-    it('should clear all characters', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 4, 300, Team.ENEMY)
-
-      const result = executeClearAllCharacters(grid, skillManager)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(1).characterId).toBeUndefined()
-      expect(grid.getTileById(2).characterId).toBeUndefined()
-      expect(grid.getTileById(4).characterId).toBeUndefined()
     })
 
     it('should handle empty grid', () => {

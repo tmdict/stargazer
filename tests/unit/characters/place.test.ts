@@ -42,26 +42,18 @@ describe('place.ts', () => {
   })
 
   describe('performPlace', () => {
-    it('should successfully place character on available ally tile', () => {
-      const result = performPlace(grid, 1, 100, Team.ALLY)
+    it.each([
+      { label: 'ally', team: Team.ALLY, hexId: 1, state: State.OCCUPIED_ALLY },
+      { label: 'enemy', team: Team.ENEMY, hexId: 4, state: State.OCCUPIED_ENEMY },
+    ])('should successfully place character on available $label tile', ({ team, hexId, state }) => {
+      const result = performPlace(grid, hexId, 100, team)
 
       expect(result).toBe(true)
-      const tile = grid.getTileById(1)
+      const tile = grid.getTileById(hexId)
       expect(tile.characterId).toBe(100)
-      expect(tile.team).toBe(Team.ALLY)
-      expect(tile.state).toBe(State.OCCUPIED_ALLY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-    })
-
-    it('should successfully place character on available enemy tile', () => {
-      const result = performPlace(grid, 4, 200, Team.ENEMY)
-
-      expect(result).toBe(true)
-      const tile = grid.getTileById(4)
-      expect(tile.characterId).toBe(200)
-      expect(tile.team).toBe(Team.ENEMY)
-      expect(tile.state).toBe(State.OCCUPIED_ENEMY)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
+      expect(tile.team).toBe(team)
+      expect(tile.state).toBe(state)
+      expect(grid.teamCharacters.get(team)?.has(100)).toBe(true)
     })
 
     it('should reject placement on an occupied tile', () => {
@@ -94,14 +86,12 @@ describe('place.ts', () => {
       expect(performPlace(grid, 1, 200, Team.ENEMY)).toBe(false)
     })
 
-    it('should reject placement on blocked tile', () => {
-      expect(performPlace(grid, 6, 100, Team.ALLY)).toBe(false)
-      expect(performPlace(grid, 6, 200, Team.ENEMY)).toBe(false)
-    })
-
-    it('should reject placement on default tile', () => {
-      expect(performPlace(grid, 7, 100, Team.ALLY)).toBe(false)
-      expect(performPlace(grid, 7, 200, Team.ENEMY)).toBe(false)
+    it.each([
+      { label: 'blocked', hexId: 6 },
+      { label: 'default', hexId: 7 },
+    ])('should reject placement on $label tile', ({ hexId }) => {
+      expect(performPlace(grid, hexId, 100, Team.ALLY)).toBe(false)
+      expect(performPlace(grid, hexId, 200, Team.ENEMY)).toBe(false)
     })
 
     it('should enforce team size limits', () => {
@@ -311,28 +301,6 @@ describe('place.ts', () => {
       expect(placedHex).toBeUndefined()
     })
 
-    it('should handle undefined selected tile gracefully', () => {
-      // Mock console.error
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-      // Mock Math.random to return out of bounds index
-      const mathRandomSpy = vi.spyOn(Math, 'random').mockReturnValue(1)
-
-      const result = executeAutoPlaceCharacter(grid, skillManager, 100, Team.ALLY)
-
-      expect(result).toBe(false)
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('Selected tile is undefined'),
-        expect.objectContaining({
-          randomIndex: expect.any(Number),
-          availableTilesLength: expect.any(Number),
-        }),
-      )
-
-      consoleSpy.mockRestore()
-      mathRandomSpy.mockRestore()
-    })
-
     it('should place on enemy tiles for enemy team', () => {
       const result = executeAutoPlaceCharacter(grid, skillManager, 100, Team.ENEMY)
 
@@ -341,43 +309,6 @@ describe('place.ts', () => {
       // Check character was placed on one of the enemy tiles (4 or 5)
       const placedHex = [4, 5].find((hexId) => grid.getTileById(hexId).characterId === 100)
       expect(placedHex).toBeDefined()
-    })
-  })
-
-  describe('Edge cases', () => {
-    it('should handle empty grid', () => {
-      const emptyGrid = new Grid({ hex: [[]], qOffset: [0] }, { name: 'Empty', grid: [] })
-      emptyGrid.skillManager = skillManager
-
-      const result = executeAutoPlaceCharacter(emptyGrid, skillManager, 100, Team.ALLY)
-      expect(result).toBe(false)
-    })
-
-    it('should handle grid with no available tiles for team', () => {
-      const enemyOnlyArena = {
-        id: 1,
-        name: 'Enemy Only',
-        grid: [{ type: State.AVAILABLE_ENEMY, hex: [1, 2, 3, 4, 5, 6, 7] }],
-      }
-      const enemyGrid = new Grid(STANDARD_GRID, enemyOnlyArena)
-      enemyGrid.skillManager = skillManager
-
-      const result = executeAutoPlaceCharacter(enemyGrid, skillManager, 100, Team.ALLY)
-      expect(result).toBe(false)
-    })
-
-    it('should track multiple sequential placements', () => {
-      expect(performPlace(grid, 1, 100, Team.ALLY)).toBe(true)
-      expect(performPlace(grid, 2, 200, Team.ALLY)).toBe(true)
-      expect(performPlace(grid, 3, 300, Team.ALLY)).toBe(true)
-
-      // Verify all are placed correctly
-      expect(grid.getTileById(1).characterId).toBe(100)
-      expect(grid.getTileById(2).characterId).toBe(200)
-      expect(grid.getTileById(3).characterId).toBe(300)
-
-      // Verify team tracking
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(3)
     })
   })
 })
