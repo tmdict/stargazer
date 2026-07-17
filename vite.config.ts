@@ -9,6 +9,7 @@ import generateSitemap from 'vite-ssg-sitemap'
 
 import { SITE_ORIGIN } from './src/lib/site'
 import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n'
+import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight'
 
 // SSG Helpers
 
@@ -66,10 +67,7 @@ function extractContentDescription(html: string): string | null {
       m[1]
         .replace(/<[^>]+>/g, '') // Strip HTML tags
         // Strip [[]] skill markers, dropping a keyword token's `|key` suffix
-        // (mirrors HIGHLIGHT_RE + splitHighlightToken in src/utils/textHighlight.ts)
-        .replace(/\[\[(.+?)\]\]/g, (_, inner: string) =>
-          inner.replace(/\|[A-Za-z][A-Za-z0-9_]*$/, ''),
-        )
+        .replace(HIGHLIGHT_RE, (_, inner: string) => splitHighlightToken(inner).label)
         .replace(/\s+/g, ' ')
         .trim(),
     )

@@ -12,7 +12,9 @@ import BoardsRow from '@/components/teams/BoardsRow.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGridSwap } from '@/composables/useGridSwap'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { MAX_TEAM_NAME_LENGTH, type TeamModeKey } from '@/lib/teams/modes'
 import type { CharacterType } from '@/lib/types/character'
@@ -78,6 +80,16 @@ const {
 const startRename = (): void => {
   if (sourceName !== null) void start('source', sourceName)
 }
+
+// The status text beside the dirty dot is hidden on mobile, so the dot needs
+// a tap path to its explanation.
+const {
+  anchor: unsavedTipAnchor,
+  hoverOpen: unsavedTipOpen,
+  hoverClose: unsavedTipClose,
+  toggle: unsavedTipToggle,
+  onTouchStart: unsavedTipTouchStart,
+} = useInfoTip()
 </script>
 
 <template>
@@ -112,7 +124,14 @@ const startRename = (): void => {
             <IconEdit :size="14" />
           </button>
         </template>
-        <span v-if="dirty" class="team-title-status" :title="i18n.t('app.unsaved-changes')">
+        <span
+          v-if="dirty"
+          class="team-title-status"
+          @mouseenter="unsavedTipOpen"
+          @mouseleave="unsavedTipClose"
+          @click="unsavedTipToggle"
+          @touchstart.passive="unsavedTipTouchStart"
+        >
           <span class="dirty-dot" />
           <span class="status-text">{{ i18n.t('app.unsaved-changes') }}</span>
         </span>
@@ -172,6 +191,17 @@ const startRename = (): void => {
       >
         {{ i18n.t('app.swap') }}
       </div>
+    </Teleport>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="unsavedTipAnchor"
+        :target-element="unsavedTipAnchor"
+        variant="detailed"
+        max-width="260px"
+      >
+        <template #content>{{ i18n.t('app.unsaved-changes') }}</template>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>

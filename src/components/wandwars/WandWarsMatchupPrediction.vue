@@ -193,9 +193,7 @@ function modelTabLabel(id: string): string {
         variant="detailed"
         max-width="260px"
       >
-        <template #content>
-          <div class="matchup-tip">{{ modelDescriptions[modelTipId] }}</div>
-        </template>
+        <template #content>{{ modelDescriptions[modelTipId] }}</template>
       </TooltipPopup>
       <TooltipPopup
         v-if="confidenceTipAnchor && confidenceTipText"
@@ -203,9 +201,7 @@ function modelTabLabel(id: string): string {
         variant="detailed"
         max-width="300px"
       >
-        <template #content>
-          <div class="matchup-tip">{{ confidenceTipText }}</div>
-        </template>
+        <template #content>{{ confidenceTipText }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -273,11 +269,6 @@ function modelTabLabel(id: string): string {
   border-radius: var(--radius-small);
   text-transform: uppercase;
   cursor: help;
-}
-
-.matchup-tip {
-  line-height: 1.4;
-  font-size: 0.85rem;
 }
 
 .confidence-badge.high {

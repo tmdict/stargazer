@@ -3,13 +3,20 @@ import { onMounted, onUnmounted, ref, type Ref } from 'vue'
 import { useTouchDetection } from './useTouchDetection'
 
 /**
- * Pinnable info tooltip (a "toggletip"), for triggers whose only job is
- * revealing information: hover shows it while the mouse rests on the trigger,
- * click or tap pins it, and an outside press, Escape, or a second click of
- * the pinned trigger dismisses it. The synthetic mouseenter a tap fires is
- * suppressed (useHoverTooltip's guards), leaving click as the single touch
- * path. Escape is consumed in the capture phase so a pinned tip inside a
- * modal closes without taking the modal down with it.
+ * Info tooltip for triggers whose only job is revealing information: hover
+ * shows it while the mouse rests on the trigger, and click or tap shows the
+ * same tooltip, which is the whole touch path (the synthetic mouseenter a tap
+ * fires is suppressed via useHoverTooltip's guards). A second click of the
+ * trigger, a press outside it, or Escape dismisses it; hovering another
+ * trigger simply replaces it, like any hover.
+ *
+ * Keyboard: on a natively focusable trigger (a real button), wire focus/blur
+ * to hoverOpen/hoverClose; Enter and Space then toggle through the native
+ * click.
+ *
+ * Short icon labels (Copy, Rename, nav links) stay on native `title`: those
+ * are hover-only and touch-silent already, which is all Rule B asks. The
+ * tooltip composables are for sentence-length content and shared popups.
  *
  * Handlers take the trigger element from the event's currentTarget; delegated
  * callers (SkillKeywordTooltip, whose spans live in v-html) pass the resolved
@@ -21,41 +28,36 @@ export function useInfoTip<T = true>() {
 
   const anchor: Ref<Element | null> = ref(null)
   const payload = ref(null) as Ref<T | null>
-  const pinned = ref(false)
 
   const elOf = (src: Event | Element): Element | null =>
     src instanceof Element ? src : src.currentTarget instanceof Element ? src.currentTarget : null
 
-  const open = (el: Element, value: T, pin: boolean): void => {
+  const open = (el: Element, value: T): void => {
     anchor.value = el
     payload.value = value
-    pinned.value = pin
   }
 
   const close = (): void => {
     anchor.value = null
     payload.value = null
-    pinned.value = false
   }
 
   const hoverOpen = (src: Event | Element, value: T = true as T): void => {
     if (isTouchDevice.value || interactionStartedAsTouch.value) return
     const el = elOf(src)
-    // Re-entering the anchored trigger must not downgrade a pin.
-    if (!el || el === anchor.value) return
-    open(el, value, false)
+    if (el) open(el, value)
   }
 
   const hoverClose = (): void => {
     interactionStartedAsTouch.value = false
-    if (!pinned.value) close()
+    close()
   }
 
   const toggle = (src: Event | Element, value: T = true as T): void => {
     const el = elOf(src)
     if (!el) return
-    if (pinned.value && el === anchor.value) close()
-    else open(el, value, true)
+    if (el === anchor.value) close()
+    else open(el, value)
   }
 
   const onTouchStart = (): void => {
@@ -70,9 +72,10 @@ export function useInfoTip<T = true>() {
     close()
   }
 
+  // Capture phase so a modal's own Escape handler (which may stop
+  // propagation) can't starve the close; the key itself is let through.
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key !== 'Escape' || !anchor.value) return
-    e.stopPropagation()
     close()
   }
 
@@ -86,5 +89,5 @@ export function useInfoTip<T = true>() {
     document.removeEventListener('keydown', onKeyDown, { capture: true })
   })
 
-  return { anchor, payload, pinned, hoverOpen, hoverClose, toggle, onTouchStart, close }
+  return { anchor, payload, hoverOpen, hoverClose, toggle, onTouchStart, close }
 }

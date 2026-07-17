@@ -9,7 +9,7 @@ import { useTouchDetection } from './useTouchDetection'
  *
  * This is the contract for ACTION triggers (buttons, icons that do something
  * when tapped): touch users get the action, never the tooltip. Info-only
- * triggers use useInfoTip instead, which adds tap-to-pin.
+ * triggers use useInfoTip instead, where a tap shows the tooltip.
  *
  * `anchor`/`payload` track the hovered trigger and its datum for components
  * where several triggers share one teleported TooltipPopup; single-trigger

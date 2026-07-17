@@ -28,7 +28,7 @@ import {
   type SkillLocaleFile,
   type SkillRefineEntry,
 } from '../src/lib/types/skill.ts'
-import { STAT_TAG_RE } from '../src/utils/textHighlight.ts'
+import { HIGHLIGHT_RE, splitHighlightToken, STAT_TAG_RE } from '../src/utils/textHighlight.ts'
 
 // ---------- paths ----------
 
@@ -253,18 +253,18 @@ interface OrphanTag {
   reason: string
 }
 
-// Keyword tokens `[[label|key]]` in projected slot text; every key must
-// resolve in the locale's glossary or the rendered span would be a dead
-// tooltip affordance.
-const KEYWORD_TOKEN_RE = /\[\[[^\]]*?\|([A-Za-z][A-Za-z0-9_]*)\]\]/g
-
+// Keyword tokens `[[label|key]]` in projected slot text, parsed with the same
+// grammar the renderer uses so validation can't drift from what ships.
 function collectKeywordKeys(data: SkillLocaleFile): Set<string> {
   const keys = new Set<string>()
   for (const slotKey of SLOT_ORDER) {
     const slot = data[slotKey]
     if (!slot) continue
     for (const text of [...slot.d, ...(slot.r ?? []).map((r) => r.d)]) {
-      for (const m of text.matchAll(KEYWORD_TOKEN_RE)) keys.add(m[1]!)
+      for (const m of text.matchAll(HIGHLIGHT_RE)) {
+        const { key } = splitHighlightToken(m[1]!)
+        if (key) keys.add(key)
+      }
     }
   }
   return keys
@@ -317,7 +317,6 @@ interface RunSummary {
   availableNotAdded: string[] // feed entry present, no character file
   orphans: OrphanTag[]
   unknownDirs: string[] // locale dirs on disk that are not in SKILL_LOCALES
-  missingKeywords: string[] // `[[label|key]]` keys with no glossary entry, e.g. "[de] peggy: weakest"
 }
 
 async function main() {
@@ -351,8 +350,9 @@ async function main() {
     if (!keywords) {
       throw new Error(`[${code}] feed lacks _meta.keywords; re-run the producer's export:api`)
     }
+    // Code-point order (the producer's sort), so bytes are stable across hosts.
     keywordsByCode[code] = Object.fromEntries(
-      Object.entries(keywords).sort(([a], [b]) => a.localeCompare(b)),
+      Object.entries(keywords).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)),
     )
   }
   const heroCount = Object.keys(bulks.en.heroes).length
@@ -367,15 +367,16 @@ async function main() {
     availableNotAdded: [],
     orphans: [],
     unknownDirs: [],
-    missingKeywords: [],
   }
 
   const knownSlugs = new Set(characters.map((c) => c.slug))
 
   // Slot-level drift (a language's feed carrying no content for a slot en
   // has) would silently render pages missing a section; fail like the
-  // hero-set assertion does.
+  // hero-set assertion does. Same for a keyword token with no glossary entry:
+  // it would ship as a dead tooltip affordance (underlined span, no popup).
   const slotMismatches: string[] = []
+  const missingKeywords: string[] = []
 
   for (const { slug, file } of characters) {
     const enHero = bulks.en.heroes[slug]
@@ -393,7 +394,7 @@ async function main() {
       if (!hero) continue
       const data = projectLocale(hero, termsByCode[code])
       for (const key of collectKeywordKeys(data)) {
-        if (!(key in keywordsByCode[code])) summary.missingKeywords.push(`[${code}] ${slug}: ${key}`)
+        if (!(key in keywordsByCode[code])) missingKeywords.push(`[${code}] ${slug}: ${key}`)
       }
       const slots = SLOT_ORDER.filter((k) => k in data).join(',')
       if (code === 'en') enSlots = slots
@@ -410,6 +411,12 @@ async function main() {
 
   if (slotMismatches.length > 0) {
     throw new Error(`feed slot coverage is not uniform across locales:\n  ${slotMismatches.join('\n  ')}`)
+  }
+
+  if (missingKeywords.length > 0) {
+    throw new Error(
+      `keyword token(s) missing from glossaries:\n  ${missingKeywords.join('\n  ')}`,
+    )
   }
 
   // One keyword glossary per language, beside the hero files so the language
@@ -453,11 +460,6 @@ async function main() {
   console.log(`  locale files: ${written} written, ${unchanged} unchanged`)
   if (keywordsWritten > 0) console.log(`  keyword glossaries: ${keywordsWritten} written`)
   if (chunksWritten > 0) console.log(`  chunk modules: ${chunksWritten} written`)
-
-  if (summary.missingKeywords.length > 0) {
-    console.warn(`\n  ${summary.missingKeywords.length} keyword token(s) missing from glossaries:`)
-    for (const k of summary.missingKeywords) console.warn(`    - ${k}`)
-  }
 
   if (summary.missingFromFeed.length > 0) {
     console.warn(

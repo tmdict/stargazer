@@ -63,6 +63,10 @@ const sorted = computed(() => {
 // unelided, so the pieces always spell the whole name.
 const searchQuery = ref('')
 const searchVisible = computed(() => library.count > 1)
+// Hiding also resets the query, so the box can't reappear pre-filtered.
+watch(searchVisible, (visible) => {
+  if (!visible) searchQuery.value = ''
+})
 const visibleTeams = computed(() => {
   const query = searchVisible.value ? searchQuery.value.trim() : ''
   if (!query)
@@ -152,7 +156,8 @@ const {
 
 const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name)
 
-// The hint is keyboard-focusable, so focus/blur mirror the hover handlers.
+// A real button, so focus/blur mirror the hover handlers and Enter/Space
+// toggle through the native click.
 const {
   anchor: storageHintAnchor,
   hoverOpen: storageHintOpen,
@@ -169,10 +174,10 @@ const {
         <span class="library-count" :class="{ warn: nearCap }">
           {{ library.count }} / {{ MAX_SAVED_TEAMS }}
         </span>
-        <span
+        <button
+          type="button"
           class="storage-hint"
           :aria-label="i18n.t('app.storage-hint')"
-          tabindex="0"
           @mouseenter="storageHintOpen"
           @mouseleave="storageHintClose"
           @focus="storageHintOpen"
@@ -181,7 +186,7 @@ const {
           @touchstart.passive="storageHintTouchStart"
         >
           <IconInfo :size="15" />
-        </span>
+        </button>
         <div
           v-if="library.count > 1"
           class="sort-picker"
@@ -319,9 +324,7 @@ const {
         variant="detailed"
         max-width="320px"
       >
-        <template #content>
-          <div class="storage-tip">{{ i18n.t('app.storage-hint') }}</div>
-        </template>
+        <template #content>{{ i18n.t('app.storage-hint') }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -364,6 +367,9 @@ const {
 
 .storage-hint {
   display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
   color: var(--color-text-secondary);
   opacity: 0.6;
   cursor: help;
@@ -373,11 +379,6 @@ const {
 .storage-hint:focus-visible {
   opacity: 1;
   color: var(--color-primary);
-}
-
-.storage-tip {
-  line-height: 1.4;
-  font-size: 0.85rem;
 }
 
 .library-count.warn {

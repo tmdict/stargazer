@@ -182,11 +182,6 @@ const activeTab = defineModel<MainTab>('activeTab', { default: 'draft' })
   cursor: help;
 }
 
-.pool-info-tip {
-  font-size: 0.85rem;
-  line-height: 1.45;
-}
-
 .pool-info-tip p {
   margin: 0 0 var(--spacing-xs);
 }

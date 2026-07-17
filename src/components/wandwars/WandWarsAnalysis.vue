@@ -8,6 +8,8 @@ import WandWarsRecordsList from './WandWarsRecordsList.vue'
 import WandWarsTopTeams from './WandWarsTopTeams.vue'
 import FilterIcons from '@/components/ui/FilterIcons.vue'
 import TabView from '@/components/ui/TabView.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { BT_LOW_DATA_THRESHOLD } from '@/wandwars/constants'
@@ -64,6 +66,22 @@ const lockedSide = ref<PickSide | null>(null)
 function toggleLock(side: PickSide) {
   lockedSide.value = lockedSide.value === side ? null : side
 }
+
+// Lock buttons are action triggers (tap toggles the lock), so their tooltip
+// is hover-only and touch-suppressed.
+const {
+  anchor: lockTipAnchor,
+  payload: lockTipSide,
+  onMouseEnter: lockTipEnter,
+  onMouseLeave: lockTipLeave,
+  onTouchStart: lockTipTouchStart,
+} = useHoverTooltip<PickSide>()
+
+const lockTipText = computed(() =>
+  lockTipSide.value
+    ? i18n.t('wandwars.messages/lock-to-team', { side: i18n.t(`wandwars.${lockTipSide.value}`) })
+    : '',
+)
 
 // The effective side used for recommendations (locked or auto-detected)
 const effectivePickSide = computed<PickSide | null>(() => lockedSide.value ?? props.currentPickSide)
@@ -308,9 +326,9 @@ const aggregatePrediction = computed(() => {
                 <button
                   :class="['lock-btn', { active: lockedSide === 'left' }]"
                   @click="toggleLock('left')"
-                  :title="
-                    i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.left') })
-                  "
+                  @mouseenter="lockTipEnter($event, 'left')"
+                  @mouseleave="lockTipLeave"
+                  @touchstart.passive="lockTipTouchStart"
                 >
                   <svg
                     v-if="lockedSide === 'left'"
@@ -327,9 +345,9 @@ const aggregatePrediction = computed(() => {
                 <button
                   :class="['lock-btn', { active: lockedSide === 'right' }]"
                   @click="toggleLock('right')"
-                  :title="
-                    i18n.t('wandwars.messages/lock-to-team', { side: i18n.t('wandwars.right') })
-                  "
+                  @mouseenter="lockTipEnter($event, 'right')"
+                  @mouseleave="lockTipLeave"
+                  @touchstart.passive="lockTipTouchStart"
                 >
                   <svg
                     v-if="lockedSide === 'right'"
@@ -425,6 +443,17 @@ const aggregatePrediction = computed(() => {
         </div>
       </template>
     </TabView>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="lockTipAnchor && lockTipText"
+        :target-element="lockTipAnchor"
+        variant="detailed"
+        max-width="260px"
+      >
+        <template #content>{{ lockTipText }}</template>
+      </TooltipPopup>
+    </Teleport>
   </section>
 </template>
 

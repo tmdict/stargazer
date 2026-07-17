@@ -113,9 +113,7 @@ function orderedTeam(team: string[]): string[] {
         variant="detailed"
         max-width="240px"
       >
-        <template #content>
-          <div class="label-tip">{{ i18n.t(labelTipKey) }}</div>
-        </template>
+        <template #content>{{ i18n.t(labelTipKey) }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -152,11 +150,6 @@ function orderedTeam(team: string[]): string[] {
 
 .top-teams-label.suggested {
   color: var(--color-primary);
-}
-
-.label-tip {
-  line-height: 1.4;
-  font-size: 0.85rem;
 }
 
 .info-icon {

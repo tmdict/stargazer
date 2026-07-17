@@ -14,9 +14,8 @@ const STAT_LABEL: Record<string, string> = {
   UAP: 'Ult Power',
 }
 
-// Canonical skill-text token grammar. searchHighlight and scripts/import-skills
-// derive their stripping/reordering from these; vite.config.ts mirrors the
-// [[...]] pattern with a pointer comment (build config can't import src).
+// Canonical skill-text token grammar; searchHighlight, scripts/import-skills,
+// and vite.config.ts all import these rather than mirroring them.
 export const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
 export const STAT_TAG_RE = /<([A-Z][A-Za-z0-9_]*)>/g
 
@@ -38,8 +37,10 @@ export function highlightSkillText(text: string): string {
   if (!text) return text
   let out = text.replace(HIGHLIGHT_RE, (_m, inner: string) => {
     const { label, key } = splitHighlightToken(inner)
+    // Keyword spans are focusable so keyboard users can reach the glossary
+    // tooltip (SkillKeywordTooltip toggles it on Enter/Space).
     return key
-      ? `<span class="skill-keyword" data-kw="${key}">${label}</span>`
+      ? `<span class="skill-keyword" data-kw="${key}" role="button" tabindex="0">${label}</span>`
       : `<span class="skill-highlight">${label}</span>`
   })
   out = out.replace(

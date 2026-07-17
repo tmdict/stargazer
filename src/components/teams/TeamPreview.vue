@@ -10,6 +10,7 @@ import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumb
 import { teamPreviewBoards, type PreviewUnit } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
 
 const { team } = defineProps<{
@@ -17,6 +18,7 @@ const { team } = defineProps<{
 }>()
 
 const gameData = useGameDataStore()
+const i18n = useI18nStore()
 
 const resolveImage = (unit: PreviewUnit): string | undefined => {
   if (unit.characterId !== undefined) {
@@ -64,7 +66,7 @@ const boards = computed(() => {
         :hex-size="10"
       />
     </template>
-    <span v-else class="preview-broken" title="Unreadable team data">⚠</span>
+    <span v-else class="preview-broken" :title="i18n.t('app.team-unreadable')">⚠</span>
   </div>
 </template>
 

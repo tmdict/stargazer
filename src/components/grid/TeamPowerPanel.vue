@@ -202,9 +202,7 @@ const hoveredStat = computed(
         variant="detailed"
         max-width="260px"
       >
-        <template #content>
-          <p class="stat-tip">{{ rivalryStatInfo(hoveredStat) }}</p>
-        </template>
+        <template #content>{{ rivalryStatInfo(hoveredStat) }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -329,13 +327,6 @@ const hoveredStat = computed(
 .stat-reset:hover {
   background: rgba(0, 0, 0, 0.11);
   color: var(--color-text-primary);
-}
-
-/* Tooltip body text; the frosted background, blur, and color come from TooltipPopup. */
-.stat-tip {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.45;
 }
 
 .heroes {
