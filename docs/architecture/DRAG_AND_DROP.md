@@ -82,9 +82,9 @@ GridManager (Orchestrator)
 │   └── Invisible Event Layer (topmost)
 ├── GridArtifacts (HTML overlay - behind characters)
 ├── GridCharacters (HTML overlay)
-├── GridArrows (SVG overlay)
 ├── SkillTargeting (SVG overlay)
-└── PathfindingDebug (conditional)
+├── PathfindingDebug (Debug tab only)
+└── GridArrows (SVG overlay, Debug tab only)
 ```
 
 **GridTiles Internal Structure:**
@@ -113,7 +113,7 @@ GridManager (Orchestrator)
 │  └───────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────┘
 
-[GridArtifacts, GridCharacters, GridArrows, SkillTargeting
+[GridArtifacts, GridCharacters, SkillTargeting, GridArrows
  render above with selective pointer-events control]
 ```
 
@@ -220,7 +220,7 @@ Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so t
 **GridTiles**: Renders hexes with three-layer SVG structure and invisible events
 **GridArtifacts**: Shows team artifacts in their host cells, dashed cells beside grid cells 1 (ally) and 45 (enemy): outside the grid simulation and the hex pipeline, with their own artifact drag surfaces (renders before characters)
 **GridCharacters**: Positions character portraits with absolute positioning
-**GridArrows**: Displays pathfinding visualization with SVG arrows
+**GridArrows**: Draws the closest-target arrows (Debug tab only)
 **SkillTargeting**: Shows skill-specific targeting arrows (e.g., Silvina's First Strike)
 
 ### Visual Layer Separation

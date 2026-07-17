@@ -64,7 +64,7 @@ The engine has a fixed orientation: ally occupies the low hex-id side and target
 
 Two surfaces need rotation awareness beyond the layout: `GridCharacters` paints sprites in ascending rendered-y order (near rows over far rows; grid storage order only matches on the canonical view), and `GridArtifacts` derives its front/back z-order from which host cell renders at the screen-bottom edge (`inverted` flips it). Thumbnails and guide snippets build their own layouts and never set the flag, so library and guide renderings stay canonical.
 
-The flag is serialized as a display flag (`d` bit 5) meaning "the sharer had the board rotated"; applying it on restore rotates the view and nothing else. On Teams it is a device-level view preference like the other toggles; the Arena keeps it in its own save slot. Each page resets the shared display globals (team view, invert) at setup, so a first visit with no saved state never inherits another page's toggles.
+The flag is serialized as a display flag (`d` bit 4) meaning "the sharer had the board rotated"; applying it on restore rotates the view and nothing else. On Teams it is a device-level view preference like the other toggles; the Arena keeps it in its own save slot. Each page resets the shared display globals (team view, invert) at setup, so a first visit with no saved state never inherits another page's toggles.
 
 ## Core Components
 

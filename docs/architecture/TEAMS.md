@@ -38,7 +38,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 
 The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter hidden on mobile) inside one card, with the roster as a sibling card.
 
-- **Display flags**: owns the view toggles (arrows, grid info, skills, perspective, team view, invert, wrap) as device-level preferences shared by every team mode: restored from `stargazer.teams.display` at setup and mirrored on every change. Share links serialize them and a `?g=` restore applies them (adopting the sharer's view is the point of a link); mode slots also carry them but restores ignore them entirely
+- **Display flags**: owns the view toggles (grid info, skills, perspective, team view, invert, wrap) as device-level preferences shared by every team mode: restored from `stargazer.teams.display` at setup and mirrored on every change. Share links serialize them and a `?g=` restore applies them (adopting the sharer's view is the point of a link); mode slots also carry them but restores ignore them entirely
 - **Board sizing**: pins its own hex size per breakpoint (`/src/utils/teamsBoardSize.ts`)
 - **Startup**: a `?g=` link overwrites the routed mode's slot; otherwise the last-used mode restores
 - **Degraded startup**: if game data failed to load, `buildDefaults()` shows placeholder boards with no persistence reads or writes
