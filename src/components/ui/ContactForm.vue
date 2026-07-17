@@ -18,28 +18,22 @@ const { trigger = null } = defineProps<{
 const open = defineModel<boolean>('open', { required: true })
 
 const i18n = useI18nStore()
-const { error } = useToast()
+const { success, error } = useToast()
 
 const panelEl = ref<HTMLElement | null>(null)
 const nameEl = ref<HTMLInputElement | null>(null)
 const name = ref('')
 const message = ref('')
 const sending = ref(false)
-const sent = ref(false)
 
-// Reopening after a delivered message starts fresh; closing mid-draft keeps
-// the draft.
 watch(open, async (isOpen) => {
   if (!isOpen) return
-  if (sent.value) {
-    sent.value = false
-    name.value = ''
-    message.value = ''
-  }
   await nextTick()
   nameEl.value?.focus()
 })
 
+// On success the panel closes and a toast confirms; a failure keeps the
+// draft in place for a retry.
 const submit = async (): Promise<void> => {
   if (sending.value || !message.value.trim()) return
   sending.value = true
@@ -57,20 +51,15 @@ const submit = async (): Promise<void> => {
       }).toString(),
     })
     if (!res.ok) throw new Error(`contact form POST failed: ${res.status}`)
-    sent.value = true
+    name.value = ''
+    message.value = ''
+    open.value = false
+    success(i18n.t('app.contact-success'))
   } catch {
     error(i18n.t('app.contact-error'))
   } finally {
     sending.value = false
   }
-}
-
-const reset = async (): Promise<void> => {
-  sent.value = false
-  name.value = ''
-  message.value = ''
-  await nextTick()
-  nameEl.value?.focus()
 }
 
 const onDocPointerDown = (e: PointerEvent): void => {
@@ -106,7 +95,7 @@ onUnmounted(() => {
       :aria-label="i18n.t('app.contact')"
     >
       <h3 class="panel-title">{{ i18n.t('app.contact') }}</h3>
-      <form v-if="!sent" @submit.prevent="submit">
+      <form @submit.prevent="submit">
         <div class="field-row">
           <label class="field-label" for="contact-name">{{ i18n.t('app.contact-name') }}</label>
           <input id="contact-name" ref="nameEl" v-model="name" class="field-input" type="text" />
@@ -123,13 +112,6 @@ onUnmounted(() => {
           </button>
         </div>
       </form>
-      <div v-else class="sent-state">
-        <div class="sent-check">✓</div>
-        <p class="sent-text">{{ i18n.t('app.contact-success') }}</p>
-        <button type="button" class="again-btn" @click="reset">
-          {{ i18n.t('app.send-another') }}
-        </button>
-      </div>
     </div>
   </Teleport>
 </template>
@@ -145,8 +127,9 @@ onUnmounted(() => {
   width: min(420px, calc(100vw - 32px));
   z-index: 9998;
   background: rgba(20, 20, 20, 0.78);
+  /* No manual -webkit- prefix: the build auto-prefixes, and a hand-written
+     duplicate makes the minifier drop the standard property. */
   backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--radius-large);
   box-shadow:
@@ -227,41 +210,6 @@ onUnmounted(() => {
 .send-btn:disabled {
   background: var(--color-primary-hover);
   cursor: default;
-}
-
-.sent-state {
-  text-align: center;
-  padding: 18px 0 6px;
-}
-
-.sent-check {
-  width: 34px;
-  height: 34px;
-  margin: 0 auto 10px;
-  border-radius: var(--radius-round);
-  background: rgba(95, 196, 187, 0.18);
-  color: var(--color-accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1rem;
-  font-weight: 700;
-}
-
-.sent-text {
-  margin: 0 0 10px;
-  font-size: 0.85rem;
-}
-
-.again-btn {
-  font: inherit;
-  font-size: 0.75rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-accent);
-  text-decoration: underline;
-  padding: 0;
 }
 
 @media (max-width: 480px) {
