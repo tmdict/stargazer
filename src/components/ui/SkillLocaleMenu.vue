@@ -3,6 +3,7 @@ import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import IconGlobe from './IconGlobe.vue'
+import { useTouchDetection } from '@/composables/useTouchDetection'
 import { SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -24,6 +25,33 @@ const i18n = useI18nStore()
 
 const open = ref(false)
 const root = ref<HTMLElement | null>(null)
+
+// Hover opens the menu for mouse users; touch users still open it with the
+// click toggle. Hover is suppressed for touch (as in useHoverTooltip) because
+// a tap fires a synthetic mouseenter whose hover-open the tap's own click
+// toggle would immediately undo. Closing on leave waits a grace period so the
+// cursor can cross the 8px gap between the trigger and the panel.
+const HOVER_CLOSE_GRACE_MS = 150
+const { isTouchDevice } = useTouchDetection()
+const interactionStartedAsTouch = ref(false)
+let closeTimer: ReturnType<typeof setTimeout> | undefined
+
+const onMouseEnter = () => {
+  if (isTouchDevice.value || interactionStartedAsTouch.value) return
+  clearTimeout(closeTimer)
+  open.value = true
+}
+
+const onMouseLeave = () => {
+  interactionStartedAsTouch.value = false
+  if (isTouchDevice.value) return
+  clearTimeout(closeTimer)
+  closeTimer = setTimeout(() => (open.value = false), HOVER_CLOSE_GRACE_MS)
+}
+
+const onTouchStart = () => {
+  interactionStartedAsTouch.value = true
+}
 
 const currentDef = computed(() => SKILL_LOCALES.find((l) => l.code === props.current))
 // Teal state signals the text language differs from the site chrome.
@@ -57,11 +85,18 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('pointerdown', onDocPointerDown)
   document.removeEventListener('keydown', onKeyDown, { capture: true })
+  clearTimeout(closeTimer)
 })
 </script>
 
 <template>
-  <div ref="root" class="locale-menu">
+  <div
+    ref="root"
+    class="locale-menu"
+    @mouseenter="onMouseEnter"
+    @mouseleave="onMouseLeave"
+    @touchstart.passive="onTouchStart"
+  >
     <button
       type="button"
       class="trigger"
