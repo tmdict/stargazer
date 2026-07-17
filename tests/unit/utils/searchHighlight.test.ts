@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { cleanSkillText, renderRichText } from '@/utils/searchHighlight'
+import { cleanSkillText, renderRichText, renderSnippet } from '@/utils/searchHighlight'
 
 describe('cleanSkillText', () => {
   it('collapses value and keyword tokens to their visible text', () => {
@@ -88,5 +88,35 @@ describe('renderRichText', () => {
       tag: 'foo',
       marked: false,
     })
+  })
+})
+
+describe('renderSnippet', () => {
+  it('elides with ellipses around a mid-text match', () => {
+    const text = 'a'.repeat(40) + 'MATCH' + 'b'.repeat(40)
+    expect(renderSnippet(text, 'match', 5)).toEqual({
+      pre: '…' + 'a'.repeat(5),
+      match: 'MATCH',
+      post: 'b'.repeat(5) + '…',
+    })
+  })
+
+  it('omits ellipses at the text boundaries', () => {
+    expect(renderSnippet('MATCH tail', 'match', 30)).toEqual({
+      pre: '',
+      match: 'MATCH',
+      post: ' tail',
+    })
+  })
+
+  it('reconstructs the whole text when context covers it (the team-name filter contract)', () => {
+    const name = 'Team [S9] (Dream) +1'
+    const snippet = renderSnippet(name, '(dream)', name.length)!
+    expect(snippet.pre + snippet.match + snippet.post).toBe(name)
+    expect(snippet.match).toBe('(Dream)')
+  })
+
+  it('returns null when the query does not occur', () => {
+    expect(renderSnippet('Team Alpha', 'beta')).toBeNull()
   })
 })

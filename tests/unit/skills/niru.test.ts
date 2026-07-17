@@ -77,3 +77,48 @@ describe('niru rear-row, front-of-row ally targeting', () => {
     expect(target()).toBeUndefined()
   })
 })
+
+// The enemy side is the 180° mirror of the ally board (hex 34 mirrors 12),
+// so both scan directions flip: rear rows are the higher diagonals and the
+// front of a row is the LOWER hex id.
+describe('niru enemy-side orientation', () => {
+  const ENEMY_HEX = 34
+
+  let grid: Grid
+  let skillManager: SkillManager
+
+  const ctx = (): SkillContext => ({
+    grid,
+    hexId: ENEMY_HEX,
+    team: Team.ENEMY,
+    characterId: NIRU,
+    skillManager,
+  })
+
+  const niru = () => getCharacterSkill(NIRU)!
+  const target = () => skillManager.getSkillTarget(NIRU, Team.ENEMY)
+
+  beforeEach(() => {
+    grid = new Grid()
+    skillManager = new SkillManager()
+    placeOnTile(grid, ENEMY_HEX, NIRU, Team.ENEMY)
+  })
+
+  it('within a diagonal row, takes the lower hex id (37 over 38)', () => {
+    placeOnTile(grid, 37, 1, Team.ENEMY) // mirror of ally 9
+    placeOnTile(grid, 38, 2, Team.ENEMY) // mirror of ally 8
+
+    niru().onActivate(ctx())
+
+    expect(target()?.targetHexId).toBe(37)
+  })
+
+  it('reaches rear diagonal rows first (40 over 37)', () => {
+    placeOnTile(grid, 40, 1, Team.ENEMY) // mirror of ally 6
+    placeOnTile(grid, 37, 2, Team.ENEMY)
+
+    niru().onActivate(ctx())
+
+    expect(target()?.targetHexId).toBe(40)
+  })
+})

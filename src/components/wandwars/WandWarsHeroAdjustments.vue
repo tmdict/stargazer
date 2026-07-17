@@ -2,6 +2,8 @@
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
 import FilterIcons from '@/components/ui/FilterIcons.vue'
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import heroBuffs from '@/data/wandwars/hero-buffs.json'
 import { compareByOrder, FACTION_ORDER } from '@/lib/filterOrder'
 import { useGameDataStore } from '@/stores/gameData'
@@ -284,6 +286,17 @@ const totalHeaderTitle = computed(
   () =>
     `Σ = ${i18n.t('game.hp')} + ${i18n.t('game.atk')} + ${i18n.t('game.phys-def')} + ${i18n.t('game.magic-def')}`,
 )
+
+// One tip serves both Σ headers. The ranked header is also the sort button,
+// so it only wires hover (tap sorts); the wall header is info-only, so tap
+// shows the tip there.
+const {
+  anchor: totalTipAnchor,
+  hoverOpen: totalTipOpen,
+  hoverClose: totalTipClose,
+  toggle: totalTipToggle,
+  onTouchStart: totalTipTouchStart,
+} = useInfoTip()
 </script>
 
 <template>
@@ -328,7 +341,9 @@ const totalHeaderTitle = computed(
             <button
               type="button"
               :class="['head-cell', 'sortable', { active: sortField === 'total' }]"
-              :title="totalHeaderTitle"
+              @mouseenter="totalTipOpen"
+              @mouseleave="totalTipClose"
+              @touchstart.passive="totalTipTouchStart"
               @click="sortField = 'total'"
             >
               Σ
@@ -338,7 +353,14 @@ const totalHeaderTitle = computed(
             <span v-for="col in STAT_COLUMNS" :key="col.field" class="head-cell">
               {{ i18n.t(col.headerKey) }}
             </span>
-            <span class="head-cell" :title="totalHeaderTitle">Σ</span>
+            <span
+              class="head-cell"
+              @mouseenter="totalTipOpen"
+              @mouseleave="totalTipClose"
+              @click="totalTipToggle"
+              @touchstart.passive="totalTipTouchStart"
+              >Σ</span
+            >
           </template>
         </div>
 
@@ -387,6 +409,17 @@ const totalHeaderTitle = computed(
         </template>
       </div>
     </div>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="totalTipAnchor"
+        :target-element="totalTipAnchor"
+        variant="detailed"
+        max-width="260px"
+      >
+        <template #content>{{ totalHeaderTitle }}</template>
+      </TooltipPopup>
+    </Teleport>
   </section>
 </template>
 

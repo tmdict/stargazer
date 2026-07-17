@@ -30,9 +30,9 @@ describe('highlightSkillText', () => {
     )
   })
 
-  it('renders keyword tokens as data-kw spans with the label only', () => {
+  it('renders keyword tokens as focusable data-kw spans with the label only', () => {
     expect(highlightSkillText('the [[frontmost|frontmost]] enemy')).toBe(
-      'the <span class="skill-keyword" data-kw="frontmost">frontmost</span> enemy',
+      'the <span class="skill-keyword" data-kw="frontmost" role="button" tabindex="0">frontmost</span> enemy',
     )
   })
 

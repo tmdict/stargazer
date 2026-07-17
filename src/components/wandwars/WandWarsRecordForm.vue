@@ -116,9 +116,7 @@ function handleSubmit() {
         variant="detailed"
         max-width="260px"
       >
-        <template #content>
-          <div class="sweep-tip">{{ i18n.t('wandwars.messages/tooltip-sweep') }}</div>
-        </template>
+        <template #content>{{ i18n.t('wandwars.messages/tooltip-sweep') }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -152,11 +150,6 @@ function handleSubmit() {
   cursor: help;
   opacity: 0.5;
   transition: opacity var(--transition-fast);
-}
-
-.sweep-tip {
-  line-height: 1.4;
-  font-size: 0.85rem;
 }
 
 .record-info-icon:hover {

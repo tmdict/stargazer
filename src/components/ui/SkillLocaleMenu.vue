@@ -102,7 +102,6 @@ onUnmounted(() => {
       class="trigger"
       :class="{ 'is-active': isActive }"
       :aria-label="i18n.t('app.skill-locale')"
-      :title="i18n.t('app.skill-locale')"
       :aria-expanded="open"
       @click="open = !open"
     >

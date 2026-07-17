@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useInfoTip } from '@/composables/useInfoTip'
 import { useI18nStore } from '@/stores/i18n'
 import {
   formatName,
@@ -40,6 +42,14 @@ const confidenceTooltip = computed(() =>
 const dataDepthLabel = computed(
   () => DATA_DEPTH_LABEL_KEYS[props.recommendation.confidence] ?? 'sparse-data',
 )
+
+const {
+  anchor: confidenceTipAnchor,
+  hoverOpen: confidenceTipOpen,
+  hoverClose: confidenceTipClose,
+  toggle: confidenceTipToggle,
+  onTouchStart: confidenceTipTouchStart,
+} = useInfoTip()
 </script>
 
 <template>
@@ -57,7 +67,13 @@ const dataDepthLabel = computed(
         <span class="hero-name">{{ formatName(recommendation.hero) }}</span>
       </div>
       <div class="score-confidence">
-        <span :class="['confidence-badge', recommendation.confidence]" :title="confidenceTooltip">
+        <span
+          :class="['confidence-badge', recommendation.confidence]"
+          @mouseenter="confidenceTipOpen"
+          @mouseleave="confidenceTipClose"
+          @click="confidenceTipToggle"
+          @touchstart.passive="confidenceTipTouchStart"
+        >
           {{ i18n.t(`wandwars.${dataDepthLabel}`) }}
         </span>
         <span class="score"
@@ -231,6 +247,17 @@ const dataDepthLabel = computed(
         v-html="formatNoteHtml(note.text, props.leftTeam ?? [], props.rightTeam ?? [])"
       />
     </div>
+
+    <Teleport to="body">
+      <TooltipPopup
+        v-if="confidenceTipAnchor"
+        :target-element="confidenceTipAnchor"
+        variant="detailed"
+        max-width="300px"
+      >
+        <template #content>{{ confidenceTooltip }}</template>
+      </TooltipPopup>
+    </Teleport>
   </div>
 </template>
 
@@ -295,6 +322,7 @@ const dataDepthLabel = computed(
   padding: 3px 8px;
   border-radius: var(--radius-small);
   text-transform: uppercase;
+  cursor: help;
 }
 
 .confidence-badge.high {

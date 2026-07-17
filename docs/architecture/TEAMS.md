@@ -158,6 +158,7 @@ Semantics wired in `TeamsView`:
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
+- **Search**: a name filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered); filtering and match highlighting share one `renderSnippet` pass, so a card is visible exactly when its name carries a `<mark>`
 
 ## Thumbnails
 
