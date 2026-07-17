@@ -1,0 +1,15 @@
+{
+  "id": 120,
+  "name": "orion",
+  "level": "s",
+  "faction": "lightbearer",
+  "class": "warrior",
+  "damage": "magic",
+  "energy": [300],
+  "range": 1,
+  "season": 7,
+  "tags": {
+    "dot": [{ "skill2": 1 }],
+    "ult-denial": [{ "ex": 1 }]
+  }
+}
