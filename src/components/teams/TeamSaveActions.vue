@@ -213,9 +213,7 @@ const tipText = computed((): string => {
     />
     <Teleport to="body">
       <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
-        <template #content>
-          <div class="action-tip">{{ tipText }}</div>
-        </template>
+        <template #content>{{ tipText }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -224,11 +222,6 @@ const tipText = computed((): string => {
 <style scoped>
 .team-save-actions {
   display: contents;
-}
-
-.action-tip {
-  line-height: 1.4;
-  font-size: 0.85rem;
 }
 
 .popover-anchor {

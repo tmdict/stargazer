@@ -98,7 +98,8 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 - `useToast`: Global toast queue (success/error), rendered by `ToastContainer`
 - `useGridExport`: Captures the grid DOM to a PNG for copy/download
 - `useTouchDetection`: Module-singleton input-modality detection (touch vs mouse): gates hover tooltips
-- `useHoverTooltip`: Hover-tooltip visibility with touch suppression, shared by roster icons
+- `useHoverTooltip`: Hover-tooltip visibility with touch suppression, the contract for action triggers (tap performs the action, never shows the tooltip): roster icons, filter buttons, save actions
+- `useInfoTip`: Tooltip for info-only triggers where click/tap shows it like hover does (the touch path; outside press or Escape dismisses): keyword glossary spans, info icons, confidence badges. Its header comment is the tooltip policy reference (including when native `title` suffices)
 - `usePressClick`: Press-duration gate so HTML5 drags don't also fire click handlers
 - `useModalLocale`: Modal-local language override (en/zh content: artifact/phantimal modals) that resets to the global locale each time the modal opens
 - `useModalSkillLocale`: Skill-modal variant across all 16 skill locales: seeds from the saved globe preference and gates rendering on the locale chunk being warm

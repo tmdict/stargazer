@@ -1,50 +1,32 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
+import { onMounted, onUnmounted, ref, watch } from 'vue'
 
-interface Props {
+const {
+  targetElement,
+  offset = 10,
+  maxWidth = '300px',
+} = defineProps<{
   // Only read via getBoundingClientRect, so SVG triggers (icon components)
   // anchor as well as HTML ones.
   targetElement: Element
-  // Visual variants
   variant: 'simple' | 'detailed'
-  // Content props for simple text mode
-  text?: string
-  // Positioning options
   offset?: number
-  placement?: 'top' | 'bottom' | 'auto'
-  // Custom styling options
-  minWidth?: string
   maxWidth?: string
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  offset: 10,
-  placement: 'auto',
-  minWidth: 'auto',
-  maxWidth: '300px',
-})
+}>()
 
 const tooltipRef = ref<HTMLElement>()
 const position = ref({ x: 0, y: 0 })
 
-const formattedText = computed(() => {
-  if (!props.text) return ''
-  return props.text
-    .split('-')
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ')
-})
-
 const updatePosition = () => {
-  if (!props.targetElement || !tooltipRef.value) return
+  if (!targetElement || !tooltipRef.value) return
 
-  const rect = props.targetElement.getBoundingClientRect()
+  const rect = targetElement.getBoundingClientRect()
   const tooltipRect = tooltipRef.value.getBoundingClientRect()
 
   // Position above the element, aligned to left edge for wide elements
   const isWide = rect.width > tooltipRect.width * 1.5
   let x = isWide ? rect.left : rect.left + rect.width / 2 - tooltipRect.width / 2
-  let y = rect.top - tooltipRect.height - props.offset
+  let y = rect.top - tooltipRect.height - offset
 
   // Adjust if tooltip goes off screen
   if (x < 10) x = 10
@@ -54,7 +36,7 @@ const updatePosition = () => {
 
   // If tooltip would go above the viewport, position it below
   if (y < 10) {
-    y = rect.bottom + props.offset
+    y = rect.bottom + offset
   }
 
   position.value = { x, y }
@@ -62,7 +44,11 @@ const updatePosition = () => {
 
 // Callers may retarget a mounted instance (e.g. hovering across keyword
 // spans); flush post so the measurement sees the re-rendered content.
-watch(() => props.targetElement, updatePosition, { flush: 'post' })
+watch(() => targetElement, updatePosition, { flush: 'post' })
+
+// Live content can resize a mounted tooltip (TeamSaveActions' New flips to
+// Confirm while hovered); re-center on the trigger when it does.
+let contentObserver: ResizeObserver | null = null
 
 onMounted(() => {
   updatePosition()
@@ -71,11 +57,16 @@ onMounted(() => {
   // the tooltip anchored to its target.
   window.addEventListener('scroll', updatePosition, { capture: true })
   window.addEventListener('resize', updatePosition)
+  if (typeof ResizeObserver !== 'undefined' && tooltipRef.value) {
+    contentObserver = new ResizeObserver(updatePosition)
+    contentObserver.observe(tooltipRef.value)
+  }
 })
 
 onUnmounted(() => {
   window.removeEventListener('scroll', updatePosition, { capture: true })
   window.removeEventListener('resize', updatePosition)
+  contentObserver?.disconnect()
 })
 </script>
 
@@ -86,19 +77,10 @@ onUnmounted(() => {
     :style="{
       left: `${position.x}px`,
       top: `${position.y}px`,
-      minWidth: minWidth,
       maxWidth: maxWidth,
     }"
   >
-    <!-- Simple text mode -->
-    <template v-if="text">
-      {{ formattedText }}
-    </template>
-
-    <!-- Slot mode for complex content -->
-    <template v-else>
-      <slot name="content" />
-    </template>
+    <slot name="content" />
   </div>
 </template>
 
@@ -128,10 +110,12 @@ onUnmounted(() => {
   animation: tooltipFadeIn 0.15s ease-out;
 }
 
+/* Prose typography inherits into slot content, so callers don't restate it. */
 .tooltip-detailed {
   border-radius: 8px;
   padding: 12px 16px;
-  min-width: 200px;
+  font-size: 0.85rem;
+  line-height: 1.4;
   animation: tooltipFadeIn 0.2s ease-out;
 }
 

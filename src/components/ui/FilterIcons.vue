@@ -10,27 +10,27 @@ import { useI18nStore } from '@/stores/i18n'
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-interface Props {
+const {
+  options,
+  iconPrefix,
+  size = 36,
+  showTooltip = true,
+  activeBorderColor = 'var(--color-bg-white)',
+} = defineProps<{
   options: string[]
   iconPrefix: string // e.g., 'class', 'faction', 'damage'
-  size?: number // button size in px (default 36)
+  size?: number // button size in px
   showTooltip?: boolean
   activeBorderColor?: string // CSS color for the selected icon's border
-}
-
-const props = withDefaults(defineProps<Props>(), {
-  size: 36,
-  showTooltip: true,
-  activeBorderColor: 'var(--color-bg-white)',
-})
+}>()
 const modelValue = defineModel<string>({ required: true })
 
-const iconSize = computed(() => Math.round(props.size * 0.78))
-const factionIconSize = computed(() => Math.round(props.size * 0.89))
-const borderWidth = computed(() => (props.size >= 36 ? 4 : 3))
+const iconSize = computed(() => Math.round(size * 0.78))
+const factionIconSize = computed(() => Math.round(size * 0.89))
+const borderWidth = computed(() => (size >= 36 ? 4 : 3))
 // "All" is a text button, not a portrait. Keep its underline slimmer than
 // the icon borders so it reads as a delicate accent.
-const clearBorderWidth = computed(() => (props.size >= 36 ? 2 : 2))
+const clearBorderWidth = computed(() => (size >= 36 ? 2 : 2))
 
 const PREFIX_ORDERS: Record<string, readonly string[]> = {
   faction: FACTION_ORDER,
@@ -38,9 +38,9 @@ const PREFIX_ORDERS: Record<string, readonly string[]> = {
 }
 
 const orderedOptions = computed(() => {
-  const order = PREFIX_ORDERS[props.iconPrefix]
-  if (!order) return props.options
-  return [...props.options].sort((a, b) => compareByOrder(a, b, order))
+  const order = PREFIX_ORDERS[iconPrefix]
+  if (!order) return options
+  return [...options].sort((a, b) => compareByOrder(a, b, order))
 })
 
 const getIconPath = (iconPrefix: string, option: string): string => {
@@ -59,7 +59,7 @@ const {
 } = useHoverTooltip<string>()
 
 const handleMouseEnter = (option: string, event: MouseEvent) => {
-  if (!props.showTooltip) return
+  if (!showTooltip) return
   onMouseEnter(event, option)
 }
 </script>
@@ -115,10 +115,11 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
     <Teleport to="body">
       <TooltipPopup
         v-if="hoveredOption && hoveredElement"
-        :text="i18n.t(`game.${hoveredOption}`)"
         :target-element="hoveredElement"
         variant="simple"
-      />
+      >
+        <template #content>{{ i18n.t(`game.${hoveredOption}`) }}</template>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>

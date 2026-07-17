@@ -51,12 +51,33 @@ const onClick = (e: Event): void => {
   if (el) toggle(el, el.dataset.kw ?? '')
 }
 
+// The spans are rendered with tabindex + role="button" (highlightSkillText),
+// so keyboard users can reach the glossary: focus shows it, Enter/Space
+// toggles.
+const onFocusIn = (e: Event): void => {
+  const el = keywordAt(e)
+  if (el) hoverOpen(el, el.dataset.kw ?? '')
+}
+
+const onKeyDown = (e: Event): void => {
+  const key = (e as KeyboardEvent).key
+  if (key !== 'Enter' && key !== ' ') return
+  const el = keywordAt(e)
+  if (!el) return
+  e.preventDefault()
+  toggle(el, el.dataset.kw ?? '')
+}
+
 const listeners: [string, EventListener, AddEventListenerOptions?][] = [
   ['mouseover', onMouseOver],
   // While a tip is open the pointer is on its span, so any mouseout in the
-  // container means the span was left; hoverClose also no-ops when pinned.
+  // container means the span was left. Touch-opened tips are unaffected: on
+  // touch the dismissal is the outside press.
   ['mouseout', hoverClose],
   ['click', onClick],
+  ['focusin', onFocusIn],
+  ['focusout', hoverClose],
+  ['keydown', onKeyDown],
   ['touchstart', onTouchStart, { passive: true }],
 ]
 
@@ -92,8 +113,6 @@ onUnmounted(() => {
 
 <style scoped>
 .keyword-tip {
-  font-size: 0.85rem;
-  line-height: 1.45;
   /* Game tooltip strings carry literal newlines. */
   white-space: pre-line;
 }

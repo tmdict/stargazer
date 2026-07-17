@@ -300,25 +300,49 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
   return artifactLocalesCache
 }
 
+// The locale dirs carry reserved underscore-prefixed files beside the hero
+// files (the `_keywords` glossary). They ride the same globs and chunks, but
+// are split out at load time so dict consumers (the search index, slug walks)
+// only ever see hero entries. The glob types every module as SkillLocaleFile,
+// hence the one cast here.
+function splitSkillDict(dict: Record<string, SkillLocaleFile>): {
+  heroes: Record<string, SkillLocaleFile>
+  keywords: SkillKeywords
+} {
+  const heroes: Record<string, SkillLocaleFile> = {}
+  let keywords: SkillKeywords = {}
+  for (const [key, value] of Object.entries(dict)) {
+    if (key === '_keywords') keywords = value as unknown as SkillKeywords
+    else if (!key.startsWith('_')) heroes[key] = value
+  }
+  return { heroes, keywords }
+}
+
+let skillKeywordsCache: Record<AppLocale, SkillKeywords> | null = null
+
 /** Per-language skill text for the app locales (en/zh), keyed by character
  * slug (filename basename). Eager: the search index, the guide panels, and
  * the en fallback all read it synchronously. */
 export function loadSkillLocales(): Record<AppLocale, Record<string, SkillLocaleFile>> {
   if (skillLocalesCache) return skillLocalesCache
-  skillLocalesCache = {
-    en: buildLocaleDict<SkillLocaleFile>(
+  const en = splitSkillDict(
+    buildLocaleDict<SkillLocaleFile>(
       import.meta.glob<SkillLocaleFile>('@/locales/skill/en/*.json', {
         eager: true,
         import: 'default',
       }),
     ),
-    zh: buildLocaleDict<SkillLocaleFile>(
+  )
+  const zh = splitSkillDict(
+    buildLocaleDict<SkillLocaleFile>(
       import.meta.glob<SkillLocaleFile>('@/locales/skill/zh/*.json', {
         eager: true,
         import: 'default',
       }),
     ),
-  }
+  )
+  skillLocalesCache = { en: en.heroes, zh: zh.heroes }
+  skillKeywordsCache = { en: en.keywords, zh: zh.keywords }
   return skillLocalesCache
 }
 
@@ -333,6 +357,7 @@ const skillLocaleChunks = import.meta.glob<Record<string, SkillLocaleFile>>(
 // Reactive so a chunk that arrives after a failed warm-up (offline first
 // load, later retried by search) re-renders anything computed from it.
 const warmedSkillLocales = reactive(new Map<SkillLocale, Record<string, SkillLocaleFile>>())
+const warmedSkillKeywords = reactive(new Map<SkillLocale, SkillKeywords>())
 const skillLocalePromises = new Map<SkillLocale, Promise<Record<string, SkillLocaleFile>>>()
 
 export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, SkillLocaleFile>> {
@@ -342,8 +367,10 @@ export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, Skill
   const loader = skillLocaleChunks[`/src/locales/skill/${lang}/index.ts`]
   if (!loader) return Promise.reject(new Error(`No skill locale chunk for "${lang}"`))
   const promise = loader().then((dict) => {
-    warmedSkillLocales.set(lang, dict)
-    return dict
+    const { heroes, keywords } = splitSkillDict(dict)
+    warmedSkillLocales.set(lang, heroes)
+    warmedSkillKeywords.set(lang, keywords)
+    return heroes
   })
   // A failed fetch must not poison the cache; the next call retries.
   promise.catch(() => skillLocalePromises.delete(lang))
@@ -367,10 +394,13 @@ export function getSkillFile(lang: SkillLocale, slug: string): SkillLocaleFile |
 
 /** Sync read of a language's keyword glossary (tooltip text for the
  * `[[label|key]]` tokens in skill text); null until the locale is warmed.
- * The glossary lives in the locale dict under the reserved `_keywords`
- * basename, hence the cast: that one entry is a glossary, not a hero file. */
+ * en/zh are always warm (eager). */
 export function getSkillKeywords(lang: SkillLocale): SkillKeywords | null {
-  return (getSkillLocaleDict(lang)?.['_keywords'] as SkillKeywords | undefined) ?? null
+  if (isAppLocale(lang)) {
+    loadSkillLocales()
+    return skillKeywordsCache![lang]
+  }
+  return warmedSkillKeywords.get(lang) ?? null
 }
 
 /** True iff the importer has produced an `en` locale file for `slug`. Gates
