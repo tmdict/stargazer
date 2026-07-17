@@ -16,7 +16,6 @@ import ImageStitcher from '@/components/teams/ImageStitcher.vue'
 import TeamsBoards from '@/components/teams/TeamsBoards.vue'
 import TeamsRoster from '@/components/teams/TeamsRoster.vue'
 import TabView from '@/components/ui/TabView.vue'
-import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
 import { loadTeamsDisplayPrefs, saveTeamsDisplayPrefs } from '@/composables/useGridPersistence'
@@ -265,7 +264,6 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
         />
       </div>
     </DragDropProvider>
-    <ToastContainer />
   </main>
 </template>
 

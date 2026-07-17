@@ -95,7 +95,7 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 - `useSearchOverlay`: Shared open/query/select-handler state for the search overlay; `open()` is the navigate flavor, `openSelect(handler)` the pick-a-hero flavor (arena roster placement); also exports `useShortcutLabel`, the platform-aware shortcut chip label shared by the triggers
 - `useRecentHeroes`: Recently viewed skill pages (localStorage `stargazer.recentHeroes`, capped at 5), recorded by `SkillReader` and shown in the overlay's empty state
 - `useLocaleToggle`: Chrome-language switch that navigates between `/en`↔`/zh` URLs on app-locale-prefixed routes, otherwise flips the global locale (non-en/zh skill prefixes parse as unprefixed, so there it flips chrome in place without rewriting the content URL)
-- `useToast`: Global toast queue (success/error), rendered by `ToastContainer`
+- `useToast`: Global toast queue (success/error), rendered by the single `ToastContainer` in `App.vue` so toasts surface on every route
 - `useGridExport`: Captures the grid DOM to a PNG for copy/download
 - `useTouchDetection`: Module-singleton input-modality detection (touch vs mouse): gates hover tooltips
 - `useHoverTooltip`: Hover-tooltip visibility with touch suppression, the contract for action triggers (tap performs the action, never shows the tooltip): roster icons, filter buttons, save actions

@@ -9,7 +9,6 @@ import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
-import ToastContainer from '@/components/ui/ToastContainer.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { useToast } from '@/composables/useToast'
 import { SITE_ORIGIN } from '@/lib/site'
@@ -187,7 +186,6 @@ const editLink = computed(() =>
   </div>
 
   <!-- Toast Container -->
-  <ToastContainer />
 </template>
 
 <style scoped>
