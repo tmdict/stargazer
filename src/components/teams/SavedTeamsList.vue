@@ -21,7 +21,7 @@ import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/m
 import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { renderSnippet, type Snippet } from '@/utils/searchHighlight'
+import { renderSnippet } from '@/utils/searchHighlight'
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const { loadedTeamId } = defineProps<{
@@ -58,16 +58,18 @@ const sorted = computed(() => {
 // The box hides below 2 teams and the filter follows it, so a leftover query
 // can never strand the list on "no matches" with no visible way to clear it.
 // Filtering and highlighting share renderSnippet: a card is visible exactly
-// when its name carries a mark. Context = max name length, so the snippet is
-// always the whole name (no ellipses).
+// when its name carries a mark. The full-length context keeps the snippet
+// unelided, so the pieces always spell the whole name.
 const searchQuery = ref('')
 const searchVisible = computed(() => library.count > 1)
-const visibleTeams = computed((): { team: SavedTeam; snippet: Snippet | null }[] => {
-  const query = searchQuery.value.trim()
-  if (!searchVisible.value || !query) return sorted.value.map((team) => ({ team, snippet: null }))
-  return sorted.value
-    .map((team) => ({ team, snippet: renderSnippet(team.name, query, MAX_TEAM_NAME_LENGTH) }))
-    .filter((entry) => entry.snippet !== null)
+const visibleTeams = computed(() => {
+  const query = searchVisible.value ? searchQuery.value.trim() : ''
+  if (!query)
+    return sorted.value.map((team) => ({ team, name: { pre: team.name, match: '', post: '' } }))
+  return sorted.value.flatMap((team) => {
+    const name = renderSnippet(team.name, query, team.name.length)
+    return name ? [{ team, name }] : []
+  })
 })
 
 const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
@@ -222,7 +224,7 @@ const showStorageHint = ref(false)
 
     <div v-else class="team-grid">
       <div
-        v-for="{ team, snippet } in visibleTeams"
+        v-for="{ team, name } in visibleTeams"
         :key="team.id"
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
@@ -244,11 +246,8 @@ const showStorageHint = ref(false)
           />
           <template v-else>
             <button type="button" class="team-name" @click="startRename(team)">
-              <template v-if="snippet"
-                >{{ snippet.pre }}<mark>{{ snippet.match }}</mark
-                >{{ snippet.post }}</template
-              >
-              <template v-else>{{ team.name }}</template>
+              {{ name.pre }}<mark v-if="name.match">{{ name.match }}</mark
+              >{{ name.post }}
               <span v-if="team.id === loadedTeamId" class="visually-hidden">
                 ({{ i18n.t('app.loaded') }})
               </span>
@@ -402,6 +401,16 @@ const showStorageHint = ref(false)
   white-space: nowrap;
 }
 
+.sort-seg:hover:not(.active) {
+  color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.sort-seg.active {
+  background: var(--color-primary);
+  color: #fff;
+}
+
 .team-search {
   flex: 0 1 150px;
   min-width: 70px;
@@ -418,21 +427,6 @@ const showStorageHint = ref(false)
 .team-search:focus {
   outline: none;
   border-color: var(--color-primary);
-}
-
-.team-name mark {
-  background: none;
-  color: var(--color-primary);
-}
-
-.sort-seg:hover:not(.active) {
-  color: var(--color-primary);
-  background: var(--color-bg-tertiary);
-}
-
-.sort-seg.active {
-  background: var(--color-primary);
-  color: #fff;
 }
 
 .delete-all-btn {
@@ -543,6 +537,11 @@ const showStorageHint = ref(false)
 .team-name:hover {
   border-color: var(--color-border-primary);
   background: var(--color-bg-tertiary);
+}
+
+.team-name mark {
+  background: none;
+  color: var(--color-primary);
 }
 
 .team-name-input {
