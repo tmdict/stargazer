@@ -336,13 +336,18 @@ export interface SkillLocaleSlot {
 }
 // `_hero` is the feed's localized hero display name: skill pages and the
 // search index read it in every language (curated character locales stay on
-// chrome surfaces and as search aliases).
+// chrome surfaces and as search aliases). `_terms` carries the game's
+// official "Ultimate" / "Exclusive Equipment" labels for heading prefixes.
 export type SkillLocaleFile = {
   _hero?: { name: string }
+  _terms?: { ultimate: string; ex: string }
 } & Partial<Record<SlotKey, SkillLocaleSlot>>
+
+// src/locales/skill/<lang>/_keywords.json: glossary key → tooltip text.
+export type SkillKeywords = Record<string, string>
 ```
 
-Description encoding: `[[…]]` wraps numeric/keyword highlights; `<TAG>` wraps stat-tag pills (`<ATK>`, `<HP>`). Both are rendered by `utils/textHighlight.ts`.
+Description encoding: `[[…]]` wraps highlights; `<TAG>` wraps stat-tag pills (`<ATK>`, `<HP>`). A glossary keyword carries its language-independent key after a pipe (`[[frontmost|frontest]]`); the key resolves against the language's `_keywords.json`, which sits beside the hero files so each language chunk ships its own glossary (the underscore keeps it out of the hero-slug namespace, and the SSG route walk skips underscore-prefixed files). All tokens render via `utils/textHighlight.ts`; keyword spans get their hover/tap tooltip from `SkillKeywordTooltip.vue`, which delegates on the `SkillSections` article because the spans live in `v-html` output. The `[[…]]` grammar is mirrored in `utils/searchHighlight.ts` (corpus and rich pieces keep the label, drop the key) and in `vite.config.ts`'s meta-description extraction.
 
 EX refinement tiers (`r`) only appear on the `ex` slot when the source data has them (≈99% of heroes for tier 2, ≈98% for tier 4 in current AFKJ data). Tier 2 is the class-shared Rivalry Skill unlocked at EX +27; tier 4 is the new-attribute introduction at EX +29, rendered via the localized "Lvl. N Refinement" template. They render as additional rows below the regular levels with a `REFINE N` badge in `SkillSection.vue`. Refinement tiers are not taggable; the `tags` overlay only attaches to numeric level rows.
 

@@ -24,6 +24,7 @@ import {
   SLOT_ORDER,
   type SlotKey,
   type CharacterTags,
+  type SkillKeywords,
   type SkillLocaleFile,
   type SkillRefineEntry,
 } from '../src/lib/types/skill.ts'
@@ -75,6 +76,7 @@ interface SkillsBulk {
     locale: string
     heroCount: number
     terms?: { ultimate: string; exclusiveEquipment: string }
+    keywords?: Record<string, string>
   }
   heroes: Record<string, HeroEntry>
 }
@@ -251,6 +253,23 @@ interface OrphanTag {
   reason: string
 }
 
+// Keyword tokens `[[label|key]]` in projected slot text; every key must
+// resolve in the locale's glossary or the rendered span would be a dead
+// tooltip affordance.
+const KEYWORD_TOKEN_RE = /\[\[[^\]]*?\|([A-Za-z][A-Za-z0-9_]*)\]\]/g
+
+function collectKeywordKeys(data: SkillLocaleFile): Set<string> {
+  const keys = new Set<string>()
+  for (const slotKey of SLOT_ORDER) {
+    const slot = data[slotKey]
+    if (!slot) continue
+    for (const text of [...slot.d, ...(slot.r ?? []).map((r) => r.d)]) {
+      for (const m of text.matchAll(KEYWORD_TOKEN_RE)) keys.add(m[1]!)
+    }
+  }
+  return keys
+}
+
 function validateTagAttachments(slug: string, char: CharacterFile, hero: HeroEntry): OrphanTag[] {
   if (!char.tags) return []
   const orphans: OrphanTag[] = []
@@ -298,6 +317,7 @@ interface RunSummary {
   availableNotAdded: string[] // feed entry present, no character file
   orphans: OrphanTag[]
   unknownDirs: string[] // locale dirs on disk that are not in SKILL_LOCALES
+  missingKeywords: string[] // `[[label|key]]` keys with no glossary entry, e.g. "[de] peggy: weakest"
 }
 
 async function main() {
@@ -322,6 +342,19 @@ async function main() {
     }
     termsByCode[code] = { ultimate: terms.ultimate, ex: terms.exclusiveEquipment }
   }
+
+  // Keyword glossaries per locale, resolving the `[[label|key]]` tokens the
+  // producer embeds in slot text.
+  const keywordsByCode = {} as Record<SkillLocale, SkillKeywords>
+  for (const { code } of SKILL_LOCALES) {
+    const keywords = bulks[code]._meta.keywords
+    if (!keywords) {
+      throw new Error(`[${code}] feed lacks _meta.keywords; re-run the producer's export:api`)
+    }
+    keywordsByCode[code] = Object.fromEntries(
+      Object.entries(keywords).sort(([a], [b]) => a.localeCompare(b)),
+    )
+  }
   const heroCount = Object.keys(bulks.en.heroes).length
   console.log(`import-skills: bulks have ${heroCount} heroes (per locale)`)
 
@@ -334,6 +367,7 @@ async function main() {
     availableNotAdded: [],
     orphans: [],
     unknownDirs: [],
+    missingKeywords: [],
   }
 
   const knownSlugs = new Set(characters.map((c) => c.slug))
@@ -358,6 +392,9 @@ async function main() {
       const hero = bulks[code].heroes[slug]
       if (!hero) continue
       const data = projectLocale(hero, termsByCode[code])
+      for (const key of collectKeywordKeys(data)) {
+        if (!(key in keywordsByCode[code])) summary.missingKeywords.push(`[${code}] ${slug}: ${key}`)
+      }
       const slots = SLOT_ORDER.filter((k) => k in data).join(',')
       if (code === 'en') enSlots = slots
       else if (slots !== enSlots) {
@@ -373,6 +410,15 @@ async function main() {
 
   if (slotMismatches.length > 0) {
     throw new Error(`feed slot coverage is not uniform across locales:\n  ${slotMismatches.join('\n  ')}`)
+  }
+
+  // One keyword glossary per language, beside the hero files so the language
+  // chunk (and the eager en/zh bundle) carries it automatically.
+  let keywordsWritten = 0
+  for (const { code } of SKILL_LOCALES) {
+    if (await writeJsonIfChanged(join(LOCALES_DIR, code, '_keywords.json'), keywordsByCode[code])) {
+      keywordsWritten++
+    }
   }
 
   // Chunk modules for the non-app locales (en/zh are eagerly bundled; a chunk
@@ -405,7 +451,13 @@ async function main() {
   const written = summary.imported.reduce((n, r) => n + r.written, 0)
   const unchanged = summary.imported.reduce((n, r) => n + r.unchanged, 0)
   console.log(`  locale files: ${written} written, ${unchanged} unchanged`)
+  if (keywordsWritten > 0) console.log(`  keyword glossaries: ${keywordsWritten} written`)
   if (chunksWritten > 0) console.log(`  chunk modules: ${chunksWritten} written`)
+
+  if (summary.missingKeywords.length > 0) {
+    console.warn(`\n  ${summary.missingKeywords.length} keyword token(s) missing from glossaries:`)
+    for (const k of summary.missingKeywords) console.warn(`    - ${k}`)
+  }
 
   if (summary.missingFromFeed.length > 0) {
     console.warn(

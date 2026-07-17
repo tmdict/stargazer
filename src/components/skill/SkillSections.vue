@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, inject, provide, ref, type Component } from 'vue'
 
+import SkillKeywordTooltip from './SkillKeywordTooltip.vue'
 import SkillSection from './SkillSection.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useSkillTags } from '@/composables/useSkillTags'
@@ -89,6 +90,10 @@ const sections = computed(() => {
 
 const anchors = useSnippetAnchors()
 
+// Delegation root for the glossary-keyword tooltips: the [data-kw] spans sit
+// in SkillSection's v-html output, so the host listens on the article.
+const rootEl = ref<HTMLElement | null>(null)
+
 // Optional per-hero snippet at src/content/skill/<slug>/<HeroName>.<lang>.vue.
 // Deep-dive essays exist only in the app locales: the text locale wins when
 // it is one, otherwise the chrome locale's essay renders under the foreign
@@ -121,7 +126,7 @@ provide(
 
 <template>
   <div v-if="!locale" class="skill-empty">No skill data available for this character.</div>
-  <article v-else class="skill-sections">
+  <article v-else ref="rootEl" class="skill-sections">
     <div class="skill-header" :class="{ resettable: activeChips.size > 0 }" @click="clearChips">
       <div class="skill-title-row">
         <h1 class="skill-hero-name">{{ heroName }}</h1>
@@ -170,6 +175,8 @@ provide(
     </template>
 
     <component :is="snippetComp" v-if="snippetComp" class="skill-snippet-host" />
+
+    <SkillKeywordTooltip :lang :container="rootEl" />
   </article>
 </template>
 

@@ -20,13 +20,28 @@ const STAT_LABEL: Record<string, string> = {
 export const HIGHLIGHT_RE = /\[\[(.+?)\]\]/g
 export const STAT_TAG_RE = /<([A-Z][A-Za-z0-9_]*)>/g
 
+// Inside a [[...]] token, a trailing `|key` marks a glossary keyword: the key
+// resolves against the language's `_keywords` glossary for its tooltip text
+// (SkillKeywordTooltip). A pipeless token is a plain value highlight.
+const KEYWORD_KEY_RE = /^(.*)\|([A-Za-z][A-Za-z0-9_]*)$/s
+
+export function splitHighlightToken(inner: string): { label: string; key?: string } {
+  const m = KEYWORD_KEY_RE.exec(inner)
+  return m ? { label: m[1]!, key: m[2]! } : { label: inner }
+}
+
 export function statLabel(tag: string): string {
   return STAT_LABEL[tag] ?? tag
 }
 
 export function highlightSkillText(text: string): string {
   if (!text) return text
-  let out = text.replace(HIGHLIGHT_RE, '<span class="skill-highlight">$1</span>')
+  let out = text.replace(HIGHLIGHT_RE, (_m, inner: string) => {
+    const { label, key } = splitHighlightToken(inner)
+    return key
+      ? `<span class="skill-keyword" data-kw="${key}">${label}</span>`
+      : `<span class="skill-highlight">${label}</span>`
+  })
   out = out.replace(
     STAT_TAG_RE,
     (_m, tag: string) =>

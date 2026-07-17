@@ -1,11 +1,11 @@
-import { HIGHLIGHT_RE, STAT_TAG_RE, statLabel } from './textHighlight'
+import { HIGHLIGHT_RE, splitHighlightToken, STAT_TAG_RE, statLabel } from './textHighlight'
 
-/** Strips display-only tokens from skill descriptions: `[[value]]` collapses
- * to `value`, `<TAG>` is dropped. Search + snippet rendering both operate on
- * the cleaned form. */
+/** Strips display-only tokens from skill descriptions: `[[value]]` and
+ * `[[label|key]]` collapse to their visible text, `<TAG>` is dropped. Search +
+ * snippet rendering both operate on the cleaned form. */
 export function cleanSkillText(raw: string): string {
   return raw
-    .replace(HIGHLIGHT_RE, '$1')
+    .replace(HIGHLIGHT_RE, (_m, inner: string) => splitHighlightToken(inner).label)
     .replace(STAT_TAG_RE, '')
     .replace(/\s{2,}/g, ' ')
     .trim()
@@ -50,7 +50,7 @@ export function renderRichText(raw: string, query: string): RichPiece[] {
   let last = 0
   for (const m of raw.matchAll(new RegExp(`${HIGHLIGHT_RE.source}|${STAT_TAG_RE.source}`, 'g'))) {
     if (m.index > last) pushText(raw.slice(last, m.index), 'plain')
-    if (m[1] !== undefined) pushText(m[1], 'value')
+    if (m[1] !== undefined) pushText(splitHighlightToken(m[1]).label, 'value')
     else if (m[2] !== undefined)
       segments.push({ text: statLabel(m[2]), kind: 'stat', tag: m[2].toLowerCase() })
     last = m.index + m[0].length

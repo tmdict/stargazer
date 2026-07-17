@@ -1,8 +1,24 @@
 import { describe, expect, it } from 'vitest'
 
-import { renderRichText } from '@/utils/searchHighlight'
+import { cleanSkillText, renderRichText } from '@/utils/searchHighlight'
+
+describe('cleanSkillText', () => {
+  it('collapses value and keyword tokens to their visible text', () => {
+    expect(cleanSkillText('deals [[240%]]<ATK> to [[2]] [[frontmost|frontest]] enemies')).toBe(
+      'deals 240% to 2 frontmost enemies',
+    )
+  })
+})
 
 describe('renderRichText', () => {
+  it('renders a keyword token as its label, searchable like the corpus', () => {
+    expect(renderRichText('the [[weakest|weakest]] ally', 'weakest ally')).toEqual([
+      { text: 'the ', kind: 'plain', marked: false },
+      { text: 'weakest', kind: 'value', marked: true },
+      { text: ' ally', kind: 'plain', marked: true },
+    ])
+  })
+
   it('splits tokens into styled pieces', () => {
     expect(renderRichText('deals [[240%]] <ATK> damage', '')).toEqual([
       { text: 'deals ', kind: 'plain', marked: false },
