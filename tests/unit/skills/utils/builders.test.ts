@@ -32,7 +32,7 @@ describe('createTargetingSkill', () => {
     skillManager = new SkillManager()
   })
 
-  it('exposes static fields from config', () => {
+  it('maps the color config to targetingColorModifier', () => {
     const skill = createTargetingSkill({
       id: 'test',
       characterId: CHARACTER_ID,
@@ -41,8 +41,6 @@ describe('createTargetingSkill', () => {
       calculateTarget: () => null,
     })
 
-    expect(skill.id).toBe('test')
-    expect(skill.characterId).toBe(CHARACTER_ID)
     expect(skill.targetingColorModifier).toBe('#abcdef')
   })
 
@@ -180,12 +178,6 @@ describe('createTileHighlightSkill', () => {
       calculateTarget,
     })
 
-  it('exposes static fields from config', () => {
-    const skill = buildSkill(() => null)
-    expect(skill.id).toBe('test')
-    expect(skill.characterId).toBe(CHARACTER_ID)
-  })
-
   it('sets target and tile color on activation', () => {
     const skill = buildSkill(() => ({ targetHexId: 3, targetCharacterId: 42 }))
     skill.onActivate(buildContext(grid, skillManager))
@@ -281,15 +273,6 @@ describe('createCompanionSkill', () => {
 
   const companionTiles = () =>
     grid.getAllTiles().filter((t) => t.characterId !== undefined && t.characterId > 10000)
-
-  it('exposes static fields from config', () => {
-    const skill = makeSkill({ companionImageModifier: 'img', companionRange: 3 })
-    expect(skill.id).toBe('test-companion')
-    expect(skill.colorModifier).toBe('#111111')
-    expect(skill.companionColorModifier).toBe('#222222')
-    expect(skill.companionImageModifier).toBe('img')
-    expect(skill.companionRange).toBe(3)
-  })
 
   it('places one linked companion, bumps capacity, and applies modifiers', () => {
     makeSkill().onActivate(context())

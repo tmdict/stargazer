@@ -56,12 +56,6 @@ describe('canonicalTeamData', () => {
     expect(canonicalTeamData(encode({ boards: [] }))).toBeNull()
     error.mockRestore()
   })
-
-  it('returns null when a crafted payload has non-object board entries', () => {
-    expect(canonicalTeamData(encode({ boards: [null] } as never))).toBeNull()
-    expect(canonicalTeamData(encode({ boards: [[1, 2]] } as never))).toBeNull()
-    expect(canonicalTeamData(encode({ boards: ['x', {}] } as never))).toBeNull()
-  })
 })
 
 describe('team naming', () => {

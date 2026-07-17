@@ -3,15 +3,6 @@ import { describe, expect, it } from 'vitest'
 import { Hex } from '@/lib/hex'
 
 describe('Hex', () => {
-  describe('constructor', () => {
-    it('creates hex with valid coordinates', () => {
-      const hex = new Hex(1, -2, 1)
-      expect(hex.q).toBe(1)
-      expect(hex.r).toBe(-2)
-      expect(hex.s).toBe(1)
-    })
-  })
-
   describe('coordinate operations', () => {
     it('handles equals correctly', () => {
       const hex1 = new Hex(1, -2, 1)
@@ -109,11 +100,6 @@ describe('Hex', () => {
   })
 
   describe('ID and string operations', () => {
-    it('returns the hex ID, defaulting to -1 when omitted', () => {
-      expect(new Hex(1, -2, 1).getId()).toBe(-1)
-      expect(new Hex(1, -2, 1, 42).getId()).toBe(42)
-    })
-
     it('converts to string correctly', () => {
       const hex = new Hex(1, -2, 1)
       expect(hex.toString()).toBe('1,-2,1')

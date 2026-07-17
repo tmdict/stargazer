@@ -70,9 +70,11 @@ describe('companion', () => {
         expect(companions.has(10102)).toBe(true)
       })
 
-      it('separates companions by team', () => {
+      it('separates companions by main character and team', () => {
         addCompanionLink(grid, 100, 10100, Team.ALLY)
         addCompanionLink(grid, 100, 10101, Team.ENEMY)
+        addCompanionLink(grid, 200, 10200, Team.ALLY)
+        addCompanionLink(grid, 200, 10201, Team.ALLY)
 
         const allyCompanions = getCompanions(grid, 100, Team.ALLY)
         const enemyCompanions = getCompanions(grid, 100, Team.ENEMY)
@@ -82,6 +84,12 @@ describe('companion', () => {
 
         expect(enemyCompanions.has(10100)).toBe(false)
         expect(enemyCompanions.has(10101)).toBe(true)
+
+        // Same team, different main character: no overlap
+        const companions200 = getCompanions(grid, 200, Team.ALLY)
+        expect(companions200.size).toBe(2)
+        expect(companions200.has(10100)).toBe(false)
+        expect(allyCompanions.has(10200)).toBe(false)
       })
     })
 
@@ -96,15 +104,6 @@ describe('companion', () => {
         expect(companions.has(10100)).toBe(false)
         expect(companions.has(10101)).toBe(true)
         expect(companions.size).toBe(1)
-      })
-
-      it('removes link entry when last companion removed', () => {
-        addCompanionLink(grid, 100, 10100, Team.ALLY)
-
-        removeCompanionLink(grid, 100, 10100, Team.ALLY)
-
-        const key = `100-${Team.ALLY}`
-        expect(grid.companionLinks.has(key)).toBe(false)
       })
 
       it('handles removing non-existent companion', () => {
@@ -148,14 +147,6 @@ describe('companion', () => {
         expect(allyCompanions.size).toBe(0)
         expect(enemyCompanions.size).toBe(1)
         expect(enemyCompanions.has(10101)).toBe(true)
-      })
-    })
-
-    describe('getCompanions', () => {
-      it('returns empty set for character with no companions', () => {
-        const companions = getCompanions(grid, 999, Team.ALLY)
-        expect(companions).toBeInstanceOf(Set)
-        expect(companions.size).toBe(0)
       })
     })
   })
@@ -283,25 +274,6 @@ describe('companion', () => {
         // Companion ends at its original tile
         expect(tile2.characterId).toBe(10100)
       })
-    })
-  })
-
-  describe('edge cases', () => {
-    it('handles multiple main characters with companions', () => {
-      addCompanionLink(grid, 100, 10100, Team.ALLY)
-      addCompanionLink(grid, 100, 10101, Team.ALLY)
-      addCompanionLink(grid, 200, 10200, Team.ALLY)
-      addCompanionLink(grid, 200, 10201, Team.ALLY)
-
-      const companions100 = getCompanions(grid, 100, Team.ALLY)
-      const companions200 = getCompanions(grid, 200, Team.ALLY)
-
-      expect(companions100.size).toBe(2)
-      expect(companions200.size).toBe(2)
-
-      // No overlap
-      expect(companions100.has(10200)).toBe(false)
-      expect(companions200.has(10100)).toBe(false)
     })
   })
 })

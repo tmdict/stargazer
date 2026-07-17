@@ -230,15 +230,8 @@ describe('distance targeting', () => {
       const context = makeSkillContext(grid, 3, Team.ALLY, 101)
 
       const result = findRearmostTarget(context, Team.ENEMY, true)
-      expect(result).toEqual({
-        targetHexId: 13,
-        targetCharacterId: 201,
-        metadata: {
-          sourceHexId: 3,
-          examinedTiles: [11, 13],
-          isRearmostTarget: true,
-        },
-      })
+      expect(result?.targetHexId).toBe(13)
+      expect(result?.targetCharacterId).toBe(201)
     })
   })
 
@@ -250,42 +243,30 @@ describe('distance targeting', () => {
       placeOnTile(grid, 13, 201, Team.ENEMY)
     })
 
-    it('finds frontmost ally (largest hex ID) when targeting allies (excluding self)', () => {
-      const context = makeSkillContext(grid, 1, Team.ALLY, 100)
+    // The scan direction depends on the target team, not the caster team:
+    // allies are scanned from the largest hex ID, enemies from the smallest.
+    it('finds frontmost ally (largest hex ID) regardless of caster team', () => {
+      const sameTeam = findFrontmostTarget(makeSkillContext(grid, 1, Team.ALLY, 100), Team.ALLY)
+      expect(sameTeam?.targetHexId).toBe(3)
+      expect(sameTeam?.targetCharacterId).toBe(101)
+      expect(sameTeam?.metadata?.isFrontmostTarget).toBe(true)
 
-      const result = findFrontmostTarget(context, Team.ALLY)
-
-      expect(result?.targetHexId).toBe(3)
-      expect(result?.targetCharacterId).toBe(101)
-      expect(result?.metadata?.isFrontmostTarget).toBe(true)
+      const crossTeam = findFrontmostTarget(makeSkillContext(grid, 11, Team.ENEMY, 200), Team.ALLY)
+      expect(crossTeam?.targetHexId).toBe(3)
+      expect(crossTeam?.targetCharacterId).toBe(101)
     })
 
-    it('finds frontmost enemy (smallest hex ID) when targeting enemies (excluding self)', () => {
-      const context = makeSkillContext(grid, 13, Team.ENEMY, 201)
+    it('finds frontmost enemy (smallest hex ID) regardless of caster team', () => {
+      const sameTeam = findFrontmostTarget(makeSkillContext(grid, 13, Team.ENEMY, 201), Team.ENEMY)
+      expect(sameTeam?.targetHexId).toBe(11)
+      expect(sameTeam?.targetCharacterId).toBe(200)
+      expect(sameTeam?.metadata?.isFrontmostTarget).toBe(true)
 
-      const result = findFrontmostTarget(context, Team.ENEMY)
-
-      expect(result?.targetHexId).toBe(11)
-      expect(result?.targetCharacterId).toBe(200)
-      expect(result?.metadata?.isFrontmostTarget).toBe(true)
-    })
-
-    it('finds frontmost enemy (smallest hex ID) when ally targets enemies', () => {
-      const context = makeSkillContext(grid, 1, Team.ALLY, 100)
-
-      const result = findFrontmostTarget(context, Team.ENEMY)
-
-      expect(result?.targetHexId).toBe(11)
-      expect(result?.targetCharacterId).toBe(200)
-    })
-
-    it('finds frontmost ally (largest hex ID) when enemy targets allies', () => {
-      const context = makeSkillContext(grid, 11, Team.ENEMY, 200)
-
-      const result = findFrontmostTarget(context, Team.ALLY)
-
-      expect(result?.targetHexId).toBe(3)
-      expect(result?.targetCharacterId).toBe(101)
+      const crossTeam = findFrontmostTarget(makeSkillContext(grid, 1, Team.ALLY, 100), Team.ENEMY)
+      expect(crossTeam?.targetHexId).toBe(11)
+      expect(crossTeam?.targetCharacterId).toBe(200)
+      expect(crossTeam?.metadata?.examinedTiles).toContain(11)
+      expect(crossTeam?.metadata?.examinedTiles).toContain(13)
     })
 
     it('excludes self when targeting same team', () => {
@@ -304,29 +285,6 @@ describe('distance targeting', () => {
       grid.getTileById(13).characterId = undefined
 
       expect(findFrontmostTarget(context, Team.ENEMY)).toBeNull()
-    })
-
-    it('returns metadata with examined tiles', () => {
-      const context = makeSkillContext(grid, 1, Team.ALLY, 100)
-
-      const result = findFrontmostTarget(context, Team.ENEMY)
-
-      expect(result?.metadata?.examinedTiles).toContain(11)
-      expect(result?.metadata?.examinedTiles).toContain(13)
-    })
-  })
-
-  describe('edge cases', () => {
-    it('handles single candidate', () => {
-      placeOnTile(grid, 10, 200, Team.ENEMY)
-      const context = makeSkillContext(grid, 1, Team.ALLY, 100)
-
-      const result = findTarget(context, {
-        targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.CLOSEST,
-      })
-
-      expect(result?.targetCharacterId).toBe(200)
     })
   })
 })

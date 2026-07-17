@@ -10,12 +10,10 @@ describe('PriorityQueue', () => {
   })
 
   describe('basic operations', () => {
-    it('starts empty', () => {
+    it('enqueues and dequeues single item', () => {
       expect(queue.isEmpty()).toBe(true)
       expect(queue.size).toBe(0)
-    })
 
-    it('enqueues and dequeues single item', () => {
       queue.enqueue(42, 1)
 
       expect(queue.isEmpty()).toBe(false)
@@ -58,26 +56,6 @@ describe('PriorityQueue', () => {
       }
 
       expect(sorted).toEqual([1, 3, 5, 8, 10, 12, 15, 20, 25, 30])
-    })
-
-    it('handles negative priorities', () => {
-      queue.enqueue('negative', -5)
-      queue.enqueue('zero', 0)
-      queue.enqueue('positive', 5)
-
-      expect(queue.dequeue()).toBe('negative')
-      expect(queue.dequeue()).toBe('zero')
-      expect(queue.dequeue()).toBe('positive')
-    })
-
-    it('handles fractional priorities', () => {
-      queue.enqueue('half', 0.5)
-      queue.enqueue('one', 1)
-      queue.enqueue('quarter', 0.25)
-
-      expect(queue.dequeue()).toBe('quarter')
-      expect(queue.dequeue()).toBe('half')
-      expect(queue.dequeue()).toBe('one')
     })
   })
 

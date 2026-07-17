@@ -211,14 +211,6 @@ describe('useTeamsRestore', () => {
     expect(rewritten.defaults).toBe('arena1')
   })
 
-  it('wrap survives entering a non-wrap mode (render gating is the layout side)', () => {
-    const { restore, wrapBoards } = createHarness()
-    restore.initialize(null)
-    wrapBoards.value = true
-    restore.switchMode('3v3')
-    expect(wrapBoards.value).toBe(true)
-  })
-
   it('slot restore ignores stored display flags entirely (device prefs win)', () => {
     const { restore, flags, inverted, wrapBoards } = createHarness()
     storage.set(
@@ -242,12 +234,15 @@ describe('useTeamsRestore', () => {
     expect(wrapBoards.value).toBe(false)
   })
 
-  it('mode switches leave the view toggles untouched (inverted included)', () => {
-    const { restore, inverted } = createHarness()
+  it('mode switches leave the view toggles untouched (wrap and inverted included)', () => {
+    // Wrap render gating is the layout side, so the flag survives non-wrap modes
+    const { restore, inverted, wrapBoards } = createHarness()
     restore.initialize(null)
     inverted.value = true
+    wrapBoards.value = true
     restore.switchMode('3v3')
     expect(inverted.value).toBe(true)
+    expect(wrapBoards.value).toBe(true)
   })
 
   it('ingress: a shared link adopts all display flags', () => {
@@ -452,26 +447,17 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     error.mockRestore()
   })
 
-  it('selecting canonical data keeps current display flags', () => {
-    const { restore, flags } = createHarness()
+  it('selecting a team keeps current display flags and view rotation', () => {
+    const { restore, flags, inverted } = createHarness()
     restore.initialize(null)
     flags.showArrows = true
+    inverted.value = true
     const data = canonicalTeamData(
       encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
     )!
     restore.applyTeamData('1v1', data, 'x')
     // applyTeamData restores with adoptFlags=false, so a payload's `d` is ignored.
     expect(flags.showArrows).toBe(true)
-  })
-
-  it('selecting a team leaves the view rotation untouched', () => {
-    const { restore, inverted } = createHarness()
-    restore.initialize(null)
-    inverted.value = true
-    const data = canonicalTeamData(
-      encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
-    )!
-    restore.applyTeamData('1v1', data, 'x')
     expect(inverted.value).toBe(true)
   })
 })

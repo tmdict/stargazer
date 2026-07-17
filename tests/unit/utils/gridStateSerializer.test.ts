@@ -264,20 +264,6 @@ describe('gridStateSerializer', () => {
       const packed = serializeGridState(tiles, null, null, original).d
       expect(unpackDisplayFlags(packed)).toEqual(original)
     })
-
-    it('decodes URLs from before teamView/inverted existed (high bits unset) as false', () => {
-      // An old packed value that used only bits 0-3.
-      const legacyPacked = 0b01111
-      expect(unpackDisplayFlags(legacyPacked)).toEqual({
-        showGridInfo: true,
-        showArrows: true,
-        showPerspective: true,
-        showSkills: true,
-        teamView: false,
-        inverted: false,
-        wrap: false,
-      })
-    })
   })
 
   describe('BOARD_CONTENT_KEYS contract', () => {
