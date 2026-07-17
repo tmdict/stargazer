@@ -1,7 +1,7 @@
 <script setup lang="ts">
-/* Frosted contact panel backed by Netlify Forms: the hidden twin form in
-   index.html registers the "contact" form at deploy, and this popup submits
-   the same field names via fetch, so no page navigation happens. */
+/* Frosted contact panel: submits the "contact" form via fetch, so no page
+   navigation happens. public/forms.html carries the hidden twin that
+   registers the form at deploy; the field names must match. */
 
 import { nextTick, onMounted, onUnmounted, ref, watch } from 'vue'
 
@@ -38,7 +38,7 @@ const submit = async (): Promise<void> => {
   if (sending.value || !message.value.trim()) return
   sending.value = true
   try {
-    // Netlify accepts form posts on any path; form-name routes it, and the
+    // Form posts are accepted on any path; form-name routes them, and the
     // empty honeypot field marks the submission as human.
     const res = await fetch('/', {
       method: 'POST',
