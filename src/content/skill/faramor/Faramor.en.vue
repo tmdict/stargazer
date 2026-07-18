@@ -8,7 +8,7 @@ import { gridStyles, images } from './Faramor.data'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="guide-tile">
+      <SkillSnippet title-key="guide-targeting">
         <p>
           Faramor looks for teammate characters on tiles adjacent to him, prioritizing characters in
           the back. When multiple characters are in the same row, Faramor will prioritize the
