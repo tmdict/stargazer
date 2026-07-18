@@ -11,6 +11,6 @@
   "tags": {
     "cheat-death": [{ "ex": 1 }],
     "initial-energy-300": [],
-    "tile-effect": [{ "ex": 1 }]
+    "special-target": [{ "ex": 1 }]
   }
 }

@@ -8,7 +8,7 @@ import { gridStyles, images } from './Daimon.data'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="guide-tile">
+      <SkillSnippet title-key="guide-targeting">
         <p>
           Daimon looks for teammate characters on tiles immediately behind him, when multiple
           characters are in the same row, Daimon will prioritize the character to the left (higher
