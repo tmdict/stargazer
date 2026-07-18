@@ -462,3 +462,4 @@ export class SkillManager {
 // Auto-import all skill files to trigger self-registration
 // This must be at the bottom after registerSkill is defined
 import.meta.glob('./characters/*.ts', { eager: true })
+import.meta.glob('./seasonal/*.ts', { eager: true })

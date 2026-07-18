@@ -292,7 +292,7 @@ When `calculate` needs a data-store fact about a unit, read it from `ctx.lookups
 
 `withSkillLine(baseSkill, calculate)` is the line analog of `withTilePaint`: `calculate(ctx)` returns straight connection lines (`{ fromHexId, toHexId, color }[]`) that `SkillTargeting` draws border-to-border between the hex icons; same stroke width as targeting arrows but straight, no arrowhead, and self-colored (so it renders for any skill, not just targeting ones). Stack it with `withTilePaint` to do both (Elijah-Lailah draws a line between the twins and outlines the allies between them). Both visuals, like the tile borders and arrows, only show while `showSkills` is on.
 
-Skills placed in `/src/lib/skills/characters/` are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration.
+Skills are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration: `/src/lib/skills/characters/` holds permanent hero skills, `/src/lib/skills/seasonal/` holds rotating seasonal-unit skills, deleted wholesale when a season retires.
 
 Skills must handle:
 

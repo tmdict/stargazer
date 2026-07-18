@@ -41,20 +41,27 @@ awareness is the small set of seams below.
 
 ## The seams
 
-| Concern                  | Where                                                                | What changes                                                                                                                                              |
-| ------------------------ | -------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Team-size exemption      | `place.ts` (`performPlace`)                                          | Phantimals are not added to the `teamCharacters` capacity set.                                                                                            |
-| Capacity/duplicate check | `character.ts` (`canPlaceCharacterOnTeam`)                           | Returns `true` for phantimal IDs.                                                                                                                         |
-| One-per-team replace     | `stores/character.ts` (`placePhantimalOnHex` / `autoPlacePhantimal`) | Clears the team's existing phantimal (`findTeamPhantimalHex`) before placing. Cross-team moves route through the same clear in `handleCharacterDrop`.     |
-| Data lookup              | `stores/gameData.ts`                                                 | `getPhantimalById`; `getCharacterRange`/`getCharacterNameById` short-circuit phantimal IDs.                                                               |
-| On-grid rendering        | `components/grid/GridCharacters.vue`                                 | An `isPhantimalId` branch swaps the image source (remote `phantimalImageSources`) and colour; all positioning, drag, lift and perspective code is reused. |
-| Roster                   | `components/PhantimalSelection.vue`                                  | Draggable + tap-to-place + placed state, mirroring the character roster; the info modal stays reachable via the pill.                                     |
-| URL serialization        | see below                                                            | Dedicated `p` section.                                                                                                                                    |
+| Concern                  | Where                                                                                                                             | What changes                                                                                                                                              |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Team-size exemption      | `place.ts` (`performPlace`)                                                                                                       | Phantimals are not added to the `teamCharacters` capacity set.                                                                                            |
+| Capacity/duplicate check | `character.ts` (`canPlaceCharacterOnTeam`)                                                                                        | Returns `true` for phantimal IDs.                                                                                                                         |
+| One-per-team replace     | `stores/character.ts` wrappers delegating to `useGridContext.ts` (`placePhantimal` / `autoPlacePhantimal` / `clearTeamPhantimal`) | Clears the team's existing phantimal (`findTeamPhantimalHex`) before placing. Cross-team moves route through the same clear in `handleDrop`.              |
+| Spirit Mark skill        | `lib/skills/seasonal/phantimal.ts`                                                                                                | Tile highlight registered under the namespaced ID; rides the generic skill lifecycle (see below).                                                         |
+| Data lookup              | `stores/gameData.ts`                                                                                                              | `getPhantimalById`; `getCharacterRange`/`getCharacterNameById` short-circuit phantimal IDs.                                                               |
+| On-grid rendering        | `components/grid/GridCharacters.vue`                                                                                              | An `isPhantimalId` branch swaps the image source (remote `phantimalImageSources`) and colour; all positioning, drag, lift and perspective code is reused. |
+| Roster                   | `components/PhantimalSelection.vue`                                                                                               | Draggable + tap-to-place + placed state, mirroring the character roster; the info modal stays reachable via the pill.                                     |
+| URL serialization        | see below                                                                                                                         | Dedicated `s` section.                                                                                                                                    |
 
-Skills: phantimals participate **passively** — they occupy cells and are valid
-targets, but have no engine-active abilities (`hasSkill` is false for them, so no
-activation is attempted). Placing/removing one still re-runs targeting for other
-units because it flows through the normal placement path.
+Skills: each phantimal registers a **Spirit Mark tile highlight** under its
+namespaced ID in `lib/skills/seasonal/phantimal.ts`, discovered by the
+`./seasonal/*.ts` glob in `skill.ts`. The skill marks the unit on the
+phantimal's priority-behind tile (Necrodrakon: priority-front) via
+`findAdjacentPriorityTarget` (shared with Daimon), painting a yellow fill plus
+border through the SkillManager's refcounted tile channels. Activation is gated
+only by the registry (`hasSkill`), so the whole lifecycle (activate on place,
+deactivate on remove, re-key on cross-team move, re-derive on every mutation)
+rides the generic `execute*` ops; the skill system contains no phantimal-aware
+code.
 
 Targeting range: a phantimal's `range` (from its data file) is used when it acts
 as a targeting _source_ for the on-grid arrows. `getCharacterRange` returns it,
@@ -66,7 +73,7 @@ passes to `getClosestTargetMap` (the static map is keyed by character id only).
 Phantimal IDs (100000+) don't fit the character section's 14-bit ID field, so they
 get their own section rather than overloading `c`:
 
-- `GridState.p`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`).
+- `GridState.s`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`).
 - `binaryEncoder.ts`: a phantimal section after artifacts — a 4-bit count then
   `hexId(6) + localId(4) + team(1)` per entry. Presence is flagged by **bit 6 of
   the extended-flags byte** (previously reserved), which forces extended mode.
@@ -129,19 +136,27 @@ Everything phantimal-specific is reachable from a short list of seams, each keye
 on `isPhantimalId` or living in a dedicated file. To retire the feature:
 
 1. Delete `lib/characters/phantimal.ts`, `lib/characters/phantimalFaction.ts`,
-   `PhantimalSelection.vue`, `modals/PhantimalModal.vue`, the phantimal
-   data/locale files (incl. `app/phantimalDeployable|Locked.json`), and this doc.
+   `PhantimalSelection.vue`, `modals/PhantimalModal.vue`, the skill file
+   `lib/skills/seasonal/phantimal.ts` with `tests/unit/skills/phantimal.test.ts`,
+   the phantimal data/locale files (incl. `app/phantimalDeployable|Locked.json`),
+   and this doc. The skill file must go whenever the data/locale files do,
+   including a data-only rotation: retired IDs restored from old URLs still
+   place, and would otherwise keep activating the skill.
 2. Remove the phantimal section from `binaryEncoder.ts` / `gridStateSerializer.ts`
-   / `urlState.ts` (the `p` field) and the `getPhantimalById` /
-   `getCharacterFaction` accessors.
+   / `urlState.ts` (the `s` field) and the `getPhantimalById` /
+   `getCharacterFaction` accessors. Optionally remove the `./seasonal/*.ts` glob
+   line in `skill.ts`: an unmatched literal Vite glob compiles to an empty module
+   map, so this is tidiness, not correctness. `findAdjacentPriorityTarget` stays
+   (it is Daimon's targeting); its `'front'` direction becomes unused and may
+   stay or be trimmed.
 3. Drop the phantimal helpers from the character store (placement, the faction
    gate, and the `reconcilePhantimals` watcher), the `isPhantimalId(...)`
    guards including the cross-team swap rejection in `swap.ts` (they collapse to
    "always a character"), the `GridCharacters` render branch, and
    `Grid.phantimalIdOffset` (restoring `isCompanionId` to a single lower bound).
 
-The `GridTile` model, targeting, pathfinding, move, and the `c` URL section
-were never modified for phantimals, so nothing there needs reverting.
+The `GridTile` model, pathfinding, move, and the `c` URL section were never
+modified for phantimals, so nothing there needs reverting.
 
 ## Retirement
 
