@@ -8,7 +8,7 @@ import { gridStyles, images } from './Hepler.data'
 <template>
   <SkillSnippets>
     <template #ex>
-      <SkillSnippet title-key="guide-tile">
+      <SkillSnippet title-key="guide-targeting">
         <p>
           赫普搜索与自己相邻格子上的队友，优先选择位置更靠前的角色。当同排有多个友方角色时，赫普会优先选择位置更靠左的角色（较高ID的格子）。
         </p>

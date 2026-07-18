@@ -10,6 +10,7 @@
   "season": 4,
   "tags": {
     "temp-buff": [{ "skill2": 1 }],
-    "temp-buff-opening": [{ "skill2": 1 }]
+    "temp-buff-opening": [{ "skill2": 1 }],
+    "tile-effect": [{ "skill2": 1 }]
   }
 }

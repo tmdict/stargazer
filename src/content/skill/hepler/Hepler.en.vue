@@ -8,7 +8,7 @@ import { gridStyles, images } from './Hepler.data'
 <template>
   <SkillSnippets>
     <template #ex>
-      <SkillSnippet title-key="guide-tile">
+      <SkillSnippet title-key="guide-targeting">
         <p>
           Hepler looks for teammate characters on tiles adjacent to him, prioritizing characters in
           the front. When multiple characters are in the same row, Hepler will prioritize the

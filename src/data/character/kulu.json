@@ -8,5 +8,7 @@
   "energy": [300],
   "range": 6,
   "season": 4,
-  "tags": {}
+  "tags": {
+    "tile-effect": [{ "skill2": 1 }]
+  }
 }
