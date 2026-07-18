@@ -10,6 +10,6 @@
   "season": 5,
   "tags": {
     "temp-buff": [{ "skill3": 1 }],
-    "temp-buff-instant": [{ "skill3": 1 }]
+    "temp-buff-opening": [{ "skill3": 1 }]
   }
 }

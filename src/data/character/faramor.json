@@ -11,7 +11,7 @@
   "tags": {
     "anti-heal": [{ "ultimate": 1 }],
     "temp-buff": [{ "skill3": 1 }],
-    "temp-buff-instant": [{ "skill3": 1 }],
+    "temp-buff-opening": [{ "skill3": 1 }],
     "tile-effect": [{ "skill3": 1 }]
   }
 }
