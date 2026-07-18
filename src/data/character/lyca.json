@@ -12,6 +12,6 @@
     "energy-battery": [{ "skill2": 1 }],
     "initial-energy-300": [],
     "temp-buff": [{ "skill2": 1 }],
-    "temp-buff-instant": [{ "skill2": 1 }]
+    "temp-buff-opening": [{ "skill2": 1 }]
   }
 }

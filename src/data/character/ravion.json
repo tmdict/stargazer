@@ -13,6 +13,6 @@
     "energy-battery": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
     "temp-buff": [{ "skill2": 1 }, { "awakening": 1 }],
-    "temp-buff-instant": [{ "skill2": 1 }]
+    "temp-buff-opening": [{ "skill2": 1 }]
   }
 }
