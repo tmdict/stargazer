@@ -15,6 +15,12 @@
   /* Soft teal text on accent-tinted chips (globe trigger, hint bar). */
   --color-accent-text: #cdeeea;
 
+  /* Progression ramp shared by charm tiers (Elite → Mythic) and paragon badges (P1-P4). */
+  --color-tier-1: #b995e2;
+  --color-tier-2: #dd9c60;
+  --color-tier-3: #dd7a6c;
+  --color-tier-4: #b3c9e2;
+
   /* Team Colors */
   --color-ally: #36958e;
   --color-enemy: #c82333;
