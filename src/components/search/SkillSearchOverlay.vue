@@ -11,13 +11,15 @@ import { isSkillLocale, SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n
 import { useI18nStore } from '@/stores/i18n'
 import { SPLIT_MIN_WIDTH } from '@/utils/breakpoints'
 import {
+  getCharmForHero,
+  getSkillCharms,
   getSkillFile,
   getSkillLocaleDict,
   hasSkillLocale,
   loadCharacterImages,
 } from '@/utils/dataLoader'
 import { renderRichText, type RichPiece, type Snippet } from '@/utils/searchHighlight'
-import { curatedHeroName, slotLabel } from '@/utils/skillLabels'
+import { appLabel, curatedHeroName, slotLabel } from '@/utils/skillLabels'
 
 // The pane's skill-text tokens are styled by content.css's unscoped rules.
 import '@/styles/content.css'
@@ -92,19 +94,31 @@ interface OverlayRow {
   nameText?: string
 }
 
+// Charm hits have no slot; they anchor to the charm block and wear the
+// chrome charm label as their chip.
+const hitAnchor = (hit: SearchHit) =>
+  hit.slot ? `#${hit.slot}` : hit.loc === 'charm' ? '#charm' : ''
+
+const hitChip = (hit: SearchHit) =>
+  hit.slot
+    ? slotLabel(hit.slot, appLang.value)
+    : hit.loc === 'charm'
+      ? appLabel('charm', appLang.value)
+      : ''
+
 const hitRows = computed<OverlayRow[]>(() => {
   const rs = results.value
   if (!rs) return []
   return rs.flatMap((r) =>
     r.hits.map((hit, i) => ({
-      key: `${r.slug}:${hit.slot ?? 'name'}:${i}`,
+      key: `${r.slug}:${hit.slot ?? hit.loc}:${i}`,
       slug: r.slug,
-      href: `/${hit.locale}/skill/${r.slug}${hit.slot ? `#${hit.slot}` : ''}`,
+      href: `/${hit.locale}/skill/${r.slug}${hitAnchor(hit)}`,
       lang: hit.locale,
       portrait: i === 0,
       alt: heroName(r.slug),
       hit,
-      chip: hit.slot ? slotLabel(hit.slot, appLang.value) : '',
+      chip: hitChip(hit),
     })),
   )
 })
@@ -137,7 +151,7 @@ const heroRows = computed<OverlayRow[]>(() => {
       {
         key: `hero:${r.slug}`,
         slug: r.slug,
-        href: `/${hit.locale}/skill/${r.slug}${hit.slot ? `#${hit.slot}` : ''}`,
+        href: `/${hit.locale}/skill/${r.slug}${hitAnchor(hit)}`,
         lang: hit.locale,
         portrait: true,
         alt: name,
@@ -212,6 +226,10 @@ const paneHits = computed<PaneHit[]>(() => {
           : hit.level
             ? `${label} · LV ${hit.level}`
             : label
+    } else if (hit.loc === 'charm') {
+      const label = appLabel('charm', appLang.value)
+      const tierName = getSkillCharms(hit.locale)?.tiers[(hit.tier ?? 1) - 1]
+      typeLine = tierName ? `${label} · ${tierName}` : label
     }
     let bodyText: string | null = null
     if (slotData) {
@@ -223,12 +241,17 @@ const paneHits = computed<PaneHit[]>(() => {
       } else if (hit.loc === 'skill-name') {
         bodyText = slotData.d[0] ?? null
       }
+    } else if (hit.loc === 'charm') {
+      const charm = getCharmForHero(hero.slug)
+      bodyText = charm
+        ? (getSkillCharms(hit.locale)?.charms[charm.slug]?.[(hit.tier ?? 1) - 1] ?? null)
+        : null
     }
     return {
-      key: `${hero.slug}:${slot ?? 'name'}:${i}`,
-      href: `/${hit.locale}/skill/${hero.slug}${slot ? `#${slot}` : ''}`,
+      key: `${hero.slug}:${slot ?? hit.loc}:${i}`,
+      href: `/${hit.locale}/skill/${hero.slug}${hitAnchor(hit)}`,
       lang: hit.locale,
-      title: hit.loc === 'description' ? null : hit.snippet,
+      title: hit.loc === 'description' || hit.loc === 'charm' ? null : hit.snippet,
       typeLine,
       body: bodyText ? renderRichText(bodyText, q) : null,
     }

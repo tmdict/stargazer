@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, defineAsyncComponent, inject, provide, ref, type Component } from 'vue'
 
+import SkillCharmSection from './SkillCharmSection.vue'
 import SkillKeywordTooltip from './SkillKeywordTooltip.vue'
 import SkillSection from './SkillSection.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
@@ -10,7 +11,7 @@ import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
-import { getSkillFile } from '@/utils/dataLoader'
+import { getCharmForHero, getSkillCharms, getSkillFile } from '@/utils/dataLoader'
 import { formatToCamelCase } from '@/utils/nameFormatting'
 import { appLabel, headingFor, heroDisplayName } from '@/utils/skillLabels'
 import { SkillLangKey } from './snippetKeys'
@@ -86,6 +87,21 @@ const sections = computed(() => {
       refinements,
     }
   }).filter((s): s is NonNullable<typeof s> => s !== null)
+})
+
+// Seasonal charm block below the slot sections. Charm text is charm-keyed
+// (one charm is shared by several heroes) and resolved through the hero →
+// charm mapping; the en fallback mirrors the skill-file fallback above.
+const charm = computed(() => {
+  const entry = getCharmForHero(props.slug)
+  if (!entry) return null
+  const dict = getSkillCharms(props.lang) ?? getSkillCharms('en')
+  const texts = dict?.charms[entry.slug]
+  if (!dict || !texts) return null
+  const sharedNames = entry.heroes
+    .filter((h) => h !== props.slug)
+    .map((h) => heroDisplayName(h, props.lang))
+  return { tierNames: dict.tiers, texts, sharedNames }
 })
 
 const anchors = useSnippetAnchors()
@@ -173,6 +189,17 @@ provide(
         class="skill-snippet-anchor"
       />
     </template>
+
+    <!-- Charm rows carry no tags, so an active chip filter hides the block,
+         same rule as EX refinements. -->
+    <SkillCharmSection
+      v-if="charm && activeChips.size === 0"
+      :heading="appLabel('charm', appLang)"
+      :shared-label="appLabel('charm-shared', appLang)"
+      :tier-names="charm.tierNames"
+      :texts="charm.texts"
+      :shared-names="charm.sharedNames"
+    />
 
     <component :is="snippetComp" v-if="snippetComp" class="skill-snippet-host" />
 

@@ -9,6 +9,7 @@
     "build:ssg": "vite-ssg build",
     "build:spa": "npm run type-check && vite build",
     "format": "prettier --write --list-different src/ docs/ tests/",
+    "import:charms": "tsx scripts/import-charms.ts",
     "import:skills": "tsx scripts/import-skills.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

@@ -2,15 +2,21 @@ import { computed, ref, watch, type ComputedRef, type Ref } from 'vue'
 
 import { isAppLocale, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
-import { getSkillLocaleDict, loadCharacterLocales, loadSkillLocale } from '@/utils/dataLoader'
+import {
+  getCharmForHero,
+  getSkillCharms,
+  getSkillLocaleDict,
+  loadCharacterLocales,
+  loadSkillLocale,
+} from '@/utils/dataLoader'
 import { cleanSkillText, renderSnippet, type Snippet } from '@/utils/searchHighlight'
 import { curatedHeroName, heroDisplayName } from '@/utils/skillLabels'
 
 export interface SearchHit {
-  loc: 'name' | 'skill-name' | 'description'
-  slot?: SlotKey
+  loc: 'name' | 'skill-name' | 'description' | 'charm'
+  slot?: SlotKey // absent for name and charm hits
   level?: number
-  tier?: number // EX refinement tier (Refine 2/4); set instead of level for refine rows
+  tier?: number // EX refinement tier with a slot; charm tier (1-4) for charm hits
   /** Language this hit's text matched in. Per-slot dedup spans the locale
    * loop, so later hits can come from a different language than the hero's
    * first; links, lang attributes, and text lookups must use this. */
@@ -30,8 +36,8 @@ interface NameEntry {
 }
 interface DeepEntry {
   slug: string
-  loc: 'skill-name' | 'description'
-  slot: SlotKey
+  loc: 'skill-name' | 'description' | 'charm'
+  slot?: SlotKey // absent for charm entries
   level?: number
   tier?: number
   text: string
@@ -108,6 +114,14 @@ function buildIndex(lang: SkillLocale, dict: NonNullable<ReturnType<typeof getSk
         })
       }
     }
+
+    // Charm tier text is charm-keyed and shared across heroes; indexing it per
+    // hero lets any sharer surface on a match. Anchored by loc, not slot.
+    const charm = getCharmForHero(slug)
+    const charmTexts = charm ? getSkillCharms(lang)?.charms[charm.slug] : undefined
+    charmTexts?.forEach((text, i) => {
+      deep.push({ slug, loc: 'charm', tier: i + 1, text: cleanSkillText(text) })
+    })
   }
 
   return { names, deep }
@@ -184,16 +198,18 @@ export function useSkillSearch(
     const includesQuery = (s: string) => s.toLowerCase().includes(lc)
 
     const perSlug = new Map<string, SearchHit[]>()
-    // At most one hit per (slug, slot). Entries are pushed in slot+level
-    // order, so the first survivor per slot is the lowest level.
-    const seenSlots = new Map<string, Set<SlotKey>>()
+    // At most one hit per (slug, slot); charm hits dedupe under one pseudo-slot
+    // so a hero surfaces once per charm, not once per matching tier. Entries
+    // are pushed in slot+level order, so the first survivor is the lowest.
+    const seenSlots = new Map<string, Set<SlotKey | 'charm'>>()
     // One name hit per hero, even when the name matches in several locales.
     const namedSlugs = new Set<string>()
     const pushHit = (slug: string, hit: Omit<SearchHit, 'locale'>, locale: SkillLocale) => {
-      if (hit.slot) {
-        const seen = seenSlots.get(slug) ?? new Set<SlotKey>()
-        if (seen.has(hit.slot)) return
-        seen.add(hit.slot)
+      const dedupKey = hit.slot ?? (hit.loc === 'charm' ? 'charm' : undefined)
+      if (dedupKey) {
+        const seen = seenSlots.get(slug) ?? new Set<SlotKey | 'charm'>()
+        if (seen.has(dedupKey)) return
+        seen.add(dedupKey)
         seenSlots.set(slug, seen)
       }
       const list = perSlug.get(slug) ?? []
