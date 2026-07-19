@@ -129,7 +129,12 @@ async function main() {
       continue
     }
     const structural = JSON.parse(await readFile(join(DATA_DIR, `${slug}.json`), 'utf8')) as {
+      name?: string
       faction?: string
+    }
+    // The locale dict and image lookups key on `name` matching the filename.
+    if (structural.name !== slug) {
+      problems.push(`${slug}: structural name "${structural.name}" does not match the filename`)
     }
     const feedFaction = en[slug]!.faction?.toLowerCase() ?? null
     if (feedFaction && structural.faction !== feedFaction) {
@@ -145,9 +150,10 @@ async function main() {
     )
   }
 
-  // Locale content: the one output this script owns.
-  let written = 0
-  let unchanged = 0
+  // Locale content: the one output this script owns. Every payload is built
+  // and validated before the first write, so an invalid feed never leaves a
+  // partially updated tree.
+  const payloads: { path: string; text: string }[] = []
   for (const slug of feedSlugs) {
     const enEntry = en[slug]!
     const zhEntry = zh[slug]!
@@ -176,8 +182,15 @@ async function main() {
       name: { en: enEntry.name ?? slug, zh: zhEntry.name ?? slug },
       skills,
     }
-    const path = join(LOCALE_DIR, `${slug}.json`)
-    if (await writeTextIfChanged(path, JSON.stringify(content, null, 2) + '\n')) written++
+    payloads.push({
+      path: join(LOCALE_DIR, `${slug}.json`),
+      text: JSON.stringify(content, null, 2) + '\n',
+    })
+  }
+  let written = 0
+  let unchanged = 0
+  for (const { path, text } of payloads) {
+    if (await writeTextIfChanged(path, text)) written++
     else unchanged++
   }
 

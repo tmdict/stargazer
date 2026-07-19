@@ -173,6 +173,19 @@ async function main() {
     return
   }
 
+  // One charm per hero: the derived hero → charm inverse (getCharmForHero)
+  // would otherwise silently last-write-wins.
+  const heroOwner = new Map<string, string>()
+  for (const charm of bulks.en.charms) {
+    for (const hero of charm.heroes) {
+      const owner = heroOwner.get(hero)
+      if (owner) {
+        throw new Error(`hero "${hero}" appears on charms "${owner}" and "${charm.slug}"`)
+      }
+      heroOwner.set(hero, charm.slug)
+    }
+  }
+
   // Roster intersection: the structural map only lists heroes this app knows.
   const rosterSlugs = new Set(
     (await readdir(CHARACTER_DIR)).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)),
@@ -206,7 +219,14 @@ async function main() {
     const charms: Record<string, string[]> = {}
     for (const charm of [...bulks[code].charms].sort((a, b) => a.slug.localeCompare(b.slug))) {
       if (!(charm.slug in structural)) continue
+      // Validation runs on the cleaned strings, which are exactly what gets
+      // written (a tier that is only a sprite tag must fail, not ship empty).
       const tiers = charm.tiers.map(cleanDescription)
+      tiers.forEach((t, i) => {
+        if (!t.trim()) {
+          throw new Error(`[${code}] charm "${charm.slug}" tier ${i + 1} is empty after cleaning`)
+        }
+      })
       for (const text of tiers) {
         for (const m of text.matchAll(HIGHLIGHT_RE)) {
           const { key } = splitHighlightToken(m[1]!)
@@ -219,11 +239,16 @@ async function main() {
   }
 
   if (missingKeywords.length > 0) {
-    throw new Error(`keyword token(s) missing from glossaries:\n  ${missingKeywords.join('\n  ')}`)
+    throw new Error(
+      `keyword token(s) missing from glossaries:\n  ${missingKeywords.join('\n  ')}\n` +
+        `  Run import:skills to refresh the glossaries, then re-run.`,
+    )
   }
 
-  // The structural file lives in a prettier-formatted dir, so it is written
-  // pretty-printed; the locale files are compact like the rest of skill/.
+  // The structural map is pretty-printed to match the hand-curated src/data/
+  // style; its dir is prettier-ignored so this formatting is authoritative
+  // (prettier would collapse the hero arrays). The locale files are compact
+  // like the rest of skill/.
   const structuralChanged = await writeTextIfChanged(
     CHARM_DATA_FILE,
     JSON.stringify(structural, null, 2) + '\n',
