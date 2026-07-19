@@ -174,7 +174,7 @@ async function main() {
   }
 
   // One charm per hero: the derived hero → charm inverse (getCharmForHero)
-  // would otherwise silently last-write-wins.
+  // would otherwise silently resolve to the last charm written.
   const heroOwner = new Map<string, string>()
   for (const charm of bulks.en.charms) {
     for (const hero of charm.heroes) {

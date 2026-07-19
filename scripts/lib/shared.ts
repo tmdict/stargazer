@@ -39,9 +39,7 @@ function reorderStatValuePairs(text: string): string {
 export function cleanDescription(text: string): string {
 }
 
-// Write only when content differs so re-runs produce no git diff. Compact,
-// auto-managed output; callers targeting prettier-formatted dirs pass
-// pre-formatted text instead.
+// Write only when content differs so re-runs produce no git diff.
 export async function writeTextIfChanged(path: string, next: string): Promise<boolean> {
   if (existsSync(path)) {
     const prev = await readFile(path, 'utf8')
