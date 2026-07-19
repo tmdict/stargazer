@@ -36,7 +36,6 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   const nameLocale = loadCharacterLocales()[name]
   // Warm by the route guard before this runs.
   const heroName = heroDisplayName(name, locale)
-  const title = locale === 'zh' ? `${heroName} 技能` : `${heroName} Skills`
   const url = `skill/${name}`
   // Per-hero preview reusing the small roster thumbnail: Discord renders it, but
   // it is below the size FB/X require, so they fall back to a text-only card.
@@ -47,14 +46,14 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   const keywords = [...BASE_KEYWORDS, nameLocale?.en, nameLocale?.zh, heroName]
 
   useHead({
-    title: `${title} | Stargazer`,
+    title: `${heroName} | Stargazer`,
     meta: [
       { name: 'keywords', content: [...new Set(keywords.filter(Boolean))].join(', ') },
-      { property: 'og:title', content: title },
+      { property: 'og:title', content: heroName },
       ...(ogImage
         ? [
             { property: 'og:image', content: `${ORIGIN}${ogImage}` },
-            { property: 'og:image:alt', content: title },
+            { property: 'og:image:alt', content: heroName },
           ]
         : []),
       { property: 'og:url', content: `${ORIGIN}/${locale}/${url}` },

@@ -1,6 +1,7 @@
 // Charm data integrity: the generated structural map and locale files must
 // stay mutually consistent, and every referenced hero must exist in the
-// roster. Guards the import-charms outputs the UI trusts blindly.
+// roster. Guards the import-charms outputs the UI consumes without runtime
+// checks.
 import { describe, expect, it } from 'vitest'
 
 import { getCharmForHero, getSkillCharms, loadCharacters, loadCharms } from '@/utils/dataLoader'

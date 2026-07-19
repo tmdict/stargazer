@@ -89,9 +89,9 @@ const sections = computed(() => {
   }).filter((s): s is NonNullable<typeof s> => s !== null)
 })
 
-// Seasonal charm block below the slot sections. Charm text is charm-keyed
-// (one charm is shared by several heroes) and resolved through the hero →
-// charm mapping; the en fallback mirrors the skill-file fallback above.
+// One charm is shared by several heroes, so its text is stored charm-keyed
+// and resolved through the hero → charm mapping; the en fallback mirrors the
+// skill-file fallback above.
 const charm = computed(() => {
   const entry = getCharmForHero(props.slug)
   if (!entry) return null
