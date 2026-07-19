@@ -34,10 +34,22 @@
     ]
   },
   "ep7backrow": {
-    "heroes": ["gunnar", "hugin", "pandora", "reinier"]
+    "heroes": [
+      "gunnar",
+      "hugin",
+      "pandora",
+      "reinier"
+    ]
   },
   "ep7ccstack": {
-    "heroes": ["alsa", "arden", "eironn", "mehira", "nerion", "pippa"]
+    "heroes": [
+      "alsa",
+      "arden",
+      "eironn",
+      "mehira",
+      "nerion",
+      "pippa"
+    ]
   },
   "ep7comboatk": {
     "heroes": [
@@ -55,22 +67,58 @@
     ]
   },
   "ep7defguard": {
-    "heroes": ["antandra", "callan", "lumont", "thador"]
+    "heroes": [
+      "antandra",
+      "callan",
+      "lumont",
+      "thador"
+    ]
   },
   "ep7flowbuff": {
-    "heroes": ["elijah-lailah", "lyca", "mikola"]
+    "heroes": [
+      "elijah-lailah",
+      "lyca",
+      "mikola"
+    ]
   },
   "ep7frontrow": {
-    "heroes": ["fay", "isabella", "koko", "rowan"]
+    "heroes": [
+      "fay",
+      "isabella",
+      "koko",
+      "rowan"
+    ]
   },
   "ep7healbuff": {
-    "heroes": ["contess", "evie", "hewynn", "ludovic", "smokey-meerky", "solise", "velara"]
+    "heroes": [
+      "contess",
+      "evie",
+      "hewynn",
+      "ludovic",
+      "smokey-meerky",
+      "solise",
+      "velara"
+    ]
   },
   "ep7hunt": {
-    "heroes": ["atalanta", "carolina", "lenya", "marcille", "nazrik", "rhys", "walker"]
+    "heroes": [
+      "atalanta",
+      "carolina",
+      "lenya",
+      "marcille",
+      "nazrik",
+      "rhys",
+      "walker"
+    ]
   },
   "ep7magicball": {
-    "heroes": ["chippy", "damian", "igor", "niru", "zorya"]
+    "heroes": [
+      "chippy",
+      "damian",
+      "igor",
+      "niru",
+      "zorya"
+    ]
   },
   "ep7maxhp": {
     "heroes": [
@@ -100,7 +148,11 @@
     ]
   },
   "ep7shieldbuff": {
-    "heroes": ["daimon", "lucius", "tilaya"]
+    "heroes": [
+      "daimon",
+      "lucius",
+      "tilaya"
+    ]
   },
   "ep7shieldwave": {
     "heroes": [
@@ -117,9 +169,22 @@
     ]
   },
   "ep7stun": {
-    "heroes": ["alna", "gerda", "lucca"]
+    "heroes": [
+      "alna",
+      "gerda",
+      "lucca"
+    ]
   },
   "ep7summon": {
-    "heroes": ["aurora", "cecia", "florabelle", "laios", "lamentis", "lucy", "peggy", "zanie"]
+    "heroes": [
+      "aurora",
+      "cecia",
+      "florabelle",
+      "laios",
+      "lamentis",
+      "lucy",
+      "peggy",
+      "zanie"
+    ]
   }
 }
