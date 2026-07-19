@@ -69,20 +69,7 @@ const sharedLine = computed(() =>
   font-weight: 600;
 }
 
-/* Shared max-content label column (via subgrid) so every tier's description
-   starts at the same x regardless of the locale's tier-name widths. Without
-   subgrid support the rows fall back to per-row sizing. */
-.charm-tiers {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-}
-
 .charm-tier {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  grid-template-columns: subgrid;
-  column-gap: 10px;
   padding: 6px 0;
   border-top: 1px dotted rgba(255, 255, 255, 0.12);
 }
@@ -92,10 +79,10 @@ const sharedLine = computed(() =>
   border-top: none;
 }
 
+/* On its own line so the description keeps the full section width. */
 .charm-tier-badge {
-  /* Matches body first-line height (15px × 1.55) so the small label is
-     vertically centered against the first line of description text. */
-  line-height: 23.25px;
+  display: block;
+  margin-bottom: 2px;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.08em;
