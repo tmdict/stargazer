@@ -41,3 +41,19 @@ export type SkillLocaleFile = {
 // text. Lives beside the hero files so each language chunk carries its own
 // glossary; the underscore keeps it out of the hero-slug namespace.
 export type SkillKeywords = Record<string, string>
+
+// On-disk shape of src/locales/skill/<lang>/_charms.json (auto-managed by
+// scripts/import-charms.ts): the current season's charm text, stored once per
+// charm because one charm is shared by several heroes. `tiers` carries the
+// localized tier labels in Elite → Mythic order; each charm slug maps to its
+// four tier descriptions in the same order. Rides the locale chunks like
+// `_keywords.json`.
+export interface SkillCharms {
+  tiers: string[]
+  charms: Record<string, string[]>
+}
+
+// On-disk shape of src/data/seasonal/charm/charms.json (auto-managed): charm
+// slug → the roster heroes sharing it. The inverse hero → charm lookup is
+// derived at load time.
+export type CharmData = Record<string, { heroes: string[] }>

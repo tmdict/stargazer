@@ -13,22 +13,28 @@
 //   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<feed>/skills.json
 //   npm run import:skills -- --url-base <URL>      # remote: <URL>/<feed>/skills.json
 
-import { readFile, readdir, writeFile, mkdir } from 'node:fs/promises'
 import { existsSync } from 'node:fs'
-import { resolve, join, dirname, basename } from 'node:path'
+import { readdir, readFile } from 'node:fs/promises'
+import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { argv } from 'node:process'
 
 import { isAppLocale, SKILL_LOCALES, type SkillLocale } from '../src/lib/types/i18n.ts'
 import {
   SLOT_ORDER,
-  type SlotKey,
   type CharacterTags,
   type SkillKeywords,
   type SkillLocaleFile,
   type SkillRefineEntry,
+  type SlotKey,
 } from '../src/lib/types/skill.ts'
-import { HIGHLIGHT_RE, splitHighlightToken, STAT_TAG_RE } from '../src/utils/textHighlight.ts'
+import { HIGHLIGHT_RE, splitHighlightToken } from '../src/utils/textHighlight.ts'
+import {
+  arg,
+  cleanDescription,
+  DEFAULT_SRC_DIR,
+  writeJsonIfChanged,
+  writeTextIfChanged,
+} from './lib/shared.ts'
 
 // ---------- paths ----------
 
@@ -36,12 +42,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
-
-// Default local source: the sibling afkj-data-viewer checkout, which emits
-// `static/api/<feed>/skills.json`. Resolved against this repo root so it
-// holds regardless of CWD as long as the two repos are siblings. Override at
-// runtime with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
-const DEFAULT_SRC_DIR = '../afkj-data-viewer/static/api'
 
 // ---------- feed shape (single-locale per file) ----------
 
@@ -86,12 +86,6 @@ type SlotTerms = NonNullable<SkillLocaleFile['_terms']>
 type LocaleFile = SkillLocaleFile
 
 // ---------- args ----------
-
-function arg(name: string): string | undefined {
-  const i = argv.indexOf(`--${name}`)
-  if (i === -1) return undefined
-  return argv[i + 1]
-}
 
 const URL_BASE_FLAG = arg('url-base')
 const SRC_DIR_FLAG = arg('src-dir')
@@ -140,45 +134,7 @@ async function loadCharacters(): Promise<CharacterListing[]> {
   return out
 }
 
-// Write only when content differs so re-runs produce no git diff. Compact,
-// auto-managed output; the dir is prettier-ignored so this stays stable.
-async function writeTextIfChanged(path: string, next: string): Promise<boolean> {
-  if (existsSync(path)) {
-    const prev = await readFile(path, 'utf8')
-    if (prev === next) return false
-  }
-  await mkdir(dirname(path), { recursive: true })
-  await writeFile(path, next)
-  return true
-}
-
-async function writeJsonIfChanged(path: string, value: unknown): Promise<boolean> {
-  return writeTextIfChanged(path, JSON.stringify(value) + '\n')
-}
-
 // ---------- projection ----------
-
-// Reorder adjacent <STAT>[[value]] pairs to [[value]]<STAT>, which reads more
-// naturally in both EN and ZH ("40% of ATK" rather than "ATK 40%"). Standalone
-// stat tags like "based on <ATK>" are left untouched. The tag grammar comes
-// from the canonical STAT_TAG_RE so renderer and importer can't diverge.
-const STAT_VALUE_SWAP = new RegExp(`${STAT_TAG_RE.source}\\s*(\\[\\[[^\\]]+\\]\\])`, 'g')
-
-function reorderStatValuePairs(text: string): string {
-  return text.replace(STAT_VALUE_SWAP, '$2<$1>')
-}
-
-// Strip Unity TextMeshPro <sprite name="..."> markers. The mode label that
-// follows the sprite carries the meaning; we don't ship the icon assets.
-const SPRITE_TAG = /<sprite\s+name="[^"]*">/g
-
-function stripSpriteTags(text: string): string {
-  return text.replace(SPRITE_TAG, '')
-}
-
-function cleanDescription(text: string): string {
-  return reorderStatValuePairs(stripSpriteTags(text))
-}
 
 function projectLocale(hero: HeroEntry, terms: SlotTerms): LocaleFile {
   const out: LocaleFile = {}
@@ -410,13 +366,13 @@ async function main() {
   }
 
   if (slotMismatches.length > 0) {
-    throw new Error(`feed slot coverage is not uniform across locales:\n  ${slotMismatches.join('\n  ')}`)
+    throw new Error(
+      `feed slot coverage is not uniform across locales:\n  ${slotMismatches.join('\n  ')}`,
+    )
   }
 
   if (missingKeywords.length > 0) {
-    throw new Error(
-      `keyword token(s) missing from glossaries:\n  ${missingKeywords.join('\n  ')}`,
-    )
+    throw new Error(`keyword token(s) missing from glossaries:\n  ${missingKeywords.join('\n  ')}`)
   }
 
   // One keyword glossary per language, beside the hero files so the language

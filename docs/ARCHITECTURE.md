@@ -195,7 +195,7 @@ Ensures atomic operations - all succeed or all rollback.
 
 - [`/docs/architecture/GRID.md`](./architecture/GRID.md) - Grid & character system details
 - [`/docs/architecture/TEAMS.md`](./architecture/TEAMS.md) - Teams page: modes, boards, saved-team library
-- [`/docs/architecture/PHANTIMALS.md`](./architecture/PHANTIMALS.md) - Seasonal phantimal grid units
+- [`/docs/architecture/SEASONAL.md`](./architecture/SEASONAL.md) - Phantimals, seasonal artifacts, and charms
 - [`/docs/architecture/SKILLS.md`](./architecture/SKILLS.md) - Skill system implementation
 - [`/docs/architecture/PATHFINDING.md`](./architecture/PATHFINDING.md) - Pathfinding algorithms
 - [`/docs/architecture/PRE_RENDERING.md`](./architecture/PRE_RENDERING.md) - SSG/pre-rendering implementation

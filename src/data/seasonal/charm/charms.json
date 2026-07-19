@@ -1,0 +1,125 @@
+{
+  "ep7assist": {
+    "heroes": [
+      "athalia",
+      "berial",
+      "bonnie",
+      "himmel",
+      "kazim",
+      "lily-may",
+      "lorsan",
+      "nara",
+      "orion",
+      "perseus",
+      "ravion",
+      "seth",
+      "silvina",
+      "sylphira",
+      "vala",
+      "viperian"
+    ]
+  },
+  "ep7atkgrow": {
+    "heroes": [
+      "bryon",
+      "dionel",
+      "gwyneth",
+      "indris",
+      "korin",
+      "marilee",
+      "odie",
+      "silven",
+      "sinbad",
+      "valka"
+    ]
+  },
+  "ep7backrow": {
+    "heroes": ["gunnar", "hugin", "pandora", "reinier"]
+  },
+  "ep7ccstack": {
+    "heroes": ["alsa", "arden", "eironn", "mehira", "nerion", "pippa"]
+  },
+  "ep7comboatk": {
+    "heroes": [
+      "aliceth",
+      "faramor",
+      "frieren",
+      "galahad",
+      "harak",
+      "kulu",
+      "saida",
+      "salazer",
+      "scarlita",
+      "talene",
+      "valen"
+    ]
+  },
+  "ep7defguard": {
+    "heroes": ["antandra", "callan", "lumont", "thador"]
+  },
+  "ep7flowbuff": {
+    "heroes": ["elijah-lailah", "lyca", "mikola"]
+  },
+  "ep7frontrow": {
+    "heroes": ["fay", "isabella", "koko", "rowan"]
+  },
+  "ep7healbuff": {
+    "heroes": ["contess", "evie", "hewynn", "ludovic", "smokey-meerky", "solise", "velara"]
+  },
+  "ep7hunt": {
+    "heroes": ["atalanta", "carolina", "lenya", "marcille", "nazrik", "rhys", "walker"]
+  },
+  "ep7magicball": {
+    "heroes": ["chippy", "damian", "igor", "niru", "zorya"]
+  },
+  "ep7maxhp": {
+    "heroes": [
+      "baelran",
+      "granny-dahnie",
+      "hepler",
+      "kruger",
+      "phraesto",
+      "thoran",
+      "ulmus",
+      "zandrok"
+    ]
+  },
+  "ep7mpregen": {
+    "heroes": [
+      "cassadee",
+      "cryonaia",
+      "cyran",
+      "hammie",
+      "mirael",
+      "natsu",
+      "parisa",
+      "satrana",
+      "shadewing",
+      "shemira",
+      "tasi"
+    ]
+  },
+  "ep7shieldbuff": {
+    "heroes": ["daimon", "lucius", "tilaya"]
+  },
+  "ep7shieldwave": {
+    "heroes": [
+      "brutus",
+      "dunlingr",
+      "hodgkin",
+      "kafra",
+      "kordan",
+      "pang",
+      "shakir",
+      "sonja",
+      "soren",
+      "temesia"
+    ]
+  },
+  "ep7stun": {
+    "heroes": ["alna", "gerda", "lucca"]
+  },
+  "ep7summon": {
+    "heroes": ["aurora", "cecia", "florabelle", "laios", "lamentis", "lucy", "peggy", "zanie"]
+  }
+}
