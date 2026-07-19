@@ -15,8 +15,8 @@ import { useTouchDetection } from './useTouchDetection'
  * click.
  *
  * Short icon labels (Copy, Rename, nav links) stay on native `title`: those
- * are hover-only and touch-silent already, which is all Rule B asks. The
- * tooltip composables are for sentence-length content and shared popups.
+ * are hover-only and touch-silent already, which is all a short label needs.
+ * The tooltip composables are for sentence-length content and shared popups.
  *
  * Handlers take the trigger element from the event's currentTarget; delegated
  * callers (SkillKeywordTooltip, whose spans live in v-html) pass the resolved

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+// Positioning shell for tooltips; show/hide policy lives in the pairing
+// composables: useHoverTooltip for action triggers, useInfoTip for info-only
+// triggers (its header documents the full policy).
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 const {
