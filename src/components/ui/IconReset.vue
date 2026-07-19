@@ -15,11 +15,11 @@ withDefaults(defineProps<Props>(), {
     viewBox="0 0 24 24"
     fill="none"
     stroke="currentColor"
-    stroke-width="2"
+    stroke-width="3"
     stroke-linecap="round"
     stroke-linejoin="round"
   >
-    <line x1="18" y1="6" x2="6" y2="18" />
-    <line x1="6" y1="6" x2="18" y2="18" />
+    <path d="M1 4v6h6" />
+    <path d="M3.5 15a9 9 0 1 0 2-9.5L1 10" />
   </svg>
 </template>
