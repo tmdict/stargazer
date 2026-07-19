@@ -34,10 +34,22 @@
     ]
   },
   "s7-3": {
-    "heroes": ["gunnar", "hugin", "pandora", "reinier"]
+    "heroes": [
+      "gunnar",
+      "hugin",
+      "pandora",
+      "reinier"
+    ]
   },
   "s7-4": {
-    "heroes": ["alsa", "arden", "eironn", "mehira", "nerion", "pippa"]
+    "heroes": [
+      "alsa",
+      "arden",
+      "eironn",
+      "mehira",
+      "nerion",
+      "pippa"
+    ]
   },
   "s7-5": {
     "heroes": [
@@ -55,22 +67,58 @@
     ]
   },
   "s7-6": {
-    "heroes": ["antandra", "callan", "lumont", "thador"]
+    "heroes": [
+      "antandra",
+      "callan",
+      "lumont",
+      "thador"
+    ]
   },
   "s7-7": {
-    "heroes": ["elijah-lailah", "lyca", "mikola"]
+    "heroes": [
+      "elijah-lailah",
+      "lyca",
+      "mikola"
+    ]
   },
   "s7-8": {
-    "heroes": ["fay", "isabella", "koko", "rowan"]
+    "heroes": [
+      "fay",
+      "isabella",
+      "koko",
+      "rowan"
+    ]
   },
   "s7-9": {
-    "heroes": ["contess", "evie", "hewynn", "ludovic", "smokey-meerky", "solise", "velara"]
+    "heroes": [
+      "contess",
+      "evie",
+      "hewynn",
+      "ludovic",
+      "smokey-meerky",
+      "solise",
+      "velara"
+    ]
   },
   "s7-10": {
-    "heroes": ["atalanta", "carolina", "lenya", "marcille", "nazrik", "rhys", "walker"]
+    "heroes": [
+      "atalanta",
+      "carolina",
+      "lenya",
+      "marcille",
+      "nazrik",
+      "rhys",
+      "walker"
+    ]
   },
   "s7-11": {
-    "heroes": ["chippy", "damian", "igor", "niru", "zorya"]
+    "heroes": [
+      "chippy",
+      "damian",
+      "igor",
+      "niru",
+      "zorya"
+    ]
   },
   "s7-12": {
     "heroes": [
@@ -100,7 +148,11 @@
     ]
   },
   "s7-14": {
-    "heroes": ["daimon", "lucius", "tilaya"]
+    "heroes": [
+      "daimon",
+      "lucius",
+      "tilaya"
+    ]
   },
   "s7-15": {
     "heroes": [
@@ -117,9 +169,22 @@
     ]
   },
   "s7-16": {
-    "heroes": ["alna", "gerda", "lucca"]
+    "heroes": [
+      "alna",
+      "gerda",
+      "lucca"
+    ]
   },
   "s7-17": {
-    "heroes": ["aurora", "cecia", "florabelle", "laios", "lamentis", "lucy", "peggy", "zanie"]
+    "heroes": [
+      "aurora",
+      "cecia",
+      "florabelle",
+      "laios",
+      "lamentis",
+      "lucy",
+      "peggy",
+      "zanie"
+    ]
   }
 }

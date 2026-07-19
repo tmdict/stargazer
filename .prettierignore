@@ -1,3 +1,5 @@
 # Auto-managed by scripts/import-skills.ts (compact JSON + generated chunk
 # modules); formatting them would churn against the importer's output.
 src/locales/skill/
+# Auto-managed by scripts/import-charms.ts; same churn rule.
+src/data/seasonal/charm/
