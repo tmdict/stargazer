@@ -70,15 +70,24 @@ export function loadCharacters(): CharacterType[] {
   return characters
 }
 
+// Artifacts split by rotation semantics: the permanent pre-season set lives
+// in data/artifact/, the current season's set in data/seasonal/artifact/
+// (deleted wholesale at rollover; an unmatched glob is an empty map).
 export function loadArtifacts(): ArtifactType[] {
   if (artifactsCache) {
     return artifactsCache
   }
 
-  const artifactModules = import.meta.glob<ArtifactType>('@/data/artifact/*.json', {
-    eager: true,
-    import: 'default',
-  })
+  const artifactModules = {
+    ...import.meta.glob<ArtifactType>('@/data/artifact/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+    ...import.meta.glob<ArtifactType>('@/data/seasonal/artifact/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  }
   const artifacts = Object.values(artifactModules).sort((a, b) => a.name.localeCompare(b.name))
 
   artifactsCache = artifacts
@@ -209,10 +218,16 @@ export function loadArtifactEffects(): Record<string, LocaleData[]> {
     return artifactEffectsCache
   }
 
-  const effectModules = import.meta.glob<LocaleData[]>('@/locales/artifact/effects/*.json', {
-    eager: true,
-    import: 'default',
-  })
+  const effectModules = {
+    ...import.meta.glob<LocaleData[]>('@/locales/artifact/effects/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+    ...import.meta.glob<LocaleData[]>('@/locales/seasonal/artifact/effects/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  }
   const result: Record<string, LocaleData[]> = {}
 
   Object.entries(effectModules).forEach(([path, content]) => {
@@ -321,12 +336,16 @@ export function loadCharacterLocales(): Record<string, LocaleData> {
 
 export function loadArtifactLocales(): Record<string, LocaleData> {
   if (artifactLocalesCache) return artifactLocalesCache
-  artifactLocalesCache = buildLocaleDict(
-    import.meta.glob<LocaleData>('@/locales/artifact/*.json', {
+  artifactLocalesCache = buildLocaleDict({
+    ...import.meta.glob<LocaleData>('@/locales/artifact/*.json', {
       eager: true,
       import: 'default',
     }),
-  )
+    ...import.meta.glob<LocaleData>('@/locales/seasonal/artifact/*.json', {
+      eager: true,
+      import: 'default',
+    }),
+  })
   return artifactLocalesCache
 }
 
