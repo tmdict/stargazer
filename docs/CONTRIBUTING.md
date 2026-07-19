@@ -94,28 +94,32 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 2. Add image: `src/assets/images/character/[name].png` (vite-imagetools converts to WebP at build time)
 3. Character automatically appears in roster
 
-### Updating Seasonal Content (Artifacts / Phantimals)
+### Updating Seasonal Content (Artifacts / Phantimals / Charms)
 
-Seasonal artifacts (`season > 0`) and phantimals are sourced from
-**afkj-data-viewer**'s exported API (`/api/<locale>/artifacts.json`,
-`/api/<locale>/phantimals.json`); pre-season artifacts (`season: 0`) are
-maintained locally.
+Seasonal text is sourced from **afkj-data-viewer**'s exported API
+(`/api/<locale>/{artifacts,phantimals,charms}.json`) via the importers; see
+[SEASONAL.md](./architecture/SEASONAL.md) for the full architecture and the
+ownership rule (scripts own feed-derivable text, humans own judgment).
 
-- **Data:** `src/data/artifact/[name].json` (artifacts) and
-  `src/data/seasonal/phantimal/[name].json`. `name` is the slug (artifact name
-  minus " Spell"); artifact `id` must be globally unique (URL serialization
-  keys on it). Stat keys map to `ArtifactStatKey` (`src/lib/types/artifact.ts`).
-- **Locales:** `src/locales/artifact/[name].json` (name) +
-  `effects/[name].json` (per-level descriptions); phantimals use a single
-  `src/locales/seasonal/phantimal/[name].json` (name + skills + levels).
+- **Data (hand-curated):** pre-season artifacts in `src/data/artifact/`,
+  seasonal artifacts in `src/data/seasonal/artifact/`, phantimals in
+  `src/data/seasonal/phantimal/`. `name` is the slug (artifact name minus
+  " Spell"); artifact `id` must be globally unique (URL serialization keys on
+  it); stat keys map to `ArtifactStatKey` (`src/lib/types/artifact.ts`). The
+  charm map `src/data/seasonal/charm/charms.json` is importer-generated.
+- **Locales:** display names are hand-curated (`src/locales/artifact/` and
+  `src/locales/seasonal/artifact/`); effect text, phantimal content, and
+  charm text are importer-generated.
 - **Icons:** pre-season artifacts ship local images; seasonal artifacts and
   phantimals load **remotely** from
   `chaldea.tmdict.com/img/seasonal/{artifact,phantimal}/<name>.webp`
   (`utils/artifactImage.ts`). The chaldea repo's `_redirects` exempts `/img/*`
   from its catch-all redirect and its `_headers` sends the CORS header the
   `crossorigin="anonymous"` consumers require.
-- **Each new season:** remove the previous season's entries and add the new
-  ones (re-run afkj-data-viewer's `export:api`, then regenerate these files).
+- **Each new season:** update the hand-curated structural/name files, then run
+  `npm run import:seasonal` (against a rebuilt afkj-data-viewer). The
+  importers generate all text, lint the hand-curated files against the feed,
+  and prune retired entries.
 
 ### Modifying Grid Logic
 

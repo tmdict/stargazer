@@ -1,4 +1,4 @@
-// Helpers shared by the data importers (import-skills, import-charms).
+// Helpers shared by the data importers.
 
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'

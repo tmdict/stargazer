@@ -13,9 +13,9 @@ which parses the raw game data and emits per-locale feeds under
 derivable from the feed, humans own only what requires judgment** (compact URL
 ids, board-sim ranges, curated display names), and the importers lint the
 hand-written parts against the feed instead of generating them.
-`npm run import:seasonal` refreshes all three consumers in one run
-(charms, artifact effects, phantimal text); the importers share helpers in
-`scripts/lib/shared.ts`.
+`npm run import:seasonal` chains `import:skills` (fresh keyword glossaries
+feed the charm validation) with the three seasonal importers; they share
+helpers in `scripts/lib/shared.ts`.
 
 ## Phantimals
 
@@ -300,17 +300,18 @@ Charms are display-only content: no URL-serialization, grid, or store seams
 exist, so removal is files, a few dataLoader accessors, and one template block.
 
 1. `rm -r src/data/seasonal/charm/` (unmatched literal globs compile to empty
-   module maps, so deletion is safe).
+   module maps, so deletion is safe) and drop its line from `.prettierignore`.
 2. `rm src/locales/skill/*/_charms.json` (or run
    `npm run import:charms -- --retire`, which does both).
 3. Delete `SkillCharmSection.vue`, the charm computed + insertion block in
-   `SkillSections.vue`, and the charm branches in `useSkillSearch.ts` and
-   `SkillSearchOverlay.vue`.
+   `SkillSections.vue`, the charm branches in `useSkillSearch.ts` and
+   `SkillSearchOverlay.vue`, and `tests/unit/charms.test.ts`.
 4. Revert the dataLoader accessors (`loadCharms`, `getCharmForHero`,
    `getSkillCharms`), the `_charms` branch in `splitSkillDict`, and the
    `SkillCharms` / `CharmData` types.
-5. Delete `scripts/import-charms.ts` and the `import:charms` npm script
-   (`scripts/lib/shared.ts` stays; the skill importer uses it).
+5. Delete `scripts/import-charms.ts`, the `import:charms` npm script, and its
+   entry in the `import:seasonal` chain (`scripts/lib/shared.ts` stays; the
+   skill importer uses it).
 6. Delete `src/locales/app/charm.json` and `src/locales/app/charm-shared.json`.
 7. Delete the Charms section of this doc.
 

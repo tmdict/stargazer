@@ -160,6 +160,7 @@ async function main() {
   for (const set of ['pre-season', 'season'] as const) {
     structuralBySet[set] = await jsonSlugs(TREES[set].data)
   }
+  const idOwner = new Map<number, string>()
   for (const slug of feedSlugs) {
     const entry = en[slug]!
     const tree = TREES[entry.set]
@@ -175,7 +176,19 @@ async function main() {
       problems.push(`${slug}: no display-name locale file in ${tree.names}`)
     }
     const structural = JSON.parse(await readFile(join(tree.data, `${slug}.json`), 'utf8')) as {
+      id?: number
+      name?: string
       stats?: Record<string, number>
+    }
+    // Effect/name locale dicts and image lookups key on `name` matching the
+    // filename; ids key URL serialization, so both must be unique/consistent.
+    if (structural.name !== slug) {
+      problems.push(`${slug}: structural name "${structural.name}" does not match the filename`)
+    }
+    if (structural.id != null) {
+      const owner = idOwner.get(structural.id)
+      if (owner) problems.push(`${slug}: id ${structural.id} already used by "${owner}"`)
+      else idOwner.set(structural.id, slug)
     }
     const expected: Record<string, number> = {}
     for (const { stat, value } of entry.statBonuses) {
@@ -209,9 +222,10 @@ async function main() {
     throw new Error(`artifact structural data disagrees with the feed:\n  ${problems.join('\n  ')}`)
   }
 
-  // Effect text: the one output this script owns.
-  let written = 0
-  let unchanged = 0
+  // Effect text: the one output this script owns. Every payload is built and
+  // validated before the first write, so an invalid feed never leaves a
+  // partially updated tree.
+  const payloads: { path: string; text: string }[] = []
   for (const slug of feedSlugs) {
     const enLevels = en[slug]!.levels
     const zhLevels = zh[slug]!.levels
@@ -225,16 +239,25 @@ async function main() {
       }
       return { en: cleanDescription(l.description), zh: cleanDescription(zhDesc) }
     })
-    const path = join(TREES[en[slug]!.set].effects, `${slug}.json`)
-    if (await writeTextIfChanged(path, JSON.stringify(effects, null, 2) + '\n')) written++
+    payloads.push({
+      path: join(TREES[en[slug]!.set].effects, `${slug}.json`),
+      text: JSON.stringify(effects, null, 2) + '\n',
+    })
+  }
+  let written = 0
+  let unchanged = 0
+  for (const { path, text } of payloads) {
+    if (await writeTextIfChanged(path, text)) written++
     else unchanged++
   }
 
-  // Prune effect files this script owns whose artifact left the feed.
+  // Prune effect files this script owns whose artifact left the feed, or
+  // that sit in the wrong tree after a set change (the loaders merge both
+  // trees by basename, so a stale wrong-tree file would shadow fresh text).
   let pruned = 0
   for (const set of ['pre-season', 'season'] as const) {
     for (const slug of await jsonSlugs(TREES[set].effects)) {
-      if (slug in en) continue
+      if (slug in en && en[slug]!.set === set) continue
       await unlink(join(TREES[set].effects, `${slug}.json`))
       console.log(`  pruned ${join(TREES[set].effects, `${slug}.json`)}`)
       pruned++
