@@ -12,7 +12,7 @@
     "import:artifacts": "tsx scripts/import-artifacts.ts",
     "import:charms": "tsx scripts/import-charms.ts",
     "import:phantimals": "tsx scripts/import-phantimals.ts",
-    "import:seasonal": "run-s import:charms import:artifacts import:phantimals",
+    "import:seasonal": "run-s import:skills import:charms import:artifacts import:phantimals",
     "import:skills": "tsx scripts/import-skills.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
