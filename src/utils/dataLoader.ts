@@ -10,7 +10,7 @@ import {
   type SkillLocale,
 } from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
-import type { SkillKeywords, SkillLocaleFile } from '@/lib/types/skill'
+import type { CharmData, SkillCharms, SkillKeywords, SkillLocaleFile } from '@/lib/types/skill'
 
 export interface ArenaJson {
   name: string
@@ -128,6 +128,36 @@ export function loadPhantimals(): PhantimalType[] {
   })
   phantimalsCache = Object.values(modules).sort((a, b) => a.id - b.id)
   return phantimalsCache
+}
+
+let charmsCache: CharmData | null = null
+let heroCharmCache: Map<string, string> | null = null
+
+/** Seasonal charm registry: charm slug → the roster heroes sharing it. The
+ * dir holds one generated file; after seasonal removal the unmatched glob
+ * compiles to an empty module map, so this degrades to {}. */
+export function loadCharms(): CharmData {
+  if (charmsCache) return charmsCache
+  const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
+    eager: true,
+    import: 'default',
+  })
+  charmsCache = Object.values(modules).reduce<CharmData>((acc, m) => ({ ...acc, ...m }), {})
+  return charmsCache
+}
+
+/** The charm a hero shares, with the full sharer list; null when the hero has
+ * none (or charms are retired). */
+export function getCharmForHero(slug: string): { slug: string; heroes: string[] } | null {
+  if (!heroCharmCache) {
+    heroCharmCache = new Map()
+    for (const [charmSlug, { heroes }] of Object.entries(loadCharms())) {
+      for (const hero of heroes) heroCharmCache.set(hero, charmSlug)
+    }
+  }
+  const charmSlug = heroCharmCache.get(slug)
+  if (!charmSlug) return null
+  return { slug: charmSlug, heroes: loadCharms()[charmSlug]!.heroes }
 }
 
 // Full localized phantimal content (name + per-skill names/levels), keyed by
@@ -301,24 +331,28 @@ export function loadArtifactLocales(): Record<string, LocaleData> {
 }
 
 // The locale dirs carry reserved underscore-prefixed files beside the hero
-// files (the `_keywords` glossary). They ride the same globs and chunks, but
-// are split out at load time so dict consumers (the search index, slug walks)
-// only ever see hero entries. The glob types every module as SkillLocaleFile,
-// hence the one cast here.
+// files (the `_keywords` glossary, the `_charms` seasonal charm text). They
+// ride the same globs and chunks, but are split out at load time so dict
+// consumers (the search index, slug walks) only ever see hero entries. The
+// glob types every module as SkillLocaleFile, hence the casts here.
 function splitSkillDict(dict: Record<string, SkillLocaleFile>): {
   heroes: Record<string, SkillLocaleFile>
   keywords: SkillKeywords
+  charms: SkillCharms | null
 } {
   const heroes: Record<string, SkillLocaleFile> = {}
   let keywords: SkillKeywords = {}
+  let charms: SkillCharms | null = null
   for (const [key, value] of Object.entries(dict)) {
     if (key === '_keywords') keywords = value as unknown as SkillKeywords
+    else if (key === '_charms') charms = value as unknown as SkillCharms
     else if (!key.startsWith('_')) heroes[key] = value
   }
-  return { heroes, keywords }
+  return { heroes, keywords, charms }
 }
 
 let skillKeywordsCache: Record<AppLocale, SkillKeywords> | null = null
+let skillCharmsCache: Record<AppLocale, SkillCharms | null> | null = null
 
 /** Per-language skill text for the app locales (en/zh), keyed by character
  * slug (filename basename). Eager: the search index, the guide panels, and
@@ -343,6 +377,7 @@ export function loadSkillLocales(): Record<AppLocale, Record<string, SkillLocale
   )
   skillLocalesCache = { en: en.heroes, zh: zh.heroes }
   skillKeywordsCache = { en: en.keywords, zh: zh.keywords }
+  skillCharmsCache = { en: en.charms, zh: zh.charms }
   return skillLocalesCache
 }
 
@@ -358,6 +393,7 @@ const skillLocaleChunks = import.meta.glob<Record<string, SkillLocaleFile>>(
 // load, later retried by search) re-renders anything computed from it.
 const warmedSkillLocales = reactive(new Map<SkillLocale, Record<string, SkillLocaleFile>>())
 const warmedSkillKeywords = reactive(new Map<SkillLocale, SkillKeywords>())
+const warmedSkillCharms = reactive(new Map<SkillLocale, SkillCharms>())
 const skillLocalePromises = new Map<SkillLocale, Promise<Record<string, SkillLocaleFile>>>()
 
 export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, SkillLocaleFile>> {
@@ -367,9 +403,10 @@ export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, Skill
   const loader = skillLocaleChunks[`/src/locales/skill/${lang}/index.ts`]
   if (!loader) return Promise.reject(new Error(`No skill locale chunk for "${lang}"`))
   const promise = loader().then((dict) => {
-    const { heroes, keywords } = splitSkillDict(dict)
+    const { heroes, keywords, charms } = splitSkillDict(dict)
     warmedSkillLocales.set(lang, heroes)
     warmedSkillKeywords.set(lang, keywords)
+    if (charms) warmedSkillCharms.set(lang, charms)
     return heroes
   })
   // A failed fetch must not poison the cache; the next call retries.
@@ -401,6 +438,17 @@ export function getSkillKeywords(lang: SkillLocale): SkillKeywords | null {
     return skillKeywordsCache![lang]
   }
   return warmedSkillKeywords.get(lang) ?? null
+}
+
+/** Sync read of a language's seasonal charm text (`_charms.json`); null until
+ * the locale is warmed, and always null once charms are retired. en/zh are
+ * always warm (eager). */
+export function getSkillCharms(lang: SkillLocale): SkillCharms | null {
+  if (isAppLocale(lang)) {
+    loadSkillLocales()
+    return skillCharmsCache![lang]
+  }
+  return warmedSkillCharms.get(lang) ?? null
 }
 
 /** True iff the importer has produced an `en` locale file for `slug`. Gates
