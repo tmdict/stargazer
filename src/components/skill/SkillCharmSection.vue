@@ -5,7 +5,6 @@ import { highlightSkillText } from '@/utils/textHighlight'
 
 const props = defineProps<{
   heading: string
-  /** Prefix label for the sharing-heroes footer. */
   sharedLabel: string
   /** Localized tier labels, Elite → Mythic order. */
   tierNames: string[]

@@ -9,7 +9,7 @@
 // Read-only against character files. The only write target is the locale dir.
 //
 // Usage:
-//   npm run import:skills                          # reads from DEFAULT_SOURCE/<feed>/skills.json
+//   npm run import:skills                          # reads DEFAULT_SRC_DIR/<feed>/skills.json
 //   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<feed>/skills.json
 //   npm run import:skills -- --url-base <URL>      # remote: <URL>/<feed>/skills.json
 

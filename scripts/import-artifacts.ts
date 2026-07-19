@@ -40,8 +40,8 @@ import {
 const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROJECT_ROOT = resolve(__dirname, '..')
 
-// Everything under a seasonal/ dir is wholesale-replaceable at rollover; the
-// pre-season trees are permanent.
+// The dir tree encodes rotation: everything under a seasonal/ dir is
+// wholesale-replaceable at rollover.
 const TREES = {
   'pre-season': {
     data: join(PROJECT_ROOT, 'src', 'data', 'artifact'),

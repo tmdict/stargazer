@@ -94,8 +94,7 @@ interface OverlayRow {
   nameText?: string
 }
 
-// Charm hits have no slot; they anchor to the charm block and wear the
-// chrome charm label as their chip.
+// Charm hits have no slot; the charm block stands in as their anchor and chip.
 const hitAnchor = (hit: SearchHit) =>
   hit.slot ? `#${hit.slot}` : hit.loc === 'charm' ? '#charm' : ''
 
