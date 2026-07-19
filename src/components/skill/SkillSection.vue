@@ -72,7 +72,7 @@ const renderedRefinements = computed(() =>
         class="skill-level upgrade refine"
       >
         <div class="skill-level-row">
-          <span class="skill-level-badge refine-badge">REFINE {{ row.tier }}</span>
+          <span class="skill-level-badge refine-badge">R{{ row.tier }}</span>
           <p class="skill-level-desc" v-html="row.html" />
         </div>
       </div>
@@ -173,9 +173,9 @@ const renderedRefinements = computed(() =>
   text-transform: uppercase;
 }
 
-/* EX refinement tiers (Refine 2 / Refine 4). Distinct teal so they read as a
-   different tier class from the numeric LV badges above without competing
-   with the per-section chip strip. */
+/* EX refinement tiers (R2 / R4). Distinct teal so they read as a different
+   tier class from the numeric LV badges above without competing with the
+   per-section chip strip. */
 .skill-level-badge.refine-badge {
   color: var(--color-accent);
 }
