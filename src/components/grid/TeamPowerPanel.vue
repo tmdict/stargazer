@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import IconChevronsUp from '@/components/ui/IconChevronsUp.vue'
 import IconReset from '@/components/ui/IconReset.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridContext } from '@/composables/useGridContext'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { getTilesWithCharactersByTeam, isBaseHeroId } from '@/lib/characters/character'
 import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
@@ -75,18 +77,26 @@ const cycle = (team: Team, hero: PanelHero): void => {
 const hasParagon = (heroes: PanelHero[]): boolean => heroes.some((hero) => hero.level > 0)
 
 const resetParagons = (team: Team, heroes: PanelHero[]): void => {
+  hideActionTip()
   heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, 0))
 }
 
 // Clamped, unlike the per-hero cycle: a batch wrap would zero a maxed team.
-// Hidden at all-P4 (nothing to raise), mirroring how reset hides at all-P0.
+// At all-P4 the raise buttons disable instead of hiding; removal would slide
+// reset under a rapidly clicking cursor.
 const canRaise = (heroes: PanelHero[]): boolean =>
   heroes.some((hero) => hero.level < PARAGON_MAX_LEVEL)
 
 const raiseAll = (team: Team, heroes: PanelHero[]): void => {
+  hideActionTip()
   heroes.forEach((hero) =>
     props.context.setParagon(team, hero.characterId, Math.min(hero.level + 1, PARAGON_MAX_LEVEL)),
   )
+}
+
+const maxAll = (team: Team, heroes: PanelHero[]): void => {
+  hideActionTip()
+  heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, PARAGON_MAX_LEVEL))
 }
 
 const rivalryStatClass = (stat: number): string => (stat > 0 ? 'pos' : stat < 0 ? 'neg' : 'zero')
@@ -119,6 +129,19 @@ const {
 const hoveredStat = computed(
   () => sides.value.find((side) => side.team === hoveredTeam.value)?.rivalryStat ?? 0,
 )
+
+// Bulk-action tooltips: the handlers close the popup themselves, because a
+// click can disable (+1, max) or remove (reset) the hovered button, and it
+// then never fires the closing mouseleave.
+const {
+  anchor: actionTipEl,
+  payload: actionTipKey,
+  onMouseEnter: showActionTip,
+  onMouseLeave: hideActionTip,
+  onTouchStart: onActionTouchStart,
+} = useHoverTooltip<string>()
+
+const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(actionTipKey.value) : ''))
 </script>
 
 <template>
@@ -138,26 +161,44 @@ const hoveredStat = computed(
           </span>
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
-        <button
-          v-if="canRaise(side.heroes) && !readonly"
-          type="button"
-          class="stat-plus capture-exclude"
-          :aria-label="i18n.t('app.raise-paragons')"
-          :title="i18n.t('app.raise-paragons')"
-          @click="raiseAll(side.team, side.heroes)"
-        >
-          +1
-        </button>
-        <button
-          v-if="hasParagon(side.heroes) && !readonly"
-          type="button"
-          class="stat-reset capture-exclude"
-          :aria-label="i18n.t('app.reset-paragons')"
-          :title="i18n.t('app.reset-paragons')"
-          @click="resetParagons(side.team, side.heroes)"
-        >
-          <IconReset :size="11" />
-        </button>
+        <span v-if="!readonly && side.heroes.length > 0" class="tp-actions">
+          <button
+            v-if="hasParagon(side.heroes)"
+            type="button"
+            class="stat-reset capture-exclude"
+            :aria-label="i18n.t('app.reset-paragons')"
+            @click="resetParagons(side.team, side.heroes)"
+            @mouseenter="showActionTip($event, 'app.reset-paragons')"
+            @touchstart.passive="onActionTouchStart"
+            @mouseleave="hideActionTip"
+          >
+            <IconReset :size="11" />
+          </button>
+          <button
+            type="button"
+            class="stat-max capture-exclude"
+            :disabled="!canRaise(side.heroes)"
+            :aria-label="i18n.t('app.max-paragons')"
+            @click="maxAll(side.team, side.heroes)"
+            @mouseenter="showActionTip($event, 'app.max-paragons')"
+            @touchstart.passive="onActionTouchStart"
+            @mouseleave="hideActionTip"
+          >
+            <IconChevronsUp :size="11" />
+          </button>
+          <button
+            type="button"
+            class="stat-plus capture-exclude"
+            :disabled="!canRaise(side.heroes)"
+            :aria-label="i18n.t('app.raise-paragons')"
+            @click="raiseAll(side.team, side.heroes)"
+            @mouseenter="showActionTip($event, 'app.raise-paragons')"
+            @touchstart.passive="onActionTouchStart"
+            @mouseleave="hideActionTip"
+          >
+            +1
+          </button>
+        </span>
       </div>
       <div class="heroes">
         <button
@@ -189,6 +230,13 @@ const hoveredStat = computed(
         max-width="260px"
       >
         <template #content>{{ rivalryStatInfo(hoveredStat) }}</template>
+      </TooltipPopup>
+      <TooltipPopup
+        v-if="actionTipKey && actionTipEl"
+        :target-element="actionTipEl"
+        variant="detailed"
+      >
+        <template #content>{{ actionTipText }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -234,13 +282,18 @@ const hoveredStat = computed(
   min-height: 28px;
   margin-bottom: var(--spacing-md);
 }
-/* Reverse the enemy header so its label and reset button sit at the outer edge with
-   the number inward, mirroring the ally side. */
+/* Reverse the enemy header so the sides mirror: stat at the outer edge, actions
+   against the center seam. */
 .tp-block.enemy .tp-head {
   flex-direction: row-reverse;
 }
 .tp-block.enemy .stat {
   flex-direction: row-reverse;
+}
+.tp-block.enemy .tp-actions {
+  flex-direction: row-reverse;
+  margin-left: 0;
+  margin-right: auto;
 }
 
 .stat {
@@ -284,7 +337,19 @@ const hoveredStat = computed(
   color: var(--color-text-secondary);
 }
 
+/* Anchored to the block edge nearest the seam: the stat text ahead changes
+   width and must never shove a button mid-press. +1 sits outermost so reset,
+   which appears with the first paragon, grows the cluster inward. */
+.tp-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
 .stat-plus,
+.stat-max,
 .stat-reset {
   display: inline-flex;
   align-items: center;
@@ -298,9 +363,12 @@ const hoveredStat = computed(
   cursor: pointer;
   transition: all var(--transition-fast);
 }
-.stat-plus {
+.stat-plus,
+.stat-max {
   width: 20px;
   height: 20px;
+}
+.stat-plus {
   font-size: 0.62rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
@@ -309,10 +377,16 @@ const hoveredStat = computed(
   width: 18px;
   height: 18px;
 }
-.stat-plus:hover,
+.stat-plus:hover:not(:disabled),
+.stat-max:hover:not(:disabled),
 .stat-reset:hover {
   background: rgba(0, 0, 0, 0.11);
   color: var(--color-text-primary);
+}
+.stat-plus:disabled,
+.stat-max:disabled {
+  opacity: 0.35;
+  cursor: default;
 }
 
 .heroes {
