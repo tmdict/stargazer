@@ -172,8 +172,8 @@ export default defineConfig({
         changefreq: 'monthly',
         priority: 0.8,
         generateRobotsTxt: true,
-        // The form-detection page, not content.
-        exclude: ['/forms'],
+        // The form-detection page and the share-link shell, not content.
+        exclude: ['/forms', '/share'],
         // @ts-expect-error - vite-ssg-sitemap types do not allow disabling lastmod
         lastmod: '',
       })

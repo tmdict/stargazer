@@ -6,8 +6,8 @@
 //   src/data/seasonal/charm/charms.json        charm slug -> sharing heroes
 //   src/locales/skill/<code>/_charms.json      localized tier labels + text
 //
-// The underscore file rides each language's existing skill-locale chunk, so
-// charm text is warm exactly when the surrounding skill text is. Charms are
+// The underscore file rides each language's skill-locale chunk, so charm
+// text is warm exactly when the surrounding skill text is. Charms are
 // seasonal: this script also owns retirement, because nothing else ever
 // deletes locale files and a stale _charms.json would keep shipping invisibly
 // inside every chunk.
@@ -206,8 +206,8 @@ async function main() {
     structural[charm.slug] = { heroes: [...heroes].sort() }
   }
 
-  // Keyword tokens in charm text resolve against the glossaries the skill
-  // import already wrote; a key missing there would ship a dead tooltip span.
+  // Keyword tokens in charm text resolve against the skill import's
+  // glossaries; a key missing there would ship a dead tooltip span.
   const missingKeywords: string[] = []
   const localeFiles = {} as Record<SkillLocale, SkillCharms>
   for (const { code } of SKILL_LOCALES) {

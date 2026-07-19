@@ -102,21 +102,20 @@ const sharedLine = computed(() =>
   text-transform: uppercase;
 }
 
-/* AFK Journey rarity hues, desaturated for the dark card. */
 .tier-elite {
-  color: #b995e2;
+  color: var(--color-tier-1);
 }
 
 .tier-epic {
-  color: #dd9c60;
+  color: var(--color-tier-2);
 }
 
 .tier-legendary {
-  color: #dd7a6c;
+  color: var(--color-tier-3);
 }
 
 .tier-mythic {
-  color: #b3c9e2;
+  color: var(--color-tier-4);
 }
 
 .charm-tier-desc {

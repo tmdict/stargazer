@@ -17,15 +17,6 @@ const props = defineProps<{ context: GridContext; readonly?: boolean }>()
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
-// Composite paragon ramp: off-grey, then yellow, soft green, teal, deep teal.
-const PARAGON_COLORS = [
-  { bg: '#cfc8bb', fg: '#4a463d' },
-  { bg: '#ead09a', fg: '#4a3a05' },
-  { bg: '#b6d0b8', fg: '#313c33' },
-  { bg: '#49a094', fg: '#ffffff' },
-  { bg: '#1f655f', fg: '#ffffff' },
-]
-
 interface PanelHero {
   characterId: number
   name: string
@@ -96,11 +87,6 @@ const raiseAll = (team: Team, heroes: PanelHero[]): void => {
   heroes.forEach((hero) =>
     props.context.setParagon(team, hero.characterId, Math.min(hero.level + 1, PARAGON_MAX_LEVEL)),
   )
-}
-
-const badgeStyle = (level: number) => {
-  const c = PARAGON_COLORS[level] ?? PARAGON_COLORS[0]!
-  return { background: c.bg, color: c.fg }
 }
 
 const rivalryStatClass = (stat: number): string => (stat > 0 ? 'pos' : stat < 0 ? 'neg' : 'zero')
@@ -188,7 +174,7 @@ const hoveredStat = computed(
             <span class="portrait">
               <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
             </span>
-            <span class="pbadge" :style="badgeStyle(hero.level)">P{{ hero.level }}</span>
+            <span class="pbadge" :class="`p${hero.level}`">P{{ hero.level }}</span>
           </span>
           <span class="hero-name" :title="hero.name">{{ hero.name }}</span>
         </button>
@@ -411,6 +397,28 @@ const hoveredStat = computed(
   align-items: center;
   justify-content: center;
   border: 2px solid #fff;
+}
+/* P0 (no paragon) sits off the tier ramp; P4's pale silver fill is the one
+   that can't carry the white text the other tiers use. */
+.pbadge.p0 {
+  background: #cfc8bb;
+  color: #4a463d;
+}
+.pbadge.p1 {
+  background: var(--color-tier-1);
+  color: #fff;
+}
+.pbadge.p2 {
+  background: var(--color-tier-2);
+  color: #fff;
+}
+.pbadge.p3 {
+  background: var(--color-tier-3);
+  color: #fff;
+}
+.pbadge.p4 {
+  background: var(--color-tier-4);
+  color: #1f2b3d;
 }
 .hero-name {
   display: none;
