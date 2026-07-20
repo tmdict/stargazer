@@ -2,11 +2,11 @@
 
 ## Overview
 
-The pre-rendering system uses vite-ssg to emit static HTML at build time while preserving the dynamic game experience. Pre-rendered routes are the per-hero skill permalinks (`/<lang>/skill/<slug>`, one page per language in `SKILL_LOCALES`, 16 today, ~1.9k pages) and guide pages (`/{en,zh}/guide`) for crawlable content, plus `/`, `/share`, `/skills`, and `/wandwars`. The latter three carry little/no static body, they exist in the SSG list so each ships the correct canonical/meta and resolves on direct navigation; `/skills` additionally pre-renders its browser content. Every route still hydrates into the full SPA after load.
+The pre-rendering system uses vite-ssg to emit static HTML at build time while preserving the dynamic game experience. Pre-rendered routes are the per-hero skill permalinks (`/<lang>/skill/<slug>`, one page per language in `SKILL_LOCALES`, 16 today, ~1.9k pages) and guide pages (`/{en,zh}/guide`) for crawlable content, plus `/`, `/share`, and `/skills`. The latter two carry little/no static body, they exist in the SSG list so each ships the correct canonical/meta and resolves on direct navigation; `/skills` additionally pre-renders its browser content. Every route still hydrates into the full SPA after load.
 
 ## Design Principles
 
-1. **Selective Pre-rendering**: Content/permalink pages pre-render their bodies; interactive routes in the SSG list (`/`, `/skills`, `/wandwars`) emit only a canonical/meta shell, never game state
+1. **Selective Pre-rendering**: Content/permalink pages pre-render their bodies; interactive routes in the SSG list (`/`, `/skills`) emit only a canonical/meta shell, never game state
 2. **Prop-based Static Content**: Pass data as props to components in static pages to avoid hydration mismatches
 3. **Route-based Locale, two axes**: The skill-page prefix is the _skill-text_ language (`SkillLocale`, any of 16); the site chrome (`AppLocale`) stays en/zh. `App.vue` syncs the i18n store from the path via `splitLocalePath`, whose regex is deliberately `(en|zh)`: an exotic prefix like `/ko/…` parses as "unprefixed", so chrome falls back to the saved preference (default en) and the header toggle flips chrome without rewriting the content URL
 4. **SSR Safety**: Guard browser APIs with environment checks to prevent build errors
@@ -47,7 +47,6 @@ export const routes: RouteRecordRaw[] = [
   { path: '/', component: () => import('@/views/HomeView.vue') },
   { path: '/share', component: () => import('@/views/ShareView.vue') },
   { path: '/skills', component: () => import('@/views/SkillsView.vue') },
-  { path: '/wandwars', component: () => import('@/views/WandWarsView.vue') },
   {
     // One route across all 16 text locales; the param regex is built from
     // SKILL_LOCALES so garbage prefixes fall to the not-found redirect.
@@ -63,7 +62,7 @@ export const routes: RouteRecordRaw[] = [
 Key considerations:
 
 - Single source of truth for all routes
-- `/`, `/skills`, `/wandwars` are interactive but still in the SSG list so each emits its own static HTML (`index.html` / `skills.html` / `wandwars.html`) carrying the right canonical/meta; `/` and `/wandwars` are otherwise empty shells, `/skills` pre-renders its browser content. All three hydrate to the full app
+- `/`, `/skills` are interactive but still in the SSG list so each emits its own static HTML (`index.html` / `skills.html`) carrying the right canonical/meta; `/` is otherwise an empty shell, `/skills` pre-renders its browser content. Both hydrate to the full app
 - Share route is pre-rendered with default content for direct URL navigation
 - Per-skill `/<lang>/skill/<slug>` routes are pre-rendered as the canonical skill permalinks, one per language in `SKILL_LOCALES`
 - Text locale comes from the `:textLocale` route param (`props: true`); chrome locale from the store
@@ -88,7 +87,7 @@ export const createApp = ViteSSG(
 )
 ```
 
-`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including the SSG-only `/skill/*` pages) resolves translation keys rather than emitting literals like `wandwars.wand-wars`. It also watches the route path and calls `i18n.setLocale()` for any `/{en,zh}/...` route (via `splitLocalePath`), so the store-backed chrome renders in the URL's locale during SSG and client navigation alike. Non-en/zh skill prefixes (`/ko/…`) intentionally parse as unprefixed: the watcher no-ops, SSG bakes those pages with en chrome, and the saved chrome preference applies post-mount exactly like the unprefixed shells. Skill content derives its text locale from the `:textLocale` route param.
+`App.vue` runs `i18n.initialize()` at setup time. It is idempotent and SSR-safe, and ensures the shared header (rendered on every route, including the SSG-only `/skill/*` pages) resolves translation keys rather than emitting literals like `app.skills`. It also watches the route path and calls `i18n.setLocale()` for any `/{en,zh}/...` route (via `splitLocalePath`), so the store-backed chrome renders in the URL's locale during SSG and client navigation alike. Non-en/zh skill prefixes (`/ko/…`) intentionally parse as unprefixed: the watcher no-ops, SSG bakes those pages with en chrome, and the saved chrome preference applies post-mount exactly like the unprefixed shells. Skill content derives its text locale from the `:textLocale` route param.
 
 Key considerations:
 
@@ -240,7 +239,7 @@ Vite config includes SSG-specific options:
 ssgOptions: {
   entry: 'src/main.ssg.ts',
   includedRoutes: () => [
-    '/', '/share', '/skills', '/wandwars', // shells for canonical/meta + direct access
+    '/', '/share', '/skills', // shells for canonical/meta + direct access
     '/en/guide', '/zh/guide',
     // every (language, hero) file under src/locales/skill/<code>/:
     // 16 locales × ~117 heroes; the filesystem is the source of truth

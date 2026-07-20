@@ -201,13 +201,6 @@ main {
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
 
-/* Tooltip body text, shared across WandWars tooltip popups. */
-.ww-tooltip-text {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.4;
-}
-
 /* Shared dashed upload zone; callers add their own size and layout. */
 .upload-dropzone {
   border: 2px dashed var(--color-border-primary);
