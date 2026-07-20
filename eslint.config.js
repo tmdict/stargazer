@@ -25,16 +25,8 @@ export default defineConfigWithVueTs(
     files: ['tests/**/*.test.ts'],
   },
   {
-    // CLI scripts run in Node and intentionally use console for output.
-    files: ['src/wandwars/scripts/**/*.ts'],
-    rules: {
-      'no-console': 'off',
-    },
-  },
-  {
     // Disallow stray console calls in app code; warn (not error) for debugging convenience.
     files: ['src/**/*.{ts,vue}'],
-    ignores: ['src/wandwars/scripts/**/*.ts'],
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
     },

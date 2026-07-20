@@ -2,4 +2,6 @@ https://afkj-stargazer.netlify.app/* https://stargazer.tmdict.com/:splat 301!
 # Retired page; its content lives on as the in-app About modal.
 /en/about / 301
 /zh/about / 301
+# Retired feature; no replacement page.
+/wandwars / 301
 /* /index.html 200

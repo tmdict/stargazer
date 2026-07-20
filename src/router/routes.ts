@@ -133,11 +133,6 @@ export const routes: RouteRecordRaw[] = [
     component: () => import('@/views/GuideView.vue'),
   },
   {
-    path: '/wandwars',
-    name: 'wandwars',
-    component: () => import('@/views/WandWarsView.vue'),
-  },
-  {
     path: '/skills',
     name: 'skills',
     component: () => import('@/views/SkillsView.vue'),

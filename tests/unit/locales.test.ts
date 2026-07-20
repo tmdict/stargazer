@@ -8,15 +8,14 @@ import { describe, expect, it } from 'vitest'
  *  2. locale files could drift from the `{ en, zh }` shape unnoticed
  *
  * Key resolution mirrors dataLoader: app/character/artifact/game keys are flat
- * filenames (subfolders are organizational); wandwars prefixes subfolder files
- * with the folder name (`messages/...`).
+ * filenames (subfolders are organizational).
  *
- * Dynamically-built keys (`app.${tag}`, `wandwars.messages/confidence-…`) are
- * out of scope here — only literal call sites are checked.
+ * Dynamically-built keys (`app.${tag}`) are out of scope here; only literal
+ * call sites are checked.
  */
 
 const LOCALES_DIR = 'src/locales'
-const T_CATEGORIES = ['app', 'character', 'artifact', 'game', 'wandwars'] as const
+const T_CATEGORIES = ['app', 'character', 'artifact', 'game'] as const
 
 function walkJsonFiles(dir: string): string[] {
   const out: string[] = []
@@ -44,11 +43,10 @@ function walkSourceFiles(dir: string): string[] {
 
 function loadCategoryKeys(category: string): Map<string, Record<string, unknown>> {
   const dir = join(LOCALES_DIR, category)
-  // Mirror the loaders' glob depth: app and wandwars use `**` (recursive);
-  // character/artifact/game use `*` (their subfolders — e.g. artifact/effects —
-  // belong to other loaders with different shapes)
-  const recursive = category === 'app' || category === 'wandwars'
-  const prefixSubfolders = category === 'wandwars'
+  // Mirror the loaders' glob depth: app uses `**` (recursive); character/artifact/game
+  // use `*` (their subfolders, e.g. artifact/effects, belong to other loaders with
+  // different shapes)
+  const recursive = category === 'app'
   const files = recursive
     ? walkJsonFiles(dir)
     : readdirSync(dir)
@@ -57,9 +55,7 @@ function loadCategoryKeys(category: string): Map<string, Record<string, unknown>
   const keys = new Map<string, Record<string, unknown>>()
   for (const file of files) {
     const parts = file.split('/')
-    const folder = parts[parts.length - 2]!
-    const name = parts[parts.length - 1]!.replace(/\.json$/, '')
-    const key = prefixSubfolders && folder !== category ? `${folder}/${name}` : name
+    const key = parts[parts.length - 1]!.replace(/\.json$/, '')
     // The loader silently overwrites colliding flat keys (e.g. a file in
     // app/messages/ shadowing one at the app root) — fail loudly instead
     expect(keys.has(key), `duplicate locale key ${category}.${key} (${file})`).toBe(false)

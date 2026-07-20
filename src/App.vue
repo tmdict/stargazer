@@ -119,12 +119,6 @@ onUnmounted(() => {
           :class="{ active: route.path.includes('/guide') }"
           >{{ i18n.t('app.guide') }}</RouterLink
         >
-        <RouterLink
-          to="/wandwars"
-          class="nav-text-link"
-          :class="{ active: route.path === '/wandwars' }"
-          >{{ i18n.t('wandwars.wand-wars') }}</RouterLink
-        >
       </div>
       <ul class="menu">
         <li class="menu-search">

@@ -25,7 +25,6 @@
       </li>
       <li><strong>技能：</strong>按名称或技能描述搜索英雄，查看完整技能说明。</li>
       <li><strong>机制：</strong>各英雄的技能与机制说明。</li>
-      <li><strong>魔法竞技：</strong>3v3 PvP 选秀分析工具，提供选人推荐、对阵预测与对局记录。</li>
     </ul>
 
     <h2>使用提示</h2>

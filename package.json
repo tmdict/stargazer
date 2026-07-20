@@ -22,10 +22,7 @@
     "test:unit": "vitest run tests/unit",
     "test:it": "vitest run tests/integration",
     "test:watch": "vitest",
-    "type-check": "vue-tsc --build",
-    "ww:encode": "tsx src/wandwars/scripts/encode.ts",
-    "ww:train": "tsx src/wandwars/scripts/trainNN.ts",
-    "ww:validate": "tsx src/wandwars/scripts/validateData.ts"
+    "type-check": "vue-tsc --build"
   },
   "dependencies": {
     "@unhead/vue": "^2.1.4",

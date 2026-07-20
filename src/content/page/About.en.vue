@@ -31,10 +31,6 @@
         descriptions.
       </li>
       <li><strong>Guide:</strong> Per-hero notes on skills and mechanics.</li>
-      <li>
-        <strong>Wand Wars:</strong> A 3v3 PvP draft analyzer with pick recommendations, matchup
-        predictions, and match tracking.
-      </li>
     </ul>
 
     <h2>Tips</h2>
