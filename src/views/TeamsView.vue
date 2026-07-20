@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The Teams page orchestrator (mirrors WandWarsView): owns the outer tab state and
+/* The Teams page orchestrator: owns the outer tab state and
    the boards. The grid tab is mode-driven: a TEAM_MODES entry selects the board
    count + default maps, and useTeamsRestore is the only initiator of board-count
    changes (per-mode persistence slots, the pause/flush/rebuild/restore/resume

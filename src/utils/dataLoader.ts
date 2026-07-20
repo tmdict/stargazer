@@ -22,9 +22,9 @@ export interface ArenaJson {
   }
 }
 
-function extractFileName(path: string, removeExtension = true): string {
+function extractFileName(path: string): string {
   const fileName = path.split('/').pop() || 'Unknown'
-  return removeExtension ? fileName.replace(/\.\w+$/, '') : fileName
+  return fileName.replace(/\.\w+$/, '')
 }
 
 function loadAssetsDict<T>(assets: Record<string, T>): Record<string, T> {
@@ -291,18 +291,14 @@ let appLocalesCache: Record<string, LocaleData> | null = null
 let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
-let wandwarsLocalesCache: Record<string, LocaleData> | null = null
 let skillLocalesCache: Record<AppLocale, Record<string, SkillLocaleFile>> | null = null
 
-// Vite's import.meta.glob requires a string literal for the pattern, so the glob calls
-// can't be parameterized, but the post-processing (filename → key) can.
-function buildLocaleDict<T = LocaleData>(
-  modules: Record<string, T>,
-  keyFn: (path: string) => string = extractFileName,
-): Record<string, T> {
+// import.meta.glob needs a literal pattern, so each loader globs its own directory
+// and passes the modules in rather than this helper globbing them.
+function buildLocaleDict<T = LocaleData>(modules: Record<string, T>): Record<string, T> {
   const result: Record<string, T> = {}
   for (const [path, content] of Object.entries(modules)) {
-    const key = keyFn(path)
+    const key = extractFileName(path)
     if (key in result) {
       console.warn(`Duplicate locale key "${key}" (from ${path}); overwriting earlier entry.`)
     }
@@ -315,8 +311,7 @@ export function loadAppLocales(): Record<string, LocaleData> {
   if (appLocalesCache) return appLocalesCache
   // `**` includes subfolders, but `app` keys stay flat (filename only): it's the
   // global namespace, with some keys resolved dynamically as `app.<key>`, so
-  // folders are organization only. (WandWars instead prefixes keys by folder, in
-  // loadWandWarsLocales, to avoid collisions across its messages/ subfolder.)
+  // folders are organization only.
   appLocalesCache = buildLocaleDict(
     import.meta.glob<LocaleData>('@/locales/app/**/*.json', { eager: true, import: 'default' }),
   )
@@ -488,30 +483,11 @@ export function loadGameLocales(): Record<string, LocaleData> {
   return gameLocalesCache
 }
 
-export function loadWandWarsLocales(): Record<string, LocaleData> {
-  if (wandwarsLocalesCache) return wandwarsLocalesCache
-  wandwarsLocalesCache = buildLocaleDict(
-    import.meta.glob<LocaleData>('@/locales/wandwars/**/*.json', {
-      eager: true,
-      import: 'default',
-    }),
-    // Files in subfolders (e.g., messages/) are prefixed with the folder name.
-    (path) => {
-      const parts = path.split('/')
-      const folder = parts[parts.length - 2]
-      const fileName = extractFileName(path)
-      return folder === 'wandwars' ? fileName : `${folder}/${fileName}`
-    },
-  )
-  return wandwarsLocalesCache
-}
-
 export function loadAllLocales(): LocaleDictionary {
   return {
     app: loadAppLocales(),
     character: loadCharacterLocales(),
     artifact: loadArtifactLocales(),
     game: loadGameLocales(),
-    wandwars: loadWandWarsLocales(),
   }
 }
