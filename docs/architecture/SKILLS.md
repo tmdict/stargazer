@@ -314,6 +314,8 @@ When `calculate` needs a data-store fact about a unit, read it from `ctx.lookups
 
 `withSkillLine(baseSkill, calculate)` is the line analog of `withTilePaint`: `calculate(ctx)` returns straight connection lines (`{ fromHexId, toHexId, color }[]`) that `SkillTargeting` draws border-to-border between the hex icons; same stroke width as targeting arrows but straight, no arrowhead, and self-colored (so it renders for any skill, not just targeting ones). Stack it with `withTilePaint` to do both (Elijah-Lailah draws a line between the twins and outlines the allies between them). Both visuals, like the tile borders and arrows, only show while `showSkills` is on.
 
+A line can instead pin to hex corners via `fromCorner`/`toCorner` (indices per `Layout.hexCornerOffset`). On a single hex (`fromHexId === toHexId`) that is an exact tile edge: `outlineEdges` in `utils/line.ts` converts a tile region into those segments, which is how Callan traces the outer boundary of his 2-tile protection zone instead of coloring each tile. Across two hexes it is a lane boundary that the renderer re-clips to the visible region (Zandrok's wedge edges). Skills whose whole behavior is lines use `createLineSkill`, the line analog of `createTilePaintSkill` (Zandrok, Callan).
+
 Skills are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration: `/src/lib/skills/characters/` holds permanent hero skills, `/src/lib/skills/seasonal/` holds rotating seasonal-unit skills, deleted wholesale when a season retires.
 
 Skills must handle:
