@@ -2,10 +2,11 @@ import type { Hex } from '../../hex'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillLine } from '../skill'
 import { withSkillLine } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { laneSpan } from '../utils/line'
 
 const ZANDROK = 88
-const SKILL_COLOR = '#e57373'
+const SKILL_COLOR = SKILL_COLORS.red
 
 // At battle start, illusions of Zandrok charge in a 5-tile-wide wedge along his
 // s-axis lane. The visual is the band's two boundary lines: the lanes s = s_z +/- 2
