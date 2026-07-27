@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Bonnie.data'
+import { gridStyles } from './Bonnie.data'
 </script>
 
 <template>
@@ -28,7 +28,7 @@ import { gridStyles, images } from './Bonnie.data'
             left (lowest tile ID to highest), targeting the first opponent found.
           </li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

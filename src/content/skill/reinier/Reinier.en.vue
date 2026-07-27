@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Reinier.data'
+import { gridStyles } from './Reinier.data'
 </script>
 
 <template>
@@ -26,7 +26,7 @@ import { gridStyles, images } from './Reinier.data'
             Top-left → Right → Bottom-right → Left → Bottom-left (180° rotation)
           </li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

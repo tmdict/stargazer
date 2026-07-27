@@ -5,12 +5,14 @@ import { Grid, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { Layout, POINTY } from '@/lib/layout'
 import { State } from '@/lib/types/state'
+import { loadCharacterImages } from '@/utils/dataLoader'
 
 interface GridStyleConfig {
   numericLabel?: Record<number, number>
   highlight?: number[]
   highlight2?: number[]
   highlight3?: number[]
+  // Keyed by roster slug; portraits resolve from the shared character-image map.
   character?: Record<string, number>
   imaginaryHexes?: Array<{
     relativeToHex: number
@@ -27,7 +29,6 @@ interface Props {
   width?: number
   height?: number
   hexSize?: number
-  images?: Record<string, string>
   layout?: 'default' | 'inline'
 }
 
@@ -98,8 +99,10 @@ const getCharacterForHex = (hexId: number): string | null => {
   return null
 }
 
+const portraits = loadCharacterImages()
+
 const getCharacterImage = (characterName: string): string | undefined => {
-  return props.images?.[characterName]
+  return portraits[characterName]
 }
 
 const imaginaryHexes = computed(() => {

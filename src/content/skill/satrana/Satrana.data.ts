@@ -1,7 +1,6 @@
-import satranaImage from '@/assets/images/character/satrana.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
-
 // Labels are the hex distance from Satrana: 1 for the adjacent ring, 2 for the
-// circle around it.
+// circle around it. Gold marks allies in range (one per ring); blue marks one
+// just outside at distance 3.
 export const gridStyles = {
   main: {
     numericLabel: {
@@ -25,8 +24,4 @@ export const gridStyles = {
       satrana: 6,
     },
   },
-}
-
-export const images = {
-  satrana: satranaImage,
 }

@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Nara.data'
+import { gridStyles } from './Nara.data'
 </script>
 
 <template>
@@ -16,7 +16,7 @@ import { gridStyles, images } from './Nara.data'
           <li><strong>第2环：</strong>距离为2的12个格子</li>
           <li>以此类推...</li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
         <p>
           友方（瞄准对手）从右上角顺时针行走，而敌方（瞄准对手）从左下角逆时针行走（180°旋转）。
         </p>

@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Aliceth.data'
+import { gridStyles } from './Aliceth.data'
 </script>
 
 <template>
@@ -31,8 +31,8 @@ import { gridStyles, images } from './Aliceth.data'
           <li>And so on...</li>
         </ul>
         <div style="text-align: center">
-          <GridSnippet :grid-style="gridStyles.rowScan1" :images layout="inline" />
-          <GridSnippet :grid-style="gridStyles.rowScan2" :images layout="inline" />
+          <GridSnippet :grid-style="gridStyles.rowScan1" layout="inline" />
+          <GridSnippet :grid-style="gridStyles.rowScan2" layout="inline" />
         </div>
         <p>
           Another way to visualize this: Aliceth scans from the tiles adjacent to her, expanding
