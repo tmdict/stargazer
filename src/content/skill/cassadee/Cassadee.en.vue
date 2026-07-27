@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Cassadee.data'
+import { gridStyles } from './Cassadee.data'
 </script>
 
 <template>
@@ -28,7 +28,7 @@ import { gridStyles, images } from './Cassadee.data'
         <p>
           When on enemy team, Cassadee prioritize teammates with the higher hex ID (180° rotation).
         </p>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

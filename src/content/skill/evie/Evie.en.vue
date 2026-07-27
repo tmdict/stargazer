@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Evie.data'
+import { gridStyles } from './Evie.data'
 </script>
 
 <template>
@@ -15,8 +15,8 @@ import { gridStyles, images } from './Evie.data'
           Evie still investigates even if the symmetrical tile is blocked.
         </p>
         <div style="text-align: center">
-          <GridSnippet :grid-style="gridStyles.enemyTarget1" :images layout="inline" />
-          <GridSnippet :grid-style="gridStyles.enemyTarget2" :images layout="inline" />
+          <GridSnippet :grid-style="gridStyles.enemyTarget1" layout="inline" />
+          <GridSnippet :grid-style="gridStyles.enemyTarget2" layout="inline" />
         </div>
       </SkillSnippet>
     </template>
@@ -35,7 +35,7 @@ import { gridStyles, images } from './Evie.data'
           The targeting arrow shows only the initial target, later in the battle the quill moves to
           the ally with the highest cumulative damage dealt.
         </p>
-        <GridSnippet :grid-style="gridStyles.allyTarget" :images />
+        <GridSnippet :grid-style="gridStyles.allyTarget" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

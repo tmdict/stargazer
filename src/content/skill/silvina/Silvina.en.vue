@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Silvina.data'
+import { gridStyles } from './Silvina.data'
 </script>
 
 <template>
@@ -22,7 +22,7 @@ import { gridStyles, images } from './Silvina.data'
           <li><strong>Ring 2:</strong> 12 tiles at distance 2</li>
           <li>And so on...</li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
         <p>
           Ally (targeting opponent) walks clockwise from top-right, while Enemy (targeting opponent)
           walks counter-clockwise from bottom-left (180° rotation).

@@ -1,5 +1,3 @@
-import callanImage from '@/assets/images/character/callan.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
-
 // Labels are the hex distance from Callan: 1 for the adjacent ring, 2 for the
 // circle around it. Gold marks allies inside the shield's radius (one per
 // ring); blue marks one just outside at distance 3.
@@ -26,8 +24,4 @@ export const gridStyles = {
       callan: 6,
     },
   },
-}
-
-export const images = {
-  callan: callanImage,
 }

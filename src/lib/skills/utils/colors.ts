@@ -1,8 +1,7 @@
 /**
  * Shared palette for skill visual effects: targeting arrows, tile borders and
- * fills, unit borders, and connection lines. Skills reference a hue by name so
- * recurring colors stay identical across characters and retune in one place;
- * which hue a character uses remains that skill's choice.
+ * fills, unit borders, and connection lines. Hues are referenced by name so a
+ * color shared across characters stays identical and retunes in one place.
  */
 export const SKILL_COLORS = {
   red: '#e57373', // galahad, hepler, satrana, zandrok

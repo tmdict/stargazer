@@ -1,5 +1,3 @@
-import alicethImage from '@/assets/images/character/aliceth.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
-
 export const gridStyles = {
   rowScan1: {
     numericLabel: {
@@ -51,8 +49,4 @@ export const gridStyles = {
       aliceth: 8,
     },
   },
-}
-
-export const images = {
-  aliceth: alicethImage,
 }

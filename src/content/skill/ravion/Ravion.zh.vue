@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Ravion.data'
+import { gridStyles } from './Ravion.data'
 </script>
 
 <template>
@@ -26,7 +26,7 @@ import { gridStyles, images } from './Ravion.data'
             >以相反顺序扫描敌方位置，从左到右（最高格子ID到最低），瞄准找到的前两个队友。
           </li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

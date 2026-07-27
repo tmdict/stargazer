@@ -1,5 +1,3 @@
-import faramorImage from '@/assets/images/character/faramor.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
-
 export const gridStyles = {
   main: {
     numericLabel: {
@@ -16,8 +14,4 @@ export const gridStyles = {
       faramor: 9,
     },
   },
-}
-
-export const images = {
-  faramor: faramorImage,
 }

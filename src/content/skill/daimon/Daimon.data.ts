@@ -1,5 +1,3 @@
-import daimonImage from '@/assets/images/character/daimon.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
-
 export const gridStyles = {
   main: {
     numericLabel: {
@@ -13,8 +11,4 @@ export const gridStyles = {
       daimon: 9,
     },
   },
-}
-
-export const images = {
-  daimon: daimonImage,
 }

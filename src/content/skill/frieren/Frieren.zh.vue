@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Frieren.data'
+import { gridStyles } from './Frieren.data'
 </script>
 
 <template>
@@ -26,7 +26,7 @@ import { gridStyles, images } from './Frieren.data'
             >按相反顺序扫描敌方位置，从右到左（格子ID从小到大），锁定找到的第一个队友。
           </li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

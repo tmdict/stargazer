@@ -1,5 +1,3 @@
-import isabellaImage from '@/assets/images/character/isabella.png?format=webp&quality=80&w=100&h=135&fit=cover&position=bottom'
-
 export const gridStyles = {
   main: {
     numericLabel: {
@@ -35,8 +33,4 @@ export const gridStyles = {
       isabella: 4,
     },
   },
-}
-
-export const images = {
-  isabella: isabellaImage,
 }

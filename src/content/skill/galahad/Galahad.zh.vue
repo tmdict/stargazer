@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Galahad.data'
+import { gridStyles } from './Galahad.data'
 </script>
 
 <template>
@@ -22,7 +22,7 @@ import { gridStyles, images } from './Galahad.data'
           <li>以此类推...</li>
         </ul>
         <p>当加拉哈德处于敌方阵营时，则优先选择较高ID格子上的队友（180°旋转）。</p>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
         <p>
           加拉哈德只会选择本体角色为目标，跳过召唤物和分身，例如蝎子的分身或双子的副体（粉色双子）。
         </p>

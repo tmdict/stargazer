@@ -419,7 +419,7 @@ Commentary is authored against a fixed set of "slots" (the same `SLOT_ORDER` as 
 </template>
 ```
 
-`<SkillSnippet>` is the styled callout box; `title` / `title-key` / `body-key` props let it inline copy or pull shared boilerplate from `/src/locales/app/<key>.json`. Grid visualizations co-locate a `<HeroNameCamelCase>.data.ts` alongside the snippet and render via `<GridSnippet>`.
+`<SkillSnippet>` is the styled callout box; `title` / `title-key` / `body-key` props let it inline copy or pull shared boilerplate from `/src/locales/app/<key>.json`. Grid visualizations co-locate a `<HeroNameCamelCase>.data.ts` alongside the snippet and render via `<GridSnippet>`. The data file is pure grid config: `character` keys are roster slugs, and `GridSnippet` resolves each portrait from the shared character-image map (`loadCharacterImages`), so data files import no images.
 
 Under the hood, `<SkillSections>` reserves an anchor element after each rendered skill section and provides the anchor map; `<SkillSnippets>` reads it and moves each filled slot into the matching anchor at render time. The slot keys and the section order are therefore the contract; adding a new slot key is a one-line change in `src/lib/types/skill.ts` that the snippet system inherits automatically.
 
