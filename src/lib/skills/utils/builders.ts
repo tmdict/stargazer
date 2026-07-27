@@ -8,8 +8,9 @@
  *   - createTileHighlightSkill: paints a color modifier on the target tile,
  *     with previous-target cleanup on update
  *
- * createTilePaintSkill covers skills whose whole behavior is a multi-tile
- * paint pass (withTilePaint over an otherwise empty lifecycle).
+ * createTilePaintSkill and createLineSkill cover skills whose whole behavior
+ * is a single decorator pass (withTilePaint / withSkillLine over an otherwise
+ * empty lifecycle).
  *
  * createCompanionSkill owns the companion lifecycle instead: spawning N
  * companions on random free tiles, raising team capacity, linking them to
@@ -177,6 +178,14 @@ export function withTilePaint(
   }
 }
 
+// Base for factories whose whole behavior lives in a decorator.
+const bareSkill = (id: string, characterId: number): Skill => ({
+  id,
+  characterId,
+  onActivate() {},
+  onDeactivate() {},
+})
+
 interface TilePaintSkillConfig {
   id: string
   characterId: number
@@ -190,7 +199,7 @@ interface TilePaintSkillConfig {
  */
 export function createTilePaintSkill(config: TilePaintSkillConfig): Skill {
   const { id, characterId, calculate } = config
-  return withTilePaint({ id, characterId, onActivate() {}, onDeactivate() {} }, calculate)
+  return withTilePaint(bareSkill(id, characterId), calculate)
 }
 
 /**
@@ -216,6 +225,21 @@ export function withSkillLine(
       base.onDeactivate(ctx)
     },
   }
+}
+
+interface LineSkillConfig {
+  id: string
+  characterId: number
+  calculate: (context: SkillContext) => SkillLine[]
+}
+
+/**
+ * Skill whose only behavior is drawing the lines `calculate` returns: the line
+ * analog of createTilePaintSkill.
+ */
+export function createLineSkill(config: LineSkillConfig): Skill {
+  const { id, characterId, calculate } = config
+  return withSkillLine(bareSkill(id, characterId), calculate)
 }
 
 interface CompanionSkillConfig {

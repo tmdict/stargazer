@@ -41,8 +41,10 @@ export interface TilePaint {
 }
 
 // A straight line a skill draws between two hexes: border to border between their
-// centers by default, or between two specific hex corners (an exact edge line, e.g. a
-// wedge boundary) when fromCorner/toCorner are set.
+// centers by default, or between two specific hex corners when fromCorner/toCorner are
+// set. A corner line on a single hex (fromHexId === toHexId) is an exact tile edge
+// (e.g. one segment of a zone outline); across two hexes it is a lane boundary that
+// the renderer re-clips to the visible region (a wedge edge).
 export interface SkillLine {
   fromHexId: number
   toHexId: number

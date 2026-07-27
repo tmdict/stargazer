@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
-import { clipLaneBoundary, hexesBetween } from '@/lib/skills/utils/line'
+import { clipLaneBoundary, hexesBetween, outlineEdges } from '@/lib/skills/utils/line'
 
 describe('hexesBetween', () => {
   const grid = new Grid()
@@ -32,6 +32,46 @@ describe('hexesBetween', () => {
   it('returns [] when the two cells share no axis', () => {
     // Cells 1 (q -3, r 4) and 45 (q 3, r -4) share no coordinate.
     expect(betweenIds(1, 45)).toEqual([])
+  })
+})
+
+describe('outlineEdges', () => {
+  const grid = new Grid()
+  const hexes = (ids: number[]) => ids.map((id) => grid.getHexById(id))
+
+  it('outlines a single hex with all six edges, corners clockwise per direction', () => {
+    const edges = outlineEdges(hexes([23]))
+    expect(edges.map((edge) => [edge.fromCorner, edge.toCorner])).toEqual([
+      [4, 5],
+      [5, 0],
+      [0, 1],
+      [1, 2],
+      [2, 3],
+      [3, 4],
+    ])
+  })
+
+  it('omits the shared edge of adjacent hexes', () => {
+    // 23 and 16 are adjacent: each keeps its 5 outer edges.
+    const edges = outlineEdges(hexes([23, 16]))
+    expect(edges).toHaveLength(10)
+    expect(edges.filter((edge) => edge.hex.getId() === 23)).toHaveLength(5)
+    expect(edges.filter((edge) => edge.hex.getId() === 16)).toHaveLength(5)
+  })
+
+  it('outlines a full radius-2 zone with 30 edges, all on the outer ring', () => {
+    // Around 23 both rings are fully on the board: the 6 corner tiles of the
+    // outer ring expose 3 edges each, the 6 side tiles 2 each.
+    const center = grid.getHexById(23)
+    const zone = grid
+      .getAllTiles()
+      .map((tile) => tile.hex)
+      .filter((hex) => center.distance(hex) <= 2)
+    const edges = outlineEdges(zone)
+    expect(edges).toHaveLength(30)
+    for (const edge of edges) {
+      expect(center.distance(edge.hex)).toBe(2)
+    }
   })
 })
 
