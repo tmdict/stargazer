@@ -2,6 +2,7 @@ import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import { createTargetingSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { getCandidates } from '../utils/targeting'
 
 // Targets the 2 rearmost allies with arrows for each. Rearmost follows the
@@ -37,7 +38,7 @@ registerSkill(
   createTargetingSkill({
     id: 'ravion',
     characterId: 90,
-    color: '#6d9c86',
+    color: SKILL_COLORS.teal,
     calculateTarget,
   }),
 )

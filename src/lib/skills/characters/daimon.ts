@@ -1,5 +1,6 @@
 import { registerSkill } from '../registry'
 import { createTileHighlightSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { findAdjacentPriorityTarget } from '../utils/targeting'
 
 // Targets an ally on adjacent tiles behind him (lower hex ID for ally, higher for
@@ -9,7 +10,7 @@ registerSkill(
   createTileHighlightSkill({
     id: 'daimon',
     characterId: 81,
-    tileColor: '#98be5d',
+    tileColor: SKILL_COLORS.green,
     calculateTarget: findAdjacentPriorityTarget,
   }),
 )

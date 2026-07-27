@@ -1,9 +1,10 @@
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
 import { type SkillContext } from '../skill'
+import { SKILL_COLORS } from '../utils/colors'
 import { getSymmetricalHexId } from '../utils/symmetry'
 
-const TILE_COLOR = '#9661f1'
+const TILE_COLOR = SKILL_COLORS.purple
 
 /**
  * Get adjacent allies to the given hex position

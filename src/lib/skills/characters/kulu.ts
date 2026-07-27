@@ -1,11 +1,12 @@
 import { Team } from '../../types/team'
 import { registerSkill } from '../registry'
 import type { SkillContext, TilePaint } from '../skill'
+import { SKILL_COLORS } from '../utils/colors'
 
 // Cosmetic "demolition zone": paints the tiles but never changes their state, so
 // they stay placeable and pathfinding ignores them.
-const ZONE_COLOR = '#565b63'
-const BREAKABLE_COLOR = '#a47fb8'
+const ZONE_COLOR = SKILL_COLORS.slate
+const BREAKABLE_COLOR = SKILL_COLORS.orchid
 
 const ALLY_AFFECTED = { blocked: [18, 19, 20, 21, 22, 24], breakable: [23] }
 const ENEMY_AFFECTED = { blocked: [25, 26, 27, 28, 22, 24], breakable: [23] }

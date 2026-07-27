@@ -1,5 +1,6 @@
 import { registerSkill } from '../registry'
 import { createTileHighlightSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { rowScan, ScanDirection } from '../utils/ring'
 
 // Protects the frontmost ally on adjacent tiles, prioritizing characters in the
@@ -8,7 +9,7 @@ registerSkill(
   createTileHighlightSkill({
     id: 'hepler',
     characterId: 110,
-    tileColor: '#e57373',
+    tileColor: SKILL_COLORS.red,
     calculateTarget: (ctx) =>
       rowScan(ctx, {
         team: ctx.team,

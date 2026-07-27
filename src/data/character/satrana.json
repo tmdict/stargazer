@@ -9,6 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "dot": [{ "skill3": 1 }]
+    "dot": [{ "skill3": 1 }],
+    "tile-effect": [{ "skill3": 1 }]
   }
 }

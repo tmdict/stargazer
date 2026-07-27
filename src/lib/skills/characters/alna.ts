@@ -1,5 +1,6 @@
 import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { searchByRow } from '../utils/ring'
 
 // Targets the closest ally in the same row. On a distance tie, the higher hex ID
@@ -8,7 +9,7 @@ registerSkill(
   createTargetingSkill({
     id: 'alna',
     characterId: 100,
-    color: '#7badc4',
+    color: SKILL_COLORS.steel,
     arrowType: 'ally',
     calculateTarget: (ctx) => searchByRow(ctx, ctx.team),
   }),

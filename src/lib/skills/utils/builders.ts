@@ -8,6 +8,9 @@
  *   - createTileHighlightSkill: paints a color modifier on the target tile,
  *     with previous-target cleanup on update
  *
+ * createTilePaintSkill covers skills whose whole behavior is a multi-tile
+ * paint pass (withTilePaint over an otherwise empty lifecycle).
+ *
  * createCompanionSkill owns the companion lifecycle instead: spawning N
  * companions on random free tiles, raising team capacity, linking them to
  * the main character, and tearing all of it down on deactivation.
@@ -172,6 +175,22 @@ export function withTilePaint(
       base.onDeactivate(ctx)
     },
   }
+}
+
+interface TilePaintSkillConfig {
+  id: string
+  characterId: number
+  calculate: (context: SkillContext) => TilePaint[]
+}
+
+/**
+ * Skill whose only behavior is painting the tiles `calculate` returns: the
+ * multi-tile analog of createTileHighlightSkill. A skill that owns other
+ * behavior composes withTilePaint onto that base instead.
+ */
+export function createTilePaintSkill(config: TilePaintSkillConfig): Skill {
+  const { id, characterId, calculate } = config
+  return withTilePaint({ id, characterId, onActivate() {}, onDeactivate() {} }, calculate)
 }
 
 /**

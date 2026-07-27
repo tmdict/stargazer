@@ -2,6 +2,7 @@ import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import { createTargetingSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { findTarget, TargetingMethod } from '../utils/distance'
 import { rowScan, ScanDirection, searchByRow } from '../utils/ring'
 
@@ -57,7 +58,7 @@ registerSkill(
   createTargetingSkill({
     id: 'aliceth',
     characterId: 91,
-    color: '#ffa000',
+    color: SKILL_COLORS.amber,
     calculateTarget,
   }),
 )

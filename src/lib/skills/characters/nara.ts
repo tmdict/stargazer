@@ -2,6 +2,7 @@ import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import { createTargetingSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { spiralSearchFromTile } from '../utils/ring'
 import { getSymmetricalHexId } from '../utils/symmetry'
 
@@ -37,7 +38,7 @@ registerSkill(
   createTargetingSkill({
     id: 'nara',
     characterId: 58,
-    color: '#98be5d',
+    color: SKILL_COLORS.green,
     arrowType: 'enemy',
     calculateTarget,
   }),

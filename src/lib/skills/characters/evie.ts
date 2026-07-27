@@ -3,10 +3,11 @@ import { getOpposingTeam } from '../../characters/character'
 import { registerSkill } from '../registry'
 import type { SkillContext, TilePaint } from '../skill'
 import { createTargetingSkill, withTilePaint } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { findTarget, TargetingMethod } from '../utils/distance'
 import { getSymmetricalHexId } from '../utils/symmetry'
 
-const TILE_COLOR = '#0288d1'
+const TILE_COLOR = SKILL_COLORS.blue
 
 // Outlines the tile symmetrical to Evie (across the board centre, as Silvina
 // targets) and its six neighbours, keeping only those in the opposing team's zone

@@ -1,8 +1,8 @@
 import { registerSkill } from '../registry'
 import type { SkillContext, TilePaint } from '../skill'
+import { createTilePaintSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { rowScan, ScanDirection } from '../utils/ring'
-
-const TILE_COLOR = '#0288d1'
 
 // One unit of each of these classes is highlighted; if any is absent among the
 // neighbors the skill highlights nothing.
@@ -25,24 +25,15 @@ function computeHighlights(ctx: SkillContext): TilePaint[] {
       filter: (characterId) => ctx.lookups?.classOf?.(characterId) === className,
     })
     if (!target?.targetHexId) return [] // a required class is missing: skill does not fire
-    tiles.push({ hexId: target.targetHexId, color: TILE_COLOR, fill: true })
+    tiles.push({ hexId: target.targetHexId, color: SKILL_COLORS.blue, fill: true })
   }
   return tiles
 }
 
-registerSkill({
-  id: 'himmel',
-  characterId: 112,
-
-  onActivate(ctx: SkillContext): void {
-    ctx.skillManager.paintTiles(ctx.characterId, ctx.team, computeHighlights(ctx))
-  },
-
-  onDeactivate(ctx: SkillContext): void {
-    ctx.skillManager.clearPaintedTiles(ctx.characterId, ctx.team)
-  },
-
-  onUpdate(ctx: SkillContext): void {
-    ctx.skillManager.paintTiles(ctx.characterId, ctx.team, computeHighlights(ctx))
-  },
-})
+registerSkill(
+  createTilePaintSkill({
+    id: 'himmel',
+    characterId: 112,
+    calculate: computeHighlights,
+  }),
+)
