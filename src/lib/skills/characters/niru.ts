@@ -1,5 +1,6 @@
 import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { rowScan, ScanDirection } from '../utils/ring'
 
 // Targets the nearest ally scanning outward from adjacent tiles, prioritizing
@@ -9,7 +10,7 @@ registerSkill(
   createTargetingSkill({
     id: 'niru',
     characterId: 28,
-    color: '#98be5d',
+    color: SKILL_COLORS.green,
     arrowType: 'ally',
     calculateTarget: (ctx) =>
       rowScan(ctx, {

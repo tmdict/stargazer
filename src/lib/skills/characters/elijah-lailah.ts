@@ -4,10 +4,11 @@ import type { Hex } from '../../hex'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillLine, TilePaint } from '../skill'
 import { createCompanionSkill, withSkillLine, withTilePaint } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { hexesBetween } from '../utils/line'
 
-const SKILL_COLOR = '#51abcb'
-const COMPANION_COLOR = '#cd7169'
+const SKILL_COLOR = SKILL_COLORS.sky
+const COMPANION_COLOR = SKILL_COLORS.rust
 
 // Shared state for both visuals; null unless the twins are collinear with a gap.
 function twinState(ctx: SkillContext): {

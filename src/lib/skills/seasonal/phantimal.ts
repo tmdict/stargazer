@@ -16,9 +16,10 @@ import { toPhantimalId } from '../../characters/phantimal'
 import { registerSkill } from '../registry'
 import type { Skill, SkillContext, TilePaint } from '../skill'
 import { withTilePaint } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { findAdjacentPriorityTarget, type TargetDirection } from '../utils/targeting'
 
-const SPIRIT_MARK_COLOR = '#fbc02d'
+const SPIRIT_MARK_COLOR = SKILL_COLORS.gold
 
 // One target computation feeds both paint channels.
 function spiritMarkTiles(direction: TargetDirection) {

@@ -164,7 +164,9 @@ Highlight multiple tiles based on game state:
 
 ## Adding New Skills
 
-Most skills follow one of three reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts`; it eliminates the activate/deactivate(/update) boilerplate.
+Most skills follow one of a few reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts`; it eliminates the activate/deactivate(/update) boilerplate.
+
+Effect colors (arrows, tile borders/fills, unit borders, lines) come from the shared `SKILL_COLORS` palette in `/src/lib/skills/utils/colors.ts`. A skill picks a hue by name (`SKILL_COLORS.red`) instead of hard-coding a hex literal, so recurring hues stay identical across characters and retune in one place.
 
 Each skill file carries a short block comment above `registerSkill` describing its in-game behavior. That comment is the only documentation of the skill's effect; the skill object itself holds just `id` and `characterId` (no `name`/`description` fields).
 
@@ -175,6 +177,7 @@ For skills that compute a target and draw an arrow (or build their own arrows fo
 ```typescript
 import { registerSkill } from '../registry'
 import { createTargetingSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { findTarget, TargetingMethod } from '../utils/distance'
 
 // What it does (gameplay behavior).
@@ -182,7 +185,7 @@ registerSkill(
   createTargetingSkill({
     id: 'my-skill',
     characterId: 123,
-    color: '#hexcolor', // arrow color (becomes targetingColorModifier)
+    color: SKILL_COLORS.red, // arrow color (becomes targetingColorModifier)
     arrowType: 'ally', // omit when calculateTarget builds its own arrows array
     calculateTarget: (ctx) =>
       findTarget(ctx, {
@@ -208,7 +211,7 @@ registerSkill(
   createTileHighlightSkill({
     id: 'my-skill',
     characterId: 123,
-    tileColor: '#hexcolor',
+    tileColor: SKILL_COLORS.blue,
     // fill: true,  // optional: tint the target's cell fill instead of its border
     calculateTarget: (ctx) =>
       rowScan(ctx, { team: ctx.team, rowDirection: ScanDirection.REARMOST }),
@@ -216,7 +219,25 @@ registerSkill(
 )
 ```
 
-### Pattern 3: companion units (`createCompanionSkill`)
+### Pattern 3: multi-tile paint (`createTilePaintSkill`)
+
+For skills whose whole behavior is highlighting a set of tiles that tracks the grid state (Himmel's class trio, Satrana's in-range allies). `calculate(ctx)` returns the full set for the current grid (`{ hexId, color, fill? }[]`); the paint diff on update and the cleanup on deactivate come from `withTilePaint` (below):
+
+```typescript
+import { registerSkill } from '../registry'
+import { createTilePaintSkill } from '../utils/builders'
+
+// What it does (gameplay behavior).
+registerSkill(
+  createTilePaintSkill({
+    id: 'my-skill',
+    characterId: 123,
+    calculate: (ctx) => computeTiles(ctx), // returns { hexId, color, fill? }[]
+  }),
+)
+```
+
+### Pattern 4: companion units (`createCompanionSkill`)
 
 For skills that spawn extra units (Phraesto's shadow, Lailah, Zanie's turrets). The factory owns the whole lifecycle: random free-tile placement, the team-capacity bump (`count` companions raise it by `count`), companion links, modifiers, rollback-and-throw on placement failure, and full teardown with capacity restore on deactivation:
 
@@ -238,15 +259,16 @@ registerSkill(
 )
 ```
 
-### Pattern 4: custom lifecycle (multi-tile zones, etc.)
+### Pattern 5: custom lifecycle
 
-When no factory fits (multi-tile highlights, companion spawning), pass the skill object directly to `registerSkill`. Declare any tile color as a local module const so the activate/deactivate logic can reference it without reaching back into the registered object, and drive visuals through the SkillManager's `setTileColorModifier`/`setTileFillModifier` (or `paintTiles` for a multi-tile set). Both paint channels refcount per (tile, color), so independent skills can paint the same color on a shared tile and one skill's cleanup never clears another's; each remove call must still mirror its add. Kulu paints its cosmetic demolition zone this way, leaving tile state untouched so the tiles stay placeable:
+When no factory fits, pass the skill object directly to `registerSkill`. Declare a reused color as a local module const (assigned from the palette) so the activate/deactivate logic can reference it without reaching back into the registered object, and drive visuals through the SkillManager's `setTileColorModifier`/`setTileFillModifier` (or `paintTiles` for a multi-tile set). Both paint channels refcount per (tile, color), so independent skills can paint the same color on a shared tile and one skill's cleanup never clears another's; each remove call must still mirror its add. Kulu paints its cosmetic demolition zone this way (custom because its static zone deliberately skips the update repaint), leaving tile state untouched so the tiles stay placeable:
 
 ```typescript
 import { registerSkill } from '../registry'
 import { type SkillContext } from '../skill'
+import { SKILL_COLORS } from '../utils/colors'
 
-const TILE_COLOR = '#hexcolor'
+const TILE_COLOR = SKILL_COLORS.slate
 
 // What it does (gameplay behavior).
 registerSkill({

@@ -1,5 +1,6 @@
 import { registerSkill } from '../registry'
 import { createTileHighlightSkill } from '../utils/builders'
+import { SKILL_COLORS } from '../utils/colors'
 import { findUnitBehind } from '../utils/targeting'
 
 // Highlights the same-team unit directly behind Hugin (the ally his skill
@@ -9,7 +10,7 @@ registerSkill(
   createTileHighlightSkill({
     id: 'hugin',
     characterId: 65,
-    tileColor: '#0288d1',
+    tileColor: SKILL_COLORS.blue,
     fill: true,
     calculateTarget: findUnitBehind,
   }),
