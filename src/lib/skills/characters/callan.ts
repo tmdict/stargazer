@@ -6,7 +6,6 @@ import { outlineEdges } from '../utils/line'
 
 const RANGE = 2
 
-// One outline along the zone's outer boundary rather than a border per tile.
 function computeOutline(ctx: SkillContext): SkillLine[] {
   const center = ctx.grid.getHexById(ctx.hexId)
   const zone = ctx.grid
@@ -23,7 +22,8 @@ function computeOutline(ctx: SkillContext): SkillLine[] {
 }
 
 // While his battle-start shield holds, Callan absorbs half of the damage taken
-// by allies within a 2-tile radius; the outline traces that protection zone.
+// by allies within a 2-tile radius; drawn as one outline along the zone's
+// outer boundary, not a border per tile.
 registerSkill(
   createLineSkill({
     id: 'callan',

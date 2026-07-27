@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Aliceth.data'
+import { gridStyles } from './Aliceth.data'
 </script>
 
 <template>
@@ -19,8 +19,8 @@ import { gridStyles, images } from './Aliceth.data'
           <li>以此类推...</li>
         </ul>
         <div style="text-align: center">
-          <GridSnippet :grid-style="gridStyles.rowScan1" :images layout="inline" />
-          <GridSnippet :grid-style="gridStyles.rowScan2" :images layout="inline" />
+          <GridSnippet :grid-style="gridStyles.rowScan1" layout="inline" />
+          <GridSnippet :grid-style="gridStyles.rowScan2" layout="inline" />
         </div>
         <p>
           另一种理解方式：亚莉克希从与她相邻的格子开始扫描，向外扩展，按照从最高格子ID到最低ID的顺序，锁定找到的第一个队友。

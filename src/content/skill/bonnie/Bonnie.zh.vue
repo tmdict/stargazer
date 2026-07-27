@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Bonnie.data'
+import { gridStyles } from './Bonnie.data'
 </script>
 
 <template>
@@ -26,7 +26,7 @@ import { gridStyles, images } from './Bonnie.data'
             >以相反顺序扫描友方位置，从右到左（最低格子ID到最高），瞄准找到的第一个对手。
           </li>
         </ul>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

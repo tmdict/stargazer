@@ -4,7 +4,6 @@ import { createTilePaintSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { getCandidates } from '../utils/targeting'
 
-// Every same-team unit within 2 hexes of Satrana, self excluded.
 function computeHighlights(ctx: SkillContext): TilePaint[] {
   const center = ctx.grid.getHexById(ctx.hexId)
   return getCandidates(ctx.grid, ctx.team, ctx.characterId)
@@ -12,8 +11,8 @@ function computeHighlights(ctx: SkillContext): TilePaint[] {
     .map((c) => ({ hexId: c.hexId, color: SKILL_COLORS.red, fill: true }))
 }
 
-// Grants Sparks to allies within 2 tiles when a battle starts; their tiles are
-// tinted to show who receives it.
+// Grants Sparks to allies within 2 tiles when a battle starts; the tile of
+// every same-team unit in range (summons included) is tinted.
 registerSkill(
   createTilePaintSkill({
     id: 'satrana',

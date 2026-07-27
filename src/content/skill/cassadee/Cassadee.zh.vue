@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Cassadee.data'
+import { gridStyles } from './Cassadee.data'
 </script>
 
 <template>
@@ -22,7 +22,7 @@ import { gridStyles, images } from './Cassadee.data'
           <li>以此类推...</li>
         </ul>
         <p>当科丝蒂处于敌方阵营时，则优先选择较高ID格子上的队友（180°旋转）。</p>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
   </SkillSnippets>

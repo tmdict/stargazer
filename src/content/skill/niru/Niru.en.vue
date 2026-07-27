@@ -2,7 +2,7 @@
 import GridSnippet from '@/components/grid/GridSnippet.vue'
 import SkillSnippet from '@/components/skill/SkillSnippet.vue'
 import SkillSnippets from '@/components/skill/SkillSnippets.vue'
-import { gridStyles, images } from './Niru.data'
+import { gridStyles } from './Niru.data'
 </script>
 
 <template>
@@ -26,7 +26,7 @@ import { gridStyles, images } from './Niru.data'
           <li>And so on...</li>
         </ul>
         <p>When on enemy team, Niru prioritizes teammates with the lower hex ID (180° rotation)</p>
-        <GridSnippet :grid-style="gridStyles.main" :images />
+        <GridSnippet :grid-style="gridStyles.main" />
         <p>
           Niru can also target summons and clones, such as Phraesto's clone or Elijah &amp; Lailah's
           Lailah (pink twin).
