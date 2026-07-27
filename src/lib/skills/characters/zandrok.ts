@@ -1,7 +1,7 @@
 import type { Hex } from '../../hex'
 import { registerSkill } from '../registry'
 import type { SkillContext, SkillLine } from '../skill'
-import { withSkillLine } from '../utils/builders'
+import { createLineSkill } from '../utils/builders'
 import { SKILL_COLORS } from '../utils/colors'
 import { laneSpan } from '../utils/line'
 
@@ -45,11 +45,4 @@ export function wedgeLines(ctx: SkillContext): SkillLine[] {
   ].filter((line): line is SkillLine => line !== null)
 }
 
-// No targeting or companions: the wedge lines are the whole skill, so it decorates a
-// bare base.
-registerSkill(
-  withSkillLine(
-    { id: 'zandrok', characterId: ZANDROK, onActivate() {}, onDeactivate() {} },
-    wedgeLines,
-  ),
-)
+registerSkill(createLineSkill({ id: 'zandrok', characterId: ZANDROK, calculate: wedgeLines }))

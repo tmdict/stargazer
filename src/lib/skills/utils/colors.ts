@@ -10,7 +10,7 @@ export const SKILL_COLORS = {
   rust: '#cd7169', // elijah-lailah (lailah)
   amber: '#ffa000', // aliceth, dunlingr
   gold: '#fbc02d', // phantimal (spirit marks)
-  green: '#98be5d', // bonnie, daimon, isabella, nara, niru, silvina
+  green: '#98be5d', // bonnie, callan, daimon, isabella, nara, niru, silvina
   teal: '#6d9c86', // faramor, ravion, thador
   blue: '#0288d1', // cassadee, evie, himmel, hugin
   sky: '#51abcb', // elijah-lailah (elijah)

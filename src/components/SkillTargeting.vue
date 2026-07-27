@@ -94,13 +94,18 @@ const arrowsToRender = computed(() => {
 })
 
 // Lines carry their own color, so (unlike arrows) they render for any skill, not just
-// targeting ones. A corner (lane-boundary) line spans the visible cells of its lane and
-// the adjacent lane it borders, so it runs edge to edge across the shown region (the
-// whole grid outside team view); a center line drops when either end is cropped.
+// targeting ones. A same-hex corner line is an exact tile edge (a zone-outline segment)
+// kept iff its tile is shown; a two-hex corner (lane-boundary) line spans the visible
+// cells of its lane and the adjacent lane it borders, so it runs edge to edge across
+// the shown region (the whole grid outside team view); a center line drops when either
+// end is cropped.
 const linesToRender = computed(() =>
   ctx.skillLines.flatMap((line) => {
     if (line.fromCorner === undefined || line.toCorner === undefined) {
       return bothVisible(line.fromHexId, line.toHexId) ? [line] : []
+    }
+    if (line.fromHexId === line.toHexId) {
+      return visibleHexIds.value.has(line.fromHexId) ? [line] : []
     }
     const laneS = ctx.grid.getHexById(line.fromHexId).s
     const clip = clipLaneBoundary(ctx.visibleHexes, laneS, line.fromCorner)

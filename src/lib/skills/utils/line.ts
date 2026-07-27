@@ -45,6 +45,33 @@ export function laneSpan(hexes: Hex[], s: number): [Hex, Hex] | null {
   return min && max && min.getId() !== max.getId() ? [min, max] : null
 }
 
+export interface HexEdge {
+  hex: Hex
+  fromCorner: number
+  toCorner: number
+}
+
+/**
+ * Boundary edges of a hex region: for each hex in `zone`, the edges whose far
+ * side is not in the zone. Corner indices follow Layout.hexCornerOffset
+ * (pointy-top): the edge facing neighbor direction d spans corners (d + 4) % 6
+ * and (d + 5) % 6 (directions step clockwise from top-right, corners clockwise
+ * from lower-right). Membership is by coordinates, so passing only on-board
+ * hexes outlines a board-clipped region along the board edge too.
+ */
+export function outlineEdges(zone: Hex[]): HexEdge[] {
+  const inZone = new Set(zone.map((hex) => hex.toString()))
+  const edges: HexEdge[] = []
+  for (const hex of zone) {
+    for (let direction = 0; direction < 6; direction++) {
+      if (!inZone.has(hex.neighbor(direction).toString())) {
+        edges.push({ hex, fromCorner: (direction + 4) % 6, toCorner: (direction + 5) % 6 })
+      }
+    }
+  }
+  return edges
+}
+
 export interface LaneBoundaryClip {
   fromHexId: number
   fromCorner: number
