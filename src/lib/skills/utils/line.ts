@@ -1,4 +1,6 @@
+import type { Grid } from '../../grid'
 import { Hex } from '../../hex'
+import type { SkillLine } from '../skill'
 
 /**
  * Hexes strictly between `a` and `b` along a straight axis.
@@ -70,6 +72,30 @@ export function outlineEdges(zone: Hex[]): HexEdge[] {
     }
   }
   return edges
+}
+
+/**
+ * Outer boundary of the on-board tiles within `range` of a center, as same-hex
+ * corner lines (see SkillLine).
+ */
+export function zoneOutline(
+  grid: Grid,
+  centerHexId: number,
+  range: number,
+  color: string,
+): SkillLine[] {
+  const center = grid.getHexById(centerHexId)
+  const zone = grid
+    .getAllTiles()
+    .map((tile) => tile.hex)
+    .filter((hex) => center.distance(hex) <= range)
+  return outlineEdges(zone).map(({ hex, fromCorner, toCorner }) => ({
+    fromHexId: hex.getId(),
+    toHexId: hex.getId(),
+    fromCorner,
+    toCorner,
+    color,
+  }))
 }
 
 export interface LaneBoundaryClip {
