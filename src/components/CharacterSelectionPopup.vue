@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import CharacterIcon from './CharacterIcon.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import { useGridContext } from '@/composables/useGridContext'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
+import { useTouchDetection } from '@/composables/useTouchDetection'
 import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
@@ -73,15 +74,30 @@ const filteredCharacters = computed(() => {
   return factionFiltered.value.filter((c) => matches.has(c.name))
 })
 
+// Type-to-pick: focus starts in the search box. Not on touch, where the
+// software keyboard would cover the icons most taps are headed for.
+const searchInput = ref<HTMLInputElement>()
+const { isTouchDevice } = useTouchDetection()
+onMounted(() => {
+  if (!isTouchDevice.value) searchInput.value?.focus({ preventScroll: true })
+})
+
+// Enter completes a search that narrowed to exactly one hero; clearing the
+// query restarts type-to-pick for the next placement (the palette stays open).
+function handleEnter() {
+  if (!searchQuery.value.trim() || filteredCharacters.value.length !== 1) return
+  if (handleSelect(filteredCharacters.value[0]!)) searchQuery.value = ''
+}
+
 /* Multi-add palette: the first pick fills the tapped tile, later picks
  * auto-place onto a free tile of the same team, and the popup stays open
  * (dismissal is mouse-leave, Esc, or an outside tap) so several heroes can be
  * placed in a row. Placed heroes drop out of the list, and a full team closes
  * the popup since every further pick would be a silent no-op. */
-function handleSelect(character: CharacterType) {
+function handleSelect(character: CharacterType): boolean {
   const t = team.value
-  if (!t || grids.isUsed(character.id, t)) return
-  if (!canPlaceCharacterOnTeam(ctx.grid, character.id, t)) return
+  if (!t || grids.isUsed(character.id, t)) return false
+  if (!canPlaceCharacterOnTeam(ctx.grid, character.id, t)) return false
   const anchorFree = ctx.grid.getTileById(props.hex.getId()).characterId === undefined
   const placed = anchorFree
     ? ctx.place(props.hex.getId(), character.id, t)
@@ -91,6 +107,7 @@ function handleSelect(character: CharacterType) {
     grids.setActive(ctx.id)
     if (getAvailableTeamSize(ctx.grid, t) <= 0) emit('close')
   }
+  return placed
 }
 </script>
 
@@ -98,10 +115,12 @@ function handleSelect(character: CharacterType) {
   <SelectionPopup :position @close="emit('close')">
     <!-- type="search" for the native clear button. -->
     <input
+      ref="searchInput"
       v-model="searchQuery"
       type="search"
       class="search-input"
       :placeholder="i18n.t('app.search-heroes-placeholder')"
+      @keydown.enter="handleEnter"
     />
     <div class="filter-row">
       <FilterIcons
