@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { isCharacterOnTeam } from '@/lib/characters/character'
 import { addCompanionLink } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { performPlace } from '@/lib/characters/place'
@@ -117,8 +118,8 @@ describe('move.ts', () => {
       expect(result).toBe(false)
       expect(grid.getTileById(1).characterId).toBe(100)
       expect(grid.getTileById(2).characterId).toBe(200)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
     })
   })
 
@@ -129,16 +130,16 @@ describe('move.ts', () => {
       expect(grid.getTileById(1).characterId).toBeUndefined()
       expect(grid.getTileById(4).characterId).toBe(100)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(true)
 
       performPlace(grid, 5, 200, Team.ENEMY)
       expect(executeMoveCharacter(grid, skillManager, 5, 1, 200)).toBe(true)
       expect(grid.getTileById(5).characterId).toBeUndefined()
       expect(grid.getTileById(1).characterId).toBe(200)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ENEMY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
     })
   })
 
@@ -171,8 +172,8 @@ describe('move.ts', () => {
       expect(grid.getTileById(4).characterId).toBeUndefined()
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
       // Team membership restored: on the original team only
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(false)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(false)
       // Failed activation at the destination, then reactivation at the origin
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 4, Team.ENEMY, grid)
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)

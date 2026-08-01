@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { getTilesWithCharacters, isCharacterOnTeam } from '@/lib/characters/character'
 import { performPlace } from '@/lib/characters/place'
 import {
   executeClearAllCharacters,
@@ -45,9 +46,9 @@ describe('remove.ts', () => {
   })
 
   describe('performRemove', () => {
-    it('should remove the character, clearing team tracking and restoring tile state', () => {
+    it('should remove the character, clearing team membership and restoring tile state', () => {
       performPlace(grid, 1, 100, Team.ALLY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
 
       const result = performRemove(grid, 1)
 
@@ -56,7 +57,7 @@ describe('remove.ts', () => {
       expect(tile.characterId).toBeUndefined()
       expect(tile.team).toBeUndefined()
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
 
       performPlace(grid, 4, 200, Team.ENEMY)
       expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
@@ -177,7 +178,7 @@ describe('remove.ts', () => {
   })
 
   describe('performClearAll', () => {
-    it('should clear all characters, team tracking, and tile states, then update skills', () => {
+    it('should clear all characters and tile states, then update skills', () => {
       performPlace(grid, 1, 100, Team.ALLY)
       performPlace(grid, 2, 200, Team.ALLY)
       performPlace(grid, 4, 300, Team.ENEMY)
@@ -188,8 +189,7 @@ describe('remove.ts', () => {
       expect(grid.getTileById(1).characterId).toBeUndefined()
       expect(grid.getTileById(2).characterId).toBeUndefined()
       expect(grid.getTileById(4).characterId).toBeUndefined()
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(0)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.size).toBe(0)
+      expect(getTilesWithCharacters(grid)).toHaveLength(0)
       expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
       expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
