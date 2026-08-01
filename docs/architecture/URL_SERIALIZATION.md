@@ -159,7 +159,8 @@ if (result.success) {
 
 ### Character Restoration
 
-- **Standard characters (ID < 10000)**: Direct placement
+- **Standard characters (ID < 9000)**: Direct placement
+- **Placeholders (ID 9000-9999)**: Reserved band for the per-faction stand-ins (lib/characters/placeholder.ts); placed directly like standard characters, and copies of one id may repeat within a team
 - **Companions (ID ≥ 10000)**: Settled per main: each main is placed (its skill spawns the companions), then those companions are repositioned onto their saved hexes before the next main is placed
 - **Phantimals (ID ≥ 100000)**: Serialized separately in the `s` section via 4-bit local IDs
 

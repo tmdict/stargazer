@@ -112,6 +112,20 @@ Key features:
 - **Atomic transactions** with automatic rollback
 - **Companion support** via companion.ts helpers
 
+### Placeholder Units (`placeholder.ts`)
+
+One stand-in per faction, placeable from the roster like heroes to reserve a
+slot before committing to one; the selection screens list them as one block
+after all heroes, in the faction filter icons' order. They occupy a reserved id band (9000-9999,
+below the companion namespace) and join `loadCharacters()`, so occupancy,
+team size, targeting, and serialization treat them as ordinary characters.
+Deliberate differences, enforced via `isPlaceholderId` / the `placeholder`
+flag: copies repeat freely (no uniqueness, no dedupe, no roster
+remove-toggle), no paragon, no skill pages. The real `faction` counts toward
+faction tallies (phantimal qualification), while `class` and `damage` are
+`none`, which no rule matches, so class-based checks (Himmel's trio) ignore
+them without special cases.
+
 ### Tile System
 
 ```typescript

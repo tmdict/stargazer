@@ -28,6 +28,7 @@ import {
   hasCharacter,
 } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
+import { isPlaceholderId } from '@/lib/characters/placeholder'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
@@ -131,6 +132,8 @@ export const useGrids = defineStore('grids', () => {
   // duplicate elsewhere on the destination board slips this pre-check but is
   // rejected by the engine's per-grid check at place time, with rollback.
   const isUsed = (characterId: number, team: Team, exceptCtxId?: number): boolean => {
+    // Placeholder copies repeat freely (see placeholder.ts).
+    if (isPlaceholderId(characterId)) return false
     const placement = findPlacement(characterId, team)
     return placement !== null && placement.ctxId !== exceptCtxId
   }
@@ -174,15 +177,16 @@ export const useGrids = defineStore('grids', () => {
 
   // Repair page-wide (character, team) uniqueness after a bulk restore: keep each
   // pair's first placement (board order) and remove later copies. Companions
-  // re-derive from their mains and phantimals are one-per-team per board, so both
-  // are skipped.
+  // re-derive from their mains, phantimals are one-per-team per board, and
+  // placeholders repeat by design, so all three are skipped.
   const dedupeCharacters = (): void => {
     const seen = new Set<string>()
     for (const ctx of contexts.value) {
       for (const tile of getTilesWithCharacters(ctx.grid)) {
         const characterId = tile.characterId
         if (characterId === undefined || tile.team === undefined) continue
-        if (isCompanion(characterId) || isPhantimalId(characterId)) continue
+        if (isCompanion(characterId) || isPhantimalId(characterId) || isPlaceholderId(characterId))
+          continue
         const key = `${tile.team}:${characterId}`
         if (seen.has(key)) ctx.remove(tile.hex.getId())
         else seen.add(key)

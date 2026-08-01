@@ -5,6 +5,7 @@ import { getCharacter, getCharacterTeam, hasCharacter, isCharacterOnTeam } from 
 import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
 import { isPhantimalId } from './phantimal'
 import { performPlace } from './place'
+import { isPlaceholderId } from './placeholder'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
 
@@ -42,10 +43,12 @@ export function executeSwapCharacters(
   }
 
   // Cross-team swaps must not duplicate a character on its destination team
-  // (the same character may legally exist once on each team)
+  // (the same character may legally exist once on each team). Placeholders
+  // repeat freely, so they skip the check.
   if (
     fromTeam !== toTeam &&
-    (isCharacterOnTeam(grid, fromChar, toTeam) || isCharacterOnTeam(grid, toChar, fromTeam))
+    ((!isPlaceholderId(fromChar) && isCharacterOnTeam(grid, fromChar, toTeam)) ||
+      (!isPlaceholderId(toChar) && isCharacterOnTeam(grid, toChar, fromTeam)))
   ) {
     return false
   }

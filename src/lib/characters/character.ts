@@ -2,6 +2,7 @@ import { COMPANION_ID_OFFSET, type Grid, type GridTile } from '../grid'
 import { State } from '../types/state'
 import { Team } from '../types/team'
 import { isPhantimalId } from './phantimal'
+import { isPlaceholderId } from './placeholder'
 
 // Character queries
 
@@ -65,6 +66,12 @@ export function isBaseHeroId(characterId: number): boolean {
   return characterId < COMPANION_ID_OFFSET
 }
 
+// Identity for hero-only surfaces (roster card, paragon): isBaseHeroId alone
+// admits the placeholder band.
+export function isRealHeroId(characterId: number): boolean {
+  return isBaseHeroId(characterId) && !isPlaceholderId(characterId)
+}
+
 // Team management
 
 export function getOpposingTeam(team: Team): Team {
@@ -102,6 +109,9 @@ export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: T
   if (isPhantimalId(characterId)) return true
   const available = getAvailableTeamSize(grid, team)
   if (available <= 0) return false
+  // Placeholders consume capacity like heroes but skip the duplicate check:
+  // copies repeat freely (see placeholder.ts).
+  if (isPlaceholderId(characterId)) return true
   return !isCharacterOnTeam(grid, characterId, team)
 }
 
