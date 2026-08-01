@@ -20,7 +20,13 @@ const { character, variant = 'detailed' } = defineProps<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-const formattedName = computed(() => localizedDisplayName(i18n.t, 'character', character.name))
+// Placeholders are named by their faction via the game labels (their slug is
+// an icon key, not a character locale key).
+const formattedName = computed(() =>
+  character.placeholder
+    ? i18n.t(`game.${character.faction}`)
+    : localizedDisplayName(i18n.t, 'character', character.name),
+)
 const damageIcon = computed(() => gameDataStore.getIcon(`damage-${character.damage}`))
 const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 
@@ -36,7 +42,10 @@ const formattedEnergy = computed(() => {
   <Teleport to="body">
     <TooltipPopup :target-element="targetElement" :variant="variant">
       <template #content>
-        <div v-if="variant === 'simple'" class="simple-tooltip">{{ formattedName }}</div>
+        <!-- Placeholders have no stats; name-only regardless of variant. -->
+        <div v-if="variant === 'simple' || character.placeholder" class="simple-tooltip">
+          {{ formattedName }}
+        </div>
 
         <template v-else>
           <div class="tooltip-header">

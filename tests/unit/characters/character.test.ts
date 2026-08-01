@@ -147,10 +147,13 @@ describe('character.ts', () => {
       expect(getMaxTeamSize(grid, Team.ALLY)).toBe(3)
       expect(getMaxTeamSize(grid, Team.ENEMY)).toBe(defaultSize)
 
-      // Add team members
-      const allyTeam = getTeamCharacters(grid, Team.ALLY)
-      allyTeam.add(100)
-      allyTeam.add(101)
+      // Occupancy counts placed units on tiles
+      const tileA = grid.getTileById(1)
+      tileA.characterId = 100
+      tileA.team = Team.ALLY
+      const tileB = grid.getTileById(2)
+      tileB.characterId = 101
+      tileB.team = Team.ALLY
 
       expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(1)
       expect(getAvailableTeamSize(grid, Team.ENEMY)).toBe(defaultSize)
@@ -246,13 +249,18 @@ describe('character.ts', () => {
       // Within limit
       expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
 
-      // Already on team
+      // Already on team (uniqueness reads the team set)
+      const tileA = grid.getTileById(1)
+      tileA.characterId = 100
+      tileA.team = Team.ALLY
       allyTeam.add(100)
       expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
 
-      // Team full
+      // Team full (capacity counts occupied tiles)
       setMaxTeamSize(grid, Team.ALLY, 2)
-      allyTeam.add(101)
+      const tileB = grid.getTileById(2)
+      tileB.characterId = 101
+      tileB.team = Team.ALLY
       expect(canPlaceCharacterOnTeam(grid, 102, Team.ALLY)).toBe(false)
     })
   })
@@ -268,9 +276,10 @@ describe('character.ts', () => {
       expect(canPlaceCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(true)
 
       // Fill team to limit
-      const allyTeam = getTeamCharacters(grid, Team.ALLY)
       setMaxTeamSize(grid, Team.ALLY, 1)
-      allyTeam.add(100)
+      const tile = grid.getTileById(1)
+      tile.characterId = 100
+      tile.team = Team.ALLY
 
       // Regular character blocked by limit
       expect(canPlaceCharacterOnTeam(grid, 101, Team.ALLY)).toBe(false)

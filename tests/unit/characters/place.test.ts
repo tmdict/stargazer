@@ -259,8 +259,8 @@ describe('place.ts', () => {
     it('should reject when character cannot be placed on team', () => {
       // Fill team to capacity
       grid.maxTeamSizes.set(Team.ALLY, 2)
-      grid.teamCharacters.get(Team.ALLY)?.add(100)
-      grid.teamCharacters.get(Team.ALLY)?.add(200)
+      performPlace(grid, 1, 100, Team.ALLY)
+      performPlace(grid, 2, 200, Team.ALLY)
 
       const result = executeAutoPlaceCharacter(grid, skillManager, 300, Team.ALLY)
 

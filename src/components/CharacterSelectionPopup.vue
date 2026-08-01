@@ -46,10 +46,14 @@ const availableCharacters = computed(() => {
   return props.characters.filter((char) => !grids.isUsed(char.id, t))
 })
 
-// Match the main roster's order (CharacterSelection): canonical faction order, then id.
+// Match the main roster's order (CharacterSelection): canonical faction order,
+// placeholders trailing as one block in the faction filter icons' order.
 const sortedCharacters = computed(() =>
   [...availableCharacters.value].sort(
-    (a, b) => compareFaction(a.faction, b.faction) || a.id - b.id,
+    (a, b) =>
+      (a.placeholder ? 1 : 0) - (b.placeholder ? 1 : 0) ||
+      compareFaction(a.faction, b.faction) ||
+      a.id - b.id,
   ),
 )
 
@@ -84,7 +88,9 @@ onMounted(() => {
 
 // Enter completes a search that narrowed to exactly one hero; clearing the
 // query restarts type-to-pick for the next placement (the palette stays open).
-function handleEnter() {
+// The Enter that commits an IME composition must not double as a pick.
+function handleEnter(event: KeyboardEvent) {
+  if (event.isComposing) return
   if (!searchQuery.value.trim() || filteredCharacters.value.length !== 1) return
   if (handleSelect(filteredCharacters.value[0]!)) searchQuery.value = ''
 }

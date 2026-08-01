@@ -17,7 +17,14 @@ export function useCharacterFilters(characters: Ref<readonly CharacterType[]>) {
     if (damageFilter.value) filtered = filtered.filter((c) => c.damage === damageFilter.value)
     if (selectedTagNames.value)
       filtered = filtered.filter((c) => Object.keys(c.tags).includes(selectedTagNames.value!))
-    return filtered.sort((a, b) => compareFaction(a.faction, b.faction) || a.id - b.id)
+    // Placeholders trail the whole roster as one block, in the faction filter
+    // icons' order (compareFaction follows the same FACTION_ORDER).
+    return filtered.sort(
+      (a, b) =>
+        (a.placeholder ? 1 : 0) - (b.placeholder ? 1 : 0) ||
+        compareFaction(a.faction, b.faction) ||
+        a.id - b.id,
+    )
   })
 
   return {

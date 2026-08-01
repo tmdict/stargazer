@@ -200,7 +200,8 @@ export function performPlace(
   tile.characterId = characterId
   tile.team = team
   tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-  // Phantimals occupy the tile but are exempt from team-size tracking.
+  // Phantimals skip the uniqueness index; their one-per-team cap lives in the
+  // placement layer.
   if (!isPhantimalId(characterId)) {
     getTeamCharacters(grid, team).add(characterId)
   }
