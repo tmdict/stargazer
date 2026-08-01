@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { getAvailableTeamSize, isCharacterOnTeam } from '@/lib/characters/character'
 import { addCompanionLink } from '@/lib/characters/companion'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { performPlace } from '@/lib/characters/place'
@@ -99,9 +100,9 @@ describe('swap.ts', () => {
       expect(grid.getTileById(2).characterId).toBe(100)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(2).team).toBe(Team.ALLY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(2)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
+      expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(3)
       expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
     })
 
@@ -132,10 +133,10 @@ describe('swap.ts', () => {
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
       // Characters switch team membership; tiles keep their occupied states
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(false)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ENEMY)).toBe(false)
       expect(grid.getTileById(1).state).toBe(State.OCCUPIED_ALLY)
       expect(grid.getTileById(4).state).toBe(State.OCCUPIED_ENEMY)
     })
@@ -155,8 +156,8 @@ describe('swap.ts', () => {
       expect(grid.getTileById(4).characterId).toBe(200)
       expect(grid.getTileById(4).team).toBe(Team.ENEMY)
       expect(grid.getTileById(5).characterId).toBe(100)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(200)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ENEMY)).toBe(true)
     })
   })
 
@@ -360,9 +361,9 @@ describe('swap.ts', () => {
       expect(grid.getTileById(2).characterId).toBe(100)
       expect(grid.getTileById(1).team).toBe(Team.ALLY)
       expect(grid.getTileById(2).team).toBe(Team.ALLY)
-      // Team-size tracking unchanged: the character counted, the phantimal exempt
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(phantimalId)).toBe(false)
+      // Capacity unchanged: the character counts, the phantimal is exempt
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(4)
     })
 
     it('should leave a full team fully intact when swapping a character onto its phantimal', () => {
@@ -383,14 +384,14 @@ describe('swap.ts', () => {
       expect(tGrid.getTileById(1).team).toBe(Team.ALLY)
       expect(tGrid.getTileById(14).characterId).toBe(phantimalId)
       expect(tGrid.getTileById(14).team).toBe(Team.ENEMY)
-      expect(tGrid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(isCharacterOnTeam(tGrid, 100, Team.ALLY)).toBe(true)
       enemyChars.forEach((charId, i) => {
         expect(tGrid.getTileById(9 + i).characterId).toBe(charId)
-        expect(tGrid.teamCharacters.get(Team.ENEMY)?.has(charId)).toBe(true)
+        expect(isCharacterOnTeam(tGrid, charId, Team.ENEMY)).toBe(true)
       })
-      // Phantimals never appear in team-size tracking
-      expect(tGrid.teamCharacters.get(Team.ALLY)?.has(phantimalId)).toBe(false)
-      expect(tGrid.teamCharacters.get(Team.ENEMY)?.has(phantimalId)).toBe(false)
+      // Phantimals never consume a team slot
+      expect(getAvailableTeamSize(tGrid, Team.ALLY)).toBe(4)
+      expect(getAvailableTeamSize(tGrid, Team.ENEMY)).toBe(0)
     })
   })
 })

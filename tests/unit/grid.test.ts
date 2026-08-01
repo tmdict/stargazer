@@ -28,8 +28,7 @@ describe('Grid', () => {
 
       expect(grid.getAllTiles()).toHaveLength(45)
       expect(grid.gridPreset).toBe(FULL_GRID)
-      expect(grid.teamCharacters.get(Team.ALLY)?.size).toBe(0)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.size).toBe(0)
+      expect(grid.getAllTiles().every((tile) => tile.characterId === undefined)).toBe(true)
       expect(grid.maxTeamSizes.get(Team.ALLY)).toBe(5)
       expect(grid.maxTeamSizes.get(Team.ENEMY)).toBe(5)
       expect(grid.companionIdOffset).toBe(10000)

@@ -77,7 +77,6 @@ class Grid {
   private storage: Map<string, GridTile>
 
   // Public for direct access by characters/
-  teamCharacters: Map<Team, Set<number>>
   maxTeamSizes: Map<Team, number>
   companionIdOffset = 10000
   companionLinks: Map<string, Set<number>>
@@ -192,7 +191,7 @@ Cascading removal for linked characters:
 2. If companion, find and remove main character
 3. Deactivate skills before removal
 4. Remove all linked companions
-5. Clean up team tracking
+5. Clear the tile (team membership and capacity derive from tiles)
 
 ### Placement interaction (desktop vs mobile)
 
@@ -215,7 +214,6 @@ Direct access to Grid's public properties:
 
 ```typescript
 // Grid exposes these publicly
-grid.teamCharacters: Map<Team, Set<number>>
 grid.maxTeamSizes: Map<Team, number>
 
 // character.ts provides functional API

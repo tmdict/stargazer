@@ -91,16 +91,16 @@ export function setMaxTeamSize(grid: Grid, team: Team, size: number): boolean {
   return true
 }
 
-export function getTeamCharacters(grid: Grid, team: Team): Set<number> {
-  return grid.teamCharacters.get(team) || new Set()
-}
-
 export function isCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
-  return grid.teamCharacters.get(team)?.has(characterId) || false
+  return getTilesWithCharactersByTeam(grid, team).some((tile) => tile.characterId === characterId)
 }
 
 export function getAvailableTeamSize(grid: Grid, team: Team): number {
-  return getMaxTeamSize(grid, team) - getTeamCharacters(grid, team).size
+  // Phantimals occupy tiles but don't hold a team slot.
+  const occupied = getTilesWithCharactersByTeam(grid, team).filter(
+    (tile) => !isPhantimalId(tile.characterId!),
+  ).length
+  return getMaxTeamSize(grid, team) - occupied
 }
 
 export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
@@ -133,10 +133,6 @@ export function canPlaceCharacterOnTile(grid: Grid, hexId: number, team: Team): 
   const occupiedState = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
 
   return state === availableState || state === occupiedState
-}
-
-export function removeCharacterFromTeam(grid: Grid, characterId: number, team: Team): void {
-  grid.teamCharacters.get(team)?.delete(characterId)
 }
 
 export function getAllAvailableTilesForTeam(grid: Grid, team: Team): GridTile[] {
