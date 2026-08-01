@@ -26,8 +26,9 @@ const i18n = useI18nStore()
 
 // Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
+// Placeholders have no skill pages, so the skills roster leaves them out.
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
-  useCharacterFilters(computed(() => props.characters))
+  useCharacterFilters(computed(() => props.characters.filter((c) => !c.placeholder)))
 
 // Seed the tag filter from `/skills?tag=<name>` (e.g. a clicked skill chip).
 const route = useRoute()

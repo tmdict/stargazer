@@ -7,7 +7,7 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridContext } from '@/composables/useGridContext'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
-import { getTilesWithCharactersByTeam, isBaseHeroId } from '@/lib/characters/character'
+import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -27,10 +27,10 @@ interface PanelHero {
   faction?: string
 }
 
-// Only base heroes carry paragon; companions and phantimals are excluded.
+// Only real heroes carry paragon.
 const heroesFor = (team: Team): PanelHero[] =>
   getTilesWithCharactersByTeam(props.context.grid, team)
-    .filter((tile) => tile.characterId !== undefined && isBaseHeroId(tile.characterId))
+    .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
     .map((tile) => {
       const characterId = tile.characterId!
       const canonicalName = gameData.getCharacterNameById(characterId) ?? ''

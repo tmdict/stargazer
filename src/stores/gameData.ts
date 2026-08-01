@@ -143,7 +143,9 @@ export const useGameDataStore = defineStore('gameData', () => {
 
   // Safe accessors for images and icons
   const getCharacterImage = (name: string): string => {
-    return characterImages.value[name] ?? ''
+    // Placeholder units have no portrait; their name doubles as an icon key
+    // (faction-lightbearer).
+    return characterImages.value[name] ?? icons.value[name] ?? ''
   }
 
   const getArtifactImage = (name: string): string => {

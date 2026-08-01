@@ -81,7 +81,13 @@ const handleDragEnd = (event: DragEvent) => {
         class="portrait"
       />
     </div>
-    <CharacterInfoIcons v-if="!hideInfo" :character :selected-filter="selectedFilter" />
+    <!-- A placeholder's image is already its faction icon; the info row would
+         repeat it. -->
+    <CharacterInfoIcons
+      v-if="!hideInfo && !character.placeholder"
+      :character
+      :selected-filter="selectedFilter"
+    />
 
     <!-- Energy Display -->
     <div v-if="showEnergy" class="character-energy">

@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 
+import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import {
@@ -57,7 +58,9 @@ export function loadCharacters(): CharacterType[] {
     eager: true,
     import: 'default',
   })
-  const characters = Object.values(characterModules)
+  // Placeholder stand-ins join the roster here so selection, placement,
+  // serialization, and lookups all see them as ordinary characters.
+  const characters = [...Object.values(characterModules), ...PLACEHOLDERS]
 
   charactersCache = characters
 

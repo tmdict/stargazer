@@ -66,10 +66,13 @@ const handleCharacterClick = (character: CharacterType) => {
     clearTargetHex()
     return
   }
-  const placed = placedTeam(character.id)
-  if (placed !== null) {
-    grids.removeFromAnyBoard(character.id, placed)
-    return
+  // Placeholders skip the remove-toggle: every click adds another copy.
+  if (!character.placeholder) {
+    const placed = placedTeam(character.id)
+    if (placed !== null) {
+      grids.removeFromAnyBoard(character.id, placed)
+      return
+    }
   }
   for (const team of fillOrder) {
     if (grids.placeOnActive(character.id, team)) break
@@ -111,7 +114,7 @@ const handleResultSelect = (slug: string) => {
         :key="character.id"
         :character
         :is-draggable
-        :is-placed="isCharacterPlaced(character.id)"
+        :is-placed="!character.placeholder && isCharacterPlaced(character.id)"
         :selected-filter="selectedTagNames"
         @character-click="handleCharacterClick"
       />

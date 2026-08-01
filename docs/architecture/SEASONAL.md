@@ -86,7 +86,7 @@ passes to `getClosestTargetMap` (the static map is keyed by character id only).
 
 ### URL serialization
 
-Phantimal IDs (100000+) don't fit the character section's 14-bit ID field, so they
+Phantimal IDs (100000+) don't fit the character section's 16-bit ID field, so they
 get their own section rather than overloading `c`:
 
 - `GridState.s`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`).

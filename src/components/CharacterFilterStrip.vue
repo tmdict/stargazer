@@ -3,6 +3,7 @@ import { computed } from 'vue'
 
 import TagsDisplay from './TagsDisplay.vue'
 import FilterIcons from './ui/FilterIcons.vue'
+import { PLACEHOLDER_NONE } from '@/lib/characters/placeholder'
 import type { CharacterType } from '@/lib/types/character'
 
 const factionFilter = defineModel<string>('factionFilter', { default: '' })
@@ -12,9 +13,12 @@ const tagFilter = defineModel<string | null>('tagFilter', { default: null })
 
 const props = defineProps<{ characters: readonly CharacterType[] }>()
 
-const factionOptions = computed(() => [...new Set(props.characters.map((c) => c.faction))].sort())
-const classOptions = computed(() => [...new Set(props.characters.map((c) => c.class))].sort())
-const damageOptions = computed(() => [...new Set(props.characters.map((c) => c.damage))].sort())
+const optionsOf = (pick: (c: CharacterType) => string) =>
+  [...new Set(props.characters.map(pick))].filter((v) => v !== PLACEHOLDER_NONE).sort()
+
+const factionOptions = computed(() => optionsOf((c) => c.faction))
+const classOptions = computed(() => optionsOf((c) => c.class))
+const damageOptions = computed(() => optionsOf((c) => c.damage))
 
 const hasActiveFilter = computed(
   () =>
