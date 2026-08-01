@@ -9,7 +9,6 @@ import {
   getAllAvailableTilesForTeam,
   getCharacter,
   getCharacterTeam,
-  getTeamCharacters,
   hasCharacter,
 } from './character'
 import {
@@ -18,7 +17,6 @@ import {
   restoreCompanions,
   storeCompanionPositions,
 } from './companion'
-import { isPhantimalId } from './phantimal'
 import { performRemove } from './remove'
 import { executeTransaction } from './transaction'
 
@@ -196,15 +194,9 @@ export function performPlace(
   // skill-aware composite in executePlaceCharacter, swaps clear both tiles first
   if (tile.characterId) return false
 
-  // Set character on tile
   tile.characterId = characterId
   tile.team = team
   tile.state = team === Team.ALLY ? State.OCCUPIED_ALLY : State.OCCUPIED_ENEMY
-  // Phantimals skip the uniqueness index; their one-per-team cap lives in the
-  // placement layer.
-  if (!isPhantimalId(characterId)) {
-    getTeamCharacters(grid, team).add(characterId)
-  }
 
   return true
 }

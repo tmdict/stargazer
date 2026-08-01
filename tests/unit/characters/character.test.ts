@@ -12,12 +12,10 @@ import {
   getCharacterPlacements,
   getCharacterTeam,
   getMaxTeamSize,
-  getTeamCharacters,
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
   hasCharacter,
   isCharacterOnTeam,
-  removeCharacterFromTeam,
   setMaxTeamSize,
 } from '@/lib/characters/character'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
@@ -111,31 +109,32 @@ describe('character.ts', () => {
 
   describe('Team management', () => {
     it('should track team members correctly', () => {
-      const allyTeam = getTeamCharacters(grid, Team.ALLY)
-      const enemyTeam = getTeamCharacters(grid, Team.ENEMY)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
 
-      expect(allyTeam.size).toBe(0)
-      expect(enemyTeam.size).toBe(0)
+      const tileA = grid.getTileById(1)
+      tileA.characterId = 100
+      tileA.team = Team.ALLY
+      const tileB = grid.getTileById(3)
+      tileB.characterId = 200
+      tileB.team = Team.ENEMY
 
-      // Add team members
-      allyTeam.add(100)
-      allyTeam.add(101)
-      enemyTeam.add(200)
-
-      expect(allyTeam.size).toBe(2)
-      expect(enemyTeam.size).toBe(1)
       expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
       expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 200, Team.ENEMY)).toBe(true)
     })
 
     it('should remove characters from team', () => {
-      const allyTeam = getTeamCharacters(grid, Team.ALLY)
-      allyTeam.add(100)
-      allyTeam.add(101)
+      const tileA = grid.getTileById(1)
+      tileA.characterId = 100
+      tileA.team = Team.ALLY
+      const tileB = grid.getTileById(2)
+      tileB.characterId = 101
+      tileB.team = Team.ALLY
 
-      removeCharacterFromTeam(grid, 100, Team.ALLY)
-      expect(allyTeam.has(100)).toBe(false)
-      expect(allyTeam.has(101)).toBe(true)
+      clearCharacterFromTile(tileA)
+
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 101, Team.ALLY)).toBe(true)
     })
 
     it('should handle team size limits', () => {
@@ -244,16 +243,13 @@ describe('character.ts', () => {
     })
 
     it('should check if character can be placed on team', () => {
-      const allyTeam = getTeamCharacters(grid, Team.ALLY)
-
       // Within limit
       expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
 
-      // Already on team (uniqueness reads the team set)
+      // Already on team
       const tileA = grid.getTileById(1)
       tileA.characterId = 100
       tileA.team = Team.ALLY
-      allyTeam.add(100)
       expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
 
       // Team full (capacity counts occupied tiles)

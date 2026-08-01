@@ -57,13 +57,6 @@ export class Grid {
   // so this never needs invalidation.
   private hexById: Map<number, Hex> = new Map()
 
-  // Per-team uniqueness index (isCharacterOnTeam), not an occupancy count:
-  // capacity counts tiles, and placeholder copies sharing one id collapse
-  // here (their uniqueness call sites are all exempt).
-  teamCharacters: Map<Team, Set<number>> = new Map([
-    [Team.ALLY, new Set()],
-    [Team.ENEMY, new Set()],
-  ])
   maxTeamSizes: Map<Team, number> = new Map([
     [Team.ALLY, BASE_TEAM_SIZE],
     [Team.ENEMY, BASE_TEAM_SIZE],

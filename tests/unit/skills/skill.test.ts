@@ -217,7 +217,6 @@ describe('skill', () => {
         tile.characterId = undefined
         tile.team = undefined
         tile.state = State.AVAILABLE_ALLY
-        bigGrid.teamCharacters.get(Team.ALLY)?.delete(50)
 
         skillManager.updateActiveSkills(bigGrid)
 

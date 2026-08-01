@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import {
   canPlaceCharacterOnTeam,
   findTeamPhantimalHex,
-  getTeamCharacters,
+  getAvailableTeamSize,
   setMaxTeamSize,
 } from '@/lib/characters/character'
 import {
@@ -50,9 +50,8 @@ describe('phantimal', () => {
       expect(tile.characterId).toBe(toPhantimalId(2))
       expect(tile.team).toBe(Team.ALLY)
       expect(tile.state).toBe(State.OCCUPIED_ALLY)
-      // The capacity set never sees the phantimal
-      expect(getTeamCharacters(grid, Team.ALLY).has(toPhantimalId(2))).toBe(false)
-      expect(getTeamCharacters(grid, Team.ALLY).size).toBe(0)
+      // Capacity ignores the phantimal
+      expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(5)
     })
 
     it('is exempt from the team-size limit when the team is full', () => {

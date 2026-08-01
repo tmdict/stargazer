@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { isCharacterOnTeam } from '@/lib/characters/character'
 import {
   executeAutoPlaceCharacter,
   executePlaceCharacter,
@@ -53,12 +54,12 @@ describe('place.ts', () => {
       expect(tile.characterId).toBe(100)
       expect(tile.team).toBe(team)
       expect(tile.state).toBe(state)
-      expect(grid.teamCharacters.get(team)?.has(100)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, team)).toBe(true)
     })
 
     it('should reject placement on an occupied tile', () => {
       performPlace(grid, 1, 100, Team.ALLY)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
 
       // The atomic primitive never displaces an existing unit;
       // replacement is the skill-aware composite in executePlaceCharacter
@@ -67,8 +68,8 @@ describe('place.ts', () => {
       expect(result).toBe(false)
       const tile = grid.getTileById(1)
       expect(tile.characterId).toBe(100)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(false)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(false)
     })
 
     it('should reject invalid character ID', () => {
@@ -121,8 +122,8 @@ describe('place.ts', () => {
       // Place same character ID on enemy team should work
       expect(performPlace(grid, 4, 100, Team.ENEMY)).toBe(true)
 
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ENEMY)?.has(100)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(true)
     })
   })
 
@@ -165,8 +166,8 @@ describe('place.ts', () => {
       expect(result).toBe(true)
       expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
       expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
     })
 
     it('should restore the occupant when the new character skill activation fails', () => {
@@ -180,8 +181,8 @@ describe('place.ts', () => {
       expect(result).toBe(false)
       // Occupant fully restored: tile, team membership, skill reactivated
       expect(grid.getTileById(1).characterId).toBe(100)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(true)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(false)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(false)
       expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
     })
 
@@ -205,9 +206,9 @@ describe('place.ts', () => {
       // Main and companion both gone; new character sits on the companion's tile
       expect(grid.getTileById(1).characterId).toBeUndefined()
       expect(grid.getTileById(2).characterId).toBe(300)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(mainId)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(companionId)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(300)).toBe(true)
+      expect(isCharacterOnTeam(grid, mainId, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 300, Team.ALLY)).toBe(true)
     })
 
     it('should rollback on skill activation failure', () => {
@@ -232,8 +233,8 @@ describe('place.ts', () => {
 
       expect(result).toBe(true)
       expect(grid.getTileById(1).characterId).toBe(200)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(100)).toBe(false)
-      expect(grid.teamCharacters.get(Team.ALLY)?.has(200)).toBe(true)
+      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
     })
 
     it('should use default team ALLY when not specified', () => {

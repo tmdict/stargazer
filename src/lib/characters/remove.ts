@@ -1,15 +1,12 @@
 import type { Grid } from '../grid'
 import { hasSkill, SkillManager } from '../skills/skill'
-import { Team } from '../types/team'
 import {
   clearCharacterFromTile,
   findCharacterHex,
   getCharacter,
   getCharacterTeam,
-  getTeamCharacters,
   getTilesWithCharacters,
   hasCharacter,
-  removeCharacterFromTeam,
 } from './character'
 import { getMainCharacterId, isCompanionId } from './companion'
 import { performPlace } from './place'
@@ -84,14 +81,7 @@ export function performRemove(grid: Grid, hexId: number): boolean {
       console.error(`Tile at hex ${hexId} has characterId ${tile.characterId} but no team`)
       return false
     }
-    const characterId = tile.characterId
-    const team = tile.team
-
-    // Remove character from team tracking
-    removeCharacterFromTeam(grid, characterId, team)
-    // Clear character from tile
     clearCharacterFromTile(tile)
-
     return true
   }
   return false
@@ -120,8 +110,6 @@ export function performClearAll(grid: Grid): boolean {
             clearCharacterFromTile(tile)
           }
         }
-        getTeamCharacters(grid, Team.ALLY).clear()
-        getTeamCharacters(grid, Team.ENEMY).clear()
         return true
       },
     ],
