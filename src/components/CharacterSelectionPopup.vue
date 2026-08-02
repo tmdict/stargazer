@@ -86,6 +86,15 @@ onMounted(() => {
   if (!isTouchDevice.value) searchInput.value?.focus({ preventScroll: true })
 })
 
+// Keep in sync with handleEnter's guard: a hint for a dead shortcut misleads.
+// Touch flows tap icons directly, so no hint there.
+const enterHintVisible = computed(
+  () =>
+    !isTouchDevice.value &&
+    searchQuery.value.trim() !== '' &&
+    filteredCharacters.value.length === 1,
+)
+
 // Enter completes a search that narrowed to exactly one hero; clearing the
 // query restarts type-to-pick for the next placement (the palette stays open).
 // The Enter that commits an IME composition must not double as a pick.
@@ -142,6 +151,7 @@ function handleSelect(character: CharacterType): boolean {
         v-for="character in filteredCharacters"
         :key="character.id"
         class="character-item"
+        :class="{ 'enter-target': enterHintVisible }"
         @click="handleSelect(character)"
       >
         <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true" />
@@ -149,6 +159,9 @@ function handleSelect(character: CharacterType): boolean {
       <div v-if="filteredCharacters.length === 0" class="no-characters">
         {{ i18n.t('app.no-available-heroes') }}
       </div>
+    </div>
+    <div v-if="enterHintVisible" class="enter-hint">
+      <kbd>↵</kbd> {{ i18n.t('app.place-hero') }}
     </div>
   </SelectionPopup>
 </template>
@@ -251,5 +264,45 @@ function handleSelect(character: CharacterType): boolean {
   color: rgba(255, 255, 255, 0.6);
   padding: 20px;
   font-size: 14px;
+}
+
+/* !important to outrank the base .character-display override above. */
+.character-item.enter-target :deep(.character-display) {
+  box-shadow: 0 0 0 2px var(--color-primary) !important;
+}
+
+.enter-hint {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 8px 4px 0;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+  animation: enter-hint-in 0.15s ease;
+}
+
+/* system-ui rather than the content font, which lacks the ↵ glyph. */
+.enter-hint kbd {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  line-height: 1;
+  font-family: system-ui, sans-serif;
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+@keyframes enter-hint-in {
+  from {
+    opacity: 0;
+  }
 }
 </style>
