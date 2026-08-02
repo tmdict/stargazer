@@ -279,6 +279,7 @@ defineExpose({
     <!-- Character layer (above artifacts) -->
     <GridCharacters
       :characters
+      :show-grid-info="showGridInfo"
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"

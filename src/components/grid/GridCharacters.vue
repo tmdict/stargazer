@@ -20,6 +20,7 @@ import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
   characters: readonly CharacterType[]
+  showGridInfo: boolean
   showPerspective: boolean
   scaleY: number
   isMapEditorMode: boolean
@@ -231,7 +232,7 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
   if (props.readonly) return
   gridEvents.emit('character:mouseenter', hexId)
-  show(event, baseCharacterAt(characterId))
+  if (props.showGridInfo) show(event, baseCharacterAt(characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
