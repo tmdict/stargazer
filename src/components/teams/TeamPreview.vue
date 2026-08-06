@@ -7,14 +7,24 @@
 import { computed } from 'vue'
 
 import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
-import { teamPreviewBoards, type PreviewUnit } from '@/lib/teams/preview'
+import { isStandardHero, teamPreviewBoards, type PreviewUnit } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
 
-const { team } = defineProps<{
+const {
+  team,
+  large = false,
+  highlightHeroes,
+} = defineProps<{
   team: SavedTeam
+  // Modal-scale rendering: bigger boards, with a hex size raised in proportion
+  // so strokes stay hairline at the larger display size.
+  large?: boolean
+  // Slugs of search-matched heroes; their hexes get the thumbnail's highlight
+  // ring. Companions and phantimals never highlight.
+  highlightHeroes?: ReadonlySet<string>
 }>()
 
 const gameData = useGameDataStore()
@@ -35,11 +45,20 @@ const resolveImage = (unit: PreviewUnit): string | undefined => {
   return undefined
 }
 
+const isHighlighted = (unit: PreviewUnit): boolean => {
+  if (!highlightHeroes || !isStandardHero(unit)) return false
+  const slug = gameData.getCharacterNameById(unit.characterId)
+  return slug !== undefined && highlightHeroes.has(slug)
+}
+
 // Decoded once per record; team.data is immutable (updates replace the record).
+const decoded = computed(() => teamPreviewBoards(team.data))
+
+// Unit mapping sits outside the decode so highlight changes (typing in the
+// team search) reuse it.
 const boards = computed(() => {
-  const decoded = teamPreviewBoards(team.data)
-  if (!decoded) return null
-  return decoded.map((board) => ({
+  if (!decoded.value) return null
+  return decoded.value.map((board) => ({
     mapKey: board.mapKey,
     tiles: board.tiles,
     units: board.units.map(
@@ -47,6 +66,7 @@ const boards = computed(() => {
         hexId: unit.hexId,
         team: unit.team,
         image: resolveImage(unit),
+        highlight: isHighlighted(unit),
       }),
     ),
   }))
@@ -54,7 +74,7 @@ const boards = computed(() => {
 </script>
 
 <template>
-  <div class="team-preview">
+  <div class="team-preview" :class="{ large }">
     <template v-if="boards">
       <BoardThumbnail
         v-for="(board, index) in boards"
@@ -63,7 +83,7 @@ const boards = computed(() => {
         :map-key="board.mapKey"
         :tiles="board.tiles"
         :units="board.units"
-        :hex-size="10"
+        :hex-size="large ? 18 : 10"
       />
     </template>
     <span v-else class="preview-broken" :title="i18n.t('app.team-unreadable')">⚠</span>
@@ -91,6 +111,20 @@ const boards = computed(() => {
   min-width: 0;
   max-width: 165px;
   height: auto;
+}
+
+/* Fixed basis instead of a percentage: every board renders full-size whatever
+   the mode's board count, wrapping to fit the modal's width. No plate: like
+   other modal content, boards sit directly on the translucent dark surface. */
+.team-preview.large {
+  gap: 10px;
+  padding: 0;
+  background: none;
+}
+
+.team-preview.large .board-thumb {
+  flex: 0 1 290px;
+  max-width: 340px;
 }
 
 .preview-broken {

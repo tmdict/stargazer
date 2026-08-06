@@ -54,8 +54,8 @@ const effectLevels = computed(() =>
 
     <h1>{{ title }}</h1>
     <div class="artifact-stats">
-      <span class="stat-chip">{{ gameLabel('season') }} {{ artifact.season }}</span>
-      <span v-for="stat in stats" :key="stat.key" class="stat-chip">
+      <span class="meta-chip stat-chip">{{ gameLabel('season') }} {{ artifact.season }}</span>
+      <span v-for="stat in stats" :key="stat.key" class="meta-chip stat-chip">
         {{ stat.label }} <strong>{{ stat.value }}</strong>
       </span>
     </div>
@@ -76,13 +76,10 @@ const effectLevels = computed(() =>
   border-bottom: 2px solid var(--color-border-primary);
 }
 
-.stat-chip {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
+/* Doubled class outweighs the shared `.content .meta-chip` rule. Dim label,
+   bright value: a stat chip's text carries a hierarchy the plain chip lacks. */
+.meta-chip.stat-chip {
   color: rgba(255, 255, 255, 0.7);
-  font-size: 13px;
-  line-height: 1.6;
 }
 
 .stat-chip strong {

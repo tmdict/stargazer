@@ -155,10 +155,11 @@ Semantics wired in `TeamsView`:
 - **Load**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
 - **Loaded badge**: the card matching `sourceId` gets a border ring, the same provenance the unsaved-changes indicator reads
 - **Copy / Download**: exports the card's thumbnail as a PNG via `useThumbnailExport`, which serializes the boards' SVGs and rasterizes them onto one canvas (WebKit fails on DOM-snapshot capture of SVG content, and the vectors upscale losslessly to full-grid resolution)
+- **Preview**: clicking a card's thumbnail opens `TeamPreviewModal`, the same `TeamPreview` at modal scale (`large`) on the shared modal surface, a read-only look at the team without loading it
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
-- **Search**: a name filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered); filtering and match highlighting share one `renderSnippet` pass, so a card is visible exactly when its name carries a `<mark>`
+- **Search**: a filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered). A card stays visible when the query hits its name (`renderSnippet` marks the hit in the title) or, at 2+ characters, a hero on its boards (the roster search's multi-locale name index via `matchCharacterNames`); hero hits ring the hero's hexes in the thumbnail. Phantimals and companion summons never match; per-record hero sets are memoized off the immutable `data` string
 
 ## Thumbnails
 

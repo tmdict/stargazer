@@ -3,6 +3,7 @@
  * component layer (it needs the game-data store); this split keeps the mapping
  * unit-testable headless. */
 
+import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Team } from '@/lib/types/team'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
@@ -13,6 +14,12 @@ export interface PreviewUnit {
   // portraits through different dictionaries).
   characterId?: number
   phantimalId?: number
+}
+
+/* A main-roster hero (not a phantimal, not a companion summon): the unit
+ * population the saved-teams hero search matches and highlights. */
+export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { characterId: number } {
+  return unit.characterId !== undefined && unit.characterId < COMPANION_ID_OFFSET
 }
 
 export interface PreviewBoard {
