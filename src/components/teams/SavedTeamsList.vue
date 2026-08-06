@@ -7,6 +7,7 @@
 
 import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
+import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -16,10 +17,13 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
+import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
+import { isStandardHero, teamPreviewBoards } from '@/lib/teams/preview'
 import { type SavedTeam } from '@/lib/teams/savedTeam'
+import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { renderSnippet } from '@/utils/searchHighlight'
@@ -33,6 +37,7 @@ const { loadedTeamId } = defineProps<{
 
 const emit = defineEmits<{ load: [team: SavedTeam] }>()
 
+const gameData = useGameDataStore()
 const i18n = useI18nStore()
 const library = useTeamLibrary()
 const { success, error } = useToast()
@@ -58,22 +63,52 @@ const sorted = computed(() => {
 
 // The box hides below 2 teams and the filter follows it, so a leftover query
 // can never strand the list on "no matches" with no visible way to clear it.
-// Filtering and highlighting share renderSnippet: a card is visible exactly
-// when its name carries a mark. The full-length context keeps the snippet
-// unelided, so the pieces always spell the whole name.
+// A card stays visible when the query hits its name (marked via renderSnippet;
+// the full-length context keeps the snippet unelided, so the pieces always
+// spell the whole name) or a hero on its boards (ringed in the thumbnail).
 const searchQuery = ref('')
 const searchVisible = computed(() => library.count > 1)
 // Hiding also resets the query, so the box can't reappear pre-filtered.
 watch(searchVisible, (visible) => {
   if (!visible) searchQuery.value = ''
 })
+const activeQuery = computed(() => (searchVisible.value ? searchQuery.value.trim() : ''))
+
+// Roster slugs matching the query in any warm locale (en/zh always are),
+// shared by card filtering and thumbnail rings. Gated to 2+ characters so a
+// single letter can't flood the list through half the roster.
+const matchedHeroes = computed<ReadonlySet<string> | undefined>(() =>
+  activeQuery.value.length >= 2 ? matchCharacterNames(activeQuery.value) : undefined,
+)
+
+// Standard-hero slugs per record, memoized by the immutable data string;
+// cached only once the roster is loaded so early lookups can't pin empty sets.
+const heroSlugCache = new Map<string, ReadonlySet<string>>()
+const teamHeroSlugs = (team: SavedTeam): ReadonlySet<string> => {
+  const cached = heroSlugCache.get(team.data)
+  if (cached) return cached
+  const slugs = new Set<string>()
+  for (const board of teamPreviewBoards(team.data) ?? []) {
+    for (const unit of board.units) {
+      if (!isStandardHero(unit)) continue
+      const slug = gameData.getCharacterNameById(unit.characterId)
+      if (slug) slugs.add(slug)
+    }
+  }
+  if (gameData.dataLoaded) heroSlugCache.set(team.data, slugs)
+  return slugs
+}
+
 const visibleTeams = computed(() => {
-  const query = searchVisible.value ? searchQuery.value.trim() : ''
+  const query = activeQuery.value
   if (!query)
     return sorted.value.map((team) => ({ team, name: { pre: team.name, match: '', post: '' } }))
+  const heroes = matchedHeroes.value
   return sorted.value.flatMap((team) => {
     const name = renderSnippet(team.name, query, team.name.length)
-    return name ? [{ team, name }] : []
+    const heroHit = !name && !!heroes && [...teamHeroSlugs(team)].some((slug) => heroes.has(slug))
+    if (!name && !heroHit) return []
+    return [{ team, name: name ?? { pre: team.name, match: '', post: '' } }]
   })
 })
 
@@ -135,6 +170,16 @@ const setPreviewEl = (id: string, instance: Element | ComponentPublicInstance | 
   const el = instance instanceof Element ? instance : instance?.$el
   if (el instanceof HTMLElement) previewEls.set(id, el)
   else previewEls.delete(id)
+}
+
+// The previewed team survives close so the modal's leave transition keeps its
+// content; `previewOpen` alone toggles visibility.
+const previewedTeam = ref<SavedTeam | null>(null)
+const previewOpen = ref(false)
+
+const openPreview = (team: SavedTeam): void => {
+  previewedTeam.value = team
+  previewOpen.value = true
 }
 
 const handleDuplicate = (team: SavedTeam): void => {
@@ -210,8 +255,8 @@ const {
           v-model="searchQuery"
           class="team-search"
           type="search"
-          :placeholder="i18n.t('app.search-label')"
-          :aria-label="i18n.t('app.search-label')"
+          :placeholder="i18n.t('app.search-teams')"
+          :aria-label="i18n.t('app.search-teams')"
           spellcheck="false"
         />
       </span>
@@ -241,7 +286,21 @@ const {
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
       >
-        <TeamPreview :team :ref="(instance) => setPreviewEl(team.id, instance)" />
+        <!-- The export ref stays on TeamPreview itself so the capture target
+             excludes the button wrapper. -->
+        <button
+          type="button"
+          class="preview-btn"
+          :title="i18n.t('app.preview')"
+          :aria-label="i18n.t('app.preview')"
+          @click="openPreview(team)"
+        >
+          <TeamPreview
+            :team
+            :highlight-heroes="matchedHeroes"
+            :ref="(instance) => setPreviewEl(team.id, instance)"
+          />
+        </button>
 
         <div class="card-title-row">
           <input
@@ -317,6 +376,13 @@ const {
         </div>
       </div>
     </div>
+    <TeamPreviewModal
+      v-if="previewedTeam"
+      :show="previewOpen"
+      :team="previewedTeam"
+      @close="previewOpen = false"
+    />
+
     <Teleport to="body">
       <TooltipPopup
         v-if="storageHintAnchor"
@@ -514,6 +580,20 @@ const {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
+}
+
+.preview-btn {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: zoom-in;
+}
+
+.preview-btn:hover :deep(.team-preview),
+.preview-btn:focus-visible :deep(.team-preview) {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .card-title-row {
