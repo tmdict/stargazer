@@ -159,7 +159,7 @@ Semantics wired in `TeamsView`:
 - **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
-- **Search**: a filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered). A card stays visible when the query hits its name (`renderSnippet` marks the hit in the title) or, at 2+ characters, a hero on its boards (the roster search's multi-locale name index via `matchCharacterNames`); hero hits ring the hero's hexes in the thumbnail. Phantimals and companion summons never match; per-record hero sets are memoized off the immutable `data` string
+- **Search**: a filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered). A card stays visible when the query hits its name (`renderSnippet` marks the hit in the title) or, at 2+ characters, a hero on its boards (`matchCharacterNames`, the roster search's multi-locale name index), whose hexes get a ring in the thumbnail. Phantimals and companion summons never match; per-record hero sets are memoized off the immutable `data` string
 
 ## Thumbnails
 

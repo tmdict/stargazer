@@ -13,7 +13,6 @@ export interface ThumbnailUnit {
   hexId: number
   team: Team
   image?: string
-  // Search-matched hero: its hex gets the highlight ring.
   highlight?: boolean
 }
 
@@ -219,9 +218,8 @@ const placedUnits = computed(() =>
           ?
         </text>
       </template>
-      <!-- Drawn last so it overdraws the team ring. Amber (--color-warning) as
-           a literal: exports serialize the SVG standalone, and it must read
-           against both team colors. -->
+      <!-- Drawn last to overdraw the team ring. Literal amber, not the token:
+           exports serialize the SVG standalone. -->
       <polygon
         v-if="unit.highlight"
         :points="unit.corners"

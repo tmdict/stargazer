@@ -19,11 +19,10 @@ const {
   highlightHeroes,
 } = defineProps<{
   team: SavedTeam
-  // Modal-scale rendering: bigger boards, with a hex size raised in proportion
-  // so strokes stay hairline at the larger display size.
+  // Modal scale: bigger boards, hex size raised in proportion so strokes stay
+  // hairline.
   large?: boolean
-  // Slugs of search-matched heroes; their hexes get the thumbnail's highlight
-  // ring. Companions and phantimals never highlight.
+  // Hero slugs to ring. Companions and phantimals never match.
   highlightHeroes?: ReadonlySet<string>
 }>()
 
@@ -54,8 +53,8 @@ const isHighlighted = (unit: PreviewUnit): boolean => {
 // Decoded once per record; team.data is immutable (updates replace the record).
 const decoded = computed(() => teamPreviewBoards(team.data))
 
-// Unit mapping sits outside the decode so highlight changes (typing in the
-// team search) reuse it.
+// Split from the decode so a changing highlight (typing in the team search)
+// reuses it.
 const boards = computed(() => {
   if (!decoded.value) return null
   return decoded.value.map((board) => ({
@@ -113,9 +112,8 @@ const boards = computed(() => {
   height: auto;
 }
 
-/* Fixed basis instead of a percentage: every board renders full-size whatever
-   the mode's board count, wrapping to fit the modal's width. No plate: like
-   other modal content, boards sit directly on the translucent dark surface. */
+/* Fixed basis, not a percentage: boards render full-size at any board count,
+   wrapping to fit. Unplated, like the rest of the modal's content. */
 .team-preview.large {
   gap: 10px;
   padding: 0;

@@ -16,8 +16,7 @@ export interface PreviewUnit {
   phantimalId?: number
 }
 
-/* A main-roster hero (not a phantimal, not a companion summon): the unit
- * population the saved-teams hero search matches and highlights. */
+/* A main-roster hero: not a phantimal, not a companion summon. */
 export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { characterId: number } {
   return unit.characterId !== undefined && unit.characterId < COMPANION_ID_OFFSET
 }
