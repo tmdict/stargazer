@@ -87,8 +87,7 @@
 }
 
 /* Meta chips in the row under a modal's h1 (faction, team mode, artifact
-   stats). Modals restyle via a second class when a chip needs more than the
-   shared look. */
+   stats). A modal needing more adds a second class. */
 .content .meta-chip {
   padding: 2px 10px;
   border-radius: 999px;

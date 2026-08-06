@@ -76,8 +76,8 @@ const effectLevels = computed(() =>
   border-bottom: 2px solid var(--color-border-primary);
 }
 
-/* Doubled class outweighs the shared `.content .meta-chip` rule. Dim label,
-   bright value: a stat chip's text carries a hierarchy the plain chip lacks. */
+/* Doubled class outweighs the shared `.content .meta-chip` rule; the dimmed
+   label lets the value read first. */
 .meta-chip.stat-chip {
   color: rgba(255, 255, 255, 0.7);
 }

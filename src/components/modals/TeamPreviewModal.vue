@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* Enlarged read-only look at a saved team: the card's own TeamPreview at modal
-   scale, rendered from the record's canonical data (no board loading). */
+   scale, no board loading. */
 
 import BaseModal from './BaseModal.vue'
 import TeamPreview from '@/components/teams/TeamPreview.vue'

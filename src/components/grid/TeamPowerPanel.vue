@@ -46,13 +46,16 @@ const heroesFor = (team: Team): PanelHero[] =>
 const allyHeroes = computed(() => heroesFor(Team.ALLY))
 const enemyHeroes = computed(() => heroesFor(Team.ENEMY))
 
-// Grid Info gates the panel, but an empty grid has nothing to show, so the panel
-// only renders once a hero is placed.
-const hasHeroes = computed(() => allyHeroes.value.length > 0 || enemyHeroes.value.length > 0)
-
 // Net Rivalry-mode stat (Inspiration minus the enemy's Intimidation). The enemy's is
 // the negation of the ally's (the two mirror), so sides reuses it.
 const allyRivalryStat = computed(() => teamPowerNet(allyHeroes.value, enemyHeroes.value))
+
+// Paragon reads only as a comparison between the sides, so the stat, badges and
+// controls all hide until both are placed. Team view is not a factor: its
+// cropped enemy still counts toward the ally stat.
+const bothTeamsPlaced = computed(() => allyHeroes.value.length > 0 && enemyHeroes.value.length > 0)
+
+const canEditParagon = computed(() => !props.readonly && bothTeamsPlaced.value)
 
 const sides = computed(() => [
   { team: Team.ALLY, klass: 'ally', heroes: allyHeroes.value, rivalryStat: allyRivalryStat.value },
@@ -64,11 +67,12 @@ const sides = computed(() => [
   },
 ])
 
-// Team view crops the grid to the ally side, so the panel drops the enemy column to
-// match. The ally stat still accounts for the hidden enemy's paragon.
-const visibleSides = computed(() =>
-  props.context.teamView ? sides.value.filter((side) => side.team === Team.ALLY) : sides.value,
-)
+// An empty side would render as a blank half; team view crops the grid to the
+// ally side, so the panel follows.
+const visibleSides = computed(() => {
+  const populated = sides.value.filter((side) => side.heroes.length > 0)
+  return props.context.teamView ? populated.filter((side) => side.team === Team.ALLY) : populated
+})
 
 const cycle = (team: Team, hero: PanelHero): void => {
   props.context.setParagon(team, hero.characterId, (hero.level + 1) % (PARAGON_MAX_LEVEL + 1))
@@ -145,9 +149,13 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 </script>
 
 <template>
-  <div v-if="hasHeroes" class="team-power" :class="{ single: visibleSides.length === 1 }">
+  <div
+    v-if="visibleSides.length > 0"
+    class="team-power"
+    :class="{ single: visibleSides.length === 1 }"
+  >
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
-      <div class="tp-head">
+      <div v-if="bothTeamsPlaced" class="tp-head">
         <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
           <span
             v-if="side.rivalryStat !== 0"
@@ -161,7 +169,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           </span>
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
-        <span v-if="!readonly && side.heroes.length > 0" class="tp-actions">
+        <span v-if="canEditParagon" class="tp-actions">
           <button
             v-if="hasParagon(side.heroes)"
             type="button"
@@ -206,16 +214,18 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           :key="hero.characterId"
           type="button"
           class="hero"
-          :class="{ readonly }"
-          :aria-label="`${hero.name}, paragon ${hero.level}`"
-          :title="readonly ? undefined : i18n.t('app.paragon-cycle')"
-          @click="!readonly && cycle(side.team, hero)"
+          :class="{ static: !canEditParagon }"
+          :aria-label="bothTeamsPlaced ? `${hero.name}, paragon ${hero.level}` : hero.name"
+          :title="canEditParagon ? i18n.t('app.paragon-cycle') : undefined"
+          @click="canEditParagon && cycle(side.team, hero)"
         >
           <span class="portrait-wrap">
             <span class="portrait">
               <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
             </span>
-            <span class="pbadge" :class="`p${hero.level}`">P{{ hero.level }}</span>
+            <span v-if="bothTeamsPlaced" class="pbadge" :class="`p${hero.level}`">
+              P{{ hero.level }}
+            </span>
           </span>
           <span class="hero-name" :title="hero.name">{{ hero.name }}</span>
         </button>
@@ -267,12 +277,14 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   background: rgba(200, 35, 51, 0.05);
   border-left: 1px solid var(--color-border-primary);
 }
-/* Team view shows one side: it fills the full width (the default flex: 1), and its
-   heroes spread across so the removed enemy half doesn't read as empty. Spreading
-   only takes effect when the row has slack: a full team on a narrow board still
-   sizes up to fill edge to edge. */
+/* A lone side fills the full width, so spread its heroes rather than let the
+   missing half read as empty. Takes effect only when the row has slack. */
 .team-power.single .heroes {
   justify-content: space-evenly;
+}
+/* Enemy-only: no second block, so no seam. */
+.team-power.single .tp-block.enemy {
+  border-left: none;
 }
 
 .tp-head {
@@ -448,11 +460,11 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 .hero:hover .portrait {
   transform: scale(1.06);
 }
-/* Read-only (share view): the hero is shown, not cyclable. */
-.hero.readonly {
+/* Not cyclable (share view, or paragon hidden): no click affordance. */
+.hero.static {
   cursor: default;
 }
-.hero.readonly:hover .portrait {
+.hero.static:hover .portrait {
   transform: none;
 }
 /* Sized in cqw (a share of the icon width) so it stays a corner badge as the icon
