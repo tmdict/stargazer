@@ -1,0 +1,14 @@
+{
+  "id": 122,
+  "name": "voracia",
+  "level": "s",
+  "faction": "mauler",
+  "class": "mage",
+  "damage": "magic",
+  "energy": [600],
+  "range": 10,
+  "season": 7,
+  "tags": {
+    "initial-energy-300": []
+  }
+}
