@@ -1,0 +1,14 @@
+{
+  "id": 121,
+  "name": "rolan",
+  "level": "s",
+  "faction": "celestial",
+  "class": "support",
+  "damage": "magic",
+  "energy": [400],
+  "range": 10,
+  "season": 7,
+  "tags": {
+    "initial-energy-300": []
+  }
+}
