@@ -63,9 +63,8 @@ const sorted = computed(() => {
 
 // The box hides below 2 teams and the filter follows it, so a leftover query
 // can never strand the list on "no matches" with no visible way to clear it.
-// A card stays visible when the query hits its name (marked via renderSnippet;
-// the full-length context keeps the snippet unelided, so the pieces always
-// spell the whole name) or a hero on its boards (ringed in the thumbnail).
+// A card survives on a name hit or a hero hit. renderSnippet gets the name's
+// full length as context, so its pieces always spell the whole name.
 const searchQuery = ref('')
 const searchVisible = computed(() => library.count > 1)
 // Hiding also resets the query, so the box can't reappear pre-filtered.
@@ -74,15 +73,14 @@ watch(searchVisible, (visible) => {
 })
 const activeQuery = computed(() => (searchVisible.value ? searchQuery.value.trim() : ''))
 
-// Roster slugs matching the query in any warm locale (en/zh always are),
-// shared by card filtering and thumbnail rings. Gated to 2+ characters so a
-// single letter can't flood the list through half the roster.
+// Matches any warm locale (en/zh always are). Gated to 2+ characters so a
+// single letter can't pull in half the roster.
 const matchedHeroes = computed<ReadonlySet<string> | undefined>(() =>
   activeQuery.value.length >= 2 ? matchCharacterNames(activeQuery.value) : undefined,
 )
 
-// Standard-hero slugs per record, memoized by the immutable data string;
-// cached only once the roster is loaded so early lookups can't pin empty sets.
+// Memoized on the immutable data string, but only once the roster is loaded:
+// an early lookup would pin an empty set.
 const heroSlugCache = new Map<string, ReadonlySet<string>>()
 const teamHeroSlugs = (team: SavedTeam): ReadonlySet<string> => {
   const cached = heroSlugCache.get(team.data)
@@ -172,8 +170,7 @@ const setPreviewEl = (id: string, instance: Element | ComponentPublicInstance | 
   else previewEls.delete(id)
 }
 
-// The previewed team survives close so the modal's leave transition keeps its
-// content; `previewOpen` alone toggles visibility.
+// The team outlives the close so the modal's leave transition keeps its content.
 const previewedTeam = ref<SavedTeam | null>(null)
 const previewOpen = ref(false)
 
@@ -286,8 +283,8 @@ const {
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
       >
-        <!-- The export ref stays on TeamPreview itself so the capture target
-             excludes the button wrapper. -->
+        <!-- Export ref stays on TeamPreview: the capture target must exclude
+             this wrapper. -->
         <button
           type="button"
           class="preview-btn"
