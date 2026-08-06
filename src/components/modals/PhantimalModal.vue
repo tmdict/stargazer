@@ -67,13 +67,4 @@ const skills = computed(() =>
   gap: 6px;
   margin: 0 0 4px;
 }
-
-.meta-chip {
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.1);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
-  line-height: 1.6;
-}
 </style>
