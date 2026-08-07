@@ -22,8 +22,12 @@ describe('directlyBehindHexId', () => {
     expect(directlyBehindHexId(grid, 23, Team.ENEMY)).toBe(30)
   })
 
-  it('falls back to the only behind tile at a board edge', () => {
-    expect(directlyBehindHexId(grid, 14, Team.ALLY)).toBe(10)
+  it('is undefined when the behind tile is off the board, even with a back-row diagonal', () => {
+    // Hexes 4 and 14 keep a bottom-right neighbour (1 and 10), but their true
+    // behind tile lies outside the board; the diagonal never substitutes.
+    expect(directlyBehindHexId(grid, 4, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 14, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 42, Team.ENEMY)).toBeUndefined()
   })
 
   it('is undefined at the rearmost tile, where nothing lies behind', () => {
@@ -109,6 +113,23 @@ describe('behind-tile highlight skill', () => {
     getCharacterSkill(GUNNAR)!.onActivate({
       grid: grid3,
       hexId: 3,
+      team: Team.ALLY,
+      characterId: GUNNAR,
+      skillManager: sm,
+    })
+
+    expect(sm.getTileFillModifier(1)).toBeUndefined()
+  })
+
+  it('does not highlight the back-row diagonal when the behind tile is off the board', () => {
+    const grid4 = new Grid()
+    const sm = new SkillManager()
+    placeOnTile(grid4, 4, GUNNAR, Team.ALLY)
+    placeOnTile(grid4, 1, 100, Team.ALLY)
+
+    getCharacterSkill(GUNNAR)!.onActivate({
+      grid: grid4,
+      hexId: 4,
       team: Team.ALLY,
       characterId: GUNNAR,
       skillManager: sm,

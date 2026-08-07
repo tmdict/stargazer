@@ -72,34 +72,25 @@ export function getCandidates(
 }
 
 /**
- * The tile directly behind a unit: an adjacent tile one row toward its team's
- * back, where rows run along the hex `r` axis (a greater `r` is behind for
- * allies, a smaller `r` for enemies). A same-row side neighbour is never behind.
- * When both back-row neighbours exist (back-left and back-right), the lower hex
- * ID is taken for allies and the higher for enemies. Undefined at the back edge
- * where no tile lies behind.
+ * The tile directly behind a unit: the bottom-left neighbour for allies
+ * (whose back is the high-r board edge), top-right for enemies, the same
+ * straight-behind convention findAdjacentPriorityTarget leads with. Undefined
+ * when that tile is off the board, even if the other back-row diagonal exists.
  */
 export function directlyBehindHexId(grid: Grid, hexId: number, team: Team): number | undefined {
   const center = grid.getHexById(hexId)
-  const behindIds = grid
-    .getAllTiles()
-    .filter((tile) => center.distance(tile.hex) === 1)
-    .filter((tile) => (team === Team.ALLY ? tile.hex.r > center.r : tile.hex.r < center.r))
-    .map((tile) => tile.hex.getId())
-  if (behindIds.length === 0) return undefined
-  return team === Team.ALLY ? Math.min(...behindIds) : Math.max(...behindIds)
+  const behind = center.neighbor(team === Team.ALLY ? 3 : 0)
+  return grid.getTileOrUndefined(behind)?.hex.getId()
 }
 
 export type TargetDirection = 'behind' | 'front'
 
 /**
  * Adjacent-tile priority target (Daimon, phantimal Spirit Marks). Candidates
- * are the up-to-three adjacent tiles toward the team's back ('behind': lower
- * hex IDs for allies, higher for enemies) or front ('front': mirrored).
- * Priority by ID: the extreme first (straight behind/ahead), then the
- * remaining candidate whose ID is nearest the caster's (the caster-row side
- * neighbour), then the last. The first candidate tile holding a same-team
- * unit wins.
+ * are the up-to-three adjacent tiles toward the team's back ('behind') or
+ * front ('front'): straight behind/ahead first, then the caster-row side
+ * neighbour, then the remaining diagonal. Off-board neighbours drop out of
+ * the chain. The first candidate tile holding a same-team unit wins.
  */
 export function findAdjacentPriorityTarget(
   context: SkillContext,
@@ -108,23 +99,18 @@ export function findAdjacentPriorityTarget(
   const { grid, hexId, characterId, team } = context
   const centerHex = grid.getHexById(hexId)
 
-  const lowerIds = (team === Team.ALLY) === (direction === 'behind')
-  const candidateIds = grid
-    .getAllTiles()
-    .filter((tile) => centerHex.distance(tile.hex) === 1)
-    .map((tile) => tile.hex.getId())
-    .filter((id) => (lowerIds ? id < hexId : id > hexId))
-    .sort((a, b) => (lowerIds ? a - b : b - a))
-
-  const priority =
-    candidateIds.length === 3
-      ? [candidateIds[0]!, candidateIds[2]!, candidateIds[1]!]
-      : candidateIds
+  const towardHighR = (team === Team.ALLY) === (direction === 'behind')
+  // Straight behind an ally is its bottom-left neighbour (indices follow
+  // Hex.DIRECTIONS order); the enemy and 'front' chains are the point mirror.
+  const priorityDirections = towardHighR
+    ? [3, 4, 2] // bottom-left, left, bottom-right
+    : [0, 1, 5] // top-right, right, top-left
 
   const candidateMap = new Map(getCandidates(grid, team, characterId).map((c) => [c.hexId, c]))
 
-  for (const tileId of priority) {
-    const candidate = candidateMap.get(tileId)
+  for (const dir of priorityDirections) {
+    const tile = grid.getTileOrUndefined(centerHex.neighbor(dir))
+    const candidate = tile && candidateMap.get(tile.hex.getId())
     if (candidate) {
       return {
         targetHexId: candidate.hexId,

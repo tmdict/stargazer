@@ -81,7 +81,7 @@ describe('findAdjacentPriorityTarget', () => {
     grid = new Grid()
   })
 
-  // Ally on 23: lower-id neighbors sorted [16, 19, 20], priority 16 > 20 > 19.
+  // Ally on 23: priority 16 (straight behind) > 20 (left) > 19 (bottom-right).
   describe('behind (default)', () => {
     it('prefers the tile directly behind', () => {
       placeOnTile(grid, 23, CASTER, Team.ALLY)
@@ -94,7 +94,7 @@ describe('findAdjacentPriorityTarget', () => {
       expect(info?.targetCharacterId).toBe(100)
     })
 
-    it('falls back to the side neighbour (nearest id), then the remaining tile', () => {
+    it('falls back to the side neighbour, then the remaining tile', () => {
       placeOnTile(grid, 23, CASTER, Team.ALLY)
       placeOnTile(grid, 20, 101, Team.ALLY)
       placeOnTile(grid, 19, 102, Team.ALLY)
@@ -137,6 +137,34 @@ describe('findAdjacentPriorityTarget', () => {
       ).toBe(10100)
     })
 
+    // Hex 4's straight-behind tile is off the board (the back row only has
+    // hexes 1 and 3), so the left neighbour outranks the bottom-right one.
+    it('skips the off-board behind tile: left neighbour over the diagonal at hex 4', () => {
+      placeOnTile(grid, 4, CASTER, Team.ALLY)
+      placeOnTile(grid, 2, 100, Team.ALLY)
+      placeOnTile(grid, 1, 101, Team.ALLY)
+      expect(
+        findAdjacentPriorityTarget(makeSkillContext(grid, 4, Team.ALLY, CASTER))?.targetHexId,
+      ).toBe(2)
+
+      const onlyDiagonal = new Grid()
+      placeOnTile(onlyDiagonal, 4, CASTER, Team.ALLY)
+      placeOnTile(onlyDiagonal, 1, 101, Team.ALLY)
+      expect(
+        findAdjacentPriorityTarget(makeSkillContext(onlyDiagonal, 4, Team.ALLY, CASTER))
+          ?.targetHexId,
+      ).toBe(1)
+    })
+
+    it('mirrors the off-board fallback for the enemy team (hex 42: 44 over 45)', () => {
+      placeOnTile(grid, 42, CASTER, Team.ENEMY)
+      placeOnTile(grid, 44, 200, Team.ENEMY)
+      placeOnTile(grid, 45, 201, Team.ENEMY)
+      expect(
+        findAdjacentPriorityTarget(makeSkillContext(grid, 42, Team.ENEMY, CASTER))?.targetHexId,
+      ).toBe(44)
+    })
+
     it('handles edges: a single candidate at hex 14, none at the rearmost hex 1', () => {
       placeOnTile(grid, 14, CASTER, Team.ALLY)
       placeOnTile(grid, 10, 100, Team.ALLY)
@@ -156,7 +184,7 @@ describe('findAdjacentPriorityTarget', () => {
     })
   })
 
-  // Ally on 4: higher-id neighbors sorted [9, 7, 6], priority 9 > 6 > 7.
+  // Ally on 4: priority 9 (straight ahead) > 6 (right) > 7 (top-left).
   describe('front', () => {
     it('prefers the tile directly in front', () => {
       placeOnTile(grid, 4, CASTER, Team.ALLY)
@@ -169,7 +197,7 @@ describe('findAdjacentPriorityTarget', () => {
       ).toBe(9)
     })
 
-    it('falls back to the side neighbour (nearest id), then the remaining tile', () => {
+    it('falls back to the side neighbour, then the remaining tile', () => {
       placeOnTile(grid, 4, CASTER, Team.ALLY)
       placeOnTile(grid, 6, 101, Team.ALLY)
       placeOnTile(grid, 7, 102, Team.ALLY)
