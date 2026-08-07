@@ -1,9 +1,10 @@
 <script setup lang="ts">
-/* The Saved Teams roster panel: header (count, cap warning, sort, Delete all)
-   plus a card grid: thumbnail, mode chip, inline-renamable name, relative updated
-   time, and Load / Duplicate / Copy / Download / Delete actions. Destructive
-   actions use the app's no-modal style: a two-step inline confirm that arms
-   for a few seconds. User feedback (toasts) is fired here, not in the store. */
+/* The Saved Teams roster panel: header (count, cap warning, sort, and the
+   library-wide Import / Export / Delete all) plus a card grid: thumbnail, mode
+   chip, inline-renamable name, relative updated time, and Load / Duplicate /
+   Copy / Download / Delete actions. Destructive actions use the app's no-modal
+   style: a two-step inline confirm that arms for a few seconds. User feedback
+   (toasts) is fired here, not in the store. */
 
 import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
@@ -15,6 +16,7 @@ import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
@@ -26,6 +28,7 @@ import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { downloadBlob, timestampedName } from '@/utils/download'
 import { renderSnippet } from '@/utils/searchHighlight'
 import { readStorage, writeStorage } from '@/utils/storage'
 
@@ -207,6 +210,46 @@ const {
   toggle: storageHintToggle,
   onTouchStart: storageHintTouchStart,
 } = useInfoTip()
+
+// Import and Export act on the whole library, which is why they belong in this
+// panel rather than the boards' action row.
+const fileInput = ref<HTMLInputElement>()
+
+const handleExport = (): void => {
+  downloadBlob(
+    new Blob([JSON.stringify(library.exportAll())], { type: 'application/json' }),
+    timestampedName('stargazer-teams', 'json'),
+  )
+}
+
+// Import merges into the library and never replaces it; "replace everything" is
+// Delete all followed by Import.
+const handleFileChosen = async (event: Event): Promise<void> => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = '' // allow re-importing the same file
+  if (!file) return
+  const result = library.importTeams(await file.text())
+  if (result.invalid) {
+    error(i18n.t('app.import-invalid'))
+    return
+  }
+  success(i18n.t('app.import-success', { imported: result.imported, skipped: result.skipped }))
+}
+
+// Hover-only, unlike the storage hint: these act on tap, so the composable
+// suppresses the tooltip on touch.
+const {
+  anchor: actionTipAnchor,
+  payload: actionTip,
+  onMouseEnter: showActionTip,
+  onMouseLeave: hideActionTip,
+  onTouchStart: actionTipTouchStart,
+} = useHoverTooltip<'import' | 'export'>()
+
+const actionTipText = computed((): string =>
+  actionTip.value ? i18n.t(`app.tooltip-${actionTip.value}`) : '',
+)
 </script>
 
 <template>
@@ -257,15 +300,47 @@ const {
           spellcheck="false"
         />
       </span>
-      <button
-        v-if="library.count > 0"
-        type="button"
-        class="delete-all-btn"
-        :class="{ armed: armed === 'all' }"
-        @click="handleDeleteAll"
-      >
-        {{ armed === 'all' ? i18n.t('app.confirm') : i18n.t('app.delete-all') }}
-      </button>
+      <span class="library-actions">
+        <!-- Import stays visible at zero teams: restoring a backup into an empty
+             library is exactly when it's needed. -->
+        <button
+          type="button"
+          class="library-btn"
+          @click="fileInput?.click()"
+          @mouseenter="showActionTip($event, 'import')"
+          @touchstart.passive="actionTipTouchStart"
+          @mouseleave="hideActionTip"
+        >
+          {{ i18n.t('app.import') }}
+        </button>
+        <button
+          v-if="library.count > 0"
+          type="button"
+          class="library-btn"
+          @click="handleExport"
+          @mouseenter="showActionTip($event, 'export')"
+          @touchstart.passive="actionTipTouchStart"
+          @mouseleave="hideActionTip"
+        >
+          {{ i18n.t('app.export') }}
+        </button>
+        <button
+          v-if="library.count > 0"
+          type="button"
+          class="library-btn delete-all-btn"
+          :class="{ armed: armed === 'all' }"
+          @click="handleDeleteAll"
+        >
+          {{ armed === 'all' ? i18n.t('app.confirm') : i18n.t('app.delete-all') }}
+        </button>
+        <input
+          ref="fileInput"
+          type="file"
+          accept="application/json,.json"
+          class="file-input"
+          @change="handleFileChosen"
+        />
+      </span>
     </div>
 
     <p v-if="library.count === 0" class="empty-state">
@@ -389,6 +464,13 @@ const {
       >
         <template #content>{{ i18n.t('app.storage-hint') }}</template>
       </TooltipPopup>
+      <TooltipPopup
+        v-if="actionTip && actionTipAnchor"
+        :target-element="actionTipAnchor"
+        variant="detailed"
+      >
+        <template #content>{{ actionTipText }}</template>
+      </TooltipPopup>
     </Teleport>
   </div>
 </template>
@@ -413,7 +495,9 @@ const {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--spacing-lg);
+  /* Three actions plus the sort picker and search box outgrow a phone-width bar. */
+  flex-wrap: wrap;
+  gap: var(--spacing-sm) var(--spacing-lg);
 }
 
 .library-info {
@@ -500,23 +584,46 @@ const {
   border-color: var(--color-primary);
 }
 
-.delete-all-btn {
-  border: 2px solid var(--color-border-primary);
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
+.library-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Solid fill (the .popover-btn treatment) so the actions stay legible beside the
+   sort picker and search box sharing the bar. */
+.library-btn {
+  border: 2px solid var(--color-primary);
+  background: var(--color-primary);
+  color: #fff;
   border-radius: var(--radius-medium);
   padding: 4px 12px;
   font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.library-btn:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+
+/* Must stay after .library-btn: equal specificity, so source order decides. */
+.delete-all-btn {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
 }
 
 .delete-all-btn:hover,
 .delete-all-btn.armed {
-  color: #fff;
-  background: var(--color-danger);
-  border-color: var(--color-danger);
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+}
+
+.file-input {
+  display: none;
 }
 
 .empty-state {

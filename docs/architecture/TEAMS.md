@@ -16,7 +16,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 
 ```
 ┌────────────────────────── TeamsView ───────────────────────────┐
-│ tab state · display flags · save/load/import/export handlers   │
+│ tab state · display flags · save/load handlers                 │
 └──────────┬────────────────────────────────────┬────────────────┘
            ▼                                    ▼
 ┌─ TeamsBoards ──────────────┐    ┌─ TeamsRoster ────────────────┐
@@ -60,11 +60,10 @@ Segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`, slotted at the hea
 
 ### TeamSaveActions (`/src/components/teams/TeamSaveActions.vue`)
 
-The team half of the action row, in File-menu order (New, Save, Save as New, Import, Export), collapsing to round icons on mobile:
+The team half of the action row, in File-menu order (New, Save, Save as New), collapsing to round icons on mobile. Every action here targets the team on the boards; library-wide backup lives in the Saved Teams tab, next to the library it acts on:
 
 - **New**: fresh default boards, detached from any saved team
 - **Save actions**: Save, and Save as New with a name popover (Enter commits, Esc cancels)
-- **Backup actions**: Import and Export through plain-language tooltips + a hidden file input
 
 ### TeamsRoster (`/src/components/teams/TeamsRoster.vue`)
 
@@ -73,6 +72,7 @@ A desktop card below the boards / a mobile pull-up sheet:
 - **Tabs**: characters, seasonal, and maps act on the active board; saved teams manages the library
 - **Load**: applies a whole team (all boards, switching mode if needed) and collapses the sheet
 - **Badge**: the saved-teams tab shows the library count
+- **Library bar**: Import / Export / Delete all sit in the saved-teams panel, since all three act on the whole library rather than the boards. `SavedTeamsList` owns them outright (store calls plus its own toasts), so no handler threads back through `TeamsRoster`. Export and Delete all hide at zero teams; Import stays, because restoring into an empty library is its main use
 
 Placement modes (on-grid popup vs. cell-tap flow) and the shared `BottomSheet` are covered in GRID.md.
 
@@ -175,7 +175,7 @@ The saved-teams panel mounts on first activation and its cards use `content-visi
 
 ## Backup Files
 
-`/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records get fresh ids; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
+Driven from the Saved Teams tab's library bar (see TeamsRoster above). `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records get fresh ids; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
 
 ## Sharing & Image Export
 
