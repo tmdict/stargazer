@@ -1,18 +1,17 @@
 <script setup lang="ts">
 /* The team actions in the controls' action row, in File-menu order (New, Save,
-   Save as New, Import, Export). New detaches from the source team; Save
-   updates it, degrading to Save as New when there is none; its name popover
-   creates a new record (Enter commits, Esc cancels). The root is
-   display: contents, so every control sits directly in the action row's flex
-   flow with its spacing. */
+   Save as New). Every one acts on the boards' current team: New detaches from
+   the source team; Save updates it, degrading to Save as New when there is
+   none; its name popover creates a new record (Enter commits, Esc cancels).
+   Library-wide backup (Import / Export) lives in the Saved Teams tab, beside
+   the library it acts on. The root is display: contents, so every control sits
+   directly in the action row's flex flow with its spacing. */
 
 import { computed, nextTick, ref } from 'vue'
 
-import IconDownload from '@/components/ui/IconDownload.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
 import IconSavePlus from '@/components/ui/IconSavePlus.vue'
-import IconUpload from '@/components/ui/IconUpload.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -30,22 +29,9 @@ const emit = defineEmits<{
   newTeam: []
   save: []
   saveAsNew: [name: string]
-  exportTeams: []
-  // The chosen backup file's text; the caller parses/merges and reports.
-  importFile: [raw: string]
 }>()
 
 const i18n = useI18nStore()
-
-const fileInput = ref<HTMLInputElement>()
-
-const handleFileChosen = async (event: Event): Promise<void> => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = '' // allow re-importing the same file
-  if (!file) return
-  emit('importFile', await file.text())
-}
 
 const popoverOpen = ref(false)
 const popoverName = ref('')
@@ -78,11 +64,11 @@ const handleNew = (): void => {
   emit('newTeam')
 }
 
-// One shared popup serves all five actions; the hovered action's id is stored
+// One shared popup serves all three actions; the hovered action's id is stored
 // (not its text) so the text stays live: arming New flips it to Confirm while
 // still hovered. Action buttons are hover-only: on touch the tap acts, so the
 // composable suppresses the tooltip there.
-type TipId = 'new' | 'save' | 'save-as-new' | 'import' | 'export'
+type TipId = 'new' | 'save' | 'save-as-new'
 const {
   anchor: tipTarget,
   payload: tip,
@@ -99,10 +85,6 @@ const tipText = computed((): string => {
       return i18n.t('app.tooltip-save')
     case 'save-as-new':
       return i18n.t('app.tooltip-save-as-new')
-    case 'import':
-      return i18n.t('app.tooltip-import')
-    case 'export':
-      return i18n.t('app.tooltip-export')
     default:
       return ''
   }
@@ -180,37 +162,6 @@ const tipText = computed((): string => {
         </div>
       </div>
     </span>
-    <button
-      type="button"
-      class="control-btn secondary"
-      :aria-label="i18n.t('app.import')"
-      @click="fileInput?.click()"
-      @mouseenter="showTip($event, 'import')"
-      @touchstart.passive="tipTouchStart"
-      @mouseleave="hideTip"
-    >
-      <IconUpload :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t('app.import') }}</span>
-    </button>
-    <button
-      type="button"
-      class="control-btn secondary"
-      :aria-label="i18n.t('app.export')"
-      @click="emit('exportTeams')"
-      @mouseenter="showTip($event, 'export')"
-      @touchstart.passive="tipTouchStart"
-      @mouseleave="hideTip"
-    >
-      <IconDownload :size="14" class="btn-icon" />
-      <span class="btn-text">{{ i18n.t('app.export') }}</span>
-    </button>
-    <input
-      ref="fileInput"
-      type="file"
-      accept="application/json,.json"
-      class="file-input"
-      @change="handleFileChosen"
-    />
     <Teleport to="body">
       <TooltipPopup v-if="tip && tipTarget" :target-element="tipTarget" variant="detailed">
         <template #content>{{ tipText }}</template>
@@ -227,10 +178,6 @@ const tipText = computed((): string => {
 .popover-anchor {
   position: relative;
   display: inline-flex;
-}
-
-.file-input {
-  display: none;
 }
 
 .name-popover {

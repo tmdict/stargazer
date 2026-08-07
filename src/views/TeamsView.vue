@@ -30,7 +30,6 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { downloadBlob, timestampedName } from '@/utils/download'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
 import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
 
@@ -143,24 +142,6 @@ const handleLoadTeam = (team: SavedTeam) => {
   success(i18n.t('app.team-loaded'))
 }
 
-// Backup file of the whole library; import merges (never replaces); "replace
-// all" is Delete all + Import.
-const handleExportTeams = () => {
-  downloadBlob(
-    new Blob([JSON.stringify(teamLibrary.exportAll())], { type: 'application/json' }),
-    timestampedName('stargazer-teams', 'json'),
-  )
-}
-
-const handleImportFile = (raw: string) => {
-  const result = teamLibrary.importTeams(raw)
-  if (result.invalid) {
-    error(i18n.t('app.import-invalid'))
-    return
-  }
-  success(i18n.t('app.import-success', { imported: result.imported, skipped: result.skipped }))
-}
-
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
 // otherwise the last-used mode and its boards are restored. Then every later
 // change mirrors to the mode's slot. A link that fails to decode is treated as
@@ -230,8 +211,6 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"
                 @rename="handleRename"
-                @export-teams="handleExportTeams"
-                @import-file="handleImportFile"
                 @copy-link="handleCopyLink"
                 @copy-image="handleCopyImage"
                 @download="handleDownload"

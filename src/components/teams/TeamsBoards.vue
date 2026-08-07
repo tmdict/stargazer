@@ -54,8 +54,6 @@ const emit = defineEmits<{
   save: []
   saveAsNew: [name: string]
   rename: [name: string]
-  exportTeams: []
-  importFile: [raw: string]
 }>()
 
 const grids = useGrids()
@@ -159,8 +157,6 @@ const {
           @new-team="emit('newTeam')"
           @save="emit('save')"
           @save-as-new="emit('saveAsNew', $event)"
-          @export-teams="emit('exportTeams')"
-          @import-file="emit('importFile', $event)"
         />
       </template>
     </GridControls>
