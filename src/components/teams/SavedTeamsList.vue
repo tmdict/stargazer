@@ -732,8 +732,10 @@ const actionTipText = computed((): string =>
 }
 
 .team-name mark {
-  background: none;
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
   color: var(--color-primary);
+  padding: 1px 3px;
+  border-radius: 4px;
 }
 
 .team-name-input {

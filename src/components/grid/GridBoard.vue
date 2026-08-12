@@ -53,7 +53,6 @@ const isSwapPending = computed(() => pendingId.value === context.id)
 const boardImageOptions = () => ({
   showPerspective,
   target: `[data-grid-board-id="${context.id}"] .perspective-container`,
-  appendTarget: `[data-grid-board-id="${context.id}"] .team-power`,
   filePrefix: 'team',
 })
 const handleCopyImage = () => copyToClipboard(boardImageOptions())
