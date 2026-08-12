@@ -83,9 +83,13 @@ function getMapStates(mapKey: string): Map<number, State> {
 
 function getTileFill(state: State | undefined): string {
   switch (state) {
+    // Portraits are partially transparent, so occupied tiles still need their
+    // zone's backing.
     case State.AVAILABLE_ALLY:
+    case State.OCCUPIED_ALLY:
       return 'rgba(54, 149, 142, 0.35)'
     case State.AVAILABLE_ENEMY:
+    case State.OCCUPIED_ENEMY:
       return 'rgba(200, 35, 51, 0.35)'
     case State.BLOCKED:
       return 'rgba(128, 128, 128, 0.45)'

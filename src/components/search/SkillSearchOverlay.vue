@@ -742,9 +742,18 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   line-height: 1.6;
 }
 
+/* Keyword color alone lacks contrast on the dark panel; pane-body matches can
+   wrap, hence the cloned per-line decoration. */
+.sso-panel mark {
+  padding: 1px 3px;
+  border-radius: 4px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+
 .sso-pane-title mark,
 .sso-pane-desc mark {
-  background: none;
+  background: color-mix(in srgb, #f2c94c 15%, transparent);
   color: #f2c94c;
   font-weight: 700;
 }
@@ -802,7 +811,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 }
 
 .sso-snip mark {
-  background: none;
+  background: color-mix(in srgb, var(--color-accent) 15%, transparent);
   color: var(--color-accent);
   font-weight: 700;
 }
@@ -811,10 +820,11 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   color: #fff;
 }
 
+/* An accent tint vanishes on the accent-active row, so the mark shares the
+   selected chip's white wash. */
 .sso-row.sel .sso-snip mark {
+  background: rgba(255, 255, 255, 0.18);
   color: #fff;
-  text-decoration: underline;
-  text-underline-offset: 2px;
 }
 
 .sso-chip {
