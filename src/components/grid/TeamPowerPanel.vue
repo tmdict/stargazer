@@ -151,7 +151,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 <template>
   <div
     v-if="visibleSides.length > 0"
-    class="team-power"
+    class="team-power capture-exclude"
     :class="{ single: visibleSides.length === 1 }"
   >
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
@@ -173,7 +173,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           <button
             v-if="hasParagon(side.heroes)"
             type="button"
-            class="stat-reset capture-exclude"
+            class="stat-reset"
             :aria-label="i18n.t('app.reset-paragons')"
             @click="resetParagons(side.team, side.heroes)"
             @mouseenter="showActionTip($event, 'app.reset-paragons')"
@@ -184,7 +184,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           </button>
           <button
             type="button"
-            class="stat-max capture-exclude"
+            class="stat-max"
             :disabled="!canRaise(side.heroes)"
             :aria-label="i18n.t('app.max-paragons')"
             @click="maxAll(side.team, side.heroes)"
@@ -196,7 +196,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           </button>
           <button
             type="button"
-            class="stat-plus capture-exclude"
+            class="stat-plus"
             :disabled="!canRaise(side.heroes)"
             :aria-label="i18n.t('app.raise-paragons')"
             @click="raiseAll(side.team, side.heroes)"
@@ -260,8 +260,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   display: flex;
   width: 100%;
   margin-top: var(--spacing-lg);
-  /* Bottom gap as padding, not margin: the image export captures the border-box, so
-     padding rides along (keeping the names off the edge) while a margin would not. */
   padding-bottom: var(--spacing-md);
 }
 

@@ -40,15 +40,12 @@ interface ExportOptions {
   // Element to capture; defaults to the single grid's perspective container.
   // 5 v 5 passes the boards row to capture all five at once.
   target?: string
-  // Optional element captured flat and stacked below the grid image (the Team Power
-  // panel), so the grid's perspective crop never clips it. Skipped when absent.
-  appendTarget?: string
   // Download filename prefix (timestamped); unused by copyToClipboard.
   filePrefix?: string
 }
 
 // On-screen chrome marked with this class (per-board action buttons, the Team
-// Power batch/reset buttons) is dropped from every image export.
+// Power panel) is dropped from every image export.
 const excludeMarkedChrome = (node: HTMLElement): boolean =>
   !node.classList?.contains('capture-exclude')
 
@@ -92,21 +89,10 @@ export function useGridExport() {
     }
 
     try {
-      let dataUrl = await capture(containerElement)
+      const dataUrl = await capture(containerElement)
 
-      // If in perspective mode, crop the image to remove empty space
       if (options.showPerspective) {
-        dataUrl = await cropPerspectiveImage(dataUrl, options.perspectiveCompression ?? 0.55)
-      }
-
-      // Stack an extra element (the Team Power panel) below the grid. Captured flat
-      // and appended after the crop so the perspective math never touches it.
-      if (options.appendTarget) {
-        const appendElement = document.querySelector<HTMLElement>(options.appendTarget)
-        if (appendElement) {
-          const appendUrl = await capture(appendElement)
-          dataUrl = await stackImagesVertically(dataUrl, appendUrl)
-        }
+        return cropPerspectiveImage(dataUrl, options.perspectiveCompression ?? 0.55)
       }
 
       return dataUrl
@@ -154,21 +140,6 @@ export function useGridExport() {
       cropHeight, // Destination width, height
     )
 
-    return canvas.toDataURL('image/png', 1.0)
-  }
-
-  // Stack two PNG data URLs into one image, the second centered below the first.
-  const stackImagesVertically = async (topUrl: string, bottomUrl: string): Promise<string> => {
-    const [top, bottom] = await Promise.all([loadImage(topUrl), loadImage(bottomUrl)])
-    const gap = 24
-    const width = Math.max(top.width, bottom.width)
-    const canvas = document.createElement('canvas')
-    canvas.width = width
-    canvas.height = top.height + gap + bottom.height
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return topUrl
-    ctx.drawImage(top, Math.round((width - top.width) / 2), 0)
-    ctx.drawImage(bottom, Math.round((width - bottom.width) / 2), top.height + gap)
     return canvas.toDataURL('image/png', 1.0)
   }
 

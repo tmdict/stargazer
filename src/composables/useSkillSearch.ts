@@ -176,8 +176,8 @@ export function deepSearchMinLength(query: string): number {
 /** Empty query → `null`. ≥1 char → name match. ≥`deepSearchMinLength` chars →
  * +skill names & descriptions. Matches every warm locale so a hero surfaces
  * regardless of language; the first query streams the missing corpora in and
- * results refine live as they land. Hits per hero capped at 3; results
- * ordered by hit count. */
+ * results refine live as they land. Hits per hero capped at 3; name-matched
+ * heroes rank above text-only matches, then by hit count. */
 export function useSkillSearch(
   query: Ref<string>,
   appLang: Ref<AppLocale>,
@@ -254,6 +254,11 @@ export function useSkillSearch(
     return [...perSlug.entries()]
       .map(([slug, hits]) => ({ slug, hits }))
       .sort((a, b) => {
+        // Typing a hero's name must put that hero first: text-only matches
+        // can tie a name match on hit count and would win the alphabetical
+        // tiebreak.
+        const nameDelta = Number(namedSlugs.has(b.slug)) - Number(namedSlugs.has(a.slug))
+        if (nameDelta !== 0) return nameDelta
         if (b.hits.length !== a.hits.length) return b.hits.length - a.hits.length
         return curatedHeroName(a.slug, appLang.value).localeCompare(
           curatedHeroName(b.slug, appLang.value),

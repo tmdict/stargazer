@@ -248,7 +248,6 @@ const handleCopyImage = async () => {
   await copyToClipboard({
     showPerspective: showPerspective.value,
     perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
-    appendTarget: '.team-power',
   })
 }
 
@@ -257,7 +256,6 @@ const handleDownload = async () => {
     showPerspective: showPerspective.value,
     perspectiveCompression: PERSPECTIVE_VERTICAL_COMPRESSION,
     filePrefix: 'team',
-    appendTarget: '.team-power',
   })
 }
 
