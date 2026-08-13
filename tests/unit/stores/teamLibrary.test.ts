@@ -151,11 +151,14 @@ describe('useTeamLibrary', () => {
     expect(library.update('missing', CANONICAL_3V3)).toBe(false)
   })
 
-  it('rename validates, duplicate copies with a fresh id and (copy) name', () => {
+  it('rename validates and leaves updatedAt, duplicate copies with a fresh id and (copy) name', () => {
     seed([record('a', 'Alpha')])
     const library = useTeamLibrary()
+    const before = library.get('a')!.updatedAt
     expect(library.rename('a', '  Bravo  ')).toBe(true)
     expect(library.get('a')!.name).toBe('Bravo')
+    // A relabel must not reorder the last-modified sort.
+    expect(library.get('a')!.updatedAt).toBe(before)
     expect(library.rename('a', '   ')).toBe(false)
 
     const copy = library.duplicate('a')!

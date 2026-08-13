@@ -7,8 +7,8 @@ import { sanitizeTeamName } from '@/lib/teams/savedTeam'
  * commit, Esc cancels. `key` distinguishes sibling targets sharing an instance
  * (e.g. one per card); a single-target caller passes any constant. */
 export function useInlineRename(options: {
-  // The stored name commit compares against; an unchanged name skips the
-  // write so blur alone never bumps the team's updatedAt.
+  // Returns the persisted name: an unchanged name skips the write, so a blur
+  // with no edit costs no storage round-trip.
   currentName: (key: string) => string | null | undefined
   rename: (key: string, name: string) => void
 }) {

@@ -143,6 +143,7 @@ Key rules:
 - **Map keys unchecked**: `t` is authoritative, so a record referencing a retired map stays valid
 - **Seasonal ids unchecked**: a record referencing retired phantimals/artifacts stays valid and lossless; boards render question-mark placeholders (removable/replaceable like live units) and thumbnails a question-marked dot, and the ids persist until the user edits them away
 - **Canonical at the owner**: `saveAsNew`/`update` canonicalize their input rather than trusting callers
+- **`updatedAt` is content-only**: `update` stamps it, `rename` does not, so the last-modified sort and the card's "updated" label track board edits rather than relabels
 - **Serializer contract**: canonicalization rebuilds each board from `BOARD_CONTENT_KEYS` (exported beside `BoardState`, contract-tested), so a new `GridState` section must be registered there to survive in saved teams
 - **Concurrency**: mutations re-read the stored blob first (read-modify-write); cross-tab sync is out of scope beyond that
 - **Layering**: the store returns typed results and never toasts; components own user feedback
