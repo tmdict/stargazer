@@ -122,13 +122,14 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       return true
     })
 
+  /* The last-modified sort and the card's "updated" label both read `updatedAt`,
+   * so a relabel deliberately leaves it alone. */
   const rename = (id: string, name: string): boolean =>
     mutate((fresh) => {
       const team = fresh.find((t) => t.id === id)
       const clean = sanitizeTeamName(name)
       if (!team || !clean) return false
       team.name = clean
-      team.updatedAt = Date.now()
       return true
     })
 
