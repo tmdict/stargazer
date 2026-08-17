@@ -34,9 +34,10 @@ export const MAPS: Record<string, MapConfig> = Object.fromEntries(
 
 export const DEFAULT_MAP = MAPS['arena1']!
 
-// Per-board starting arenas for the 5 v 5 page, by board index: Arena I, Arena II,
-// Arena III, Preset SR11, Preset SR1. Keys index src/data/arena/*.json; its length
-// is the board count.
+// Per-board starting arenas for the 5v5 SL team mode, by board index. Keys index
+// src/data/arena/*.json; its length is the board count. Editing this list changes
+// the mode's persisted defaults fingerprint, which hard-resets every visitor's
+// active 5v5 SL boards on next load (saved teams keep their own maps).
 export const FIVE_V_FIVE_DEFAULT_MAPS = [
   'arena1',
   'arena2',

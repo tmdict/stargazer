@@ -3,3 +3,8 @@
 # stay on Netlify's default always-revalidate behavior.
 /assets/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Netlify has no MIME mapping for .webmanifest and falls back to
+# application/octet-stream, which crawlers and strict parsers reject.
+/site.webmanifest
+  Content-Type: application/manifest+json
