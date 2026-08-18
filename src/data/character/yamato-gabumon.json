@@ -1,0 +1,14 @@
+{
+  "id": 124,
+  "name": "yamato-gabumon",
+  "level": "s",
+  "faction": "dimensional",
+  "class": "mage",
+  "damage": "magic",
+  "energy": [400],
+  "range": 4,
+  "season": 7,
+  "tags": {
+    "initial-energy-300": []
+  }
+}
