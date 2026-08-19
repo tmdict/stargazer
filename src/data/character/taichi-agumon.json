@@ -9,6 +9,8 @@
   "range": 7,
   "season": 7,
   "tags": {
-    "initial-energy-300": []
+    "initial-energy-300": [],
+    "temp-buff": [{ "awakening": 1 }],
+    "temp-buff-opening": [{ "awakening": 1 }]
   }
 }

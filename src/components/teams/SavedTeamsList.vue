@@ -1,10 +1,10 @@
 <script setup lang="ts">
-/* The Saved Teams roster panel: header (count, cap warning, sort, and the
-   library-wide Import / Export / Delete all) plus a card grid: thumbnail, mode
-   chip, inline-renamable name, relative updated time, and Load / Duplicate /
-   Copy / Download / Delete actions. Destructive actions use the app's no-modal
-   style: a two-step inline confirm that arms for a few seconds. User feedback
-   (toasts) is fired here, not in the store. */
+/* The Saved Teams roster panel: header (count, cap warning, sort, mode filter,
+   search, and the library-wide Import / Export / Delete all) plus a card grid:
+   thumbnail, mode chip, inline-renamable name, relative updated time, and
+   Load / Duplicate / Copy / Download / Delete actions. Destructive actions use
+   the app's no-modal style: a two-step inline confirm that arms for a few
+   seconds. User feedback (toasts) is fired here, not in the store. */
 
 import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
@@ -22,7 +22,13 @@ import { useInlineRename } from '@/composables/useInlineRename'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
-import { MAX_SAVED_TEAMS, MAX_TEAM_NAME_LENGTH, TEAM_MODES } from '@/lib/teams/modes'
+import {
+  MAX_SAVED_TEAMS,
+  MAX_TEAM_NAME_LENGTH,
+  TEAM_MODE_ORDER,
+  TEAM_MODES,
+  type TeamModeKey,
+} from '@/lib/teams/modes'
 import { isStandardHero, teamPreviewBoards } from '@/lib/teams/preview'
 import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
@@ -64,7 +70,22 @@ const sorted = computed(() => {
     : teams.sort((a, b) => b.updatedAt - a.updatedAt)
 })
 
-// The box hides below 2 teams and the filter follows it, so a leftover query
+type ModeFilter = 'all' | TeamModeKey
+// Every mode stays on offer whatever the library holds: a segment that vanished
+// with its last team would strand the selection, and an empty mode reaches the
+// same "no matches" state a query does.
+const MODE_FILTERS: ModeFilter[] = ['all', ...TEAM_MODE_ORDER]
+// Unlike the sort preference this stays out of storage: a filter restored on
+// load would read as missing teams.
+const modeFilter = ref<ModeFilter>('all')
+
+const modeFiltered = computed(() =>
+  modeFilter.value === 'all'
+    ? sorted.value
+    : sorted.value.filter((team) => team.mode === modeFilter.value),
+)
+
+// The box hides below 2 teams and matching follows it, so a leftover query
 // can never strand the list on "no matches" with no visible way to clear it.
 // A card survives on a name hit or a hero hit. renderSnippet gets the name's
 // full length as context, so its pieces always spell the whole name.
@@ -103,9 +124,12 @@ const teamHeroSlugs = (team: SavedTeam): ReadonlySet<string> => {
 const visibleTeams = computed(() => {
   const query = activeQuery.value
   if (!query)
-    return sorted.value.map((team) => ({ team, name: { pre: team.name, match: '', post: '' } }))
+    return modeFiltered.value.map((team) => ({
+      team,
+      name: { pre: team.name, match: '', post: '' },
+    }))
   const heroes = matchedHeroes.value
-  return sorted.value.flatMap((team) => {
+  return modeFiltered.value.flatMap((team) => {
     const name = renderSnippet(team.name, query, team.name.length)
     const heroHit = !name && !!heroes && [...teamHeroSlugs(team)].some((slug) => heroes.has(slug))
     if (!name && !heroHit) return []
@@ -274,7 +298,7 @@ const actionTipText = computed((): string =>
         </button>
         <div
           v-if="library.count > 1"
-          class="sort-picker"
+          class="seg-group"
           role="group"
           :aria-label="i18n.t('app.sort')"
         >
@@ -283,11 +307,24 @@ const actionTipText = computed((): string =>
             :key
             type="button"
             :aria-pressed="sortBy === key"
-            class="sort-seg"
+            class="seg-btn"
             :class="{ active: sortBy === key }"
             @click="sortBy = key"
           >
             {{ i18n.t(`app.sort-${key}`) }}
+          </button>
+        </div>
+        <div class="seg-group" role="group" :aria-label="i18n.t('app.teams')">
+          <button
+            v-for="key in MODE_FILTERS"
+            :key
+            type="button"
+            :aria-pressed="modeFilter === key"
+            class="seg-btn"
+            :class="{ active: modeFilter === key }"
+            @click="modeFilter = key"
+          >
+            {{ key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey) }}
           </button>
         </div>
         <input
@@ -503,6 +540,7 @@ const actionTipText = computed((): string =>
 .library-info {
   display: inline-flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
 
@@ -533,7 +571,7 @@ const actionTipText = computed((): string =>
 }
 
 /* Sized down from TeamModePicker's segmented style to fit the library bar. */
-.sort-picker {
+.seg-group {
   display: inline-flex;
   margin-left: var(--spacing-sm);
   background: var(--color-bg-secondary);
@@ -543,7 +581,7 @@ const actionTipText = computed((): string =>
   gap: 2px;
 }
 
-.sort-seg {
+.seg-btn {
   border: none;
   background: transparent;
   border-radius: 999px;
@@ -556,12 +594,12 @@ const actionTipText = computed((): string =>
   white-space: nowrap;
 }
 
-.sort-seg:hover:not(.active) {
+.seg-btn:hover:not(.active) {
   color: var(--color-primary);
   background: var(--color-bg-tertiary);
 }
 
-.sort-seg.active {
+.seg-btn.active {
   background: var(--color-primary);
   color: #fff;
 }
