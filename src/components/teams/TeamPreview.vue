@@ -11,7 +11,7 @@ import { isStandardHero, teamPreviewBoards, type PreviewUnit } from '@/lib/teams
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { phantimalImageUrl } from '@/utils/artifactImage'
+import { isRemoteArtifact, phantimalImageUrl, seasonArtifactImageUrl } from '@/utils/artifactImage'
 
 const {
   team,
@@ -44,6 +44,16 @@ const resolveImage = (unit: PreviewUnit): string | undefined => {
   return undefined
 }
 
+// The same local/remote split ArtifactImage makes for the live board.
+const resolveArtifactImage = (artifactId: number | null): string | undefined => {
+  if (artifactId === null) return undefined
+  const artifact = gameData.getArtifactById(artifactId)
+  if (!artifact) return undefined
+  return isRemoteArtifact(artifact.season)
+    ? seasonArtifactImageUrl(artifact.name)
+    : gameData.getArtifactImage(artifact.name) || undefined
+}
+
 const isHighlighted = (unit: PreviewUnit): boolean => {
   if (!highlightHeroes || !isStandardHero(unit)) return false
   const slug = gameData.getCharacterNameById(unit.characterId)
@@ -60,6 +70,10 @@ const boards = computed(() => {
   return decoded.value.map((board) => ({
     mapKey: board.mapKey,
     tiles: board.tiles,
+    artifacts: {
+      ally: resolveArtifactImage(board.artifacts.ally),
+      enemy: resolveArtifactImage(board.artifacts.enemy),
+    },
     units: board.units.map(
       (unit): ThumbnailUnit => ({
         hexId: unit.hexId,
@@ -82,6 +96,7 @@ const boards = computed(() => {
         :map-key="board.mapKey"
         :tiles="board.tiles"
         :units="board.units"
+        :artifacts="board.artifacts"
         :hex-size="large ? 18 : 10"
       />
     </template>

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { MAPS } from '@/lib/maps'
+import { FIVE_V_FIVE_DEFAULT_MAPS, MAPS } from '@/lib/maps'
 import {
   DEFAULT_TEAM_MODE,
   isTeamModeKey,
@@ -110,9 +110,7 @@ describe('normalizeTeamPayload', () => {
     expect(normalized.boards.map((b) => b.m)).toEqual([
       'arena1',
       'arena1',
-      'arena3',
-      'preset-sr11',
-      'preset-sr1',
+      ...FIVE_V_FIVE_DEFAULT_MAPS.slice(2),
     ])
   })
 

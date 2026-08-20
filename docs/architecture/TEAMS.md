@@ -141,7 +141,7 @@ Key rules:
 
 - **Validation**: hydration and import run every record through `validateSavedTeam` (known mode, matching board count, canonicalizable data); a failing record drops alone, never the library
 - **Map keys unchecked**: `t` is authoritative, so a record referencing a retired map stays valid
-- **Seasonal ids unchecked**: a record referencing retired phantimals/artifacts stays valid and lossless; boards render question-mark placeholders (removable/replaceable like live units) and thumbnails a question-marked dot, and the ids persist until the user edits them away
+- **Seasonal ids unchecked**: a record referencing retired phantimals/artifacts stays valid and lossless; boards render question-mark placeholders (removable/replaceable like live units) and thumbnails a question-marked dot for units (an unresolvable artifact is omitted instead), and the ids persist until the user edits them away
 - **Canonical at the owner**: `saveAsNew`/`update` canonicalize their input rather than trusting callers
 - **`updatedAt` is content-only**: `update` stamps it, `rename` does not, so the last-modified sort and the card's "updated" label track board edits rather than relabels
 - **Serializer contract**: canonicalization rebuilds each board from `BOARD_CONTENT_KEYS` (exported beside `BoardState`, contract-tested), so a new `GridState` section must be registered there to survive in saved teams
@@ -170,6 +170,7 @@ Semantics wired in `TeamsView`:
 - **Geometry cache**: hex polygons are memoized at module level per hex size, so a full library renders hundreds of boards from one polygon set
 - **Map-state cache**: baseline tile states are memoized per map key
 - **Portraits**: hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units); `clipPath` defs exist only for occupied hexes; companion ids resolve through `gameData.getCharacterImageNameById` (the skill's custom companion image or the main hero's portrait)
+- **Artifacts**: the ally/enemy ids from the record's `a` section, drawn as circle-clipped `<image>`s with a team-colored ring on GridArtifacts' host cells (the neighbours of hexes 1 and 45). Those cells fall in the empty corners of the hex grid's bounding box, so showing them costs no framing change. `TeamPreview` resolves the icons with ArtifactImage's local/remote split; an id that no longer resolves draws nothing
 - **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states, exactly what Load produces; the map-config baseline applies only when a board has no `t`
 - **Reuse**: `ArenaPreviewGrid` (Maps tab + Map Editor preset picker) renders through the same component with its square framing
 

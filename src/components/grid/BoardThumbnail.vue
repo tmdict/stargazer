@@ -20,6 +20,9 @@ interface Geometry {
   viewBox: string
   points: Map<number, string>
   centers: Map<number, Point>
+  // `renderTiles` walks `points`, so an artifact cell listed there would draw
+  // as a tile.
+  artifactCenters: Record<'ally' | 'enemy', Point>
 }
 
 /* Hex geometry depends only on hexSize (+ optional square viewBox), never on the
@@ -54,12 +57,20 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
     centers.set(hex.getId(), layout.hexToPixel(hex))
   }
 
+  // Must match GridArtifacts' host cells. They land in the empty corners of the
+  // hex grid's bounding box, so drawing there costs no framing change.
+  const artifactCenters = {
+    ally: layout.hexToPixel(grid.getHexById(1).neighbor(4)),
+    enemy: layout.hexToPixel(grid.getHexById(45).neighbor(1)),
+  }
+
   const geometry: Geometry = {
     viewBox: viewBoxSize
       ? `0 0 ${viewBoxSize} ${viewBoxSize}`
       : `${(minX - 1).toFixed(1)} ${(minY - 1).toFixed(1)} ${(maxX - minX + 2).toFixed(1)} ${(maxY - minY + 2).toFixed(1)}`,
     points,
     centers,
+    artifactCenters,
   }
   geometryCache.set(key, geometry)
   return geometry
@@ -101,6 +112,15 @@ function getTileFill(state: State | undefined): string {
 }
 
 const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c82333')
+
+/* Well under the hex it sits in, so the icon reads as an attachment to the board
+   rather than a sixth unit. */
+const ARTIFACT_RADIUS_RATIO = 0.62
+
+const ARTIFACT_SIDES = [
+  { side: 'ally', team: Team.ALLY },
+  { side: 'enemy', team: Team.ENEMY },
+] as const
 </script>
 
 <script setup lang="ts">
@@ -112,6 +132,7 @@ const {
   mapKey,
   tiles,
   units = [],
+  artifacts,
   hexSize = 7,
   viewBoxSize,
 } = defineProps<{
@@ -122,6 +143,7 @@ const {
   // map pickers).
   tiles?: number[][]
   units?: ThumbnailUnit[]
+  artifacts?: { ally?: string; enemy?: string }
   hexSize?: number
   // Square viewBox with a centered board (the maps tab's framing); omitted =
   // tight-fit bounds, the right default for card thumbnails.
@@ -163,6 +185,22 @@ const placedUnits = computed(() =>
       imageSize: hexSize * 2.2,
     })),
 )
+
+const placedArtifacts = computed(() =>
+  ARTIFACT_SIDES.flatMap(({ side, team }) => {
+    const image = artifacts?.[side]
+    if (image === undefined) return []
+    return [
+      {
+        side,
+        image,
+        center: geometry.value.artifactCenters[side],
+        radius: hexSize * ARTIFACT_RADIUS_RATIO,
+        color: teamColor(team),
+      },
+    ]
+  }),
+)
 </script>
 
 <template>
@@ -171,6 +209,9 @@ const placedUnits = computed(() =>
       <!-- Clip paths only for occupied hexes, not all 45 tiles. -->
       <clipPath v-for="unit in placedUnits" :id="`${uid}-u-${unit.hexId}`" :key="unit.hexId">
         <polygon :points="unit.corners" />
+      </clipPath>
+      <clipPath v-for="art in placedArtifacts" :id="`${uid}-a-${art.side}`" :key="art.side">
+        <circle :cx="art.center.x" :cy="art.center.y" :r="art.radius" />
       </clipPath>
     </defs>
 
@@ -230,6 +271,26 @@ const placedUnits = computed(() =>
         fill="none"
         stroke="#f9a825"
         stroke-width="2"
+      />
+    </g>
+
+    <g v-for="art in placedArtifacts" :key="`artifact-${art.side}`">
+      <image
+        :href="art.image"
+        :x="art.center.x - art.radius"
+        :y="art.center.y - art.radius"
+        :width="art.radius * 2"
+        :height="art.radius * 2"
+        preserveAspectRatio="xMidYMid slice"
+        :clip-path="`url(#${uid}-a-${art.side})`"
+      />
+      <circle
+        :cx="art.center.x"
+        :cy="art.center.y"
+        :r="art.radius"
+        fill="none"
+        :stroke="art.color"
+        stroke-width="1"
       />
     </g>
   </svg>

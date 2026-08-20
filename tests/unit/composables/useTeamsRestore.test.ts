@@ -4,6 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { teamsSlotKey, type ActiveSlot } from '@/composables/useGridPersistence'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
+import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
 import type { TeamModeKey } from '@/lib/teams/modes'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
@@ -91,13 +92,7 @@ describe('useTeamsRestore', () => {
     expect(result).toEqual({ linkLoaded: false, linkFailed: false })
     expect(restore.activeMode.value).toBe('5v5sl')
     expect(grids.contexts).toHaveLength(5)
-    expect(grids.contexts.map((ctx) => ctx.currentMap)).toEqual([
-      'arena1',
-      'arena2',
-      'arena3',
-      'preset-sr11',
-      'preset-sr1',
-    ])
+    expect(grids.contexts.map((ctx) => ctx.currentMap)).toEqual(FIVE_V_FIVE_DEFAULT_MAPS)
     expect(storage.get('stargazer.teams.mode')).toBe('5v5sl')
     expect(readEnvelope('5v5sl').sourceId).toBeNull()
   })
@@ -155,13 +150,7 @@ describe('useTeamsRestore', () => {
     expect(decodeBoards(readEnvelope('5v5').data).boards.every((b) => !b.c)).toBe(true)
 
     restore.switchMode('5v5sl')
-    expect(grids.contexts.map((ctx) => ctx.currentMap)).toEqual([
-      'arena1',
-      'arena2',
-      'arena3',
-      'preset-sr11',
-      'preset-sr1',
-    ])
+    expect(grids.contexts.map((ctx) => ctx.currentMap)).toEqual(FIVE_V_FIVE_DEFAULT_MAPS)
     const restored = decodeBoards(readEnvelope('5v5sl').data)
     expect(restored.boards[0]!.c).toEqual([[1, 11, Team.ALLY]])
   })
