@@ -1,7 +1,7 @@
 /* Pure mapping from a saved team's encoded data to thumbnail inputs: one entry
- * per board with its map key and occupied hexes. Image resolution stays in the
- * component layer (it needs the game-data store); this split keeps the mapping
- * unit-testable headless. */
+ * per board with its map key, occupied hexes, and artifact ids. Image resolution
+ * stays in the component layer (it needs the game-data store); this split keeps
+ * the mapping unit-testable headless. */
 
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Team } from '@/lib/types/team'
@@ -27,6 +27,7 @@ export interface PreviewBoard {
   // array means an all-default board; undefined means no t section was present).
   tiles?: number[][]
   units: PreviewUnit[]
+  artifacts: { ally: number | null; enemy: number | null }
 }
 
 /* Null = undecodable record (the card renders its fallback tile). */
@@ -46,6 +47,11 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       if (hexId === undefined || phantimalId === undefined || team === undefined) continue
       units.push({ hexId, team: team as Team, phantimalId })
     }
-    return { mapKey: board.m ?? 'arena1', tiles: board.t, units }
+    return {
+      mapKey: board.m ?? 'arena1',
+      tiles: board.t,
+      units,
+      artifacts: { ally: board.a?.[0] ?? null, enemy: board.a?.[1] ?? null },
+    }
   })
 }
