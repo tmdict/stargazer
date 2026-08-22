@@ -42,9 +42,15 @@ interface TargetingSkillConfig {
 /**
  * Skill that calculates a target and stores it via skillManager.
  * Optionally enriches the target with a single arrow.
+ *
+ * Instance state in every factory keys by ctx.characterId (the placed unit),
+ * never the config id: a synergy copy shares one Skill object with its base
+ * hero, and config-keyed state would cross-wire the two instances. Hence no
+ * factory destructures characterId out of its config; it appears only as the
+ * returned object's registry field.
  */
 export function createTargetingSkill(config: TargetingSkillConfig): Skill {
-  const { id, characterId, color, arrowType, calculateTarget } = config
+  const { id, color, arrowType, calculateTarget } = config
 
   const isHit = (info: SkillTargetInfo | null): info is SkillTargetInfo => {
     if (info === null) return false
@@ -64,24 +70,24 @@ export function createTargetingSkill(config: TargetingSkillConfig): Skill {
             },
           }
         : info
-    ctx.skillManager.setSkillTarget(characterId, ctx.team, enriched)
+    ctx.skillManager.setSkillTarget(ctx.characterId, ctx.team, enriched)
   }
 
   return {
     id,
-    characterId,
+    characterId: config.characterId,
     targetingColorModifier: color,
     onActivate(ctx) {
       const info = calculateTarget(ctx)
       if (isHit(info)) apply(ctx, info)
     },
     onDeactivate(ctx) {
-      ctx.skillManager.clearSkillTarget(characterId, ctx.team)
+      ctx.skillManager.clearSkillTarget(ctx.characterId, ctx.team)
     },
     onUpdate(ctx) {
       const info = calculateTarget(ctx)
       if (isHit(info)) apply(ctx, info)
-      else ctx.skillManager.clearSkillTarget(characterId, ctx.team)
+      else ctx.skillManager.clearSkillTarget(ctx.characterId, ctx.team)
     },
   }
 }
@@ -101,7 +107,7 @@ interface TileHighlightSkillConfig {
  * before applying the new one.
  */
 export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skill {
-  const { id, characterId, tileColor, fill, calculateTarget } = config
+  const { id, tileColor, fill, calculateTarget } = config
 
   const paint = (sm: SkillContext['skillManager'], hexId: number): void =>
     fill ? sm.setTileFillModifier(hexId, tileColor) : sm.setTileColorModifier(hexId, tileColor)
@@ -111,7 +117,7 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
       : sm.removeTileColorModifier(hexId, tileColor)
 
   const updateTargets = (ctx: SkillContext): void => {
-    const { skillManager, team } = ctx
+    const { skillManager, team, characterId } = ctx
 
     // Clear previous tile color before applying new one
     const previous = skillManager.getSkillTarget(characterId, team)
@@ -130,12 +136,12 @@ export function createTileHighlightSkill(config: TileHighlightSkillConfig): Skil
 
   return {
     id,
-    characterId,
+    characterId: config.characterId,
     onActivate(ctx) {
       updateTargets(ctx)
     },
     onDeactivate(ctx) {
-      const { skillManager, team } = ctx
+      const { skillManager, team, characterId } = ctx
       const current = skillManager.getSkillTarget(characterId, team)
       if (current?.targetHexId) {
         unpaint(skillManager, current.targetHexId)
@@ -266,7 +272,6 @@ interface CompanionSkillConfig {
 export function createCompanionSkill(config: CompanionSkillConfig): Skill {
   const {
     id,
-    characterId,
     count = 1,
     colorModifier,
     companionColorModifier,
@@ -276,14 +281,14 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
 
   return {
     id,
-    characterId,
+    characterId: config.characterId,
     colorModifier,
     companionColorModifier,
     companionImageModifier,
     companionRange,
 
     onActivate(ctx: SkillContext): void {
-      const { grid, team, skillManager } = ctx
+      const { grid, team, skillManager, characterId } = ctx
       const companionIds = Array.from(
         { length: count },
         (_, i) => (i + 1) * grid.companionIdOffset + characterId,
@@ -339,7 +344,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
     },
 
     onDeactivate(ctx: SkillContext): void {
-      const { grid, team, skillManager } = ctx
+      const { grid, team, skillManager, characterId } = ctx
 
       skillManager.removeCharacterColorModifier(characterId, team)
 

@@ -2,6 +2,7 @@ import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
+import { decomposeUnitId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
@@ -69,22 +70,18 @@ export const useGameDataStore = defineStore('gameData', () => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.range ?? 1
     }
-    // Check if this is a companion ID
-    if (characterId >= COMPANION_ID_OFFSET) {
-      const mainCharacterId = characterId % COMPANION_ID_OFFSET
+    // Synergy-band ids mirror the base namespace: decompose first, or a synergy
+    // main would take its own skill's companion branch (e.g. turret range).
+    const { localId } = decomposeUnitId(characterId)
+    if (localId >= COMPANION_ID_OFFSET) {
+      const mainCharacterId = localId % COMPANION_ID_OFFSET
       const skill = getCharacterSkill(mainCharacterId)
-
-      // If the skill defines a companion range, use that
       if (skill?.companionRange !== undefined) {
         return skill.companionRange
       }
-
-      // Otherwise fall back to the main character's range
       return characterRanges.value.get(mainCharacterId) ?? 1
     }
-
-    // Regular character - use standard range
-    return characterRanges.value.get(characterId) ?? 1
+    return characterRanges.value.get(localId) ?? 1
   }
 
   const getCharacterById = (characterId: number): CharacterType | undefined => {
@@ -95,9 +92,8 @@ export const useGameDataStore = defineStore('gameData', () => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.name
     }
-    // Handle companion IDs
-    const actualId =
-      characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
+    const { localId } = decomposeUnitId(characterId)
+    const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
     const character = getCharacterById(actualId)
     return character?.name
   }
@@ -106,8 +102,9 @@ export const useGameDataStore = defineStore('gameData', () => {
   // companion image when one is defined (e.g. Zanie's turret), otherwise its
   // main hero's portrait, matching what the live grid renders.
   const getCharacterImageNameById = (characterId: number): string | undefined => {
-    if (!isPhantimalId(characterId) && characterId >= COMPANION_ID_OFFSET) {
-      const custom = getCharacterSkill(characterId % COMPANION_ID_OFFSET)?.companionImageModifier
+    const { localId } = decomposeUnitId(characterId)
+    if (!isPhantimalId(characterId) && localId >= COMPANION_ID_OFFSET) {
+      const custom = getCharacterSkill(localId % COMPANION_ID_OFFSET)?.companionImageModifier
       if (custom) return custom
     }
     return getCharacterNameById(characterId)
@@ -127,8 +124,8 @@ export const useGameDataStore = defineStore('gameData', () => {
   // character and phantimals to their own faction.
   const getCharacterFaction = (characterId: number): string | undefined => {
     if (isPhantimalId(characterId)) return getPhantimalById(characterId)?.faction
-    const actualId =
-      characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
+    const { localId } = decomposeUnitId(characterId)
+    const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
     return getCharacterById(actualId)?.faction
   }
 
@@ -136,8 +133,8 @@ export const useGameDataStore = defineStore('gameData', () => {
   // character. Phantimals carry no class.
   const getCharacterClass = (characterId: number): string | undefined => {
     if (isPhantimalId(characterId)) return undefined
-    const actualId =
-      characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
+    const { localId } = decomposeUnitId(characterId)
+    const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
     return getCharacterById(actualId)?.class
   }
 

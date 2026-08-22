@@ -13,7 +13,7 @@ import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { getAvailableTeamSize } from '@/lib/characters/character'
+import { getAvailableTeamSize, synergySlotFree } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
@@ -126,8 +126,14 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
     return
   }
 
-  // The picker can only add: skip a tile whose team is already full.
-  if (getAvailableTeamSize(ctx.grid, tileTeam) <= 0) return
+  // The picker can only add: skip a tile whose team is already full — unless
+  // the Syn affordance still has an assist slot to offer.
+  if (
+    getAvailableTeamSize(ctx.grid, tileTeam) <= 0 &&
+    !(grids.synergy && synergySlotFree(ctx.grid, tileTeam))
+  ) {
+    return
+  }
 
   // Anchor the popup near the tapped hex. The perspective transform scales Y,
   // but svgPointToScreen (getScreenCTM) already accounts for it.

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 
+import { decomposeUnitId } from '@/lib/characters/synergy'
 import type { GridTile } from '@/lib/grid'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { SkillTargetInfo } from '@/lib/skills/skill'
@@ -119,7 +120,7 @@ const activeSkillConfigs = computed(() => {
       skillName: skill.id,
       characterName: getCharacterName(tile.characterId),
       targets: targets,
-      showSymmetry: [39, 58].includes(tile.characterId), // Silvina, Nara
+      showSymmetry: [39, 58].includes(decomposeUnitId(tile.characterId).localId), // Silvina, Nara
     })
   }
 
@@ -176,7 +177,7 @@ defineExpose({
                   {{ getSymmetricalHexId(gridStore._getGrid(), tile.hex.getId()) }}</span
                 >
                 <!-- Handle Reinier's special dual target display -->
-                <template v-if="config.characterId === 31">
+                <template v-if="decomposeUnitId(config.characterId).localId === 31">
                   <template v-for="targetData in config.targets" :key="targetData.key">
                     <span
                       v-if="

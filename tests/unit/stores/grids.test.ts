@@ -1,7 +1,8 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
+import { findCharacterHex, getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
+import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
@@ -522,5 +523,62 @@ describe('useGrids.routeDrop same-board uniqueness', () => {
     expect(grids.routeDrop(dragPayload(0, 1, ENEMY_A), 0, 41)).toBe(true)
     expect(getCharacter(a.grid, 41)).toBe(ENEMY_A)
     expect(a.grid.getTileById(1).characterId).toBeUndefined()
+  })
+})
+
+describe('useGrids synergy', () => {
+  it('placeOnActive resolves a duplicate to the synergy copy only while armed', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
+
+    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(false)
+    grids.synergy = true
+    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
+
+    const ids = getTilesWithCharacters(grids.active!.grid).map((t) => t.characterId)
+    expect(ids.sort((a, b) => a! - b!)).toEqual([ALLY_A, toSynergyId(ALLY_A)])
+    // The slot is spent: a further duplicate resolves to nothing.
+    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(false)
+  })
+
+  it('placeOnActive routes an overflow pick on a full team into the slot', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const heroes = [11, 12, 13, 14, 15]
+    heroes.forEach((id) => expect(grids.placeOnActive(id, Team.ALLY)).toBe(true))
+
+    expect(grids.placeOnActive(16, Team.ALLY)).toBe(false)
+    grids.synergy = true
+    expect(grids.placeOnActive(16, Team.ALLY)).toBe(true)
+    expect(findCharacterHex(grids.active!.grid, toSynergyId(16), Team.ALLY)).not.toBe(null)
+  })
+
+  it('setSynergy(false) removes both teams synergy units and their companions', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    grids.synergy = true
+    expect(grids.placeOnActive(PHRAESTO, Team.ALLY)).toBe(true)
+    expect(grids.placeOnActive(PHRAESTO, Team.ALLY)).toBe(true)
+    expect(grids.placeOnActive(ALLY_A, Team.ENEMY)).toBe(true)
+    expect(grids.placeOnActive(ALLY_A, Team.ENEMY)).toBe(true)
+
+    const before = roster(grids.active!.grid).map((r) => r.characterId)
+    expect(before).toContain(toSynergyId(PHRAESTO))
+    expect(before).toContain(toSynergyId(PHRAESTO) + COMPANION_ID_OFFSET)
+    expect(before).toContain(toSynergyId(ALLY_A))
+
+    grids.setSynergy(false)
+    expect(grids.synergy).toBe(false)
+    const after = roster(grids.active!.grid).map((r) => r.characterId)
+    expect(after.sort((a, b) => a - b)).toEqual([ALLY_A, PHRAESTO, PHRAESTO_COMPANION])
+  })
+
+  it('setGridCount re-derives the affordance from the rebuilt boards', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    grids.synergy = true
+    grids.setGridCount(1)
+    expect(grids.synergy).toBe(false)
   })
 })

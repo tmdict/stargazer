@@ -16,7 +16,7 @@ import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
-import { MAX_TEAM_NAME_LENGTH, type TeamModeKey } from '@/lib/teams/modes'
+import { MAX_TEAM_NAME_LENGTH, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -137,6 +137,7 @@ const {
 
     <GridControls
       :show-wrap-toggle="canWrap"
+      :show-syn-toggle="TEAM_MODES[activeMode].allowSynergy"
       confirm-clear
       v-model:wrap="wrap"
       v-model:show-grid-info="showGridInfo"

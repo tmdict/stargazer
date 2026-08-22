@@ -3,6 +3,7 @@ import { State } from '../types/state'
 import { Team } from '../types/team'
 import { isPhantimalId } from './phantimal'
 import { isPlaceholderId } from './placeholder'
+import { isSynergyHeroId, toSynergyId } from './synergy'
 
 // Character queries
 
@@ -96,9 +97,11 @@ export function isCharacterOnTeam(grid: Grid, characterId: number, team: Team): 
 }
 
 export function getAvailableTeamSize(grid: Grid, team: Team): number {
-  // Phantimals occupy tiles but don't hold a team slot.
+  // Phantimals and synergy heroes occupy tiles but don't hold a team slot (the
+  // synergy hero is the friend-assist "+1"; companions it spawns count like any
+  // other, balanced by their skill's capacity bump).
   const occupied = getTilesWithCharactersByTeam(grid, team).filter(
-    (tile) => !isPhantimalId(tile.characterId!),
+    (tile) => !isPhantimalId(tile.characterId!) && !isSynergyHeroId(tile.characterId!),
   ).length
   return getMaxTeamSize(grid, team) - occupied
 }
@@ -107,12 +110,47 @@ export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: T
   // Phantimals don't count toward team size and are capped at one per team by the
   // placement layer, so capacity/duplicate checks don't apply to them.
   if (isPhantimalId(characterId)) return true
+  // The synergy hero replaces capacity and duplicate checks with its own cap of
+  // one per team; its offset id keeps every duplicate check blind to it. Its
+  // companions fall through to the normal companion rules.
+  if (isSynergyHeroId(characterId)) return findTeamSynergyHex(grid, team) === null
   const available = getAvailableTeamSize(grid, team)
   if (available <= 0) return false
   // Placeholders consume capacity like heroes but skip the duplicate check:
   // copies repeat freely (see placeholder.ts).
   if (isPlaceholderId(characterId)) return true
   return !isCharacterOnTeam(grid, characterId, team)
+}
+
+// Which id a roster pick of baseId should place: the base id when it passes the
+// normal gate, else the synergy copy when the affordance is on and the team's
+// slot is free, else nothing. The single decision point for every placement
+// entry (click, tap, popup, drag), so hover cues and drops can't disagree.
+export function resolvePlacement(
+  grid: Grid,
+  baseId: number,
+  team: Team,
+  synergyOn: boolean,
+): number | null {
+  if (canPlaceCharacterOnTeam(grid, baseId, team)) return baseId
+  const synergyId = toSynergyId(baseId)
+  if (synergyOn && canPlaceCharacterOnTeam(grid, synergyId, team)) return synergyId
+  return null
+}
+
+// Hex of the team's synergy hero, or null; the assist slot is capped at one per
+// team.
+export function findTeamSynergyHex(grid: Grid, team: Team): number | null {
+  for (const tile of grid.getAllTiles()) {
+    if (tile.team === team && tile.characterId !== undefined && isSynergyHeroId(tile.characterId)) {
+      return tile.hex.getId()
+    }
+  }
+  return null
+}
+
+export function synergySlotFree(grid: Grid, team: Team): boolean {
+  return findTeamSynergyHex(grid, team) === null
 }
 
 // Hex of the team's on-field phantimal, or null. Phantimals are capped at one per

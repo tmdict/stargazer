@@ -49,12 +49,7 @@
       <li>
         <a href="https://www.yaphalla.com/">Yaphalla</a>：阵型构建工具、英雄优先级工具与数据库。
       </li>
-      <li>
-        <a href="https://afkjourney-art.pages.dev/">AFK Journey Art Archive</a>：AFKJ
-        壁纸与角色立绘存档。
-      </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>：AFKJ 数据库与攻略。</li>
-      <li>特别感谢 Milan 提供英雄技能与相关机制的资料。</li>
       <li>
         图片素材来自<a href="https://www.yaphalla.com/">Yaphalla</a>与<a
           href="https://drive.google.com/drive/folders/1rDfDEFJWSASMfCDAuBosoyocN7UZZPoe"
