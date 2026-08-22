@@ -37,9 +37,7 @@
     <ul>
       <li>Click any empty tile to place a character from a popup menu.</li>
       <li>Toggle overlays to preview flat view, grid info, skills, targeting, and debug.</li>
-      <li>
-        <strong>Team View</strong> crops the board to your side for a clean formation screenshot.
-      </li>
+      <li><strong>Team</strong> crops the board to your side for a clean formation screenshot.</li>
       <li>Use the <strong>Maps</strong> tab to load a preset arena or paint a custom one.</li>
       <li>Heroes with special abilities reshape the map or trigger special effects.</li>
       <li>
