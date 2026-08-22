@@ -70,6 +70,15 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     return result.success
   }
 
+  // Every Teams ingress is shape-normalized against its mode (initialize's link
+  // path normalizes inline, after resolving the mode): board count and, per
+  // mode, the synergy strip. Undecodable payloads pass through so applyEncoded
+  // reports the failure.
+  const normalizeEncoded = (mode: TeamModeKey, encoded: string): string => {
+    const decoded = decodeMultiGridStateFromUrl(encoded)
+    return decoded ? encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode)) : encoded
+  }
+
   // Rebuild hygiene shared by every path: boards share hex ids so stale selection
   // must drop, and the page pins its own sizing. A stray wrap bit needs no reset
   // here: every wrap consumer gates on the mode's canWrap / board count.
@@ -89,7 +98,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   // didn't run.
   const restoreOrDefault = (mode: TeamModeKey): void => {
     const slot = persistence.load(mode)
-    const restored = slot !== null && applyEncoded(slot.data, false)
+    const restored = slot !== null && applyEncoded(normalizeEncoded(mode, slot.data), false)
     if (!restored) buildModeDefaults(mode)
     afterRebuild()
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
@@ -116,7 +125,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     persistence.flush()
     activeMode.value = mode
     persistence.persistMode(mode)
-    const applied = applyEncoded(encoded, false)
+    const applied = applyEncoded(normalizeEncoded(mode, encoded), false)
     if (!applied) buildModeDefaults(mode)
     afterRebuild()
     sourceId.value = applied ? source : null

@@ -42,13 +42,17 @@ used for companions (`companionIdOffset = 10000`):
 
 - `lib/characters/phantimal.ts` owns `PHANTIMAL_ID_OFFSET = 100000` plus the pure
   helpers `isPhantimalId`, `toPhantimalId(localId)`, `toLocalPhantimalId(id)`.
-- A tile whose `characterId >= PHANTIMAL_ID_OFFSET` holds phantimal
-  `characterId - PHANTIMAL_ID_OFFSET` (local IDs come from
-  `src/data/seasonal/phantimal/*.json`).
-- `grid.ts` imports the constant as `Grid.phantimalIdOffset`. `isCompanionId` is
-  bounded by it (`>= companionIdOffset && < phantimalIdOffset`) so phantimal IDs
-  are never mistaken for companions. The offset sits well above the companion
-  band (`N * companionIdOffset + characterId`, N ≥ 1) so a character with several
+- A tile whose `characterId` is in the phantimal band (100000-199999) holds
+  phantimal `characterId - PHANTIMAL_ID_OFFSET` (local IDs come from
+  `src/data/seasonal/phantimal/*.json`). `isPhantimalId` is bounded above by
+  `SYNERGY_ID_OFFSET` (200000) so synergy-band units are never mistaken for
+  phantimals.
+- `grid.ts` imports the constant as `Grid.phantimalIdOffset`. `isCompanionId`
+  classifies on the decomposed local id, bounded by the phantimal offset
+  (`local >= companionIdOffset && local < phantimalIdOffset`), so phantimal IDs
+  are never mistaken for companions while synergy companions still count. The
+  offset sits well above the companion band
+  (`N * companionIdOffset + characterId`, N ≥ 1) so a character with several
   companions (e.g. Zanie's two turrets at `10089`/`20089`) can't spill into the
   phantimal namespace.
 

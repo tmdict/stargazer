@@ -384,3 +384,28 @@ describe('binaryEncoder', () => {
     })
   })
 })
+
+describe('synergy section', () => {
+  it('round-trips synergy entries through the binary format', () => {
+    const state: GridState = {
+      y: [
+        [3, 50, 1],
+        [4, 10050, 2],
+      ],
+    }
+    expect(decodeFromBinary(encodeToBinary(state))).toEqual(state)
+  })
+
+  it('validates synergy entries and caps the count at the field maximum', () => {
+    const good: number[][] = Array.from({ length: 20 }, (_, i) => [i + 1, 100 + i, 1])
+    const bad: number[][] = [
+      [0, 50, 1],
+      [1, 0, 1],
+      [1, 70000, 1],
+      [1, 50, 3],
+    ]
+    const validated = validateGridState({ y: [...bad, ...good] })
+    expect(validated.y).toHaveLength(15)
+    expect(validated.y![0]).toEqual([1, 100, 1])
+  })
+})

@@ -2,11 +2,13 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { decomposeUnitId, toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
 import { useCharacterStore } from '@/stores/character'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
 import { MAX_GRID_COUNT, useGrids } from '@/stores/grids'
 import { useUrlStateStore } from '@/stores/urlState'
@@ -318,5 +320,78 @@ describe('urlStateStore.restoreMultiFromEncodedState', () => {
     const fresh = useGrids()
     expect(fresh.contexts[0]!.grid.getTileById(1).characterId).toBe(ALLY_A)
     expect(fresh.contexts[1]!.grid.getTileById(2).characterId).toBeUndefined()
+  })
+})
+
+describe('synergy restore', () => {
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('round-trips a synergy duplicate and its companions onto their saved hexes', () => {
+    const source = createStores()
+    expect(source.character.placeCharacterOnHex(2, PHRAESTO, Team.ALLY)).toBe(true)
+    expect(source.character.placeCharacterOnHex(7, toSynergyId(PHRAESTO), Team.ALLY)).toBe(true)
+
+    const expected = snapshotTiles(source.grid)
+    const encoded = encodeStores(source)
+
+    const restored = createStores()
+    const restoredGrids = useGrids()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(snapshotTiles(restored.grid)).toEqual(expected)
+    expect(restoredGrids.synergy).toBe(true)
+  })
+
+  it('derives the toggle off when the payload has no synergy unit', () => {
+    const source = createStores()
+    expect(source.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
+    const encoded = encodeStores(source)
+
+    const restored = createStores()
+    const restoredGrids = useGrids()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restoredGrids.synergy).toBe(false)
+  })
+
+  it('restores a phantimal whose faction requirement depends on the synergy hero', () => {
+    const FACTIONS: Record<number, string> = { 601: 'wilder', 602: 'wilder', 603: 'wilder' }
+    const wilderPhantimal = {
+      id: 1,
+      name: 'test-phantimal',
+      season: 7,
+      range: 2,
+      faction: 'wilder',
+    }
+    const mockGameData = (): void => {
+      const gameData = useGameDataStore()
+      vi.spyOn(gameData, 'getCharacterFaction').mockImplementation(
+        (id: number) => FACTIONS[decomposeUnitId(id).localId],
+      )
+      vi.spyOn(gameData, 'getPhantimalById').mockReturnValue(wilderPhantimal)
+    }
+
+    const source = createStores()
+    mockGameData()
+    expect(source.character.placeCharacterOnHex(1, 601, Team.ALLY)).toBe(true)
+    expect(source.character.placeCharacterOnHex(2, 602, Team.ALLY)).toBe(true)
+    expect(source.character.placeCharacterOnHex(3, toSynergyId(603), Team.ALLY)).toBe(true)
+    expect(source.character.placePhantimalOnHex(4, toPhantimalId(1), Team.ALLY)).toBe(true)
+    const encoded = encodeStores(source)
+
+    const restored = createStores()
+    mockGameData()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    expect(restored.grid.getTile(3).characterId).toBe(toSynergyId(603))
+    expect(restored.grid.getTile(4).characterId).toBe(toPhantimalId(1))
+  })
+
+  it('drops crafted out-of-band ids instead of misplacing them', () => {
+    const restored = createStores()
+    const encoded = encodeMultiGridStateToUrl({
+      boards: [{ c: [[1, toSynergyId(PHRAESTO), Team.ALLY]], y: [[2, 100005, Team.ALLY]] }],
+    })
+    expect(restored.urlState.restoreMultiFromEncodedState(encoded).success).toBe(true)
+    expect(restored.character.charactersPlaced).toBe(0)
   })
 })

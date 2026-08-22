@@ -60,12 +60,7 @@
         <a href="https://www.yaphalla.com/">Yaphalla</a>: Team formation builder, priority list
         builder, and database.
       </li>
-      <li>
-        <a href="https://afkjourney-art.pages.dev/">AFK Journey Art Archive</a>: Archive of AFKJ
-        wallpapers and character sheets.
-      </li>
       <li><a href="https://www.prydwen.gg/afk-journey/">Prydwen</a>: AFKJ database and guides.</li>
-      <li>Special thanks to Milan for information on hero skills and various mechanics.</li>
       <li>
         Image assets courtesy of <a href="https://www.yaphalla.com/">Yaphalla</a> and
         <a href="https://drive.google.com/drive/folders/1rDfDEFJWSASMfCDAuBosoyocN7UZZPoe"

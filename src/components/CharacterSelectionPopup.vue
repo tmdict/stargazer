@@ -7,7 +7,7 @@ import SelectionPopup from './ui/SelectionPopup.vue'
 import { useGridContext } from '@/composables/useGridContext'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { useTouchDetection } from '@/composables/useTouchDetection'
-import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
+import { getAvailableTeamSize, resolvePlacement, synergySlotFree } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
@@ -38,12 +38,17 @@ const i18n = useI18nStore()
 
 const team = computed(() => getTeamFromTileState(ctx.grid.getTileById(props.hex.getId()).state))
 
-// Heroes not already on this team on any board (page-wide uniqueness; on the
-// single Arena board this is just the one board).
+// Heroes with a legal placement on this team: page-wide uniqueness for a base
+// placement, or a synergy-copy resolution while the affordance is on (which
+// keeps already-placed heroes listed, matching the roster's lifted grey-out).
 const availableCharacters = computed(() => {
   const t = team.value
   if (!t) return []
-  return props.characters.filter((char) => !grids.isUsed(char.id, t))
+  return props.characters.filter((char) => {
+    const resolved = resolvePlacement(ctx.grid, char.id, t, grids.synergy)
+    if (resolved === null) return false
+    return resolved !== char.id || !grids.isUsed(char.id, t)
+  })
 })
 
 // Match the main roster's order (CharacterSelection): canonical faction order,
@@ -111,16 +116,21 @@ function handleEnter(event: KeyboardEvent) {
  * the popup since every further pick would be a silent no-op. */
 function handleSelect(character: CharacterType): boolean {
   const t = team.value
-  if (!t || grids.isUsed(character.id, t)) return false
-  if (!canPlaceCharacterOnTeam(ctx.grid, character.id, t)) return false
+  if (!t) return false
+  const resolved = resolvePlacement(ctx.grid, character.id, t, grids.synergy)
+  if (resolved === null) return false
+  if (resolved === character.id && grids.isUsed(character.id, t)) return false
   const anchorFree = ctx.grid.getTileById(props.hex.getId()).characterId === undefined
-  const placed = anchorFree
-    ? ctx.place(props.hex.getId(), character.id, t)
-    : ctx.autoPlace(character.id, t)
+  const placed = anchorFree ? ctx.place(props.hex.getId(), resolved, t) : ctx.autoPlace(resolved, t)
   if (placed) {
     // Active follows interaction, matching drop routing.
     grids.setActive(ctx.id)
-    if (getAvailableTeamSize(ctx.grid, t) <= 0) emit('close')
+    if (
+      getAvailableTeamSize(ctx.grid, t) <= 0 &&
+      !(grids.synergy && synergySlotFree(ctx.grid, t))
+    ) {
+      emit('close')
+    }
   }
   return placed
 }

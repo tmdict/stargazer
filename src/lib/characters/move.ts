@@ -6,6 +6,7 @@ import { getCharacter, getCharacterTeam } from './character'
 import { isCompanionId, restoreCompanions, storeCompanionPositions } from './companion'
 import { performPlace } from './place'
 import { performRemove } from './remove'
+import { isSynergyHeroId } from './synergy'
 import { executeTransaction } from './transaction'
 
 // High-level operations
@@ -34,8 +35,9 @@ export function executeMoveCharacter(
 
   const changingTeams = fromTeam != toTeam
 
-  // Companion validation - companions can't change teams
-  if (isCompanionId(grid, characterId) && changingTeams) {
+  // Companions can't change teams, and neither can a synergy hero: the
+  // destination team's assist slot may already be taken.
+  if ((isCompanionId(grid, characterId) || isSynergyHeroId(characterId)) && changingTeams) {
     return false
   }
 

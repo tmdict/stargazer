@@ -47,6 +47,13 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       if (hexId === undefined || phantimalId === undefined || team === undefined) continue
       units.push({ hexId, team: team as Team, phantimalId })
     }
+    // Synergy-band locals reuse c's id space, so portraits, companion art, and
+    // the search index handle them with the same logic as c entries.
+    for (const entry of board.y ?? []) {
+      const [hexId, localId, team] = entry
+      if (hexId === undefined || localId === undefined || team === undefined) continue
+      units.push({ hexId, team: team as Team, characterId: localId })
+    }
     return {
       mapKey: board.m ?? 'arena1',
       tiles: board.t,

@@ -87,6 +87,30 @@ class Grid {
 }
 ```
 
+### Unit ID Namespaces
+
+Every unit on a tile is a `characterId`, and the id's numeric band encodes what
+kind of unit it is — identity travels with the unit through moves, swaps, and
+serialization for free:
+
+| Band          | Unit                                                                                                       | Wire form                       |
+| ------------- | ---------------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 1–8999        | base heroes                                                                                                | `c`, raw id                     |
+| 9000–9999     | placeholders                                                                                               | `c`, raw id                     |
+| 10000–99999   | companions (`N * 10000 + mainId`)                                                                          | `c`, raw id                     |
+| 100000–199999 | phantimals                                                                                                 | `s`, local id (offset stripped) |
+| 200000–299999 | synergy band: the friend-assist hero at `200000 + baseId`, its companions at `200000 + N * 10000 + baseId` | `y`, local id (offset stripped) |
+
+The synergy band mirrors the base namespace shifted by `SYNERGY_ID_OFFSET`, so
+companion arithmetic works unchanged inside it. `decomposeUnitId`
+(`characters/synergy.ts`) is the one place the mirror is decomposed; every
+band predicate (`isPhantimalId`, `isCompanionId`, `getMainCharacterId`, the
+gameData identity getters) consumes it. The synergy hero is exempt from team
+capacity and capped at one per team (`canPlaceCharacterOnTeam`), and its offset
+id keeps every duplicate check blind to it by construction; it cannot change
+teams or boards. `resolvePlacement` is the single decision point that turns a
+roster pick into a base or synergy placement while the Syn affordance is armed.
+
 ### Characters (`/src/lib/characters/`)
 
 Modular operations with direct Grid state access:

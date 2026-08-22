@@ -8,7 +8,7 @@ import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
-import { canPlaceCharacterOnTeam } from '@/lib/characters/character'
+import { isCharacterOnTeam, resolvePlacement, synergySlotFree } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
@@ -48,6 +48,19 @@ const placedTeam = (characterId: number): Team | null => {
 
 const isCharacterPlaced = (characterId: number): boolean => placedTeam(characterId) !== null
 
+// While Syn is armed and the placed hero's own team still has a free assist
+// slot, the next click places the duplicate, so the grey-out lifts to match.
+const synergyCopyAvailable = (characterId: number): boolean => {
+  const ctx = grids.active
+  if (!grids.synergy || !ctx) return false
+  const team = placedTeam(characterId)
+  return (
+    team !== null &&
+    isCharacterOnTeam(ctx.grid, characterId, team) &&
+    synergySlotFree(ctx.grid, team)
+  )
+}
+
 const handleCharacterClick = (character: CharacterType) => {
   // Mobile: a tapped tile targets a specific cell on its board. Place the hero
   // there using that tile's team, on that board (not whichever board is active).
@@ -55,12 +68,11 @@ const handleCharacterClick = (character: CharacterType) => {
     const ctx = grids.getContext(targetGridId.value)
     if (ctx) {
       const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
-      if (
-        team &&
-        !grids.isUsed(character.id, team) &&
-        canPlaceCharacterOnTeam(ctx.grid, character.id, team)
-      ) {
-        ctx.place(targetHexId.value, character.id, team)
+      if (team) {
+        const resolved = resolvePlacement(ctx.grid, character.id, team, grids.synergy)
+        if (resolved !== null && !(resolved === character.id && grids.isUsed(character.id, team))) {
+          ctx.place(targetHexId.value, resolved, team)
+        }
       }
     }
     clearTargetHex()
@@ -70,6 +82,9 @@ const handleCharacterClick = (character: CharacterType) => {
   if (!character.placeholder) {
     const placed = placedTeam(character.id)
     if (placed !== null) {
+      // With Syn armed and the hero's team's assist slot free, the click
+      // places the duplicate (placeOnActive resolves it) instead of removing.
+      if (grids.placeOnActive(character.id, placed)) return
       grids.removeFromAnyBoard(character.id, placed)
       return
     }
@@ -85,7 +100,11 @@ const handleCharacterClick = (character: CharacterType) => {
 const handleResultSelect = (slug: string) => {
   const character = characters.find((c) => c.name === slug)
   if (!character) return
-  if (targetHexId.value === null && isCharacterPlaced(character.id)) {
+  if (
+    targetHexId.value === null &&
+    isCharacterPlaced(character.id) &&
+    !synergyCopyAvailable(character.id)
+  ) {
     // The overlay has already closed; without feedback the no-op reads as a bug.
     toast.show(i18n.t('app.search-already-placed'), 'info')
     return
@@ -114,7 +133,11 @@ const handleResultSelect = (slug: string) => {
         :key="character.id"
         :character
         :is-draggable
-        :is-placed="!character.placeholder && isCharacterPlaced(character.id)"
+        :is-placed="
+          !character.placeholder &&
+          isCharacterPlaced(character.id) &&
+          !synergyCopyAvailable(character.id)
+        "
         :selected-filter="selectedTagNames"
         @character-click="handleCharacterClick"
       />

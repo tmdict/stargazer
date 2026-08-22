@@ -20,15 +20,17 @@ import {
   type GridContext,
 } from '@/composables/useGridContext'
 import {
-  canPlaceCharacterOnTeam,
+  findTeamSynergyHex,
   getAvailableTeamSize,
   getCharacter,
   getCharacterTeam,
   getTilesWithCharacters,
   hasCharacter,
+  resolvePlacement,
 } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { isPlaceholderId } from '@/lib/characters/placeholder'
+import { decomposeUnitId, isSynergyHeroId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import { Team } from '@/lib/types/team'
@@ -63,6 +65,33 @@ export const useGrids = defineStore('grids', () => {
   // Renders every board rotated 180 degrees (the Invert toggle): a pure view
   // transform applied at the layout level, content stays canonical.
   const inverted = ref(false)
+  // The Syn affordance. Never serialized or persisted: the placed unit is the
+  // content, and deriveSynergy re-reads the boards after every restore path so
+  // arriving state with a synergy unit lands with the box checked.
+  const synergy = ref(false)
+
+  const deriveSynergy = (): void => {
+    synergy.value = contexts.value.some((ctx) =>
+      getTilesWithCharacters(ctx.grid).some(
+        (tile) => tile.characterId !== undefined && isSynergyHeroId(tile.characterId),
+      ),
+    )
+  }
+
+  // Destructive by design: unchecking clears both teams' assist slots so the
+  // box always mirrors the board; only the checkbox routes here, restore paths
+  // write the ref through deriveSynergy instead.
+  const setSynergy = (value: boolean): void => {
+    if (!value) {
+      for (const ctx of contexts.value) {
+        for (const team of [Team.ALLY, Team.ENEMY]) {
+          const hex = findTeamSynergyHex(ctx.grid, team)
+          if (hex !== null) ctx.remove(hex)
+        }
+      }
+    }
+    synergy.value = value
+  }
 
   const active = computed<GridContext | undefined>(() => contexts.value[activeId.value])
 
@@ -100,9 +129,16 @@ export const useGrids = defineStore('grids', () => {
     const clamped = Math.min(Math.max(count, 1), MAX_GRID_COUNT)
     contexts.value.forEach((ctx) => ctx.dispose())
     contexts.value = Array.from({ length: clamped }, (_, i) =>
-      createGridContext(i, maps?.[i] ?? 'arena1', { hexSize, teamView, inverted, sharedCrop }),
+      createGridContext(i, maps?.[i] ?? 'arena1', {
+        hexSize,
+        teamView,
+        inverted,
+        synergy,
+        sharedCrop,
+      }),
     )
     if (activeId.value >= clamped) activeId.value = 0
+    deriveSynergy()
   }
 
   const setActive = (id: number): void => {
@@ -139,8 +175,14 @@ export const useGrids = defineStore('grids', () => {
   }
 
   const placeOnActive = (characterId: number, team: Team): boolean => {
-    if (!active.value || isUsed(characterId, team)) return false
-    return active.value.autoPlace(characterId, team)
+    const ctx = active.value
+    if (!ctx) return false
+    const resolved = resolvePlacement(ctx.grid, characterId, team, synergy.value)
+    if (resolved === null) return false
+    // Page-wide uniqueness still gates a base-id placement (the hero may sit on
+    // another board's same team); the synergy id is invisible to it by design.
+    if (resolved === characterId && isUsed(characterId, team)) return false
+    return ctx.autoPlace(resolved, team)
   }
 
   const removeFromAnyBoard = (characterId: number, team: Team): boolean => {
@@ -194,7 +236,8 @@ export const useGrids = defineStore('grids', () => {
     }
   }
 
-  const isCompanion = (id: number): boolean => id >= COMPANION_ID_OFFSET && !isPhantimalId(id)
+  const isCompanion = (id: number): boolean =>
+    decomposeUnitId(id).localId >= COMPANION_ID_OFFSET && !isPhantimalId(id)
 
   const placeUnit = (ctx: GridContext, hexId: number, unitId: number, team: Team): boolean =>
     isPhantimalId(unitId) ? ctx.placePhantimal(hexId, unitId, team) : ctx.place(hexId, unitId, team)
@@ -366,6 +409,10 @@ export const useGrids = defineStore('grids', () => {
         ? getCharacterTeam(ctx.grid, targetHexId)
         : getTeamFromTileState(ctx.grid.getTileById(targetHexId).state)
     if (destTeam === undefined || destTeam === null || destTeam === movingTeam) return true
+    // Synergy heroes can't change teams (engine rule); reject here too so the
+    // hover cue never promises a drop the engine will refuse.
+    if (isSynergyHeroId(movingId)) return false
+    if (residentId !== undefined && isSynergyHeroId(residentId)) return false
     if (!isPhantimalId(movingId) && isUsed(movingId, destTeam, ctxId)) return false
     if (
       residentId !== undefined &&
@@ -395,14 +442,18 @@ export const useGrids = defineStore('grids', () => {
     if (destTeam === null) return false
 
     // Roster placement. An occupied target is a replace, which frees the slot it
-    // fills, so capacity only gates an empty tile.
+    // fills (and, when the occupant is the synergy hero, the assist slot), so
+    // the resolver only gates an empty tile.
     if (sourceGridId === undefined || sourceHexId === undefined) {
       if (isPhantimalId(characterId)) return targetCtx.phantimalCanJoinTeam(characterId, destTeam)
-      if (isUsed(characterId, destTeam)) return false
-      return (
-        hasCharacter(targetCtx.grid, targetHexId) ||
-        canPlaceCharacterOnTeam(targetCtx.grid, characterId, destTeam)
-      )
+      if (hasCharacter(targetCtx.grid, targetHexId)) {
+        if (!isUsed(characterId, destTeam)) return true
+        const slotHex = findTeamSynergyHex(targetCtx.grid, destTeam)
+        return synergy.value && (slotHex === null || slotHex === targetHexId)
+      }
+      const resolved = resolvePlacement(targetCtx.grid, characterId, destTeam, synergy.value)
+      if (resolved === null) return false
+      return resolved !== characterId || !isUsed(characterId, destTeam)
     }
 
     if (sourceGridId === targetCtxId) {
@@ -415,7 +466,9 @@ export const useGrids = defineStore('grids', () => {
     const movingId = getCharacter(sourceCtx.grid, sourceHexId)
     const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
     if (movingId === undefined || sourceTeam === undefined) return false
-    if (isCompanion(movingId)) return false // companions can't leave their main's board
+    // Companions can't leave their main's board; the synergy hero belongs to
+    // its board's assist slot and can't leave either.
+    if (isCompanion(movingId) || isSynergyHeroId(movingId)) return false
 
     const residentId = getCharacter(targetCtx.grid, targetHexId)
     if (residentId === undefined) {
@@ -431,7 +484,7 @@ export const useGrids = defineStore('grids', () => {
     // the same character when one hero's two legal placements are swapped).
     const residentTeam = getCharacterTeam(targetCtx.grid, targetHexId)
     if (residentTeam === undefined) return false
-    if (isCompanion(residentId)) return false
+    if (isCompanion(residentId) || isSynergyHeroId(residentId)) return false
     if (isPhantimalId(movingId) && !targetCtx.phantimalCanJoinTeam(movingId, residentTeam)) {
       return false
     }
@@ -584,6 +637,9 @@ export const useGrids = defineStore('grids', () => {
     hexSizeMode,
     teamView,
     inverted,
+    synergy,
+    deriveSynergy,
+    setSynergy,
     setGridCount,
     setActive,
     getContext,

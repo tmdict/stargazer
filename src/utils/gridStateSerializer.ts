@@ -1,5 +1,6 @@
 import { isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
+import { decomposeUnitId, inSynergyBand } from '@/lib/characters/synergy'
 import type { GridTile } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
@@ -10,6 +11,7 @@ export interface GridState {
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   s?: number[][] // seasonal units, phantimals today: [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
+  y?: number[][] // synergy-band units, hero plus its companions: [hexId, localUnitId, team] (locals reuse c's id space: hero = base id, companion = N*10000+base)
   p?: number[][] // paragon: [team, characterId, level] for placed heroes with level > 0
   d?: number // display flags: bit-packed (showGridInfo, showPerspective, showSkills, teamView, inverted, wrap)
 }
@@ -48,12 +50,31 @@ export function serializeGridState(
   // separately so the character section keeps its compact 16-bit id field).
   const characters = allTiles
     .filter(
-      (tile) => tile.characterId && tile.team !== undefined && !isPhantimalId(tile.characterId),
+      (tile) =>
+        tile.characterId &&
+        tile.team !== undefined &&
+        !isPhantimalId(tile.characterId) &&
+        !inSynergyBand(tile.characterId),
     )
     .map((tile) => [tile.hex.getId(), tile.characterId!, tile.team!])
 
   if (characters.length > 0) {
     state.c = characters
+  }
+
+  // Synergy-band units, stored by their local id (offset stripped). The local
+  // space mirrors c's, so restore can reuse the same main/companion split.
+  const synergyUnits = allTiles
+    .filter(
+      (tile) =>
+        tile.characterId !== undefined &&
+        tile.team !== undefined &&
+        inSynergyBand(tile.characterId),
+    )
+    .map((tile) => [tile.hex.getId(), decomposeUnitId(tile.characterId!).localId, tile.team!])
+
+  if (synergyUnits.length > 0) {
+    state.y = synergyUnits
   }
 
   // Extract phantimals, stored by their local id (offset stripped).
@@ -127,7 +148,7 @@ export type BoardState = GridState & { m?: string }
  * exactly this list, so a new GridState section must be registered here too or
  * saved teams would silently drop it; the serializer contract test pins the
  * two together. `d` is deliberately absent: it is viewer state, not content. */
-export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'p', 'a', 'm'] as const
+export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'y', 'p', 'a', 'm'] as const
 
 /* Multi-board state (Teams page): one BoardState per board, the active board,
  * the global display flags, and the team mode the boards belong to. `mode` is

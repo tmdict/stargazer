@@ -16,6 +16,8 @@ const PARAGON_LEVEL_BITS = 3 // Paragon levels 1-4 (0 = absent, never stored)
 const MAX_PARAGON_LEVEL = (1 << PARAGON_LEVEL_BITS) - 1 // 7 (game caps levels at 4)
 const PARAGON_COUNT_BITS = 5 // Supports up to 31 paragon entries
 const MAX_PARAGON_COUNT = (1 << PARAGON_COUNT_BITS) - 1 // 31
+const SYNERGY_COUNT_BITS = 4 // Supports up to 15 synergy-band entries
+const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
 
 /**
  * Binary encoding utilities for ultra-compact URL serialization
@@ -32,7 +34,8 @@ const MAX_PARAGON_COUNT = (1 << PARAGON_COUNT_BITS) - 1 // 31
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
  *   - Bit 1: Has paragon (paragon section present after phantimals)
- *   - Bits 2-5: reserved
+ *   - Bit 2: Has synergy units (section present after paragon)
+ *   - Bits 3-5: reserved
  *   - Bit 6: Has phantimals (phantimal section present after artifacts)
  *   - Bit 7: Has display flags (a dedicated display-flags byte follows)
  * - If bit 7 of extended flags is set:
@@ -68,6 +71,12 @@ const MAX_PARAGON_COUNT = (1 << PARAGON_COUNT_BITS) - 1 // 31
  * Paragon (only if extended flag bit 1 is set, written after phantimals):
  * - Count (5 bits, 0-31)
  * - Each entry (20 bits): team (1) + characterId (16) + level (3)
+ *
+ * Synergy units (only if extended flag bit 2 is set, written after paragon):
+ * - Count (4 bits, 0-15)
+ * - Each entry (23 bits): hexId (6) + local unit ID (16) + team (1). Locals
+ *   reuse the character field's id space (hero = base id, spawned companion =
+ *   N * 10000 + base); the 200000 band offset is applied on restore.
  */
 
 /**
@@ -177,6 +186,35 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
+  // Validate synergy entries: hexId 1-63, local id 1-65535, team 1-2
+  if (state.y && Array.isArray(state.y)) {
+    let validSynergy = state.y.filter((entry) => {
+      const [hexId, localId, team] = entry
+      const isValid =
+        hexId != null &&
+        hexId > 0 &&
+        hexId <= 63 &&
+        localId != null &&
+        localId > 0 &&
+        localId <= MAX_CHARACTER_ID &&
+        (team === 1 || team === 2)
+      if (!isValid) {
+        console.warn('Invalid synergy entry:', entry)
+      }
+      return isValid
+    })
+    // Cap at the count field's maximum so the encoded count can't wrap.
+    if (validSynergy.length > MAX_SYNERGY_COUNT) {
+      console.warn(
+        `Too many synergy entries (${validSynergy.length}), keeping first ${MAX_SYNERGY_COUNT}`,
+      )
+      validSynergy = validSynergy.slice(0, MAX_SYNERGY_COUNT)
+    }
+    if (validSynergy.length > 0) {
+      validated.y = validSynergy
+    }
+  }
+
   // Validate paragon entries: team 1-2, charId 1-65535, level 1-7
   if (state.p && Array.isArray(state.p)) {
     let validParagons = state.p.filter((entry) => {
@@ -283,11 +321,13 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const hasDisplayFlags = validState.d !== undefined
   const hasPhantimals = validState.s !== undefined && validState.s.length > 0
   const hasParagon = validState.p !== undefined && validState.p.length > 0
+  const hasSynergy = validState.y !== undefined && validState.y.length > 0
 
   // Extended header is needed if we have >7 entries OR display flags OR phantimals
-  // OR paragon. This optimization keeps URLs short for small grids
+  // OR paragon OR synergy units. This optimization keeps URLs short for small grids
   const needsExtendedCounts = tileCount > 7 || charCount > 7
-  const needsExtended = needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasParagon
+  const needsExtended =
+    needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasParagon || hasSynergy
 
   // Write header byte (8 bits total)
   let header = 0
@@ -317,6 +357,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
     }
     if (hasParagon) {
       extendedFlags |= 0x02 // Bit 1: has paragon
+    }
+    if (hasSynergy) {
+      extendedFlags |= 0x04 // Bit 2: has synergy units
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -399,6 +442,16 @@ export function encodeToBinary(state: GridState): Uint8Array {
     }
   }
 
+  // Write synergy units (after paragon): count, then hexId + local id + team each
+  if (hasSynergy && validState.y) {
+    writer.writeBits(validState.y.length, SYNERGY_COUNT_BITS)
+    for (const entry of validState.y) {
+      writer.writeBits(entry[0]!, HEX_ID_BITS) // 6 bits for hex ID
+      writer.writeBits(entry[1]!, CHARACTER_ID_BITS) // 16 bits for local unit ID
+      writer.writeBits(entry[2]! - 1, TEAM_BITS) // 1 bit for team
+    }
+  }
+
   return writer.getBytes()
 }
 
@@ -428,6 +481,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     // them so the sections after artifacts are read.
     let hasPhantimals = false
     let hasParagon = false
+    let hasSynergy = false
 
     // Read extended header if present
     if (hasExtended) {
@@ -436,6 +490,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
       hasPhantimals = (extendedFlags & 0x40) !== 0 // Bit 6
       hasParagon = (extendedFlags & 0x02) !== 0 // Bit 1
+      hasSynergy = (extendedFlags & 0x04) !== 0 // Bit 2
 
       // Bit 7 explicitly marks display flags as present, so d=0 (all flags off)
       // is distinguishable from "no display flags encoded" (d stays undefined).
@@ -509,6 +564,20 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
           const charId = reader.readBits(CHARACTER_ID_BITS) // 16 bits
           const level = reader.readBits(PARAGON_LEVEL_BITS) // 3 bits
           state.p.push([teamBit + 1, charId, level])
+        }
+      }
+    }
+
+    // Read synergy units (after paragon) if the extended flag marked them present
+    if (hasSynergy) {
+      const synergyCount = reader.readBits(SYNERGY_COUNT_BITS)
+      if (synergyCount > 0) {
+        state.y = []
+        for (let i = 0; i < synergyCount; i++) {
+          const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
+          const localId = reader.readBits(CHARACTER_ID_BITS) // 16 bits
+          const teamBit = reader.readBits(TEAM_BITS) // 1 bit
+          state.y.push([hexId, localId, teamBit + 1])
         }
       }
     }

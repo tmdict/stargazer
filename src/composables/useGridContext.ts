@@ -30,12 +30,16 @@ import {
   canPlaceCharacterOnTeam,
   findCharacterHex,
   findTeamPhantimalHex,
+  findTeamSynergyHex,
   getCharacter,
   getCharacterCount,
   getCharacterPlacements,
   getCharacterTeam,
   getTilesWithCharacters,
   hasCharacter,
+  isBaseHeroId,
+  isCharacterOnTeam,
+  resolvePlacement,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { PARAGON_MAX_LEVEL } from '@/lib/characters/paragon'
@@ -48,6 +52,7 @@ import {
 import { executeAutoPlaceCharacter, executePlaceCharacter } from '@/lib/characters/place'
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
+import { toSynergyId } from '@/lib/characters/synergy'
 import { Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'
@@ -81,6 +86,8 @@ export interface GridContextGlobals {
   hexSize: Ref<Point>
   teamView: Ref<boolean>
   inverted: Ref<boolean>
+  // The Syn affordance; per-board drop handling resolves base-vs-copy with it.
+  synergy?: Ref<boolean>
   // Team-view crop shared across boards so they stay the same size; null means
   // each board crops to its own ally extent (the single-board Arena).
   sharedCrop?: Ref<{ minX: number; maxX: number; minY: number; maxY: number } | null>
@@ -190,12 +197,13 @@ export function createGridContext(
 
   const scope = effectScope(true)
 
-  // Phantimal range is data-driven; seed the static character range map with an
-  // entry per on-grid phantimal so it can act as a targeting source.
+  // The static range map is base-id keyed; seed an entry per on-grid namespaced
+  // unit (phantimal, companion, synergy) so any of them can act as a targeting
+  // source instead of falling back to melee.
   const buildUnitRanges = (tiles: GridTile[]): Map<number, number> => {
     const ranges = new Map(gameDataStore.characterRanges)
     for (const tile of tiles) {
-      if (tile.characterId !== undefined && isPhantimalId(tile.characterId)) {
+      if (tile.characterId !== undefined && !isBaseHeroId(tile.characterId)) {
         ranges.set(tile.characterId, gameDataStore.getCharacterRange(tile.characterId))
       }
     }
@@ -220,9 +228,10 @@ export function createGridContext(
     return countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
   }
 
-  // The phantimal a team currently qualifies for, or null. With a 5-unit roster
-  // at most one faction can reach the requirement, so the first match is
-  // unambiguous in normal play.
+  // The phantimal a team currently qualifies for, or null. With a synergy hero
+  // a 6-unit roster can satisfy two factions at once; data order picks the
+  // match, and the auto-place below never fires while a phantimal stands, so
+  // the earlier-qualified one keeps its seat either way.
   const findQualifyingPhantimalId = (team: Team): number | null => {
     for (const phantimal of gameDataStore.phantimals) {
       const factions = requiredFactions(phantimal.name, phantimal.faction)
@@ -307,12 +316,24 @@ export function createGridContext(
     if (isPhantimalId(characterId)) {
       return placePhantimal(targetHexId, characterId, team)
     }
-    // Replacing an occupant frees the slot it fills, so the capacity gate only
-    // needs to block an add onto an empty tile.
-    if (!hasCharacter(grid, targetHexId) && !canPlaceCharacterOnTeam(grid, characterId, team)) {
+    const synergyOn = globals.synergy?.value ?? false
+    // Replacing an occupant frees the slot it fills (and, when the occupant is
+    // the synergy hero, the assist slot), so an occupied target resolves
+    // against the post-vacate board; an empty tile goes through the resolver.
+    // Mirrors canDropCharacter's roster leg so hover cues and drops agree.
+    if (hasCharacter(grid, targetHexId)) {
+      if (!isCharacterOnTeam(grid, characterId, team)) {
+        return place(targetHexId, characterId, team)
+      }
+      const slotHex = findTeamSynergyHex(grid, team)
+      if (synergyOn && (slotHex === null || slotHex === targetHexId)) {
+        return place(targetHexId, toSynergyId(characterId), team)
+      }
       return false
     }
-    return place(targetHexId, characterId, team)
+    const resolved = resolvePlacement(grid, characterId, team, synergyOn)
+    if (resolved === null) return false
+    return place(targetHexId, resolved, team)
   }
 
   const setArtifact = (team: Team, artifactId: number): void => {

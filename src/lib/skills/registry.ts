@@ -1,3 +1,5 @@
+import { decomposeUnitId } from '../characters/synergy'
+
 // Generic skill interface - Context is parameterized to avoid circular dep with SkillContext in skill.ts
 export interface SkillBase<Context = unknown> {
   id: string
@@ -22,11 +24,18 @@ export function registerSkill<Context>(skill: SkillBase<Context>): void {
 export function getCharacterSkill<Context = unknown>(
   characterId: number,
 ): SkillBase<Context> | undefined {
-  return skillRegistry.get(characterId) as SkillBase<Context> | undefined
+  // A synergy copy runs its base hero's skill; instance state stays keyed by
+  // the placed id at the call sites, only the definition lookup strips.
+  return skillRegistry.get(decomposeUnitId(characterId).localId) as SkillBase<Context> | undefined
 }
 
 export function hasSkill(characterId: number): boolean {
-  return skillRegistry.has(characterId)
+  return skillRegistry.has(decomposeUnitId(characterId).localId)
+}
+
+// Test enumeration point for registry-wide contract tests.
+export function getRegisteredSkills(): ReadonlyArray<SkillBase<unknown>> {
+  return [...skillRegistry.values()]
 }
 
 export function hasCompanionSkill(characterId: number): boolean {

@@ -9,6 +9,7 @@ import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { getCharacter, getCharacterTeam, isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
+import { decomposeUnitId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -51,8 +52,11 @@ const {
   hide: hideTooltip,
 } = useGridHoverTooltip<CharacterType>(() => ctx.placements)
 
-const baseCharacterAt = (characterId: number): CharacterType | undefined =>
-  isBaseHeroId(characterId) ? props.characters.find((c) => c.id === characterId) : undefined
+// A synergy copy keeps its hero's card; companions and phantimals have none.
+const baseCharacterAt = (characterId: number): CharacterType | undefined => {
+  const { localId } = decomposeUnitId(characterId)
+  return isBaseHeroId(localId) ? props.characters.find((c) => c.id === localId) : undefined
+}
 
 const getCharacterName = (characterId: number, hexId: number): string => {
   // Check if this character has a custom image modifier
@@ -68,7 +72,7 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 }
 
 const isCompanion = (characterId: number): boolean =>
-  characterId >= COMPANION_ID_OFFSET && !isPhantimalId(characterId)
+  decomposeUnitId(characterId).localId >= COMPANION_ID_OFFSET && !isPhantimalId(characterId)
 
 // Phantimal-specific render helpers (B1 seam: phantimals reuse the character
 // wrapper's positioning, drag, lift and perspective; only image + colour differ).
@@ -167,9 +171,9 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
     return
   }
 
-  // For companions, we need to use the base character data
-  const actualId =
-    characterId >= COMPANION_ID_OFFSET ? characterId % COMPANION_ID_OFFSET : characterId
+  // For companions (in either band), we need to use the base character data
+  const localId = decomposeUnitId(characterId).localId
+  const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
   const character = props.characters.find((c) => c.id === actualId)
   if (!character) return
 

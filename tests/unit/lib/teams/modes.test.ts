@@ -125,3 +125,21 @@ describe('normalizeTeamPayload', () => {
     expect(payload.boards).toHaveLength(1)
   })
 })
+
+describe('normalizeTeamPayload synergy strip', () => {
+  it('strips synergy units from modes that do not allow them', () => {
+    const state = {
+      boards: [{ y: [[1, 50, 1]] }, { c: [[2, 7, 1]] }, { y: [[3, 60, 2]] }],
+      mode: '3v3',
+    }
+    const normalized = normalizeTeamPayload(state, '3v3')
+    expect(normalized.boards).toHaveLength(3)
+    expect(normalized.boards.every((board) => board.y === undefined)).toBe(true)
+    expect(normalized.boards[1]!.c).toEqual([[2, 7, 1]])
+  })
+
+  it('keeps synergy units on 1v1', () => {
+    const normalized = normalizeTeamPayload({ boards: [{ y: [[1, 50, 1]] }] }, '1v1')
+    expect(normalized.boards[0]!.y).toEqual([[1, 50, 1]])
+  })
+})

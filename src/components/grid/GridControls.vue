@@ -7,10 +7,12 @@ import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconLink from '@/components/ui/IconLink.vue'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const i18n = useI18nStore()
-const { handleClearAll } = useSelectionState()
+const grids = useGrids()
+const { handleClearAll, clearTargetHex, clearLiftedHex } = useSelectionState()
 
 const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
@@ -27,6 +29,8 @@ defineProps<{
   hideTeamControls?: boolean
   // Shows the "Wrap" boards-layout toggle (Teams only); the Arena never renders it.
   showWrapToggle?: boolean
+  // Shows the "Syn" friend-assist toggle (Arena team tabs; Teams 1v1 mode only).
+  showSynToggle?: boolean
   // Two-step confirm on Clear (Teams only; the Arena clears instantly).
   confirmClear?: boolean
 }>()
@@ -42,6 +46,20 @@ const flatView = computed({
   get: () => !showPerspective.value,
   set: (flat) => (showPerspective.value = !flat),
 })
+
+// Unchecking removes the placed synergy units (setSynergy), which may delete
+// the unit a pending tap/lift gesture references, so the gesture state drops
+// with it (every other bulk mutation clears it the same way).
+const synergyView = computed({
+  get: () => grids.synergy,
+  set: (value: boolean) => {
+    grids.setSynergy(value)
+    if (!value) {
+      clearTargetHex()
+      clearLiftedHex()
+    }
+  },
+})
 </script>
 
 <template>
@@ -53,14 +71,23 @@ const flatView = computed({
         <input type="checkbox" v-model="wrap" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.wrap') }}</span>
       </label>
-      <label class="grid-toggle-btn" :class="{ active: flatView }">
-        <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
-      </label>
       <label class="grid-toggle-btn" :class="{ active: showGridInfo }">
         <input type="checkbox" v-model="showGridInfo" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
       </label>
+      <label class="grid-toggle-btn" :class="{ active: showSkills }">
+        <input type="checkbox" v-model="showSkills" class="grid-toggle-checkbox" />
+        <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
+      </label>
+      <label v-if="showSynToggle" class="grid-toggle-btn" :class="{ active: synergyView }">
+        <input type="checkbox" v-model="synergyView" class="grid-toggle-checkbox" />
+        <span class="grid-toggle-text">{{ i18n.t('app.synergy') }}</span>
+      </label>
+      <label class="grid-toggle-btn" :class="{ active: flatView }">
+        <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
+        <span class="grid-toggle-text">{{ i18n.t('app.flat') }}</span>
+      </label>
+      <MapInvertToggle />
       <label class="grid-toggle-btn" :class="{ active: teamView, disabled: disableTeamView }">
         <input
           type="checkbox"
@@ -70,11 +97,6 @@ const flatView = computed({
         />
         <span class="grid-toggle-text">{{ i18n.t('app.team-view') }}</span>
       </label>
-      <label class="grid-toggle-btn" :class="{ active: showSkills }">
-        <input type="checkbox" v-model="showSkills" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>
-      </label>
-      <MapInvertToggle />
     </div>
 
     <!-- Row 2: action buttons (plus the page's own, e.g. team save actions) -->

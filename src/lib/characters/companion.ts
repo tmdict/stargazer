@@ -4,6 +4,7 @@ import { Team } from '../types/team'
 import { findCharacterHex } from './character'
 import { performPlace } from './place'
 import { performRemove } from './remove'
+import { decomposeUnitId } from './synergy'
 
 export interface CompanionPosition {
   companionId: number
@@ -15,16 +16,21 @@ export interface CompanionPosition {
 // Companion system helpers
 
 export function isCompanionId(grid: Grid, characterId: number): boolean {
-  // Phantimals live above the companion range, so bound the upper end to keep
-  // them from being treated as companions.
-  return characterId >= grid.companionIdOffset && characterId < grid.phantimalIdOffset
+  // Classified on the decomposed local id, so companions of synergy heroes
+  // (offset + N * 10000 + base) count too. Phantimals live above the companion
+  // range, so bound the upper end to keep them from being treated as companions.
+  const { localId } = decomposeUnitId(characterId)
+  return localId >= grid.companionIdOffset && localId < grid.phantimalIdOffset
 }
 
 export function getMainCharacterId(grid: Grid, companionId: number): number {
   if (!isCompanionId(grid, companionId)) {
     return companionId
   }
-  return companionId % grid.companionIdOffset
+  // Subtraction rather than modulo keeps the main in the companion's own band:
+  // a synergy companion cascades to the synergy main, never the base hero.
+  const { localId } = decomposeUnitId(companionId)
+  return companionId - Math.floor(localId / grid.companionIdOffset) * grid.companionIdOffset
 }
 
 export function getCompanions(grid: Grid, mainCharacterId: number, team: Team): Set<number> {

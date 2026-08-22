@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 
 import { repositionCompanions } from '@/lib/characters/companion'
-import { toPhantimalId } from '@/lib/characters/phantimal'
+import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
+import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
 import { unpackDisplayFlags, type DisplayFlags, type GridState } from '@/utils/gridStateSerializer'
@@ -42,6 +43,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
       // Apply the decoded state
       applyGridState(gridState)
+      grids.deriveSynergy()
 
       // Return success with display flags
       const displayFlags = unpackDisplayFlags(gridState.d)
@@ -104,6 +106,11 @@ export const useUrlStateStore = defineStore('urlState', () => {
         const characterId = entry[1]
         if (characterId === undefined) return
 
+        // Only base and companion ids are legal in c; a crafted phantimal- or
+        // synergy-band id would otherwise slip into companion matching below
+        // (200050 % 10000 matches hero 50) and raw-place an orphan.
+        if (characterId >= PHANTIMAL_ID_OFFSET) return
+
         if (characterId >= COMPANION_ID_OFFSET) {
           companions.push(entry)
         } else {
@@ -137,6 +144,51 @@ export const useUrlStateStore = defineStore('urlState', () => {
             (e) => e[1]! % COMPANION_ID_OFFSET === validated.characterId && e[2] === validated.team,
           )
           .map((e) => ({ companionId: e[1]!, hexId: e[0]! }))
+        repositionCompanions(grid, validated.team, companionTargets)
+      })
+    }
+
+    // Restore synergy-band units from compact format: [hexId, localUnitId, team],
+    // locals mirroring c's id space. Position is load-bearing: after c so the
+    // synergy hero's faction is visible to the phantimal placements below, and
+    // before seedPhantimalBaseline so the bulk restore doesn't read as a
+    // qualifying transition.
+    if (gridState.y) {
+      const synergyMains: typeof gridState.y = []
+      const synergyCompanions: typeof gridState.y = []
+      gridState.y.forEach((entry) => {
+        const localId = entry[1]
+        if (localId === undefined) return
+        // Nothing legal maps at or above the phantimal offset; the multi codec
+        // has no validation pass, so crafted locals are dropped here.
+        if (localId >= PHANTIMAL_ID_OFFSET) return
+        if (localId >= COMPANION_ID_OFFSET) {
+          synergyCompanions.push(entry)
+        } else {
+          synergyMains.push(entry)
+        }
+      })
+
+      const grid = grids.active!.grid
+      synergyMains.forEach((entry) => {
+        const validated = getValidatedCharacterEntry(entry)
+        if (!validated) return
+
+        const synergyId = toSynergyId(validated.characterId)
+        const placementSuccess = characterStore.placeCharacterOnHex(
+          validated.hexId,
+          synergyId,
+          validated.team,
+        )
+        if (!placementSuccess) {
+          console.warn(`Failed to place synergy unit ${synergyId} on hex ${validated.hexId}`)
+          return
+        }
+        const companionTargets = synergyCompanions
+          .filter(
+            (e) => e[1]! % COMPANION_ID_OFFSET === validated.characterId && e[2] === validated.team,
+          )
+          .map((e) => ({ companionId: toSynergyId(e[1]!), hexId: e[0]! }))
         repositionCompanions(grid, validated.team, companionTargets)
       })
     }
@@ -215,6 +267,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
       // restore the same hero twice on one team across boards; repair page-wide
       // uniqueness once every board is in.
       grids.dedupeCharacters()
+      grids.deriveSynergy()
 
       return {
         success: true,

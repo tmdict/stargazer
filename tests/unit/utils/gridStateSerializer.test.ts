@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
+import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { State } from '@/lib/types/state'
@@ -267,6 +268,7 @@ describe('gridStateSerializer', () => {
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
         createMockTile(2, State.OCCUPIED_ALLY, toPhantimalId(1), Team.ALLY),
         createMockTile(3, State.BLOCKED),
+        createMockTile(4, State.OCCUPIED_ALLY, toSynergyId(100), Team.ALLY),
       ]
       const state = serializeMultiGridState(
         [{ tiles, allyArtifact: 2, enemyArtifact: null, map: 'arena1', getParagon: () => 3 }],
@@ -274,5 +276,21 @@ describe('gridStateSerializer', () => {
       )
       expect(Object.keys(state.boards[0]!).sort()).toEqual([...BOARD_CONTENT_KEYS].sort())
     })
+  })
+})
+
+describe('synergy band emission', () => {
+  it('splits synergy-band units into y with local ids, keeping c pure', () => {
+    const tiles: GridTile[] = [
+      createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
+      createMockTile(2, State.OCCUPIED_ALLY, toSynergyId(100), Team.ALLY),
+      createMockTile(3, State.OCCUPIED_ALLY, toSynergyId(COMPANION_ID_OFFSET + 100), Team.ALLY),
+    ]
+    const state = serializeGridState(tiles, null, null)
+    expect(state.c).toEqual([[1, 100, Team.ALLY]])
+    expect(state.y).toEqual([
+      [2, 100, Team.ALLY],
+      [3, COMPANION_ID_OFFSET + 100, Team.ALLY],
+    ])
   })
 })

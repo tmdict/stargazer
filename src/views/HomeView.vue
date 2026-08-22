@@ -298,6 +298,7 @@ const handleResetMap = () => {
             v-model:team-view="gridStore.teamView"
             :disable-team-view="mapEditorActive || activeTab === 'debug'"
             :hide-team-controls="mapEditorActive || activeTab === 'debug'"
+            :show-syn-toggle="!mapEditorActive && activeTab !== 'debug'"
             @copy-link="handleCopyLink"
             @copy-image="handleCopyImage"
             @download="handleDownload"
