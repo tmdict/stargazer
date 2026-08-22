@@ -41,7 +41,13 @@ Companions are namespaced as `N * COMPANION_ID_OFFSET + mainCharacterId`
 
 - **10000-19999**: First companion (N=1)
 - **20000-29999**: Second companion (N=2)
-- **…up to 99999**: Further companions, before the phantimal range (100000+)
+- **…up to 99999**: Further companions, before the phantimal range (100000-199999)
 
-The system uses modulo `COMPANION_ID_OFFSET` to recover the main character ID from
-any companion ID (`getMainCharacterId`).
+The same layout repeats inside the synergy band (`SYNERGY_ID_OFFSET = 200000`):
+a synergy hero's companions land at `200000 + N * 10000 + baseId`. The factory
+derives companion IDs from the placed id (`ctx.characterId`), so a hero and its
+friend-assist copy field companions side by side without colliding.
+
+`getMainCharacterId` recovers the main character ID from any companion ID by
+subtracting the companion index within its band (via `decomposeUnitId`), so a
+synergy companion cascades to the synergy main, never the base hero.

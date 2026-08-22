@@ -20,6 +20,9 @@ export interface TeamModeConfig {
   defaultMaps: string[]
   // Wrap (the 3-2 boards layout) only makes sense for 5-board modes.
   canWrap: boolean
+  // Whether the Syn toggle is offered: the in-game friend-assist mechanic is
+  // 1v1-only, and normalizeTeamPayload strips y from modes without it.
+  allowSynergy: boolean
 }
 
 const arena1 = (count: number): string[] => Array<string>(count).fill('arena1')
@@ -31,6 +34,7 @@ export const TEAM_MODES: Record<TeamModeKey, TeamModeConfig> = {
     boardCount: 1,
     defaultMaps: arena1(1),
     canWrap: false,
+    allowSynergy: true,
   },
   '3v3': {
     key: '3v3',
@@ -38,6 +42,7 @@ export const TEAM_MODES: Record<TeamModeKey, TeamModeConfig> = {
     boardCount: 3,
     defaultMaps: arena1(3),
     canWrap: false,
+    allowSynergy: false,
   },
   '5v5': {
     key: '5v5',
@@ -45,6 +50,7 @@ export const TEAM_MODES: Record<TeamModeKey, TeamModeConfig> = {
     boardCount: 5,
     defaultMaps: arena1(5),
     canWrap: true,
+    allowSynergy: false,
   },
   '5v5sl': {
     key: '5v5sl',
@@ -52,6 +58,7 @@ export const TEAM_MODES: Record<TeamModeKey, TeamModeConfig> = {
     boardCount: 5,
     defaultMaps: FIVE_V_FIVE_DEFAULT_MAPS,
     canWrap: true,
+    allowSynergy: false,
   },
 }
 
@@ -84,10 +91,21 @@ export function resolveTeamMode(state: MultiGridState): TeamModeKey {
  * pad missing ones as empty boards on the mode's default maps. Teams-page ingress
  * only; /share stays lenient and renders payloads as-is. */
 export function normalizeTeamPayload(state: MultiGridState, mode: TeamModeKey): MultiGridState {
-  const { boardCount, defaultMaps } = TEAM_MODES[mode]
-  const boards = state.boards.slice(0, boardCount)
+  const { boardCount, defaultMaps, allowSynergy } = TEAM_MODES[mode]
+  let boards = state.boards.slice(0, boardCount)
   while (boards.length < boardCount) {
     boards.push({ m: defaultMaps[boards.length] })
+  }
+  // Synergy units are 1v1-only content. On other modes a crafted y section
+  // would bypass the page-wide duplicate repair (its ids differ from the base
+  // hero's), so it is stripped at ingress rather than rendered leniently.
+  if (!allowSynergy) {
+    boards = boards.map((board) => {
+      if (board.y === undefined) return board
+      const stripped = { ...board }
+      delete stripped.y
+      return stripped
+    })
   }
   return { ...state, boards, mode }
 }

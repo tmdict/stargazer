@@ -7,6 +7,7 @@ import { isPhantimalId } from './phantimal'
 import { performPlace } from './place'
 import { isPlaceholderId } from './placeholder'
 import { performRemove } from './remove'
+import { isSynergyHeroId } from './synergy'
 import { executeTransaction } from './transaction'
 
 // High-level operations
@@ -30,14 +31,17 @@ export function executeSwapCharacters(
   // Validate all required data exists
   if (!fromChar || !toChar || !fromTeam || !toTeam) return false
 
-  // Phantimals are tied to their team's faction hero count and companions to
-  // their main character, so both can only swap within their own team
+  // Phantimals are tied to their team's faction hero count, companions to their
+  // main character, and synergy heroes to their team's single assist slot, so
+  // all of them can only swap within their own team
   if (
     fromTeam !== toTeam &&
     (isPhantimalId(fromChar) ||
       isPhantimalId(toChar) ||
       isCompanionId(grid, fromChar) ||
-      isCompanionId(grid, toChar))
+      isCompanionId(grid, toChar) ||
+      isSynergyHeroId(fromChar) ||
+      isSynergyHeroId(toChar))
   ) {
     return false
   }
