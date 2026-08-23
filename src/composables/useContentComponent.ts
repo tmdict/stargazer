@@ -31,8 +31,7 @@ export function useContentComponent(options: ContentComponentOptions) {
     }
 
     let module = contentModules[buildPath(currentName, currentLocale)] as
-      | { default: Component }
-      | undefined
+      { default: Component } | undefined
 
     // Fallback to English if not found
     if (!module && fallbackToEnglish && currentLocale !== 'en') {
