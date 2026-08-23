@@ -2,17 +2,30 @@
 import { computed, onUnmounted, ref } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
-import { getMapNames } from '@/lib/maps'
+import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
 
 const gridStore = useGridStore()
 const i18nStore = useI18nStore()
 
-const arenaMaps = getMapNames().filter((m) => m.key.startsWith('arena'))
+// Quick-select slots: Supreme League follows the season's 5v5 map list, so a
+// season rollover in maps.ts updates those entries by itself; the GD slots are
+// pinned here. One map can back several slots (SL Arena 1 and GD Arena 1 are
+// both arena1), so entries key by label and every slot backed by the current
+// map highlights.
+const quickMaps = computed(() => {
+  const arena = i18nStore.t('app.arena')
+  return [
+    ...FIVE_V_FIVE_DEFAULT_MAPS.map((key, i) => ({ label: `SL ${arena} ${i + 1}`, key })),
+    ...['arena1', 'preset-sr3', 'arena5'].map((key, i) => ({ label: `GD ${arena} ${i + 1}`, key })),
+  ]
+})
 
-const currentArenaName = computed(
-  () => arenaMaps.find((m) => m.key === gridStore.currentMap)?.name ?? '',
+// The first matching slot names the trigger; a map picked outside this list
+// (the Maps tab offers every preset) falls back to the generic label.
+const currentLabel = computed(
+  () => quickMaps.value.find((m) => m.key === gridStore.currentMap)?.label,
 )
 
 const dropdownRef = ref<HTMLElement>()
@@ -58,18 +71,18 @@ onUnmounted(cancelClose)
     @mouseleave="canHover && closeSoon()"
   >
     <button type="button" class="arena-dropdown-btn" :aria-expanded="showMenu" @click="toggle">
-      {{ i18nStore.t('app.arena') }} {{ currentArenaName }}
+      {{ currentLabel ?? i18nStore.t('app.arena') }}
       <span class="arena-dropdown-caret">▾</span>
     </button>
     <div v-if="showMenu" class="arena-dropdown-menu">
       <button
-        v-for="m in arenaMaps"
-        :key="m.key"
+        v-for="m in quickMaps"
+        :key="m.label"
         type="button"
         :class="['arena-dropdown-item', { selected: m.key === gridStore.currentMap }]"
         @click="select(m.key)"
       >
-        {{ i18nStore.t('app.arena') }} {{ m.name }}
+        {{ m.label }}
       </button>
     </div>
   </div>
@@ -98,7 +111,6 @@ onUnmounted(cancelClose)
   font-family: inherit;
   font-size: var(--tab-font-size);
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
@@ -135,7 +147,6 @@ onUnmounted(cancelClose)
   padding: var(--spacing-md) var(--spacing-lg);
   font-size: var(--tab-font-size);
   font-weight: 600;
-  text-transform: uppercase;
   letter-spacing: 0.05em;
   text-align: left;
   white-space: nowrap;
