@@ -302,9 +302,7 @@ import { createCompanionSkill, withTilePaint } from '../utils/builders'
 
 registerSkill(
   withTilePaint(
-    createCompanionSkill({
-      /* ... */
-    }),
+    createCompanionSkill({/* ... */}),
     (ctx) => calculateTiles(ctx), // returns { hexId, color }[]
   ),
 )
