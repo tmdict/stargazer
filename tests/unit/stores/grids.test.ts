@@ -38,6 +38,12 @@ const dragPayload = (sourceGridId: number, sourceHexId: number, characterId: num
   characterId,
 })
 
+// Roster drag payload: no source cell, so the drop is a placement.
+const rosterPayload = (characterId: number) => ({
+  character: { id: characterId } as unknown as CharacterType,
+  characterId,
+})
+
 beforeEach(() => {
   setActivePinia(createPinia())
 })
@@ -572,6 +578,43 @@ describe('useGrids synergy', () => {
     expect(grids.synergy).toBe(false)
     const after = roster(grids.active!.grid).map((r) => r.characterId)
     expect(after.sort((a, b) => a - b)).toEqual([ALLY_A, PHRAESTO, PHRAESTO_COMPANION])
+  })
+
+  it('routeDrop replaces the synergy hero on a full team with the new hero as the copy', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    ;[11, 12, 13, 14, 15].forEach((id) => expect(grids.placeOnActive(id, Team.ALLY)).toBe(true))
+    grids.synergy = true
+    expect(grids.placeOnActive(16, Team.ALLY)).toBe(true)
+    const slotHex = findCharacterHex(ctx.grid, toSynergyId(16), Team.ALLY)!
+
+    // Vacating the copy frees the assist slot, not a capacity slot, so the
+    // newcomer lands as the copy; the hover cue and the drop agree.
+    expect(grids.canDropCharacter(17, undefined, undefined, ctx.id, slotHex)).toBe(true)
+    expect(grids.routeDrop(rosterPayload(17), ctx.id, slotHex)).toBe(true)
+    expect(getCharacter(ctx.grid, slotHex)).toBe(toSynergyId(17))
+    expect(roster(ctx.grid).map((r) => r.characterId)).toEqual([
+      11,
+      12,
+      13,
+      14,
+      15,
+      toSynergyId(17),
+    ])
+  })
+
+  it('routeDrop treats a hero dropped onto its own tile as a no-op', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
+    grids.synergy = true
+    const hex = findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)!
+
+    expect(grids.canDropCharacter(ALLY_A, undefined, undefined, ctx.id, hex)).toBe(false)
+    expect(grids.routeDrop(rosterPayload(ALLY_A), ctx.id, hex)).toBe(false)
+    expect(roster(ctx.grid).map((r) => r.characterId)).toEqual([ALLY_A])
   })
 
   it('setGridCount re-derives the affordance from the rebuilt boards', () => {
