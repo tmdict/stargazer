@@ -147,13 +147,10 @@ const closeCharacterModal = () => {
   modalHex.value = null
 }
 
-/**
- * Utility function to find which hex is under the given screen coordinates
- * Uses point-in-polygon detection to accurately determine hex boundaries
- * Accounts for perspective mode translation offset
- */
+// Finds the hex under a screen point by converting the point into SVG space
+// and testing it against each hex polygon. No perspective adjustment is needed:
+// getScreenCTM already includes the perspective transform.
 const findHexUnderMouse = (x: number, y: number): number | null => {
-  // Get the SVG element to convert screen coordinates to SVG coordinates
   const svgElement = gridTilesRef.value?.svgEl
   if (!svgElement) return null
 
@@ -161,17 +158,13 @@ const findHexUnderMouse = (x: number, y: number): number | null => {
   pt.x = x
   pt.y = y
 
-  // Convert screen coordinates to SVG coordinates
   const screenCTM = svgElement.getScreenCTM()
   if (!screenCTM) return null
   const svgPt = pt.matrixTransform(screenCTM.inverse())
 
-  // No adjustment needed since perspective offset is removed
-  // Check each hex to see if the point is inside it
   for (const hex of ctx.grid.keys()) {
     const corners = ctx.layout.polygonCorners(hex)
 
-    // Point-in-polygon test
     if (isPointInPolygon({ x: svgPt.x, y: svgPt.y }, corners)) {
       return hex.getId()
     }
@@ -180,10 +173,7 @@ const findHexUnderMouse = (x: number, y: number): number | null => {
   return null
 }
 
-/**
- * Point-in-polygon algorithm to check if a point is inside a hexagon
- * Uses ray casting algorithm
- */
+// Ray-casting point-in-polygon.
 const isPointInPolygon = (
   point: { x: number; y: number },
   vertices: { x: number; y: number }[],
@@ -200,7 +190,7 @@ const isPointInPolygon = (
         j,
         verticesLength: vertices.length,
       })
-      continue // Skip if vertices are undefined
+      continue
     }
 
     const xi = vertexI.x
@@ -216,8 +206,7 @@ const isPointInPolygon = (
   return inside
 }
 
-// Handle drops on detected hexes
-// This is called by DragDropProvider when a drop occurs outside a hex tile
+// Called by DragDropProvider when a drop lands outside a hex tile.
 const handleDetectedHexDrop = (event: DragEvent) => {
   if (hoveredHexId.value === null || dropHandled.value) return
   const dropResult = handleDrop(event)
@@ -241,7 +230,6 @@ onUnmounted(() => {
   unregisterDropHandler(ctx.id)
 })
 
-// Expose methods for parent components if needed
 defineExpose({
   findHexUnderMouse,
 })
@@ -314,7 +302,7 @@ defineExpose({
     />
   </div>
 
-  <!-- Character Selection Modal - Outside of map container to avoid transform issues -->
+  <!-- Teleported out of the map container so its transforms don't skew the popup. -->
   <Teleport to="body">
     <CharacterSelectionPopup
       v-if="showCharacterModal && modalHex"

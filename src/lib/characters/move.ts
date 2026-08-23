@@ -75,7 +75,6 @@ export function executeMoveCharacter(
 
 // Atomic operations
 
-// Performs atomic move of a single character
 function performMove(
   grid: Grid,
   fromHexId: number,
@@ -93,7 +92,6 @@ function performMove(
   )
 }
 
-// Performs cross-team move with skill handling
 function performCrossTeamMove(
   grid: Grid,
   skillManager: SkillManager,

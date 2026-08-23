@@ -109,7 +109,8 @@ export class SkillManager {
   private skillPaintedTiles: Map<string, TilePaint[]> = new Map()
   // Connection lines each skill instance draws (rendered by SkillTargeting)
   private skillLines: Map<string, SkillLine[]> = new Map()
-  // Version counter to trigger reactivity
+  // Bumped on every mutation the UI must see; the board's computeds read it
+  // to re-derive from this non-reactive class.
   private targetVersion = 0
 
   // Lookups are injected (that data lives in the data store, outside this pure lib);
@@ -124,7 +125,6 @@ export class SkillManager {
     if (team !== undefined) {
       return this.getSkillKey(characterId, team) in this.activeSkills
     }
-    // Check if character has skill on any team
     for (const info of Object.values(this.activeSkills)) {
       if (info.characterId === characterId) return true
     }
@@ -136,7 +136,6 @@ export class SkillManager {
       const info = this.activeSkills[this.getSkillKey(characterId, team)]
       return info ? { hexId: info.hexId, team: info.team } : undefined
     }
-    // Find skill info for character on any team
     for (const info of Object.values(this.activeSkills)) {
       if (info.characterId === characterId) {
         return { hexId: info.hexId, team: info.team }
@@ -146,13 +145,11 @@ export class SkillManager {
   }
 
   activateCharacterSkill(characterId: number, hexId: number, team: Team, grid: Grid): boolean {
-    // Check if character has a skill
     const skill = getCharacterSkill(characterId)
     if (!skill) return true // No skill to activate, consider it success
 
     const skillKey = this.getSkillKey(characterId, team)
 
-    // If already active on THIS team, deactivate first
     if (this.hasActiveSkill(characterId, team)) {
       this.deactivateCharacterSkill(characterId, hexId, team, grid)
     }
@@ -173,7 +170,6 @@ export class SkillManager {
       return true
     } catch (error) {
       console.error('Skill activation failed:', error)
-      // Rollback tracking on failure
       delete this.activeSkills[skillKey]
       return false
     }
@@ -221,7 +217,7 @@ export class SkillManager {
     this.skillTargets.clear()
     this.skillPaintedTiles.clear()
     this.skillLines.clear()
-    this.targetVersion++ // Trigger reactivity to clear UI
+    this.targetVersion++
   }
 
   // Add color modifier for a specific character (used by skills for companions)
@@ -230,7 +226,6 @@ export class SkillManager {
     this.characterColorModifiers[key] = color
   }
 
-  // Remove color modifier for a specific character
   removeCharacterColorModifier(characterId: number, team: Team): void {
     const key = this.getSkillKey(characterId, team)
     delete this.characterColorModifiers[key]
@@ -242,7 +237,6 @@ export class SkillManager {
     this.characterImageModifiers[key] = imageName
   }
 
-  // Remove image modifier for a specific character
   removeCharacterImageModifier(characterId: number, team: Team): void {
     const key = this.getSkillKey(characterId, team)
     delete this.characterImageModifiers[key]
@@ -265,7 +259,7 @@ export class SkillManager {
     const counts = map.get(hexId) ?? new Map<string, number>()
     counts.set(color, (counts.get(color) ?? 0) + 1)
     map.set(hexId, counts)
-    this.targetVersion++ // Trigger reactivity
+    this.targetVersion++
   }
 
   private removeTileColor(
@@ -282,7 +276,7 @@ export class SkillManager {
       counts.delete(color)
       if (counts.size === 0) map.delete(hexId)
     }
-    this.targetVersion++ // Trigger reactivity
+    this.targetVersion++
   }
 
   // Border channel
@@ -307,7 +301,7 @@ export class SkillManager {
 
   clearTileColorModifiers(): void {
     this.tileColorModifiers.clear()
-    this.targetVersion++ // Trigger reactivity
+    this.targetVersion++
   }
 
   // Fill channel
@@ -400,7 +394,7 @@ export class SkillManager {
   setSkillTarget(characterId: number, team: Team, target: SkillTargetInfo): void {
     const key = this.getSkillKey(characterId, team)
     this.skillTargets.set(key, target)
-    this.targetVersion++ // Trigger reactivity
+    this.targetVersion++
   }
 
   getSkillTarget(characterId: number, team: Team): SkillTargetInfo | undefined {
@@ -411,7 +405,7 @@ export class SkillManager {
   clearSkillTarget(characterId: number, team: Team): void {
     const key = this.getSkillKey(characterId, team)
     this.skillTargets.delete(key)
-    this.targetVersion++ // Trigger reactivity
+    this.targetVersion++
   }
 
   getAllSkillTargets(): Map<string, SkillTargetInfo> {
@@ -438,7 +432,6 @@ export class SkillManager {
           continue
         }
 
-        // Update stored position if it changed
         if (info.hexId !== currentHexId) {
           info.hexId = currentHexId
         }

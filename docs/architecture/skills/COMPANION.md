@@ -18,8 +18,6 @@ registerSkill(
   createCompanionSkill({
     id: 'zanie',
     characterId: 89,
-    name: 'Turret',
-    description: '…',
     count: 2, // companions to spawn (default 1)
     companionImageModifier: 'zanie-turret',
     companionRange: 3,
@@ -30,7 +28,7 @@ registerSkill(
 The factory owns the full lifecycle:
 
 - **Activation**: derives the companion IDs (`N * companionIdOffset + characterId` for N = 1..count), raises team capacity by `count`, places each companion on a random free tile of the team's side, links it to the main character, and applies the configured modifiers
-- **Failure**: a placement failure rolls back already-placed companions and the capacity bump, then throws — so the surrounding placement transaction (`executePlaceCharacter`) fails as a whole
+- **Failure**: a placement failure rolls back already-placed companions and the capacity bump, then throws, so the surrounding placement transaction (`executePlaceCharacter`) fails as a whole
 - **Deactivation**: removes the companions, their links and modifiers, and restores capacity to `BASE_TEAM_SIZE` semantics (clamped, never below the base)
 
 ## Companion ID Ranges
@@ -47,6 +45,12 @@ The same layout repeats inside the synergy band (`SYNERGY_ID_OFFSET = 200000`):
 a synergy hero's companions land at `200000 + N * 10000 + baseId`. The factory
 derives companion IDs from the placed id (`ctx.characterId`), so a hero and its
 friend-assist copy field companions side by side without colliding.
+
+The copy runs the same `Skill` object as its base hero (`getCharacterSkill`
+strips the band offset for the registry lookup only), so every factory keys its
+instance state (links, modifiers, targets) by `ctx.characterId` + team, never
+the config's `characterId`; `tests/unit/skills/instanceIsolation.test.ts` pins
+this for every registered skill.
 
 `getMainCharacterId` recovers the main character ID from any companion ID by
 subtracting the companion index within its band (via `decomposeUnitId`), so a

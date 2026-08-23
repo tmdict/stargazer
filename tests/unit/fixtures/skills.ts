@@ -14,6 +14,12 @@ export function placeOnTile(grid: Grid, hexId: number, characterId: number, team
   tile.team = team
 }
 
+export function removeFromTile(grid: Grid, hexId: number): void {
+  const tile = grid.getTileById(hexId)
+  tile.characterId = undefined
+  tile.team = undefined
+}
+
 export function makeSkillContext(
   grid: Grid,
   hexId: number,

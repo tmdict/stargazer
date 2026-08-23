@@ -5,6 +5,7 @@ import GridArrow from './grid/GridArrow.vue'
 import GridLine from './grid/GridLine.vue'
 import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
+import type { Hex } from '@/lib/hex'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import { clipLaneBoundary } from '@/lib/skills/utils/line'
 import { Team } from '@/lib/types/team'
@@ -57,28 +58,21 @@ function targetingColor(key: string): string | undefined {
 }
 
 const arrowsToRender = computed(() => {
-  const arrows: Array<{
-    key: string
-    fromHexId: number
-    toHexId: number
-    color: string
-  }> = []
+  const arrows: Array<{ key: string; fromHex: Hex; toHex: Hex; color: string }> = []
 
   for (const [key, targetInfo] of skillTargets.value) {
     const color = targetingColor(key)
     if (!color) continue
 
-    if (targetInfo.metadata?.arrows) {
-      targetInfo.metadata.arrows.forEach((arrow, idx) => {
-        if (!bothVisible(arrow.fromHexId, arrow.toHexId)) return
-        arrows.push({
-          key: `${key}-arrow-${idx}`,
-          fromHexId: arrow.fromHexId,
-          toHexId: arrow.toHexId,
-          color,
-        })
+    targetInfo.metadata?.arrows?.forEach((arrow, idx) => {
+      if (!bothVisible(arrow.fromHexId, arrow.toHexId)) return
+      arrows.push({
+        key: `${key}-arrow-${idx}`,
+        fromHex: ctx.grid.getHexById(arrow.fromHexId),
+        toHex: ctx.grid.getHexById(arrow.toHexId),
+        color,
       })
-    }
+    })
   }
 
   return arrows
@@ -97,17 +91,23 @@ const artifactArrowsToRender = computed(() =>
 // the shown region (the whole grid outside team view); a center line drops when either
 // end is cropped.
 const linesToRender = computed(() =>
-  ctx.skillLines.flatMap((line) => {
-    if (line.fromCorner === undefined || line.toCorner === undefined) {
-      return bothVisible(line.fromHexId, line.toHexId) ? [line] : []
-    }
-    if (line.fromHexId === line.toHexId) {
-      return visibleHexIds.value.has(line.fromHexId) ? [line] : []
-    }
-    const laneS = ctx.grid.getHexById(line.fromHexId).s
-    const clip = clipLaneBoundary(ctx.visibleHexes, laneS, line.fromCorner)
-    return clip ? [{ ...line, ...clip }] : []
-  }),
+  ctx.skillLines
+    .flatMap((line) => {
+      if (line.fromCorner === undefined || line.toCorner === undefined) {
+        return bothVisible(line.fromHexId, line.toHexId) ? [line] : []
+      }
+      if (line.fromHexId === line.toHexId) {
+        return visibleHexIds.value.has(line.fromHexId) ? [line] : []
+      }
+      const laneS = ctx.grid.getHexById(line.fromHexId).s
+      const clip = clipLaneBoundary(ctx.visibleHexes, laneS, line.fromCorner)
+      return clip ? [{ ...line, ...clip }] : []
+    })
+    .map((line) => ({
+      ...line,
+      fromHex: ctx.grid.getHexById(line.fromHexId),
+      toHex: ctx.grid.getHexById(line.toHexId),
+    })),
 )
 </script>
 
@@ -122,8 +122,8 @@ const linesToRender = computed(() =>
       <GridLine
         v-for="(line, idx) in linesToRender"
         :key="`line-${idx}`"
-        :start-hex="ctx.grid.getHexById(line.fromHexId)"
-        :end-hex="ctx.grid.getHexById(line.toHexId)"
+        :start-hex="line.fromHex"
+        :end-hex="line.toHex"
         :start-corner="line.fromCorner"
         :end-corner="line.toCorner"
         :color="line.color"
@@ -133,17 +133,15 @@ const linesToRender = computed(() =>
         v-for="arrow in arrowsToRender"
         :id="arrow.key"
         :key="arrow.key"
-        :start-hex="ctx.grid.getHexById(arrow.fromHexId)"
-        :end-hex="ctx.grid.getHexById(arrow.toHexId)"
+        :start-hex="arrow.fromHex"
+        :end-hex="arrow.toHex"
         :color="arrow.color"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
       />
-      <!-- Marker ids are document-wide; the board id keeps two boards' artifact
-           arrows to the same hex from sharing one. -->
       <GridArrow
         v-for="arrow in artifactArrowsToRender"
-        :id="`artifact-${ctx.id}-${arrow.team}-${arrow.toHex.getId()}`"
+        :id="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
         :key="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
         :start-hex="arrow.fromHex"
         :end-hex="arrow.toHex"

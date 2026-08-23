@@ -4,9 +4,11 @@ AFK Journey arena simulator built with Vue 3 and TypeScript. Place characters on
 
 ## Features
 
-- Character skills and team synergies
+- Character skills, companions, and the friend-assist (synergy) hero
 - Drag & drop character placement on hexagonal grid
-- Range-aware pathfinding and targeting
+- Range-aware pathfinding and targeting, including artifact targeting arrows
+- Teams page: 1v1 / 3v3 / 5v5 / Supreme League boards with a saved-team library
+- Seasonal artifacts, phantimals, and charms
 - Map editor for custom arenas
 - URL-based state sharing
 - Responsive design seamlessly adapts to mobile, tablet, and desktop
@@ -44,7 +46,7 @@ See [Contributing](./docs/CONTRIBUTING.md) for all available commands.
 │   ├── views/          # Page views
 │   ├── data/           # Static data
 │   └── assets/         # Images & styles
-├── test/               # Test files
+├── tests/              # Unit and integration tests
 └── docs/               # Documentation
 ```
 
@@ -58,6 +60,8 @@ See [Contributing](./docs/CONTRIBUTING.md) for all available commands.
 **Systems:**
 
 - [Grid & Characters](./docs/architecture/GRID.md)
+- [Teams](./docs/architecture/TEAMS.md)
+- [Seasonal Content](./docs/architecture/SEASONAL.md)
 - [Skills](./docs/architecture/SKILLS.md)
 - [Pathfinding](./docs/architecture/PATHFINDING.md)
 - [Drag & Drop](./docs/architecture/DRAG_AND_DROP.md)

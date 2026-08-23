@@ -32,7 +32,7 @@ import { encodeGridStateToUrl, getEncodedStateFromUrl } from '@/utils/urlStateMa
 
 // Perspective Mode Configuration
 const PERSPECTIVE_VERTICAL_COMPRESSION = 0.55
-const DEFAULT_SVG_HEIGHT = 600 // Default SVG height
+const DEFAULT_SVG_HEIGHT = 600
 
 const gridStore = useGridStore()
 const grids = useGrids()
@@ -343,13 +343,10 @@ const handleResetMap = () => {
         </BottomSheet>
       </div>
     </DragDropProvider>
-
-    <!-- Toast Container -->
   </main>
 </template>
 
 <style scoped>
-/* Container for sections - side by side on large screens */
 .sections-container {
   display: flex;
   flex-direction: column;

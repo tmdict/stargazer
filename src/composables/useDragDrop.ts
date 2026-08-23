@@ -52,14 +52,13 @@ const lastDropHexId = ref<number | null>(null)
 const lastDropGridId = ref<number | null>(null)
 
 const updateDragPosition = (x: number, y: number) => {
-  // Get the current grid scale to adjust preview offset
   const gridStore = useGridStore()
   const scale = gridStore.getHexScale()
 
-  // Scale the offset based on current grid scale (35px is for 100% scale)
+  // Centers the preview on the pointer (35px at 100% scale).
   const offset = 35 * scale
 
-  dragPreviewPosition.value = { x: x - offset, y: y - offset } // Offset to center the preview
+  dragPreviewPosition.value = { x: x - offset, y: y - offset }
 }
 
 const handleGlobalDragOver = (event: DragEvent) => {
@@ -84,7 +83,6 @@ const endDrag = (event: DragEvent) => {
   draggedCharacter.value = null
   draggedImageSrc.value = ''
 
-  // Hand the drop target to the grid for the post-drag hover highlight
   lastDropHexId.value = hoveredHexId.value
   lastDropGridId.value = hoveredGridId.value
   hoveredHexId.value = null
@@ -110,7 +108,7 @@ const startDrag = (
   isDragging.value = true
   draggedCharacter.value = character
   draggedImageSrc.value = imageUrl || character.name
-  dropHandled.value = false // Reset drop handled flag for new drag
+  dropHandled.value = false
   lastDropHexId.value = null
 
   updateDragPosition(event.clientX, event.clientY)
@@ -125,7 +123,6 @@ const startDrag = (
 
   event.dataTransfer.effectAllowed = 'copy'
 
-  // Hide the default drag image using pre-loaded transparent image
   if (transparentDragImage) {
     event.dataTransfer.setDragImage(transparentDragImage, 0, 0)
   }
@@ -134,7 +131,6 @@ const startDrag = (
     event.target.style.opacity = '0.5'
   }
 
-  // Add global mouse move listeners for drag preview
   document.addEventListener('dragover', handleGlobalDragOver)
   document.addEventListener('drag', handleGlobalDrag)
   // Safety net: dragend bubbles to document, so even if the source element's
@@ -143,7 +139,7 @@ const startDrag = (
   document.addEventListener('dragend', endDrag, { once: true })
 }
 
-// Handle drag over (required for drop to work)
+// preventDefault on dragover is what makes the element a valid drop target.
 const handleDragOver = (event: DragEvent) => {
   event.preventDefault()
   if (event.dataTransfer) {

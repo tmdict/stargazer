@@ -171,7 +171,7 @@ describe('binaryEncoder', () => {
     describe('wire format', () => {
       // Shared URLs embed this exact format: a change to bit layout, header
       // flags, or the URL-safe alphabet silently breaks every existing link.
-      // If this test fails, the encoding changed — old URLs no longer decode
+      // If this test fails, the encoding changed and old URLs no longer decode.
       const GOLDEN_STATE: GridState = {
         t: [
           [1, 2],

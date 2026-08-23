@@ -17,10 +17,10 @@ import {
 } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-/* The mode-switch regression suite: encodes the failure of the old single-slot
- * 3v3 attempt (one mode's edits overwriting another's save) as a permanent
- * guard, plus the ?g= ingress routing (mode resolution + shape normalization).
- * Headless: node env, in-memory localStorage, SSR off. */
+/* The mode-switch regression suite: per-mode slot isolation (one mode's edits
+ * must never overwrite another mode's save), plus the ?g= ingress routing
+ * (mode resolution + shape normalization). Headless: node env, in-memory
+ * localStorage, SSR off. */
 
 const storage = new Map<string, string>()
 const setItemSpy = vi.fn((key: string, value: string) => {

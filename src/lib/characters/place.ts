@@ -165,14 +165,11 @@ export function executeAutoPlaceCharacter(
   characterId: number,
   team: Team,
 ): boolean {
-  // Validate character can be placed
   if (!canPlaceCharacterOnTeam(grid, characterId, team)) return false
 
-  // Get all available tiles for this team
   const availableTiles = getAllAvailableTilesForTeam(grid, team)
   if (availableTiles.length == 0) return false
 
-  // Select random tile from available options
   const randomIndex = Math.floor(Math.random() * availableTiles.length)
   const selectedTile = availableTiles[randomIndex]
 
@@ -189,16 +186,13 @@ export function executeAutoPlaceCharacter(
 
   const hexId = selectedTile.hex.getId()
 
-  // Place character
   const placed = performPlace(grid, hexId, characterId, team)
   if (!placed) return false
 
-  // Activate skill if character has one
   if (hasSkill(characterId)) {
     const activated = skillManager.activateCharacterSkill(characterId, hexId, team, grid)
 
     if (!activated) {
-      // Clean up on skill failure
       if (!performRemove(grid, hexId)) {
         console.warn(
           `Failed to remove character ${characterId} from hex ${hexId} after skill activation failure`,
@@ -218,14 +212,12 @@ export function executeAutoPlaceCharacter(
 
 // Atomic operations
 
-// Performs atomic character placement
 export function performPlace(
   grid: Grid,
   hexId: number,
   characterId: number,
   team: Team = Team.ALLY,
 ): boolean {
-  // Input validation
   if (!Number.isInteger(characterId) || characterId <= 0) return false
 
   if (!canPlaceCharacterOnTile(grid, hexId, team)) return false

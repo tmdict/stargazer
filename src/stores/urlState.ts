@@ -23,13 +23,11 @@ interface UrlRestoreResult {
 }
 
 export const useUrlStateStore = defineStore('urlState', () => {
-  // Store instances created once at store level
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
   const artifactStore = useArtifactStore()
   const grids = useGrids()
 
-  // Restore grid state from encoded string
   const restoreFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
     if (!encodedState) {
       return { success: false, error: 'No state provided' }
@@ -41,11 +39,9 @@ export const useUrlStateStore = defineStore('urlState', () => {
         return { success: false, error: 'Invalid state data' }
       }
 
-      // Apply the decoded state
       applyGridState(gridState)
       grids.deriveSynergy()
 
-      // Return success with display flags
       const displayFlags = unpackDisplayFlags(gridState.d)
       return { success: true, displayFlags }
     } catch (err) {
@@ -54,9 +50,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
   }
 
-  // Apply grid state to stores (private helper)
   const applyGridState = (gridState: GridState): void => {
-    // Helper functions to safely extract validated entries
     const getValidatedTileEntry = (entry: number[]): { hexId: number; state: number } | null => {
       const hexId = entry[0]
       const state = entry[1]
@@ -84,7 +78,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
     if (gridState.t) {
       gridState.t.forEach((entry) => {
         const validated = getValidatedTileEntry(entry)
-        if (!validated) return // Skip if can't verify the entry
+        if (!validated) return
 
         try {
           const hex = gridStore.getHexById(validated.hexId)

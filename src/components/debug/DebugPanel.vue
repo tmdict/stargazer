@@ -55,7 +55,6 @@ const getSkillTargetsForCharacter = (
   const targets: Array<{ key: string; target: SkillTargetInfo }> = []
   const allTargets = skillStore.getAllSkillTargets
 
-  // Check for standard key format (all skills now use this)
   const standardKey = `${characterId}-${team}`
   if (allTargets.has(standardKey)) {
     targets.push({ key: standardKey, target: allTargets.get(standardKey)! })
@@ -83,7 +82,6 @@ const getTargetLabel = (
 const getMetadataDescriptor = (metadata: SkillTargetInfo['metadata']): string | null => {
   if (!metadata) return null
 
-  // Priority order for descriptors
   if (metadata.isSymmetricalTarget === true) return 'symmetrical'
   if (metadata.isSymmetricalTarget === false) return 'spiral fallback'
   if (metadata.isFrontmostTarget) return 'frontmost'
@@ -165,18 +163,17 @@ defineExpose({
                 {{ getStateName(tile.state) }}
               </span>
             </div>
-            <!-- Dynamic skill targeting info - works for all characters with skills -->
+            <!-- Skill targeting -->
             <template v-for="config in activeSkillConfigs" :key="config.characterId">
               <div v-if="config.tile === tile" class="skill-info">
                 <span class="skill-label"
                   >Skill: {{ config.skillName }} ({{ config.characterName }})</span
                 >
-                <!-- Show symmetry info for characters that use it -->
                 <span v-if="config.showSymmetry" class="symmetry-info"
                   >Symmetrical Hex:
                   {{ getSymmetricalHexId(gridStore._getGrid(), tile.hex.getId()) }}</span
                 >
-                <!-- Handle Reinier's special dual target display -->
+                <!-- Reinier: a symmetrical ally/enemy pair instead of one target -->
                 <template v-if="decomposeUnitId(config.characterId).localId === 31">
                   <template v-for="targetData in config.targets" :key="targetData.key">
                     <span
@@ -192,10 +189,8 @@ defineExpose({
                     </span>
                   </template>
                 </template>
-                <!-- Handle all other characters -->
                 <template v-else>
                   <template v-for="targetData in config.targets" :key="targetData.key">
-                    <!-- Show arrows if present (new multi-target pattern) -->
                     <template v-if="targetData.target.metadata?.arrows">
                       <span class="skill-target">
                         → Arrows ({{ targetData.target.metadata.arrows.length }}):
@@ -213,17 +208,14 @@ defineExpose({
                         </template>
                       </span>
                     </template>
-                    <!-- Show standard single target (for skills without arrows) -->
                     <template v-else>
                       <span class="skill-target">
                         → Targeting {{ getTargetLabel(targetData.target.targetHexId, tile.team) }}
-                        <!-- Show metadata descriptor -->
                         <span v-if="getMetadataDescriptor(targetData.target.metadata)">
                           ({{ getMetadataDescriptor(targetData.target.metadata) }})
                         </span>
                       </span>
                     </template>
-                    <!-- Show examined tiles -->
                     <span v-if="targetData.target.metadata?.examinedTiles" class="examined-tiles">
                       Examined tiles: {{ targetData.target.metadata.examinedTiles.join(', ') }}
                     </span>
@@ -231,7 +223,6 @@ defineExpose({
                 </template>
               </div>
             </template>
-            <!-- Show closest enemy info for Ally characters -->
             <div
               v-if="
                 tile.team === Team.ALLY && pathfindingStore.closestEnemyMap.has(tile.hex.getId())
@@ -258,7 +249,6 @@ defineExpose({
                 </label>
               </div>
             </div>
-            <!-- Show closest ally info for Enemy characters -->
             <div
               v-if="
                 tile.team === Team.ENEMY && pathfindingStore.closestAllyMap.has(tile.hex.getId())

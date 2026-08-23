@@ -20,19 +20,19 @@ The pathfinding system provides movement calculations, target selection, and dis
 Finds optimal path between two specific hexes:
 
 ```typescript
-function aStarHexPath(
+function findPathAStar(
   start: Hex,
   goal: Hex,
-  getTile: (hex: Hex) => Tile | null,
-  canTraverse: (tile: Tile) => boolean,
+  getTile: (hex: Hex) => GridTile | undefined,
+  canTraverse: (tile: GridTile) => boolean,
 ): Hex[] | null
 ```
 
 Features:
 
-- **Manhattan Distance Heuristic**: Admissible for guaranteed optimal paths
+- **Hex Distance Heuristic**: Admissible for guaranteed optimal paths
 - **Binary Heap Priority Queue**: Efficient node selection
-- **Early Termination**: Stops when goal reached
+- **Early Termination**: Stops when goal reached, or after 1000 explored nodes
 - **Null on Impossible**: Returns null for blocked paths
 
 ### BFS Distance Calculation
@@ -40,16 +40,16 @@ Features:
 Finds minimum tiles to move before attacking any target:
 
 ```typescript
-function bfsDistanceToTargets(
-  source: Hex,
+function calculateRangedMovementDistance(
+  start: Hex,
   targets: Hex[],
   range: number,
-  getTile: (hex: Hex) => Tile | null,
-  canTraverse: (tile: Tile) => boolean,
-): Map<number, number>
+  getTile: (hex: Hex) => GridTile | undefined,
+  canTraverse: (tile: GridTile) => boolean,
+): { movementDistance: number; canReach: boolean; reachableTargets: Hex[] }
 ```
 
-Handles both melee (range 1) and ranged attacks by finding positions within attack range.
+Handles both melee (range 1) and ranged attacks by finding positions within attack range. Every target reachable at the minimum distance is returned so tie-breaking can choose among them; the search gives up after 20 moves.
 
 ## Target Selection
 
@@ -96,7 +96,7 @@ Processes all source-team characters, returning optimal targets based on team an
 
 ## Memoization Strategy
 
-The library functions are pure and uncached: every call computes from the grid state it is given. Memoization lives one layer up, in the pathfinding store (`/src/stores/pathfinding.ts`), where `closestEnemyMap`/`closestAllyMap` are Vue `computed` properties. They recompute only when the reactive grid state they read — placements, tile states, character ranges — actually changes, so results can never go stale: any mutation that affects targeting (character operations, map-editor tile painting, map switches) invalidates them automatically through Vue's dependency tracking.
+The library functions are pure and uncached: every call computes from the grid state it is given. Memoization lives one layer up, on each board's context (`/src/composables/useGridContext.ts`), where `closestEnemyMap`/`closestAllyMap` are Vue `computed` properties; the pathfinding store (`/src/stores/pathfinding.ts`) only adapts the active board's maps for the debug panel. They recompute only when the reactive grid state they read (placements, tile states, character ranges) actually changes, so results can never go stale: any mutation that affects targeting (character operations, map-editor tile painting, map switches) invalidates them automatically through Vue's dependency tracking. The per-board range map seeds an entry for every on-grid namespaced unit (companion, phantimal, synergy copy), since the static map is keyed by base hero id.
 
 ## Performance Characteristics
 

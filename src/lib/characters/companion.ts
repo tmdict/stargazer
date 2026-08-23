@@ -72,7 +72,6 @@ export function clearCompanionLinks(grid: Grid, mainCharacterId: number, team: T
   grid.companionLinks.delete(key)
 }
 
-// Stores companion positions before skill deactivation
 export function storeCompanionPositions(
   grid: Grid,
   characterId: number,
@@ -120,7 +119,6 @@ export function repositionCompanions(
   })
 }
 
-// Restores companions to original positions
 export function restoreCompanions(
   grid: Grid,
   skillManager: SkillManager,

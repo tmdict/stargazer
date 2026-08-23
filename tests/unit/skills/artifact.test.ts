@@ -4,7 +4,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { artifactHostHex, Grid } from '@/lib/grid'
 import { artifactTargetArrows } from '@/lib/skills/artifact'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const ENLIGHTENING = 3
 const VANGUARD = 14
@@ -38,7 +38,7 @@ describe('artifact targeting', () => {
     expect(artifactTargetArrows(grid, Team.ALLY, null)).toEqual([])
     expect(artifactTargetArrows(grid, Team.ALLY, AWAKENING)).toEqual([])
 
-    for (const hexId of [5, 12, 20]) grid.getTileById(hexId).characterId = undefined
+    for (const hexId of [5, 12, 20]) removeFromTile(grid, hexId)
     expect(artifactTargetArrows(grid, Team.ALLY, ENLIGHTENING)).toEqual([])
   })
 
@@ -55,7 +55,7 @@ describe('artifact targeting', () => {
     }
   })
 
-  // Retire with src/lib/skills/seasonal/artifact.ts.
+  // Retire with the season's entries in src/lib/skills/artifact.ts.
   describe('season 7', () => {
     it('vanguard points at the frontmost unit of its slot team', () => {
       expect(targetHexIds(grid, Team.ALLY, VANGUARD)).toEqual([20])
@@ -68,8 +68,8 @@ describe('artifact targeting', () => {
     })
 
     it('valorshield collapses to one arrow for a lone unit', () => {
-      grid.getTileById(5).characterId = undefined
-      grid.getTileById(12).characterId = undefined
+      removeFromTile(grid, 5)
+      removeFromTile(grid, 12)
       expect(targetHexIds(grid, Team.ALLY, VALORSHIELD)).toEqual([20])
     })
   })

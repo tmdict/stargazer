@@ -74,6 +74,8 @@ interface SkillContext {
 
 The registry stores skills using a generic `SkillBase<Context>` interface to avoid circular dependencies with `SkillContext`. The `skill.ts` module provides typed wrappers that bind `SkillContext` to the generic functions.
 
+Lookups resolve a synergy copy (the `SYNERGY_ID_OFFSET` band, see GRID.md) to its base hero's skill via `decomposeUnitId`, so the two share one `Skill` object. Only the definition lookup strips the offset: every instance-keyed structure (active skills, paints, targets, companion links) keys by the placed id, which is why the builders read `ctx.characterId` rather than their config id.
+
 ```typescript
 // registry.ts - generic interface, stores SkillBase<unknown>
 interface SkillBase<Context = unknown> {
@@ -334,10 +336,9 @@ Some artifacts act on specific units (Enlightening: the rearmost ally; Vanguard:
 
 Hero arrows that look equally "pure" (Talene, Bonnie) stay Skills because a unit owns them; an artifact has no hex and no `characterId`, so nothing in the lifecycle could track it.
 
-- `/src/lib/skills/artifact.ts` holds the permanent definition table, keyed by artifact id: `ArtifactTargeting = (grid, team) => (TargetCandidate | null)[]`, the units the artifact acts on given the slot's team (a null pick is a rule that found no unit). Entries use the whole-team helpers `frontmostUnit` / `rearmostUnit` from `utils/distance.ts` (the same rule Talene and Bonnie use), so phantimals and companions count like they do for hero skills. `artifactTargetArrows(grid, team, artifactId)` resolves a slot to distinct `{ team, fromHex, toHex }` arrows, anchored on `artifactHostHex` (`/src/lib/grid.ts`).
-- `/src/lib/skills/seasonal/artifact.ts` holds the rotating season's entries, spread into the permanent table. Retirement is deleting that file with the season's data; the dangling spread fails `type-check` so it cannot be forgotten.
+- `/src/lib/skills/artifact.ts` holds the definition table, keyed by artifact id: `(grid, team) => (TargetCandidate | null)[]`, the units the artifact acts on given the slot's team (a null pick is a rule that found no unit). Entries use the whole-team helpers `frontmostUnit` / `rearmostUnit` from `utils/distance.ts` (the same rule Talene and Bonnie use), so phantimals and companions count like they do for hero skills. `artifactTargetArrows(grid, team, artifactId)` resolves a slot to distinct `{ team, fromHex, toHex }` arrows, anchored on `artifactHostHex` (`/src/lib/grid.ts`). The rotating season's entries sit under a season comment in the same table and are deleted with the season's data files (SEASONAL.md lists this in the artifact retirement step).
 - `useGridContext` exposes `artifactArrows`, a `computed` over the two slots and the grid's tiles, so the arrows re-evaluate on every placement change and slot change with no wiring in the place/move/remove paths.
-- `SkillTargeting.vue` renders them next to the skill arrows in the team's arrow hue (`TEAM_ARROW_COLORS`), so they share the Skills toggle, the arrow layer geometry, the perspective lift, and team view (which hides the enemy slot and its arrows).
+- `SkillTargeting.vue` renders them next to the skill arrows in the team's arrow hue (`TEAM_ARROW_COLORS`, `useArrowLayer.ts`), so they share the Skills toggle, the arrow layer geometry, the perspective lift, and team view (which hides the enemy slot and its arrows). `GridArrow` and `GridLine` take `Hex` endpoints (an artifact host cell has no tile id) and draw through the board's `ctx.layout`; `GridArrow` prefixes its arrowhead marker id with the board id, since SVG marker ids are document-wide and the 5 v 5 page renders several boards.
 
 Adding an artifact is one table entry. If an artifact ever needs a side effect (a spawned unit, a capacity change), that is the point to give skills a caster-agnostic source rather than to extend this table.
 

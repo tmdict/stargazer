@@ -46,9 +46,8 @@ const gridEvents = useGridEvents()
 const { startDrag, endDrag } = useDragDrop()
 const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelectionState()
 
-// Hover tooltip: the same character card as the roster, for a plainly-hovered base
-// hero (companions and phantimals have no roster card, so they're skipped). Dismissed
-// on any placement change, since an icon removed/swapped from under a still cursor
+// Hover tooltip: the same character card as the roster. Dismissed on any
+// placement change, since an icon removed/swapped from under a still cursor
 // fires no mouseleave.
 const {
   hoveredEl,
@@ -64,7 +63,6 @@ const baseCharacterAt = (characterId: number): CharacterType | undefined => {
 }
 
 const getCharacterName = (characterId: number, hexId: number): string => {
-  // Check if this character has a custom image modifier
   const team = getCharacterTeam(ctx.grid, hexId)
   if (team) {
     const customImageName = ctx.getImageModifierForCharacter(characterId, team)
@@ -110,9 +108,9 @@ const characterDimensions = computed(() => {
   return {
     size: BASE_CHARACTER_SIZE * scale,
     offset: BASE_CHARACTER_OFFSET * scale,
-    borderWidth: Math.max(2, 3 * scale), // Min 2px border
-    fontSize: Math.max(10, 14 * scale), // Min 10px font
-    levelBadgeSize: Math.max(16, 20 * scale), // Level indicator size
+    borderWidth: Math.max(2, 3 * scale),
+    fontSize: Math.max(10, 14 * scale),
+    levelBadgeSize: Math.max(16, 20 * scale),
   }
 })
 
@@ -120,7 +118,6 @@ const getSkillBorderStyle = (characterId: number, hexId: number) => {
   const team = getCharacterTeam(ctx.grid, hexId)
   if (!team) return {}
 
-  // Check if this character has a color modifier (either main character with skill or companion)
   const borderColor = ctx.getColorModifierForCharacter(characterId, team)
   if (borderColor) {
     return { borderColor }
@@ -129,11 +126,9 @@ const getSkillBorderStyle = (characterId: number, hexId: number) => {
 }
 
 const getCharacterStyle = (hexId: number) => {
-  // Use getHexPosition to get SVG coordinates, not screen coordinates
   const position = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
   const { size, offset, borderWidth } = characterDimensions.value
 
-  // Base positioning
   const baseStyle: Record<string, string> = {
     position: 'absolute',
     left: `${position.x - offset}px`,
@@ -176,8 +171,8 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
   const character = props.characters.find((c) => c.id === toBaseHeroId(characterId))
   if (!character) return
 
-  // Add sourceHexId to differentiate from character selection drags
-  // For companions, we pass the companion ID so the system knows it's a companion
+  // sourceHexId marks a board-origin drag (the drop handler routes on it), and
+  // id is the placed unit (companion or synergy id), not the base card's.
   const characterWithSource = {
     ...character,
     id: characterId,
