@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import { useGridStore } from '@/stores/grid'
+import { useGridContext } from '@/composables/useGridContext'
+import type { Hex } from '@/lib/hex'
 
+// Endpoints are hexes, not tile ids, so an arrow can start from an off-grid
+// artifact host cell as well as from a tile.
 interface Props {
-  startHexId: number
-  endHexId: number
+  startHex: Hex
+  endHex: Hex
   color: string
   strokeWidth: number
   arrowheadSize: number
@@ -13,7 +16,7 @@ interface Props {
   invertCurve?: boolean
   curveScale?: number
   dashed?: boolean
-  id?: string
+  id: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -21,35 +24,27 @@ const props = withDefaults(defineProps<Props>(), {
   invertCurve: false,
   curveScale: 1,
   dashed: false,
-  id: '',
 })
 
-const gridStore = useGridStore()
+const ctx = useGridContext()
 
-const markerId = computed(() =>
-  props.id ? `arrowhead-${props.id}` : `arrowhead-${props.startHexId}-${props.endHexId}`,
-)
+const markerId = computed(() => `arrowhead-${props.id}`)
 
 const dashArray = computed(() => {
   if (!props.dashed) return undefined
-  const dash = 8 * gridStore.getHexScale()
+  const dash = 8 * ctx.hexScale
   return `${dash},${dash}`
 })
 
-// Scale-aware character radius for arrow positioning
-const scaledCharacterRadius = computed(() => {
-  return props.characterRadius * gridStore.getHexScale()
-})
-
-const pathData = computed(() => {
-  return gridStore.getArrowPath(
-    props.startHexId,
-    props.endHexId,
-    scaledCharacterRadius.value,
+const pathData = computed(() =>
+  ctx.layout.getArrowPath(
+    props.startHex,
+    props.endHex,
+    props.characterRadius * ctx.hexScale,
     props.invertCurve,
     props.curveScale,
-  )
-})
+  ),
+)
 </script>
 
 <template>

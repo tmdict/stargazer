@@ -204,6 +204,10 @@ loaders merge one glob per location.
   `src/locales/seasonal/artifact/effects/<slug>.json`, written by
   `npm run import:artifacts` from the viewer's en/zh `artifacts.json` feeds
   with the shared `cleanDescription` normalization.
+- Targeting (hand-curated): artifacts that act on specific units draw an arrow
+  from their slot to each target. Permanent entries live in
+  `src/lib/skills/artifact.ts`, the season's in
+  `src/lib/skills/seasonal/artifact.ts` (see SKILLS.md, "Artifact Targeting").
 
 The importer lints everything hand-written against the feed and hard-fails on
 disagreement: every feed artifact has a structural file in the dir matching
@@ -214,9 +218,9 @@ prunes effect files whose artifact left the feed, and
 `npm run import:artifacts -- --retire` clears the seasonal effect files.
 
 Retiring a season's artifacts is deleting the seasonal data and name files
-(the importer prunes its own effect files); the pre-season six are never
-touched. Retired ids restored from old URLs occupy their slot as a
-question-mark circle (see Retirement below).
+(the importer prunes its own effect files) and `lib/skills/seasonal/artifact.ts`;
+the pre-season six are never touched. Retired ids restored from old URLs occupy
+their slot as a question-mark circle (see Retirement below).
 
 ## Charms
 

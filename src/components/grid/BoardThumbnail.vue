@@ -1,7 +1,7 @@
 <script lang="ts">
 import { computed, useId } from 'vue'
 
-import { Grid } from '@/lib/grid'
+import { artifactHostHex, Grid } from '@/lib/grid'
 import { Layout, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
@@ -57,11 +57,11 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
     centers.set(hex.getId(), layout.hexToPixel(hex))
   }
 
-  // Must match GridArtifacts' host cells. They land in the empty corners of the
-  // hex grid's bounding box, so drawing there costs no framing change.
+  // Host cells land in the empty corners of the hex grid's bounding box, so
+  // drawing there costs no framing change.
   const artifactCenters = {
-    ally: layout.hexToPixel(grid.getHexById(1).neighbor(4)),
-    enemy: layout.hexToPixel(grid.getHexById(45).neighbor(1)),
+    ally: layout.hexToPixel(artifactHostHex(grid, Team.ALLY)),
+    enemy: layout.hexToPixel(artifactHostHex(grid, Team.ENEMY)),
   }
 
   const geometry: Geometry = {

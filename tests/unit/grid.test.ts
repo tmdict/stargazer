@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { Grid } from '@/lib/grid'
+import { artifactHostHex, Grid } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
@@ -122,5 +122,18 @@ describe('Grid', () => {
       expect(tile2.characterId).toBe(100)
       expect(tile2.team).toBe(Team.ALLY)
     })
+  })
+})
+
+describe('artifactHostHex', () => {
+  it('is the off-grid neighbour left of cell 1 (ally) and right of cell 45 (enemy)', () => {
+    const grid = new Grid()
+    const ally = artifactHostHex(grid, Team.ALLY)
+    const enemy = artifactHostHex(grid, Team.ENEMY)
+
+    expect(ally.equals(grid.getHexById(1).neighbor(4))).toBe(true)
+    expect(enemy.equals(grid.getHexById(45).neighbor(1))).toBe(true)
+    expect(grid.getTileOrUndefined(ally)).toBeUndefined()
+    expect(grid.getTileOrUndefined(enemy)).toBeUndefined()
   })
 })

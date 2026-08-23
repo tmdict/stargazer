@@ -8,7 +8,8 @@ import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { Hex } from '@/lib/hex'
+import { artifactHostHex } from '@/lib/grid'
+import type { Hex } from '@/lib/hex'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -52,28 +53,17 @@ const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null) =
 // board (its coordinate space matches the layout, like GridTiles).
 const cellLayerRef = ref<SVGSVGElement | null>(null)
 
-// Host cells: the left/right neighbours of real cells 1 (ally) and 45 (enemy).
-// Not part of the grid simulation (no tile, no pathfinding, never a hex-pipeline
-// drop target): an SVG outline + the icon, tracking the layout/scale. They do
-// accept artifact drops, via the separate artifact pipeline below.
-const ghostCell = (baseId: number, direction: number): Hex | null => {
-  try {
-    return ctx.grid.getHexById(baseId).neighbor(direction)
-  } catch {
-    return null
-  }
-}
-const allyCellHex = computed(() => ghostCell(1, 4)) // direction 4 = left of cell 1
-const enemyCellHex = computed(() => ghostCell(45, 1)) // direction 1 = right of cell 45
+// Host cells are never a hex-pipeline drop target; they accept artifact drops
+// via the separate artifact pipeline below.
+const allyCellHex = computed(() => artifactHostHex(ctx.grid, Team.ALLY))
+const enemyCellHex = computed(() => artifactHostHex(ctx.grid, Team.ENEMY))
 
-const cellCenter = (hex: Hex | null) => (hex ? ctx.layout.hexToPixel(hex) : { x: 0, y: 0 })
-const cellPoints = (hex: Hex | null) =>
-  hex
-    ? ctx.layout
-        .polygonCorners(hex)
-        .map((p) => `${p.x},${p.y}`)
-        .join(' ')
-    : ''
+const cellCenter = (hex: Hex) => ctx.layout.hexToPixel(hex)
+const cellPoints = (hex: Hex) =>
+  ctx.layout
+    .polygonCorners(hex)
+    .map((p) => `${p.x},${p.y}`)
+    .join(' ')
 
 const allyCenter = computed(() => cellCenter(allyCellHex.value))
 const enemyCenter = computed(() => cellCenter(enemyCellHex.value))

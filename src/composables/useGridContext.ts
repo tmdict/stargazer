@@ -53,11 +53,12 @@ import {
 } from '@/lib/characters/place'
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
-import { Grid, type GridTile } from '@/lib/grid'
+import { artifactHostHex, Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { getClosestTargetMap } from '@/lib/pathfinding'
+import { artifactTargetArrows, type ArtifactArrow } from '@/lib/skills/artifact'
 import { SkillManager } from '@/lib/skills/skill'
 import type { CharacterType } from '@/lib/types/character'
 import { FULL_GRID } from '@/lib/types/grid'
@@ -120,6 +121,7 @@ export interface GridContext {
   placements: Map<number, number>
   closestEnemyMap: ReturnType<typeof getClosestTargetMap>
   closestAllyMap: ReturnType<typeof getClosestTargetMap>
+  artifactArrows: ArtifactArrow[]
   skillTargets: ReturnType<SkillManager['getAllSkillTargets']>
   skillLines: ReturnType<SkillManager['getSkillLines']>
   // Page-wide values surfaced on the board for one-stop component access.
@@ -387,17 +389,14 @@ export function createGridContext(
         .map((tile) => tile.hex)
     })
 
-    // The crop must also contain the ally artifact host cell: the ghost cell
-    // beside hex 1, which renders in team view and can sit at the formation's
-    // edge on maps with a sparse front line.
-    const cropHexes = computed<Hex[]>(() => {
-      if (!teamView.value) return visibleHexes.value
-      try {
-        return [...visibleHexes.value, grid.getHexById(1).neighbor(4)]
-      } catch {
-        return visibleHexes.value
-      }
-    })
+    // The crop must also contain the ally artifact host cell, which renders in
+    // team view and can sit at the formation's edge on maps with a sparse
+    // front line.
+    const cropHexes = computed<Hex[]>(() =>
+      teamView.value
+        ? [...visibleHexes.value, artifactHostHex(grid, Team.ALLY)]
+        : visibleHexes.value,
+    )
 
     // Team view crops to the shown team's extent (cropHexes), padded for breathing
     // room on the sides and bottom; the top pad also clears the perspective-mode
@@ -463,6 +462,13 @@ export function createGridContext(
       })
     const closestEnemyMap = closestMap(Team.ALLY, Team.ENEMY)
     const closestAllyMap = closestMap(Team.ENEMY, Team.ALLY)
+
+    // Derived like the closest-target maps: reading the slots and the grid's
+    // tiles is what keeps the arrows current across placements and slot changes.
+    const artifactArrows = computed<ArtifactArrow[]>(() => [
+      ...artifactTargetArrows(grid, Team.ALLY, artifacts.ally.value),
+      ...artifactTargetArrows(grid, Team.ENEMY, artifacts.enemy.value),
+    ])
 
     const hexScale = computed(() => hexSize.value.x / 40)
     const teamViewActive = computed(() => teamView.value)
@@ -543,6 +549,7 @@ export function createGridContext(
       charactersPlaced,
       closestEnemyMap,
       closestAllyMap,
+      artifactArrows,
       hexScale,
       teamView: teamViewActive,
       inverted: invertedActive,

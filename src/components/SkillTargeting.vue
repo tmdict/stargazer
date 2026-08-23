@@ -3,10 +3,11 @@ import { computed } from 'vue'
 
 import GridArrow from './grid/GridArrow.vue'
 import GridLine from './grid/GridLine.vue'
-import { useArrowLayer } from '@/composables/useArrowLayer'
+import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import { clipLaneBoundary } from '@/lib/skills/utils/line'
+import { Team } from '@/lib/types/team'
 
 interface Props {
   showPerspective: boolean
@@ -49,19 +50,10 @@ function parseSkillKey(key: string): { characterId: number; team: string } | nul
   }
 }
 
-// Check if this is a targeting skill (has targetingColorModifier)
-function isTargetingSkill(key: string): boolean {
+// Only targeting skills (those with a targetingColorModifier) draw arrows.
+function targetingColor(key: string): string | undefined {
   const parsed = parseSkillKey(key)
-  if (!parsed) return false
-  const skill = getCharacterSkill(parsed.characterId)
-  return skill?.targetingColorModifier !== undefined
-}
-
-function getTargetingColor(key: string): string {
-  const parsed = parseSkillKey(key)
-  if (!parsed) return '#36958e'
-  const skill = getCharacterSkill(parsed.characterId)
-  return skill?.targetingColorModifier || '#36958e' // Default to green if not specified
+  return parsed ? getCharacterSkill(parsed.characterId)?.targetingColorModifier : undefined
 }
 
 const arrowsToRender = computed(() => {
@@ -73,11 +65,10 @@ const arrowsToRender = computed(() => {
   }> = []
 
   for (const [key, targetInfo] of skillTargets.value) {
-    if (!isTargetingSkill(key)) continue
+    const color = targetingColor(key)
+    if (!color) continue
 
-    // Check for arrows array in metadata
     if (targetInfo.metadata?.arrows) {
-      const color = getTargetingColor(key)
       targetInfo.metadata.arrows.forEach((arrow, idx) => {
         if (!bothVisible(arrow.fromHexId, arrow.toHexId)) return
         arrows.push({
@@ -92,6 +83,12 @@ const arrowsToRender = computed(() => {
 
   return arrows
 })
+
+// An artifact arrow shows with its slot: team view hides the enemy slot, and
+// ally targets are ally tiles, which team view always shows.
+const artifactArrowsToRender = computed(() =>
+  ctx.artifactArrows.filter((arrow) => !ctx.teamView || arrow.team === Team.ALLY),
+)
 
 // Lines carry their own color, so (unlike arrows) they render for any skill, not just
 // targeting ones. A same-hex corner line is an exact tile edge (a zone-outline segment)
@@ -116,7 +113,7 @@ const linesToRender = computed(() =>
 
 <template>
   <svg
-    v-if="arrowsToRender.length > 0 || linesToRender.length > 0"
+    v-if="arrowsToRender.length || artifactArrowsToRender.length || linesToRender.length"
     class="skill-arrow-layer"
     :width="svgDimensions.width"
     :height="svgDimensions.height"
@@ -125,8 +122,8 @@ const linesToRender = computed(() =>
       <GridLine
         v-for="(line, idx) in linesToRender"
         :key="`line-${idx}`"
-        :start-hex-id="line.fromHexId"
-        :end-hex-id="line.toHexId"
+        :start-hex="ctx.grid.getHexById(line.fromHexId)"
+        :end-hex="ctx.grid.getHexById(line.toHexId)"
         :start-corner="line.fromCorner"
         :end-corner="line.toCorner"
         :color="line.color"
@@ -136,9 +133,21 @@ const linesToRender = computed(() =>
         v-for="arrow in arrowsToRender"
         :id="arrow.key"
         :key="arrow.key"
-        :start-hex-id="arrow.fromHexId"
-        :end-hex-id="arrow.toHexId"
+        :start-hex="ctx.grid.getHexById(arrow.fromHexId)"
+        :end-hex="ctx.grid.getHexById(arrow.toHexId)"
         :color="arrow.color"
+        :stroke-width="arrowStyle.strokeWidth"
+        :arrowhead-size="arrowStyle.arrowheadSize"
+      />
+      <!-- Marker ids are document-wide; the board id keeps two boards' artifact
+           arrows to the same hex from sharing one. -->
+      <GridArrow
+        v-for="arrow in artifactArrowsToRender"
+        :id="`artifact-${ctx.id}-${arrow.team}-${arrow.toHex.getId()}`"
+        :key="`artifact-${arrow.team}-${arrow.toHex.getId()}`"
+        :start-hex="arrow.fromHex"
+        :end-hex="arrow.toHex"
+        :color="TEAM_ARROW_COLORS[arrow.team]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
       />
