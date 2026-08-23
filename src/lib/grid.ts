@@ -101,6 +101,11 @@ export class Grid {
     return hex
   }
 
+  // Non-throwing twin of getHexById for ids read from untrusted serialized data
+  getHexByIdOrUndefined(id: number): Hex | undefined {
+    return this.hexById.get(id)
+  }
+
   // Non-throwing lookup for probing hexes that may lie outside the grid
   // (pathfinding callbacks, neighbor scans)
   getTileOrUndefined(hex: Hex): GridTile | undefined {
@@ -139,4 +144,14 @@ const ARTIFACT_HOST_CELLS = {
 export function artifactHostHex(grid: Grid, team: Team): Hex {
   const { anchor, direction } = ARTIFACT_HOST_CELLS[team]
   return grid.getHexById(anchor).neighbor(direction)
+}
+
+// 180-degree rotation about the board center, the content-level counterpart of
+// the view-only Invert toggle: negating all three cube coordinates maps a
+// formation onto the opposite side. Undefined for an unknown id or a rotated
+// position off the grid.
+export function rotatedHexId(grid: Grid, hexId: number): number | undefined {
+  const hex = grid.getHexByIdOrUndefined(hexId)
+  if (!hex) return undefined
+  return grid.getTileOrUndefined(new Hex(-hex.q, -hex.r, -hex.s))?.hex.getId()
 }

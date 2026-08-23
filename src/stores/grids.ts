@@ -20,20 +20,27 @@ import {
   type GridContext,
 } from '@/composables/useGridContext'
 import {
+  canPlaceCharacterOnTile,
   findTeamSynergyHex,
   getAvailableTeamSize,
   getCharacter,
   getCharacterTeam,
+  getOpposingTeam,
   getTilesWithCharacters,
+  getTilesWithCharactersByTeam,
   hasCharacter,
+  isBaseHeroId,
   isCompanionUnitId,
   resolvePlacement,
 } from '@/lib/characters/character'
+import { repositionCompanions } from '@/lib/characters/companion'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { resolveReplacement } from '@/lib/characters/place'
 import { isPlaceholderId } from '@/lib/characters/placeholder'
 import { isSynergyHeroId } from '@/lib/characters/synergy'
+import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
+import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
@@ -54,6 +61,14 @@ export const artifactSlot = (
   slots: { ally: number | null; enemy: number | null },
   team: Team,
 ): number | null => (team === Team.ALLY ? slots.ally : slots.enemy)
+
+export interface SideLoadOptions {
+  // Mirror the formation 180 degrees onto the opposite team.
+  invert: boolean
+  // 'all': saved board i onto live board i; 'active': a single-board record
+  // onto the active board.
+  scope: 'all' | 'active'
+}
 
 export const useGrids = defineStore('grids', () => {
   const contexts = shallowRef<GridContext[]>([])
@@ -405,6 +420,130 @@ export const useGrids = defineStore('grids', () => {
     return true
   }
 
+  // The boards a side-load touches, shared by loadTeamSide and its read-only
+  // confirm mirror below so the two can never drift.
+  const sideLoadContexts = (scope: SideLoadOptions['scope']): GridContext[] =>
+    scope === 'active' ? (active.value ? [active.value] : []) : contexts.value
+
+  // Read-only mirror of loadTeamSide's clear phase (the canDropCharacter
+  // pattern): the two-step confirm must promise exactly what the load removes.
+  const sideLoadWouldReplace = (dest: Team, scope: SideLoadOptions['scope']): boolean =>
+    sideLoadContexts(scope).some(
+      (ctx) =>
+        getTilesWithCharactersByTeam(ctx.grid, dest).length > 0 ||
+        artifactSlot(ctx.artifacts, dest) !== null,
+    )
+
+  /* Stamp a one-side saved team (lib/teams/sideLoad) onto the live boards:
+   * clear the destination side first via per-hex removal, the same delete path
+   * the UI uses (skill cleanup, companion cascade), then place each unit on its
+   * saved hex, falling back to a random tile when the live map assigns that
+   * tile elsewhere or something already stands there. `invert` flips the
+   * destination team and 180-rotates every saved hex; scope 'active' targets
+   * only the active board (a 1v1 record loaded inside a multi-board mode).
+   * Units page-wide uniqueness already claims, and units with no landing tile
+   * at all, are skipped and counted. The other side, maps, and provenance are
+   * untouched. */
+  const loadTeamSide = (
+    plan: SideLoadPlan,
+    { invert, scope }: SideLoadOptions,
+  ): { placed: number; skipped: number } => {
+    const dest = invert ? getOpposingTeam(plan.side) : plan.side
+    const ctxs = sideLoadContexts(scope)
+    const boards = scope === 'active' ? plan.boards.slice(0, 1) : plan.boards
+    const targets = boards.flatMap((board, i) => {
+      const ctx = ctxs[i]
+      return ctx ? [{ ctx, board }] : []
+    })
+
+    for (const { ctx } of targets) {
+      for (const tile of getTilesWithCharactersByTeam(ctx.grid, dest)) {
+        // A companion's removal cascades to its main, so later snapshot hexes
+        // may already be empty.
+        if (hasCharacter(ctx.grid, tile.hex.getId())) ctx.remove(tile.hex.getId())
+      }
+      ctx.removeArtifact(dest)
+    }
+
+    const targetHexFor = (ctx: GridContext, unit: { hexId: number }): number | undefined =>
+      invert
+        ? rotatedHexId(ctx.grid, unit.hexId)
+        : ctx.grid.getHexByIdOrUndefined(unit.hexId)?.getId()
+
+    // Stamp only onto a free destination tile. An occupied one holds this
+    // load's own work (a placed main, or a skill-spawned companion the record
+    // couldn't settle); replacing would cascade-remove the whole earlier unit,
+    // so the incomer takes the random fallback instead.
+    const stampableHex = (ctx: GridContext, unit: { hexId: number }): number | undefined => {
+      const hexId = targetHexFor(ctx, unit)
+      if (hexId === undefined) return undefined
+      if (!canPlaceCharacterOnTile(ctx.grid, hexId, dest)) return undefined
+      return hasCharacter(ctx.grid, hexId) ? undefined : hexId
+    }
+
+    // Settle a just-placed main's skill-spawned companions onto their saved
+    // (rotated under invert) hexes, the same per-main pass the bulk restore
+    // runs: left at a random spawn tile, a companion could squat on a later
+    // unit's saved hex. A target that is off the destination zone or already
+    // taken (by anything but a sibling companion) leaves that companion at its
+    // spawn tile, so no unit is ever evicted.
+    const settleCompanions = (ctx: GridContext, board: SideLoadBoard, mainUnitId: number): void => {
+      const saved = board.companions.filter((companion) => companion.mainUnitId === mainUnitId)
+      if (saved.length === 0) return
+      const siblings = new Set(saved.map((companion) => companion.unitId))
+      const settle = saved.flatMap((companion) => {
+        const hexId = targetHexFor(ctx, companion)
+        if (hexId === undefined || !canPlaceCharacterOnTile(ctx.grid, hexId, dest)) return []
+        const occupant = getCharacter(ctx.grid, hexId)
+        if (occupant !== undefined && !siblings.has(occupant)) return []
+        return [{ companionId: companion.unitId, hexId }]
+      })
+      if (settle.length > 0) repositionCompanions(ctx.grid, dest, settle)
+    }
+
+    let placed = 0
+    let skipped = 0
+    for (const { ctx, board } of targets) {
+      for (const unit of board.mains) {
+        // Cleared boards can't conflict with a canonical record, but a crafted
+        // one can repeat a hero; active-board scope can also collide with the
+        // destination team of an untouched board.
+        if (isUsed(unit.unitId, dest)) {
+          skipped++
+          continue
+        }
+        const hexId = stampableHex(ctx, unit)
+        const ok =
+          (hexId !== undefined && ctx.place(hexId, unit.unitId, dest)) ||
+          ctx.autoPlace(unit.unitId, dest)
+        if (!ok) {
+          skipped++
+          continue
+        }
+        placed++
+        if (isBaseHeroId(unit.unitId)) ctx.setParagon(dest, unit.unitId, unit.paragon)
+        settleCompanions(ctx, board, unit.unitId)
+      }
+      if (board.phantimal) {
+        const hexId = stampableHex(ctx, board.phantimal)
+        const ok =
+          (hexId !== undefined && ctx.placePhantimal(hexId, board.phantimal.unitId, dest)) ||
+          ctx.autoPlacePhantimal(board.phantimal.unitId, dest)
+        if (ok) placed++
+        else skipped++
+      }
+      // Per-team artifact uniqueness spans boards; a crafted duplicate drops.
+      if (board.artifact !== null && !isArtifactUsed(board.artifact, dest)) {
+        ctx.setArtifact(dest, board.artifact)
+      }
+      // Re-align the phantimal reconciler so a save that deliberately omits its
+      // phantimal doesn't get one auto-placed after this batch.
+      ctx.seedPhantimalBaseline()
+    }
+    deriveSynergy()
+    return { placed, skipped }
+  }
+
   // canDropCharacter's same-board leg: a move or swap that stays on one board can
   // still change a unit's team, which risks the same page-wide duplicate as a
   // cross-board transfer, a copy already on the destination team of another board.
@@ -667,6 +806,8 @@ export const useGrids = defineStore('grids', () => {
     canDropArtifact,
     routeArtifactDrop,
     swapBoards,
+    sideLoadWouldReplace,
+    loadTeamSide,
     clearAll,
   }
 })

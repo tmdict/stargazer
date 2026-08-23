@@ -1,7 +1,8 @@
-/* Pure mapping from a saved team's encoded data to thumbnail inputs: one entry
- * per board with its map key, occupied hexes, and artifact ids. Image resolution
- * stays in the component layer (it needs the game-data store); this split keeps
- * the mapping unit-testable headless. */
+/* Pure mappings from a saved team's encoded data to display inputs: thumbnail
+ * boards (one entry per board with its map key, occupied hexes, and artifact
+ * ids) and record-level queries like teamHasSynergy. Image resolution stays in
+ * the component layer (it needs the game-data store); this split keeps the
+ * mapping unit-testable headless. */
 
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { Team } from '@/lib/types/team'
@@ -61,4 +62,24 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       artifacts: { ally: board.a?.[0] ?? null, enemy: board.a?.[1] ?? null },
     }
   })
+}
+
+// Memoized on the immutable data string (records mutate by replacement).
+const synergyCache = new Map<string, boolean>()
+
+/* Whether the record fields a friend-assist unit. The Syn toggle itself is
+ * never serialized: the placed assist hero is the state, so a y-section hero
+ * entry (local id below the companion band) is the source of truth. */
+export function teamHasSynergy(data: string): boolean {
+  const cached = synergyCache.get(data)
+  if (cached !== undefined) return cached
+  const decoded = decodeMultiGridStateFromUrl(data)
+  const result = !!decoded?.boards.some((board) =>
+    (board.y ?? []).some((entry) => {
+      const localId = entry[1]
+      return localId !== undefined && localId < COMPANION_ID_OFFSET
+    }),
+  )
+  synergyCache.set(data, result)
+  return result
 }

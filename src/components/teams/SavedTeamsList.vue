@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* The Saved Teams roster panel: header (count, cap warning, sort, mode filter,
    search, and the library-wide Import / Export / Delete all) plus a card grid:
-   thumbnail, mode chip, inline-renamable name, relative updated time, and
-   Load / Duplicate / Copy / Download / Delete actions. Destructive actions use
+   thumbnail, mode and Syn chips, inline-renamable name, relative updated time,
+   and Load / Duplicate / Copy / Download / Delete actions. Destructive actions use
    the app's no-modal style: a two-step inline confirm that arms for a few
    seconds. User feedback (toasts) is fired here, not in the store. */
 
@@ -19,9 +19,10 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
-import { matchCharacterNames } from '@/composables/useSkillSearch'
+import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
+import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
 import {
   MAX_SAVED_TEAMS,
   MAX_TEAM_NAME_LENGTH,
@@ -29,13 +30,11 @@ import {
   TEAM_MODES,
   type TeamModeKey,
 } from '@/lib/teams/modes'
-import { isStandardHero, teamPreviewBoards } from '@/lib/teams/preview'
+import { teamHasSynergy } from '@/lib/teams/preview'
 import { type SavedTeam } from '@/lib/teams/savedTeam'
-import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { downloadBlob, timestampedName } from '@/utils/download'
-import { renderSnippet } from '@/utils/searchHighlight'
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const { loadedTeamId } = defineProps<{
@@ -46,7 +45,6 @@ const { loadedTeamId } = defineProps<{
 
 const emit = defineEmits<{ load: [team: SavedTeam] }>()
 
-const gameData = useGameDataStore()
 const i18n = useI18nStore()
 const library = useTeamLibrary()
 const { success, error } = useToast()
@@ -85,91 +83,26 @@ const modeFiltered = computed(() =>
     : sorted.value.filter((team) => team.mode === modeFilter.value),
 )
 
-// The box hides below 2 teams and matching follows it, so a leftover query
-// can never strand the list on "no matches" with no visible way to clear it.
-// A card survives on a name hit or a hero hit. renderSnippet gets the name's
-// full length as context, so its pieces always spell the whole name.
-const searchQuery = ref('')
+// Matching itself (name hit with highlight snippet, hero hit at 2+ characters)
+// is the shared useSavedTeamSearch composable, also used by the Load menu.
 const searchVisible = computed(() => library.count > 1)
-// Hiding also resets the query, so the box can't reappear pre-filtered.
+const {
+  query: searchQuery,
+  matchedHeroes,
+  results: visibleTeams,
+} = useSavedTeamSearch(() => modeFiltered.value)
+// The box hides below 2 teams; hiding also resets the query (which matching
+// reads), so a leftover query can never strand the list on "no matches" with
+// no visible way to clear it, and the box can't reappear pre-filtered.
 watch(searchVisible, (visible) => {
   if (!visible) searchQuery.value = ''
-})
-const activeQuery = computed(() => (searchVisible.value ? searchQuery.value.trim() : ''))
-
-// Matches any warm locale (en/zh always are). Gated to 2+ characters so a
-// single letter can't pull in half the roster.
-const matchedHeroes = computed<ReadonlySet<string> | undefined>(() =>
-  activeQuery.value.length >= 2 ? matchCharacterNames(activeQuery.value) : undefined,
-)
-
-// Memoized on the immutable data string, but only once the roster is loaded:
-// an early lookup would pin an empty set.
-const heroSlugCache = new Map<string, ReadonlySet<string>>()
-const teamHeroSlugs = (team: SavedTeam): ReadonlySet<string> => {
-  const cached = heroSlugCache.get(team.data)
-  if (cached) return cached
-  const slugs = new Set<string>()
-  for (const board of teamPreviewBoards(team.data) ?? []) {
-    for (const unit of board.units) {
-      if (!isStandardHero(unit)) continue
-      const slug = gameData.getCharacterNameById(unit.characterId)
-      if (slug) slugs.add(slug)
-    }
-  }
-  if (gameData.dataLoaded) heroSlugCache.set(team.data, slugs)
-  return slugs
-}
-
-const visibleTeams = computed(() => {
-  const query = activeQuery.value
-  if (!query)
-    return modeFiltered.value.map((team) => ({
-      team,
-      name: { pre: team.name, match: '', post: '' },
-    }))
-  const heroes = matchedHeroes.value
-  return modeFiltered.value.flatMap((team) => {
-    const name = renderSnippet(team.name, query, team.name.length)
-    const heroHit = !name && !!heroes && [...teamHeroSlugs(team)].some((slug) => heroes.has(slug))
-    if (!name && !heroHit) return []
-    return [{ team, name: name ?? { pre: team.name, match: '', post: '' } }]
-  })
 })
 
 const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
 
 const modeChip = (team: SavedTeam): string => i18n.t(TEAM_MODES[team.mode].labelKey)
 
-const UPDATED_UNITS: [Intl.RelativeTimeFormatUnit, number][] = [
-  ['minute', 60],
-  ['hour', 3600],
-  ['day', 86400],
-  ['week', 604800],
-]
-
-// Cached per locale: the label runs for every card on each re-render, and the
-// formatter's construction is the expensive part.
-const updatedFormatter = computed(
-  () => new Intl.RelativeTimeFormat(i18n.currentLocale, { numeric: 'auto' }),
-)
-
-// Relative "updated" stamp in the chrome locale (coarsest unit: weeks).
-const updatedLabel = (team: SavedTeam): string => {
-  // 0 = record predates timestamps (validation's fallback); no stamp beats
-  // "52 weeks ago".
-  if (team.updatedAt === 0) return ''
-  const seconds = Math.round((team.updatedAt - Date.now()) / 1000)
-  const rtf = updatedFormatter.value
-  if (-seconds < 60) return i18n.t('app.updated', { time: rtf.format(0, 'minute') })
-  for (let i = UPDATED_UNITS.length - 1; i >= 0; i--) {
-    const [unit, size] = UPDATED_UNITS[i]!
-    if (-seconds >= size || i === 0) {
-      return i18n.t('app.updated', { time: rtf.format(Math.ceil(seconds / size), unit) })
-    }
-  }
-  return ''
-}
+const updatedLabel = useUpdatedLabel()
 
 // 'all' = the Delete all button; team ids arm the per-card Delete.
 const { armed, confirm } = useArmedConfirm()
@@ -446,7 +379,10 @@ const actionTipText = computed((): string =>
 
         <div class="card-meta-row">
           <span class="mode-chip">{{ modeChip(team) }}</span>
-          <span class="card-meta">{{ updatedLabel(team) }}</span>
+          <span v-if="teamHasSynergy(team.data)" class="mode-chip">
+            {{ i18n.t('app.synergy') }}
+          </span>
+          <span class="card-meta">{{ updatedLabel(team.updatedAt) }}</span>
         </div>
 
         <div class="card-actions">
