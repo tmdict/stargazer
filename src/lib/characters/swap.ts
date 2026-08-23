@@ -101,7 +101,6 @@ export function executeSwapCharacters(
 
 // Atomic operations
 
-// Performs atomic swap of two characters
 // Parameters:
 // - toCharDestTeam: The team that toChar will join when placed at fromHexId
 // - fromCharDestTeam: The team that fromChar will join when placed at toHexId
@@ -119,7 +118,6 @@ function performSwap(
   toCharOriginalTeam: Team,
 ): boolean {
   const result = executeTransaction(
-    // Operations to execute
     [
       () => {
         return performRemove(grid, fromHexId)
@@ -154,7 +152,6 @@ function performSwap(
   return result
 }
 
-// Performs cross-team character swap with skill handling
 function performCrossTeamSwap(
   grid: Grid,
   skillManager: SkillManager,
@@ -232,11 +229,11 @@ function performCrossTeamSwap(
       },
     ],
     [
-      // Rollback: First reverse the swap if it was performed, then reactivate original skills
+      // Rollback: reverse the swap if it was performed (a skill activation
+      // failure lands here with the swap already applied), then reactivate
+      // the original skills.
       () => {
-        // If swap was performed but skill activation failed, we need to reverse the swap
         if (swapPerformed) {
-          // Manually reverse the swap back to original positions and teams
           performSwap(
             grid,
             fromHexId,
@@ -252,19 +249,16 @@ function performCrossTeamSwap(
 
         if (!skillsDeactivated) return
 
-        // Handle fromChar skill reactivation
+        // Reactivation respawns companions on random tiles, so their saved
+        // positions are restored afterwards.
         if (fromHasSkill) {
           skillManager.activateCharacterSkill(fromChar, fromHexId, fromTeam, grid)
-          // Special handling for companion skills to restore companion positions
           if (hasCompanionSkill(fromChar)) {
             restoreCompanions(grid, skillManager, fromChar, companionPositions)
           }
         }
-
-        // Handle toChar skill reactivation
         if (toHasSkill) {
           skillManager.activateCharacterSkill(toChar, toHexId, toTeam, grid)
-          // Special handling for companion skills to restore companion positions
           if (hasCompanionSkill(toChar)) {
             restoreCompanions(grid, skillManager, toChar, companionPositions)
           }

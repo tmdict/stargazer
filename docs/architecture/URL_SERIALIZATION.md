@@ -133,6 +133,7 @@ Extended mode activates when:
 - Display flags are explicitly provided (even if all false)
 - Phantimals are present
 - Paragon entries are present
+- Synergy units are present
 
 Display flags are only stored when explicitly provided (`d !== undefined`). Extended flags bit 7 marks their presence and is followed by a dedicated display-flags byte, so an explicit `d=0` (all toggles off) survives the round trip even when extended counts or phantimals also require the extended header.
 
@@ -170,9 +171,11 @@ if (result.success) {
 
 - **Standard characters (ID < 9000)**: Direct placement
 - **Placeholders (ID 9000-9999)**: Reserved band for the per-faction stand-ins (lib/characters/placeholder.ts); placed directly like standard characters, and copies of one id may repeat within a team
-- **Companions (ID ≥ 10000)**: Settled per main: each main is placed (its skill spawns the companions), then those companions are repositioned onto their saved hexes before the next main is placed
+- **Companions (ID 10000-99999)**: Settled per main: each main is placed (its skill spawns the companions), then those companions are repositioned onto their saved hexes before the next main is placed
 - **Phantimals (ID 100000-199999)**: Serialized separately in the `s` section via 4-bit local IDs
-- **Synergy-band units (ID ≥ 200000)**: Serialized in the `y` section by their local ID (the 200000 offset stripped); locals mirror the `c` band, so restore reuses the same main/companion split. The `y` loop runs after `c` and before phantimals, so a phantimal whose faction requirement depends on the synergy hero still qualifies, and before `seedPhantimalBaseline()` so a bulk restore never reads as a qualifying transition
+- **Synergy-band units (ID 200000-299999)**: Serialized in the `y` section by their local ID (the 200000 offset stripped); locals mirror the `c` band, so restore reuses the same main/companion split. The `y` loop runs after `c` and before phantimals, so a phantimal whose faction requirement depends on the synergy hero still qualifies, and before `seedPhantimalBaseline()` so a bulk restore never reads as a qualifying transition
+
+Both restore paths end with `grids.deriveSynergy()`: the Syn affordance is never serialized, so it is re-derived from whether any restored board holds a synergy hero.
 
 **Note**: Character IDs are limited to 65,535 (16-bit encoding). Companion IDs are `N * 10000 + base`, so the field covers companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). IDs exceeding the limit are filtered during validation.
 
@@ -188,7 +191,7 @@ The Teams page shares N boards in one link. Several boards plus an active id and
 
 Teams ingress (link, slot, and saved-team loads) shape-normalizes every payload against its mode via `normalizeTeamPayload`, which also strips `y` from modes without `allowSynergy`: a crafted synergy section on a multi-board mode would otherwise bypass the page-wide duplicate repair, since its ids differ from the base hero's. `/share` stays lenient and renders payloads as-is.
 
-Adding a section is forward-compatible for **rendering**: an old client ignores the unknown extended-flag bit (binary) or JSON key and decodes everything else. It is not compatible for **persisting**: an old client that imports a team export or re-saves a loaded team canonicalizes through its own `BOARD_CONTENT_KEYS` and permanently drops sections it doesn't know (this applied to `s` and `p` when they were added, and applies to `y` now).
+Adding a section is forward-compatible for **rendering**: an old client ignores the unknown extended-flag bit (binary) or JSON key and decodes everything else. It is not compatible for **persisting**: an old client that imports a team export or re-saves a loaded team canonicalizes through its own `BOARD_CONTENT_KEYS` and permanently drops sections it doesn't know.
 
 The same encoding, in a **canonical form** stripped of viewer state (`active` and `d`, boards rebuilt in fixed key order), is the payload of saved teams; see [Teams](./TEAMS.md). A saved team's `data` string works verbatim as a `/share?g=` value.
 

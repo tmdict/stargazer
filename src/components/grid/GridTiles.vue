@@ -71,15 +71,15 @@ const mapEditorStore = useMapEditorStore()
 // on every 5 v 5 board.
 const { targetHexId, targetGridId, liftedHexId, liftedGridId } = useSelectionState()
 
-// Track which hex is currently being hovered (non-drag)
+// Non-drag hover; drag hover is the shared hoveredHexId.
 const hoveredHex = ref<number | null>(null)
 
-// Map editor drag-to-paint state
-// Enables continuous painting while dragging mouse across hexes
+// Map editor drag-to-paint: holding the mouse button paints every hex it
+// crosses, each once per drag session and at most every PAINT_THROTTLE_MS.
 const isMapEditorDragging = ref(false)
-const paintedHexes = ref(new Set<number>()) // Tracks painted hexes to avoid duplicates
+const paintedHexes = ref(new Set<number>())
 let lastPaintTime = 0
-const PAINT_THROTTLE_MS = 50 // Performance: throttle painting to every 50ms
+const PAINT_THROTTLE_MS = 50
 
 const textTransform = (hex: Hex) => {
   const pos = ctx.layout.hexToPixel(hex)
@@ -122,19 +122,9 @@ const shouldShowHexId = (hex: Hex) => {
   return state !== State.BLOCKED
 }
 
-// HOVER STATE FIX:
-// Problem: After drag ends, hover state would sometimes immediately appear on the hex
-// where the drag ended, causing a visual flicker/glitch.
-//
-// Root Cause: Race condition between drag end and mouse events. When drag ends,
-// isDragging becomes false, but mouse events can fire immediately, seeing isDragging
-// as false and setting hover state before the UI has fully cleaned up.
-//
-// Solution: Use a blocking flag that stays true during drag AND for 100ms after drag
-// ends. This gives the UI time to clean up before allowing hover states again.
-//
-// Implementation: watchEffect monitors isDragging changes and manages a timer that
-// keeps blockHover true for a grace period after drag ends.
+// Hover is suppressed during a drag and for a 100ms grace period after it:
+// mouse events fire as soon as isDragging drops and would otherwise flash a
+// hover highlight on the drop hex before the drag UI has cleaned up.
 const blockHover = ref(false)
 
 const svgDimensions = computed(() => {
@@ -148,28 +138,25 @@ const svgDimensions = computed(() => {
 const scaledFontSizes = computed(() => {
   const scale = ctx.hexScale
   return {
-    hexId: Math.max(10, HEX_ID_FONT_SIZE * scale), // Min 10px for readability
-    coordinate: Math.max(6, COORDINATE_FONT_SIZE * scale), // Min 6px
+    hexId: Math.max(10, HEX_ID_FONT_SIZE * scale),
+    coordinate: Math.max(6, COORDINATE_FONT_SIZE * scale),
   }
 })
 
-// Hide coordinates on mobile for better readability
+// Coordinates are unreadable at reduced scale (mobile).
 const shouldShowCoordinates = computed(() => {
   const scale = ctx.hexScale
-  // Only show coordinates on desktop (scale = 1)
   return props.showCoordinates && scale >= 1
 })
 
 const scaledStrokeWidth = computed(() => {
   const scale = ctx.hexScale
-  return Math.max(1, BASE_STROKE_WIDTH * scale) // Min 1px
+  return Math.max(1, BASE_STROKE_WIDTH * scale)
 })
 
-// When dragging state changes, manage the block
 let blockHoverTimeout: number | null = null
 watchEffect(() => {
   if (isDragging.value) {
-    // Currently dragging - block hover and clear stale state
     blockHover.value = true
     hoveredHex.value = null
     if (blockHoverTimeout) {
@@ -177,10 +164,9 @@ watchEffect(() => {
       blockHoverTimeout = null
     }
   } else if (blockHover.value) {
-    // Just stopped dragging - keep blocking for a bit, then restore hover
     blockHoverTimeout = window.setTimeout(() => {
       blockHover.value = false
-      // Restore the hover highlight on the tile that received the drop (this board only)
+      // Restore the hover highlight on the drop tile (this board only).
       if (lastDropHexId.value !== null && lastDropGridId.value === ctx.id) {
         hoveredHex.value = lastDropHexId.value
         lastDropHexId.value = null
@@ -192,12 +178,10 @@ watchEffect(() => {
 })
 
 const handleHexMouseEnter = (hex: Hex) => {
-  // Don't set hover state if we're blocking
   if (!blockHover.value) {
     hoveredHex.value = hex.getId()
   }
 
-  // Map editor drag-to-paint with throttling
   if (props.isMapEditorMode && isMapEditorDragging.value) {
     const hexId = hex.getId()
     const now = Date.now()
@@ -216,56 +200,54 @@ const handleHexMouseLeave = (hex: Hex) => {
   }
 }
 
-// Map editor mouse handlers for drag-to-paint functionality
-// Enables painting multiple hexes by holding mouse button and dragging
 const handleMapEditorMouseDown = () => {
   if (props.isMapEditorMode) {
     isMapEditorDragging.value = true
-    paintedHexes.value.clear() // Reset painted hexes for new drag session
+    paintedHexes.value.clear()
   }
 }
 
 const handleMapEditorMouseUp = () => {
   if (props.isMapEditorMode) {
     isMapEditorDragging.value = false
-    paintedHexes.value.clear() // Cleanup after drag session
+    paintedHexes.value.clear()
   }
 }
 
-// Clean up map editor state on unmount
 onBeforeUnmount(() => {
   isMapEditorDragging.value = false
   paintedHexes.value.clear()
 })
 
-/**
- * Hybrid drag detection: combines SVG events with position-based detection
- * to handle drops when character portraits block tile events.
- */
+// Hybrid drag detection: the tile's own SVG events plus the provider's
+// position-based detection, which still sees the hex when a character
+// portrait sits over the tile and swallows its events.
 const handleHexDragOver = (event: DragEvent, hex: Hex) => {
   if (hasCharacterData(event)) {
     handleDragOver(event)
-    // Sync with global hover state for visual feedback
     setHoveredHex(hex.getId(), ctx.id)
   }
 }
 
 const handleHexDragLeave = (_event: DragEvent, hex: Hex) => {
-  // Only clear if position detection confirms we left this hex
+  // Only clear once position detection confirms the pointer left this hex;
+  // dragleave also fires when moving onto the portrait above the same tile.
   const currentDetectedHex = hoveredHexId.value
   if (currentDetectedHex !== hex.getId()) {
     setHoveredHex(null)
   }
 }
 
+// A tile drop must not also be processed by DragDropProvider's document-level
+// drop listener: stopPropagation keeps the event from bubbling there, and
+// dropHandled is the provider's own check for the same case.
 const handleHexDrop = (event: DragEvent, hex: Hex) => {
-  // Prevent event from bubbling up to global handlers
   event.stopPropagation()
   event.preventDefault()
 
   const dropResult = handleDrop(event)
   if (dropResult) {
-    setDropHandled(true) // Prevent duplicate processing
+    setDropHandled(true)
     grids.routeDrop(dropResult, ctx.id, hex.getId())
   }
 }
@@ -273,7 +255,6 @@ const handleHexDrop = (event: DragEvent, hex: Hex) => {
 const getHexDropClass = (hex: Hex) => {
   const hexId = hex.getId()
   const isOccupied = hasCharacter(ctx.grid, hexId)
-  // Use position-based hover detection instead of SVG event-based detection
   const isDragHover =
     isDragging.value && hoveredGridId.value === ctx.id && hoveredHexId.value === hexId
 
@@ -306,7 +287,6 @@ const isElevated = (hex: Hex) => {
   return hasCharacter(ctx.grid, hex.getId())
 }
 
-// Get stroke style for tiles - uses first skill color if available
 const getHexStroke = (hex: Hex) => {
   const hexId = hex.getId()
 
@@ -328,7 +308,6 @@ const getHexStrokeWidth = (hex: Hex) => {
   if (props.showSkills) {
     const colors = ctx.getTileColorModifier(hexId)
     if (colors) {
-      // Total width accommodates all concentric strokes
       const baseWidth = Math.max(3, 4 * scale)
       const step = Math.max(2, 3 * scale)
       return baseWidth + (colors.length - 1) * step
@@ -339,7 +318,6 @@ const getHexStrokeWidth = (hex: Hex) => {
   return isOccupied ? Math.max(2, 3 * scale) : scaledStrokeWidth.value
 }
 
-// Get additional concentric stroke layers for multi-color tiles
 const getConcentricStrokes = (hex: Hex): Array<{ color: string; width: number }> => {
   if (!props.showSkills) return []
   const colors = ctx.getTileColorModifier(hex.getId())
@@ -349,20 +327,19 @@ const getConcentricStrokes = (hex: Hex): Array<{ color: string; width: number }>
   const baseWidth = Math.max(3, 4 * scale)
   const step = Math.max(2, 3 * scale)
 
-  // Inner strokes rendered on top, each progressively thinner
+  // Painted over the outermost stroke, each thinner, so every color shows as a ring.
   return colors.slice(1).map((color, i) => ({
     color,
     width: baseWidth + (colors.length - 2 - i) * step,
   }))
 }
 
-// Helper to check if a hex has a skill highlight
 const hasSkillHighlight = (hex: Hex) => {
   if (!props.showSkills) return false
   return ctx.getTileColorModifier(hex.getId()) !== undefined
 }
 
-// Separate hexes into rendering layers for proper z-ordering
+// Render layers: SVG has no z-index, so stacking is draw order.
 const regularHexes = computed(() =>
   props.hexes.filter((hex) => !isElevated(hex) && !hasSkillHighlight(hex)),
 )
@@ -371,7 +348,6 @@ const elevatedHexes = computed(() =>
 )
 const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
 
-// Handle hover events from character layer
 const handleCharacterHoverEnter = (hexId: number) => {
   if (!blockHover.value && !props.readonly) {
     hoveredHex.value = hexId
@@ -503,13 +479,12 @@ onUnmounted(() => {
           </text>
         </g>
 
-        <!-- Purely visual layer; no child components. -->
-
-        <!-- 
-        Invisible event layer - MUST be rendered last to be topmost layer
-        This ensures drag and drop events are captured even when hovering over characters
-        All character visual elements have pointer-events: none to allow events to pass through
-        -->
+        <!-- Invisible event layer. Rendered last so it is the topmost SVG layer and
+             receives the hover, click, and drop events; the tile polygons above are
+             visual only. The HTML character portraits are not under it (they keep
+             pointer-events: auto so they can be dragged), so a drag hovering over a
+             portrait is resolved by DragDropProvider's position-based hex detection
+             instead of by this layer. -->
         <g
           v-for="hex in hexes"
           :key="`event-${hex.getId()}`"
@@ -554,20 +529,18 @@ onUnmounted(() => {
 }
 
 .hex-text {
-  pointer-events: none; /* Text doesn't block mouse events */
+  pointer-events: none;
 }
 
 .grid-event-layer {
   cursor: pointer;
   pointer-events: all;
-  /* Ensure event layer can receive drop events even with HTML overlays above */
 }
 
 .grid-tiles[data-readonly='true'] .grid-event-layer {
   cursor: default;
 }
 
-/* Ensure event layer polygons can receive all pointer events including drops */
 .grid-event-layer polygon {
   pointer-events: all;
   transition:

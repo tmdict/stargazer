@@ -19,7 +19,6 @@ export interface TargetCandidate {
 export function getTeamTargetCandidates(grid: Grid, team: Team): TargetCandidate[] {
   const characters: TargetCandidate[] = []
 
-  // Only tiles holding characters can be candidates
   const tilesWithCharacters = getTilesWithCharacters(grid)
 
   for (const tile of tilesWithCharacters) {
@@ -36,7 +35,7 @@ export function getTeamTargetCandidates(grid: Grid, team: Team): TargetCandidate
 }
 
 /**
- * Calculate distances from multiple reference points efficiently
+ * Record each candidate's distance from every reference hex.
  */
 export function calculateDistances(
   candidates: TargetCandidate[],

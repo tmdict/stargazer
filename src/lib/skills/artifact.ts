@@ -11,13 +11,12 @@
 import { artifactHostHex, type Grid } from '../grid'
 import type { Hex } from '../hex'
 import type { Team } from '../types/team'
-import { SEASONAL_ARTIFACT_TARGETING } from './seasonal/artifact'
-import { rearmostUnit } from './utils/distance'
+import { frontmostUnit, rearmostUnit } from './utils/distance'
 import type { TargetCandidate } from './utils/targeting'
 
 // The units the artifact acts on, given the team whose slot holds it; a null
 // pick is a rule that found no unit.
-export type ArtifactTargeting = (grid: Grid, team: Team) => (TargetCandidate | null)[]
+type ArtifactTargeting = (grid: Grid, team: Team) => (TargetCandidate | null)[]
 
 export interface ArtifactArrow {
   team: Team
@@ -29,7 +28,15 @@ export interface ArtifactArrow {
 const ARTIFACT_TARGETING: Record<number, ArtifactTargeting> = {
   // Enlightening: buffs the rearmost ally.
   3: (grid, team) => [rearmostUnit(grid, team)],
-  ...SEASONAL_ARTIFACT_TARGETING,
+
+  /* Season 7. Delete these entries (and the season's cases in
+   * tests/unit/skills/artifact.test.ts) with the season's artifact data files:
+   * a retired id restored from an old URL still occupies its slot as a
+   * placeholder and would otherwise keep drawing arrows. */
+  // Vanguard: designates the frontmost ally as the vanguard.
+  14: (grid, team) => [frontmostUnit(grid, team)],
+  // Valorshield: shields the frontmost and rearmost allies.
+  18: (grid, team) => [frontmostUnit(grid, team), rearmostUnit(grid, team)],
 }
 
 export function artifactTargetArrows(

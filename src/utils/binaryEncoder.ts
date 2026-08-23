@@ -28,7 +28,7 @@ const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
  * - Bits 0-2: Number of tile entries (0-7)
  * - Bits 3-5: Number of character entries (0-7)
  * - Bit 6: Has artifacts (0/1)
- * - Bit 7: Extended mode for 8+ entries or has display flags
+ * - Bit 7: Extended header present (8+ entries, display flags, or any optional section)
  *
  * Extended header (if bit 7 is set):
  * - Next byte: Extended flags byte
@@ -323,8 +323,8 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const hasParagon = validState.p !== undefined && validState.p.length > 0
   const hasSynergy = validState.y !== undefined && validState.y.length > 0
 
-  // Extended header is needed if we have >7 entries OR display flags OR phantimals
-  // OR paragon OR synergy units. This optimization keeps URLs short for small grids
+  // The extended header is skipped entirely for small grids with none of the
+  // optional sections, keeping those URLs a byte shorter.
   const needsExtendedCounts = tileCount > 7 || charCount > 7
   const needsExtended =
     needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasParagon || hasSynergy
@@ -337,29 +337,24 @@ export function encodeToBinary(state: GridState): Uint8Array {
   header |= needsExtended ? 0x80 : 0 // Bit 7: extended header flag
   writer.writeBits(header, 8)
 
-  // Write extended header if needed (for 8+ entries or display flags)
   if (needsExtended) {
-    // Extended flags byte layout:
-    // Bit 0: needs extended counts (1 if >7 entries)
-    // Bit 1: has paragon
-    // Bits 2-5: reserved
-    // Bit 6: has phantimals
-    // Bit 7: has display flags (a dedicated byte follows; lets an explicit d=0 round-trip)
+    // Extended flags byte (layout in the format spec above). Bit 7 is a
+    // presence marker so an explicit d=0 round-trips.
     let extendedFlags = 0
     if (needsExtendedCounts) {
-      extendedFlags |= 0x01 // Bit 0: needs extended counts
+      extendedFlags |= 0x01 // Bit 0
     }
     if (hasDisplayFlags) {
-      extendedFlags |= 0x80 // Bit 7: display flags present
+      extendedFlags |= 0x80 // Bit 7
     }
     if (hasPhantimals) {
-      extendedFlags |= 0x40 // Bit 6: has phantimals
+      extendedFlags |= 0x40 // Bit 6
     }
     if (hasParagon) {
-      extendedFlags |= 0x02 // Bit 1: has paragon
+      extendedFlags |= 0x02 // Bit 1
     }
     if (hasSynergy) {
-      extendedFlags |= 0x04 // Bit 2: has synergy units
+      extendedFlags |= 0x04 // Bit 2
     }
     writer.writeBits(extendedFlags, 8)
 
@@ -446,9 +441,9 @@ export function encodeToBinary(state: GridState): Uint8Array {
   if (hasSynergy && validState.y) {
     writer.writeBits(validState.y.length, SYNERGY_COUNT_BITS)
     for (const entry of validState.y) {
-      writer.writeBits(entry[0]!, HEX_ID_BITS) // 6 bits for hex ID
-      writer.writeBits(entry[1]!, CHARACTER_ID_BITS) // 16 bits for local unit ID
-      writer.writeBits(entry[2]! - 1, TEAM_BITS) // 1 bit for team
+      writer.writeBits(entry[0]!, HEX_ID_BITS)
+      writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
+      writer.writeBits(entry[2]! - 1, TEAM_BITS)
     }
   }
 
@@ -477,7 +472,7 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     const hasArtifacts = (header & 0x40) !== 0 // Bit 6
     const hasExtended = (header & 0x80) !== 0 // Bit 7
 
-    // Phantimals / paragon can be the sole reason for an extended header; track
+    // Any optional section can be the sole reason for an extended header; track
     // them so the sections after artifacts are read.
     let hasPhantimals = false
     let hasParagon = false
@@ -574,9 +569,9 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       if (synergyCount > 0) {
         state.y = []
         for (let i = 0; i < synergyCount; i++) {
-          const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
-          const localId = reader.readBits(CHARACTER_ID_BITS) // 16 bits
-          const teamBit = reader.readBits(TEAM_BITS) // 1 bit
+          const hexId = reader.readBits(HEX_ID_BITS)
+          const localId = reader.readBits(CHARACTER_ID_BITS)
+          const teamBit = reader.readBits(TEAM_BITS)
           state.y.push([hexId, localId, teamBit + 1])
         }
       }

@@ -46,8 +46,8 @@ export function serializeGridState(
     state.t = nonDefaultTiles
   }
 
-  // Extract characters from tiles that have them (phantimals are serialized
-  // separately so the character section keeps its compact 16-bit id field).
+  // Phantimals and synergy-band units are serialized separately so the character
+  // section keeps its compact 16-bit id field.
   const characters = allTiles
     .filter(
       (tile) =>

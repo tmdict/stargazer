@@ -60,9 +60,10 @@ export function getTilesWithCharactersByTeam(grid: Grid, team: Team): GridTile[]
   return getTilesWithCharacters(grid).filter((tile) => tile.team === team)
 }
 
-// A base hero, as opposed to a skill-spawned companion or a seasonal phantimal. One
-// comparison covers both: companion ids are N * COMPANION_ID_OFFSET + base and
-// phantimal ids sit higher still, so every non-base unit lands at or above the offset.
+// A base hero, as opposed to a skill-spawned companion, a seasonal phantimal, or
+// a synergy-band unit. One comparison covers all: companion ids are
+// N * COMPANION_ID_OFFSET + base and the phantimal and synergy bands sit higher
+// still, so every non-base unit lands at or above the offset.
 export function isBaseHeroId(characterId: number): boolean {
   return characterId < COMPANION_ID_OFFSET
 }
@@ -100,7 +101,7 @@ export function getMaxTeamSize(grid: Grid, team: Team): number {
 export function setMaxTeamSize(grid: Grid, team: Team, size: number): boolean {
   const maxPossibleSize = grid.getAllTiles().length
   if (!Number.isInteger(size) || size <= 0 || size > maxPossibleSize) {
-    return false // Invalid input
+    return false
   }
   grid.maxTeamSizes.set(team, size)
   return true
@@ -210,13 +211,12 @@ export function clearCharacterFromTile(tile: GridTile): void {
   delete tile.characterId
   delete tile.team
 
-  // Restore original tile state based on current state
+  // Only occupied states revert; anything else (blocked, default) is left as is.
   if (currentState === State.OCCUPIED_ALLY) {
     tile.state = State.AVAILABLE_ALLY
   } else if (currentState === State.OCCUPIED_ENEMY) {
     tile.state = State.AVAILABLE_ENEMY
   } else {
-    // Keep current state if it wasn't an occupied state
     tile.state = currentState
   }
 }
