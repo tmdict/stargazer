@@ -8,7 +8,7 @@ import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
-import { isCharacterOnTeam, resolvePlacement, synergySlotFree } from '@/lib/characters/character'
+import { isCharacterOnTeam, synergySlotFree } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
@@ -69,10 +69,8 @@ const handleCharacterClick = (character: CharacterType) => {
     if (ctx) {
       const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
       if (team) {
-        const resolved = resolvePlacement(ctx.grid, character.id, team, grids.synergy)
-        if (resolved !== null && !(resolved === character.id && grids.isUsed(character.id, team))) {
-          ctx.place(targetHexId.value, resolved, team)
-        }
+        const resolved = grids.resolvePick(ctx, character.id, team, targetHexId.value)
+        if (resolved !== null) ctx.place(targetHexId.value, resolved, team)
       }
     }
     clearTargetHex()
@@ -82,10 +80,10 @@ const handleCharacterClick = (character: CharacterType) => {
   if (!character.placeholder) {
     const placed = placedTeam(character.id)
     if (placed !== null) {
-      // With Syn armed and the hero's team's assist slot free, the click
-      // places the duplicate (placeOnActive resolves it) instead of removing.
-      if (grids.placeOnActive(character.id, placed)) return
-      grids.removeFromAnyBoard(character.id, placed)
+      // The lifted grey-out promises the duplicate; otherwise the click is the
+      // remove-toggle.
+      if (synergyCopyAvailable(character.id)) grids.placeOnActive(character.id, placed)
+      else grids.removeFromAnyBoard(character.id, placed)
       return
     }
   }

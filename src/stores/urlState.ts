@@ -95,103 +95,55 @@ export const useUrlStateStore = defineStore('urlState', () => {
       })
     }
 
-    // Restore character placements from compact format: [hexId, characterId, team]
-    if (gridState.c) {
-      // Companions are skill-spawned, not placed directly; settle them after
-      // their owner is on the board.
-      const mainCharacters: typeof gridState.c = []
-      const companions: typeof gridState.c = []
-
-      gridState.c.forEach((entry) => {
-        const characterId = entry[1]
-        if (characterId === undefined) return
-
-        // Only base and companion ids are legal in c; a crafted phantimal- or
-        // synergy-band id would otherwise slip into companion matching below
-        // (200050 % 10000 matches hero 50) and raw-place an orphan.
-        if (characterId >= PHANTIMAL_ID_OFFSET) return
-
-        if (characterId >= COMPANION_ID_OFFSET) {
-          companions.push(entry)
-        } else {
-          mainCharacters.push(entry)
-        }
+    // Restore one character band ([hexId, localId, team] entries whose locals
+    // share c's id space; `toUnitId` lifts a local into the band's namespace).
+    // Companions are skill-spawned, not placed directly, so each main is placed
+    // and its companions are settled onto their saved hexes right away: doing
+    // this per main (rather than after every main is placed) stops a spawned
+    // companion from squatting on a tile a later main needs, a collision that
+    // would evict the squatter and, since it is a companion, drop its whole unit.
+    const restoreCharacterBand = (
+      entries: number[][],
+      toUnitId: (localId: number) => number,
+    ): void => {
+      const mains: number[][] = []
+      const companions: number[][] = []
+      entries.forEach((entry) => {
+        const localId = entry[1]
+        if (localId === undefined) return
+        // Only base and companion locals are legal here; a phantimal- or
+        // synergy-band value would otherwise slip into companion matching below
+        // (200050 % 10000 matches hero 50) and raw-place an orphan. The multi
+        // codec has no validation pass, so crafted values are dropped here.
+        if (localId >= PHANTIMAL_ID_OFFSET) return
+        if (localId >= COMPANION_ID_OFFSET) companions.push(entry)
+        else mains.push(entry)
       })
 
-      // Place each main character, then immediately settle its companions onto
-      // their saved hexes. Doing this per main (rather than after every main is
-      // placed) stops a skill-spawned companion from squatting on a tile a later
-      // main needs: that collision would evict the squatter, and since it is a
-      // companion the eviction cascades to drop its whole unit.
       const grid = grids.active!.grid
-      mainCharacters.forEach((entry) => {
+      mains.forEach((entry) => {
         const validated = getValidatedCharacterEntry(entry)
         if (!validated) return
 
-        const placementSuccess = characterStore.placeCharacterOnHex(
-          validated.hexId,
-          validated.characterId,
-          validated.team,
-        )
-        if (!placementSuccess) {
-          console.warn(
-            `Failed to place character ID ${validated.characterId} on hex ${validated.hexId}`,
-          )
+        const unitId = toUnitId(validated.characterId)
+        if (!characterStore.placeCharacterOnHex(validated.hexId, unitId, validated.team)) {
+          console.warn(`Failed to place character ID ${unitId} on hex ${validated.hexId}`)
           return
         }
         const companionTargets = companions
           .filter(
             (e) => e[1]! % COMPANION_ID_OFFSET === validated.characterId && e[2] === validated.team,
           )
-          .map((e) => ({ companionId: e[1]!, hexId: e[0]! }))
+          .map((e) => ({ companionId: toUnitId(e[1]!), hexId: e[0]! }))
         repositionCompanions(grid, validated.team, companionTargets)
       })
     }
 
-    // Restore synergy-band units from compact format: [hexId, localUnitId, team],
-    // locals mirroring c's id space. Position is load-bearing: after c so the
-    // synergy hero's faction is visible to the phantimal placements below, and
-    // before seedPhantimalBaseline so the bulk restore doesn't read as a
-    // qualifying transition.
-    if (gridState.y) {
-      const synergyMains: typeof gridState.y = []
-      const synergyCompanions: typeof gridState.y = []
-      gridState.y.forEach((entry) => {
-        const localId = entry[1]
-        if (localId === undefined) return
-        // Nothing legal maps at or above the phantimal offset; the multi codec
-        // has no validation pass, so crafted locals are dropped here.
-        if (localId >= PHANTIMAL_ID_OFFSET) return
-        if (localId >= COMPANION_ID_OFFSET) {
-          synergyCompanions.push(entry)
-        } else {
-          synergyMains.push(entry)
-        }
-      })
-
-      const grid = grids.active!.grid
-      synergyMains.forEach((entry) => {
-        const validated = getValidatedCharacterEntry(entry)
-        if (!validated) return
-
-        const synergyId = toSynergyId(validated.characterId)
-        const placementSuccess = characterStore.placeCharacterOnHex(
-          validated.hexId,
-          synergyId,
-          validated.team,
-        )
-        if (!placementSuccess) {
-          console.warn(`Failed to place synergy unit ${synergyId} on hex ${validated.hexId}`)
-          return
-        }
-        const companionTargets = synergyCompanions
-          .filter(
-            (e) => e[1]! % COMPANION_ID_OFFSET === validated.characterId && e[2] === validated.team,
-          )
-          .map((e) => ({ companionId: toSynergyId(e[1]!), hexId: e[0]! }))
-        repositionCompanions(grid, validated.team, companionTargets)
-      })
-    }
+    if (gridState.c) restoreCharacterBand(gridState.c, (localId) => localId)
+    // Position is load-bearing: after c so the synergy hero's faction is visible
+    // to the phantimal placements below, and before seedPhantimalBaseline so the
+    // bulk restore doesn't read as a qualifying transition.
+    if (gridState.y) restoreCharacterBand(gridState.y, toSynergyId)
 
     // Restore paragon levels from compact format: [team, characterId, level].
     // Characters are already placed; setParagon keys by team + character, so it

@@ -7,10 +7,15 @@ import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { getCharacter, getCharacterTeam, isBaseHeroId } from '@/lib/characters/character'
+import {
+  getCharacter,
+  getCharacterTeam,
+  isBaseHeroId,
+  isCompanionUnitId,
+  toBaseHeroId,
+} from '@/lib/characters/character'
 import { isPhantimalId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -70,9 +75,6 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 
   return gameDataStore.getCharacterNameById(characterId) || 'Unknown'
 }
-
-const isCompanion = (characterId: number): boolean =>
-  decomposeUnitId(characterId).localId >= COMPANION_ID_OFFSET && !isPhantimalId(characterId)
 
 // Phantimal-specific render helpers (B1 seam: phantimals reuse the character
 // wrapper's positioning, drag, lift and perspective; only image + colour differ).
@@ -171,10 +173,7 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
     return
   }
 
-  // For companions (in either band), we need to use the base character data
-  const localId = decomposeUnitId(characterId).localId
-  const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
-  const character = props.characters.find((c) => c.id === actualId)
+  const character = props.characters.find((c) => c.id === toBaseHeroId(characterId))
   if (!character) return
 
   // Add sourceHexId to differentiate from character selection drags
@@ -281,7 +280,7 @@ const visiblePlacements = computed(() => {
       @mouseenter="handleMouseEnter($event, hexId, characterId)"
       @mouseleave="handleMouseLeave(hexId)"
     >
-      <div class="character-content" :class="{ companion: isCompanion(characterId) }">
+      <div class="character-content" :class="{ companion: isCompanionUnitId(characterId) }">
         <div class="character-background" :style="getCharacterColors(characterId)" />
         <!-- draggable=false keeps the wrapper div as the drag source. Images are
              draggable by default, and a swap can replace this node mid-drag

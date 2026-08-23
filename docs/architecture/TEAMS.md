@@ -49,10 +49,11 @@ The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter
 The grid panel: a document-style title line, a two-row control bar (`GridControls` with teams content slotted in), then a horizontally scrolling row of boards, each bound to its own `GridContext`.
 
 - **Title line**: the source team's name (or "Unsaved team") as plain centered text, with a dot + "Unsaved changes" beside it while the boards differ from the saved copy
-- **Row 1 (configure)**: mode picker, then the display toggles (wrap, flat, grid info, team view, skills, invert)
+- **Row 1 (configure)**: mode picker, then the display toggles (wrap, grid info, skills, syn, flat, invert, team view)
 - **Row 2 (act)**: team actions, then the share actions (link, copy, download, clear)
 - **Per-board actions**: swap (drag to reorder, via `useGridSwap`), copy image, download image, clear
 - **Wrap**: the 3-2 two-row boards layout; rendered for 5-board modes on desktop only (every consumer gates on `canWrap` / board count, so the preference survives visits to non-wrap modes), serialized with the display flags
+- **Syn**: the friend-assist toggle (see [Grid](./GRID.md), unit id namespaces); offered only on modes with `allowSynergy` (1v1), and never serialized: it is derived from board content on every restore, and unchecking removes the placed synergy units
 
 ### TeamModePicker (`/src/components/teams/TeamModePicker.vue`)
 
@@ -86,7 +87,7 @@ A standalone tool tab: drop exported board images in, reorder them, and stitch t
 
 ```typescript
 TEAM_MODES: Record<TeamModeKey, TeamModeConfig>
-// key, labelKey (i18n), boardCount, defaultMaps (length === boardCount), canWrap
+// key, labelKey (i18n), boardCount, defaultMaps (length === boardCount), canWrap, allowSynergy
 TEAM_MODE_ORDER // picker order, ascending board count
 DEFAULT_TEAM_MODE = '5v5sl'
 ```
