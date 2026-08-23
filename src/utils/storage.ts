@@ -22,12 +22,3 @@ export const writeStorage = (key: string, value: string): boolean => {
     return false
   }
 }
-
-export const removeStorage = (key: string): void => {
-  if (import.meta.env.SSR) return
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    // Best-effort.
-  }
-}

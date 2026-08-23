@@ -51,12 +51,6 @@ describe('useTeamsPersistence', () => {
     vi.unstubAllGlobals()
   })
 
-  it('deletes the legacy single-slot key unread on creation', () => {
-    storage.set('stargazer.teams', 'legacy-payload')
-    useTeamsPersistence(ref<TeamModeKey>('5v5sl'), ref(null), FLAGS)
-    expect(storage.has('stargazer.teams')).toBe(false)
-  })
-
   it('flush is inert before startAutosave (degraded page must not overwrite slots)', () => {
     storage.set(teamsSlotKey('3v3'), 'existing-slot')
     const persistence = useTeamsPersistence(ref<TeamModeKey>('3v3'), ref(null), FLAGS)

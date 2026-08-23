@@ -13,7 +13,6 @@ import {
  */
 
 export enum TargetingMethod {
-  CLOSEST,
   FURTHEST,
   REARMOST, // Scans hex IDs based on team: ally scans 45→1, enemy scans 1→45
   FRONTMOST, // Scans hex IDs based on team: ally scans 1→45, enemy scans 45→1
@@ -26,24 +25,13 @@ export interface TargetingOptions {
   referenceHexId?: number // Default to context.hexId
 }
 
-/**
- * Sort candidates by targeting method (closest/furthest)
- */
-function sortByTargetingMethod(
+function sortFurthestFirst(
   candidates: TargetCandidate[],
   referenceHexId: number,
-  targetingMethod: TargetingMethod,
 ): TargetCandidate[] {
-  return [...candidates].sort((a, b) => {
-    const distA = a.distances.get(referenceHexId) ?? 0
-    const distB = b.distances.get(referenceHexId) ?? 0
-
-    if (targetingMethod === TargetingMethod.FURTHEST) {
-      return distB - distA
-    } else {
-      return distA - distB
-    }
-  })
+  return [...candidates].sort(
+    (a, b) => (b.distances.get(referenceHexId) ?? 0) - (a.distances.get(referenceHexId) ?? 0),
+  )
 }
 
 /**
@@ -86,13 +74,14 @@ function applyHexIdTieBreaker(
 }
 
 /**
- * Main targeting function that handles all common cases
+ * One entry point for the three methods: REARMOST and FRONTMOST are hex-id
+ * picks, FURTHEST is the distance search below (furthest from the reference
+ * hex, ties broken by team-aware hex id).
  */
 export function findTarget(
   context: SkillContext,
   options: TargetingOptions,
 ): SkillTargetInfo | null {
-  // Handle special targeting methods that don't use distance-based sorting
   if (options.targetingMethod === TargetingMethod.REARMOST) {
     return findRearmostTarget(context, options.targetTeam, options.excludeSelf ?? false)
   }
@@ -114,7 +103,7 @@ export function findTarget(
 
   calculateDistances(candidates, [referenceHexId], grid)
 
-  const sorted = sortByTargetingMethod(candidates, referenceHexId, options.targetingMethod)
+  const sorted = sortFurthestFirst(candidates, referenceHexId)
   const winner = applyHexIdTieBreaker(sorted, team, referenceHexId)
 
   if (!winner) return null

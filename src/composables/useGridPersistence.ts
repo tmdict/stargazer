@@ -26,12 +26,10 @@ import {
   unpackDisplayFlags,
   type DisplayFlags,
 } from '@/utils/gridStateSerializer'
-import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
+import { readStorage, writeStorage } from '@/utils/storage'
 import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 const ARENA_KEY = 'stargazer.arena'
-// Obsolete single-slot key; deleted on sight so stale data can't linger.
-const LEGACY_TEAMS_KEY = 'stargazer.teams'
 const TEAMS_MODE_KEY = 'stargazer.teams.mode'
 const TEAMS_DISPLAY_KEY = 'stargazer.teams.display'
 
@@ -124,8 +122,6 @@ export function useTeamsPersistence(
   const grids = useGrids()
   const paused = ref(false)
   let started = false
-
-  removeStorage(LEGACY_TEAMS_KEY)
 
   const snapshot = (): string =>
     encodeMultiGridStateToUrl(

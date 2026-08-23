@@ -10,7 +10,7 @@ import {
 } from '@/lib/skills/utils/distance'
 import { Team } from '@/lib/types/team'
 import { TARGETING_ARENA, TARGETING_GRID } from '../../fixtures/grid'
-import { makeSkillContext, placeOnTile } from '../../fixtures/skills'
+import { makeSkillContext, placeOnTile, removeFromTile } from '../../fixtures/skills'
 
 // Key distances on TARGETING_GRID used by the assertions below:
 // from hex 1 → hex 11 = 2, hex 10 = 3, hex 2 = 1
@@ -33,17 +33,6 @@ describe('distance targeting', () => {
       context = makeSkillContext(grid, 1, Team.ALLY, 100)
     })
 
-    it('finds closest target', () => {
-      const result = findTarget(context, {
-        targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.CLOSEST,
-      })
-
-      expect(result?.targetHexId).toBe(11)
-      expect(result?.targetCharacterId).toBe(201)
-      expect(result?.metadata?.distance).toBe(2)
-    })
-
     it('finds furthest target', () => {
       const result = findTarget(context, {
         targetTeam: Team.ENEMY,
@@ -56,37 +45,32 @@ describe('distance targeting', () => {
     })
 
     it('excludes self when specified', () => {
-      placeOnTile(grid, 2, 102, Team.ALLY)
+      // The caster is the only ally, so it is the target unless excluded.
+      const options = { targetTeam: Team.ALLY, targetingMethod: TargetingMethod.FURTHEST }
 
-      const result = findTarget(context, {
-        targetTeam: Team.ALLY,
-        targetingMethod: TargetingMethod.CLOSEST,
-        excludeSelf: true,
-      })
-
-      expect(result?.targetHexId).toBe(2)
-      expect(result?.targetCharacterId).toBe(102)
+      expect(findTarget(context, options)?.targetHexId).toBe(1)
+      expect(findTarget(context, { ...options, excludeSelf: true })).toBeNull()
     })
 
     it('measures from the reference hex when provided', () => {
-      // From hex 1 the closest enemy is 11; from reference hex 5 it is 10
+      // From hex 1 the furthest enemy is 10; from reference hex 5 it is 11
       const result = findTarget(context, {
         targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.CLOSEST,
+        targetingMethod: TargetingMethod.FURTHEST,
         referenceHexId: 5,
       })
 
-      expect(result?.targetHexId).toBe(10)
+      expect(result?.targetHexId).toBe(11)
       expect(result?.metadata?.sourceHexId).toBe(1)
     })
 
     it('returns null when no targets exist', () => {
-      grid.getTileById(10).characterId = undefined
-      grid.getTileById(11).characterId = undefined
+      removeFromTile(grid, 10)
+      removeFromTile(grid, 11)
 
       const result = findTarget(context, {
         targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.CLOSEST,
+        targetingMethod: TargetingMethod.FURTHEST,
       })
 
       expect(result).toBeNull()
@@ -145,7 +129,7 @@ describe('distance targeting', () => {
 
       const result = findTarget(context, {
         targetTeam: Team.ALLY,
-        targetingMethod: TargetingMethod.CLOSEST,
+        targetingMethod: TargetingMethod.FURTHEST,
       })
 
       expect(result?.targetHexId).toBe(5)
@@ -157,7 +141,7 @@ describe('distance targeting', () => {
 
       const result = findTarget(context, {
         targetTeam: Team.ALLY,
-        targetingMethod: TargetingMethod.CLOSEST,
+        targetingMethod: TargetingMethod.FURTHEST,
       })
 
       expect(result?.targetHexId).toBe(9)
