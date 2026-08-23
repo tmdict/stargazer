@@ -325,6 +325,22 @@ Skills must handle:
 - Team changes
 - Edge cases
 
+## Artifact Targeting
+
+Some artifacts act on specific units (Enlightening: the rearmost ally; Vanguard: the frontmost; Valorshield: both), and the board draws an arrow from the artifact's host cell to each of them. This is deliberately **not a Skill**. The rule that decides between the two mechanisms is ownership:
+
+- A **Skill** is owned by a placed unit. It is keyed `characterId-team`, activates when the unit is placed, updates as the board changes, and deactivates when the unit leaves; that lifecycle is also what lets it carry side effects (companions, capacity, tile paints).
+- A **derived value** is owned by board-level state that is not a unit: the artifact slots, or the closest-target debug map. There is no placement to hook and nothing to roll back, so it is a `computed` on the board context that re-evaluates whenever the slot or the grid changes.
+
+Hero arrows that look equally "pure" (Talene, Bonnie) stay Skills because a unit owns them; an artifact has no hex and no `characterId`, so nothing in the lifecycle could track it.
+
+- `/src/lib/skills/artifact.ts` holds the permanent definition table, keyed by artifact id: `ArtifactTargeting = (grid, team) => (TargetCandidate | null)[]`, the units the artifact acts on given the slot's team (a null pick is a rule that found no unit). Entries use the whole-team helpers `frontmostUnit` / `rearmostUnit` from `utils/distance.ts` (the same rule Talene and Bonnie use), so phantimals and companions count like they do for hero skills. `artifactTargetArrows(grid, team, artifactId)` resolves a slot to distinct `{ team, fromHex, toHex }` arrows, anchored on `artifactHostHex` (`/src/lib/grid.ts`).
+- `/src/lib/skills/seasonal/artifact.ts` holds the rotating season's entries, spread into the permanent table. Retirement is deleting that file with the season's data; the dangling spread fails `type-check` so it cannot be forgotten.
+- `useGridContext` exposes `artifactArrows`, a `computed` over the two slots and the grid's tiles, so the arrows re-evaluate on every placement change and slot change with no wiring in the place/move/remove paths.
+- `SkillTargeting.vue` renders them next to the skill arrows in the team's arrow hue (`TEAM_ARROW_COLORS`), so they share the Skills toggle, the arrow layer geometry, the perspective lift, and team view (which hides the enemy slot and its arrows).
+
+Adding an artifact is one table entry. If an artifact ever needs a side effect (a spawned unit, a capacity change), that is the point to give skills a caster-agnostic source rather than to extend this table.
+
 ## Skill Page Pipeline
 
 Distinct from the in-game runtime above: this is the documentation surface, the `/skills` browser page, the `SkillModal` popup, and the per-hero SSG pages at `/<lang>/skill/<slug>`, that renders a hero's skill text, filter chips, and optional commentary.

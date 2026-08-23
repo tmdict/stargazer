@@ -38,3 +38,38 @@ describe('createGridContext closest-target ranges', () => {
     expect(ctx.closestEnemyMap.get(ALLY_NEAR)).toEqual({ enemyHexId: ENEMY, distance: 0 })
   })
 })
+
+/* Artifact arrows are derived from the slot and the board, so every placement
+ * change and slot change must show up without any wiring in the operations. */
+describe('createGridContext artifact arrows', () => {
+  const ENLIGHTENING = 3 // rearmost ally
+  const DUMMY_2 = 602
+
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  it('follows the slot and the board', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    const targets = () => ctx.artifactArrows.map((arrow) => arrow.toHex.getId())
+
+    ctx.setArtifact(Team.ALLY, ENLIGHTENING)
+    expect(targets()).toEqual([])
+
+    expect(ctx.place(ALLY_NEAR, DUMMY, Team.ALLY)).toBe(true)
+    expect(ctx.place(ALLY_FAR, DUMMY_2, Team.ALLY)).toBe(true)
+    expect(targets()).toEqual([ALLY_FAR])
+    expect(ctx.artifactArrows[0]?.team).toBe(Team.ALLY)
+
+    expect(ctx.move(ALLY_FAR, 12, DUMMY_2)).toBe(true)
+    expect(targets()).toEqual([12])
+
+    expect(ctx.remove(12)).toBe(true)
+    expect(targets()).toEqual([ALLY_NEAR])
+
+    ctx.removeArtifact(Team.ALLY)
+    expect(targets()).toEqual([])
+  })
+})

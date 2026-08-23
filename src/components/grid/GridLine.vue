@@ -5,11 +5,12 @@
 
 import { computed } from 'vue'
 
-import { useGridStore } from '@/stores/grid'
+import { useGridContext } from '@/composables/useGridContext'
+import type { Hex } from '@/lib/hex'
 
 interface Props {
-  startHexId: number
-  endHexId: number
+  startHex: Hex
+  endHex: Hex
   color: string
   strokeWidth: number
   characterRadius?: number
@@ -18,16 +19,14 @@ interface Props {
   endCorner?: number
 }
 
-const { startHexId, endHexId, characterRadius = 30, startCorner, endCorner } = defineProps<Props>()
+const { startHex, endHex, characterRadius = 30, startCorner, endCorner } = defineProps<Props>()
 
-const gridStore = useGridStore()
-
-const scaledCharacterRadius = computed(() => characterRadius * gridStore.getHexScale())
+const ctx = useGridContext()
 
 const pathData = computed(() =>
   startCorner !== undefined && endCorner !== undefined
-    ? gridStore.getCornerLinePath(startHexId, startCorner, endHexId, endCorner)
-    : gridStore.getLinePath(startHexId, endHexId, scaledCharacterRadius.value),
+    ? ctx.layout.getCornerLinePath(startHex, startCorner, endHex, endCorner)
+    : ctx.layout.getLinePath(startHex, endHex, characterRadius * ctx.hexScale),
 )
 </script>
 
