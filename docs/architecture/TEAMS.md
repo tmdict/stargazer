@@ -21,7 +21,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
            ▼                                    ▼
 ┌─ TeamsBoards ──────────────┐    ┌─ TeamsRoster ────────────────┐
 │ - GridControls + picker    │    │ - characters/seasonal/maps   │
-│   and team save actions    │    │ - SavedTeamsList (lazy)      │
+│   and team save actions    │    │ - SavedTeamsList (default)   │
 │ - BoardsRow → GridBoard ×N │    │   → TeamPreview thumbnails   │
 └──────────┬─────────────────┘    └──────────────┬───────────────┘
            ▼                                     ▼
@@ -175,7 +175,7 @@ Semantics wired in `TeamsView`:
 - **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states, exactly what Load produces; the map-config baseline applies only when a board has no `t`
 - **Reuse**: `ArenaPreviewGrid` (Maps tab + Map Editor preset picker) renders through the same component with its square framing
 
-The saved-teams panel mounts on first activation and its cards use `content-visibility: auto`, so a full library never taxes page load.
+The saved-teams panel is the roster's default tab; its cards use `content-visibility: auto`, so a full library never taxes page load.
 
 ## Backup Files
 
