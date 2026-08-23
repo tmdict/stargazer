@@ -12,6 +12,7 @@ The targeting system uses a functional composition approach with shared foundati
 ┌───────────────────────┐
 │  Skill Files          │
 │  /skills/characters/  │
+│  /skills/artifact.ts  │
 │                       │
 │ silvina.ts            │
 │ cassadee.ts           │───┐
@@ -59,6 +60,8 @@ Selects targets by comparing distances from a reference point:
 - **FURTHEST**: Find furthest target (used by Dunlingr/Vala)
 - **REARMOST**: Find rearmost target by hex ID position (used by Bonnie)
 - **FRONTMOST**: Find frontmost target by hex ID position
+
+REARMOST and FRONTMOST are properties of the targeted team, not the caster (ally ids rise toward the front, enemy ids fall toward it). Their cores, `frontmostCandidate(candidates, targetTeam)` and `rearmostCandidate(candidates, targetTeam)`, take a candidate list and no context; `findFrontmostTarget` / `findRearmostTarget` wrap them with self-exclusion and the `SkillTargetInfo` metadata, and `frontmostUnit(grid, team)` / `rearmostUnit(grid, team)` are the whole-team picks for callers without a caster (artifact targeting).
 
 ### Ring Expansion Targeting (`utils/ring.ts`)
 

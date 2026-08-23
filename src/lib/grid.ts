@@ -127,3 +127,17 @@ export class Grid {
     this.getTile(hex).state = state
   }
 }
+
+// Artifact host cells: the off-grid hexes beside the arena's corner cells, left
+// of cell 1 (ally) and right of cell 45 (enemy). They hold no tile, so
+// placement, pathfinding, and targeting never see them; rendering and artifact
+// arrows anchor on them.
+const ARTIFACT_HOST_CELLS = {
+  [Team.ALLY]: { anchor: 1, direction: 4 },
+  [Team.ENEMY]: { anchor: 45, direction: 1 },
+} as const
+
+export function artifactHostHex(grid: Grid, team: Team): Hex {
+  const { anchor, direction } = ARTIFACT_HOST_CELLS[team]
+  return grid.getHexById(anchor).neighbor(direction)
+}

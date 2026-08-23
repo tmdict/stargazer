@@ -1,3 +1,4 @@
+import type { Grid } from '../../grid'
 import { Team } from '../../types/team'
 import type { SkillContext, SkillTargetInfo } from '../skill'
 import {
@@ -137,16 +138,45 @@ export function findTarget(
 }
 
 /**
- * Find the rearmost target based on hex ID positions.
- *
- * Rearmost is determined by the target team's position in the grid:
- * - When targeting enemies (regardless of caster): largest hex ID is rearmost
- * - When targeting allies (regardless of caster): smallest hex ID is rearmost
- *
- * This ensures consistent behavior whether it's:
- * - Ally targeting rearmost enemy
- * - Ally targeting rearmost ally
- * - An enemy targeting rearmost ally or enemy
+ * Formation ends by hex id. Ids run from a team's back to its front (ally ids
+ * rise toward the enemy side, enemy ids fall toward the ally side), so the
+ * frontmost unit of a team is its highest id for allies and lowest for enemies,
+ * and the rearmost is the opposite end. The end is a property of the targeted
+ * team, independent of who is asking (a caster, or an artifact with no hex).
+ */
+function extremeByHexId(candidates: TargetCandidate[], highest: boolean): TargetCandidate | null {
+  if (candidates.length === 0) return null
+  return candidates.reduce((best, current) =>
+    (highest ? current.hexId > best.hexId : current.hexId < best.hexId) ? current : best,
+  )
+}
+
+export function frontmostCandidate(
+  candidates: TargetCandidate[],
+  targetTeam: Team,
+): TargetCandidate | null {
+  return extremeByHexId(candidates, targetTeam === Team.ALLY)
+}
+
+export function rearmostCandidate(
+  candidates: TargetCandidate[],
+  targetTeam: Team,
+): TargetCandidate | null {
+  return extremeByHexId(candidates, targetTeam === Team.ENEMY)
+}
+
+// Whole-team picks for callers without a caster (artifact targeting).
+export function frontmostUnit(grid: Grid, team: Team): TargetCandidate | null {
+  return frontmostCandidate(getTeamTargetCandidates(grid, team), team)
+}
+
+export function rearmostUnit(grid: Grid, team: Team): TargetCandidate | null {
+  return rearmostCandidate(getTeamTargetCandidates(grid, team), team)
+}
+
+/**
+ * Find the rearmost target of `targetTeam`. `excludeSelf` drops the caster when
+ * it targets its own team.
  */
 export function findRearmostTarget(
   context: SkillContext,
@@ -155,33 +185,17 @@ export function findRearmostTarget(
 ): SkillTargetInfo | null {
   const { grid, team, hexId, characterId } = context
 
-  let candidates = getTeamTargetCandidates(grid, targetTeam)
-
-  // Exclude self if requested and targeting the same team
-  if (excludeSelf && targetTeam === team) {
-    candidates = candidates.filter((c) => c.characterId !== characterId)
-  }
-
-  if (candidates.length === 0) return null
-
-  // Optimize by finding max/min hex ID directly instead of scanning all tiles
-  // The logic is based on which team we're TARGETING, not which team is casting
-  let rearmostCandidate: TargetCandidate
-  if (targetTeam === Team.ENEMY) {
-    // Targeting enemies: largest hex ID is rearmost (furthest from allies)
-    rearmostCandidate = candidates.reduce((max, current) =>
-      current.hexId > max.hexId ? current : max,
-    )
-  } else {
-    // Targeting allies: smallest hex ID is rearmost (furthest from enemies)
-    rearmostCandidate = candidates.reduce((min, current) =>
-      current.hexId < min.hexId ? current : min,
-    )
-  }
+  const candidates = getCandidates(
+    grid,
+    targetTeam,
+    excludeSelf && targetTeam === team ? characterId : undefined,
+  )
+  const winner = rearmostCandidate(candidates, targetTeam)
+  if (!winner) return null
 
   return {
-    targetHexId: rearmostCandidate.hexId,
-    targetCharacterId: rearmostCandidate.characterId,
+    targetHexId: winner.hexId,
+    targetCharacterId: winner.characterId,
     metadata: {
       sourceHexId: hexId,
       examinedTiles: candidates.map((c) => c.hexId),
@@ -191,14 +205,8 @@ export function findRearmostTarget(
 }
 
 /**
- * Find the frontmost target based on hex ID positions.
- *
- * Frontmost is determined by the target team's position in the grid:
- * - When targeting enemies (regardless of caster): smallest hex ID is frontmost
- * - When targeting allies (regardless of caster): largest hex ID is frontmost
- *
- * This is the opposite of rearmost targeting - it finds characters at the "front"
- * of their formation. Always excludes self when targeting the same team.
+ * Find the frontmost target of `targetTeam`. Always excludes the caster when it
+ * targets its own team.
  */
 export function findFrontmostTarget(
   context: SkillContext,
@@ -206,33 +214,13 @@ export function findFrontmostTarget(
 ): SkillTargetInfo | null {
   const { grid, team, hexId, characterId } = context
 
-  // Get all candidates on the target team, excluding self if targeting same team
-  let candidates = getTeamTargetCandidates(grid, targetTeam)
-
-  // Always exclude self when targeting the same team
-  if (targetTeam === team) {
-    candidates = candidates.filter((c) => c.characterId !== characterId)
-  }
-
-  if (candidates.length === 0) return null
-
-  // Find frontmost based on which team we're TARGETING, not which team is casting
-  let frontmostCandidate: TargetCandidate
-  if (targetTeam === Team.ENEMY) {
-    // Targeting enemies: smallest hex ID is frontmost (closest to allies)
-    frontmostCandidate = candidates.reduce((min, current) =>
-      current.hexId < min.hexId ? current : min,
-    )
-  } else {
-    // Targeting allies: largest hex ID is frontmost (closest to enemies)
-    frontmostCandidate = candidates.reduce((max, current) =>
-      current.hexId > max.hexId ? current : max,
-    )
-  }
+  const candidates = getCandidates(grid, targetTeam, targetTeam === team ? characterId : undefined)
+  const winner = frontmostCandidate(candidates, targetTeam)
+  if (!winner) return null
 
   return {
-    targetHexId: frontmostCandidate.hexId,
-    targetCharacterId: frontmostCandidate.characterId,
+    targetHexId: winner.hexId,
+    targetCharacterId: winner.characterId,
     metadata: {
       sourceHexId: hexId,
       examinedTiles: candidates.map((c) => c.hexId),

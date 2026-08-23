@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import GridArrow from './GridArrow.vue'
-import { useArrowLayer } from '@/composables/useArrowLayer'
+import { TEAM_ARROW_COLORS, useArrowLayer } from '@/composables/useArrowLayer'
 import { useGridContext } from '@/composables/useGridContext'
+import { Team } from '@/lib/types/team'
 
 interface Props {
   showPerspective: boolean
@@ -19,9 +20,6 @@ const ctx = useGridContext()
 const ALLY_CURVE_SCALE = 1.5
 const ENEMY_CURVE_SCALE = 2.0
 
-const allyArrowColor = '#36958e'
-const enemyArrowColor = '#dc3545'
-
 const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
   () => props.showPerspective,
   () => props.defaultSvgHeight,
@@ -31,26 +29,26 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 <template>
   <svg class="arrow-layer" :width="svgDimensions.width" :height="svgDimensions.height">
     <g :transform="layerTransform">
-      <!-- Ally to Enemy arrows (teal) -->
       <GridArrow
         v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"
-        :key="`arrow-ally-${allyHexId}-${enemyInfo.enemyHexId}`"
-        :start-hex-id="allyHexId"
-        :end-hex-id="enemyInfo.enemyHexId!"
-        :color="allyArrowColor"
+        :id="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
+        :key="`ally-${allyHexId}-${enemyInfo.enemyHexId}`"
+        :start-hex="ctx.grid.getHexById(allyHexId)"
+        :end-hex="ctx.grid.getHexById(enemyInfo.enemyHexId!)"
+        :color="TEAM_ARROW_COLORS[Team.ALLY]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :curve-scale="ALLY_CURVE_SCALE"
         dashed
       />
 
-      <!-- Enemy to Ally arrows (red) -->
       <GridArrow
         v-for="[enemyHexId, allyInfo] in ctx.closestAllyMap"
-        :key="`arrow-enemy-${enemyHexId}-${allyInfo.allyHexId}`"
-        :start-hex-id="enemyHexId"
-        :end-hex-id="allyInfo.allyHexId!"
-        :color="enemyArrowColor"
+        :id="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
+        :key="`enemy-${enemyHexId}-${allyInfo.allyHexId}`"
+        :start-hex="ctx.grid.getHexById(enemyHexId)"
+        :end-hex="ctx.grid.getHexById(allyInfo.allyHexId!)"
+        :color="TEAM_ARROW_COLORS[Team.ENEMY]"
         :stroke-width="arrowStyle.strokeWidth"
         :arrowhead-size="arrowStyle.arrowheadSize"
         :invert-curve="true"
