@@ -7,9 +7,9 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
-import { SITE_ORIGIN } from './src/lib/site'
-import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n'
-import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight'
+import { SITE_ORIGIN } from './src/lib/site.ts'
+import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n.ts'
+import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
 
 // SSG Helpers
 
@@ -86,14 +86,11 @@ function extractContentDescription(html: string): string | null {
  * Keep the first occurrence per href. */
 function dedupeAssetLinks(html: string): string {
   const seen = new Set<string>()
-  return html.replace(
-    /<link[^>]+href="(\/assets\/[^"]+)"[^>]*>\s*/g,
-    (full, href: string) => {
-      if (seen.has(href)) return ''
-      seen.add(href)
-      return full
-    },
-  )
+  return html.replace(/<link[^>]+href="(\/assets\/[^"]+)"[^>]*>\s*/g, (full, href: string) => {
+    if (seen.has(href)) return ''
+    seen.add(href)
+    return full
+  })
 }
 
 // The lazy locale chunk is imported by the route guard only after the app

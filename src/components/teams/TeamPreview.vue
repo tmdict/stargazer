@@ -74,14 +74,12 @@ const boards = computed(() => {
       ally: resolveArtifactImage(board.artifacts.ally),
       enemy: resolveArtifactImage(board.artifacts.enemy),
     },
-    units: board.units.map(
-      (unit): ThumbnailUnit => ({
-        hexId: unit.hexId,
-        team: unit.team,
-        image: resolveImage(unit),
-        highlight: isHighlighted(unit),
-      }),
-    ),
+    units: board.units.map((unit): ThumbnailUnit => ({
+      hexId: unit.hexId,
+      team: unit.team,
+      image: resolveImage(unit),
+      highlight: isHighlighted(unit),
+    })),
   }))
 })
 </script>

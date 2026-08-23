@@ -142,9 +142,7 @@ Data files use optimized images via vite-imagetools:
 // src/content/skill/Silvina.data.ts
 import silvinaImage from '@/assets/images/character/silvina.png?format=webp&quality=80&w=100'
 
-export const gridStyles = {
-  /* ... */
-}
+export const gridStyles = {/* ... */}
 export const images = {
   silvina: silvinaImage,
 }
