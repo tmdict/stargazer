@@ -824,16 +824,26 @@ const actionTipText = computed((): string =>
   border-color: var(--color-primary-hover);
 }
 
-.card-btn.danger:hover {
+/* Danger outline at rest (a filled button on every card reads too loud across
+   a large library); the fill arrives on hover and the armed confirm step. */
+.card-btn.danger {
   color: var(--color-danger);
   border-color: var(--color-danger);
-  background: var(--color-bg-primary);
 }
 
-.card-btn.armed,
-.card-btn.armed:hover {
+.card-btn.danger:hover {
   background: var(--color-danger);
   border-color: var(--color-danger);
   color: #fff;
+}
+
+/* Armed step of the two-step confirm: darkened with a ring, the control bar's
+   armed treatment. */
+.card-btn.armed,
+.card-btn.armed:hover {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
+  color: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
 }
 </style>
