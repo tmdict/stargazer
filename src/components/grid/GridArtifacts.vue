@@ -20,6 +20,7 @@ import { svgPointToScreen } from '@/utils/gridScreenPosition'
 const props = defineProps<{
   allyArtifactId?: number | null
   enemyArtifactId?: number | null
+  showGridInfo: boolean
   showPerspective?: boolean
   scaleY?: number
   readonly?: boolean
@@ -35,9 +36,10 @@ const grids = useGrids()
 const { setArtifactTarget, requestTab } = useSelectionState()
 const { artifactDragPayload } = useDragDrop()
 
-// Hover tooltip: the same artifact card as the roster, shown only on a still hover.
-// Native HTML5 drag suppresses mouse events, so it can't appear mid-drag; the click
-// and dragstart handlers also dismiss it, and it clears on any artifact change.
+// Hover tooltip: the same artifact card as the roster, shown only on a still
+// hover and only while Grid Info is on (the hero cards' gate). Native HTML5
+// drag suppresses mouse events, so it can't appear mid-drag; the click and
+// dragstart handlers also dismiss it, and it clears on any artifact change.
 const {
   hoveredEl,
   hovered: hoveredArtifact,
@@ -46,7 +48,7 @@ const {
 } = useGridHoverTooltip<ArtifactType>(() => [props.allyArtifactId, props.enemyArtifactId])
 
 const showArtifactTooltip = (event: MouseEvent, artifact: ArtifactType | null) => {
-  if (!props.readonly) show(event, artifact)
+  if (!props.readonly && props.showGridInfo) show(event, artifact)
 }
 
 // This board's host-cell SVG, used to anchor the artifact popup to the clicked
