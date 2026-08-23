@@ -2,16 +2,20 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { findCharacterHex, getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { TEAM_MODES } from '@/lib/teams/modes'
+import { buildSideLoadPlan, type SideLoadBoard } from '@/lib/teams/sideLoad'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
+import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 /**
- * Tests for grids.swapBoards: exchanging two 5 v 5 boards' rosters while keeping
- * each unit's team. Boards default to arena1 (ally spawns 1-10/12/13/16, enemy
+ * Tests for the grids store's cross-board actions: swapBoards, drop routing,
+ * and loadTeamSide. Boards default to arena1 (ally spawns 1-10/12/13/16, enemy
  * spawns 30/33/34/36-45). Skills are code-registered, so Kulu/Phraesto behave
  * without loaded game data.
  */
@@ -622,6 +626,278 @@ describe('useGrids synergy', () => {
     grids.setGridCount(1)
     grids.synergy = true
     grids.setGridCount(1)
+    expect(grids.synergy).toBe(false)
+  })
+})
+
+describe('useGrids.loadTeamSide', () => {
+  const board = (
+    mains: [number, number, number?][],
+    extra: Partial<SideLoadBoard> = {},
+  ): SideLoadBoard => ({
+    mains: mains.map(([unitId, hexId, paragon]) => ({ unitId, hexId, paragon: paragon ?? 0 })),
+    companions: [],
+    phantimal: null,
+    artifact: null,
+    ...extra,
+  })
+
+  it('replaces the destination side at the saved hexes, leaving the other side alone', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    expect(ctx.place(1, 11, Team.ALLY)).toBe(true)
+    expect(ctx.place(40, 21, Team.ENEMY)).toBe(true)
+
+    const result = grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          board([
+            [12, 2],
+            [13, 3],
+          ]),
+        ],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(result).toEqual({ placed: 2, skipped: 0 })
+    expect(findCharacterHex(ctx.grid, 11, Team.ALLY)).toBeNull()
+    expect(findCharacterHex(ctx.grid, 12, Team.ALLY)).toBe(2)
+    expect(findCharacterHex(ctx.grid, 13, Team.ALLY)).toBe(3)
+    expect(findCharacterHex(ctx.grid, 21, Team.ENEMY)).toBe(40)
+  })
+
+  it("falls back to a random tile when the saved hex is not the destination team's", () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+
+    // Hex 40 is an enemy spawn on arena1, unplaceable for an ally unit.
+    const result = grids.loadTeamSide(
+      { side: Team.ALLY, boards: [board([[12, 40]])] },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(result).toEqual({ placed: 1, skipped: 0 })
+    const hex = findCharacterHex(ctx.grid, 12, Team.ALLY)
+    expect(hex).not.toBeNull()
+    expect(hex).not.toBe(40)
+  })
+
+  it('invert mirrors the formation 180 degrees onto the opposite team', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+
+    const result = grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          board([
+            [12, 1],
+            [13, 16],
+          ]),
+        ],
+      },
+      { invert: true, scope: 'all' },
+    )
+
+    // rotate(1) = 45, rotate(16) = 30: both enemy spawns on arena1.
+    expect(result).toEqual({ placed: 2, skipped: 0 })
+    expect(findCharacterHex(ctx.grid, 12, Team.ENEMY)).toBe(45)
+    expect(findCharacterHex(ctx.grid, 13, Team.ENEMY)).toBe(30)
+    expect(findCharacterHex(ctx.grid, 12, Team.ALLY)).toBeNull()
+  })
+
+  it("applies saved paragon, resets stale paragon, and swaps only the destination side's artifact", () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    expect(ctx.place(1, 11, Team.ALLY)).toBe(true)
+    ctx.setParagon(Team.ALLY, 11, 3)
+    ctx.setArtifact(Team.ALLY, 5)
+    ctx.setArtifact(Team.ENEMY, 6)
+
+    grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          board(
+            [
+              [11, 2],
+              [12, 3, 4],
+            ],
+            { artifact: 8 },
+          ),
+        ],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    // 11 returns without a saved level: the lingering 3 must not resurface.
+    expect(findCharacterHex(ctx.grid, 11, Team.ALLY)).toBe(2)
+    expect(ctx.getParagon(Team.ALLY, 11)).toBe(0)
+    expect(ctx.getParagon(Team.ALLY, 12)).toBe(4)
+    expect(ctx.artifacts.ally).toBe(8)
+    expect(ctx.artifacts.enemy).toBe(6)
+  })
+
+  it('scope active targets only the active board and skips page-wide duplicates', () => {
+    const grids = useGrids()
+    grids.setGridCount(2)
+    const [a, b] = grids.contexts
+    expect(a!.place(1, 11, Team.ALLY)).toBe(true)
+    grids.setActive(1)
+
+    const result = grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          board([
+            [11, 2],
+            [12, 3],
+          ]),
+        ],
+      },
+      { invert: false, scope: 'active' },
+    )
+
+    expect(result).toEqual({ placed: 1, skipped: 1 })
+    expect(findCharacterHex(a!.grid, 11, Team.ALLY)).toBe(1)
+    expect(findCharacterHex(b!.grid, 11, Team.ALLY)).toBeNull()
+    expect(findCharacterHex(b!.grid, 12, Team.ALLY)).toBe(3)
+  })
+
+  it('maps saved board i onto live board i', () => {
+    const grids = useGrids()
+    grids.setGridCount(3)
+
+    grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [board([[11, 1]]), board([[12, 2]]), board([[13, 3]])],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(findCharacterHex(grids.contexts[0]!.grid, 11, Team.ALLY)).toBe(1)
+    expect(findCharacterHex(grids.contexts[1]!.grid, 12, Team.ALLY)).toBe(2)
+    expect(findCharacterHex(grids.contexts[2]!.grid, 13, Team.ALLY)).toBe(3)
+  })
+
+  it("places the plan's phantimal on its saved hex", () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+
+    grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          board([[11, 1]], { phantimal: { unitId: toPhantimalId(1), hexId: 4, paragon: 0 } }),
+        ],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(findCharacterHex(ctx.grid, toPhantimalId(1), Team.ALLY)).toBe(4)
+  })
+
+  it('derives the Syn affordance from a loaded synergy hero', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    expect(grids.synergy).toBe(false)
+
+    grids.loadTeamSide(
+      { side: Team.ALLY, boards: [board([[toSynergyId(16), 5]])] },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(findCharacterHex(ctx.grid, toSynergyId(16), Team.ALLY)).toBe(5)
+    expect(grids.synergy).toBe(true)
+  })
+
+  it('settles a spawned companion onto its saved hex so it cannot squat on a later main', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+
+    // Phraesto's companion spawns at a random free ally tile, which without the
+    // settle pass could be hex 10, the second main's saved tile; stamping there
+    // would then evict the companion and cascade-remove Phraesto.
+    const result = grids.loadTeamSide(
+      {
+        side: Team.ALLY,
+        boards: [
+          board(
+            [
+              [PHRAESTO, 1],
+              [ALLY_A, 10],
+            ],
+            { companions: [{ unitId: PHRAESTO_COMPANION, hexId: 4, mainUnitId: PHRAESTO }] },
+          ),
+        ],
+      },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(result).toEqual({ placed: 2, skipped: 0 })
+    expect(findCharacterHex(ctx.grid, PHRAESTO, Team.ALLY)).toBe(1)
+    expect(findCharacterHex(ctx.grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(4)
+    expect(findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)).toBe(10)
+    expect(getTilesWithCharacters(ctx.grid)).toHaveLength(3)
+  })
+
+  it('removes the destination artifact when the incoming board carries none', () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    const ctx = grids.active!
+    ctx.setArtifact(Team.ALLY, 5)
+    ctx.setArtifact(Team.ENEMY, 6)
+
+    grids.loadTeamSide(
+      { side: Team.ALLY, boards: [board([[11, 1]])] },
+      { invert: false, scope: 'all' },
+    )
+
+    expect(ctx.artifacts.ally).toBeNull()
+    expect(ctx.artifacts.enemy).toBe(6)
+  })
+
+  it('strips the synergy unit when a 1v1 record loads into a mode without the Syn affordance', () => {
+    const grids = useGrids()
+    grids.setGridCount(5)
+    grids.setActive(2)
+
+    // A 1v1 record saved with Syn on: base heroes in c plus the synergy hero
+    // (local base id) in y, the exact shape the serializer emits.
+    const data = encodeMultiGridStateToUrl({
+      boards: [
+        {
+          m: 'arena1',
+          c: [
+            [1, ALLY_A, Team.ALLY],
+            [2, ALLY_B, Team.ALLY],
+            [3, 13, Team.ALLY],
+          ],
+          y: [[6, 16, Team.ALLY]],
+        },
+      ],
+      mode: '1v1',
+    })
+    const plan = buildSideLoadPlan(data, TEAM_MODES['5v5sl'].allowSynergy)!
+    const result = grids.loadTeamSide(plan, { invert: false, scope: 'active' })
+
+    expect(result).toEqual({ placed: 3, skipped: 0 })
+    expect(roster(grids.contexts[2]!.grid).map((r) => r.characterId)).toEqual([ALLY_A, ALLY_B, 13])
+    for (const ctx of grids.contexts) {
+      expect(findCharacterHex(ctx.grid, toSynergyId(16), Team.ALLY)).toBeNull()
+    }
     expect(grids.synergy).toBe(false)
   })
 })

@@ -9,7 +9,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 1. **One format everywhere**: live boards, autosave slots, share links, backup files, and saved teams all serialize to the same encoded `MultiGridState` string
 2. **Mode is data, not a tab**: one registry (`TEAM_MODES`) and one orchestrator reconfigure the single board array; there are never two writers to the live boards
 3. **One slot per mode**: each mode autosaves to its own versioned localStorage envelope, so switching modes is lossless by construction
-4. **One restore path**: every bulk apply (slot restore, mode switch, saved-team load, `?g=` ingress) goes through `restoreMultiFromEncodedState`
+4. **One restore path**: every whole-board apply (slot restore, mode switch, saved-team load, `?g=` ingress) goes through `restoreMultiFromEncodedState`; the side-load merge is deliberately an engine-primitive edit instead (see Side Loading)
 5. **Canonical team data**: saved-team payloads are viewer-state-free with fixed key order, so equal content is byte-equal
 
 ## Architecture
@@ -50,7 +50,7 @@ The grid panel: a document-style title line, a two-row control bar (`GridControl
 
 - **Title line**: the source team's name (or "Unsaved team") as plain centered text, with a dot + "Unsaved changes" beside it while the boards differ from the saved copy
 - **Row 1 (configure)**: mode picker, then the display toggles (wrap, grid info, skills, syn, flat, invert, team view)
-- **Row 2 (act)**: team actions, then the share actions (link, copy, download, clear)
+- **Row 2 (act)**: team actions and the side-load menu, then the share actions (link, copy, download, clear)
 - **Per-board actions**: swap (drag to reorder, via `useGridSwap`), copy image, download image, clear
 - **Wrap**: the 3-2 two-row boards layout; rendered for 5-board modes on desktop only (every consumer gates on `canWrap` / board count, so the preference survives visits to non-wrap modes), serialized with the display flags
 - **Syn**: the friend-assist toggle (see [Grid](./GRID.md), unit id namespaces); offered only on modes with `allowSynergy` (1v1), and never serialized: it is derived from board content on every restore, and unchecking removes the placed synergy units
@@ -162,7 +162,18 @@ Semantics wired in `TeamsView`:
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
 - **Mode**: segments for All plus every key in `TEAM_MODE_ORDER`, always shown. Offering the full list rather than only the modes present keeps a segment from disappearing with its last team and stranding the selection; an empty mode reaches the same "no matches" state a query does. Narrows the list before the search query runs, and unlike Sort it is deliberately not persisted
-- **Search**: a filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered). A card stays visible when the query hits its name (`renderSnippet` marks the hit in the title) or, at 2+ characters, a hero on its boards (`matchCharacterNames`, the roster search's multi-locale name index), whose hexes get a ring in the thumbnail. Phantimals and companion summons never match; per-record hero sets are memoized off the immutable `data` string
+- **Search**: a filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered). A card stays visible when the query hits its name (`renderSnippet` marks the hit in the title) or, at 2+ characters, a hero on its boards (`matchCharacterNames`, the roster search's multi-locale name index), whose hexes get a ring in the thumbnail. Phantimals and companion summons never match; per-record hero sets are memoized off the immutable `data` string. The matching lives in `useSavedTeamSearch`, shared with the Load menu
+
+## Side Loading (Load Menu)
+
+`TeamLoadMenu` (`/src/components/teams/TeamLoadMenu.vue`), slotted beside the save actions, stamps a saved one-side team onto the live boards without touching the other side:
+
+- **Eligibility**: a record qualifies when every unit on every board (heroes, companions, phantimals, synergy units) belongs to one team, and at least one unit exists; the rule spans the whole record, never a single board (`savedTeamSide` in `/src/lib/teams/sideLoad.ts`, memoized per record)
+- **Two groups, two scopes**: the active mode's teams load board-for-board; a second group offers 1v1 teams in every other mode, loading onto the active board only. Active-board loads skip heroes already on the destination team of another board (page-wide uniqueness) and count them in the toast
+- **Load**: `buildSideLoadPlan` maps the record to per-board `{ mains, companions, phantimal, artifact }` (the synergy hero rides in `mains` only when the destination mode has the Syn affordance), and `grids.loadTeamSide` clears the destination side via per-hex removal (the delete path: skill cleanup, companion cascade), then places each unit on its saved hex, falling back to a random destination tile when the live map assigns that tile elsewhere or something already stands there (a stamp never replaces, so it can't evict this load's own work). Companions spawn from their main's skill and are settled onto their saved hexes per main, the same anti-squatting pass the bulk restore runs; an unreachable target leaves the companion at its spawn tile. Paragon is written for every placed hero (saved level or 0, so a stale level can't attach to the incomer), phantimals place after mains (their faction gate needs the roster), the side's artifact is carried, and the phantimal baseline re-seeds so a deliberately phantimal-less save stays that way
+- **Invert**: flips the destination team and 180-rotates every saved hex (`rotatedHexId` in `/src/lib/grid.ts`: cube-coordinate negation, `46 - hexId` on the full arena), with the same random fallback
+- **Confirm**: a load that would remove anything (units or the destination side's artifact) arms the two-step inline confirm; an empty destination loads in one click
+- **Deliberately not a restore**: the load is a one-side merge composed from engine primitives, so it bypasses `restoreMultiFromEncodedState` (which replaces whole boards); `sourceId`, maps, and display flags stay untouched, and the edit surfaces as normal unsaved changes that autosave persists
 
 ## Thumbnails
 
