@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { artifactHostHex, Grid } from '@/lib/grid'
+import { artifactHostHex, Grid, rotatedHexId } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import { FULL_GRID } from '@/lib/types/grid'
 import { State } from '@/lib/types/state'
@@ -135,5 +135,22 @@ describe('artifactHostHex', () => {
     expect(enemy.equals(grid.getHexById(45).neighbor(1))).toBe(true)
     expect(grid.getTileOrUndefined(ally)).toBeUndefined()
     expect(grid.getTileOrUndefined(enemy)).toBeUndefined()
+  })
+})
+
+describe('rotatedHexId', () => {
+  it('maps a hex onto its 180-degree counterpart (46 - id on the full grid)', () => {
+    const grid = new Grid()
+    expect(rotatedHexId(grid, 1)).toBe(45)
+    expect(rotatedHexId(grid, 45)).toBe(1)
+    expect(rotatedHexId(grid, 14)).toBe(32)
+    // The center cell rotates onto itself.
+    expect(rotatedHexId(grid, 23)).toBe(23)
+  })
+
+  it('is undefined for an unknown id', () => {
+    const grid = new Grid()
+    expect(rotatedHexId(grid, 0)).toBeUndefined()
+    expect(rotatedHexId(grid, 99)).toBeUndefined()
   })
 })

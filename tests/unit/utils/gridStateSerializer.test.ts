@@ -263,7 +263,9 @@ describe('gridStateSerializer', () => {
       // Canonical saved-team data is rebuilt from BOARD_CONTENT_KEYS, so a new
       // GridState section that isn't registered there would be silently dropped
       // from every saved team. This board exercises every content section; when
-      // adding a section, extend the fixture AND the key list together.
+      // adding a section, extend the fixture AND the key list together, and
+      // register a unit-bearing section in lib/teams/preview.ts and
+      // lib/teams/sideLoad.ts too (both read the unit sections directly).
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
         createMockTile(2, State.OCCUPIED_ALLY, toPhantimalId(1), Team.ALLY),

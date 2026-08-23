@@ -147,7 +147,10 @@ export type BoardState = GridState & { m?: string }
  * order. Canonical saved-team data (lib/teams/savedTeam) rebuilds boards from
  * exactly this list, so a new GridState section must be registered here too or
  * saved teams would silently drop it; the serializer contract test pins the
- * two together. `d` is deliberately absent: it is viewer state, not content. */
+ * two together. The unit-bearing sections are also read directly by
+ * lib/teams/preview.ts (thumbnails) and lib/teams/sideLoad.ts (the one-side
+ * rule), so a new unit section must be handled there as well. `d` is
+ * deliberately absent: it is viewer state, not content. */
 export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'y', 'p', 'a', 'm'] as const
 
 /* Multi-board state (Teams page): one BoardState per board, the active board,

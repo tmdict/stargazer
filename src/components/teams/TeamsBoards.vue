@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* The Teams grid panel: the team title line (document-style name with inline
    source-team rename, plus save state), the control bar (mode picker + display
-   toggles, then team save actions + share actions), and the
+   toggles, then team save actions + the side-load menu + share actions), and the
    horizontally-scrolling row of boards. It's
    the #teams panel of TeamsView's outer TabView; the tab strip and the roster
    live in TeamsView. Boards bind to their own context. */
@@ -9,6 +9,7 @@
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
+import TeamLoadMenu from '@/components/teams/TeamLoadMenu.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
@@ -159,6 +160,7 @@ const {
           @save="emit('save')"
           @save-as-new="emit('saveAsNew', $event)"
         />
+        <TeamLoadMenu :active-mode />
       </template>
     </GridControls>
 
