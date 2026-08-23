@@ -28,11 +28,15 @@ npm run type-check  # TypeScript validation
 npm run format      # Code formatting (Prettier)
 npm run lint        # ESLint checks
 npm run lint:fix    # ESLint with auto-fix
-npm run test        # Run tests
+npm run test        # Run all tests
+npm run test:unit   # Unit tests only
+npm run test:it     # Integration tests only
 npm run test:watch  # Run tests in watch mode
+npm run prep        # format + type-check + lint + test
+npm run import:seasonal  # Regenerate seasonal data/locales (see below)
 ```
 
-Always run `type-check` and `build` before committing.
+Always run `npm run prep` (or at least `lint` and `type-check`) before committing.
 
 ## Build Modes
 
@@ -49,24 +53,28 @@ Development always runs in SPA mode for hot module replacement.
 ├── src/                # Source code
 │   ├── lib/            # Domain logic (framework-agnostic)
 │   │   ├── types/      # Type definitions
+│   │   ├── characters/ # Placement, companions, synergy, phantimals
 │   │   ├── skills/     # Skill implementations
-│   │   └── arena/      # Map configurations
+│   │   ├── teams/      # Team modes, saved-team records, previews, backup files
+│   │   └── maps.ts     # Arena map registry (parses data/arena/*.json)
 │   ├── stores/         # Pinia state management
 │   ├── components/     # Vue UI components
 │   ├── content/        # Content components (localized, pre-rendered)
 │   ├── composables/    # Vue composition functions
+│   ├── directives/     # Custom Vue directives
 │   ├── utils/          # Helper utilities
 │   ├── views/          # Page-level components
 │   ├── router/         # Vue Router configuration
-│   ├── data/           # Static JSON data (characters, artifacts, seasonal/phantimal)
+│   ├── data/           # Static JSON data (arena, character, artifact, seasonal)
 │   ├── locales/        # i18n translations
 │   ├── assets/         # Images and styles
 │   ├── styles/         # Global CSS styles
 │   ├── main.ts         # SPA entry point
 │   └── main.ssg.ts     # SSG entry point (pre-rendering)
-└── test/               # Test files
-    ├── lib/            # Domain logic tests
-    └── utils/          # Utility tests
+├── scripts/            # Seasonal data importers
+└── tests/
+    ├── unit/           # Mirrors src/ (lib, stores, composables, utils, skills, ...)
+    └── integration/
 ```
 
 ## Architecture
@@ -87,6 +95,8 @@ See [Architecture Overview](./ARCHITECTURE.md) for details.
 2. Click the "Link" button in grid controls
 3. The share URL is copied to clipboard and you're redirected to the Share page
 4. Share the URL with others - they'll see a read-only view of your exact grid setup
+
+The Teams page shares the same way for all of its boards; see [TEAMS.md](./architecture/TEAMS.md).
 
 ### Adding a Character
 
@@ -121,6 +131,13 @@ ownership rule (scripts own feed-derivable text, humans own judgment).
   importers generate all text, lint the hand-curated files against the feed,
   and prune retired entries.
 
+### Adding an Arena Map
+
+Add `src/data/arena/<key>.json`; `src/lib/maps.ts` discovers it by filename. The
+Supreme League per-board defaults are `FIVE_V_FIVE_DEFAULT_MAPS` in the same file
+(editing that list hard-resets visitors' active 5v5 SL boards; see
+[TEAMS.md](./architecture/TEAMS.md), Team Modes).
+
 ### Modifying Grid Logic
 
 Edit `src/lib/grid.ts` - ensure transaction safety for complex operations.
@@ -129,7 +146,7 @@ Edit `src/lib/grid.ts` - ensure transaction safety for complex operations.
 
 - Component styles: `<style scoped>` blocks
 - Global styles: `src/styles/`
-- State colors: `src/utils/stateFormatting.ts`
+- Tile state colors: `src/utils/tileStateFormatting.ts`
 
 ## Troubleshooting
 

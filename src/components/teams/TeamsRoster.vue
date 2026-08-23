@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /* The Teams roster: a separate card on desktop, a pull-up sheet over the grids on
-   mobile. Its tabs (characters / seasonal / maps / saved teams) act on the active
-   board. The mobile tap flow drives the sheet, so the selection watches + sheet
-   state live here alongside the BottomSheet they control: a targeted cell opens it
-   on Characters, an on-grid artifact opens it on Seasonal, lifting a hero collapses
-   it, and loading a saved team collapses it so the loaded boards show. */
+   mobile. The characters / seasonal / maps tabs act on the active board; saved
+   teams (the default tab) manages the library. The mobile tap flow drives the
+   sheet, so the selection watches + sheet state live here alongside the
+   BottomSheet they control: a targeted cell opens it on Characters, an on-grid
+   artifact opens it on Seasonal, lifting a hero collapses it, and loading a saved
+   team collapses it so the loaded boards show. */
 
 import { computed, ref, watch } from 'vue'
 

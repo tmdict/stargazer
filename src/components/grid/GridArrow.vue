@@ -28,7 +28,9 @@ const props = withDefaults(defineProps<Props>(), {
 
 const ctx = useGridContext()
 
-const markerId = computed(() => `arrowhead-${props.id}`)
+// Marker ids are document-wide and `id` is only unique within a board, so the
+// board id keeps a multi-board page from defining one arrowhead twice.
+const markerId = computed(() => `arrowhead-${ctx.id}-${props.id}`)
 
 const dashArray = computed(() => {
   if (!props.dashed) return undefined
@@ -76,7 +78,6 @@ const pathData = computed(() =>
       stroke-linecap="round"
       :stroke-dasharray="dashArray"
     />
-    <!-- Main arrow path -->
     <path
       v-if="pathData"
       :d="pathData"

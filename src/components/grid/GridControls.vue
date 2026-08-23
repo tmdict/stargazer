@@ -168,7 +168,6 @@ const synergyView = computed({
   pointer-events: none;
 }
 
-/* Checkbox inside toggle buttons */
 .grid-toggle-checkbox {
   width: 0.9rem;
   height: 0.9rem;
@@ -177,7 +176,6 @@ const synergyView = computed({
   margin: 0;
 }
 
-/* Text elements in buttons */
 .grid-toggle-text {
   font-weight: 600;
 }

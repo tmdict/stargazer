@@ -39,9 +39,9 @@ function sortByTargetingMethod(
     const distB = b.distances.get(referenceHexId) ?? 0
 
     if (targetingMethod === TargetingMethod.FURTHEST) {
-      return distB - distA // Furthest first
+      return distB - distA
     } else {
-      return distA - distB // Closest first
+      return distA - distB
     }
   })
 }
@@ -75,12 +75,11 @@ function applyHexIdTieBreaker(
     return first ?? null
   }
 
-  // Apply team-aware hex ID tie-breaking
   const sorted = tiedCandidates.sort((a, b) => {
     if (casterTeam === Team.ALLY) {
-      return a.hexId - b.hexId // Lower hex ID wins for ally team
+      return a.hexId - b.hexId
     } else {
-      return b.hexId - a.hexId // Higher hex ID wins for enemy team
+      return b.hexId - a.hexId
     }
   })
   return sorted[0] ?? null
@@ -115,10 +114,7 @@ export function findTarget(
 
   calculateDistances(candidates, [referenceHexId], grid)
 
-  // Sort by targeting method (closest/furthest)
   const sorted = sortByTargetingMethod(candidates, referenceHexId, options.targetingMethod)
-
-  // Apply team-aware hex ID tie-breaking
   const winner = applyHexIdTieBreaker(sorted, team, referenceHexId)
 
   if (!winner) return null
@@ -151,14 +147,14 @@ function extremeByHexId(candidates: TargetCandidate[], highest: boolean): Target
   )
 }
 
-export function frontmostCandidate(
+function frontmostCandidate(
   candidates: TargetCandidate[],
   targetTeam: Team,
 ): TargetCandidate | null {
   return extremeByHexId(candidates, targetTeam === Team.ALLY)
 }
 
-export function rearmostCandidate(
+function rearmostCandidate(
   candidates: TargetCandidate[],
   targetTeam: Team,
 ): TargetCandidate | null {

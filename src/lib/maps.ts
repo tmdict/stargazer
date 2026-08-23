@@ -9,7 +9,6 @@ export interface MapConfig {
   }>
 }
 
-// Maps JSON grid keys to hex tile states
 const STATE_MAP: Record<keyof ArenaJson['grid'], State> = {
   ally: State.AVAILABLE_ALLY,
   enemy: State.AVAILABLE_ENEMY,
@@ -27,7 +26,8 @@ function parseMapConfig(json: ArenaJson): MapConfig {
   }
 }
 
-// Auto-discovered from src/data/arena/*.json, keyed by filename
+// Keyed by filename under src/data/arena/; the key is what `m` sections and
+// TEAM_MODES default lists reference.
 export const MAPS: Record<string, MapConfig> = Object.fromEntries(
   Object.entries(loadArenas()).map(([key, json]) => [key, parseMapConfig(json)]),
 )

@@ -62,7 +62,6 @@ export class Grid {
     [Team.ENEMY, BASE_TEAM_SIZE],
   ])
 
-  // Companion IDs are derived as N * companionIdOffset + mainCharacterId
   companionIdOffset = COMPANION_ID_OFFSET
   // Phantimals occupy the same unit slot as characters, namespaced above companions.
   phantimalIdOffset = PHANTIMAL_ID_OFFSET

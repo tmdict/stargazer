@@ -18,7 +18,7 @@ The drag and drop system enables intuitive character placement through native HT
 
 Thin lifecycle wrapper around the drag UI. It owns the document-level
 `drop`/`dragover`/`mousemove` listeners (its global `dragover` calls
-`preventDefault()`, which makes the page a drop target — that must not outlive
+`preventDefault()`, which makes the page a drop target; that must not outlive
 the drag UI, so it is mount-scoped rather than module state), and it provides
 the typed registration channel:
 
@@ -46,7 +46,7 @@ actions come straight from `useDragDrop()`; components don't inject them.
 Core state and logic, as module-level singletons: at most one drag exists at a
 time, and the document listener add/remove pairs must share function identity
 no matter which component starts or ends the drag. `startDrag` also attaches a
-once-only document `dragend` listener as a safety net — if the source element's
+once-only document `dragend` listener as a safety net: if the source element's
 own `@dragend` binding is gone when the drag ends, state still resets and the
 ghost preview can't get stuck. `endDrag` records the drop tile in
 `lastDropHexId`, which GridTiles consumes (read + clear) to restore the hover
@@ -56,7 +56,7 @@ The safety net depends on `dragend` bubbling to the document, which requires
 the drag _source node_ to still be attached (or detach as part of a subtree
 whose root carries the `@dragend` binding) when the drag ends. Browsers pick
 the innermost draggable element as the source, and images are draggable by
-default — so inner `<img>`s in grid drag wrappers must set `draggable="false"`
+default, so inner `<img>`s in grid drag wrappers must set `draggable="false"`
 to keep the keyed wrapper as the source. Otherwise a drop that replaces the
 image node mid-drag (e.g. a character↔phantimal swap flipping a `v-if` branch)
 orphans the source, `dragend` never reaches any listener, and the ghost
@@ -178,22 +178,12 @@ Characters dragged from existing positions:
 
 ### Validation Flow
 
-```typescript
-function validateDrop(hexId: number, character: CharacterType): boolean {
-  const tile = grid.getTile(hexId)
+Two layers, each with its own authority:
 
-  // Check tile accepts placement
-  if (!canAcceptCharacter(tile.state)) return false
+1. **Routing layer** (`useGrids.canDropCharacter`): page-wide per-team uniqueness, companions and synergy heroes staying on their board, destination capacity, phantimal faction; a roster drop resolves its id through `useGrids.resolvePick` (base id, or the synergy copy while Syn is on)
+2. **Engine layer** (`canPlaceCharacterOnTile` / `canPlaceCharacterOnTeam` inside `performPlace`): tile accepts the team, per-grid capacity and duplicates, the synergy hero's one-per-team cap
 
-  // Check team capacity
-  if (!hasTeamSpace(character, tile.team)) return false
-
-  // Check for duplicates
-  if (isDuplicate(character, tile.team)) return false
-
-  return true
-}
-```
+The drag-hover cue reads layer 1 only, so a layer 2 rejection resolves as a silent no-op at drop time.
 
 ### Cross-board drag (multigrid)
 
@@ -331,15 +321,14 @@ interface DragData {
 
 ## Performance Optimizations
 
-- **Throttled Updates**: Mouse position tracked at 60fps max
-- **Event Delegation**: Single set of global listeners
+- **Event Delegation**: Single set of global listeners; hex detection runs only while a drag is active
 - **Conditional Rendering**: Preview only shown when dragging
 - **Cached Calculations**: Hex boundaries computed once
 - **Reactive State Optimization**: Character store uses granular computed properties to minimize recalculations during drag
 
 ## Browser Compatibility
 
-- **HTML5 Drag API**: Supported in all modern browsers (mouse-only — `dataTransfer` doesn't fire on touch)
+- **HTML5 Drag API**: Supported in all modern browsers (mouse-only: `dataTransfer` doesn't fire on touch)
 - **SVG Events**: Pointer events with proper configuration
 - **Touch**: Drag never fires on touch, so touch interactions are tap-based on every layout, split by pointer type (`isTouchClick`), not by viewport: narrow layouts add via the tap-target + roster sheet, wide layouts add via the on-grid picker, and a placed hero moves (including cross-board), swaps, or removes via the tap-lift flow. Artifacts are the exception: they have no tap-lift, so touch adds and deletes them but only a mouse drag repositions one. See [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)
 - **Fallback Handling**: Graceful degradation for older browsers

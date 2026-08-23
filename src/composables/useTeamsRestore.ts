@@ -3,7 +3,7 @@
  * and the mode-aware persistence, and runs the critical switch sequence:
  *
  *   pause → flush old slot → set mode → restore-or-default (single rebuild) →
- *   adopt sourceId → sizing → resume + baseline write.
+ *   sizing → adopt sourceId → resume + baseline write.
  *
  * A mode's slot is only ever written while that mode's boards are live, which is
  * the invariant that keeps per-mode state independent. All bulk state application

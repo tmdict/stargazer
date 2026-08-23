@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The horizontally-scrolling row of 5 v 5 boards, with the optional 3-2 "wrap"
+/* The horizontally-scrolling row of team boards, with the optional 3-2 "wrap"
    layout. Layout only: callers slot in the boards (editable GridBoard on the Teams
    page, read-only GridContainer on the share view). `.boards-track` is the
    image-export capture root (see TeamsView's boardCapture). */

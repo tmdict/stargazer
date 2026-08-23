@@ -84,8 +84,9 @@ Shared reactive state and reusable Vue logic. Composables can call stores (one-w
 **Key Composables:**
 
 - `useSelectionState`: Shared team selection + the mobile tap interaction state: the placement-target hex (tap an empty cell to add from the roster) and the lifted hex (tap a placed hero to move/swap it)
+- `useGridContext`: The per-board entity (its `Grid`, `SkillManager`, map, artifacts, layout, and place/move/swap operations); `useGrids` aggregates N of them (see GRID.md, Multigrid)
 - `useDragDrop`: Global drag state management (desktop/mouse only: touch placement is tap-based)
-- `useBottomSheet`: Pull-up sheet state: peek/expanded detents; drag-to-resize by touch **or** mouse (narrow desktop) from the handle or the content; tap-, flick-, or drag-to-toggle; and overscroll-to-collapse (swipe the content down once it's scrolled to the top). SSR-safe (CSS drives the resting layout; the composable only adds the inline `transform` once mounted). Consumed by the shared `BottomSheet` component (`components/ui/BottomSheet.vue`), which both the grid (`HomeView`) and `/skills` (`SkillsBrowser`) use for the roster column (desktop card + mobile sheet); each page slots its own content, which owns its in-sheet fill/scroll
+- `useBottomSheet`: Pull-up sheet state: peek/expanded detents; drag-to-resize by touch **or** mouse (narrow desktop) from the handle or the content; tap-, flick-, or drag-to-toggle; and overscroll-to-collapse (swipe the content down once it's scrolled to the top). SSR-safe (CSS drives the resting layout; the composable only adds the inline `transform` once mounted). Consumed by the shared `BottomSheet` component (`components/ui/BottomSheet.vue`), which the Arena (`HomeView`), Teams (`TeamsRoster`), and `/skills` (`SkillsBrowser`) use for the roster column (desktop card + mobile sheet); each page slots its own content, which owns its in-sheet fill/scroll
 - `useGridEvents`: Pure pub/sub bus for grid DOM events (typed InjectionKey provide/inject; see EVENT_SYSTEM.md)
 - `useBreakpoint`: Responsive breakpoint detection
 - `useOverlay`: Escape + click-outside-to-close for modal-style surfaces
@@ -110,9 +111,10 @@ Thin reactive wrappers around domain objects using Pinia. Bridges framework-agno
 
 **Key Stores:**
 
-- `GridStore`: Reactive grid state
-- `CharacterStore`: Character selection and placement
-- `GameDataStore`: Character definitions and ranges
+- `useGrids`: The board collection: active-board pointer, shared globals (hex size, team view, invert, Syn affordance), page-wide uniqueness, drop routing
+- `GridStore` / `CharacterStore`: Single-board facades over the active board (grid state; character selection and placement)
+- `GameDataStore`: Character definitions and ranges; identity getters resolve companions and synergy copies to their base hero
+- `UrlStateStore`: Decodes shared state and applies it to the boards
 
 ### Domain Layer (`/src/lib/`)
 
@@ -120,11 +122,12 @@ Pure TypeScript game logic, completely framework-agnostic. Can be tested in isol
 
 **Key Components:**
 
-- `Grid`: Hexagonal grid with public state properties (122 lines)
+- `Grid`: Hexagonal grid with public state properties
 - `Characters/`: Character operations folder
   - `character.ts`: Queries, team management, tile helpers
   - `place.ts`, `remove.ts`, `move.ts`, `swap.ts`: Complex operations with skills
   - `companion.ts`: Companion system helpers
+  - `phantimal.ts`, `placeholder.ts`, `synergy.ts`: Unit id namespaces (pure id math, see GRID.md)
   - `transaction.ts`: Atomic operation utilities
 - `Pathfinding`: A\* and BFS algorithms
 - `Skills`: Ability system with visual effects

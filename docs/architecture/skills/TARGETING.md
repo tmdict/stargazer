@@ -56,12 +56,12 @@ Provides the base types and utilities used by both distance and ring modules:
 
 Selects targets by comparing distances from a reference point:
 
-- **CLOSEST**: Find nearest target (used by Nara/Silvina from symmetrical point)
+- **CLOSEST**: Find nearest target (no hero caller today; Nara/Silvina spiral out from the symmetrical tile instead)
 - **FURTHEST**: Find furthest target (used by Dunlingr/Vala)
-- **REARMOST**: Find rearmost target by hex ID position (used by Bonnie)
-- **FRONTMOST**: Find frontmost target by hex ID position
+- **REARMOST**: Find rearmost target by hex ID position (used by Bonnie, Evie)
+- **FRONTMOST**: Find frontmost target by hex ID position (used by Talene)
 
-REARMOST and FRONTMOST are properties of the targeted team, not the caster (ally ids rise toward the front, enemy ids fall toward it). Their cores, `frontmostCandidate(candidates, targetTeam)` and `rearmostCandidate(candidates, targetTeam)`, take a candidate list and no context; `findFrontmostTarget` / `findRearmostTarget` wrap them with self-exclusion and the `SkillTargetInfo` metadata, and `frontmostUnit(grid, team)` / `rearmostUnit(grid, team)` are the whole-team picks for callers without a caster (artifact targeting).
+REARMOST and FRONTMOST are properties of the targeted team, not the caster (ally ids rise toward the front, enemy ids fall toward it). `findFrontmostTarget` / `findRearmostTarget` apply that rule with self-exclusion and the `SkillTargetInfo` metadata; `frontmostUnit(grid, team)` / `rearmostUnit(grid, team)` are the whole-team picks for callers without a caster (artifact targeting).
 
 ### Ring Expansion Targeting (`utils/ring.ts`)
 
@@ -106,14 +106,14 @@ onDeactivate: clearSkillTarget()
 Visual feedback options:
 
 - **Arrow color**: Via `targetingColorModifier` (e.g., Dunlingr, Aliceth)
-- **Tile border color**: Via `setTileColorModifier()` on the SkillManager (e.g., Reinier, Evie)
+- **Tile border color**: Via the SkillManager's `paintTiles` (Reinier) or the `withTilePaint` wrapper (Evie)
 
 ## Adding New Targeting Skills
 
 1. **Pick a builder** from `src/lib/skills/utils/builders.ts`:
-   - `createTargetingSkill` — arrow-based skills (single or self-built multi-arrow)
-   - `createTileHighlightSkill` — single-tile highlights with previous-target cleanup
-   - Custom `registerSkill({...})` — only when neither lifecycle fits (e.g. multi-tile pairs like Reinier)
+   - `createTargetingSkill`: arrow-based skills (single or self-built multi-arrow)
+   - `createTileHighlightSkill`: single-tile highlights with previous-target cleanup
+   - Custom `registerSkill({...})`: only when neither lifecycle fits (e.g. multi-tile pairs like Reinier)
 
 2. **Pick a calculation utility** for `calculateTarget`:
    - Distance-based? `findTarget()` from `distance.ts`
@@ -128,7 +128,7 @@ Visual feedback options:
      createTargetingSkill({
        id: 'my-skill',
        characterId: 123,
-       color: '#hexcolor',
+       color: SKILL_COLORS.red,
        arrowType: 'enemy',
        calculateTarget: (ctx) =>
          findTarget(ctx, {
@@ -140,8 +140,7 @@ Visual feedback options:
    ```
 
 4. **Drop down to a custom lifecycle only when needed**:
-   - Complex multi-step targeting (like Reinier — highlights ally + symmetrical enemy pair)
+   - Complex multi-step targeting (like Reinier, which highlights an ally + symmetrical enemy pair)
    - Multi-tile cosmetic zones (like Kulu, which paints a demolition zone)
-   - Companion spawning (like Phraesto, Zanie)
 
-   In those cases, declare a local `const TILE_COLOR = '#xxx'` for any tile color and pass the skill object directly to `registerSkill({...})`. See [SKILLS.md](../SKILLS.md#pattern-3-custom-lifecycle-companions-multi-tile-zones-etc) for a full example.
+   In those cases, declare a local `const TILE_COLOR = SKILL_COLORS.x` for any tile color and pass the skill object directly to `registerSkill({...})`. Companion spawning (Phraesto, Zanie) is not a custom case: `createCompanionSkill` owns that lifecycle. See [SKILLS.md](../SKILLS.md#pattern-5-custom-lifecycle) for a full example.

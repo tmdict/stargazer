@@ -2,9 +2,6 @@ import { inject, provide, type InjectionKey } from 'vue'
 
 import type { Hex } from '@/lib/hex'
 
-/**
- * Grid event types with namespacing
- */
 export interface GridEvents {
   // Hex interactions; the DOM event travels along so handlers can tell touch
   // gestures from mouse clicks.
@@ -27,12 +24,9 @@ export interface GridEventAPI {
 
 export const GridEventKey: InjectionKey<GridEventAPI> = Symbol('grid-events')
 
-/**
- * Create grid event system (for provider)
- */
 export function createGridEvents(): GridEventAPI {
-  // Map of event names to their handler functions. Using unknown[] for args provides
-  // type safety while allowing handlers with different signatures to be stored together
+  // unknown[] lets handlers of every signature share one map; the generic
+  // emit/on/off signatures keep the public API typed.
   const handlers = new Map<keyof GridEvents, Set<(...args: unknown[]) => void>>()
 
   const emit: GridEventAPI['emit'] = (event, ...args) => {
@@ -53,9 +47,6 @@ export function createGridEvents(): GridEventAPI {
   return { emit, on, off }
 }
 
-/**
- * Use grid events (for consumers)
- */
 export function useGridEvents(): GridEventAPI {
   const api = inject(GridEventKey)
   if (!api) {

@@ -6,7 +6,7 @@ The event system provides centralized, type-safe component communication using V
 
 ## Design Principles
 
-1. **Pure Pub/Sub**: Emitting only notifies subscribers — all state changes live in the subscribing components, never inside the bus
+1. **Pure Pub/Sub**: Emitting only notifies subscribers; all state changes live in the subscribing components, never inside the bus
 2. **Namespaced Events**: Organized by feature (`hex:*`, `character:*`)
 3. **Type Safety**: Full TypeScript support with compile-time checking
 4. **Real Consumers Only**: An event exists only when it has a cross-component subscriber; components with a direct line to a store call its actions directly
@@ -30,7 +30,7 @@ interface GridEventAPI {
 
 ```typescript
 interface GridEvents {
-  'hex:click': (hex: Hex) => void
+  'hex:click': (hex: Hex, event: MouseEvent) => void // the DOM event tells touch taps from mouse clicks
   'character:mouseenter': (hexId: number) => void
   'character:mouseleave': (hexId: number) => void
 }
@@ -40,13 +40,13 @@ interface GridEvents {
 
 ### Hex Events
 
-- **hex:click**: Emitted by GridTiles' invisible event-capture layer. GridManager's subscriber owns all click semantics in one decision tree: map-editor paint, the mobile tap flow (lift/drop/target), and desktop remove-or-pick (clicking a placed hero removes it; an empty placement tile opens the character picker)
+- **hex:click**: Emitted by GridTiles' invisible event-capture layer. GridManager's subscriber owns all click semantics in one decision tree: map-editor paint, the lifted-hero drop, the tap-target flow, and wide-layout remove-or-pick (a mouse click on a placed hero removes it; a touch tap does not, since hero taps belong to the character layer's lift flow; an empty placement tile opens the character picker while the team has an open slot)
 
 ### Character Events
 
 - **character:mouseenter** / **character:mouseleave**: Emitted by the GridCharacters overlay; GridTiles subscribes to drive the hover highlight on the tile beneath the character
 
-Character and artifact removal are not bus events: GridCharacters and GridArtifacts call `characterStore.removeCharacterFromHex()` / `artifactStore.removeArtifact()` directly, the same way they call their other store actions.
+Character and artifact removal are not bus events: GridCharacters and GridArtifacts call `ctx.remove()` / `ctx.removeArtifact()` on their injected `GridContext` directly, the same way they call its other operations.
 
 ## Implementation Patterns
 

@@ -70,7 +70,7 @@ The team half of the action row, in File-menu order (New, Save, Save as New), co
 
 A desktop card below the boards / a mobile pull-up sheet:
 
-- **Tabs**: characters, seasonal, and maps act on the active board; saved teams manages the library
+- **Tabs**: characters, seasonal, and maps act on the active board; saved teams manages the library and is the default tab
 - **Load**: applies a whole team (all boards, switching mode if needed) and collapses the sheet
 - **Badge**: the saved-teams tab shows the library count
 - **Library bar**: Import / Export / Delete all sit in the saved-teams panel, since all three act on the whole library rather than the boards. `SavedTeamsList` owns them outright (store calls plus its own toasts), so no handler threads back through `TeamsRoster`. Export and Delete all hide at zero teams; Import stays, because restoring into an empty library is its main use
@@ -92,11 +92,11 @@ TEAM_MODE_ORDER // picker order, ascending board count
 DEFAULT_TEAM_MODE = '5v5sl'
 ```
 
-- **Default maps**: seed fresh slates and pad short crafted links; 1v1/3v3/5v5 default every board to `arena1`, Supreme League uses the season's map list
+- **Default maps**: seed fresh slates and pad short crafted links; 1v1/3v3/5v5 default every board to `arena1`, Supreme League uses the season's map list (`FIVE_V_FIVE_DEFAULT_MAPS` in `/src/lib/maps.ts`)
 - **Defaults fingerprint**: each active slot records its mode's default maps at write time; changing the list (a new Supreme League season) invalidates the slot on next load: a deliberate hard reset, with saved teams untouched
 - **`t` is authoritative**: serialized tile states are self-sufficient (restore resets all tiles and replays `t`), so records referencing retired maps still restore, preview, and re-export; map configs are needed only for empty boards and the Maps-tab picker
 - **`resolveTeamMode(state)`**: a declared `mode` is honored only when its board count matches; otherwise the count decides (5 boards → Supreme League, else the smallest fitting mode)
-- **`normalizeTeamPayload`**: truncates/pads a payload to the mode's exact shape (teams-page ingress only; `/share` renders payloads as-is)
+- **`normalizeTeamPayload`**: truncates/pads a payload to the mode's exact shape and strips the `y` (synergy) section on modes without `allowSynergy`, since a crafted synergy unit would bypass the page-wide duplicate repair. Runs on every teams-page ingress (slot restore, saved-team load, `?g=`); `/share` renders payloads as-is
 - **Modes are add-only**: removing a mode key would orphan its slot and saved teams
 
 ## Per-Mode Persistence
@@ -116,12 +116,12 @@ stargazer.teams.saved.backup         an unknown-version library blob, preserved 
 
 1. Pause autosave, flush the old mode's slot
 2. Set + persist the new mode
-3. Restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults; exactly one rebuild, always (equal-count modes still differ in maps and state). A slot restore ignores the payload's display flags: view toggles are device prefs
+3. Normalize and restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults; exactly one rebuild, always (equal-count modes still differ in maps and state). A slot restore ignores the payload's display flags: view toggles are device prefs
 4. Clear board-qualified selection, re-assert page sizing
 5. Adopt the slot's `sourceId`, normalized through the library (unresolvable → null)
 6. Resume autosave, write the baseline
 
-A `?g=` link resolves + normalizes first, then applies through the same path with `sourceId = null`, overwriting the routed mode's slot (a shared link is nobody's saved team). A link that fails to decode or apply falls back to the saved slot, which autosave then cannot wipe.
+A `?g=` link resolves its mode first, then normalizes and applies through the same path with `sourceId = null`, overwriting the routed mode's slot (a shared link is nobody's saved team). A link that fails to decode or apply falls back to the saved slot, which autosave then cannot wipe.
 
 ## Saved-Team Library
 
@@ -154,7 +154,7 @@ Semantics wired in `TeamsView`:
 
 - **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
 - **Save**: updates the source team in place; with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
-- **Load**: switches to the team's mode, applies its content, and repoints `sourceId`; viewer display toggles stay untouched
+- **Load**: switches to the team's mode, applies its content (normalized like every ingress), and repoints `sourceId`; viewer display toggles stay untouched
 - **Loaded badge**: the card matching `sourceId` gets a border ring, the same provenance the unsaved-changes indicator reads
 - **Copy / Download**: exports the card's thumbnail as a PNG via `useThumbnailExport`, which serializes the boards' SVGs and rasterizes them onto one canvas (WebKit fails on DOM-snapshot capture of SVG content, and the vectors upscale losslessly to full-grid resolution)
 - **Preview**: clicking a card's thumbnail opens `TeamPreviewModal`, the same `TeamPreview` at modal scale (`large`) on the shared modal surface, a read-only look at the team without loading it
@@ -170,8 +170,8 @@ Semantics wired in `TeamsView`:
 
 - **Geometry cache**: hex polygons are memoized at module level per hex size, so a full library renders hundreds of boards from one polygon set
 - **Map-state cache**: baseline tile states are memoized per map key
-- **Portraits**: hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units); `clipPath` defs exist only for occupied hexes; companion ids resolve through `gameData.getCharacterImageNameById` (the skill's custom companion image or the main hero's portrait)
-- **Artifacts**: the ally/enemy ids from the record's `a` section, drawn as circle-clipped `<image>`s with a team-colored ring on GridArtifacts' host cells (the neighbours of hexes 1 and 45). Those cells fall in the empty corners of the hex grid's bounding box, so showing them costs no framing change. `TeamPreview` resolves the icons with ArtifactImage's local/remote split; an id that no longer resolves draws nothing
+- **Portraits**: hex-clipped `<image>`s with a team-colored ring (dot fallback for unresolvable units); `clipPath` defs exist only for occupied hexes; companion ids resolve through `gameData.getCharacterImageNameById` (the skill's custom companion image or the main hero's portrait); synergy units (`y`, local ids) resolve exactly like `c` entries
+- **Artifacts**: the ally/enemy ids from the record's `a` section, drawn as circle-clipped `<image>`s with a team-colored ring on the artifact host cells (`artifactHostHex` in `/src/lib/grid.ts`: left of hex 1, right of hex 45, the same cells `GridArtifacts` and artifact arrows anchor on). Those cells fall in the empty corners of the hex grid's bounding box, so showing them costs no framing change. `TeamPreview` resolves the icons with ArtifactImage's local/remote split; an id that no longer resolves draws nothing
 - **Tiles from `t`**: `TeamPreview` decodes a record once (`/src/lib/teams/preview.ts`) and renders each board from the record's own tile states, exactly what Load produces; the map-config baseline applies only when a board has no `t`
 - **Reuse**: `ArenaPreviewGrid` (Maps tab + Map Editor preset picker) renders through the same component with its square framing
 
