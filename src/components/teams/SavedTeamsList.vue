@@ -1,6 +1,7 @@
 <script setup lang="ts">
-/* The Saved Teams roster panel: header (count, cap warning, sort, mode filter,
-   search, and the library-wide Import / Export / Delete all) plus a card grid:
+/* The Saved Teams roster panel: header (count, cap warning, sort, mode and
+   one-side filters, search, and the library-wide Import / Export / Delete all)
+   plus a card grid:
    thumbnail, mode and Syn chips, inline-renamable name, relative updated time,
    and Load / Duplicate / Copy / Download / Delete actions. Destructive actions use
    the app's no-modal style: a two-step inline confirm that arms for a few
@@ -32,6 +33,7 @@ import {
 } from '@/lib/teams/modes'
 import { teamHasSynergy } from '@/lib/teams/preview'
 import { type SavedTeam } from '@/lib/teams/savedTeam'
+import { savedTeamSide } from '@/lib/teams/sideLoad'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { downloadBlob, timestampedName } from '@/utils/download'
@@ -83,6 +85,15 @@ const modeFiltered = computed(() =>
     : sorted.value.filter((team) => team.mode === modeFilter.value),
 )
 
+// Narrows to teams the Load menu can side-load (savedTeamSide: every unit on
+// one team). Like the mode filter, deliberately not persisted.
+const oneSideOnly = ref(false)
+const sideFiltered = computed(() =>
+  oneSideOnly.value
+    ? modeFiltered.value.filter((team) => savedTeamSide(team.data) !== null)
+    : modeFiltered.value,
+)
+
 // Matching itself (name hit with highlight snippet, hero hit at 2+ characters)
 // is the shared useSavedTeamSearch composable, also used by the Load menu.
 const searchVisible = computed(() => library.count > 1)
@@ -90,7 +101,7 @@ const {
   query: searchQuery,
   matchedHeroes,
   results: visibleTeams,
-} = useSavedTeamSearch(() => modeFiltered.value)
+} = useSavedTeamSearch(() => sideFiltered.value)
 // The box hides below 2 teams; hiding also resets the query (which matching
 // reads), so a leftover query can never strand the list on "no matches" with
 // no visible way to clear it, and the box can't reappear pre-filtered.
@@ -258,6 +269,17 @@ const actionTipText = computed((): string =>
             @click="modeFilter = key"
           >
             {{ key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey) }}
+          </button>
+        </div>
+        <div class="seg-group" role="group" :aria-label="i18n.t('app.one-side')">
+          <button
+            type="button"
+            :aria-pressed="oneSideOnly"
+            class="seg-btn"
+            :class="{ active: oneSideOnly }"
+            @click="oneSideOnly = !oneSideOnly"
+          >
+            {{ i18n.t('app.one-side') }}
           </button>
         </div>
         <input
@@ -476,6 +498,7 @@ const actionTipText = computed((): string =>
 .library-info {
   display: inline-flex;
   align-items: center;
+  flex: 1 1 auto;
   flex-wrap: wrap;
   gap: var(--spacing-sm);
 }
@@ -540,9 +563,11 @@ const actionTipText = computed((): string =>
   color: #fff;
 }
 
+/* Widen via max-width: a larger basis wraps the bar before the box can shrink. */
 .team-search {
-  flex: 0 1 150px;
+  flex: 1 1 120px;
   min-width: 70px;
+  max-width: 260px;
   margin-left: var(--spacing-sm);
   font: inherit;
   font-size: 0.8rem;

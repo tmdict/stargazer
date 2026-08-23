@@ -162,6 +162,7 @@ Semantics wired in `TeamsView`:
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
 - **Mode**: segments for All plus every key in `TEAM_MODE_ORDER`, always shown. Offering the full list rather than only the modes present keeps a segment from disappearing with its last team and stranding the selection; an empty mode reaches the same "no matches" state a query does. Narrows the list before the search query runs, and unlike Sort it is deliberately not persisted
+- **One-side**: a toggle after the mode segments, narrowing the list to teams the Load menu can side-load (`savedTeamSide`, every unit on one team) before the search query runs; like Mode, deliberately not persisted
 - **Search**: a filter in the library bar, shown only with 2+ teams (hiding it also clears the query, so it can't reappear pre-filtered). A card stays visible when the query hits its name (`renderSnippet` marks the hit in the title) or, at 2+ characters, a hero on its boards (`matchCharacterNames`, the roster search's multi-locale name index), whose hexes get a ring in the thumbnail. Phantimals and companion summons never match; per-record hero sets are memoized off the immutable `data` string. The matching lives in `useSavedTeamSearch`, shared with the Load menu
 
 ## Side Loading (Load Menu)
