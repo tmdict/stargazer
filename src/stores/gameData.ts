@@ -1,9 +1,8 @@
 import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
-import { decomposeUnitId } from '@/lib/characters/synergy'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -70,18 +69,12 @@ export const useGameDataStore = defineStore('gameData', () => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.range ?? 1
     }
-    // Synergy-band ids mirror the base namespace: decompose first, or a synergy
-    // main would take its own skill's companion branch (e.g. turret range).
-    const { localId } = decomposeUnitId(characterId)
-    if (localId >= COMPANION_ID_OFFSET) {
-      const mainCharacterId = localId % COMPANION_ID_OFFSET
-      const skill = getCharacterSkill(mainCharacterId)
-      if (skill?.companionRange !== undefined) {
-        return skill.companionRange
-      }
-      return characterRanges.value.get(mainCharacterId) ?? 1
+    const baseId = toBaseHeroId(characterId)
+    if (isCompanionUnitId(characterId)) {
+      const companionRange = getCharacterSkill(baseId)?.companionRange
+      if (companionRange !== undefined) return companionRange
     }
-    return characterRanges.value.get(localId) ?? 1
+    return characterRanges.value.get(baseId) ?? 1
   }
 
   const getCharacterById = (characterId: number): CharacterType | undefined => {
@@ -92,19 +85,15 @@ export const useGameDataStore = defineStore('gameData', () => {
     if (isPhantimalId(characterId)) {
       return getPhantimalById(characterId)?.name
     }
-    const { localId } = decomposeUnitId(characterId)
-    const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
-    const character = getCharacterById(actualId)
-    return character?.name
+    return getCharacterById(toBaseHeroId(characterId))?.name
   }
 
   // Portrait image name for a unit id: a companion uses its skill's static
   // companion image when one is defined (e.g. Zanie's turret), otherwise its
   // main hero's portrait, matching what the live grid renders.
   const getCharacterImageNameById = (characterId: number): string | undefined => {
-    const { localId } = decomposeUnitId(characterId)
-    if (!isPhantimalId(characterId) && localId >= COMPANION_ID_OFFSET) {
-      const custom = getCharacterSkill(localId % COMPANION_ID_OFFSET)?.companionImageModifier
+    if (isCompanionUnitId(characterId)) {
+      const custom = getCharacterSkill(toBaseHeroId(characterId))?.companionImageModifier
       if (custom) return custom
     }
     return getCharacterNameById(characterId)
@@ -120,22 +109,18 @@ export const useGameDataStore = defineStore('gameData', () => {
     return phantimals.value.find((phantimal) => phantimal.id === localId)
   }
 
-  // Resolves a grid unit's faction by ID, mapping companions to their main
-  // character and phantimals to their own faction.
+  // Resolves a grid unit's faction by ID, mapping companions and synergy copies
+  // to their base hero and phantimals to their own faction.
   const getCharacterFaction = (characterId: number): string | undefined => {
     if (isPhantimalId(characterId)) return getPhantimalById(characterId)?.faction
-    const { localId } = decomposeUnitId(characterId)
-    const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
-    return getCharacterById(actualId)?.faction
+    return getCharacterById(toBaseHeroId(characterId))?.faction
   }
 
-  // Resolves a grid unit's class by ID, mapping companions to their main
-  // character. Phantimals carry no class.
+  // Resolves a grid unit's class by ID, mapping companions and synergy copies
+  // to their base hero. Phantimals carry no class.
   const getCharacterClass = (characterId: number): string | undefined => {
     if (isPhantimalId(characterId)) return undefined
-    const { localId } = decomposeUnitId(characterId)
-    const actualId = localId >= COMPANION_ID_OFFSET ? localId % COMPANION_ID_OFFSET : localId
-    return getCharacterById(actualId)?.class
+    return getCharacterById(toBaseHeroId(characterId))?.class
   }
 
   // Safe accessors for images and icons

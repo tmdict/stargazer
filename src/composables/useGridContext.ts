@@ -30,7 +30,6 @@ import {
   canPlaceCharacterOnTeam,
   findCharacterHex,
   findTeamPhantimalHex,
-  findTeamSynergyHex,
   getCharacter,
   getCharacterCount,
   getCharacterPlacements,
@@ -38,8 +37,6 @@ import {
   getTilesWithCharacters,
   hasCharacter,
   isBaseHeroId,
-  isCharacterOnTeam,
-  resolvePlacement,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { PARAGON_MAX_LEVEL } from '@/lib/characters/paragon'
@@ -49,10 +46,13 @@ import {
   PHANTIMAL_FACTION_REQUIREMENT,
   requiredFactions,
 } from '@/lib/characters/phantimalFaction'
-import { executeAutoPlaceCharacter, executePlaceCharacter } from '@/lib/characters/place'
+import {
+  executeAutoPlaceCharacter,
+  executePlaceCharacter,
+  resolveReplacement,
+} from '@/lib/characters/place'
 import { executeClearAllCharacters, executeRemoveCharacter } from '@/lib/characters/remove'
 import { executeSwapCharacters } from '@/lib/characters/swap'
-import { toSynergyId } from '@/lib/characters/synergy'
 import { Grid, type GridTile } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
 import { Layout, POINTY, type Point } from '@/lib/layout'
@@ -316,24 +316,16 @@ export function createGridContext(
     if (isPhantimalId(characterId)) {
       return placePhantimal(targetHexId, characterId, team)
     }
-    const synergyOn = globals.synergy?.value ?? false
-    // Replacing an occupant frees the slot it fills (and, when the occupant is
-    // the synergy hero, the assist slot), so an occupied target resolves
-    // against the post-vacate board; an empty tile goes through the resolver.
-    // Mirrors canDropCharacter's roster leg so hover cues and drops agree.
-    if (hasCharacter(grid, targetHexId)) {
-      if (!isCharacterOnTeam(grid, characterId, team)) {
-        return place(targetHexId, characterId, team)
-      }
-      const slotHex = findTeamSynergyHex(grid, team)
-      if (synergyOn && (slotHex === null || slotHex === targetHexId)) {
-        return place(targetHexId, toSynergyId(characterId), team)
-      }
-      return false
-    }
-    const resolved = resolvePlacement(grid, characterId, team, synergyOn)
-    if (resolved === null) return false
-    return place(targetHexId, resolved, team)
+    // The same resolver as canDropCharacter's roster leg (an occupied target is
+    // a replace, judged post-vacate), so hover cues and drops agree.
+    const resolved = resolveReplacement(
+      grid,
+      characterId,
+      team,
+      targetHexId,
+      globals.synergy?.value ?? false,
+    )
+    return resolved !== null && place(targetHexId, resolved, team)
   }
 
   const setArtifact = (team: Team, artifactId: number): void => {

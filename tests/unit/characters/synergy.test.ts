@@ -9,8 +9,8 @@ import {
 } from '@/lib/characters/character'
 import { getMainCharacterId, isCompanionId } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
-import { isPhantimalId } from '@/lib/characters/phantimal'
-import { executePlaceCharacter } from '@/lib/characters/place'
+import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
+import { executePlaceCharacter, resolveReplacement } from '@/lib/characters/place'
 import { executeSwapCharacters } from '@/lib/characters/swap'
 import { decomposeUnitId, isSynergyHeroId, toSynergyId } from '@/lib/characters/synergy'
 import { Grid } from '@/lib/grid'
@@ -125,6 +125,64 @@ describe('resolvePlacement', () => {
     fillAllyTeam(grid, sm)
     expect(resolvePlacement(grid, 606, Team.ALLY, true)).toBe(toSynergyId(606))
     expect(resolvePlacement(grid, 606, Team.ALLY, false)).toBe(null)
+  })
+})
+
+describe('resolveReplacement', () => {
+  const PHRAESTO = 50
+  let grid: Grid
+  let sm: SkillManager
+
+  beforeEach(() => {
+    grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
+    sm = new SkillManager()
+  })
+
+  it('delegates an empty target to resolvePlacement', () => {
+    expect(resolveReplacement(grid, 601, Team.ALLY, 1, false)).toBe(601)
+  })
+
+  it('vacating a base hero frees its capacity slot', () => {
+    fillAllyTeam(grid, sm)
+    expect(resolveReplacement(grid, 606, Team.ALLY, 1, false)).toBe(606)
+  })
+
+  it('vacating the synergy hero frees the assist slot but no capacity', () => {
+    fillAllyTeam(grid, sm)
+    expect(executePlaceCharacter(grid, sm, 6, toSynergyId(606), Team.ALLY)).toBe(true)
+    expect(resolveReplacement(grid, 607, Team.ALLY, 6, true)).toBe(toSynergyId(607))
+    expect(resolveReplacement(grid, 607, Team.ALLY, 6, false)).toBe(null)
+  })
+
+  it('vacating a phantimal frees nothing', () => {
+    fillAllyTeam(grid, sm)
+    expect(executePlaceCharacter(grid, sm, 6, toPhantimalId(1), Team.ALLY)).toBe(true)
+    expect(resolveReplacement(grid, 606, Team.ALLY, 6, true)).toBe(toSynergyId(606))
+    expect(resolveReplacement(grid, 606, Team.ALLY, 6, false)).toBe(null)
+  })
+
+  it('a duplicate replacing another hero resolves to the synergy copy', () => {
+    expect(executePlaceCharacter(grid, sm, 1, 601, Team.ALLY)).toBe(true)
+    expect(executePlaceCharacter(grid, sm, 2, 602, Team.ALLY)).toBe(true)
+    expect(resolveReplacement(grid, 601, Team.ALLY, 2, true)).toBe(toSynergyId(601))
+    expect(resolveReplacement(grid, 601, Team.ALLY, 2, false)).toBe(null)
+  })
+
+  it('a hero dropped onto itself or its companion is a no-op', () => {
+    expect(executePlaceCharacter(grid, sm, 1, PHRAESTO, Team.ALLY)).toBe(true)
+    const companionHex = grid
+      .getAllTiles()
+      .find((tile) => tile.characterId === PHRAESTO + grid.companionIdOffset)!
+      .hex.getId()
+    expect(resolveReplacement(grid, PHRAESTO, Team.ALLY, 1, true)).toBe(null)
+    expect(resolveReplacement(grid, PHRAESTO, Team.ALLY, companionHex, true)).toBe(null)
+  })
+
+  it('a hero dropped onto its own synergy copy converts it to the base hero, given room', () => {
+    expect(executePlaceCharacter(grid, sm, 6, toSynergyId(606), Team.ALLY)).toBe(true)
+    expect(resolveReplacement(grid, 606, Team.ALLY, 6, true)).toBe(606)
+    fillAllyTeam(grid, sm)
+    expect(resolveReplacement(grid, 606, Team.ALLY, 6, true)).toBe(null)
   })
 })
 

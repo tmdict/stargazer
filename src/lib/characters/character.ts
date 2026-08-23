@@ -3,7 +3,7 @@ import { State } from '../types/state'
 import { Team } from '../types/team'
 import { isPhantimalId } from './phantimal'
 import { isPlaceholderId } from './placeholder'
-import { isSynergyHeroId, toSynergyId } from './synergy'
+import { decomposeUnitId, isSynergyHeroId, toSynergyId } from './synergy'
 
 // Character queries
 
@@ -73,6 +73,20 @@ export function isRealHeroId(characterId: number): boolean {
   return isBaseHeroId(characterId) && !isPlaceholderId(characterId)
 }
 
+// A skill-spawned companion in either band (base or synergy). The grid-free
+// twin of companion.ts's isCompanionId for surfaces that have no Grid at hand.
+export function isCompanionUnitId(unitId: number): boolean {
+  return decomposeUnitId(unitId).localId >= COMPANION_ID_OFFSET && !isPhantimalId(unitId)
+}
+
+// The hero a unit identifies as on every surface (name, art, faction, class):
+// a synergy copy or a companion in either band resolves to the base hero it
+// derives from. Phantimals have no base hero; callers branch on isPhantimalId
+// first.
+export function toBaseHeroId(unitId: number): number {
+  return decomposeUnitId(unitId).localId % COMPANION_ID_OFFSET
+}
+
 // Team management
 
 export function getOpposingTeam(team: Team): Team {
@@ -113,7 +127,7 @@ export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: T
   // The synergy hero replaces capacity and duplicate checks with its own cap of
   // one per team; its offset id keeps every duplicate check blind to it. Its
   // companions fall through to the normal companion rules.
-  if (isSynergyHeroId(characterId)) return findTeamSynergyHex(grid, team) === null
+  if (isSynergyHeroId(characterId)) return synergySlotFree(grid, team)
   const available = getAvailableTeamSize(grid, team)
   if (available <= 0) return false
   // Placeholders consume capacity like heroes but skip the duplicate check:
@@ -151,6 +165,12 @@ export function findTeamSynergyHex(grid: Grid, team: Team): number | null {
 
 export function synergySlotFree(grid: Grid, team: Team): boolean {
   return findTeamSynergyHex(grid, team) === null
+}
+
+// Whether any roster pick can still land on the team: a capacity slot, or the
+// assist slot while the Syn affordance is on. Gates the add-only pickers.
+export function teamHasOpenSlot(grid: Grid, team: Team, synergyOn: boolean): boolean {
+  return getAvailableTeamSize(grid, team) > 0 || (synergyOn && synergySlotFree(grid, team))
 }
 
 // Hex of the team's on-field phantimal, or null. Phantimals are capped at one per
