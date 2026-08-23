@@ -38,7 +38,7 @@ const gridStore = useGridStore()
 const library = useTeamLibrary()
 const { targetHexId, tabRequest, liftedHexId, clearTargets } = useSelectionState()
 
-const activeTab = ref('characters')
+const activeTab = ref('saved')
 const tabs = computed(() => [
   { key: 'characters', label: i18n.t('app.characters') },
   { key: 'seasonal', label: i18n.t('app.seasonal') },
@@ -49,18 +49,6 @@ const tabs = computed(() => [
     badge: library.count > 0 ? library.count : undefined,
   },
 ])
-
-// The roster TabView is eager (all panels mount at page load), but the saved
-// panel can hold hundreds of SVG thumbnails; mount it on first activation only
-// (sticky, so scroll/rename state survives later tab switches).
-const savedTabSeen = ref(false)
-watch(
-  activeTab,
-  (tab) => {
-    if (tab === 'saved') savedTabSeen.value = true
-  },
-  { immediate: true },
-)
 
 const sheetExpanded = ref(false)
 
@@ -117,7 +105,7 @@ const handleArenaSelected = (mapKey: string) => {
         </div>
       </template>
       <template #saved>
-        <SavedTeamsList v-if="savedTabSeen" :loaded-team-id @load="handleLoadTeam" />
+        <SavedTeamsList :loaded-team-id @load="handleLoadTeam" />
       </template>
     </TabView>
   </BottomSheet>
