@@ -257,6 +257,7 @@ defineExpose({
     <GridArtifacts
       :ally-artifact-id="ctx.artifacts.ally"
       :enemy-artifact-id="ctx.artifacts.enemy"
+      :show-grid-info="showGridInfo"
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
