@@ -150,7 +150,7 @@ Automatically select and track enemy targets:
 - **Unified API**: Composable targeting functions eliminate duplication
 - **Dynamic recalculation**: Updates when characters move
 - **Visual feedback**: Colored arrows instead of borders
-- **Flexible patterns**: Furthest/closest, same/opposing team, spiral search
+- **Flexible patterns**: Furthest, frontmost/rearmost, same/opposing team, spiral search
 - **Performance optimized**: Efficient grid queries and early termination
 
 See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implementation details.

@@ -54,9 +54,8 @@ Provides the base types and utilities used by both distance and ring modules:
 
 ### Distance-Based Targeting (`utils/distance.ts`)
 
-Selects targets by comparing distances from a reference point:
+Selects targets by distance from a reference point, or by formation end:
 
-- **CLOSEST**: Find nearest target (no hero caller today; Nara/Silvina spiral out from the symmetrical tile instead)
 - **FURTHEST**: Find furthest target (used by Dunlingr/Vala)
 - **REARMOST**: Find rearmost target by hex ID position (used by Bonnie, Evie)
 - **FRONTMOST**: Find frontmost target by hex ID position (used by Talene)
@@ -133,7 +132,7 @@ Visual feedback options:
        calculateTarget: (ctx) =>
          findTarget(ctx, {
            targetTeam: getOpposingTeam(ctx.team),
-           targetingMethod: TargetingMethod.CLOSEST,
+           targetingMethod: TargetingMethod.FURTHEST,
          }),
      }),
    )
