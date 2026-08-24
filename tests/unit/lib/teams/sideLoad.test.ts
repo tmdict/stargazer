@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
@@ -65,11 +65,13 @@ describe('savedTeamSide', () => {
   })
 
   it('rejects unit-less records (nothing to load) and corrupt team fields', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(savedTeamSide(encode({ boards: [{ m: 'arena1' }], mode: '1v1' }))).toBeNull()
     expect(
       savedTeamSide(encode({ boards: [{ m: 'arena1', c: [[1, 11, 3]] }], mode: '1v1' })),
     ).toBeNull()
     expect(savedTeamSide('not-a-record')).toBeNull()
+    warn.mockRestore()
   })
 })
 
@@ -144,6 +146,8 @@ describe('buildSideLoadPlan', () => {
       mode: '1v1',
     }
     expect(buildSideLoadPlan(encode(mixed), true)).toBeNull()
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(buildSideLoadPlan('not-a-record', true)).toBeNull()
+    warn.mockRestore()
   })
 })
