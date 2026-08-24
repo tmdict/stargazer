@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { executePlaceCharacter } from '@/lib/characters/place'
+import { executeRemoveCharacter } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
@@ -33,7 +34,7 @@ describe('ravion (Designated Duty)', () => {
       .map((a) => a.toHexId)
       .sort((a, b) => a - b)
 
-  it('targets the two smallest hex IDs on the ally team', () => {
+  it('targets the two smallest hex IDs on the ally team, retargeting as allies leave', () => {
     const ids = availableIds(State.AVAILABLE_ALLY)
     // Ravion at the largest ally tile so he is never his own rearmost
     expect(executePlaceCharacter(grid, skillManager, ids.at(-1)!, RAVION, Team.ALLY)).toBe(true)
@@ -42,6 +43,17 @@ describe('ravion (Designated Duty)', () => {
     }
 
     expect(arrowTargets(Team.ALLY)).toEqual([ids[0], ids[1]])
+
+    // Removal runs the skill's update path and shifts both arrows
+    expect(executeRemoveCharacter(grid, skillManager, ids[0]!)).toBe(true)
+    expect(arrowTargets(Team.ALLY)).toEqual([ids[1], ids[2]])
+  })
+
+  it('registers no target when no other ally exists', () => {
+    const ids = availableIds(State.AVAILABLE_ALLY)
+    expect(executePlaceCharacter(grid, skillManager, ids[0]!, RAVION, Team.ALLY)).toBe(true)
+
+    expect(skillManager.getSkillTarget(RAVION, Team.ALLY)).toBeUndefined()
   })
 
   it('targets the two largest hex IDs on the enemy team', () => {

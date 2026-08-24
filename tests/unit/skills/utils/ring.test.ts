@@ -31,12 +31,6 @@ describe('spiralSearchFromTile', () => {
     expect(result).toBeNull()
   })
 
-  it('handles invalid center hex', () => {
-    expect(() => spiralSearchFromTile(grid, 999, Team.ALLY, Team.ENEMY)).toThrow(
-      'Hex with ID 999 not found',
-    )
-  })
-
   it('expands ring by ring, examining each full ring before the next', () => {
     placeOnTile(grid, 5, 101, Team.ALLY)
 

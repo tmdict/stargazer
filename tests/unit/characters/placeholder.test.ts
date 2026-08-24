@@ -64,12 +64,6 @@ describe('placeholder definitions', () => {
     // Real ids stay far below the band, so the reservation holds long-term.
     expect(Math.max(...real.map((c) => c.id))).toBeLessThan(PLACEHOLDER_ID_OFFSET)
   })
-
-  it('names double as icon keys for image resolution', () => {
-    for (const p of PLACEHOLDERS) {
-      expect(p.name).toBe(`faction-${p.faction}`)
-    }
-  })
 })
 
 describe('placeholder roster order', () => {

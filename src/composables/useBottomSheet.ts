@@ -1,6 +1,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
+import { dynamicViewportHeight } from '@/utils/viewport'
 
 interface Options {
   /** Collapsed (peek) visible height, in px. */
@@ -44,7 +45,7 @@ export function useBottomSheet(opts: Options) {
     return Math.max(opts.peek, Math.min(expandedPx.value, base - dragDelta.value))
   })
   // Height shares the transform's basis so the collapsed peek is exactly `peek`px
-  // regardless of how CSS `vh` resolves (vh vs innerHeight diverge under mobile
+  // regardless of how CSS `vh` resolves (vh and the dynamic viewport diverge under mobile
   // toolbars / DevTools emulation, which otherwise hides the collapsed sheet).
   const sheetStyle = computed(() =>
     isMobile.value
@@ -230,7 +231,7 @@ export function useBottomSheet(opts: Options) {
   }
 
   function update() {
-    viewportH.value = window.innerHeight
+    viewportH.value = dynamicViewportHeight()
     isMobile.value = window.matchMedia(`(max-width: ${breakpoint}px)`).matches
     if (!isMobile.value) expanded.value = false
   }

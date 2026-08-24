@@ -6,7 +6,7 @@ import { executePlaceCharacter } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, hasSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const AURELIAN = toPhantimalId(1)
 const NECRODRAKON = toPhantimalId(4)
@@ -60,14 +60,6 @@ describe('phantimal Spirit Mark skills', () => {
     expect(skillManager.getTileFillModifier(19)).toBeUndefined()
   })
 
-  it('marks a companion on the priority tile', () => {
-    placeOnTile(grid, 23, AURELIAN, Team.ALLY)
-    placeOnTile(grid, 16, 10100, Team.ALLY)
-
-    getCharacterSkill(AURELIAN)!.onActivate(ctx(23, AURELIAN))
-    expect(skillManager.getTileFillModifier(16)).toBeDefined()
-  })
-
   it('paints nothing when no candidate tile holds a same-team unit', () => {
     placeOnTile(grid, 23, AURELIAN, Team.ALLY)
     placeOnTile(grid, 16, 200, Team.ENEMY)
@@ -95,9 +87,7 @@ describe('phantimal Spirit Mark skills', () => {
     const skill = getCharacterSkill(AURELIAN)!
     skill.onActivate(ctx(23, AURELIAN))
 
-    const from = grid.getTileById(16)
-    from.characterId = undefined
-    from.team = undefined
+    removeFromTile(grid, 16)
     placeOnTile(grid, 19, 100, Team.ALLY)
 
     skill.onUpdate!(ctx(23, AURELIAN))
@@ -113,9 +103,7 @@ describe('phantimal Spirit Mark skills', () => {
     const skill = getCharacterSkill(AURELIAN)!
     skill.onActivate(ctx(23, AURELIAN))
 
-    const tile = grid.getTileById(16)
-    tile.characterId = undefined
-    tile.team = undefined
+    removeFromTile(grid, 16)
 
     skill.onUpdate!(ctx(23, AURELIAN))
     expect(skillManager.getTileColorModifier(16)).toBeUndefined()

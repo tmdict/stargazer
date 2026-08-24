@@ -341,7 +341,11 @@ describe('binaryEncoder', () => {
   })
 
   describe('URL-safe encoding', () => {
+    // Lengths 1-3 cover every 6-bit padding remainder
     const testCases = [
+      new Uint8Array([1]),
+      new Uint8Array([1, 2]),
+      new Uint8Array([1, 2, 3]),
       new Uint8Array([0, 1, 2, 3]),
       new Uint8Array([255, 254, 253]),
       new Uint8Array(Array.from({ length: 100 }, (_, i) => i)),
@@ -358,21 +362,6 @@ describe('binaryEncoder', () => {
     it('handles empty input', () => {
       expect(bytesToUrlSafe(new Uint8Array())).toBe('')
       expect(urlSafeToBytes('')).toEqual(new Uint8Array())
-    })
-
-    it('handles padding correctly', () => {
-      // Test various lengths that require different padding
-      const bytes1 = new Uint8Array([1])
-      const bytes2 = new Uint8Array([1, 2])
-      const bytes3 = new Uint8Array([1, 2, 3])
-
-      const url1 = bytesToUrlSafe(bytes1)
-      const url2 = bytesToUrlSafe(bytes2)
-      const url3 = bytesToUrlSafe(bytes3)
-
-      expect(urlSafeToBytes(url1)).toEqual(bytes1)
-      expect(urlSafeToBytes(url2)).toEqual(bytes2)
-      expect(urlSafeToBytes(url3)).toEqual(bytes3)
     })
 
     it('returns null for strings outside the URL-safe alphabet', () => {

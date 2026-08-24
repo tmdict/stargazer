@@ -12,6 +12,15 @@ import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import {
+  ALLY_A,
+  ALLY_B,
+  ENEMY_A,
+  ENEMY_B,
+  KULU,
+  PHRAESTO,
+  PHRAESTO_COMPANION,
+} from '../fixtures/characters'
 
 /**
  * Tests for the grids store's cross-board actions: swapBoards, drop routing,
@@ -19,16 +28,6 @@ import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
  * spawns 30/33/34/36-45). Skills are code-registered, so Kulu/Phraesto behave
  * without loaded game data.
  */
-
-// Character ids with no registered skill (placement has no side effects).
-const ALLY_A = 11
-const ALLY_B = 12
-const ENEMY_A = 21
-const ENEMY_B = 22
-
-const PHRAESTO = 50
-const PHRAESTO_COMPANION = COMPANION_ID_OFFSET + PHRAESTO
-const KULU = 80 // cosmetic demolition zone: ally 18-24, enemy 22-28
 
 // (characterId, team) pairs on a board, order-independent (placement is random).
 const roster = (grid: Grid): { characterId: number; team: Team }[] =>
@@ -48,6 +47,14 @@ const rosterPayload = (characterId: number) => ({
   characterId,
 })
 
+// Fresh store with `count` arena1 boards; a/b are the first two contexts.
+const setupBoards = (count = 2) => {
+  const grids = useGrids()
+  grids.setGridCount(count)
+  const [a, b] = grids.contexts
+  return { grids, a: a!, b: b! }
+}
+
 beforeEach(() => {
   setActivePinia(createPinia())
 })
@@ -58,9 +65,7 @@ afterEach(() => {
 
 describe('useGrids.swapBoards', () => {
   it('exchanges the two boards rosters, keeping each unit on its own team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
 
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(a!.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
@@ -80,9 +85,7 @@ describe('useGrids.swapBoards', () => {
   })
 
   it('swaps each board artifacts, keeping the team side', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     a!.setArtifact(Team.ALLY, 3)
     a!.setArtifact(Team.ENEMY, 4)
     b!.setArtifact(Team.ALLY, 7)
@@ -97,8 +100,7 @@ describe('useGrids.swapBoards', () => {
   })
 
   it('makes the target board active', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
+    const { grids } = setupBoards()
     grids.setActive(0)
 
     grids.swapBoards(0, 1)
@@ -107,15 +109,12 @@ describe('useGrids.swapBoards', () => {
   })
 
   it('rejects a swap of a board with itself', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
+    const { grids } = setupBoards()
     expect(grids.swapBoards(1, 1)).toBe(false)
   })
 
   it('re-derives a cosmetic skill zone on the destination, leaving no ghost', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
 
     const before = a!.grid.getTileById(18).state
     expect(a!.place(1, KULU, Team.ALLY)).toBe(true)
@@ -137,9 +136,7 @@ describe('useGrids.swapBoards', () => {
 
   it('respawns a companion on the destination with none stranded on the source', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
 
     expect(a!.place(1, PHRAESTO, Team.ALLY)).toBe(true)
     expect(
@@ -161,9 +158,7 @@ describe('useGrids.swapBoards', () => {
   })
 
   it('round-trips each roster when swapped twice', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     a!.place(1, ALLY_A, Team.ALLY)
     a!.place(40, ENEMY_A, Team.ENEMY)
     b!.place(2, ALLY_B, Team.ALLY)
@@ -208,8 +203,7 @@ describe('useGrids.routeArtifactDrop', () => {
   })
 
   it('moves an artifact to another board on the same team and makes it active', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
+    const { grids } = setupBoards()
     grids.setActive(0)
     const [a, b] = grids.contexts
     a!.setArtifact(Team.ALLY, 3)
@@ -224,9 +218,7 @@ describe('useGrids.routeArtifactDrop', () => {
   })
 
   it('swaps same-team artifacts across boards', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     a!.setArtifact(Team.ALLY, 3)
     b!.setArtifact(Team.ALLY, 7)
 
@@ -239,9 +231,7 @@ describe('useGrids.routeArtifactDrop', () => {
   })
 
   it('rejects a cross-team drop that would duplicate an artifact on a team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     a!.setArtifact(Team.ALLY, 5)
     a!.setArtifact(Team.ENEMY, 5) // same artifact on both teams of board a (legal per-team)
     b!.setArtifact(Team.ENEMY, 9)
@@ -269,15 +259,13 @@ describe('useGrids.routeArtifactDrop', () => {
   })
 
   it('is a no-op when the source slot is empty', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [, b] = grids.contexts
-    b!.setArtifact(Team.ALLY, 7)
+    const { grids, b } = setupBoards()
+    b.setArtifact(Team.ALLY, 7)
 
     expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 1, Team.ALLY)).toBe(
       false,
     )
-    expect(b!.artifacts.ally).toBe(7)
+    expect(b.artifacts.ally).toBe(7)
   })
 
   it('is a no-op when the same artifact already occupies the target slot', () => {
@@ -296,9 +284,7 @@ describe('useGrids.routeArtifactDrop', () => {
 
 describe('useGrids.routeDrop cross-board uniqueness', () => {
   it('rejects a cross-board swap that would put a character on the same team twice', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(a!.place(40, ALLY_A, Team.ENEMY)).toBe(true) // same hero on both teams of board a
     expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
@@ -313,9 +299,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('allows a cross-board cross-team swap when uniqueness holds', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
 
@@ -326,9 +310,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('rejects a cross-board cross-team move that would duplicate a character on a team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(a!.place(40, ALLY_A, Team.ENEMY)).toBe(true)
 
@@ -340,9 +322,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('allows a cross-board cross-team move when uniqueness holds', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
 
     expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
@@ -352,9 +332,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('allows a cross-board same-team move', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
 
     expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 2)).toBe(true)
@@ -364,9 +342,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('allows swapping the same hero between its two legal cross-board placements', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(b!.place(41, ALLY_A, Team.ENEMY)).toBe(true)
     // The swap leaves global placement state unchanged, so distinct paragon
@@ -390,9 +366,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
 
   it('rejects a companion dragged to another board', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, PHRAESTO, Team.ALLY)).toBe(true)
     const companionHex = getTilesWithCharacters(a!.grid)
       .find((t) => t.characterId === PHRAESTO_COMPANION)!
@@ -405,9 +379,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('rejects a cross-board move into a full team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     // Fill b's ally team to BASE_TEAM_SIZE (5).
     for (const [hexId, id] of [
@@ -427,8 +399,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 
   it('makes the destination board active on a roster drop', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
+    const { grids } = setupBoards()
     grids.setActive(0)
 
     // Roster payload: no sourceGridId/sourceHexId.
@@ -442,9 +413,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
 
 describe('useGrids paragon carry-over', () => {
   it('carries paragon levels through a board swap', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     a!.setParagon(Team.ALLY, ALLY_A, 3)
     expect(b!.place(41, ENEMY_B, Team.ENEMY)).toBe(true)
@@ -459,9 +428,7 @@ describe('useGrids paragon carry-over', () => {
   })
 
   it('moves a paragon level with its hero to the destination board and team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     a!.setParagon(Team.ALLY, ALLY_A, 4)
 
@@ -472,9 +439,7 @@ describe('useGrids paragon carry-over', () => {
   })
 
   it('swaps paragon levels with the swapped heroes', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     a!.setParagon(Team.ALLY, ALLY_A, 2)
     expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
@@ -491,9 +456,7 @@ describe('useGrids paragon carry-over', () => {
 
 describe('useGrids.routeDrop same-board uniqueness', () => {
   it('rejects a same-board cross-team move that would duplicate a character on a team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(b!.place(41, ALLY_A, Team.ENEMY)).toBe(true)
 
@@ -506,9 +469,7 @@ describe('useGrids.routeDrop same-board uniqueness', () => {
   })
 
   it('rejects a same-board swap whose displaced unit would duplicate on a team', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(a!.place(40, ENEMY_A, Team.ENEMY)).toBe(true)
     expect(b!.place(2, ENEMY_A, Team.ALLY)).toBe(true)
@@ -538,8 +499,7 @@ describe('useGrids.routeDrop same-board uniqueness', () => {
 
 describe('useGrids synergy', () => {
   it('placeOnActive resolves a duplicate to the synergy copy only while armed', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
+    const { grids } = setupBoards(1)
     expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
 
     expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(false)
@@ -553,8 +513,7 @@ describe('useGrids synergy', () => {
   })
 
   it('placeOnActive routes an overflow pick on a full team into the slot', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
+    const { grids } = setupBoards(1)
     const heroes = [11, 12, 13, 14, 15]
     heroes.forEach((id) => expect(grids.placeOnActive(id, Team.ALLY)).toBe(true))
 
@@ -565,8 +524,7 @@ describe('useGrids synergy', () => {
   })
 
   it('setSynergy(false) removes both teams synergy units and their companions', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
+    const { grids } = setupBoards(1)
     grids.synergy = true
     expect(grids.placeOnActive(PHRAESTO, Team.ALLY)).toBe(true)
     expect(grids.placeOnActive(PHRAESTO, Team.ALLY)).toBe(true)
@@ -585,9 +543,7 @@ describe('useGrids synergy', () => {
   })
 
   it('routeDrop replaces the synergy hero on a full team with the new hero as the copy', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
     ;[11, 12, 13, 14, 15].forEach((id) => expect(grids.placeOnActive(id, Team.ALLY)).toBe(true))
     grids.synergy = true
     expect(grids.placeOnActive(16, Team.ALLY)).toBe(true)
@@ -609,9 +565,7 @@ describe('useGrids synergy', () => {
   })
 
   it('routeDrop treats a hero dropped onto its own tile as a no-op', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
     expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
     grids.synergy = true
     const hex = findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)!
@@ -622,8 +576,7 @@ describe('useGrids synergy', () => {
   })
 
   it('setGridCount re-derives the affordance from the rebuilt boards', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
+    const { grids } = setupBoards(1)
     grids.synergy = true
     grids.setGridCount(1)
     expect(grids.synergy).toBe(false)
@@ -643,9 +596,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('replaces the destination side at the saved hexes, leaving the other side alone', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
     expect(ctx.place(1, 11, Team.ALLY)).toBe(true)
     expect(ctx.place(40, 21, Team.ENEMY)).toBe(true)
 
@@ -671,9 +622,7 @@ describe('useGrids.loadTeamSide', () => {
 
   it("falls back to a random tile when the saved hex is not the destination team's", () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
 
     // Hex 40 is an enemy spawn on arena1, unplaceable for an ally unit.
     const result = grids.loadTeamSide(
@@ -688,9 +637,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('invert mirrors the formation 180 degrees onto the opposite team', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
 
     const result = grids.loadTeamSide(
       {
@@ -713,9 +660,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it("applies saved paragon, resets stale paragon, and swaps only the destination side's artifact", () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
     expect(ctx.place(1, 11, Team.ALLY)).toBe(true)
     ctx.setParagon(Team.ALLY, 11, 3)
     ctx.setArtifact(Team.ALLY, 5)
@@ -746,9 +691,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('scope active targets only the active board and skips page-wide duplicates', () => {
-    const grids = useGrids()
-    grids.setGridCount(2)
-    const [a, b] = grids.contexts
+    const { grids, a, b } = setupBoards()
     expect(a!.place(1, 11, Team.ALLY)).toBe(true)
     grids.setActive(1)
 
@@ -772,8 +715,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('maps saved board i onto live board i', () => {
-    const grids = useGrids()
-    grids.setGridCount(3)
+    const { grids } = setupBoards(3)
 
     grids.loadTeamSide(
       {
@@ -789,9 +731,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it("places the plan's phantimal on its saved hex", () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
 
     grids.loadTeamSide(
       {
@@ -807,9 +747,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('derives the Syn affordance from a loaded synergy hero', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
     expect(grids.synergy).toBe(false)
 
     grids.loadTeamSide(
@@ -823,9 +761,7 @@ describe('useGrids.loadTeamSide', () => {
 
   it('settles a spawned companion onto its saved hex so it cannot squat on a later main', () => {
     vi.spyOn(Math, 'random').mockReturnValue(0)
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
 
     // Phraesto's companion spawns at a random free ally tile, which without the
     // settle pass could be hex 10, the second main's saved tile; stamping there
@@ -854,9 +790,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('removes the destination artifact when the incoming board carries none', () => {
-    const grids = useGrids()
-    grids.setGridCount(1)
-    const ctx = grids.active!
+    const { grids, a: ctx } = setupBoards(1)
     ctx.setArtifact(Team.ALLY, 5)
     ctx.setArtifact(Team.ENEMY, 6)
 
@@ -870,8 +804,7 @@ describe('useGrids.loadTeamSide', () => {
   })
 
   it('strips the synergy unit when a 1v1 record loads into a mode without the Syn affordance', () => {
-    const grids = useGrids()
-    grids.setGridCount(5)
+    const { grids } = setupBoards(5)
     grids.setActive(2)
 
     // A 1v1 record saved with Syn on: base heroes in c plus the synergy hero

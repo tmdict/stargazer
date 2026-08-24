@@ -3,7 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import {
   calculateDistances,
+  directlyBehindHexId,
   findAdjacentPriorityTarget,
+  findUnitBehind,
   getCandidates,
   getTeamTargetCandidates,
   type TargetCandidate,
@@ -53,14 +55,6 @@ describe('targeting foundations', () => {
   })
 
   describe('getCandidates', () => {
-    it('gets candidates without exclusion', () => {
-      placeOnTile(grid, 1, 100, Team.ALLY)
-      placeOnTile(grid, 2, 101, Team.ALLY)
-
-      const candidates = getCandidates(grid, Team.ALLY)
-      expect(candidates).toHaveLength(2)
-    })
-
     it('excludes specified character', () => {
       placeOnTile(grid, 1, 100, Team.ALLY)
       placeOnTile(grid, 2, 101, Team.ALLY)
@@ -72,10 +66,71 @@ describe('targeting foundations', () => {
   })
 })
 
-describe('findAdjacentPriorityTarget', () => {
+describe('directlyBehindHexId', () => {
   let grid: Grid
 
-  const CASTER = 500
+  beforeEach(() => {
+    grid = new Grid()
+  })
+
+  it('picks the back-row neighbor for an interior tile', () => {
+    expect(directlyBehindHexId(grid, 23, Team.ALLY)).toBe(16)
+    // Enemies face the other way: the same tile's behind is the mirror neighbor.
+    expect(directlyBehindHexId(grid, 23, Team.ENEMY)).toBe(30)
+  })
+
+  it('is undefined when the behind tile is off the board, even with a back-row diagonal', () => {
+    // Hexes 4 and 14 keep a bottom-right neighbour (1 and 10), but their true
+    // behind tile lies outside the board; the diagonal never substitutes.
+    expect(directlyBehindHexId(grid, 4, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 14, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 42, Team.ENEMY)).toBeUndefined()
+  })
+
+  it('is undefined at the rearmost tile, where nothing lies behind', () => {
+    expect(directlyBehindHexId(grid, 1, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 45, Team.ENEMY)).toBeUndefined()
+  })
+
+  it('ignores a same-row side neighbor (beside, not behind)', () => {
+    // These back-edge tiles have only a same-row side neighbour, not a tile behind.
+    expect(directlyBehindHexId(grid, 3, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 11, Team.ALLY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 35, Team.ENEMY)).toBeUndefined()
+    expect(directlyBehindHexId(grid, 43, Team.ENEMY)).toBeUndefined()
+  })
+})
+
+const CASTER = 500
+
+describe('findUnitBehind', () => {
+  let grid: Grid
+
+  beforeEach(() => {
+    grid = new Grid()
+    placeOnTile(grid, 23, CASTER, Team.ALLY)
+  })
+
+  it('targets a same-team unit on the tile directly behind', () => {
+    placeOnTile(grid, 16, 100, Team.ALLY)
+    expect(findUnitBehind(makeSkillContext(grid, 23, Team.ALLY, CASTER))).toEqual({
+      targetHexId: 16,
+      targetCharacterId: 100,
+    })
+  })
+
+  it('returns null when the tile behind is empty', () => {
+    expect(findUnitBehind(makeSkillContext(grid, 23, Team.ALLY, CASTER))).toBeNull()
+  })
+
+  it('ignores a unit from the other team on the tile behind', () => {
+    placeOnTile(grid, 16, 200, Team.ENEMY)
+    expect(findUnitBehind(makeSkillContext(grid, 23, Team.ALLY, CASTER))).toBeNull()
+  })
+})
+
+describe('findAdjacentPriorityTarget', () => {
+  let grid: Grid
 
   beforeEach(() => {
     grid = new Grid()

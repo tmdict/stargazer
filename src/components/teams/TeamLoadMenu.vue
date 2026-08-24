@@ -32,6 +32,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type SideLoadOptions } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { clampX } from '@/utils/viewport'
 
 const { activeMode } = defineProps<{ activeMode: TeamModeKey }>()
 
@@ -59,14 +60,9 @@ const clampPanel = (): void => {
   const panel = panelRef.value
   const trigger = triggerRef.value
   if (!panel || !trigger) return
-  const margin = 8
   const rect = trigger.getBoundingClientRect()
-  const center = rect.left + rect.width / 2
-  const half = panel.offsetWidth / 2
-  if (center - half < margin) panelShift.value = margin - (center - half)
-  else if (center + half > window.innerWidth - margin) {
-    panelShift.value = window.innerWidth - margin - (center + half)
-  } else panelShift.value = 0
+  const left = rect.left + rect.width / 2 - panel.offsetWidth / 2
+  panelShift.value = clampX(left, panel.offsetWidth, 8) - left
 }
 
 const openMenu = async (): Promise<void> => {

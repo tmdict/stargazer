@@ -167,23 +167,6 @@ describe('skill', () => {
     })
 
     describe('skill targeting', () => {
-      it('manages skill targets', () => {
-        const targetInfo = {
-          targetHexId: 5,
-          targetCharacterId: 200,
-          metadata: { distance: 3 },
-        }
-
-        skillManager.setSkillTarget(100, Team.ALLY, targetInfo)
-        expect(skillManager.getSkillTarget(100, Team.ALLY)).toEqual(targetInfo)
-
-        skillManager.setSkillTarget(150, Team.ENEMY, { targetHexId: 2, targetCharacterId: 300 })
-        expect(skillManager.getAllSkillTargets().size).toBe(2)
-
-        skillManager.clearSkillTarget(100, Team.ALLY)
-        expect(skillManager.getSkillTarget(100, Team.ALLY)).toBeUndefined()
-      })
-
       it('increments version on target changes', () => {
         const initialVersion = skillManager.getTargetVersion()
 

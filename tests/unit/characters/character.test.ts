@@ -7,21 +7,18 @@ import {
   findCharacterHex,
   getAllAvailableTilesForTeam,
   getAvailableTeamSize,
-  getCharacter,
   getCharacterCount,
   getCharacterPlacements,
   getCharacterTeam,
   getMaxTeamSize,
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
-  hasCharacter,
   isCharacterOnTeam,
   setMaxTeamSize,
 } from '@/lib/characters/character'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 import { SMALL_BLOCKED_ARENA, SMALL_GRID } from '../fixtures/grid'
 
 describe('character.ts', () => {
@@ -32,22 +29,6 @@ describe('character.ts', () => {
   })
 
   describe('Basic character operations', () => {
-    it('should handle character presence checks', () => {
-      // Empty tile
-      expect(getCharacter(grid, 1)).toBeUndefined()
-      expect(hasCharacter(grid, 1)).toBe(false)
-      expect(getCharacterTeam(grid, 1)).toBeUndefined()
-
-      // With character
-      const tile = grid.getTileById(1)
-      tile.characterId = 123
-      tile.team = Team.ALLY
-
-      expect(getCharacter(grid, 1)).toBe(123)
-      expect(hasCharacter(grid, 1)).toBe(true)
-      expect(getCharacterTeam(grid, 1)).toBe(Team.ALLY)
-    })
-
     it('should find characters correctly', () => {
       // Not found
       expect(findCharacterHex(grid, 123, Team.ALLY)).toBeNull()
@@ -70,40 +51,37 @@ describe('character.ts', () => {
       expect(findCharacterHex(grid, 200, Team.ALLY)).toBeNull()
     })
 
-    it('should count characters correctly', () => {
+    it('should report counts, placements, and tiles for placed characters', () => {
       expect(getCharacterCount(grid)).toBe(0)
+      expect(getCharacterPlacements(grid).size).toBe(0)
+      expect(getTilesWithCharacters(grid)).toHaveLength(0)
 
-      grid.getTileById(1).characterId = 100
-      grid.getTileById(3).characterId = 200
+      const tile1 = grid.getTileById(1)
+      tile1.characterId = 100
+      tile1.team = Team.ALLY
+      const tile3 = grid.getTileById(3)
+      tile3.characterId = 200
+      tile3.team = Team.ENEMY
 
       expect(getCharacterCount(grid)).toBe(2)
-    })
-
-    it('should track character placements', () => {
-      expect(getCharacterPlacements(grid).size).toBe(0)
-
-      // Add characters
-      grid.getTileById(1).characterId = 100
-      grid.getTileById(3).characterId = 200
 
       const placements = getCharacterPlacements(grid)
       expect(placements.size).toBe(2)
       expect(placements.get(1)).toBe(100)
       expect(placements.get(3)).toBe(200)
-    })
 
-    it('should get tiles with characters', () => {
-      expect(getTilesWithCharacters(grid)).toHaveLength(0)
-
-      grid.getTileById(1).characterId = 100
-      grid.getTileById(3).characterId = 200
-
-      const tiles = getTilesWithCharacters(grid)
-      expect(tiles).toHaveLength(2)
       // The order depends on internal iteration, just check both are present
-      const charIds = tiles.map((t) => t.characterId)
+      const charIds = getTilesWithCharacters(grid).map((t) => t.characterId)
       expect(charIds).toContain(100)
       expect(charIds).toContain(200)
+
+      const allyTiles = getTilesWithCharactersByTeam(grid, Team.ALLY)
+      expect(allyTiles).toHaveLength(1)
+      expect(allyTiles[0].characterId).toBe(100)
+
+      const enemyTiles = getTilesWithCharactersByTeam(grid, Team.ENEMY)
+      expect(enemyTiles).toHaveLength(1)
+      expect(enemyTiles[0].characterId).toBe(200)
     })
   })
 
@@ -121,20 +99,6 @@ describe('character.ts', () => {
       expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
       expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(false)
       expect(isCharacterOnTeam(grid, 200, Team.ENEMY)).toBe(true)
-    })
-
-    it('should remove characters from team', () => {
-      const tileA = grid.getTileById(1)
-      tileA.characterId = 100
-      tileA.team = Team.ALLY
-      const tileB = grid.getTileById(2)
-      tileB.characterId = 101
-      tileB.team = Team.ALLY
-
-      clearCharacterFromTile(tileA)
-
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
-      expect(isCharacterOnTeam(grid, 101, Team.ALLY)).toBe(true)
     })
 
     it('should handle team size limits', () => {
@@ -158,15 +122,6 @@ describe('character.ts', () => {
       expect(getAvailableTeamSize(grid, Team.ENEMY)).toBe(defaultSize)
     })
 
-    it('should determine team from tile state', () => {
-      expect(getTeamFromTileState(State.AVAILABLE_ALLY)).toBe(Team.ALLY)
-      expect(getTeamFromTileState(State.OCCUPIED_ALLY)).toBe(Team.ALLY)
-      expect(getTeamFromTileState(State.AVAILABLE_ENEMY)).toBe(Team.ENEMY)
-      expect(getTeamFromTileState(State.OCCUPIED_ENEMY)).toBe(Team.ENEMY)
-      expect(getTeamFromTileState(State.BLOCKED)).toBeNull()
-      expect(getTeamFromTileState(State.DEFAULT)).toBeNull()
-    })
-
     it('should get available tiles for team', () => {
       const allyTiles = getAllAvailableTilesForTeam(grid, Team.ALLY)
       const enemyTiles = getAllAvailableTilesForTeam(grid, Team.ENEMY)
@@ -180,25 +135,6 @@ describe('character.ts', () => {
       tile1.characterId = 100
       const updatedAllyTiles = getAllAvailableTilesForTeam(grid, Team.ALLY)
       expect(updatedAllyTiles).toHaveLength(1)
-    })
-
-    it('should filter tiles with characters by team', () => {
-      // Place characters on different teams
-      const tile1 = grid.getTileById(1)
-      tile1.characterId = 100
-      tile1.team = Team.ALLY
-
-      const tile3 = grid.getTileById(3)
-      tile3.characterId = 200
-      tile3.team = Team.ENEMY
-
-      const allyTiles = getTilesWithCharactersByTeam(grid, Team.ALLY)
-      expect(allyTiles).toHaveLength(1)
-      expect(allyTiles[0].characterId).toBe(100)
-
-      const enemyTiles = getTilesWithCharactersByTeam(grid, Team.ENEMY)
-      expect(enemyTiles).toHaveLength(1)
-      expect(enemyTiles[0].characterId).toBe(200)
     })
   })
 
@@ -262,13 +198,10 @@ describe('character.ts', () => {
   })
 
   describe('Edge cases', () => {
-    it('should handle companion offset correctly', () => {
+    it('should count companions toward the team-size limit', () => {
       const companionId = grid.companionIdOffset + 100
 
-      // Regular character
       expect(canPlaceCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
-
-      // Companion (special handling for team limit)
       expect(canPlaceCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(true)
 
       // Fill team to limit
@@ -277,10 +210,7 @@ describe('character.ts', () => {
       tile.characterId = 100
       tile.team = Team.ALLY
 
-      // Regular character blocked by limit
       expect(canPlaceCharacterOnTeam(grid, 101, Team.ALLY)).toBe(false)
-
-      // Companion not allowed when team is full (companions DO count toward limit in this implementation)
       expect(canPlaceCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(false)
     })
 

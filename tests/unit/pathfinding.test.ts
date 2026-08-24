@@ -43,6 +43,13 @@ describe('pathfinding', () => {
 
   const pathIds = (path: Hex[]) => path.map((h) => grid.getTile(h).hex.getId())
 
+  const occupy = (hexId: number, team: Team, characterId?: number) => {
+    const tile = grid.getTileById(hexId)
+    tile.team = team
+    if (characterId) tile.characterId = characterId
+    return tile
+  }
+
   describe('findPathAStar', () => {
     it('finds path between adjacent hexes', () => {
       const start = grid.getHexById(1)
@@ -137,13 +144,6 @@ describe('pathfinding', () => {
   })
 
   describe('findClosestTarget', () => {
-    const occupy = (hexId: number, team: Team, characterId?: number) => {
-      const tile = grid.getTileById(hexId)
-      tile.team = team
-      if (characterId) tile.characterId = characterId
-      return tile
-    }
-
     it('finds closest target for melee unit', () => {
       const sourceTile = occupy(1, Team.ALLY)
       const targetTile = occupy(6, Team.ENEMY, 100)
@@ -223,21 +223,10 @@ describe('pathfinding', () => {
 
   describe('getClosestTargetMap', () => {
     it('creates map of closest enemies for ally team', () => {
-      const ally1 = grid.getTileById(1)
-      ally1.team = Team.ALLY
-      ally1.characterId = 1
-
-      const ally2 = grid.getTileById(2)
-      ally2.team = Team.ALLY
-      ally2.characterId = 2
-
-      const enemy1 = grid.getTileById(6)
-      enemy1.team = Team.ENEMY
-      enemy1.characterId = 100
-
-      const enemy2 = grid.getTileById(7)
-      enemy2.team = Team.ENEMY
-      enemy2.characterId = 101
+      const ally1 = occupy(1, Team.ALLY, 1)
+      const ally2 = occupy(2, Team.ALLY, 2)
+      const enemy1 = occupy(6, Team.ENEMY, 100)
+      const enemy2 = occupy(7, Team.ENEMY, 101)
 
       const tilesWithCharacters = [ally1, ally2, enemy1, enemy2]
       const result = getClosestTargetMap(tilesWithCharacters, Team.ALLY, Team.ENEMY, getTile)
@@ -250,14 +239,8 @@ describe('pathfinding', () => {
     })
 
     it('consults custom ranges instead of the default melee range', () => {
-      const ally = grid.getTileById(1)
-      ally.team = Team.ALLY
-      ally.characterId = 1
-
-      const enemy = grid.getTileById(5)
-      enemy.team = Team.ENEMY
-      enemy.characterId = 100
-
+      const ally = occupy(1, Team.ALLY, 1)
+      const enemy = occupy(5, Team.ENEMY, 100)
       const tilesWithCharacters = [ally, enemy]
 
       // Hex 5 is direct distance 2: melee range needs one move

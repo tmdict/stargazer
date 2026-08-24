@@ -32,6 +32,34 @@ export default defineConfigWithVueTs(
     },
   },
   {
+    // window.innerWidth/innerHeight include classic scrollbars and track
+    // mobile browser chrome, so overlay code must not read them directly;
+    // utils/viewport owns every window-size read and names each intent.
+    files: ['src/**/*.{ts,vue}'],
+    ignores: ['src/utils/viewport.ts'],
+    rules: {
+      'no-restricted-properties': [
+        'error',
+        {
+          object: 'window',
+          property: 'innerWidth',
+          message: 'Import from @/utils/viewport instead (viewportWidth, clampX, scrollbarGutter).',
+        },
+        {
+          object: 'window',
+          property: 'innerHeight',
+          message:
+            'Import from @/utils/viewport instead (viewportHeight, clampY, dynamicViewportHeight).',
+        },
+      ],
+      'no-restricted-globals': [
+        'error',
+        { name: 'innerWidth', message: 'Import from @/utils/viewport instead.' },
+        { name: 'innerHeight', message: 'Import from @/utils/viewport instead.' },
+      ],
+    },
+  },
+  {
     // Content files are dynamically-loaded modules (via import.meta.glob),
     // not reusable components referenced by name in templates
     files: ['src/content/**/*.vue'],

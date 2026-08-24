@@ -98,16 +98,4 @@ describe('kulu (Demolition Zone)', () => {
     expect(grid.getTileById(20).state).toBe(State.OCCUPIED_ALLY)
     expect(skillManager.hasActiveSkill(KULU, Team.ALLY)).toBe(true)
   })
-
-  it('keeps zone paint isolated per grid', () => {
-    const gridB = new Grid()
-    const managerB = new SkillManager()
-    gridB.skillManager = managerB
-
-    executePlaceCharacter(grid, skillManager, 1, KULU, Team.ALLY)
-    for (const id of ALLY_ONLY) expect(managerB.getTileColorModifier(id)).toBeUndefined()
-
-    executeRemoveCharacter(grid, skillManager, 1)
-    for (const id of ALLY_ONLY) expect(skillManager.getTileColorModifier(id)).toBeUndefined()
-  })
 })

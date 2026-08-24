@@ -13,26 +13,14 @@ import type { TeamModeKey } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
+import { stubLocalStorage } from '../fixtures/storage'
 
-/* Per-mode ActiveSlot persistence: slot routing, envelope round-trips, pause
- * semantics, and legacy-key cleanup. Runs headless: node env + in-memory
- * localStorage stub, SSR flag off so the storage branches execute. */
+/* Per-mode ActiveSlot persistence: slot routing, envelope round-trips, and
+ * pause semantics. Runs headless: node env + in-memory localStorage stub,
+ * SSR flag off so the storage branches execute. */
 
-const storage = new Map<string, string>()
-const setItemSpy = vi.fn((key: string, value: string) => {
-  storage.set(key, value)
-})
-
-function stubStorage() {
-  storage.clear()
-  setItemSpy.mockClear()
-  vi.stubGlobal('localStorage', {
-    getItem: (key: string) => storage.get(key) ?? null,
-    setItem: setItemSpy,
-    removeItem: (key: string) => storage.delete(key),
-    clear: () => storage.clear(),
-  })
-}
+let storage: Map<string, string>
+let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 
 const FLAGS = () => ({ showGridInfo: true, showSkills: false })
 
@@ -42,7 +30,7 @@ const readEnvelope = (mode: TeamModeKey): ActiveSlot =>
 describe('useTeamsPersistence', () => {
   beforeEach(() => {
     vi.stubEnv('SSR', false)
-    stubStorage()
+    ;({ storage, setItemSpy } = stubLocalStorage())
     setActivePinia(createPinia())
   })
 
@@ -151,7 +139,7 @@ describe('useTeamsPersistence', () => {
 describe('teams display prefs', () => {
   beforeEach(() => {
     vi.stubEnv('SSR', false)
-    stubStorage()
+    ;({ storage, setItemSpy } = stubLocalStorage())
   })
 
   afterEach(() => {

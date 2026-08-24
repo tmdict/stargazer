@@ -2,7 +2,9 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it, vi, type MockInstance } from 'vitest'
 
 import { useGridSwap } from '@/composables/useGridSwap'
+import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
+import { ALLY_A } from '../fixtures/characters'
 
 // Minimal pointer events: startFromButton reads button + coords + stopPropagation; the
 // overlay handlers read only coords.
@@ -15,6 +17,7 @@ const TARGET = 2
 const OTHER = 3
 
 describe('useGridSwap target selection', () => {
+  let grids: ReturnType<typeof useGrids>
   let swap: ReturnType<typeof useGridSwap>
   let swapBoards: MockInstance
 
@@ -26,9 +29,12 @@ describe('useGridSwap target selection', () => {
 
   beforeEach(() => {
     setActivePinia(createPinia())
+    grids = useGrids()
+    grids.setGridCount(4) // real boards for SOURCE/TARGET/OTHER
     swap = useGridSwap()
     swap.cancel() // clear the module-level singleton between tests
-    swapBoards = vi.spyOn(useGrids(), 'swapBoards').mockImplementation(() => true)
+    // Spy only: the real swapBoards runs, so commits move real board content
+    swapBoards = vi.spyOn(grids, 'swapBoards')
   })
 
   describe('tap layout (two-step)', () => {
@@ -42,10 +48,19 @@ describe('useGridSwap target selection', () => {
     })
 
     it('commits on a second tap of the previewed target', () => {
+      grids.contexts[SOURCE]!.place(1, ALLY_A, Team.ALLY)
+
       tap(TARGET)
       tap(TARGET)
+
       expect(swapBoards).toHaveBeenCalledWith(SOURCE, TARGET)
       expect(swap.isSwapping.value).toBe(false)
+      // The swap really happened: the unit now lives on the target board
+      // (swapBoards re-places rosters, so only membership is stable)
+      const onBoard = (boardId: number) =>
+        grids.contexts[boardId]!.grid.getAllTiles().some((tile) => tile.characterId === ALLY_A)
+      expect(onBoard(SOURCE)).toBe(false)
+      expect(onBoard(TARGET)).toBe(true)
     })
 
     it('moves the preview when a different board is tapped', () => {
