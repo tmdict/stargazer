@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { teamHasSynergy } from '@/lib/teams/preview'
 import { Team } from '@/lib/types/team'
@@ -32,6 +32,8 @@ describe('teamHasSynergy', () => {
   })
 
   it('is false for undecodable data', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     expect(teamHasSynergy('not-a-record')).toBe(false)
+    warn.mockRestore()
   })
 })

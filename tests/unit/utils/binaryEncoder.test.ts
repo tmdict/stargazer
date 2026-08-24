@@ -386,6 +386,7 @@ describe('synergy section', () => {
   })
 
   it('validates synergy entries and caps the count at the field maximum', () => {
+    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const good: number[][] = Array.from({ length: 20 }, (_, i) => [i + 1, 100 + i, 1])
     const bad: number[][] = [
       [0, 50, 1],
@@ -396,5 +397,7 @@ describe('synergy section', () => {
     const validated = validateGridState({ y: [...bad, ...good] })
     expect(validated.y).toHaveLength(15)
     expect(validated.y![0]).toEqual([1, 100, 1])
+    expect(consoleSpy).toHaveBeenCalled()
+    consoleSpy.mockRestore()
   })
 })
