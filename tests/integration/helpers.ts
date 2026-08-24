@@ -12,13 +12,12 @@ import { Team } from '@/lib/types/team'
  * caster tiles with the expected target.
  */
 
+// The JSON fixtures carry extra descriptive keys (testName, team, notes);
+// only the fields read by the suites are typed here.
 export interface TargetingTestFile {
-  testName: string
   testSetup: {
     arena: string // roman numeral, e.g. "I" → arena1
-    team: string
     positions: number[]
-    notes?: string
   }
   testCases: {
     characterTile: number

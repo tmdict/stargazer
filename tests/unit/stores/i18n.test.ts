@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import type { LocaleDictionary } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
+import { stubLocalStorage } from '../fixtures/storage'
 
 const FIXTURE: LocaleDictionary = {
   app: {
@@ -26,13 +27,7 @@ vi.mock('@/utils/dataLoader', () => ({
 // window.location.search on creation. Stub minimal in-memory shims since the
 // project runs unit tests in the node environment without jsdom.
 function stubDomGlobals() {
-  const storage = new Map<string, string>()
-  vi.stubGlobal('localStorage', {
-    getItem: (key: string) => storage.get(key) ?? null,
-    setItem: (key: string, value: string) => storage.set(key, value),
-    removeItem: (key: string) => storage.delete(key),
-    clear: () => storage.clear(),
-  })
+  stubLocalStorage()
   vi.stubGlobal('window', { location: { search: '' } })
   vi.stubGlobal('document', { documentElement: { lang: '' } })
 }
@@ -123,7 +118,10 @@ describe('i18nStore', () => {
 
     it('initializeLocale applies the saved preference without re-persisting', () => {
       localStorage.setItem('stargazer.locale', 'zh')
+      // The fixture's setItem is already a mock, so spyOn returns it with the
+      // seeding call recorded; only calls after this point matter
       const spy = vi.spyOn(localStorage, 'setItem')
+      spy.mockClear()
 
       store.initializeLocale()
 

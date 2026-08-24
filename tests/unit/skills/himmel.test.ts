@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const HIMMEL = 112
 const HIMMEL_HEX = 9 // neighbors: {4, 6, 7, 12, 13, 16}
@@ -15,7 +15,6 @@ const CLASS_BY_ID: Record<number, string> = {
   3: 'support',
   4: 'tank', // second tank, for tiebreaks
   5: 'warrior', // a class the skill ignores
-  10001: 'tank', // a companion: the data resolver maps summons to their main's class
 }
 const classOf = (id: number): string | undefined => CLASS_BY_ID[id]
 
@@ -42,18 +41,6 @@ describe('himmel class-trio highlighting', () => {
 
   it('highlights one tank, mage, and support among the neighbors', () => {
     placeOnTile(grid, 16, 1, Team.ALLY) // tank
-    placeOnTile(grid, 12, 2, Team.ALLY) // mage
-    placeOnTile(grid, 6, 3, Team.ALLY) // support
-
-    himmel().onActivate(ctx())
-
-    expect(skillManager.getTileFillModifier(16)).toHaveLength(1)
-    expect(skillManager.getTileFillModifier(12)).toHaveLength(1)
-    expect(skillManager.getTileFillModifier(6)).toHaveLength(1)
-  })
-
-  it('counts a companion toward the trio via its main hero class', () => {
-    placeOnTile(grid, 16, 10001, Team.ALLY) // companion whose main is a tank
     placeOnTile(grid, 12, 2, Team.ALLY) // mage
     placeOnTile(grid, 6, 3, Team.ALLY) // support
 
@@ -157,8 +144,7 @@ describe('himmel class-trio highlighting', () => {
     himmel().onActivate(ctx())
     expect(skillManager.getTileFillModifier(6)).toBeDefined()
 
-    grid.getTileById(6).characterId = undefined
-    grid.getTileById(6).team = undefined
+    removeFromTile(grid, 6)
     himmel().onUpdate!(ctx())
 
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()

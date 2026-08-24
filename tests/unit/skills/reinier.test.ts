@@ -4,7 +4,7 @@ import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const REINIER = 31
 const REINIER_HEX = 23
@@ -70,8 +70,7 @@ describe('reinier tile highlighting', () => {
     reinier().onActivate(ctx())
     expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeDefined()
 
-    grid.getTileById(enemyHex).characterId = undefined
-    grid.getTileById(enemyHex).team = undefined
+    removeFromTile(grid, enemyHex)
     reinier().onUpdate!(ctx())
 
     expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeUndefined()

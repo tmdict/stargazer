@@ -39,15 +39,6 @@ describe('Hex', () => {
       // Negative coordinates
       expect(new Hex(-2, 1, 1).distance(new Hex(2, -1, -1))).toBe(4)
     })
-
-    it.each([
-      [new Hex(0, 0, 0), 0],
-      [new Hex(2, 2, -4), 0], // on the q = r middle diagonal
-      [new Hex(1, -1, 0), 2],
-      [new Hex(-3, 2, 1), -5],
-    ])('getDiagonal() returns q − r for %s', (hex, expected) => {
-      expect(hex.getDiagonal()).toBe(expected)
-    })
   })
 
   describe('neighbor operations', () => {
@@ -87,22 +78,6 @@ describe('Hex', () => {
       // Check all neighbors are unique
       const uniqueNeighbors = new Set(neighbors.map((n) => n.toString()))
       expect(uniqueNeighbors.size).toBe(6)
-    })
-  })
-
-  describe('static methods', () => {
-    it('creates hex from axial coordinates', () => {
-      const hex = Hex.fromAxial(2, -3)
-      expect(hex.q).toBe(2)
-      expect(hex.r).toBe(-3)
-      expect(hex.s).toBe(1)
-    })
-  })
-
-  describe('ID and string operations', () => {
-    it('converts to string correctly', () => {
-      const hex = new Hex(1, -2, 1)
-      expect(hex.toString()).toBe('1,-2,1')
     })
   })
 

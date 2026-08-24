@@ -2,6 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
+import { clampX, clampY } from '@/utils/viewport'
 
 // Shared chrome for the on-grid selection popups (character / artifact pickers):
 // a fixed-positioned, click-outside-dismissing panel. Consumers supply the grid
@@ -26,13 +27,9 @@ const reposition = () => {
   const el = popupRef.value
   if (!el) return
   const { width, height } = el.getBoundingClientRect()
-  // clientWidth/Height exclude the scrollbar; innerWidth/Height include it, which
-  // would let a right-clamped panel slip under the vertical scrollbar.
-  const maxX = document.documentElement.clientWidth - width - VIEWPORT_MARGIN
-  const maxY = document.documentElement.clientHeight - height - VIEWPORT_MARGIN
   coords.value = {
-    x: Math.max(VIEWPORT_MARGIN, Math.min(props.position.x, maxX)),
-    y: Math.max(VIEWPORT_MARGIN, Math.min(props.position.y, maxY)),
+    x: clampX(props.position.x, width, VIEWPORT_MARGIN),
+    y: clampY(props.position.y, height, VIEWPORT_MARGIN),
   }
 }
 

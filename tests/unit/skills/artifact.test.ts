@@ -42,7 +42,7 @@ describe('artifact targeting', () => {
     expect(artifactTargetArrows(grid, Team.ALLY, ENLIGHTENING)).toEqual([])
   })
 
-  it('counts phantimals and companions as units', () => {
+  it('counts a phantimal as a unit', () => {
     placeOnTile(grid, 2, toPhantimalId(1), Team.ALLY)
     expect(targetHexIds(grid, Team.ALLY, ENLIGHTENING)).toEqual([2])
   })

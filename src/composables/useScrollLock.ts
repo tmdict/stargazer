@@ -1,5 +1,7 @@
 import { onBeforeUnmount, watch, type Ref } from 'vue'
 
+import { scrollbarGutter } from '@/utils/viewport'
+
 // Locks page scroll while `active` is true, for modal overlays.
 //
 // Two strategies, chosen per device:
@@ -39,7 +41,7 @@ function lock(): void {
       style.left = '0'
       style.right = '0'
     } else {
-      const gutter = window.innerWidth - root.clientWidth
+      const gutter = scrollbarGutter()
       root.style.overflow = 'hidden'
       if (gutter > 0) document.body.style.paddingRight = `${gutter}px`
     }

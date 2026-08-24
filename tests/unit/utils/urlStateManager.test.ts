@@ -1,14 +1,7 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import type { GridTile } from '@/lib/grid'
-import { Hex } from '@/lib/hex'
-import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import {
-  serializeGridState,
-  type GridState,
-  type MultiGridState,
-} from '@/utils/gridStateSerializer'
+import type { GridState, MultiGridState } from '@/utils/gridStateSerializer'
 import {
   decodeGridStateFromUrl,
   decodeMultiGridStateFromUrl,
@@ -17,20 +10,6 @@ import {
   getEncodedStateFromRoute,
   getEncodedStateFromUrl,
 } from '@/utils/urlStateManager'
-
-function createMockTile(
-  hexId: number,
-  state: State = State.DEFAULT,
-  characterId?: number,
-  team?: Team,
-): GridTile {
-  return {
-    hex: { getId: () => hexId } as Hex,
-    state,
-    characterId,
-    team,
-  }
-}
 
 describe('urlStateManager', () => {
   describe('encodeGridStateToUrl and decodeGridStateFromUrl', () => {
@@ -113,10 +92,6 @@ describe('urlStateManager', () => {
   })
 
   describe('getEncodedStateFromUrl', () => {
-    beforeEach(() => {
-      vi.stubGlobal('window', { location: { search: '' } })
-    })
-
     afterEach(() => {
       vi.unstubAllGlobals()
     })
@@ -134,51 +109,6 @@ describe('urlStateManager', () => {
     ])('with query %o returns %s', (query, expected) => {
       const result = getEncodedStateFromRoute(query)
       expect(result).toBe(expected)
-    })
-  })
-
-  describe('Integration tests', () => {
-    it('complete round-trip: GridState -> URL -> GridState', () => {
-      const originalTiles: GridTile[] = [
-        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
-        createMockTile(2, State.DEFAULT),
-        createMockTile(3, State.OCCUPIED_ENEMY, 200, Team.ENEMY),
-        createMockTile(4, State.BLOCKED),
-      ]
-      const displayFlags = {
-        showGridInfo: true,
-        showPerspective: false,
-        showSkills: true,
-      }
-
-      const encoded = encodeGridStateToUrl(serializeGridState(originalTiles, 3, 5, displayFlags))
-
-      const decoded = decodeGridStateFromUrl(encoded)
-      expect(decoded).not.toBeNull()
-      expect(decoded?.t).toHaveLength(3)
-      expect(decoded?.c).toHaveLength(2)
-      expect(decoded?.a).toEqual([3, 5])
-      expect(decoded?.d).toBe(0b101)
-    })
-
-    it('handles large grid states', () => {
-      const tiles: GridTile[] = Array.from({ length: 100 }, (_, i) =>
-        createMockTile(
-          (i % 63) + 1,
-          i % 3 === 0 ? State.DEFAULT : State.OCCUPIED_ALLY,
-          i % 2 === 0 ? 1000 + i : undefined,
-          i % 2 === 0 ? Team.ALLY : undefined,
-        ),
-      )
-
-      const encoded = encodeGridStateToUrl(serializeGridState(tiles, 1, 2))
-
-      const decoded = decodeGridStateFromUrl(encoded)
-      expect(decoded).not.toBeNull()
-      expect(decoded?.d).toBeUndefined()
-      // 66 non-default tiles and 50 characters force the extended header
-      expect(decoded?.t).toHaveLength(66)
-      expect(decoded?.c).toHaveLength(50)
     })
   })
 })

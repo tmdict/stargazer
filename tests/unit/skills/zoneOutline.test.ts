@@ -6,19 +6,22 @@ import { SKILL_COLORS } from '@/lib/skills/utils/colors'
 import { Team } from '@/lib/types/team'
 import { placeOnTile } from '../fixtures/skills'
 
+// Callan (shield) and Satrana (sparks) share the radius-2 zone-outline skill,
+// differing only in color; the lifecycle tests run through Callan alone.
 const CALLAN = 70
+const SATRANA = 35
 const INTERIOR_HEX = 23 // both rings fully on the board
 const EDGE_HEX = 6 // ring 2 only partially on the board
 
-describe('callan shield-zone outline', () => {
+describe('radius-2 zone-outline skills (callan, satrana)', () => {
   let grid: Grid
   let skillManager: SkillManager
 
-  const ctx = (hexId: number): SkillContext => ({
+  const ctx = (hexId: number, characterId = CALLAN): SkillContext => ({
     grid,
     hexId,
     team: Team.ALLY,
-    characterId: CALLAN,
+    characterId,
     skillManager,
   })
 
@@ -29,9 +32,12 @@ describe('callan shield-zone outline', () => {
     skillManager = new SkillManager()
   })
 
-  it('draws the 30-segment perimeter of a full 2-tile zone as tile edges', () => {
-    placeOnTile(grid, INTERIOR_HEX, CALLAN, Team.ALLY)
-    callan().onActivate(ctx(INTERIOR_HEX))
+  it.each([
+    { name: 'callan', characterId: CALLAN, color: SKILL_COLORS.green },
+    { name: 'satrana', characterId: SATRANA, color: SKILL_COLORS.red },
+  ])('draws the 30-segment perimeter of a full 2-tile zone for $name', ({ characterId, color }) => {
+    placeOnTile(grid, INTERIOR_HEX, characterId, Team.ALLY)
+    getCharacterSkill(characterId)!.onActivate(ctx(INTERIOR_HEX, characterId))
 
     const lines = skillManager.getSkillLines()
     expect(lines).toHaveLength(30)
@@ -39,7 +45,7 @@ describe('callan shield-zone outline', () => {
     for (const line of lines) {
       expect(line.fromHexId).toBe(line.toHexId)
       expect(line.fromCorner).toBeDefined()
-      expect(line.color).toBe(SKILL_COLORS.green)
+      expect(line.color).toBe(color)
       expect(center.distance(grid.getHexById(line.fromHexId))).toBe(2)
     }
   })
@@ -58,14 +64,16 @@ describe('callan shield-zone outline', () => {
     }
   })
 
-  it('moves the outline with Callan on update', () => {
+  it('moves the outline with the caster on update', () => {
     placeOnTile(grid, INTERIOR_HEX, CALLAN, Team.ALLY)
     callan().onActivate(ctx(INTERIOR_HEX))
 
     callan().onUpdate!(ctx(EDGE_HEX))
 
     const center = grid.getHexById(EDGE_HEX)
-    for (const line of skillManager.getSkillLines()) {
+    const lines = skillManager.getSkillLines()
+    expect(lines).not.toHaveLength(0)
+    for (const line of lines) {
       expect(center.distance(grid.getHexById(line.fromHexId))).toBeLessThanOrEqual(2)
     }
   })
