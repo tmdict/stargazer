@@ -4,6 +4,8 @@
 // triggers (its header documents the full policy).
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
+import { clampX } from '@/utils/viewport'
+
 const {
   targetElement,
   offset = 10,
@@ -17,6 +19,8 @@ const {
   maxWidth?: string
 }>()
 
+const VIEWPORT_MARGIN = 10
+
 const tooltipRef = ref<HTMLElement>()
 const position = ref({ x: 0, y: 0 })
 
@@ -26,21 +30,16 @@ const updatePosition = () => {
   const rect = targetElement.getBoundingClientRect()
   const tooltipRect = tooltipRef.value.getBoundingClientRect()
 
-  // Position above the element, aligned to left edge for wide elements
+  // Centered on the trigger (left-aligned for wide triggers), above it,
+  // flipping below when there is no room above.
   const isWide = rect.width > tooltipRect.width * 1.5
-  let x = isWide ? rect.left : rect.left + rect.width / 2 - tooltipRect.width / 2
+  const x = clampX(
+    isWide ? rect.left : rect.left + rect.width / 2 - tooltipRect.width / 2,
+    tooltipRect.width,
+    VIEWPORT_MARGIN,
+  )
   let y = rect.top - tooltipRect.height - offset
-
-  // Adjust if tooltip goes off screen
-  if (x < 10) x = 10
-  if (x + tooltipRect.width > window.innerWidth - 10) {
-    x = window.innerWidth - tooltipRect.width - 10
-  }
-
-  // If tooltip would go above the viewport, position it below
-  if (y < 10) {
-    y = rect.bottom + offset
-  }
+  if (y < VIEWPORT_MARGIN) y = rect.bottom + offset
 
   position.value = { x, y }
 }

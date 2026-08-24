@@ -3,7 +3,6 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { decomposeUnitId, toSynergyId } from '@/lib/characters/synergy'
-import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import { useArtifactStore } from '@/stores/artifact'
@@ -18,6 +17,14 @@ import {
   type DisplayFlags,
 } from '@/utils/gridStateSerializer'
 import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import {
+  ALLY_A,
+  ALLY_B,
+  ENEMY_A,
+  ENEMY_B,
+  PHRAESTO,
+  PHRAESTO_COMPANION,
+} from '../fixtures/characters'
 
 /**
  * Round-trip tests for the urlState store's restore path: state is built with
@@ -27,15 +34,6 @@ import { encodeGridStateToUrl, encodeMultiGridStateToUrl } from '@/utils/urlStat
  * Default map (arena1): ally spawns are hexes 1-10/12/13/16, enemy spawns are
  * hexes 30/33/34/36-45; everything else is DEFAULT.
  */
-
-// Character ids with no registered skill, so placement has no side effects.
-const ALLY_A = 11
-const ALLY_B = 12
-const ENEMY_A = 21
-const ENEMY_B = 22
-
-const PHRAESTO = 50
-const PHRAESTO_COMPANION = COMPANION_ID_OFFSET + PHRAESTO
 
 interface TestStores {
   grid: ReturnType<typeof useGridStore>

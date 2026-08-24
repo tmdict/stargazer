@@ -30,17 +30,11 @@ const envelope = (teams: unknown[], overrides: Record<string, unknown> = {}): st
   JSON.stringify({ app: 'stargazer', kind: 'saved-teams', version: 1, teams, ...overrides })
 
 describe('buildExport', () => {
-  it('wraps the library in the versioned envelope', () => {
-    const file = buildExport([record()], '2026-07-04T00:00:00.000Z')
-    expect(file.app).toBe('stargazer')
-    expect(file.kind).toBe('saved-teams')
-    expect(file.version).toBe(1)
-    expect(file.exportedAt).toBe('2026-07-04T00:00:00.000Z')
-    expect(file.teams).toHaveLength(1)
-  })
-
+  // parseImport accepting the export proves the envelope is well-formed; its
+  // rejection paths below pin every envelope field.
   it('round-trips through parseImport', () => {
-    const file = buildExport([record()], new Date(0).toISOString())
+    const file = buildExport([record()], '2026-07-04T00:00:00.000Z')
+    expect(file.exportedAt).toBe('2026-07-04T00:00:00.000Z')
     const result = parseImport(JSON.stringify(file), [])
     expect(result).toMatchObject({ ok: true, skipped: 0, teams: [expect.any(Object)] })
   })
@@ -63,21 +57,15 @@ describe('parseImport envelope rejection', () => {
 })
 
 describe('parseImport record validation', () => {
+  // Record-rejection variants are validateSavedTeam's, pinned in
+  // savedTeam.test.ts; this pins skip-not-reject and the skipped count.
   it('skips invalid records without rejecting the file', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const result = parseImport(
-      envelope([
-        record(),
-        record({ mode: '9v9' as never }),
-        record({ data: 'undecodable' }),
-        record({ data: encode({ boards: [{ m: 'arena1' }], mode: '1v1' }) }), // count mismatch vs 3v3
-        record({ data: encode({ boards: [null, {}, {}] } as never) }), // non-object board entry
-        record({ name: '   ' }),
-        'not-an-object',
-      ]),
+      envelope([record(), record({ mode: '9v9' as never }), 'not-an-object']),
       [],
     )
-    expect(result).toMatchObject({ ok: true, skipped: 6, teams: [expect.any(Object)] })
+    expect(result).toMatchObject({ ok: true, skipped: 2, teams: [expect.any(Object)] })
     warn.mockRestore()
   })
 

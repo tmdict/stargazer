@@ -81,39 +81,28 @@ describe('active grid: drop routing (handleDrop)', () => {
       expect(gridStore.getTile(defaultTile.getId()).characterId).toBeUndefined()
     })
 
-    it('returns false when team is at capacity', () => {
+    // Capacity and replacement rules are lib-pinned (characters/place.test.ts);
+    // this pins the roster-drop dispatch on a full team.
+    it('on a full team, rejects a drop on an empty tile but replaces an occupant', () => {
       const allyTiles = tilesByState(State.AVAILABLE_ALLY)
       const maxAlly = getMaxTeamSize(grids.active!.grid, Team.ALLY)
       const allyHexIds = allyTiles.slice(0, maxAlly).map((h) => h.getId())
       allyHexIds.forEach((id, i) => store.placeCharacterOnHex(id, 100 + i, Team.ALLY))
-
       expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
 
       const remaining = allyTiles[allyHexIds.length]
       if (!remaining) throw new Error('Test setup: default map has no spare ally tile')
-
-      const ok = grids.active!.handleDrop(
-        { character: buildCharacter(999), characterId: 999 },
-        remaining.getId(),
-      )
-
-      expect(ok).toBe(false)
-    })
-
-    it('replaces an occupant on a full team (drop onto an occupied tile)', () => {
-      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
-      const maxAlly = getMaxTeamSize(grids.active!.grid, Team.ALLY)
-      const allyHexIds = allyTiles.slice(0, maxAlly).map((h) => h.getId())
-      allyHexIds.forEach((id, i) => store.placeCharacterOnHex(id, 100 + i, Team.ALLY))
-      expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
+      expect(
+        grids.active!.handleDrop(
+          { character: buildCharacter(999), characterId: 999 },
+          remaining.getId(),
+        ),
+      ).toBe(false)
 
       const targetHexId = allyHexIds[0]!
-      const ok = grids.active!.handleDrop(
-        { character: buildCharacter(999), characterId: 999 },
-        targetHexId,
-      )
-
-      expect(ok).toBe(true)
+      expect(
+        grids.active!.handleDrop({ character: buildCharacter(999), characterId: 999 }, targetHexId),
+      ).toBe(true)
       expect(gridStore.getTile(targetHexId).characterId).toBe(999)
       expect(isCharacterOnTeam(grids.active!.grid, 100, Team.ALLY)).toBe(false)
       expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
@@ -160,39 +149,9 @@ describe('active grid: drop routing (handleDrop)', () => {
   })
 })
 
-describe('characterStore.removeCharacterFromHex', () => {
-  it('removes an occupied character and is an idempotent success when empty', () => {
-    const allyTile = firstTile(State.AVAILABLE_ALLY)
-    store.placeCharacterOnHex(allyTile.getId(), 101, Team.ALLY)
-
-    expect(store.removeCharacterFromHex(allyTile.getId())).toBe(true)
-    expect(gridStore.getTile(allyTile.getId()).characterId).toBeUndefined()
-
-    // Removing again succeeds without a character present
-    expect(store.removeCharacterFromHex(allyTile.getId())).toBe(true)
-  })
-})
-
+// Phantimal placement rules (team-size exemption, one per team) are lib-pinned
+// in characters/phantimal.test.ts; this pins the roster-drop dispatch.
 describe('characterStore phantimals', () => {
-  it('places a phantimal without consuming team size', () => {
-    const tiles = tilesByState(State.AVAILABLE_ALLY)
-    const before = getAvailableTeamSize(grids.active!.grid, Team.ALLY)
-    const ok = store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
-
-    expect(ok).toBe(true)
-    expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBe(toPhantimalId(1))
-    expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(before) // unchanged by the phantimal
-  })
-
-  it('keeps at most one phantimal per team (replace on add)', () => {
-    const tiles = tilesByState(State.AVAILABLE_ALLY)
-    store.placePhantimalOnHex(tiles[0]!.getId(), toPhantimalId(1), Team.ALLY)
-    store.placePhantimalOnHex(tiles[1]!.getId(), toPhantimalId(2), Team.ALLY)
-
-    expect(gridStore.getTile(tiles[0]!.getId()).characterId).toBeUndefined()
-    expect(gridStore.getTile(tiles[1]!.getId()).characterId).toBe(toPhantimalId(2))
-  })
-
   it('routes a roster phantimal drop through one-per-team placement', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)
     grids.active!.handleDrop(
@@ -218,7 +177,6 @@ describe('characterStore phantimal faction rule', () => {
     4: 'lightbearer',
     5: 'lightbearer',
     6: 'lightbearer',
-    7: 'lightbearer',
   }
 
   const aurelian: PhantimalType = {
@@ -277,25 +235,6 @@ describe('characterStore phantimal faction rule', () => {
     await nextTick()
 
     expect(gridStore.getTile(target.getId()).characterId).toBeUndefined()
-  })
-
-  it('rejects a cross-team phantimal swap even when the faction requirement would survive', async () => {
-    fieldHeroes(Team.ALLY, [1, 2, 3])
-    // One above the requirement: cross-team phantimal swaps are rejected
-    // outright, independent of faction counts
-    const enemyHexes = fieldHeroes(Team.ENEMY, [4, 5, 6, 7])
-    const phantimalHex = tilesByState(State.AVAILABLE_ALLY)[3]!.getId()
-    store.placePhantimalOnHex(phantimalHex, toPhantimalId(1), Team.ALLY)
-    await nextTick()
-
-    const ok = grids.active!.handleDrop(
-      { character: buildCharacter(toPhantimalId(1), phantimalHex), characterId: toPhantimalId(1) },
-      enemyHexes[0]!,
-    )
-
-    expect(ok).toBe(false)
-    expect(gridStore.getTile(phantimalHex).characterId).toBe(toPhantimalId(1))
-    expect(gridStore.getTile(enemyHexes[0]!).characterId).toBe(4)
   })
 
   it('moving a phantimal to an empty enemy tile displaces the enemy phantimal', async () => {

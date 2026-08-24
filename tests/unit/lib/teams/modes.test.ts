@@ -28,6 +28,12 @@ describe('TEAM_MODES registry', () => {
       expect(cfg.boardCount).toBeGreaterThanOrEqual(1)
       expect(cfg.boardCount).toBeLessThanOrEqual(MAX_GRID_COUNT)
     }
+
+    // Wrap layout is defined only for the 5-board shape
+    const wrapCounts = Object.values(TEAM_MODES)
+      .filter((cfg) => cfg.canWrap)
+      .map((cfg) => cfg.boardCount)
+    expect(wrapCounts.every((count) => count === 5)).toBe(true)
   })
 
   it('references only maps that exist', () => {
@@ -41,14 +47,6 @@ describe('TEAM_MODES registry', () => {
   it('orders modes by ascending board count so smallest-fit inference works', () => {
     const counts = TEAM_MODE_ORDER.map((key) => TEAM_MODES[key].boardCount)
     expect([...counts].sort((a, b) => a - b)).toEqual(counts)
-  })
-
-  it('default mode is valid and wrap is 5-board-only', () => {
-    expect(isTeamModeKey(DEFAULT_TEAM_MODE)).toBe(true)
-    const wrapCounts = Object.values(TEAM_MODES)
-      .filter((cfg) => cfg.canWrap)
-      .map((cfg) => cfg.boardCount)
-    expect(wrapCounts.every((count) => count === 5)).toBe(true)
   })
 })
 

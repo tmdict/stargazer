@@ -1,25 +1,30 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { isCharacterOnTeam } from '@/lib/characters/character'
+import { findCharacterHex, getMaxTeamSize, isCharacterOnTeam } from '@/lib/characters/character'
 import {
   executeAutoPlaceCharacter,
   executePlaceCharacter,
   performPlace,
 } from '@/lib/characters/place'
-import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
-import { hasSkill, SkillManager } from '@/lib/skills/skill'
+import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import {
+  ALLY_A,
+  ALLY_B,
+  ALLY_C,
+  ENEMY_A,
+  GUNNAR,
+  PHRAESTO,
+  PHRAESTO_COMPANION,
+} from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
-vi.mock('@/lib/skills/skill', () => ({
-  hasSkill: vi.fn(),
-  hasCompanionSkill: vi.fn(),
-  SkillManager: vi.fn(),
-}))
-
-// Don't mock performRemove globally - import the real implementation
+// Runs against the real SkillManager and skill registry: the fixture ids have
+// no registered skill, and Phraesto drives the lifecycle tests because his
+// companion spawn is observable (companion tile, capacity bonus) and throws
+// for real when no free same-team tile exists.
 
 describe('place.ts', () => {
   let grid: Grid
@@ -27,19 +32,8 @@ describe('place.ts', () => {
 
   beforeEach(() => {
     grid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-
-    vi.clearAllMocks()
-
-    skillManager = {
-      activateCharacterSkill: vi.fn().mockReturnValue(true),
-      deactivateCharacterSkill: vi.fn(),
-      updateActiveSkills: vi.fn(),
-      hasActiveSkill: vi.fn().mockReturnValue(false),
-    } as unknown as SkillManager
-
+    skillManager = new SkillManager()
     grid.skillManager = skillManager
-
-    vi.mocked(hasSkill).mockReturnValue(false)
   })
 
   describe('performPlace', () => {
@@ -47,29 +41,29 @@ describe('place.ts', () => {
       { label: 'ally', team: Team.ALLY, hexId: 1, state: State.OCCUPIED_ALLY },
       { label: 'enemy', team: Team.ENEMY, hexId: 4, state: State.OCCUPIED_ENEMY },
     ])('should successfully place character on available $label tile', ({ team, hexId, state }) => {
-      const result = performPlace(grid, hexId, 100, team)
+      const result = performPlace(grid, hexId, ALLY_A, team)
 
       expect(result).toBe(true)
       const tile = grid.getTileById(hexId)
-      expect(tile.characterId).toBe(100)
+      expect(tile.characterId).toBe(ALLY_A)
       expect(tile.team).toBe(team)
       expect(tile.state).toBe(state)
-      expect(isCharacterOnTeam(grid, 100, team)).toBe(true)
+      expect(isCharacterOnTeam(grid, ALLY_A, team)).toBe(true)
     })
 
     it('should reject placement on an occupied tile', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
+      performPlace(grid, 1, ALLY_A, Team.ALLY)
+      expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(true)
 
       // The atomic primitive never displaces an existing unit;
       // replacement is the skill-aware composite in executePlaceCharacter
-      const result = performPlace(grid, 1, 200, Team.ALLY)
+      const result = performPlace(grid, 1, ALLY_B, Team.ALLY)
 
       expect(result).toBe(false)
       const tile = grid.getTileById(1)
-      expect(tile.characterId).toBe(100)
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
-      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(false)
+      expect(tile.characterId).toBe(ALLY_A)
+      expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, ALLY_B, Team.ALLY)).toBe(false)
     })
 
     it('should reject invalid character ID', () => {
@@ -79,166 +73,147 @@ describe('place.ts', () => {
       expect(performPlace(grid, 1, NaN, Team.ALLY)).toBe(false)
     })
 
-    it('should reject placement on wrong team tile', () => {
-      // Try to place ally on enemy tile
-      expect(performPlace(grid, 4, 100, Team.ALLY)).toBe(false)
-
-      // Try to place enemy on ally tile
-      expect(performPlace(grid, 1, 200, Team.ENEMY)).toBe(false)
+    // Rule variants live in character.test.ts (canPlaceCharacterOnTile/OnTeam);
+    // these two pin only that performPlace consults those rules.
+    it('should reject placement on wrong-team, blocked, or default tiles', () => {
+      expect(performPlace(grid, 4, ALLY_A, Team.ALLY)).toBe(false)
+      expect(performPlace(grid, 1, ENEMY_A, Team.ENEMY)).toBe(false)
+      expect(performPlace(grid, 6, ALLY_A, Team.ALLY)).toBe(false)
+      expect(performPlace(grid, 7, ALLY_A, Team.ALLY)).toBe(false)
     })
 
-    it.each([
-      { label: 'blocked', hexId: 6 },
-      { label: 'default', hexId: 7 },
-    ])('should reject placement on $label tile', ({ hexId }) => {
-      expect(performPlace(grid, hexId, 100, Team.ALLY)).toBe(false)
-      expect(performPlace(grid, hexId, 200, Team.ENEMY)).toBe(false)
-    })
-
-    it('should enforce team size limits', () => {
-      // Set team size limit to 2
+    it('should enforce team rules (size limit, duplicates)', () => {
       grid.maxTeamSizes.set(Team.ALLY, 2)
 
-      // Place two characters successfully
-      expect(performPlace(grid, 1, 100, Team.ALLY)).toBe(true)
-      expect(performPlace(grid, 2, 200, Team.ALLY)).toBe(true)
-
-      // Third placement should fail due to team size limit
-      expect(performPlace(grid, 3, 300, Team.ALLY)).toBe(false)
-    })
-
-    it('should prevent duplicate character on same team', () => {
-      // Place character once
-      expect(performPlace(grid, 1, 100, Team.ALLY)).toBe(true)
-
-      // Try to place same character again on same team
-      expect(performPlace(grid, 2, 100, Team.ALLY)).toBe(false)
+      expect(performPlace(grid, 1, ALLY_A, Team.ALLY)).toBe(true)
+      expect(performPlace(grid, 2, ALLY_A, Team.ALLY)).toBe(false)
+      expect(performPlace(grid, 2, ALLY_B, Team.ALLY)).toBe(true)
+      expect(performPlace(grid, 3, ALLY_C, Team.ALLY)).toBe(false)
     })
 
     it('should allow same character ID on different teams', () => {
-      // Place character on ally team
-      expect(performPlace(grid, 1, 100, Team.ALLY)).toBe(true)
+      expect(performPlace(grid, 1, ALLY_A, Team.ALLY)).toBe(true)
+      expect(performPlace(grid, 4, ALLY_A, Team.ENEMY)).toBe(true)
 
-      // Place same character ID on enemy team should work
-      expect(performPlace(grid, 4, 100, Team.ENEMY)).toBe(true)
-
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
-      expect(isCharacterOnTeam(grid, 100, Team.ENEMY)).toBe(true)
+      expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, ALLY_A, Team.ENEMY)).toBe(true)
     })
   })
 
   describe('executePlaceCharacter', () => {
-    it('should successfully place character without skill', () => {
-      const result = executePlaceCharacter(grid, skillManager, 1, 100, Team.ALLY)
+    it('should place a character without a skill, leaving no active-skill entry', () => {
+      const result = executePlaceCharacter(grid, skillManager, 1, ALLY_A, Team.ALLY)
 
       expect(result).toBe(true)
       const tile = grid.getTileById(1)
-      expect(tile.characterId).toBe(100)
+      expect(tile.characterId).toBe(ALLY_A)
       expect(tile.team).toBe(Team.ALLY)
-      expect(skillManager.activateCharacterSkill).not.toHaveBeenCalled()
+      expect(skillManager.hasActiveSkill(ALLY_A)).toBe(false)
     })
 
-    it('should successfully place character with skill', () => {
-      vi.mocked(hasSkill).mockReturnValue(true)
-
-      const result = executePlaceCharacter(grid, skillManager, 1, 100, Team.ALLY)
+    it('should activate the skill on placement', () => {
+      const result = executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
 
       expect(result).toBe(true)
-      expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
-      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
+      expect(skillManager.getActiveSkillInfo(PHRAESTO, Team.ALLY)).toEqual({
+        hexId: 1,
+        team: Team.ALLY,
+      })
+      expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).not.toBeNull()
+      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(6)
     })
 
     it('should reject companion IDs', () => {
-      const companionId = grid.companionIdOffset + 1
+      const companionId = grid.companionIdOffset + ALLY_A
       const result = executePlaceCharacter(grid, skillManager, 1, companionId, Team.ALLY)
 
       expect(result).toBe(false)
-      const tile = grid.getTileById(1)
-      expect(tile.characterId).toBeUndefined()
+      expect(grid.getTileById(1).characterId).toBeUndefined()
     })
 
     it('should replace an occupant with full skill cleanup', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      skillManager.hasActiveSkill = vi.fn().mockImplementation((id: number) => id === 100)
+      executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
 
-      const result = executePlaceCharacter(grid, skillManager, 1, 200, Team.ALLY)
+      const result = executePlaceCharacter(grid, skillManager, 1, ALLY_B, Team.ALLY)
 
       expect(result).toBe(true)
-      expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
-      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
+      expect(grid.getTileById(1).characterId).toBe(ALLY_B)
+      expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, ALLY_B, Team.ALLY)).toBe(true)
+      // Teardown removed the companion and the capacity bonus with it
+      expect(skillManager.hasActiveSkill(PHRAESTO)).toBe(false)
+      expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).toBeNull()
+      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(5)
     })
 
     it('should restore the occupant when the new character skill activation fails', () => {
-      performPlace(grid, 1, 100, Team.ALLY)
-      skillManager.hasActiveSkill = vi.fn().mockImplementation((id: number) => id === 100)
-      vi.mocked(hasSkill).mockReturnValue(true)
-      skillManager.activateCharacterSkill = vi.fn().mockImplementation((id: number) => id !== 200)
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      executePlaceCharacter(grid, skillManager, 1, GUNNAR, Team.ALLY)
+      performPlace(grid, 2, ALLY_A, Team.ALLY)
+      performPlace(grid, 3, ALLY_B, Team.ALLY)
 
-      const result = executePlaceCharacter(grid, skillManager, 1, 200, Team.ALLY)
+      // No free ally tile for Phraesto's companion: activation throws, rollback
+      const result = executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
 
       expect(result).toBe(false)
       // Occupant fully restored: tile, team membership, skill reactivated
-      expect(grid.getTileById(1).characterId).toBe(100)
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(true)
-      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(false)
-      expect(skillManager.activateCharacterSkill).toHaveBeenCalledWith(100, 1, Team.ALLY, grid)
+      expect(grid.getTileById(1).characterId).toBe(GUNNAR)
+      expect(isCharacterOnTeam(grid, GUNNAR, Team.ALLY)).toBe(true)
+      expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
+      expect(skillManager.getActiveSkillInfo(GUNNAR, Team.ALLY)).toEqual({
+        hexId: 1,
+        team: Team.ALLY,
+      })
+      error.mockRestore()
     })
 
     it('should cascade a companion occupant to its main character', () => {
-      const mainId = 100
-      const companionId = grid.companionIdOffset + mainId
-      performPlace(grid, 1, mainId, Team.ALLY)
-      performPlace(grid, 2, companionId, Team.ALLY)
-      grid.companionLinks.set(`${mainId}-${Team.ALLY}`, new Set([companionId]))
-      skillManager.hasActiveSkill = vi.fn().mockImplementation((id: number) => id === mainId)
-      // Mirror the real teardown: deactivating the main removes its companion
-      skillManager.deactivateCharacterSkill = vi.fn().mockImplementation(() => {
-        performRemove(grid, 2)
-      })
+      executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
+      const companionHex = findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)!
 
-      const result = executePlaceCharacter(grid, skillManager, 2, 300, Team.ALLY)
+      const result = executePlaceCharacter(grid, skillManager, companionHex, ALLY_B, Team.ALLY)
 
       expect(result).toBe(true)
-      // Deactivation is anchored on the main character, not the companion tile
-      expect(skillManager.deactivateCharacterSkill).toHaveBeenCalledWith(mainId, 1, Team.ALLY, grid)
-      // Main and companion both gone; new character sits on the companion's tile
+      // Replacing the companion removes the whole unit, anchored on the main
       expect(grid.getTileById(1).characterId).toBeUndefined()
-      expect(grid.getTileById(2).characterId).toBe(300)
-      expect(isCharacterOnTeam(grid, mainId, Team.ALLY)).toBe(false)
-      expect(isCharacterOnTeam(grid, companionId, Team.ALLY)).toBe(false)
-      expect(isCharacterOnTeam(grid, 300, Team.ALLY)).toBe(true)
+      expect(grid.getTileById(companionHex).characterId).toBe(ALLY_B)
+      expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, PHRAESTO_COMPANION, Team.ALLY)).toBe(false)
+      expect(skillManager.hasActiveSkill(PHRAESTO)).toBe(false)
+      expect(getMaxTeamSize(grid, Team.ALLY)).toBe(5)
     })
 
     it('should rollback on skill activation failure', () => {
-      vi.mocked(hasSkill).mockReturnValue(true)
-      skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      performPlace(grid, 2, ALLY_A, Team.ALLY)
+      performPlace(grid, 3, ALLY_B, Team.ALLY)
 
-      const result = executePlaceCharacter(grid, skillManager, 1, 100, Team.ALLY)
+      const result = executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
 
       expect(result).toBe(false)
       const tile = grid.getTileById(1)
       expect(tile.characterId).toBeUndefined()
       expect(tile.state).toBe(State.AVAILABLE_ALLY)
+      expect(skillManager.hasActiveSkill(PHRAESTO)).toBe(false)
+      error.mockRestore()
     })
 
     it('should replace an occupant when the team is at max capacity', () => {
       // Occupant removal precedes the capacity check, so replacement on a
       // full team must succeed rather than trip the team size limit
       grid.maxTeamSizes.set(Team.ALLY, 1)
-      performPlace(grid, 1, 100, Team.ALLY)
+      performPlace(grid, 1, ALLY_A, Team.ALLY)
 
-      const result = executePlaceCharacter(grid, skillManager, 1, 200, Team.ALLY)
+      const result = executePlaceCharacter(grid, skillManager, 1, ALLY_B, Team.ALLY)
 
       expect(result).toBe(true)
-      expect(grid.getTileById(1).characterId).toBe(200)
-      expect(isCharacterOnTeam(grid, 100, Team.ALLY)).toBe(false)
-      expect(isCharacterOnTeam(grid, 200, Team.ALLY)).toBe(true)
+      expect(grid.getTileById(1).characterId).toBe(ALLY_B)
+      expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(false)
+      expect(isCharacterOnTeam(grid, ALLY_B, Team.ALLY)).toBe(true)
     })
 
     it('should use default team ALLY when not specified', () => {
-      const result = executePlaceCharacter(grid, skillManager, 1, 100)
+      const result = executePlaceCharacter(grid, skillManager, 1, ALLY_A)
 
       expect(result).toBe(true)
       const tile = grid.getTileById(1)
@@ -247,69 +222,57 @@ describe('place.ts', () => {
   })
 
   describe('executeAutoPlaceCharacter', () => {
-    it('should place character on random available tile', () => {
-      const result = executeAutoPlaceCharacter(grid, skillManager, 100, Team.ALLY)
+    it.each([
+      { team: Team.ALLY, hexes: [1, 2, 3] },
+      { team: Team.ENEMY, hexes: [4, 5] },
+    ])('should place on a random available tile of team $team', ({ team, hexes }) => {
+      const result = executeAutoPlaceCharacter(grid, skillManager, ALLY_A, team)
 
       expect(result).toBe(true)
-
-      // Check character was placed on one of the ally tiles (1, 2, or 3)
-      const placedHex = [1, 2, 3].find((hexId) => grid.getTileById(hexId).characterId === 100)
-      expect(placedHex).toBeDefined()
+      expect(hexes.some((hexId) => grid.getTileById(hexId).characterId === ALLY_A)).toBe(true)
     })
 
     it('should reject when character cannot be placed on team', () => {
       // Fill team to capacity
       grid.maxTeamSizes.set(Team.ALLY, 2)
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
+      performPlace(grid, 1, ALLY_A, Team.ALLY)
+      performPlace(grid, 2, ALLY_B, Team.ALLY)
 
-      const result = executeAutoPlaceCharacter(grid, skillManager, 300, Team.ALLY)
+      const result = executeAutoPlaceCharacter(grid, skillManager, ALLY_C, Team.ALLY)
 
       expect(result).toBe(false)
     })
 
     it('should reject when no tiles available', () => {
-      // Place characters on all available ally tiles
-      performPlace(grid, 1, 100, Team.ALLY)
-      performPlace(grid, 2, 200, Team.ALLY)
-      performPlace(grid, 3, 300, Team.ALLY)
+      performPlace(grid, 1, ALLY_A, Team.ALLY)
+      performPlace(grid, 2, ALLY_B, Team.ALLY)
+      performPlace(grid, 3, ALLY_C, Team.ALLY)
 
-      const result = executeAutoPlaceCharacter(grid, skillManager, 400, Team.ALLY)
+      const result = executeAutoPlaceCharacter(grid, skillManager, GUNNAR, Team.ALLY)
 
       expect(result).toBe(false)
     })
 
-    it('should activate skill after placement', () => {
-      vi.mocked(hasSkill).mockReturnValue(true)
-
-      const result = executeAutoPlaceCharacter(grid, skillManager, 100, Team.ALLY)
+    it('should activate the skill after auto-placement', () => {
+      const result = executeAutoPlaceCharacter(grid, skillManager, PHRAESTO, Team.ALLY)
 
       expect(result).toBe(true)
-      expect(skillManager.activateCharacterSkill).toHaveBeenCalled()
-      expect(skillManager.updateActiveSkills).toHaveBeenCalledWith(grid)
+      expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
+      expect(findCharacterHex(grid, PHRAESTO_COMPANION, Team.ALLY)).not.toBeNull()
     })
 
     it('should rollback placement on skill activation failure', () => {
-      vi.mocked(hasSkill).mockReturnValue(true)
-      skillManager.activateCharacterSkill = vi.fn().mockReturnValue(false)
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {})
+      // Only hex 1 stays free: the companion spawn finds no second tile
+      performPlace(grid, 2, ALLY_A, Team.ALLY)
+      performPlace(grid, 3, ALLY_B, Team.ALLY)
 
-      const result = executeAutoPlaceCharacter(grid, skillManager, 100, Team.ALLY)
+      const result = executeAutoPlaceCharacter(grid, skillManager, PHRAESTO, Team.ALLY)
 
       expect(result).toBe(false)
-
-      // Check character was not placed on any tile
-      const placedHex = [1, 2, 3].find((hexId) => grid.getTileById(hexId).characterId === 100)
-      expect(placedHex).toBeUndefined()
-    })
-
-    it('should place on enemy tiles for enemy team', () => {
-      const result = executeAutoPlaceCharacter(grid, skillManager, 100, Team.ENEMY)
-
-      expect(result).toBe(true)
-
-      // Check character was placed on one of the enemy tiles (4 or 5)
-      const placedHex = [4, 5].find((hexId) => grid.getTileById(hexId).characterId === 100)
-      expect(placedHex).toBeDefined()
+      expect(isCharacterOnTeam(grid, PHRAESTO, Team.ALLY)).toBe(false)
+      expect(grid.getTileById(1).characterId).toBeUndefined()
+      error.mockRestore()
     })
   })
 })

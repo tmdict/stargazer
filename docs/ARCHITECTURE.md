@@ -164,6 +164,7 @@ Helper functions and services supporting the application.
 - Binary encoding for URL serialization
 - Data loading and asset management
 - Formatting helpers for consistency
+- Viewport measurement (`viewport.ts`): owns all window-size reads and the clamping that keeps fixed overlays clear of classic scrollbars; ESLint bans raw `window.innerWidth`/`innerHeight` elsewhere in `src/`
 
 ## Data Flow Patterns
 

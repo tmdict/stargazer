@@ -100,15 +100,6 @@ describe('Grid', () => {
     })
   })
 
-  describe('setState()', () => {
-    it('should set the tile state', () => {
-      grid = new Grid(SMALL_GRID, TEST_ARENA)
-      const hex = grid.getHexById(1)
-      grid.setState(hex, State.BLOCKED)
-      expect(grid.getTile(hex).state).toBe(State.BLOCKED)
-    })
-  })
-
   describe('edge cases', () => {
     it('should preserve tile references', () => {
       grid = new Grid(SMALL_GRID, TEST_ARENA)

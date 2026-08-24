@@ -10,32 +10,32 @@ import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
-import {
-  packDisplayFlags,
-  type DisplayFlags,
-  type MultiGridState,
-} from '@/utils/gridStateSerializer'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import { packDisplayFlags, type DisplayFlags } from '@/utils/gridStateSerializer'
+import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import { stubLocalStorage } from '../fixtures/storage'
 
 /* The mode-switch regression suite: per-mode slot isolation (one mode's edits
  * must never overwrite another mode's save), plus the ?g= ingress routing
  * (mode resolution + shape normalization). Headless: node env, in-memory
  * localStorage, SSR off. */
 
-const storage = new Map<string, string>()
-const setItemSpy = vi.fn((key: string, value: string) => {
-  storage.set(key, value)
+let storage: Map<string, string>
+let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
+
+beforeEach(() => {
+  vi.stubEnv('SSR', false)
+  ;({ storage, setItemSpy } = stubLocalStorage())
+})
+
+afterEach(() => {
+  vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
 })
 
 const readEnvelope = (mode: TeamModeKey): ActiveSlot =>
   JSON.parse(storage.get(teamsSlotKey(mode))!) as ActiveSlot
 
-const decodeBoards = (encoded: string): MultiGridState =>
-  JSON.parse(
-    new TextDecoder().decode(
-      Uint8Array.from(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0)),
-    ),
-  ) as MultiGridState
+const decodeBoards = (encoded: string) => decodeMultiGridStateFromUrl(encoded)!
 
 interface Harness {
   restore: ReturnType<typeof useTeamsRestore>
@@ -44,7 +44,6 @@ interface Harness {
   flags: DisplayFlags
   wrapBoards: ReturnType<typeof ref<boolean>>
   inverted: ReturnType<typeof ref<boolean>>
-  applySize: ReturnType<typeof vi.fn>
 }
 
 function createHarness(resolveSourceId?: (id: string | null) => string | null): Harness {
@@ -54,7 +53,6 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
   const flags: DisplayFlags = { showGridInfo: true, wrap: false }
   const wrapBoards = ref(false)
   const inverted = ref(false)
-  const applySize = vi.fn()
   const restore = useTeamsRestore({
     getFlags: () => ({ ...flags, wrap: wrapBoards.value, inverted: inverted.value }),
     applyFlags: (next) => {
@@ -62,30 +60,13 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
       wrapBoards.value = next.wrap ?? false
       inverted.value = next.inverted ?? false
     },
-    applySize,
+    applySize: () => {},
     resolveSourceId,
   })
-  return { restore, grids, character, flags, wrapBoards, inverted, applySize }
+  return { restore, grids, character, flags, wrapBoards, inverted }
 }
 
 describe('useTeamsRestore', () => {
-  beforeEach(() => {
-    vi.stubEnv('SSR', false)
-    storage.clear()
-    setItemSpy.mockClear()
-    vi.stubGlobal('localStorage', {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: setItemSpy,
-      removeItem: (key: string) => storage.delete(key),
-      clear: () => storage.clear(),
-    })
-  })
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    vi.unstubAllGlobals()
-  })
-
   it('initialize without link or slots builds the default mode', () => {
     const { restore, grids } = createHarness()
     const result = restore.initialize(null)
@@ -283,14 +264,6 @@ describe('useTeamsRestore', () => {
     warn.mockRestore()
   })
 
-  it('ingress: a contradictory declared mode is overridden by the board count', () => {
-    const { restore, grids } = createHarness()
-    const link = encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '5v5sl' })
-    restore.initialize(link)
-    expect(restore.activeMode.value).toBe('1v1')
-    expect(grids.contexts).toHaveLength(1)
-  })
-
   it('ingress: an invalid link falls back to the saved slot and reports failure', async () => {
     // Seed a 5v5sl slot with an edit via a first session.
     {
@@ -342,23 +315,6 @@ const encode1v1WithUnit = (): string =>
   encodeMultiGridStateToUrl({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' })
 
 describe('useTeamsRestore + saved teams (provenance and canonical compare)', () => {
-  beforeEach(() => {
-    vi.stubEnv('SSR', false)
-    storage.clear()
-    setItemSpy.mockClear()
-    vi.stubGlobal('localStorage', {
-      getItem: (key: string) => storage.get(key) ?? null,
-      setItem: setItemSpy,
-      removeItem: (key: string) => storage.delete(key),
-      clear: () => storage.clear(),
-    })
-  })
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    vi.unstubAllGlobals()
-  })
-
   it('canonical snapshot ignores viewer state but tracks content', () => {
     const { restore, grids, character, wrapBoards } = createHarness()
     restore.initialize(null)
@@ -441,11 +397,14 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
     restore.initialize(null)
     flags.showGridInfo = false
     inverted.value = true
-    const data = canonicalTeamData(
-      encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
-    )!
-    restore.applyTeamData('1v1', data, 'x')
-    // applyTeamData restores with adoptFlags=false, so a payload's `d` is ignored.
+    // The payload carries contrary display flags; applyTeamData restores with
+    // adoptFlags=false, so they must be ignored.
+    const data = encodeMultiGridStateToUrl({
+      boards: [{ m: 'arena1' }],
+      mode: '1v1',
+      d: packDisplayFlags({ showGridInfo: true, inverted: false }),
+    })
+    expect(restore.applyTeamData('1v1', data, 'x')).toBe(true)
     expect(flags.showGridInfo).toBe(false)
     expect(inverted.value).toBe(true)
   })

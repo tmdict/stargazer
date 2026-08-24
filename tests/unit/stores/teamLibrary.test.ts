@@ -6,10 +6,11 @@ import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import { stubLocalStorage } from '../fixtures/storage'
 
 const LIBRARY_KEY = 'stargazer.teams.saved'
 
-const storage = new Map<string, string>()
+let storage: Map<string, string>
 
 const CANONICAL_3V3 = canonicalTeamData(
   encodeMultiGridStateToUrl({
@@ -39,13 +40,7 @@ const stored = (): SavedTeam[] => JSON.parse(storage.get(LIBRARY_KEY)!).teams as
 
 beforeEach(() => {
   vi.stubEnv('SSR', false)
-  storage.clear()
-  vi.stubGlobal('localStorage', {
-    getItem: (key: string) => storage.get(key) ?? null,
-    setItem: (key: string, value: string) => storage.set(key, value),
-    removeItem: (key: string) => storage.delete(key),
-    clear: () => storage.clear(),
-  })
+  ;({ storage } = stubLocalStorage())
   setActivePinia(createPinia())
 })
 

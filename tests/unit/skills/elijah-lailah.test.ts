@@ -4,7 +4,7 @@ import { addCompanionLink } from '@/lib/characters/companion'
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
-import { placeOnTile } from '../fixtures/skills'
+import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const ELIJAH = 68
 // Cells 1, 4, 7, 10, 14 share a hex axis (q = -3), each one step apart.
@@ -37,11 +37,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
   }
 
   const runSkill = () => getCharacterSkill(ELIJAH)!.onUpdate!(buildContext())
-
-  const removeUnit = (hexId: number) => {
-    grid.getTileById(hexId).characterId = undefined
-    grid.getTileById(hexId).team = undefined
-  }
 
   const lineSegments = () =>
     skillManager.getSkillLines().map((line) => ({ from: line.fromHexId, to: line.toHexId }))
@@ -79,7 +74,7 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     runSkill()
     expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeDefined()
 
-    removeUnit(BETWEEN_A)
+    removeFromTile(grid, BETWEEN_A)
     runSkill()
 
     expect(skillManager.getTileColorModifier(BETWEEN_A)).toBeUndefined()
@@ -101,7 +96,7 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     runSkill()
     const mixed = skillManager.getTileColorModifier(BETWEEN_A)![0]
 
-    removeUnit(BETWEEN_B)
+    removeFromTile(grid, BETWEEN_B)
     runSkill()
     const lone = skillManager.getTileColorModifier(BETWEEN_A)![0]
 
