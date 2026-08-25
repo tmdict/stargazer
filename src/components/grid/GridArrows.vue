@@ -27,7 +27,16 @@ const { svgDimensions, arrowStyle, layerTransform } = useArrowLayer(
 </script>
 
 <template>
-  <svg class="arrow-layer" :width="svgDimensions.width" :height="svgDimensions.height">
+  <!-- Closest-target arrows are a two-sided relation; team view crops the
+       enemy half away, so the layer hides rather than draw stubs truncated at
+       the crop edge (from sprites that are not even rendered, on the enemy
+       side). -->
+  <svg
+    v-if="!ctx.teamView"
+    class="arrow-layer"
+    :width="svgDimensions.width"
+    :height="svgDimensions.height"
+  >
     <g :transform="layerTransform">
       <GridArrow
         v-for="[allyHexId, enemyInfo] in ctx.closestEnemyMap"

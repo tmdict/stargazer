@@ -14,7 +14,13 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
-const props = defineProps<{ context: GridContext; readonly?: boolean }>()
+const props = defineProps<{
+  context: GridContext
+  // Paragon layer (badges, cycle, bulk actions, rivalry stat header); off, the
+  // panel is portraits and names only.
+  showParagon: boolean
+  readonly?: boolean
+}>()
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
@@ -50,12 +56,7 @@ const enemyHeroes = computed(() => heroesFor(Team.ENEMY))
 // the negation of the ally's (the two mirror), so sides reuses it.
 const allyRivalryStat = computed(() => teamPowerNet(allyHeroes.value, enemyHeroes.value))
 
-// Paragon reads only as a comparison between the sides, so the stat, badges and
-// controls all hide until both are placed. Team view is not a factor: its
-// cropped enemy still counts toward the ally stat.
-const bothTeamsPlaced = computed(() => allyHeroes.value.length > 0 && enemyHeroes.value.length > 0)
-
-const canEditParagon = computed(() => !props.readonly && bothTeamsPlaced.value)
+const canEditParagon = computed(() => !props.readonly && props.showParagon)
 
 const sides = computed(() => [
   { team: Team.ALLY, klass: 'ally', heroes: allyHeroes.value, rivalryStat: allyRivalryStat.value },
@@ -155,7 +156,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
     :class="{ single: visibleSides.length === 1 }"
   >
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
-      <div v-if="bothTeamsPlaced" class="tp-head">
+      <div v-if="showParagon" class="tp-head">
         <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
           <span
             v-if="side.rivalryStat !== 0"
@@ -215,7 +216,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           type="button"
           class="hero"
           :class="{ static: !canEditParagon }"
-          :aria-label="bothTeamsPlaced ? `${hero.name}, paragon ${hero.level}` : hero.name"
+          :aria-label="showParagon ? `${hero.name}, paragon ${hero.level}` : hero.name"
           :title="canEditParagon ? i18n.t('app.paragon-cycle') : undefined"
           @click="canEditParagon && cycle(side.team, hero)"
         >
@@ -223,7 +224,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
             <span class="portrait">
               <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
             </span>
-            <span v-if="bothTeamsPlaced" class="pbadge" :class="`p${hero.level}`">
+            <span v-if="showParagon" class="pbadge" :class="`p${hero.level}`">
               P{{ hero.level }}
             </span>
           </span>

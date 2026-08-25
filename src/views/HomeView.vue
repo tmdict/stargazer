@@ -15,6 +15,11 @@ import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
+import {
+  deriveGridInfoView,
+  GRID_INFO_NONE,
+  useGridInfoPrefs,
+} from '@/composables/useGridInfoPrefs'
 import { useArenaPersistence } from '@/composables/useGridPersistence'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
@@ -118,7 +123,12 @@ watch(liftedHexId, (id) => {
 // Debug tab keeps debug on, switching away turns it off).
 const showDebug = computed(() => activeTab.value === 'debug')
 
-const { showGridInfo, showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
+const { showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
+
+// First call on this device seeds the pref (and runs gridInfoMigration's
+// legacy byte remap), so it must precede the arena autosave read in onMounted
+// below.
+const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 
 const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
 
@@ -130,15 +140,17 @@ const selectedMapEditorState = ref<State>(State.DEFAULT)
 const editorEnabled = ref(false)
 const mapEditorActive = computed(() => activeTab.value === 'mapEditor' && editorEnabled.value)
 
-// Tile painting is incompatible with these display modes; force them off when the
-// editor turns on (not on Map-tab entry, so placing characters there keeps them).
-const resetForMapEditor = () => {
-  showGridInfo.value = false
-  gridStore.teamView = false
-}
+// Tile painting is incompatible with team view; force it off when the editor
+// turns on (not on Map-tab entry, so placing characters there keeps it). Grid
+// info is suppressed view-level through `info` instead, never written back to
+// the pref.
 watch(mapEditorActive, (active) => {
-  if (active) resetForMapEditor()
+  if (active) gridStore.teamView = false
 })
+
+const info = computed(() =>
+  mapEditorActive.value ? GRID_INFO_NONE : deriveGridInfoView(gridInfoPrefs),
+)
 
 // Debug shows the full grid, so team view (which crops to ally tiles) doesn't apply.
 const resetForDebug = () => {
@@ -280,7 +292,7 @@ const handleResetMap = () => {
           <GridContainer
             :context="activeContext"
             :characters="gameDataStore.characters"
-            :show-grid-info="showGridInfo"
+            :info
             :show-debug="showDebug"
             :show-skills="showSkills"
             :is-map-editor-mode="mapEditorActive"
@@ -290,14 +302,18 @@ const handleResetMap = () => {
             :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
-          <TeamPowerPanel v-if="showGridInfo && !mapEditorActive" :context="activeContext" />
+          <TeamPowerPanel
+            v-if="info.heroCard"
+            :context="activeContext"
+            :show-paragon="info.paragon"
+          />
           <GridControls
-            v-model:show-grid-info="showGridInfo"
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"
             v-model:team-view="gridStore.teamView"
             :disable-team-view="mapEditorActive || activeTab === 'debug'"
             :hide-team-controls="mapEditorActive || activeTab === 'debug'"
+            :hide-grid-info="mapEditorActive"
             :show-syn-toggle="!mapEditorActive && activeTab !== 'debug'"
             @copy-link="handleCopyLink"
             @copy-image="handleCopyImage"

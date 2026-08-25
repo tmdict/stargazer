@@ -96,7 +96,6 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     source.artifact.placeArtifact(5, Team.ENEMY)
 
     const flags: DisplayFlags = {
-      showGridInfo: true,
       showPerspective: false,
       showSkills: true,
       teamView: true,
@@ -248,7 +247,6 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(result.success).toBe(true)
     // No flags were encoded, so the store reports the defaults.
     expect(result.displayFlags).toEqual({
-      showGridInfo: true,
       showPerspective: true,
       showSkills: true,
       teamView: false,

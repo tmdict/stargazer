@@ -14,15 +14,16 @@ import IconSwap from '@/components/ui/IconSwap.vue'
 import IconTrash from '@/components/ui/IconTrash.vue'
 import type { GridContext } from '@/composables/useGridContext'
 import { useGridExport } from '@/composables/useGridExport'
+import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useGridSwap } from '@/composables/useGridSwap'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
-const { context, showGridInfo, showSkills, showPerspective, tapMode } = defineProps<{
+const { context, info, showSkills, showPerspective, tapMode } = defineProps<{
   context: GridContext
   characters: readonly CharacterType[]
-  showGridInfo: boolean
+  info: GridInfoView
   showSkills: boolean
   showPerspective: boolean
   // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid
@@ -66,17 +67,9 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
     :data-grid-board-id="context.id"
     @pointerdown="grids.setActive(context.id)"
   >
-    <GridContainer
-      :context
-      :characters
-      :show-grid-info
-      :show-debug="false"
-      :show-skills
-      :show-perspective
-      :tap-mode
-    />
+    <GridContainer :context :characters :info :show-skills :show-perspective :tap-mode />
 
-    <TeamPowerPanel v-if="showGridInfo" :context />
+    <TeamPowerPanel v-if="info.heroCard" :context :show-paragon="info.paragon" />
 
     <div class="board-actions capture-exclude">
       <button

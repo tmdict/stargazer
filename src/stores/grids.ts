@@ -292,8 +292,7 @@ export const useGrids = defineStore('grids', () => {
     if (!sourceCtx.remove(sourceHexId)) return false
     if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) {
       // Paragon follows the hero to its destination board and team.
-      targetCtx.setParagon(destTeam, characterId, sourceCtx.getParagon(sourceTeam, characterId))
-      sourceCtx.setParagon(sourceTeam, characterId, 0)
+      targetCtx.setParagon(destTeam, characterId, sourceCtx.takeParagon(sourceTeam, characterId))
       return true
     }
     placeUnit(sourceCtx, sourceHexId, characterId, sourceTeam) // rollback
@@ -324,12 +323,10 @@ export const useGrids = defineStore('grids', () => {
     const placedA = placeUnit(targetCtx, targetHexId, aId, bTeam)
     const placedB = placeUnit(sourceCtx, sourceHexId, bId, aTeam)
     if (placedA && placedB) {
-      // Paragon follows each hero. Clear both old keys before writing the new
-      // ones: a same-hero cross-team swap (aId === bId) reuses a key.
-      const aLevel = sourceCtx.getParagon(aTeam, aId)
-      const bLevel = targetCtx.getParagon(bTeam, bId)
-      sourceCtx.setParagon(aTeam, aId, 0)
-      targetCtx.setParagon(bTeam, bId, 0)
+      // Paragon follows each hero. Take both levels before writing either: a
+      // same-hero cross-team swap (aId === bId) reuses a key.
+      const aLevel = sourceCtx.takeParagon(aTeam, aId)
+      const bLevel = targetCtx.takeParagon(bTeam, bId)
       targetCtx.setParagon(bTeam, aId, aLevel)
       sourceCtx.setParagon(aTeam, bId, bLevel)
       return true

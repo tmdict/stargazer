@@ -18,6 +18,7 @@ import TeamsRoster from '@/components/teams/TeamsRoster.vue'
 import TabView from '@/components/ui/TabView.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
+import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { loadTeamsDisplayPrefs, saveTeamsDisplayPrefs } from '@/composables/useGridPersistence'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -58,8 +59,14 @@ const isGridTab = computed(() => activeTab.value === 'teams')
 // Display flags drive every board (global controls); the share link serializes them.
 // 3-2 "wrap" boards layout vs one row; serialized with the other display flags.
 const wrapBoards = ref(false)
-const { showGridInfo, showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } =
-  useDisplayFlags({ wrap: wrapBoards })
+const { showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } = useDisplayFlags({
+  wrap: wrapBoards,
+})
+
+// First call on this device seeds the pref (and runs gridInfoMigration's
+// legacy byte remap), so it must precede the loadTeamsDisplayPrefs read below.
+const { prefs: gridInfoPrefs } = useGridInfoPrefs()
+const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 
 // At sheet widths (<= tablet) the roster is a pull-up sheet and boards place via
 // the cell-tap flow; on desktop the roster is a card and cells use the on-grid popup.
@@ -195,12 +202,12 @@ const handleCopyLink = () => shareLink(teamsRestore.snapshot())
           <TabView v-model="activeTab" :tabs="tabs" eager>
             <template #teams>
               <TeamsBoards
-                v-model:show-grid-info="showGridInfo"
                 v-model:show-perspective="showPerspective"
                 v-model:show-skills="showSkills"
                 v-model:wrap="wrapBoards"
                 :characters="gameDataStore.characters"
                 :active-mode="activeMode"
+                :info
                 :source-name="sourceTeam?.name ?? null"
                 :dirty="dirty"
                 :suggested-name="suggestedName"

@@ -150,6 +150,8 @@ export interface GridContext {
   removeArtifact: (team: Team) => void
   getParagon: (team: Team, characterId: number) => number
   setParagon: (team: Team, characterId: number, level: number) => void
+  // Reads and clears a level in one step, so a transfer's clear can't be missed.
+  takeParagon: (team: Team, characterId: number) => number
   handleDrop: (payload: CharacterDropPayload, targetHexId: number) => boolean
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
@@ -184,7 +186,9 @@ export function createGridContext(
   // rather than hex, so a level follows its hero across moves and each team tracks a
   // hero independently. Sparse: only non-zero levels are stored, and a removed hero's
   // entry lingers harmlessly (neither rendered nor serialized) until the hero returns;
-  // bulk resets (clear, map switch) drop the lot.
+  // bulk resets (clear, map switch) drop the lot. The team in the key means a team
+  // change must re-key the entry: move/swap below transfer it via takeParagon, as do
+  // the grids store's cross-board transfers.
   const paragon = reactive(new Map<string, number>())
   const paragonKey = (team: Team, characterId: number): string => `${team}:${characterId}`
   const getParagon = (team: Team, characterId: number): number =>
@@ -194,6 +198,11 @@ export function createGridContext(
     const key = paragonKey(team, characterId)
     if (clamped > 0) paragon.set(key, clamped)
     else paragon.delete(key)
+  }
+  const takeParagon = (team: Team, characterId: number): number => {
+    const level = getParagon(team, characterId)
+    setParagon(team, characterId, 0)
+    return level
   }
   const clearParagon = (): void => paragon.clear()
 
@@ -272,11 +281,39 @@ export function createGridContext(
 
   const remove = (hexId: number): boolean => executeRemoveCharacter(grid, skillManager, hexId)
 
-  const move = (fromHexId: number, toHexId: number, characterId: number): boolean =>
-    executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
+  // The engine is paragon-agnostic, and a move or swap can change a unit's team
+  // (the destination zone decides), so a team change transfers each level to its
+  // hero's new key.
+  const move = (fromHexId: number, toHexId: number, characterId: number): boolean => {
+    const fromTeam = getCharacterTeam(grid, fromHexId)
+    if (!executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)) return false
+    const toTeam = getCharacterTeam(grid, toHexId)
+    if (fromTeam !== undefined && toTeam !== undefined && toTeam !== fromTeam) {
+      setParagon(toTeam, characterId, takeParagon(fromTeam, characterId))
+    }
+    return true
+  }
 
-  const swap = (fromHexId: number, toHexId: number): boolean =>
-    executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
+  const swap = (fromHexId: number, toHexId: number): boolean => {
+    const fromId = getCharacter(grid, fromHexId)
+    const toId = getCharacter(grid, toHexId)
+    const fromTeam = getCharacterTeam(grid, fromHexId)
+    const toTeam = getCharacterTeam(grid, toHexId)
+    if (!executeSwapCharacters(grid, skillManager, fromHexId, toHexId)) return false
+    if (
+      fromId !== undefined &&
+      toId !== undefined &&
+      fromTeam !== undefined &&
+      toTeam !== undefined &&
+      fromTeam !== toTeam
+    ) {
+      const fromLevel = takeParagon(fromTeam, fromId)
+      const toLevel = takeParagon(toTeam, toId)
+      setParagon(toTeam, fromId, fromLevel)
+      setParagon(fromTeam, toId, toLevel)
+    }
+    return true
+  }
 
   const autoPlace = (characterId: number, team: Team): boolean =>
     executeAutoPlaceCharacter(grid, skillManager, characterId, team)
@@ -583,6 +620,7 @@ export function createGridContext(
     removeArtifact,
     getParagon,
     setParagon,
+    takeParagon,
     handleDrop,
     switchMap,
     clearCharacters,
