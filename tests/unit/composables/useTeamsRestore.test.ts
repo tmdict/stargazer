@@ -50,7 +50,7 @@ function createHarness(resolveSourceId?: (id: string | null) => string | null): 
   setActivePinia(createPinia())
   const grids = useGrids()
   const character = useCharacterStore()
-  const flags: DisplayFlags = { showGridInfo: true, wrap: false }
+  const flags: DisplayFlags = { showSkills: true, wrap: false }
   const wrapBoards = ref(false)
   const inverted = ref(false)
   const restore = useTeamsRestore({
@@ -190,7 +190,7 @@ describe('useTeamsRestore', () => {
         data: encodeMultiGridStateToUrl({
           boards: [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
-          d: packDisplayFlags({ showGridInfo: false, teamView: true, inverted: true }),
+          d: packDisplayFlags({ showSkills: false, teamView: true, inverted: true }),
         }),
         sourceId: null,
         defaults: 'arena1,arena1,arena1',
@@ -198,7 +198,7 @@ describe('useTeamsRestore', () => {
     )
     restore.initialize(null)
     restore.switchMode('3v3')
-    expect(flags.showGridInfo).toBe(true)
+    expect(flags.showSkills).toBe(true)
     expect(flags.teamView).toBeUndefined()
     expect(inverted.value).toBe(false)
     expect(wrapBoards.value).toBe(false)
@@ -220,10 +220,10 @@ describe('useTeamsRestore', () => {
     const link = encodeMultiGridStateToUrl({
       boards: [{ m: 'arena1' }],
       mode: '1v1',
-      d: packDisplayFlags({ showGridInfo: false, inverted: true }),
+      d: packDisplayFlags({ showSkills: false, inverted: true }),
     })
     restore.initialize(link)
-    expect(flags.showGridInfo).toBe(false)
+    expect(flags.showSkills).toBe(false)
     expect(inverted.value).toBe(true)
   })
 
@@ -395,17 +395,17 @@ describe('useTeamsRestore + saved teams (provenance and canonical compare)', () 
   it('selecting a team keeps current display flags and view rotation', () => {
     const { restore, flags, inverted } = createHarness()
     restore.initialize(null)
-    flags.showGridInfo = false
+    flags.showSkills = false
     inverted.value = true
     // The payload carries contrary display flags; applyTeamData restores with
     // adoptFlags=false, so they must be ignored.
     const data = encodeMultiGridStateToUrl({
       boards: [{ m: 'arena1' }],
       mode: '1v1',
-      d: packDisplayFlags({ showGridInfo: true, inverted: false }),
+      d: packDisplayFlags({ showSkills: true, inverted: false }),
     })
     expect(restore.applyTeamData('1v1', data, 'x')).toBe(true)
-    expect(flags.showGridInfo).toBe(false)
+    expect(flags.showSkills).toBe(false)
     expect(inverted.value).toBe(true)
   })
 })

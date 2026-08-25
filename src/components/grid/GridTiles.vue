@@ -17,7 +17,7 @@ interface Props {
   hexes: Hex[]
   layout: Layout
   height: number
-  showGridInfo: boolean
+  showTileIds: boolean
   showCoordinates: boolean
   isMapEditorMode: boolean
   selectedMapEditorState: State
@@ -141,12 +141,6 @@ const scaledFontSizes = computed(() => {
     hexId: Math.max(10, HEX_ID_FONT_SIZE * scale),
     coordinate: Math.max(6, COORDINATE_FONT_SIZE * scale),
   }
-})
-
-// Coordinates are unreadable at reduced scale (mobile).
-const shouldShowCoordinates = computed(() => {
-  const scale = ctx.hexScale
-  return props.showCoordinates && scale >= 1
 })
 
 const scaledStrokeWidth = computed(() => {
@@ -454,7 +448,7 @@ onUnmounted(() => {
         <!-- Text layer (render once for all hexes, on top of all tile polygons) -->
         <g v-for="hex in hexes" :key="`text-${hex.getId()}`" class="hex-text">
           <text
-            v-if="showGridInfo && shouldShowHexId(hex)"
+            v-if="showTileIds && shouldShowHexId(hex)"
             :x="ctx.layout.hexToPixel(hex).x"
             :y="ctx.layout.hexToPixel(hex).y + 6"
             text-anchor="middle"
@@ -466,7 +460,7 @@ onUnmounted(() => {
             {{ hex.getId() }}
           </text>
           <text
-            v-if="shouldShowCoordinates"
+            v-if="showCoordinates"
             :x="ctx.layout.hexToPixel(hex).x"
             :y="ctx.layout.hexToPixel(hex).y + 18"
             text-anchor="middle"

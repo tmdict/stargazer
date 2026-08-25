@@ -38,7 +38,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 
 The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter hidden on mobile) inside one card, with the roster as a sibling card.
 
-- **Display flags**: owns the view toggles (grid info, skills, perspective, team view, invert, wrap) as device-level preferences shared by every team mode: restored from `stargazer.teams.display` at setup and mirrored on every change. Share links serialize them and a `?g=` restore applies them (adopting the sharer's view is the point of a link); mode slots also carry them but restores ignore them entirely
+- **Display flags**: owns the view toggles (skills, perspective, team view, invert, wrap) as device-level preferences shared by every team mode: restored from `stargazer.teams.display` at setup and mirrored on every change. Share links serialize them and a `?g=` restore applies them (adopting the sharer's view is the point of a link); mode slots also carry them but restores ignore them entirely. Grid info visibility is separate: the `gridInfo` slice of `stargazer.prefs` (`useGridInfoPrefs`, shared with the Arena and ShareView), derived into an effective `info` object threaded to the boards, never serialized into links
 - **Board sizing**: pins its own hex size per breakpoint (`/src/utils/teamsBoardSize.ts`)
 - **Startup**: a `?g=` link overwrites the routed mode's slot; otherwise the last-used mode restores
 - **Degraded startup**: if game data failed to load, `buildDefaults()` shows placeholder boards with no persistence reads or writes
@@ -49,7 +49,7 @@ The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter
 The grid panel: a document-style title line, a two-row control bar (`GridControls` with teams content slotted in), then a horizontally scrolling row of boards, each bound to its own `GridContext`.
 
 - **Title line**: the source team's name (or "Unsaved team") as plain centered text, with a dot + "Unsaved changes" beside it while the boards differ from the saved copy
-- **Row 1 (configure)**: mode picker, then the display toggles (wrap, grid info, skills, syn, flat, invert, team view)
+- **Row 1 (configure)**: mode picker, then the display toggles (wrap, the Grid Info split chip with its children popover, skills, syn, flat, invert, team view)
 - **Row 2 (act)**: team actions and the side-load menu, then the share actions (link, copy, download, clear)
 - **Per-board actions**: swap (drag to reorder, via `useGridSwap`), copy image, download image, clear
 - **Wrap**: the 3-2 two-row boards layout; rendered for 5-board modes on desktop only (every consumer gates on `canWrap` / board count, so the preference survives visits to non-wrap modes), serialized with the display flags

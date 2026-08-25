@@ -5,11 +5,13 @@ import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
+import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
+import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { useToast } from '@/composables/useToast'
 import { SITE_ORIGIN } from '@/lib/site'
 import { useGameDataStore } from '@/stores/gameData'
@@ -64,10 +66,13 @@ applyMultiSize()
 watch(currentBreakpoint, applyMultiSize)
 
 const hasValidGrid = ref(false)
-const showGridInfo = ref(false)
 const showPerspective = ref(false) // Default to flat view
 const showSkills = ref(true)
 const wrapBoards = ref(false) // 5 v 5 only: 3-2 layout vs one row
+
+// Grid-info visibility is the viewer's own shared pref, not the link's.
+const { prefs: gridInfoPrefs } = useGridInfoPrefs()
+const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 
 // Initialize data immediately (synchronous)
 gameDataStore.initializeData()
@@ -82,7 +87,6 @@ const restoreStateFromUrl = () => {
   if (result.success) {
     // Apply display flags if present
     if (result.displayFlags) {
-      showGridInfo.value = result.displayFlags.showGridInfo ?? false
       showPerspective.value = result.displayFlags.showPerspective ?? false
       showSkills.value = result.displayFlags.showSkills ?? true
       gridStore.teamView = result.displayFlags.teamView ?? false
@@ -125,9 +129,10 @@ const editLink = computed(() =>
     <a :href="dismissLink" class="backdrop-link" aria-label="Back to Stargazer"></a>
 
     <!-- Content container -->
-    <div v-if="hasValidGrid" class="grid-wrapper" :class="{ multi: isMultiBoard }" @click.stop>
+    <div v-if="hasValidGrid" class="grid-wrapper" :class="{ multi: isMultiBoard }">
       <!-- Edit opens the shared setup in its editable page; close dismisses to it. -->
       <div class="buttons">
+        <GridInfoToggle share />
         <a :href="editLink" class="button" aria-label="Edit in Stargazer" title="Edit">
           <IconEdit :size="18" />
         </a>
@@ -148,26 +153,34 @@ const editLink = computed(() =>
             <GridContainer
               :context="ctx"
               :characters="gameDataStore.characters"
-              :show-grid-info
-              :show-debug="false"
+              :info
               :show-skills
               :show-perspective
               :readonly="true"
             />
-            <TeamPowerPanel v-if="showGridInfo" :context="ctx" readonly />
+            <TeamPowerPanel
+              v-if="info.heroCard"
+              :context="ctx"
+              :show-paragon="info.paragon"
+              readonly
+            />
           </div>
         </BoardsRow>
         <div v-else class="share-board">
           <GridContainer
             :context="activeContext"
             :characters="gameDataStore.characters"
-            :show-grid-info
-            :show-debug="false"
+            :info
             :show-skills
             :show-perspective
             :readonly="true"
           />
-          <TeamPowerPanel v-if="showGridInfo" :context="activeContext" readonly />
+          <TeamPowerPanel
+            v-if="info.heroCard"
+            :context="activeContext"
+            :show-paragon="info.paragon"
+            readonly
+          />
         </div>
       </DragDropProvider>
     </div>
@@ -193,7 +206,9 @@ const editLink = computed(() =>
   box-shadow:
     0 10px 30px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
-  padding: 10px;
+  /* Top padding clears the absolutely positioned action cluster (modal.css
+     .buttons: 12px offset + 32px buttons) so the board starts below it. */
+  padding: 56px 10px 10px;
   z-index: 1;
   display: flex;
   justify-content: center;
@@ -278,7 +293,7 @@ const editLink = computed(() =>
 
   .grid-wrapper {
     margin: 80px 4px;
-    padding: 4px;
+    padding: 52px 4px 4px;
   }
 
   .empty-state {
