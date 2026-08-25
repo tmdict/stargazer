@@ -46,7 +46,7 @@ describe('binaryEncoder', () => {
           ],
         },
       ],
-      ['display flags with inverted (bit 5)', { t: [[1, 1]], d: 0b101010 }],
+      ['display flags with high bits set', { t: [[1, 1]], d: 0b101010 }],
       ['display flags zero', { t: [[1, 1]], d: 0 }],
       [
         'display flags zero with extended counts',

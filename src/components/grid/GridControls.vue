@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import GridInfoToggle from '@/components/grid/GridInfoToggle.vue'
 import MapInvertToggle from '@/components/MapInvertToggle.vue'
 import ClearButton from '@/components/ui/ClearButton.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
@@ -14,7 +15,6 @@ const i18n = useI18nStore()
 const grids = useGrids()
 const { handleClearAll, clearTargetHex, clearLiftedHex } = useSelectionState()
 
-const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills')
 const teamView = defineModel<boolean>('teamView')
@@ -29,6 +29,9 @@ defineProps<{
   hideTeamControls?: boolean
   // Shows the "Wrap" boards-layout toggle (Teams only); the Arena never renders it.
   showWrapToggle?: boolean
+  // Hides the Grid Info chip (map-editor painting suppresses every grid-info
+  // surface, so a live-looking chip would misrepresent the board).
+  hideGridInfo?: boolean
   // Shows the "Syn" friend-assist toggle (Arena team tabs; Teams 1v1 mode only).
   showSynToggle?: boolean
   // Two-step confirm on Clear (Teams only; the Arena clears instantly).
@@ -71,10 +74,7 @@ const synergyView = computed({
         <input type="checkbox" v-model="wrap" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.wrap') }}</span>
       </label>
-      <label class="grid-toggle-btn" :class="{ active: showGridInfo }">
-        <input type="checkbox" v-model="showGridInfo" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.grid-info') }}</span>
-      </label>
+      <GridInfoToggle v-if="!hideGridInfo" />
       <label class="grid-toggle-btn" :class="{ active: showSkills }">
         <input type="checkbox" v-model="showSkills" class="grid-toggle-checkbox" />
         <span class="grid-toggle-text">{{ i18n.t('app.skills') }}</span>

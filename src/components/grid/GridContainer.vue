@@ -4,6 +4,7 @@ import { computed } from 'vue'
 import GridManager from './GridManager.vue'
 import type DebugPanel from '@/components/debug/DebugPanel.vue'
 import { provideGridContext, type GridContext } from '@/composables/useGridContext'
+import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import type { CharacterType } from '@/lib/types/character'
 import { State } from '@/lib/types/state'
 
@@ -13,8 +14,9 @@ interface Props {
   // Data props
   characters: readonly CharacterType[]
   // Display toggle props
-  showGridInfo: boolean
-  showDebug: boolean
+  info: GridInfoView
+  // Debug-tab-only: gates the PathfindingDebug svg (the Arena's Debug tab).
+  showDebug?: boolean
   showSkills: boolean
   // Map editor props
   isMapEditorMode?: boolean
@@ -115,7 +117,7 @@ const shiftStyle = computed(() => {
         <div :style="shiftStyle">
           <GridManager
             :characters
-            :show-grid-info
+            :info
             :show-debug
             :show-skills
             :is-map-editor-mode

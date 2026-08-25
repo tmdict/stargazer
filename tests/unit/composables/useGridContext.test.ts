@@ -15,6 +15,7 @@ const ALLY_FAR = 13
 const ENEMY = 30
 const ZANIE = 89 // turrets: companionRange 3
 const DUMMY = 601 // skill-less
+const DUMMY_2 = 602 // skill-less
 
 describe('createGridContext closest-target ranges', () => {
   beforeEach(() => {
@@ -43,7 +44,6 @@ describe('createGridContext closest-target ranges', () => {
  * change and slot change must show up without any wiring in the operations. */
 describe('createGridContext artifact arrows', () => {
   const ENLIGHTENING = 3 // rearmost ally
-  const DUMMY_2 = 602
 
   beforeEach(() => {
     setActivePinia(createPinia())
@@ -71,5 +71,57 @@ describe('createGridContext artifact arrows', () => {
 
     ctx.removeArtifact(Team.ALLY)
     expect(targets()).toEqual([])
+  })
+})
+
+/* Paragon levels are keyed by team + character, and a move or swap can change a
+ * unit's team (the destination zone decides), so the ctx wrappers must re-key
+ * the level; the engine underneath is paragon-agnostic. arena1 enemy spawns
+ * include hex 40. */
+describe('createGridContext paragon re-keying', () => {
+  beforeEach(() => {
+    setActivePinia(createPinia())
+  })
+
+  const setup = () => {
+    const grids = useGrids()
+    grids.setGridCount(1)
+    return grids.active!
+  }
+
+  it('keeps a level on a same-team move', () => {
+    const ctx = setup()
+    expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
+    ctx.setParagon(Team.ALLY, DUMMY, 3)
+
+    expect(ctx.move(1, 2, DUMMY)).toBe(true)
+
+    expect(ctx.getParagon(Team.ALLY, DUMMY)).toBe(3)
+  })
+
+  it('re-keys a level to the destination team on a cross-team move', () => {
+    const ctx = setup()
+    expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
+    ctx.setParagon(Team.ALLY, DUMMY, 3)
+
+    expect(ctx.move(1, 40, DUMMY)).toBe(true)
+
+    expect(ctx.getParagon(Team.ENEMY, DUMMY)).toBe(3)
+    expect(ctx.getParagon(Team.ALLY, DUMMY)).toBe(0)
+  })
+
+  it('trades levels on a cross-team swap', () => {
+    const ctx = setup()
+    expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
+    expect(ctx.place(40, DUMMY_2, Team.ENEMY)).toBe(true)
+    ctx.setParagon(Team.ALLY, DUMMY, 2)
+    ctx.setParagon(Team.ENEMY, DUMMY_2, 4)
+
+    expect(ctx.swap(1, 40)).toBe(true)
+
+    expect(ctx.getParagon(Team.ENEMY, DUMMY)).toBe(2)
+    expect(ctx.getParagon(Team.ALLY, DUMMY_2)).toBe(4)
+    expect(ctx.getParagon(Team.ALLY, DUMMY)).toBe(0)
+    expect(ctx.getParagon(Team.ENEMY, DUMMY_2)).toBe(0)
   })
 })

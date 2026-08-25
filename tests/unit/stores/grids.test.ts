@@ -452,6 +452,32 @@ describe('useGrids paragon carry-over', () => {
     expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
     expect(b!.getParagon(Team.ENEMY, ENEMY_A)).toBe(0)
   })
+
+  it('re-keys a paragon level on a same-board cross-team move', () => {
+    const { grids, a } = setupBoards()
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    a!.setParagon(Team.ALLY, ALLY_A, 4)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 41)).toBe(true)
+
+    expect(a!.getParagon(Team.ENEMY, ALLY_A)).toBe(4)
+    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+  })
+
+  it('trades paragon levels on a same-board cross-team swap', () => {
+    const { grids, a } = setupBoards()
+    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
+    expect(a!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
+    a!.setParagon(Team.ALLY, ALLY_A, 2)
+    a!.setParagon(Team.ENEMY, ENEMY_A, 4)
+
+    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 41)).toBe(true)
+
+    expect(a!.getParagon(Team.ENEMY, ALLY_A)).toBe(2)
+    expect(a!.getParagon(Team.ALLY, ENEMY_A)).toBe(4)
+    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+    expect(a!.getParagon(Team.ENEMY, ENEMY_A)).toBe(0)
+  })
 })
 
 describe('useGrids.routeDrop same-board uniqueness', () => {

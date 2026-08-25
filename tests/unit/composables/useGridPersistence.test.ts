@@ -22,7 +22,7 @@ import { stubLocalStorage } from '../fixtures/storage'
 let storage: Map<string, string>
 let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 
-const FLAGS = () => ({ showGridInfo: true, showSkills: false })
+const FLAGS = () => ({ showPerspective: true, showSkills: false })
 
 const readEnvelope = (mode: TeamModeKey): ActiveSlot =>
   JSON.parse(storage.get(teamsSlotKey(mode))!) as ActiveSlot
@@ -149,7 +149,7 @@ describe('teams display prefs', () => {
 
   it('round-trips every view toggle, inverted included', () => {
     saveTeamsDisplayPrefs({
-      showGridInfo: false,
+      showPerspective: false,
       showSkills: false,
       teamView: true,
       wrap: true,
@@ -157,7 +157,7 @@ describe('teams display prefs', () => {
     })
     const loaded = loadTeamsDisplayPrefs()
     expect(loaded).not.toBeNull()
-    expect(loaded!.showGridInfo).toBe(false)
+    expect(loaded!.showPerspective).toBe(false)
     expect(loaded!.showSkills).toBe(false)
     expect(loaded!.teamView).toBe(true)
     expect(loaded!.wrap).toBe(true)

@@ -17,11 +17,9 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   const grids = useGrids()
   const { currentBreakpoint, showPerspective } = useBreakpoint()
 
-  const showGridInfo = ref(true)
   const showSkills = ref(true)
 
   const toFlags = (): DisplayFlags => ({
-    showGridInfo: showGridInfo.value,
     showPerspective: showPerspective.value,
     showSkills: showSkills.value,
     teamView: grids.teamView,
@@ -30,7 +28,6 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   })
 
   const applyFlags = (flags: DisplayFlags): void => {
-    showGridInfo.value = flags.showGridInfo ?? true
     showPerspective.value = flags.showPerspective ?? false
     showSkills.value = flags.showSkills ?? true
     grids.teamView = flags.teamView ?? false
@@ -39,7 +36,6 @@ export function useDisplayFlags(opts: { wrap?: Ref<boolean> } = {}) {
   }
 
   return {
-    showGridInfo,
     showSkills,
     showPerspective,
     currentBreakpoint,

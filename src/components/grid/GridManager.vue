@@ -12,6 +12,7 @@ import SkillTargeting from '@/components/SkillTargeting.vue'
 import { useDragDrop, useDragDropRegistration } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { provideGridEvents } from '@/composables/useGridEvents'
+import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import type { Hex } from '@/lib/hex'
@@ -27,8 +28,9 @@ interface Props {
   // Data props
   characters: readonly CharacterType[]
   // Display toggle props
-  showGridInfo: boolean
-  showDebug: boolean
+  info: GridInfoView
+  // Debug-tab-only: gates the PathfindingDebug svg (the Arena's Debug tab).
+  showDebug?: boolean
   showSkills: boolean
   // Map editor props
   isMapEditorMode: boolean
@@ -243,8 +245,8 @@ defineExpose({
       :hexes="ctx.visibleHexes"
       :layout="ctx.layout"
       :height="defaultSvgHeight"
-      :show-grid-info="showGridInfo"
-      :show-coordinates="showDebug"
+      :show-tile-ids="info.tileIds"
+      :show-coordinates="info.coordinates"
       :is-map-editor-mode="isMapEditorMode"
       :selected-map-editor-state="selectedMapEditorState"
       :show-perspective="showPerspective"
@@ -257,7 +259,7 @@ defineExpose({
     <GridArtifacts
       :ally-artifact-id="ctx.artifacts.ally"
       :enemy-artifact-id="ctx.artifacts.enemy"
-      :show-grid-info="showGridInfo"
+      :show-hover="info.hover"
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
@@ -268,7 +270,7 @@ defineExpose({
     <!-- Character layer (above artifacts) -->
     <GridCharacters
       :characters
-      :show-grid-info="showGridInfo"
+      :show-hover="info.hover"
       :show-perspective="showPerspective"
       :scale-y="verticalScaleComp"
       :is-map-editor-mode="isMapEditorMode"
@@ -294,10 +296,10 @@ defineExpose({
       </g>
     </svg>
 
-    <!-- Closest-target arrows, a debug-level visual: last in the stack so
-         they stay readable over the pathfinding debug lines. -->
+    <!-- Closest-target arrows: last in the stack so they stay readable over
+         the pathfinding debug lines when the Debug tab shows both. -->
     <GridArrows
-      v-if="showDebug"
+      v-if="info.targeting"
       :show-perspective="showPerspective"
       :default-svg-height="defaultSvgHeight"
     />

@@ -26,7 +26,8 @@ import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
   characters: readonly CharacterType[]
-  showGridInfo: boolean
+  // Gates the hover card only; placement interactions are unaffected.
+  showHover: boolean
   showPerspective: boolean
   scaleY: number
   isMapEditorMode: boolean
@@ -227,14 +228,15 @@ const handleClick = (event: MouseEvent, hexId: number, characterId: number) => {
   ctx.remove(hexId)
 }
 
+// Hover runs on readonly boards too: the card is pure information gated by
+// the pref alone, and the event-bus emits just report the pointer; listeners
+// own their interactivity policy (GridTiles ignores these on readonly).
 const handleMouseEnter = (event: MouseEvent, hexId: number, characterId: number) => {
-  if (props.readonly) return
   gridEvents.emit('character:mouseenter', hexId)
-  if (props.showGridInfo) show(event, baseCharacterAt(characterId))
+  if (props.showHover) show(event, baseCharacterAt(characterId))
 }
 
 const handleMouseLeave = (hexId: number) => {
-  if (props.readonly) return
   gridEvents.emit('character:mouseleave', hexId)
   hideTooltip()
 }
@@ -344,8 +346,9 @@ const visiblePlacements = computed(() => {
   cursor: default;
 }
 
+/* Readonly keeps pointer events (the hover card needs them, mirroring the
+   artifact icons); drag and click are gated in the template. */
 .character.readonly {
-  pointer-events: none;
   cursor: default;
 }
 

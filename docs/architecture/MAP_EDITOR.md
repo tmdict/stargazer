@@ -29,7 +29,7 @@ const emit = defineEmits<{
 
 ### HomeView (`/src/views/HomeView.vue`)
 
-Owns `selectedMapEditorState` and `editorEnabled`; `mapEditorActive` is both the Maps tab and the toggle. While active, grid info and team view are forced off (painting is incompatible with both), the team-view toggle is disabled, and the team controls (Clear all) and Syn toggle are hidden. `arenaSelected` goes to `gridStore.switchMap`.
+Owns `selectedMapEditorState` and `editorEnabled`; `mapEditorActive` is both the Maps tab and the toggle. While active, team view is forced off (painting is incompatible with it), every grid-info surface is suppressed view-level (the effective `info` object zeroes without writing the pref, and the Grid Info chip is hidden), the team-view toggle is disabled, and the team controls (Clear all) and Syn toggle are hidden. `arenaSelected` goes to `gridStore.switchMap`.
 
 ### MapEditor Store (`/src/stores/mapEditor.ts`)
 

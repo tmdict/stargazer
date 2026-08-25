@@ -14,6 +14,7 @@ import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
@@ -25,6 +26,8 @@ import { useI18nStore } from '@/stores/i18n'
 const { sourceName } = defineProps<{
   characters: readonly CharacterType[]
   activeMode: TeamModeKey
+  // Effective grid-info visibility, derived by TeamsView from the shared pref.
+  info: GridInfoView
   // Title-line and save-action state: source name (null = unsaved), content-dirty
   // flag, and the popover's suggested auto-name.
   sourceName: string | null
@@ -39,7 +42,6 @@ const { sourceName } = defineProps<{
 
 // Display flags are owned by TeamsView (the share link serializes them, the URL
 // restore sets them); GridControls writes them and every board reads them.
-const showGridInfo = defineModel<boolean>('showGridInfo', { required: true })
 const showPerspective = defineModel<boolean>('showPerspective', { required: true })
 const showSkills = defineModel<boolean>('showSkills', { required: true })
 // 3-2 "wrap" boards layout vs one row. Owned by TeamsView and serialized with the
@@ -141,7 +143,6 @@ const {
       :show-syn-toggle="TEAM_MODES[activeMode].allowSynergy"
       confirm-clear
       v-model:wrap="wrap"
-      v-model:show-grid-info="showGridInfo"
       v-model:show-perspective="showPerspective"
       v-model:show-skills="showSkills"
       v-model:team-view="grids.teamView"
@@ -170,7 +171,7 @@ const {
         :key="ctx.id"
         :context="ctx"
         :characters="characters"
-        :show-grid-info="showGridInfo"
+        :info
         :show-skills="showSkills"
         :show-perspective="showPerspective"
         :tap-mode="tapMode"

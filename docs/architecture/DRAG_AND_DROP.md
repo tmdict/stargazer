@@ -84,7 +84,7 @@ GridManager (Orchestrator)
 ├── GridCharacters (HTML overlay)
 ├── SkillTargeting (SVG overlay)
 ├── PathfindingDebug (Debug tab only)
-└── GridArrows (SVG overlay, Debug tab only)
+└── GridArrows (SVG overlay, Grid Info's Targeting toggle)
 ```
 
 **GridTiles Internal Structure:**
@@ -189,7 +189,7 @@ The drag-hover cue reads layer 1 only, so a layer 2 rejection resolves as a sile
 
 On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`. Drag is not the only caller: tap-lift drops (see the placement-interaction section in [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)) reach the same router through `routeLiftDrop`, which builds the payload from the lifted cell, so taps and drags share every gate below.
 
-Every drop first passes `canDropCharacter(characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)`, the routing-layer gate covering page-wide per-team uniqueness (including same-board cross-team moves and swaps), companions and synergy heroes staying on their board, destination capacity, and phantimal faction. A roster drop resolves through `useGrids.resolvePick` (base id, or the synergy copy while Syn is on; an occupied target is judged against the post-vacate board), the same resolver the board's drop handler places with. GridTiles reads the same gate for the drag-hover cue, so hover and drop agree for every routing-layer rule. The engine's per-grid checks still have the last word at drop time: the gate's same-board leg checks only the page-wide rule, so a same-board engine rejection (a full team on a team change, a companion changing teams, a phantimal cross-team swap) or a mid-transaction failure resolves as a silent no-op. Paragon levels move with a hero across boards.
+Every drop first passes `canDropCharacter(characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)`, the routing-layer gate covering page-wide per-team uniqueness (including same-board cross-team moves and swaps), companions and synergy heroes staying on their board, destination capacity, and phantimal faction. A roster drop resolves through `useGrids.resolvePick` (base id, or the synergy copy while Syn is on; an occupied target is judged against the post-vacate board), the same resolver the board's drop handler places with. GridTiles reads the same gate for the drag-hover cue, so hover and drop agree for every routing-layer rule. The engine's per-grid checks still have the last word at drop time: the gate's same-board leg checks only the page-wide rule, so a same-board engine rejection (a full team on a team change, a companion changing teams, a phantimal cross-team swap) or a mid-transaction failure resolves as a silent no-op. Paragon levels move with a hero across boards and across team changes (levels are keyed by team + character, so a team change re-keys the entry).
 
 - **Roster or same-board drop**: handled by the target board's own context (place / move / swap).
 - **Cross-board drop**: a compensating transaction across two `Grid` instances (remove from the source, place on the target, restore the source on failure), since the single-board atomic `move.ts` wrapper can't span two grids. Dropping onto an occupied cell is a paired swap with the same envelope.
@@ -210,7 +210,7 @@ Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so t
 **GridTiles**: Renders hexes with three-layer SVG structure and invisible events
 **GridArtifacts**: Shows team artifacts in their host cells, dashed cells beside grid cells 1 (ally) and 45 (enemy): outside the grid simulation and the hex pipeline, with their own artifact drag surfaces (renders before characters)
 **GridCharacters**: Positions character portraits with absolute positioning
-**GridArrows**: Draws the closest-target arrows (Debug tab only)
+**GridArrows**: Draws the closest-target arrows (Grid Info's Targeting toggle)
 **SkillTargeting**: Shows skill-specific targeting arrows (e.g., Silvina's First Strike)
 
 ### Visual Layer Separation
