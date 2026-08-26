@@ -1,0 +1,12 @@
+{
+  "id": 125,
+  "name": "eryndor",
+  "level": "s",
+  "faction": "graveborn",
+  "class": "mage",
+  "damage": "magic",
+  "energy": [0],
+  "range": 4,
+  "season": 7,
+  "tags": {}
+}
