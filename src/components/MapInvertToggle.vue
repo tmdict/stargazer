@@ -49,7 +49,7 @@ const onToggle = () => {
 
 /* GridControls' touch-tablet compact tier: keep this chip the same width as
    the row's others so the row stays one line in the 660px column. */
-@media (pointer: coarse) and (min-width: 769px) {
+@media (pointer: coarse) and (min-width: 1220px) {
   .invert-toggle {
     padding: var(--spacing-xs) var(--spacing-sm);
   }
