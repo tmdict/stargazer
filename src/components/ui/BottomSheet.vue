@@ -205,7 +205,8 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
     /* Collapsed peek before the composable engages; it overrides this inline. */
     transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
     /* Fast start, long decelerating tail (the iOS-sheet curve): a released
-       drag glides into its snap point instead of stopping flat. */
+       drag glides into its snap point instead of stopping flat. The duration
+       must stay in sync with useBottomSheet's TRANSITION_MS. */
     transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   }
   /* No transition while dragging, or while snapping to a new viewport size: a
