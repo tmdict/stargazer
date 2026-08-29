@@ -156,7 +156,7 @@ const handleDuplicate = (team: SavedTeam): void => {
     error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
     return
   }
-  // Load the copy so edits made right after duplicating land on it, not on
+  // Edits made right after duplicating should land on the copy, not on
   // whatever the boards held before.
   emit('load', copy)
 }
