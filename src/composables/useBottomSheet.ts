@@ -156,6 +156,7 @@ export function useBottomSheet(opts: Options) {
   const CONTENT_DRAG_THRESHOLD = 4 // px of travel before the sheet engages
   let scrollEl: HTMLElement | null = null
   let anchorY = 0
+  let startedAtTop = true
 
   // Nearest scrollable ancestor of the touch target (the element that owns the
   // sheet's content scroll); null when nothing scrolls (short content).
@@ -180,20 +181,24 @@ export function useBottomSheet(opts: Options) {
   // Drives a content gesture frame. Returns true when the caller should suppress
   // native scroll because the sheet (not the content) is handling the gesture.
   //
-  // Native scroll is allowed in just two cases, both while expanded: the content
-  // is scrolled below its top, or the finger is moving up at the top. Otherwise
-  // the sheet owns the gesture, collapsed (swipe up to expand) or an at-top
-  // downward pull (swipe down to collapse), so it suppresses scroll from the
-  // first move (the page never drags) and engages the drag past the threshold.
+  // Native scroll is allowed only while expanded: for the whole life of a
+  // gesture that began in scrolled content (reaching the top mid-swipe must not
+  // hand the remainder to the sheet, or scrolling back up drags the sheet down
+  // with it — collapsing takes a fresh swipe that starts at the top), while the
+  // content sits below its top, or when the finger moves up at the top.
+  // Otherwise the sheet owns the gesture, collapsed (swipe up to expand) or an
+  // at-top downward pull (swipe down to collapse), so it suppresses scroll from
+  // the first move (the page never drags) and engages the drag past the
+  // threshold.
   function contentDragStep(clientY: number): boolean {
     if (dragging.value) {
       dragMove(clientY)
       return true
     }
     if (expanded.value) {
-      // Scrolled below the top: let it scroll, keeping the anchor live so a later
-      // pull is measured from the moment the top is reached.
-      if (scrollEl && scrollEl.scrollTop > 0) {
+      // The anchor stays live so a permitted pull is measured from the moment
+      // the top is reached.
+      if (!startedAtTop || (scrollEl && scrollEl.scrollTop > 0)) {
         anchorY = clientY
         return false
       }
@@ -210,6 +215,7 @@ export function useBottomSheet(opts: Options) {
   function onContentTouchStart(e: TouchEvent) {
     if (!isMobile.value) return
     scrollEl = findScrollable(e.target)
+    startedAtTop = !scrollEl || scrollEl.scrollTop <= 0
     anchorY = e.touches[0]!.clientY
   }
   function onContentTouchMove(e: TouchEvent) {
@@ -226,6 +232,7 @@ export function useBottomSheet(opts: Options) {
     if (!isMobile.value) return
     if (Date.now() - lastTouchEnd < 700) return
     scrollEl = findScrollable(e.target)
+    startedAtTop = !scrollEl || scrollEl.scrollTop <= 0
     anchorY = e.clientY
     runMouseDrag(contentDragStep, () => dragEnd(false))
   }
