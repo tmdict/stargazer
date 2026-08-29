@@ -152,7 +152,13 @@ const openPreview = (team: SavedTeam): void => {
 
 const handleDuplicate = (team: SavedTeam): void => {
   const copy = library.duplicate(team.id)
-  if (!copy) error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
+  if (!copy) {
+    error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
+    return
+  }
+  // Load the copy so edits made right after duplicating land on it, not on
+  // whatever the boards held before.
+  emit('load', copy)
 }
 
 const {
@@ -753,6 +759,7 @@ const actionTipText = computed((): string =>
 .team-name-input:focus {
   outline: none;
 }
+
 
 .rename-btn {
   display: inline-flex;
