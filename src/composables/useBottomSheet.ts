@@ -181,15 +181,14 @@ export function useBottomSheet(opts: Options) {
   // Drives a content gesture frame. Returns true when the caller should suppress
   // native scroll because the sheet (not the content) is handling the gesture.
   //
-  // Native scroll is allowed only while expanded: for the whole life of a
-  // gesture that began in scrolled content (reaching the top mid-swipe must not
-  // hand the remainder to the sheet, or scrolling back up drags the sheet down
-  // with it — collapsing takes a fresh swipe that starts at the top), while the
-  // content sits below its top, or when the finger moves up at the top.
-  // Otherwise the sheet owns the gesture, collapsed (swipe up to expand) or an
-  // at-top downward pull (swipe down to collapse), so it suppresses scroll from
-  // the first move (the page never drags) and engages the drag past the
-  // threshold.
+  // Native scroll is allowed only while expanded, in three cases: the gesture
+  // began in scrolled content (then it stays the content's for its whole life —
+  // reaching the top mid-swipe must not hand the remainder to the sheet, so
+  // collapsing takes a fresh swipe from the top), the content sits below its
+  // top, or the finger moves up at the top. Otherwise the sheet owns the
+  // gesture, collapsed (swipe up to expand) or an at-top downward pull (swipe
+  // down to collapse), so it suppresses scroll from the first move (the page
+  // never drags) and engages the drag past the threshold.
   function contentDragStep(clientY: number): boolean {
     if (dragging.value) {
       dragMove(clientY)

@@ -78,11 +78,11 @@ const filteredCharacters = computed(() => {
   return factionFiltered.value.filter((c) => matches.has(c.name))
 })
 
-// Type-to-pick: focus starts in the search box, touch included — this popup
-// only exists on tablet-and-wider layouts (phones place via the roster sheet),
-// and iPad taps land here expecting to type. The focus must happen in the
-// mount tick: iPadOS only raises the keyboard while the opening tap's user
-// activation is still live.
+// Type-to-pick: focus starts in the search box even on touch — the popup only
+// exists on tablet-and-wider layouts (phones place via the roster sheet), and
+// iPad taps land here expecting to type. Focusing in the mount tick matters:
+// iPadOS raises the keyboard only while the opening tap's user activation is
+// live.
 const searchInput = ref<HTMLInputElement>()
 onMounted(() => searchInput.value?.focus({ preventScroll: true }))
 
