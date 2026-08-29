@@ -47,8 +47,8 @@ const onToggle = () => {
   color: var(--color-primary);
 }
 
-/* GridControls' touch-tablet compact tier: keep this chip the same width as
-   the row's others so the row stays one line in the 660px column. */
+/* GridControls' touch-tablet compact tier: match the row's chip padding so
+   the row stays one line in the 660px column. */
 @media (pointer: coarse) and (min-width: 1220px) {
   .invert-toggle {
     padding: var(--spacing-xs) var(--spacing-sm);
