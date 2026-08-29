@@ -308,7 +308,7 @@ onUnmounted(closePanel)
   padding: 5px 11px;
   min-height: 34px;
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -430,12 +430,15 @@ onUnmounted(closePanel)
   margin: 0;
 }
 
-/* Chip tray (narrow): master first, one divider, then the children. */
+/* Chip tray (narrow): master first, one divider, then the children. The base
+   panel's min-width: max-content would beat max-width and defeat the wrap,
+   running the tray off the phone screen. */
 .panel.tray {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;
+  min-width: 0;
   max-width: min(320px, calc(100vw - 16px));
 }
 
@@ -446,7 +449,7 @@ onUnmounted(closePanel)
   color: var(--color-text-secondary);
   padding: 5px 11px;
   font-size: 0.78rem;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
   transition: all var(--transition-fast);
