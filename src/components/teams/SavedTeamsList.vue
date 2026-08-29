@@ -768,7 +768,6 @@ const actionTipText = computed((): string =>
   }
 }
 
-
 .rename-btn {
   display: inline-flex;
   align-items: center;
