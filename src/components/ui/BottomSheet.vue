@@ -38,6 +38,7 @@ const emit = defineEmits<{ dismiss: [] }>()
 const {
   expanded: sheetExpanded,
   isMobile,
+  justToggled,
   dragging,
   snapping,
   sheetStyle,
@@ -68,7 +69,11 @@ watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
 // desktop, where the sheet is a static column.
 useScrollLock(computed(() => isMobile.value && expanded.value))
 
+// The justToggled guard: the release that expanded the sheet can land its
+// synthesized click on the scrim before the glide reaches the finger,
+// dismissing the sheet it just opened.
 const onScrimClick = () => {
+  if (justToggled()) return
   sheetExpanded.value = false
   emit('dismiss')
 }
@@ -84,8 +89,19 @@ defineExpose({ expand })
 // clicks there in the capture phase so a tap only expands the sheet instead of
 // also triggering the control underneath. Swipe-to-expand is unaffected (touch
 // events, not clicks). No-op when expanded or on desktop.
-const onCollapsedClickCapture = (e: MouseEvent) => {
-  if (expanded.value || !isMobile.value) return
+//
+// The justToggled branch swallows the click a toggling release synthesizes:
+// it hit-tests against content that has slid under the finger mid-glide and
+// would press whatever landed there (the search trigger, a hero), or —
+// after a collapse — re-expand the sheet through the peek branch below.
+const onSheetClickCapture = (e: MouseEvent) => {
+  if (!isMobile.value) return
+  if (justToggled()) {
+    e.stopPropagation()
+    e.preventDefault()
+    return
+  }
+  if (expanded.value) return
   e.stopPropagation()
   e.preventDefault()
   sheetExpanded.value = true
@@ -103,7 +119,7 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
       'desktop-rail': desktopRail,
     }"
     :style="[sheetVars, sheetStyle]"
-    @click.capture="onCollapsedClickCapture"
+    @click.capture="onSheetClickCapture"
   >
     <div
       class="sheet-handle-area"
