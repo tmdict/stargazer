@@ -6,7 +6,6 @@ import FilterIcons from './ui/FilterIcons.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
 import { useGridContext } from '@/composables/useGridContext'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
-import { useTouchDetection } from '@/composables/useTouchDetection'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
@@ -79,21 +78,17 @@ const filteredCharacters = computed(() => {
   return factionFiltered.value.filter((c) => matches.has(c.name))
 })
 
-// Type-to-pick: focus starts in the search box. Not on touch, where the
-// software keyboard would cover the icons most taps are headed for.
+// Type-to-pick: focus starts in the search box, touch included — this popup
+// only exists on tablet-and-wider layouts (phones place via the roster sheet),
+// and iPad taps land here expecting to type. The focus must happen in the
+// mount tick: iPadOS only raises the keyboard while the opening tap's user
+// activation is still live.
 const searchInput = ref<HTMLInputElement>()
-const { isTouchDevice } = useTouchDetection()
-onMounted(() => {
-  if (!isTouchDevice.value) searchInput.value?.focus({ preventScroll: true })
-})
+onMounted(() => searchInput.value?.focus({ preventScroll: true }))
 
 // Keep in sync with handleEnter's guard: a hint for a dead shortcut misleads.
-// Touch flows tap icons directly, so no hint there.
 const enterHintVisible = computed(
-  () =>
-    !isTouchDevice.value &&
-    searchQuery.value.trim() !== '' &&
-    filteredCharacters.value.length === 1,
+  () => searchQuery.value.trim() !== '' && filteredCharacters.value.length === 1,
 )
 
 // Enter completes a search that narrowed to exactly one hero; clearing the
@@ -180,6 +175,14 @@ function handleSelect(character: CharacterType): boolean {
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   transition: border-color 0.15s ease;
+}
+
+/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
+   zoom outlives the field. */
+@media (pointer: coarse) {
+  .search-input {
+    font-size: 1rem;
+  }
 }
 
 .search-input::placeholder {
