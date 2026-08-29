@@ -176,6 +176,21 @@ const synergyView = computed({
   margin: 0;
 }
 
+/* Touch tablets: the two-column layout (HomeView, ≥1220px) fixes the grid
+   column at 660px, which fits the toggle row with little slack under desktop
+   metrics — and iPadOS renders the chips' native checkboxes and text wider,
+   enough to push the last chip onto a second line. Tighter gap and chip
+   padding restore real headroom; MapInvertToggle and GridInfoToggle compact
+   their chips on the same condition. */
+@media (pointer: coarse) and (min-width: 769px) {
+  .controls-row {
+    gap: var(--spacing-sm);
+  }
+  .grid-toggle-btn {
+    padding: var(--spacing-xs) var(--spacing-sm);
+  }
+}
+
 /* Mobile: a native-first toolbar. Display toggles become filled/outlined
    choice chips (the fill is the on/off state, so the checkbox is dropped) and
    the link/copy/download actions become icon-only round buttons. */

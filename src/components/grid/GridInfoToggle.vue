@@ -296,6 +296,14 @@ onUnmounted(closePanel)
   background: var(--color-bg-secondary);
 }
 
+/* GridControls' touch-tablet compact tier: keep this chip the same width as
+   the row's others so the row stays one line in the 660px column. */
+@media (pointer: coarse) and (min-width: 769px) {
+  .chip-body {
+    padding-left: var(--spacing-sm);
+  }
+}
+
 /* Narrow trigger: matches GridControls' mobile choice chips. */
 .pill {
   display: inline-flex;
