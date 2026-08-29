@@ -333,6 +333,14 @@ const tipText = computed((): string =>
   color: var(--color-text-primary);
 }
 
+/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
+   zoom outlives the field. */
+@media (pointer: coarse) {
+  .panel-search {
+    font-size: 1rem;
+  }
+}
+
 .panel-search:focus {
   outline: none;
   border-color: var(--color-primary);

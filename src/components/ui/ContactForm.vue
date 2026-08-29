@@ -177,6 +177,14 @@ onUnmounted(() => {
   box-shadow: 0 0 0 2px rgba(95, 196, 187, 0.3);
 }
 
+/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
+   zoom outlives the field. */
+@media (pointer: coarse) {
+  .field-input {
+    font-size: 1rem;
+  }
+}
+
 .field-area {
   resize: vertical;
   min-height: 140px;
