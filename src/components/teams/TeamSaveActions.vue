@@ -220,6 +220,14 @@ const tipText = computed((): string => {
   border-color: var(--color-primary);
 }
 
+/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
+   zoom outlives the field. */
+@media (pointer: coarse) {
+  .name-popover-input {
+    font-size: 1rem;
+  }
+}
+
 .name-popover-actions {
   display: flex;
   gap: var(--spacing-sm);
