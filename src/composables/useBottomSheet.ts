@@ -1,4 +1,4 @@
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 
 import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 import { dynamicViewportHeight } from '@/utils/viewport'
@@ -249,6 +249,15 @@ export function useBottomSheet(opts: Options) {
     if (typeof requestAnimationFrame !== 'undefined') requestAnimationFrame(update)
   }
 
+  // A toggle provokes resizes of its own (the scroll unlock, a dismissing
+  // keyboard), which must not cut the glide short; while its transition window
+  // is open, onResize retargets the live transition instead of snapping.
+  const TRANSITION_MS = 500 // BottomSheet.vue's transition duration; keep in sync
+  let animatingUntil = 0
+  watch(expanded, () => {
+    animatingUntil = Date.now() + TRANSITION_MS
+  })
+
   // A viewport change (mobile toolbars show/hide on scroll, firing `resize`) must
   // reposition the sheet instantly, never via the transition: the collapsed peek
   // stays pinned only while `height` and `transform` change together, but they
@@ -256,6 +265,10 @@ export function useBottomSheet(opts: Options) {
   // drift under scroll load, jiggling the peek. `snapping` suppresses the
   // transition until the new geometry has painted.
   function onResize() {
+    if (Date.now() < animatingUntil) {
+      remeasure()
+      return
+    }
     snapping.value = true
     remeasure()
     if (typeof requestAnimationFrame !== 'undefined') {
