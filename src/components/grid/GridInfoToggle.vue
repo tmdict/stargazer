@@ -298,7 +298,7 @@ onUnmounted(closePanel)
 
 /* GridControls' touch-tablet compact tier: keep this chip the same width as
    the row's others so the row stays one line in the 660px column. */
-@media (pointer: coarse) and (min-width: 769px) {
+@media (pointer: coarse) and (min-width: 1220px) {
   .chip-body {
     padding-left: var(--spacing-sm);
   }

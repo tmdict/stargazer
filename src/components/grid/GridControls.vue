@@ -182,7 +182,7 @@ const synergyView = computed({
    enough to push the last chip onto a second line. Tighter gap and chip
    padding restore real headroom; MapInvertToggle and GridInfoToggle compact
    their chips on the same condition. */
-@media (pointer: coarse) and (min-width: 769px) {
+@media (pointer: coarse) and (min-width: 1220px) {
   .controls-row {
     gap: var(--spacing-sm);
   }
