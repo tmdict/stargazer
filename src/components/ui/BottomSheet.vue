@@ -11,7 +11,7 @@ import { useScrollLock } from '@/composables/useScrollLock'
 // stays in the page since each content component scrolls differently.
 const {
   peek = 56,
-  expandedFraction = 0.62,
+  expandedFraction = 0.8,
   initialExpanded = false,
   desktopRail = true,
 } = defineProps<{
@@ -204,7 +204,9 @@ const onCollapsedClickCapture = (e: MouseEvent) => {
     overflow: hidden;
     /* Collapsed peek before the composable engages; it overrides this inline. */
     transform: translateY(calc(var(--sheet-expanded) - var(--sheet-peek)));
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Fast start, long decelerating tail (the iOS-sheet curve): a released
+       drag glides into its snap point instead of stopping flat. */
+    transition: transform 0.5s cubic-bezier(0.32, 0.72, 0, 1);
   }
   /* No transition while dragging, or while snapping to a new viewport size: a
      resize (mobile toolbar show/hide) must reposition the sheet instantly so the
