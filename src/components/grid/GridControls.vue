@@ -176,10 +176,6 @@ const synergyView = computed({
   margin: 0;
 }
 
-.grid-toggle-text {
-  font-weight: 600;
-}
-
 /* Mobile: a native-first toolbar. Display toggles become filled/outlined
    choice chips (the fill is the on/off state, so the checkbox is dropped) and
    the link/copy/download actions become icon-only round buttons. */
@@ -207,7 +203,6 @@ const synergyView = computed({
     min-height: 34px;
     gap: 0;
     font-size: 0.78rem;
-    font-weight: 500;
   }
   .grid-toggle-btn.active {
     background: var(--color-primary);
