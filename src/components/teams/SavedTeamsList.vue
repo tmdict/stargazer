@@ -759,6 +759,14 @@ const actionTipText = computed((): string =>
 .team-name-input:focus {
   outline: none;
 }
+/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
+   zoom outlives the field. */
+@media (pointer: coarse) {
+  .team-search,
+  .team-name-input {
+    font-size: 1rem;
+  }
+}
 
 
 .rename-btn {
