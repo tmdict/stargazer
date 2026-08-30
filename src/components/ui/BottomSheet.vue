@@ -69,9 +69,9 @@ watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
 // desktop, where the sheet is a static column.
 useScrollLock(computed(() => isMobile.value && expanded.value))
 
-// The justToggled guard: the release that expanded the sheet can land its
-// synthesized click on the scrim before the glide reaches the finger,
-// dismissing the sheet it just opened.
+// The release that expanded the sheet can land its synthesized click on the
+// scrim before the glide reaches the finger, dismissing the sheet it just
+// opened — hence the justToggled guard.
 const onScrimClick = () => {
   if (justToggled()) return
   sheetExpanded.value = false
@@ -88,12 +88,12 @@ defineExpose({ expand })
 // While collapsed, the peek shows the top of the content (e.g. the tabs). Swallow
 // clicks there in the capture phase so a tap only expands the sheet instead of
 // also triggering the control underneath. Swipe-to-expand is unaffected (touch
-// events, not clicks). No-op when expanded or on desktop.
+// events, not clicks). No-op on desktop.
 //
-// The justToggled branch swallows the click a toggling release synthesizes:
-// it hit-tests against content that has slid under the finger mid-glide and
-// would press whatever landed there (the search trigger, a hero), or —
-// after a collapse — re-expand the sheet through the peek branch below.
+// A toggling release also synthesizes a click that hit-tests against content
+// slid under the finger mid-glide: it would press whatever landed there (the
+// search trigger, a hero) or, after a collapse, re-expand the sheet through
+// the peek branch — so the justToggled branch swallows it.
 const onSheetClickCapture = (e: MouseEvent) => {
   if (!isMobile.value) return
   if (justToggled()) {
