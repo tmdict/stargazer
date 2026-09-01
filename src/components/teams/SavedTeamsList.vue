@@ -1,7 +1,6 @@
 <script setup lang="ts">
 /* The Saved Teams roster panel: header (count, cap warning, sort, mode and
-   one-side filters, search, and the library-wide Import / Export / Delete all)
-   plus a card grid:
+   one-side filters, search, and Import / Export / Delete all) plus a card grid:
    thumbnail, mode and Syn chips, inline-renamable name, relative updated time,
    and Load / Duplicate / Copy / Download / Delete actions. Destructive actions use
    the app's no-modal style: a two-step inline confirm that arms for a few
@@ -49,7 +48,7 @@ const emit = defineEmits<{ load: [team: SavedTeam] }>()
 
 const i18n = useI18nStore()
 const library = useTeamLibrary()
-const { success, error } = useToast()
+const { show, success, error } = useToast()
 
 // Device-level sort preference: last-modified first (the default) or by name.
 const SORT_STORAGE_KEY = 'stargazer.teams.sort'
@@ -185,15 +184,50 @@ const {
   onTouchStart: storageHintTouchStart,
 } = useInfoTip()
 
-// Import and Export act on the whole library, which is why they belong in this
-// panel rather than the boards' action row.
+// Import and Export act on the library rather than the boards, which is why
+// they belong in this panel rather than the boards' action row.
 const fileInput = ref<HTMLInputElement>()
 
+// A filtered export names its criteria back to the user (button label and
+// tooltip before, toast after), so a partial backup can't pass for a full one.
+const filterLabels = computed((): string[] => {
+  const labels: string[] = []
+  if (modeFilter.value !== 'all') labels.push(i18n.t(TEAM_MODES[modeFilter.value].labelKey))
+  if (oneSideOnly.value) labels.push(i18n.t('app.one-side'))
+  const query = searchQuery.value.trim()
+  if (query) labels.push(`“${query}”`)
+  return labels
+})
+const exportFiltered = computed(() => filterLabels.value.length > 0)
+const filterSummary = computed(() =>
+  new Intl.ListFormat(i18n.currentLocale, { type: 'conjunction' }).format(filterLabels.value),
+)
+
 const handleExport = (): void => {
+  const selection = exportFiltered.value
+    ? visibleTeams.value.map(({ team }) => team)
+    : library.teams
+  // The button hides at zero teams, so an empty selection is a filter that
+  // matched nothing.
+  if (selection.length === 0) {
+    error(i18n.t('app.teams-no-matches'))
+    return
+  }
   downloadBlob(
-    new Blob([JSON.stringify(library.exportAll())], { type: 'application/json' }),
+    new Blob([JSON.stringify(library.exportTeams(selection))], { type: 'application/json' }),
     timestampedName('stargazer-teams', 'json'),
   )
+  if (exportFiltered.value) {
+    show(
+      i18n.t('app.export-filtered', {
+        count: selection.length,
+        total: library.count,
+        filters: filterSummary.value,
+      }),
+      'info',
+      5000,
+    )
+  }
 }
 
 // Import merges into the library and never replaces it; "replace everything" is
@@ -221,9 +255,12 @@ const {
   onTouchStart: actionTipTouchStart,
 } = useHoverTooltip<'import' | 'export'>()
 
-const actionTipText = computed((): string =>
-  actionTip.value ? i18n.t(`app.tooltip-${actionTip.value}`) : '',
-)
+const actionTipText = computed((): string => {
+  if (!actionTip.value) return ''
+  return actionTip.value === 'export' && exportFiltered.value
+    ? i18n.t('app.tooltip-export-filtered', { filters: filterSummary.value })
+    : i18n.t(`app.tooltip-${actionTip.value}`)
+})
 </script>
 
 <template>
@@ -320,7 +357,11 @@ const actionTipText = computed((): string =>
           @touchstart.passive="actionTipTouchStart"
           @mouseleave="hideActionTip"
         >
-          {{ i18n.t('app.export') }}
+          {{
+            exportFiltered
+              ? i18n.t('app.export-count', { count: visibleTeams.length, total: library.count })
+              : i18n.t('app.export')
+          }}
         </button>
         <button
           v-if="library.count > 0"

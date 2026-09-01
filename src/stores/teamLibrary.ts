@@ -161,7 +161,8 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       return copy
     })
 
-  const exportAll = (): TeamsExportFile => buildExport(teams.value, new Date().toISOString())
+  const exportTeams = (selection: readonly SavedTeam[] = teams.value): TeamsExportFile =>
+    buildExport(selection, new Date().toISOString())
 
   /* Merge-only: `invalid` means the envelope itself was rejected (library
    * untouched); records past the cap count as skipped. */
@@ -192,7 +193,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
     remove,
     removeAll,
     duplicate,
-    exportAll,
+    exportTeams,
     importTeams,
   }
 })
