@@ -5,8 +5,10 @@
   "faction": "graveborn",
   "class": "mage",
   "damage": "magic",
-  "energy": [0],
-  "range": 4,
+  "energy": [550],
+  "range": 8,
   "season": 7,
-  "tags": {}
+  "tags": {
+    "initial-energy-300": []
+  }
 }
