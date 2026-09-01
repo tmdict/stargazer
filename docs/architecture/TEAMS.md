@@ -73,7 +73,8 @@ A desktop card below the boards / a mobile pull-up sheet:
 - **Tabs**: characters, seasonal, and maps act on the active board; saved teams manages the library and is the default tab
 - **Load**: applies a whole team (all boards, switching mode if needed) and collapses the sheet
 - **Badge**: the saved-teams tab shows the library count
-- **Library bar**: Import / Export / Delete all sit in the saved-teams panel, since all three act on the whole library rather than the boards. `SavedTeamsList` owns them outright (store calls plus its own toasts), so no handler threads back through `TeamsRoster`. Export and Delete all hide at zero teams; Import stays, because restoring into an empty library is its main use
+- **Library bar**: Import / Export / Delete all sit in the saved-teams panel, since all three act on the library rather than the boards. `SavedTeamsList` owns them outright (store calls plus its own toasts), so no handler threads back through `TeamsRoster`. Export and Delete all hide at zero teams; Import stays, because restoring into an empty library is its main use
+- **Filtered export**: Export follows the Mode / One-side / Search filters. With none active it backs up the whole library silently; with any active it writes only the teams shown: the button relabels to the shown count ("Export 3 of 20"), the hover tooltip names the criteria, and an info toast confirms the count and criteria afterwards ("Exported 3 of 20 teams matching 3v3 and “Kelsey”"), so a partial backup can't pass for a full one. A filter that matches nothing exports nothing and raises the no-matches message as an error toast
 
 Placement modes (on-grid popup vs. cell-tap flow) and the shared `BottomSheet` are covered in GRID.md.
 
@@ -191,7 +192,7 @@ The saved-teams panel is the roster's default tab; its cards use `content-visibi
 
 ## Backup Files
 
-Driven from the Saved Teams tab's library bar (see TeamsRoster above). `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records get fresh ids; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
+Driven from the Saved Teams tab's library bar (see TeamsRoster above); a file holds the whole library or, with a filter active, only the filtered view. `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records get fresh ids; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
 
 ## Sharing & Image Export
 
