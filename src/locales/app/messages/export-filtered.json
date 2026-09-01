@@ -1,0 +1,4 @@
+{
+  "en": "Exported {count} of {total} teams matching {filters}",
+  "zh": "已导出符合 {filters} 的 {count} 个阵容（共 {total} 个）"
+}
