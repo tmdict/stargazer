@@ -96,11 +96,7 @@ const sideFiltered = computed(() =>
 // Matching itself (name hit with highlight snippet, hero hit at 2+ characters)
 // is the shared useSavedTeamSearch composable, also used by the Load menu.
 const searchVisible = computed(() => library.count > 1)
-const {
-  query: searchQuery,
-  matchedHeroes,
-  results: visibleTeams,
-} = useSavedTeamSearch(() => sideFiltered.value)
+const { query: searchQuery, results: visibleTeams } = useSavedTeamSearch(() => sideFiltered.value)
 // The box hides below 2 teams; hiding also resets the query (which matching
 // reads), so a leftover query can never strand the list on "no matches" with
 // no visible way to clear it, and the box can't reappear pre-filtered.
@@ -392,7 +388,7 @@ const actionTipText = computed((): string => {
 
     <div v-else class="team-grid">
       <div
-        v-for="{ team, name } in visibleTeams"
+        v-for="{ team, name, highlightHeroes } in visibleTeams"
         :key="team.id"
         class="team-card"
         :class="{ loaded: team.id === loadedTeamId }"
@@ -408,7 +404,7 @@ const actionTipText = computed((): string => {
         >
           <TeamPreview
             :team
-            :highlight-heroes="matchedHeroes"
+            :highlight-heroes="highlightHeroes"
             :ref="(instance) => setPreviewEl(team.id, instance)"
           />
         </button>
