@@ -198,7 +198,7 @@ describe('useTeamLibrary export/import', () => {
     expect(library.count).toBe(0)
 
     const result = library.importTeams(file)
-    expect(result).toEqual({ imported: 2, skipped: 0, invalid: false })
+    expect(result).toEqual({ imported: 2, skipped: 0, conflicts: 0, invalid: false })
     expect(library.teams.map((t) => t.name).sort()).toEqual(['Alpha', 'Bravo'])
     expect(
       stored()
@@ -220,14 +220,19 @@ describe('useTeamLibrary export/import', () => {
     const library = useTeamLibrary()
     const file = JSON.stringify(library.exportTeams())
     const result = library.importTeams(file)
-    expect(result).toEqual({ imported: 0, skipped: 1, invalid: false })
+    expect(result).toEqual({ imported: 0, skipped: 1, conflicts: 0, invalid: false })
     expect(library.count).toBe(1)
   })
 
   it('rejects invalid envelopes without touching the library', () => {
     seed([record('a', 'Alpha')])
     const library = useTeamLibrary()
-    expect(library.importTeams('nope')).toEqual({ imported: 0, skipped: 0, invalid: true })
+    expect(library.importTeams('nope')).toEqual({
+      imported: 0,
+      skipped: 0,
+      conflicts: 0,
+      invalid: true,
+    })
     expect(library.count).toBe(1)
   })
 
@@ -241,7 +246,7 @@ describe('useTeamLibrary export/import', () => {
       teams: [record('x', 'New One'), record('y', 'New Two')],
     })
     const result = library.importTeams(file)
-    expect(result).toEqual({ imported: 1, skipped: 1, invalid: false })
+    expect(result).toEqual({ imported: 1, skipped: 1, conflicts: 0, invalid: false })
     expect(library.count).toBe(MAX_SAVED_TEAMS)
   })
 })

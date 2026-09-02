@@ -65,10 +65,14 @@ export function nextAutoName(existingNames: readonly string[]): string {
   return `Team ${n}`
 }
 
+// Truncate the base, not the suffix, so a max-length name still gets a
+// visibly distinct derived name.
+export function suffixedName(name: string, suffix: string): string {
+  return `${name.slice(0, MAX_TEAM_NAME_LENGTH - suffix.length)}${suffix}`
+}
+
 export function duplicateName(name: string): string {
-  // Truncate the base, not the suffix, so a max-length name still gets a
-  // visibly distinct copy name.
-  return `${name.slice(0, MAX_TEAM_NAME_LENGTH - 7)} (copy)`
+  return suffixedName(name, ' (copy)')
 }
 
 /* Validate one record from untrusted storage (hydration) or an import file.

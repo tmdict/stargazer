@@ -103,16 +103,19 @@ describe('parseImport record validation', () => {
     const result = parseImport(envelope([record({ id: 'stable-id' })]), [])
     if (!result.ok) throw new Error('expected ok')
     expect(result.teams[0]!.id).toBe('stable-id')
+    expect(result.conflicts).toBe(0)
   })
 
-  it('regenerates an id already taken by an existing record', () => {
+  it('marks an old version of an existing team (its id is taken) as a conflict', () => {
     const existing = record({ id: 'existing', name: 'Other' })
     const result = parseImport(envelope([record({ id: 'existing' })]), [existing])
     if (!result.ok) throw new Error('expected ok')
+    expect(result.conflicts).toBe(1)
     expect(result.teams[0]!.id).not.toBe('existing')
+    expect(result.teams[0]!.name).toBe('Alpha (imported)')
   })
 
-  it('regenerates in-file duplicate ids', () => {
+  it('regenerates in-file duplicate ids without marking a conflict', () => {
     const result = parseImport(
       envelope([record({ id: 'dupe' }), record({ id: 'dupe', name: 'Other' })]),
       [],
@@ -120,6 +123,8 @@ describe('parseImport record validation', () => {
     if (!result.ok) throw new Error('expected ok')
     expect(result.teams[0]!.id).toBe('dupe')
     expect(result.teams[1]!.id).not.toBe('dupe')
+    expect(result.teams[1]!.name).toBe('Other')
+    expect(result.conflicts).toBe(0)
   })
 
   it('regenerates overlong ids', () => {
@@ -129,7 +134,10 @@ describe('parseImport record validation', () => {
   })
 
   it('skips duplicates of existing teams and within the file (data + name)', () => {
-    const existing: SavedTeam = { ...record(), data: canonicalTeamData(DATA_3V3)! }
+    const existing: SavedTeam = {
+      ...record({ id: 'existing-id' }),
+      data: canonicalTeamData(DATA_3V3)!,
+    }
     const result = parseImport(
       envelope([
         record(), // duplicate of existing (same canonical data + name)

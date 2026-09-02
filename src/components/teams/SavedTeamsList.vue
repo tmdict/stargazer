@@ -239,7 +239,15 @@ const handleFileChosen = async (event: Event): Promise<void> => {
     error(i18n.t('app.import-invalid'))
     return
   }
-  success(i18n.t('app.import-success', { imported: result.imported, skipped: result.skipped }))
+  success(
+    result.conflicts > 0
+      ? i18n.t('app.import-success-conflicts', {
+          imported: result.imported,
+          skipped: result.skipped,
+          conflicts: result.conflicts,
+        })
+      : i18n.t('app.import-success', { imported: result.imported, skipped: result.skipped }),
+  )
 }
 
 // Hover-only, unlike the storage hint: these act on tap, so the composable
