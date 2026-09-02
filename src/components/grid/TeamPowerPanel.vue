@@ -176,6 +176,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
            is available whenever the panel is editable. -->
       <div v-if="showParagon || !readonly" class="tp-head">
         <span v-if="showParagon" class="stat" :class="rivalryStatClass(side.rivalryStat)">
+          <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
           <span
             v-if="side.rivalryStat !== 0"
             class="stat-label"
@@ -186,7 +187,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           >
             {{ rivalryStatName(side.rivalryStat) }}
           </span>
-          <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
         <span v-if="!readonly" class="tp-actions">
           <button
@@ -335,7 +335,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   flex-direction: row-reverse;
 }
 .tp-block.enemy .stat {
-  flex-direction: row-reverse;
+  align-items: flex-end;
 }
 .tp-block.enemy .tp-actions {
   flex-direction: row-reverse;
@@ -343,10 +343,13 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   margin-right: auto;
 }
 
+/* Number over caption: stacked, the stat is only as wide as its longest line,
+   which lets narrower blocks keep the caption. */
 .stat {
   display: inline-flex;
-  align-items: baseline;
-  gap: var(--spacing-sm);
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
 }
 /* Subtle: the label is a quiet caption and the tooltip handle, not the headline. */
 .stat-label {
@@ -359,11 +362,11 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   cursor: help;
 }
 /* Tight container: the caption would shove the action chips across the block
-   boundary (a Teams board gives each side ~250px; caption + number + chips
-   need ~285px), so the number alone carries the stat. Container width, not
-   viewport, is the real constraint — a single-block team view keeps its
+   boundary (stacked, a side needs ~230px: caption ~85px beside ~110px of
+   chips plus padding), so the number alone carries the stat. Container width,
+   not viewport, is the real constraint — a single-block team view keeps its
    caption at widths where two blocks must drop theirs. */
-@container (max-width: 579px) {
+@container (max-width: 499px) {
   .tp-block:not(:only-child) .stat-label {
     display: none;
   }
