@@ -7,7 +7,7 @@ import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 /* parseImport is the only place untrusted file content enters the app; this
- * suite exhausts its rejection paths, plus the merge/dedupe/fresh-id rules. */
+ * suite exhausts its rejection paths, plus the merge/dedupe/id-stability rules. */
 
 const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)
 
@@ -99,11 +99,33 @@ describe('parseImport record validation', () => {
     expect(result.teams[0]!.updatedAt).toBe(43)
   })
 
-  it('assigns fresh ids so imports never collide with existing records', () => {
+  it('keeps the file id so a record round-trips with its identity', () => {
+    const result = parseImport(envelope([record({ id: 'stable-id' })]), [])
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.teams[0]!.id).toBe('stable-id')
+  })
+
+  it('regenerates an id already taken by an existing record', () => {
     const existing = record({ id: 'existing', name: 'Other' })
     const result = parseImport(envelope([record({ id: 'existing' })]), [existing])
     if (!result.ok) throw new Error('expected ok')
     expect(result.teams[0]!.id).not.toBe('existing')
+  })
+
+  it('regenerates in-file duplicate ids', () => {
+    const result = parseImport(
+      envelope([record({ id: 'dupe' }), record({ id: 'dupe', name: 'Other' })]),
+      [],
+    )
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.teams[0]!.id).toBe('dupe')
+    expect(result.teams[1]!.id).not.toBe('dupe')
+  })
+
+  it('regenerates overlong ids', () => {
+    const result = parseImport(envelope([record({ id: 'x'.repeat(65) })]), [])
+    if (!result.ok) throw new Error('expected ok')
+    expect(result.teams[0]!.id).toHaveLength(36)
   })
 
   it('skips duplicates of existing teams and within the file (data + name)', () => {
