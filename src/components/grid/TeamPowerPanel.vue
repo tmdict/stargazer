@@ -321,6 +321,9 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 
 .tp-head {
   display: flex;
+  /* Never bleed into the neighboring block: anything the row can't fit wraps
+     below instead (a rare, graceful second line). */
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--spacing-sm);
   min-height: 28px;
@@ -355,9 +358,17 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   border-bottom: 1px dotted var(--color-border-primary);
   cursor: help;
 }
-/* Mobile: the caption would crowd the header and shove the +1/reset buttons to
-   the block's far side; the number alone carries the stat. */
-@media (max-width: 768px) {
+/* Tight container: the caption would shove the action chips across the block
+   boundary (a Teams board gives each side ~250px; caption + number + chips
+   need ~285px), so the number alone carries the stat. Container width, not
+   viewport, is the real constraint — a single-block team view keeps its
+   caption at widths where two blocks must drop theirs. */
+@container (max-width: 579px) {
+  .tp-block:not(:only-child) .stat-label {
+    display: none;
+  }
+}
+@container (max-width: 319px) {
   .stat-label {
     display: none;
   }
@@ -443,12 +454,18 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   background: var(--color-danger);
   color: #fff;
 }
-/* Armed step of the two-step confirm: solid fill plus a ring, so the state
-   reads even at chip size (the control-btn.danger.armed treatment). */
+/* Armed step of the two-step confirm: solid fill, ring, and the shared
+   confirm-ping pulse (controls.css), so the state reads even at chip size. */
 .stat-clear.armed {
   background: var(--color-danger);
   color: #fff;
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  animation: confirm-ping 0.9s ease-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-clear.armed {
+    animation: none;
+  }
 }
 .stat-plus:disabled,
 .stat-max:disabled {
