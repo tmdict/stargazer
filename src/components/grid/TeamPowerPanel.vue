@@ -189,45 +189,45 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           </span>
         </span>
         <span v-if="!readonly" class="tp-actions">
-          <button
-            v-if="canEditParagon && hasParagon(side.heroes)"
-            type="button"
-            class="stat-reset"
-            :aria-label="i18n.t('app.reset-paragons')"
-            @click="resetParagons(side.team, side.heroes)"
-            @mouseenter="showActionTip($event, 'app.reset-paragons')"
-            @touchstart.passive="onActionTouchStart"
-            @mouseleave="hideActionTip"
-          >
-            <IconReset :size="11" />
-          </button>
-          <button
-            v-if="canEditParagon"
-            type="button"
-            class="stat-max"
-            :disabled="!canRaise(side.heroes)"
-            :aria-label="i18n.t('app.max-paragons')"
-            @click="maxAll(side.team, side.heroes)"
-            @mouseenter="showActionTip($event, 'app.max-paragons')"
-            @touchstart.passive="onActionTouchStart"
-            @mouseleave="hideActionTip"
-          >
-            <IconChevronsUp :size="11" />
-          </button>
-          <button
-            v-if="canEditParagon"
-            type="button"
-            class="stat-plus"
-            :disabled="!canRaise(side.heroes)"
-            :aria-label="i18n.t('app.raise-paragons')"
-            @click="raiseAll(side.team, side.heroes)"
-            @mouseenter="showActionTip($event, 'app.raise-paragons')"
-            @touchstart.passive="onActionTouchStart"
-            @mouseleave="hideActionTip"
-          >
-            +1
-          </button>
-          <span v-if="canEditParagon" class="tp-actions-divider" />
+          <template v-if="canEditParagon">
+            <button
+              v-if="hasParagon(side.heroes)"
+              type="button"
+              class="stat-reset"
+              :aria-label="i18n.t('app.reset-paragons')"
+              @click="resetParagons(side.team, side.heroes)"
+              @mouseenter="showActionTip($event, 'app.reset-paragons')"
+              @touchstart.passive="onActionTouchStart"
+              @mouseleave="hideActionTip"
+            >
+              <IconReset :size="11" />
+            </button>
+            <button
+              type="button"
+              class="stat-max"
+              :disabled="!canRaise(side.heroes)"
+              :aria-label="i18n.t('app.max-paragons')"
+              @click="maxAll(side.team, side.heroes)"
+              @mouseenter="showActionTip($event, 'app.max-paragons')"
+              @touchstart.passive="onActionTouchStart"
+              @mouseleave="hideActionTip"
+            >
+              <IconChevronsUp :size="11" />
+            </button>
+            <button
+              type="button"
+              class="stat-plus"
+              :disabled="!canRaise(side.heroes)"
+              :aria-label="i18n.t('app.raise-paragons')"
+              @click="raiseAll(side.team, side.heroes)"
+              @mouseenter="showActionTip($event, 'app.raise-paragons')"
+              @touchstart.passive="onActionTouchStart"
+              @mouseleave="hideActionTip"
+            >
+              +1
+            </button>
+            <span class="tp-actions-divider" />
+          </template>
           <button
             type="button"
             class="stat-clear"
@@ -455,15 +455,14 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 .stat-clear {
   color: var(--color-danger);
 }
-.stat-clear:hover {
-  background: var(--color-danger);
-  color: #fff;
-}
-/* Armed step of the two-step confirm: solid fill, ring, and the shared
-   confirm-ping pulse (controls.css), so the state reads even at chip size. */
+.stat-clear:hover,
 .stat-clear.armed {
   background: var(--color-danger);
   color: #fff;
+}
+/* Armed step of the two-step confirm: ring plus the shared confirm-ping pulse
+   (controls.css), so the state reads even at chip size. */
+.stat-clear.armed {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
   animation: confirm-ping 0.9s ease-out infinite;
 }
