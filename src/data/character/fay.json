@@ -9,6 +9,7 @@
   "range": 3,
   "season": 0,
   "tags": {
-    "temp-buff": [{ "ultimate": 1 }, { "ex": 1 }]
+    "temp-buff": [{ "ultimate": 1 }, { "ex": 1 }],
+    "temp-buff-opening": [{ "ex": 1 }]
   }
 }
