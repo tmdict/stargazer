@@ -54,13 +54,37 @@
   border-color: var(--color-danger-hover);
 }
 
-/* Armed step of a two-step confirm: darkened with a ring so the state still
-   reads when the label collapses to an icon on mobile. */
+/* Armed step of a two-step confirm: darkened with a ring, plus a pulsing ping
+   so the state reads even when the label collapses to a small icon-only
+   circle on mobile (a static highlight there is easy to miss). */
 .control-btn.danger.armed,
 .control-btn.danger.armed:hover {
   background: var(--color-danger-hover);
   border-color: var(--color-danger-hover);
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
+  animation: confirm-ping 0.9s ease-out infinite;
+}
+
+/* Shared by every armed confirm control (scoped components reference it too:
+   TeamPowerPanel's per-team clear). The first shadow keeps the static ring;
+   the second expands and fades. */
+@keyframes confirm-ping {
+  from {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent),
+      0 0 0 2px color-mix(in srgb, var(--color-danger) 45%, transparent);
+  }
+  to {
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent),
+      0 0 0 12px transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .control-btn.danger.armed {
+    animation: none;
+  }
 }
 
 .control-btn .btn-icon {
