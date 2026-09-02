@@ -9,11 +9,12 @@
 import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
 import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
-import TeamPreview from '@/components/teams/TeamPreview.vue'
+import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
+import MountOnVisible from '@/components/ui/MountOnVisible.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -402,11 +403,13 @@ const actionTipText = computed((): string => {
           :aria-label="i18n.t('app.preview')"
           @click="openPreview(team)"
         >
-          <TeamPreview
-            :team
-            :highlight-heroes="highlightHeroes"
-            :ref="(instance) => setPreviewEl(team.id, instance)"
-          />
+          <MountOnVisible :estimated-height="estimatedPreviewHeight(team.mode)">
+            <TeamPreview
+              :team
+              :highlight-heroes="highlightHeroes"
+              :ref="(instance) => setPreviewEl(team.id, instance)"
+            />
+          </MountOnVisible>
         </button>
 
         <div class="card-title-row">

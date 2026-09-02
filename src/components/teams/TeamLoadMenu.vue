@@ -11,8 +11,9 @@
 
 import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
 
-import TeamPreview from '@/components/teams/TeamPreview.vue'
+import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
 import IconFolderOpen from '@/components/ui/IconFolderOpen.vue'
+import MountOnVisible from '@/components/ui/MountOnVisible.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -255,7 +256,9 @@ const tipText = computed((): string =>
                 @click="handlePick(team)"
               >
                 <span class="card-thumb">
-                  <TeamPreview :team :highlight-heroes="highlightHeroes" />
+                  <MountOnVisible :estimated-height="estimatedPreviewHeight(team.mode)">
+                    <TeamPreview :team :highlight-heroes="highlightHeroes" />
+                  </MountOnVisible>
                   <span v-if="armed === team.id" class="card-confirm">{{ confirmText(team) }}</span>
                 </span>
                 <span class="card-name">
