@@ -166,10 +166,12 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
 
   /* Merge-only: `invalid` means the envelope itself was rejected (library
    * untouched); records past the cap count as skipped. */
-  const importTeams = (raw: string): { imported: number; skipped: number; invalid: boolean } =>
+  const importTeams = (
+    raw: string,
+  ): { imported: number; skipped: number; conflicts: number; invalid: boolean } =>
     mutate((fresh) => {
       const parsed = parseImport(raw, fresh)
-      if (!parsed.ok) return { imported: 0, skipped: 0, invalid: true }
+      if (!parsed.ok) return { imported: 0, skipped: 0, conflicts: 0, invalid: true }
       let imported = 0
       let skipped = parsed.skipped
       for (const team of parsed.teams) {
@@ -179,7 +181,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
           imported++
         }
       }
-      return { imported, skipped, invalid: false }
+      return { imported, skipped, conflicts: parsed.conflicts, invalid: false }
     })
 
   return {

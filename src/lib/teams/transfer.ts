@@ -8,7 +8,7 @@
  * app, so parsing is exhaustive and a malformed envelope rejects the whole file
  * rather than half-importing. */
 
-import { validateSavedTeam, type SavedTeam } from './savedTeam'
+import { suffixedName, validateSavedTeam, type SavedTeam } from './savedTeam'
 
 export interface TeamsExportFile {
   app: 'stargazer'
@@ -32,7 +32,8 @@ export function buildExport(teams: readonly SavedTeam[], exportedAt: string): Te
   }
 }
 
-export type ImportParseResult = { ok: true; teams: SavedTeam[]; skipped: number } | { ok: false }
+export type ImportParseResult =
+  { ok: true; teams: SavedTeam[]; skipped: number; conflicts: number } | { ok: false }
 
 // Ids are inert strings (only compared and used as keys), so shape needs no
 // more than a length cap; a failing id regenerates rather than rejecting the
@@ -40,10 +41,12 @@ export type ImportParseResult = { ok: true; teams: SavedTeam[]; skipped: number 
 const MAX_ID_LENGTH = 64
 
 /* Parse an export file against the current library. Accepted records keep the
- * file's id unless it is already taken — an import must never collide with an
- * existing record, and a taken id is the same-lineage case (an old export of a
- * team edited since, which the data|name dedupe can't catch) — or overlong;
- * those get fresh ids. Timestamps are preserved from the file. `skipped`
+ * file's id unless it is already taken (an import must never collide with an
+ * existing record) or overlong; those get fresh ids. An id held by an existing
+ * team is the same-lineage case — an old export of a team edited since, which
+ * the data|name dedupe can't catch — so that record also gets a marked name
+ * and counts in `conflicts`; otherwise the library would show two same-named
+ * teams with no explanation. Timestamps are preserved from the file. `skipped`
  * counts invalid records and duplicates (same canonical data + name as an
  * existing or already-accepted team). Cap enforcement stays with the caller,
  * which owns the library size. */
@@ -60,9 +63,11 @@ export function parseImport(raw: string, existing: readonly SavedTeam[]): Import
   if (!Array.isArray(teams)) return { ok: false }
 
   const seen = new Set(existing.map(dedupeKey))
-  const takenIds = new Set(existing.map((team) => team.id))
+  const existingIds = new Set(existing.map((team) => team.id))
+  const takenIds = new Set(existingIds)
   const accepted: SavedTeam[] = []
   let skipped = 0
+  let conflicts = 0
 
   for (const record of teams) {
     const valid = validateSavedTeam(record)
@@ -76,11 +81,20 @@ export function parseImport(raw: string, existing: readonly SavedTeam[]): Import
       continue
     }
     seen.add(key)
+    if (existingIds.has(valid.id)) {
+      conflicts++
+      accepted.push({
+        ...valid,
+        id: crypto.randomUUID(),
+        name: suffixedName(valid.name, ' (imported)'),
+      })
+      continue
+    }
     const id =
       valid.id.length <= MAX_ID_LENGTH && !takenIds.has(valid.id) ? valid.id : crypto.randomUUID()
     takenIds.add(id)
     accepted.push({ ...valid, id })
   }
 
-  return { ok: true, teams: accepted, skipped }
+  return { ok: true, teams: accepted, skipped, conflicts }
 }
