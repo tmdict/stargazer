@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import IconChevronsUp from '@/components/ui/IconChevronsUp.vue'
 import IconReset from '@/components/ui/IconReset.vue'
-import IconTrash from '@/components/ui/IconTrash.vue'
+import IconTrashSmall from '@/components/ui/IconTrashSmall.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import type { GridContext } from '@/composables/useGridContext'
@@ -238,7 +238,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
             @touchstart.passive="onActionTouchStart"
             @mouseleave="hideActionTip"
           >
-            <IconTrash :size="11" />
+            <IconTrashSmall :size="12" />
           </button>
         </span>
       </div>
