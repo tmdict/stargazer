@@ -4,7 +4,7 @@
  * boards (matchCharacterNames, the roster search's multi-locale name index).
  * Phantimals and companion summons never match. */
 
-import { computed, ref, type ComputedRef, type Ref } from 'vue'
+import { computed, onScopeDispose, ref, watch, type ComputedRef, type Ref } from 'vue'
 
 import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { isStandardHero, teamPreviewBoards } from '@/lib/teams/preview'
@@ -15,7 +15,15 @@ import { renderSnippet, type Snippet } from '@/utils/searchHighlight'
 export interface SavedTeamSearchResult {
   team: SavedTeam
   name: Snippet
+  // Present only when the team contains a matched hero. Every other card gets
+  // a stable undefined, so typing never re-renders its thumbnails.
+  highlightHeroes?: ReadonlySet<string>
 }
+
+// The list reacts once typing pauses rather than per keystroke: every filter
+// pass re-patches a large card grid, and consecutive passes queue into a
+// visible stall on mobile.
+const DEBOUNCE_MS = 200
 
 // Shared across consumers and keyed on the immutable data string (updates
 // replace the record), so the tab and the menu never decode a record twice.
@@ -23,12 +31,17 @@ const heroSlugCache = new Map<string, ReadonlySet<string>>()
 
 export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
   query: Ref<string>
-  matchedHeroes: ComputedRef<ReadonlySet<string> | undefined>
   results: ComputedRef<SavedTeamSearchResult[]>
 } {
   const gameData = useGameDataStore()
   const query = ref('')
-  const activeQuery = computed(() => query.value.trim())
+  const activeQuery = ref('')
+  let debounce: ReturnType<typeof setTimeout> | undefined
+  watch(query, (value) => {
+    clearTimeout(debounce)
+    debounce = setTimeout(() => (activeQuery.value = value.trim()), DEBOUNCE_MS)
+  })
+  onScopeDispose(() => clearTimeout(debounce))
 
   // Matches any warm locale (en/zh always are). Gated to 2+ characters so a
   // single letter can't pull in half the roster.
@@ -55,7 +68,8 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
 
   // A card survives on a name hit or a hero hit; input order is preserved.
   // renderSnippet gets the name's full length as context, so its pieces always
-  // spell the whole name.
+  // spell the whole name. The hero check runs even for name hits: a name-matched
+  // team still rings its matched heroes.
   const results = computed<SavedTeamSearchResult[]>(() => {
     const q = activeQuery.value
     if (!q) {
@@ -64,11 +78,17 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     const heroes = matchedHeroes.value
     return teams().flatMap((team) => {
       const name = renderSnippet(team.name, q, team.name.length)
-      const heroHit = !name && !!heroes && [...teamHeroSlugs(team)].some((slug) => heroes.has(slug))
+      const heroHit = !!heroes && [...teamHeroSlugs(team)].some((slug) => heroes.has(slug))
       if (!name && !heroHit) return []
-      return [{ team, name: name ?? { pre: team.name, match: '', post: '' } }]
+      return [
+        {
+          team,
+          name: name ?? { pre: team.name, match: '', post: '' },
+          highlightHeroes: heroHit ? heroes : undefined,
+        },
+      ]
     })
   })
 
-  return { query, matchedHeroes, results }
+  return { query, results }
 }

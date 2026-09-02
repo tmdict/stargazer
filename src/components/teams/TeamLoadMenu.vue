@@ -104,7 +104,7 @@ const searchable = computed(() => {
   return [...modeTeams, ...duelTeams]
 })
 
-const { query, matchedHeroes, results } = useSavedTeamSearch(() => searchable.value)
+const { query, results } = useSavedTeamSearch(() => searchable.value)
 
 const groups = computed(() =>
   [
@@ -246,7 +246,7 @@ const tipText = computed((): string =>
             <div v-if="group.label" class="panel-group">{{ group.label }}</div>
             <div class="team-cards">
               <button
-                v-for="{ team, name } in group.items"
+                v-for="{ team, name, highlightHeroes } in group.items"
                 :key="team.id"
                 type="button"
                 class="load-card"
@@ -255,7 +255,7 @@ const tipText = computed((): string =>
                 @click="handlePick(team)"
               >
                 <span class="card-thumb">
-                  <TeamPreview :team :highlight-heroes="matchedHeroes" />
+                  <TeamPreview :team :highlight-heroes="highlightHeroes" />
                   <span v-if="armed === team.id" class="card-confirm">{{ confirmText(team) }}</span>
                 </span>
                 <span class="card-name">
