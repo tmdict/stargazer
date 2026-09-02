@@ -66,6 +66,13 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     return slugs
   }
 
+  const plainName = (team: SavedTeam): Snippet => ({ pre: team.name, match: '', post: '' })
+
+  const hasMatchedHero = (team: SavedTeam, heroes: ReadonlySet<string>): boolean => {
+    for (const slug of teamHeroSlugs(team)) if (heroes.has(slug)) return true
+    return false
+  }
+
   // A card survives on a name hit or a hero hit; input order is preserved.
   // renderSnippet gets the name's full length as context, so its pieces always
   // spell the whole name. The hero check runs even for name hits: a name-matched
@@ -73,17 +80,17 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
   const results = computed<SavedTeamSearchResult[]>(() => {
     const q = activeQuery.value
     if (!q) {
-      return teams().map((team) => ({ team, name: { pre: team.name, match: '', post: '' } }))
+      return teams().map((team) => ({ team, name: plainName(team) }))
     }
     const heroes = matchedHeroes.value
     return teams().flatMap((team) => {
       const name = renderSnippet(team.name, q, team.name.length)
-      const heroHit = !!heroes && [...teamHeroSlugs(team)].some((slug) => heroes.has(slug))
+      const heroHit = !!heroes && hasMatchedHero(team, heroes)
       if (!name && !heroHit) return []
       return [
         {
           team,
-          name: name ?? { pre: team.name, match: '', post: '' },
+          name: name ?? plainName(team),
           highlightHeroes: heroHit ? heroes : undefined,
         },
       ]
