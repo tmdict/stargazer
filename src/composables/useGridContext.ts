@@ -35,6 +35,7 @@ import {
   getCharacterPlacements,
   getCharacterTeam,
   getTilesWithCharacters,
+  getTilesWithCharactersByTeam,
   hasCharacter,
   isBaseHeroId,
 } from '@/lib/characters/character'
@@ -155,6 +156,9 @@ export interface GridContext {
   handleDrop: (payload: CharacterDropPayload, targetHexId: number) => boolean
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
+  // One side wiped: every unit on the team (heroes, phantimal, synergy) and
+  // its paragon levels; the team's artifact stays.
+  clearTeam: (team: Team) => void
   clearArtifacts: () => void
   clear: () => void
 
@@ -396,6 +400,17 @@ export function createGridContext(
     clearParagon()
   }
 
+  const clearTeam = (team: Team): void => {
+    for (const tile of getTilesWithCharactersByTeam(grid, team)) {
+      executeRemoveCharacter(grid, skillManager, tile.hex.getId())
+    }
+    // Unlike a single removal's harmlessly lingering entry, a cleared side is a
+    // fresh slate: a returning hero must not resurrect its old level.
+    for (const key of paragon.keys()) {
+      if (key.startsWith(`${team}:`)) paragon.delete(key)
+    }
+  }
+
   const clearArtifacts = (): void => {
     artifacts.ally.value = null
     artifacts.enemy.value = null
@@ -624,6 +639,7 @@ export function createGridContext(
     handleDrop,
     switchMap,
     clearCharacters,
+    clearTeam,
     clearArtifacts,
     clear,
     dispose: () => scope.stop(),
