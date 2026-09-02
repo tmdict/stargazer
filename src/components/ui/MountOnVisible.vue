@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref } from 'vue'
-
 /* Defers building its slot until the wrapper nears the viewport, so heavy leaf
    content (e.g. saved-team thumbnails) mounts on approach instead of all at
    once at page mount. One-way: once built, content never unmounts. */
+
+import { onBeforeUnmount, onMounted, ref } from 'vue'
 
 defineProps<{
   // Placeholder height until the content mounts, so scroll geometry holds. An
