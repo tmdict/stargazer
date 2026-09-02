@@ -3,10 +3,13 @@ import { computed } from 'vue'
 
 import IconChevronsUp from '@/components/ui/IconChevronsUp.vue'
 import IconReset from '@/components/ui/IconReset.vue'
+import IconTrash from '@/components/ui/IconTrash.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import type { GridContext } from '@/composables/useGridContext'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { useSelectionState } from '@/composables/useSelectionState'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
@@ -104,6 +107,19 @@ const maxAll = (team: Team, heroes: PanelHero[]): void => {
   heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, PARAGON_MAX_LEVEL))
 }
 
+// Per-team wipe, two-step armed like every destructive control. Bulk removal
+// may delete the unit a pending tap/lift gesture references, so the gesture
+// state drops with it (as every other bulk mutation does).
+const { armed, confirm } = useArmedConfirm()
+const { clearTargetHex, clearLiftedHex } = useSelectionState()
+const clearTeam = (team: Team): void => {
+  if (!confirm(String(team))) return
+  hideActionTip()
+  props.context.clearTeam(team)
+  clearTargetHex()
+  clearLiftedHex()
+}
+
 const rivalryStatClass = (stat: number): string => (stat > 0 ? 'pos' : stat < 0 ? 'neg' : 'zero')
 
 // The label is hidden when the stat is 0 (the v-if), so only the two signs reach here.
@@ -156,8 +172,10 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
     :class="{ single: visibleSides.length === 1 }"
   >
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
-      <div v-if="showParagon" class="tp-head">
-        <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
+      <!-- The head renders without the paragon layer too: the per-team clear
+           is available whenever the panel is editable. -->
+      <div v-if="showParagon || !readonly" class="tp-head">
+        <span v-if="showParagon" class="stat" :class="rivalryStatClass(side.rivalryStat)">
           <span
             v-if="side.rivalryStat !== 0"
             class="stat-label"
@@ -170,9 +188,9 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           </span>
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
         </span>
-        <span v-if="canEditParagon" class="tp-actions">
+        <span v-if="!readonly" class="tp-actions">
           <button
-            v-if="hasParagon(side.heroes)"
+            v-if="canEditParagon && hasParagon(side.heroes)"
             type="button"
             class="stat-reset"
             :aria-label="i18n.t('app.reset-paragons')"
@@ -184,6 +202,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
             <IconReset :size="11" />
           </button>
           <button
+            v-if="canEditParagon"
             type="button"
             class="stat-max"
             :disabled="!canRaise(side.heroes)"
@@ -196,6 +215,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
             <IconChevronsUp :size="11" />
           </button>
           <button
+            v-if="canEditParagon"
             type="button"
             class="stat-plus"
             :disabled="!canRaise(side.heroes)"
@@ -206,6 +226,19 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
             @mouseleave="hideActionTip"
           >
             +1
+          </button>
+          <span v-if="canEditParagon" class="tp-actions-divider" />
+          <button
+            type="button"
+            class="stat-clear"
+            :class="{ armed: armed === String(side.team) }"
+            :aria-label="i18n.t('app.clear-team')"
+            @click="clearTeam(side.team)"
+            @mouseenter="showActionTip($event, 'app.clear-team')"
+            @touchstart.passive="onActionTouchStart"
+            @mouseleave="hideActionTip"
+          >
+            <IconTrash :size="11" />
           </button>
         </span>
       </div>
@@ -361,7 +394,8 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 
 .stat-plus,
 .stat-max,
-.stat-reset {
+.stat-reset,
+.stat-clear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -384,7 +418,8 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   font-weight: 800;
   font-variant-numeric: tabular-nums;
 }
-.stat-reset {
+.stat-reset,
+.stat-clear {
   width: 18px;
   height: 18px;
 }
@@ -393,6 +428,27 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 .stat-reset:hover {
   background: rgba(0, 0, 0, 0.11);
   color: var(--color-text-primary);
+}
+
+/* Sets the destructive clear apart from the repeatable paragon cluster. */
+.tp-actions-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--color-border-primary);
+}
+.stat-clear {
+  color: var(--color-danger);
+}
+.stat-clear:hover {
+  background: var(--color-danger);
+  color: #fff;
+}
+/* Armed step of the two-step confirm: solid fill plus a ring, so the state
+   reads even at chip size (the control-btn.danger.armed treatment). */
+.stat-clear.armed {
+  background: var(--color-danger);
+  color: #fff;
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
 }
 .stat-plus:disabled,
 .stat-max:disabled {
