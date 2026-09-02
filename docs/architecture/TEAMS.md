@@ -192,7 +192,7 @@ The saved-teams panel is the roster's default tab; its cards use `content-visibi
 
 ## Backup Files
 
-Driven from the Saved Teams tab's library bar (see TeamsRoster above); a file holds the whole library or, with a filter active, only the filtered view. `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records get fresh ids; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
+Driven from the Saved Teams tab's library bar (see TeamsRoster above); a file holds the whole library or, with a filter active, only the filtered view. `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records keep the file's ids so identity survives a round trip, regenerating only when an id is overlong or already taken — and a record whose id belongs to an existing team (an old export of it, edited since) additionally imports under an "(imported)"-marked name and counts as a conflict in the import toast; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
 
 ## Sharing & Image Export
 
