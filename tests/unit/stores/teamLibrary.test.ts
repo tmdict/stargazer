@@ -189,7 +189,7 @@ describe('useTeamLibrary', () => {
 })
 
 describe('useTeamLibrary export/import', () => {
-  it('export -> wipe -> import restores the library (fresh ids)', () => {
+  it('export -> wipe -> import restores the library with its ids', () => {
     seed([record('a', 'Alpha'), record('b', 'Bravo')])
     const library = useTeamLibrary()
     const file = JSON.stringify(library.exportTeams())
@@ -200,7 +200,11 @@ describe('useTeamLibrary export/import', () => {
     const result = library.importTeams(file)
     expect(result).toEqual({ imported: 2, skipped: 0, invalid: false })
     expect(library.teams.map((t) => t.name).sort()).toEqual(['Alpha', 'Bravo'])
-    expect(stored().map((t) => t.id)).not.toContain('a')
+    expect(
+      stored()
+        .map((t) => t.id)
+        .sort(),
+    ).toEqual(['a', 'b'])
   })
 
   it('exports only the given selection', () => {
