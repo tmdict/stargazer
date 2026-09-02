@@ -20,7 +20,7 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 const props = defineProps<{
   context: GridContext
   // Paragon layer (badges, cycle, bulk actions, rivalry stat header); off, the
-  // panel is portraits and names only.
+  // panel is portraits, names, and the per-team clear.
   showParagon: boolean
   readonly?: boolean
 }>()
@@ -324,7 +324,9 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   /* Never bleed into the neighboring block: anything the row can't fit wraps
      below instead (a rare, graceful second line). */
   flex-wrap: wrap;
-  align-items: center;
+  /* Top-aligned so the chips sit on the stat's number line, not centered
+     against the taller number-plus-caption stack. */
+  align-items: flex-start;
   gap: var(--spacing-sm);
   min-height: 28px;
   margin-bottom: var(--spacing-md);
@@ -447,7 +449,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 /* Sets the destructive clear apart from the repeatable paragon cluster. */
 .tp-actions-divider {
   width: 1px;
-  align-self: stretch;
+  height: 18px;
   background: var(--color-border-primary);
 }
 .stat-clear {
