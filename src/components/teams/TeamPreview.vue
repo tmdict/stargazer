@@ -1,3 +1,16 @@
+<script lang="ts">
+import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+
+/* MountOnVisible placeholder height for a team's thumbnail. Boards wrap three
+   per row (CSS below); the row constant sits between the rendered row heights
+   at phone and desktop widths — an offscreen placeholder needs no better. */
+const BOARD_ROW_PX = 130
+const PREVIEW_PADDING_PX = 16
+export function estimatedPreviewHeight(mode: TeamModeKey): number {
+  return Math.ceil(TEAM_MODES[mode].boardCount / 3) * BOARD_ROW_PX + PREVIEW_PADDING_PX
+}
+</script>
+
 <script setup lang="ts">
 /* A saved team's thumbnail: one mini board per grid, rendered from the record's
    canonical data (never from live contexts or DOM capture). Hero portraits are
