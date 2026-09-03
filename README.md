@@ -72,7 +72,3 @@ See [Contributing](./docs/CONTRIBUTING.md) for all available commands.
 ## Contributing
 
 See [Getting Started](./docs/CONTRIBUTING.md) for setup and guidelines.
-
----
-
-_Built with the help of Claude Code 🤖⚔️_
