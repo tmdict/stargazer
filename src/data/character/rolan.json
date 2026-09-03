@@ -9,9 +9,8 @@
   "range": 10,
   "season": 7,
   "tags": {
-    "dot": [{ "ex": 4 }],
     "initial-energy-300": [],
-    "temp-buff": [{ "skill2": 1 }],
-    "temp-buff-opening": [{ "skill2": 1 }]
+    "temp-buff": [{ "awakening": 1 }],
+    "temp-buff-opening": [{ "awakening": 1 }]
   }
 }
