@@ -264,7 +264,9 @@ needs no change (reads unit sections only).
   - P0–P3 and R0–R3: neutral gray — bg `#cfc8bb`, text `#4a463d` (today's `.p0`).
     The per-tier `--color-tier-1..3` fills are retired from the panel (the
     variables stay for other consumers).
-  - **P4: silver-blue `#8fa7c8`, white text.** **R4: `#dd7a6c`, white text.**
+  - **P4: silver-blue `#8fa7c8`, white text.** **R4: the current P3 fill,
+    `var(--color-tier-3)` (#dd7a6c), white text** — free for reuse since tiers
+    go gray.
   - White-on-`#8fa7c8` is below strict WCAG contrast; accepted because the badge
     is bold, tiny, and the fill alone signals "maxed".
 - Refinement badge visibility: add `refinement` to `GridInfoPrefs` /
@@ -283,7 +285,11 @@ needs no change (reads unit sections only).
 
 ### Floating edit dock — mounting, gating, state
 
-**One dock per board** (owner sign-off pending, §8.2), replacing the panel's
+Visual style (owner-chosen "pop"): a white card floating under the board —
+rounded corners, subtle border, drop shadow — visually detached from the panel
+strip above it.
+
+**One dock per board** (owner-decided), replacing the panel's
 `.tp-actions` cluster:
 
 - **Teams**: mounted in `GridBoard.vue` beside the panel (`:72`), one per board.
@@ -485,7 +491,8 @@ armed-∩-visible rule (no invisible edits); raised the unknown-attrId question
 single-deployment model — the reviewer's version-skew scenario cannot occur)
 and pinned the malformed-row
 contracts as fixtures; added the refinement-only-header and
-co-presence codec fixtures; verified count-field widths (≤10 rows vs 31 cap);
+co-presence codec fixtures; verified wire capacity against the real 5-hero
+team cap;
 pinned ALL-tap as two `setAttr` calls; pulled `TeamPowerPanel` into slice 1
 (wrapper drop is compile-coupled); enumerated the removal runbook and grep-able
 legacy test blocks; confirmed slice 1 as one PR.
@@ -504,7 +511,8 @@ legacy test blocks; confirmed slice 1 as one PR.
   are out of policy (CLAUDE.md). Old links and old export files are explicitly
   expendable after removal.
 - **Badge palette**: gray-until-max (`#cfc8bb`/`#4a463d` for P0–P3/R0–R3),
-  P4 `#8fa7c8` white text (S3), R4 `#dd7a6c` white text.
+  P4 `#8fa7c8` white text (S3), R4 the current P3 fill `var(--color-tier-3)`
+  (#dd7a6c) white text.
 - **Badge corners**: P upper-left, R upper-right.
 - **Selector**: V2 independent P/R toggle chips (both lit = ALL).
 - **Control colors**: neutral — no per-layer tinting; armed feedback is the
