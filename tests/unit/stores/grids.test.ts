@@ -1,3 +1,4 @@
+import { ATTR_PARAGON, type AttrRecord } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
@@ -348,8 +349,8 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     // The swap leaves global placement state unchanged, so distinct paragon
     // levels are what prove the two copies actually traded boards (and that the
     // reused paragon key is cleared before it is rewritten).
-    a!.setParagon(Team.ALLY, ALLY_A, 2)
-    b!.setParagon(Team.ENEMY, ALLY_A, 4)
+    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 2)
+    b!.setAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON, 4)
 
     // The destination-board exclusion in isUsed exists for exactly this: each
     // leg's scan would otherwise find the counterpart copy, which is itself
@@ -360,8 +361,8 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(a!.grid.getTileById(1).team).toBe(Team.ALLY)
     expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
     expect(b!.grid.getTileById(41).team).toBe(Team.ENEMY)
-    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(4)
-    expect(b!.getParagon(Team.ENEMY, ALLY_A)).toBe(2)
+    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(4)
+    expect(b!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(2)
   })
 
   it('rejects a companion dragged to another board', () => {
@@ -415,68 +416,68 @@ describe('useGrids paragon carry-over', () => {
   it('carries paragon levels through a board swap', () => {
     const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    a!.setParagon(Team.ALLY, ALLY_A, 3)
+    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 3)
     expect(b!.place(41, ENEMY_B, Team.ENEMY)).toBe(true)
-    b!.setParagon(Team.ENEMY, ENEMY_B, 4)
+    b!.setAttr(Team.ENEMY, ENEMY_B, ATTR_PARAGON, 4)
 
     grids.swapBoards(0, 1)
 
-    expect(b!.getParagon(Team.ALLY, ALLY_A)).toBe(3)
-    expect(a!.getParagon(Team.ENEMY, ENEMY_B)).toBe(4)
-    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
-    expect(b!.getParagon(Team.ENEMY, ENEMY_B)).toBe(0)
+    expect(b!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(3)
+    expect(a!.getAttr(Team.ENEMY, ENEMY_B, ATTR_PARAGON)).toBe(4)
+    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
+    expect(b!.getAttr(Team.ENEMY, ENEMY_B, ATTR_PARAGON)).toBe(0)
   })
 
   it('moves a paragon level with its hero to the destination board and team', () => {
     const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    a!.setParagon(Team.ALLY, ALLY_A, 4)
+    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 4)
 
     expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
 
-    expect(b!.getParagon(Team.ENEMY, ALLY_A)).toBe(4)
-    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+    expect(b!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(4)
+    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
   })
 
   it('swaps paragon levels with the swapped heroes', () => {
     const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    a!.setParagon(Team.ALLY, ALLY_A, 2)
+    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 2)
     expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
-    b!.setParagon(Team.ENEMY, ENEMY_A, 4)
+    b!.setAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON, 4)
 
     expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
 
-    expect(b!.getParagon(Team.ENEMY, ALLY_A)).toBe(2)
-    expect(a!.getParagon(Team.ALLY, ENEMY_A)).toBe(4)
-    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
-    expect(b!.getParagon(Team.ENEMY, ENEMY_A)).toBe(0)
+    expect(b!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(2)
+    expect(a!.getAttr(Team.ALLY, ENEMY_A, ATTR_PARAGON)).toBe(4)
+    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
+    expect(b!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(0)
   })
 
   it('re-keys a paragon level on a same-board cross-team move', () => {
     const { grids, a } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    a!.setParagon(Team.ALLY, ALLY_A, 4)
+    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 4)
 
     expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 41)).toBe(true)
 
-    expect(a!.getParagon(Team.ENEMY, ALLY_A)).toBe(4)
-    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
+    expect(a!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(4)
+    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
   })
 
   it('trades paragon levels on a same-board cross-team swap', () => {
     const { grids, a } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
     expect(a!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
-    a!.setParagon(Team.ALLY, ALLY_A, 2)
-    a!.setParagon(Team.ENEMY, ENEMY_A, 4)
+    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 2)
+    a!.setAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON, 4)
 
     expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 41)).toBe(true)
 
-    expect(a!.getParagon(Team.ENEMY, ALLY_A)).toBe(2)
-    expect(a!.getParagon(Team.ALLY, ENEMY_A)).toBe(4)
-    expect(a!.getParagon(Team.ALLY, ALLY_A)).toBe(0)
-    expect(a!.getParagon(Team.ENEMY, ENEMY_A)).toBe(0)
+    expect(a!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(2)
+    expect(a!.getAttr(Team.ALLY, ENEMY_A, ATTR_PARAGON)).toBe(4)
+    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
+    expect(a!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(0)
   })
 })
 
@@ -614,7 +615,10 @@ describe('useGrids.loadTeamSide', () => {
     mains: [number, number, number?][],
     extra: Partial<SideLoadBoard> = {},
   ): SideLoadBoard => ({
-    mains: mains.map(([unitId, hexId, paragon]) => ({ unitId, hexId, paragon: paragon ?? 0 })),
+    mains: mains.map(([unitId, hexId, paragon]) => {
+      const attrs: AttrRecord = paragon ? { [ATTR_PARAGON]: paragon } : {}
+      return { unitId, hexId, attrs }
+    }),
     companions: [],
     phantimal: null,
     artifact: null,
@@ -688,7 +692,7 @@ describe('useGrids.loadTeamSide', () => {
   it("applies saved paragon, resets stale paragon, and swaps only the destination side's artifact", () => {
     const { grids, a: ctx } = setupBoards(1)
     expect(ctx.place(1, 11, Team.ALLY)).toBe(true)
-    ctx.setParagon(Team.ALLY, 11, 3)
+    ctx.setAttr(Team.ALLY, 11, ATTR_PARAGON, 3)
     ctx.setArtifact(Team.ALLY, 5)
     ctx.setArtifact(Team.ENEMY, 6)
 
@@ -710,8 +714,8 @@ describe('useGrids.loadTeamSide', () => {
 
     // 11 returns without a saved level: the lingering 3 must not resurface.
     expect(findCharacterHex(ctx.grid, 11, Team.ALLY)).toBe(2)
-    expect(ctx.getParagon(Team.ALLY, 11)).toBe(0)
-    expect(ctx.getParagon(Team.ALLY, 12)).toBe(4)
+    expect(ctx.getAttr(Team.ALLY, 11, ATTR_PARAGON)).toBe(0)
+    expect(ctx.getAttr(Team.ALLY, 12, ATTR_PARAGON)).toBe(4)
     expect(ctx.artifacts.ally).toBe(8)
     expect(ctx.artifacts.enemy).toBe(6)
   })
@@ -763,7 +767,7 @@ describe('useGrids.loadTeamSide', () => {
       {
         side: Team.ALLY,
         boards: [
-          board([[11, 1]], { phantimal: { unitId: toPhantimalId(1), hexId: 4, paragon: 0 } }),
+          board([[11, 1]], { phantimal: { unitId: toPhantimalId(1), hexId: 4, attrs: {} } }),
         ],
       },
       { invert: false, scope: 'all' },

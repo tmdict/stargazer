@@ -19,6 +19,7 @@ import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useLiftGuard } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
+import { runUpgradeStoragePass } from '@/utils/upgradeMigration'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
@@ -33,6 +34,11 @@ useLiftGuard()
 // Header renders on every route; init here so SSG-only routes whose views
 // don't call initialize (about, skill/*) still get translations. Idempotent.
 i18n.initialize()
+
+// TEMPORARY (delete with upgradeMigration.ts). Root setup runs before any
+// route child's persistence reads, and on every entry page, so stored boards
+// convert even for visitors who never open /teams.
+runUpgradeStoragePass()
 
 // Locale-prefixed routes are authoritative: keep the store in sync with the
 // path so the header and skill browser render in the URL's language (during

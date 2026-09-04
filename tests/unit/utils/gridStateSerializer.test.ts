@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import type { AttrRecord } from '@/lib/characters/attributes'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
@@ -44,26 +45,27 @@ describe('gridStateSerializer', () => {
         createMockTile(4, State.OCCUPIED_ALLY, companionId, Team.ALLY), // companion
         createMockTile(5, State.OCCUPIED_ALLY, toPhantimalId(1), Team.ALLY), // phantimal
       ]
-      const levels = new Map<string, number>([
-        [`${Team.ALLY}:100`, 4],
-        [`${Team.ENEMY}:200`, 2],
-        [`${Team.ALLY}:${companionId}`, 3],
-        [`${Team.ALLY}:${toPhantimalId(1)}`, 3],
+      const records = new Map<string, AttrRecord>([
+        [`${Team.ALLY}:100`, { 1: 4, 2: 1 }],
+        [`${Team.ENEMY}:200`, { 1: 2 }],
+        [`${Team.ALLY}:${companionId}`, { 1: 3 }],
+        [`${Team.ALLY}:${toPhantimalId(1)}`, { 1: 3 }],
       ])
-      const getParagon = (team: Team, characterId: number): number =>
-        levels.get(`${team}:${characterId}`) ?? 0
+      const getAttrs = (team: Team, characterId: number): AttrRecord =>
+        records.get(`${team}:${characterId}`) ?? {}
 
-      const result = serializeGridState(tiles, null, null, undefined, getParagon)
-      expect(result.p).toEqual([
-        [Team.ALLY, 100, 4],
-        [Team.ENEMY, 200, 2],
+      const result = serializeGridState(tiles, null, null, undefined, getAttrs)
+      expect(result.u).toEqual([
+        [Team.ALLY, 100, 1, 4],
+        [Team.ALLY, 100, 2, 1],
+        [Team.ENEMY, 200, 1, 2],
       ])
     })
 
-    it('omits p without getParagon or when every level is zero', () => {
+    it('omits u without getAttrs or when every record is default', () => {
       const tiles: GridTile[] = [createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY)]
-      expect(serializeGridState(tiles, null, null).p).toBeUndefined()
-      expect(serializeGridState(tiles, null, null, undefined, () => 0).p).toBeUndefined()
+      expect(serializeGridState(tiles, null, null).u).toBeUndefined()
+      expect(serializeGridState(tiles, null, null, undefined, () => ({})).u).toBeUndefined()
     })
 
     it('filters out default state tiles', () => {
@@ -264,7 +266,7 @@ describe('gridStateSerializer', () => {
         createMockTile(4, State.OCCUPIED_ALLY, toSynergyId(100), Team.ALLY),
       ]
       const state = serializeMultiGridState(
-        [{ tiles, allyArtifact: 2, enemyArtifact: null, map: 'arena1', getParagon: () => 3 }],
+        [{ tiles, allyArtifact: 2, enemyArtifact: null, map: 'arena1', getAttrs: () => ({ 1: 3 }) }],
         0,
       )
       expect(Object.keys(state.boards[0]!).sort()).toEqual([...BOARD_CONTENT_KEYS].sort())

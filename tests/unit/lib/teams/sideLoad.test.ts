@@ -10,8 +10,8 @@ import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)
 
 // One 1v1 board exercising every unit section: mains, a companion, a
-// phantimal, the synergy hero with its companion, paragon for both teams,
-// and an ally artifact.
+// phantimal, the synergy hero with its companion, upgrade attrs for both
+// teams, and an ally artifact.
 const ALLY_RECORD: MultiGridState = {
   boards: [
     {
@@ -26,9 +26,10 @@ const ALLY_RECORD: MultiGridState = {
         [5, 16, Team.ALLY],
         [6, 10016, Team.ALLY],
       ],
-      p: [
-        [Team.ALLY, 11, 3],
-        [Team.ENEMY, 21, 2],
+      u: [
+        [Team.ALLY, 11, 1, 3],
+        [Team.ALLY, 11, 2, 4],
+        [Team.ENEMY, 21, 1, 2],
       ],
       a: [7, null],
     },
@@ -83,16 +84,16 @@ describe('buildSideLoadPlan', () => {
 
     const board = plan.boards[0]!
     expect(board.mains).toEqual([
-      { unitId: 11, hexId: 1, paragon: 3 },
-      { unitId: 12, hexId: 2, paragon: 0 },
-      { unitId: toSynergyId(16), hexId: 5, paragon: 0 },
+      { unitId: 11, hexId: 1, attrs: { 1: 3, 2: 4 } },
+      { unitId: 12, hexId: 2, attrs: {} },
+      { unitId: toSynergyId(16), hexId: 5, attrs: {} },
     ])
     // Companions become settle targets tied to their band-preserving main.
     expect(board.companions).toEqual([
       { unitId: 10012, hexId: 3, mainUnitId: 12 },
       { unitId: toSynergyId(10016), hexId: 6, mainUnitId: toSynergyId(16) },
     ])
-    expect(board.phantimal).toEqual({ unitId: toPhantimalId(1), hexId: 4, paragon: 0 })
+    expect(board.phantimal).toEqual({ unitId: toPhantimalId(1), hexId: 4, attrs: {} })
     expect(board.artifact).toBe(7)
   })
 

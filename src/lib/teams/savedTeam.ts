@@ -8,6 +8,13 @@
  */
 
 import {
+  attrDefault,
+  clampAttr,
+  compareAttrRows,
+  isKnownAttrId,
+  type AttrRow,
+} from '@/lib/characters/attributes'
+import {
   BOARD_CONTENT_KEYS,
   type BoardState,
   type MultiGridState,
@@ -31,6 +38,37 @@ export interface SavedTeam {
   updatedAt: number
 }
 
+/* `u` rows normalized to what the serializer itself would emit — well-formed,
+ * known attrIds, clamped, non-default, deduped last-wins, sorted — so a
+ * hand-crafted or crafted-payload record still canonicalizes byte-equal to a
+ * fresh snapshot of the same content. Unknown attrIds drop like unregistered
+ * keys (single-deployment app: they can only come from crafted input). */
+const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
+  if (!Array.isArray(rows)) return undefined
+  const byKey = new Map<string, AttrRow>()
+  for (const row of rows) {
+    if (!Array.isArray(row) || row.length !== 4) continue
+    const [team, characterId, attrId, value] = row as unknown[]
+    if (
+      typeof team !== 'number' ||
+      typeof characterId !== 'number' ||
+      typeof attrId !== 'number' ||
+      typeof value !== 'number' ||
+      !isKnownAttrId(attrId)
+    ) {
+      continue
+    }
+    const clamped = clampAttr(attrId, value)
+    if (clamped !== attrDefault(attrId)) {
+      byKey.set(`${team}:${characterId}:${attrId}`, [team, characterId, attrId, clamped])
+    } else {
+      byKey.delete(`${team}:${characterId}:${attrId}`)
+    }
+  }
+  if (byKey.size === 0) return undefined
+  return [...byKey.values()].sort(compareAttrRows)
+}
+
 /* Strip viewer state and re-encode. Boards are rebuilt key-by-key from
  * BOARD_CONTENT_KEYS (the serializer's emission order) so a hand-ordered import
  * and a fresh serialize of the same content produce identical bytes, and any
@@ -43,7 +81,8 @@ export function canonicalTeamData(encoded: string): string | null {
     boards: decoded.boards.map((board) => {
       const ordered: BoardState = {}
       for (const key of BOARD_CONTENT_KEYS) {
-        if (board[key] !== undefined) (ordered as Record<string, unknown>)[key] = board[key]
+        const value = key === 'u' ? canonicalAttrRows(board.u) : board[key]
+        if (value !== undefined) (ordered as Record<string, unknown>)[key] = value
       }
       return ordered
     }),

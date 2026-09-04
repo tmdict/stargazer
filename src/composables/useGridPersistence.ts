@@ -94,7 +94,7 @@ export function useArenaPersistence(getFlags: () => DisplayFlags): GridPersisten
         artifactStore.allyArtifactId,
         artifactStore.enemyArtifactId,
         getFlags(),
-        grids.active?.getParagon,
+        grids.active?.getAttrs,
       ),
     ),
   )
@@ -131,7 +131,7 @@ export function useTeamsPersistence(
           allyArtifact: ctx.artifacts.ally,
           enemyArtifact: ctx.artifacts.enemy,
           map: ctx.currentMap,
-          getParagon: ctx.getParagon,
+          getAttrs: ctx.getAttrs,
         })),
         grids.activeId,
         getFlags(),

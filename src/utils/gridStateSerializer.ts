@@ -1,3 +1,9 @@
+import {
+  attrRowsFor,
+  compareAttrRows,
+  type AttrRecord,
+  type AttrRow,
+} from '@/lib/characters/attributes'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import { decomposeUnitId, inSynergyBand } from '@/lib/characters/synergy'
@@ -12,7 +18,7 @@ export interface GridState {
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
   s?: number[][] // seasonal units, phantimals today: [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
   y?: number[][] // synergy-band units, hero plus its companions: [hexId, localUnitId, team] (locals reuse c's id space: hero = base id, companion = N*10000+base)
-  p?: number[][] // paragon: [team, characterId, level] for placed heroes with level > 0
+  u?: number[][] // hero upgrade attrs (lib/characters/attributes): [team, characterId, attrId, value], sorted, non-default only
   d?: number // display flags: bit-packed (wrap, showSkills, showPerspective, inverted, teamView)
 }
 
@@ -31,7 +37,7 @@ export function serializeGridState(
   allyArtifact: number | null,
   enemyArtifact: number | null,
   displayFlags?: DisplayFlags,
-  getParagon?: (team: Team, characterId: number) => number,
+  getAttrs?: (team: Team, characterId: number) => AttrRecord,
 ): GridState {
   const state: GridState = {}
 
@@ -90,20 +96,17 @@ export function serializeGridState(
     state.s = phantimals
   }
 
-  // Paragon levels keyed by team + character; only base heroes carry them and only
-  // non-zero levels are emitted.
-  if (getParagon) {
-    const paragons = allTiles
-      .filter(
-        (tile) =>
-          tile.characterId !== undefined &&
-          tile.team !== undefined &&
-          isBaseHeroId(tile.characterId),
-      )
-      .map((tile) => [tile.team!, tile.characterId!, getParagon(tile.team!, tile.characterId!)])
-      .filter((entry) => entry[2]! > 0)
-    if (paragons.length > 0) {
-      state.p = paragons
+  // Upgrade attrs keyed by team + character; only base heroes carry them and
+  // only non-default values are emitted, sorted so equal content is byte-equal.
+  if (getAttrs) {
+    const rows: AttrRow[] = []
+    for (const tile of allTiles) {
+      if (tile.characterId === undefined || tile.team === undefined) continue
+      if (!isBaseHeroId(tile.characterId)) continue
+      rows.push(...attrRowsFor(tile.team, tile.characterId, getAttrs(tile.team, tile.characterId)))
+    }
+    if (rows.length > 0) {
+      state.u = rows.sort(compareAttrRows)
     }
   }
 
@@ -149,7 +152,7 @@ export type BoardState = GridState & { m?: string }
  * lib/teams/preview.ts (thumbnails) and lib/teams/sideLoad.ts (the one-side
  * rule), so a new unit section must be handled there as well. `d` is
  * deliberately absent: it is viewer state, not content. */
-export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'y', 'p', 'a', 'm'] as const
+export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'y', 'u', 'a', 'm'] as const
 
 /* Multi-board state (Teams page): one BoardState per board, the active board,
  * the global display flags, and the team mode the boards belong to. `mode` is
@@ -167,7 +170,7 @@ export interface BoardInput {
   allyArtifact: number | null
   enemyArtifact: number | null
   map: string
-  getParagon?: (team: Team, characterId: number) => number
+  getAttrs?: (team: Team, characterId: number) => AttrRecord
 }
 
 export function serializeMultiGridState(
@@ -178,7 +181,7 @@ export function serializeMultiGridState(
 ): MultiGridState {
   const state: MultiGridState = {
     boards: boards.map((b) => ({
-      ...serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact, undefined, b.getParagon),
+      ...serializeGridState(b.tiles, b.allyArtifact, b.enemyArtifact, undefined, b.getAttrs),
       m: b.map,
     })),
   }

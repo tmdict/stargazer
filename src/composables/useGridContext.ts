@@ -26,6 +26,7 @@ import {
   type Ref,
 } from 'vue'
 
+import { attrDefault, clampAttr, type AttrRecord } from '@/lib/characters/attributes'
 import {
   canPlaceCharacterOnTeam,
   findCharacterHex,
@@ -40,7 +41,6 @@ import {
   isBaseHeroId,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
-import { PARAGON_MAX_LEVEL } from '@/lib/characters/paragon'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
 import {
   countTeamFaction,
@@ -149,15 +149,19 @@ export interface GridContext {
   seedPhantimalBaseline: () => void
   setArtifact: (team: Team, artifactId: number) => void
   removeArtifact: (team: Team) => void
-  getParagon: (team: Team, characterId: number) => number
-  setParagon: (team: Team, characterId: number, level: number) => void
-  // Reads and clears a level in one step, so a transfer's clear can't be missed.
-  takeParagon: (team: Team, characterId: number) => number
+  getAttr: (team: Team, characterId: number, attrId: number) => number
+  getAttrs: (team: Team, characterId: number) => AttrRecord
+  setAttr: (team: Team, characterId: number, attrId: number, value: number) => void
+  // Replaces the hero's whole record (never merges): side-load stamps records
+  // including defaults so a stale value can't linger.
+  setAttrs: (team: Team, characterId: number, record: AttrRecord) => void
+  // Reads and clears a record in one step, so a transfer's clear can't be missed.
+  takeAttrs: (team: Team, characterId: number) => AttrRecord
   handleDrop: (payload: CharacterDropPayload, targetHexId: number) => boolean
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
   // One side wiped: every unit on the team (heroes, phantimal, synergy) and
-  // its paragon levels; the team's artifact stays.
+  // its upgrade attrs; the team's artifact stays.
   clearTeam: (team: Team) => void
   clearArtifacts: () => void
   clear: () => void
@@ -186,29 +190,48 @@ export function createGridContext(
   const currentMap = ref(mapKey)
   const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }
 
-  // Paragon levels (0..PARAGON_MAX_LEVEL) per placed hero, keyed by team + character
-  // rather than hex, so a level follows its hero across moves and each team tracks a
-  // hero independently. Sparse: only non-zero levels are stored, and a removed hero's
-  // entry lingers harmlessly (neither rendered nor serialized) until the hero returns;
-  // bulk resets (clear, map switch) drop the lot. The team in the key means a team
-  // change must re-key the entry: move/swap below transfer it via takeParagon, as do
-  // the grids store's cross-board transfers.
-  const paragon = reactive(new Map<string, number>())
-  const paragonKey = (team: Team, characterId: number): string => `${team}:${characterId}`
-  const getParagon = (team: Team, characterId: number): number =>
-    paragon.get(paragonKey(team, characterId)) ?? 0
-  const setParagon = (team: Team, characterId: number, level: number): void => {
-    const clamped = Math.max(0, Math.min(PARAGON_MAX_LEVEL, Math.round(level)))
-    const key = paragonKey(team, characterId)
-    if (clamped > 0) paragon.set(key, clamped)
-    else paragon.delete(key)
+  // Upgrade attrs (lib/characters/attributes) per placed hero, keyed by team +
+  // character rather than hex, so values follow their hero across moves and each
+  // team tracks a hero independently. Sparse: only non-default records are
+  // stored, and a removed hero's record lingers harmlessly (neither rendered nor
+  // serialized) until the hero returns; bulk resets (clear, map switch) drop the
+  // lot. The team in the key means a team change must re-key the record:
+  // move/swap below transfer it whole via takeAttrs, as do the grids store's
+  // cross-board transfers.
+  const attrs = reactive(new Map<string, AttrRecord>())
+  const attrKey = (team: Team, characterId: number): string => `${team}:${characterId}`
+  const getAttr = (team: Team, characterId: number, attrId: number): number =>
+    attrs.get(attrKey(team, characterId))?.[attrId] ?? attrDefault(attrId)
+  const getAttrs = (team: Team, characterId: number): AttrRecord =>
+    attrs.get(attrKey(team, characterId)) ?? {}
+  const storeAttrs = (key: string, record: AttrRecord): void => {
+    if (Object.keys(record).length > 0) attrs.set(key, record)
+    else attrs.delete(key)
   }
-  const takeParagon = (team: Team, characterId: number): number => {
-    const level = getParagon(team, characterId)
-    setParagon(team, characterId, 0)
-    return level
+  const setAttr = (team: Team, characterId: number, attrId: number, value: number): void => {
+    const key = attrKey(team, characterId)
+    const record = { ...attrs.get(key) }
+    const clamped = clampAttr(attrId, value)
+    if (clamped !== attrDefault(attrId)) record[attrId] = clamped
+    else delete record[attrId]
+    storeAttrs(key, record)
   }
-  const clearParagon = (): void => paragon.clear()
+  const setAttrs = (team: Team, characterId: number, record: AttrRecord): void => {
+    const next: AttrRecord = {}
+    for (const [id, value] of Object.entries(record)) {
+      const attrId = Number(id)
+      const clamped = clampAttr(attrId, value)
+      if (clamped !== attrDefault(attrId)) next[attrId] = clamped
+    }
+    storeAttrs(attrKey(team, characterId), next)
+  }
+  const takeAttrs = (team: Team, characterId: number): AttrRecord => {
+    const key = attrKey(team, characterId)
+    const record = attrs.get(key) ?? {}
+    attrs.delete(key)
+    return record
+  }
+  const clearAttrs = (): void => attrs.clear()
 
   const scope = effectScope(true)
 
@@ -285,15 +308,15 @@ export function createGridContext(
 
   const remove = (hexId: number): boolean => executeRemoveCharacter(grid, skillManager, hexId)
 
-  // The engine is paragon-agnostic, and a move or swap can change a unit's team
-  // (the destination zone decides), so a team change transfers each level to its
-  // hero's new key.
+  // The engine is attr-agnostic, and a move or swap can change a unit's team
+  // (the destination zone decides), so a team change transfers each record to
+  // its hero's new key.
   const move = (fromHexId: number, toHexId: number, characterId: number): boolean => {
     const fromTeam = getCharacterTeam(grid, fromHexId)
     if (!executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)) return false
     const toTeam = getCharacterTeam(grid, toHexId)
     if (fromTeam !== undefined && toTeam !== undefined && toTeam !== fromTeam) {
-      setParagon(toTeam, characterId, takeParagon(fromTeam, characterId))
+      setAttrs(toTeam, characterId, takeAttrs(fromTeam, characterId))
     }
     return true
   }
@@ -311,10 +334,12 @@ export function createGridContext(
       toTeam !== undefined &&
       fromTeam !== toTeam
     ) {
-      const fromLevel = takeParagon(fromTeam, fromId)
-      const toLevel = takeParagon(toTeam, toId)
-      setParagon(toTeam, fromId, fromLevel)
-      setParagon(fromTeam, toId, toLevel)
+      // Take both records before writing either: a same-hero cross-team swap
+      // (fromId === toId) reuses a key.
+      const fromRecord = takeAttrs(fromTeam, fromId)
+      const toRecord = takeAttrs(toTeam, toId)
+      setAttrs(toTeam, fromId, fromRecord)
+      setAttrs(fromTeam, toId, toRecord)
     }
     return true
   }
@@ -391,23 +416,23 @@ export function createGridContext(
     skillManager.reset()
     grid.skillManager = skillManager
     currentMap.value = mapKey
-    clearParagon()
+    clearAttrs()
     return true
   }
 
   const clearCharacters = (): void => {
     executeClearAllCharacters(grid, skillManager)
-    clearParagon()
+    clearAttrs()
   }
 
   const clearTeam = (team: Team): void => {
     for (const tile of getTilesWithCharactersByTeam(grid, team)) {
       executeRemoveCharacter(grid, skillManager, tile.hex.getId())
     }
-    // Unlike a single removal's harmlessly lingering entry, a cleared side is a
-    // fresh slate: a returning hero must not resurrect its old level.
-    for (const key of paragon.keys()) {
-      if (key.startsWith(`${team}:`)) paragon.delete(key)
+    // Unlike a single removal's harmlessly lingering record, a cleared side is a
+    // fresh slate: a returning hero must not resurrect its old values.
+    for (const key of attrs.keys()) {
+      if (key.startsWith(`${team}:`)) attrs.delete(key)
     }
   }
 
@@ -633,9 +658,11 @@ export function createGridContext(
     seedPhantimalBaseline,
     setArtifact,
     removeArtifact,
-    getParagon,
-    setParagon,
-    takeParagon,
+    getAttr,
+    getAttrs,
+    setAttr,
+    setAttrs,
+    takeAttrs,
     handleDrop,
     switchMap,
     clearCharacters,

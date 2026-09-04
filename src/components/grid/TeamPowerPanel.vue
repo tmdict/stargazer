@@ -10,6 +10,7 @@ import type { GridContext } from '@/composables/useGridContext'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
@@ -47,7 +48,7 @@ const heroesFor = (team: Team): PanelHero[] =>
         characterId,
         name: localizedDisplayName(i18n.t, 'character', canonicalName),
         image: gameData.getCharacterImage(canonicalName),
-        level: props.context.getParagon(team, characterId),
+        level: props.context.getAttr(team, characterId, ATTR_PARAGON),
         faction: gameData.getCharacterFaction(characterId),
       }
     })
@@ -79,14 +80,19 @@ const visibleSides = computed(() => {
 })
 
 const cycle = (team: Team, hero: PanelHero): void => {
-  props.context.setParagon(team, hero.characterId, (hero.level + 1) % (PARAGON_MAX_LEVEL + 1))
+  props.context.setAttr(
+    team,
+    hero.characterId,
+    ATTR_PARAGON,
+    (hero.level + 1) % (PARAGON_MAX_LEVEL + 1),
+  )
 }
 
 const hasParagon = (heroes: PanelHero[]): boolean => heroes.some((hero) => hero.level > 0)
 
 const resetParagons = (team: Team, heroes: PanelHero[]): void => {
   hideActionTip()
-  heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, 0))
+  heroes.forEach((hero) => props.context.setAttr(team, hero.characterId, ATTR_PARAGON, 0))
 }
 
 // Clamped, unlike the per-hero cycle: a batch wrap would zero a maxed team.
@@ -98,13 +104,20 @@ const canRaise = (heroes: PanelHero[]): boolean =>
 const raiseAll = (team: Team, heroes: PanelHero[]): void => {
   hideActionTip()
   heroes.forEach((hero) =>
-    props.context.setParagon(team, hero.characterId, Math.min(hero.level + 1, PARAGON_MAX_LEVEL)),
+    props.context.setAttr(
+      team,
+      hero.characterId,
+      ATTR_PARAGON,
+      Math.min(hero.level + 1, PARAGON_MAX_LEVEL),
+    ),
   )
 }
 
 const maxAll = (team: Team, heroes: PanelHero[]): void => {
   hideActionTip()
-  heroes.forEach((hero) => props.context.setParagon(team, hero.characterId, PARAGON_MAX_LEVEL))
+  heroes.forEach((hero) =>
+    props.context.setAttr(team, hero.characterId, ATTR_PARAGON, PARAGON_MAX_LEVEL),
+  )
 }
 
 // Per-team wipe, two-step armed like every destructive control. Bulk removal
