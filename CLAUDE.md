@@ -9,6 +9,10 @@
 - Test changes: `npm run lint` and `npm run type-check`
 - Update relevant architecture docs when making major changes
 
+### Migrations
+
+- Data/format migration shims are always TEMPORARY: one deletable module with a removal runbook, deleted about a month after release (`src/utils/gridInfoMigration.ts` is the pattern). Never build permanent conversion or translation fallbacks for legacy formats — old share links and old export files are explicitly expendable once a shim is removed.
+
 ### Comments
 
 Add a comment only when the code can't tell the story itself: a non-obvious mechanic, something that looks wrong but is intentional, a cross-file contract, or a real gotcha. If a competent reader could already know it from the code, omit it.
