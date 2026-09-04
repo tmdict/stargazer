@@ -69,11 +69,18 @@ u: [team, characterId, attrId, value][]
 ```
 
 - `team`: 1 = ally, 2 = enemy (existing encoding).
-- `characterId`: hero id. **0 is reserved** as a team-scope sentinel (hero ids
-  start at 1). This is an id-space reservation only: the current serializer walks
-  placed tiles (`gridStateSerializer.ts:95-108`), so emitting a team-scoped row
-  would additionally require whole-record enumeration — a follow-up design, not a
-  free ride.
+- `characterId`: hero id. **0 is reserved** as a team-scope sentinel —
+  verified free: real hero ids start at 1 (smallest id in
+  `src/data/character/*.json` is 1), placeholders occupy 9001–9007
+  (`placeholder.ts:21,34-42`), companions sit at ≥10000, and the binary codec's
+  validation requires `charId > 0` everywhere today (`binaryEncoder.ts:124-131,
+  218-229`), so nothing has ever emitted a 0. The row shape and the attrs-map
+  key (`${team}:0`) carry it as-is, and the new generic binary section's
+  validation **permits characterId 0** from day one so the wire needs no change
+  later. What a team-level attr still needs when one ships: the serializer
+  switches from the per-tile walk (`gridStateSerializer.ts:95-108`) to
+  whole-record enumeration, and consumers (`sideLoad`, restore) route id-0 rows
+  to team scope — known, bounded work, not a format change.
 - Rows are emitted **sorted by (team, characterId, attrId)**; only non-default
   values appear. The comparator is a **registry export** (it must survive the
   shim's deletion — serializer, canonicalization, and shim all import it).
@@ -91,24 +98,31 @@ u: [team, characterId, attrId, value][]
   base64 **JSON** (`urlStateManager.ts:33`). Here `u` is a literal JSON key and
   legacy `p` needs the temporary shim (below).
 - **Single-board Arena (`?g=`, `stargazer.arena` autosave)** is the **binary
-  codec** (`src/utils/binaryEncoder.ts`). Paragon is a bit-packed section behind
-  extended-flags **bit 1** (spec at `binaryEncoder.ts:26-80`; bits 3–5 verified
-  free). The codec translates: encode maps attrId-1 `u` rows to the existing
-  paragon section, decode produces `u` rows from it — the wire format is
-  unchanged (this is the live format for attrId 1, not a compat layer), so old
-  Arena links and autosaves keep decoding. Everything else rides a **generic
-  upgrades section behind bit 3** — one bit spent once, never bits 4/5:
-  count (6 bits), then per entry team (1) + characterId (16) + attrId (6) +
-  value (4) = 27 bits, carrying every wire-pinned attrId ≥ 2 (refinement today,
-  future attrs for free). **Appended after the synergy section** — currently
-  last (`binaryEncoder.ts:440-448`) — so old decoders seeing bit 3 leave
-  trailing bits unread. Encode routes attrId 1 to the paragon section and the
-  rest here; decode merges both into `u` rows. The codec's contract test pins
-  the set of wire-carried attrIds and that registry ranges fit the 4-bit value
-  field. Count-width check: real heroes cap at 5 per team
-  (`character.ts:97-98`; skill-driven team-size bumps admit only companions,
-  which `isBaseHeroId` excludes), so 10 rows per attr per board — the 6-bit
-  count (63) holds six wire attrs before the section needs a successor.
+  codec** (`src/utils/binaryEncoder.ts`; spec at `:26-80`, bits 3–5 verified
+  free). **All upgrades — paragon included — ride one generic upgrades section
+  behind bit 3** (owner decision: no legacy wire shapes are kept; the old
+  bit-1 paragon section is retired, not preserved): count (6 bits), then per
+  entry team (1) + characterId (16, **0 permitted** for the team-scope
+  sentinel) + attrId (6) + value (4) = 27 bits, carrying every wire-pinned
+  attrId. **Appended after the synergy section** — currently last
+  (`binaryEncoder.ts:440-448`). The encoder never writes the bit-1 paragon
+  section again, and its constants (`PARAGON_LEVEL_BITS`, `PARAGON_COUNT_BITS`,
+  `binaryEncoder.ts:15-18`) die with it; bit 1 becomes retired/reserved,
+  never reused. One code path for every attr — no attrId-1 special routing.
+  A **TEMPORARY decode branch** keeps reading a bit-1 paragon section into
+  attrId-1 `u` rows during the shim window (it lives inline in the decoder's
+  sequential bit-read flow, tagged and enumerated in the upgradeMigration
+  removal runbook — bit-parsing can't be extracted to the shim module). The
+  arena autosave self-heals immediately: `useArenaPersistence` rewrites
+  `stargazer.arena` up front on first load (`useGridPersistence.ts:81`), in
+  the new section. After shim removal, an old Arena link carrying paragon
+  fails to decode (bit 1 unknown → the sequential read desyncs → decode
+  returns null → the link loads an empty board) — accepted per the owner's
+  "I don't care about links breaking". The codec's contract test pins the
+  wire-carried attrIds and that registry ranges fit the 4-bit value field.
+  Capacity: real heroes cap at 5 per team (`character.ts:97-98`; skill-driven
+  bumps admit only companions, excluded by `isBaseHeroId`), so 10 rows per
+  attr per board — the 6-bit count (63) holds six wire attrs.
 
 ### Legacy `p` shim — TEMPORARY, deleted ~1 month after release
 
@@ -166,7 +180,10 @@ reuse of existing choke points**:
   persists silent record drops). `stargazer.teams.saved.backup` is a
   forward-version guard written on unknown `blob.v` only (`teamLibrary.ts:45-50`)
   and is not touched.
-- `stargazer.arena` is binary and needs no pass.
+- `stargazer.arena`: decode through the binary codec (the temporary bit-1
+  branch converts a legacy paragon section) and re-encode, so the arena slot
+  is in the new section even on a device that never opens the Arena page
+  during the month; an undecodable value is left untouched.
 
 **Marker: dedicated key `stargazer.migration.u`, written LAST** — only after
 every attempted `writeStorage` returned true; any failure leaves the marker
@@ -184,7 +201,16 @@ still open across the release writing `p`-form autosaves concurrently — the
 one transient skew the hosted single-deployment model allows (healed by the
 decode half until removal, an accepted loss after).
 
-**Removal runbook must enumerate**: the module; its test file; the grep-able
+**Import files convert while the shim is live** — verified: `parseImport` runs
+every record through `validateSavedTeam` → `canonicalTeamData` → the decode
+choke point (`transfer.ts:73`), and dedupe compares the converted canonical
+bytes (`transfer.ts:23,78-82`), so an old export imports with paragon intact
+and true duplicates are skipped correctly. Only after removal does an old
+export degrade (see accepted consequences).
+
+**Removal runbook must enumerate**: the module; its test file; **the temporary
+bit-1 paragon decode branch and its constants in `binaryEncoder.ts`**; the
+grep-able
 `describe('upgradeMigration …')` legacy blocks in shared test files (legacy-`p`
 cases in `urlStateManager.test.ts` / `savedTeam.test.ts` live in such blocks so
 removal is a grep, not an archaeology dig); the decode call + import in
@@ -198,8 +224,10 @@ from `URL_SERIALIZATION.md`/`TEAMS.md`; verification
 links and old export files silently lose their paragon levels (canonicalization
 drops the unregistered `p`; board content unaffected), and importing an old
 export whose team already exists in `u` form lands as a paragon-less
-"(imported)" duplicate (byte-compare dedupe no longer matches). Old Arena links
-are NOT affected (binary path).
+"(imported)" duplicate (byte-compare dedupe no longer matches). Old Arena
+links that carried paragon fail to decode entirely and load an empty board
+(the retired bit-1 section desyncs the read); paragon-less old Arena links
+keep working.
 
 ### Future expansion
 
@@ -259,7 +287,9 @@ needs no change (reads unit sections only).
 
 - **P badge upper-left, R badge upper-right.** (Today's single badge sits
   upper-right — `TeamPowerPanel.vue` `.pbadge`, `top:-3px; right:-3px` — P moves
-  left.)
+  left.) Both badges keep the existing badge chrome, including the **2px white
+  border** (`.pbadge` `border: 2px solid #fff`) and the cqw-driven sizing; the
+  armed ring is an `outline`, drawn outside the white border.
 - Palette — color means "maxed", nothing else:
   - P0–P3 and R0–R3: neutral gray — bg `#cfc8bb`, text `#4a463d` (today's `.p0`).
     The per-tier `--color-tier-1..3` fills are retired from the panel (the
@@ -365,10 +395,14 @@ selector chip renders filled (both in ALL), and the corresponding badges get a
 
 - Portrait tap, single effective layer: cycle that layer (+1 wrapping 4→0),
   matching today (`TeamPowerPanel.vue:81-83`).
-- Portrait tap in ALL: **+1 both layers, clamped, no wrap** — implemented as
-  **two `setAttr` calls, not `setAttrs`** (replace semantics would force a
-  read-modify-write that drops a future third attr if assembled naively; Vue's
-  watcher scheduling coalesces the two writes into one autosave).
+- Portrait tap in ALL: **+1 both layers, clamped at max — except when every
+  armed layer is already at max, in which case the tap wraps them all to 0**
+  (owner decision: max-everything then tap again resets, matching the
+  single-layer wrap). Mid-range values still never wrap independently, so the
+  two counters can't desync. Implemented as **two `setAttr` calls, not
+  `setAttrs`** (replace semantics would force a read-modify-write that drops a
+  future third attr if assembled naively; Vue's watcher scheduling coalesces
+  the writes into one autosave).
 - Bulk chips in ALL apply to both layers.
 
 ### Panel restructure budget (slice 2, `TeamPowerPanel.vue`)
@@ -409,7 +443,7 @@ comments in `useGridContext.ts:189-195, 291, 327, 408-411`,
 | `src/utils/upgradeMigration.ts` | **New, TEMPORARY.** Decode-side conversion (row filter/clamp/dedupe/sort; always deletes `p`) + one-time storage pass (`ActiveSlot`-envelope-preserving slot rewrite; `canonicalTeamData` library rewrite, raw-preserving) + marker-LAST `stargazer.migration.u`; header documents accepted races; removal runbook per §2. |
 | `src/utils/urlStateManager.ts` | Invoke the shim's conversion in `decodeMultiGridStateFromUrl` (one deletable call). |
 | `src/App.vue` | Invoke the storage pass once at setup (SSR-guarded), before route children mount (one deletable call + ordering comment). |
-| `src/utils/binaryEncoder.ts` | Encode/decode translation (attrId 1 ↔ paragon section, bit 1); **generic upgrades section behind bit 3** (attrId ≥ 2, appended after synergy; 6-bit count, 27-bit entries per §2); `validateGridState` clamps `u` against the registry, drops unknown/unpinned attrIds. |
+| `src/utils/binaryEncoder.ts` | **Generic upgrades section behind bit 3 carries all attrIds** (appended after synergy; 6-bit count, 27-bit entries per §2; characterId 0 permitted). Bit-1 paragon section retired: encode path and its constants (`:15-18`) deleted; a TEMPORARY decode branch (tagged, in the shim runbook) converts a legacy bit-1 section to attrId-1 `u` rows. `validateGridState` clamps `u` against the registry, drops unknown/unpinned attrIds. |
 | `src/composables/useGridContext.ts` | Attrs map; `getAttr`/`setAttr`/`takeAttrs`/`setAttrs` (replace semantics); `clearParagon`→`clearAttrs` (`:394,400`); interface update. |
 | `src/components/grid/TeamPowerPanel.vue` | **Mechanical script-only migration** of the dropped wrappers (`:50, 82, 89, 101, 107` → `getAttr`/`setAttr` with `ATTR_PARAGON`); no template or visual change. |
 | `src/stores/grids.ts` | Whole-record take/set at `:295, :328-331, :521`; `collectMainUnits` + restore (`:344-359, :404, :409`). |
@@ -417,7 +451,7 @@ comments in `useGridContext.ts:189-195, 291, 327, 408-411`,
 | `src/lib/teams/sideLoad.ts` | `SideLoadUnit.paragon` → attrs record from `u` (`:96`, doc comment). |
 | `src/composables/useGridPersistence.ts`, `src/views/HomeView.vue` | Attrs getter (`:97,:134`; `:253`). |
 | `src/lib/teams/savedTeam.ts` | `canonicalTeamData` sorts `u` rows and drops unknown attrIds; comment updates. |
-| Tests — new/updated | `attributes` registry contract; `gridStateSerializer.test.ts` (key contract, sorted sparse `u`); `binaryEncoder.test.ts` (translation round-trip; old-bytes decode fixture incl. out-of-range clamp; generic-section round-trip; **refinement-only board sets the extended header**; **bit-1 + bit-3 + synergy co-presence byte fixture**; registry-ranges-fit-4-bit-value pin; wire-attrId pin); `upgradeMigration.test.ts` (conversion; row-filter fixtures: short/non-numeric/duplicate rows, both-keys deletes `p`; envelope preservation for slots; raw-preserving library pass; marker-last + retry-on-failed-write; idempotence); legacy-`p` cases in `urlStateManager.test.ts` / `savedTeam.test.ts` inside grep-able `describe('upgradeMigration …')` blocks (incl. legacy record canonicalizes byte-equal to fresh snapshot); unknown-attrId decode fixture; `sideLoad.test.ts`; known breakers: `stores/urlState.test.ts:124`, `stores/grids.test.ts:348-364, 414-475, 617, 688, 766`, `composables/useGridContext.test.ts:79+`. |
+| Tests — new/updated | `attributes` registry contract; `gridStateSerializer.test.ts` (key contract, sorted sparse `u`); `binaryEncoder.test.ts` (generic-section round-trip incl. paragon + refinement together and characterId-0 rows; **upgrades-only board sets the extended header**; **section-after-synergy byte fixture**; out-of-range clamp; registry-ranges-fit-4-bit-value pin; wire-attrId pin; legacy bit-1 decode fixture in a grep-able `describe('upgradeMigration …')` block, deleted with the shim); `upgradeMigration.test.ts` (conversion; row-filter fixtures: short/non-numeric/duplicate rows, both-keys deletes `p`; envelope preservation for slots; raw-preserving library pass; marker-last + retry-on-failed-write; idempotence); legacy-`p` cases in `urlStateManager.test.ts` / `savedTeam.test.ts` inside grep-able `describe('upgradeMigration …')` blocks (incl. legacy record canonicalizes byte-equal to fresh snapshot); unknown-attrId decode fixture; `sideLoad.test.ts`; known breakers: `stores/urlState.test.ts:124`, `stores/grids.test.ts:348-364, 414-475, 617, 688, 766`, `composables/useGridContext.test.ts:79+`. |
 
 ### Slice 2 — UI
 
@@ -433,7 +467,7 @@ comments in `useGridContext.ts:189-195, 291, 327, 408-411`,
 | `src/views/TeamsView.vue`, `src/views/ShareView.vue` | Thread `refinement` flag (`ShareView.vue:164,181`); ShareView gets no dock. |
 | `src/locales/app/` | New `refinement.json` (en "Refinement" / zh 精炼) + selector aria strings + refinement/ALL bulk variants; existing `messages/{max-paragons,raise-paragons,reset-paragons,paragon-cycle}.json` generalize or gain siblings (all four exist). |
 | `docs/architecture/GRID.md`, `TEAMS.md`, `URL_SERIALIZATION.md` | Attrs, `u`, shim (with removal note), dock. |
-| Tests | Dock: teamView-filtered, empty-side, armed-state shared across docks, effective-armed pref interaction, ALL-mode clamp-no-wrap; panel: badge corners/palette; cross-board move carrying refinement; clearTeam wiping both attrs; full `u` round-trip save/load/share/import. |
+| Tests | Dock: teamView-filtered, empty-side, armed-state shared across docks, effective-armed pref interaction, ALL-mode clamp + wrap-when-all-max; panel: badge corners/palette; cross-board move carrying refinement; clearTeam wiping both attrs; full `u` round-trip save/load/share/import. |
 
 ### Slice 3 — notebook side (afkj-pvp)
 
@@ -443,10 +477,11 @@ Read `u` rows from shared links (attrId 1 = paragon, 2 = refinement).
 
 ## 6. Verified assumptions & corrections
 
-1. **Arena format is binary, not JSON** — the shim applies only to multi-board
-   JSON; the codec translation is the live wire format for attrId 1 (not a
-   compat layer), old Arena links keep decoding, and new autosaves remain
-   readable by the previous app version.
+1. **Arena format is binary, not JSON** — its legacy support is the temporary
+   bit-1 decode branch, deleted with the shim; the encoder writes only the
+   generic bit-3 section from day one. After removal, old paragon-bearing
+   Arena links load an empty board (accepted); the arena autosave is protected
+   by the storage pass and the upfront rewrite.
 2. **Single decode choke point confirmed** for all multi-board JSON consumers
    (incl. `useTeamsRestore.ts:78,145` and `ShareView.vue:39`).
 3. **Transfer surface** is the 10-row table in §3.
@@ -512,7 +547,7 @@ legacy test blocks; confirmed slice 1 as one PR.
   expendable after removal.
 - **Badge palette**: gray-until-max (`#cfc8bb`/`#4a463d` for P0–P3/R0–R3),
   P4 `#8fa7c8` white text (S3), R4 the current P3 fill `var(--color-tier-3)`
-  (#dd7a6c) white text.
+  (#dd7a6c) white text; badges keep the existing 2px white border.
 - **Badge corners**: P upper-left, R upper-right.
 - **Selector**: V2 independent P/R toggle chips (both lit = ALL).
 - **Control colors**: neutral — no per-layer tinting; armed feedback is the
@@ -523,7 +558,13 @@ legacy test blocks; confirmed slice 1 as one PR.
   is non-negotiable, and at 10+ upgrade types the sibling-key option costs
   per-attr boilerplate forever plus a binary format extension after two more
   attrs, versus `u`'s one-time shim. The generic bit-3 upgrades section (§2)
-  follows from the same call.
+  follows from the same call, and **paragon rides it too**: the binary bit-1
+  paragon section is retired, not kept as a live special case — no legacy wire
+  shapes survive the shim window, and old paragon-bearing Arena links breaking
+  after removal is accepted ("I don't care about links breaking").
+- **ALL-mode tap wraps at max**: with both layers selected, a tap raises both
+  (clamped); when every selected layer is already at max, the tap wraps them
+  all to 0 — matching the single-layer wrap.
 
 - **Dock scoping: per-board** — each board keeps its own bar (trash/bulk
   adjacent to what they act on); the P/R selection is one page-global state
