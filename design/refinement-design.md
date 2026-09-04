@@ -47,14 +47,13 @@ Rules:
   today's `setParagon` clamp at `useGridContext.ts:201`) for the JSON multi-board
   path, and `validateGridState` for the binary codec. `canonicalTeamData` never
   clamps — no third clamp site.
-- **Unknown attrIds** (rows written by a *future* app version reaching this one
-  via link, import, or synced slot): restore ignores them (never stored, never
-  thrown); the binary codec drops them (the wire-attrId pin below); but
-  `canonicalTeamData` deliberately **keeps** them — filtering would silently
-  destroy forward data. Accepted consequence: a team touched by a newer version
-  can show phantom "unsaved changes" on an older one (the byte compare at
-  `TeamsView.vue:114-116` sees rows this version can't emit). Pinned by a decode
-  fixture.
+- **Unknown attrIds are dropped everywhere** — restore ignores them (never
+  stored, never thrown), the binary codec drops them (the wire-attrId pin
+  below), and `canonicalTeamData` drops them like any other unregistered
+  content. There is no version-skew scenario to preserve them for: the app is a
+  single hosted deployment (owner: "once it updates there won't be old versions
+  available anywhere else"), so an unknown attrId can only come from a crafted
+  or corrupt payload. Pinned by a decode fixture.
 - A contract test pins the registry (ids, ranges, defaults) alongside the existing
   `BOARD_CONTENT_KEYS` contract test.
 - `PARAGON_MAX_LEVEL` (`src/lib/characters/paragon.ts:9`) becomes the registry's
@@ -97,8 +96,7 @@ u: [team, characterId, attrId, value][]
   free). The codec translates: encode maps attrId-1 `u` rows to the existing
   paragon section, decode produces `u` rows from it — the wire format is
   unchanged (this is the live format for attrId 1, not a compat layer), so old
-  Arena links and autosaves keep decoding, and new autosaves stay readable by
-  the previous app version (rollback-safe). Everything else rides a **generic
+  Arena links and autosaves keep decoding. Everything else rides a **generic
   upgrades section behind bit 3** — one bit spent once, never bits 4/5:
   count (6 bits), then per entry team (1) + characterId (16) + attrId (6) +
   value (4) = 27 bits, carrying every wire-pinned attrId ≥ 2 (refinement today,
@@ -181,9 +179,10 @@ app's largest key; `storage.ts` fails silently) into permanent paragon loss at
 the deadline. (The gridInfoMigration marker — absence of `stargazer.prefs` —
 is also unavailable: it's consumed on every device that has run the app since
 that shim shipped.) Accepted races, documented in the module header: two tabs
-both running the pass (idempotent, equivalent writes); an old-app-version tab
-writing `p`-form autosaves concurrently (healed by the decode half until
-removal, an accepted loss after).
+both running the pass (idempotent, equivalent writes); a stale pre-deploy tab
+still open across the release writing `p`-form autosaves concurrently — the
+one transient skew the hosted single-deployment model allows (healed by the
+decode half until removal, an accepted loss after).
 
 **Removal runbook must enumerate**: the module; its test file; the grep-able
 `describe('upgradeMigration …')` legacy blocks in shared test files (legacy-`p`
@@ -200,8 +199,7 @@ links and old export files silently lose their paragon levels (canonicalization
 drops the unregistered `p`; board content unaffected), and importing an old
 export whose team already exists in `u` form lands as a paragon-less
 "(imported)" duplicate (byte-compare dedupe no longer matches). Old Arena links
-are NOT affected (binary path). Rollback note for the release: a pre-`u` app
-version drops `u` at its next canonicalization.
+are NOT affected (binary path).
 
 ### Future expansion
 
@@ -412,7 +410,7 @@ comments in `useGridContext.ts:189-195, 291, 327, 408-411`,
 | `src/stores/urlState.ts` | Restore reads `u` → `setAttr`, ignoring unknown attrIds (`:145-154`). |
 | `src/lib/teams/sideLoad.ts` | `SideLoadUnit.paragon` → attrs record from `u` (`:96`, doc comment). |
 | `src/composables/useGridPersistence.ts`, `src/views/HomeView.vue` | Attrs getter (`:97,:134`; `:253`). |
-| `src/lib/teams/savedTeam.ts` | `canonicalTeamData` sorts `u` rows (keeps unknown attrIds); comment updates. |
+| `src/lib/teams/savedTeam.ts` | `canonicalTeamData` sorts `u` rows and drops unknown attrIds; comment updates. |
 | Tests — new/updated | `attributes` registry contract; `gridStateSerializer.test.ts` (key contract, sorted sparse `u`); `binaryEncoder.test.ts` (translation round-trip; old-bytes decode fixture incl. out-of-range clamp; generic-section round-trip; **refinement-only board sets the extended header**; **bit-1 + bit-3 + synergy co-presence byte fixture**; registry-ranges-fit-4-bit-value pin; wire-attrId pin); `upgradeMigration.test.ts` (conversion; row-filter fixtures: short/non-numeric/duplicate rows, both-keys deletes `p`; envelope preservation for slots; raw-preserving library pass; marker-last + retry-on-failed-write; idempotence); legacy-`p` cases in `urlStateManager.test.ts` / `savedTeam.test.ts` inside grep-able `describe('upgradeMigration …')` blocks (incl. legacy record canonicalizes byte-equal to fresh snapshot); unknown-attrId decode fixture; `sideLoad.test.ts`; known breakers: `stores/urlState.test.ts:124`, `stores/grids.test.ts:348-364, 414-475, 617, 688, 766`, `composables/useGridContext.test.ts:79+`. |
 
 ### Slice 2 — UI
@@ -482,8 +480,11 @@ key and the `App.vue` call site; caught the missing Arena dock mount (HomeView
 doesn't use GridBoard) and pinned the dock gate to `info.heroCard && !readonly`
 (avoiding a three-trashes-per-board default-UI regression); specified the
 teamView/empty-side matrix and the `useAttrLayerSelection`
-armed-∩-visible rule (no invisible edits); pinned the unknown-attrId and
-malformed-row contracts as fixtures; added the refinement-only-header and
+armed-∩-visible rule (no invisible edits); raised the unknown-attrId question
+(resolved as drop-everywhere once corrected against the owner's
+single-deployment model — the reviewer's version-skew scenario cannot occur)
+and pinned the malformed-row
+contracts as fixtures; added the refinement-only-header and
 co-presence codec fixtures; verified count-field widths (≤10 rows vs 31 cap);
 pinned ALL-tap as two `setAttr` calls; pulled `TeamPowerPanel` into slice 1
 (wrapper drop is compile-coupled); enumerated the removal runbook and grep-able
@@ -493,6 +494,11 @@ legacy test blocks; confirmed slice 1 as one PR.
 
 ### Owner-decided (from the design conversation)
 
+- **Deployment model**: the app is a single hosted deployment — "once it
+  updates there won't be old versions available anywhere else." No design may
+  assume version skew (old clients reading new data, rollbacks, parallel
+  versions); the only transient exception is a stale browser tab open across a
+  deploy.
 - **Migration policy**: shims are TEMPORARY — one deletable module + runbook,
   deleted ~1 month after release; permanent conversion/translation fallbacks
   are out of policy (CLAUDE.md). Old links and old export files are explicitly
@@ -524,5 +530,5 @@ Shim mechanics (sorted conversion, envelope-preserving storage pass,
 raw-preserving library rewrite, marker-last retry, `App.vue` call site) — A
 only; dock gating (`info.heroCard && !readonly`), teamView/empty-side matrix,
 `useAttrLayerSelection` defaults and armed-∩-visible rule, ALL-tap as two
-`setAttr` calls, unknown-attrId and malformed-row contracts, named test
+`setAttr` calls, unknown-attrId (drop everywhere) and malformed-row contracts, named test
 fixtures.
