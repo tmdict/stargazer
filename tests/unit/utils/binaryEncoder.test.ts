@@ -93,25 +93,28 @@ describe('binaryEncoder', () => {
         },
       ],
       [
-        'paragon levels with characters',
+        'upgrade rows with characters',
         {
           c: [
             [2, 100, 1],
             [6, 200, 2],
           ],
-          p: [
-            [1, 100, 4],
-            [2, 200, 2],
+          u: [
+            [1, 100, 1, 4],
+            [1, 100, 2, 3],
+            [2, 200, 1, 2],
           ],
         },
       ],
-      ['only paragon', { p: [[1, 33, 3]] }],
+      ['only upgrades (extended header from the section alone)', { u: [[1, 33, 1, 3]] }],
+      ['a team-scope sentinel row (characterId 0)', { u: [[1, 0, 2, 4]] }],
       [
-        'paragon with phantimals and display flags',
+        'upgrades with phantimals, synergy, and display flags',
         {
           c: [[2, 100, 1]],
           s: [[7, 1, 2]],
-          p: [[1, 100, 4]],
+          y: [[5, 100, 1]],
+          u: [[1, 100, 1, 4]],
           d: 0b1,
         },
       ],
@@ -119,6 +122,48 @@ describe('binaryEncoder', () => {
       const encoded = encodeToBinary(state as GridState)
       const decoded = decodeFromBinary(encoded)
       expect(decoded).toEqual(state)
+    })
+
+    describe('upgradeMigration legacy bit-1 decode (TEMPORARY, deleted with the shim)', () => {
+      // Hand-assembled pre-`u` bytes: extended header, flags bit 1, one
+      // character [2,100,ally], one paragon row [ally,100,4].
+      const legacyBytes = (): Uint8Array => {
+        const bits: number[] = []
+        const push = (value: number, count: number): void => {
+          for (let i = 0; i < count; i++) bits.push((value >> i) & 1)
+        }
+        push(0x88, 8)
+        push(0x02, 8)
+        push(2, 6)
+        push(100, 16)
+        push(0, 1)
+        push(1, 5)
+        push(0, 1)
+        push(100, 16)
+        push(4, 3)
+        const bytes: number[] = []
+        for (let i = 0; i < bits.length; i += 8) {
+          let byte = 0
+          for (let j = 0; j < 8 && i + j < bits.length; j++) byte |= bits[i + j]! << j
+          bytes.push(byte)
+        }
+        return new Uint8Array(bytes)
+      }
+
+      it('converts a legacy paragon section into upgrade rows with attrId 1', () => {
+        expect(decodeFromBinary(legacyBytes())).toEqual({
+          c: [[2, 100, 1]],
+          u: [[1, 100, 1, 4]],
+        })
+      })
+
+      it('never re-encodes the legacy section (round-trip lands in the upgrades section)', () => {
+        const decoded = decodeFromBinary(legacyBytes())!
+        const reencoded = encodeToBinary(decoded)
+        expect(decodeFromBinary(reencoded)).toEqual(decoded)
+        expect(reencoded[1]! & 0x02).toBe(0)
+        expect(reencoded[1]! & 0x08).toBe(0x08)
+      })
     })
 
     describe('extended header handling', () => {
