@@ -8,6 +8,7 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
+import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import MapEditor from '@/components/MapEditor.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
@@ -302,11 +303,18 @@ const handleResetMap = () => {
             :perspective-vertical-compression="PERSPECTIVE_VERTICAL_COMPRESSION"
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
-          <TeamPowerPanel
-            v-if="info.heroCard"
-            :context="activeContext"
-            :show-paragon="info.paragon"
-          />
+          <template v-if="info.heroCard">
+            <TeamPowerPanel
+              :context="activeContext"
+              :show-paragon="info.paragon"
+              :show-refinement="info.refinement"
+            />
+            <TeamPowerDock
+              :context="activeContext"
+              :show-paragon="info.paragon"
+              :show-refinement="info.refinement"
+            />
+          </template>
           <GridControls
             v-model:show-perspective="showPerspective"
             v-model:show-skills="showSkills"

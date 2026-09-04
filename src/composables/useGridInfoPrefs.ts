@@ -30,6 +30,7 @@ export interface GridInfoPrefs {
   hover: boolean
   heroCard: boolean
   paragon: boolean
+  refinement: boolean
   targeting: boolean
   coordinates: boolean
 }
@@ -44,6 +45,7 @@ export interface GridInfoView {
   hover: boolean
   heroCard: boolean
   paragon: boolean
+  refinement: boolean
   targeting: boolean
 }
 
@@ -53,6 +55,7 @@ const DEFAULTS: GridInfoPrefs = {
   hover: true,
   heroCard: false,
   paragon: false,
+  refinement: false,
   targeting: false,
   coordinates: false,
 }
@@ -64,6 +67,7 @@ const PREF_KEYS = Object.keys(DEFAULTS) as GridInfoKey[]
  * map, so a future nested child cannot ship with the three out of sync. */
 export const GRID_INFO_PARENTS: Partial<Record<GridInfoKey, GridInfoKey[]>> = {
   paragon: ['heroCard'],
+  refinement: ['heroCard'],
   coordinates: ['tileIds'],
 }
 
@@ -76,6 +80,7 @@ export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
     hover: effective('hover'),
     heroCard: effective('heroCard'),
     paragon: effective('paragon'),
+    refinement: effective('refinement'),
     targeting: effective('targeting'),
   }
 }
@@ -87,6 +92,7 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
   hover: false,
   heroCard: false,
   paragon: false,
+  refinement: false,
   targeting: false,
 })
 
