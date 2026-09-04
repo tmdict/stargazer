@@ -247,7 +247,7 @@ const handleCopyLink = () => {
       artifactStore.allyArtifactId,
       artifactStore.enemyArtifactId,
       toFlags(),
-      activeContext.value.getParagon,
+      activeContext.value.getAttrs,
     ),
   )
   return shareLink(encodedState)
