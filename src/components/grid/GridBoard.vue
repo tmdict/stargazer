@@ -7,6 +7,7 @@
 import { computed } from 'vue'
 
 import GridContainer from '@/components/grid/GridContainer.vue'
+import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -69,7 +70,10 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
   >
     <GridContainer :context :characters :info :show-skills :show-perspective :tap-mode />
 
-    <TeamPowerPanel v-if="info.heroCard" :context :show-paragon="info.paragon" />
+    <template v-if="info.heroCard">
+      <TeamPowerPanel :context :show-paragon="info.paragon" :show-refinement="info.refinement" />
+      <TeamPowerDock :context :show-paragon="info.paragon" :show-refinement="info.refinement" />
+    </template>
 
     <div class="board-actions capture-exclude">
       <button
