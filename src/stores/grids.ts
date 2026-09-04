@@ -19,6 +19,7 @@ import {
   type CharacterDropPayload,
   type GridContext,
 } from '@/composables/useGridContext'
+import { type AttrRecord } from '@/lib/characters/attributes'
 import {
   canPlaceCharacterOnTile,
   findTeamSynergyHex,
@@ -291,8 +292,8 @@ export const useGrids = defineStore('grids', () => {
     if (characterId === undefined || sourceTeam === undefined) return false
     if (!sourceCtx.remove(sourceHexId)) return false
     if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) {
-      // Paragon follows the hero to its destination board and team.
-      targetCtx.setParagon(destTeam, characterId, sourceCtx.takeParagon(sourceTeam, characterId))
+      // Attrs follow the hero to its destination board and team.
+      targetCtx.setAttrs(destTeam, characterId, sourceCtx.takeAttrs(sourceTeam, characterId))
       return true
     }
     placeUnit(sourceCtx, sourceHexId, characterId, sourceTeam) // rollback
@@ -323,12 +324,12 @@ export const useGrids = defineStore('grids', () => {
     const placedA = placeUnit(targetCtx, targetHexId, aId, bTeam)
     const placedB = placeUnit(sourceCtx, sourceHexId, bId, aTeam)
     if (placedA && placedB) {
-      // Paragon follows each hero. Take both levels before writing either: a
+      // Attrs follow each hero. Take both records before writing either: a
       // same-hero cross-team swap (aId === bId) reuses a key.
-      const aLevel = sourceCtx.takeParagon(aTeam, aId)
-      const bLevel = targetCtx.takeParagon(bTeam, bId)
-      targetCtx.setParagon(bTeam, aId, aLevel)
-      sourceCtx.setParagon(aTeam, bId, bLevel)
+      const aRecord = sourceCtx.takeAttrs(aTeam, aId)
+      const bRecord = targetCtx.takeAttrs(bTeam, bId)
+      targetCtx.setAttrs(bTeam, aId, aRecord)
+      sourceCtx.setAttrs(aTeam, bId, bRecord)
       return true
     }
     if (placedA) targetCtx.remove(targetHexId)
@@ -338,12 +339,12 @@ export const useGrids = defineStore('grids', () => {
     return false
   }
 
-  // A board's directly-placed roster: the main characters with their paragon
-  // levels, dropping skill-derived units (companions, faction phantimals) since
+  // A board's directly-placed roster: the main characters with their upgrade
+  // attrs, dropping skill-derived units (companions, faction phantimals) since
   // those re-derive from the roster.
   const collectMainUnits = (
     ctx: GridContext,
-  ): { characterId: number; team: Team; paragon: number }[] =>
+  ): { characterId: number; team: Team; attrs: AttrRecord }[] =>
     getTilesWithCharacters(ctx.grid)
       .filter(
         (tile) =>
@@ -355,7 +356,7 @@ export const useGrids = defineStore('grids', () => {
       .map((tile) => ({
         characterId: tile.characterId!,
         team: tile.team!,
-        paragon: ctx.getParagon(tile.team!, tile.characterId!),
+        attrs: ctx.getAttrs(tile.team!, tile.characterId!),
       }))
 
   const applyArtifacts = (
@@ -369,7 +370,7 @@ export const useGrids = defineStore('grids', () => {
     }
   }
 
-  // Exchange two boards' rosters (with paragon levels) and artifacts, keeping each
+  // Exchange two boards' rosters (with upgrade attrs) and artifacts, keeping each
   // unit/artifact's team (ally <-> ally, enemy <-> enemy). Only directly-placed
   // mains move; companions, faction phantimals, and tile zones (e.g. Kulu's) are
   // skill-derived, so clearing deactivates them on the source and autoPlace
@@ -398,15 +399,15 @@ export const useGrids = defineStore('grids', () => {
     source.seedPhantimalBaseline()
     target.seedPhantimalBaseline()
 
-    // clearCharacters wiped both paragon maps, so restore each hero's level with it.
+    // clearCharacters wiped both attrs maps, so restore each hero's record with it.
     fromTarget.forEach((unit) => {
       if (source.autoPlace(unit.characterId, unit.team)) {
-        source.setParagon(unit.team, unit.characterId, unit.paragon)
+        source.setAttrs(unit.team, unit.characterId, unit.attrs)
       }
     })
     fromSource.forEach((unit) => {
       if (target.autoPlace(unit.characterId, unit.team)) {
-        target.setParagon(unit.team, unit.characterId, unit.paragon)
+        target.setAttrs(unit.team, unit.characterId, unit.attrs)
       }
     })
 
@@ -518,7 +519,7 @@ export const useGrids = defineStore('grids', () => {
           continue
         }
         placed++
-        if (isBaseHeroId(unit.unitId)) ctx.setParagon(dest, unit.unitId, unit.paragon)
+        if (isBaseHeroId(unit.unitId)) ctx.setAttrs(dest, unit.unitId, unit.attrs)
         settleCompanions(ctx, board, unit.unitId)
       }
       if (board.phantimal) {

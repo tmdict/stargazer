@@ -1,5 +1,6 @@
 import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
 import type { GridState, MultiGridState } from './gridStateSerializer'
+import { convertLegacyBoard } from './upgradeMigration'
 
 export function encodeGridStateToUrl(gridState: GridState): string {
   try {
@@ -46,7 +47,10 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
     const plainObjects = parsed.boards.every(
       (board) => typeof board === 'object' && board !== null && !Array.isArray(board),
     )
-    return plainObjects ? parsed : null
+    if (!plainObjects) return null
+    // TEMPORARY: delete with upgradeMigration.ts.
+    for (const board of parsed.boards) convertLegacyBoard(board as Record<string, unknown>)
+    return parsed
   } catch (error) {
     console.warn('Failed to decode multi-grid state from URL:', error)
     return null

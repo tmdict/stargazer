@@ -1,3 +1,4 @@
+import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -126,8 +127,8 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const sourceGrids = useGrids()
     expect(source.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
     expect(source.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)
-    sourceGrids.active!.setParagon(Team.ALLY, ALLY_A, 4)
-    sourceGrids.active!.setParagon(Team.ENEMY, ENEMY_A, 2)
+    sourceGrids.active!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 4)
+    sourceGrids.active!.setAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON, 2)
 
     const encoded = encodeGridStateToUrl(
       serializeGridState(
@@ -135,17 +136,17 @@ describe('urlStateStore.restoreFromEncodedState', () => {
         source.artifact.allyArtifactId,
         source.artifact.enemyArtifactId,
         undefined,
-        sourceGrids.active!.getParagon,
+        sourceGrids.active!.getAttrs,
       ),
     )
 
     const target = createStores()
     const targetGrids = useGrids()
     expect(target.urlState.restoreFromEncodedState(encoded).success).toBe(true)
-    expect(targetGrids.active!.getParagon(Team.ALLY, ALLY_A)).toBe(4)
-    expect(targetGrids.active!.getParagon(Team.ENEMY, ENEMY_A)).toBe(2)
+    expect(targetGrids.active!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(4)
+    expect(targetGrids.active!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(2)
     // A hero with no stored level defaults to 0.
-    expect(targetGrids.active!.getParagon(Team.ALLY, ALLY_B)).toBe(0)
+    expect(targetGrids.active!.getAttr(Team.ALLY, ALLY_B, ATTR_PARAGON)).toBe(0)
   })
 
   it('restores a moved companion at its encoded hex, not the auto-spawn hex', () => {
@@ -273,7 +274,7 @@ describe('urlStateStore.restoreMultiFromEncodedState', () => {
           allyArtifact: ctx.artifacts.ally,
           enemyArtifact: ctx.artifacts.enemy,
           map: ctx.currentMap,
-          getParagon: ctx.getParagon,
+          getAttrs: ctx.getAttrs,
         })),
         grids.activeId,
       ),

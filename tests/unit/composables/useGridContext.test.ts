@@ -1,3 +1,4 @@
+import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -92,36 +93,36 @@ describe('createGridContext paragon re-keying', () => {
   it('keeps a level on a same-team move', () => {
     const ctx = setup()
     expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
-    ctx.setParagon(Team.ALLY, DUMMY, 3)
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 3)
 
     expect(ctx.move(1, 2, DUMMY)).toBe(true)
 
-    expect(ctx.getParagon(Team.ALLY, DUMMY)).toBe(3)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(3)
   })
 
   it('re-keys a level to the destination team on a cross-team move', () => {
     const ctx = setup()
     expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
-    ctx.setParagon(Team.ALLY, DUMMY, 3)
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 3)
 
     expect(ctx.move(1, 40, DUMMY)).toBe(true)
 
-    expect(ctx.getParagon(Team.ENEMY, DUMMY)).toBe(3)
-    expect(ctx.getParagon(Team.ALLY, DUMMY)).toBe(0)
+    expect(ctx.getAttr(Team.ENEMY, DUMMY, ATTR_PARAGON)).toBe(3)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
   })
 
   it('trades levels on a cross-team swap', () => {
     const ctx = setup()
     expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
     expect(ctx.place(40, DUMMY_2, Team.ENEMY)).toBe(true)
-    ctx.setParagon(Team.ALLY, DUMMY, 2)
-    ctx.setParagon(Team.ENEMY, DUMMY_2, 4)
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 2)
+    ctx.setAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON, 4)
 
     expect(ctx.swap(1, 40)).toBe(true)
 
-    expect(ctx.getParagon(Team.ENEMY, DUMMY)).toBe(2)
-    expect(ctx.getParagon(Team.ALLY, DUMMY_2)).toBe(4)
-    expect(ctx.getParagon(Team.ALLY, DUMMY)).toBe(0)
-    expect(ctx.getParagon(Team.ENEMY, DUMMY_2)).toBe(0)
+    expect(ctx.getAttr(Team.ENEMY, DUMMY, ATTR_PARAGON)).toBe(2)
+    expect(ctx.getAttr(Team.ALLY, DUMMY_2, ATTR_PARAGON)).toBe(4)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
+    expect(ctx.getAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON)).toBe(0)
   })
 })

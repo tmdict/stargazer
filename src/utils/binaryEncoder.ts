@@ -1,3 +1,9 @@
+import {
+  clampAttr,
+  compareAttrRows,
+  isKnownAttrId,
+  type AttrRow,
+} from '@/lib/characters/attributes'
 import type { GridState } from './gridStateSerializer'
 
 // Character ID encoding constants
@@ -12,10 +18,15 @@ const PHANTIMAL_ID_BITS = 4 // Supports local phantimal IDs 1-15
 const MAX_PHANTIMAL_ID = (1 << PHANTIMAL_ID_BITS) - 1 // 15
 const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
 const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
-const PARAGON_LEVEL_BITS = 3 // Paragon levels 1-4 (0 = absent, never stored)
-const MAX_PARAGON_LEVEL = (1 << PARAGON_LEVEL_BITS) - 1 // 7 (game caps levels at 4)
-const PARAGON_COUNT_BITS = 5 // Supports up to 31 paragon entries
-const MAX_PARAGON_COUNT = (1 << PARAGON_COUNT_BITS) - 1 // 31
+const UPGRADE_COUNT_BITS = 6 // Supports up to 63 upgrade rows
+const MAX_UPGRADE_COUNT = (1 << UPGRADE_COUNT_BITS) - 1 // 63
+const ATTR_ID_BITS = 6 // Supports attrIds 1-63
+const ATTR_VALUE_BITS = 4 // Supports values 0-15; registry maxes must fit
+
+// TEMPORARY (delete with upgradeMigration.ts): field widths of the retired
+// bit-1 paragon section, read-only for links that predate the `u` format.
+const LEGACY_PARAGON_LEVEL_BITS = 3
+const LEGACY_PARAGON_COUNT_BITS = 5
 const SYNERGY_COUNT_BITS = 4 // Supports up to 15 synergy-band entries
 const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
 
@@ -33,9 +44,11 @@ const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
  * Extended header (if bit 7 is set):
  * - Next byte: Extended flags byte
  *   - Bit 0: Actually needs extended counts (not just display flags)
- *   - Bit 1: Has paragon (paragon section present after phantimals)
- *   - Bit 2: Has synergy units (section present after paragon)
- *   - Bits 3-5: reserved
+ *   - Bit 1: TEMPORARY, decode-only — legacy paragon section (pre-`u` links);
+ *     never written; free for reuse once upgradeMigration.ts is deleted
+ *   - Bit 2: Has synergy units (section present after phantimals)
+ *   - Bit 3: Has upgrades (generic attr section, last)
+ *   - Bits 4-5: reserved
  *   - Bit 6: Has phantimals (phantimal section present after artifacts)
  *   - Bit 7: Has display flags (a dedicated display-flags byte follows)
  * - If bit 7 of extended flags is set:
@@ -68,15 +81,22 @@ const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
  * - Count (4 bits, 0-15)
  * - Each entry (11 bits): hexId (6) + local phantimal ID (4) + team (1)
  *
- * Paragon (only if extended flag bit 1 is set, written after phantimals):
- * - Count (5 bits, 0-31)
- * - Each entry (20 bits): team (1) + characterId (16) + level (3)
- *
- * Synergy units (only if extended flag bit 2 is set, written after paragon):
+ * Synergy units (only if extended flag bit 2 is set, written after phantimals):
  * - Count (4 bits, 0-15)
  * - Each entry (23 bits): hexId (6) + local unit ID (16) + team (1). Locals
  *   reuse the character field's id space (hero = base id, spawned companion =
  *   N * 10000 + base); the 200000 band offset is applied on restore.
+ *
+ * Upgrades (only if extended flag bit 3 is set, written LAST, after synergy,
+ * so decoders that predate a future section leave trailing bits unread):
+ * - Count (6 bits, 0-63)
+ * - Each entry (27 bits): team (1) + characterId (16, 0 = team-scope
+ *   sentinel) + attrId (6) + value (4). Carries every registry attr; the
+ *   registry contract test pins that attr maxes fit the 4-bit value field.
+ *
+ * Legacy paragon (TEMPORARY, decode-only, bit 1; between phantimals and
+ * synergy in old links): count (5 bits) then team (1) + characterId (16) +
+ * level (3) per entry, converted to upgrades rows with attrId 1 on read.
  */
 
 /**
@@ -215,32 +235,37 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
-  // Validate paragon entries: team 1-2, charId 1-65535, level 1-7
-  if (state.p && Array.isArray(state.p)) {
-    let validParagons = state.p.filter((entry) => {
-      const [team, charId, level] = entry
+  // Validate upgrade rows: team 1-2, charId 0-65535 (0 = team-scope sentinel),
+  // known attrId; values clamp to the registry range rather than dropping.
+  if (state.u && Array.isArray(state.u)) {
+    let validUpgrades = state.u.filter((entry) => {
+      const [team, charId, attrId] = entry
       const isValid =
         (team === 1 || team === 2) &&
         charId != null &&
-        charId > 0 &&
+        charId >= 0 &&
         charId <= MAX_CHARACTER_ID &&
-        level != null &&
-        level > 0 &&
-        level <= MAX_PARAGON_LEVEL
+        attrId != null &&
+        isKnownAttrId(attrId)
       if (!isValid) {
-        console.warn('Invalid paragon entry:', entry)
+        console.warn('Invalid upgrade entry:', entry)
       }
       return isValid
     })
     // Cap at the count field's maximum so the encoded count can't wrap.
-    if (validParagons.length > MAX_PARAGON_COUNT) {
+    if (validUpgrades.length > MAX_UPGRADE_COUNT) {
       console.warn(
-        `Too many paragon entries (${validParagons.length}), keeping first ${MAX_PARAGON_COUNT}`,
+        `Too many upgrade entries (${validUpgrades.length}), keeping first ${MAX_UPGRADE_COUNT}`,
       )
-      validParagons = validParagons.slice(0, MAX_PARAGON_COUNT)
+      validUpgrades = validUpgrades.slice(0, MAX_UPGRADE_COUNT)
     }
-    if (validParagons.length > 0) {
-      validated.p = validParagons
+    if (validUpgrades.length > 0) {
+      validated.u = validUpgrades.map((entry) => [
+        entry[0]!,
+        entry[1]!,
+        entry[2]!,
+        clampAttr(entry[2]!, entry[3] ?? 0),
+      ])
     }
   }
 
@@ -320,14 +345,14 @@ export function encodeToBinary(state: GridState): Uint8Array {
   const hasArtifacts = validState.a !== undefined
   const hasDisplayFlags = validState.d !== undefined
   const hasPhantimals = validState.s !== undefined && validState.s.length > 0
-  const hasParagon = validState.p !== undefined && validState.p.length > 0
+  const hasUpgrades = validState.u !== undefined && validState.u.length > 0
   const hasSynergy = validState.y !== undefined && validState.y.length > 0
 
   // The extended header is skipped entirely for small grids with none of the
   // optional sections, keeping those URLs a byte shorter.
   const needsExtendedCounts = tileCount > 7 || charCount > 7
   const needsExtended =
-    needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasParagon || hasSynergy
+    needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasUpgrades || hasSynergy
 
   // Write header byte (8 bits total)
   let header = 0
@@ -350,8 +375,8 @@ export function encodeToBinary(state: GridState): Uint8Array {
     if (hasPhantimals) {
       extendedFlags |= 0x40 // Bit 6
     }
-    if (hasParagon) {
-      extendedFlags |= 0x02 // Bit 1
+    if (hasUpgrades) {
+      extendedFlags |= 0x08 // Bit 3
     }
     if (hasSynergy) {
       extendedFlags |= 0x04 // Bit 2
@@ -423,27 +448,24 @@ export function encodeToBinary(state: GridState): Uint8Array {
     }
   }
 
-  // Write paragon (after phantimals): count, then team + character ID + level each
-  if (hasParagon && validState.p) {
-    writer.writeBits(validState.p.length, PARAGON_COUNT_BITS)
-    for (const entry of validState.p) {
-      const team = entry[0]! // Guaranteed valid (1 or 2) by validation
-      const charId = entry[1]! // Guaranteed valid (1-65535) by validation
-      const level = entry[2]! // Guaranteed valid (1-7) by validation
-
-      writer.writeBits(team - 1, TEAM_BITS) // 1 bit for team
-      writer.writeBits(charId, CHARACTER_ID_BITS) // 16 bits for character ID
-      writer.writeBits(level, PARAGON_LEVEL_BITS) // 3 bits for paragon level
-    }
-  }
-
-  // Write synergy units (after paragon): count, then hexId + local id + team each
+  // Write synergy units (after phantimals): count, then hexId + local id + team each
   if (hasSynergy && validState.y) {
     writer.writeBits(validState.y.length, SYNERGY_COUNT_BITS)
     for (const entry of validState.y) {
       writer.writeBits(entry[0]!, HEX_ID_BITS)
       writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
       writer.writeBits(entry[2]! - 1, TEAM_BITS)
+    }
+  }
+
+  // Write upgrades last: count, then team + characterId + attrId + value each
+  if (hasUpgrades && validState.u) {
+    writer.writeBits(validState.u.length, UPGRADE_COUNT_BITS)
+    for (const entry of validState.u) {
+      writer.writeBits(entry[0]! - 1, TEAM_BITS)
+      writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
+      writer.writeBits(entry[2]!, ATTR_ID_BITS)
+      writer.writeBits(entry[3]!, ATTR_VALUE_BITS)
     }
   }
 
@@ -475,8 +497,9 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
     // Any optional section can be the sole reason for an extended header; track
     // them so the sections after artifacts are read.
     let hasPhantimals = false
-    let hasParagon = false
+    let hasLegacyParagon = false
     let hasSynergy = false
+    let hasUpgrades = false
 
     // Read extended header if present
     if (hasExtended) {
@@ -484,8 +507,9 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       const extendedFlags = reader.readBits(8)
       const needsExtendedCounts = (extendedFlags & 0x01) !== 0
       hasPhantimals = (extendedFlags & 0x40) !== 0 // Bit 6
-      hasParagon = (extendedFlags & 0x02) !== 0 // Bit 1
+      hasLegacyParagon = (extendedFlags & 0x02) !== 0 // Bit 1, TEMPORARY
       hasSynergy = (extendedFlags & 0x04) !== 0 // Bit 2
+      hasUpgrades = (extendedFlags & 0x08) !== 0 // Bit 3
 
       // Bit 7 explicitly marks display flags as present, so d=0 (all flags off)
       // is distinguishable from "no display flags encoded" (d stays undefined).
@@ -549,21 +573,21 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
       }
     }
 
-    // Read paragon (after phantimals) if the extended flag marked it present
-    if (hasParagon) {
-      const paragonCount = reader.readBits(PARAGON_COUNT_BITS)
-      if (paragonCount > 0) {
-        state.p = []
-        for (let i = 0; i < paragonCount; i++) {
-          const teamBit = reader.readBits(TEAM_BITS) // 1 bit
-          const charId = reader.readBits(CHARACTER_ID_BITS) // 16 bits
-          const level = reader.readBits(PARAGON_LEVEL_BITS) // 3 bits
-          state.p.push([teamBit + 1, charId, level])
-        }
+    // TEMPORARY (delete with upgradeMigration.ts): a pre-`u` link's paragon
+    // section, converted to upgrades rows so nothing downstream sees the old
+    // shape. Sits between phantimals and synergy in the legacy stream order.
+    const upgradeRows: AttrRow[] = []
+    if (hasLegacyParagon) {
+      const paragonCount = reader.readBits(LEGACY_PARAGON_COUNT_BITS)
+      for (let i = 0; i < paragonCount; i++) {
+        const teamBit = reader.readBits(TEAM_BITS)
+        const charId = reader.readBits(CHARACTER_ID_BITS)
+        const level = reader.readBits(LEGACY_PARAGON_LEVEL_BITS)
+        upgradeRows.push([teamBit + 1, charId, 1, level])
       }
     }
 
-    // Read synergy units (after paragon) if the extended flag marked them present
+    // Read synergy units if the extended flag marked them present
     if (hasSynergy) {
       const synergyCount = reader.readBits(SYNERGY_COUNT_BITS)
       if (synergyCount > 0) {
@@ -575,6 +599,22 @@ export function decodeFromBinary(bytes: Uint8Array): GridState | null {
           state.y.push([hexId, localId, teamBit + 1])
         }
       }
+    }
+
+    // Read upgrades (last section) if the extended flag marked them present
+    if (hasUpgrades) {
+      const upgradeCount = reader.readBits(UPGRADE_COUNT_BITS)
+      for (let i = 0; i < upgradeCount; i++) {
+        const teamBit = reader.readBits(TEAM_BITS)
+        const charId = reader.readBits(CHARACTER_ID_BITS)
+        const attrId = reader.readBits(ATTR_ID_BITS)
+        const value = reader.readBits(ATTR_VALUE_BITS)
+        upgradeRows.push([teamBit + 1, charId, attrId, value])
+      }
+    }
+
+    if (upgradeRows.length > 0) {
+      state.u = upgradeRows.sort(compareAttrRows)
     }
 
     return state

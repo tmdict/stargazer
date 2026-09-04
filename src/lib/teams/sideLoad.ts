@@ -7,12 +7,13 @@
  * headless; grid concerns (invert mirroring, page-wide uniqueness, scope)
  * live in the store action that consumes the plan.
  *
- * Reads the unit-bearing sections (c/s/y) plus p and a directly, a sibling of
+ * Reads the unit-bearing sections (c/s/y) plus u and a directly, a sibling of
  * the BOARD_CONTENT_KEYS contract in gridStateSerializer.ts: a new
  * unit-bearing GridState section must be handled here (and in preview.ts)
  * too, or the one-side rule would silently miss its units.
  */
 
+import type { AttrRecord } from '@/lib/characters/attributes'
 import { isCompanionUnitId } from '@/lib/characters/character'
 import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
@@ -26,9 +27,10 @@ export interface SideLoadUnit {
   unitId: number
   // The record's own hex; the executor resolves it against the live map.
   hexId: number
-  // Saved paragon level; 0 must still be applied so a stale level lingering on
-  // the board (paragon survives removal) can't attach to the incoming hero.
-  paragon: number
+  // Saved upgrade attrs. The executor stamps the whole record with replace
+  // semantics, so an empty record still clears stale values lingering on the
+  // board (attrs survive removal) before the incoming hero would adopt them.
+  attrs: AttrRecord
 }
 
 export interface SideLoadCompanion {
@@ -92,11 +94,13 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
   if (side === null) return null
 
   const boards = decoded.boards.map((board): SideLoadBoard => {
-    const paragonByHero = new Map<number, number>()
-    for (const [team, characterId, level] of board.p ?? []) {
-      if (team === side && characterId !== undefined && level !== undefined) {
-        paragonByHero.set(characterId, level)
-      }
+    const attrsByHero = new Map<number, AttrRecord>()
+    for (const [team, characterId, attrId, value] of board.u ?? []) {
+      if (team !== side || characterId === undefined || attrId === undefined || value === undefined)
+        continue
+      const record = attrsByHero.get(characterId) ?? {}
+      record[attrId] = value
+      attrsByHero.set(characterId, record)
     }
 
     const mains: SideLoadUnit[] = []
@@ -114,7 +118,7 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
           mainUnitId: characterId % COMPANION_ID_OFFSET,
         })
       } else {
-        mains.push({ unitId: characterId, hexId, paragon: paragonByHero.get(characterId) ?? 0 })
+        mains.push({ unitId: characterId, hexId, attrs: attrsByHero.get(characterId) ?? {} })
       }
     }
     if (allowSynergy) {
@@ -128,7 +132,7 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
             mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
           })
         } else {
-          mains.push({ unitId: toSynergyId(localId), hexId, paragon: 0 })
+          mains.push({ unitId: toSynergyId(localId), hexId, attrs: {} })
         }
       }
     }
@@ -138,7 +142,7 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
       ([hexId, localId]) => hexId !== undefined && localId !== undefined,
     )
     const phantimal: SideLoadUnit | null = phantimalEntry
-      ? { unitId: toPhantimalId(phantimalEntry[1]!), hexId: phantimalEntry[0]!, paragon: 0 }
+      ? { unitId: toPhantimalId(phantimalEntry[1]!), hexId: phantimalEntry[0]!, attrs: {} }
       : null
 
     const artifact = (side === Team.ALLY ? board.a?.[0] : board.a?.[1]) ?? null

@@ -139,17 +139,23 @@ export const useUrlStateStore = defineStore('urlState', () => {
     // bulk restore doesn't read as a qualifying transition.
     if (gridState.y) restoreCharacterBand(gridState.y, toSynergyId)
 
-    // Restore paragon levels from compact format: [team, characterId, level].
-    // Characters are already placed; setParagon keys by team + character, so it
-    // doesn't depend on hex placement.
-    if (gridState.p) {
+    // Restore upgrade attrs from compact format: [team, characterId, attrId,
+    // value]. Characters are already placed; setAttr keys by team + character,
+    // so it doesn't depend on hex placement, and an unknown attrId (crafted
+    // payload) clamps to default and stores nothing.
+    if (gridState.u) {
       const ctx = grids.active!
-      gridState.p.forEach((entry) => {
-        const team = entry[0]
-        const characterId = entry[1]
-        const level = entry[2]
-        if (team === undefined || characterId === undefined || level === undefined) return
-        ctx.setParagon(team, characterId, level)
+      gridState.u.forEach((entry) => {
+        const [team, characterId, attrId, value] = entry
+        if (
+          team === undefined ||
+          characterId === undefined ||
+          attrId === undefined ||
+          value === undefined
+        ) {
+          return
+        }
+        ctx.setAttr(team, characterId, attrId, value)
       })
     }
 
