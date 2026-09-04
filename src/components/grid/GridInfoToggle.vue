@@ -40,6 +40,7 @@ const rows: Row[] = [
   { key: 'targeting', label: 'app.targeting' },
   { key: 'heroCard', label: 'app.hero-card' },
   { key: 'paragon', label: 'app.paragon' },
+  { key: 'refinement', label: 'app.refinement' },
 ]
 
 // Indentation and dimming derive from the shared parent map, so the checklist

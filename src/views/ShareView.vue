@@ -162,6 +162,7 @@ const editLink = computed(() =>
               v-if="info.heroCard"
               :context="ctx"
               :show-paragon="info.paragon"
+              :show-refinement="info.refinement"
               readonly
             />
           </div>
@@ -179,6 +180,7 @@ const editLink = computed(() =>
             v-if="info.heroCard"
             :context="activeContext"
             :show-paragon="info.paragon"
+            :show-refinement="info.refinement"
             readonly
           />
         </div>

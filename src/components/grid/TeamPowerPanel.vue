@@ -1,18 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import IconChevronsUp from '@/components/ui/IconChevronsUp.vue'
-import IconReset from '@/components/ui/IconReset.vue'
-import IconTrashSmall from '@/components/ui/IconTrashSmall.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import type { GridContext } from '@/composables/useGridContext'
-import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
-import { useSelectionState } from '@/composables/useSelectionState'
-import { ATTR_PARAGON } from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
-import { PARAGON_MAX_LEVEL, teamPowerNet } from '@/lib/characters/paragon'
+import { teamPowerNet } from '@/lib/characters/paragon'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -20,24 +15,27 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   context: GridContext
-  // Paragon layer (badges, cycle, bulk actions, rivalry stat header); off, the
-  // panel is portraits, names, and the per-team clear.
+  // Badge layers (display); the armed-layer selection decides which of the
+  // visible layers portrait taps edit. Off, the panel is portraits and names.
   showParagon: boolean
+  showRefinement?: boolean
   readonly?: boolean
 }>()
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
+const { effectiveLayers } = useAttrLayerSelection()
 
 interface PanelHero {
   characterId: number
   name: string
   image: string
-  level: number
+  paragon: number
+  refinement: number
   faction?: string
 }
 
-// Only real heroes carry paragon.
+// Only real heroes carry upgrade attrs.
 const heroesFor = (team: Team): PanelHero[] =>
   getTilesWithCharactersByTeam(props.context.grid, team)
     .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
@@ -48,7 +46,8 @@ const heroesFor = (team: Team): PanelHero[] =>
         characterId,
         name: localizedDisplayName(i18n.t, 'character', canonicalName),
         image: gameData.getCharacterImage(canonicalName),
-        level: props.context.getAttr(team, characterId, ATTR_PARAGON),
+        paragon: props.context.getAttr(team, characterId, ATTR_PARAGON),
+        refinement: props.context.getAttr(team, characterId, ATTR_REFINEMENT),
         faction: gameData.getCharacterFaction(characterId),
       }
     })
@@ -56,11 +55,24 @@ const heroesFor = (team: Team): PanelHero[] =>
 const allyHeroes = computed(() => heroesFor(Team.ALLY))
 const enemyHeroes = computed(() => heroesFor(Team.ENEMY))
 
-// Net Rivalry-mode stat (Inspiration minus the enemy's Intimidation). The enemy's is
-// the negation of the ally's (the two mirror), so sides reuses it.
-const allyRivalryStat = computed(() => teamPowerNet(allyHeroes.value, enemyHeroes.value))
+// Net Rivalry-mode stat (Inspiration minus the enemy's Intimidation), driven by
+// paragon alone. The enemy's is the negation of the ally's (the two mirror).
+const allyRivalryStat = computed(() =>
+  teamPowerNet(
+    allyHeroes.value.map((hero) => ({ level: hero.paragon, faction: hero.faction })),
+    enemyHeroes.value.map((hero) => ({ level: hero.paragon, faction: hero.faction })),
+  ),
+)
 
-const canEditParagon = computed(() => !props.readonly && props.showParagon)
+const visibleAttrIds = computed(() => [
+  ...(props.showParagon ? [ATTR_PARAGON] : []),
+  ...(props.showRefinement ? [ATTR_REFINEMENT] : []),
+])
+
+// A hidden badge layer is never edited: taps act on armed ∩ visible (falling
+// back to the visible layers), and with no layer visible they no-op.
+const editLayers = computed(() => (props.readonly ? [] : effectiveLayers(visibleAttrIds.value)))
+const canEdit = computed(() => editLayers.value.length > 0)
 
 const sides = computed(() => [
   { team: Team.ALLY, klass: 'ally', heroes: allyHeroes.value, rivalryStat: allyRivalryStat.value },
@@ -79,58 +91,33 @@ const visibleSides = computed(() => {
   return props.context.teamView ? populated.filter((side) => side.team === Team.ALLY) : populated
 })
 
+// One armed layer cycles with wrap (as paragon taps always have). Both armed:
+// +1 clamped so counters at different values can't desync — except when every
+// armed layer is already maxed, when the tap wraps them all to 0 together.
 const cycle = (team: Team, hero: PanelHero): void => {
-  props.context.setAttr(
-    team,
-    hero.characterId,
-    ATTR_PARAGON,
-    (hero.level + 1) % (PARAGON_MAX_LEVEL + 1),
+  const layers = editLayers.value
+  if (layers.length === 1) {
+    const attrId = layers[0]!
+    const current = props.context.getAttr(team, hero.characterId, attrId)
+    props.context.setAttr(team, hero.characterId, attrId, (current + 1) % (attrMax(attrId) + 1))
+    return
+  }
+  const values = layers.map(
+    (attrId) => [attrId, props.context.getAttr(team, hero.characterId, attrId)] as const,
   )
+  const allMaxed = values.every(([attrId, value]) => value >= attrMax(attrId))
+  for (const [attrId, value] of values) {
+    props.context.setAttr(team, hero.characterId, attrId, allMaxed ? 0 : value + 1)
+  }
 }
 
-const hasParagon = (heroes: PanelHero[]): boolean => heroes.some((hero) => hero.level > 0)
+const badgeRung = (attrId: number): boolean => canEdit.value && editLayers.value.includes(attrId)
 
-const resetParagons = (team: Team, heroes: PanelHero[]): void => {
-  hideActionTip()
-  heroes.forEach((hero) => props.context.setAttr(team, hero.characterId, ATTR_PARAGON, 0))
-}
-
-// Clamped, unlike the per-hero cycle: a batch wrap would zero a maxed team.
-// At all-P4 the raise buttons disable instead of hiding; removal would slide
-// reset under a rapidly clicking cursor.
-const canRaise = (heroes: PanelHero[]): boolean =>
-  heroes.some((hero) => hero.level < PARAGON_MAX_LEVEL)
-
-const raiseAll = (team: Team, heroes: PanelHero[]): void => {
-  hideActionTip()
-  heroes.forEach((hero) =>
-    props.context.setAttr(
-      team,
-      hero.characterId,
-      ATTR_PARAGON,
-      Math.min(hero.level + 1, PARAGON_MAX_LEVEL),
-    ),
-  )
-}
-
-const maxAll = (team: Team, heroes: PanelHero[]): void => {
-  hideActionTip()
-  heroes.forEach((hero) =>
-    props.context.setAttr(team, hero.characterId, ATTR_PARAGON, PARAGON_MAX_LEVEL),
-  )
-}
-
-// Per-team wipe, two-step armed like every destructive control. Bulk removal
-// may delete the unit a pending tap/lift gesture references, so the gesture
-// state drops with it (as every other bulk mutation does).
-const { armed, confirm } = useArmedConfirm()
-const { clearTargetHex, clearLiftedHex } = useSelectionState()
-const clearTeam = (team: Team): void => {
-  if (!confirm(String(team))) return
-  hideActionTip()
-  props.context.clearTeam(team)
-  clearTargetHex()
-  clearLiftedHex()
+const heroAria = (hero: PanelHero): string => {
+  const parts = [hero.name]
+  if (props.showParagon) parts.push(`${i18n.t('app.paragon')} ${hero.paragon}`)
+  if (props.showRefinement) parts.push(`${i18n.t('app.refinement')} ${hero.refinement}`)
+  return parts.join(', ')
 }
 
 const rivalryStatClass = (stat: number): string => (stat > 0 ? 'pos' : stat < 0 ? 'neg' : 'zero')
@@ -163,19 +150,6 @@ const {
 const hoveredStat = computed(
   () => sides.value.find((side) => side.team === hoveredTeam.value)?.rivalryStat ?? 0,
 )
-
-// Bulk-action tooltips: the handlers close the popup themselves, because a
-// click can disable (+1, max) or remove (reset) the hovered button, and it
-// then never fires the closing mouseleave.
-const {
-  anchor: actionTipEl,
-  payload: actionTipKey,
-  onMouseEnter: showActionTip,
-  onMouseLeave: hideActionTip,
-  onTouchStart: onActionTouchStart,
-} = useHoverTooltip<string>()
-
-const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(actionTipKey.value) : ''))
 </script>
 
 <template>
@@ -185,10 +159,8 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
     :class="{ single: visibleSides.length === 1 }"
   >
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
-      <!-- The head renders without the paragon layer too: the per-team clear
-           is available whenever the panel is editable. -->
-      <div v-if="showParagon || !readonly" class="tp-head">
-        <span v-if="showParagon" class="stat" :class="rivalryStatClass(side.rivalryStat)">
+      <div v-if="showParagon" class="tp-head">
+        <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
           <span
             v-if="side.rivalryStat !== 0"
@@ -201,59 +173,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
             {{ rivalryStatName(side.rivalryStat) }}
           </span>
         </span>
-        <span v-if="!readonly" class="tp-actions">
-          <template v-if="canEditParagon">
-            <button
-              v-if="hasParagon(side.heroes)"
-              type="button"
-              class="stat-reset"
-              :aria-label="i18n.t('app.reset-paragons')"
-              @click="resetParagons(side.team, side.heroes)"
-              @mouseenter="showActionTip($event, 'app.reset-paragons')"
-              @touchstart.passive="onActionTouchStart"
-              @mouseleave="hideActionTip"
-            >
-              <IconReset :size="11" />
-            </button>
-            <button
-              type="button"
-              class="stat-max"
-              :disabled="!canRaise(side.heroes)"
-              :aria-label="i18n.t('app.max-paragons')"
-              @click="maxAll(side.team, side.heroes)"
-              @mouseenter="showActionTip($event, 'app.max-paragons')"
-              @touchstart.passive="onActionTouchStart"
-              @mouseleave="hideActionTip"
-            >
-              <IconChevronsUp :size="11" />
-            </button>
-            <button
-              type="button"
-              class="stat-plus"
-              :disabled="!canRaise(side.heroes)"
-              :aria-label="i18n.t('app.raise-paragons')"
-              @click="raiseAll(side.team, side.heroes)"
-              @mouseenter="showActionTip($event, 'app.raise-paragons')"
-              @touchstart.passive="onActionTouchStart"
-              @mouseleave="hideActionTip"
-            >
-              +1
-            </button>
-            <span class="tp-actions-divider" />
-          </template>
-          <button
-            type="button"
-            class="stat-clear"
-            :class="{ armed: armed === String(side.team) }"
-            :aria-label="i18n.t('app.clear-team')"
-            @click="clearTeam(side.team)"
-            @mouseenter="showActionTip($event, 'app.clear-team')"
-            @touchstart.passive="onActionTouchStart"
-            @mouseleave="hideActionTip"
-          >
-            <IconTrashSmall :size="12" />
-          </button>
-        </span>
       </div>
       <div class="heroes">
         <button
@@ -261,17 +180,28 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
           :key="hero.characterId"
           type="button"
           class="hero"
-          :class="{ static: !canEditParagon }"
-          :aria-label="showParagon ? `${hero.name}, paragon ${hero.level}` : hero.name"
-          :title="canEditParagon ? i18n.t('app.paragon-cycle') : undefined"
-          @click="canEditParagon && cycle(side.team, hero)"
+          :class="{ static: !canEdit }"
+          :aria-label="heroAria(hero)"
+          :title="canEdit ? i18n.t('app.upgrade-cycle') : undefined"
+          @click="canEdit && cycle(side.team, hero)"
         >
           <span class="portrait-wrap">
             <span class="portrait">
               <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
             </span>
-            <span v-if="showParagon" class="pbadge" :class="`p${hero.level}`">
-              P{{ hero.level }}
+            <span
+              v-if="showParagon"
+              class="pbadge pb-p"
+              :class="{ 'max-p': hero.paragon >= 4, ring: badgeRung(ATTR_PARAGON) }"
+            >
+              P{{ hero.paragon }}
+            </span>
+            <span
+              v-if="showRefinement"
+              class="pbadge pb-r"
+              :class="{ 'max-r': hero.refinement >= 4, ring: badgeRung(ATTR_REFINEMENT) }"
+            >
+              R{{ hero.refinement }}
             </span>
           </span>
           <span class="hero-name" :title="hero.name">{{ hero.name }}</span>
@@ -287,13 +217,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
         max-width="260px"
       >
         <template #content>{{ rivalryStatInfo(hoveredStat) }}</template>
-      </TooltipPopup>
-      <TooltipPopup
-        v-if="actionTipKey && actionTipEl"
-        :target-element="actionTipEl"
-        variant="detailed"
-      >
-        <template #content>{{ actionTipText }}</template>
       </TooltipPopup>
     </Teleport>
   </div>
@@ -334,32 +257,18 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 
 .tp-head {
   display: flex;
-  /* Never bleed into the neighboring block: anything the row can't fit wraps
-     below instead (a rare, graceful second line). */
-  flex-wrap: wrap;
-  /* Top-aligned so the chips sit on the stat's number line, not centered
-     against the taller number-plus-caption stack. */
-  align-items: flex-start;
-  gap: var(--spacing-sm);
   min-height: 28px;
   margin-bottom: var(--spacing-md);
 }
-/* Reverse the enemy header so the sides mirror: stat at the outer edge, actions
-   against the center seam. */
+/* Mirror the sides: each stat sits at its block's outer edge. */
 .tp-block.enemy .tp-head {
-  flex-direction: row-reverse;
+  justify-content: flex-end;
 }
 .tp-block.enemy .stat {
   align-items: flex-end;
 }
-.tp-block.enemy .tp-actions {
-  flex-direction: row-reverse;
-  margin-left: 0;
-  margin-right: auto;
-}
 
-/* Number over caption: stacked, the stat is only as wide as its longest line,
-   which lets narrower blocks keep the caption. */
+/* Number over caption: stacked, the stat is only as wide as its longest line. */
 .stat {
   display: inline-flex;
   flex-direction: column;
@@ -375,16 +284,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   color: var(--color-text-secondary);
   border-bottom: 1px dotted var(--color-border-primary);
   cursor: help;
-}
-/* Tight container: the caption would shove the action chips across the block
-   boundary (stacked, a side needs ~230px: caption ~85px beside ~110px of
-   chips plus padding), so the number alone carries the stat. Container width,
-   not viewport, is the real constraint — a single-block team view keeps its
-   caption at widths where two blocks must drop theirs. */
-@container (max-width: 499px) {
-  .tp-block:not(:only-child) .stat-label {
-    display: none;
-  }
 }
 @container (max-width: 319px) {
   .stat-label {
@@ -408,86 +307,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 }
 .stat.zero .stat-num {
   color: var(--color-text-secondary);
-}
-
-/* Anchored to the block edge nearest the seam: the stat text ahead changes
-   width and must never shove a button mid-press. +1 sits outermost so reset,
-   which appears with the first paragon, grows the cluster inward. */
-.tp-actions {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--spacing-sm);
-  flex-shrink: 0;
-  margin-left: auto;
-}
-
-.stat-plus,
-.stat-max,
-.stat-reset,
-.stat-clear {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0;
-  border: none;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
-  color: var(--color-text-secondary);
-  cursor: pointer;
-  transition: all var(--transition-fast);
-}
-.stat-plus,
-.stat-max {
-  width: 20px;
-  height: 20px;
-}
-.stat-plus {
-  font-size: 0.62rem;
-  font-weight: 800;
-  font-variant-numeric: tabular-nums;
-}
-.stat-reset,
-.stat-clear {
-  width: 18px;
-  height: 18px;
-}
-.stat-plus:hover:not(:disabled),
-.stat-max:hover:not(:disabled),
-.stat-reset:hover {
-  background: rgba(0, 0, 0, 0.11);
-  color: var(--color-text-primary);
-}
-
-/* Sets the destructive clear apart from the repeatable paragon cluster. */
-.tp-actions-divider {
-  width: 1px;
-  height: 18px;
-  background: var(--color-border-primary);
-}
-.stat-clear {
-  color: var(--color-danger);
-}
-.stat-clear:hover,
-.stat-clear.armed {
-  background: var(--color-danger);
-  color: #fff;
-}
-/* Armed step of the two-step confirm: ring plus the shared confirm-ping pulse
-   (controls.css), so the state reads even at chip size. */
-.stat-clear.armed {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
-  animation: confirm-ping 0.9s ease-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .stat-clear.armed {
-    animation: none;
-  }
-}
-.stat-plus:disabled,
-.stat-max:disabled {
-  opacity: 0.35;
-  cursor: default;
 }
 
 .heroes {
@@ -518,7 +337,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   cursor: pointer;
   font: inherit;
 }
-/* A size container so the corner badge can scale with the column-driven icon. */
+/* A size container so the corner badges can scale with the column-driven icon. */
 .portrait-wrap {
   container-type: inline-size;
   position: relative;
@@ -549,7 +368,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 .hero:hover .portrait {
   transform: scale(1.06);
 }
-/* Not cyclable (share view, or paragon hidden): no click affordance. */
+/* Not editable (share view, or no layer visible): no click affordance. */
 .hero.static {
   cursor: default;
 }
@@ -557,11 +376,11 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   transform: none;
 }
 /* Sized in cqw (a share of the icon width) so it stays a corner badge as the icon
-   scales, with px floors that keep "P#" legible on the smallest boards. */
+   scales, with px floors that keep the text legible on the smallest boards.
+   Color means "maxed", nothing else: every other level shares the quiet gray. */
 .pbadge {
   position: absolute;
   top: -3px;
-  right: -3px;
   min-width: max(14px, 36cqw);
   height: max(14px, 36cqw);
   padding: 0 3px;
@@ -572,28 +391,26 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   align-items: center;
   justify-content: center;
   border: 2px solid #fff;
-}
-/* P0 (no paragon) sits off the tier ramp; P4's pale silver fill is the one
-   that can't carry the white text the other tiers use. */
-.pbadge.p0 {
   background: #cfc8bb;
   color: #4a463d;
 }
-.pbadge.p1 {
-  background: var(--color-tier-1);
+.pbadge.pb-p {
+  left: -3px;
+}
+.pbadge.pb-r {
+  right: -3px;
+}
+.pbadge.max-p {
+  background: #8fa7c8;
   color: #fff;
 }
-.pbadge.p2 {
-  background: var(--color-tier-2);
-  color: #fff;
-}
-.pbadge.p3 {
+.pbadge.max-r {
   background: var(--color-tier-3);
   color: #fff;
 }
-.pbadge.p4 {
-  background: var(--color-tier-4);
-  color: #1f2b3d;
+/* The armed edit layer(s): the ring says which badges portrait taps change. */
+.pbadge.ring {
+  outline: 2px solid var(--color-primary);
 }
 .hero-name {
   display: none;

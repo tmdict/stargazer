@@ -50,7 +50,7 @@ interface GridState {
   a?: (number | null)[] // artifacts: [ally, enemy]
   s?: number[][] // seasonal units (phantimals today): [hexId, localUnitId, team]
   y?: number[][] // synergy-band units: [hexId, localUnitId, team]
-  p?: number[][] // paragon: [team, characterId, level]
+  u?: number[][] // upgrade attrs: [team, characterId, attrId, value], sorted, non-default only
   d?: number // display flags (bit-packed)
 }
 ```
@@ -69,9 +69,11 @@ interface GridState {
 [Extended Header (if bit 7 set): 8+ bits]
   - Extended flags byte:
     - Bit 0: Needs extended counts
-    - Bit 1: Has paragon (paragon section present after phantimals)
-    - Bit 2: Has synergy units (section present after paragon)
-    - Bits 3-5: reserved
+    - Bit 1: legacy paragon section (TEMPORARY, decode-only; see
+      `upgradeMigration.ts` — free for reuse once the shim is deleted)
+    - Bit 2: Has synergy units (section present after phantimals)
+    - Bit 3: Has upgrades (generic attr section, last)
+    - Bits 4-5: reserved
     - Bit 6: Has phantimals (phantimal section present after artifacts)
     - Bit 7: Has display flags (a dedicated display-flags byte follows)
   - Display flags byte (if extended bit 7 set): bit 0 wrap, 1 showSkills,
@@ -98,15 +100,19 @@ interface GridState {
   - Count (4 bits): Range 0-15
   - Each entry (11 bits): hex ID (6) + local phantimal ID (4) + team (1)
 
-[Paragon (if extended flags bit 1 set, after phantimals)]
-  - Count (5 bits): Range 0-31
-  - Each entry (20 bits): team (1) + character ID (16) + level (3)
-
-[Synergy units (if extended flags bit 2 set, after paragon)]
+[Synergy units (if extended flags bit 2 set, after phantimals)]
   - Count (4 bits): Range 0-15
   - Each entry (23 bits): hex ID (6) + local unit ID (16) + team (1). Locals
     reuse the character field's ID space (hero = base ID, spawned companion =
     N * 10000 + base); the 200000 band offset is applied on restore.
+
+[Upgrades (if extended flags bit 3 set, written LAST so decoders predating a
+ future section leave trailing bits unread)]
+  - Count (6 bits): Range 0-63
+  - Each entry (27 bits): team (1) + character ID (16, 0 reserved for a future
+    team-scope row) + attr ID (6) + value (4). Carries every registry attr
+    (`/src/lib/characters/attributes.ts`); the registry contract test pins
+    that attr maxes fit the 4-bit value field.
 ```
 
 Only non-default hex states are stored, significantly reducing size.
@@ -120,7 +126,7 @@ Before encoding, `validateGridState()` filters invalid entries:
 - **Character IDs**: Must be 1-65535 (16-bit limit)
 - **Artifact IDs**: Must be null or 1-63 (6-bit limit); out-of-range IDs become null
 - **Phantimal entries**: Local ID 1-15, capped at 15 entries (4-bit count field)
-- **Paragon entries**: Level 1-7, capped at 31 entries (5-bit count field)
+- **Upgrade entries**: Known attr IDs only (values clamp to the registry range), character ID 0-65535, capped at 63 entries (6-bit count field)
 - **Synergy entries**: Local ID 1-65535, capped at 15 entries (4-bit count field)
 - **Team Values**: Must be 1 (ALLY) or 2 (ENEMY)
 - **Maximum Counts**: 262 tiles or characters (7 in header + 255 in extended)
@@ -134,7 +140,7 @@ Extended mode activates when:
 - More than 7 tile entries (modified hexes) OR more than 7 character entries
 - Display flags are explicitly provided (even if all false)
 - Phantimals are present
-- Paragon entries are present
+- Upgrade entries are present
 - Synergy units are present
 
 Display flags are only stored when explicitly provided (`d !== undefined`). Extended flags bit 7 marks their presence and is followed by a dedicated display-flags byte, so an explicit `d=0` (all toggles off) survives the round trip even when extended counts or phantimals also require the extended header.
@@ -189,7 +195,7 @@ The Teams page shares N boards in one link. Several boards plus an active id and
 - `encodeMultiGridStateToUrl(state)` → the `g` value carried by `/teams?g=` and `/share?g=` links (`/src/utils/urlStateManager.ts`)
 - `TeamsView` restores it on load via `useTeamsRestore`, which resolves the payload's team mode, normalizes the board count to the mode's shape, and applies it through `useUrlStateStore.restoreMultiFromEncodedState`.
 
-`MultiGridState` is `{ boards, active?, d?, mode? }`. Each board record is a `BoardState` `{t, c, s, y, p, a, m}`: the single-board `GridState` plus `m`, the board's map key. `mode` is always written by the serializer; links predating it (or carrying a mode that contradicts the board count) resolve their mode from the count via `resolveTeamMode` (`/src/lib/teams/modes.ts`); five boards belong to the Supreme League page, otherwise the smallest fitting mode. Restore caps boards at `MAX_GRID_COUNT` (5), passes the map keys into `setGridCount`, then applies each board in order: tiles, mains (companions settled per main), synergy units (same split, offset by 200000), paragon, artifacts, phantimals, then `seedPhantimalBaseline()`. After all boards, `grids.dedupeCharacters()` repairs page-wide hero uniqueness that per-board validation cannot see. The restore result reports `hasDisplayFlags` so payloads without a `d` field (canonical saved-team data) apply board content without touching the viewer's display toggles. Callers decide whether to honor a present `d`: a `?g=` link applies every flag (sharing the sharer's exact view is the point of a link), while Teams mode-slot restores ignore it entirely, since view toggles are device-level preferences (`stargazer.teams.display`).
+`MultiGridState` is `{ boards, active?, d?, mode? }`. Each board record is a `BoardState` `{t, c, s, y, u, a, m}`: the single-board `GridState` plus `m`, the board's map key. `mode` is always written by the serializer; links predating it (or carrying a mode that contradicts the board count) resolve their mode from the count via `resolveTeamMode` (`/src/lib/teams/modes.ts`); five boards belong to the Supreme League page, otherwise the smallest fitting mode. Restore caps boards at `MAX_GRID_COUNT` (5), passes the map keys into `setGridCount`, then applies each board in order: tiles, mains (companions settled per main), synergy units (same split, offset by 200000), upgrade attrs, artifacts, phantimals, then `seedPhantimalBaseline()`. After all boards, `grids.dedupeCharacters()` repairs page-wide hero uniqueness that per-board validation cannot see. The restore result reports `hasDisplayFlags` so payloads without a `d` field (canonical saved-team data) apply board content without touching the viewer's display toggles. Callers decide whether to honor a present `d`: a `?g=` link applies every flag (sharing the sharer's exact view is the point of a link), while Teams mode-slot restores ignore it entirely, since view toggles are device-level preferences (`stargazer.teams.display`).
 
 Teams ingress (link, slot, and saved-team loads) shape-normalizes every payload against its mode via `normalizeTeamPayload`, which also strips `y` from modes without `allowSynergy`: a crafted synergy section on a multi-board mode would otherwise bypass the page-wide duplicate repair, since its ids differ from the base hero's. `/share` stays lenient and renders payloads as-is.
 
