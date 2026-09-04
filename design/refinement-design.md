@@ -107,8 +107,12 @@ u: [team, characterId, attrId, value][]
   attrId. **Appended after the synergy section** — currently last
   (`binaryEncoder.ts:440-448`). The encoder never writes the bit-1 paragon
   section again, and its constants (`PARAGON_LEVEL_BITS`, `PARAGON_COUNT_BITS`,
-  `binaryEncoder.ts:15-18`) die with it; bit 1 becomes retired/reserved,
-  never reused. One code path for every attr — no attrId-1 special routing.
+  `binaryEncoder.ts:15-18`) die with it; **bit 1 is freed for future reuse
+  once the shim is deleted** (not permanently retired — reserving it would
+  only protect how expendable ancient links fail; if reused, such a link
+  decodes as garbage instead of failing cleanly, accepted). Until deletion the
+  shim's decode branch owns the bit. Post-shim free bits: 1, 4, 5. One code
+  path for every attr — no attrId-1 special routing.
   A **TEMPORARY decode branch** keeps reading a bit-1 paragon section into
   attrId-1 `u` rows during the shim window (it lives inline in the decoder's
   sequential bit-read flow, tagged and enumerated in the upgradeMigration
@@ -559,9 +563,11 @@ legacy test blocks; confirmed slice 1 as one PR.
   per-attr boilerplate forever plus a binary format extension after two more
   attrs, versus `u`'s one-time shim. The generic bit-3 upgrades section (§2)
   follows from the same call, and **paragon rides it too**: the binary bit-1
-  paragon section is retired, not kept as a live special case — no legacy wire
-  shapes survive the shim window, and old paragon-bearing Arena links breaking
-  after removal is accepted ("I don't care about links breaking").
+  paragon section is deleted, not kept as a live special case — no legacy wire
+  shapes survive the shim window, old paragon-bearing Arena links breaking
+  after removal is accepted ("I don't care about links breaking"), and bit 1
+  is freed for future reuse after shim deletion rather than permanently
+  reserved (reserving it would only protect how expendable links fail).
 - **ALL-mode tap wraps at max**: with both layers selected, a tap raises both
   (clamped); when every selected layer is already at max, the tap wraps them
   all to 0 — matching the single-layer wrap.
