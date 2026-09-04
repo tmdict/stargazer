@@ -127,7 +127,7 @@ footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--border);font-
 </style>
 
 <div class="page">
-<p class="eyebrow">Stargazer · design &amp; build plan · design only, nothing built yet</p>
+<p class="eyebrow">Stargazer · design, build plan &amp; implementation status · built on branch <code>upgrade-attribute</code></p>
 <h1>EX Refinement Levels</h1>
 <p class="lede">The plan for letting you set each hero's EX refinement level (R0–R4) next to their paragon level (P0–P4) — on both teams, saved automatically, carried in share links, and edited from a new control bar under each board. Reviewed in two audit rounds; every decision is settled and the design is ready to build.</p>
 <div class="statusline">
@@ -147,6 +147,7 @@ footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--border);font-
   <a href="#verified"><span class="n">6</span>What was double-checked</a>
   <a href="#audit"><span class="n">7</span>Review findings</a>
   <a href="#decisions"><span class="n">8</span>Decisions</a>
+  <a href="#status"><span class="n">9</span>Implementation status</a>
 </nav>
 
 <h2 id="goal">1 · What we're building</h2>
@@ -467,5 +468,25 @@ Old Teams share links posted before the release, and old export files sitting on
 </div>
 <div class="prose"><p><strong>All design decisions are settled; the design is implementation-ready.</strong></p></div>
 
-<footer>EX refinement design · Stargazer · every code reference verified against the current codebase · audited in two review rounds</footer>
+<h2 id="status">9 · Implementation status</h2>
+<div class="prose">
+<p><strong>Built and verified. Both app slices are implemented on branch <code>upgrade-attribute</code></strong> (cut from main; not merged), in two commits matching the plan: <code>c2f3096</code> — the data layer (registry, <code>u</code> format, binary codec, converter, generalized state and all consumers), invisible to users; <code>ed20282</code> — the UI (dual badges, settings toggle, per-board dock, armed-layer selection, locale strings, doc updates). Slice 3 — teaching the companion afkj-pvp notebook to read <code>u</code> rows — is a separate repository and remains open.</p>
+
+<h3>Validation, all green</h3>
+<ul>
+  <li><strong>Full test suite</strong>: 990 unit tests pass (24 new for the registry, the converter's every edge — malformed rows, envelope preservation, marker-last retry, idempotence — the legacy binary reader, and the layer selection), plus lint and type-check.</li>
+  <li><strong>Real-data regression</strong>, using the owner's actual 129-team old-format export (kept out of the repo; test data only): every team imports with zero drops; the 79 teams carrying legacy paragon all convert (3,707 upgrade rows, values intact and in range); converted records are byte-stable, so no phantom "unsaved changes"; re-importing the same file dedupes all 129 (no duplicate copies); previews and one-side loading read every converted team.</li>
+  <li><strong>Live app smoke</strong> (headless browser against the dev server, seeded with old-format data): the one-time cleanup converts the stored library on first load and sets its marker; five per-board docks render with dual badges everywhere; bulk reset / +1 act on the right board and right team only; disabled states are honest (+1 correctly grays out on an all-maxed team); ALL mode rings both badge layers on every portrait; a portrait tap in ALL raises both levels; and the wrap rule holds — P4/R4 → tap → P0/R0 → tap → P1/R1. The Arena page mounts its dock.</li>
+</ul>
+
+<h3>Implementation notes</h3>
+<ul>
+  <li>The repo has no component-test framework (composables/stores/libs only, by convention), so the dock and panel's interactive behavior is covered by the live-browser checks above rather than unit tests; the armed-layer logic they share is unit-tested in its composable.</li>
+  <li>The old per-action paragon strings (<code>reset/max/raise-paragons</code>, <code>paragon-cycle</code>) became layer-neutral upgrade strings, since the buttons now act on whichever layers are selected.</li>
+  <li>The panel keeps its rivalry stat (paragon-driven, unchanged) and loses all its editing chrome to the dock, per §4; the deletable caption-drop tier is gone.</li>
+  <li>The design doc's remaining housekeeping when the shim's month is up is the removal runbook in <code>src/utils/upgradeMigration.ts</code>.</li>
+</ul>
+</div>
+
+<footer>EX refinement design · Stargazer · every code reference verified against the current codebase · audited in two review rounds · implemented on branch upgrade-attribute</footer>
 </div>
