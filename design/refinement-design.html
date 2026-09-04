@@ -1,0 +1,531 @@
+<title>EX Refinement Design</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Chivo:wght@400;600;800&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+:root{
+  --bg:#f6f2e9; --surface:#fdfbf5; --surface2:#efe9dc;
+  --ink:#33302a; --muted:#797365; --accent:#2e8b84; --accent-ink:#1f6560;
+  --border:#ddd5c4; --border-soft:#e8e1d2;
+  --code-bg:#eee8d9; --code-ink:#4a4438;
+  --good:#2e8b84; --warn:#b8574a;
+  --p4:#8fa7c8; --r4:#dd7a6c; --gray-badge:#cfc8bb;
+}
+:root:not([data-theme="light"]){}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#211e18; --surface:#2a2620; --surface2:#332e26;
+    --ink:#e9e2d2; --muted:#a39a88; --accent:#57b5ac; --accent-ink:#7fcac2;
+    --border:#453f33; --border-soft:#3a352b;
+    --code-bg:#332e26; --code-ink:#d8d0bd;
+    --good:#57b5ac; --warn:#d98a7d;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#211e18; --surface:#2a2620; --surface2:#332e26;
+  --ink:#e9e2d2; --muted:#a39a88; --accent:#57b5ac; --accent-ink:#7fcac2;
+  --border:#453f33; --border-soft:#3a352b;
+  --code-bg:#332e26; --code-ink:#d8d0bd;
+  --good:#57b5ac; --warn:#d98a7d;
+}
+body{background:var(--bg);color:var(--ink);font-family:"Source Serif 4",Georgia,serif;font-size:16.5px;line-height:1.62;margin:0}
+.page{max-width:1020px;margin:0 auto;padding:40px 28px 90px}
+.prose{max-width:72ch}
+h1,h2,h3,h4{font-family:"Chivo",system-ui,sans-serif;line-height:1.2;text-wrap:balance;color:var(--ink)}
+h1{font-size:2.15rem;font-weight:800;letter-spacing:-.015em;margin:.4em 0 .25em}
+h2{font-size:1.45rem;font-weight:800;margin:2.6em 0 .6em;padding-top:1.1em;border-top:1px solid var(--border)}
+h3{font-size:1.08rem;font-weight:600;margin:2em 0 .5em;color:var(--accent-ink)}
+h4{font-size:.95rem;font-weight:600;margin:1.6em 0 .4em}
+p{margin:.75em 0}
+ul,ol{margin:.7em 0;padding-left:1.35em}
+li{margin:.35em 0}
+li::marker{color:var(--accent)}
+strong{font-weight:600}
+a{color:var(--accent-ink)}
+code{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82em;background:var(--code-bg);color:var(--code-ink);padding:.1em .35em;border-radius:4px;white-space:nowrap}
+pre{background:var(--code-bg);color:var(--code-ink);border:1px solid var(--border-soft);border-radius:8px;padding:14px 18px;overflow-x:auto;font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.82rem;line-height:1.55}
+pre code{background:none;padding:0;white-space:pre}
+
+.eyebrow{font-family:"Chivo",system-ui,sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent-ink);margin:0}
+.lede{font-size:1.05rem;color:var(--muted);max-width:72ch}
+.statusline{display:flex;flex-wrap:wrap;gap:8px;margin:18px 0 6px}
+.pill{font-family:"Chivo",system-ui,sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.03em;border:1px solid var(--border);border-radius:999px;padding:3px 12px;color:var(--muted);background:var(--surface)}
+.pill.on{border-color:var(--accent);color:var(--accent-ink)}
+
+nav.toc{background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:16px 22px;margin:26px 0 8px;columns:2;column-gap:34px;max-width:640px}
+nav.toc a{display:block;font-family:"Chivo",system-ui,sans-serif;font-size:.85rem;font-weight:400;text-decoration:none;color:var(--ink);padding:3px 0;break-inside:avoid}
+nav.toc a:hover,nav.toc a:focus-visible{color:var(--accent-ink)}
+nav.toc .n{color:var(--accent);font-weight:600;margin-right:.5em;font-variant-numeric:tabular-nums}
+@media (max-width:560px){nav.toc{columns:1}}
+
+.tablewrap{overflow-x:auto;margin:1em 0;border:1px solid var(--border-soft);border-radius:8px}
+table{border-collapse:collapse;width:100%;font-size:.86rem;background:var(--surface)}
+th{font-family:"Chivo",system-ui,sans-serif;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:9px 14px;border-bottom:1px solid var(--border);background:var(--surface2)}
+td{padding:9px 14px;border-bottom:1px solid var(--border-soft);vertical-align:top;line-height:1.5}
+tr:last-child td{border-bottom:none}
+td:first-child,th:first-child{white-space:nowrap}
+td code{white-space:normal}
+.filetable td:first-child{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:.78rem}
+.num{font-variant-numeric:tabular-nums}
+
+.callout{border-left:3px solid var(--accent);background:var(--surface);border-radius:0 8px 8px 0;padding:12px 18px;margin:1.1em 0;max-width:72ch}
+.callout.warn{border-left-color:var(--warn)}
+.callout .tag{font-family:"Chivo",system-ui,sans-serif;font-size:.7rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-ink);display:block;margin-bottom:2px}
+.callout.warn .tag{color:var(--warn)}
+
+/* ————— UI specimens: rendered in the app's own light palette, deliberately
+   theme-fixed so the mock is accurate on both page themes. ————— */
+.specimen{background:#f2ede4;border:1px solid #ddd5c4;border-radius:12px;padding:20px 22px 18px;margin:1.3em 0;color:#33302a}
+.specimen .slabel{font-family:"Chivo",system-ui,sans-serif;font-size:.7rem;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#8a8375;margin:0 0 12px}
+.specimen .snote{font-size:.78rem;color:#797365;margin:10px 0 0;font-style:italic}
+.mockwrap{overflow-x:auto}
+.panel{display:flex;min-width:640px;border-radius:10px;overflow:hidden}
+.blk{flex:1;padding:12px 14px 14px}
+.ally{background:#e9ede6}.enemy{background:#f2e6e2}
+.phead{display:flex;margin-bottom:10px}
+.enemy .phead{justify-content:flex-end}
+.stat{display:flex;flex-direction:column;gap:2px}
+.enemy .stat{align-items:flex-end}
+.snum{font-family:"Chivo",system-ui,sans-serif;font-weight:800;font-size:1.1rem;line-height:1;letter-spacing:-.01em}
+.pos{color:#2e8b84}.neg{color:#b8574a}
+.capt{font-size:.56rem;font-weight:600;letter-spacing:.05em;color:#888;border-bottom:1px dotted #ccc;font-family:"Chivo",system-ui,sans-serif}
+.heroes{display:flex;gap:10px;justify-content:space-evenly}
+.hero{display:flex;flex-direction:column;align-items:center;gap:3px;width:54px}
+.pw{position:relative;width:100%;line-height:0}
+.por{display:block;width:100%;aspect-ratio:1;border-radius:50%;border:2px solid #fff;box-sizing:border-box}
+.pb{position:absolute;border-radius:999px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;min-width:19px;height:19px;font-size:10px;font-family:"Chivo",system-ui,sans-serif}
+.tl{top:-3px;left:-3px}.trr{top:-3px;right:-3px}
+.gb{background:#cfc8bb;color:#4a463d}
+.p4b{background:#8fa7c8;color:#fff}
+.r4b{background:#dd7a6c;color:#fff}
+.ring{outline:2px solid #36958e}
+.nm{font-size:.6rem;font-weight:600;color:#797365;font-family:"Chivo",system-ui,sans-serif}
+.dock{position:relative;display:flex;align-items:center;min-width:640px;background:#fff;border:1.5px solid #ddd6c8;border-radius:12px;padding:8px 14px;margin-top:10px;box-shadow:0 3px 14px rgba(0,0,0,.09);box-sizing:border-box}
+.chip{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:rgba(0,0,0,.07);color:#6d675b;border:0;font-weight:800;width:22px;height:22px;font-size:.6rem;font-family:"Chivo",system-ui,sans-serif}
+.chip.trash{color:#c0553f;background:rgba(192,85,63,.1)}
+.divv{width:1px;height:20px;background:#e4ddd0;margin:0 9px}
+.cl{display:inline-flex;align-items:center;gap:7px}
+.sidelbl{font-size:.55rem;font-weight:700;letter-spacing:.06em;color:#b5afa3;margin:0 5px;font-family:"Chivo",system-ui,sans-serif}
+.mid{position:absolute;left:50%;transform:translateX(-50%);display:inline-flex}
+.tgl{display:inline-flex;gap:6px}
+.tgl .tc{border:1.5px solid #cfc8ba;background:#fff;border-radius:999px;font-weight:800;font-size:.62rem;padding:3px 13px;color:#999;min-height:22px;font-family:"Chivo",system-ui,sans-serif}
+.tgl .lit{background:#36958e;border-color:#36958e;color:#fff}
+.selrow{display:flex;align-items:center;gap:26px;flex-wrap:wrap}
+.selcase{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.selcase .cn{font-size:.66rem;font-weight:600;color:#797365;font-family:"Chivo",system-ui,sans-serif}
+.swrow{display:flex;gap:14px;flex-wrap:wrap;margin:2px 0 6px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:.62rem;font-weight:600;color:#797365;font-family:"Chivo",system-ui,sans-serif}
+.swc{width:34px;height:34px;border-radius:8px;border:1px solid rgba(0,0,0,.14);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800}
+
+.decision{background:var(--surface);border:1px solid var(--border-soft);border-radius:10px;padding:4px 20px 14px;margin:1em 0}
+footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--border);font-size:.8rem;color:var(--muted);font-family:"Chivo",system-ui,sans-serif}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div class="page">
+<p class="eyebrow">Stargazer · design &amp; execution plan · design only, no implementation yet</p>
+<h1>EX Refinement Levels</h1>
+<p class="lede">Capture each hero's EX refinement level (r0–r4) alongside paragon (p0–p4) — a generic, append-only attribute system on the wire, whole-record transfers in state, and a per-board floating edit dock in the UI. Supersedes the original <code>design-refinements.md</code> handoff; audited across two review rounds. All decisions are settled — implementation-ready.</p>
+<div class="statusline">
+  <span class="pill on">u key · generic attributes</span>
+  <span class="pill on">shim: TEMPORARY, ~1 month</span>
+  <span class="pill on">dock: per-board</span>
+  <span class="pill on">badges: gray until max</span>
+  <span class="pill on">zh: 精炼</span>
+</div>
+
+<nav class="toc" aria-label="Contents">
+  <a href="#goal"><span class="n">1</span>Goal</a>
+  <a href="#data"><span class="n">2</span>Data model</a>
+  <a href="#state"><span class="n">3</span>State</a>
+  <a href="#ui"><span class="n">4</span>UI &amp; mocks</a>
+  <a href="#plan"><span class="n">5</span>Execution plan</a>
+  <a href="#verified"><span class="n">6</span>Verified assumptions</a>
+  <a href="#audit"><span class="n">7</span>Audit summary</a>
+  <a href="#decisions"><span class="n">8</span>Decision log</a>
+</nav>
+
+<h2 id="goal">1 · Goal</h2>
+<div class="prose">
+<p>Both teams, with:</p>
+<ul>
+  <li>corner badges on hero portraits (display-only),</li>
+  <li>a floating control bar under each board that owns all editing,</li>
+  <li>shareable links that round-trip both values,</li>
+  <li>a format that extends to future per-hero or per-team upgrades without another migration.</li>
+</ul>
+<p>Opponent refinement is visible and editable. Exact stat values conferred by refinement are out of scope — only the level is tracked.</p>
+</div>
+
+<h2 id="data">2 · Data model — generic hero attributes</h2>
+<div class="prose">
+<h3>Registry</h3>
+<p>New append-only registry, <code>src/lib/characters/attributes.ts</code>:</p>
+</div>
+<div class="tablewrap" style="max-width:420px"><table>
+<tr><th>attrId</th><th>name</th><th>range</th><th>default</th></tr>
+<tr><td class="num">1</td><td>paragon</td><td class="num">0–4</td><td class="num">0</td></tr>
+<tr><td class="num">2</td><td>refinement</td><td class="num">0–4</td><td class="num">0</td></tr>
+</table></div>
+<div class="prose">
+<ul>
+  <li><strong>Append-only.</strong> Ids are never reused or renumbered; retired attrs stay reserved.</li>
+  <li>Ids are named exports (<code>ATTR_PARAGON = 1</code>, <code>ATTR_REFINEMENT = 2</code>).</li>
+  <li>Each entry declares its range and default; the serializer emits only non-default values (sparse).</li>
+  <li><strong>Clamp lives in exactly two places</strong>: the state layer (<code>setAttr</code>, generalizing today's clamp at <code>useGridContext.ts:201</code>) for the JSON multi-board path, and <code>validateGridState</code> for the binary codec. <code>canonicalTeamData</code> never clamps — no third clamp site.</li>
+  <li><strong>Unknown attrIds</strong> (rows written by a <em>future</em> app version reaching this one): restore ignores them; the binary codec drops them (the wire-attrId pin); but <code>canonicalTeamData</code> deliberately <strong>keeps</strong> them — filtering would silently destroy forward data. Accepted consequence: a team touched by a newer version can show phantom "unsaved changes" on an older one (the byte compare at <code>TeamsView.vue:114-116</code> sees rows this version can't emit). Pinned by a decode fixture.</li>
+  <li>A contract test pins the registry alongside the existing <code>BOARD_CONTENT_KEYS</code> contract test.</li>
+  <li><code>PARAGON_MAX_LEVEL</code> (<code>paragon.ts:9</code>) becomes the registry's paragon range; the team-power math there is untouched.</li>
+</ul>
+
+<h3>In-memory / JSON serialization — the <code>u</code> key</h3>
+<p><code>GridState</code> (<code>gridStateSerializer.ts:9</code>) replaces <code>p</code> with <code>u</code> ("upgrades"), holding uniform rows:</p>
+<pre><code>u: [team, characterId, attrId, value][]</code></pre>
+<ul>
+  <li><code>team</code>: 1 = ally, 2 = enemy (existing encoding).</li>
+  <li><code>characterId</code>: hero id. <strong>0 is reserved</strong> as a team-scope sentinel (hero ids start at 1). An id-space reservation only: the current serializer walks placed tiles (<code>gridStateSerializer.ts:95-108</code>), so emitting a team-scoped row would additionally require whole-record enumeration — a follow-up design, not a free ride.</li>
+  <li>Rows are emitted <strong>sorted by (team, characterId, attrId)</strong>; only non-default values appear. The comparator is a <strong>registry export</strong> (it must survive the shim's deletion — serializer, canonicalization, and shim all import it). Canonicalization also sorts <code>u</code> rows — required so a converted legacy record and a fresh snapshot of the same board are byte-equal (the unsaved-changes compare and import dedupe at <code>transfer.ts:23</code> are byte compares).</li>
+</ul>
+<p><code>BOARD_CONTENT_KEYS</code> (<code>gridStateSerializer.ts:152</code>) changes from <code>['t','c','s','y','p','a','m']</code> to <code>['t','c','s','y','u','a','m']</code>.</p>
+
+<h3>Two wire formats — verified split</h3>
+<ul>
+  <li><strong>Multi-board (Teams page, saved teams, import files, <code>/teams?g=</code>)</strong> is url-safe base64 <strong>JSON</strong> (<code>urlStateManager.ts:33</code>). Here <code>u</code> is a literal JSON key and legacy <code>p</code> needs the temporary shim.</li>
+  <li><strong>Single-board Arena (<code>?g=</code>, <code>stargazer.arena</code> autosave)</strong> is the <strong>binary codec</strong> (<code>binaryEncoder.ts</code>). Paragon is a bit-packed section behind extended-flags <strong>bit 1</strong> (spec at <code>binaryEncoder.ts:26-80</code>; bits 3–5 verified free). The codec translates: encode maps attrId-1 <code>u</code> rows to the existing paragon section, decode produces <code>u</code> rows from it — the wire format is unchanged (this is the live format for attrId 1, not a compat layer), so old Arena links and autosaves keep decoding, and new autosaves stay readable by the previous app version (rollback-safe). Everything else rides a <strong>generic upgrades section behind bit 3</strong> — one bit spent once, never bits 4/5: count (6 bits), then per entry team (1) + characterId (16) + attrId (6) + value (4) = 27 bits, carrying every wire-pinned attrId ≥ 2 (refinement today, future attrs for free). <strong>Appended after the synergy section</strong> — currently last (<code>binaryEncoder.ts:440-448</code>) — so old decoders seeing bit 3 leave trailing bits unread. Encode routes attrId 1 to the paragon section and the rest here; decode merges both into <code>u</code> rows. The codec's contract test pins the set of wire-carried attrIds and that registry ranges fit the 4-bit value field. Count-width check: real heroes cap at 5 per team (<code>character.ts:97-98</code>; skill-driven team-size bumps admit only companions, which <code>isBaseHeroId</code> excludes), so 10 rows per attr per board — the 6-bit count (63) holds six wire attrs before the section needs a successor.</li>
+</ul>
+
+<h3>Legacy <code>p</code> shim — TEMPORARY, deleted ~1 month after release</h3>
+</div>
+<div class="callout"><span class="tag">Owner decision · project policy (CLAUDE.md)</span>
+Shims are always temporary in this project — permanent conversion/translation fallbacks are out of policy, and old share links / old export files are explicitly expendable once the shim is removed.</div>
+<div class="prose">
+<p>All legacy knowledge lives in one deletable module, <code>src/utils/upgradeMigration.ts</code>, mirroring <code>gridInfoMigration.ts</code>'s shape (TEMPORARY header, accepted-races note, step-by-step removal runbook). Two halves — both needed for the month, both die together (the decode half alone leaves at-rest data unconverted at the deadline; the storage half alone can't serve external ingress):</p>
+
+<h4>1 — Decode-side conversion</h4>
+<p>Invoked from <code>decodeMultiGridStateFromUrl</code> (<code>urlStateManager.ts:37</code>) — the verified single choke point for all multi-board JSON: library hydration, per-mode autosave slots, <code>/teams?g=</code> links, import files, previews, side-load, Teams ingress normalization (<code>useTeamsRestore.ts:78,145</code>), and ShareView's format probe (<code>ShareView.vue:39</code>). Per board:</p>
+<ul>
+  <li>If <code>p</code> is present and <code>u</code> absent: convert each valid row <code>[team, characterId, level]</code> → <code>[team, characterId, ATTR_PARAGON, level]</code>, sorted with the registry comparator.</li>
+  <li><strong>Row filter, pinned</strong>: keep only length-3, all-finite-number rows; clamp the level through the registry; dedupe duplicate <code>(team, characterId)</code> last-wins. (Today's decode passes <code>p</code> arrays through untouched and consumers guard per-entry; the Teams ingress <em>re-encodes</em> decoded payloads (<code>useTeamsRestore.ts:79</code>), so a sloppy conversion would persist <code>null</code>s into slots and canonical data.)</li>
+  <li><code>p</code> is <strong>always deleted</strong>, including when <code>u</code> already exists (conversion skipped, <code>p</code> dropped) — re-encoded payloads must never carry a stale <code>p</code> forward.</li>
+</ul>
+
+<h4>2 — One-time storage pass</h4>
+<p>Invoked once from <code>App.vue</code> setup (SSR-guarded), before any view's persistence reads — parent setup runs before route children mount, and it runs for Arena-only visitors too, so on-device Teams data converts even on a device that never opens <code>/teams</code> during the month. Per key, <strong>pure reuse of existing choke points</strong>:</p>
+<ul>
+  <li>The four <code>stargazer.teams.active.&lt;mode&gt;</code> slots (mode registry at <code>modes.ts:30</code> enumerates the keys): <code>JSON.parse</code> → require <code>v === 1</code> and string <code>data</code> (the <code>ActiveSlot</code> envelope, <code>useGridPersistence.ts:59-66</code>) → run <code>data</code> through <code>decodeMultiGridStateFromUrl</code> (conversion fires inside) → <code>encodeMultiGridStateToUrl</code> → write <code>{...slot, data}</code> with <code>v</code>, <code>sourceId</code>, <code>defaults</code> <strong>byte-preserved</strong>. Slots are NOT canonicalized (that would strip <code>active</code>/<code>d</code>/<code>mode</code>), the defaults-fingerprint check is NOT applied (staleness is load's business), and any slot that fails parse/decode is left untouched (load discards it anyway — today's behavior).</li>
+  <li>The <code>stargazer.teams.saved</code> library: per record, <code>canonicalTeamData(data)</code> (decode-shim + canonical re-encode + sorted <code>u</code> in <code>BOARD_CONTENT_KEYS</code> order); <strong>raw-preserving</strong> — records where canonicalization returns null, and corrupt/unknown-version blobs, are left untouched (hydration today never writes back, <code>teamLibrary.ts:35-65</code>; the pass must not become the thing that persists silent record drops). <code>stargazer.teams.saved.backup</code> is a forward-version guard written on unknown <code>blob.v</code> only (<code>teamLibrary.ts:45-50</code>) and is not touched.</li>
+  <li><code>stargazer.arena</code> is binary and needs no pass.</li>
+</ul>
+<p><strong>Marker: dedicated key <code>stargazer.migration.u</code>, written LAST</strong> — only after every attempted <code>writeStorage</code> returned true; any failure leaves the marker absent for a clean retry next load. This deliberately inverts <code>gridInfoMigration</code>'s marker-first discipline: that remap is non-idempotent (a repeat scrambles bytes), so its marker must land first; this conversion is idempotent (<code>p</code>+no-<code>u</code> converts, anything else no-ops), so the risk inverts — marker-first would turn one transient quota failure (the library blob is the app's largest key; <code>storage.ts</code> fails silently) into permanent paragon loss at the deadline. (The gridInfoMigration marker — absence of <code>stargazer.prefs</code> — is also unavailable: it's consumed on every device that has run the app since that shim shipped.) Accepted races, documented in the module header: two tabs both running the pass (idempotent, equivalent writes); an old-app-version tab writing <code>p</code>-form autosaves concurrently (healed by the decode half until removal, an accepted loss after).</p>
+<p><strong>Removal runbook must enumerate</strong>: the module; its test file; the grep-able <code>describe('upgradeMigration …')</code> legacy blocks in shared test files (legacy-<code>p</code> cases in <code>urlStateManager.test.ts</code> / <code>savedTeam.test.ts</code> live in such blocks so removal is a grep, not an archaeology dig); the decode call + import in <code>urlStateManager.ts</code>; the <code>App.vue</code> call + import + ordering comment; the orphaned <code>stargazer.migration.u</code> key (accepted residue, noted like <code>gridInfoMigration.ts:42-44</code> notes its key duplication); trimming shim mentions from <code>URL_SERIALIZATION.md</code>/<code>TEAMS.md</code>; verification (<code>grep -ri upgrademigration src tests</code> empty, then lint/type-check/tests).</p>
+</div>
+<div class="callout warn"><span class="tag">Accepted consequences — explicit and final</span>
+After removal, old multi-board links and old export files silently lose their paragon levels (canonicalization drops the unregistered <code>p</code>; board content unaffected), and importing an old export whose team already exists in <code>u</code> form lands as a paragon-less "(imported)" duplicate (byte-compare dedupe no longer matches). Old Arena links are NOT affected (binary path). Rollback note for the release: a pre-<code>u</code> app version drops <code>u</code> at its next canonicalization.</div>
+<div class="prose">
+<h3>Future expansion</h3>
+<p>Adding an attrId is <strong>not</strong> "one registry line and done"; in this codebase's style (compare the <code>BOARD_CONTENT_KEYS</code> comment), a new per-hero attr touches: registry row · state map (free) · transfers (free via whole-record take/set) · serializer emission (free) · binary wire (free — add the attrId to the wire pin and it rides the generic bit-3 section) · grid-info pref key + parent + <code>GridInfoView</code>/<code>GRID_INFO_NONE</code> fields · badge placement and palette · a dock selector chip · locale strings. The storage, state, and wire layers are generic; the user-facing surface is deliberately per-attr.</p>
+</div>
+
+<h2 id="state">3 · State</h2>
+<div class="prose">
+<p>The per-board paragon map (<code>useGridContext.ts:196</code>, keyed <code>${team}:${characterId}</code> → level) generalizes to an <strong>attrs map</strong>: same key → <code>{ [attrId]: value }</code>, with records deleted when all values are default (preserving today's "empty map when clean" behavior, including "attrs survive removal but aren't serialized for unplaced heroes", <code>useGridContext.ts:189-195</code>).</p>
+<p><code>GridContext</code> API (interface at <code>useGridContext.ts:152-155</code>): <code>getAttr(team, id, attrId)</code> / <code>setAttr(team, id, attrId, value)</code> / <code>takeAttrs(team, id)</code> / <code>setAttrs(team, id, record)</code>. <code>setAttrs</code> <strong>replaces</strong> the record (never merges) — side-load stamps full records including defaults so a stale level can't linger (<code>sideLoad.ts:29-31</code>); merge semantics would silently break that rule. The per-attr <code>getParagon</code>/<code>setParagon</code> wrappers are dropped (keeping them would reintroduce the dual code path this design removes) — which pulls <code>TeamPowerPanel.vue</code> into slice&nbsp;1 for a mechanical, script-only call-site migration.</p>
+<p>Verified transfer/consumer surface (each becomes a one-line record take/set):</p>
+</div>
+<div class="tablewrap" style="max-width:680px"><table>
+<tr><th>Site</th><th>Location</th></tr>
+<tr><td>In-board move</td><td><code>useGridContext.ts:296</code></td></tr>
+<tr><td>In-board swap</td><td><code>useGridContext.ts:314-317</code></td></tr>
+<tr><td>Cross-board move</td><td><code>stores/grids.ts:295</code></td></tr>
+<tr><td>Cross-board swap</td><td><code>stores/grids.ts:328-331</code></td></tr>
+<tr><td>Board-swap collect / restore</td><td><code>stores/grids.ts:344-359, 404, 409</code> (the <code>collectMainUnits</code> record type changes too)</td></tr>
+<tr><td>Side-load executor stamping</td><td><code>stores/grids.ts:521</code></td></tr>
+<tr><td>Full clears (<code>switchMap</code>, <code>clearCharacters</code>)</td><td><code>useGridContext.ts:394, 400</code> (<code>clearParagon</code> → <code>clearAttrs</code>)</td></tr>
+<tr><td>Team clear (prefix wipe, unchanged)</td><td><code>useGridContext.ts:409-410</code></td></tr>
+<tr><td>URL restore</td><td><code>stores/urlState.ts:145-154</code></td></tr>
+<tr><td>Panel display + tap editing</td><td><code>TeamPowerPanel.vue:50, 82, 89, 101, 107</code></td></tr>
+</table></div>
+<div class="prose">
+<p>Serializer callers that pass <code>getParagon</code> today and switch to the attrs getter: <code>useGridPersistence.ts:97,134</code>, <code>HomeView.vue:253</code>, <code>gridStateSerializer.ts:34,170</code>. <code>sideLoad.ts</code> reads <code>board.u</code> (<code>:96</code>), carrying a per-hero attrs record on <code>SideLoadUnit</code>; the executor stamps the full record. <code>lib/teams/preview.ts</code> needs no change (reads unit sections only).</p>
+</div>
+
+<h2 id="ui">4 · UI</h2>
+<div class="prose">
+<h3>Badges (display-only)</h3>
+<ul>
+  <li><strong>P badge upper-left, R badge upper-right.</strong> (Today's single badge sits upper-right — <code>.pbadge</code>, <code>top:-3px; right:-3px</code> — P moves left.)</li>
+  <li>Palette — color means "maxed", nothing else: P0–P3 and R0–R3 in neutral gray (today's <code>.p0</code>); the per-tier <code>--color-tier-1..3</code> fills are retired from the panel (the variables stay for other consumers). White-on-<code>#8fa7c8</code> is below strict WCAG contrast; accepted because the badge is bold, tiny, and the fill alone signals "maxed".</li>
+</ul>
+</div>
+<div class="specimen">
+  <p class="slabel">Badge palette — color means "maxed"</p>
+  <div class="swrow">
+    <span class="sw"><span class="swc" style="background:#cfc8bb;color:#4a463d">P2</span>P0–P3 · R0–R3<br>#cfc8bb</span>
+    <span class="sw"><span class="swc" style="background:#8fa7c8;color:#fff">P4</span>P4 silver-blue<br>#8fa7c8</span>
+    <span class="sw"><span class="swc" style="background:#dd7a6c;color:#fff">R4</span>R4 red<br>#dd7a6c</span>
+  </div>
+</div>
+<div class="specimen">
+  <p class="slabel">Panel — final badge scheme in context (P upper-left · R upper-right)</p>
+  <div class="mockwrap"><div class="panel">
+    <div class="blk ally">
+      <div class="phead"><span class="stat"><span class="snum pos">+4.5%</span><span class="capt">INSPIRATION</span></span></div>
+      <div class="heroes">
+        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span><span class="pb tl gb">P3</span><span class="pb trr r4b">R4</span></span><span class="nm">Vala</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span><span class="pb tl p4b">P4</span><span class="pb trr gb">R2</span></span><span class="nm">Thoran</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span><span class="pb tl gb">P0</span><span class="pb trr gb">R0</span></span><span class="nm">Rolan</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#5f7d99"></span><span class="pb tl p4b">P4</span><span class="pb trr r4b">R4</span></span><span class="nm">Lenya</span></span>
+      </div>
+    </div>
+    <div class="blk enemy">
+      <div class="phead"><span class="stat"><span class="snum neg">-4.5%</span><span class="capt">INTIMIDATION</span></span></div>
+      <div class="heroes">
+        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span><span class="pb tl gb">P2</span><span class="pb trr gb">R1</span></span><span class="nm">Korin</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span><span class="pb tl p4b">P4</span><span class="pb trr r4b">R4</span></span><span class="nm">Marilee</span></span>
+      </div>
+    </div>
+  </div></div>
+  <p class="snote">Every non-max level is the same quiet gray — the number carries the information, color only announces "maxed". Specimens render in the app's light palette by design.</p>
+</div>
+<div class="prose">
+<ul>
+  <li>Refinement badge visibility: add <code>refinement</code> to <code>GridInfoPrefs</code> / <code>GridInfoView</code> / <code>DEFAULTS</code> (default <code>false</code>) / <code>GRID_INFO_NONE</code> (<code>useGridInfoPrefs.ts:27-91</code>) and <code>GRID_INFO_PARENTS: { refinement: ['heroCard'] }</code>. Old stored pref objects merge over defaults (<code>sliceFrom</code>) — no pref migration.</li>
+  <li>Attrs attach only to real heroes (<code>isRealHeroId</code>, <code>TeamPowerPanel.vue:40-42</code>).</li>
+  <li>ShareView: badges render, <strong>no dock</strong> (readonly — the asymmetry is intentional). Visibility follows the <em>viewer's</em> device prefs (<code>ShareView.vue:74-75</code>), exact parity with paragon today. Intended — do not "fix" by adopting the sharer's flags.</li>
+  <li>Locale: en "Refinement", zh <strong>精炼</strong> (in-game term).</li>
+</ul>
+
+<h3>Floating edit dock — mounting, gating, state</h3>
+<p><strong>One dock per board</strong> (owner-decided), replacing the panel's <code>.tp-actions</code> cluster:</p>
+<ul>
+  <li><strong>Teams</strong>: mounted in <code>GridBoard.vue</code> beside the panel (<code>:72</code>), one per board.</li>
+  <li><strong>Arena</strong>: mounted directly in <code>HomeView.vue</code> beside its panel (<code>:305-309</code>) — <strong>HomeView does not use <code>GridBoard</code></strong>, so it needs its own mount row (missing this ships an Arena with no clear/bulk controls).</li>
+  <li><strong>ShareView</strong>: none.</li>
+</ul>
+<p><strong>Mount gate: <code>info.heroCard &amp;&amp; !readonly</code></strong> — identical to today's panel mount (<code>GridBoard.vue:72</code>, <code>HomeView.vue:305-306</code>). This matters twice over: (a) <code>heroCard</code> defaults off, and an unconditional dock would hand every default-prefs Teams user five trash-only bars whose team-clear trashes sit beside the existing per-board board-clear trash (<code>GridBoard.vue:103-111</code>) — three differently-scoped trashes per board; (b) HomeView's map-editor and debug states suppress the whole info view via <code>GRID_INFO_NONE</code> (<code>HomeView.vue:152, 314-316</code>), so the <code>heroCard</code> gate keeps the dock out of the map editor for free.</p>
+<p><strong>Within the dock</strong>: the trash always renders; the P/R bulk clusters and the selector gate on the layer prefs; with both layer prefs off the dock is trash-only (matching today's paragon-off head, <code>TeamPowerPanel.vue:177,191</code>). <strong>Per-side matrix</strong>: under <code>teamView</code> the enemy cluster and enemy trash are hidden (the panel already crops the enemy side, <code>:76-79</code> — destructive controls must not target invisible units); a side with no real heroes has its cluster and trash disabled.</p>
+</div>
+
+<div class="specimen">
+  <p class="slabel">Dock — P armed (neutral controls; armed feedback = filled chip + badge rings)</p>
+  <div class="mockwrap">
+  <div class="panel">
+    <div class="blk ally">
+      <div class="phead"><span class="stat"><span class="snum pos">+4.5%</span><span class="capt">INSPIRATION</span></span></div>
+      <div class="heroes">
+        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span><span class="pb tl gb ring">P3</span><span class="pb trr r4b">R4</span></span><span class="nm">Vala</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span><span class="pb tl p4b ring">P4</span><span class="pb trr gb">R2</span></span><span class="nm">Thoran</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span><span class="pb tl gb ring">P0</span><span class="pb trr gb">R0</span></span><span class="nm">Rolan</span></span>
+      </div>
+    </div>
+    <div class="blk enemy">
+      <div class="phead"><span class="stat"><span class="snum neg">-4.5%</span><span class="capt">INTIMIDATION</span></span></div>
+      <div class="heroes">
+        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span><span class="pb tl gb ring">P2</span><span class="pb trr gb">R1</span></span><span class="nm">Korin</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span><span class="pb tl p4b ring">P4</span><span class="pb trr r4b">R4</span></span><span class="nm">Marilee</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="dock">
+    <span class="cl"><button class="chip trash" aria-label="Clear ally team">🗑</button><span class="divv"></span><span class="sidelbl">ALLY</span><button class="chip" aria-label="Reset">↺</button><button class="chip" aria-label="Max">⌃</button><button class="chip" aria-label="Raise">+1</button></span>
+    <span class="mid"><span class="tgl"><button class="tc lit">P</button><button class="tc">R</button></span></span>
+    <span class="cl" style="margin-left:auto"><button class="chip" aria-label="Raise">+1</button><button class="chip" aria-label="Max">⌃</button><button class="chip" aria-label="Reset">↺</button><span class="sidelbl">ENEMY</span><span class="divv"></span><button class="chip trash" aria-label="Clear enemy team">🗑</button></span>
+  </div>
+  </div>
+  <p class="snote">Identical clusters flank the centered V2 selector. Bulk chips stay neutral regardless of the armed layer — the filled chip and the 2px rings on the P badges say what's being edited.</p>
+</div>
+
+<div class="specimen">
+  <p class="slabel">Dock — ALL (both chips lit; both badge sets ring; taps +1 both, clamped, no wrap)</p>
+  <div class="mockwrap">
+  <div class="panel">
+    <div class="blk ally">
+      <div class="phead"><span class="stat"><span class="snum pos">+4.5%</span><span class="capt">INSPIRATION</span></span></div>
+      <div class="heroes">
+        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span><span class="pb tl gb ring">P3</span><span class="pb trr r4b ring">R4</span></span><span class="nm">Vala</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span><span class="pb tl p4b ring">P4</span><span class="pb trr gb ring">R2</span></span><span class="nm">Thoran</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span><span class="pb tl gb ring">P0</span><span class="pb trr gb ring">R0</span></span><span class="nm">Rolan</span></span>
+      </div>
+    </div>
+    <div class="blk enemy">
+      <div class="phead"><span class="stat"><span class="snum neg">-4.5%</span><span class="capt">INTIMIDATION</span></span></div>
+      <div class="heroes">
+        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span><span class="pb tl gb ring">P2</span><span class="pb trr gb ring">R1</span></span><span class="nm">Korin</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span><span class="pb tl p4b ring">P4</span><span class="pb trr r4b ring">R4</span></span><span class="nm">Marilee</span></span>
+      </div>
+    </div>
+  </div>
+  <div class="dock">
+    <span class="cl"><button class="chip trash" aria-label="Clear ally team">🗑</button><span class="divv"></span><span class="sidelbl">ALLY</span><button class="chip" aria-label="Reset">↺</button><button class="chip" aria-label="Max">⌃</button><button class="chip" aria-label="Raise">+1</button></span>
+    <span class="mid"><span class="tgl"><button class="tc lit">P</button><button class="tc lit">R</button></span></span>
+    <span class="cl" style="margin-left:auto"><button class="chip" aria-label="Raise">+1</button><button class="chip" aria-label="Max">⌃</button><button class="chip" aria-label="Reset">↺</button><span class="sidelbl">ENEMY</span><span class="divv"></span><button class="chip trash" aria-label="Clear enemy team">🗑</button></span>
+  </div>
+  </div>
+</div>
+
+<div class="specimen">
+  <p class="slabel">Selector V2 — independent toggle chips; last lit can't turn off</p>
+  <div class="selrow">
+    <span class="selcase"><span class="cn">P armed</span><span class="tgl"><button class="tc lit">P</button><button class="tc">R</button></span></span>
+    <span class="selcase"><span class="cn">R armed</span><span class="tgl"><button class="tc">P</button><button class="tc lit">R</button></span></span>
+    <span class="selcase"><span class="cn">ALL (both lit)</span><span class="tgl"><button class="tc lit">P</button><button class="tc lit">R</button></span></span>
+  </div>
+  <p class="snote">Checkbox model, not a radio: a third registry attr is a third chip — no redesign.</p>
+</div>
+
+<div class="prose">
+<h3>Armed-layer state — <code>useAttrLayerSelection</code>, module singleton</h3>
+<p>The <code>useSelectionState</code> / <code>useDragDrop</code> idiom:</p>
+<ul>
+  <li>One page-global armed set; <strong>every dock renders the same state and any chip toggles it page-wide</strong> (never per-board).</li>
+  <li>Default <code>{P}</code> (matches today's tap-cycles-paragon); session-only, not persisted.</li>
+  <li><strong>No route-change or rebuild reset needed</strong> — unlike <code>useSelectionState</code> (force-cleared on rebuilds, <code>useTeamsRestore.ts:85-89</code>) it references no boards or hexes. Provide a test-reset export.</li>
+  <li><strong>Pref interaction</strong>: the <em>effective</em> armed set is <code>armed ∩ pref-visible layers</code>; when that intersection is empty, the visible layers act as armed; with no layers visible, portrait taps no-op. Prevents invisible edits (e.g. <code>{R}</code> armed, refinement pref then disabled — taps must not silently mutate an unrendered value).</li>
+</ul>
+
+<h3>Dock contents</h3>
+<ul>
+  <li><strong>Trash</strong>: existing <code>clearTeam</code> behavior including the armed two-step confirm (<code>useArmedConfirm</code>), the confirm-ping pulse (<code>controls.css</code>), <strong>and the gesture-state clearing</strong> (<code>clearTargetHex</code>/<code>clearLiftedHex</code>, <code>TeamPowerPanel.vue:113-121</code>) — that clearing moves with the trash.</li>
+  <li><strong>Bulk clusters</strong> per side, acting on the effective armed layer(s) of that board: <code>↺</code> reset to 0, <code>⌃</code> max to 4, <code>+1</code> increment (clamped). Disable semantics carry over (raise disables at all-max rather than hides, <code>:92-96</code>). The action-tip tooltip pair and its close-on-click discipline (<code>:157-165</code>) move with the cluster.</li>
+  <li><strong>Narrow widths</strong>: the ~12 controls must fit the fixed-medium Teams column — define a container-query collapse tier (drop the ALLY/ENEMY labels, tighten gaps) the way the panel drops its stat caption (<code>:371-380</code>).</li>
+</ul>
+
+<h3>Edit semantics</h3>
+<ul>
+  <li>Portrait tap, single effective layer: cycle that layer (+1 wrapping 4→0), matching today (<code>:81-83</code>).</li>
+  <li>Portrait tap in ALL: <strong>+1 both layers, clamped, no wrap</strong> — implemented as <strong>two <code>setAttr</code> calls, not <code>setAttrs</code></strong> (replace semantics would force a read-modify-write that drops a future third attr if assembled naively; Vue's watcher scheduling coalesces the two writes into one autosave).</li>
+  <li>Bulk chips in ALL apply to both layers.</li>
+</ul>
+
+<h3>Panel restructure budget (slice 2, <code>TeamPowerPanel.vue</code>)</h3>
+<p>Moves to the dock: <code>.tp-actions</code> + handlers + action tooltips, enemy-mirror <code>row-reverse</code> rules (<code>:336-346</code>), armed styles + confirm-ping (<code>:455-473</code>). Stays: stat + <code>useInfoTip</code> tooltip, heroes flex sizing, container tiers — but the head <code>v-if</code> collapses from <code>showParagon || !readonly</code> (<code>:177</code>) to <code>showParagon</code>, the 499px caption-drop tier deletes, and the 319px tier + <code>min-height: 28px</code> were sized around the chips and need re-tuning. Budget this as a real restructure, not an hour's edit.</p>
+</div>
+
+<h2 id="plan">5 · Execution plan</h2>
+<div class="prose">
+<p>Slice 1 is <strong>one release and defensibly one PR</strong> — the <code>p</code>→<code>u</code> rename is compile-coupled through the codec (<code>binaryEncoder.ts:219, 323, 427</code> read <code>state.p</code>), the panel, restore, side-load, and the serializer callers; no intermediate point both compiles and preserves data. If split, stack commits inside one PR. Slice 1 is user-invisible (paragon behavior unchanged, panel migration is script-only).</p>
+<p>Validate each slice with <code>npm run lint</code>, <code>npm run type-check</code>, and <code>npx vitest run --no-file-parallelism</code>.</p>
+<p>Comment churn to plan for (CLAUDE.md comment rules): paragon-specific narrative comments in <code>useGridContext.ts:189-195, 291, 327, 408-411</code>, <code>grids.ts:294, 327, 341-344, 401</code>, <code>gridStateSerializer.ts:15, 93-94</code>, <code>sideLoad.ts</code> header + <code>:29-31</code>.</p>
+</div>
+
+<h3>Slice 1 — data layer (format + state, invisible to users)</h3>
+<div class="tablewrap"><table class="filetable">
+<tr><th>File</th><th>Change</th></tr>
+<tr><td>src/lib/characters/attributes.ts</td><td><strong>New.</strong> Registry, named attrId exports, clamp helper, row comparator (registry-owned — survives shim deletion).</td></tr>
+<tr><td>src/utils/gridStateSerializer.ts</td><td><code>GridState.p</code> → <code>u</code>; attrs getter param; sorted sparse emission (base heroes only, as today); <code>BOARD_CONTENT_KEYS</code> <code>'p'</code>→<code>'u'</code>.</td></tr>
+<tr><td>src/utils/upgradeMigration.ts</td><td><strong>New, TEMPORARY.</strong> Decode-side conversion (row filter/clamp/dedupe/sort; always deletes <code>p</code>) + one-time storage pass (<code>ActiveSlot</code>-envelope-preserving slot rewrite; <code>canonicalTeamData</code> library rewrite, raw-preserving) + marker-LAST <code>stargazer.migration.u</code>; header documents accepted races; removal runbook per §2.</td></tr>
+<tr><td>src/utils/urlStateManager.ts</td><td>Invoke the shim's conversion in <code>decodeMultiGridStateFromUrl</code> (one deletable call).</td></tr>
+<tr><td>src/App.vue</td><td>Invoke the storage pass once at setup (SSR-guarded), before route children mount (one deletable call + ordering comment).</td></tr>
+<tr><td>src/utils/binaryEncoder.ts</td><td>Encode/decode translation (attrId 1 ↔ paragon section, bit 1); <strong>generic upgrades section behind bit 3</strong> (attrId ≥ 2, appended after synergy; 6-bit count, 27-bit entries per §2); <code>validateGridState</code> clamps <code>u</code> against the registry, drops unknown/unpinned attrIds.</td></tr>
+<tr><td>src/composables/useGridContext.ts</td><td>Attrs map; <code>getAttr</code>/<code>setAttr</code>/<code>takeAttrs</code>/<code>setAttrs</code> (replace semantics); <code>clearParagon</code>→<code>clearAttrs</code> (<code>:394,400</code>); interface update.</td></tr>
+<tr><td>src/components/grid/TeamPowerPanel.vue</td><td><strong>Mechanical script-only migration</strong> of the dropped wrappers (<code>:50, 82, 89, 101, 107</code> → <code>getAttr</code>/<code>setAttr</code> with <code>ATTR_PARAGON</code>); no template or visual change.</td></tr>
+<tr><td>src/stores/grids.ts</td><td>Whole-record take/set at <code>:295, :328-331, :521</code>; <code>collectMainUnits</code> + restore (<code>:344-359, :404, :409</code>).</td></tr>
+<tr><td>src/stores/urlState.ts</td><td>Restore reads <code>u</code> → <code>setAttr</code>, ignoring unknown attrIds (<code>:145-154</code>).</td></tr>
+<tr><td>src/lib/teams/sideLoad.ts</td><td><code>SideLoadUnit.paragon</code> → attrs record from <code>u</code> (<code>:96</code>, doc comment).</td></tr>
+<tr><td>src/composables/useGridPersistence.ts · src/views/HomeView.vue</td><td>Attrs getter (<code>:97,:134</code>; <code>:253</code>).</td></tr>
+<tr><td>src/lib/teams/savedTeam.ts</td><td><code>canonicalTeamData</code> sorts <code>u</code> rows (keeps unknown attrIds); comment updates.</td></tr>
+<tr><td>Tests — new/updated</td><td><code>attributes</code> registry contract; <code>gridStateSerializer.test.ts</code> (key contract, sorted sparse <code>u</code>); <code>binaryEncoder.test.ts</code> (translation round-trip; old-bytes decode fixture incl. out-of-range clamp; generic-section round-trip; refinement-only board sets the extended header; bit-1 + bit-3 + synergy co-presence byte fixture; registry-ranges-fit-4-bit-value pin; wire-attrId pin); <code>upgradeMigration.test.ts</code> (conversion; row-filter fixtures: short/non-numeric/duplicate rows, both-keys deletes <code>p</code>; envelope preservation for slots; raw-preserving library pass; marker-last + retry-on-failed-write; idempotence); legacy-<code>p</code> cases in <code>urlStateManager.test.ts</code> / <code>savedTeam.test.ts</code> inside grep-able <code>describe('upgradeMigration …')</code> blocks (incl. legacy record canonicalizes byte-equal to fresh snapshot); unknown-attrId decode fixture; <code>sideLoad.test.ts</code>; known breakers: <code>stores/urlState.test.ts:124</code>, <code>stores/grids.test.ts:348-364, 414-475, 617, 688, 766</code>, <code>composables/useGridContext.test.ts:79+</code>.</td></tr>
+</table></div>
+
+<h3>Slice 2 — UI</h3>
+<div class="tablewrap"><table class="filetable">
+<tr><th>File</th><th>Change</th></tr>
+<tr><td>src/composables/useAttrLayerSelection.ts</td><td><strong>New.</strong> Module-singleton armed set per §4 (default <code>{P}</code>, effective = armed ∩ visible, last-lit guard, test-reset export).</td></tr>
+<tr><td>src/composables/useGridInfoPrefs.ts</td><td><code>refinement</code> key (+<code>GRID_INFO_NONE</code>), parent under <code>heroCard</code>.</td></tr>
+<tr><td>src/components/grid/GridInfoToggle.vue</td><td>Checklist row (<code>:42</code> pattern).</td></tr>
+<tr><td>src/components/grid/TeamPowerPanel.vue</td><td>Restructure per §4 budget: head → stat only; dual corner badges, new palette; tap editing per effective layer(s); armed rings.</td></tr>
+<tr><td>src/components/grid/TeamPowerDock.vue</td><td><strong>New.</strong> Per-board dock per §4: trash (armed confirm + gesture clearing) + per-side clusters (teamView/empty-side matrix) + centered selector + narrow-width collapse tier.</td></tr>
+<tr><td>src/components/grid/GridBoard.vue</td><td>Mount dock beside the panel (<code>:72</code>, same <code>info.heroCard &amp;&amp; !readonly</code> gate); thread the refinement view flag (also via <code>TeamsBoards.vue</code>).</td></tr>
+<tr><td>src/views/HomeView.vue</td><td><strong>Mount <code>TeamPowerDock</code></strong> beside the Arena panel (<code>:305-309</code>), same gate; thread <code>refinement</code> flag (<code>:308</code>).</td></tr>
+<tr><td>src/views/TeamsView.vue · src/views/ShareView.vue</td><td>Thread <code>refinement</code> flag (<code>ShareView.vue:164,181</code>); ShareView gets no dock.</td></tr>
+<tr><td>src/locales/app/</td><td>New <code>refinement.json</code> (en "Refinement" / zh 精炼) + selector aria strings + refinement/ALL bulk variants; existing <code>messages/{max-paragons,raise-paragons,reset-paragons,paragon-cycle}.json</code> generalize or gain siblings (all four exist).</td></tr>
+<tr><td>docs/architecture/GRID.md · TEAMS.md · URL_SERIALIZATION.md</td><td>Attrs, <code>u</code>, shim (with removal note), dock.</td></tr>
+<tr><td>Tests</td><td>Dock: teamView-filtered, empty-side, armed-state shared across docks, effective-armed pref interaction, ALL-mode clamp-no-wrap; panel: badge corners/palette; cross-board move carrying refinement; clearTeam wiping both attrs; full <code>u</code> round-trip save/load/share/import.</td></tr>
+</table></div>
+
+<h3>Slice 3 — notebook side (afkj-pvp)</h3>
+<div class="prose"><p>Read <code>u</code> rows from shared links (attrId 1 = paragon, 2 = refinement).</p></div>
+
+<h2 id="verified">6 · Verified assumptions &amp; corrections</h2>
+<div class="prose">
+<ol>
+  <li><strong>Arena format is binary, not JSON</strong> — the shim applies only to multi-board JSON; the codec translation is the live wire format for attrId 1 (not a compat layer), old Arena links keep decoding, and new autosaves remain readable by the previous app version.</li>
+  <li><strong>Single decode choke point confirmed</strong> for all multi-board JSON consumers (incl. <code>useTeamsRestore.ts:78,145</code> and <code>ShareView.vue:39</code>).</li>
+  <li><strong>Transfer surface</strong> is the 10-row table in §3.</li>
+  <li><strong>Badge today</strong>: upper-right, per-tier colors; new scheme is corner-split and gray-until-max.</li>
+  <li><strong>Prefs need no migration</strong> (<code>sliceFrom</code> merges over defaults).</li>
+  <li><strong><code>preview.ts</code> unchanged</strong>; canonicalization is key-driven.</li>
+  <li><strong>No corruption paths found</strong> by any review — every failure mode is clean loss, enumerated in §2's accepted-consequences note and explicitly accepted by the owner.</li>
+  <li><strong>HomeView/ShareView mount panels directly</strong> — <code>GridBoard.vue</code> is Teams-only; the Arena dock needs its own mount (round-2 catch).</li>
+  <li><strong>Mode slots are <code>ActiveSlot</code> envelopes</strong> — the storage pass rewrites <code>slot.data</code> only, preserving <code>v</code>/<code>sourceId</code>/<code>defaults</code> (round-2 catch; a bare rewrite would fail the <code>v===1</code> load check and hard-reset all four modes).</li>
+</ol>
+</div>
+
+<h2 id="audit">7 · Audit summary</h2>
+<div class="prose">
+<p>Four independent reviews across two rounds: a senior engineer and an architect in round 1, then a staff engineer and a fresh architect in round 2 (briefed on the settled owner decisions). The table lists every substantive finding in plain language, with what happened to it. <strong>Fixed</strong> means the design was changed to resolve it; <strong>accepted</strong> means it's a known, documented trade-off; <strong>overruled</strong> means the project owner rejected the recommendation.</p>
+</div>
+<style>
+.sev{font-family:"Chivo",system-ui,sans-serif;font-size:.66rem;font-weight:800;letter-spacing:.06em;border-radius:5px;padding:2px 8px;white-space:nowrap;display:inline-block}
+.sev.b{background:var(--warn);color:var(--bg)}
+.sev.m{border:1.5px solid var(--warn);color:var(--warn)}
+.sev.s{border:1px solid var(--border);color:var(--muted)}
+.out-fixed{color:var(--good);font-weight:600}
+.out-acc{color:var(--muted);font-weight:600}
+.out-over{color:var(--warn);font-weight:600}
+.findings td:nth-child(1){white-space:nowrap}
+.findings td{font-size:.84rem}
+</style>
+<h3>Round 1 — senior engineer + architect</h3>
+<div class="tablewrap"><table class="findings">
+<tr><th>Severity</th><th>Finding, in plain terms</th><th>Outcome</th></tr>
+<tr><td><span class="sev b">Blocker</span></td><td>The plan's first two build steps couldn't actually be done separately — renaming the data field immediately breaks code that was scheduled for the later step. (Found by both reviewers.)</td><td><span class="out-fixed">Fixed</span> — merged into one step (slice 1) that compiles and passes tests as a whole.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Setting a refinement level on the Arena page would silently vanish on reload: the Arena's save format didn't carry refinement yet, and adding it was marked "optional".</td><td><span class="out-fixed">Fixed</span> — the Arena format work is now required and part of slice 1, before any editing UI ships.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>The architect recommended making the legacy-format conversion permanent instead of a one-month shim, arguing old links and export files would otherwise lose their paragon levels.</td><td><span class="out-over">Overruled by owner</span> — shims are temporary by project policy; the loss of stale links/exports is explicitly accepted. The parts of the recommendation that protect <em>on-device</em> data were kept (see the fixes below).</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>The edit bar's design contradicted itself: one page-level bar can't reach the per-board panels, and its delete button would act on things far away from it.</td><td><span class="out-fixed">Fixed</span> — one bar per board (buttons sit next to what they affect); only the P/R selection is shared page-wide.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Every old saved team would show a phantom "unsaved changes" flag forever: the app compares stored vs. current data byte-for-byte, and converted old data would have its rows in a different order than freshly saved data.</td><td><span class="out-fixed">Fixed</span> — one shared sort order used by the converter, the saver, and the normalizer, so identical content is always identical bytes.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Only the game mode you happened to open would get its saved boards converted; the other modes' boards would lose paragon when the shim is deleted a month later.</td><td><span class="out-fixed">Fixed</span> — a one-time storage pass converts all four modes' saved boards up front, on any page visit.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>The claim that team-wide upgrades "already work" in the new format was overstated — the format reserves room for them, but the code that writes data would never actually emit them.</td><td><span class="out-fixed">Fixed</span> — reworded honestly: reserved for the future, not implemented.</td></tr>
+<tr><td><span class="sev s">Minor</span></td><td>An early idea to rewrite the saved-team library on every load could have permanently deleted records that fail validation, with no backup.</td><td><span class="out-fixed">Fixed</span> — the one-time pass leaves anything it can't safely convert completely untouched.</td></tr>
+<tr><td><span class="sev s">Minor</span></td><td>Importing an old export file <em>after</em> the shim is gone doesn't just lose paragon — it also creates a duplicate "(imported)" copy of a team you already have.</td><td><span class="out-acc">Accepted</span> — documented as a consequence of the temporary-shim policy; old exports are expendable.</td></tr>
+<tr><td><span class="sev s">Minor</span></td><td>Assorted gaps: the delete button must also cancel any in-progress tap gesture; several files and breaking tests were missing from the plan's tables; a storage key was described wrongly; "what happens to out-of-range values" was undecided.</td><td><span class="out-fixed">Fixed</span> — all specified (gesture clearing moves with the button; tables completed; out-of-range values clamp, locked by a test).</td></tr>
+</table></div>
+
+<h3>Round 2 — staff engineer + architect</h3>
+<div class="tablewrap"><table class="findings">
+<tr><th>Severity</th><th>Finding, in plain terms</th><th>Outcome</th></tr>
+<tr><td><span class="sev b">Blocker</span></td><td>The storage pass, as written, would have <strong>wiped users' boards in all four modes</strong>: saved boards are stored inside a wrapper the plan didn't mention, and rewriting them without it makes the app reject them as corrupt on next load.</td><td><span class="out-fixed">Fixed</span> — the pass rewrites only the inner data and keeps the wrapper byte-identical; anything it can't parse is left alone.</td></tr>
+<tr><td><span class="sev b">Blocker</span></td><td>The team panel component uses functions that slice 1 deletes, but was scheduled for slice 2 — the code wouldn't compile between the two.</td><td><span class="out-fixed">Fixed</span> — the panel's small, invisible code change moved into slice 1.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>The "done" marker for the one-time conversion was to be written <em>before</em> the work (copying the older shim's pattern). If a write then failed — likely, since the library is the app's biggest stored item — the conversion would never retry, and that data would be lost when the shim is deleted.</td><td><span class="out-fixed">Fixed</span> — marker is written <em>last</em>, only after every write succeeds; otherwise it retries on the next visit. Safe because re-running the conversion is harmless.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Nobody had said <em>where</em> the one-time pass runs or what its marker key is — two implementers would have built it differently, with different coverage.</td><td><span class="out-fixed">Fixed</span> — runs once at app startup (covering Arena-only visitors too), with its own dedicated marker key.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>The Arena page had <strong>no edit bar at all</strong> in the plan: it builds its layout differently than the Teams page, and following the plan literally would have shipped the Arena with no clear/bulk buttons. (Found by both reviewers.)</td><td><span class="out-fixed">Fixed</span> — the Arena gets its own explicit bar mount.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>The bar was going to appear for everyone by default, putting <strong>three different trash icons on every board</strong> (board-clear, ally-clear, enemy-clear) for users who never opened the related settings.</td><td><span class="out-fixed">Fixed</span> — the bar appears only when the hero-card info layer is on and the page is editable, exactly like today's panel.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Nothing said what the bar does when the enemy team is hidden from view or a side is empty — its delete button could destroy units the user literally cannot see.</td><td><span class="out-fixed">Fixed</span> — enemy controls hide when the enemy side is hidden; a side with no heroes has its controls disabled.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>You could arm the refinement layer for editing and then switch its display off — taps would keep silently changing values you can't see.</td><td><span class="out-fixed">Fixed</span> — only currently-visible layers can be edited; taps do nothing if nothing relevant is shown.</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Nothing defined what happens when an <em>older</em> app version meets data written by a <em>future</em> one — it could have silently destroyed the newer data on re-save.</td><td><span class="out-fixed">Fixed / partly accepted</span> — unknown data is never edited but always preserved when saving; the cost is a harmless phantom "unsaved changes" flag on old versions, accepted and locked by a test. (Explained in §2.)</td></tr>
+<tr><td><span class="sev m">Major</span></td><td>Corrupt or hand-crafted old data rows could be "converted" into junk that then gets written back into storage and saved teams, because one code path re-encodes whatever it decodes.</td><td><span class="out-fixed">Fixed</span> — the converter accepts only well-formed rows, clamps values, and drops duplicates; each case is locked by a test.</td></tr>
+<tr><td><span class="sev s">Minor</span></td><td>Assorted smaller items: two missing save-format test cases; a subtle implementation choice for the "edit both layers" tap; the panel rework being a bigger job than the plan implied; the exact list of text/translation files; whether the format's capacity limits are sufficient (they are — checked against the real 5-hero team cap); which paragon comments need rewriting.</td><td><span class="out-fixed">Fixed</span> — all specified or verified and written into the plan.</td></tr>
+</table></div>
+<div class="prose">
+<p>Net result: two would-have-been data-destroying bugs (the board-wiping storage pass and the marker-ordering flaw) and one shipped-broken page (the Arena without controls) were caught on paper, before any code was written. Everything is either fixed in the design or an explicitly accepted, documented trade-off.</p>
+</div>
+
+<h2 id="decisions">8 · Decision log</h2>
+<div class="decision">
+<h3 style="margin-top:14px">Owner-decided (from the design conversation)</h3>
+<ul>
+  <li><strong>Migration policy</strong>: shims are TEMPORARY — one deletable module + runbook, deleted ~1 month after release; permanent conversion/translation fallbacks are out of policy (CLAUDE.md). Old links and old export files are explicitly expendable after removal.</li>
+  <li><strong>Serialization: generic <code>u</code> key</strong> — chosen over a sibling <code>r</code> key with the trade-offs re-examined under the temporary-shim policy; future extensibility is non-negotiable, and at 10+ upgrade types the sibling-key option costs per-attr boilerplate forever plus a binary format extension after two more attrs, versus <code>u</code>'s one-time shim. The generic bit-3 upgrades section (§2) follows from the same call.</li>
+  <li><strong>Dock scoping: per-board</strong> — each board keeps its own bar (trash/bulk adjacent to what they act on); the P/R selection is one page-global state shared by all bars (any chip toggles page-wide), with the supporting rules in §4.</li>
+  <li><strong>Badge palette</strong>: gray-until-max (<code>#cfc8bb</code>/<code>#4a463d</code> for P0–P3/R0–R3), P4 <code>#8fa7c8</code> white text (S3), R4 <code>#dd7a6c</code> white text.</li>
+  <li><strong>Badge corners</strong>: P upper-left, R upper-right.</li>
+  <li><strong>Selector</strong>: V2 independent P/R toggle chips (both lit = ALL).</li>
+  <li><strong>Control colors</strong>: neutral — no per-layer tinting; armed feedback is the filled selector chip + badge rings only.</li>
+  <li><strong>Locale</strong>: zh 精炼.</li>
+</ul>
+<h3>Audit-derived specifications (recommendations, standing unless overruled)</h3>
+<p style="margin-bottom:14px">Shim mechanics (sorted conversion, envelope-preserving storage pass, raw-preserving library rewrite, marker-last retry, <code>App.vue</code> call site); dock gating (<code>info.heroCard &amp;&amp; !readonly</code>), teamView/empty-side matrix, <code>useAttrLayerSelection</code> defaults and armed-∩-visible rule, ALL-tap as two <code>setAttr</code> calls, unknown-attrId and malformed-row contracts, named test fixtures.</p>
+</div>
+<div class="prose"><p><strong>All design decisions are settled; the design is implementation-ready.</strong></p></div>
+
+<footer>EX refinement design · Stargazer · every code reference verified against the current codebase · audited in two review rounds</footer>
+</div>
