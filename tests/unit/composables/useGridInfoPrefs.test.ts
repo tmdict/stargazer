@@ -56,6 +56,7 @@ describe('useGridInfoPrefs', () => {
         hover: true,
         heroCard: false,
         paragon: false,
+        refinement: false,
         targeting: false,
         coordinates: false,
       },
@@ -134,6 +135,7 @@ describe('deriveGridInfoView', () => {
       hover: true,
       heroCard: true,
       paragon: true,
+      refinement: true,
       targeting: true,
       coordinates: true,
     }
@@ -144,11 +146,13 @@ describe('deriveGridInfoView', () => {
       hover: true,
       heroCard: true,
       paragon: true,
+      refinement: true,
       targeting: true,
     })
     const masterOff = deriveGridInfoView({ ...allOn, master: false })
     expect(Object.values(masterOff).every((v) => v === false)).toBe(true)
     expect(deriveGridInfoView({ ...allOn, heroCard: false }).paragon).toBe(false)
+    expect(deriveGridInfoView({ ...allOn, heroCard: false }).refinement).toBe(false)
     expect(deriveGridInfoView({ ...allOn, tileIds: false }).coordinates).toBe(false)
     expect(deriveGridInfoView({ ...allOn, tileIds: false }).targeting).toBe(true)
   })
