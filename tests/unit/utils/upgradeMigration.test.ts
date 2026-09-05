@@ -5,8 +5,8 @@ import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { convertLegacyBoard, runUpgradeStoragePass } from '@/utils/upgradeMigration'
 import {
-  decodeGridStateFromUrl,
   decodeMultiGridStateFromUrl,
+  encodeGridStateToUrl,
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
 import { stubLocalStorage } from '../fixtures/storage'
@@ -155,15 +155,15 @@ describe('upgradeMigration convertLegacyBoard', () => {
 })
 
 describe('upgradeMigration storage pass', () => {
+  // At-rest bytes are asserted exactly: a decode-based check would route
+  // through the converting decoder and pass even if legacy p-form bytes were
+  // still stored.
   it('rewrites the arena slot from the legacy binary section', () => {
     storage.set(ARENA_KEY, legacyArenaValue())
     runUpgradeStoragePass()
-    const rewritten = storage.get(ARENA_KEY)!
-    expect(rewritten).not.toBe(legacyArenaValue())
-    expect(decodeGridStateFromUrl(rewritten)).toEqual({
-      c: [[2, 100, Team.ALLY]],
-      u: [[Team.ALLY, 100, 1, 4]],
-    })
+    expect(storage.get(ARENA_KEY)).toBe(
+      encodeGridStateToUrl({ c: [[2, 100, Team.ALLY]], u: [[Team.ALLY, 100, 1, 4]] }),
+    )
     expect(storage.get(MARKER_KEY)).toBe('1')
   })
 
@@ -175,10 +175,12 @@ describe('upgradeMigration storage pass', () => {
     expect(after.v).toBe(1)
     expect(after.sourceId).toBe('abc')
     expect(after.defaults).toBe('x,y')
-    const decoded = decodeMultiGridStateFromUrl(after.data)!
-    expect(decoded.boards[0]!.u).toEqual([[Team.ALLY, 11, 1, 2]])
-    // The re-encoded slot carries u literally; no legacy p remains at rest.
-    expect(after.data).not.toBe(slot.data)
+    expect(after.data).toBe(
+      encodeMultiGridStateToUrl({
+        boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]], u: [[Team.ALLY, 11, 1, 2]] } as never],
+        mode: '1v1',
+      } as MultiGridState),
+    )
   })
 
   it('leaves unparsable or wrong-shape values untouched', () => {
