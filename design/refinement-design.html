@@ -97,11 +97,9 @@ details.tech .inner .tablewrap{border:1px solid var(--border-soft)}
 .hero{display:flex;flex-direction:column;align-items:center;gap:3px;width:54px}
 .pw{position:relative;width:100%;line-height:0}
 .por{display:block;width:100%;aspect-ratio:1;border-radius:50%;border:2px solid #fff;box-sizing:border-box}
-.pb{position:absolute;border-radius:999px;font-weight:800;display:flex;align-items:center;justify-content:center;padding:0 3px;min-width:19px;height:19px;font-size:10px;font-family:"Chivo",system-ui,sans-serif;border:2px solid #fff;box-sizing:content-box}
-.tl{top:-3px;left:-3px}.trr{top:-3px;right:-3px}
-.gb{background:#cfc8bb;color:#4a463d}
-.p4b{background:#8fa7c8;color:#fff}
-.r4b{background:#dd7a6c;color:#fff}
+.upl{display:inline-flex;border-radius:999px;overflow:hidden;border:1.5px solid #fff;margin-top:-8px;position:relative;z-index:1;box-shadow:0 1px 3px rgba(0,0,0,.18);line-height:1;font-size:9px;font-weight:800;font-family:"Chivo",system-ui,sans-serif}
+.us{flex:1 1 0;min-width:21px;padding:2.5px 4px;text-align:center;color:#4a463d;box-sizing:border-box}
+.us.w{color:#fff}
 .ring{outline:2px solid #36958e}
 .nm{font-size:.6rem;font-weight:600;color:#797365;font-family:"Chivo",system-ui,sans-serif}
 .dock{position:relative;display:flex;align-items:center;min-width:640px;background:#fff;border:1.5px solid #ddd6c8;border-radius:12px;padding:8px 14px;margin-top:10px;box-shadow:0 3px 14px rgba(0,0,0,.09);box-sizing:border-box}
@@ -134,7 +132,7 @@ footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--border);font-
   <span class="pill on">one generic upgrade format</span>
   <span class="pill on">converter: temporary, ~1 month</span>
   <span class="pill on">control bar: one per board</span>
-  <span class="pill on">badges: gray until max</span>
+  <span class="pill on">split pill: gray → tint → red</span>
   <span class="pill on">zh: 精炼</span>
 </div>
 
@@ -152,7 +150,7 @@ footer{margin-top:70px;padding-top:18px;border-top:1px solid var(--border);font-
 
 <h2 id="goal">1 · What we're building</h2>
 <div class="prose">
-<p>Today the app tracks one upgrade per hero: paragon. This design adds a second one — EX refinement (R0 through R4) — for every hero on both teams. You'll see it as a small badge on each portrait, edit it from a control bar under the board, and it will ride along in saved teams and share links just like paragon does.</p>
+<p>Today the app tracks one upgrade per hero: paragon. This design adds a second one — EX refinement (R0 through R4) — for every hero on both teams. You'll see both upgrades in a small split pill under each portrait, edit it from a control bar under the board, and it will ride along in saved teams and share links just like paragon does.</p>
 <p>Just as important: the storage format is being rebuilt so that the <em>next</em> upgrade type after refinement (and the ten after that) can be added without redoing any of this. Refinement is the second passenger, not a special case.</p>
 <p>Your opponent's refinement is visible and editable too. We only track the level itself, not the exact stat boost it grants — whoever consumes the data can decide what a level is worth.</p>
 </div>
@@ -197,7 +195,7 @@ Old Teams share links posted before the release, and old export files sitting on
 <li><em>Marker</em>: dedicated key <code>stargazer.migration.u</code>, written LAST, only after every <code>writeStorage</code> succeeded (conversion is idempotent, so retry is safe; marker-first would turn one quota failure into permanent loss — deliberate inversion of gridInfoMigration's non-idempotent marker-first). Accepted races documented in header: two tabs (equivalent writes); a stale pre-deploy tab writing <code>p</code>-form autosaves across the release — the one transient skew the single-deployment model allows.</li>
 <li><em>Runbook enumerates</em>: module, its test, the temporary bit-1 decode branch + its constants in <code>binaryEncoder.ts</code>, grep-able <code>describe('upgradeMigration …')</code> blocks in shared test files, decode call + import, App.vue call + import + ordering comment, orphaned marker key note, doc trims, <code>grep -ri upgrademigration src tests</code> + lint/type-check/tests verification.</li>
 </ul>
-<p><strong>Future attr checklist</strong> (the honest per-attr surface): registry row · state map (free) · transfers (free) · serializer (free) · binary wire (free — add to wire pin) · grid-info pref key + parent + <code>GridInfoView</code>/<code>GRID_INFO_NONE</code> · badge placement/palette · dock chip · locale strings.</p>
+<p><strong>Future attr checklist</strong> (the honest per-attr surface): registry row · state map (free) · transfers (free) · serializer (free) · binary wire (free — add to wire pin) · grid-info pref key + parent + <code>GridInfoView</code>/<code>GRID_INFO_NONE</code> · pill palette · dock chip · locale strings.</p>
 </div></details>
 
 <h2 id="state">3 · How the app keeps track while you play</h2>
@@ -224,63 +222,65 @@ Old Teams share links posted before the release, and old export files sitting on
 
 <h2 id="ui">4 · What it looks like</h2>
 <div class="prose">
-<h3>The badges</h3>
-<p>Every hero portrait gets two small corner badges: <strong>paragon upper-left, refinement upper-right</strong>. Both keep the crisp white outline today's paragon badge has. They're labels, not buttons — refinement badges would be too tiny to tap reliably, so all editing happens elsewhere. The color rule is simple: <strong>color means "maxed out", nothing else</strong>. Levels 0–3 of both kinds use the same quiet gray — the number does the talking — while P4 gets a silver-blue fill and R4 takes over the red that P3 used to wear (free now that tiers are gray). Both max badges use white text; on the silver-blue it's slightly below formal contrast guidelines, accepted because the badge is bold, tiny, and the fill alone already signals "maxed".</p>
+<h3>The split pill</h3>
+<p>Both upgrades live in one <strong>slim split pill sitting on the bottom edge of each portrait</strong> — paragon on the left half, refinement on the right, separated by a slanted white seam. (The design started as two corner badges, but on 5v5 boards neighboring portraits sit so close that corner badges collided; a pill tucked under the portrait can never touch its neighbor.) The seam stays visible at every level, so an all-gray pill still clearly reads as two halves. The pill keeps the crisp white outline today's paragon badge has. It's a label, not a button — all editing happens in the control bar.</p>
+<p>The colors tell a progress story on the refinement side: <strong>R0–R1 are quiet gray, R2–R3 warm up to a light red tint, and R4 turns full red with white text</strong>. Paragon stays simpler — gray until P4, which gets a silver-blue fill. White text appears only on the two maxed fills; on the silver-blue it's slightly below formal contrast guidelines, accepted because the pill is bold, tiny, and the fill alone already signals "maxed". When only one of the two layers is switched on in settings, the pill collapses to a one-color chip that keeps its pill shape (a raised minimum width stops it shrinking into a small circle).</p>
 </div>
 <div class="specimen">
-  <p class="slabel">Badge palette — color means "maxed"</p>
+  <p class="slabel">Pill palette — refinement warms up toward max</p>
   <div class="swrow">
-    <span class="sw"><span class="swc" style="background:#cfc8bb;color:#4a463d">P2</span>P0–P3 · R0–R3<br>#cfc8bb</span>
+    <span class="sw"><span class="swc" style="background:#cfc8bb;color:#4a463d">P2</span>P0–P3 · R0–R1<br>#cfc8bb</span>
+    <span class="sw"><span class="swc" style="background:#f5cdc2;color:#4a463d">R2</span>R2–R3 light tint<br>#f5cdc2</span>
     <span class="sw"><span class="swc" style="background:#8fa7c8;color:#fff">P4</span>P4 silver-blue<br>#8fa7c8</span>
-    <span class="sw"><span class="swc" style="background:#dd7a6c;color:#fff">R4</span>R4 — the old P3 red<br>var(--color-tier-3)</span>
+    <span class="sw"><span class="swc" style="background:#e4938a;color:#fff">R4</span>R4 red<br>#e4938a</span>
   </div>
 </div>
 <div class="specimen">
-  <p class="slabel">Panel — final badge scheme in context (P upper-left · R upper-right)</p>
+  <p class="slabel">Panel — final pill scheme in context (P left half · R right half, slanted seam)</p>
   <div class="mockwrap"><div class="panel">
     <div class="blk ally">
       <div class="phead"><span class="stat"><span class="snum pos">+4.5%</span><span class="capt">INSPIRATION</span></span></div>
       <div class="heroes">
-        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span><span class="pb tl gb">P3</span><span class="pb trr r4b">R4</span></span><span class="nm">Vala</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span><span class="pb tl p4b">P4</span><span class="pb trr gb">R2</span></span><span class="nm">Thoran</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span><span class="pb tl gb">P0</span><span class="pb trr gb">R0</span></span><span class="nm">Rolan</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#5f7d99"></span><span class="pb tl p4b">P4</span><span class="pb trr r4b">R4</span></span><span class="nm">Lenya</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span></span><span class="upl" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us">P3</span><span class="us w">R4</span></span><span class="nm">Vala</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span></span><span class="upl" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #f5cdc2 51.4%)"><span class="us w">P4</span><span class="us">R2</span></span><span class="nm">Thoran</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span></span><span class="upl" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #cfc8bb 51.4%)"><span class="us">P0</span><span class="us">R0</span></span><span class="nm">Rolan</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#5f7d99"></span></span><span class="upl" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us w">P4</span><span class="us w">R4</span></span><span class="nm">Lenya</span></span>
       </div>
     </div>
     <div class="blk enemy">
       <div class="phead"><span class="stat"><span class="snum neg">-4.5%</span><span class="capt">INTIMIDATION</span></span></div>
       <div class="heroes">
-        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span><span class="pb tl gb">P2</span><span class="pb trr gb">R1</span></span><span class="nm">Korin</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span><span class="pb tl p4b">P4</span><span class="pb trr r4b">R4</span></span><span class="nm">Marilee</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span></span><span class="upl" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #cfc8bb 51.4%)"><span class="us">P2</span><span class="us">R1</span></span><span class="nm">Korin</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span></span><span class="upl" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us w">P4</span><span class="us w">R4</span></span><span class="nm">Marilee</span></span>
       </div>
     </div>
   </div></div>
-  <p class="snote">Every non-max level is the same quiet gray — the number carries the information, color only announces "maxed". Specimens render in the app's light palette by design.</p>
+  <p class="snote">The refinement half warms up in steps — gray, light tint from R2, full red at R4 — while the paragon half stays gray until P4. The white slanted seam is always visible, so every pill reads the same shape. Specimens render in the app's light palette by design.</p>
 </div>
 <div class="prose">
-<p>Refinement badges get their own on/off switch in the grid-info settings, nested under the hero-card option just like paragon's. On the read-only share view, badges show but nothing is editable, and visibility follows the <em>viewer's</em> own settings — same as paragon today. In Chinese the feature is called <strong>精炼</strong>, the in-game term.</p>
+<p>The refinement layer gets its own on/off switch in the grid-info settings, nested under the hero-card option just like paragon's; switching a layer off hides its half of the pill. On the read-only share view, the pills show but nothing is editable, and visibility follows the <em>viewer's</em> own settings — same as paragon today. In Chinese the feature is called <strong>精炼</strong>, the in-game term.</p>
 
 <h3>The control bar ("dock")</h3>
 <p>All editing moves out of the panel header and into a new floating bar under each board: a white card with rounded corners and a soft shadow, visually "popping" off the page. <strong>Every board gets its own bar</strong>, so the delete and bulk buttons always sit right next to the heroes they affect — on the Arena there's one board and one bar, exactly as mocked.</p>
 <p>Reading the bar left to right: a trash button that clears the whole ally team (two taps — the first arms it with a pulsing ring, the second confirms), the ally bulk buttons (<strong>↺</strong> reset to 0, <strong>⌃</strong> raise everyone to max, <strong>+1</strong>), the centered <strong>P / R selector</strong>, and the mirrored enemy side. The selector chips work like checkboxes: light up P to edit paragon, R to edit refinement, or both to edit both at once ("ALL"). The last lit chip can't be switched off, so there's always an active layer. The selection is shared across the whole page — flip a chip on any board's bar and every bar follows.</p>
 </div>
 <div class="specimen">
-  <p class="slabel">Dock — P armed (neutral controls; armed feedback = filled chip + badge rings)</p>
+  <p class="slabel">Dock — P armed (neutral controls; armed feedback = filled chip + pill rings)</p>
   <div class="mockwrap">
   <div class="panel">
     <div class="blk ally">
       <div class="phead"><span class="stat"><span class="snum pos">+4.5%</span><span class="capt">INSPIRATION</span></span></div>
       <div class="heroes">
-        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span><span class="pb tl gb ring">P3</span><span class="pb trr r4b">R4</span></span><span class="nm">Vala</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span><span class="pb tl p4b ring">P4</span><span class="pb trr gb">R2</span></span><span class="nm">Thoran</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span><span class="pb tl gb ring">P0</span><span class="pb trr gb">R0</span></span><span class="nm">Rolan</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us">P3</span><span class="us w">R4</span></span><span class="nm">Vala</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #f5cdc2 51.4%)"><span class="us w">P4</span><span class="us">R2</span></span><span class="nm">Thoran</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #cfc8bb 51.4%)"><span class="us">P0</span><span class="us">R0</span></span><span class="nm">Rolan</span></span>
       </div>
     </div>
     <div class="blk enemy">
       <div class="phead"><span class="stat"><span class="snum neg">-4.5%</span><span class="capt">INTIMIDATION</span></span></div>
       <div class="heroes">
-        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span><span class="pb tl gb ring">P2</span><span class="pb trr gb">R1</span></span><span class="nm">Korin</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span><span class="pb tl p4b ring">P4</span><span class="pb trr r4b">R4</span></span><span class="nm">Marilee</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #cfc8bb 51.4%)"><span class="us">P2</span><span class="us">R1</span></span><span class="nm">Korin</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us w">P4</span><span class="us w">R4</span></span><span class="nm">Marilee</span></span>
       </div>
     </div>
   </div>
@@ -290,26 +290,26 @@ Old Teams share links posted before the release, and old export files sitting on
     <span class="cl" style="margin-left:auto"><button class="chip" aria-label="Raise">+1</button><button class="chip" aria-label="Max">⌃</button><button class="chip" aria-label="Reset">↺</button><span class="sidelbl">ENEMY</span><span class="divv"></span><button class="chip trash" aria-label="Clear enemy team">🗑</button></span>
   </div>
   </div>
-  <p class="snote">Identical clusters flank the centered selector. The bulk buttons stay neutral no matter what's selected — the filled chip and the rings around the P badges say what's being edited.</p>
+  <p class="snote">Identical clusters flank the centered selector. The bulk buttons stay neutral no matter what's selected — the filled chip and the ring around each pill say editing is armed; the lit chip says which layer.</p>
 </div>
 
 <div class="specimen">
-  <p class="slabel">Dock — ALL (both chips lit; both badge sets ring; taps raise both, stopping at max)</p>
+  <p class="slabel">Dock — ALL (both chips lit; every pill rings; taps raise both, stopping at max)</p>
   <div class="mockwrap">
   <div class="panel">
     <div class="blk ally">
       <div class="phead"><span class="stat"><span class="snum pos">+4.5%</span><span class="capt">INSPIRATION</span></span></div>
       <div class="heroes">
-        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span><span class="pb tl gb ring">P3</span><span class="pb trr r4b ring">R4</span></span><span class="nm">Vala</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span><span class="pb tl p4b ring">P4</span><span class="pb trr gb ring">R2</span></span><span class="nm">Thoran</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span><span class="pb tl gb ring">P0</span><span class="pb trr gb ring">R0</span></span><span class="nm">Rolan</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#7a6a8f"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us">P3</span><span class="us w">R4</span></span><span class="nm">Vala</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#4f7a68"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #f5cdc2 51.4%)"><span class="us w">P4</span><span class="us">R2</span></span><span class="nm">Thoran</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#9c6b4e"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #cfc8bb 51.4%)"><span class="us">P0</span><span class="us">R0</span></span><span class="nm">Rolan</span></span>
       </div>
     </div>
     <div class="blk enemy">
       <div class="phead"><span class="stat"><span class="snum neg">-4.5%</span><span class="capt">INTIMIDATION</span></span></div>
       <div class="heroes">
-        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span><span class="pb tl gb ring">P2</span><span class="pb trr gb ring">R1</span></span><span class="nm">Korin</span></span>
-        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span><span class="pb tl p4b ring">P4</span><span class="pb trr r4b ring">R4</span></span><span class="nm">Marilee</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#5b7a8f"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #cfc8bb 48.6%, #fff 49.4%, #fff 50.6%, #cfc8bb 51.4%)"><span class="us">P2</span><span class="us">R1</span></span><span class="nm">Korin</span></span>
+        <span class="hero"><span class="pw"><span class="por" style="background:#8f6a5b"></span></span><span class="upl ring" style="background:linear-gradient(112deg, #8fa7c8 48.6%, #fff 49.4%, #fff 50.6%, #e4938a 51.4%)"><span class="us w">P4</span><span class="us w">R4</span></span><span class="nm">Marilee</span></span>
       </div>
     </div>
   </div>
@@ -335,9 +335,9 @@ Old Teams share links posted before the release, and old export files sitting on
 <h3>Editing rules, in plain terms</h3>
 <ul>
   <li><strong>Tap a portrait</strong> with one layer selected: that hero's level steps up by one, wrapping from 4 back to 0 — exactly how paragon tapping works today. With ALL selected, a tap raises <em>both</em> levels by one, stopping at max — and once both are at max, the next tap wraps them together back to 0, just like the single-layer behavior. Mid-range values never wrap independently, so the two counters can't scramble each other.</li>
-  <li><strong>Which layer is being edited is always visible</strong>: the lit chip plus a ring around the matching badges on every portrait. No colored button styling beyond that — the controls stay neutral.</li>
+  <li><strong>Which layer is being edited is always visible</strong>: the lit chip plus a ring around the pill on every portrait. No colored button styling beyond that — the controls stay neutral.</li>
   <li><strong>The bar only appears when it makes sense</strong>: when the hero-card info layer is on and the page is editable — the same rule the hero panel follows today. That also keeps it out of the map editor, and avoids stacking a third trash icon under boards for people who never use these features. With both layer toggles off, the bar shows just the team-clear trashes.</li>
-  <li><strong>No editing what you can't see</strong>: if a layer's badges are switched off in settings, that layer can't be selected for editing — taps will never silently change an invisible number. And when the view is cropped to your own team, the enemy half of the bar hides; a side with no heroes has its buttons disabled. Deleting a team also cancels any in-progress tap-move gesture, so nothing is left pointing at a removed hero.</li>
+  <li><strong>No editing what you can't see</strong>: if a layer is switched off in settings (its half of the pill hidden), that layer can't be selected for editing — taps will never silently change an invisible number. And when the view is cropped to your own team, the enemy half of the bar hides; a side with no heroes has its buttons disabled. Deleting a team also cancels any in-progress tap-move gesture, so nothing is left pointing at a removed hero.</li>
 </ul>
 </div>
 <details class="tech"><summary>For implementers — mounting, gating, state, and the panel restructure</summary><div class="inner">
@@ -352,7 +352,7 @@ Old Teams share links posted before the release, and old export files sitting on
 <p>Three steps, each fully tested before the next:</p>
 <ol>
   <li><strong>The plumbing</strong> — new storage format, the converter, and the generalized tracking. Completely invisible: paragon looks and behaves exactly as before. This lands as one pull request, because the format rename touches reading, writing, and display code all at once — there's no halfway point that both compiles and keeps data safe.</li>
-  <li><strong>The visuals</strong> — the two-corner badges with the new colors, the settings toggle, and the control bar on both pages.</li>
+  <li><strong>The visuals</strong> — the split pill with its color ladder, the settings toggle, and the control bar on both pages.</li>
   <li><strong>The companion notebook</strong> (the separate afkj-pvp project) learns to read the new upgrade list from shared links.</li>
 </ol>
 <p>Each step is validated with the project's full lint, type-check, and test suite.</p>
@@ -383,14 +383,14 @@ Old Teams share links posted before the release, and old export files sitting on
 <tr><td>src/composables/useAttrLayerSelection.ts</td><td><strong>New.</strong> Module-singleton armed set per §4 (default <code>{P}</code>, effective = armed ∩ visible, last-lit guard, test-reset export).</td></tr>
 <tr><td>src/composables/useGridInfoPrefs.ts</td><td><code>refinement</code> key (+<code>GRID_INFO_NONE</code>), parent under <code>heroCard</code>.</td></tr>
 <tr><td>src/components/grid/GridInfoToggle.vue</td><td>Checklist row (<code>:42</code> pattern).</td></tr>
-<tr><td>src/components/grid/TeamPowerPanel.vue</td><td>Restructure per §4: head → stat only; dual corner badges, new palette; tap editing per effective layer(s); armed rings.</td></tr>
+<tr><td>src/components/grid/TeamPowerPanel.vue</td><td>Restructure per §4: head → stat only; slanted split pill (supersedes the corner badges), color ladder; tap editing per effective layer(s); armed rings.</td></tr>
 <tr><td>src/components/grid/TeamPowerDock.vue</td><td><strong>New.</strong> Per-board dock per §4: trash (armed confirm + gesture clearing) + per-side clusters (teamView/empty-side matrix) + centered selector + narrow-width collapse tier.</td></tr>
 <tr><td>src/components/grid/GridBoard.vue</td><td>Mount dock beside the panel (<code>:72</code>, same <code>info.heroCard &amp;&amp; !readonly</code> gate); thread the refinement view flag (also via <code>TeamsBoards.vue</code>).</td></tr>
 <tr><td>src/views/HomeView.vue</td><td>Mount <code>TeamPowerDock</code> beside the Arena panel (<code>:305-309</code>), same gate; thread <code>refinement</code> flag (<code>:308</code>).</td></tr>
 <tr><td>src/views/TeamsView.vue · src/views/ShareView.vue</td><td>Thread <code>refinement</code> flag (<code>ShareView.vue:164,181</code>); ShareView gets no dock.</td></tr>
 <tr><td>src/locales/app/</td><td>New <code>refinement.json</code> (en "Refinement" / zh 精炼) + selector aria strings + refinement/ALL bulk variants; existing <code>messages/{max-paragons,raise-paragons,reset-paragons,paragon-cycle}.json</code> generalize or gain siblings (all four exist).</td></tr>
 <tr><td>docs/architecture/GRID.md · TEAMS.md · URL_SERIALIZATION.md</td><td>Attrs, <code>u</code>, converter (with removal note), dock.</td></tr>
-<tr><td>Tests</td><td>Dock: teamView-filtered, empty-side, armed-state shared across docks, effective-armed pref interaction, ALL-mode clamp + wrap-when-all-max; panel: badge corners/palette; cross-board move carrying refinement; clearTeam wiping both attrs; full <code>u</code> round-trip save/load/share/import.</td></tr>
+<tr><td>Tests</td><td>Dock: teamView-filtered, empty-side, armed-state shared across docks, effective-armed pref interaction, ALL-mode clamp + wrap-when-all-max; panel: pill segments/palette; cross-board move carrying refinement; clearTeam wiping both attrs; full <code>u</code> round-trip save/load/share/import.</td></tr>
 </table></div>
 </div></details>
 
@@ -401,7 +401,7 @@ Old Teams share links posted before the release, and old export files sitting on
   <li>Arena links use the binary format, not text; their legacy support is the temporary bit-1 reader deleted with the converter, and afterwards old paragon-bearing Arena links load an empty board (accepted). The Arena board saved in the browser is protected by the one-time cleanup.</li>
   <li>Every piece of Teams data — saved teams, links, imports, previews — really does flow through one decode function, so one conversion point covers everything.</li>
   <li>The hero hand-off surface is the 10-row table in §3, checked line by line.</li>
-  <li>Today's badge sits upper-right with per-tier colors; the new scheme splits the corners and goes gray-until-max (R4 reuses the freed-up P3 red, <code>var(--color-tier-3)</code>).</li>
+  <li>Today's badge sits upper-right with per-tier colors; the final scheme replaces it with the split pill and the gray → tint → red ladder (the per-tier fills are retired from the panel).</li>
   <li>Settings need no migration — new options simply default to off.</li>
   <li>Team thumbnails need no changes (they don't read upgrade data).</li>
   <li>No scenario was found where data gets <em>corrupted</em> — every failure mode is a clean, known loss, and each one is listed in §2's accepted-consequences note.</li>
@@ -457,10 +457,10 @@ Old Teams share links posted before the release, and old export files sitting on
   <li><strong>Serialization: the generic <code>u</code> upgrade list</strong> — chosen over a paragon-style sibling key with the trade-offs re-examined under the temporary-converter policy; future extensibility is non-negotiable, and at 10+ upgrade types the sibling-key option costs per-attr boilerplate forever plus a binary format extension after two more attrs, versus one one-time converter. The generic bit-3 upgrades section (§2) follows from the same call, and <strong>paragon rides it too</strong>: the binary format's old paragon spot is deleted outright, not kept as a legacy special case — old paragon-bearing Arena links breaking after the converter's removal is accepted ("I don't care about links breaking"), and the freed-up spot becomes available for future use rather than being roped off forever.</li>
   <li><strong>ALL-mode tap wraps at max</strong>: with both layers selected, a tap raises both (stopping at max); once every selected layer is at max, the next tap wraps them all to 0 — matching the single-layer wrap.</li>
   <li><strong>Control bar: one per board</strong> — delete and bulk buttons stay adjacent to what they act on; the P/R selection is one page-global state shared by all bars. Visual style: the floating white "pop" card (rounded corners, soft shadow).</li>
-  <li><strong>Badge palette</strong>: gray-until-max (<code>#cfc8bb</code>/<code>#4a463d</code> for P0–P3/R0–R3), P4 silver-blue <code>#8fa7c8</code> white text (S3), R4 the current P3 fill <code>var(--color-tier-3)</code> (#dd7a6c) white text; badges keep the existing 2px white border.</li>
-  <li><strong>Badge corners</strong>: P upper-left, R upper-right; badges are display-only (refinement badges are too small to be reliable tap targets).</li>
+  <li><strong>Pill palette</strong> (iterated live in the app): gray <code>#cfc8bb</code>/<code>#4a463d</code> for P0–P3 and R0–R1; R2–R3 light red tint <code>#f5cdc2</code> so mid refinement shows as progress; P4 silver-blue <code>#8fa7c8</code> white text (S3); R4 red <code>#e4938a</code> white text (lightened from the original #dd7a6c pick). The pill keeps a white border.</li>
+  <li><strong>Split pill, not corner badges</strong>: corner badges collided between neighboring portraits on 5v5 boards, so both layers merged into one slanted split pill under each portrait (P left, R right, always-visible white seam). A lone visible layer keeps pill proportions via a raised minimum width instead of collapsing to a small circle. The pill is display-only (too small to be a reliable tap target).</li>
   <li><strong>Selector</strong>: independent P/R toggle chips (both lit = ALL).</li>
-  <li><strong>Control colors</strong>: neutral — no per-layer tinting; the "what am I editing" signal is the filled selector chip plus badge rings only.</li>
+  <li><strong>Control colors</strong>: neutral — no per-layer tinting; the "what am I editing" signal is the filled selector chip plus pill rings only.</li>
   <li><strong>Locale</strong>: zh 精炼 (the in-game term).</li>
 </ul>
 <h3>Audit-derived specifications (recommendations, standing unless overruled)</h3>
@@ -470,13 +470,13 @@ Old Teams share links posted before the release, and old export files sitting on
 
 <h2 id="status">9 · Implementation status</h2>
 <div class="prose">
-<p><strong>Built and verified. Both app slices are implemented on branch <code>upgrade-attribute</code></strong> (cut from main; not merged), in two commits matching the plan: <code>c2f3096</code> — the data layer (registry, <code>u</code> format, binary codec, converter, generalized state and all consumers), invisible to users; <code>ed20282</code> — the UI (dual badges, settings toggle, per-board dock, armed-layer selection, locale strings, doc updates). Slice 3 — teaching the companion afkj-pvp notebook to read <code>u</code> rows — is a separate repository and remains open.</p>
+<p><strong>Built and verified. Both app slices are implemented on branch <code>upgrade-attribute</code></strong> (cut from main; not merged), in two commits matching the plan: <code>c2f3096</code> — the data layer (registry, <code>u</code> format, binary codec, converter, generalized state and all consumers), invisible to users; <code>ed20282</code> — the UI (settings toggle, per-board dock, armed-layer selection, locale strings, doc updates); then <code>230e8f3</code>–<code>fc41f04</code> — the badge design iterated live in the app into the final slanted split pill with the gray → tint → red ladder. Slice 3 — teaching the companion afkj-pvp notebook to read <code>u</code> rows — is a separate repository and remains open.</p>
 
 <h3>Validation, all green</h3>
 <ul>
   <li><strong>Full test suite</strong>: 990 unit tests pass (24 new for the registry, the converter's every edge — malformed rows, envelope preservation, marker-last retry, idempotence — the legacy binary reader, and the layer selection), plus lint and type-check.</li>
   <li><strong>Real-data regression</strong>, using the owner's actual 129-team old-format export (kept out of the repo; test data only): every team imports with zero drops; the 79 teams carrying legacy paragon all convert (3,707 upgrade rows, values intact and in range); converted records are byte-stable, so no phantom "unsaved changes"; re-importing the same file dedupes all 129 (no duplicate copies); previews and one-side loading read every converted team.</li>
-  <li><strong>Live app smoke</strong> (headless browser against the dev server, seeded with old-format data): the one-time cleanup converts the stored library on first load and sets its marker; five per-board docks render with dual badges everywhere; bulk reset / +1 act on the right board and right team only; disabled states are honest (+1 correctly grays out on an all-maxed team); ALL mode rings both badge layers on every portrait; a portrait tap in ALL raises both levels; and the wrap rule holds — P4/R4 → tap → P0/R0 → tap → P1/R1. The Arena page mounts its dock.</li>
+  <li><strong>Live app smoke</strong> (headless browser against the dev server, seeded with old-format data): the one-time cleanup converts the stored library on first load and sets its marker; five per-board docks render with split pills everywhere; bulk reset / +1 act on the right board and right team only; disabled states are honest (+1 correctly grays out on an all-maxed team); ALL mode rings the pill on every portrait; a portrait tap in ALL raises both levels; and the wrap rule holds — P4/R4 → tap → P0/R0 → tap → P1/R1. The Arena page mounts its dock.</li>
 </ul>
 
 <h3>Implementation notes</h3>

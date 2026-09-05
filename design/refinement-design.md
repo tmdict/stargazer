@@ -287,22 +287,31 @@ needs no change (reads unit sections only).
 
 ## 4. UI
 
-### Badges (display-only)
+### Split pill (display-only) — supersedes the corner badges
 
-- **P badge upper-left, R badge upper-right.** (Today's single badge sits
-  upper-right — `TeamPowerPanel.vue` `.pbadge`, `top:-3px; right:-3px` — P moves
-  left.) Both badges keep the existing badge chrome, including the **2px white
-  border** (`.pbadge` `border: 2px solid #fff`) and the cqw-driven sizing; the
-  armed ring is an `outline`, drawn outside the white border.
-- Palette — color means "maxed", nothing else:
-  - P0–P3 and R0–R3: neutral gray — bg `#cfc8bb`, text `#4a463d` (today's `.p0`).
-    The per-tier `--color-tier-1..3` fills are retired from the panel (the
-    variables stay for other consumers).
-  - **P4: silver-blue `#8fa7c8`, white text.** **R4: the current P3 fill,
-    `var(--color-tier-3)` (#dd7a6c), white text** — free for reuse since tiers
-    go gray.
-  - White-on-`#8fa7c8` is below strict WCAG contrast; accepted because the badge
-    is bold, tiny, and the fill alone signals "maxed".
+Corner badges collided between neighboring heroes on 5v5 boards, so both
+layers render in a **single slanted split pill seated on the portrait's
+bottom edge** (`.upill` in `TeamPowerPanel.vue`): `inline-flex`,
+`border-radius: 999px`, **1.5px white border**, `margin-top: -7px`, the
+armed ring an `outline` outside the border. `font-size: 7.5px` base,
+bumped to 9px at the ≥480px container tier.
+
+- **P half left, R half right**, halves split by a 112° slanted seam built
+  in one `linear-gradient`; a **white sliver at the seam stays visible at
+  every level combination** so an all-gray pill still reads as two halves.
+- Palette:
+  - P0–P3, R0–R1: neutral gray — bg `#cfc8bb`, text `#4a463d`. The per-tier
+    `--color-tier-1..3` fills are retired from the panel (the variables stay
+    for other consumers).
+  - **R2–R3: light red tint `#f5cdc2`, dark text** — mid refinement shows as
+    visible progress without stealing the maxed pop.
+  - **P4: silver-blue `#8fa7c8`, white text.** **R4: `#e4938a`, white
+    text** (a lightened relative of the old P3 fill).
+  - White-on-`#8fa7c8` is below strict WCAG contrast; accepted because the
+    pill is bold, tiny, and the fill alone signals "maxed".
+- **Single visible layer**: the pill collapses to a one-color chip;
+  `.useg:only-child` raises its min-width (30px / 36px at the large tier)
+  so it keeps pill proportions instead of shrinking to a near-circle.
 - Refinement badge visibility: add `refinement` to `GridInfoPrefs` /
   `GridInfoView` / `DEFAULTS` (default `false`) / `GRID_INFO_NONE`
   (`useGridInfoPrefs.ts:27-91`) and `GRID_INFO_PARENTS: { refinement:
@@ -464,7 +473,7 @@ comments in `useGridContext.ts:189-195, 291, 327, 408-411`,
 | `src/composables/useAttrLayerSelection.ts` | **New.** Module-singleton armed set per §4 (default `{P}`, effective = armed ∩ visible, last-lit guard, test-reset export). |
 | `src/composables/useGridInfoPrefs.ts` | `refinement` key (+`GRID_INFO_NONE`), parent under `heroCard`. |
 | `src/components/grid/GridInfoToggle.vue` | Checklist row (`:42` pattern). |
-| `src/components/grid/TeamPowerPanel.vue` | Restructure per §4 budget: head → stat only; dual corner badges, new palette; tap editing per effective layer(s); armed rings. |
+| `src/components/grid/TeamPowerPanel.vue` | Restructure per §4 budget: head → stat only; slanted split pill (supersedes corner badges), new palette; tap editing per effective layer(s); armed rings. |
 | `src/components/grid/TeamPowerDock.vue` | **New.** Per-board dock per §4: trash (armed confirm + gesture clearing) + per-side clusters (teamView/empty-side matrix) + centered selector + narrow-width collapse tier. |
 | `src/components/grid/GridBoard.vue` | Mount dock beside the panel (`:72`, same `info.heroCard && !readonly` gate); thread the refinement view flag (also via `TeamsBoards.vue`). |
 | `src/views/HomeView.vue` | **Mount `TeamPowerDock`** beside the Arena panel (`:305-309`), same gate; thread `refinement` flag (`:308`). |
@@ -549,10 +558,17 @@ legacy test blocks; confirmed slice 1 as one PR.
   deleted ~1 month after release; permanent conversion/translation fallbacks
   are out of policy (CLAUDE.md). Old links and old export files are explicitly
   expendable after removal.
-- **Badge palette**: gray-until-max (`#cfc8bb`/`#4a463d` for P0–P3/R0–R3),
-  P4 `#8fa7c8` white text (S3), R4 the current P3 fill `var(--color-tier-3)`
-  (#dd7a6c) white text; badges keep the existing 2px white border.
-- **Badge corners**: P upper-left, R upper-right.
+- **Pill palette**: gray `#cfc8bb`/`#4a463d` for P0–P3 and R0–R1;
+  **R2–R3 light red tint `#f5cdc2`** (dark text, mid progress visible);
+  P4 `#8fa7c8` white text (S3); **R4 `#e4938a` white text** (iterated live
+  from the original #dd7a6c). The pill keeps a white border (1.5px at pill
+  scale).
+- **Split pill, not corner badges** (iterated live after corner badges
+  overlapped between neighbors on 5v5 boards): one slanted split pill under
+  each portrait — P half left, R half right, 112° seam with an always-visible
+  white sliver so all-gray pills stay consistent; a lone visible layer keeps
+  pill proportions via a raised min-width (Option A) instead of collapsing to
+  a near-circle.
 - **Selector**: V2 independent P/R toggle chips (both lit = ALL).
 - **Control colors**: neutral — no per-layer tinting; armed feedback is the
   filled selector chip + badge rings only.
