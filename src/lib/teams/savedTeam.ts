@@ -39,10 +39,13 @@ export interface SavedTeam {
 }
 
 /* `u` rows normalized to what the serializer itself would emit — well-formed,
- * known attrIds, clamped, non-default, deduped last-wins, sorted — so a
- * hand-crafted or crafted-payload record still canonicalizes byte-equal to a
- * fresh snapshot of the same content. Unknown attrIds drop like unregistered
- * keys (single-deployment app: they can only come from crafted input). */
+ * known attrIds, real teams, integer characterIds, clamped, non-default,
+ * deduped last-wins, sorted — so a hand-crafted or crafted-payload record
+ * still canonicalizes byte-equal to a fresh snapshot of the same content.
+ * Anything else drops like unregistered keys (single-deployment app: it can
+ * only come from crafted input, and a kept row the serializer can never
+ * re-emit would flag the record as dirty forever). characterId 0 stays legal:
+ * it is the reserved team-scope sentinel, mirroring the binary codec. */
 const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
   if (!Array.isArray(rows)) return undefined
   const byKey = new Map<string, AttrRow>()
@@ -54,6 +57,9 @@ const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
       typeof characterId !== 'number' ||
       typeof attrId !== 'number' ||
       typeof value !== 'number' ||
+      (team !== 1 && team !== 2) ||
+      !Number.isInteger(characterId) ||
+      characterId < 0 ||
       !isKnownAttrId(attrId)
     ) {
       continue

@@ -31,14 +31,13 @@
  *    tests legacy `p` behavior.
  * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard import
  *    and its call in decodeMultiGridStateFromUrl.
- * 5. In src/App.vue: remove the runUpgradeStoragePass import, its onMounted
- *    call, and the ordering comment above it.
+ * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
+ *    in the setup block, and the ordering comment above it.
  * 6. In src/utils/binaryEncoder.ts: remove the bit-1 legacy branch in
- *    decodeFromBinary, the LEGACY_PARAGON_* constants, and the two "legacy
- *    paragon" format-spec notes; extended-flags bit 1 is then free for
- *    future reuse.
- * 7. Trim shim mentions from docs/architecture/URL_SERIALIZATION.md and
- *    TEAMS.md.
+ *    decodeFromBinary (including the hasLegacyParagon flag it sets and
+ *    reads), the LEGACY_PARAGON_* constants, and the two "legacy paragon"
+ *    format-spec notes; extended-flags bit 1 is then free for future reuse.
+ * 7. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
  * 8. The stargazer.migration.u marker key stays behind in user storage as
  *    accepted residue (like gridInfoMigration's deliberate key duplication).
  * 9. Verify: `grep -ri upgrademigration src tests` returns nothing, then
@@ -86,9 +85,13 @@ export function convertLegacyBoard(board: Record<string, unknown>): void {
     if (typeof team !== 'number' || typeof characterId !== 'number' || typeof level !== 'number') {
       continue
     }
-    if (!Number.isFinite(team) || !Number.isFinite(characterId) || !Number.isFinite(level)) continue
+    if ((team !== 1 && team !== 2) || !Number.isInteger(characterId) || characterId < 1) continue
+    if (!Number.isFinite(level)) continue
     const value = clampAttr(1, level)
+    // Last-wins includes a trailing default: the old format's sequential
+    // setParagon ended wherever the final entry landed, zero included.
     if (value > 0) byHero.set(`${team}:${characterId}`, [team, characterId, 1, value])
+    else byHero.delete(`${team}:${characterId}`)
   }
   if (byHero.size > 0) {
     board.u = [...byHero.values()].sort(compareAttrRows)
