@@ -412,10 +412,13 @@ const hoveredStat = computed(
   font-weight: 800;
   letter-spacing: 0.02em;
 }
+/* Vertical padding is asymmetric on purpose: at line-height 1 the font's
+   descender space hangs below the baseline, and P/R levels never use it, so
+   symmetric padding reads as the glyphs floating high. */
 .useg {
   flex: 1 1 0;
   min-width: 17px;
-  padding: 2px 3px;
+  padding: 2.4px 3px 1.6px;
   text-align: center;
   color: #4a463d;
 }
@@ -423,7 +426,7 @@ const hoveredStat = computed(
    near-circle around its two characters. */
 .useg:only-child {
   min-width: 30px;
-  padding: 2px 6px;
+  padding: 2.4px 6px 1.6px;
 }
 .useg.max {
   color: #fff;
@@ -461,11 +464,11 @@ const hoveredStat = computed(
   }
   .useg {
     min-width: 21px;
-    padding: 2.5px 4px;
+    padding: 3px 4px 2px;
   }
   .useg:only-child {
     min-width: 36px;
-    padding: 2.5px 7px;
+    padding: 3px 7px 2px;
   }
 }
 </style>
