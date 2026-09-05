@@ -15,7 +15,7 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   context: GridContext
-  // Badge layers (display); the armed-layer selection decides which of the
+  // Pill layers (display); the armed-layer selection decides which of the
   // visible layers portrait taps edit. Off, the panel is portraits and names.
   showParagon: boolean
   showRefinement?: boolean
@@ -69,8 +69,8 @@ const visibleAttrIds = computed(() => [
   ...(props.showRefinement ? [ATTR_REFINEMENT] : []),
 ])
 
-// A hidden badge layer is never edited: taps act on armed ∩ visible (falling
-// back to the visible layers), and with no layer visible they no-op.
+// A hidden layer is never edited: taps act on armed ∩ visible (falling back
+// to the visible layers), and with no layer visible they no-op.
 const editLayers = computed(() => (props.readonly ? [] : effectiveLayers(visibleAttrIds.value)))
 const canEdit = computed(() => editLayers.value.length > 0)
 
@@ -205,10 +205,8 @@ const hoveredStat = computed(
           :title="canEdit ? i18n.t('app.upgrade-cycle') : undefined"
           @click="canEdit && cycle(side.team, hero)"
         >
-          <span class="portrait-wrap">
-            <span class="portrait">
-              <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
-            </span>
+          <span class="portrait">
+            <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
           </span>
           <span
             v-if="showParagon || showRefinement"
@@ -359,13 +357,6 @@ const hoveredStat = computed(
   background: none;
   cursor: pointer;
   font: inherit;
-}
-/* A size container so the corner badges can scale with the column-driven icon. */
-.portrait-wrap {
-  container-type: inline-size;
-  position: relative;
-  width: 100%;
-  line-height: 0;
 }
 /* Oversized image centered in an overflow-clipped circle (mirrors CharacterIcon)
    so the portrait frames the face instead of sitting too high. The circle fills its
