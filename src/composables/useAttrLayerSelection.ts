@@ -8,7 +8,7 @@
  * The selection is a set, not an enum (both layers armed = edit both), with
  * two guards: the last armed layer can't be disarmed, and the *effective*
  * layers are the armed set intersected with the pref-visible layers — a
- * hidden badge layer must never be silently edited. When the intersection is
+ * hidden layer must never be silently edited. When the intersection is
  * empty, the visible layers act as armed (so taps keep working when the
  * armed layer's pref is toggled off); with nothing visible, editing no-ops.
  */
