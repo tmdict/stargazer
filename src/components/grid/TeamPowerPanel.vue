@@ -111,15 +111,22 @@ const cycle = (team: Team, hero: PanelHero): void => {
   }
 }
 
-// Color marks max only; every other level shares the quiet gray, so the pill
-// stays calm and a maxed hero pops. When both layers show, the fills meet in
-// a slanted seam; a single visible layer renders as a one-color chip.
+// Paragon colors max only; refinement warms up in two steps (0-1 gray,
+// 2-3 light tint, 4 full red) so mid progress shows without stealing the
+// maxed pop. When both layers show, the fills meet in a slanted seam; a
+// single visible layer renders as a one-color chip.
 const PILL_GRAY = '#cfc8bb'
 const PILL_MAX_P = '#8fa7c8'
-const PILL_MAX_R = '#e89b91'
+const PILL_MID_R = '#f0bcae'
+const PILL_MAX_R = '#e4938a'
 const pillBackground = (hero: PanelHero): string => {
   const pFill = hero.paragon >= attrMax(ATTR_PARAGON) ? PILL_MAX_P : PILL_GRAY
-  const rFill = hero.refinement >= attrMax(ATTR_REFINEMENT) ? PILL_MAX_R : PILL_GRAY
+  const rFill =
+    hero.refinement >= attrMax(ATTR_REFINEMENT)
+      ? PILL_MAX_R
+      : hero.refinement >= 2
+        ? PILL_MID_R
+        : PILL_GRAY
   if (props.showParagon && props.showRefinement) {
     // The white sliver keeps the slanted split visible even when both halves
     // share the gray, so the pill reads the same at every level combination.
