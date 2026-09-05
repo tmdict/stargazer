@@ -111,7 +111,22 @@ const cycle = (team: Team, hero: PanelHero): void => {
   }
 }
 
-const badgeRung = (attrId: number): boolean => canEdit.value && editLayers.value.includes(attrId)
+// Color marks max only; every other level shares the quiet gray, so the pill
+// stays calm and a maxed hero pops. When both layers show, the fills meet in
+// a slanted seam; a single visible layer renders as a one-color chip.
+const PILL_GRAY = '#cfc8bb'
+const PILL_MAX_P = '#8fa7c8'
+const PILL_MAX_R = '#e89b91'
+const pillBackground = (hero: PanelHero): string => {
+  const pFill = hero.paragon >= attrMax(ATTR_PARAGON) ? PILL_MAX_P : PILL_GRAY
+  const rFill = hero.refinement >= attrMax(ATTR_REFINEMENT) ? PILL_MAX_R : PILL_GRAY
+  if (props.showParagon && props.showRefinement) {
+    // The white sliver keeps the slanted split visible even when both halves
+    // share the gray, so the pill reads the same at every level combination.
+    return `linear-gradient(112deg, ${pFill} 48.6%, #fff 49.4%, #fff 50.6%, ${rFill} 51.4%)`
+  }
+  return props.showParagon ? pFill : rFill
+}
 
 const heroAria = (hero: PanelHero): string => {
   const parts = [hero.name]
@@ -189,18 +204,17 @@ const hoveredStat = computed(
             <span class="portrait">
               <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
             </span>
-            <span
-              v-if="showParagon"
-              class="pbadge pb-p"
-              :class="{ 'max-p': hero.paragon >= 4, ring: badgeRung(ATTR_PARAGON) }"
-            >
+          </span>
+          <span
+            v-if="showParagon || showRefinement"
+            class="upill"
+            :class="{ armed: canEdit }"
+            :style="{ background: pillBackground(hero) }"
+          >
+            <span v-if="showParagon" class="useg" :class="{ max: hero.paragon >= 4 }">
               P{{ hero.paragon }}
             </span>
-            <span
-              v-if="showRefinement"
-              class="pbadge pb-r"
-              :class="{ 'max-r': hero.refinement >= 4, ring: badgeRung(ATTR_REFINEMENT) }"
-            >
+            <span v-if="showRefinement" class="useg" :class="{ max: hero.refinement >= 4 }">
               R{{ hero.refinement }}
             </span>
           </span>
@@ -375,41 +389,34 @@ const hoveredStat = computed(
 .hero.static:hover .portrait {
   transform: none;
 }
-/* Sized in cqw (a share of the icon width) so it stays a corner badge as the icon
-   scales, with px floors that keep the text legible on the smallest boards.
-   Color means "maxed", nothing else: every other level shares the quiet gray. */
-.pbadge {
-  position: absolute;
-  top: -3px;
-  min-width: max(14px, 36cqw);
-  height: max(14px, 36cqw);
-  padding: 0 3px;
+/* The upgrade pill seats on the portrait's bottom edge (no corner overhang, so
+   neighboring heroes can never collide) with the numbers centered per half. */
+.upill {
+  display: inline-flex;
   border-radius: 999px;
-  font-size: max(7px, 19cqw);
+  overflow: hidden;
+  border: 1.5px solid #fff;
+  margin-top: -7px;
+  position: relative;
+  z-index: 1;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+  line-height: 1;
+  font-size: 7.5px;
   font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 2px solid #fff;
-  background: #cfc8bb;
+  letter-spacing: 0.02em;
+}
+.useg {
+  flex: 1 1 0;
+  min-width: 17px;
+  padding: 2px 3px;
+  text-align: center;
   color: #4a463d;
 }
-.pbadge.pb-p {
-  left: -3px;
-}
-.pbadge.pb-r {
-  right: -3px;
-}
-.pbadge.max-p {
-  background: #8fa7c8;
+.useg.max {
   color: #fff;
 }
-.pbadge.max-r {
-  background: var(--color-tier-3);
-  color: #fff;
-}
-/* The armed edit layer(s): the ring says which badges portrait taps change. */
-.pbadge.ring {
+/* Armed for editing: the pill rings; which layer(s) is the dock selector's job. */
+.upill.armed {
   outline: 2px solid var(--color-primary);
 }
 .hero-name {
@@ -434,6 +441,14 @@ const hoveredStat = computed(
   }
   .hero-name {
     display: block;
+  }
+  .upill {
+    font-size: 9px;
+    margin-top: -9px;
+  }
+  .useg {
+    min-width: 21px;
+    padding: 2.5px 4px;
   }
 }
 </style>
