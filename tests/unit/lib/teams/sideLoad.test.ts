@@ -77,7 +77,7 @@ describe('savedTeamSide', () => {
 })
 
 describe('buildSideLoadPlan', () => {
-  it('maps mains with paragon, bands the phantimal and synergy hero, carries companions', () => {
+  it('maps mains with their attr records, bands the phantimal and synergy hero, carries companions', () => {
     const plan = buildSideLoadPlan(encode(ALLY_RECORD), true)!
     expect(plan.side).toBe(Team.ALLY)
     expect(plan.boards).toHaveLength(1)

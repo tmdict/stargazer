@@ -1,4 +1,4 @@
-import { ATTR_PARAGON } from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
@@ -122,12 +122,13 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(restored.artifact.enemyArtifactId).toBe(5)
   })
 
-  it('round-trips paragon levels into the restored board', () => {
+  it('round-trips upgrade attrs into the restored board', () => {
     const source = createStores()
     const sourceGrids = useGrids()
     expect(source.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
     expect(source.character.placeCharacterOnHex(40, ENEMY_A, Team.ENEMY)).toBe(true)
     sourceGrids.active!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 4)
+    sourceGrids.active!.setAttr(Team.ALLY, ALLY_A, ATTR_REFINEMENT, 3)
     sourceGrids.active!.setAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON, 2)
 
     const encoded = encodeGridStateToUrl(
@@ -143,7 +144,10 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     const target = createStores()
     const targetGrids = useGrids()
     expect(target.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+    // Both attrs of a two-key record survive: restore merges per-row setAttr
+    // calls into one record rather than replacing it.
     expect(targetGrids.active!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(4)
+    expect(targetGrids.active!.getAttr(Team.ALLY, ALLY_A, ATTR_REFINEMENT)).toBe(3)
     expect(targetGrids.active!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(2)
     // A hero with no stored level defaults to 0.
     expect(targetGrids.active!.getAttr(Team.ALLY, ALLY_B, ATTR_PARAGON)).toBe(0)

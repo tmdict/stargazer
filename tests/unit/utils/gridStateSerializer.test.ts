@@ -36,17 +36,18 @@ describe('gridStateSerializer', () => {
       expect(result).toEqual({})
     })
 
-    it('serializes paragon for base heroes, skipping zero, companions, and phantimals', () => {
+    it('serializes upgrade attrs for base heroes, skipping defaults, companions, and phantimals', () => {
       const companionId = COMPANION_ID_OFFSET + 100
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
-        createMockTile(2, State.OCCUPIED_ALLY, 101, Team.ALLY), // left at level 0
+        createMockTile(2, State.OCCUPIED_ALLY, 101, Team.ALLY),
         createMockTile(3, State.OCCUPIED_ENEMY, 200, Team.ENEMY),
         createMockTile(4, State.OCCUPIED_ALLY, companionId, Team.ALLY), // companion
         createMockTile(5, State.OCCUPIED_ALLY, toPhantimalId(1), Team.ALLY), // phantimal
       ]
       const records = new Map<string, AttrRecord>([
         [`${Team.ALLY}:100`, { 1: 4, 2: 1 }],
+        [`${Team.ALLY}:101`, { 1: 0 }], // explicit default: no row
         [`${Team.ENEMY}:200`, { 1: 2 }],
         [`${Team.ALLY}:${companionId}`, { 1: 3 }],
         [`${Team.ALLY}:${toPhantimalId(1)}`, { 1: 3 }],
