@@ -47,11 +47,6 @@ export const clampAttr = (attrId: number, value: number): number => {
  * default. Treated as a value object: transfers move the whole record. */
 export type AttrRecord = Record<number, number>
 
-export const emptyAttrs = (): AttrRecord => ({})
-
-export const attrsAreDefault = (attrs: AttrRecord): boolean =>
-  Object.entries(attrs).every(([id, value]) => value === attrDefault(Number(id)))
-
 /* A serialized `u` row. */
 export type AttrRow = [team: Team, characterId: number, attrId: number, value: number]
 

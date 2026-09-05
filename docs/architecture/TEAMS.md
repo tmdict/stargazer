@@ -55,6 +55,10 @@ The grid panel: a document-style title line, a two-row control bar (`GridControl
 - **Wrap**: the 3-2 two-row boards layout; rendered for 5-board modes on desktop only (every consumer gates on `canWrap` / board count, so the preference survives visits to non-wrap modes), serialized with the display flags
 - **Syn**: the friend-assist toggle (see [Grid](./GRID.md), unit id namespaces); offered only on modes with `allowSynergy` (1v1), and never serialized: it is derived from board content on every restore, and unchecking removes the placed synergy units
 
+### TeamPowerDock (`/src/components/grid/TeamPowerDock.vue`)
+
+Each board's upgrade-edit bar, mounted beside the hero panel under the same `info.heroCard && !readonly` gate (in `GridBoard` on Teams, directly in `HomeView` on the Arena; ShareView renders none). Per-team clear and bulk buttons (reset / max / +1) flank a centered P/R layer selector, so destructive and bulk actions always sit next to the heroes they change; the enemy cluster hides under team view and an empty side's buttons disable. The armed layer selection itself is one page-global set (`/src/composables/useAttrLayerSelection.ts`, a module singleton like `useSelectionState`): a chip toggled on any dock flips every dock and panel, the last armed layer can't be disarmed, and portrait taps edit armed ∩ visible (falling back to the visible layers) so a layer hidden by the Grid Info toggles is never silently edited. Chip clicks act on that displayed effective set — the click's result replaces the armed set, so the lit chips always equal what taps will edit.
+
 ### TeamModePicker (`/src/components/teams/TeamModePicker.vue`)
 
 Segmented `aria-pressed` toggle buttons in `TEAM_MODE_ORDER`, slotted at the head of the toggles row.

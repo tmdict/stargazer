@@ -21,17 +21,25 @@ const armed = reactive(new Set<number>([ATTR_PARAGON]))
 
 export function useAttrLayerSelection(): {
   isArmed: (attrId: number) => boolean
-  toggle: (attrId: number) => void
+  toggle: (attrId: number, visible: number[]) => void
   effectiveLayers: (visible: number[]) => number[]
 } {
   const isArmed = (attrId: number): boolean => armed.has(attrId)
 
-  const toggle = (attrId: number): void => {
-    if (armed.has(attrId)) {
-      if (armed.size > 1) armed.delete(attrId)
-    } else {
-      armed.add(attrId)
-    }
+  // Clicks act on the effective (displayed) set, not the raw armed set: with
+  // a pref toggled off the two can diverge, and toggling raw state behind a
+  // fallback-lit chip would visibly do nothing while arming hidden layers.
+  // The click's result replaces the whole set, so what the chips show is
+  // exactly what is armed afterward.
+  const toggle = (attrId: number, visible: number[]): void => {
+    const effective = effectiveLayers(visible)
+    const next = effective.includes(attrId)
+      ? effective.length > 1
+        ? effective.filter((id) => id !== attrId)
+        : effective
+      : [...effective, attrId]
+    armed.clear()
+    for (const id of next) armed.add(id)
   }
 
   const effectiveLayers = (visible: number[]): number[] => {

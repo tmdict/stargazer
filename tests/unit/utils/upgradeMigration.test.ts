@@ -110,6 +110,21 @@ describe('upgradeMigration convertLegacyBoard', () => {
     ])
   })
 
+  // The old format was applied by sequential setParagon calls, so a duplicate
+  // ending at 0 ended at 0 — last-wins must include the trailing default.
+  it('dedupes to the trailing default: a final zero deletes the row', () => {
+    const board: Record<string, unknown> = {
+      p: [
+        [Team.ALLY, 11, 3],
+        [Team.ALLY, 11, 0],
+        [3, 12, 2], // team outside {1, 2}: dropped
+        [Team.ALLY, 12.5, 2], // non-integer characterId: dropped
+      ],
+    }
+    convertLegacyBoard(board)
+    expect(board.u).toBeUndefined()
+  })
+
   it('always deletes p, and never touches an existing u', () => {
     const board: Record<string, unknown> = { p: [[Team.ALLY, 11, 3]], u: [[Team.ALLY, 11, 1, 1]] }
     convertLegacyBoard(board)

@@ -1,4 +1,4 @@
-import { ATTR_PARAGON } from '@/lib/characters/attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -124,5 +124,20 @@ describe('createGridContext paragon re-keying', () => {
     expect(ctx.getAttr(Team.ALLY, DUMMY_2, ATTR_PARAGON)).toBe(4)
     expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
     expect(ctx.getAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON)).toBe(0)
+  })
+
+  it('clearTeam wipes every attr for that team only', () => {
+    const ctx = setup()
+    expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
+    expect(ctx.place(40, DUMMY_2, Team.ENEMY)).toBe(true)
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 2)
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_REFINEMENT, 3)
+    ctx.setAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON, 4)
+
+    ctx.clearTeam(Team.ALLY)
+
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_REFINEMENT)).toBe(0)
+    expect(ctx.getAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON)).toBe(4)
   })
 })
