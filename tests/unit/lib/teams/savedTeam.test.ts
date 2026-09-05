@@ -56,6 +56,49 @@ describe('canonicalTeamData', () => {
     expect(canonicalTeamData(encode({ boards: [] }))).toBeNull()
     error.mockRestore()
   })
+
+  // The byte-equality guarantee (unsaved-changes compare, import dedupe) rests
+  // on canonical `u` rows matching what a fresh serialize of the restored
+  // content would emit, so crafted rows must normalize, not survive.
+  it('normalizes u rows: drops junk, clamps, dedupes last-wins, sorts', () => {
+    const crafted = encode({
+      boards: [
+        {
+          m: 'arena1',
+          c: [
+            [1, 11, Team.ALLY],
+            [2, 12, Team.ALLY],
+          ],
+          u: [
+            [1, 12, 2, 3], // out of comparator order vs the row below
+            [1, 11, 99, 4], // unknown attrId
+            [3, 11, 1, 4], // team outside {1, 2}
+            [1, 11.5, 1, 4], // non-integer characterId
+            [1, -2, 1, 4], // negative characterId
+            [1, 11, 1, 99], // clamps to max
+            [1, 12, 1, 3],
+            [1, 12, 1, 0], // duplicate ending at default: row drops
+          ],
+        },
+        { m: 'arena2' },
+        { m: 'arena3' },
+      ],
+      mode: '3v3',
+    })
+    const decoded = decodeMultiGridStateFromUrl(canonicalTeamData(crafted)!)!
+    expect(decoded.boards[0]!.u).toEqual([
+      [1, 11, 1, 4],
+      [1, 12, 2, 3],
+    ])
+  })
+
+  it('omits u entirely when every row normalizes away', () => {
+    const crafted = encode({
+      boards: [{ m: 'arena1', u: [[1, 11, 99, 4]] }, { m: 'arena2' }, { m: 'arena3' }],
+      mode: '3v3',
+    })
+    expect(decodeMultiGridStateFromUrl(canonicalTeamData(crafted)!)!.boards[0]!.u).toBeUndefined()
+  })
 })
 
 describe('team naming', () => {
