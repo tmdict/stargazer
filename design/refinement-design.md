@@ -43,10 +43,17 @@ Rules:
 - Ids are named exports (`ATTR_PARAGON = 1`, `ATTR_REFINEMENT = 2`).
 - Each entry declares its range and default; the serializer emits only non-default
   values (sparse).
-- **Clamp lives in exactly two places**: the state layer (`setAttr`, generalizing
-  today's `setParagon` clamp at `useGridContext.ts:201`) for the JSON multi-board
-  path, and `validateGridState` for the binary codec. `canonicalTeamData` never
-  clamps — no third clamp site.
+- **Clamp lives at every trust boundary**: the state layer (`setAttr`,
+  generalizing today's `setParagon` clamp at `useGridContext.ts:201`),
+  `validateGridState` for the binary codec, and `canonicalTeamData` — whose
+  clamp is *normalizing*, not defensive: canonical bytes must equal what a
+  fresh serialize of the restored content emits, and restore clamps via
+  `setAttr`, so an unclamped canonical row would flag the record dirty
+  forever. (Amends the earlier "no third clamp site" rule, which contradicted
+  the byte-equality invariant.) The same normalization drops rows with a team
+  outside {1, 2} or a non-integer characterId, and the binary validator
+  dedupes last-wins with defaults dropped — light guardrails against crafted
+  payloads, not a validation layer.
 - **Unknown attrIds are dropped everywhere** — restore ignores them (never
   stored, never thrown), the binary codec drops them (the wire-attrId pin
   below), and `canonicalTeamData` drops them like any other unregistered
