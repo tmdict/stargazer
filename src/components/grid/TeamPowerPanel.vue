@@ -117,7 +117,7 @@ const cycle = (team: Team, hero: PanelHero): void => {
 // single visible layer renders as a one-color chip.
 const PILL_GRAY = '#cfc8bb'
 const PILL_MAX_P = '#8fa7c8'
-const PILL_MID_R = '#f0bcae'
+const PILL_MID_R = '#f5cdc2'
 const PILL_MAX_R = '#e4938a'
 const pillBackground = (hero: PanelHero): string => {
   const pFill = hero.paragon >= attrMax(ATTR_PARAGON) ? PILL_MAX_P : PILL_GRAY
@@ -419,6 +419,12 @@ const hoveredStat = computed(
   text-align: center;
   color: #4a463d;
 }
+/* A lone visible layer keeps pill proportions instead of shrinking to a
+   near-circle around its two characters. */
+.useg:only-child {
+  min-width: 30px;
+  padding: 2px 6px;
+}
 .useg.max {
   color: #fff;
 }
@@ -456,6 +462,10 @@ const hoveredStat = computed(
   .useg {
     min-width: 21px;
     padding: 2.5px 4px;
+  }
+  .useg:only-child {
+    min-width: 36px;
+    padding: 2.5px 7px;
   }
 }
 </style>
