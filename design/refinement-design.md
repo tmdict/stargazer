@@ -299,8 +299,8 @@ needs no change (reads unit sections only).
 Corner badges collided between neighboring heroes on 5v5 boards, so both
 layers render in a **single slanted split pill seated on the portrait's
 bottom edge** (`.upill` in `TeamPowerPanel.vue`): `inline-flex`,
-`border-radius: 999px`, **1.5px white border**, `margin-top: -7px`, the
-armed ring an `outline` outside the border. `font-size: 7.5px` base,
+`border-radius: 999px`, **1.5px white border**, `margin-top: -7px`.
+`font-size: 7.5px` base,
 bumped to 9px at the ≥480px container tier.
 
 - **P half left, R half right**, halves split by a 112° slanted seam built
@@ -407,9 +407,11 @@ Layout per dock, selector centered:
 
 ### Armed-layer feedback (neutral)
 
-No per-layer colors. Two signals, both in the app's default accent: the armed
-selector chip renders filled (both in ALL), and the corresponding badges get a
-2px ring (both sets in ALL). Bulk chips keep their neutral resting style.
+No per-layer colors. One signal, in the app's default accent: the armed
+selector chip renders filled (both in ALL). The pills stay plain labels —
+no armed ring (owner decision after seeing both live: the ring only said
+"editable", not which layer, and the calmer panel won). Bulk chips keep
+their neutral resting style.
 
 ### Edit semantics
 
@@ -480,7 +482,7 @@ comments in `useGridContext.ts:189-195, 291, 327, 408-411`,
 | `src/composables/useAttrLayerSelection.ts` | **New.** Module-singleton armed set per §4 (default `{P}`, effective = armed ∩ visible, last-lit guard, test-reset export). |
 | `src/composables/useGridInfoPrefs.ts` | `refinement` key (+`GRID_INFO_NONE`), parent under `heroCard`. |
 | `src/components/grid/GridInfoToggle.vue` | Checklist row (`:42` pattern). |
-| `src/components/grid/TeamPowerPanel.vue` | Restructure per §4 budget: head → stat only; slanted split pill (supersedes corner badges), new palette; tap editing per effective layer(s); armed rings. |
+| `src/components/grid/TeamPowerPanel.vue` | Restructure per §4 budget: head → stat only; slanted split pill (supersedes corner badges), new palette; tap editing per effective layer(s). |
 | `src/components/grid/TeamPowerDock.vue` | **New.** Per-board dock per §4: trash (armed confirm + gesture clearing) + per-side clusters (teamView/empty-side matrix) + centered selector + narrow-width collapse tier. |
 | `src/components/grid/GridBoard.vue` | Mount dock beside the panel (`:72`, same `info.heroCard && !readonly` gate); thread the refinement view flag (also via `TeamsBoards.vue`). |
 | `src/views/HomeView.vue` | **Mount `TeamPowerDock`** beside the Arena panel (`:305-309`), same gate; thread `refinement` flag (`:308`). |
@@ -578,7 +580,8 @@ legacy test blocks; confirmed slice 1 as one PR.
   a near-circle.
 - **Selector**: V2 independent P/R toggle chips (both lit = ALL).
 - **Control colors**: neutral — no per-layer tinting; armed feedback is the
-  filled selector chip + badge rings only.
+  filled selector chip alone (the pill's armed ring was dropped after live
+  review: it read as "editable", not "which layer").
 - **Locale**: zh 精炼.
 - **Serialization: generic `u` key** — chosen over a sibling `r` key with the
   trade-offs re-examined under the temporary-shim policy; future extensibility
