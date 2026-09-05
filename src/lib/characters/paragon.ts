@@ -6,7 +6,9 @@
  * (P0 is not "off" for them) with a shallower step, and both ramps converge to
  * the same value at PARAGON_MAX_LEVEL. */
 
-export const PARAGON_MAX_LEVEL = 4
+import { ATTR_PARAGON, attrMax } from './attributes'
+
+export const PARAGON_MAX_LEVEL = attrMax(ATTR_PARAGON)
 
 export interface ParagonHero {
   level: number

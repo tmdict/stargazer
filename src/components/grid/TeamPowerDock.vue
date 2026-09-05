@@ -38,8 +38,10 @@ const layerChips = computed(() => [
 
 // Bulk actions and the lit chips both follow the effective set, so what the
 // dock shows armed is exactly what it will edit.
-const editLayers = computed(() => effectiveLayers(layerChips.value.map((chip) => chip.attrId)))
+const visibleAttrIds = computed(() => layerChips.value.map((chip) => chip.attrId))
+const editLayers = computed(() => effectiveLayers(visibleAttrIds.value))
 const chipLit = (attrId: number): boolean => editLayers.value.includes(attrId)
+const toggleChip = (attrId: number): void => toggle(attrId, visibleAttrIds.value)
 
 const realHeroIds = (team: Team): number[] =>
   getTilesWithCharactersByTeam(props.context.grid, team)
@@ -195,7 +197,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
         :aria-pressed="chipLit(chip.attrId)"
         :aria-label="i18n.t(chip.name)"
         :title="i18n.t(chip.name)"
-        @click="toggle(chip.attrId)"
+        @click="toggleChip(chip.attrId)"
       >
         {{ chip.label }}
       </button>

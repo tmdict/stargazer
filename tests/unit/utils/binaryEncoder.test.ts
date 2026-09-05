@@ -242,6 +242,31 @@ describe('binaryEncoder', () => {
         expect(bytes).not.toBeNull()
         expect(decodeFromBinary(bytes!)).toEqual(GOLDEN_STATE)
       })
+
+      // Pins the section ORDER (upgrades after synergy): a coordinated
+      // encoder+decoder reorder would pass every round-trip test while
+      // silently breaking existing links that carry both sections.
+      const GOLDEN_SECTIONS_STATE: GridState = {
+        t: [[1, 2]],
+        c: [[2, 100, 1]],
+        s: [[7, 2, 2]],
+        y: [[9, 3, 1]],
+        u: [
+          [1, 100, 1, 4],
+          [2, 200, 2, 3],
+        ],
+      }
+      const GOLDEN_SECTIONS_ENCODED = 'iUyBBDIAcchIBgAIyAACigwgDA'
+
+      it('encodes the synergy + upgrades state to the frozen string', () => {
+        expect(bytesToUrlSafe(encodeToBinary(GOLDEN_SECTIONS_STATE))).toBe(GOLDEN_SECTIONS_ENCODED)
+      })
+
+      it('decodes the synergy + upgrades frozen string back to the state', () => {
+        const bytes = urlSafeToBytes(GOLDEN_SECTIONS_ENCODED)
+        expect(bytes).not.toBeNull()
+        expect(decodeFromBinary(bytes!)).toEqual(GOLDEN_SECTIONS_STATE)
+      })
     })
 
     describe('validation and filtering', () => {
@@ -353,6 +378,33 @@ describe('binaryEncoder', () => {
       }
       const result = validateGridState(state)
       expect(result.s).toHaveLength(15)
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    // A value past the registry range must clamp before writeBits sees it: the
+    // 4-bit field would otherwise truncate (17 → 1), corrupting the wire.
+    it('normalizes upgrade rows: drops junk teams/attrIds, clamps values, dedupes last-wins', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const state: GridState = {
+        u: [
+          [3, 11, 1, 2], // team outside {1, 2}
+          [1, 11, 99, 2], // unknown attrId
+          [1, 11, 1, 17], // clamps to registry max
+          [1, 12, 2, 3],
+          [1, 12, 2, 0], // duplicate ending at default: row drops
+        ],
+      }
+      expect(validateGridState(state).u).toEqual([[1, 11, 1, 4]])
+      consoleSpy.mockRestore()
+    })
+
+    it('caps upgrade entries at the 6-bit count limit (63)', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const state: GridState = {
+        u: Array.from({ length: 64 }, (_, i) => [(i % 2) + 1, i + 1, (i % 2) + 1, 3]),
+      }
+      expect(validateGridState(state).u).toHaveLength(63)
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })

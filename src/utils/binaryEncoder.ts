@@ -1,4 +1,5 @@
 import {
+  attrDefault,
   clampAttr,
   compareAttrRows,
   isKnownAttrId,
@@ -237,21 +238,30 @@ export function validateGridState(state: GridState): GridState {
 
   // Validate upgrade rows: team 1-2, charId 0-65535 (0 = team-scope sentinel),
   // known attrId; values clamp to the registry range rather than dropping.
+  // Deduped last-wins with defaults dropped — mirrors canonicalAttrRows, so a
+  // crafted link carrying duplicate or zero rows can't burn the 63-row cap or
+  // persist junk through the arena autosave's decode/re-encode.
   if (state.u && Array.isArray(state.u)) {
-    let validUpgrades = state.u.filter((entry) => {
+    const byKey = new Map<string, [number, number, number, number]>()
+    for (const entry of state.u) {
       const [team, charId, attrId] = entry
-      const isValid =
-        (team === 1 || team === 2) &&
-        charId != null &&
-        charId >= 0 &&
-        charId <= MAX_CHARACTER_ID &&
-        attrId != null &&
-        isKnownAttrId(attrId)
-      if (!isValid) {
+      if (
+        (team !== 1 && team !== 2) ||
+        charId == null ||
+        charId < 0 ||
+        charId > MAX_CHARACTER_ID ||
+        attrId == null ||
+        !isKnownAttrId(attrId)
+      ) {
         console.warn('Invalid upgrade entry:', entry)
+        continue
       }
-      return isValid
-    })
+      const value = clampAttr(attrId, entry[3] ?? 0)
+      const key = `${team}:${charId}:${attrId}`
+      if (value !== attrDefault(attrId)) byKey.set(key, [team, charId, attrId, value])
+      else byKey.delete(key)
+    }
+    let validUpgrades = [...byKey.values()]
     // Cap at the count field's maximum so the encoded count can't wrap.
     if (validUpgrades.length > MAX_UPGRADE_COUNT) {
       console.warn(
@@ -260,12 +270,7 @@ export function validateGridState(state: GridState): GridState {
       validUpgrades = validUpgrades.slice(0, MAX_UPGRADE_COUNT)
     }
     if (validUpgrades.length > 0) {
-      validated.u = validUpgrades.map((entry) => [
-        entry[0]!,
-        entry[1]!,
-        entry[2]!,
-        clampAttr(entry[2]!, entry[3] ?? 0),
-      ])
+      validated.u = validUpgrades
     }
   }
 

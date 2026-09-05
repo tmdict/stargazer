@@ -119,14 +119,12 @@ const PILL_GRAY = '#cfc8bb'
 const PILL_MAX_P = '#8fa7c8'
 const PILL_MID_R = '#f5cdc2'
 const PILL_MAX_R = '#e4938a'
+const MAX_PARAGON = attrMax(ATTR_PARAGON)
+const MAX_REFINEMENT = attrMax(ATTR_REFINEMENT)
 const pillBackground = (hero: PanelHero): string => {
-  const pFill = hero.paragon >= attrMax(ATTR_PARAGON) ? PILL_MAX_P : PILL_GRAY
+  const pFill = hero.paragon >= MAX_PARAGON ? PILL_MAX_P : PILL_GRAY
   const rFill =
-    hero.refinement >= attrMax(ATTR_REFINEMENT)
-      ? PILL_MAX_R
-      : hero.refinement >= 2
-        ? PILL_MID_R
-        : PILL_GRAY
+    hero.refinement >= MAX_REFINEMENT ? PILL_MAX_R : hero.refinement >= 2 ? PILL_MID_R : PILL_GRAY
   if (props.showParagon && props.showRefinement) {
     // The white sliver keeps the slanted split visible even when both halves
     // share the gray, so the pill reads the same at every level combination.
@@ -218,10 +216,14 @@ const hoveredStat = computed(
             :class="{ armed: canEdit }"
             :style="{ background: pillBackground(hero) }"
           >
-            <span v-if="showParagon" class="useg" :class="{ max: hero.paragon >= 4 }">
+            <span v-if="showParagon" class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
               P{{ hero.paragon }}
             </span>
-            <span v-if="showRefinement" class="useg" :class="{ max: hero.refinement >= 4 }">
+            <span
+              v-if="showRefinement"
+              class="useg"
+              :class="{ max: hero.refinement >= MAX_REFINEMENT }"
+            >
               R{{ hero.refinement }}
             </span>
           </span>
