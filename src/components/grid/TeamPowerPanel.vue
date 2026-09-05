@@ -213,7 +213,6 @@ const hoveredStat = computed(
           <span
             v-if="showParagon || showRefinement"
             class="upill"
-            :class="{ armed: canEdit }"
             :style="{ background: pillBackground(hero) }"
           >
             <span v-if="showParagon" class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
@@ -283,20 +282,21 @@ const hoveredStat = computed(
   min-height: 28px;
   margin-bottom: var(--spacing-md);
 }
-/* Mirror the sides: each stat sits at its block's outer edge. */
+/* Mirror the sides: each stat sits at its block's outer edge, number
+   outermost, caption toward the center seam. */
 .tp-block.enemy .tp-head {
   justify-content: flex-end;
 }
 .tp-block.enemy .stat {
-  align-items: flex-end;
+  flex-direction: row-reverse;
 }
 
-/* Number over caption: stacked, the stat is only as wide as its longest line. */
+/* Number beside caption on the shared baseline; the head holds nothing else
+   now that editing lives in the dock. */
 .stat {
   display: inline-flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
+  align-items: baseline;
+  gap: var(--spacing-sm);
 }
 /* Subtle: the label is a quiet caption and the tooltip handle, not the headline. */
 .stat-label {
@@ -432,10 +432,6 @@ const hoveredStat = computed(
 }
 .useg.max {
   color: #fff;
-}
-/* Armed for editing: the pill rings; which layer(s) is the dock selector's job. */
-.upill.armed {
-  outline: 2px solid var(--color-primary);
 }
 .hero-name {
   display: none;

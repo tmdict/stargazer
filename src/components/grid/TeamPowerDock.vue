@@ -315,8 +315,8 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 }
 
 /* Centered on the bar's midline; the flanking clusters flow around it. The
-   armed chip's fill (plus the badge rings above) is the whole armed signal —
-   the bulk chips stay neutral regardless of layer. */
+   armed chip's fill is the whole armed signal — the pills stay plain labels
+   and the bulk chips stay neutral regardless of layer. */
 .dock-selector {
   position: absolute;
   left: 50%;
