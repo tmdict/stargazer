@@ -43,7 +43,7 @@ Ids are append-only: reassigning one silently re-routes every existing link.
 
 - **`encodeLink(input)`**: `{ mode, active?, d?, boards }` → bytes. Unknown mode keys throw; a board list disagreeing with the mode's count is padded/trimmed with a warning; entries are pre-filtered by `validateGridState()`
 - **`decodeLink(bytes)`**: bytes → `BinaryLinkState` or null (silent — a failed probe is expected traffic for the universal decoder)
-- **`validateGridState()`**: pre-encoding filter, also used on its own
+- **`validateGridState()`**: the pre-encoding filter (exported for direct testing; `encodeBoard` is its one live caller)
 - **`bytesToUrlSafe()` / `urlSafeToBytes()`**: URL-safe base64 alphabet (`A-Za-z0-9-_`), shared with the JSON interchange encoding
 
 ### Grid State Serializer (`/src/utils/gridStateSerializer.ts`)
@@ -108,7 +108,7 @@ The wire format is frozen by golden-string tests in `tests/unit/utils/binaryEnco
 
 ### Validation & Limits
 
-Before encoding, `validateGridState()` filters invalid entries (with console warnings), so header counts always match the data written — `writeBits` silently truncates oversized values, which would alias them to different IDs on decode:
+Before encoding, `validateGridState()` filters invalid entries (with console warnings), so header counts always match the data written — `writeBits` silently truncates oversized and fractional values alike, which would alias them to different IDs on decode, so every id field also requires an integer:
 
 - **Hex IDs**: 1-63 (6-bit field)
 - **Tile states**: 0-7 (3 bits); tiles capped at 63 entries (6-bit count)

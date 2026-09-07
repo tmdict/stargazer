@@ -63,6 +63,9 @@ import { clampAttr, compareAttrRows, type AttrRow } from '@/lib/characters/attri
 import { resolveTeamMode } from '@/lib/teams/modes'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { readStorage, writeStorage } from '@/utils/storage'
+// Import cycle with urlStateManager (it calls back into this shim): safe
+// because every cross-reference is call-time, but neither module may use the
+// other's exports at module-init level while this file exists.
 import {
   decodeGridStateFromUrl,
   decodeMultiGridStateFromUrl,
