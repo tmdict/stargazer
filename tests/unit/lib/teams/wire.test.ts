@@ -83,6 +83,9 @@ describe('wire registry', () => {
   it('keeps mode and map ids inside their wire fields (3 and 6 bits)', () => {
     for (const mode of WIRE_MODES) {
       expect(mode.wireId).toBeLessThan(8)
+      // The 3-bit active field indexes boards 0-7; a larger mode needs a
+      // format change, not just a registry entry.
+      expect(mode.boardCount).toBeLessThanOrEqual(8)
     }
     for (const id of Object.values(MAP_WIRE_IDS)) {
       expect(id).toBeLessThan(64)
