@@ -125,9 +125,6 @@ const showDebug = computed(() => activeTab.value === 'debug')
 
 const { showSkills, showPerspective, toFlags, applyFlags } = useDisplayFlags()
 
-// First call on this device seeds the pref (and runs gridInfoMigration's
-// legacy byte remap), so it must precede the arena autosave read in onMounted
-// below.
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 
 const debugPanelRef = ref<InstanceType<typeof DebugPanel> | null>(null)
