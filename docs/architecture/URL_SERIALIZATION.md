@@ -77,9 +77,14 @@ All fields are written LSB-first. One envelope, then one header + sections per b
     viewer's device pref (`useGridInfoPrefs`), never carried by a link.
 
 [Per board, in order: Header: 14 bits]
-  - Map id (6 bits): wire.ts registry; 0 = no map; unknown ids reject
+  - Map id (6 bits): wire.ts registry; 0 = no map; unknown ids reject. An
+    arena-mode board carrying any map id rejects (arena boards never encode
+    one — their serialized tiles are authoritative)
   - Section bitmap (8 bits): t=0x01, c=0x02, a=0x04, s=0x08, y=0x10, u=0x20
-    (bits 6-7 spare; a set spare bit rejects)
+    (bits 6-7 spare; a set spare bit rejects). A counted section with a zero
+    count rejects: the encoder never writes an empty section, and both rules
+    exist because short retired-format payloads were observed to misread as
+    plausible near-empty v2 links without them
 
 [Sections, in bitmap-bit order:]
   Tiles      count (6 bits) + 9 bits each: hex ID (6) + state (3)

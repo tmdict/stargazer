@@ -153,7 +153,9 @@ describe('binaryEncoder', () => {
 
     it('encodes an unregistered map key as none, keeping the board content', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const decoded = decodeLink(arenaLink({ m: 'retired-map', t: [[1, 1]] }))
+      const decoded = decodeLink(
+        encodeLink({ mode: '1v1', boards: [{ m: 'retired-map', t: [[1, 1]] }] }),
+      )
       expect(decoded!.boards[0]).toEqual({ t: [[1, 1]] })
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
@@ -212,6 +214,37 @@ describe('binaryEncoder', () => {
         push(0x40, 8) // spare bit 6 set
       })
       expect(decodeLink(bytes)).toBeNull()
+    })
+
+    // The encoder never writes an empty section (validation drops them), and
+    // arena boards never carry a map — both patterns are how short legacy
+    // payloads were observed to misread as plausible v2 links.
+    it('rejects a zero-count section', () => {
+      const bytes = v2Bytes((push) => {
+        push(0, 3) // arena
+        push(0, 3)
+        push(0, 8)
+        push(0, 6)
+        push(0x20, 8) // upgrades section present
+        push(0, 6) // ...with zero rows
+      })
+      expect(decodeLink(bytes)).toBeNull()
+    })
+
+    it('rejects an arena board carrying a map id', () => {
+      const bytes = v2Bytes((push) => {
+        push(0, 3) // arena
+        push(0, 3)
+        push(0, 8)
+        push(1, 6) // arena1 — legal for team modes, never for arena
+        push(0, 8)
+      })
+      expect(decodeLink(bytes)).toBeNull()
+    })
+
+    it('strips a crafted map from an arena board on encode', () => {
+      const decoded = decodeLink(arenaLink({ m: 'arena1', t: [[1, 1]] }))
+      expect(decoded!.boards[0]).toEqual({ t: [[1, 1]] })
     })
 
     // The full-consumption rule: trailing content beyond the mode's boards

@@ -287,6 +287,26 @@ describe('upgradeMigration decodeLegacyLink', () => {
     })
   })
 
+  // A near-empty v1 payload is short enough for a minimal v2 parse to fit
+  // inside it; only the strict zero-count/arena-map rules push it past the v2
+  // probe so the frozen reader converts it instead of v2 misreading it.
+  it('converts a degenerate artifact-only v1 payload instead of misreading it as v2', () => {
+    const encoded = v1Encode((push) => {
+      push(0xc0, 8) // header: artifacts + extended
+      push(0x80, 8) // extended flags: display flags present
+      push(2, 8) // display flags byte
+      push(2, 6) // ally artifact
+      push(0, 6) // no enemy artifact
+    })
+    expect(encoded).toBe('wIACAgA')
+    expect(decodeLinkFromUrl(encoded)).toEqual({
+      mode: 'arena',
+      active: 0,
+      d: 2,
+      boards: [{ a: [2, null] }],
+    })
+  })
+
   it('preserves a v1 display-flags byte', () => {
     const encoded = v1Encode((push) => {
       push(0x80, 8) // header: extended only
