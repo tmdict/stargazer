@@ -63,8 +63,6 @@ const { showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } = 
   wrap: wrapBoards,
 })
 
-// First call on this device seeds the pref (and runs gridInfoMigration's
-// legacy byte remap), so it must precede the loadTeamsDisplayPrefs read below.
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 

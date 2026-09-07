@@ -4,13 +4,10 @@
  * the key; writes read-modify-write the whole object and preserve sibling
  * slices they don't own.
  *
- * The first call seeds storage synchronously, so pages must call this
- * composable before their persistence reads (the arena autosave load, the
- * Teams display byte): the seed runs gridInfoMigration's one-time legacy byte
- * remap those reads depend on. The reactive prefs themselves render as the
- * defaults and adopt the stored values in onMounted: '/' and /share are
- * SSG-prerendered with the defaults, so a setup-time adoption would
- * hydration-mismatch for any user whose stored prefs differ.
+ * The first call seeds storage synchronously. The reactive prefs themselves
+ * render as the defaults and adopt the stored values in onMounted: '/' and
+ * /share are SSG-prerendered with the defaults, so a setup-time adoption
+ * would hydration-mismatch for any user whose stored prefs differ.
  *
  * Enabling a child auto-enables what it needs to take effect (master; Paragon
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
@@ -19,7 +16,6 @@
 
 import { getCurrentInstance, onMounted, reactive } from 'vue'
 
-import { remapLegacyDisplayBytes } from '@/utils/gridInfoMigration'
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const PREFS_KEY = 'stargazer.prefs'
@@ -112,18 +108,11 @@ const sliceFrom = (raw: string): GridInfoPrefs | null => {
 
 const seedStorage = (): boolean => writeStorage(PREFS_KEY, JSON.stringify({ gridInfo: DEFAULTS }))
 
-/* Read the stored slice, seeding on first run. The key's absence doubles as
- * gridInfoMigration's not-yet-migrated marker: the marker write goes FIRST,
- * and the remap runs only if it landed, so a failed write leaves the legacy
- * bytes intact for a clean retry while a landed one guarantees the remap
- * can't repeat. A corrupt object reseeds without remapping (the marker
- * existed, so the bytes are already current-layout). */
+// Read the stored slice, seeding on first run.
 const initStorage = (): GridInfoPrefs => {
   const raw = readStorage(PREFS_KEY)
   if (raw === null) {
-    if (seedStorage()) {
-      remapLegacyDisplayBytes() // TEMPORARY: delete with gridInfoMigration.ts
-    }
+    seedStorage()
     return { ...DEFAULTS }
   }
   const slice = sliceFrom(raw)
