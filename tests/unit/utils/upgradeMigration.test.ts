@@ -2,9 +2,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
-import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { convertLegacyBoard, runUpgradeStoragePass } from '@/utils/upgradeMigration'
+import { urlSafeToBytes } from '@/utils/binaryEncoder'
 import {
+  packDisplayFlags,
+  unpackDisplayFlags,
+  type MultiGridState,
+} from '@/utils/gridStateSerializer'
+import {
+  convertLegacyBoard,
+  decodeLegacyLink,
+  runUpgradeStoragePass,
+} from '@/utils/upgradeMigration'
+import {
+  decodeLinkFromUrl,
   decodeMultiGridStateFromUrl,
   encodeGridStateToUrl,
   encodeMultiGridStateToUrl,
@@ -19,23 +29,13 @@ const ARENA_KEY = 'stargazer.arena'
 const LIBRARY_KEY = 'stargazer.teams.saved'
 const SLOT_KEY = 'stargazer.teams.active.5v5sl'
 
-// Mirrors the retired binary layout so the arena-slot conversion can be fed a
-// genuine pre-`u` value: header (1 char, extended), flags bit 1, one character
-// [2,100,ally], one paragon row [ally,100,4]. LSB-first like BitWriter.
-const legacyArenaValue = (): string => {
+// LSB-first bit assembler mirroring the retired v1 writer, so the shim can be
+// fed genuine pre-v2 payloads.
+const v1Encode = (build: (push: (value: number, count: number) => void) => void): string => {
   const bits: number[] = []
-  const push = (value: number, count: number): void => {
+  build((value, count) => {
     for (let i = 0; i < count; i++) bits.push((value >> i) & 1)
-  }
-  push(0x88, 8) // header: 1 character, extended header present
-  push(0x02, 8) // extended flags: legacy paragon only
-  push(2, 6) // character hexId
-  push(100, 16) // character id
-  push(0, 1) // team ally
-  push(1, 5) // paragon count
-  push(0, 1) // team ally
-  push(100, 16) // character id
-  push(4, 3) // level
+  })
   const bytes: number[] = []
   for (let i = 0; i < bits.length; i += 8) {
     let byte = 0
@@ -57,6 +57,21 @@ const legacyArenaValue = (): string => {
   if (count > 0) out += CHARS[(acc << (6 - count)) & 0x3f]
   return out
 }
+
+// A pre-`u` arena value: header (1 char, extended), flags bit 1, one character
+// [2,100,ally], one paragon row [ally,100,4]. No display-flags byte.
+const legacyArenaValue = (): string =>
+  v1Encode((push) => {
+    push(0x88, 8) // header: 1 character, extended header present
+    push(0x02, 8) // extended flags: legacy paragon only
+    push(2, 6) // character hexId
+    push(100, 16) // character id
+    push(0, 1) // team ally
+    push(1, 5) // paragon count
+    push(0, 1) // team ally
+    push(100, 16) // character id
+    push(4, 3) // level
+  })
 
 const legacyTeams = (p: number[][]): string =>
   encodeMultiGridStateToUrl({
@@ -228,6 +243,18 @@ describe('upgradeMigration storage pass', () => {
     expect(storage.get(SLOT_KEY)).toBe(first)
   })
 
+  // Guards the shim's probe order: a rerun (marker lost) decodes the
+  // already-converted v2 value via the strict v2 path and skips the write —
+  // if the frozen v1 reader accepted v2 bytes, this would corrupt the slot.
+  it('leaves a converted arena slot byte-stable on a marker-less rerun', () => {
+    storage.set(ARENA_KEY, legacyArenaValue())
+    runUpgradeStoragePass()
+    const converted = storage.get(ARENA_KEY)
+    storage.delete(MARKER_KEY)
+    runUpgradeStoragePass()
+    expect(storage.get(ARENA_KEY)).toBe(converted)
+  })
+
   it('writes the marker LAST: a failed write leaves it absent for a retry', () => {
     storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [] }))
     storage.set(SLOT_KEY, JSON.stringify({ v: 1, data: legacyTeams([[Team.ALLY, 11, 2]]) }))
@@ -243,5 +270,72 @@ describe('upgradeMigration storage pass', () => {
       decodeMultiGridStateFromUrl((JSON.parse(storage.get(SLOT_KEY)!) as { data: string }).data)!
         .boards[0]!.u,
     ).toEqual([[Team.ALLY, 11, 1, 2]])
+  })
+})
+
+describe('upgradeMigration decodeLegacyLink', () => {
+  const DEFAULT_FLAGS = packDisplayFlags(unpackDisplayFlags(undefined))
+
+  it('decodes a v1 binary arena link through the universal decoder', () => {
+    expect(decodeLinkFromUrl(legacyArenaValue())).toEqual({
+      mode: 'arena',
+      active: 0,
+      // The value predates display flags, so d synthesizes to the unpack
+      // defaults — absent must not flip skills/perspective off.
+      d: DEFAULT_FLAGS,
+      boards: [{ c: [[2, 100, Team.ALLY]], u: [[Team.ALLY, 100, 1, 4]] }],
+    })
+  })
+
+  it('preserves a v1 display-flags byte', () => {
+    const encoded = v1Encode((push) => {
+      push(0x80, 8) // header: extended only
+      push(0x80, 8) // extended flags: display flags present
+      push(0b10110, 8) // display flags byte
+    })
+    expect(decodeLinkFromUrl(encoded)).toEqual({
+      mode: 'arena',
+      active: 0,
+      d: 0b10110,
+      boards: [{}],
+    })
+  })
+
+  it('decodes a pre-binary JSON teams link to its team mode', () => {
+    const multi: MultiGridState = {
+      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena2' }, { m: 'preset-sr1' }],
+      active: 2,
+      d: 5,
+      mode: '3v3',
+    }
+    expect(decodeLinkFromUrl(encodeMultiGridStateToUrl(multi))).toEqual({
+      mode: '3v3',
+      active: 2,
+      d: 5,
+      boards: multi.boards,
+    })
+  })
+
+  it('synthesizes default flags for a d-less JSON teams link', () => {
+    const link = decodeLinkFromUrl(
+      encodeMultiGridStateToUrl({ boards: [{ m: 'arena1' }], mode: '1v1' }),
+    )
+    expect(link?.mode).toBe('1v1')
+    expect(link?.d).toBe(DEFAULT_FLAGS)
+  })
+
+  /* The corruption blocker: without the strict full-consumption check the v1
+   * reader "decodes" v2 bytes into a plausible wrong state, and the storage
+   * pass's marker-less rerun would overwrite converted data with it. The
+   * frozen wire strings come from binaryEncoder.test.ts's golden suite. */
+  it('rejects v2 payloads instead of misreading them', () => {
+    const V2_ARENA = 'gAXwIwQqNghkAAxkgEraiUGKQ0YyAEBABhBQZABhAA'
+    const V2_TEAMS = 'ikUgEgQLAAILAAEJAQHRBQA'
+    expect(decodeLegacyLink(V2_ARENA, urlSafeToBytes(V2_ARENA)!)).toBeNull()
+    expect(decodeLegacyLink(V2_TEAMS, urlSafeToBytes(V2_TEAMS)!)).toBeNull()
+  })
+
+  it('rejects garbage that is neither format', () => {
+    expect(decodeLinkFromUrl('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')).toBeNull()
   })
 })
