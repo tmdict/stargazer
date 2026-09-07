@@ -14,9 +14,9 @@
  * The pass is idempotent (`p` present + `u` absent converts; anything else
  * no-ops), so its marker is written LAST, only after every attempted write
  * landed — a failed write (quota; the library is the app's largest key) just
- * retries next load. This deliberately inverts gridInfoMigration's
- * marker-first discipline, which exists because that remap scrambles on
- * re-run; this one doesn't. Accepted races: two tabs both running the pass
+ * retries next load. (A non-idempotent pass would need the opposite,
+ * marker-FIRST discipline; this one re-runs harmlessly, so retry beats
+ * never-again.) Accepted races: two tabs both running the pass
  * write equivalent bytes; a stale pre-deploy tab autosaving `p`-form data
  * during the shim window is healed by the read-side conversion until removal.
  *
@@ -39,7 +39,7 @@
  *    format-spec notes; extended-flags bit 1 is then free for future reuse.
  * 7. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
  * 8. The stargazer.migration.u marker key stays behind in user storage as
- *    accepted residue (like gridInfoMigration's deliberate key duplication).
+ *    accepted residue.
  * 9. Verify: `grep -ri upgrademigration src tests` returns nothing, then
  *    lint, type-check, and the test suite pass with no further edits.
  * Expected user-visible consequences, accepted by policy (old links and
