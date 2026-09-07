@@ -1,36 +1,78 @@
-import { bytesToUrlSafe, decodeFromBinary, encodeToBinary, urlSafeToBytes } from './binaryEncoder'
+/* The app's two serialization boundaries, one function each way per format:
+ *
+ * - BINARY (binaryEncoder) is the link format — every `?g=` payload — plus
+ *   the arena autosave, the one binary value at rest (a device-local snapshot
+ *   that is never exported or shared). `decodeLinkFromUrl` is the universal
+ *   link decoder: the only function any page or storage pass calls for a
+ *   `?g=` payload, and the shim's single call site in live code.
+ * - JSON (encode/decodeMultiGridState) is the interchange format — the
+ *   saved-team library, mode slots, and export files — the data that
+ *   canonicalization and the byte-equality compares operate on. Links never
+ *   use it.
+ */
+
+import {
+  bytesToUrlSafe,
+  decodeLink,
+  encodeLink,
+  urlSafeToBytes,
+  type BinaryLinkState,
+} from './binaryEncoder'
 import type { GridState, MultiGridState } from './gridStateSerializer'
-import { convertLegacyBoard } from './upgradeMigration'
+import { convertLegacyBoard, decodeLegacyLink } from './upgradeMigration'
+
+export type { BinaryLinkState }
+
+/* Decode any `?g=` link payload. Strict v2 first; a failure falls through to
+ * the shim's frozen legacy reader (old binary arena links and the stored
+ * arena autosave, plus pre-binary JSON Teams links). Pages route on the
+ * result's mode — 'arena' or a team mode key. */
+export function decodeLinkFromUrl(encoded: string): BinaryLinkState | null {
+  const bytes = urlSafeToBytes(encoded)
+  if (!bytes || bytes.length === 0) return null
+  const link = decodeLink(bytes)
+  if (link) return link
+  // TEMPORARY: delete with upgradeMigration.ts.
+  return decodeLegacyLink(encoded, bytes)
+}
 
 export function encodeGridStateToUrl(gridState: GridState): string {
   try {
-    const binaryData = encodeToBinary(gridState)
-    return bytesToUrlSafe(binaryData)
+    const { d, ...board } = gridState
+    return bytesToUrlSafe(encodeLink({ mode: 'arena', active: 0, d, boards: [board] }))
   } catch (error) {
     console.error('Failed to encode grid state:', error)
     throw new Error('Failed to encode grid state for sharing')
   }
 }
 
+/* The arena adapter over the universal decoder: a payload naming any other
+ * mode rejects, so a teams link pasted on the Arena page (or crafted into the
+ * arena autosave) fails clean instead of half-rendering one board. */
 export function decodeGridStateFromUrl(encodedState: string): GridState | null {
+  const link = decodeLinkFromUrl(encodedState)
+  if (!link || link.mode !== 'arena') return null
+  const board = link.boards[0] ?? {}
+  return { ...board, d: link.d }
+}
+
+export function encodeMultiGridStateToLinkUrl(state: MultiGridState): string {
   try {
-    const bytes = urlSafeToBytes(encodedState)
-    // A valid encoding always carries at least one header byte; zero decoded
-    // bytes means the input is not shared state (e.g. a truncated link)
-    if (!bytes || bytes.length === 0) {
-      console.warn('Failed to decode binary data from URL')
-      return null
-    }
-    return decodeFromBinary(bytes)
+    return bytesToUrlSafe(
+      encodeLink({
+        mode: state.mode ?? '',
+        active: state.active,
+        d: state.d,
+        boards: state.boards,
+      }),
+    )
   } catch (error) {
-    console.warn('Failed to decode grid state from URL:', error)
-    return null
+    console.error('Failed to encode multi-grid state:', error)
+    throw new Error('Failed to encode grid state for sharing')
   }
 }
 
-/* Multi-board (5 v 5) state is encoded as url-safe base64 of JSON: five boards
- * plus active id and global flags are too varied for the single-board binary
- * packing, and there is no back-compat constraint to keep it binary. */
+// JSON, interchange only (library, slots, export files) — never a link.
 export function encodeMultiGridStateToUrl(state: MultiGridState): string {
   return bytesToUrlSafe(new TextEncoder().encode(JSON.stringify(state)))
 }
@@ -51,8 +93,7 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
     // TEMPORARY: delete with upgradeMigration.ts.
     for (const board of parsed.boards) convertLegacyBoard(board as Record<string, unknown>)
     return parsed
-  } catch (error) {
-    console.warn('Failed to decode multi-grid state from URL:', error)
+  } catch {
     return null
   }
 }

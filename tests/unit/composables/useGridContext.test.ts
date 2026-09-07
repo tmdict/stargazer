@@ -1,7 +1,7 @@
-import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { getCompanions, repositionCompanions } from '@/lib/characters/companion'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'

@@ -1,111 +1,119 @@
+import { attrDefault, clampAttr, isKnownAttrId } from '@/lib/characters/attributes'
+import { mapKeyByWireId, mapWireIdByKey, wireModeById, wireModeByKey } from '@/lib/teams/wire'
 import {
-  attrDefault,
-  clampAttr,
-  compareAttrRows,
-  isKnownAttrId,
-  type AttrRow,
-} from '@/lib/characters/attributes'
-import type { GridState } from './gridStateSerializer'
+  packDisplayFlags,
+  unpackDisplayFlags,
+  type BoardState,
+  type GridState,
+} from './gridStateSerializer'
 
-// Character ID encoding constants
-const CHARACTER_ID_BITS = 16 // Supports IDs 0-65535 (covers companion IDs, see format note)
-const MAX_CHARACTER_ID = (1 << CHARACTER_ID_BITS) - 1 // 65535
+/**
+ * Binary link codec: one compact format for every share link — the Arena is
+ * simply wire mode 0 with one board. Storage and export files use the JSON
+ * encoding instead (urlStateManager); the only binary value at rest is the
+ * arena autosave, by owner decision.
+ *
+ * Format (bit-sequential, LSB-first per BitWriter):
+ *
+ * Envelope (14 bits):
+ * - Mode id (3 bits): wire registry (lib/teams/wire.ts); board count derives
+ *   from the mode, so no count field exists.
+ * - Active board (3 bits): 0-based.
+ * - Display flags (8 bits): the packDisplayFlags byte (wrap, skills,
+ *   perspective, inverted, teamView; 3 spare). Always present — an absent `d`
+ *   is encoded as the unpack defaults so pre-flags states keep today's
+ *   skills/perspective-on behavior.
+ *
+ * Each board (14-bit header, then its sections):
+ * - Map id (6 bits): wire registry; 0 = none (arena boards, whose serialized
+ *   tiles are authoritative).
+ * - Section bitmap (8 bits): bit 0 tiles · 1 characters · 2 artifacts ·
+ *   3 phantimals · 4 synergy · 5 upgrades; bits 6-7 spare for future
+ *   sections. Sections are written in bit order.
+ *
+ * Sections:
+ * - tiles:      count (6) + 9 bits/entry  — hexId 6 · state 3
+ * - characters: count (6) + 23 bits/entry — hexId 6 · characterId 16 · team 1
+ * - artifacts:  12 bits, no count         — ally 6 · enemy 6 (0 = none)
+ * - phantimals: count (4) + 11 bits/entry — hexId 6 · local id 4 · team 1
+ * - synergy:    count (4) + 23 bits/entry — hexId 6 · local id 16 · team 1
+ * - upgrades:   count (6) + 27 bits/entry — team 1 · characterId 16 (0 =
+ *   team-scope sentinel) · attrId 6 · value 4
+ *
+ * The 16-bit character field also carries companion ids (N * 10000 + base,
+ * see grid.ts), which caps companion index N at 6 for base ids below 5536.
+ *
+ * Decoding is STRICT: unknown mode, map, or section-bitmap bits reject, and
+ * the entire input must be consumed with only zero padding bits remaining.
+ * That is what makes another format's bytes practically impossible to
+ * misread as a valid link, which the shim's probe order relies on. No version
+ * field, deliberately: the app and its links deploy together, links are
+ * expendable, and only the arena autosave outlives a deploy (converted by a
+ * temporary shim per format change).
+ */
+
+const MODE_BITS = 3
+const ACTIVE_BITS = 3
+const DISPLAY_FLAGS_BITS = 8
+const MAP_ID_BITS = 6
+const SECTION_BITMAP_BITS = 8
+
 const HEX_ID_BITS = 6 // Supports hex IDs 0-63
 const TILE_STATE_BITS = 3 // Supports states 0-7
 const TEAM_BITS = 1 // Supports 2 teams
+const CHARACTER_ID_BITS = 16 // Supports IDs 0-65535 (covers companion IDs, see format note)
+const MAX_CHARACTER_ID = (1 << CHARACTER_ID_BITS) - 1 // 65535
 const ARTIFACT_BITS = 6 // Supports artifact IDs 0-63 (0 = null)
 const MAX_ARTIFACT_ID = (1 << ARTIFACT_BITS) - 1 // 63
 const PHANTIMAL_ID_BITS = 4 // Supports local phantimal IDs 1-15
 const MAX_PHANTIMAL_ID = (1 << PHANTIMAL_ID_BITS) - 1 // 15
-const PHANTIMAL_COUNT_BITS = 4 // Supports up to 15 phantimal entries
+const TILE_COUNT_BITS = 6 // A 45-hex board keeps every count under 63
+const MAX_TILE_COUNT = (1 << TILE_COUNT_BITS) - 1 // 63
+const CHARACTER_COUNT_BITS = 6
+const MAX_CHARACTER_COUNT = (1 << CHARACTER_COUNT_BITS) - 1 // 63
+const PHANTIMAL_COUNT_BITS = 4
 const MAX_PHANTIMAL_COUNT = (1 << PHANTIMAL_COUNT_BITS) - 1 // 15
-const UPGRADE_COUNT_BITS = 6 // Supports up to 63 upgrade rows
+const SYNERGY_COUNT_BITS = 4
+const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
+const UPGRADE_COUNT_BITS = 6
 const MAX_UPGRADE_COUNT = (1 << UPGRADE_COUNT_BITS) - 1 // 63
 const ATTR_ID_BITS = 6 // Supports attrIds 1-63
 const ATTR_VALUE_BITS = 4 // Supports values 0-15; registry maxes must fit
 
-// TEMPORARY (delete with upgradeMigration.ts): field widths of the retired
-// bit-1 paragon section, read-only for links that predate the `u` format.
-const LEGACY_PARAGON_LEVEL_BITS = 3
-const LEGACY_PARAGON_COUNT_BITS = 5
-const SYNERGY_COUNT_BITS = 4 // Supports up to 15 synergy-band entries
-const MAX_SYNERGY_COUNT = (1 << SYNERGY_COUNT_BITS) - 1 // 15
+const SECTION_TILES = 0x01
+const SECTION_CHARACTERS = 0x02
+const SECTION_ARTIFACTS = 0x04
+const SECTION_PHANTIMALS = 0x08
+const SECTION_SYNERGY = 0x10
+const SECTION_UPGRADES = 0x20
+const KNOWN_SECTIONS =
+  SECTION_TILES |
+  SECTION_CHARACTERS |
+  SECTION_ARTIFACTS |
+  SECTION_PHANTIMALS |
+  SECTION_SYNERGY |
+  SECTION_UPGRADES
 
-/**
- * Binary encoding utilities for ultra-compact URL serialization
- *
- * Binary Format Specification:
- *
- * Header byte (8 bits):
- * - Bits 0-2: Number of tile entries (0-7)
- * - Bits 3-5: Number of character entries (0-7)
- * - Bit 6: Has artifacts (0/1)
- * - Bit 7: Extended header present (8+ entries, display flags, or any optional section)
- *
- * Extended header (if bit 7 is set):
- * - Next byte: Extended flags byte
- *   - Bit 0: Actually needs extended counts (not just display flags)
- *   - Bit 1: TEMPORARY, decode-only — legacy paragon section (pre-`u` links);
- *     never written; free for reuse once upgradeMigration.ts is deleted
- *   - Bit 2: Has synergy units (section present after phantimals)
- *   - Bit 3: Has upgrades (generic attr section, last)
- *   - Bits 4-5: reserved
- *   - Bit 6: Has phantimals (phantimal section present after artifacts)
- *   - Bit 7: Has display flags (a dedicated display-flags byte follows)
- * - If bit 7 of extended flags is set:
- *   - Next byte: Display flags (bit 0 wrap, 1 showSkills, 2 showPerspective,
- *     3 inverted, 4 teamView; bits 5-7 spare)
- * - If bit 0 of extended flags is set:
- *   - Next byte: Additional tile count (0-255, add to first 7)
- *   - Next byte: Additional character count (0-255, add to first 7)
- *
- * Tile entry (9 bits):
- * - Bits 0-5: Hex ID (6 bits, supports 1-63)
- * - Bits 6-8: State (3 bits, supports 0-7)
- *
- * Character entry (23 bits):
- * - Bits 0-5: Hex ID (6 bits)
- * - Bits 6-21: Character ID (16 bits, supports 0-65535)
- * - Bit 22: Team (1 bit)
- *
- * Note: This field also carries companion IDs (N * companionIdOffset + base, see
- * grid.ts), which the restore path uses to reposition companions after their main
- * character is placed. 16 bits covers companion index N up to 6 for base IDs below
- * 5536. Phantimal IDs (100000+) never reach this field; they serialize via their
- * 4-bit local ID below.
- *
- * Artifacts (12 bits):
- * - Bits 0-5: Ally artifact (6 bits, 0 = null, 1-63 = artifact ID)
- * - Bits 6-11: Enemy artifact (6 bits, 0 = null, 1-63 = artifact ID)
- *
- * Phantimals (only if extended flag bit 6 is set, written after artifacts):
- * - Count (4 bits, 0-15)
- * - Each entry (11 bits): hexId (6) + local phantimal ID (4) + team (1)
- *
- * Synergy units (only if extended flag bit 2 is set, written after phantimals):
- * - Count (4 bits, 0-15)
- * - Each entry (23 bits): hexId (6) + local unit ID (16) + team (1). Locals
- *   reuse the character field's id space (hero = base id, spawned companion =
- *   N * 10000 + base); the 200000 band offset is applied on restore.
- *
- * Upgrades (only if extended flag bit 3 is set, written LAST, after synergy,
- * so decoders that predate a future section leave trailing bits unread):
- * - Count (6 bits, 0-63)
- * - Each entry (27 bits): team (1) + characterId (16, 0 = team-scope
- *   sentinel) + attrId (6) + value (4). Carries every registry attr; the
- *   registry contract test pins that attr maxes fit the 4-bit value field.
- *
- * Legacy paragon (TEMPORARY, decode-only, bit 1; between phantimals and
- * synergy in old links): count (5 bits) then team (1) + characterId (16) +
- * level (3) per entry, converted to upgrades rows with attrId 1 on read.
- */
+/* A decoded (or encodable) link: the envelope plus one content board per the
+ * mode's board count. `mode` is the wire registry key — 'arena' or a team
+ * mode key; boards carry no `d` (the envelope owns the display flags). */
+export interface BinaryLinkState {
+  mode: string
+  active: number
+  d: number
+  boards: BoardState[]
+}
+
+export interface BinaryLinkInput {
+  mode: string
+  active?: number
+  d?: number
+  boards: BoardState[]
+}
 
 /**
  * Validates and filters grid state to ensure all values are within valid ranges.
  * This prevents encoding errors and ensures encoder/decoder stay in sync.
- *
- * @param state - The grid state to validate
- * @returns A new grid state with only valid entries
  */
 export function validateGridState(state: GridState): GridState {
   // Handle null, undefined, or non-object inputs
@@ -118,7 +126,7 @@ export function validateGridState(state: GridState): GridState {
   // Validate tile entries: hexId must be 1-63, state must be 0-7
   // We filter out invalid entries to ensure the count matches actual data written
   if (state.t && Array.isArray(state.t)) {
-    const validTiles = state.t.filter((entry) => {
+    let validTiles = state.t.filter((entry) => {
       const [hexId, tileState] = entry
       const isValid =
         hexId != null &&
@@ -132,6 +140,11 @@ export function validateGridState(state: GridState): GridState {
       }
       return isValid
     })
+    // Cap at the count field's maximum so the encoded count can't wrap.
+    if (validTiles.length > MAX_TILE_COUNT) {
+      console.warn(`Too many tile entries (${validTiles.length}), keeping first ${MAX_TILE_COUNT}`)
+      validTiles = validTiles.slice(0, MAX_TILE_COUNT)
+    }
     if (validTiles.length > 0) {
       validated.t = validTiles
     }
@@ -140,7 +153,7 @@ export function validateGridState(state: GridState): GridState {
   // Validate character entries: hexId 1-63, charId 1-65535, team 1-2
   // This ensures character IDs fit in 16 bits and teams in 1 bit
   if (state.c && Array.isArray(state.c)) {
-    const validChars = state.c.filter((entry) => {
+    let validChars = state.c.filter((entry) => {
       const [hexId, charId, team] = entry
       const isValid =
         hexId != null &&
@@ -160,6 +173,12 @@ export function validateGridState(state: GridState): GridState {
       }
       return isValid
     })
+    if (validChars.length > MAX_CHARACTER_COUNT) {
+      console.warn(
+        `Too many character entries (${validChars.length}), keeping first ${MAX_CHARACTER_COUNT}`,
+      )
+      validChars = validChars.slice(0, MAX_CHARACTER_COUNT)
+    }
     if (validChars.length > 0) {
       validated.c = validChars
     }
@@ -194,8 +213,6 @@ export function validateGridState(state: GridState): GridState {
       }
       return isValid
     })
-    // Cap at the 4-bit count field's maximum; a longer list would wrap the
-    // encoded count and desync the decoder.
     if (validPhantimals.length > MAX_PHANTIMAL_COUNT) {
       console.warn(
         `Too many phantimal entries (${validPhantimals.length}), keeping first ${MAX_PHANTIMAL_COUNT}`,
@@ -224,7 +241,6 @@ export function validateGridState(state: GridState): GridState {
       }
       return isValid
     })
-    // Cap at the count field's maximum so the encoded count can't wrap.
     if (validSynergy.length > MAX_SYNERGY_COUNT) {
       console.warn(
         `Too many synergy entries (${validSynergy.length}), keeping first ${MAX_SYNERGY_COUNT}`,
@@ -262,7 +278,6 @@ export function validateGridState(state: GridState): GridState {
       else byKey.delete(key)
     }
     let validUpgrades = [...byKey.values()]
-    // Cap at the count field's maximum so the encoded count can't wrap.
     if (validUpgrades.length > MAX_UPGRADE_COUNT) {
       console.warn(
         `Too many upgrade entries (${validUpgrades.length}), keeping first ${MAX_UPGRADE_COUNT}`,
@@ -274,7 +289,8 @@ export function validateGridState(state: GridState): GridState {
     }
   }
 
-  // Display flags: keep as-is (stored in a dedicated byte during encoding)
+  // Display flags: passed through for callers; the link envelope owns them
+  // during encoding (boards never carry a flags byte).
   if (state.d !== undefined) {
     validated.d = state.d
   }
@@ -335,297 +351,225 @@ class BitReader {
     this.position += bitCount
     return value
   }
+
+  // True only when every remaining bit is final-byte zero padding: the strict
+  // full-consumption rule that keeps another format's bytes from misreading
+  // as a valid link.
+  atCleanEnd(): boolean {
+    const remaining = this.bytes.length * 8 - this.position
+    if (remaining < 0 || remaining >= 8) return false
+    return remaining === 0 || this.readBits(remaining) === 0
+  }
 }
 
-export function encodeToBinary(state: GridState): Uint8Array {
-  // Validate and filter input before counting, so the encoded counts always
-  // match the entries actually written
-  const validState = validateGridState(state)
+// The envelope's flags byte is mandatory, so an absent `d` encodes as the
+// unpack defaults — a pre-flags state must not flip skills/perspective off.
+const flagsByte = (d: number | undefined): number =>
+  (d ?? packDisplayFlags(unpackDisplayFlags(undefined))) & 0xff
 
-  const writer = new BitWriter()
+function encodeBoard(writer: BitWriter, board: BoardState): void {
+  const state = validateGridState(board)
 
-  // Now we can safely use the lengths since all entries are valid
-  const tileCount = validState.t?.length || 0
-  const charCount = validState.c?.length || 0
-  const hasArtifacts = validState.a !== undefined
-  const hasDisplayFlags = validState.d !== undefined
-  const hasPhantimals = validState.s !== undefined && validState.s.length > 0
-  const hasUpgrades = validState.u !== undefined && validState.u.length > 0
-  const hasSynergy = validState.y !== undefined && validState.y.length > 0
-
-  // The extended header is skipped entirely for small grids with none of the
-  // optional sections, keeping those URLs a byte shorter.
-  const needsExtendedCounts = tileCount > 7 || charCount > 7
-  const needsExtended =
-    needsExtendedCounts || hasDisplayFlags || hasPhantimals || hasUpgrades || hasSynergy
-
-  // Write header byte (8 bits total)
-  let header = 0
-  header |= Math.min(tileCount, 7) & 0x07 // Bits 0-2: tile count (0-7)
-  header |= (Math.min(charCount, 7) & 0x07) << 3 // Bits 3-5: character count (0-7)
-  header |= hasArtifacts ? 0x40 : 0 // Bit 6: has artifacts flag
-  header |= needsExtended ? 0x80 : 0 // Bit 7: extended header flag
-  writer.writeBits(header, 8)
-
-  if (needsExtended) {
-    // Extended flags byte (layout in the format spec above). Bit 7 is a
-    // presence marker so an explicit d=0 round-trips.
-    let extendedFlags = 0
-    if (needsExtendedCounts) {
-      extendedFlags |= 0x01 // Bit 0
+  let mapId = 0
+  if (board.m !== undefined) {
+    const wireId = mapWireIdByKey(board.m)
+    if (wireId === undefined) {
+      // The board still restores via its serialized tiles; only the Maps-tab
+      // highlight goes stale for the recipient.
+      console.warn(`Map key "${board.m}" has no wire id, encoding as none`)
     }
-    if (hasDisplayFlags) {
-      extendedFlags |= 0x80 // Bit 7
-    }
-    if (hasPhantimals) {
-      extendedFlags |= 0x40 // Bit 6
-    }
-    if (hasUpgrades) {
-      extendedFlags |= 0x08 // Bit 3
-    }
-    if (hasSynergy) {
-      extendedFlags |= 0x04 // Bit 2
-    }
-    writer.writeBits(extendedFlags, 8)
+    mapId = wireId ?? 0
+  }
+  writer.writeBits(mapId, MAP_ID_BITS)
 
-    // Dedicated display-flags byte (one bit per toggle; see format note)
-    if (hasDisplayFlags && validState.d !== undefined) {
-      writer.writeBits(validState.d & 0xff, 8)
-    }
+  let bitmap = 0
+  if (state.t) bitmap |= SECTION_TILES
+  if (state.c) bitmap |= SECTION_CHARACTERS
+  if (state.a) bitmap |= SECTION_ARTIFACTS
+  if (state.s) bitmap |= SECTION_PHANTIMALS
+  if (state.y) bitmap |= SECTION_SYNERGY
+  if (state.u) bitmap |= SECTION_UPGRADES
+  writer.writeBits(bitmap, SECTION_BITMAP_BITS)
 
-    // Write extended counts if needed (supports up to 262 total entries: 7 + 255)
-    if (needsExtendedCounts) {
-      const extendedTileCount = Math.max(0, tileCount - 7)
-      const extendedCharCount = Math.max(0, charCount - 7)
-      writer.writeBits(extendedTileCount, 8) // Additional tiles beyond first 7
-      writer.writeBits(extendedCharCount, 8) // Additional characters beyond first 7
+  if (state.t) {
+    writer.writeBits(state.t.length, TILE_COUNT_BITS)
+    for (const entry of state.t) {
+      writer.writeBits(entry[0]!, HEX_ID_BITS)
+      writer.writeBits(entry[1]!, TILE_STATE_BITS)
     }
   }
 
-  // Write tiles (already validated, so no need to check or skip)
-  if (validState.t) {
-    for (const entry of validState.t) {
-      const hexId = entry[0]! // Guaranteed valid (1-63) by validation
-      const stateValue = entry[1]! // Guaranteed valid (0-7) by validation
-
-      writer.writeBits(hexId, HEX_ID_BITS) // 6 bits for hex ID
-      writer.writeBits(stateValue, TILE_STATE_BITS) // 3 bits for state
-    }
-  }
-
-  // Write characters (already validated, so all values are guaranteed valid)
-  if (validState.c) {
-    for (const entry of validState.c) {
-      const hexId = entry[0]! // Guaranteed valid (1-63) by validation
-      const charId = entry[1]! // Guaranteed valid (1-65535) by validation
-      const team = entry[2]! // Guaranteed valid (1 or 2) by validation
-
-      writer.writeBits(hexId, HEX_ID_BITS) // 6 bits for hex ID
-      writer.writeBits(charId, CHARACTER_ID_BITS) // 16 bits for character ID
-
-      // Convert Team enum to bit value: Team.ALLY (1) -> 0, Team.ENEMY (2) -> 1
-      // This saves 1 bit per character entry
-      const teamBit = team - 1
-      writer.writeBits(teamBit, TEAM_BITS) // 1 bit for team
-    }
-  }
-
-  // Write artifacts (12 bits total: 6 bits per artifact)
-  if (hasArtifacts && validState.a) {
-    // 0 represents null/no artifact, 1-63 are valid artifact IDs
-    const ally = validState.a[0] ?? 0 // null -> 0
-    const enemy = validState.a[1] ?? 0 // null -> 0
-    writer.writeBits(ally, ARTIFACT_BITS) // 6 bits for ally artifact
-    writer.writeBits(enemy, ARTIFACT_BITS) // 6 bits for enemy artifact
-  }
-
-  // Write phantimals (after artifacts): count, then hexId + local id + team each
-  if (hasPhantimals && validState.s) {
-    writer.writeBits(validState.s.length, PHANTIMAL_COUNT_BITS)
-    for (const entry of validState.s) {
-      const hexId = entry[0]! // Guaranteed valid (1-63) by validation
-      const localId = entry[1]! // Guaranteed valid (1-15) by validation
-      const team = entry[2]! // Guaranteed valid (1 or 2) by validation
-
-      writer.writeBits(hexId, HEX_ID_BITS) // 6 bits for hex ID
-      writer.writeBits(localId, PHANTIMAL_ID_BITS) // 4 bits for local phantimal ID
-      writer.writeBits(team - 1, TEAM_BITS) // 1 bit for team
-    }
-  }
-
-  // Write synergy units (after phantimals): count, then hexId + local id + team each
-  if (hasSynergy && validState.y) {
-    writer.writeBits(validState.y.length, SYNERGY_COUNT_BITS)
-    for (const entry of validState.y) {
+  if (state.c) {
+    writer.writeBits(state.c.length, CHARACTER_COUNT_BITS)
+    for (const entry of state.c) {
       writer.writeBits(entry[0]!, HEX_ID_BITS)
       writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
       writer.writeBits(entry[2]! - 1, TEAM_BITS)
     }
   }
 
-  // Write upgrades last: count, then team + characterId + attrId + value each
-  if (hasUpgrades && validState.u) {
-    writer.writeBits(validState.u.length, UPGRADE_COUNT_BITS)
-    for (const entry of validState.u) {
+  if (state.a) {
+    writer.writeBits(state.a[0] ?? 0, ARTIFACT_BITS)
+    writer.writeBits(state.a[1] ?? 0, ARTIFACT_BITS)
+  }
+
+  if (state.s) {
+    writer.writeBits(state.s.length, PHANTIMAL_COUNT_BITS)
+    for (const entry of state.s) {
+      writer.writeBits(entry[0]!, HEX_ID_BITS)
+      writer.writeBits(entry[1]!, PHANTIMAL_ID_BITS)
+      writer.writeBits(entry[2]! - 1, TEAM_BITS)
+    }
+  }
+
+  if (state.y) {
+    writer.writeBits(state.y.length, SYNERGY_COUNT_BITS)
+    for (const entry of state.y) {
+      writer.writeBits(entry[0]!, HEX_ID_BITS)
+      writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
+      writer.writeBits(entry[2]! - 1, TEAM_BITS)
+    }
+  }
+
+  if (state.u) {
+    writer.writeBits(state.u.length, UPGRADE_COUNT_BITS)
+    for (const entry of state.u) {
       writer.writeBits(entry[0]! - 1, TEAM_BITS)
       writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
       writer.writeBits(entry[2]!, ATTR_ID_BITS)
       writer.writeBits(entry[3]!, ATTR_VALUE_BITS)
     }
   }
+}
 
+export function encodeLink(link: BinaryLinkInput): Uint8Array {
+  const mode = wireModeByKey(link.mode)
+  if (!mode) {
+    throw new Error(`Unknown wire mode: ${link.mode}`)
+  }
+
+  // The decoder derives board count from the mode, so the encoded list must
+  // match it exactly; our own callers always agree, so a mismatch is crafted
+  // input and gets the filter-and-warn treatment.
+  let boards = link.boards
+  if (boards.length !== mode.boardCount) {
+    console.warn(`Mode ${mode.key} expects ${mode.boardCount} boards, got ${boards.length}`)
+    boards = boards.slice(0, mode.boardCount)
+    while (boards.length < mode.boardCount) boards = [...boards, {}]
+  }
+
+  const writer = new BitWriter()
+  writer.writeBits(mode.wireId, MODE_BITS)
+  const active = Math.min(Math.max(link.active ?? 0, 0), mode.boardCount - 1)
+  writer.writeBits(active, ACTIVE_BITS)
+  writer.writeBits(flagsByte(link.d), DISPLAY_FLAGS_BITS)
+  for (const board of boards) {
+    encodeBoard(writer, board)
+  }
   return writer.getBytes()
 }
 
-export function decodeFromBinary(bytes: Uint8Array): GridState | null {
-  // Handle empty input gracefully - return empty state instead of error
-  if (!bytes || bytes.length === 0) {
-    return {} // Empty grid state
+function decodeBoard(reader: BitReader): BoardState | null {
+  const mapId = reader.readBits(MAP_ID_BITS)
+  let mapKey: string | undefined
+  if (mapId !== 0) {
+    mapKey = mapKeyByWireId(mapId)
+    if (mapKey === undefined) return null
   }
 
-  // Special case: single zero byte represents empty state (optimization)
-  if (bytes.length === 1 && bytes[0] === 0) {
-    return {}
+  const bitmap = reader.readBits(SECTION_BITMAP_BITS)
+  if ((bitmap & ~KNOWN_SECTIONS) !== 0) return null
+
+  const board: BoardState = {}
+  if (mapKey !== undefined) board.m = mapKey
+
+  if (bitmap & SECTION_TILES) {
+    const count = reader.readBits(TILE_COUNT_BITS)
+    board.t = []
+    for (let i = 0; i < count; i++) {
+      board.t.push([reader.readBits(HEX_ID_BITS), reader.readBits(TILE_STATE_BITS)])
+    }
   }
 
+  if (bitmap & SECTION_CHARACTERS) {
+    const count = reader.readBits(CHARACTER_COUNT_BITS)
+    board.c = []
+    for (let i = 0; i < count; i++) {
+      board.c.push([
+        reader.readBits(HEX_ID_BITS),
+        reader.readBits(CHARACTER_ID_BITS),
+        reader.readBits(TEAM_BITS) + 1,
+      ])
+    }
+  }
+
+  if (bitmap & SECTION_ARTIFACTS) {
+    const ally = reader.readBits(ARTIFACT_BITS)
+    const enemy = reader.readBits(ARTIFACT_BITS)
+    board.a = [ally === 0 ? null : ally, enemy === 0 ? null : enemy]
+  }
+
+  if (bitmap & SECTION_PHANTIMALS) {
+    const count = reader.readBits(PHANTIMAL_COUNT_BITS)
+    board.s = []
+    for (let i = 0; i < count; i++) {
+      board.s.push([
+        reader.readBits(HEX_ID_BITS),
+        reader.readBits(PHANTIMAL_ID_BITS),
+        reader.readBits(TEAM_BITS) + 1,
+      ])
+    }
+  }
+
+  if (bitmap & SECTION_SYNERGY) {
+    const count = reader.readBits(SYNERGY_COUNT_BITS)
+    board.y = []
+    for (let i = 0; i < count; i++) {
+      board.y.push([
+        reader.readBits(HEX_ID_BITS),
+        reader.readBits(CHARACTER_ID_BITS),
+        reader.readBits(TEAM_BITS) + 1,
+      ])
+    }
+  }
+
+  if (bitmap & SECTION_UPGRADES) {
+    const count = reader.readBits(UPGRADE_COUNT_BITS)
+    board.u = []
+    for (let i = 0; i < count; i++) {
+      board.u.push([
+        reader.readBits(TEAM_BITS) + 1,
+        reader.readBits(CHARACTER_ID_BITS),
+        reader.readBits(ATTR_ID_BITS),
+        reader.readBits(ATTR_VALUE_BITS),
+      ])
+    }
+  }
+
+  return board
+}
+
+// Silent on failure by design: during the shim window this decoder is the
+// first probe for payloads that may legitimately be another format.
+export function decodeLink(bytes: Uint8Array): BinaryLinkState | null {
+  if (!bytes || bytes.length === 0) return null
   try {
     const reader = new BitReader(bytes)
-    const state: GridState = {}
+    const mode = wireModeById(reader.readBits(MODE_BITS))
+    if (!mode) return null
+    const active = Math.min(reader.readBits(ACTIVE_BITS), mode.boardCount - 1)
+    const d = reader.readBits(DISPLAY_FLAGS_BITS)
 
-    // Read header
-    const header = reader.readBits(8)
-    let tileCount = header & 0x07 // Bits 0-2
-    let charCount = (header >> 3) & 0x07 // Bits 3-5
-    const hasArtifacts = (header & 0x40) !== 0 // Bit 6
-    const hasExtended = (header & 0x80) !== 0 // Bit 7
-
-    // Any optional section can be the sole reason for an extended header; track
-    // them so the sections after artifacts are read.
-    let hasPhantimals = false
-    let hasLegacyParagon = false
-    let hasSynergy = false
-    let hasUpgrades = false
-
-    // Read extended header if present
-    if (hasExtended) {
-      // Read extended flags byte
-      const extendedFlags = reader.readBits(8)
-      const needsExtendedCounts = (extendedFlags & 0x01) !== 0
-      hasPhantimals = (extendedFlags & 0x40) !== 0 // Bit 6
-      hasLegacyParagon = (extendedFlags & 0x02) !== 0 // Bit 1, TEMPORARY
-      hasSynergy = (extendedFlags & 0x04) !== 0 // Bit 2
-      hasUpgrades = (extendedFlags & 0x08) !== 0 // Bit 3
-
-      // Bit 7 explicitly marks display flags as present, so d=0 (all flags off)
-      // is distinguishable from "no display flags encoded" (d stays undefined).
-      if ((extendedFlags & 0x80) !== 0) {
-        state.d = reader.readBits(8) // dedicated display-flags byte
-      }
-
-      // Read extended counts if present
-      if (needsExtendedCounts) {
-        const extendedTileCount = reader.readBits(8) // Additional tiles beyond 7
-        const extendedCharCount = reader.readBits(8) // Additional characters beyond 7
-        tileCount += extendedTileCount
-        charCount += extendedCharCount
-      }
+    const boards: BoardState[] = []
+    for (let i = 0; i < mode.boardCount; i++) {
+      const board = decodeBoard(reader)
+      if (board === null) return null
+      boards.push(board)
     }
 
-    // Read tiles (each tile is 9 bits: 6 for hexId, 3 for state)
-    if (tileCount > 0) {
-      state.t = []
-      for (let i = 0; i < tileCount; i++) {
-        const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
-        const stateValue = reader.readBits(TILE_STATE_BITS) // 3 bits
-        state.t.push([hexId, stateValue])
-      }
-    }
-
-    // Read characters (each character is 23 bits: 6 + 16 + 1)
-    if (charCount > 0) {
-      state.c = []
-      for (let i = 0; i < charCount; i++) {
-        const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
-        const charId = reader.readBits(CHARACTER_ID_BITS) // 16 bits (max 65535)
-        const teamBit = reader.readBits(TEAM_BITS) // 1 bit
-
-        // Convert bit value back to Team enum: 0 -> Team.ALLY (1), 1 -> Team.ENEMY (2)
-        const team = teamBit + 1
-        state.c.push([hexId, charId, team])
-      }
-    }
-
-    // Read artifacts (ARTIFACT_BITS each for ally and enemy)
-    if (hasArtifacts) {
-      const ally = reader.readBits(ARTIFACT_BITS)
-      const enemy = reader.readBits(ARTIFACT_BITS)
-
-      // Convert 0 back to null (no artifact), 1-63 are artifact IDs
-      state.a = [ally === 0 ? null : ally, enemy === 0 ? null : enemy]
-    }
-
-    // Read phantimals (after artifacts) if the extended flag marked them present
-    if (hasPhantimals) {
-      const phantimalCount = reader.readBits(PHANTIMAL_COUNT_BITS)
-      if (phantimalCount > 0) {
-        state.s = []
-        for (let i = 0; i < phantimalCount; i++) {
-          const hexId = reader.readBits(HEX_ID_BITS) // 6 bits
-          const localId = reader.readBits(PHANTIMAL_ID_BITS) // 4 bits
-          const teamBit = reader.readBits(TEAM_BITS) // 1 bit
-          state.s.push([hexId, localId, teamBit + 1])
-        }
-      }
-    }
-
-    // TEMPORARY (delete with upgradeMigration.ts): a pre-`u` link's paragon
-    // section, converted to upgrades rows so nothing downstream sees the old
-    // shape. Sits between phantimals and synergy in the legacy stream order.
-    const upgradeRows: AttrRow[] = []
-    if (hasLegacyParagon) {
-      const paragonCount = reader.readBits(LEGACY_PARAGON_COUNT_BITS)
-      for (let i = 0; i < paragonCount; i++) {
-        const teamBit = reader.readBits(TEAM_BITS)
-        const charId = reader.readBits(CHARACTER_ID_BITS)
-        const level = reader.readBits(LEGACY_PARAGON_LEVEL_BITS)
-        upgradeRows.push([teamBit + 1, charId, 1, level])
-      }
-    }
-
-    // Read synergy units if the extended flag marked them present
-    if (hasSynergy) {
-      const synergyCount = reader.readBits(SYNERGY_COUNT_BITS)
-      if (synergyCount > 0) {
-        state.y = []
-        for (let i = 0; i < synergyCount; i++) {
-          const hexId = reader.readBits(HEX_ID_BITS)
-          const localId = reader.readBits(CHARACTER_ID_BITS)
-          const teamBit = reader.readBits(TEAM_BITS)
-          state.y.push([hexId, localId, teamBit + 1])
-        }
-      }
-    }
-
-    // Read upgrades (last section) if the extended flag marked them present
-    if (hasUpgrades) {
-      const upgradeCount = reader.readBits(UPGRADE_COUNT_BITS)
-      for (let i = 0; i < upgradeCount; i++) {
-        const teamBit = reader.readBits(TEAM_BITS)
-        const charId = reader.readBits(CHARACTER_ID_BITS)
-        const attrId = reader.readBits(ATTR_ID_BITS)
-        const value = reader.readBits(ATTR_VALUE_BITS)
-        upgradeRows.push([teamBit + 1, charId, attrId, value])
-      }
-    }
-
-    if (upgradeRows.length > 0) {
-      state.u = upgradeRows.sort(compareAttrRows)
-    }
-
-    return state
-  } catch (error) {
-    // Log error with context for easier debugging
-    console.error('Binary decode error:', error)
+    if (!reader.atCleanEnd()) return null
+    return { mode: mode.key, active, d, boards }
+  } catch {
     return null
   }
 }

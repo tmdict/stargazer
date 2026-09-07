@@ -32,7 +32,11 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
-import { getEncodedStateFromUrl } from '@/utils/urlStateManager'
+import {
+  decodeMultiGridStateFromUrl,
+  encodeMultiGridStateToLinkUrl,
+  getEncodedStateFromUrl,
+} from '@/utils/urlStateManager'
 
 const grids = useGrids()
 const gameDataStore = useGameDataStore()
@@ -182,9 +186,13 @@ const handleCopyImage = () => copyToClipboard(boardCapture)
 const handleDownload = () => downloadAsImage(boardCapture)
 
 // Mirror the Arena: copy a read-only /share link for all boards and open it.
-// The persistence snapshot is exactly the shareable encoding (boards + active
-// + flags + mode), so there is a single serialization path.
-const handleCopyLink = () => shareLink(teamsRestore.snapshot())
+// The persistence snapshot carries the full content (boards + active + flags
+// + mode) in the JSON interchange encoding; links go out in the compact
+// binary form, so the snapshot is decoded once and re-encoded for the wire.
+const handleCopyLink = () => {
+  const multi = decodeMultiGridStateFromUrl(teamsRestore.snapshot())
+  if (multi) shareLink(encodeMultiGridStateToLinkUrl(multi))
+}
 </script>
 
 <template>

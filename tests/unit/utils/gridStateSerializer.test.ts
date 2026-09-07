@@ -267,7 +267,15 @@ describe('gridStateSerializer', () => {
         createMockTile(4, State.OCCUPIED_ALLY, toSynergyId(100), Team.ALLY),
       ]
       const state = serializeMultiGridState(
-        [{ tiles, allyArtifact: 2, enemyArtifact: null, map: 'arena1', getAttrs: () => ({ 1: 3 }) }],
+        [
+          {
+            tiles,
+            allyArtifact: 2,
+            enemyArtifact: null,
+            map: 'arena1',
+            getAttrs: () => ({ 1: 3 }),
+          },
+        ],
         0,
       )
       expect(Object.keys(state.boards[0]!).sort()).toEqual([...BOARD_CONTENT_KEYS].sort())

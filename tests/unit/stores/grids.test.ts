@@ -1,7 +1,7 @@
-import { ATTR_PARAGON, type AttrRecord } from '@/lib/characters/attributes'
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { ATTR_PARAGON, type AttrRecord } from '@/lib/characters/attributes'
 import { findCharacterHex, getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
