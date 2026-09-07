@@ -2,17 +2,28 @@ import { describe, expect, it, vi } from 'vitest'
 
 import {
   bytesToUrlSafe,
-  decodeFromBinary,
-  encodeToBinary,
+  decodeLink,
+  encodeLink,
   urlSafeToBytes,
   validateGridState,
 } from '@/utils/binaryEncoder'
-import type { GridState } from '@/utils/gridStateSerializer'
+import {
+  packDisplayFlags,
+  unpackDisplayFlags,
+  type BoardState,
+  type GridState,
+} from '@/utils/gridStateSerializer'
+
+// The envelope's mandatory flags byte for a state that carried none.
+const DEFAULT_FLAGS = packDisplayFlags(unpackDisplayFlags(undefined))
+
+const arenaLink = (board: BoardState, d?: number): Uint8Array =>
+  encodeLink({ mode: 'arena', boards: [board], d })
 
 describe('binaryEncoder', () => {
-  describe('encodeToBinary and decodeFromBinary', () => {
+  describe('encodeLink and decodeLink', () => {
     it.each([
-      ['empty state', {}],
+      ['empty board', {}],
       [
         'only tiles',
         {
@@ -46,27 +57,6 @@ describe('binaryEncoder', () => {
           ],
         },
       ],
-      ['display flags with high bits set', { t: [[1, 1]], d: 0b101010 }],
-      ['display flags zero', { t: [[1, 1]], d: 0 }],
-      [
-        'display flags zero with extended counts',
-        { t: Array.from({ length: 10 }, (_, i) => [i + 1, 1]), d: 0 },
-      ],
-      ['display flags zero with phantimals', { s: [[5, 1, 1]], d: 0 }],
-      [
-        'complete state',
-        {
-          t: [
-            [1, 2],
-            [5, 3],
-          ],
-          c: [
-            [2, 100, 1],
-            [6, 200, 2],
-          ],
-          a: [2, 4],
-        },
-      ],
       [
         'only phantimals',
         {
@@ -85,11 +75,12 @@ describe('binaryEncoder', () => {
         },
       ],
       [
-        'phantimals with display flags',
+        'synergy units',
         {
-          t: [[1, 1]],
-          s: [[3, 4, 1]],
-          d: 0b1010,
+          y: [
+            [3, 50, 1],
+            [4, 10050, 2],
+          ],
         },
       ],
       [
@@ -106,228 +97,213 @@ describe('binaryEncoder', () => {
           ],
         },
       ],
-      ['only upgrades (extended header from the section alone)', { u: [[1, 33, 1, 3]] }],
+      ['only upgrades', { u: [[1, 33, 1, 3]] }],
       ['a team-scope sentinel row (characterId 0)', { u: [[1, 0, 2, 4]] }],
       [
-        'upgrades with phantimals, synergy, and display flags',
+        'every section together',
         {
+          t: [[1, 2]],
           c: [[2, 100, 1]],
+          a: [2, 4],
           s: [[7, 1, 2]],
           y: [[5, 100, 1]],
           u: [[1, 100, 1, 4]],
-          d: 0b1,
         },
       ],
-    ])('encodes and decodes %s', (_, state) => {
-      const encoded = encodeToBinary(state as GridState)
-      const decoded = decodeFromBinary(encoded)
-      expect(decoded).toEqual(state)
+    ])('round-trips an arena board with %s', (_, board) => {
+      const decoded = decodeLink(arenaLink(board as BoardState))
+      expect(decoded).toEqual({ mode: 'arena', active: 0, d: DEFAULT_FLAGS, boards: [board] })
     })
 
-    describe('upgradeMigration legacy bit-1 decode (TEMPORARY, deleted with the shim)', () => {
-      // Hand-assembled pre-`u` bytes: extended header, flags bit 1, one
-      // character [2,100,ally], one paragon row [ally,100,4].
-      const legacyBytes = (): Uint8Array => {
-        const bits: number[] = []
-        const push = (value: number, count: number): void => {
-          for (let i = 0; i < count; i++) bits.push((value >> i) & 1)
-        }
-        push(0x88, 8)
-        push(0x02, 8)
-        push(2, 6)
-        push(100, 16)
-        push(0, 1)
-        push(1, 5)
-        push(0, 1)
-        push(100, 16)
-        push(4, 3)
-        const bytes: number[] = []
-        for (let i = 0; i < bits.length; i += 8) {
-          let byte = 0
-          for (let j = 0; j < 8 && i + j < bits.length; j++) byte |= bits[i + j]! << j
-          bytes.push(byte)
-        }
-        return new Uint8Array(bytes)
+    it('round-trips a full 45-tile board', () => {
+      const board: BoardState = {
+        t: Array.from({ length: 45 }, (_, i) => [i + 1, (i % 7) + 1]),
+        c: Array.from({ length: 10 }, (_, i) => [i + 1, 100 + i, (i % 2) + 1]),
       }
-
-      it('converts a legacy paragon section into upgrade rows with attrId 1', () => {
-        expect(decodeFromBinary(legacyBytes())).toEqual({
-          c: [[2, 100, 1]],
-          u: [[1, 100, 1, 4]],
-        })
-      })
-
-      it('never re-encodes the legacy section (round-trip lands in the upgrades section)', () => {
-        const decoded = decodeFromBinary(legacyBytes())!
-        const reencoded = encodeToBinary(decoded)
-        expect(decodeFromBinary(reencoded)).toEqual(decoded)
-        expect(reencoded[1]! & 0x02).toBe(0)
-        expect(reencoded[1]! & 0x08).toBe(0x08)
-      })
+      expect(decodeLink(arenaLink(board))!.boards[0]).toEqual(board)
     })
 
-    describe('extended header handling', () => {
-      it.each([
-        ['8+ tiles', { t: Array.from({ length: 10 }, (_, i) => [i + 1, 1]) }],
-        [
-          '8+ characters',
-          { c: Array.from({ length: 12 }, (_, i) => [i + 1, 100 + i, (i % 2) + 1]) },
-        ],
-      ])('handles %s', (_, state) => {
-        const encoded = encodeToBinary(state as GridState)
-        const decoded = decodeFromBinary(encoded)
-        expect(decoded).toEqual(state)
-      })
-
-      it('handles maximum tiles (262) with content intact', () => {
-        const maxTiles = 262 // 7 in header + 255 in extended
-        const state: GridState = {
-          t: Array.from({ length: maxTiles }, (_, i) => [(i % 63) + 1, (i % 7) + 1]),
-        }
-        const encoded = encodeToBinary(state)
-        const decoded = decodeFromBinary(encoded)
-        expect(decoded?.t).toEqual(state.t)
-      })
-
-      it('handles maximum characters (262) with content intact', () => {
-        const maxChars = 262 // 7 in header + 255 in extended
-        const state: GridState = {
-          c: Array.from({ length: maxChars }, (_, i) => [
-            (i % 63) + 1,
-            (i % 1000) + 1,
-            (i % 2) + 1,
-          ]),
-        }
-        const encoded = encodeToBinary(state)
-        const decoded = decodeFromBinary(encoded)
-        expect(decoded?.c).toEqual(state.c)
-      })
-
-      it('round-trips the maximum phantimal count (15)', () => {
-        const state: GridState = {
-          s: Array.from({ length: 15 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
-        }
-        const encoded = encodeToBinary(state)
-        const decoded = decodeFromBinary(encoded)
-        expect(decoded?.s).toEqual(state.s)
-      })
+    it('round-trips a multi-board link with maps, active board, and flags', () => {
+      const boards: BoardState[] = [
+        { m: 'arena1', c: [[1, 11, 1]], u: [[1, 11, 2, 3]] },
+        { m: 'arena2', t: [[4, 5]] },
+        { m: 'preset-sr3' },
+      ]
+      const decoded = decodeLink(encodeLink({ mode: '3v3', boards, active: 2, d: 0b10110 }))
+      expect(decoded).toEqual({ mode: '3v3', active: 2, d: 0b10110, boards })
     })
 
-    describe('wire format', () => {
-      // Shared URLs embed this exact format: a change to bit layout, header
-      // flags, or the URL-safe alphabet silently breaks every existing link.
-      // If this test fails, the encoding changed and old URLs no longer decode.
-      const GOLDEN_STATE: GridState = {
-        t: [
-          [1, 2],
-          [5, 3],
-        ],
-        c: [
-          [2, 100, 1],
-          [6, 200, 2],
-          [10, 10089, 1],
-        ],
-        a: [3, 18],
-        s: [[7, 2, 2]],
+    it('preserves an explicit all-off flags byte and defaults an absent one', () => {
+      expect(decodeLink(arenaLink({}, 0))!.d).toBe(0)
+      expect(decodeLink(arenaLink({}))!.d).toBe(DEFAULT_FLAGS)
+    })
+
+    it('clamps the active board into the mode range on both sides', () => {
+      const boards: BoardState[] = [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }]
+      expect(decodeLink(encodeLink({ mode: '3v3', boards, active: 9 }))!.active).toBe(2)
+    })
+
+    it('pads or trims a board list that disagrees with the mode', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const decoded = decodeLink(encodeLink({ mode: '3v3', boards: [{ m: 'arena1' }] }))
+      expect(decoded!.boards).toEqual([{ m: 'arena1' }, {}, {}])
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('encodes an unregistered map key as none, keeping the board content', () => {
+      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
+      const decoded = decodeLink(arenaLink({ m: 'retired-map', t: [[1, 1]] }))
+      expect(decoded!.boards[0]).toEqual({ t: [[1, 1]] })
+      expect(consoleSpy).toHaveBeenCalled()
+      consoleSpy.mockRestore()
+    })
+
+    it('throws on an unknown mode key', () => {
+      expect(() => encodeLink({ mode: '9v9', boards: [] })).toThrow()
+    })
+  })
+
+  describe('strict decoding', () => {
+    // Hand-assembled v2 bit streams (LSB-first, like BitWriter).
+    const v2Bytes = (build: (push: (value: number, count: number) => void) => void): Uint8Array => {
+      const bits: number[] = []
+      const push = (value: number, count: number): void => {
+        for (let i = 0; i < count; i++) bits.push((value >> i) & 1)
+      }
+      build(push)
+      const bytes: number[] = []
+      for (let i = 0; i < bits.length; i += 8) {
+        let byte = 0
+        for (let j = 0; j < 8 && i + j < bits.length; j++) byte |= bits[i + j]! << j
+        bytes.push(byte)
+      }
+      return new Uint8Array(bytes)
+    }
+
+    it('rejects an unknown mode id', () => {
+      const bytes = v2Bytes((push) => {
+        push(7, 3) // unregistered mode
+        push(0, 3)
+        push(0, 8)
+        push(0, 6)
+        push(0, 8)
+      })
+      expect(decodeLink(bytes)).toBeNull()
+    })
+
+    it('rejects an unknown map id', () => {
+      const bytes = v2Bytes((push) => {
+        push(0, 3) // arena
+        push(0, 3)
+        push(0, 8)
+        push(63, 6) // unregistered map
+        push(0, 8)
+      })
+      expect(decodeLink(bytes)).toBeNull()
+    })
+
+    it('rejects unknown section-bitmap bits', () => {
+      const bytes = v2Bytes((push) => {
+        push(0, 3)
+        push(0, 3)
+        push(0, 8)
+        push(0, 6)
+        push(0x40, 8) // spare bit 6 set
+      })
+      expect(decodeLink(bytes)).toBeNull()
+    })
+
+    // The full-consumption rule: trailing content beyond the mode's boards
+    // means the payload is not a v2 link, however plausible its prefix.
+    it('rejects trailing bytes after a valid payload', () => {
+      const valid = arenaLink({ t: [[1, 1]] })
+      const padded = new Uint8Array([...valid, 0xff])
+      expect(decodeLink(valid)).not.toBeNull()
+      expect(decodeLink(padded)).toBeNull()
+    })
+
+    it('rejects truncated payloads and empty input', () => {
+      const valid = arenaLink({ c: [[2, 100, 1]] })
+      expect(decodeLink(valid.slice(0, valid.length - 1))).toBeNull()
+      expect(decodeLink(new Uint8Array())).toBeNull()
+      expect(decodeLink(new Uint8Array([0]))).toBeNull()
+    })
+
+    // Cross-format guardrails: the other formats' bytes must fail to null,
+    // never misparse — the shim's probe order depends on it.
+    it('rejects v1 payloads (the retired binary format)', () => {
+      const V1_GOLDEN = '2sAWgYoJZAAMZIBK2olBikMC'
+      const V1_GOLDEN_SECTIONS = 'iUyBBDIAcchIBgAIyAACigwgDA'
+      expect(decodeLink(urlSafeToBytes(V1_GOLDEN)!)).toBeNull()
+      expect(decodeLink(urlSafeToBytes(V1_GOLDEN_SECTIONS)!)).toBeNull()
+    })
+
+    it('rejects JSON multi payloads', () => {
+      const json = new TextEncoder().encode(
+        JSON.stringify({ boards: [{ m: 'arena1', c: [[1, 11, 1]] }], mode: '1v1' }),
+      )
+      expect(decodeLink(json)).toBeNull()
+    })
+  })
+
+  describe('wire format', () => {
+    /* Shared URLs embed this exact format: a change to bit layout, field
+     * order, section order, or the URL-safe alphabet silently breaks every
+     * existing link. If these fail, the encoding changed and old URLs no
+     * longer decode. */
+    const GOLDEN_ARENA_BOARD: BoardState = {
+      t: [
+        [1, 2],
+        [5, 3],
+      ],
+      c: [
+        [2, 100, 1],
+        [6, 200, 2],
+        [10, 10089, 1],
+      ],
+      a: [3, 18],
+      s: [[7, 2, 2]],
+      y: [[9, 3, 1]],
+      u: [
+        [1, 100, 1, 4],
+        [2, 200, 2, 3],
+      ],
+    }
+    const GOLDEN_ARENA_ENCODED = 'gAXwIwQqNghkAAxkgEraiUGKQ0YyAEBABhBQZABhAA'
+
+    const GOLDEN_TEAMS_LINK = {
+      mode: '3v3',
+      active: 1,
+      d: 0b10110,
+      boards: [
+        { m: 'arena1', c: [[1, 11, 1]], u: [[1, 11, 1, 4]] },
+        { m: 'arena2', t: [[4, 5]] },
+        { m: 'preset-sr1' },
+      ] as BoardState[],
+    }
+    const GOLDEN_TEAMS_ENCODED = 'ikUgEgQLAAILAAEJAQHRBQA'
+
+    it('encodes the golden arena link to the frozen string', () => {
+      expect(bytesToUrlSafe(arenaLink(GOLDEN_ARENA_BOARD, 0b10110))).toBe(GOLDEN_ARENA_ENCODED)
+    })
+
+    it('decodes the frozen arena string back to the golden state', () => {
+      const decoded = decodeLink(urlSafeToBytes(GOLDEN_ARENA_ENCODED)!)
+      expect(decoded).toEqual({
+        mode: 'arena',
+        active: 0,
         d: 0b10110,
-      }
-      const GOLDEN_ENCODED = '2sAWgYoJZAAMZIBK2olBikMC'
-
-      it('encodes the golden state to the frozen string', () => {
-        expect(bytesToUrlSafe(encodeToBinary(GOLDEN_STATE))).toBe(GOLDEN_ENCODED)
-      })
-
-      it('decodes the frozen string back to the golden state', () => {
-        const bytes = urlSafeToBytes(GOLDEN_ENCODED)
-        expect(bytes).not.toBeNull()
-        expect(decodeFromBinary(bytes!)).toEqual(GOLDEN_STATE)
-      })
-
-      // Pins the section ORDER (upgrades after synergy): a coordinated
-      // encoder+decoder reorder would pass every round-trip test while
-      // silently breaking existing links that carry both sections.
-      const GOLDEN_SECTIONS_STATE: GridState = {
-        t: [[1, 2]],
-        c: [[2, 100, 1]],
-        s: [[7, 2, 2]],
-        y: [[9, 3, 1]],
-        u: [
-          [1, 100, 1, 4],
-          [2, 200, 2, 3],
-        ],
-      }
-      const GOLDEN_SECTIONS_ENCODED = 'iUyBBDIAcchIBgAIyAACigwgDA'
-
-      it('encodes the synergy + upgrades state to the frozen string', () => {
-        expect(bytesToUrlSafe(encodeToBinary(GOLDEN_SECTIONS_STATE))).toBe(GOLDEN_SECTIONS_ENCODED)
-      })
-
-      it('decodes the synergy + upgrades frozen string back to the state', () => {
-        const bytes = urlSafeToBytes(GOLDEN_SECTIONS_ENCODED)
-        expect(bytes).not.toBeNull()
-        expect(decodeFromBinary(bytes!)).toEqual(GOLDEN_SECTIONS_STATE)
+        boards: [GOLDEN_ARENA_BOARD],
       })
     })
 
-    describe('validation and filtering', () => {
-      it('handles max character ID (65535)', () => {
-        const state: GridState = {
-          c: [
-            [1, 65535, 1],
-            [2, 1, 2],
-            [3, 10000, 1],
-          ],
-        }
-        const encoded = encodeToBinary(state)
-        const decoded = decodeFromBinary(encoded)
-        expect(decoded).toEqual(state)
-      })
-
-      it('filters invalid entries with warnings', () => {
-        const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-
-        const state: GridState = {
-          t: [
-            [1, 2],
-            [undefined as unknown as number, 3], // Invalid
-            [64, 3], // Invalid: hexId > 63
-          ],
-          c: [
-            [1, 100, 1],
-            [2, 70000, 1], // Invalid: charId > 65535
-            [3, 300, 3], // Invalid: team must be 1 or 2
-          ],
-        }
-
-        const encoded = encodeToBinary(state)
-        const decoded = decodeFromBinary(encoded)
-
-        // Only valid entries are preserved
-        expect(decoded?.t).toEqual([[1, 2]])
-        expect(decoded?.c).toEqual([[1, 100, 1]])
-        expect(consoleSpy).toHaveBeenCalled()
-
-        consoleSpy.mockRestore()
-      })
+    it('encodes the golden teams link to the frozen string', () => {
+      expect(bytesToUrlSafe(encodeLink(GOLDEN_TEAMS_LINK))).toBe(GOLDEN_TEAMS_ENCODED)
     })
 
-    describe('error handling', () => {
-      it('handles empty array', () => {
-        const result = decodeFromBinary(new Uint8Array())
-        expect(result).toEqual({})
-      })
-
-      it.each([
-        ['invalid header', new Uint8Array([0xff, 0xff])],
-        ['truncated data', new Uint8Array([0x10])], // Header says there's data but none provided
-      ])('handles %s gracefully', (_, invalidData) => {
-        // decodeFromBinary logs to console.error on failure; suppress for these expected-failure cases.
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-        const result = decodeFromBinary(invalidData)
-        expect(result).toBeNull()
-        expect(consoleSpy).toHaveBeenCalled()
-        consoleSpy.mockRestore()
-      })
+    it('decodes the frozen teams string back to the golden link', () => {
+      expect(decodeLink(urlSafeToBytes(GOLDEN_TEAMS_ENCODED)!)).toEqual(GOLDEN_TEAMS_LINK)
     })
   })
 
@@ -371,13 +347,34 @@ describe('binaryEncoder', () => {
       consoleSpy.mockRestore()
     })
 
-    it('caps phantimal entries at the 4-bit count limit (15)', () => {
+    // Every count field caps at its width: an oversized crafted list would
+    // otherwise wrap the encoded count and desync the decoder.
+    it.each([
+      ['tiles', { t: Array.from({ length: 64 }, (_, i) => [(i % 63) + 1, 1]) }, 't', 63],
+      [
+        'characters',
+        { c: Array.from({ length: 64 }, (_, i) => [(i % 63) + 1, 100 + i, (i % 2) + 1]) },
+        'c',
+        63,
+      ],
+      [
+        'phantimals',
+        { s: Array.from({ length: 16 }, (_, i) => [i + 1, (i % 15) + 1, 1]) },
+        's',
+        15,
+      ],
+      ['synergy', { y: Array.from({ length: 16 }, (_, i) => [i + 1, 100 + i, 1]) }, 'y', 15],
+      [
+        'upgrades',
+        { u: Array.from({ length: 64 }, (_, i) => [(i % 2) + 1, i + 1, 1, 3]) },
+        'u',
+        63,
+      ],
+    ])('caps %s at the count field maximum', (_, state, key, max) => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const state: GridState = {
-        s: Array.from({ length: 16 }, (_, i) => [i + 1, (i % 15) + 1, (i % 2) + 1]),
-      }
-      const result = validateGridState(state)
-      expect(result.s).toHaveLength(15)
+      expect(validateGridState(state as GridState)[key as keyof GridState]).toHaveLength(
+        max as number,
+      )
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
@@ -399,12 +396,18 @@ describe('binaryEncoder', () => {
       consoleSpy.mockRestore()
     })
 
-    it('caps upgrade entries at the 6-bit count limit (63)', () => {
+    it('validates synergy entries before capping', () => {
       const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-      const state: GridState = {
-        u: Array.from({ length: 64 }, (_, i) => [(i % 2) + 1, i + 1, (i % 2) + 1, 3]),
-      }
-      expect(validateGridState(state).u).toHaveLength(63)
+      const good: number[][] = Array.from({ length: 20 }, (_, i) => [i + 1, 100 + i, 1])
+      const bad: number[][] = [
+        [0, 50, 1],
+        [1, 0, 1],
+        [1, 70000, 1],
+        [1, 50, 3],
+      ]
+      const validated = validateGridState({ y: [...bad, ...good] })
+      expect(validated.y).toHaveLength(15)
+      expect(validated.y![0]).toEqual([1, 100, 1])
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
@@ -468,33 +471,5 @@ describe('binaryEncoder', () => {
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
-  })
-})
-
-describe('synergy section', () => {
-  it('round-trips synergy entries through the binary format', () => {
-    const state: GridState = {
-      y: [
-        [3, 50, 1],
-        [4, 10050, 2],
-      ],
-    }
-    expect(decodeFromBinary(encodeToBinary(state))).toEqual(state)
-  })
-
-  it('validates synergy entries and caps the count at the field maximum', () => {
-    const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const good: number[][] = Array.from({ length: 20 }, (_, i) => [i + 1, 100 + i, 1])
-    const bad: number[][] = [
-      [0, 50, 1],
-      [1, 0, 1],
-      [1, 70000, 1],
-      [1, 50, 3],
-    ]
-    const validated = validateGridState({ y: [...bad, ...good] })
-    expect(validated.y).toHaveLength(15)
-    expect(validated.y![0]).toEqual([1, 100, 1])
-    expect(consoleSpy).toHaveBeenCalled()
-    consoleSpy.mockRestore()
   })
 })

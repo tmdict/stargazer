@@ -20,7 +20,7 @@ import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useUrlStateStore } from '@/stores/urlState'
 import { teamsBoardSize } from '@/utils/teamsBoardSize'
-import { decodeMultiGridStateFromUrl, getEncodedStateFromRoute } from '@/utils/urlStateManager'
+import { decodeLinkFromUrl, getEncodedStateFromRoute } from '@/utils/urlStateManager'
 
 import '@/styles/modal.css'
 
@@ -32,12 +32,11 @@ const urlStateStore = useUrlStateStore()
 const { success } = useToast()
 const route = useRoute()
 
-// /share carries either a single-board (Arena) binary state or a 5 v 5 JSON state;
-// decodeMulti returns null for the former, which selects the render mode.
+// The payload names its own mode: arena renders the single-board viewer,
+// team modes the multi viewer.
 const encodedAtLoad = getEncodedStateFromRoute(route.query)
-const isMultiBoard = ref(
-  encodedAtLoad !== null && decodeMultiGridStateFromUrl(encodedAtLoad) !== null,
-)
+const linkAtLoad = encodedAtLoad !== null ? decodeLinkFromUrl(encodedAtLoad) : null
+const isMultiBoard = ref(linkAtLoad !== null && linkAtLoad.mode !== 'arena')
 
 // Multi reuses the Teams board sizing; single keeps the Arena breakpoint sizing.
 if (isMultiBoard.value) {
@@ -80,9 +79,15 @@ i18nStore.initialize()
 
 // Restore state from URL
 const restoreStateFromUrl = () => {
-  const result = isMultiBoard.value
-    ? urlStateStore.restoreMultiFromEncodedState(encodedAtLoad)
-    : urlStateStore.restoreFromEncodedState(encodedAtLoad)
+  const result =
+    isMultiBoard.value && linkAtLoad
+      ? urlStateStore.restoreMultiFromDecodedState({
+          boards: linkAtLoad.boards,
+          active: linkAtLoad.active,
+          d: linkAtLoad.d,
+          mode: linkAtLoad.mode,
+        })
+      : urlStateStore.restoreFromEncodedState(encodedAtLoad)
 
   if (result.success) {
     // Apply display flags if present

@@ -5,7 +5,12 @@ import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { Team } from '@/lib/types/team'
-import { unpackDisplayFlags, type DisplayFlags, type GridState } from '@/utils/gridStateSerializer'
+import {
+  unpackDisplayFlags,
+  type DisplayFlags,
+  type GridState,
+  type MultiGridState,
+} from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { useArtifactStore } from './artifact'
 import { useCharacterStore } from './character'
@@ -191,16 +196,13 @@ export const useUrlStateStore = defineStore('urlState', () => {
     characterStore.seedPhantimalBaseline()
   }
 
-  // Restore N boards (5 v 5): rebuild the board array, then restore each board by
+  // Restore N boards: rebuild the board array, then restore each board by
   // temporarily making it active so the same per-board apply path is reused.
-  const restoreMultiFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
-    if (!encodedState) {
-      return { success: false, error: 'No state provided' }
-    }
-
+  // Takes decoded state so both payload formats share it: the JSON wrapper
+  // below (slots, saved teams) and ShareView's binary multi links.
+  const restoreMultiFromDecodedState = (multi: MultiGridState): UrlRestoreResult => {
     try {
-      const multi = decodeMultiGridStateFromUrl(encodedState)
-      if (!multi || multi.boards.length === 0) {
+      if (multi.boards.length === 0) {
         return { success: false, error: 'Invalid state data' }
       }
 
@@ -227,13 +229,25 @@ export const useUrlStateStore = defineStore('urlState', () => {
         hasDisplayFlags: multi.d !== undefined,
       }
     } catch (err) {
-      console.error('Failed to restore multi state from encoded string:', err)
+      console.error('Failed to restore multi state:', err)
       return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   }
 
+  const restoreMultiFromEncodedState = (encodedState: string | null): UrlRestoreResult => {
+    if (!encodedState) {
+      return { success: false, error: 'No state provided' }
+    }
+    const multi = decodeMultiGridStateFromUrl(encodedState)
+    if (!multi) {
+      return { success: false, error: 'Invalid state data' }
+    }
+    return restoreMultiFromDecodedState(multi)
+  }
+
   return {
     restoreFromEncodedState,
+    restoreMultiFromDecodedState,
     restoreMultiFromEncodedState,
   }
 })

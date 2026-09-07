@@ -6,7 +6,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 
 ## Design Principles
 
-1. **One format everywhere**: live boards, autosave slots, share links, backup files, and saved teams all serialize to the same encoded `MultiGridState` string
+1. **One interchange format**: live boards, autosave slots, backup files, and saved teams all serialize to the same encoded `MultiGridState` string; share links re-encode that content in the compact binary link format (see [URL Serialization](./URL_SERIALIZATION.md))
 2. **Mode is data, not a tab**: one registry (`TEAM_MODES`) and one orchestrator reconfigure the single board array; there are never two writers to the live boards
 3. **One slot per mode**: each mode autosaves to its own versioned localStorage envelope, so switching modes is lossless by construction
 4. **One restore path**: every whole-board apply (slot restore, mode switch, saved-team load, `?g=` ingress) goes through `restoreMultiFromEncodedState`; the side-load merge is deliberately an engine-primitive edit instead (see Side Loading)
@@ -126,7 +126,7 @@ stargazer.teams.saved.backup         an unknown-version library blob, preserved 
 5. Adopt the slot's `sourceId`, normalized through the library (unresolvable → null)
 6. Resume autosave, write the baseline
 
-A `?g=` link resolves its mode first, then normalizes and applies through the same path with `sourceId = null`, overwriting the routed mode's slot (a shared link is nobody's saved team). A link that fails to decode or apply falls back to the saved slot, which autosave then cannot wipe.
+A `?g=` link is binary and names its own mode (`decodeLinkFromUrl`): the decoded payload re-encodes as interchange JSON and applies through the same path with `sourceId = null`, overwriting its mode's slot (a shared link is nobody's saved team). An arena-mode payload is a wrong-page link; it and any link that fails to decode or apply fall back to the saved slot, which autosave then cannot wipe.
 
 ## Saved-Team Library
 
@@ -200,12 +200,12 @@ Driven from the Saved Teams tab's library bar (see TeamsRoster above); a file ho
 
 ## Sharing & Image Export
 
-- **Link**: copies a read-only `/share` URL built from the same persistence snapshot autosave writes; `/share` shows the wrap layout only for 5-board payloads, and its Edit action reopens `/teams` with the payload applied
+- **Link**: copies a read-only `/share` URL carrying the same content the persistence snapshot autosave writes, decoded once and re-encoded in the compact binary link format (`encodeMultiGridStateToLinkUrl`); `/share` shows the wrap layout only for 5-board payloads, and its Edit action reopens `/teams` with the payload applied
 - **Copy / Download**: captures the full boards track as one image through `useGridExport` (scrolled-out boards included, per-board action buttons filtered out)
 - **Per-board copy/download**: each board's own actions export just that board
 
 ## Related Documentation
 
 - [`/docs/architecture/GRID.md`](./GRID.md) - Multi-board store, grid contexts, placement modes, bottom sheet
-- [`/docs/architecture/URL_SERIALIZATION.md`](./URL_SERIALIZATION.md) - The `MultiGridState` codec, mode field, canonical form
+- [`/docs/architecture/URL_SERIALIZATION.md`](./URL_SERIALIZATION.md) - The binary link codec, the `MultiGridState` interchange format, canonical form
 - [`/docs/architecture/DRAG_AND_DROP.md`](./DRAG_AND_DROP.md) - Cross-board character and artifact drag

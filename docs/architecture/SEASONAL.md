@@ -95,8 +95,8 @@ get their own section rather than overloading `c`:
 
 - `GridState.s`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`).
 - `binaryEncoder.ts`: a phantimal section after artifacts, a 4-bit count then
-  `hexId(6) + localId(4) + team(1)` per entry. Presence is flagged by **bit 6 of
-  the extended-flags byte**, which forces extended mode.
+  `hexId(6) + localId(4) + team(1)` per entry. Presence is flagged by the `s`
+  bit of the board header's section bitmap.
 - `urlState.ts` restores phantimals via `placePhantimalOnHex` after characters
   and artifacts.
 

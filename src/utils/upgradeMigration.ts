@@ -1,23 +1,30 @@
-/* One-time conversion of stored/shared paragon data from the retired formats
- * (JSON `p` boards, binary bit-1 sections) to the `u` upgrade rows. All legacy
- * `p` knowledge lives here plus the tagged bit-1 decode branch in
- * binaryEncoder.ts; the serializer and every consumer know only `u`.
+/* One-time conversion of stored/shared legacy data to the current formats: the
+ * pre-`u` JSON `p` boards, and the entire pre-v2 (v1) binary link format —
+ * every consumer outside this file knows only `u` rows and v2 links.
  *
- * Two halves. `convertLegacyBoard` runs inside decodeMultiGridStateFromUrl —
- * the single choke point for all multi-board JSON (library hydration, mode
- * slots, /teams?g= links, import files, previews, side-load) — so any legacy
- * payload converts the moment it is read. `runUpgradeStoragePass` runs once at
- * app startup and rewrites the at-rest keys (library records, the four mode
- * slots, the arena autosave) so stored data stops depending on the read-side
- * conversion before it is deleted.
+ * Three pieces:
+ * - `convertLegacyBoard` runs inside decodeMultiGridStateFromUrl — the single
+ *   choke point for all multi-board JSON (library hydration, mode slots,
+ *   import files, previews, side-load) — so any legacy `p` payload converts
+ *   the moment it is read.
+ * - `decodeLegacyLink` is the frozen v1 binary reader (verbatim copy of the
+ *   retired decoder, bit-1 paragon section included, plus a strict
+ *   full-consumption check the original lacked — without it the v1 reader
+ *   "succeeds" on v2 bytes) with a JSON-multi fallback for pre-binary Teams
+ *   links. Its ONLY caller is the universal link decoder in urlStateManager;
+ *   nothing else may call it, which is what keeps the storage pass idempotent
+ *   (the wrapper probes strict v2 first, so an already-converted value
+ *   re-encodes to identical bytes and skips the write).
+ * - `runUpgradeStoragePass` runs once at app startup and rewrites the at-rest
+ *   keys (library records, the four mode slots, the arena autosave) so stored
+ *   data stops depending on the read-side conversions before deletion.
  *
- * The pass is idempotent (`p` present + `u` absent converts; anything else
- * no-ops), so its marker is written LAST, only after every attempted write
- * landed — a failed write (quota; the library is the app's largest key) just
- * retries next load. (A non-idempotent pass would need the opposite,
- * marker-FIRST discipline; this one re-runs harmlessly, so retry beats
- * never-again.) Accepted races: two tabs both running the pass
- * write equivalent bytes; a stale pre-deploy tab autosaving `p`-form data
+ * The pass is idempotent, so its marker is written LAST, only after every
+ * attempted write landed — a failed write (quota; the library is the app's
+ * largest key) just retries next load. (A non-idempotent pass would need the
+ * opposite, marker-FIRST discipline; this one re-runs harmlessly, so retry
+ * beats never-again.) Accepted races: two tabs both running the pass write
+ * equivalent bytes; a stale pre-deploy tab autosaving legacy-format data
  * during the shim window is healed by the read-side conversion until removal.
  *
  * TEMPORARY, planned for deletion about a month after release.
@@ -28,30 +35,28 @@
  * 2. Delete tests/unit/utils/upgradeMigration.test.ts.
  * 3. Delete every `describe('upgradeMigration ...')` block in other test
  *    files (`grep -rn "upgradeMigration" tests` finds them); nothing else
- *    tests legacy `p` behavior.
- * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard import
- *    and its call in decodeMultiGridStateFromUrl.
+ *    tests legacy behavior.
+ * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard and
+ *    decodeLegacyLink imports and their two tagged TEMPORARY calls (in
+ *    decodeMultiGridStateFromUrl and decodeLinkFromUrl).
  * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
  *    in the setup block, and the ordering comment above it.
- * 6. In src/utils/binaryEncoder.ts: remove the bit-1 legacy branch in
- *    decodeFromBinary (including the hasLegacyParagon flag it sets and
- *    reads), the LEGACY_PARAGON_* constants, and the two "legacy paragon"
- *    format-spec notes; extended-flags bit 1 is then free for future reuse.
- * 7. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
- * 8. The stargazer.migration.u marker key stays behind in user storage as
+ * 6. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
+ * 7. The stargazer.migration.u marker key stays behind in user storage as
  *    accepted residue.
- * 9. Verify: `grep -ri upgrademigration src tests` returns nothing, then
+ * 8. Verify: `grep -ri upgrademigration src tests` returns nothing, then
  *    lint, type-check, and the test suite pass with no further edits.
  * Expected user-visible consequences, accepted by policy (old links and
- * exports are expendable): pre-release Teams links and export files lose
- * their paragon levels; pre-release Arena links that carried paragon stop
- * decoding and load an empty board.
+ * exports are expendable): pre-release links of every kind stop decoding
+ * (empty board), and pre-release export files lose their paragon levels.
  *
- * The storage keys are duplicated here (not exported from their owners) so
- * deleting this file leaves no orphaned exports behind.
+ * The storage keys, the v1 bit reader, and the v1 field widths are all
+ * duplicated here (not imported from or exported to their owners) so deleting
+ * this file leaves no orphaned exports behind.
  */
 
 import { clampAttr, compareAttrRows, type AttrRow } from '@/lib/characters/attributes'
+import { resolveTeamMode } from '@/lib/teams/modes'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { readStorage, writeStorage } from '@/utils/storage'
 import {
@@ -60,6 +65,8 @@ import {
   encodeGridStateToUrl,
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
+import type { BinaryLinkState } from './binaryEncoder'
+import { packDisplayFlags, unpackDisplayFlags, type GridState } from './gridStateSerializer'
 
 const MARKER_KEY = 'stargazer.migration.u'
 const ARENA_KEY = 'stargazer.arena'
@@ -168,4 +175,205 @@ export function runUpgradeStoragePass(): void {
   }
   allOk = rewriteLibrary() && allOk
   if (allOk) writeStorage(MARKER_KEY, '1')
+}
+
+/* ------------------------------------------------------------------------- *
+ * Frozen v1 binary reader — the retired link format, decode-only.
+ * ------------------------------------------------------------------------- */
+
+const V1_HEX_ID_BITS = 6
+const V1_TILE_STATE_BITS = 3
+const V1_TEAM_BITS = 1
+const V1_CHARACTER_ID_BITS = 16
+const V1_ARTIFACT_BITS = 6
+const V1_PHANTIMAL_ID_BITS = 4
+const V1_PHANTIMAL_COUNT_BITS = 4
+const V1_SYNERGY_COUNT_BITS = 4
+const V1_UPGRADE_COUNT_BITS = 6
+const V1_ATTR_ID_BITS = 6
+const V1_ATTR_VALUE_BITS = 4
+const V1_PARAGON_LEVEL_BITS = 3
+const V1_PARAGON_COUNT_BITS = 5
+
+class V1BitReader {
+  private position = 0
+
+  constructor(private bytes: Uint8Array) {}
+
+  readBits(bitCount: number): number {
+    let value = 0
+    for (let i = 0; i < bitCount; i++) {
+      const byteIndex = Math.floor((this.position + i) / 8)
+      const bitIndex = (this.position + i) % 8
+      if (byteIndex >= this.bytes.length) {
+        throw new Error('Unexpected end of data')
+      }
+      const byte = this.bytes[byteIndex]
+      if (byte === undefined) {
+        throw new Error('Unexpected end of data')
+      }
+      value |= ((byte >> bitIndex) & 1) << i
+    }
+    this.position += bitCount
+    return value
+  }
+
+  atCleanEnd(): boolean {
+    const remaining = this.bytes.length * 8 - this.position
+    if (remaining < 0 || remaining >= 8) return false
+    return remaining === 0 || this.readBits(remaining) === 0
+  }
+}
+
+/* The retired v1 decoder, verbatim (packed two-counts header byte, extended
+ * header/counts, display-flags presence bit, the bit-1 paragon section merged
+ * into `u` rows) plus the strict trailing check: without full consumption the
+ * v1 reader "decodes" v2 bytes into a plausible wrong state, and the storage
+ * pass's retry would then overwrite converted data with garbage. */
+const decodeV1Binary = (bytes: Uint8Array): GridState | null => {
+  if (bytes.length === 0) return {}
+  if (bytes.length === 1 && bytes[0] === 0) return {}
+
+  try {
+    const reader = new V1BitReader(bytes)
+    const state: GridState = {}
+
+    const header = reader.readBits(8)
+    let tileCount = header & 0x07
+    let charCount = (header >> 3) & 0x07
+    const hasArtifacts = (header & 0x40) !== 0
+    const hasExtended = (header & 0x80) !== 0
+
+    let hasPhantimals = false
+    let hasLegacyParagon = false
+    let hasSynergy = false
+    let hasUpgrades = false
+
+    if (hasExtended) {
+      const extendedFlags = reader.readBits(8)
+      const needsExtendedCounts = (extendedFlags & 0x01) !== 0
+      hasPhantimals = (extendedFlags & 0x40) !== 0
+      hasLegacyParagon = (extendedFlags & 0x02) !== 0
+      hasSynergy = (extendedFlags & 0x04) !== 0
+      hasUpgrades = (extendedFlags & 0x08) !== 0
+
+      if ((extendedFlags & 0x80) !== 0) {
+        state.d = reader.readBits(8)
+      }
+      if (needsExtendedCounts) {
+        tileCount += reader.readBits(8)
+        charCount += reader.readBits(8)
+      }
+    }
+
+    if (tileCount > 0) {
+      state.t = []
+      for (let i = 0; i < tileCount; i++) {
+        state.t.push([reader.readBits(V1_HEX_ID_BITS), reader.readBits(V1_TILE_STATE_BITS)])
+      }
+    }
+
+    if (charCount > 0) {
+      state.c = []
+      for (let i = 0; i < charCount; i++) {
+        state.c.push([
+          reader.readBits(V1_HEX_ID_BITS),
+          reader.readBits(V1_CHARACTER_ID_BITS),
+          reader.readBits(V1_TEAM_BITS) + 1,
+        ])
+      }
+    }
+
+    if (hasArtifacts) {
+      const ally = reader.readBits(V1_ARTIFACT_BITS)
+      const enemy = reader.readBits(V1_ARTIFACT_BITS)
+      state.a = [ally === 0 ? null : ally, enemy === 0 ? null : enemy]
+    }
+
+    if (hasPhantimals) {
+      const count = reader.readBits(V1_PHANTIMAL_COUNT_BITS)
+      if (count > 0) {
+        state.s = []
+        for (let i = 0; i < count; i++) {
+          state.s.push([
+            reader.readBits(V1_HEX_ID_BITS),
+            reader.readBits(V1_PHANTIMAL_ID_BITS),
+            reader.readBits(V1_TEAM_BITS) + 1,
+          ])
+        }
+      }
+    }
+
+    const upgradeRows: AttrRow[] = []
+    if (hasLegacyParagon) {
+      const count = reader.readBits(V1_PARAGON_COUNT_BITS)
+      for (let i = 0; i < count; i++) {
+        const teamBit = reader.readBits(V1_TEAM_BITS)
+        const charId = reader.readBits(V1_CHARACTER_ID_BITS)
+        const level = reader.readBits(V1_PARAGON_LEVEL_BITS)
+        upgradeRows.push([teamBit + 1, charId, 1, level])
+      }
+    }
+
+    if (hasSynergy) {
+      const count = reader.readBits(V1_SYNERGY_COUNT_BITS)
+      if (count > 0) {
+        state.y = []
+        for (let i = 0; i < count; i++) {
+          state.y.push([
+            reader.readBits(V1_HEX_ID_BITS),
+            reader.readBits(V1_CHARACTER_ID_BITS),
+            reader.readBits(V1_TEAM_BITS) + 1,
+          ])
+        }
+      }
+    }
+
+    if (hasUpgrades) {
+      const count = reader.readBits(V1_UPGRADE_COUNT_BITS)
+      for (let i = 0; i < count; i++) {
+        upgradeRows.push([
+          reader.readBits(V1_TEAM_BITS) + 1,
+          reader.readBits(V1_CHARACTER_ID_BITS),
+          reader.readBits(V1_ATTR_ID_BITS),
+          reader.readBits(V1_ATTR_VALUE_BITS),
+        ])
+      }
+    }
+
+    if (upgradeRows.length > 0) {
+      state.u = upgradeRows.sort(compareAttrRows)
+    }
+
+    if (!reader.atCleanEnd()) return null
+    return state
+  } catch {
+    return null
+  }
+}
+
+// v1 states without a flags byte predate display flags; the v2 envelope's
+// byte is mandatory, so they take the unpack defaults (skills/perspective on).
+const legacyFlagsByte = (d: number | undefined): number =>
+  (d ?? packDisplayFlags(unpackDisplayFlags(undefined))) & 0xff
+
+/* Read one legacy link payload into the v2 link shape. JSON probe first — a
+ * pre-binary Teams link parses deterministically, while binary bytes
+ * essentially never parse as JSON with a boards array — then the frozen v1
+ * binary reader (arena links and the stored arena autosave). */
+export function decodeLegacyLink(encoded: string, bytes: Uint8Array): BinaryLinkState | null {
+  const multi = decodeMultiGridStateFromUrl(encoded)
+  if (multi && multi.boards.length > 0) {
+    return {
+      mode: resolveTeamMode(multi),
+      active: Math.min(Math.max(multi.active ?? 0, 0), multi.boards.length - 1),
+      d: legacyFlagsByte(multi.d),
+      boards: multi.boards,
+    }
+  }
+
+  const state = decodeV1Binary(bytes)
+  if (!state) return null
+  const { d, ...board } = state
+  return { mode: 'arena', active: 0, d: legacyFlagsByte(d), boards: [board] }
 }

@@ -17,15 +17,19 @@ import { ref } from 'vue'
 import { useSelectionState } from '@/composables/useSelectionState'
 import {
   DEFAULT_TEAM_MODE,
+  isTeamModeKey,
   normalizeTeamPayload,
-  resolveTeamMode,
   TEAM_MODES,
   type TeamModeKey,
 } from '@/lib/teams/modes'
 import { useGrids } from '@/stores/grids'
 import { useUrlStateStore } from '@/stores/urlState'
-import type { DisplayFlags } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import type { DisplayFlags, MultiGridState } from '@/utils/gridStateSerializer'
+import {
+  decodeLinkFromUrl,
+  decodeMultiGridStateFromUrl,
+  encodeMultiGridStateToUrl,
+} from '@/utils/urlStateManager'
 import { useTeamsPersistence } from './useGridPersistence'
 
 export interface TeamsRestoreOptions {
@@ -142,9 +146,18 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     let linkFailed = false
 
     if (sharedLink) {
-      const decoded = decodeMultiGridStateFromUrl(sharedLink)
-      if (decoded && decoded.boards.length > 0) {
-        const mode = resolveTeamMode(decoded)
+      // Links are binary and self-describing; an arena-mode payload pasted
+      // here is a wrong-page link and falls through to the slot. The decoded
+      // link re-encodes as JSON so the apply path stays the interchange one.
+      const link = decodeLinkFromUrl(sharedLink)
+      if (link && isTeamModeKey(link.mode) && link.boards.length > 0) {
+        const mode = link.mode
+        const decoded: MultiGridState = {
+          boards: link.boards,
+          active: link.active,
+          d: link.d,
+          mode,
+        }
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
         if (applyEncoded(normalized, true)) {
