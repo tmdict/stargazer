@@ -43,13 +43,18 @@ import {
  * The 16-bit character field also carries companion ids (N * 10000 + base,
  * see grid.ts), which caps companion index N at 6 for base ids below 5536.
  *
- * Decoding is STRICT: unknown mode, map, or section-bitmap bits reject, and
- * the entire input must be consumed with only zero padding bits remaining.
- * That is what makes another format's bytes practically impossible to
- * misread as a valid link, which the shim's probe order relies on. No version
- * field, deliberately: the app and its links deploy together, links are
- * expendable, and only the arena autosave outlives a deploy (converted by a
- * temporary shim per format change).
+ * Decoding is STRICT — a payload either is a link this encoder could have
+ * produced, or it rejects. Unknown mode, map, or section-bitmap bits reject;
+ * an arena-mode board carrying a map id rejects (arena boards never encode
+ * one); a counted section with a zero count rejects (validation never emits
+ * empty sections); and the entire input must be consumed with only zero
+ * padding bits remaining. Together these make another format's bytes
+ * practically impossible to misread as a valid link, which the shim's probe
+ * order relies on — near-empty payloads especially need the arena-map and
+ * zero-count rules, since a minimal parse can fit inside just a few foreign
+ * bytes. No version field, deliberately: the app and its links deploy
+ * together, links are expendable, and only the arena autosave outlives a
+ * deploy (converted by a temporary shim per format change).
  */
 
 const MODE_BITS = 3
@@ -111,82 +116,66 @@ export interface BinaryLinkInput {
   boards: BoardState[]
 }
 
-/**
- * Validates and filters grid state to ensure all values are within valid ranges.
- * This prevents encoding errors and ensures encoder/decoder stay in sync.
- */
+// Integers only: writeBits truncates fractions the same way it truncates
+// oversized values, silently aliasing them to a different id on decode.
+const inRange = (value: unknown, min: number, max: number): boolean =>
+  typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
+
+const isTeam = (value: unknown): boolean => value === 1 || value === 2
+
+/* Filter a state down to entries the bit fields can carry exactly. Invalid
+ * entries drop with a warning (never a throw), each list is capped at its
+ * count field's maximum so the encoded count can't wrap, and an emptied
+ * section is omitted entirely — the decoder's zero-count rejection relies on
+ * that. Exported for direct testing; encodeBoard is its one live caller. */
 export function validateGridState(state: GridState): GridState {
-  // Handle null, undefined, or non-object inputs
   if (!state || typeof state !== 'object' || Array.isArray(state)) {
     return {}
   }
 
   const validated: GridState = {}
 
-  // Validate tile entries: hexId must be 1-63, state must be 0-7
-  // We filter out invalid entries to ensure the count matches actual data written
+  const filterRows = (
+    rows: number[][],
+    label: string,
+    max: number,
+    isValid: (entry: number[]) => boolean,
+  ): number[][] | undefined => {
+    let valid = rows.filter((entry) => {
+      if (isValid(entry)) return true
+      console.warn(`Invalid ${label} entry:`, entry)
+      return false
+    })
+    if (valid.length > max) {
+      console.warn(`Too many ${label} entries (${valid.length}), keeping first ${max}`)
+      valid = valid.slice(0, max)
+    }
+    return valid.length > 0 ? valid : undefined
+  }
+
   if (state.t && Array.isArray(state.t)) {
-    let validTiles = state.t.filter((entry) => {
-      const [hexId, tileState] = entry
-      const isValid =
-        hexId != null &&
-        hexId > 0 &&
-        hexId <= 63 &&
-        tileState != null &&
-        tileState >= 0 &&
-        tileState <= 7
-      if (!isValid && (hexId == null || hexId <= 0 || hexId > 63)) {
-        console.warn(`Invalid tile entry: hexId ${hexId} out of range (1-63)`, entry)
-      }
-      return isValid
-    })
-    // Cap at the count field's maximum so the encoded count can't wrap.
-    if (validTiles.length > MAX_TILE_COUNT) {
-      console.warn(`Too many tile entries (${validTiles.length}), keeping first ${MAX_TILE_COUNT}`)
-      validTiles = validTiles.slice(0, MAX_TILE_COUNT)
-    }
-    if (validTiles.length > 0) {
-      validated.t = validTiles
-    }
+    const t = filterRows(
+      state.t,
+      'tile',
+      MAX_TILE_COUNT,
+      ([hexId, tileState]) => inRange(hexId, 1, 63) && inRange(tileState, 0, 7),
+    )
+    if (t) validated.t = t
   }
 
-  // Validate character entries: hexId 1-63, charId 1-65535, team 1-2
-  // This ensures character IDs fit in 16 bits and teams in 1 bit
   if (state.c && Array.isArray(state.c)) {
-    let validChars = state.c.filter((entry) => {
-      const [hexId, charId, team] = entry
-      const isValid =
-        hexId != null &&
-        hexId > 0 &&
-        hexId <= 63 &&
-        charId != null &&
-        charId > 0 &&
-        charId <= MAX_CHARACTER_ID &&
-        (team === 1 || team === 2)
-      if (!isValid) {
-        console.warn('Invalid character entry:', {
-          hexId: hexId ?? 'undefined',
-          charId: charId ?? 'undefined',
-          team: team ?? 'undefined',
-          limits: { maxHexId: 63, maxCharId: MAX_CHARACTER_ID, validTeams: [1, 2] },
-        })
-      }
-      return isValid
-    })
-    if (validChars.length > MAX_CHARACTER_COUNT) {
-      console.warn(
-        `Too many character entries (${validChars.length}), keeping first ${MAX_CHARACTER_COUNT}`,
-      )
-      validChars = validChars.slice(0, MAX_CHARACTER_COUNT)
-    }
-    if (validChars.length > 0) {
-      validated.c = validChars
-    }
+    const c = filterRows(
+      state.c,
+      'character',
+      MAX_CHARACTER_COUNT,
+      ([hexId, charId, team]) =>
+        inRange(hexId, 1, 63) && inRange(charId, 1, MAX_CHARACTER_ID) && isTeam(team),
+    )
+    if (c) validated.c = c
   }
 
-  // Artifacts: must be array with exactly 2 elements; each element null or an ID
-  // within the 6-bit field (1-63). Out-of-range IDs become null; writeBits would
-  // otherwise silently truncate them to a different artifact's ID.
+  // An out-of-range artifact id becomes null rather than dropping the pair,
+  // so the other side's artifact survives.
   if (state.a && Array.isArray(state.a) && state.a.length === 2) {
     validated.a = state.a.map((id) => {
       if (id == null) return null
@@ -196,76 +185,40 @@ export function validateGridState(state: GridState): GridState {
     })
   }
 
-  // Validate phantimal entries: hexId 1-63, local id 1-15, team 1-2
   if (state.s && Array.isArray(state.s)) {
-    let validPhantimals = state.s.filter((entry) => {
-      const [hexId, localId, team] = entry
-      const isValid =
-        hexId != null &&
-        hexId > 0 &&
-        hexId <= 63 &&
-        localId != null &&
-        localId > 0 &&
-        localId <= MAX_PHANTIMAL_ID &&
-        (team === 1 || team === 2)
-      if (!isValid) {
-        console.warn('Invalid phantimal entry:', entry)
-      }
-      return isValid
-    })
-    if (validPhantimals.length > MAX_PHANTIMAL_COUNT) {
-      console.warn(
-        `Too many phantimal entries (${validPhantimals.length}), keeping first ${MAX_PHANTIMAL_COUNT}`,
-      )
-      validPhantimals = validPhantimals.slice(0, MAX_PHANTIMAL_COUNT)
-    }
-    if (validPhantimals.length > 0) {
-      validated.s = validPhantimals
-    }
+    const s = filterRows(
+      state.s,
+      'phantimal',
+      MAX_PHANTIMAL_COUNT,
+      ([hexId, localId, team]) =>
+        inRange(hexId, 1, 63) && inRange(localId, 1, MAX_PHANTIMAL_ID) && isTeam(team),
+    )
+    if (s) validated.s = s
   }
 
-  // Validate synergy entries: hexId 1-63, local id 1-65535, team 1-2
   if (state.y && Array.isArray(state.y)) {
-    let validSynergy = state.y.filter((entry) => {
-      const [hexId, localId, team] = entry
-      const isValid =
-        hexId != null &&
-        hexId > 0 &&
-        hexId <= 63 &&
-        localId != null &&
-        localId > 0 &&
-        localId <= MAX_CHARACTER_ID &&
-        (team === 1 || team === 2)
-      if (!isValid) {
-        console.warn('Invalid synergy entry:', entry)
-      }
-      return isValid
-    })
-    if (validSynergy.length > MAX_SYNERGY_COUNT) {
-      console.warn(
-        `Too many synergy entries (${validSynergy.length}), keeping first ${MAX_SYNERGY_COUNT}`,
-      )
-      validSynergy = validSynergy.slice(0, MAX_SYNERGY_COUNT)
-    }
-    if (validSynergy.length > 0) {
-      validated.y = validSynergy
-    }
+    const y = filterRows(
+      state.y,
+      'synergy',
+      MAX_SYNERGY_COUNT,
+      ([hexId, localId, team]) =>
+        inRange(hexId, 1, 63) && inRange(localId, 1, MAX_CHARACTER_ID) && isTeam(team),
+    )
+    if (y) validated.y = y
   }
 
-  // Validate upgrade rows: team 1-2, charId 0-65535 (0 = team-scope sentinel),
-  // known attrId; values clamp to the registry range rather than dropping.
-  // Deduped last-wins with defaults dropped — mirrors canonicalAttrRows, so a
-  // crafted link carrying duplicate or zero rows can't burn the 63-row cap or
-  // persist junk through the arena autosave's decode/re-encode.
+  // Upgrade rows dedupe last-wins with defaults dropped (charId 0 is the
+  // team-scope sentinel; values clamp to the registry range rather than
+  // dropping) — mirrors canonicalAttrRows, so a crafted link carrying
+  // duplicate or zero rows can't burn the 63-row cap or persist junk through
+  // the arena autosave's decode/re-encode.
   if (state.u && Array.isArray(state.u)) {
     const byKey = new Map<string, [number, number, number, number]>()
     for (const entry of state.u) {
       const [team, charId, attrId] = entry
       if (
-        (team !== 1 && team !== 2) ||
-        charId == null ||
-        charId < 0 ||
-        charId > MAX_CHARACTER_ID ||
+        !isTeam(team) ||
+        !inRange(charId, 0, MAX_CHARACTER_ID) ||
         attrId == null ||
         !isKnownAttrId(attrId)
       ) {
@@ -491,8 +444,7 @@ function decodeBoard(reader: BitReader): BoardState | null {
 
   // Every counted section rejects a zero count: the encoder never writes an
   // empty section (validation drops them), so a zero count proves the bytes
-  // are another format's — it is how short legacy payloads were observed to
-  // misread as plausible v2 links.
+  // are another format's.
   if (bitmap & SECTION_TILES) {
     const count = reader.readBits(TILE_COUNT_BITS)
     if (count === 0) return null

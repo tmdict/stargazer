@@ -217,8 +217,9 @@ describe('binaryEncoder', () => {
     })
 
     // The encoder never writes an empty section (validation drops them), and
-    // arena boards never carry a map — both patterns are how short legacy
-    // payloads were observed to misread as plausible v2 links.
+    // arena boards never carry a map. Without these two rejections a minimal
+    // parse fits inside a few foreign bytes, so short v1 payloads misread as
+    // plausible near-empty v2 links.
     it('rejects a zero-count section', () => {
       const bytes = v2Bytes((push) => {
         push(0, 3) // arena

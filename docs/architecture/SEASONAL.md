@@ -328,12 +328,16 @@ exist, so removal is files, a few dataLoader accessors, and one template block.
 
 ## Retirement
 
-Deleting a season's phantimal data files (and artifact JSONs) is safe: the
-binary format is positional, so encoded teams, links, and backups keep
-decoding. Unknown ids render as question-mark placeholders on boards (with a
-"no longer available" tooltip) and question-marked dots in thumbnails; retired
-artifacts occupy their slot as a question-mark circle. All of them stay
-removable/replaceable, and the ids survive load/save round-trips until edited
-away. The `s` board section and its decode path are file format, not season
+Deleting a season's phantimal data files (and artifact JSONs) is safe: both
+formats store raw ids (JSON interchange for saved teams and backups, the
+binary codec for links), so existing payloads keep decoding. Unknown ids
+render as question-mark placeholders on boards (with a "no longer available"
+tooltip) and question-marked dots in thumbnails; retired artifacts occupy
+their slot as a question-mark circle. All of them stay removable/replaceable,
+and the ids survive load/save round-trips until edited away. One caveat under
+the id-rotation policy: a link or record whose freed id has already been
+reassigned to the new season's content resolves to that new content rather
+than a placeholder — an accepted mis-render, since seasonal payloads are not
+expected to outlive their season. The `s` board section and its decode path are file format, not season
 data: they stay even if phantimals are replaced by a new seasonal unit type.
 Charms have no URL presence at all, so their retirement has no decode story.
