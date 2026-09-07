@@ -11,7 +11,12 @@ import { Team } from '@/lib/types/team'
 import { useCharacterStore } from '@/stores/character'
 import { useGrids } from '@/stores/grids'
 import { packDisplayFlags, type DisplayFlags } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import {
+  decodeMultiGridStateFromUrl,
+  encodeGridStateToUrl,
+  encodeMultiGridStateToLinkUrl,
+  encodeMultiGridStateToUrl,
+} from '@/utils/urlStateManager'
 import { stubLocalStorage } from '../fixtures/storage'
 
 /* The mode-switch regression suite: per-mode slot isolation (one mode's edits
@@ -217,7 +222,7 @@ describe('useTeamsRestore', () => {
 
   it('ingress: a shared link adopts all display flags', () => {
     const { restore, flags, inverted } = createHarness()
-    const link = encodeMultiGridStateToUrl({
+    const link = encodeMultiGridStateToLinkUrl({
       boards: [{ m: 'arena1' }],
       mode: '1v1',
       d: packDisplayFlags({ showSkills: false, inverted: true }),
@@ -225,6 +230,37 @@ describe('useTeamsRestore', () => {
     restore.initialize(link)
     expect(flags.showSkills).toBe(false)
     expect(inverted.value).toBe(true)
+  })
+
+  // The copy-link → paste round trip through the wire format: the link is
+  // built exactly as TeamsView's copy action builds it (snapshot decoded and
+  // re-encoded for the wire), then fed to the ingress every recipient runs.
+  it('ingress: a binary teams link restores boards, mode, and slot', async () => {
+    let link: string
+    {
+      const { restore, grids, character } = createHarness()
+      restore.initialize(null)
+      restore.switchMode('3v3')
+      grids.setActive(0)
+      expect(character.placeCharacterOnHex(1, 11, Team.ALLY)).toBe(true)
+      await nextTick()
+      link = encodeMultiGridStateToLinkUrl(decodeBoards(restore.snapshot()))
+    }
+
+    const { restore, grids } = createHarness()
+    const result = restore.initialize(link)
+    expect(result.linkLoaded).toBe(true)
+    expect(restore.activeMode.value).toBe('3v3')
+    expect(grids.contexts).toHaveLength(3)
+    const slot = decodeBoards(readEnvelope('3v3').data)
+    expect(slot.boards[0]!.c).toEqual([[1, 11, Team.ALLY]])
+  })
+
+  it('ingress: an arena-mode payload is a wrong-page link and falls back', () => {
+    const { restore } = createHarness()
+    const result = restore.initialize(encodeGridStateToUrl({ c: [[1, 11, Team.ALLY]] }))
+    expect(result).toEqual({ linkLoaded: false, linkFailed: true })
+    expect(restore.activeMode.value).toBe('5v5sl')
   })
 
   it('normalizes stale sourceIds through the resolver at slot adoption', () => {
@@ -243,25 +279,6 @@ describe('useTeamsRestore', () => {
     restore.switchMode('3v3')
     expect(resolver).toHaveBeenCalledWith('dead')
     expect(restore.sourceId.value).toBeNull()
-  })
-
-  it('ingress: a crafted 2-board link routes to 3v3 and is padded to shape', () => {
-    // The unit lands on a non-placeable hex of arena2; restore warns and skips it.
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    const { restore, grids } = createHarness()
-    const link = encodeMultiGridStateToUrl({
-      boards: [{ m: 'arena2', c: [[1, 11, Team.ALLY]] }, { m: 'arena3' }],
-    })
-    const result = restore.initialize(link)
-    expect(result.linkLoaded).toBe(true)
-    expect(restore.activeMode.value).toBe('3v3')
-    expect(grids.contexts).toHaveLength(3)
-    expect(grids.contexts.map((ctx) => ctx.currentMap)).toEqual(['arena2', 'arena3', 'arena1'])
-    expect(restore.sourceId.value).toBeNull()
-    const slot = decodeBoards(readEnvelope('3v3').data)
-    expect(slot.boards).toHaveLength(3)
-    expect(slot.mode).toBe('3v3')
-    warn.mockRestore()
   })
 
   it('ingress: an invalid link falls back to the saved slot and reports failure', async () => {
@@ -295,13 +312,38 @@ describe('useTeamsRestore', () => {
         defaults: 'arena1',
       } satisfies ActiveSlot),
     )
-    const link = encodeMultiGridStateToUrl({ boards: [{ m: 'arena4' }], mode: '1v1' })
+    const link = encodeMultiGridStateToLinkUrl({ boards: [{ m: 'arena4' }], mode: '1v1' })
     restore.initialize(link)
     expect(restore.activeMode.value).toBe('1v1')
     expect(restore.sourceId.value).toBeNull()
     const slot = readEnvelope('1v1')
     expect(slot.sourceId).toBeNull()
     expect(decodeBoards(slot.data).boards[0]!.m).toBe('arena4')
+  })
+})
+
+/* TEMPORARY: pre-binary JSON teams links decode only through the shim; deleted
+ * with src/utils/upgradeMigration.ts (see its removal runbook). Binary links
+ * always carry a mode and an exact board count, so count-based mode resolution
+ * and pad-to-shape are legacy-only behavior. */
+describe('upgradeMigration legacy links via useTeamsRestore', () => {
+  it('a mode-less 2-board JSON link routes to 3v3 and is padded to shape', () => {
+    // The unit lands on a non-placeable hex of arena2; restore warns and skips it.
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+    const { restore, grids } = createHarness()
+    const link = encodeMultiGridStateToUrl({
+      boards: [{ m: 'arena2', c: [[1, 11, Team.ALLY]] }, { m: 'arena3' }],
+    })
+    const result = restore.initialize(link)
+    expect(result.linkLoaded).toBe(true)
+    expect(restore.activeMode.value).toBe('3v3')
+    expect(grids.contexts).toHaveLength(3)
+    expect(grids.contexts.map((ctx) => ctx.currentMap)).toEqual(['arena2', 'arena3', 'arena1'])
+    expect(restore.sourceId.value).toBeNull()
+    const slot = decodeBoards(readEnvelope('3v3').data)
+    expect(slot.boards).toHaveLength(3)
+    expect(slot.mode).toBe('3v3')
+    warn.mockRestore()
   })
 })
 

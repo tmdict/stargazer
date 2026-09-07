@@ -37,8 +37,12 @@
  *    files (`grep -rn "upgradeMigration" tests` finds them); nothing else
  *    tests legacy behavior.
  * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard and
- *    decodeLegacyLink imports and their two tagged TEMPORARY calls (in
- *    decodeMultiGridStateFromUrl and decodeLinkFromUrl).
+ *    decodeLegacyLink imports and their two tagged TEMPORARY calls — in
+ *    decodeMultiGridStateFromUrl delete the tagged loop; in decodeLinkFromUrl
+ *    replace the tagged `return decodeLegacyLink(...)` line with
+ *    `return null` (the function needs a terminal return). Also trim the two
+ *    header sentences mentioning the shim (the file-header BINARY bullet and
+ *    the decodeLinkFromUrl doc).
  * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
  *    in the setup block, and the ordering comment above it.
  * 6. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
@@ -169,12 +173,20 @@ const rewriteLibrary = (): boolean => {
 
 export function runUpgradeStoragePass(): void {
   if (readStorage(MARKER_KEY) !== null) return
-  let allOk = rewriteArenaSlot()
-  for (const mode of TEAM_MODE_KEYS) {
-    allOk = rewriteModeSlot(mode) && allOk
+  // The pass runs in root setup before the marker exists, so an unforeseen
+  // throw would repeat on every load and block startup; swallowing it instead
+  // degrades to the same retry-next-load the marker-last discipline gives
+  // failed writes.
+  try {
+    let allOk = rewriteArenaSlot()
+    for (const mode of TEAM_MODE_KEYS) {
+      allOk = rewriteModeSlot(mode) && allOk
+    }
+    allOk = rewriteLibrary() && allOk
+    if (allOk) writeStorage(MARKER_KEY, '1')
+  } catch (err) {
+    console.error('Upgrade storage pass failed, will retry next load:', err)
   }
-  allOk = rewriteLibrary() && allOk
-  if (allOk) writeStorage(MARKER_KEY, '1')
 }
 
 /* ------------------------------------------------------------------------- *

@@ -464,7 +464,13 @@ export function encodeLink(link: BinaryLinkInput): Uint8Array {
   writer.writeBits(active, ACTIVE_BITS)
   writer.writeBits(flagsByte(link.d), DISPLAY_FLAGS_BITS)
   for (const board of boards) {
-    encodeBoard(writer, board)
+    // Arena boards never carry a map on the wire (their tiles are
+    // authoritative), and the decoder rejects one; strip a crafted `m` so
+    // every encoder output stays decodable.
+    encodeBoard(
+      writer,
+      mode.wireId === 0 && board.m !== undefined ? { ...board, m: undefined } : board,
+    )
   }
   return writer.getBytes()
 }
@@ -483,8 +489,13 @@ function decodeBoard(reader: BitReader): BoardState | null {
   const board: BoardState = {}
   if (mapKey !== undefined) board.m = mapKey
 
+  // Every counted section rejects a zero count: the encoder never writes an
+  // empty section (validation drops them), so a zero count proves the bytes
+  // are another format's — it is how short legacy payloads were observed to
+  // misread as plausible v2 links.
   if (bitmap & SECTION_TILES) {
     const count = reader.readBits(TILE_COUNT_BITS)
+    if (count === 0) return null
     board.t = []
     for (let i = 0; i < count; i++) {
       board.t.push([reader.readBits(HEX_ID_BITS), reader.readBits(TILE_STATE_BITS)])
@@ -493,6 +504,7 @@ function decodeBoard(reader: BitReader): BoardState | null {
 
   if (bitmap & SECTION_CHARACTERS) {
     const count = reader.readBits(CHARACTER_COUNT_BITS)
+    if (count === 0) return null
     board.c = []
     for (let i = 0; i < count; i++) {
       board.c.push([
@@ -511,6 +523,7 @@ function decodeBoard(reader: BitReader): BoardState | null {
 
   if (bitmap & SECTION_PHANTIMALS) {
     const count = reader.readBits(PHANTIMAL_COUNT_BITS)
+    if (count === 0) return null
     board.s = []
     for (let i = 0; i < count; i++) {
       board.s.push([
@@ -523,6 +536,7 @@ function decodeBoard(reader: BitReader): BoardState | null {
 
   if (bitmap & SECTION_SYNERGY) {
     const count = reader.readBits(SYNERGY_COUNT_BITS)
+    if (count === 0) return null
     board.y = []
     for (let i = 0; i < count; i++) {
       board.y.push([
@@ -535,6 +549,7 @@ function decodeBoard(reader: BitReader): BoardState | null {
 
   if (bitmap & SECTION_UPGRADES) {
     const count = reader.readBits(UPGRADE_COUNT_BITS)
+    if (count === 0) return null
     board.u = []
     for (let i = 0; i < count; i++) {
       board.u.push([
@@ -564,6 +579,9 @@ export function decodeLink(bytes: Uint8Array): BinaryLinkState | null {
     for (let i = 0; i < mode.boardCount; i++) {
       const board = decodeBoard(reader)
       if (board === null) return null
+      // Arena boards never carry a map (the encoder strips one); a map here
+      // proves the bytes are another format's.
+      if (mode.wireId === 0 && board.m !== undefined) return null
       boards.push(board)
     }
 
