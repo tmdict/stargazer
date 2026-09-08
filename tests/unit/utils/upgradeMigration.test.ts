@@ -194,6 +194,8 @@ describe('upgradeMigration storage pass', () => {
       encodeMultiGridStateToUrl({
         boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]], u: [[Team.ALLY, 11, 1, 2]] } as never],
         mode: '1v1',
+        // The backfilled season stamp: pre-field payloads are season-7 pool.
+        season: 7,
       } as MultiGridState),
     )
   })

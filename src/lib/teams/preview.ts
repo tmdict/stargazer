@@ -5,17 +5,24 @@
  * mapping unit-testable headless. */
 
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
 import type { Team } from '@/lib/types/team'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 
 export interface PreviewUnit {
   hexId: number
   team: Team
-  // Exactly one of the two is set (characters and phantimals resolve their
-  // portraits through different dictionaries).
+  // Exactly one of the three is set (characters and phantimals resolve their
+  // portraits through different dictionaries). A retired seasonal unit carries
+  // only its season: the raw id is withheld so nothing can resolve it to the
+  // current season's content that reuses it.
   characterId?: number
   phantimalId?: number
+  retiredSeason?: number
 }
+
+// An artifact slot: a resolvable id, a retired seasonal placeholder, or empty.
+export type PreviewArtifact = number | { retiredSeason: number } | null
 
 /* A main-roster hero: not a phantimal, not a companion summon. */
 export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { characterId: number } {
@@ -28,13 +35,24 @@ export interface PreviewBoard {
   // array means an all-default board; undefined means no t section was present).
   tiles?: number[][]
   units: PreviewUnit[]
-  artifacts: { ally: number | null; enemy: number | null }
+  artifacts: { ally: PreviewArtifact; enemy: PreviewArtifact }
 }
 
 /* Null = undecodable record (the card renders its fallback tile). */
 export function teamPreviewBoards(data: string): PreviewBoard[] | null {
   const decoded = decodeMultiGridStateFromUrl(data)
   if (!decoded || decoded.boards.length === 0) return null
+
+  // Seasonal refs in a payload from another season's pool are retired: masked
+  // here (season instead of id) so no display surface can resolve the reused
+  // id to the current season's content.
+  const retiredSeason =
+    decoded.season !== undefined && isRetiredSeason(decoded.season) ? decoded.season : undefined
+  const artifactSlot = (id: number | null | undefined): PreviewArtifact => {
+    if (id === null || id === undefined) return null
+    if (retiredSeason !== undefined && !isPermanentArtifactId(id)) return { retiredSeason }
+    return id
+  }
 
   return decoded.boards.map((board) => {
     const units: PreviewUnit[] = []
@@ -46,7 +64,8 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
     for (const entry of board.s ?? []) {
       const [hexId, phantimalId, team] = entry
       if (hexId === undefined || phantimalId === undefined || team === undefined) continue
-      units.push({ hexId, team: team as Team, phantimalId })
+      if (retiredSeason !== undefined) units.push({ hexId, team: team as Team, retiredSeason })
+      else units.push({ hexId, team: team as Team, phantimalId })
     }
     // Synergy-band locals reuse c's id space, so portraits, companion art, and
     // the search index handle them with the same logic as c entries.
@@ -59,7 +78,7 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       mapKey: board.m ?? 'arena1',
       tiles: board.t,
       units,
-      artifacts: { ally: board.a?.[0] ?? null, enemy: board.a?.[1] ?? null },
+      artifacts: { ally: artifactSlot(board.a?.[0]), enemy: artifactSlot(board.a?.[1]) },
     }
   })
 }
