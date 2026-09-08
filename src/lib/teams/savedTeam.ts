@@ -14,7 +14,7 @@ import {
   isKnownAttrId,
   type AttrRow,
 } from '@/lib/characters/attributes'
-import { hasSeasonalContent } from '@/lib/seasonal'
+import { hasRetiredSeasonal, hasSeasonalContent } from '@/lib/seasonal'
 import {
   BOARD_CONTENT_KEYS,
   type BoardState,
@@ -100,6 +100,14 @@ export function canonicalTeamData(encoded: string): string | null {
     season: decoded.season,
   }
   return encodeMultiGridStateToUrl(canonical)
+}
+
+/* The season a record's retired seasonal content came from, or null when
+ * loading it would drop nothing — the load paths' one call for the
+ * "Season {n} content removed" notice. */
+export function retiredSeasonOf(encoded: string): number | null {
+  const decoded = decodeMultiGridStateFromUrl(encoded)
+  return decoded && hasRetiredSeasonal(decoded) ? decoded.season! : null
 }
 
 /* Equality identity for a team's content. `season` counts if and only if the

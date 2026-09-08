@@ -24,17 +24,15 @@ import { useToast } from '@/composables/useToast'
 import { useTouchDetection } from '@/composables/useTouchDetection'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
 import { getOpposingTeam } from '@/lib/characters/character'
-import { hasRetiredSeasonal } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { teamHasSynergy } from '@/lib/teams/preview'
-import type { SavedTeam } from '@/lib/teams/savedTeam'
+import { retiredSeasonOf, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildSideLoadPlan, savedTeamSide } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type SideLoadOptions } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { clampX } from '@/utils/viewport'
 
 const { activeMode } = defineProps<{ activeMode: TeamModeKey }>()
@@ -165,10 +163,8 @@ const handlePick = (team: SavedTeam): void => {
   success(skipped > 0 ? i18n.t('app.team-loaded-skipped', { skipped }) : i18n.t('app.team-loaded'))
   // The plan build stripped retired seasonal content; same notice as a full
   // library load.
-  const decoded = decodeMultiGridStateFromUrl(team.data)
-  if (decoded && hasRetiredSeasonal(decoded)) {
-    info(i18n.t('app.seasonal-removed', { n: decoded.season! }))
-  }
+  const retiredSeason = retiredSeasonOf(team.data)
+  if (retiredSeason !== null) info(i18n.t('app.seasonal-removed', { n: retiredSeason }))
 }
 
 const {
