@@ -2,11 +2,12 @@
  * pre-`u` JSON `p` boards, and the entire pre-v2 (v1) binary link format —
  * every consumer outside this file knows only `u` rows and v2 links.
  *
- * Three pieces:
- * - `convertLegacyBoard` runs inside decodeMultiGridStateFromUrl — the single
- *   choke point for all multi-board JSON (library hydration, mode slots,
- *   import files, previews, side-load) — so any legacy `p` payload converts
- *   the moment it is read.
+ * Four pieces:
+ * - `convertLegacyBoard` and `stampLegacySeason` run inside
+ *   decodeMultiGridStateFromUrl — the single choke point for all multi-board
+ *   JSON (library hydration, mode slots, import files, previews, side-load)
+ *   — so any legacy `p` payload converts and any pre-season-field payload
+ *   gains its `season: 7` stamp the moment it is read.
  * - `decodeLegacyLink` is the frozen v1 binary reader (verbatim copy of the
  *   retired decoder, bit-1 paragon section included, plus a strict
  *   full-consumption check the original lacked — without it the v1 reader
@@ -36,13 +37,13 @@
  * 3. Delete every `describe('upgradeMigration ...')` block in other test
  *    files (`grep -rn "upgradeMigration" tests` finds them); nothing else
  *    tests legacy behavior.
- * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard and
- *    decodeLegacyLink imports and their two tagged TEMPORARY calls — in
- *    decodeMultiGridStateFromUrl delete the tagged loop; in decodeLinkFromUrl
- *    replace the tagged `return decodeLegacyLink(...)` line with
- *    `return null` (the function needs a terminal return). Also trim the two
- *    header sentences mentioning the shim (the file-header BINARY bullet and
- *    the decodeLinkFromUrl doc).
+ * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard,
+ *    stampLegacySeason, and decodeLegacyLink imports and their tagged
+ *    TEMPORARY calls — in decodeMultiGridStateFromUrl delete the tagged
+ *    stamp call and board loop; in decodeLinkFromUrl replace the tagged
+ *    `return decodeLegacyLink(...)` line with `return null` (the function
+ *    needs a terminal return). Also trim the two header sentences mentioning
+ *    the shim (the file-header BINARY bullet and the decodeLinkFromUrl doc).
  * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
  *    in the setup block, and the ordering comment above it.
  * 6. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
@@ -52,7 +53,9 @@
  *    lint, type-check, and the test suite pass with no further edits.
  * Expected user-visible consequences, accepted by policy (old links and
  * exports are expendable): pre-release links of every kind stop decoding
- * (empty board), and pre-release export files lose their paragon levels.
+ * (empty board), and pre-release export files lose their paragon levels and
+ * import without season provenance — their seasonal ids resolve as
+ * current-pool content instead of "S7" placeholders.
  *
  * The storage keys, the v1 bit reader, and the v1 field widths are all
  * duplicated here (not imported from or exported to their owners) so deleting
@@ -73,12 +76,28 @@ import {
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
 import type { BinaryLinkState } from './binaryEncoder'
-import { packDisplayFlags, unpackDisplayFlags, type GridState } from './gridStateSerializer'
+import {
+  packDisplayFlags,
+  unpackDisplayFlags,
+  type GridState,
+  type MultiGridState,
+} from './gridStateSerializer'
 
 const MARKER_KEY = 'stargazer.migration.u'
 const ARENA_KEY = 'stargazer.arena'
 const LIBRARY_KEY = 'stargazer.teams.saved'
 const TEAM_MODE_KEYS = ['1v1', '3v3', '5v5', '5v5sl'] as const
+
+/* Stamp a pre-field payload with the season its content pool can only be:
+ * everything serialized before the season field existed was built from the
+ * season-7 pool. Runs inside the JSON decode choke point beside
+ * convertLegacyBoard; the at-rest storage pass persists the stamp. After
+ * deletion an unstamped payload (an old export file, hand-crafted data)
+ * simply has no provenance — its seasonal ids resolve as current-pool
+ * content, the accepted expendable-data outcome. */
+export function stampLegacySeason(state: MultiGridState): void {
+  if (state.season === undefined) state.season = 7
+}
 
 /* Convert one decoded board in place: legacy `p` rows ([team, characterId,
  * level]) become `u` rows with attrId 1, filtered (length-3, finite numbers),

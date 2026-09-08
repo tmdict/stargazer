@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { FIRST_STAMPED_SEASON } from '@/lib/seasonal'
 import { Team } from '@/lib/types/team'
 import type { GridState, MultiGridState } from '@/utils/gridStateSerializer'
 import {
@@ -62,20 +61,14 @@ describe('urlStateManager', () => {
       expect(decodeMultiGridStateFromUrl(encodeMultiGridStateToUrl(state))).toEqual(state)
     })
 
-    // Pre-field payloads (old exports live forever) and crafted junk both
-    // resolve to the first stamped season.
-    it('defaults a missing or invalid season to the first stamped season', () => {
+    // The legacy season-7 stamp for absent seasons is the shim's (see the
+    // upgradeMigration suite); the sanitize here is the permanent guardrail.
+    it('sanitizes a crafted invalid season instead of letting it flow', () => {
       const boards = [{ m: 'arena1' }]
-      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards }))!.season).toBe(FIRST_STAMPED_SEASON)
-      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: 'banana' }))!.season).toBe(
-        FIRST_STAMPED_SEASON,
-      )
-      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: -3 }))!.season).toBe(
-        FIRST_STAMPED_SEASON,
-      )
-      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: 2.5 }))!.season).toBe(
-        FIRST_STAMPED_SEASON,
-      )
+      for (const junk of ['banana', -3, 2.5]) {
+        const decoded = decodeMultiGridStateFromUrl(encodeRaw({ boards, season: junk }))!
+        expect(decoded.season).not.toBe(junk)
+      }
     })
 
     it('rejects undecodable input and payloads whose boards are not an array', () => {

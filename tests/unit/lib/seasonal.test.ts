@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest'
 
 import {
   CURRENT_SEASON,
-  FIRST_STAMPED_SEASON,
   hasRetiredSeasonal,
   isPermanentArtifactId,
   isRetiredSeason,
@@ -25,9 +24,9 @@ describe('seasonal', () => {
       ...loadPhantimals().map((p) => p.season),
     )
     expect(CURRENT_SEASON).toBe(maxDataSeason)
-    // The pre-cutover pool: pins that today's data really is the first
-    // stamped season, which the decode default depends on.
-    expect(CURRENT_SEASON).toBe(FIRST_STAMPED_SEASON)
+    // Pins that today's data really is the season-7 pool, which the shim's
+    // legacy stamp and the rotation pass's marker seed both assume.
+    expect(CURRENT_SEASON).toBe(7)
   })
 
   it('classifies permanent vs seasonal artifact ids from the data', () => {
@@ -94,12 +93,7 @@ describe('season provenance across surfaces', () => {
   const encode = (state: Partial<MultiGridState>): string =>
     encodeMultiGridStateToUrl(state as MultiGridState)
 
-  it('canonicalTeamData backfills an unstamped record and preserves a stale stamp', () => {
-    const unstamped = canonicalTeamData(
-      encode({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' }),
-    )
-    expect(decodeMultiGridStateFromUrl(unstamped!)!.season).toBe(FIRST_STAMPED_SEASON)
-
+  it('canonicalTeamData preserves a stale stamp', () => {
     // Provenance is preserved, never re-stamped: a record keeps saying which
     // pool it was built from, content included.
     const stale = canonicalTeamData(

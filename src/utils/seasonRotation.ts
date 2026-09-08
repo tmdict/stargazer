@@ -12,16 +12,20 @@
  * skip an entire release.
  */
 
-import { CURRENT_SEASON, FIRST_STAMPED_SEASON, stripRetiredSeasonalBoard } from '@/lib/seasonal'
+import { CURRENT_SEASON, stripRetiredSeasonalBoard } from '@/lib/seasonal'
 import { readStorage, writeStorage } from '@/utils/storage'
 import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/utils/urlStateManager'
 
 const SEASON_KEY = 'stargazer.season'
 const ARENA_KEY = 'stargazer.arena'
 
+// The season the marker feature shipped in: a device with no marker last
+// wrote arena data on a build no newer than this pool.
+const PRE_MARKER_SEASON = 7
+
 export function runSeasonRotationPass(): void {
-  const stored = Number(readStorage(SEASON_KEY) ?? FIRST_STAMPED_SEASON)
-  const last = Number.isInteger(stored) ? stored : FIRST_STAMPED_SEASON
+  const stored = Number(readStorage(SEASON_KEY) ?? PRE_MARKER_SEASON)
+  const last = Number.isInteger(stored) ? stored : PRE_MARKER_SEASON
   if (last === CURRENT_SEASON) return
 
   // Marker-last, like the storage pass: a failed write leaves it stale so the

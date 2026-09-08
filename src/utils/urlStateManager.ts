@@ -11,7 +11,6 @@
  *   use it.
  */
 
-import { FIRST_STAMPED_SEASON } from '@/lib/seasonal'
 import {
   bytesToUrlSafe,
   decodeLink,
@@ -20,7 +19,7 @@ import {
   type BinaryLinkState,
 } from './binaryEncoder'
 import type { GridState, MultiGridState } from './gridStateSerializer'
-import { convertLegacyBoard, decodeLegacyLink } from './upgradeMigration'
+import { convertLegacyBoard, decodeLegacyLink, stampLegacySeason } from './upgradeMigration'
 
 export type { BinaryLinkState }
 
@@ -91,13 +90,13 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
       (board) => typeof board === 'object' && board !== null && !Array.isArray(board),
     )
     if (!plainObjects) return null
-    // Permanent (unlike the shim line below): pre-field payloads — export
-    // files included, which outlive any migration window — and crafted junk
-    // both resolve to the first stamped season.
-    if (!Number.isInteger(parsed.season) || parsed.season! < 0) {
-      parsed.season = FIRST_STAMPED_SEASON
+    // Crafted junk carries no provenance; consumers treat an absent season as
+    // current-pool content.
+    if (parsed.season !== undefined && (!Number.isInteger(parsed.season) || parsed.season < 0)) {
+      delete parsed.season
     }
     // TEMPORARY: delete with upgradeMigration.ts.
+    stampLegacySeason(parsed)
     for (const board of parsed.boards) convertLegacyBoard(board as Record<string, unknown>)
     return parsed
   } catch {

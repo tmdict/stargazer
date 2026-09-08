@@ -334,9 +334,13 @@ ids. What makes that safe for stored data is **season provenance**
 (`/src/lib/seasonal.ts`):
 
 - Every serialized `MultiGridState` carries `season` — the content pool the
-  snapshot was built from. The JSON decoder defaults absent/invalid values to
-  `FIRST_STAMPED_SEASON` (payloads predating the field), and canonicalization
-  preserves a record's stamp rather than re-stamping it.
+  snapshot was built from. Canonicalization preserves a record's stamp rather
+  than re-stamping it. Payloads predating the field are stamped season 7 by
+  the TEMPORARY shim (read-side plus the at-rest storage pass); per the
+  shims-are-always-temporary policy there is no permanent default, so an
+  unstamped payload surfacing after the window (an old export file) has no
+  provenance and resolves its seasonal ids against the current pool — the
+  same accepted expendable-data outcome as every other post-shim legacy.
 - `CURRENT_SEASON` is deploy-derived, never calendar-derived: the max `season`
   across the loaded seasonal data files. The boundary flips exactly when a
   cutover deploy ships; a team saved between the game's season flip and the

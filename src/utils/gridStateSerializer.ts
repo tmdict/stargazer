@@ -165,8 +165,8 @@ export interface MultiGridState {
   d?: number
   mode?: string
   // The content pool the snapshot was built from (lib/seasonal.ts). Always
-  // written by the serializer; the JSON decoder defaults absent/invalid
-  // values, so it is only optional for literals and pre-field payloads.
+  // written by the serializer; absent means no provenance (a pre-field or
+  // hand-crafted payload), which readers treat as current-pool content.
   season?: number
 }
 
