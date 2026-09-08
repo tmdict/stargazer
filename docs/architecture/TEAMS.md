@@ -10,7 +10,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 2. **Mode is data, not a tab**: one registry (`TEAM_MODES`) and one orchestrator reconfigure the single board array; there are never two writers to the live boards
 3. **One slot per mode**: each mode autosaves to its own versioned localStorage envelope, so switching modes is lossless by construction
 4. **One restore path**: every whole-board apply (slot restore, mode switch, saved-team load, `?g=` ingress) goes through `restoreMultiFromEncodedState`; the side-load merge is deliberately an engine-primitive edit instead (see Side Loading)
-5. **Canonical team data**: saved-team payloads are viewer-state-free with fixed key order, so equal content is byte-equal
+5. **Canonical team data**: saved-team payloads are viewer-state-free with fixed key order, so equal content is byte-equal; equality comparisons go through `teamContentKey`, which additionally ignores the `season` stamp on seasonal-free teams (a reused seasonal id names different content each season, so the stamp counts exactly when seasonal refs exist)
 
 ## Architecture
 
@@ -163,7 +163,7 @@ Semantics wired in `TeamsView`:
 - **Loaded badge**: the card matching `sourceId` gets a border ring, the same provenance the unsaved-changes indicator reads
 - **Copy / Download**: exports the card's thumbnail as a PNG via `useThumbnailExport`, which serializes the boards' SVGs and rasterizes them onto one canvas (WebKit fails on DOM-snapshot capture of SVG content, and the vectors upscale losslessly to full-grid resolution)
 - **Preview**: clicking a card's thumbnail opens `TeamPreviewModal`, the same `TeamPreview` at modal scale (`large`) on the shared modal surface, a read-only look at the team without loading it
-- **Dirty**: `canonicalTeamData(live snapshot) !== source.data`; board clicks and display toggles never trip it
+- **Dirty**: the live snapshot's `teamContentKey` vs the source record's; board clicks, display toggles, and a season flip over an unchanged team never trip it
 - **Delete / Delete all**: two-step inline confirm; deleting the source reverts the label to "Unsaved team"
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"); the choice persists per device (`stargazer.teams.sort`)
 - **Mode**: segments for All plus every key in `TEAM_MODE_ORDER`, always shown. Offering the full list rather than only the modes present keeps a segment from disappearing with its last team and stranding the selection; an empty mode reaches the same "no matches" state a query does. Narrows the list before the search query runs, and unlike Sort it is deliberately not persisted
@@ -196,7 +196,7 @@ The saved-teams panel is the roster's default tab; its cards use `content-visibi
 
 ## Backup Files
 
-Driven from the Saved Teams tab's library bar (see TeamsRoster above); a file holds the whole library or, with a filter active, only the filtered view. `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (canonical data + name) and in-file duplicates are skipped; accepted records keep the file's ids so identity survives a round trip, regenerating only when an id is overlong or already taken — and a record whose id belongs to an existing team (an old export of it, edited since) additionally imports under an "(imported)"-marked name and counts as a conflict in the import toast; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
+Driven from the Saved Teams tab's library bar (see TeamsRoster above); a file holds the whole library or, with a filter active, only the filtered view. `/src/lib/teams/transfer.ts` builds and parses the export envelope (`{ app, kind, version, exportedAt, teams }`). Import is merge-only: a malformed envelope rejects wholesale; records re-validate and canonicalize; duplicates of existing teams (content key + name, so an old export of an unchanged seasonal-free team still dedupes across a season flip) and in-file duplicates are skipped; accepted records keep the file's ids so identity survives a round trip, regenerating only when an id is overlong or already taken — and a record whose id belongs to an existing team (an old export of it, edited since) additionally imports under an "(imported)"-marked name and counts as a conflict in the import toast; cap overflow counts as skipped. "Replace everything" is Delete all + Import.
 
 ## Sharing & Image Export
 
