@@ -10,6 +10,7 @@
 
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { FIVE_V_FIVE_DEFAULT_MAPS } from '../maps'
+import { stripRetiredSeasonal } from '../seasonal'
 
 export type TeamModeKey = '1v1' | '3v3' | '5v5' | '5v5sl'
 
@@ -92,6 +93,10 @@ export function resolveTeamMode(state: MultiGridState): TeamModeKey {
  * only; /share stays lenient and renders payloads as-is. */
 export function normalizeTeamPayload(state: MultiGridState, mode: TeamModeKey): MultiGridState {
   const { boardCount, defaultMaps, allowSynergy } = TEAM_MODES[mode]
+  // Retired seasonal content must not reach live boards: its reused ids would
+  // resolve to the new season's content. Saved records keep theirs (this runs
+  // on ingress only); display surfaces mask instead of resolving.
+  state = stripRetiredSeasonal(state)
   let boards = state.boards.slice(0, boardCount)
   while (boards.length < boardCount) {
     boards.push({ m: defaultMaps[boards.length] })

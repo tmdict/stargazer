@@ -8,6 +8,7 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import { decomposeUnitId, inSynergyBand } from '@/lib/characters/synergy'
 import type { GridTile } from '@/lib/grid'
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 
@@ -163,6 +164,10 @@ export interface MultiGridState {
   active?: number
   d?: number
   mode?: string
+  // The content pool the snapshot was built from (lib/seasonal.ts). Always
+  // written by the serializer; the JSON decoder defaults absent/invalid
+  // values, so it is only optional for literals and pre-field payloads.
+  season?: number
 }
 
 export interface BoardInput {
@@ -188,6 +193,7 @@ export function serializeMultiGridState(
   if (activeId) state.active = activeId
   if (displayFlags) state.d = packDisplayFlags(displayFlags)
   if (mode) state.mode = mode
+  state.season = CURRENT_SEASON
   return state
 }
 

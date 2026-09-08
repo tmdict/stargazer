@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
+import { FIRST_STAMPED_SEASON } from '@/lib/seasonal'
 import { Team } from '@/lib/types/team'
 import type { GridState, MultiGridState } from '@/utils/gridStateSerializer'
 import {
@@ -50,14 +51,31 @@ describe('urlStateManager', () => {
   describe('encodeMultiGridStateToUrl and decodeMultiGridStateFromUrl', () => {
     const encodeRaw = (value: unknown): string => encodeMultiGridStateToUrl(value as MultiGridState)
 
-    it('round-trips a multi-board state', () => {
+    it('round-trips a multi-board state, preserving its season stamp', () => {
       const state: MultiGridState = {
         boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena2' }],
         active: 1,
         d: 3,
         mode: '3v3',
+        season: 9,
       }
       expect(decodeMultiGridStateFromUrl(encodeMultiGridStateToUrl(state))).toEqual(state)
+    })
+
+    // Pre-field payloads (old exports live forever) and crafted junk both
+    // resolve to the first stamped season.
+    it('defaults a missing or invalid season to the first stamped season', () => {
+      const boards = [{ m: 'arena1' }]
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards }))!.season).toBe(FIRST_STAMPED_SEASON)
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: 'banana' }))!.season).toBe(
+        FIRST_STAMPED_SEASON,
+      )
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: -3 }))!.season).toBe(
+        FIRST_STAMPED_SEASON,
+      )
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: 2.5 }))!.season).toBe(
+        FIRST_STAMPED_SEASON,
+      )
     })
 
     it('rejects undecodable input and payloads whose boards are not an array', () => {

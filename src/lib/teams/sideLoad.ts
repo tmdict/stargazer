@@ -18,6 +18,7 @@ import { isCompanionUnitId } from '@/lib/characters/character'
 import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
@@ -77,7 +78,10 @@ export function savedTeamSide(data: string): Team | null {
   const cached = sideCache.get(data)
   if (cached !== undefined) return cached
   const decoded = decodeMultiGridStateFromUrl(data)
-  const side = decoded ? sideOfDecoded(decoded) : null
+  // Retired seasonal refs never side-load (their reused ids would place the
+  // new season's content), so eligibility ignores them too; retiredness is
+  // deploy-constant, keeping the per-data cache valid.
+  const side = decoded ? sideOfDecoded(stripRetiredSeasonal(decoded)) : null
   sideCache.set(data, side)
   return side
 }
@@ -88,8 +92,9 @@ export function savedTeamSide(data: string): Team | null {
  * id (place/autoPlace resolve it like any unit), included with its companions
  * only when the destination mode offers the Syn affordance. */
 export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoadPlan | null {
-  const decoded = decodeMultiGridStateFromUrl(data)
-  if (!decoded) return null
+  const raw = decodeMultiGridStateFromUrl(data)
+  if (!raw) return null
+  const decoded = stripRetiredSeasonal(raw)
   const side = sideOfDecoded(decoded)
   if (side === null) return null
 

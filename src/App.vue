@@ -19,6 +19,7 @@ import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useLiftGuard } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
+import { runSeasonRotationPass } from '@/utils/seasonRotation'
 import { runUpgradeStoragePass } from '@/utils/upgradeMigration'
 
 const isLogoHovered = ref(false)
@@ -39,6 +40,10 @@ i18n.initialize()
 // route child's persistence reads, and on every entry page, so stored boards
 // convert even for visitors who never open /teams.
 runUpgradeStoragePass()
+
+// Permanent, same before-any-reads slot: re-aligns the arena autosave once
+// per season flip.
+runSeasonRotationPass()
 
 // Locale-prefixed routes are authoritative: keep the store in sync with the
 // path so the header and skill browser render in the URL's language (during

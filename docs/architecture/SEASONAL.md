@@ -326,18 +326,47 @@ exist, so removal is files, a few dataLoader accessors, and one template block.
 6. Delete `src/locales/app/charm.json` and `src/locales/app/charm-shared.json`.
 7. Delete the Charms section of this doc.
 
-## Retirement
+## Season cutover & retirement
 
-Deleting a season's phantimal data files (and artifact JSONs) is safe: both
-formats store raw ids (JSON interchange for saved teams and backups, the
-binary codec for links), so existing payloads keep decoding. Unknown ids
-render as question-mark placeholders on boards (with a "no longer available"
-tooltip) and question-marked dots in thumbnails; retired artifacts occupy
-their slot as a question-mark circle. All of them stay removable/replaceable,
-and the ids survive load/save round-trips until edited away. One caveat under
-the id-rotation policy: a link or record whose freed id has already been
-reassigned to the new season's content resolves to that new content rather
-than a placeholder — an accepted mis-render, since seasonal payloads are not
-expected to outlive their season. The `s` board section and its decode path are file format, not season
-data: they stay even if phantimals are replaced by a new seasonal unit type.
-Charms have no URL presence at all, so their retirement has no decode story.
+Seasonal artifact/phantimal ids are **reused** each season: a cutover deletes
+the old season's data files and the new season's content takes over the freed
+ids. What makes that safe for stored data is **season provenance**
+(`/src/lib/seasonal.ts`):
+
+- Every serialized `MultiGridState` carries `season` — the content pool the
+  snapshot was built from. The JSON decoder defaults absent/invalid values to
+  `FIRST_STAMPED_SEASON` (payloads predating the field), and canonicalization
+  preserves a record's stamp rather than re-stamping it.
+- `CURRENT_SEASON` is deploy-derived, never calendar-derived: the max `season`
+  across the loaded seasonal data files. The boundary flips exactly when a
+  cutover deploy ships; a team saved between the game's season flip and the
+  deploy genuinely contains old-pool content and is labeled with it.
+- A payload whose season is not current has its seasonal references treated
+  as **retired**: previews and thumbnails mask them (an "S{n}" disc/dot/circle
+  with a "Season {n} · no longer available" tooltip — the raw id is withheld
+  so nothing can resolve it to the new season's content), and every Teams
+  ingress strips them via `normalizeTeamPayload` (side-load strips the same
+  way) so they never reach live boards, autosaves, or fresh links. Saved
+  records keep their content and placeholders until the user re-saves. The
+  pre-season artifacts (`season: 0`) are exempt everywhere.
+- The arena autosave is binary and stampless, so `runSeasonRotationPass`
+  (`/src/utils/seasonRotation.ts`, permanent) keeps a `stargazer.season`
+  marker and strips the stored value once per season flip — no per-season
+  migration code.
+- Links carry no season: an old link's bare ids resolve as current-pool
+  content, the accepted links-are-expendable mis-render.
+
+The cutover-day checklist: viewer `build:data`; the three `--retire`
+importers; replace the hand-curated structural + name files (new content
+reuses the freed ids with the new `season` number); replace
+`lib/skills/seasonal/phantimal.ts` and the season's targeting entries in
+`lib/skills/artifact.ts` (+ tests); `npm run import:seasonal`; rotate seasonal
+preset maps onto freed `MAP_WIRE_IDS`; tests; deploy. Nothing else — the
+derived current season flips the read rule everywhere, and each device's
+rotation pass cleans its arena autosave on first visit.
+
+Feature-retirement notes: the `s` board section and its decode path are file
+format, not season data — they stay even if phantimals are replaced by a new
+seasonal unit type. A plain "?" placeholder remains for ids with no season
+context (an id absent from data inside a current-season payload). Charms have
+no URL presence at all, so their retirement has no decode story.

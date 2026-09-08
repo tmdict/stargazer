@@ -25,6 +25,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
+import { hasRetiredSeasonal } from '@/lib/seasonal'
 import { MAX_SAVED_TEAMS, TEAM_MODES } from '@/lib/teams/modes'
 import { canonicalTeamData, nextAutoName, type SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
@@ -42,7 +43,7 @@ const grids = useGrids()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { copyToClipboard, downloadAsImage } = useGridExport()
-const { success, error } = useToast()
+const { success, error, info: infoToast } = useToast()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
@@ -149,6 +150,12 @@ const handleLoadTeam = (team: SavedTeam) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.applyTeamData(team.mode, team.data, team.id)
   success(i18n.t('app.team-loaded'))
+  // Retired seasonal content was stripped by the ingress normalize; the saved
+  // record keeps it (placeholders in its thumbnail) until re-saved.
+  const decoded = decodeMultiGridStateFromUrl(team.data)
+  if (decoded && hasRetiredSeasonal(decoded)) {
+    infoToast(i18n.t('app.seasonal-removed', { n: decoded.season! }))
+  }
 }
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;

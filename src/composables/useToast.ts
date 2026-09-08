@@ -51,11 +51,14 @@ export function useToast() {
 
   const error = (message: string, duration?: number) => show(message, 'error', duration)
 
+  const info = (message: string, duration?: number) => show(message, 'info', duration)
+
   return {
     toasts: state.toasts,
     show,
     remove,
     success,
     error,
+    info,
   }
 }

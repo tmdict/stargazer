@@ -15,6 +15,7 @@
 import { ref } from 'vue'
 
 import { useSelectionState } from '@/composables/useSelectionState'
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import {
   DEFAULT_TEAM_MODE,
   isTeamModeKey,
@@ -157,6 +158,10 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
           active: link.active,
           d: link.d,
           mode,
+          // Links carry no season; their bare ids can only mean the current
+          // pool (an old link resolving to new content is the accepted
+          // links-are-expendable mis-render).
+          season: CURRENT_SEASON,
         }
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode

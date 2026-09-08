@@ -93,6 +93,10 @@ export function canonicalTeamData(encoded: string): string | null {
       return ordered
     }),
     mode: resolveTeamMode(decoded),
+    // Provenance, not viewer state: the decoder always supplies it (defaulted
+    // for pre-field payloads), and it is preserved — never re-stamped — so a
+    // record keeps saying which pool it was built from.
+    season: decoded.season,
   }
   return encodeMultiGridStateToUrl(canonical)
 }

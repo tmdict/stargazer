@@ -11,6 +11,7 @@
  *   use it.
  */
 
+import { FIRST_STAMPED_SEASON } from '@/lib/seasonal'
 import {
   bytesToUrlSafe,
   decodeLink,
@@ -90,6 +91,12 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
       (board) => typeof board === 'object' && board !== null && !Array.isArray(board),
     )
     if (!plainObjects) return null
+    // Permanent (unlike the shim line below): pre-field payloads — export
+    // files included, which outlive any migration window — and crafted junk
+    // both resolve to the first stamped season.
+    if (!Number.isInteger(parsed.season) || parsed.season! < 0) {
+      parsed.season = FIRST_STAMPED_SEASON
+    }
     // TEMPORARY: delete with upgradeMigration.ts.
     for (const board of parsed.boards) convertLegacyBoard(board as Record<string, unknown>)
     return parsed

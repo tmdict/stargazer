@@ -148,7 +148,7 @@ Both restore paths end with `grids.deriveSynergy()`: the Syn affordance is never
 
 ## Multi-board state (JSON interchange)
 
-`MultiGridState` is `{ boards, active?, d?, mode? }`. Each board record is a `BoardState` `{t, c, s, y, u, a, m}`: the single-board `GridState` plus `m`, the board's map key. This is the format of the saved-team library, the per-mode autosave slots, and backup files:
+`MultiGridState` is `{ boards, active?, d?, mode?, season? }`. Each board record is a `BoardState` `{t, c, s, y, u, a, m}`: the single-board `GridState` plus `m`, the board's map key. `season` is the content pool the snapshot was built from (`/src/lib/seasonal.ts`): always written by the serializer, defaulted by the decoder for pre-field payloads (missing or invalid → the first stamped season — old export files outlive any migration window), and preserved (never re-stamped) by canonicalization. It drives the retired-seasonal masking and ingress strip documented in [Seasonal Content](./SEASONAL.md); binary links never carry it. This is the format of the saved-team library, the per-mode autosave slots, and backup files:
 
 - `serializeMultiGridState(boards, activeId, displayFlags, mode)` → `MultiGridState` (`/src/utils/gridStateSerializer.ts`)
 - `encodeMultiGridStateToUrl(state)` → url-safe base64 JSON, the `data` payload of slots, saved teams, and exports
