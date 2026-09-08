@@ -7,14 +7,20 @@ import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 
-/* One unit on a thumbnail: a portrait clipped to its hex, or a question-marked
-   dot when the unit is unresolvable (retired seasonal content). */
+/* One unit on a thumbnail: a portrait clipped to its hex, or a team-colored
+   dot when the unit is unresolvable — "?" by default, or the caller's label
+   (retired seasonal content shows its season, e.g. "S7"). */
 export interface ThumbnailUnit {
   hexId: number
   team: Team
   image?: string
+  label?: string
+  title?: string
   highlight?: boolean
 }
+
+// An artifact slot: an image URL, or a labeled placeholder circle.
+export type ThumbnailArtifact = string | { label: string; title?: string }
 
 interface Geometry {
   viewBox: string
@@ -143,7 +149,7 @@ const {
   // map pickers).
   tiles?: number[][]
   units?: ThumbnailUnit[]
-  artifacts?: { ally?: string; enemy?: string }
+  artifacts?: { ally?: ThumbnailArtifact; enemy?: ThumbnailArtifact }
   hexSize?: number
   // Square viewBox with a centered board (the maps tab's framing); omitted =
   // tight-fit bounds, the right default for card thumbnails.
@@ -188,12 +194,15 @@ const placedUnits = computed(() =>
 
 const placedArtifacts = computed(() =>
   ARTIFACT_SIDES.flatMap(({ side, team }) => {
-    const image = artifacts?.[side]
-    if (image === undefined) return []
+    const value = artifacts?.[side]
+    if (value === undefined) return []
+    const placeholder = typeof value === 'string' ? undefined : value
     return [
       {
         side,
-        image,
+        image: typeof value === 'string' ? value : undefined,
+        label: placeholder?.label,
+        title: placeholder?.title,
         center: geometry.value.artifactCenters[side],
         radius: hexSize * ARTIFACT_RADIUS_RATIO,
         color: teamColor(team),
@@ -227,6 +236,7 @@ const placedArtifacts = computed(() =>
     />
 
     <g v-for="unit in placedUnits" :key="`unit-${unit.hexId}`">
+      <title v-if="unit.title">{{ unit.title }}</title>
       <template v-if="unit.image">
         <image
           :href="unit.image"
@@ -250,17 +260,18 @@ const placedArtifacts = computed(() =>
           stroke="#fff"
           :stroke-width="Math.max(1, hexSize * 0.14)"
         />
+        <!-- Multi-char labels ("S7") get a smaller size to fit the dot. -->
         <text
           :x="unit.center.x"
           :y="unit.center.y"
           fill="#fff"
-          :font-size="hexSize * 0.8"
+          :font-size="unit.label ? hexSize * 0.62 : hexSize * 0.8"
           font-weight="700"
           font-family="sans-serif"
           text-anchor="middle"
           dominant-baseline="central"
         >
-          ?
+          {{ unit.label ?? '?' }}
         </text>
       </template>
       <!-- Drawn last to overdraw the team ring. Literal amber, not the token:
@@ -275,7 +286,9 @@ const placedArtifacts = computed(() =>
     </g>
 
     <g v-for="art in placedArtifacts" :key="`artifact-${art.side}`">
+      <title v-if="art.title">{{ art.title }}</title>
       <image
+        v-if="art.image"
         :href="art.image"
         :x="art.center.x - art.radius"
         :y="art.center.y - art.radius"
@@ -284,6 +297,21 @@ const placedArtifacts = computed(() =>
         preserveAspectRatio="xMidYMid slice"
         :clip-path="`url(#${uid}-a-${art.side})`"
       />
+      <!-- Literal grey, not a token: exports serialize the SVG standalone. -->
+      <circle v-else :cx="art.center.x" :cy="art.center.y" :r="art.radius" fill="#b0b6bb" />
+      <text
+        v-if="art.label"
+        :x="art.center.x"
+        :y="art.center.y"
+        fill="#fff"
+        :font-size="art.radius * 1.1"
+        font-weight="700"
+        font-family="sans-serif"
+        text-anchor="middle"
+        dominant-baseline="central"
+      >
+        {{ art.label }}
+      </text>
       <circle
         :cx="art.center.x"
         :cy="art.center.y"

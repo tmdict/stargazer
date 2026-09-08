@@ -19,8 +19,16 @@ export function estimatedPreviewHeight(mode: TeamModeKey): number {
 
 import { computed } from 'vue'
 
-import BoardThumbnail, { type ThumbnailUnit } from '@/components/grid/BoardThumbnail.vue'
-import { isStandardHero, teamPreviewBoards, type PreviewUnit } from '@/lib/teams/preview'
+import BoardThumbnail, {
+  type ThumbnailArtifact,
+  type ThumbnailUnit,
+} from '@/components/grid/BoardThumbnail.vue'
+import {
+  isStandardHero,
+  teamPreviewBoards,
+  type PreviewArtifact,
+  type PreviewUnit,
+} from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -57,10 +65,17 @@ const resolveImage = (unit: PreviewUnit): string | undefined => {
   return undefined
 }
 
-// The same local/remote split ArtifactImage makes for the live board.
-const resolveArtifactImage = (artifactId: number | null): string | undefined => {
-  if (artifactId === null) return undefined
-  const artifact = gameData.getArtifactById(artifactId)
+// The same local/remote split ArtifactImage makes for the live board; retired
+// slots become the "S{n}" placeholder circle instead of resolving the id.
+const resolveArtifact = (slot: PreviewArtifact): ThumbnailArtifact | undefined => {
+  if (slot === null) return undefined
+  if (typeof slot !== 'number') {
+    return {
+      label: `S${slot.retiredSeason}`,
+      title: i18n.t('app.seasonal-retired', { n: slot.retiredSeason }),
+    }
+  }
+  const artifact = gameData.getArtifactById(slot)
   if (!artifact) return undefined
   return isRemoteArtifact(artifact.season)
     ? seasonArtifactImageUrl(artifact.name)
@@ -84,15 +99,24 @@ const boards = computed(() => {
     mapKey: board.mapKey,
     tiles: board.tiles,
     artifacts: {
-      ally: resolveArtifactImage(board.artifacts.ally),
-      enemy: resolveArtifactImage(board.artifacts.enemy),
+      ally: resolveArtifact(board.artifacts.ally),
+      enemy: resolveArtifact(board.artifacts.enemy),
     },
-    units: board.units.map((unit): ThumbnailUnit => ({
-      hexId: unit.hexId,
-      team: unit.team,
-      image: resolveImage(unit),
-      highlight: isHighlighted(unit),
-    })),
+    units: board.units.map((unit): ThumbnailUnit =>
+      unit.retiredSeason !== undefined
+        ? {
+            hexId: unit.hexId,
+            team: unit.team,
+            label: `S${unit.retiredSeason}`,
+            title: i18n.t('app.seasonal-retired', { n: unit.retiredSeason }),
+          }
+        : {
+            hexId: unit.hexId,
+            team: unit.team,
+            image: resolveImage(unit),
+            highlight: isHighlighted(unit),
+          },
+    ),
   }))
 })
 </script>
