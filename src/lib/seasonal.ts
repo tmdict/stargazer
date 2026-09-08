@@ -42,11 +42,12 @@ export const isPermanentArtifactId = (id: number): boolean => PERMANENT_ARTIFACT
 
 export const isRetiredSeason = (season: number): boolean => season !== CURRENT_SEASON
 
-/* Remove a retired board's seasonal content: all phantimals, and artifact ids
- * outside the permanent set (nulled per side so the other side's permanent
- * artifact survives; a fully-null pair drops). Boards from current-season or
- * unstamped payloads pass through untouched. */
-export function stripRetiredSeasonalBoard(board: BoardState): BoardState {
+/* Remove a board's seasonal content unconditionally: all phantimals, and
+ * artifact ids outside the permanent set (nulled per side so the other side's
+ * permanent artifact survives; a fully-null pair drops). The retired gate
+ * lives in the payload-level wrapper; the season rotation pass strips without
+ * one (its marker is the staleness signal). */
+export function stripSeasonalBoard(board: BoardState): BoardState {
   const stripped = { ...board }
   delete stripped.s
   if (stripped.a) {
@@ -59,7 +60,7 @@ export function stripRetiredSeasonalBoard(board: BoardState): BoardState {
 
 export function stripRetiredSeasonal(state: MultiGridState): MultiGridState {
   if (state.season === undefined || !isRetiredSeason(state.season)) return state
-  return { ...state, boards: state.boards.map(stripRetiredSeasonalBoard) }
+  return { ...state, boards: state.boards.map(stripSeasonalBoard) }
 }
 
 /* Whether the payload references any rotating content — the same predicate

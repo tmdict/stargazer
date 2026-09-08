@@ -18,7 +18,7 @@
  * mis-render class.
  */
 
-import { CURRENT_SEASON, stripRetiredSeasonalBoard } from '@/lib/seasonal'
+import { CURRENT_SEASON, stripSeasonalBoard } from '@/lib/seasonal'
 import { readStorage, writeStorage } from '@/utils/storage'
 import { decodeGridStateFromUrl, encodeGridStateToUrl } from '@/utils/urlStateManager'
 
@@ -47,7 +47,7 @@ export function runSeasonRotationPass(): void {
       // Undecodable values stay untouched; their reader discards them anyway.
       if (state) {
         const { d, ...board } = state
-        const encoded = encodeGridStateToUrl({ ...stripRetiredSeasonalBoard(board), d })
+        const encoded = encodeGridStateToUrl({ ...stripSeasonalBoard(board), d })
         ok = encoded === raw || writeStorage(ARENA_KEY, encoded)
       }
     }
