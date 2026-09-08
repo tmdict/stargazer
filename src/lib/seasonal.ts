@@ -11,15 +11,18 @@
  * `season` across the loaded seasonal data files, so the boundary flips
  * exactly when a cutover deploy ships (0 when the seasonal dirs are empty,
  * which correctly retires every stamp).
+ *
+ * An UNSTAMPED payload has no provenance and passes through everywhere as
+ * current-pool content. During the shim window the JSON choke point stamps
+ * legacy payloads with season 7 and the storage pass persists it; per the
+ * shims-are-always-temporary policy there is no permanent default, so an
+ * unstamped payload surfacing after the window (an old export file) simply
+ * resolves its seasonal ids against the current pool — accepted, like every
+ * other post-shim legacy outcome.
  */
 
 import { loadArtifacts, loadPhantimals } from '@/utils/dataLoader'
 import type { BoardState, MultiGridState } from '@/utils/gridStateSerializer'
-
-/* Payloads with no (or an invalid) `season` predate the field and can only
- * have been built from the season-7 pool, so they default to it forever —
- * old export files outlive any migration window. */
-export const FIRST_STAMPED_SEASON = 7
 
 export const CURRENT_SEASON: number = Math.max(
   0,

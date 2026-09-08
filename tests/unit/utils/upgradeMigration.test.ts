@@ -361,3 +361,26 @@ describe('upgradeMigration decodeLegacyLink', () => {
     expect(decodeLinkFromUrl('AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')).toBeNull()
   })
 })
+
+describe('upgradeMigration season stamp', () => {
+  const encodeRaw = (value: unknown): string => encodeMultiGridStateToUrl(value as MultiGridState)
+
+  // Pre-field payloads can only be season-7 pool content; the at-rest pass
+  // persists the stamp so nothing depends on this read-side line for long.
+  // After deletion an unstamped payload has no provenance and resolves its
+  // seasonal ids against the current pool — accepted expendable-data outcome.
+  it('stamps season 7 onto pre-field payloads at the decode choke point', () => {
+    const boards = [{ m: 'arena1' }]
+    expect(decodeMultiGridStateFromUrl(encodeRaw({ boards }))!.season).toBe(7)
+    // Crafted junk sanitizes (permanent guardrail), then stamps like absent.
+    expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: 'banana' }))!.season).toBe(7)
+    expect(decodeMultiGridStateFromUrl(encodeRaw({ boards, season: -3 }))!.season).toBe(7)
+  })
+
+  it('backfills an unstamped record through canonicalization', () => {
+    const canonical = canonicalTeamData(
+      encodeRaw({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' }),
+    )
+    expect(decodeMultiGridStateFromUrl(canonical!)!.season).toBe(7)
+  })
+})
