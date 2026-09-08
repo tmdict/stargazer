@@ -161,7 +161,8 @@ Helper functions and services supporting the application.
 
 **Key Utilities:**
 
-- Binary encoding for URL serialization
+- Two serialization boundaries: the binary link codec (`binaryEncoder.ts`) carries every `?g=` link plus the arena autosave, while JSON interchange (`urlStateManager.ts`) carries stored and exported team data — see [URL Serialization](./architecture/URL_SERIALIZATION.md)
+- Season lifecycle: `lib/seasonal.ts` derives the current season from data and governs retired-content masking/stripping; `seasonRotation.ts` re-aligns the arena autosave once per season flip; the temporary `upgradeMigration.ts` shim converts pre-release data (deleted per its own runbook)
 - Data loading and asset management
 - Formatting helpers for consistency
 - Viewport measurement (`viewport.ts`): owns all window-size reads and the clamping that keeps fixed overlays clear of classic scrollbars; ESLint bans raw `window.innerWidth`/`innerHeight` elsewhere in `src/`
