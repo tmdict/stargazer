@@ -6,7 +6,7 @@ import {
   isPermanentArtifactId,
   isRetiredSeason,
   stripRetiredSeasonal,
-  stripRetiredSeasonalBoard,
+  stripSeasonalBoard,
 } from '@/lib/seasonal'
 import { normalizeTeamPayload } from '@/lib/teams/modes'
 import { teamPreviewBoards } from '@/lib/teams/preview'
@@ -49,7 +49,7 @@ describe('seasonal', () => {
       y: [[9, 50, Team.ALLY]],
       a: [1, 14] as (number | null)[],
     }
-    const stripped = stripRetiredSeasonalBoard(board)
+    const stripped = stripSeasonalBoard(board)
     // Heroes and synergy units are never seasonal; the permanent artifact
     // survives while the seasonal one nulls.
     expect(stripped).toEqual({ c: board.c, y: board.y, a: [1, null] })
@@ -57,7 +57,7 @@ describe('seasonal', () => {
   })
 
   it('drops a fully-seasonal artifact pair instead of keeping [null, null]', () => {
-    expect(stripRetiredSeasonalBoard({ a: [14, 18] })).toEqual({})
+    expect(stripSeasonalBoard({ a: [14, 18] })).toEqual({})
   })
 
   it('strips a payload only when its season is retired', () => {
