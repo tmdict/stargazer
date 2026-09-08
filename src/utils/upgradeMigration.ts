@@ -44,17 +44,25 @@
  *    `return decodeLegacyLink(...)` line with `return null` (the function
  *    needs a terminal return). Also trim the two header sentences mentioning
  *    the shim (the file-header BINARY bullet and the decodeLinkFromUrl doc).
+ * 4b. Remove the tagged TEMPORARY `season?` field from BinaryLinkState
+ *    (src/utils/binaryEncoder.ts) and simplify the link path's
+ *    `link.season ?? CURRENT_SEASON` (src/composables/useTeamsRestore.ts)
+ *    to `CURRENT_SEASON`, trimming its legacy-JSON sentence.
  * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
  *    in the setup block, and the ordering comment above it.
- * 6. Trim the shim mention from docs/architecture/URL_SERIALIZATION.md.
+ * 6. Trim the shim mentions from docs/architecture/URL_SERIALIZATION.md (the
+ *    Migration shim section and the season-field sentence) and from
+ *    docs/architecture/SEASONAL.md (the "stamped season 7 by the TEMPORARY
+ *    shim" sentence in Season cutover & retirement).
  * 7. The stargazer.migration.u marker key stays behind in user storage as
  *    accepted residue.
  * 8. Verify: `grep -ri upgrademigration src tests` returns nothing, then
  *    lint, type-check, and the test suite pass with no further edits.
  * Expected user-visible consequences, accepted by policy (old links and
  * exports are expendable): pre-release links of every kind stop decoding
- * (empty board), and pre-release export files lose their paragon levels and
- * import without season provenance — their seasonal ids resolve as
+ * (empty board), and pre-release data the storage pass never reached — export
+ * files on disk, plus the slots/library of a device first seen after deletion
+ * — loses its paragon levels and season provenance: seasonal ids resolve as
  * current-pool content instead of "S7" placeholders.
  *
  * The storage keys, the v1 bit reader, and the v1 field widths are all
@@ -403,6 +411,10 @@ export function decodeLegacyLink(encoded: string, bytes: Uint8Array): BinaryLink
       active: Math.min(Math.max(multi.active ?? 0, 0), multi.boards.length - 1),
       d: legacyFlagsByte(multi.d),
       boards: multi.boards,
+      // Provenance rides through to the ingress strip: once the current
+      // season moves past the stamp, this link's seasonal ids must not load
+      // as the new season's content.
+      season: multi.season,
     }
   }
 

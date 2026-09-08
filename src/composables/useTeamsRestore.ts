@@ -158,10 +158,11 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
           active: link.active,
           d: link.d,
           mode,
-          // Links carry no season; their bare ids can only mean the current
-          // pool (an old link resolving to new content is the accepted
-          // links-are-expendable mis-render).
-          season: CURRENT_SEASON,
+          // Binary links carry no season — their bare ids can only mean the
+          // current pool (an old link resolving to new content is the
+          // accepted links-are-expendable mis-render). The shim's legacy
+          // JSON probe DOES supply one, so those links strip like records.
+          season: link.season ?? CURRENT_SEASON,
         }
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode

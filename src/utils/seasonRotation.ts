@@ -5,11 +5,17 @@
  * the season the stored value was last aligned to; on mismatch the pass
  * strips seasonal references once and re-aligns the marker.
  *
- * PERMANENT, unlike the upgradeMigration shim: this runs at every future
+ * PERMANENT, unlike the temporary migration shim: this runs at every future
  * cutover with no per-season code. An absent marker means the device last
  * wrote arena data on a build that predates the marker itself — the
  * first-stamped-season pool — so it converts correctly even for devices that
  * skip an entire release.
+ *
+ * Accepted race: an old-build tab left open across a cutover deploy can
+ * autosave old-pool content after this pass ran, and the aligned marker never
+ * re-fires — those bare ids then resolve as new-pool content. Bounded to the
+ * arena (stamped JSON payloads self-heal at read) and inside the accepted
+ * mis-render class.
  */
 
 import { CURRENT_SEASON, stripRetiredSeasonalBoard } from '@/lib/seasonal'
@@ -24,8 +30,11 @@ const ARENA_KEY = 'stargazer.arena'
 const PRE_MARKER_SEASON = 7
 
 export function runSeasonRotationPass(): void {
-  const stored = Number(readStorage(SEASON_KEY) ?? PRE_MARKER_SEASON)
-  const last = Number.isInteger(stored) ? stored : PRE_MARKER_SEASON
+  // Strict digit parse: Number() coercion accepts "", "0x10", "1e2" as
+  // integers, and a corrupted marker must fall back to the seed, never to a
+  // value that wrongly strips current-season content.
+  const raw = readStorage(SEASON_KEY)
+  const last = raw !== null && /^\d{1,4}$/.test(raw) ? Number(raw) : PRE_MARKER_SEASON
   if (last === CURRENT_SEASON) return
 
   // Marker-last, like the storage pass: a failed write leaves it stale so the

@@ -107,6 +107,10 @@ export interface BinaryLinkState {
   active: number
   d: number
   boards: BoardState[]
+  // TEMPORARY (delete with upgradeMigration.ts): set only by the shim's
+  // legacy JSON probe, whose payloads carry season provenance the ingress
+  // strip must see. The wire format itself never encodes one.
+  season?: number
 }
 
 export interface BinaryLinkInput {
