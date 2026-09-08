@@ -5,6 +5,7 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET, type GridTile } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 import {
@@ -296,5 +297,17 @@ describe('synergy band emission', () => {
       [2, 100, Team.ALLY],
       [3, COMPANION_ID_OFFSET + 100, Team.ALLY],
     ])
+  })
+})
+
+describe('season stamp', () => {
+  // The one line the provenance scheme hangs on: without it every new
+  // snapshot is unstamped and, post-shim, permanently provenance-less.
+  it('serializeMultiGridState stamps every snapshot with the current season', () => {
+    const state = serializeMultiGridState(
+      [{ tiles: [], allyArtifact: null, enemyArtifact: null, map: 'arena1' }],
+      0,
+    )
+    expect(state.season).toBe(CURRENT_SEASON)
   })
 })

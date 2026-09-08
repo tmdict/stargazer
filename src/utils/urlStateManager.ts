@@ -91,8 +91,12 @@ export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | n
     )
     if (!plainObjects) return null
     // Crafted junk carries no provenance; consumers treat an absent season as
-    // current-pool content.
-    if (parsed.season !== undefined && (!Number.isInteger(parsed.season) || parsed.season < 0)) {
+    // current-pool content. The upper bound blocks absurd-but-integer values
+    // (1e300 passes Number.isInteger) from persisting into records and labels.
+    if (
+      parsed.season !== undefined &&
+      (!Number.isInteger(parsed.season) || parsed.season < 0 || parsed.season > 9999)
+    ) {
       delete parsed.season
     }
     // TEMPORARY: delete with upgradeMigration.ts.

@@ -362,12 +362,17 @@ ids. What makes that safe for stored data is **season provenance**
 
 The cutover-day checklist: viewer `build:data`; the three `--retire`
 importers; replace the hand-curated structural + name files (new content
-reuses the freed ids with the new `season` number); replace
-`lib/skills/seasonal/phantimal.ts` and the season's targeting entries in
-`lib/skills/artifact.ts` (+ tests); `npm run import:seasonal`; rotate seasonal
-preset maps onto freed `MAP_WIRE_IDS`; tests; deploy. Nothing else — the
-derived current season flips the read rule everywhere, and each device's
-rotation pass cleans its arena autosave on first visit.
+reuses the freed ids with the new `season` number — the contract test that
+every non-zero data season equals `CURRENT_SEASON` catches a partial or
+forgotten bump); replace `lib/skills/seasonal/phantimal.ts` and the season's
+targeting entries in `lib/skills/artifact.ts` (+ tests); `npm run
+import:seasonal`; rotate seasonal preset maps onto freed `MAP_WIRE_IDS` and
+update `FIVE_V_FIVE_DEFAULT_MAPS` (`src/lib/maps.ts`) if the SL rotation
+changed; bump the pinned `CURRENT_SEASON` value in
+`tests/unit/lib/seasonal.test.ts` (it fails loudly otherwise); full tests;
+deploy. No stored-data rewrites — the derived current season flips the read
+rule everywhere, and each device's rotation pass cleans its arena autosave on
+first visit.
 
 Feature-retirement notes: the `s` board section and its decode path are file
 format, not season data — they stay even if phantimals are replaced by a new

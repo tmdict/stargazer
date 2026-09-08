@@ -14,6 +14,7 @@ import {
   isKnownAttrId,
   type AttrRow,
 } from '@/lib/characters/attributes'
+import { hasSeasonalContent } from '@/lib/seasonal'
 import {
   BOARD_CONTENT_KEYS,
   type BoardState,
@@ -93,12 +94,27 @@ export function canonicalTeamData(encoded: string): string | null {
       return ordered
     }),
     mode: resolveTeamMode(decoded),
-    // Provenance, not viewer state: the decoder always supplies it (defaulted
-    // for pre-field payloads), and it is preserved — never re-stamped — so a
-    // record keeps saying which pool it was built from.
+    // Provenance, not viewer state: preserved — never re-stamped — so a
+    // record keeps saying which pool it was built from. Absent (a payload
+    // with no provenance) stays absent; JSON.stringify drops the key.
     season: decoded.season,
   }
   return encodeMultiGridStateToUrl(canonical)
+}
+
+/* Equality identity for a team's content. `season` counts if and only if the
+ * payload holds seasonal content: a reused seasonal id names a different
+ * artifact/phantimal each season (so the stamp disambiguates real content),
+ * while on a seasonal-free team the stamp is invisible bookkeeping — without
+ * this exclusion every pre-cutover record would read as edited (dirty dot,
+ * import duplicate) once the current season moves past its stamp. */
+export function teamContentKey(encoded: string): string | null {
+  const canonical = canonicalTeamData(encoded)
+  if (canonical === null) return null
+  const decoded = decodeMultiGridStateFromUrl(canonical)!
+  if (decoded.season === undefined || hasSeasonalContent(decoded)) return canonical
+  delete decoded.season
+  return encodeMultiGridStateToUrl(decoded)
 }
 
 export function sanitizeTeamName(raw: unknown): string | null {

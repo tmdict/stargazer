@@ -152,3 +152,34 @@ describe('buildSideLoadPlan', () => {
     warn.mockRestore()
   })
 })
+
+describe('retired seasonal content in side-load', () => {
+  it("excludes a stale record's seasonal refs from the plan", () => {
+    const stale = encode({
+      ...ALLY_RECORD,
+      season: 6, // another season's pool: phantimal + seasonal artifact retire
+    })
+    const plan = buildSideLoadPlan(stale, true)!
+    expect(plan.boards[0]!.phantimal).toBeNull()
+    // Artifact 7 is seasonal (season > 0 in data), so the retired side clears.
+    expect(plan.boards[0]!.artifact).toBeNull()
+    // Heroes, companions, synergy units, and attrs are never seasonal.
+    expect(plan.boards[0]!.mains.length).toBeGreaterThan(0)
+  })
+
+  it('a stale record whose only units are seasonal is not side-loadable', () => {
+    const phantimalOnly = encode({
+      boards: [{ m: 'arena1', s: [[4, 1, Team.ALLY]] }],
+      mode: '1v1',
+      season: 6,
+    })
+    expect(savedTeamSide(phantimalOnly)).toBeNull()
+  })
+
+  it('current-season records keep their seasonal refs in the plan', () => {
+    const current = encode({ ...ALLY_RECORD, season: 7 })
+    const plan = buildSideLoadPlan(current, true)!
+    expect(plan.boards[0]!.phantimal).not.toBeNull()
+    expect(plan.boards[0]!.artifact).toBe(7)
+  })
+})

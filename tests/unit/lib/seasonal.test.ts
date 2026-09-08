@@ -10,7 +10,7 @@ import {
 } from '@/lib/seasonal'
 import { normalizeTeamPayload } from '@/lib/teams/modes'
 import { teamPreviewBoards } from '@/lib/teams/preview'
-import { canonicalTeamData } from '@/lib/teams/savedTeam'
+import { canonicalTeamData, teamContentKey } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import { loadArtifacts, loadPhantimals } from '@/utils/dataLoader'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
@@ -150,5 +150,56 @@ describe('season provenance across surfaces', () => {
     const currentBoard = teamPreviewBoards(current)![0]!
     expect(currentBoard.units.find((u) => u.hexId === 7)!.phantimalId).toBe(2)
     expect(currentBoard.artifacts.enemy).toBe(14)
+  })
+})
+
+describe('season data contract', () => {
+  // A cutover must bump every seasonal record: a partial bump flips
+  // CURRENT_SEASON while stale entries linger, and a wholly forgotten bump
+  // leaves stale records rendering new content — both wrong.
+  it('every non-zero data season equals the current season', () => {
+    for (const artifact of loadArtifacts()) {
+      if (artifact.season !== 0) expect(artifact.season).toBe(CURRENT_SEASON)
+    }
+    for (const phantimal of loadPhantimals()) {
+      expect(phantimal.season).toBe(CURRENT_SEASON)
+    }
+  })
+})
+
+describe('teamContentKey', () => {
+  const key = (state: Partial<MultiGridState>): string | null =>
+    teamContentKey(encodeMultiGridStateToUrl(state as MultiGridState))
+
+  // A reused seasonal id names a different artifact each season, so the stamp
+  // is part of the team's identity exactly when seasonal refs exist.
+  it('distinguishes same-layout teams whose seasonal content is from different pools', () => {
+    const boards = [{ m: 'arena1', c: [[1, 11, Team.ALLY]], a: [null, 14] }]
+    expect(key({ boards, mode: '1v1', season: CURRENT_SEASON })).not.toBe(
+      key({ boards, mode: '1v1', season: CURRENT_SEASON - 1 }),
+    )
+  })
+
+  it('ignores the stamp on seasonal-free teams (dirty dot, import dedupe)', () => {
+    const boards = [{ m: 'arena1', c: [[1, 11, Team.ALLY]], a: [1, null] }]
+    const a = key({ boards, mode: '1v1', season: CURRENT_SEASON })
+    const b = key({ boards, mode: '1v1', season: CURRENT_SEASON - 1 })
+    const unstamped = key({ boards, mode: '1v1' })
+    expect(a).toBe(b)
+    expect(a).toBe(unstamped)
+  })
+
+  it('differing content differs regardless of stamps', () => {
+    const withArtifact = key({
+      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]], a: [null, 14] }],
+      mode: '1v1',
+      season: CURRENT_SEASON,
+    })
+    const without = key({
+      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }],
+      mode: '1v1',
+      season: CURRENT_SEASON,
+    })
+    expect(withArtifact).not.toBe(without)
   })
 })

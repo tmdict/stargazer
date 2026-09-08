@@ -104,3 +104,16 @@ describe('seasonRotation', () => {
     )
   })
 })
+
+// Number("") coerces to 0, an integer — a corrupted empty marker must fall
+// back to the seed instead of reading as "season 0" and stripping current
+// content.
+it('treats an empty or coercible-garbage marker as the seed, not season 0', () => {
+  for (const junk of ['', ' ', '0x10', '1e2']) {
+    storage.set(SEASON_KEY, junk)
+    const value = staleArenaValue()
+    storage.set(ARENA_KEY, value)
+    runSeasonRotationPass()
+    expect(storage.get(ARENA_KEY)).toBe(value)
+  }
+})

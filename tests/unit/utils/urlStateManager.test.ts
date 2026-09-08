@@ -61,11 +61,13 @@ describe('urlStateManager', () => {
       expect(decodeMultiGridStateFromUrl(encodeMultiGridStateToUrl(state))).toEqual(state)
     })
 
-    // The legacy season-7 stamp for absent seasons is the shim's (see the
-    // upgradeMigration suite); the sanitize here is the permanent guardrail.
+    // The legacy season-7 stamp for absent seasons belongs to the migration
+    // shim (tested in its own suite); the sanitize here is the permanent
+    // guardrail.
     it('sanitizes a crafted invalid season instead of letting it flow', () => {
       const boards = [{ m: 'arena1' }]
-      for (const junk of ['banana', -3, 2.5]) {
+      // 1e300 passes Number.isInteger; the upper bound catches it.
+      for (const junk of ['banana', -3, 2.5, 1e300]) {
         const decoded = decodeMultiGridStateFromUrl(encodeRaw({ boards, season: junk }))!
         expect(decoded.season).not.toBe(junk)
       }

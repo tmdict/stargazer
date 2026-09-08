@@ -260,12 +260,13 @@ const placedArtifacts = computed(() =>
           stroke="#fff"
           :stroke-width="Math.max(1, hexSize * 0.14)"
         />
-        <!-- Multi-char labels ("S7") get a smaller size to fit the dot. -->
+        <!-- Multi-char labels ("S7", and "S10"+ once seasons hit two digits)
+             shrink to fit the dot. -->
         <text
           :x="unit.center.x"
           :y="unit.center.y"
           fill="#fff"
-          :font-size="unit.label ? hexSize * 0.62 : hexSize * 0.8"
+          :font-size="unit.label ? hexSize * (unit.label.length > 2 ? 0.5 : 0.62) : hexSize * 0.8"
           font-weight="700"
           font-family="sans-serif"
           text-anchor="middle"

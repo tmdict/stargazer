@@ -8,7 +8,7 @@
  * app, so parsing is exhaustive and a malformed envelope rejects the whole file
  * rather than half-importing. */
 
-import { suffixedName, validateSavedTeam, type SavedTeam } from './savedTeam'
+import { suffixedName, teamContentKey, validateSavedTeam, type SavedTeam } from './savedTeam'
 
 export interface TeamsExportFile {
   app: 'stargazer'
@@ -18,9 +18,12 @@ export interface TeamsExportFile {
   teams: SavedTeam[]
 }
 
-/* `data` is url-safe base64, so '|' can never appear in it and the key splits
- * unambiguously even when the name contains '|'. */
-const dedupeKey = (team: Pick<SavedTeam, 'data' | 'name'>): string => `${team.data}|${team.name}`
+/* Content key (season-blind for seasonal-free teams, so an old export of an
+ * unchanged team still dedupes across a season flip) — url-safe base64, so
+ * '|' can never appear in it and the key splits unambiguously even when the
+ * name contains '|'. */
+const dedupeKey = (team: Pick<SavedTeam, 'data' | 'name'>): string =>
+  `${teamContentKey(team.data) ?? team.data}|${team.name}`
 
 export function buildExport(teams: readonly SavedTeam[], exportedAt: string): TeamsExportFile {
   return {

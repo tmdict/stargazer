@@ -41,8 +41,9 @@ i18n.initialize()
 // convert even for visitors who never open /teams.
 runUpgradeStoragePass()
 
-// Permanent, same before-any-reads slot: re-aligns the arena autosave once
-// per season flip.
+// Permanent: root setup runs before any route child's persistence reads, and
+// the arena autosave must re-align once per season flip before its page can
+// read it.
 runSeasonRotationPass()
 
 // Locale-prefixed routes are authoritative: keep the store in sync with the
