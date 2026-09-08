@@ -51,7 +51,7 @@ export function stripRetiredSeasonalBoard(board: BoardState): BoardState {
   delete stripped.s
   if (stripped.a) {
     const a = stripped.a.map((id) => (id !== null && isPermanentArtifactId(id) ? id : null))
-    if (a[0] === null && a[1] === null) delete stripped.a
+    if (a.every((id) => id === null)) delete stripped.a
     else stripped.a = a
   }
   return stripped
@@ -62,13 +62,21 @@ export function stripRetiredSeasonal(state: MultiGridState): MultiGridState {
   return { ...state, boards: state.boards.map(stripRetiredSeasonalBoard) }
 }
 
-// True when loading this payload onto live boards would drop something — the
-// caller's cue to toast.
-export function hasRetiredSeasonal(state: MultiGridState): boolean {
-  if (state.season === undefined || !isRetiredSeason(state.season)) return false
+/* Whether the payload references any rotating content — the same predicate
+ * that decides what a strip would remove, and what makes `season` part of the
+ * team's identity: a reused id names a different artifact each season, so
+ * equality must include the stamp exactly when refs like this exist. */
+export function hasSeasonalContent(state: MultiGridState): boolean {
   return state.boards.some(
     (board) =>
       (board.s?.length ?? 0) > 0 ||
       (board.a?.some((id) => id !== null && !isPermanentArtifactId(id)) ?? false),
   )
+}
+
+// True when loading this payload onto live boards would drop something — the
+// caller's cue to toast.
+export function hasRetiredSeasonal(state: MultiGridState): boolean {
+  if (state.season === undefined || !isRetiredSeason(state.season)) return false
+  return hasSeasonalContent(state)
 }

@@ -27,7 +27,12 @@ import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
 import { hasRetiredSeasonal } from '@/lib/seasonal'
 import { MAX_SAVED_TEAMS, TEAM_MODES } from '@/lib/teams/modes'
-import { canonicalTeamData, nextAutoName, type SavedTeam } from '@/lib/teams/savedTeam'
+import {
+  canonicalTeamData,
+  nextAutoName,
+  teamContentKey,
+  type SavedTeam,
+} from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -110,13 +115,17 @@ const { activeMode } = teamsRestore
 
 const canWrap = computed(() => !isSheet.value && TEAM_MODES[activeMode.value].canWrap)
 
-// The Save button's target and the unsaved-changes indicator. Both sides of the
-// dirty compare are canonical (viewer state stripped), so board clicks and
-// display toggles never read as team edits.
+// The Save button's target and the unsaved-changes indicator. Both sides of
+// the dirty compare are content keys (canonical, viewer state stripped, and
+// season-blind for seasonal-free teams), so board clicks, display toggles,
+// and a season flip over an unchanged team never read as edits.
 const sourceTeam = computed(() => teamLibrary.get(teamsRestore.sourceId.value))
 const canonicalActive = computed(() => canonicalTeamData(teamsRestore.snapshot()))
 const dirty = computed(
-  () => sourceTeam.value !== undefined && canonicalActive.value !== sourceTeam.value.data,
+  () =>
+    sourceTeam.value !== undefined &&
+    canonicalActive.value !== null &&
+    teamContentKey(canonicalActive.value) !== teamContentKey(sourceTeam.value.data),
 )
 const suggestedName = computed(() => nextAutoName(teamLibrary.teams.map((team) => team.name)))
 

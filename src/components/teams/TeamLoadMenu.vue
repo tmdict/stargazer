@@ -24,6 +24,7 @@ import { useToast } from '@/composables/useToast'
 import { useTouchDetection } from '@/composables/useTouchDetection'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
 import { getOpposingTeam } from '@/lib/characters/character'
+import { hasRetiredSeasonal } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { teamHasSynergy } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
@@ -33,6 +34,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type SideLoadOptions } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
 import { clampX } from '@/utils/viewport'
 
 const { activeMode } = defineProps<{ activeMode: TeamModeKey }>()
@@ -41,7 +43,7 @@ const gameData = useGameDataStore()
 const grids = useGrids()
 const i18n = useI18nStore()
 const library = useTeamLibrary()
-const { success } = useToast()
+const { success, info } = useToast()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { isTouchDevice } = useTouchDetection()
 const updatedLabel = useUpdatedLabel()
@@ -161,6 +163,12 @@ const handlePick = (team: SavedTeam): void => {
   clearLiftedHex()
   closeMenu()
   success(skipped > 0 ? i18n.t('app.team-loaded-skipped', { skipped }) : i18n.t('app.team-loaded'))
+  // The plan build stripped retired seasonal content; same notice as a full
+  // library load.
+  const decoded = decodeMultiGridStateFromUrl(team.data)
+  if (decoded && hasRetiredSeasonal(decoded)) {
+    info(i18n.t('app.seasonal-removed', { n: decoded.season! }))
+  }
 }
 
 const {

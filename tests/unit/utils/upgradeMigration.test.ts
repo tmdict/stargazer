@@ -8,6 +8,7 @@ import {
   unpackDisplayFlags,
   type MultiGridState,
 } from '@/utils/gridStateSerializer'
+import { runSeasonRotationPass } from '@/utils/seasonRotation'
 import {
   convertLegacyBoard,
   decodeLegacyLink,
@@ -335,7 +336,14 @@ describe('upgradeMigration decodeLegacyLink', () => {
       active: 2,
       d: 5,
       boards: multi.boards,
+      // Provenance rides through to the ingress strip (stamped 7 here since
+      // the fixture predates the field; an explicit stamp carries verbatim).
+      season: 7,
     })
+    const stamped = decodeLinkFromUrl(
+      encodeMultiGridStateToUrl({ ...multi, season: 6 } as MultiGridState),
+    )
+    expect(stamped?.season).toBe(6)
   })
 
   it('synthesizes default flags for a d-less JSON teams link', () => {
@@ -382,5 +390,52 @@ describe('upgradeMigration season stamp', () => {
       encodeRaw({ boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }], mode: '1v1' }),
     )
     expect(decodeMultiGridStateFromUrl(canonical!)!.season).toBe(7)
+  })
+})
+
+describe('upgradeMigration composed with the season rotation pass', () => {
+  // The realistic skipped-release startup: a device whose storage still holds
+  // a v1 arena value (paragon + phantimal + seasonal artifact) starts up on a
+  // build whose rotation marker disagrees — the u-pass converts, then the
+  // rotation pass strips, in App.vue order.
+  it('converts then strips a v1 arena value across both passes', () => {
+    const v1WithSeasonal = v1Encode((push) => {
+      push(0xc8, 8) // header: 1 character, artifacts, extended
+      push(0x42, 8) // extended flags: phantimals + legacy paragon
+      push(2, 6) // character hexId
+      push(100, 16) // character id
+      push(0, 1) // team ally
+      push(1, 6) // ally artifact: permanent 1
+      push(14, 6) // enemy artifact: seasonal 14
+      push(1, 4) // phantimal count
+      push(7, 6) // phantimal hexId
+      push(2, 4) // phantimal local id
+      push(0, 1) // team ally
+      push(1, 5) // paragon count
+      push(0, 1) // team ally
+      push(100, 16) // character id
+      push(4, 3) // level
+    })
+    storage.set(ARENA_KEY, v1WithSeasonal)
+    storage.set('stargazer.season', '6')
+    runUpgradeStoragePass()
+    runSeasonRotationPass()
+    expect(storage.get(ARENA_KEY)).toBe(
+      encodeGridStateToUrl({ c: [[2, 100, Team.ALLY]], a: [1, null], u: [[Team.ALLY, 100, 1, 4]] }),
+    )
+    expect(storage.get('stargazer.season')).toBe('7')
+  })
+
+  // If the u-pass write failed, the rotation pass converts AND strips in one
+  // step through the universal decoder — the same fallback that protects the
+  // arena page load.
+  it('the rotation pass alone converts a raw v1 value while stripping', () => {
+    const v1Value = legacyArenaValue()
+    storage.set(ARENA_KEY, v1Value)
+    storage.set('stargazer.season', '6')
+    runSeasonRotationPass()
+    expect(storage.get(ARENA_KEY)).toBe(
+      encodeGridStateToUrl({ c: [[2, 100, Team.ALLY]], u: [[Team.ALLY, 100, 1, 4]] }),
+    )
   })
 })
