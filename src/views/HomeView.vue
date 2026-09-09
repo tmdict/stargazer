@@ -301,16 +301,8 @@ const handleResetMap = () => {
             :default-svg-height="DEFAULT_SVG_HEIGHT"
           />
           <template v-if="info.heroCard">
-            <TeamPowerPanel
-              :context="activeContext"
-              :show-paragon="info.paragon"
-              :show-refinement="info.refinement"
-            />
-            <TeamPowerDock
-              :context="activeContext"
-              :show-paragon="info.paragon"
-              :show-refinement="info.refinement"
-            />
+            <TeamPowerPanel :context="activeContext" :show-upgrades="info.upgrades" />
+            <TeamPowerDock :context="activeContext" :show-upgrades="info.upgrades" />
           </template>
           <GridControls
             v-model:show-perspective="showPerspective"
