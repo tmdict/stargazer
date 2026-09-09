@@ -22,12 +22,9 @@ import { ATTR_PARAGON } from '@/lib/characters/attributes'
 const armed = reactive(new Set<number>([ATTR_PARAGON]))
 
 export function useAttrLayerSelection(): {
-  isArmed: (attrId: number) => boolean
   toggle: (attrId: number, visible: number[]) => void
   effectiveLayers: (visible: number[]) => number[]
 } {
-  const isArmed = (attrId: number): boolean => armed.has(attrId)
-
   // Clicks act on the effective (displayed) set, not the raw armed set: with
   // a pref toggled off the two can diverge, and toggling raw state behind a
   // fallback-lit chip would visibly do nothing while arming hidden layers.
@@ -49,7 +46,7 @@ export function useAttrLayerSelection(): {
     return intersection.length > 0 ? intersection : visible
   }
 
-  return { isArmed, toggle, effectiveLayers }
+  return { toggle, effectiveLayers }
 }
 
 // Test-only: module singletons outlive test files.

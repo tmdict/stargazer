@@ -1,8 +1,10 @@
 /* Wire-id registry for the binary link codec: stable numeric ids for the
  * string-keyed modes and maps, so links carry small integers instead of text.
  *
- * APPEND-ONLY: ids are never reused or renumbered; retiring a mode or map
- * leaves its id reserved (a retired entry stays here, tagged in a comment).
+ * APPEND-ONLY for modes and permanent maps: those ids are never reused or
+ * renumbered, and retiring one leaves its id reserved (the retired entry
+ * stays here, tagged in a comment). Seasonal preset maps are the exception:
+ * they rotate with the season and their freed ids return to the pool.
  * Deliberately a pure leaf: the codec imports this file, so it must stay free
  * of data loading (maps.ts eagerly loads every arena JSON) and Vue. Board
  * counts are duplicated from TEAM_MODES for the same reason — completeness

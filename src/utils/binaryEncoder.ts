@@ -1,4 +1,4 @@
-import { attrDefault, clampAttr, isKnownAttrId } from '@/lib/characters/attributes'
+import { attrDefault, clampAttr, compareAttrRows, isKnownAttrId } from '@/lib/characters/attributes'
 import { mapKeyByWireId, mapWireIdByKey, wireModeById, wireModeByKey } from '@/lib/teams/wire'
 import {
   packDisplayFlags,
@@ -234,7 +234,7 @@ export function validateGridState(state: GridState): GridState {
       if (value !== attrDefault(attrId)) byKey.set(key, [team, charId, attrId, value])
       else byKey.delete(key)
     }
-    let validUpgrades = [...byKey.values()]
+    let validUpgrades = [...byKey.values()].sort(compareAttrRows)
     if (validUpgrades.length > MAX_UPGRADE_COUNT) {
       console.warn(
         `Too many upgrade entries (${validUpgrades.length}), keeping first ${MAX_UPGRADE_COUNT}`,

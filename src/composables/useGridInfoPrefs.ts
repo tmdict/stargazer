@@ -9,7 +9,7 @@
  * /share are SSG-prerendered with the defaults, so a setup-time adoption
  * would hydration-mismatch for any user whose stored prefs differ.
  *
- * Enabling a child auto-enables what it needs to take effect (master; Paragon
+ * Enabling a child auto-enables what it needs to take effect (master; Upgrades
  * also Hero card, Coordinates also Tile IDs); disabling never cascades, so a
  * re-enabled parent restores the children it had.
  */
