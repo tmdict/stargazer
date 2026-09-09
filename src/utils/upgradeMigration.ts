@@ -2,7 +2,7 @@
  * pre-`u` JSON `p` boards, and the entire pre-v2 (v1) binary link format —
  * every consumer outside this file knows only `u` rows and v2 links.
  *
- * Four pieces:
+ * Three pieces:
  * - `convertLegacyBoard` and `stampLegacySeason` run inside
  *   decodeMultiGridStateFromUrl — the single choke point for all multi-board
  *   JSON (library hydration, mode slots, import files, previews, side-load)
@@ -36,7 +36,9 @@
  * 2. Delete tests/unit/utils/upgradeMigration.test.ts.
  * 3. Delete every `describe('upgradeMigration ...')` block in other test
  *    files (`grep -rn "upgradeMigration" tests` finds them); nothing else
- *    tests legacy behavior.
+ *    tests legacy behavior. Two test comments name the shim and need
+ *    trimming: the CURRENT_SEASON pin in tests/unit/lib/seasonal.test.ts and
+ *    the season-sanitize case in tests/unit/utils/urlStateManager.test.ts.
  * 4. In src/utils/urlStateManager.ts: remove the convertLegacyBoard,
  *    stampLegacySeason, and decodeLegacyLink imports and their tagged
  *    TEMPORARY calls — in decodeMultiGridStateFromUrl delete the tagged
@@ -52,7 +54,9 @@
  *    stripRetiredSeasonal wrapper (and its import) around the multi restore —
  *    binary links carry no season, so post-shim it is a guaranteed no-op.
  * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
- *    in the setup block, and the ordering comment above it.
+ *    in the setup block, and the ordering comment above it; drop the
+ *    "Permanent:" prefix from the season-rotation comment that follows, which
+ *    only contrasts with the removed block.
  * 6. Trim every shim mention from comments and docs — these say "shim" or
  *    "legacy", not "upgradeMigration", so step 8's grep can't find them:
  *    - docs/architecture/URL_SERIALIZATION.md: the Migration shim section,
@@ -65,7 +69,9 @@
  *      upgradeMigration.ts shim ..." clause.
  *    - src/lib/seasonal.ts: the header's shim-window sentences (keep the
  *      unstamped-payload rule itself).
- *    - src/utils/seasonRotation.ts: "unlike the temporary migration shim".
+ *    - src/utils/seasonRotation.ts: "unlike the temporary migration shim"
+ *      (header) and "Marker-last, like the storage pass" (inside
+ *      runSeasonRotationPass).
  *    - src/utils/binaryEncoder.ts: the header's "which the shim's probe
  *      order relies on" clause and decodeLink's shim-window comment.
  *    - src/lib/characters/attributes.ts: "and legacy conversion" in the

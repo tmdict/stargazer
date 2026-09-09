@@ -86,15 +86,7 @@ const restoreStateFromUrl = () => {
         // stamps a link season; honoring it strips a retired-season link like
         // the Teams page does, instead of resolving its reused ids as
         // current-pool content.
-        urlStateStore.restoreMultiFromDecodedState(
-          stripRetiredSeasonal({
-            boards: linkAtLoad.boards,
-            active: linkAtLoad.active,
-            d: linkAtLoad.d,
-            mode: linkAtLoad.mode,
-            season: linkAtLoad.season,
-          }),
-        )
+        urlStateStore.restoreMultiFromDecodedState(stripRetiredSeasonal(linkAtLoad))
       : urlStateStore.restoreFromEncodedState(encodedAtLoad)
 
   if (result.success) {

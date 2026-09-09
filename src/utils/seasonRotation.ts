@@ -43,15 +43,15 @@ export function runSeasonRotationPass(): number | null {
   // strip retries next load, and a throw must not block startup.
   let stripped: number | null = null
   try {
-    const raw = readStorage(ARENA_KEY)
+    const stored = readStorage(ARENA_KEY)
     let ok = true
-    if (raw !== null) {
-      const state = decodeGridStateFromUrl(raw)
+    if (stored !== null) {
+      const state = decodeGridStateFromUrl(stored)
       // Undecodable values stay untouched; their reader discards them anyway.
       if (state) {
         const { d, ...board } = state
         const encoded = encodeGridStateToUrl({ ...stripSeasonalBoard(board), d })
-        if (encoded !== raw) {
+        if (encoded !== stored) {
           ok = writeStorage(ARENA_KEY, encoded)
           if (ok) stripped = last
         }

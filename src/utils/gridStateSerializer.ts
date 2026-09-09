@@ -12,12 +12,12 @@ import { CURRENT_SEASON } from '@/lib/seasonal'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 
-/* Ultra-compact format for URL serialization - the ONLY format we support */
+/* One board's content sections, carried by both codecs (binary links and JSON interchange). */
 export interface GridState {
   t?: number[][] // tiles: [hexId, state] (only non-default states)
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
-  s?: number[][] // seasonal units, phantimals today: [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
+  s?: number[][] // seasonal units (phantimals): [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
   y?: number[][] // synergy-band units, hero plus its companions: [hexId, localUnitId, team] (locals reuse c's id space: hero = base id, companion = N*10000+base)
   u?: number[][] // hero upgrade attrs (lib/characters/attributes): [team, characterId, attrId, value], sorted, non-default only
   d?: number // display flags: bit-packed (wrap, showSkills, showPerspective, inverted, teamView)
@@ -157,8 +157,9 @@ export const BOARD_CONTENT_KEYS = ['t', 'c', 's', 'y', 'u', 'a', 'm'] as const
 
 /* Multi-board state (Teams page): one BoardState per board, the active board,
  * the global display flags, and the team mode the boards belong to. `mode` is
- * always written by the serializer but optional on decode (links predating it
- * infer their mode from the board count; see lib/teams/modes.ts). */
+ * always written by the serializer but optional on decode (a payload without
+ * one, hand-crafted or predating the field, gets it from the board count at
+ * canonicalization; see resolveTeamMode in lib/teams/modes.ts). */
 export interface MultiGridState {
   boards: BoardState[]
   active?: number

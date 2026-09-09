@@ -412,7 +412,7 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
   })
 })
 
-describe('useGrids paragon carry-over', () => {
+describe('useGrids attr carry-over', () => {
   it('carries paragon levels through a board swap', () => {
     const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
