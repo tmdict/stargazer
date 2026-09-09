@@ -15,10 +15,10 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   context: GridContext
-  // Pill layers (display); the armed-layer selection decides which of the
-  // visible layers portrait taps edit. Off, the panel is portraits and names.
-  showParagon: boolean
-  showRefinement?: boolean
+  // Pill display, both layers together (one Grid Info toggle governs them);
+  // the armed-layer selection decides which layers portrait taps edit. Off,
+  // the panel is portraits and names.
+  showUpgrades: boolean
   readonly?: boolean
 }>()
 
@@ -64,10 +64,7 @@ const allyRivalryStat = computed(() =>
   ),
 )
 
-const visibleAttrIds = computed(() => [
-  ...(props.showParagon ? [ATTR_PARAGON] : []),
-  ...(props.showRefinement ? [ATTR_REFINEMENT] : []),
-])
+const visibleAttrIds = computed(() => (props.showUpgrades ? [ATTR_PARAGON, ATTR_REFINEMENT] : []))
 
 // A hidden layer is never edited: taps act on armed ∩ visible (falling back
 // to the visible layers), and with no layer visible they no-op.
@@ -125,18 +122,17 @@ const pillBackground = (hero: PanelHero): string => {
   const pFill = hero.paragon >= MAX_PARAGON ? PILL_MAX_P : PILL_GRAY
   const rFill =
     hero.refinement >= MAX_REFINEMENT ? PILL_MAX_R : hero.refinement >= 2 ? PILL_MID_R : PILL_GRAY
-  if (props.showParagon && props.showRefinement) {
-    // The white sliver keeps the slanted split visible even when both halves
-    // share the gray, so the pill reads the same at every level combination.
-    return `linear-gradient(112deg, ${pFill} 48.6%, #fff 49.4%, #fff 50.6%, ${rFill} 51.4%)`
-  }
-  return props.showParagon ? pFill : rFill
+  // The white sliver keeps the slanted split visible even when both halves
+  // share the gray, so the pill reads the same at every level combination.
+  return `linear-gradient(112deg, ${pFill} 48.6%, #fff 49.4%, #fff 50.6%, ${rFill} 51.4%)`
 }
 
 const heroAria = (hero: PanelHero): string => {
   const parts = [hero.name]
-  if (props.showParagon) parts.push(`${i18n.t('app.paragon')} ${hero.paragon}`)
-  if (props.showRefinement) parts.push(`${i18n.t('app.refinement')} ${hero.refinement}`)
+  if (props.showUpgrades) {
+    parts.push(`${i18n.t('app.paragon')} ${hero.paragon}`)
+    parts.push(`${i18n.t('app.refinement')} ${hero.refinement}`)
+  }
   return parts.join(', ')
 }
 
@@ -179,7 +175,7 @@ const hoveredStat = computed(
     :class="{ single: visibleSides.length === 1 }"
   >
     <div v-for="side in visibleSides" :key="side.klass" class="tp-block" :class="side.klass">
-      <div v-if="showParagon" class="tp-head">
+      <div v-if="showUpgrades" class="tp-head">
         <span class="stat" :class="rivalryStatClass(side.rivalryStat)">
           <span class="stat-num">{{ formatRivalryStat(side.rivalryStat) }}</span>
           <span
@@ -208,19 +204,11 @@ const hoveredStat = computed(
           <span class="portrait">
             <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
           </span>
-          <span
-            v-if="showParagon || showRefinement"
-            class="upill"
-            :style="{ background: pillBackground(hero) }"
-          >
-            <span v-if="showParagon" class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
+          <span v-if="showUpgrades" class="upill" :style="{ background: pillBackground(hero) }">
+            <span class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
               P{{ hero.paragon }}
             </span>
-            <span
-              v-if="showRefinement"
-              class="useg"
-              :class="{ max: hero.refinement >= MAX_REFINEMENT }"
-            >
+            <span class="useg" :class="{ max: hero.refinement >= MAX_REFINEMENT }">
               R{{ hero.refinement }}
             </span>
           </span>
@@ -415,12 +403,6 @@ const hoveredStat = computed(
   text-align: center;
   color: #4a463d;
 }
-/* A lone visible layer keeps pill proportions instead of shrinking to a
-   near-circle around its two characters. */
-.useg:only-child {
-  min-width: 30px;
-  padding: 2.4px 6px 1.6px;
-}
 .useg.max {
   color: #fff;
 }
@@ -454,10 +436,6 @@ const hoveredStat = computed(
   .useg {
     min-width: 21px;
     padding: 3px 4px 2px;
-  }
-  .useg:only-child {
-    min-width: 36px;
-    padding: 3px 7px 2px;
   }
 }
 </style>

@@ -7,10 +7,12 @@
  *
  * The selection is a set, not an enum (both layers armed = edit both), with
  * two guards: the last armed layer can't be disarmed, and the *effective*
- * layers are the armed set intersected with the pref-visible layers — a
- * hidden layer must never be silently edited. When the intersection is
- * empty, the visible layers act as armed (so taps keep working when the
- * armed layer's pref is toggled off); with nothing visible, editing no-ops.
+ * layers are the armed set intersected with the visible layers — a hidden
+ * layer must never be silently edited. The single Grid Info "Upgrades"
+ * toggle shows both layers or none, so visible is all-or-nothing today; the
+ * intersection semantics stay layer-general regardless. When the
+ * intersection is empty, the visible layers act as armed; with nothing
+ * visible, editing no-ops.
  */
 
 import { reactive } from 'vue'

@@ -25,8 +25,7 @@ export interface GridInfoPrefs {
   tileIds: boolean
   hover: boolean
   heroCard: boolean
-  paragon: boolean
-  refinement: boolean
+  upgrades: boolean
   targeting: boolean
   coordinates: boolean
 }
@@ -40,8 +39,7 @@ export interface GridInfoView {
   coordinates: boolean
   hover: boolean
   heroCard: boolean
-  paragon: boolean
-  refinement: boolean
+  upgrades: boolean
   targeting: boolean
 }
 
@@ -50,8 +48,7 @@ const DEFAULTS: GridInfoPrefs = {
   tileIds: true,
   hover: true,
   heroCard: false,
-  paragon: false,
-  refinement: false,
+  upgrades: false,
   targeting: false,
   coordinates: false,
 }
@@ -62,8 +59,7 @@ const PREF_KEYS = Object.keys(DEFAULTS) as GridInfoKey[]
  * effective derivation, and the checklist's indentation/dimming all read this
  * map, so a future nested child cannot ship with the three out of sync. */
 export const GRID_INFO_PARENTS: Partial<Record<GridInfoKey, GridInfoKey[]>> = {
-  paragon: ['heroCard'],
-  refinement: ['heroCard'],
+  upgrades: ['heroCard'],
   coordinates: ['tileIds'],
 }
 
@@ -75,8 +71,7 @@ export function deriveGridInfoView(prefs: GridInfoPrefs): GridInfoView {
     coordinates: effective('coordinates'),
     hover: effective('hover'),
     heroCard: effective('heroCard'),
-    paragon: effective('paragon'),
-    refinement: effective('refinement'),
+    upgrades: effective('upgrades'),
     targeting: effective('targeting'),
   }
 }
@@ -87,8 +82,7 @@ export const GRID_INFO_NONE: GridInfoView = Object.freeze({
   coordinates: false,
   hover: false,
   heroCard: false,
-  paragon: false,
-  refinement: false,
+  upgrades: false,
   targeting: false,
 })
 

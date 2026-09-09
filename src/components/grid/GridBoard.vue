@@ -71,8 +71,8 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
     <GridContainer :context :characters :info :show-skills :show-perspective :tap-mode />
 
     <template v-if="info.heroCard">
-      <TeamPowerPanel :context :show-paragon="info.paragon" :show-refinement="info.refinement" />
-      <TeamPowerDock :context :show-paragon="info.paragon" :show-refinement="info.refinement" />
+      <TeamPowerPanel :context :show-upgrades="info.upgrades" />
+      <TeamPowerDock :context :show-upgrades="info.upgrades" />
     </template>
 
     <div class="board-actions capture-exclude">

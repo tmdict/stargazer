@@ -39,8 +39,7 @@ const rows: Row[] = [
   { key: 'hover', label: 'app.details-on-hover' },
   { key: 'targeting', label: 'app.targeting' },
   { key: 'heroCard', label: 'app.hero-card' },
-  { key: 'paragon', label: 'app.paragon' },
-  { key: 'refinement', label: 'app.refinement' },
+  { key: 'upgrades', label: 'app.upgrades' },
 ]
 
 // Indentation and dimming derive from the shared parent map, so the checklist
