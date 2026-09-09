@@ -3,8 +3,10 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { teamsSlotKey, type ActiveSlot } from '@/composables/useGridPersistence'
+import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import type { TeamModeKey } from '@/lib/teams/modes'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
@@ -30,6 +32,8 @@ let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 beforeEach(() => {
   vi.stubEnv('SSR', false)
   ;({ storage, setItemSpy } = stubLocalStorage())
+  // Module singleton: a notice raised in one test must not leak into the next.
+  useSeasonNotice().dismiss()
 })
 
 afterEach(() => {
@@ -207,6 +211,49 @@ describe('useTeamsRestore', () => {
     expect(flags.teamView).toBeUndefined()
     expect(inverted.value).toBe(false)
     expect(wrapBoards.value).toBe(false)
+  })
+
+  it('raises the season notice when a quiet slot restore strips retired content', () => {
+    const { restore } = createHarness()
+    const { season } = useSeasonNotice()
+    storage.set(
+      teamsSlotKey('3v3'),
+      JSON.stringify({
+        v: 1,
+        data: encodeMultiGridStateToUrl({
+          boards: [{ m: 'arena1', s: [[7, 2, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
+          mode: '3v3',
+          season: CURRENT_SEASON - 1,
+        }),
+        sourceId: null,
+        defaults: 'arena1,arena1,arena1',
+      } satisfies ActiveSlot),
+    )
+    restore.initialize(null)
+    expect(season.value).toBeNull()
+    restore.switchMode('3v3')
+    expect(season.value).toBe(CURRENT_SEASON - 1)
+  })
+
+  it('keeps the season notice quiet for a stale stamp with no seasonal content', () => {
+    const { restore } = createHarness()
+    const { season } = useSeasonNotice()
+    storage.set(
+      teamsSlotKey('3v3'),
+      JSON.stringify({
+        v: 1,
+        data: encodeMultiGridStateToUrl({
+          boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
+          mode: '3v3',
+          season: CURRENT_SEASON - 1,
+        }),
+        sourceId: null,
+        defaults: 'arena1,arena1,arena1',
+      } satisfies ActiveSlot),
+    )
+    restore.initialize(null)
+    restore.switchMode('3v3')
+    expect(season.value).toBeNull()
   })
 
   it('mode switches leave the view toggles untouched (wrap and inverted included)', () => {

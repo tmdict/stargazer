@@ -34,7 +34,7 @@ describe('seasonRotation', () => {
     storage.set(SEASON_KEY, String(CURRENT_SEASON))
     const value = staleArenaValue()
     storage.set(ARENA_KEY, value)
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(ARENA_KEY)).toBe(value)
   })
 
@@ -43,14 +43,15 @@ describe('seasonRotation', () => {
   it('does nothing on a fresh device before any cutover', () => {
     const value = staleArenaValue()
     storage.set(ARENA_KEY, value)
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(ARENA_KEY)).toBe(value)
   })
 
   it('strips seasonal content from the autosave on a season flip', () => {
     storage.set(SEASON_KEY, String(CURRENT_SEASON - 1))
     storage.set(ARENA_KEY, staleArenaValue())
-    runSeasonRotationPass()
+    // The return value names the stripped season, the page banner's cue.
+    expect(runSeasonRotationPass()).toBe(CURRENT_SEASON - 1)
     // Phantimal gone, seasonal artifact nulled, permanent artifact + hero +
     // display flags intact.
     expect(storage.get(ARENA_KEY)).toBe(
@@ -64,7 +65,7 @@ describe('seasonRotation', () => {
     const clean = encodeGridStateToUrl({ c: [[1, 100, Team.ALLY]], a: [1, null], d: 6 })
     storage.set(ARENA_KEY, clean)
     const writes = vi.spyOn(globalThis.localStorage, 'setItem')
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(ARENA_KEY)).toBe(clean)
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
     // Only the marker was written: the identical re-encode skipped its write.
@@ -75,7 +76,7 @@ describe('seasonRotation', () => {
   it('leaves an undecodable autosave untouched but re-aligns the marker', () => {
     storage.set(SEASON_KEY, String(CURRENT_SEASON - 1))
     storage.set(ARENA_KEY, '!!!garbage!!!')
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(ARENA_KEY)).toBe('!!!garbage!!!')
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
   })
@@ -84,7 +85,7 @@ describe('seasonRotation', () => {
     storage.set(SEASON_KEY, 'banana')
     const value = staleArenaValue()
     storage.set(ARENA_KEY, value)
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(ARENA_KEY)).toBe(value)
   })
 
@@ -94,10 +95,10 @@ describe('seasonRotation', () => {
     const failing = vi.spyOn(globalThis.localStorage, 'setItem').mockImplementation(() => {
       throw new Error('quota')
     })
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBeNull()
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON - 1))
     failing.mockRestore()
-    runSeasonRotationPass()
+    expect(runSeasonRotationPass()).toBe(CURRENT_SEASON - 1)
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
     expect(storage.get(ARENA_KEY)).toBe(
       encodeGridStateToUrl({ c: [[1, 100, Team.ALLY]], a: [1, null], d: 6 }),
@@ -112,7 +113,7 @@ describe('seasonRotation', () => {
       storage.set(SEASON_KEY, junk)
       const value = staleArenaValue()
       storage.set(ARENA_KEY, value)
-      runSeasonRotationPass()
+      expect(runSeasonRotationPass()).toBeNull()
       expect(storage.get(ARENA_KEY)).toBe(value)
     }
   })

@@ -29,16 +29,19 @@ const ARENA_KEY = 'stargazer.arena'
 // wrote arena data on a build no newer than this pool.
 const PRE_MARKER_SEASON = 7
 
-export function runSeasonRotationPass(): void {
+// Returns the season whose content was removed from the autosave (the
+// caller's cue for the page banner), or null when nothing was dropped.
+export function runSeasonRotationPass(): number | null {
   // Strict digit parse: Number() coercion accepts "", "0x10", "1e2" as
   // integers, and a corrupted marker must fall back to the seed, never to a
   // value that wrongly strips current-season content.
   const raw = readStorage(SEASON_KEY)
   const last = raw !== null && /^\d{1,4}$/.test(raw) ? Number(raw) : PRE_MARKER_SEASON
-  if (last === CURRENT_SEASON) return
+  if (last === CURRENT_SEASON) return null
 
   // Marker-last, like the storage pass: a failed write leaves it stale so the
   // strip retries next load, and a throw must not block startup.
+  let stripped: number | null = null
   try {
     const raw = readStorage(ARENA_KEY)
     let ok = true
@@ -48,11 +51,15 @@ export function runSeasonRotationPass(): void {
       if (state) {
         const { d, ...board } = state
         const encoded = encodeGridStateToUrl({ ...stripSeasonalBoard(board), d })
-        ok = encoded === raw || writeStorage(ARENA_KEY, encoded)
+        if (encoded !== raw) {
+          ok = writeStorage(ARENA_KEY, encoded)
+          if (ok) stripped = last
+        }
       }
     }
     if (ok) writeStorage(SEASON_KEY, String(CURRENT_SEASON))
   } catch (err) {
     console.error('Season rotation pass failed, will retry next load:', err)
   }
+  return stripped
 }
