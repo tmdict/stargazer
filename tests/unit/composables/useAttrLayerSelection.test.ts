@@ -5,64 +5,55 @@ import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 
 const BOTH = [ATTR_PARAGON, ATTR_REFINEMENT]
 
-// With every layer visible the effective set IS the armed set (the fallback
-// never engages), so effectiveLayers(BOTH) reads the raw selection.
-
 describe('useAttrLayerSelection', () => {
   beforeEach(() => {
     resetAttrLayerSelection()
   })
 
-  it('defaults to paragon armed and toggles layers as a set', () => {
-    const { toggle, effectiveLayers } = useAttrLayerSelection()
+  it('defaults to paragon and switches layers exclusively', () => {
+    const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
     expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
-    toggle(ATTR_REFINEMENT, BOTH)
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON, ATTR_REFINEMENT])
-    toggle(ATTR_PARAGON, BOTH)
+    expect(litChoice(BOTH)).toBe(ATTR_PARAGON)
+    select(ATTR_REFINEMENT)
+    expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
+    expect(litChoice(BOTH)).toBe(ATTR_REFINEMENT)
+    select(ATTR_PARAGON)
+    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
+    expect(litChoice(BOTH)).toBe(ATTR_PARAGON)
+  })
+
+  it('ALL edits every visible layer', () => {
+    const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
+    select('all')
+    expect(effectiveLayers(BOTH)).toEqual(BOTH)
+    expect(litChoice(BOTH)).toBe('all')
+    select(ATTR_REFINEMENT)
     expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
   })
 
-  it('never disarms the last armed layer', () => {
-    const { toggle, effectiveLayers } = useAttrLayerSelection()
-    toggle(ATTR_PARAGON, BOTH)
+  it('re-selecting the current chip keeps it selected', () => {
+    const { select, effectiveLayers } = useAttrLayerSelection()
+    select(ATTR_PARAGON)
     expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
   })
 
   it('is one shared selection across consumers', () => {
     const a = useAttrLayerSelection()
     const b = useAttrLayerSelection()
-    a.toggle(ATTR_REFINEMENT, BOTH)
-    expect(b.effectiveLayers(BOTH)).toEqual([ATTR_PARAGON, ATTR_REFINEMENT])
+    a.select(ATTR_REFINEMENT)
+    expect(b.effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
   })
 
-  it('edits only visible layers: armed ∩ visible, falling back to visible', () => {
-    const { toggle, effectiveLayers } = useAttrLayerSelection()
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
-    toggle(ATTR_REFINEMENT, BOTH)
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON, ATTR_REFINEMENT])
-    // The armed layer's badges hidden: the visible layer acts as armed instead
-    // of taps silently editing an invisible value.
+  it('edits only visible layers, falling back to visible when the choice is hidden', () => {
+    const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
+    select('all')
     expect(effectiveLayers([ATTR_REFINEMENT])).toEqual([ATTR_REFINEMENT])
     expect(effectiveLayers([])).toEqual([])
-  })
-
-  // Clicks act on the displayed (effective) set: a chip lit by the fallback
-  // must never toggle hidden armed state with no visible result.
-  it('toggling a fallback-lit chip adopts the displayed set instead of arming hidden layers', () => {
-    const { toggle, effectiveLayers } = useAttrLayerSelection()
-    // Armed {P}, paragon pref off: R is lit by the fallback. Clicking R is the
-    // last-lit no-op, but the armed set becomes exactly what is displayed, so
-    // re-enabling the paragon pref does not surface a surprise ALL state.
-    toggle(ATTR_REFINEMENT, [ATTR_REFINEMENT])
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
-  })
-
-  it('toggling with one layer hidden drops the hidden layer from the armed set', () => {
-    const { toggle, effectiveLayers } = useAttrLayerSelection()
-    toggle(ATTR_REFINEMENT, BOTH) // armed {P, R}
-    // Refinement pref off: only P displayed; clicking P is the last-lit no-op
-    // and the armed set collapses to the displayed {P}.
-    toggle(ATTR_PARAGON, [ATTR_PARAGON])
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
+    expect(litChoice([])).toBeNull()
+    // The chosen layer's badges hidden: the visible layer acts as chosen instead
+    // of taps silently editing an invisible value, and the lit chip follows.
+    select(ATTR_PARAGON)
+    expect(effectiveLayers([ATTR_REFINEMENT])).toEqual([ATTR_REFINEMENT])
+    expect(litChoice([ATTR_REFINEMENT])).toBe(ATTR_REFINEMENT)
   })
 })

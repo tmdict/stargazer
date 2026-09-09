@@ -16,8 +16,8 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 const props = defineProps<{
   context: GridContext
   // Pill display, both layers together (one Grid Info toggle governs them);
-  // the armed-layer selection decides which layers portrait taps edit. Off,
-  // the panel is portraits and names.
+  // the layer choice (useAttrLayerSelection) decides which layers portrait
+  // taps edit. Off, the panel is portraits and names.
   showUpgrades: boolean
   readonly?: boolean
 }>()
@@ -66,8 +66,9 @@ const allyRivalryStat = computed(() =>
 
 const visibleAttrIds = computed(() => (props.showUpgrades ? [ATTR_PARAGON, ATTR_REFINEMENT] : []))
 
-// A hidden layer is never edited: taps act on armed ∩ visible (falling back
-// to the visible layers), and with no layer visible they no-op.
+// A hidden layer is never edited: taps act on the chosen layer restricted to
+// the visible ones (falling back to the visible layers), and with no layer
+// visible they no-op.
 const editLayers = computed(() => (props.readonly ? [] : effectiveLayers(visibleAttrIds.value)))
 const canEdit = computed(() => editLayers.value.length > 0)
 
@@ -88,9 +89,9 @@ const visibleSides = computed(() => {
   return props.context.teamView ? populated.filter((side) => side.team === Team.ALLY) : populated
 })
 
-// One armed layer cycles with wrap. Both armed:
-// +1 clamped so counters at different values can't desync — except when every
-// armed layer is already maxed, when the tap wraps them all to 0 together.
+// One layer cycles with wrap. ALL: +1 clamped so counters at different values
+// can't desync — except when every layer is already maxed, when the tap wraps
+// them all to 0 together.
 const cycle = (team: Team, hero: PanelHero): void => {
   const layers = editLayers.value
   if (layers.length === 1) {
@@ -110,8 +111,7 @@ const cycle = (team: Team, hero: PanelHero): void => {
 
 // Paragon colors max only; refinement warms up in two steps (0-1 gray,
 // 2-3 light tint, 4 full red) so mid progress shows without stealing the
-// maxed pop. When both layers show, the fills meet in a slanted seam; a
-// single visible layer renders as a one-color chip.
+// maxed pop; the two fills meet in a slanted seam.
 const PILL_GRAY = '#cfc8bb'
 const PILL_MAX_P = '#8fa7c8'
 const PILL_MID_R = '#f5cdc2'

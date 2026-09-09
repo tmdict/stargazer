@@ -1,56 +1,54 @@
-/* Page-global armed-attr-layer selection for the edit docks: which upgrade
- * layers (paragon / refinement) portrait taps and bulk actions edit. State is
- * a module-level singleton (like useSelectionState / useDragDrop) so every
- * board's dock and panel share one selection — a chip toggled on any dock
+/* Page-global upgrade-layer choice for the edit docks: which upgrade layer
+ * (paragon, refinement, or all of them) portrait taps and bulk actions edit.
+ * State is a module-level singleton (like useSelectionState / useDragDrop) so
+ * every board's dock and panel share one choice — a chip picked on any dock
  * flips them all. Unlike useSelectionState it references no boards or hexes,
  * so it needs no route-change or rebuild reset; session-only by design.
  *
- * The selection is a set, not an enum (both layers armed = edit both), with
- * two guards: the last armed layer can't be disarmed, and the *effective*
- * layers are the armed set intersected with the visible layers — a hidden
- * layer must never be silently edited. The single Grid Info "Upgrades"
- * toggle shows both layers or none, so visible is all-or-nothing today; the
- * intersection semantics stay layer-general regardless. When the
- * intersection is empty, the visible layers act as armed; with nothing
- * visible, editing no-ops.
+ * The chips are mutually exclusive, with ALL as its own choice rather than a
+ * lit pair: paragon and refinement are usually edited separately, and one tap
+ * must switch between them. The *effective* layers are the choice restricted
+ * to the visible layers — a hidden layer must never be silently edited. The
+ * single Grid Info "Upgrades" toggle shows both layers or none, so visible is
+ * all-or-nothing; the semantics stay layer-general regardless: a hidden single
+ * choice falls back to the visible layers, and with nothing visible, editing
+ * no-ops.
  */
 
-import { reactive } from 'vue'
+import { ref } from 'vue'
 
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 
-const armed = reactive(new Set<number>([ATTR_PARAGON]))
+export type AttrLayerChoice = number | 'all'
+
+const choice = ref<AttrLayerChoice>(ATTR_PARAGON)
 
 export function useAttrLayerSelection(): {
-  toggle: (attrId: number, visible: number[]) => void
+  select: (next: AttrLayerChoice) => void
   effectiveLayers: (visible: number[]) => number[]
+  litChoice: (visible: number[]) => AttrLayerChoice | null
 } {
-  // Clicks act on the effective (displayed) set, not the raw armed set: with
-  // a pref toggled off the two can diverge, and toggling raw state behind a
-  // fallback-lit chip would visibly do nothing while arming hidden layers.
-  // The click's result replaces the whole set, so what the chips show is
-  // exactly what is armed afterward.
-  const toggle = (attrId: number, visible: number[]): void => {
-    const effective = effectiveLayers(visible)
-    const next = effective.includes(attrId)
-      ? effective.length > 1
-        ? effective.filter((id) => id !== attrId)
-        : effective
-      : [...effective, attrId]
-    armed.clear()
-    for (const id of next) armed.add(id)
+  const select = (next: AttrLayerChoice): void => {
+    choice.value = next
   }
 
   const effectiveLayers = (visible: number[]): number[] => {
-    const intersection = visible.filter((attrId) => armed.has(attrId))
-    return intersection.length > 0 ? intersection : visible
+    const current = choice.value
+    return current !== 'all' && visible.includes(current) ? [current] : visible
   }
 
-  return { toggle, effectiveLayers }
+  // The lit chip follows the effective set, not the raw choice, so a hidden
+  // choice's fallback lights exactly what taps will edit.
+  const litChoice = (visible: number[]): AttrLayerChoice | null => {
+    const effective = effectiveLayers(visible)
+    if (effective.length === 0) return null
+    return effective.length === 1 ? effective[0]! : 'all'
+  }
+
+  return { select, effectiveLayers, litChoice }
 }
 
 // Test-only: module singletons outlive test files.
 export function resetAttrLayerSelection(): void {
-  armed.clear()
-  armed.add(ATTR_PARAGON)
+  choice.value = ATTR_PARAGON
 }

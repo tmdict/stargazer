@@ -16,7 +16,7 @@ import { Team } from '@/lib/types/team'
 export const ATTR_PARAGON = 1
 export const ATTR_REFINEMENT = 2
 
-export interface AttrConfig {
+interface AttrConfig {
   id: number
   // Locale key suffix (app.<name>) and stable code-facing name.
   name: string

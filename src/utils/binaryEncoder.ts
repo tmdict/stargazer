@@ -21,8 +21,8 @@ import {
  * - Active board (3 bits): 0-based.
  * - Display flags (8 bits): the packDisplayFlags byte (wrap, skills,
  *   perspective, inverted, teamView; 3 spare). Always present — an absent `d`
- *   is encoded as the unpack defaults so pre-flags states keep today's
- *   skills/perspective-on behavior.
+ *   is encoded as the unpack defaults (skills and perspective on), so a
+ *   flag-less board never decodes with those views switched off.
  *
  * Each board (14-bit header, then its sections):
  * - Map id (6 bits): wire registry; 0 = none (arena boards, whose serialized
@@ -54,7 +54,7 @@ import {
  * zero-count rules, since a minimal parse can fit inside just a few foreign
  * bytes. No version field, deliberately: the app and its links deploy
  * together, links are expendable, and only the arena autosave outlives a
- * deploy (converted by a temporary shim per format change).
+ * deploy (converted by a temporary migration per format change).
  */
 
 const MODE_BITS = 3
@@ -113,7 +113,7 @@ export interface BinaryLinkState {
   season?: number
 }
 
-export interface BinaryLinkInput {
+interface BinaryLinkInput {
   mode: string
   active?: number
   d?: number
@@ -244,12 +244,6 @@ export function validateGridState(state: GridState): GridState {
     if (validUpgrades.length > 0) {
       validated.u = validUpgrades
     }
-  }
-
-  // Display flags: passed through for callers; the link envelope owns them
-  // during encoding (boards never carry a flags byte).
-  if (state.d !== undefined) {
-    validated.d = state.d
   }
 
   return validated

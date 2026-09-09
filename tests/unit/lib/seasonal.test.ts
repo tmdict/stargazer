@@ -24,8 +24,9 @@ describe('seasonal', () => {
       ...loadPhantimals().map((p) => p.season),
     )
     expect(CURRENT_SEASON).toBe(maxDataSeason)
-    // Pins that today's data really is the season-7 pool, which the shim's
-    // legacy stamp and the rotation pass's marker seed both assume.
+    // Pins the pool's season explicitly so a cutover is a deliberate edit here;
+    // the shim's legacy stamp and the rotation pass's marker seed both assume
+    // the pre-field pool was season 7.
     expect(CURRENT_SEASON).toBe(7)
   })
 

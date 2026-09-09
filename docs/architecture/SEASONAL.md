@@ -221,9 +221,10 @@ prunes effect files whose artifact left the feed, and
 Retiring a season's artifacts is deleting the seasonal data and name files
 (the importer prunes its own effect files) and the season's entries in
 `lib/skills/artifact.ts` with their cases in `tests/unit/skills/artifact.test.ts`;
-the pre-season six are never touched. Retired ids restored from old URLs occupy
-their slot as a placeholder circle (see Season cutover & retirement below), so a lingering
-targeting entry would keep drawing arrows for them.
+the pre-season six are never touched. Stamped records never bring retired ids
+onto live boards (ingress strips them), but links carry no season, so a retired
+id in an old link resolves to the new season's occupant of that id; a lingering
+targeting entry would then draw the old season's arrows for it.
 
 ## Charms
 

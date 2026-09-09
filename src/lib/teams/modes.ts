@@ -75,10 +75,10 @@ export const isTeamModeKey = (key: unknown): key is TeamModeKey =>
 
 /* Resolve the team mode for a decoded payload. A present `mode` is honored only
  * when its board count matches the payload (a contradictory or unknown mode is
- * treated as absent), so a crafted link can never smuggle a wrong-shaped board
- * array into a mode's slot. Inference for mode-less payloads: 5 boards belong to
- * the Supreme League page (every mode-less 5-board link predates the mode field),
- * otherwise the smallest mode that fits. */
+ * treated as absent), so a crafted payload can never smuggle a wrong-shaped
+ * board array into a mode's slot. Inference for mode-less payloads: 5 boards
+ * belong to the Supreme League page (every mode-less 5-board payload predates
+ * the mode field), otherwise the smallest mode that fits. */
 export function resolveTeamMode(state: MultiGridState): TeamModeKey {
   const count = state.boards.length
   if (isTeamModeKey(state.mode) && TEAM_MODES[state.mode].boardCount === count) {
