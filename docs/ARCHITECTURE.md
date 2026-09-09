@@ -127,6 +127,7 @@ Pure TypeScript game logic, completely framework-agnostic. Can be tested in isol
   - `character.ts`: Queries, team management, tile helpers
   - `place.ts`, `remove.ts`, `move.ts`, `swap.ts`: Complex operations with skills
   - `companion.ts`: Companion system helpers
+  - `attributes.ts`, `upgradeStats.ts`: The per-hero upgrade registry (paragon, EX refinement) and what each level grants (the guide's tables and the panel's Rivalry maths)
   - `phantimal.ts`, `placeholder.ts`, `synergy.ts`: Unit id namespaces (pure id math, see GRID.md)
   - `transaction.ts`: Atomic operation utilities
 - `Pathfinding`: A\* and BFS algorithms
