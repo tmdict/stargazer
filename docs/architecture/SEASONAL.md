@@ -8,7 +8,7 @@ no archives; git history is the archive), and every feature is confined to
 dedicated files plus a short seam list so retirement is deletion, not surgery.
 
 Text for all three comes from the upstream data feed, which emits per-locale feeds under
-`static/api/<locale>/`. The shared ownership rule: **scripts own everything
+`public/api/<locale>/`. The shared ownership rule: **scripts own everything
 derivable from the feed, humans own only what requires judgment** (compact URL
 ids, board-sim ranges, curated display names), and the importers lint the
 hand-written parts against the feed instead of generating them.
@@ -248,7 +248,7 @@ skill text is, and the SSG route walk and hero-slug walks already skip it.
 ### Pipeline
 
 The upstream data feed emits
-`static/api/<locale>/charms.json` per feed locale. `npm run import:charms`
+`public/api/<locale>/charms.json` per feed locale. `npm run import:charms`
 (`scripts/import-charms.ts`) then:
 
 - asserts uniform charm coverage and identical hero lists across all 16 feeds;
