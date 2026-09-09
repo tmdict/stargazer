@@ -22,19 +22,20 @@ import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
   context: GridContext
-  showParagon: boolean
-  showRefinement?: boolean
+  showUpgrades: boolean
 }>()
 
 const i18n = useI18nStore()
 const { toggle, effectiveLayers } = useAttrLayerSelection()
 
-const layerChips = computed(() => [
-  ...(props.showParagon ? [{ attrId: ATTR_PARAGON, label: 'P', name: 'app.paragon' }] : []),
-  ...(props.showRefinement
-    ? [{ attrId: ATTR_REFINEMENT, label: 'R', name: 'app.refinement' }]
-    : []),
-])
+const layerChips = computed(() =>
+  props.showUpgrades
+    ? [
+        { attrId: ATTR_PARAGON, label: 'P', name: 'app.paragon' },
+        { attrId: ATTR_REFINEMENT, label: 'R', name: 'app.refinement' },
+      ]
+    : [],
+)
 
 // Bulk actions and the lit chips both follow the effective set, so what the
 // dock shows armed is exactly what it will edit.

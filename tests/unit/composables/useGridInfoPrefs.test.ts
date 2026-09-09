@@ -55,8 +55,7 @@ describe('useGridInfoPrefs', () => {
         tileIds: true,
         hover: true,
         heroCard: false,
-        paragon: false,
-        refinement: false,
+        upgrades: false,
         targeting: false,
         coordinates: false,
       },
@@ -77,7 +76,7 @@ describe('useGridInfoPrefs', () => {
   it('keeps the defaults until a component mounts, then adopts stored booleans only', async () => {
     storage.set(
       PREFS_KEY,
-      JSON.stringify({ gridInfo: { master: true, tileIds: false, paragon: 'yes' } }),
+      JSON.stringify({ gridInfo: { master: true, tileIds: false, upgrades: 'yes' } }),
     )
     const mod = await importComposable()
 
@@ -88,7 +87,7 @@ describe('useGridInfoPrefs', () => {
     const { prefs } = mountPrefs(mod)
     expect(prefs.master).toBe(true)
     expect(prefs.tileIds).toBe(false)
-    expect(prefs.paragon).toBe(false) // non-boolean ignored
+    expect(prefs.upgrades).toBe(false) // non-boolean ignored
     expect(prefs.hover).toBe(true) // absent key keeps its default
   })
 
@@ -96,7 +95,7 @@ describe('useGridInfoPrefs', () => {
     const { useGridInfoPrefs } = await importComposable()
     const { prefs, setPref } = useGridInfoPrefs()
 
-    setPref('paragon', true)
+    setPref('upgrades', true)
     expect(prefs.heroCard).toBe(true)
     expect(prefs.master).toBe(true)
 
@@ -104,12 +103,12 @@ describe('useGridInfoPrefs', () => {
     expect(prefs.tileIds).toBe(true)
 
     setPref('master', false)
-    expect(prefs.paragon).toBe(true)
+    expect(prefs.upgrades).toBe(true)
     expect(prefs.heroCard).toBe(true)
 
     setPref('heroCard', false)
     expect(prefs.master).toBe(false)
-    expect(prefs.paragon).toBe(true)
+    expect(prefs.upgrades).toBe(true)
   })
 
   it('persists the slice while preserving sibling slices of stargazer.prefs', async () => {
@@ -134,8 +133,7 @@ describe('deriveGridInfoView', () => {
       tileIds: true,
       hover: true,
       heroCard: true,
-      paragon: true,
-      refinement: true,
+      upgrades: true,
       targeting: true,
       coordinates: true,
     }
@@ -145,14 +143,12 @@ describe('deriveGridInfoView', () => {
       coordinates: true,
       hover: true,
       heroCard: true,
-      paragon: true,
-      refinement: true,
+      upgrades: true,
       targeting: true,
     })
     const masterOff = deriveGridInfoView({ ...allOn, master: false })
     expect(Object.values(masterOff).every((v) => v === false)).toBe(true)
-    expect(deriveGridInfoView({ ...allOn, heroCard: false }).paragon).toBe(false)
-    expect(deriveGridInfoView({ ...allOn, heroCard: false }).refinement).toBe(false)
+    expect(deriveGridInfoView({ ...allOn, heroCard: false }).upgrades).toBe(false)
     expect(deriveGridInfoView({ ...allOn, tileIds: false }).coordinates).toBe(false)
     expect(deriveGridInfoView({ ...allOn, tileIds: false }).targeting).toBe(true)
   })

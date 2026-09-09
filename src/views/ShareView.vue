@@ -166,8 +166,7 @@ const editLink = computed(() =>
             <TeamPowerPanel
               v-if="info.heroCard"
               :context="ctx"
-              :show-paragon="info.paragon"
-              :show-refinement="info.refinement"
+              :show-upgrades="info.upgrades"
               readonly
             />
           </div>
@@ -184,8 +183,7 @@ const editLink = computed(() =>
           <TeamPowerPanel
             v-if="info.heroCard"
             :context="activeContext"
-            :show-paragon="info.paragon"
-            :show-refinement="info.refinement"
+            :show-upgrades="info.upgrades"
             readonly
           />
         </div>
