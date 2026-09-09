@@ -351,8 +351,13 @@ ids. What makes that safe for stored data is **season provenance**
   so nothing can resolve it to the new season's content), and every Teams
   ingress strips them via `normalizeTeamPayload` (side-load strips the same
   way) so they never reach live boards, autosaves, or fresh links. Saved
-  records keep their content and placeholders until the user re-saves. The
-  pre-season artifacts (`season: 0`) are exempt everywhere.
+  records keep their content and placeholders until the user re-saves. Every
+  strip — explicit loads and quiet slot/link restores alike, plus the arena
+  rotation pass — raises the persistent, dismissible season banner
+  (`useSeasonNotice` + the `SeasonNotice` component above the boards on both
+  pages), so a first visit after a cutover explains what was removed instead
+  of flashing a toast. The pre-season artifacts (`season: 0`) are exempt
+  everywhere.
 - The arena autosave is binary and stampless, so `runSeasonRotationPass`
   (`/src/utils/seasonRotation.ts`, permanent) keeps a `stargazer.season`
   marker and strips the stored value once per season flip — no per-season

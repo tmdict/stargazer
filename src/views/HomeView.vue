@@ -8,6 +8,7 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import ArenaDropdown from '@/components/grid/ArenaDropdown.vue'
 import GridContainer from '@/components/grid/GridContainer.vue'
 import GridControls from '@/components/grid/GridControls.vue'
+import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import MapEditor from '@/components/MapEditor.vue'
@@ -287,6 +288,7 @@ const handleResetMap = () => {
     <DragDropProvider>
       <div class="sections-container">
         <div class="section">
+          <SeasonNotice />
           <GridContainer
             :context="activeContext"
             :characters="gameDataStore.characters"

@@ -12,6 +12,7 @@ import { computed, onScopeDispose, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
+import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import ImageStitcher from '@/components/teams/ImageStitcher.vue'
 import TeamsBoards from '@/components/teams/TeamsBoards.vue'
 import TeamsRoster from '@/components/teams/TeamsRoster.vue'
@@ -29,7 +30,6 @@ import { MAX_SAVED_TEAMS, TEAM_MODES } from '@/lib/teams/modes'
 import {
   canonicalTeamData,
   nextAutoName,
-  retiredSeasonOf,
   teamContentKey,
   type SavedTeam,
 } from '@/lib/teams/savedTeam'
@@ -48,7 +48,7 @@ const grids = useGrids()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { copyToClipboard, downloadAsImage } = useGridExport()
-const { success, error, info: infoToast } = useToast()
+const { success, error } = useToast()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
@@ -159,10 +159,6 @@ const handleLoadTeam = (team: SavedTeam) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.applyTeamData(team.mode, team.data, team.id)
   success(i18n.t('app.team-loaded'))
-  // Retired seasonal content was stripped by the ingress normalize; the saved
-  // record keeps it (placeholders in its thumbnail) until re-saved.
-  const retiredSeason = retiredSeasonOf(team.data)
-  if (retiredSeason !== null) infoToast(i18n.t('app.seasonal-removed', { n: retiredSeason }))
 }
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
@@ -221,6 +217,7 @@ const handleCopyLink = () => {
                target rendered). -->
           <TabView v-model="activeTab" :tabs="tabs" eager>
             <template #teams>
+              <SeasonNotice />
               <TeamsBoards
                 v-model:show-perspective="showPerspective"
                 v-model:show-skills="showSkills"

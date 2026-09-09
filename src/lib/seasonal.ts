@@ -76,7 +76,7 @@ export function hasSeasonalContent(state: MultiGridState): boolean {
 }
 
 // True when loading this payload onto live boards would drop something — the
-// caller's cue to toast.
+// caller's cue to raise the season notice.
 export function hasRetiredSeasonal(state: MultiGridState): boolean {
   if (state.season === undefined || !isRetiredSeason(state.season)) return false
   return hasSeasonalContent(state)

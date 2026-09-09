@@ -14,8 +14,9 @@
 
 import { ref } from 'vue'
 
+import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
-import { CURRENT_SEASON } from '@/lib/seasonal'
+import { CURRENT_SEASON, hasRetiredSeasonal } from '@/lib/seasonal'
 import {
   DEFAULT_TEAM_MODE,
   isTeamModeKey,
@@ -23,6 +24,7 @@ import {
   TEAM_MODES,
   type TeamModeKey,
 } from '@/lib/teams/modes'
+import { retiredSeasonOf } from '@/lib/teams/savedTeam'
 import { useGrids } from '@/stores/grids'
 import { useUrlStateStore } from '@/stores/urlState'
 import type { DisplayFlags, MultiGridState } from '@/utils/gridStateSerializer'
@@ -54,6 +56,16 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   const grids = useGrids()
   const urlStateStore = useUrlStateStore()
   const { clearTargetHex, clearLiftedHex } = useSelectionState()
+  const seasonNotice = useSeasonNotice()
+
+  // The ingress normalize strips retired seasonal content without asking, so
+  // every apply path that could drop something raises the page banner — a
+  // quiet restore (the first visit after a cutover) must not lose pieces
+  // unexplained.
+  const notifyIfStripped = (encoded: string): void => {
+    const retired = retiredSeasonOf(encoded)
+    if (retired !== null) seasonNotice.notify(retired)
+  }
 
   const activeMode = ref<TeamModeKey>(DEFAULT_TEAM_MODE)
   const sourceId = ref<string | null>(null)
@@ -107,6 +119,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     if (!restored) buildModeDefaults(mode)
     afterRebuild()
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
+    if (restored && slot) notifyIfStripped(slot.data)
   }
 
   /* Always rebuilds: equal-count modes (5v5 ↔ 5v5sl) still differ in maps and
@@ -134,6 +147,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     if (!applied) buildModeDefaults(mode)
     afterRebuild()
     sourceId.value = applied ? source : null
+    if (applied) notifyIfStripped(encoded)
     persistence.setPaused(false)
     persistence.flush()
     return applied
@@ -167,6 +181,7 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
         const normalized = encodeMultiGridStateToUrl(normalizeTeamPayload(decoded, mode))
         activeMode.value = mode
         if (applyEncoded(normalized, true)) {
+          if (hasRetiredSeasonal(decoded)) seasonNotice.notify(decoded.season!)
           // Persisted only on success: a link that decodes but fails to apply
           // must not leave its mode as the remembered one for the fallback.
           persistence.persistMode(mode)

@@ -19,6 +19,7 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useOverlay } from '@/composables/useOverlay'
 import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
+import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
 import { useTouchDetection } from '@/composables/useTouchDetection'
@@ -41,7 +42,8 @@ const gameData = useGameDataStore()
 const grids = useGrids()
 const i18n = useI18nStore()
 const library = useTeamLibrary()
-const { success, info } = useToast()
+const { success } = useToast()
+const seasonNotice = useSeasonNotice()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { isTouchDevice } = useTouchDetection()
 const updatedLabel = useUpdatedLabel()
@@ -161,10 +163,10 @@ const handlePick = (team: SavedTeam): void => {
   clearLiftedHex()
   closeMenu()
   success(skipped > 0 ? i18n.t('app.team-loaded-skipped', { skipped }) : i18n.t('app.team-loaded'))
-  // The plan build stripped retired seasonal content; same notice as a full
+  // The plan build stripped retired seasonal content; same banner as a full
   // library load.
   const retiredSeason = retiredSeasonOf(team.data)
-  if (retiredSeason !== null) info(i18n.t('app.seasonal-removed', { n: retiredSeason }))
+  if (retiredSeason !== null) seasonNotice.notify(retiredSeason)
 }
 
 const {
