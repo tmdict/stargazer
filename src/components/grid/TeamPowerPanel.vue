@@ -8,6 +8,7 @@ import { useInfoTip } from '@/composables/useInfoTip'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
+import { pillTone, type PillTone } from '@/lib/characters/upgradeStats'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -109,19 +110,24 @@ const cycle = (team: Team, hero: PanelHero): void => {
   }
 }
 
-// Paragon colors max only; refinement warms up in two steps (0-1 gray,
-// 2-3 light tint, 4 full red) so mid progress shows without stealing the
-// maxed pop; the two fills meet in a slanted seam.
-const PILL_GRAY = '#cfc8bb'
-const PILL_MAX_P = '#8fa7c8'
-const PILL_MID_R = '#f5cdc2'
-const PILL_MAX_R = '#e4938a'
+// One fill per pillTone (the tone rule is shared with the guide's level
+// headers); the two fills meet in a slanted seam.
+const PILL_GRAY = 'var(--upgrade-pill-gray)'
+const P_FILL: Record<PillTone, string> = {
+  base: PILL_GRAY,
+  mid: PILL_GRAY,
+  max: 'var(--upgrade-pill-paragon-max)',
+}
+const R_FILL: Record<PillTone, string> = {
+  base: PILL_GRAY,
+  mid: 'var(--upgrade-pill-refinement-mid)',
+  max: 'var(--upgrade-pill-refinement-max)',
+}
 const MAX_PARAGON = attrMax(ATTR_PARAGON)
 const MAX_REFINEMENT = attrMax(ATTR_REFINEMENT)
 const pillBackground = (hero: PanelHero): string => {
-  const pFill = hero.paragon >= MAX_PARAGON ? PILL_MAX_P : PILL_GRAY
-  const rFill =
-    hero.refinement >= MAX_REFINEMENT ? PILL_MAX_R : hero.refinement >= 2 ? PILL_MID_R : PILL_GRAY
+  const pFill = P_FILL[pillTone(ATTR_PARAGON, hero.paragon)]
+  const rFill = R_FILL[pillTone(ATTR_REFINEMENT, hero.refinement)]
   // The white sliver keeps the slanted split visible even when both halves
   // share the gray, so the pill reads the same at every level combination.
   return `linear-gradient(112deg, ${pFill} 48.6%, #fff 49.4%, #fff 50.6%, ${rFill} 51.4%)`
@@ -150,7 +156,7 @@ const rivalryStatInfo = (stat: number): string =>
 const formatRivalryStat = (stat: number): string => {
   const magnitude = Number.isInteger(stat) ? String(Math.abs(stat)) : Math.abs(stat).toFixed(1)
   const sign = stat > 0 ? '+' : stat < 0 ? '-' : ''
-  return `${sign}${magnitude}%`
+  return `${sign}${magnitude}`
 }
 
 // Track the hovered side, not its value, so the tooltip text stays live if the stat
@@ -400,7 +406,7 @@ const hoveredStat = computed(
   min-width: 17px;
   padding: 2.4px 3px 1.6px;
   text-align: center;
-  color: #4a463d;
+  color: var(--upgrade-pill-gray-text);
 }
 .useg.max {
   color: #fff;

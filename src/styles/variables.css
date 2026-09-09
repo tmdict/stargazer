@@ -21,6 +21,15 @@
   --color-tier-3: #dd7a6c;
   --color-tier-4: #b3c9e2;
 
+  /* Hero upgrade pills (the panel's portrait pills, the guide's level headers):
+     gray below max; paragon turns silver-blue at max, refinement warms through
+     a tint from R2 to red at max. */
+  --upgrade-pill-gray: #cfc8bb;
+  --upgrade-pill-gray-text: #4a463d;
+  --upgrade-pill-paragon-max: #8fa7c8;
+  --upgrade-pill-refinement-mid: #f5cdc2;
+  --upgrade-pill-refinement-max: #e4938a;
+
   /* Team Colors */
   --color-ally: #36958e;
   --color-enemy: #c82333;
