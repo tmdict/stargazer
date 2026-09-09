@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
+import { ATTR_PARAGON, attrMax } from '@/lib/characters/attributes'
 import {
-  PARAGON_MAX_LEVEL,
   paragonStatValue,
   teamPowerNet,
   teamPowerTotal,
   type ParagonHero,
 } from '@/lib/characters/paragon'
+
+const PARAGON_MAX_LEVEL = attrMax(ATTR_PARAGON)
 
 const hero = (level: number, faction?: string): ParagonHero => ({ level, faction })
 

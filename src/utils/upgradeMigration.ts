@@ -48,16 +48,33 @@
  *    (src/utils/binaryEncoder.ts) and simplify the link path's
  *    `link.season ?? CURRENT_SEASON` (src/composables/useTeamsRestore.ts)
  *    to `CURRENT_SEASON`, trimming its legacy-JSON sentence.
+ * 4c. In src/views/ShareView.vue: remove the tagged TEMPORARY
+ *    stripRetiredSeasonal wrapper (and its import) around the multi restore —
+ *    binary links carry no season, so post-shim it is a guaranteed no-op.
  * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
  *    in the setup block, and the ordering comment above it.
- * 6. Trim the shim mentions from docs/architecture/URL_SERIALIZATION.md (the
- *    Migration shim section and the season-field sentence) and from
- *    docs/architecture/SEASONAL.md (the "stamped season 7 by the TEMPORARY
- *    shim" sentence in Season cutover & retirement).
+ * 6. Trim every shim mention from comments and docs — these say "shim" or
+ *    "legacy", not "upgradeMigration", so step 8's grep can't find them:
+ *    - docs/architecture/URL_SERIALIZATION.md: the Migration shim section,
+ *      the season-field sentence, the universal decoder's "falls through to
+ *      the temporary legacy shim" clause, and the all-or-nothing paragraph's
+ *      "lets the legacy shim probe formats safely" clause.
+ *    - docs/architecture/SEASONAL.md: the "stamped season 7 by the TEMPORARY
+ *      shim" sentence in Season cutover & retirement.
+ *    - docs/ARCHITECTURE.md: the utilities bullet's "the temporary
+ *      upgradeMigration.ts shim ..." clause.
+ *    - src/lib/seasonal.ts: the header's shim-window sentences (keep the
+ *      unstamped-payload rule itself).
+ *    - src/utils/seasonRotation.ts: "unlike the temporary migration shim".
+ *    - src/utils/binaryEncoder.ts: the header's "which the shim's probe
+ *      order relies on" clause and decodeLink's shim-window comment.
+ *    - src/lib/characters/attributes.ts: "and legacy conversion" in the
+ *      compareAttrRows comment.
  * 7. The stargazer.migration.u marker key stays behind in user storage as
  *    accepted residue.
- * 8. Verify: `grep -ri upgrademigration src tests` returns nothing, then
- *    lint, type-check, and the test suite pass with no further edits.
+ * 8. Verify: `grep -ri upgrademigration src tests docs` and
+ *    `grep -rin shim src docs` both return nothing, then lint, type-check,
+ *    and the test suite pass with no further edits.
  * Expected user-visible consequences, accepted by policy (old links and
  * exports are expendable): pre-release links of every kind stop decoding
  * (empty board), and pre-release data the storage pass never reached — export
@@ -231,9 +248,6 @@ const V1_ARTIFACT_BITS = 6
 const V1_PHANTIMAL_ID_BITS = 4
 const V1_PHANTIMAL_COUNT_BITS = 4
 const V1_SYNERGY_COUNT_BITS = 4
-const V1_UPGRADE_COUNT_BITS = 6
-const V1_ATTR_ID_BITS = 6
-const V1_ATTR_VALUE_BITS = 4
 const V1_PARAGON_LEVEL_BITS = 3
 const V1_PARAGON_COUNT_BITS = 5
 
@@ -289,7 +303,6 @@ const decodeV1Binary = (bytes: Uint8Array): GridState | null => {
     let hasPhantimals = false
     let hasLegacyParagon = false
     let hasSynergy = false
-    let hasUpgrades = false
 
     if (hasExtended) {
       const extendedFlags = reader.readBits(8)
@@ -297,7 +310,6 @@ const decodeV1Binary = (bytes: Uint8Array): GridState | null => {
       hasPhantimals = (extendedFlags & 0x40) !== 0
       hasLegacyParagon = (extendedFlags & 0x02) !== 0
       hasSynergy = (extendedFlags & 0x04) !== 0
-      hasUpgrades = (extendedFlags & 0x08) !== 0
 
       if ((extendedFlags & 0x80) !== 0) {
         state.d = reader.readBits(8)
@@ -346,14 +358,14 @@ const decodeV1Binary = (bytes: Uint8Array): GridState | null => {
       }
     }
 
-    const upgradeRows: AttrRow[] = []
+    const paragonRows: AttrRow[] = []
     if (hasLegacyParagon) {
       const count = reader.readBits(V1_PARAGON_COUNT_BITS)
       for (let i = 0; i < count; i++) {
         const teamBit = reader.readBits(V1_TEAM_BITS)
         const charId = reader.readBits(V1_CHARACTER_ID_BITS)
         const level = reader.readBits(V1_PARAGON_LEVEL_BITS)
-        upgradeRows.push([teamBit + 1, charId, 1, level])
+        paragonRows.push([teamBit + 1, charId, 1, level])
       }
     }
 
@@ -371,20 +383,8 @@ const decodeV1Binary = (bytes: Uint8Array): GridState | null => {
       }
     }
 
-    if (hasUpgrades) {
-      const count = reader.readBits(V1_UPGRADE_COUNT_BITS)
-      for (let i = 0; i < count; i++) {
-        upgradeRows.push([
-          reader.readBits(V1_TEAM_BITS) + 1,
-          reader.readBits(V1_CHARACTER_ID_BITS),
-          reader.readBits(V1_ATTR_ID_BITS),
-          reader.readBits(V1_ATTR_VALUE_BITS),
-        ])
-      }
-    }
-
-    if (upgradeRows.length > 0) {
-      state.u = upgradeRows.sort(compareAttrRows)
+    if (paragonRows.length > 0) {
+      state.u = paragonRows.sort(compareAttrRows)
     }
 
     if (!reader.atCleanEnd()) return null

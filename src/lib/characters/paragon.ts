@@ -4,11 +4,7 @@
  * exactly the other side's Intimidation), so the two teams' nets always mirror.
  * Faction picks the ramp: Celestials and Hypogeans start from a nonzero base
  * (P0 is not "off" for them) with a shallower step, and both ramps converge to
- * the same value at PARAGON_MAX_LEVEL. */
-
-import { ATTR_PARAGON, attrMax } from './attributes'
-
-export const PARAGON_MAX_LEVEL = attrMax(ATTR_PARAGON)
+ * the same value at the max paragon level. */
 
 export interface ParagonHero {
   level: number

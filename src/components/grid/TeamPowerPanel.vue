@@ -88,7 +88,7 @@ const visibleSides = computed(() => {
   return props.context.teamView ? populated.filter((side) => side.team === Team.ALLY) : populated
 })
 
-// One armed layer cycles with wrap (as paragon taps always have). Both armed:
+// One armed layer cycles with wrap. Both armed:
 // +1 clamped so counters at different values can't desync — except when every
 // armed layer is already maxed, when the tap wraps them all to 0 together.
 const cycle = (team: Team, hero: PanelHero): void => {
@@ -277,8 +277,7 @@ const hoveredStat = computed(
   flex-direction: row-reverse;
 }
 
-/* Number beside caption on the shared baseline; the head holds nothing else
-   now that editing lives in the dock. */
+/* Number beside caption on the shared baseline. */
 .stat {
   display: inline-flex;
   align-items: baseline;

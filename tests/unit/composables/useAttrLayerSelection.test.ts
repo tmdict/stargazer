@@ -5,34 +5,34 @@ import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 
 const BOTH = [ATTR_PARAGON, ATTR_REFINEMENT]
 
+// With every layer visible the effective set IS the armed set (the fallback
+// never engages), so effectiveLayers(BOTH) reads the raw selection.
+
 describe('useAttrLayerSelection', () => {
   beforeEach(() => {
     resetAttrLayerSelection()
   })
 
   it('defaults to paragon armed and toggles layers as a set', () => {
-    const { isArmed, toggle } = useAttrLayerSelection()
-    expect(isArmed(ATTR_PARAGON)).toBe(true)
-    expect(isArmed(ATTR_REFINEMENT)).toBe(false)
+    const { toggle, effectiveLayers } = useAttrLayerSelection()
+    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
     toggle(ATTR_REFINEMENT, BOTH)
-    expect(isArmed(ATTR_PARAGON)).toBe(true)
-    expect(isArmed(ATTR_REFINEMENT)).toBe(true)
+    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON, ATTR_REFINEMENT])
     toggle(ATTR_PARAGON, BOTH)
-    expect(isArmed(ATTR_PARAGON)).toBe(false)
-    expect(isArmed(ATTR_REFINEMENT)).toBe(true)
+    expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
   })
 
   it('never disarms the last armed layer', () => {
-    const { isArmed, toggle } = useAttrLayerSelection()
+    const { toggle, effectiveLayers } = useAttrLayerSelection()
     toggle(ATTR_PARAGON, BOTH)
-    expect(isArmed(ATTR_PARAGON)).toBe(true)
+    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
   })
 
   it('is one shared selection across consumers', () => {
     const a = useAttrLayerSelection()
     const b = useAttrLayerSelection()
     a.toggle(ATTR_REFINEMENT, BOTH)
-    expect(b.isArmed(ATTR_REFINEMENT)).toBe(true)
+    expect(b.effectiveLayers(BOTH)).toEqual([ATTR_PARAGON, ATTR_REFINEMENT])
   })
 
   it('edits only visible layers: armed ∩ visible, falling back to visible', () => {
@@ -49,13 +49,11 @@ describe('useAttrLayerSelection', () => {
   // Clicks act on the displayed (effective) set: a chip lit by the fallback
   // must never toggle hidden armed state with no visible result.
   it('toggling a fallback-lit chip adopts the displayed set instead of arming hidden layers', () => {
-    const { isArmed, toggle, effectiveLayers } = useAttrLayerSelection()
+    const { toggle, effectiveLayers } = useAttrLayerSelection()
     // Armed {P}, paragon pref off: R is lit by the fallback. Clicking R is the
-    // last-lit no-op, but the armed set becomes exactly what is displayed.
+    // last-lit no-op, but the armed set becomes exactly what is displayed, so
+    // re-enabling the paragon pref does not surface a surprise ALL state.
     toggle(ATTR_REFINEMENT, [ATTR_REFINEMENT])
-    expect(isArmed(ATTR_REFINEMENT)).toBe(true)
-    expect(isArmed(ATTR_PARAGON)).toBe(false)
-    // Re-enabling the paragon pref does not surface a surprise ALL state.
     expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
   })
 
