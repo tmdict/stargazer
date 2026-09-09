@@ -16,6 +16,7 @@ import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
 import { useLocaleToggle } from '@/composables/useLocaleToggle'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
+import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
@@ -44,7 +45,8 @@ runUpgradeStoragePass()
 // Permanent: root setup runs before any route child's persistence reads, and
 // the arena autosave must re-align once per season flip before its page can
 // read it.
-runSeasonRotationPass()
+const strippedSeason = runSeasonRotationPass()
+if (strippedSeason !== null) useSeasonNotice().notify(strippedSeason)
 
 // Locale-prefixed routes are authoritative: keep the store in sync with the
 // path so the header and skill browser render in the URL's language (during

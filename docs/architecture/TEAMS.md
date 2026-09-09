@@ -147,7 +147,7 @@ Key rules:
 
 - **Validation**: hydration and import run every record through `validateSavedTeam` (known mode, matching board count, canonicalizable data); a failing record drops alone, never the library
 - **Map keys unchecked**: `t` is authoritative, so a record referencing a retired map stays valid
-- **Seasonal ids unchecked, season-stamped**: a record referencing retired seasonal content stays valid and lossless — the payload's `season` stamp marks it, thumbnails/previews render "S{n}" placeholders instead of resolving the reused ids, and loading strips the retired refs from the live boards (with a toast) while the record keeps them until re-saved (see [Seasonal Content](./SEASONAL.md), "Season cutover & retirement")
+- **Seasonal ids unchecked, season-stamped**: a record referencing retired seasonal content stays valid and lossless — the payload's `season` stamp marks it, thumbnails/previews render "S{n}" placeholders instead of resolving the reused ids, and loading strips the retired refs from the live boards while the record keeps them until re-saved — every strip (explicit loads and quiet slot/link restores alike) raises the persistent, dismissible season banner above the boards (see [Seasonal Content](./SEASONAL.md), "Season cutover & retirement")
 - **Canonical at the owner**: `saveAsNew`/`update` canonicalize their input rather than trusting callers
 - **`updatedAt` is content-only**: `update` stamps it, `rename` does not, so the last-modified sort and the card's "updated" label track board edits rather than relabels
 - **Serializer contract**: canonicalization rebuilds each board from `BOARD_CONTENT_KEYS` (exported beside `BoardState`, contract-tested), so a new `GridState` section must be registered there to survive in saved teams
