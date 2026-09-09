@@ -44,22 +44,25 @@ const editLayers = computed(() => effectiveLayers(visibleAttrIds.value))
 const chipLit = (attrId: number): boolean => editLayers.value.includes(attrId)
 const toggleChip = (attrId: number): void => toggle(attrId, visibleAttrIds.value)
 
-const realHeroIds = (team: Team): number[] =>
-  getTilesWithCharactersByTeam(props.context.grid, team)
-    .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
-    .map((tile) => tile.characterId!)
+// The bulk upgrade actions edit real heroes only, but the clear removes every
+// unit — a side holding just placeholders or phantimals must still be
+// clearable.
+const sideState = (team: Team): { heroIds: number[]; hasUnits: boolean } => {
+  const tiles = getTilesWithCharactersByTeam(props.context.grid, team)
+  return {
+    heroIds: tiles
+      .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
+      .map((tile) => tile.characterId!),
+    hasUnits: tiles.length > 0,
+  }
+}
 
 // The enemy half hides under team view: destructive and bulk controls must not
 // target units the crop has hidden.
 const sides = computed(() => {
   const all = [
-    { team: Team.ALLY, klass: 'ally', label: i18n.t('app.ally'), heroIds: realHeroIds(Team.ALLY) },
-    {
-      team: Team.ENEMY,
-      klass: 'enemy',
-      label: i18n.t('app.enemy'),
-      heroIds: realHeroIds(Team.ENEMY),
-    },
+    { team: Team.ALLY, klass: 'ally', label: i18n.t('app.ally'), ...sideState(Team.ALLY) },
+    { team: Team.ENEMY, klass: 'enemy', label: i18n.t('app.enemy'), ...sideState(Team.ENEMY) },
   ]
   return props.context.teamView ? all.filter((side) => side.team === Team.ALLY) : all
 })
@@ -137,7 +140,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
         type="button"
         class="dock-chip dock-clear"
         :class="{ armed: armed === String(side.team) }"
-        :disabled="side.heroIds.length === 0"
+        :disabled="!side.hasUnits"
         :aria-label="i18n.t('app.clear-team')"
         @click="clearTeam(side.team)"
         @mouseenter="showActionTip($event, 'app.clear-team')"

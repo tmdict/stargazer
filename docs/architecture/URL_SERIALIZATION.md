@@ -37,7 +37,7 @@ Stable numeric ids for the string-keyed modes and maps, so links carry small int
 - **Modes** (3-bit field): `arena` 0, `1v1` 1, `3v3` 2, `5v5` 3, `5v5sl` 4. The mode implies the board count, so it is never encoded separately
 - **Maps** (6-bit field): 0 reserved for "no map" (Arena boards carry none — their serialized tiles are authoritative); registered map keys get ids 1+. Seasonal preset ids follow the rotation policy: a season's maps replace the last season's and freed ids return to the pool
 
-Ids are append-only: reassigning one silently re-routes every existing link.
+Mode and permanent-map ids are append-only: reassigning one silently re-routes every existing link. Rotating seasonal preset ids re-routes old links too — accepted under the links-are-expendable policy.
 
 ### Binary Encoder (`/src/utils/binaryEncoder.ts`)
 

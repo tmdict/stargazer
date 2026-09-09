@@ -13,6 +13,7 @@ import IconEdit from '@/components/ui/IconEdit.vue'
 import { useBreakpoint } from '@/composables/useBreakpoint'
 import { deriveGridInfoView, useGridInfoPrefs } from '@/composables/useGridInfoPrefs'
 import { useToast } from '@/composables/useToast'
+import { stripRetiredSeasonal } from '@/lib/seasonal'
 import { SITE_ORIGIN } from '@/lib/site'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGridStore } from '@/stores/grid'
@@ -81,12 +82,19 @@ i18nStore.initialize()
 const restoreStateFromUrl = () => {
   const result =
     isMultiBoard.value && linkAtLoad
-      ? urlStateStore.restoreMultiFromDecodedState({
-          boards: linkAtLoad.boards,
-          active: linkAtLoad.active,
-          d: linkAtLoad.d,
-          mode: linkAtLoad.mode,
-        })
+      ? // TEMPORARY (upgradeMigration shim): only the shim's legacy JSON probe
+        // stamps a link season; honoring it strips a retired-season link like
+        // the Teams page does, instead of resolving its reused ids as
+        // current-pool content.
+        urlStateStore.restoreMultiFromDecodedState(
+          stripRetiredSeasonal({
+            boards: linkAtLoad.boards,
+            active: linkAtLoad.active,
+            d: linkAtLoad.d,
+            mode: linkAtLoad.mode,
+            season: linkAtLoad.season,
+          }),
+        )
       : urlStateStore.restoreFromEncodedState(encodedAtLoad)
 
   if (result.success) {

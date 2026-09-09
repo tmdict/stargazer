@@ -158,8 +158,8 @@ describe('season data contract', () => {
   // CURRENT_SEASON while stale entries linger, and a wholly forgotten bump
   // leaves stale records rendering new content — both wrong.
   it('every non-zero data season equals the current season', () => {
-    for (const artifact of loadArtifacts()) {
-      if (artifact.season !== 0) expect(artifact.season).toBe(CURRENT_SEASON)
+    for (const artifact of loadArtifacts().filter((a) => a.season !== 0)) {
+      expect(artifact.season).toBe(CURRENT_SEASON)
     }
     for (const phantimal of loadPhantimals()) {
       expect(phantimal.season).toBe(CURRENT_SEASON)
