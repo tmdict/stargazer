@@ -1,10 +1,20 @@
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 import type { SkillLocaleFile, SlotKey } from '@/lib/types/skill'
-import { getSkillFile, loadAppLocales, loadCharacterLocales } from '@/utils/dataLoader'
+import {
+  getSkillFile,
+  loadAppLocales,
+  loadCharacterLocales,
+  loadGameLocales,
+} from '@/utils/dataLoader'
 
 /** App-locale label for a key (tag name, slot prefix, etc.); falls back to the key. */
 export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
+}
+
+/** Game-locale label (faction, class, stat); falls back to the key. */
+export function gameLabel(key: string, lang: AppLocale): string {
+  return loadGameLocales()[key]?.[lang] ?? key
 }
 
 // Chrome labels for slot chips (search-result cards, the search overlay).

@@ -2,6 +2,7 @@
 import { provide } from 'vue'
 
 import GuideTagSection from '@/components/guide/GuideTagSection.vue'
+import GuideUpgradeSection from '@/components/guide/GuideUpgradeSection.vue'
 import { SkillLangKey } from '@/components/skill/snippetKeys'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { useGameDataStore } from '@/stores/gameData'
@@ -27,6 +28,7 @@ const groups = guideTagGroups()
     <!-- Single dark column; reuses the skill reader surface (content.css). -->
     <article class="container guide-panel">
       <div class="content">
+        <GuideUpgradeSection :lang />
         <GuideTagSection
           v-for="g in groups"
           :key="g.tag"
