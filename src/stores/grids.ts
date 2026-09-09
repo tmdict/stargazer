@@ -19,7 +19,7 @@ import {
   type CharacterDropPayload,
   type GridContext,
 } from '@/composables/useGridContext'
-import { type AttrRecord } from '@/lib/characters/attributes'
+import type { AttrRecord } from '@/lib/characters/attributes'
 import {
   canPlaceCharacterOnTile,
   findTeamSynergyHex,

@@ -33,7 +33,7 @@ export interface SavedTeam {
   id: string
   name: string
   mode: TeamModeKey
-  // Canonical encoded MultiGridState (share-link codec, viewer state stripped).
+  // Canonical encoded MultiGridState (JSON interchange, viewer state stripped).
   data: string
   createdAt: number
   updatedAt: number
@@ -107,7 +107,7 @@ export function canonicalTeamData(encoded: string): string | null {
  * "Season {n} content removed" notice. */
 export function retiredSeasonOf(encoded: string): number | null {
   const decoded = decodeMultiGridStateFromUrl(encoded)
-  return decoded && hasRetiredSeasonal(decoded) ? decoded.season! : null
+  return decoded?.season !== undefined && hasRetiredSeasonal(decoded) ? decoded.season : null
 }
 
 /* Equality identity for a team's content. `season` counts if and only if the

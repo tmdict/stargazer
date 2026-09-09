@@ -21,8 +21,6 @@ import {
 import type { GridState, MultiGridState } from './gridStateSerializer'
 import { convertLegacyBoard, decodeLegacyLink, stampLegacySeason } from './upgradeMigration'
 
-export type { BinaryLinkState }
-
 /* Decode any `?g=` link payload. Strict v2 first; a failure falls through to
  * the shim's frozen legacy reader (old binary arena links and the stored
  * arena autosave, plus pre-binary JSON Teams links). Pages route on the

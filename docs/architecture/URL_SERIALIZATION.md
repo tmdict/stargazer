@@ -13,7 +13,7 @@ The split follows exportability: anything a user can export or share as a team f
 
 1. **One generic codec**: a single self-describing format for every link; pages route on the decoded payload's mode instead of owning formats
 2. **Compact representation**: bit packing, section bitmaps, and small wire ids for minimal URL length
-3. **No version field**: the format is frozen by golden-string tests; a future change ships with its own temporary migration shim
+3. **No version field**: the format is frozen by golden-string tests; a future change ships with its own temporary migration
 4. **Strict decoding**: unknown mode ids, map ids, or section-bitmap bits reject the payload, and the bit stream must be fully consumed — a payload either decodes exactly or not at all
 5. **Input validation**: `validateGridState()` filters out-of-range entries before encoding so bit-field truncation can never alias ids
 

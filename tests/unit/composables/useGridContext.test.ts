@@ -79,7 +79,7 @@ describe('createGridContext artifact arrows', () => {
  * unit's team (the destination zone decides), so the ctx wrappers must re-key
  * the level; the engine underneath is paragon-agnostic. arena1 enemy spawns
  * include hex 40. */
-describe('createGridContext paragon re-keying', () => {
+describe('createGridContext attr re-keying and clearing', () => {
   beforeEach(() => {
     setActivePinia(createPinia())
   })

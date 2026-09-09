@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* Per-board edit dock for hero upgrade attrs: per-team clear and bulk actions
    flank a centered layer selector. Every board mounts its own dock (actions
-   stay adjacent to the heroes they change), while the P/R selection is one
-   page-global set (useAttrLayerSelection) shared by all docks and panels. */
+   stay adjacent to the heroes they change), while the ALL / P / R choice is
+   one page-global value (useAttrLayerSelection) shared by all docks and panels. */
 
 import { computed } from 'vue'
 
@@ -11,7 +11,7 @@ import IconReset from '@/components/ui/IconReset.vue'
 import IconTrashSmall from '@/components/ui/IconTrashSmall.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
-import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
+import { useAttrLayerSelection, type AttrLayerChoice } from '@/composables/useAttrLayerSelection'
 import type { GridContext } from '@/composables/useGridContext'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -26,23 +26,23 @@ const props = defineProps<{
 }>()
 
 const i18n = useI18nStore()
-const { toggle, effectiveLayers } = useAttrLayerSelection()
+const { select, effectiveLayers, litChoice } = useAttrLayerSelection()
 
-const layerChips = computed(() =>
+const layerChips = computed((): { choice: AttrLayerChoice; label: string; name: string }[] =>
   props.showUpgrades
     ? [
-        { attrId: ATTR_PARAGON, label: 'P', name: 'app.paragon' },
-        { attrId: ATTR_REFINEMENT, label: 'R', name: 'app.refinement' },
+        { choice: 'all', label: i18n.t('app.all'), name: 'app.all' },
+        { choice: ATTR_PARAGON, label: 'P', name: 'app.paragon' },
+        { choice: ATTR_REFINEMENT, label: 'R', name: 'app.refinement' },
       ]
     : [],
 )
 
-// Bulk actions and the lit chips both follow the effective set, so what the
-// dock shows armed is exactly what it will edit.
-const visibleAttrIds = computed(() => layerChips.value.map((chip) => chip.attrId))
+// Bulk actions and the lit chip both follow the effective set, so what the
+// dock shows selected is exactly what it will edit.
+const visibleAttrIds = computed(() => (props.showUpgrades ? [ATTR_PARAGON, ATTR_REFINEMENT] : []))
 const editLayers = computed(() => effectiveLayers(visibleAttrIds.value))
-const chipLit = (attrId: number): boolean => editLayers.value.includes(attrId)
-const toggleChip = (attrId: number): void => toggle(attrId, visibleAttrIds.value)
+const chipLit = (choice: AttrLayerChoice): boolean => litChoice(visibleAttrIds.value) === choice
 
 // The bulk upgrade actions edit real heroes only, but the clear removes every
 // unit — a side holding just placeholders or phantimals must still be
@@ -166,18 +166,6 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
         </button>
         <button
           type="button"
-          class="dock-chip"
-          :disabled="!canRaise(side.heroIds, side.team)"
-          :aria-label="i18n.t('app.max-upgrades')"
-          @click="maxAll(side.team, side.heroIds)"
-          @mouseenter="showActionTip($event, 'app.max-upgrades')"
-          @touchstart.passive="onActionTouchStart"
-          @mouseleave="hideActionTip"
-        >
-          <IconChevronsUp :size="11" />
-        </button>
-        <button
-          type="button"
           class="dock-chip dock-plus"
           :disabled="!canRaise(side.heroIds, side.team)"
           :aria-label="i18n.t('app.raise-upgrades')"
@@ -188,20 +176,32 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
         >
           +1
         </button>
+        <button
+          type="button"
+          class="dock-chip"
+          :disabled="!canRaise(side.heroIds, side.team)"
+          :aria-label="i18n.t('app.max-upgrades')"
+          @click="maxAll(side.team, side.heroIds)"
+          @mouseenter="showActionTip($event, 'app.max-upgrades')"
+          @touchstart.passive="onActionTouchStart"
+          @mouseleave="hideActionTip"
+        >
+          <IconChevronsUp :size="11" />
+        </button>
       </template>
     </div>
 
     <span v-if="layerChips.length > 0" class="dock-selector">
       <button
         v-for="chip in layerChips"
-        :key="chip.attrId"
+        :key="chip.choice"
         type="button"
         class="layer-chip"
-        :class="{ lit: chipLit(chip.attrId) }"
-        :aria-pressed="chipLit(chip.attrId)"
+        :class="{ lit: chipLit(chip.choice) }"
+        :aria-pressed="chipLit(chip.choice)"
         :aria-label="i18n.t(chip.name)"
         :title="i18n.t(chip.name)"
-        @click="toggleChip(chip.attrId)"
+        @click="select(chip.choice)"
       >
         {{ chip.label }}
       </button>
@@ -242,7 +242,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   align-items: center;
   gap: var(--spacing-sm);
 }
-/* Mirror the enemy side: trash at the outer edge, +1 innermost, matching the
+/* Mirror the enemy side: trash at the outer edge, max innermost, matching the
    ally order read outward-in. */
 .dock-cluster.enemy {
   flex-direction: row-reverse;
@@ -319,8 +319,8 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 }
 
 /* Centered on the bar's midline; the flanking clusters flow around it. The
-   armed chip's fill is the whole armed signal — the pills stay plain labels
-   and the bulk chips stay neutral regardless of layer. */
+   lit chip's fill is the whole selection signal — the portrait pills stay
+   plain labels and the bulk chips stay neutral regardless of layer. */
 .dock-selector {
   position: absolute;
   left: 50%;
@@ -362,6 +362,13 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   }
   .dock-divider {
     display: none;
+  }
+  /* Three chips must still clear the flanking clusters. */
+  .dock-selector {
+    gap: 4px;
+  }
+  .layer-chip {
+    padding: 2px 9px;
   }
 }
 </style>
