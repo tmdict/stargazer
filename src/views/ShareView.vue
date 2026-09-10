@@ -214,6 +214,11 @@ const editLink = computed(() =>
   /* Top padding clears the absolutely positioned action cluster (modal.css
      .buttons: 12px offset + 32px buttons) so the board starts below it. */
   padding: 56px 10px 10px;
+  /* The overlay's align-items: center would center a box taller than the
+     overlay too, leaving its top half beyond scroll reach; auto margins (as on
+     content.css .container) collapse instead, so the box starts at the top and
+     scrolls. */
+  margin: auto;
   z-index: 1;
   display: flex;
   justify-content: center;
@@ -221,10 +226,12 @@ const editLink = computed(() =>
 }
 
 /* Multi-board (5 v 5): let the boards row own the width and scroll horizontally
-   (and grow to two rows when wrapped) rather than centering a single grid. */
+   (and grow to two rows when wrapped) rather than centering a single grid. As a
+   flex item its automatic minimum width would be the full five-board row, so
+   zero it to let the box shrink to the overlay. */
 .grid-wrapper.multi {
   display: block;
-  max-width: 95vw;
+  min-width: 0;
 }
 
 /* Each board stacks its grid over its read-only team-power panel. */
