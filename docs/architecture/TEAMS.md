@@ -153,7 +153,7 @@ Key rules:
 - **Serializer contract**: canonicalization rebuilds each board from `BOARD_CONTENT_KEYS` (exported beside `BoardState`, contract-tested), so a new `GridState` section must be registered there to survive in saved teams
 - **Concurrency**: mutations re-read the stored blob first (read-modify-write); cross-tab sync is out of scope beyond that
 - **Layering**: the store returns typed results and never toasts; components own user feedback
-- **Cap**: `MAX_SAVED_TEAMS` (200, ≈ 6 KB per full team)
+- **Cap**: `MAX_SAVED_TEAMS` (500, ≈ 6 KB per full team)
 
 Semantics wired in `TeamsView`:
 

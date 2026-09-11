@@ -67,7 +67,7 @@ export const TEAM_MODE_ORDER: TeamModeKey[] = ['1v1', '3v3', '5v5', '5v5sl']
 
 export const DEFAULT_TEAM_MODE: TeamModeKey = '5v5sl'
 
-export const MAX_SAVED_TEAMS = 200
+export const MAX_SAVED_TEAMS = 500
 export const MAX_TEAM_NAME_LENGTH = 60
 
 export const isTeamModeKey = (key: unknown): key is TeamModeKey =>
