@@ -119,7 +119,31 @@ Before encoding, `validateGridState()` filters invalid entries (with console war
 - **Upgrade entries**: known attr IDs only (values clamp to the registry range), character ID 0-65535, capped at 63 entries (6-bit count)
 - **Team values**: 1 (ALLY) or 2 (ENEMY)
 
-**Capacity notes**: character IDs are limited to 65,535, so companion IDs (`N * 10000 + base`) cover companion index N up to 6 for base IDs below 5,536 (e.g. Zanie's second turret, ID 20089). Artifact and phantimal fields fit because seasonal ids rotate (each season's ids replace the last season's) rather than accumulate.
+### Capacity & Headroom
+
+A link is the 14-bit envelope, then per board a 14-bit header plus only the sections it uses, rounded up to whole bytes and base64-encoded (6 bits per URL character). An arena link holding 3 changed tiles, 2 heroes, and 1 upgrade row is 14 + 14 + (6 + 3 × 9) + (6 + 2 × 23) + (6 + 27) = 146 bits: 19 bytes, 26 characters. A fully loaded board (20 changed tiles, 10 heroes at P4/R4, both artifacts, a phantimal per side) is about 170 characters as an arena link and about 850 as a five-board link, against roughly 3,300 for the same boards as JSON interchange.
+
+Every field has room beyond today's data. The registry-backed fields are pinned by contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attributes.test.ts`), so a mode, map, or attr that outgrows its field fails CI instead of truncating on the wire:
+
+| Field                  | Bits | In use                     | Capacity | Headroom                                       |
+| ---------------------- | ---- | -------------------------- | -------- | ---------------------------------------------- |
+| Mode id                | 3    | 5 modes                    | 8        | 3 more modes                                   |
+| Active board           | 3    | 5 boards max               | 8        | modes of up to 8 boards                        |
+| Display flags          | 8    | 5 flags                    | 8        | 3 more toggles                                 |
+| Map id                 | 6    | 21 maps + "none"           | 64       | 42 more maps                                   |
+| Section bitmap         | 8    | 6 sections                 | 8        | 2 more sections                                |
+| Hex id (every entry)   | 6    | 45 hexes                   | 63       | the grid can grow to 63 hexes                  |
+| Tile state             | 3    | 7 states                   | 8        | 1 more state                                   |
+| Character id           | 16   | heroes + companions        | 65,535   | companion index N ≤ 6 for base ids below 5,536 |
+| Artifact id            | 6    | 6 permanent + 12 seasonal  | 63       | seasonal ids rotate, so the pool never grows   |
+| Phantimal local id     | 4    | 5 types                    | 15       | same rotation                                  |
+| Attr id                | 6    | 2                          | 63       | 61 more upgrade kinds                          |
+| Attr value             | 4    | max level 4                | 15       | level caps can rise to 15                      |
+| Upgrade rows per board | 6    | ≤ 20 (10 heroes × 2 attrs) | 63       | 6 attrs per hero on a full board               |
+
+Growth that costs nothing (no format change, no shim): new heroes, maps, modes, artifacts, phantimal types, and upgrade kinds; higher level caps up to 15; new display toggles (3 spare bits); and whole new features as new sections (2 spare bitmap bits), the way the upgrades section sits beside the others. The registries are append-only, so adding content is adding a row.
+
+Growth that forces a new format, each a change to the game's shape rather than its content: a grid beyond 63 hexes, an eighth tile state, more than 8 modes or 8 boards in a mode, a ninth section, an exhausted registry (64 maps or 64 upgrade kinds), or an id scheme outgrowing 16 bits. A new format ships the way v2 did: new golden strings, a frozen copy of the old decoder in a temporary shim that converts the arena autosave once, and every existing link breaks, since links are expendable by policy.
 
 ## Link Flow
 
