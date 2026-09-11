@@ -141,6 +141,31 @@ Key features:
 - **Atomic transactions** with automatic rollback
 - **Companion support** via companion.ts helpers
 
+### Hero Upgrade Attributes (`attributes.ts`)
+
+The registry of every levelled upgrade a hero carries (paragon, EX refinement), and the only place their ids and ranges are defined. Each entry is `{ id, name, max, default }`; `name` doubles as the `app.<name>` locale key. `ATTR_PARAGON` (1) and `ATTR_REFINEMENT` (2) are the current ids. What each level grants (the guide's tables, the panel's Rivalry stat) lives beside it in `upgradeStats.ts`.
+
+- **Append-only ids**: an attr id is never reused or renumbered, and a retired attr keeps its id; saved teams and links carry the number, so reassigning one would silently relabel stored levels. Character id 0 is reserved for future team-scoped rows (hero ids start at 1)
+- **Clamped at every trust boundary**: `clampAttr` (unknown id or non-finite value → 0, otherwise rounded into `[0, max]`) runs in `setAttr`, in the binary codec's validation, and in saved-team canonicalization, so an out-of-range value never reaches state or storage
+- **Unknown ids drop**: restore, the codec, and canonicalization all discard rows with an unknown attr id. The app is a single deployment, so such a row can only come from a crafted or corrupted payload
+- **Real heroes only**: placeholders, companions, phantimals, and synergy units carry no attrs (`isRealHeroId` gates the panel and dock; the serializer walks base heroes only)
+
+A hero's values form an `AttrRecord` (`{ [attrId]: value }`, absent key = default). Each `GridContext` holds one per team + character id, keyed that way rather than by hex so values follow a hero across moves and each team tracks a hero independently:
+
+```typescript
+getAttr(team, characterId, attrId): number   // default when unset
+getAttrs(team, characterId): AttrRecord
+setAttr(team, characterId, attrId, value)     // clamped; a default value deletes the key
+setAttrs(team, characterId, record)           // replaces the whole record, never merges
+takeAttrs(team, characterId): AttrRecord      // read and clear in one step
+```
+
+- **Sparse**: only non-default values are stored and an all-default record is deleted, so an untouched board holds nothing and serializes nothing
+- **Survives removal**: a removed hero's record lingers (neither rendered nor serialized) until the hero returns; `clearTeam` drops one side's records, and bulk resets (clear, map switch) drop them all
+- **Transfers move the whole record**: every hand-off (in-board move and swap, cross-board move and swap, board exchange, side-load) is `setAttrs(dest, takeAttrs(source))`, so a new attr rides along with no new bookkeeping. Replace semantics let side-load stamp a full record (saved values or empty) so a stale level can't linger on the incomer, and since the team is part of the key, a team change re-keys the record
+
+Serialization is the `u` section: sparse rows `[team, characterId, attrId, value]` sorted by `compareAttrRows`, the one comparator shared by the serializer, canonicalization, and the legacy converter so identical content is always byte-identical (the unsaved-changes compare and import dedupe are byte compares). Layouts are in [URL Serialization](./URL_SERIALIZATION.md).
+
 ### Placeholder Units (`placeholder.ts`)
 
 One stand-in per faction, placeable from the roster like heroes to reserve a
