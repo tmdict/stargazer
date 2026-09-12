@@ -14,9 +14,10 @@ import { Team } from '@/lib/types/team'
 const hero = (characterId: number, paragon = 4, refinement = 0): HeroReading => ({
   box: { x: 0, y: 0, w: 1, h: 1 },
   card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
-  candidates: [{ characterId, score: 0.8, learned: false }],
+  candidates: [{ characterId, score: 0.8, learned: false, costume: false }],
   recognised: true,
   margin: 0.3,
+  sure: true,
   descriptor: new Float32Array(1),
   paragon: { level: paragon, score: 0.7, runnerUp: 0.4, sure: true },
   refinement: { level: refinement, stars: 6, family: 'white' },
