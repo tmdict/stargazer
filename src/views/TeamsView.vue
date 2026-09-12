@@ -262,6 +262,7 @@ const handleCopyLink = () => {
                 :source-name="sourceTeam?.name ?? null"
                 :dirty="dirty"
                 :suggested-name="suggestedName"
+                :pending-name="pendingName"
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
                 @switch-mode="teamsRestore.switchMode($event)"
