@@ -18,6 +18,7 @@ import {
   CARD_TOP,
   HEADER_ICON,
   PANEL_GAP,
+  SCAN_FLOOR,
   STRIP,
 } from './layout'
 import { readStars } from './stars'
@@ -67,11 +68,13 @@ export function readScreenshot(
   // pair of columns anywhere in the shot.
   let ally = findPanelAnchor(shot, refs.frames, CARD_COLUMN_X, CARD_TOP[Team.ALLY])
   let enemy = findPanelAnchor(shot, refs.frames, ally.x, ally.y + PANEL_GAP)
+  let scanned = false
   if (ally.mean < ANCHOR_FLOOR || enemy.mean < ANCHOR_FLOOR) {
     const found = scanForColumns(shot, refs.frames, CARD_COLUMN_X)
     if (found) {
       ally = findPanelAnchor(shot, refs.frames, found.ally.x, found.ally.y, found.pitch)
       enemy = findPanelAnchor(shot, refs.frames, found.enemy.x, found.enemy.y, found.pitch)
+      scanned = true
     }
   }
   const anchors: Record<Team, typeof ally> = { [Team.ALLY]: ally, [Team.ENEMY]: enemy }
@@ -79,12 +82,14 @@ export function readScreenshot(
   const sides = {} as Record<Team, HeroReading[]>
   for (const team of [Team.ALLY, Team.ENEMY]) {
     const anchor = anchors[team]
-    if (anchor.mean < ANCHOR_FLOOR) warnings.push({ kind: 'no-panel', side: team })
+    if (anchor.mean < (scanned ? SCAN_FLOOR : ANCHOR_FLOOR))
+      warnings.push({ kind: 'no-panel', side: team })
 
     // Without a frame match the boxes are guesses over unknown card art
     // (a tier whose frame is not among the references), so the cells are
-    // offered empty for the picker rather than with a stranger's face.
-    const anchored = anchor.mean >= ANCHOR_FLOOR
+    // offered empty for the picker rather than with a stranger's face. A
+    // scanned pair is trusted down to its own floor.
+    const anchored = anchor.mean >= (scanned ? SCAN_FLOOR : ANCHOR_FLOOR)
     const cells: Omit<HeroReading, 'candidates' | 'margin' | 'recognised' | 'sure'>[] = []
     const rankings = []
     for (let row = 0; row < CARD_ROWS; row++) {
