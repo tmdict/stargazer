@@ -54,7 +54,7 @@ const handleImport = (plan: TeamImportPlan): void => {
     @touchstart.passive="tipTouchStart"
     @mouseleave="hideTip"
   >
-    <IconImagePlus :size="14" class="btn-icon" />
+    <IconImagePlus :size="16" class="btn-icon" />
   </button>
   <TeamImportModal
     v-if="open"
@@ -71,15 +71,14 @@ const handleImport = (plan: TeamImportPlan): void => {
 </template>
 
 <style scoped>
-/* Deliberately quieter than the labelled controls: no text, tighter padding,
-   the secondary tint. Keeps the row's height so the row does not jitter. */
+/* Deliberately quieter than the labelled controls: no text, a square at the
+   row's height, the secondary tint, dimmed until hovered. The widths below
+   mirror .control-btn's sizes at each breakpoint, since this scoped rule
+   outranks its collapse to a round icon button. */
 .import-btn {
   padding: 0;
-  width: 30px;
-  min-height: 30px;
-  height: 30px;
+  width: 36px;
   justify-content: center;
-  align-self: center;
   opacity: 0.75;
 }
 
@@ -90,8 +89,13 @@ const handleImport = (plan: TeamImportPlan): void => {
 
 @media (max-width: 768px) {
   .import-btn {
-    width: 28px;
-    height: 28px;
+    width: 34px;
+  }
+}
+
+@media (max-width: 480px) {
+  .import-btn {
+    width: 30px;
   }
 }
 </style>
