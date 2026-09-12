@@ -187,13 +187,13 @@ const handleImportMatch = async (plan: TeamImportPlan) => {
   const { placed } = grids.applyRosters(plan)
   const maps = plan.boards.flatMap((board, i) => (board === null ? [] : [i + 1])).join(', ')
   teamsRestore.sourceId.value = null
-  pendingName.value = plan.suggestedName
   await nextTick()
   const canonical = canonicalActive.value
   const team = canonical
     ? teamLibrary.saveAsNew(activeMode.value, canonical, plan.suggestedName)
     : null
   if (!team) {
+    pendingName.value = plan.suggestedName
     success(i18n.t('app.import-applied', { maps, heroes: placed }))
     error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
     return

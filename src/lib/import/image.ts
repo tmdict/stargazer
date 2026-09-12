@@ -1,6 +1,6 @@
 /* Pixel primitives for the screenshot readers: crop-and-resize with box
  * sampling, HSV, per-channel normalised descriptors, and alpha-masked
- * normalised cross-correlation. The only file that touches pixel data. */
+ * normalised cross-correlation. */
 
 import type { Rect, RgbaImage } from './types'
 
@@ -54,9 +54,6 @@ export function cropResize(src: RgbaImage, rect: Rect, w: number, h: number): Rg
   }
   return out
 }
-
-export const resizeImage = (src: RgbaImage, w: number, h: number): RgbaImage =>
-  cropResize(src, { x: 0, y: 0, w: src.width, h: src.height }, w, h)
 
 /* Composite transparent art onto a flat colour. The game draws portraits on
  * a light card, so references are flattened onto a matching cream. */
@@ -193,15 +190,4 @@ export function maskedNcc(
   const vb = sbb - (sb * sb) / n
   const denom = Math.sqrt(va * vb)
   return denom === 0 ? 0 : cov / denom
-}
-
-export const clampRect = (r: Rect, img: RgbaImage): Rect => {
-  const x = Math.max(0, r.x)
-  const y = Math.max(0, r.y)
-  return {
-    x,
-    y,
-    w: Math.max(0, Math.min(img.width, r.x + r.w) - x),
-    h: Math.max(0, Math.min(img.height, r.y + r.h) - y),
-  }
 }
