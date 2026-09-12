@@ -128,7 +128,10 @@ export function suggestRecordName(names: RecordNames, results: readonly (Team | 
   const op = rightMaps.length > leftMaps.length ? '<' : '>'
   const prefix = names.prefix.trim()
   const head = prefix ? `${prefix} - ` : ''
-  return `${head}${names.left.trim()} ${op} ${names.right.trim()} (${leftMaps.join(',')} ${op} ${rightMaps.join(',')})`
+  const players = `${head}${names.left.trim()} ${op} ${names.right.trim()}`
+  // A single map has nothing to list; the operator already says who won it.
+  if (results.length <= 1) return players
+  return `${players} (${leftMaps.join(',')} ${op} ${rightMaps.join(',')})`
 }
 
 export function buildTeamImportPlan(

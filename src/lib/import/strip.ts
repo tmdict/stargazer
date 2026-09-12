@@ -1,10 +1,13 @@
-/* The map strip at the bottom and the Ally tab. The strip's circles sit at a
- * fixed pitch centred on the image whether there are three or five, so only
- * the green ring around the current map needs finding: it is searched below
- * the enemy panel (healing bars above it are green too), and confirmed by
- * how much green each circle's ring band holds. The tick or cross under a
- * circle is the left player's result on that map; the Ally tab's colour is
- * the same for the map on screen and is always visible, so it is read too. */
+/* The map strip at the bottom and the Ally tab. The strip's circles sit at
+ * a fixed pitch whether there are three or five, so only the green ring
+ * around the current map needs finding: each circle's ring band is scored
+ * for green at the rows where green arcs could be, in a band below the enemy
+ * panel (the panel's own bars are green too, and a raw capture goes on
+ * below) and a little either side of its nominal centre; the best places the
+ * whole strip. The tick or cross under a circle is the left player's result
+ * on that map; the Ally tab's colour is the same for the map on screen and
+ * is always visible, so it is read too. The header's halves show the series
+ * result, not the map's, and are not read. */
 
 import { Team } from '@/lib/types/team'
 import { hsvAt } from './image'
@@ -21,35 +24,25 @@ const isGreen = (r: number, g: number, b: number): boolean => g > r + 30 && g > 
 export function readStrip(shot: RgbaImage, mapCount: number, searchTop: number): StripReading {
   const W = shot.width
   const pitch = STRIP.pitch * W
-  const radius = Math.round(pitch * STRIP.radius)
   const firstCx = STRIP.centre * W - ((mapCount - 1) / 2) * pitch
-  const centres = Array.from({ length: mapCount }, (_, i) => firstCx + i * pitch)
-  const empty = { mapIndex: null, mapResults: centres.map(() => null) }
+  const empty = { mapIndex: null, mapResults: Array.from({ length: mapCount }, () => null) }
 
-  let gn = 0
-  let gy = 0
-  let gMin = shot.height
-  let gMax = 0
-  for (let y = Math.max(0, searchTop); y < shot.height; y++) {
+  const top = Math.max(0, searchTop)
+  const bottom = Math.min(shot.height, top + Math.round(pitch * STRIP.band))
+  const greenInRow = new Int32Array(shot.height)
+  for (let y = top; y < bottom; y++) {
     for (let x = 0; x < W; x++) {
       const i = (y * W + x) * 4
-      if (isGreen(shot.data[i]!, shot.data[i + 1]!, shot.data[i + 2]!)) {
-        gn++
-        gy += y
-        if (y < gMin) gMin = y
-        if (y > gMax) gMax = y
-      }
+      if (isGreen(shot.data[i]!, shot.data[i + 1]!, shot.data[i + 2]!)) greenInRow[y]!++
     }
   }
-  if (gn < 30) return empty
-  // The ring's lower half may be cropped away; then the top arc places it.
-  const cut = gMax >= shot.height - 3
-  const cy = cut ? gMin + radius : Math.round(gy / gn)
+  const arcNear = (y: number): boolean => {
+    for (let dy = -4; dy <= 4; dy++) if ((greenInRow[y + dy] ?? 0) >= 2) return true
+    return false
+  }
 
-  // Green fraction in each circle's ring band; the current map's ring wins.
-  let mapIndex: number | null = null
-  let bestGreen = 0
-  centres.forEach((cx, i) => {
+  // Green fraction in a circle's ring band.
+  const ringGreen = (cx: number, cy: number, radius: number): number => {
     let inRing = 0
     let green = 0
     for (let y = cy - radius - 4; y <= cy + radius + 4; y++) {
@@ -62,14 +55,30 @@ export function readStrip(shot: RgbaImage, mapCount: number, searchTop: number):
         if (isGreen(shot.data[p]!, shot.data[p + 1]!, shot.data[p + 2]!)) green++
       }
     }
-    const frac = inRing ? green / inRing : 0
-    if (frac > bestGreen) {
-      bestGreen = frac
-      mapIndex = i
+    return inRing ? green / inRing : 0
+  }
+
+  // Candidate centres: rows with a green arc about a radius above and,
+  // unless the ring's lower half is cropped away, about a radius below.
+  let best = { frac: 0, index: 0, cy: 0, dx: 0, radius: 0 }
+  for (const scale of STRIP.radiusScales) {
+    const radius = Math.round(pitch * STRIP.radius * scale)
+    for (let cy = top + radius; cy < bottom; cy += 2) {
+      const below = cy + radius
+      if (!arcNear(cy - radius) || (below < shot.height - 4 && !arcNear(below))) continue
+      for (let i = 0; i < mapCount; i++) {
+        for (let dx = -STRIP.slack; dx <= STRIP.slack; dx += 4) {
+          const frac = ringGreen(firstCx + i * pitch + dx, cy, radius)
+          if (frac > best.frac) best = { frac, index: i, cy, dx, radius }
+        }
+      }
     }
-  })
-  // The ring is two thin lines inside the band, a few percent of its area.
-  if (bestGreen < 0.02) return empty
+  }
+  // The ring is two thin lines inside the band, a few percent of its area on
+  // a sharp capture and about one on a soft one.
+  if (best.frac < 0.012) return empty
+  const { cy, radius } = best
+  const centres = Array.from({ length: mapCount }, (_, i) => firstCx + i * pitch + best.dx)
 
   const mapResults = centres.map((cx) => {
     const bx = Math.round(cx + radius * 0.72)
@@ -97,17 +106,24 @@ export function readStrip(shot: RgbaImage, mapCount: number, searchTop: number):
     if (blue >= need && blue > orange) return Team.ENEMY
     return null
   })
-  return { mapIndex, mapResults }
+  return { mapIndex: best.index, mapResults }
 }
 
-/* The Ally tab beside the top panel: orange when the top (left) team won
- * this map, blue when it lost. Null when the region reads neither. */
-export function readTab(shot: RgbaImage, anchorX: number, anchorY: number): Team | null {
+/* The game's two result colours, by the circular mean hue of the saturated
+ * pixels in a region: orange for a win (or the ally panel), blue for a loss
+ * (or the enemy panel), null when neither. */
+export const resultHue = (
+  shot: RgbaImage,
+  x0: number,
+  x1: number,
+  y0: number,
+  y1: number,
+): 'won' | 'lost' | null => {
   let cx = 0
   let cy = 0
   let n = 0
-  for (let y = anchorY + TAB_REGION.dy; y < anchorY + TAB_REGION.dy + TAB_REGION.h; y++) {
-    for (let x = anchorX + TAB_REGION.dx; x < anchorX + TAB_REGION.dx + TAB_REGION.w; x++) {
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
       if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
       const [h, s] = hsvAt(shot, x, y)
       if (s < 0.25) continue
@@ -118,7 +134,20 @@ export function readTab(shot: RgbaImage, anchorX: number, anchorY: number): Team
   }
   if (n < 50) return null
   const hue = ((Math.atan2(cy, cx) * 180) / Math.PI + 360) % 360
-  if (hue >= 180 && hue <= 260) return Team.ENEMY
-  if (hue <= 60 || hue >= 330) return Team.ALLY
+  if (hue >= 180 && hue <= 260) return 'lost'
+  if (hue <= 60 || hue >= 330) return 'won'
   return null
+}
+
+/* The Ally tab beside the top panel: orange when the top (left) team won
+ * this map, blue when it lost. Null when the region reads neither. */
+export function readTab(shot: RgbaImage, anchorX: number, anchorY: number): Team | null {
+  const result = resultHue(
+    shot,
+    anchorX + TAB_REGION.dx,
+    anchorX + TAB_REGION.dx + TAB_REGION.w,
+    anchorY + TAB_REGION.dy,
+    anchorY + TAB_REGION.dy + TAB_REGION.h,
+  )
+  return result === null ? null : result === 'won' ? Team.ALLY : Team.ENEMY
 }
