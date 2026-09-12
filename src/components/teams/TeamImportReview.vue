@@ -1,18 +1,23 @@
 <script setup lang="ts">
 /* The review grid for one screenshot: both sides, five cells each, with the
-   card as the reader located it, the hero it matched (a picker on tap), the
-   paragon / refinement pill, and a state: sure, review (amber), or not
-   recognised (red). Each side also shows its artifact with a dropdown. Every
-   edit is an override on the shot; nothing here touches a board. */
+   card as the reader located it, the hero it matched, the paragon /
+   refinement pill, and a state: sure, review (amber), or not recognised
+   (red). The name opens the grid's own character palette with the reader's
+   candidates pinned first. Each side also shows its artifact with a dropdown.
+   Every edit is an override on the shot; nothing here touches a board. */
 
 import { computed, ref } from 'vue'
 
-import HeroPicker from '@/components/teams/HeroPicker.vue'
+import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
+import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
+import { isBaseHeroId } from '@/lib/characters/character'
+import { compareFaction } from '@/lib/filterOrder'
 import { HERO_SURE_MARGIN } from '@/lib/import/heroes'
 import type { HeroReading } from '@/lib/import/types'
 import { cellCharacterId, overrideKey, type RecordNames } from '@/lib/teams/teamImport'
+import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -33,7 +38,6 @@ const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
 const SIDES = [Team.ALLY, Team.ENEMY] as const
-const pickerFor = ref<string | null>(null)
 
 const heroName = (characterId: number | null): string => {
   if (characterId === null) return i18n.t('app.import-no-hero')
@@ -99,6 +103,63 @@ const sideCells = computed(() => ({
   [Team.ENEMY]: cells(Team.ENEMY),
 }))
 
+// ---------- hero picker ----------
+
+// Every real hero in roster order; a cell may take any of them, since the
+// review is board-free and page-wide uniqueness is settled on Replace.
+const heroes = computed(() =>
+  gameData.characters
+    .filter((c) => isBaseHeroId(c.id) && !c.placeholder)
+    .sort((a, b) => compareFaction(a.faction, b.faction) || a.id - b.id),
+)
+
+interface PickerTarget {
+  team: Team
+  row: number
+  key: string
+  position: { x: number; y: number }
+}
+
+const picker = ref<PickerTarget | null>(null)
+
+const togglePicker = (team: Team, row: number, key: string, event: MouseEvent): void => {
+  if (picker.value?.key === key) {
+    picker.value = null
+    return
+  }
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  picker.value = { team, row, key, position: { x: rect.left, y: rect.bottom + 4 } }
+}
+
+const pickerCell = computed(() => {
+  const target = picker.value
+  return target ? (shot.reading?.sides[target.team][target.row] ?? null) : null
+})
+
+const pinned = computed(() =>
+  (pickerCell.value?.candidates ?? [])
+    .map((c) => gameData.getCharacterById(c.characterId))
+    .filter((c): c is CharacterType => c !== undefined),
+)
+
+const pickerHasHero = computed(() => {
+  const target = picker.value
+  return (
+    target !== null &&
+    shot.reading !== null &&
+    cellCharacterId(shot.reading, target.team, target.row, shot.overrides) !== null
+  )
+})
+
+const setPicked = (characterId: number | null): void => {
+  const target = picker.value
+  if (!target) return
+  emit('setHero', target.team, target.row, characterId)
+  picker.value = null
+}
+
+// ---------- artifacts ----------
+
 const artifactOf = (team: Team): number | null => {
   const override = shot.artifactOverrides[team]
   if (override !== undefined) return override
@@ -153,27 +214,15 @@ const stateLabel = (state: CellState): string =>
             />
             <span v-else class="cell-portrait empty" />
           </div>
-          <div class="cell-name-wrap">
-            <button
-              type="button"
-              class="cell-name"
-              :title="heroName(view.characterId)"
-              @click="pickerFor = pickerFor === view.key ? null : view.key"
-            >
-              {{ heroName(view.characterId) }}
-            </button>
-            <HeroPicker
-              v-if="pickerFor === view.key"
-              :suggestions="view.cell.candidates.map((c) => c.characterId)"
-              @pick="
-                (id) => {
-                  emit('setHero', team, view.row, id)
-                  pickerFor = null
-                }
-              "
-              @close="pickerFor = null"
-            />
-          </div>
+          <button
+            type="button"
+            class="cell-name"
+            :class="{ open: picker?.key === view.key }"
+            :title="heroName(view.characterId)"
+            @click="togglePicker(team, view.row, view.key, $event)"
+          >
+            {{ heroName(view.characterId) }}
+          </button>
           <div class="cell-meta">
             <UpgradePill
               :paragon="view.paragon"
@@ -192,6 +241,29 @@ const stateLabel = (state: CellState): string =>
         </div>
       </div>
     </div>
+
+    <!-- Outside the modal's container, so its clicks and Escape are stopped
+         here rather than reaching the modal's own close listeners on document. -->
+    <Teleport to="body">
+      <SelectionPopup
+        v-if="picker"
+        :position="picker.position"
+        over-modal
+        @close="picker = null"
+        @click.stop
+        @keydown.esc.stop="picker = null"
+      >
+        <CharacterSelectionPalette
+          :characters="heroes"
+          :pinned
+          :enter-hint="i18n.t('app.import-pick-hero')"
+          @pick="setPicked($event.id)"
+        />
+        <button v-if="pickerHasHero" type="button" class="remove-hero" @click="setPicked(null)">
+          {{ i18n.t('app.import-remove-hero') }}
+        </button>
+      </SelectionPopup>
+    </Teleport>
   </div>
 </template>
 
@@ -199,7 +271,7 @@ const stateLabel = (state: CellState): string =>
 .review {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--spacing-lg);
 }
 
 .side-head {
@@ -207,7 +279,7 @@ const stateLabel = (state: CellState): string =>
   align-items: center;
   gap: var(--spacing-sm);
   flex-wrap: wrap;
-  margin-bottom: var(--spacing-xs);
+  margin-bottom: var(--spacing-sm);
 }
 
 .side-label {
@@ -215,13 +287,13 @@ const stateLabel = (state: CellState): string =>
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--color-text-secondary);
+  color: var(--import-label);
 }
 
 .side-player {
   font-weight: 600;
   font-size: 0.85rem;
-  color: var(--color-text-primary);
+  color: var(--import-text);
 }
 
 .artifact {
@@ -230,23 +302,24 @@ const stateLabel = (state: CellState): string =>
   align-items: center;
   gap: 6px;
   font-size: 0.75rem;
-  color: var(--color-text-secondary);
+  color: var(--import-text-dim);
 }
 
 .artifact-select {
   font: inherit;
   font-size: 0.78rem;
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  background: var(--color-bg-white);
-  color: var(--color-text-primary);
-  padding: 3px 6px;
   max-width: 160px;
+  padding: 4px 6px;
+  border: 1px solid var(--import-border);
+  border-radius: var(--radius-medium);
+  background: var(--import-surface);
+  color: var(--import-text);
+  color-scheme: dark;
 }
 
 .artifact-select.review {
-  border-color: var(--color-warning);
-  background: var(--color-warning-bg);
+  border-color: var(--import-warn);
+  background: var(--import-warn-tint);
 }
 
 .cells {
@@ -262,24 +335,24 @@ const stateLabel = (state: CellState): string =>
 }
 
 .cell {
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-large);
-  background: var(--color-bg-primary);
-  padding: 6px;
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
+  padding: 6px;
+  border: 1px solid var(--import-border);
+  border-radius: var(--radius-large);
+  background: var(--import-surface);
 }
 
 .cell.review {
-  border-color: var(--color-warning);
-  background: var(--color-warning-bg);
+  border-color: var(--import-warn);
+  background: var(--import-warn-tint);
 }
 
 .cell.none {
-  border-color: var(--color-error);
-  background: var(--color-error-bg);
+  border-color: var(--import-bad);
+  background: var(--import-bad-tint);
 }
 
 .cell-images {
@@ -290,43 +363,43 @@ const stateLabel = (state: CellState): string =>
 
 .cell-card,
 .cell-portrait {
+  display: block;
   width: 100%;
   aspect-ratio: 74 / 104;
   object-fit: cover;
   border-radius: var(--radius-medium);
-  background: #333;
-  display: block;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .cell-portrait.empty {
-  background: var(--color-bg-secondary);
-}
-
-.cell-name-wrap {
-  position: relative;
+  background: rgba(255, 255, 255, 0.06);
 }
 
 .cell-name {
   width: 100%;
-  border: 1.5px solid var(--color-border-primary);
+  padding: 4px 6px;
+  border: 1px solid var(--import-border);
   border-radius: var(--radius-medium);
-  background: var(--color-bg-white);
-  color: var(--color-text-primary);
+  background: var(--import-surface);
+  color: var(--import-text);
   font: inherit;
   font-size: 0.78rem;
   font-weight: 600;
-  padding: 4px 6px;
   text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
 .cell-name:hover,
-.cell-name:focus-visible {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+.cell-name:focus-visible,
+.cell-name.open {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .cell-meta {
@@ -338,21 +411,43 @@ const stateLabel = (state: CellState): string =>
 }
 
 .cell-state {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
 .cell-state.review {
-  color: #8a6100;
+  color: var(--import-warn);
 }
 
 .cell-state.none {
-  color: var(--color-error);
+  color: var(--import-bad);
 }
 
 .cell-state.edited {
-  color: var(--color-primary);
+  color: var(--color-accent);
+}
+
+/* Rendered inside the teleported popup, hence the popup's own palette rather
+   than the modal's --import-* tokens. */
+.remove-hero {
+  display: block;
+  flex-shrink: 0;
+  width: calc(100% - 8px);
+  margin: 8px 4px 0;
+  padding: 6px 0 0;
+  border: none;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: none;
+  color: rgba(255, 255, 255, 0.6);
+  font: inherit;
+  font-size: 11px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.remove-hero:hover {
+  color: #fff;
 }
 </style>
