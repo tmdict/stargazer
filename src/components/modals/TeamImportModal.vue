@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /* The match screenshot import: drop result screenshots, map each one to a
-   board, review what was read, name the record, and replace the boards.
-   State lives in useTeamImport (module-level), so closing and reopening keeps
-   the shots; the modal only renders and emits the finished plan upward. */
+   board, review what was read, name the record, and save it as a new team on
+   the boards. State lives in useTeamImport (module-level), so closing and
+   reopening keeps the shots; the modal only renders and emits the finished
+   plan upward. */
 
 import { computed, ref, watch } from 'vue'
 
@@ -112,11 +113,12 @@ const blocked = computed(
     plan.value.issues.some((i) => i.kind === 'duplicate-map' || i.kind === 'cross-board-duplicate'),
 )
 
-// Replacing non-empty boards is destructive, so it arms like Clear and Load.
+// The new team lands on the boards, so with content there it arms like
+// Clear and Load.
 const { armed, confirm } = useArmedConfirm()
-const handleReplace = (): void => {
+const handleSaveAsNew = (): void => {
   if (blocked.value) return
-  if (grids.rostersWouldReplace(plan.value) && !confirm('replace')) return
+  if (grids.rostersWouldReplace(plan.value) && !confirm('save')) return
   saveNames()
   emit('importMatch', plan.value)
 }
@@ -223,12 +225,12 @@ const handleReplace = (): void => {
           class="footer-btn danger"
           :class="{ armed: armed !== null }"
           :disabled="blocked || namesMissing"
-          @click="handleReplace"
+          @click="handleSaveAsNew"
         >
           {{
             armed !== null
               ? i18n.t('app.confirm')
-              : i18n.t('app.import-replace', { count: mappedCount })
+              : i18n.t('app.import-save-as-new', { count: mappedCount })
           }}
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">

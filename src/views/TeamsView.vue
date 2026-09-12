@@ -8,7 +8,7 @@
    it). Renders one TabView (Teams / Image Stitcher) inside a card, plus the roster
    as a separate sibling card shown for the grid tab. */
 
-import { computed, onScopeDispose, ref, watch } from 'vue'
+import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import DragDropProvider from '@/components/DragDropProvider.vue'
@@ -175,23 +175,32 @@ const handleLoadTeam = (team: SavedTeam) => {
   success(i18n.t('app.team-loaded'))
 }
 
-// Replace the mapped boards with the screenshots' rosters. The boards become
-// a new, unsaved team (provenance detached, so Save cannot overwrite the
-// record they came from) named after the match; the reconcile watcher places
-// the phantimals once the placements settle.
-const handleImportMatch = (plan: TeamImportPlan) => {
+// Replace the mapped boards with the screenshots' rosters and save them as a
+// new team named after the match (never over the record the boards came
+// from). The save waits a tick so the reconcile watcher has placed the
+// phantimals; a full library leaves the boards as an unsaved team that still
+// offers the name.
+const handleImportMatch = async (plan: TeamImportPlan) => {
   if (!gameDataStore.dataLoaded) return
   clearTargetHex()
   clearLiftedHex()
   const { placed } = grids.applyRosters(plan)
+  const maps = plan.boards.flatMap((board, i) => (board === null ? [] : [i + 1])).join(', ')
   teamsRestore.sourceId.value = null
   pendingName.value = plan.suggestedName
-  success(
-    i18n.t('app.import-applied', {
-      maps: plan.boards.filter((board) => board !== null).length,
-      heroes: placed,
-    }),
-  )
+  await nextTick()
+  const canonical = canonicalActive.value
+  const team = canonical
+    ? teamLibrary.saveAsNew(activeMode.value, canonical, plan.suggestedName)
+    : null
+  if (!team) {
+    success(i18n.t('app.import-applied', { maps, heroes: placed }))
+    error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
+    return
+  }
+  teamsRestore.sourceId.value = team.id
+  pendingName.value = null
+  success(i18n.t('app.import-saved', { name: team.name, maps, heroes: placed }))
 }
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
