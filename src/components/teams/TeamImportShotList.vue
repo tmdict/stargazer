@@ -65,6 +65,12 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
           : 'app.import-failed-unsupported'
     return { text: i18n.t(key), tone: 'error' }
   }
+  const warnings = shot.reading?.warnings ?? []
+  if (warnings.some((w) => w.kind === 'no-panel'))
+    return { text: i18n.t('app.import-no-panel'), tone: 'error' }
+  const count = warnings.find((w) => w.kind === 'map-count')
+  if (count?.kind === 'map-count')
+    return { text: i18n.t('app.import-mode-mismatch', { count: count.found }), tone: 'error' }
   if (shot.mapIndex === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
   const n = reviewCount(shot)
   return n

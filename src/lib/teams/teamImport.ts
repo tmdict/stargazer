@@ -39,6 +39,8 @@ export interface BoardRoster {
 export type PlanIssue =
   | { kind: 'duplicate-map'; mapIndex: number }
   | { kind: 'unmapped'; count: number }
+  // Mapped, but no hero on either side (nothing recognised, nothing picked).
+  | { kind: 'empty'; count: number }
   | { kind: 'cross-board-duplicate'; team: Team; characterId: number; maps: number[] }
 
 export interface TeamImportPlan {
@@ -145,6 +147,7 @@ export function buildTeamImportPlan(
   const seen = new Map<number, ShotAssignment>()
   const unmapped = shots.filter((s) => s.mapIndex === null).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
+  let empty = 0
 
   for (const shot of shots) {
     if (shot.mapIndex === null || shot.mapIndex >= boardCount) continue
@@ -165,11 +168,17 @@ export function buildTeamImportPlan(
       })
       sides[team] = entries
     }
+    // An empty board would only wipe what is there; the screenshot is skipped.
+    if (sides[Team.ALLY].length === 0 && sides[Team.ENEMY].length === 0) {
+      empty++
+      continue
+    }
     boards[shot.mapIndex] = {
       sides,
       artifacts: { ally: cellArtifact(shot, Team.ALLY), enemy: cellArtifact(shot, Team.ENEMY) },
     }
   }
+  if (empty > 0) issues.push({ kind: 'empty', count: empty })
 
   // A hero fields once per side in a match, so the same hero on the same
   // side of two boards is a misread or a foreign screenshot: it blocks.

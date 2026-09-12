@@ -96,6 +96,8 @@ const issueText = (issue: PlanIssue): string => {
       return i18n.t('app.import-duplicate-map', { map: issue.mapIndex + 1 })
     case 'unmapped':
       return i18n.t('app.import-unmapped', { count: issue.count })
+    case 'empty':
+      return i18n.t('app.import-empty', { count: issue.count })
     case 'cross-board-duplicate':
       return i18n.t('app.import-cross-duplicate', {
         hero: heroLabel(issue.characterId),
@@ -213,7 +215,7 @@ const handleSaveAsNew = (): void => {
         <li
           v-for="(issue, i) in plan.issues"
           :key="i"
-          :class="{ blocking: issue.kind !== 'unmapped' }"
+          :class="{ blocking: issue.kind !== 'unmapped' && issue.kind !== 'empty' }"
         >
           {{ issueText(issue) }}
         </li>

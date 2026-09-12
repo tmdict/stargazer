@@ -81,6 +81,10 @@ export function readScreenshot(
     const anchor = anchors[team]
     if (anchor.mean < ANCHOR_FLOOR) warnings.push({ kind: 'no-panel', side: team })
 
+    // Without a frame match the boxes are guesses over unknown card art
+    // (a tier whose frame is not among the references), so the cells are
+    // offered empty for the picker rather than with a stranger's face.
+    const anchored = anchor.mean >= ANCHOR_FLOOR
     const cells: Omit<HeroReading, 'candidates' | 'margin' | 'recognised' | 'sure'>[] = []
     const rankings = []
     for (let row = 0; row < CARD_ROWS; row++) {
@@ -89,7 +93,7 @@ export function readScreenshot(
       const alignments = ALIGNMENTS.map(([dx, dy]) =>
         heroDescriptor(shot, { ...art, x: art.x + dx, y: art.y + dy }),
       )
-      rankings.push(rankHeroes(refs.heroes, alignments))
+      rankings.push(anchored ? rankHeroes(refs.heroes, alignments) : [])
       const stars = readStars(shot, match.box)
       const cardRect = {
         x: match.box.x - 3,
@@ -113,13 +117,15 @@ export function readScreenshot(
     })
   }
 
-  // A single map has no strip; the one board is the map.
+  // A single map has no strip; the one board is the map. Otherwise the
+  // strip says how many maps the match had, which need not be the mode's.
   const enemyBottom = enemy.y + Math.round(enemy.pitch * CARD_ROWS)
   const strip =
     mapCount > 1
-      ? readStrip(shot, mapCount, enemyBottom + STRIP.belowPanel)
-      : { mapIndex: 0, mapResults: [null] }
+      ? readStrip(shot, enemyBottom + STRIP.belowPanel)
+      : { mapIndex: 0, mapResults: [null], mapCount: 1 }
   if (strip.mapIndex === null) warnings.push({ kind: 'no-strip' })
+  else if (strip.mapCount !== mapCount) warnings.push({ kind: 'map-count', found: strip.mapCount! })
 
   const artifacts = {} as Record<Team, ReturnType<typeof readArtifact> | null>
   for (const team of [Team.ALLY, Team.ENEMY]) {
