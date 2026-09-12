@@ -24,6 +24,7 @@ import { loadTeamsDisplayPrefs, saveTeamsDisplayPrefs } from '@/composables/useG
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
+import { disposeTeamImport } from '@/composables/useTeamImport'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, TEAM_MODES } from '@/lib/teams/modes'
@@ -33,6 +34,7 @@ import {
   teamContentKey,
   type SavedTeam,
 } from '@/lib/teams/savedTeam'
+import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -127,7 +129,12 @@ const dirty = computed(
     canonicalActive.value !== null &&
     teamContentKey(canonicalActive.value) !== teamContentKey(sourceTeam.value.data),
 )
-const suggestedName = computed(() => nextAutoName(teamLibrary.teams.map((team) => team.name)))
+// A match import names the boards it filled; the name is offered by Save as
+// New until the boards are saved, replaced, or loaded.
+const pendingName = ref<string | null>(null)
+const suggestedName = computed(
+  () => pendingName.value ?? nextAutoName(teamLibrary.teams.map((team) => team.name)),
+)
 
 const handleSave = () => {
   const canonical = canonicalActive.value
@@ -146,7 +153,13 @@ const handleSaveAsNew = (name: string) => {
     return
   }
   teamsRestore.sourceId.value = team.id
+  pendingName.value = null
   success(i18n.t('app.team-saved', { name: team.name }))
+}
+
+const handleNewTeam = () => {
+  teamsRestore.newTeam()
+  pendingName.value = null
 }
 
 const handleRename = (name: string) => {
@@ -158,7 +171,27 @@ const handleRename = (name: string) => {
 const handleLoadTeam = (team: SavedTeam) => {
   if (!gameDataStore.dataLoaded) return
   teamsRestore.applyTeamData(team.mode, team.data, team.id)
+  pendingName.value = null
   success(i18n.t('app.team-loaded'))
+}
+
+// Replace the mapped boards with the screenshots' rosters. The boards become
+// a new, unsaved team (provenance detached, so Save cannot overwrite the
+// record they came from) named after the match; the reconcile watcher places
+// the phantimals once the placements settle.
+const handleImportMatch = (plan: TeamImportPlan) => {
+  if (!gameDataStore.dataLoaded) return
+  clearTargetHex()
+  clearLiftedHex()
+  const { placed } = grids.applyRosters(plan)
+  teamsRestore.sourceId.value = null
+  pendingName.value = plan.suggestedName
+  success(
+    i18n.t('app.import-applied', {
+      maps: plan.boards.filter((board) => board !== null).length,
+      heroes: placed,
+    }),
+  )
 }
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
@@ -183,6 +216,7 @@ onScopeDispose(() => {
   clearTargetHex()
   clearLiftedHex()
   cancelSwap() // drop any in-flight swap + its document listeners on leave
+  disposeTeamImport()
 })
 
 // Capture all boards as one image (the full-width track, so boards scrolled
@@ -231,10 +265,11 @@ const handleCopyLink = () => {
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
                 @switch-mode="teamsRestore.switchMode($event)"
-                @new-team="teamsRestore.newTeam()"
+                @new-team="handleNewTeam"
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"
                 @rename="handleRename"
+                @import-match="handleImportMatch"
                 @copy-link="handleCopyLink"
                 @copy-image="handleCopyImage"
                 @download="handleDownload"
