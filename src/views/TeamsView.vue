@@ -277,7 +277,7 @@ const handleCopyLink = () => {
             </template>
             <template #imageStitcher>
               <h1 class="page-title">{{ i18n.t('app.image-stitcher') }}</h1>
-              <ImageStitcher />
+              <ImageStitcher :paste-active="activeTab === 'imageStitcher'" />
             </template>
           </TabView>
         </section>
