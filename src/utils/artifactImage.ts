@@ -6,7 +6,8 @@
 // crossorigin keeps the icon CORS-clean so the canvas-based image export can read
 // it (the host must send Access-Control-Allow-Origin, see chaldea's _headers),
 // and a single <img> (not <picture>) is what html-to-image reliably inlines.
-const REMOTE_BASE = 'https://chaldea.tmdict.com/img/seasonal'
+const REMOTE_ROOT = 'https://chaldea.tmdict.com/img'
+const REMOTE_BASE = `${REMOTE_ROOT}/seasonal`
 
 // Pre-season uses local bundled images; every other season uses remote assets.
 export const isRemoteArtifact = (season: number): boolean => season !== 0
@@ -17,3 +18,7 @@ export const seasonArtifactImageUrl = (name: string): string =>
 
 // WebP icon URL for a seasonal phantimal, by phantimal name (slug).
 export const phantimalImageUrl = (name: string): string => `${REMOTE_BASE}/phantimal/${name}.webp`
+
+// Reference images for the match-screenshot import (the paragon frames), by
+// file name: `frame-p0` … `frame-p4-crown`. Hosted like the seasonal icons.
+export const importReferenceUrl = (name: string): string => `${REMOTE_ROOT}/import/${name}.webp`
