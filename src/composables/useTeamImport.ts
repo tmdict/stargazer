@@ -11,7 +11,7 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { FRAME_NAMES } from '@/lib/import/frames'
 import { CANONICAL_WIDTH } from '@/lib/import/layout'
 import { addLearnedIcon, parseLearnedIcons, serializeLearnedIcons } from '@/lib/import/learned'
-import type { LearnedIcon, RgbaImage, ScreenshotReading } from '@/lib/import/types'
+import type { LearnedIcon, PortraitRef, RgbaImage, ScreenshotReading } from '@/lib/import/types'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
@@ -24,7 +24,12 @@ import {
 } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
-import { importReferenceUrl, isRemoteArtifact, seasonArtifactImageUrl } from '@/utils/artifactImage'
+import {
+  importReferenceUrl,
+  importSkinsManifestUrl,
+  isRemoteArtifact,
+  seasonArtifactImageUrl,
+} from '@/utils/artifactImage'
 import { loadMatcherPortraits } from '@/utils/dataLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
 import type { TeamImportRequest, TeamImportResponse } from '@/workers/teamImport.worker'
@@ -135,6 +140,32 @@ const imageToDataUrl = (image: RgbaImage): string => {
 
 // ---------- references and the worker ----------
 
+// Costume references from chaldea, or none when the manifest is missing; a
+// single file that fails to load is skipped, the rest still count.
+const loadCostumes = async (idOf: (slug: string) => number | undefined): Promise<PortraitRef[]> => {
+  let manifest: Record<string, string[]>
+  try {
+    const response = await fetch(importSkinsManifestUrl(), { mode: 'cors' })
+    if (!response.ok) return []
+    manifest = (await response.json()) as Record<string, string[]>
+  } catch {
+    return []
+  }
+  const jobs: Promise<PortraitRef | null>[] = []
+  for (const [slug, files] of Object.entries(manifest)) {
+    const characterId = idOf(slug)
+    if (characterId === undefined || !Array.isArray(files)) continue
+    for (const file of files) {
+      jobs.push(
+        fetchImage(importReferenceUrl(`skin/${file}`))
+          .then((image) => ({ characterId, image, costume: true }))
+          .catch(() => null),
+      )
+    }
+  }
+  return (await Promise.all(jobs)).filter((ref): ref is PortraitRef => ref !== null)
+}
+
 async function loadReferences(): Promise<
   Omit<Extract<TeamImportRequest, { type: 'references' }>, 'type'>
 > {
@@ -143,12 +174,16 @@ async function loadReferences(): Promise<
   const heroes = gameData.characters.filter(
     (c) => isBaseHeroId(c.id) && !c.placeholder && portraitLoaders[c.name],
   )
-  const portraits = await Promise.all(
-    heroes.map(async (hero) => ({
-      characterId: hero.id,
-      image: await fetchImage(await portraitLoaders[hero.name]!()),
-    })),
-  )
+  const ids = new Map(gameData.characters.map((c) => [c.name, c.id]))
+  const [portraits, costumes] = await Promise.all([
+    Promise.all(
+      heroes.map(async (hero) => ({
+        characterId: hero.id,
+        image: await fetchImage(await portraitLoaders[hero.name]!()),
+      })),
+    ),
+    loadCostumes((slug) => ids.get(slug)),
+  ])
   const frames = await Promise.all(
     FRAME_NAMES.map((name) => fetchImage(importReferenceUrl(`frame-${name}`))),
   )
@@ -163,7 +198,7 @@ async function loadReferences(): Promise<
       ),
     })),
   )
-  return { frames, portraits, artifacts, learned: plainLearned() }
+  return { frames, portraits: [...portraits, ...costumes], artifacts, learned: plainLearned() }
 }
 
 const post = (message: TeamImportRequest, transfer: Transferable[] = []): void => {
@@ -357,7 +392,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     if (
       characterId !== null &&
       cell.paragon.sure &&
-      cell.margin < 0.1 &&
+      !cell.sure &&
       cell.candidates[0]?.characterId !== characterId
     ) {
       learned.value = addLearnedIcon(learned.value, characterId, cell.descriptor, Date.now())

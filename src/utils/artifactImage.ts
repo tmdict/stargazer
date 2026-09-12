@@ -22,3 +22,6 @@ export const phantimalImageUrl = (name: string): string => `${REMOTE_BASE}/phant
 // Reference images for the match-screenshot import (the paragon frames), by
 // file name: `frame-p0` … `frame-p4-crown`. Hosted like the seasonal icons.
 export const importReferenceUrl = (name: string): string => `${REMOTE_ROOT}/import/${name}.webp`
+
+// Costume references: `{ "<hero slug>": ["<file>", …] }`, each file at skin/<file>.webp.
+export const importSkinsManifestUrl = (): string => `${REMOTE_ROOT}/import/skins.json`

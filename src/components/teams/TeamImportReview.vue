@@ -14,7 +14,6 @@ import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
-import { HERO_SURE_MARGIN } from '@/lib/import/heroes'
 import type { HeroReading } from '@/lib/import/types'
 import { cellCharacterId, overrideKey, type RecordNames } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
@@ -79,11 +78,7 @@ const cells = (team: Team): CellView[] => {
     const characterId = cellCharacterId(reading, team, row, shot.overrides)
     const edited = shot.edited.has(key)
     const state: CellState =
-      characterId === null && !edited
-        ? 'none'
-        : edited || cell.margin >= HERO_SURE_MARGIN
-          ? 'sure'
-          : 'review'
+      characterId === null && !edited ? 'none' : edited || cell.sure ? 'sure' : 'review'
     return {
       key,
       row,

@@ -8,12 +8,18 @@ import { buildArtifactTable } from '@/lib/import/artifacts'
 import { prepareFrameRefs } from '@/lib/import/frames'
 import { buildHeroTable } from '@/lib/import/heroes'
 import { readScreenshot } from '@/lib/import/pipeline'
-import type { LearnedIcon, ReferenceSet, RgbaImage, ScreenshotReading } from '@/lib/import/types'
+import type {
+  LearnedIcon,
+  PortraitRef,
+  ReferenceSet,
+  RgbaImage,
+  ScreenshotReading,
+} from '@/lib/import/types'
 
 export interface ReferenceImages {
   // In FRAME_NAMES order.
   frames: RgbaImage[]
-  portraits: { characterId: number; image: RgbaImage }[]
+  portraits: PortraitRef[]
   artifacts: { artifactId: number; image: RgbaImage }[]
   learned: LearnedIcon[]
 }

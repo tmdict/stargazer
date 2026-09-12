@@ -47,7 +47,7 @@ const reviewCount = (shot: ImportShot): number => {
   if (!shot.reading) return 0
   let n = 0
   for (const team of SIDES) {
-    for (const cell of shot.reading.sides[team]) if (!cell.recognised || cell.margin < 0.1) n++
+    for (const cell of shot.reading.sides[team]) if (!cell.sure) n++
   }
   return n
 }

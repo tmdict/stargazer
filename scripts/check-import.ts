@@ -7,7 +7,8 @@
 //   npm run check:import -- --samples <dir> --frames <dir> [--artifacts <dir>] [--maps 5] [--truth <json>]
 //
 //   --samples    folder of PNG/JPEG screenshots (hand-cropped result screens)
-//   --frames     folder holding frame-p0.webp … frame-p4-crown.webp (the chaldea files)
+//   --frames     folder holding frame-p0.webp … frame-p4-crown.webp (chaldea's img/import);
+//                its skins.json and skin/ folder, when present, add the costume references
 //   --artifacts  folder of seasonal artifact icons (chaldea's img/seasonal/artifact); the
 //                bundled permanent six are always included
 //   --maps       circles on the strip for every file in the folder (default 5); a truth
@@ -27,7 +28,7 @@ import { FRAME_NAMES, prepareFrameRefs } from '../src/lib/import/frames.ts'
 import { buildHeroTable } from '../src/lib/import/heroes.ts'
 import { CANONICAL_WIDTH } from '../src/lib/import/layout.ts'
 import { readScreenshot } from '../src/lib/import/pipeline.ts'
-import type { RgbaImage, ScreenshotReading } from '../src/lib/import/types.ts'
+import type { PortraitRef, RgbaImage, ScreenshotReading } from '../src/lib/import/types.ts'
 import { Team } from '../src/lib/types/team.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')
@@ -55,14 +56,14 @@ const toImage = async (input: Buffer | string, width?: number): Promise<RgbaImag
   }
 }
 
-async function loadHeroes(): Promise<{
-  names: Map<number, string>
-  portraits: { characterId: number; image: RgbaImage }[]
-}> {
+async function loadHeroes(
+  referenceDir: string,
+): Promise<{ names: Map<number, string>; portraits: PortraitRef[]; costumes: number }> {
   const dataDir = join(ROOT, 'src/data/character')
   const artDir = join(ROOT, 'src/assets/images/character')
   const names = new Map<number, string>()
-  const portraits: { characterId: number; image: RgbaImage }[] = []
+  const ids = new Map<string, number>()
+  const portraits: PortraitRef[] = []
   for (const file of await readdir(dataDir)) {
     if (!file.endsWith('.json')) continue
     const hero = JSON.parse(await readFile(join(dataDir, file), 'utf8')) as {
@@ -70,12 +71,28 @@ async function loadHeroes(): Promise<{
       name: string
     }
     names.set(hero.id, hero.name)
+    ids.set(hero.name, hero.id)
     const art = join(artDir, `${hero.name}.png`)
     if (!existsSync(art)) continue
     const webp = await sharp(art).webp({ quality: 85 }).toBuffer()
     portraits.push({ characterId: hero.id, image: await toImage(webp) })
   }
-  return { names, portraits }
+  let costumes = 0
+  const manifest = join(referenceDir, 'skins.json')
+  if (existsSync(manifest)) {
+    const skins = JSON.parse(await readFile(manifest, 'utf8')) as Record<string, string[]>
+    for (const [slug, files] of Object.entries(skins)) {
+      const characterId = ids.get(slug)
+      if (characterId === undefined) continue
+      for (const file of files) {
+        const path = join(referenceDir, 'skin', `${file}.webp`)
+        if (!existsSync(path)) continue
+        portraits.push({ characterId, image: await toImage(path), costume: true })
+        costumes++
+      }
+    }
+  }
+  return { names, portraits, costumes }
 }
 
 async function loadArtifacts(
@@ -142,13 +159,13 @@ function printReading(
         const pOk = cell.paragon.level === t.p
         const rOk = cell.refinement.level === t.r
         tally.hero.push(heroOk ? 1 : 0)
-        if (cell.margin >= 0.1) tally.sure.push(heroOk ? 1 : 0)
+        if (cell.sure) tally.sure.push(heroOk ? 1 : 0)
         tally.p.push(pOk ? 1 : 0)
         tally.r.push(rOk ? 1 : 0)
         verdict = `  | truth ${t.hero} P${t.p} R${t.r} ${heroOk ? '' : 'HERO✗'}${pOk ? '' : 'P✗'}${rOk ? '' : 'R✗'}`
       }
       console.log(
-        `  ${key} ${name.padEnd(14)} ${top ? top.score.toFixed(2) : ' -  '} lead ${cell.margin.toFixed(2)}${top?.learned ? ' learned' : ''}${cell.margin < 0.1 ? ' review' : ''}` +
+        `  ${key} ${name.padEnd(14)} ${top ? top.score.toFixed(2) : ' -  '} lead ${cell.margin.toFixed(2)}${top?.learned ? ' learned' : ''}${top?.costume ? ' costume' : ''}${cell.sure ? '' : ' review'}` +
           `  P${cell.paragon.level} (${cell.paragon.score.toFixed(2)}${cell.paragon.sure ? '' : ' check'})  R${cell.refinement.level} ${cell.refinement.family} ${cell.refinement.stars}★${verdict}`,
       )
     })
@@ -173,12 +190,12 @@ async function main(): Promise<void> {
     FRAME_NAMES.map((n) => toImage(join(framesDir, `frame-${n}.webp`))),
   )
   const refs = prepareFrameRefs(frames)
-  const { names: heroNames, portraits } = await loadHeroes()
+  const { names: heroNames, portraits, costumes } = await loadHeroes(framesDir)
   const heroTable = buildHeroTable(portraits)
   const { names: artifactNames, icons } = await loadArtifacts(arg('artifacts'))
   const artifactTable = buildArtifactTable(icons)
   console.log(
-    `references: ${portraits.length} portraits, ${heroTable.ids.length} descriptors, ${icons.length} artifact icons`,
+    `references: ${portraits.length - costumes} portraits, ${costumes} costume references, ${heroTable.ids.length} descriptors, ${icons.length} artifact icons`,
   )
 
   const files = (await readdir(samples)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f)).sort()

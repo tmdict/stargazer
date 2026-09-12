@@ -66,7 +66,7 @@ export function readScreenshot(
     anchors[team] = anchor
     if (anchor.mean < ANCHOR_FLOOR) warnings.push({ kind: 'no-panel', side: team })
 
-    const cells: Omit<HeroReading, 'candidates' | 'margin' | 'recognised'>[] = []
+    const cells: Omit<HeroReading, 'candidates' | 'margin' | 'recognised' | 'sure'>[] = []
     const rankings = []
     for (let row = 0; row < CARD_ROWS; row++) {
       const match = matchCard(
@@ -100,7 +100,7 @@ export function readScreenshot(
     sides[team] = cells.map((cell, row) => {
       const u = unique[row]!
       if (!u.recognised) warnings.push({ kind: 'unrecognised', side: team, row })
-      return { ...cell, candidates: u.candidates, recognised: u.recognised, margin: u.margin }
+      return { ...cell, ...u }
     })
   }
 

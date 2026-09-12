@@ -4,26 +4,53 @@
  * contributes a grid of crop windows and the best window wins. Ranking runs
  * once at the centre alignment against the whole table, then the other
  * offsets and a finer window grid only for the leaders, which keeps a
- * screenshot to about a second. Descriptors learned from corrections
- * (special icons) join the table as extra rows. */
+ * screenshot to about a second. A hero may bring several portraits (its
+ * bundled art plus costume references), each with its own window grid, and
+ * its best window from any of them counts. Descriptors learned from
+ * corrections join the table as extra rows. */
 
 import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from './image'
-import type { HeroCandidate, HeroTable, LearnedIcon, Rect, RgbaImage } from './types'
+import type {
+  CropWindow,
+  HeroCandidate,
+  HeroTable,
+  LearnedIcon,
+  PortraitRef,
+  Rect,
+  RgbaImage,
+} from './types'
 
 // Worker-resident portrait size: half of the 180 × 248 art, which loses
 // nothing at descriptor resolution and keeps the table at a few megabytes.
+// Costume references keep full size: their card windows are small, and a
+// window narrower than the descriptor would be upscaled into a smooth patch
+// that correlates with any face.
 export const PORTRAIT_SIZE = { width: 90, height: 124 } as const
+const COSTUME_SCALE = 2
 export const DESCRIPTOR_SIZE = { width: 32, height: 24 } as const
 export const DESCRIPTOR_LENGTH = DESCRIPTOR_SIZE.width * DESCRIPTOR_SIZE.height * 3
 const ASPECT = DESCRIPTOR_SIZE.height / DESCRIPTOR_SIZE.width
 
-// Crop windows over the half-size portrait: width, horizontal centre, top.
-const WINDOWS = {
-  w: [44, 52, 60, 68],
-  xc: [42, 48, 54],
-  yt: [18, 24, 30, 36, 42],
-} as const
+// Crop window grids over the half-size portrait. The bundled art frames every
+// hero alike, so its grid is tight; a costume reference is captured from the
+// game's skin card, where the face sits smaller and higher, so it also carries
+// a grid over that range.
+const ART_WINDOWS = { w: [44, 52, 60, 68], xc: [42, 48, 54], yt: [18, 24, 30, 36, 42] } as const
+const CARD_WINDOWS = { w: [30, 36, 42], xc: [39, 45, 51], yt: [12, 18, 24, 30] } as const
 const REFINE = { w: [-4, -2, 0, 2, 4], xc: [-3, -1, 0, 1, 3], yt: [-4, -2, 0, 2, 4] } as const
+
+const expandGrid = (grid: {
+  w: readonly number[]
+  xc: readonly number[]
+  yt: readonly number[]
+}): CropWindow[] =>
+  grid.w.flatMap((w) => grid.xc.flatMap((xc) => grid.yt.map((yt) => ({ w, xc, yt }))))
+
+const scaleGrid = (grid: readonly CropWindow[], scale: number): CropWindow[] =>
+  grid.map(({ w, xc, yt }) => ({ w: w * scale, xc: xc * scale, yt: yt * scale }))
+
+const ART_GRID = expandGrid(ART_WINDOWS)
+const COSTUME_GRID = scaleGrid([...ART_GRID, ...expandGrid(CARD_WINDOWS)], COSTUME_SCALE)
 
 const COARSE_KEEP = 60
 const REFINE_KEEP = 15
@@ -46,10 +73,10 @@ export const dequantize = (q: Int8Array): Float32Array => {
   return out
 }
 
-const windowRect = (w: number, xc: number, yt: number): Rect | null => {
+const windowRect = (w: number, xc: number, yt: number, portrait: RgbaImage): Rect | null => {
   const h = Math.round(w * ASPECT)
-  const x = Math.max(0, Math.min(PORTRAIT_SIZE.width - w, Math.round(xc - w / 2)))
-  if (w > PORTRAIT_SIZE.width || yt < 0 || yt + h > PORTRAIT_SIZE.height) return null
+  const x = Math.max(0, Math.min(portrait.width - w, Math.round(xc - w / 2)))
+  if (w > portrait.width || yt < 0 || yt + h > portrait.height) return null
   return { x, y: yt, w, h }
 }
 
@@ -57,46 +84,49 @@ const windowVector = (portrait: RgbaImage, rect: Rect): Float32Array =>
   normalizedVector(cropResize(portrait, rect, DESCRIPTOR_SIZE.width, DESCRIPTOR_SIZE.height))
 
 export function buildHeroTable(
-  portraits: readonly { characterId: number; image: RgbaImage }[],
+  portraits: readonly PortraitRef[],
   learned: readonly LearnedIcon[] = [],
 ): HeroTable {
-  const rows: { id: number; learned: boolean; v: Int8Array }[] = []
-  const stored = new Map<number, RgbaImage>()
-  for (const { characterId, image } of portraits) {
+  const rows: { id: number; learned: boolean; source: number; v: Int8Array }[] = []
+  const stored: HeroTable['portraits'] = []
+  for (const { characterId, image, costume } of portraits) {
+    const scale = costume ? COSTUME_SCALE : 1
     const portrait = cropResize(
       flatten(image, PORTRAIT_BACKGROUND),
       { x: 0, y: 0, w: image.width, h: image.height },
-      PORTRAIT_SIZE.width,
-      PORTRAIT_SIZE.height,
+      PORTRAIT_SIZE.width * scale,
+      PORTRAIT_SIZE.height * scale,
     )
-    stored.set(characterId, portrait)
-    for (const w of WINDOWS.w) {
-      for (const xc of WINDOWS.xc) {
-        for (const yt of WINDOWS.yt) {
-          const rect = windowRect(w, xc, yt)
-          if (rect)
-            rows.push({
-              id: characterId,
-              learned: false,
-              v: quantize(windowVector(portrait, rect)),
-            })
-        }
-      }
+    // Only windows that fit are kept, so a row's window is its index in the block.
+    const windows = (costume ? COSTUME_GRID : ART_GRID).filter(
+      ({ w, xc, yt }) => windowRect(w, xc, yt, portrait) !== null,
+    )
+    const source = stored.push({ image: portrait, windows, scale, costume: !!costume }) - 1
+    for (const { w, xc, yt } of windows) {
+      const rect = windowRect(w, xc, yt, portrait)!
+      rows.push({
+        id: characterId,
+        learned: false,
+        source,
+        v: quantize(windowVector(portrait, rect)),
+      })
     }
   }
   for (const icon of learned) {
     const v = decodeLearned(icon.descriptor)
-    if (v) rows.push({ id: icon.characterId, learned: true, v })
+    if (v) rows.push({ id: icon.characterId, learned: true, source: -1, v })
   }
   const ids = new Int32Array(rows.length)
   const learnedRows = new Uint8Array(rows.length)
+  const sources = new Int32Array(rows.length)
   const vectors = new Int8Array(rows.length * DESCRIPTOR_LENGTH)
   rows.forEach((row, i) => {
     ids[i] = row.id
     learnedRows[i] = row.learned ? 1 : 0
+    sources[i] = row.source
     vectors.set(row.v, i * DESCRIPTOR_LENGTH)
   })
-  return { ids, learnedRows, vectors, portraits: stored }
+  return { ids, learnedRows, sources, vectors, portraits: stored }
 }
 
 export const encodeLearned = (v: Float32Array): string => {
@@ -133,6 +163,7 @@ interface Lead {
   characterId: number
   score: number
   learned: boolean
+  costume: boolean
   row: number
 }
 
@@ -151,7 +182,10 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
     // Learned rows rank as their own entries so a learned match is visible as such.
     const key = learned ? -id : id
     const cur = best.get(key)
-    if (!cur || cur.score < score) best.set(key, { characterId: id, score, learned, row })
+    if (!cur || cur.score < score) {
+      const costume = !learned && table.portraits[table.sources[row]!]!.costume
+      best.set(key, { characterId: id, score, learned, costume, row })
+    }
   }
   const leaders = [...best.values()].sort((a, b) => b.score - a.score).slice(0, COARSE_KEEP)
 
@@ -170,16 +204,21 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
   // window to refine.
   for (const lead of leaders.slice(0, REFINE_KEEP)) {
     if (lead.learned) continue
-    const portrait = table.portraits.get(lead.characterId)
-    if (!portrait) continue
-    const coarse = coarseWindowOfRow(lead.row, table)
-    if (!coarse) continue
+    const portrait = table.portraits[table.sources[lead.row]!]
+    const coarse = portrait && coarseWindowOfRow(lead.row, table)
+    if (!portrait || !coarse) continue
+    const { scale } = portrait
     for (const dw of REFINE.w) {
       for (const dx of REFINE.xc) {
         for (const dy of REFINE.yt) {
-          const rect = windowRect(coarse.w + dw, coarse.xc + dx, coarse.yt + dy)
+          const rect = windowRect(
+            coarse.w + dw * scale,
+            coarse.xc + dx * scale,
+            coarse.yt + dy * scale,
+            portrait.image,
+          )
           if (!rect) continue
-          const v = windowVector(portrait, rect)
+          const v = windowVector(portrait.image, rect)
           for (const a of alignments) {
             const s = dot(v, a)
             if (s > lead.score) lead.score = s
@@ -191,38 +230,31 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
   leaders.sort((a, b) => b.score - a.score)
   return leaders
     .slice(0, CANDIDATES)
-    .map(({ characterId, score, learned }) => ({ characterId, score, learned }))
+    .map(({ characterId, score, learned, costume }) => ({ characterId, score, learned, costume }))
 }
 
-// Rows are emitted per hero in WINDOWS order (w, xc, yt nested), so a row's
-// window is its index within the hero's block; learned rows sit after.
-const WINDOWS_PER_HERO = WINDOWS.w.length * WINDOWS.xc.length * WINDOWS.yt.length
-function coarseWindowOfRow(
-  row: number,
-  table: HeroTable,
-): { w: number; xc: number; yt: number } | null {
+// A row's window is its index within its portrait's block.
+function coarseWindowOfRow(row: number, table: HeroTable): CropWindow | null {
   if (table.learnedRows[row] === 1) return null
   let start = row
-  while (start > 0 && table.ids[start - 1] === table.ids[row] && table.learnedRows[start - 1] === 0)
-    start--
-  const k = (row - start) % WINDOWS_PER_HERO
-  const w = WINDOWS.w[Math.floor(k / (WINDOWS.xc.length * WINDOWS.yt.length))]
-  const xc = WINDOWS.xc[Math.floor(k / WINDOWS.yt.length) % WINDOWS.xc.length]
-  const yt = WINDOWS.yt[k % WINDOWS.yt.length]
-  return w === undefined || xc === undefined || yt === undefined ? null : { w, xc, yt }
+  while (start > 0 && table.sources[start - 1] === table.sources[row]) start--
+  return table.portraits[table.sources[row]!]?.windows[row - start] ?? null
 }
 
 export const HERO_SCORE_FLOOR = 0.35
 export const HERO_SURE_MARGIN = 0.1
+// A costume reference's looser framing and wider window search let it fit a
+// stranger's face more closely than the art grid can, so its lead must be larger.
+export const COSTUME_SURE_MARGIN = 0.15
 
 /* A side fields five different heroes, so the same hero read twice on a
  * side goes to the surer cell and the other takes its next candidate. Returns
  * each cell's candidates reordered so the pick comes first, with its margin
- * over the next hero that is not the pick. A learned match must lead the
- * best bundled candidate of another hero by the sure margin to count as sure. */
+ * over the next hero that is not the pick and whether that margin clears the
+ * bar. A learned match must lead the best bundled candidate of another hero. */
 export function assignUnique(
   rankings: readonly HeroCandidate[][],
-): { candidates: HeroCandidate[]; recognised: boolean; margin: number }[] {
+): { candidates: HeroCandidate[]; recognised: boolean; margin: number; sure: boolean }[] {
   const order = rankings
     .map((cands, i) => ({
       i,
@@ -230,9 +262,12 @@ export function assignUnique(
     }))
     .sort((a, b) => b.lead - a.lead)
   const taken = new Set<number>()
-  const out: { candidates: HeroCandidate[]; recognised: boolean; margin: number }[] = rankings.map(
-    () => ({ candidates: [], recognised: false, margin: 0 }),
-  )
+  const out: ReturnType<typeof assignUnique> = rankings.map(() => ({
+    candidates: [],
+    recognised: false,
+    margin: 0,
+    sure: false,
+  }))
   for (const { i } of order) {
     const cands = rankings[i]!
     const pick = cands.find((c) => !taken.has(c.characterId) && c.score >= HERO_SCORE_FLOOR)
@@ -241,6 +276,7 @@ export function assignUnique(
         candidates: cands.filter((c) => !taken.has(c.characterId)),
         recognised: false,
         margin: 0,
+        sure: false,
       }
       continue
     }
@@ -249,10 +285,12 @@ export function assignUnique(
       (c) => c.characterId !== pick.characterId && !taken.has(c.characterId),
     )
     const next = rest.find((c) => !pick.learned || !c.learned)
+    const margin = next ? pick.score - next.score : pick.score
     out[i] = {
       candidates: [pick, ...rest],
       recognised: true,
-      margin: next ? pick.score - next.score : pick.score,
+      margin,
+      sure: margin >= (pick.costume ? COSTUME_SURE_MARGIN : HERO_SURE_MARGIN),
     }
   }
   return out

@@ -25,6 +25,8 @@ export interface HeroCandidate {
   // Matched a descriptor learned from an earlier correction rather than the
   // bundled portrait.
   learned: boolean
+  // Matched a costume reference rather than the bundled art.
+  costume: boolean
 }
 
 export type StarFamily = 'white' | 'purple' | 'gold' | 'red'
@@ -40,6 +42,8 @@ export interface HeroReading {
   recognised: boolean
   // Best score minus the runner-up's: the confidence signal.
   margin: number
+  // Whether the margin clears the bar for this kind of match.
+  sure: boolean
   // The face crop's descriptor, kept so a correction can be learned.
   descriptor: Float32Array
   paragon: { level: number; score: number; runnerUp: number; sure: boolean }
@@ -77,14 +81,38 @@ export interface FrameRef {
   image: RgbaImage
 }
 
+// A crop window over a worker-resident portrait: width, horizontal centre, top.
+export interface CropWindow {
+  w: number
+  xc: number
+  yt: number
+}
+
+export interface PortraitRef {
+  characterId: number
+  image: RgbaImage
+  // A costume reference captured from the game rather than the bundled art;
+  // its framing is looser, so it is cut over a wider window grid.
+  costume?: boolean
+}
+
 export interface HeroTable {
-  // Row i describes descriptor i: the hero and whether it was learned.
+  // Row i describes descriptor i: the hero, whether it was learned, and the
+  // portrait it was cut from (-1 for a learned row).
   ids: Int32Array
   learnedRows: Uint8Array
+  sources: Int32Array
   // Int8-quantised descriptors, row-major, DESCRIPTOR_LENGTH per row.
   vectors: Int8Array
-  // Worker-resident portraits for the refinement crops.
-  portraits: Map<number, RgbaImage>
+  // Worker-resident portraits with their windows (in row order, in the
+  // portrait's own pixels) and their scale over the half-size art, for the
+  // refinement crops.
+  portraits: {
+    image: RgbaImage
+    windows: readonly CropWindow[]
+    scale: number
+    costume: boolean
+  }[]
 }
 
 export interface ArtifactTable {
