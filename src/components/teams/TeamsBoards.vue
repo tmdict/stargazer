@@ -9,6 +9,7 @@
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
+import TeamImportButton from '@/components/teams/TeamImportButton.vue'
 import TeamLoadMenu from '@/components/teams/TeamLoadMenu.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
@@ -19,6 +20,7 @@ import { useGridSwap } from '@/composables/useGridSwap'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { MAX_TEAM_NAME_LENGTH, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
@@ -57,6 +59,7 @@ const emit = defineEmits<{
   save: []
   saveAsNew: [name: string]
   rename: [name: string]
+  importMatch: [plan: TeamImportPlan]
 }>()
 
 const grids = useGrids()
@@ -162,6 +165,7 @@ const {
           @save-as-new="emit('saveAsNew', $event)"
         />
         <TeamLoadMenu :active-mode />
+        <TeamImportButton :active-mode @import-match="emit('importMatch', $event)" />
       </template>
     </GridControls>
 
