@@ -24,6 +24,10 @@ export const CARD_TOP: Record<Team, number> = { [Team.ALLY]: 237, [Team.ENEMY]: 
 export const ANCHOR_SEARCH = { oy: [-60, 40], ox: [-16, 16], step: 4 } as const
 export const CARD_SEARCH = { oy: 6, ox: 4, step: 2 } as const
 export const ANCHOR_FLOOR = 0.35
+// The whole-height scan may accept a weaker pair: its two combs a panel gap
+// apart with a summary bar under each are already strong structure, and a
+// capture taken while the panel was still fading in scores its frames low.
+export const SCAN_FLOOR = 0.27
 
 // The enemy column starts this far below the ally column in a crop; a
 // taller phone spreads the panels further apart.
