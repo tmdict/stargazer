@@ -1,10 +1,14 @@
 <script setup lang="ts">
-/* The dropped screenshots as cards: the whole image, the map it fills (read
-   from the strip), who won it (read from the Ally tab), both editable, and
-   the reading's state. Two cards on one map both turn red; the modal blocks
-   Replace on it. */
+/* The dropped screenshots as cards: a thumbnail that opens the full image in
+   a lightbox, the map it fills (read from the strip), who won it (read from
+   the Ally tab), both editable, and the reading's state. Two cards on one map
+   both turn red; the modal blocks Replace on it. */
+
+import { ref } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
+import IconExpand from '@/components/ui/IconExpand.vue'
+import ImageLightbox from '@/components/ui/ImageLightbox.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
 import type { RecordNames } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
@@ -27,6 +31,8 @@ const emit = defineEmits<{
 const i18n = useI18nStore()
 
 const SIDES = [Team.ALLY, Team.ENEMY] as const
+
+const zoomed = ref<ImportShot | null>(null)
 
 // The winner segments carry the typed player names once there are any.
 const sideLabel = (team: Team): string =>
@@ -79,7 +85,16 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
       @click="emit('select', shot.id)"
       @keydown.enter.prevent="emit('select', shot.id)"
     >
-      <img class="shot-thumb" :src="shot.thumb" alt="" />
+      <button
+        type="button"
+        class="shot-thumb"
+        :aria-label="i18n.t('app.import-view-full')"
+        :title="i18n.t('app.import-view-full')"
+        @click.stop="zoomed = shot"
+      >
+        <img :src="shot.thumb" alt="" />
+        <IconExpand :size="14" class="shot-zoom" />
+      </button>
       <div class="shot-name" :title="shot.name">{{ shot.name }}</div>
       <div class="shot-row">
         <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
@@ -132,6 +147,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
         <IconClose :size="12" />
       </button>
     </div>
+    <ImageLightbox v-if="zoomed" :src="zoomed.thumb" :alt="zoomed.name" @close="zoomed = null" />
   </div>
 </template>
 
@@ -171,12 +187,53 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 }
 
 .shot-thumb {
+  position: relative;
   display: block;
   width: 100%;
-  max-height: 260px;
-  object-fit: contain;
+  height: 80px;
+  padding: 0;
+  border: none;
   border-radius: var(--radius-medium);
   background: rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  cursor: zoom-in;
+}
+
+.shot-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top;
+  transition: filter var(--transition-fast);
+}
+
+.shot-thumb:hover img,
+.shot-thumb:focus-visible img {
+  filter: brightness(1.15);
+}
+
+.shot-zoom {
+  position: absolute;
+  right: 6px;
+  bottom: 6px;
+  padding: 3px;
+  border-radius: var(--radius-small);
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.shot-thumb:hover .shot-zoom,
+.shot-thumb:focus-visible .shot-zoom {
+  opacity: 1;
+}
+
+@media (pointer: coarse) {
+  .shot-zoom {
+    opacity: 1;
+  }
 }
 
 .shot-name {
