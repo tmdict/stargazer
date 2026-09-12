@@ -44,6 +44,7 @@ const {
   addFiles,
   removeShot,
   setMap,
+  setWinner,
   setHero,
   setLevel,
   setArtifact,
@@ -123,139 +124,180 @@ const handleReplace = (): void => {
 
 <template>
   <BaseModal :show="show" max-width="1000px" top-anchor @close="emit('close')">
-    <h1>{{ i18n.t('app.import-title') }}</h1>
-    <p class="sub">
-      <span class="mode-chip">
-        {{ i18n.t(TEAM_MODES[activeMode].labelKey) }} ·
-        {{ i18n.t('app.import-maps-count', { count: mapCount }) }}
-      </span>
-      {{ i18n.t('app.import-privacy') }}
-    </p>
-
-    <p v-if="referenceStatus === 'loading'" class="note">
-      {{ i18n.t('app.import-references-loading') }}
-    </p>
-    <p v-else-if="referenceStatus === 'failed'" class="note error">
-      {{ i18n.t('app.import-failed-references') }}
-    </p>
-
-    <ImageDropZone :compact="shots.length > 0" :active="show" @add="handleAdd" />
-
-    <TeamImportShotList
-      v-if="shots.length"
-      :shots
-      :map-count="mapCount"
-      :selected-id="selectedId"
-      @select="selectedId = $event"
-      @set-map="setMap"
-      @remove="removeShot"
-    />
-
-    <div v-if="shots.length" class="names">
-      <label class="field">
-        <span>{{ i18n.t('app.import-prefix') }}</span>
-        <input v-model="names.prefix" type="text" spellcheck="false" maxlength="40" />
-      </label>
-      <label class="field">
-        <span>{{ i18n.t('app.import-left-player') }}</span>
-        <input v-model="names.left" type="text" spellcheck="false" maxlength="30" />
-      </label>
-      <label class="field">
-        <span>{{ i18n.t('app.import-right-player') }}</span>
-        <input v-model="names.right" type="text" spellcheck="false" maxlength="30" />
-      </label>
-      <div class="field wide">
-        <span>{{ i18n.t('app.import-record-name') }}</span>
-        <output class="record-name" :class="{ invalid: nameInvalid }">{{
-          plan.suggestedName
-        }}</output>
-        <small v-if="nameInvalid" class="error">{{ i18n.t('app.import-name-invalid') }}</small>
+    <div class="import">
+      <h1>{{ i18n.t('app.import-title') }}</h1>
+      <div class="meta">
+        <span class="meta-chip">
+          {{ i18n.t(TEAM_MODES[activeMode].labelKey) }} ·
+          {{ i18n.t('app.import-maps-count', { count: mapCount }) }}
+        </span>
+        <span v-if="referenceStatus === 'loading'" class="note">
+          {{ i18n.t('app.import-references-loading') }}
+        </span>
+        <span v-else-if="referenceStatus === 'failed'" class="note error">
+          {{ i18n.t('app.import-failed-references') }}
+        </span>
       </div>
-    </div>
 
-    <TeamImportReview
-      v-if="selected?.reading"
-      :shot="selected"
-      :names
-      @set-hero="(team, row, id) => setHero(selected!.id, team, row, id)"
-      @set-level="(team, row, field, level) => setLevel(selected!.id, team, row, field, level)"
-      @set-artifact="(team, id) => setArtifact(selected!.id, team, id)"
-    />
+      <ImageDropZone dark :compact="shots.length > 0" :active="show" @add="handleAdd" />
 
-    <ul v-if="plan.issues.length" class="issues">
-      <li
-        v-for="(issue, i) in plan.issues"
-        :key="i"
-        :class="{ blocking: issue.kind !== 'unmapped' }"
-      >
-        {{ issueText(issue) }}
-      </li>
-    </ul>
+      <TeamImportShotList
+        v-if="shots.length"
+        :shots
+        :map-count="mapCount"
+        :names
+        :selected-id="selectedId"
+        @select="selectedId = $event"
+        @set-map="setMap"
+        @set-winner="setWinner"
+        @remove="removeShot"
+      />
 
-    <div class="footer">
-      <button
-        type="button"
-        class="footer-btn danger"
-        :class="{ armed: armed !== null }"
-        :disabled="blocked || namesMissing"
-        @click="handleReplace"
-      >
-        {{
-          armed !== null
-            ? i18n.t('app.confirm')
-            : i18n.t('app.import-replace', { count: mappedCount })
-        }}
-      </button>
-      <button type="button" class="footer-btn secondary" @click="emit('close')">
-        {{ i18n.t('app.cancel') }}
-      </button>
-      <button v-if="learnedCount > 0" type="button" class="link-btn" @click="forgetLearned">
-        {{ i18n.t('app.import-forget-learned', { count: learnedCount }) }}
-      </button>
+      <section v-if="shots.length" class="names">
+        <label class="field">
+          <span class="field-label">{{ i18n.t('app.import-prefix') }}</span>
+          <input
+            v-model="names.prefix"
+            class="field-input"
+            type="text"
+            spellcheck="false"
+            maxlength="40"
+          />
+        </label>
+        <label class="field">
+          <span class="field-label">{{ i18n.t('app.import-left-player') }}</span>
+          <input
+            v-model="names.left"
+            class="field-input"
+            type="text"
+            spellcheck="false"
+            maxlength="30"
+          />
+        </label>
+        <label class="field">
+          <span class="field-label">{{ i18n.t('app.import-right-player') }}</span>
+          <input
+            v-model="names.right"
+            class="field-input"
+            type="text"
+            spellcheck="false"
+            maxlength="30"
+          />
+        </label>
+        <div class="field wide">
+          <span class="field-label">{{ i18n.t('app.import-record-name') }}</span>
+          <output class="record-name" :class="{ invalid: nameInvalid }">{{
+            plan.suggestedName
+          }}</output>
+          <small v-if="nameInvalid" class="error">{{ i18n.t('app.import-name-invalid') }}</small>
+        </div>
+      </section>
+
+      <section v-if="selected?.reading" class="review-section">
+        <div class="section-head">
+          <span class="section-title">{{ i18n.t('app.import-review') }}</span>
+          <span class="section-sub">{{ selected.name }}</span>
+        </div>
+        <TeamImportReview
+          :shot="selected"
+          :names
+          @set-hero="(team, row, id) => setHero(selected!.id, team, row, id)"
+          @set-level="(team, row, field, level) => setLevel(selected!.id, team, row, field, level)"
+          @set-artifact="(team, id) => setArtifact(selected!.id, team, id)"
+        />
+      </section>
+
+      <ul v-if="plan.issues.length" class="issues">
+        <li
+          v-for="(issue, i) in plan.issues"
+          :key="i"
+          :class="{ blocking: issue.kind !== 'unmapped' }"
+        >
+          {{ issueText(issue) }}
+        </li>
+      </ul>
+
+      <div class="footer">
+        <button
+          type="button"
+          class="footer-btn danger"
+          :class="{ armed: armed !== null }"
+          :disabled="blocked || namesMissing"
+          @click="handleReplace"
+        >
+          {{
+            armed !== null
+              ? i18n.t('app.confirm')
+              : i18n.t('app.import-replace', { count: mappedCount })
+          }}
+        </button>
+        <button type="button" class="footer-btn secondary" @click="emit('close')">
+          {{ i18n.t('app.cancel') }}
+        </button>
+        <button v-if="learnedCount > 0" type="button" class="link-btn" @click="forgetLearned">
+          {{ i18n.t('app.import-forget-learned', { count: learnedCount }) }}
+        </button>
+      </div>
     </div>
   </BaseModal>
 </template>
 
 <style scoped>
-.sub {
-  color: var(--color-text-secondary);
-  font-size: 0.85rem;
-  margin: 0 0 var(--spacing-md);
+/* One palette for the import's own pieces (shot list, review) on the modal's
+   dark glass: white text at a few opacities, frosted fills, the accent for
+   selection, and the game's result colours. Set here so the children inherit. */
+.import {
+  --import-text: #fff;
+  --import-text-dim: rgba(255, 255, 255, 0.65);
+  --import-label: rgba(255, 255, 255, 0.55);
+  --import-surface: rgba(255, 255, 255, 0.06);
+  --import-surface-hover: rgba(255, 255, 255, 0.12);
+  --import-border: rgba(255, 255, 255, 0.14);
+  --import-border-strong: rgba(255, 255, 255, 0.3);
+  --import-warn: #f6c453;
+  --import-warn-tint: rgba(246, 196, 83, 0.12);
+  --import-bad: #f28b82;
+  --import-bad-tint: rgba(242, 139, 130, 0.14);
+  --import-left: #d9782f;
+  --import-right: #4f78c0;
+
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+  color: var(--import-text);
 }
 
-.mode-chip {
-  display: inline-block;
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: 999px;
-  padding: 1px 9px;
-  font-size: 0.74rem;
-  font-weight: 600;
-  margin-right: var(--spacing-sm);
+.import h1 {
+  margin: 0;
+}
+
+.meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
 .note {
   font-size: 0.82rem;
-  color: var(--color-text-secondary);
-  margin: 0 0 var(--spacing-sm);
+  color: var(--import-text-dim);
 }
 
-.note.error,
 .error {
-  color: var(--color-error);
+  color: var(--import-bad);
 }
 
 .names {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-sm) var(--spacing-md);
-  margin: var(--spacing-md) 0;
+  gap: var(--spacing-md) var(--spacing-lg);
 }
 
 .field {
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  flex: 1 1 140px;
+  gap: 4px;
+  flex: 1 1 160px;
   min-width: 0;
 }
 
@@ -263,58 +305,89 @@ const handleReplace = (): void => {
   flex-basis: 100%;
 }
 
-.field span {
+.field-label {
   font-size: 0.68rem;
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: var(--color-text-secondary);
+  color: var(--import-label);
 }
 
-.field input {
+.field-input {
   font: inherit;
   font-size: 0.85rem;
-  padding: 6px 8px;
-  border: 1.5px solid var(--color-border-primary);
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius-medium);
-  background: var(--color-bg-white);
-  color: var(--color-text-primary);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--import-text);
 }
 
-.field input:focus {
+.field-input:focus {
   outline: none;
-  border-color: var(--color-primary);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
+/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
+   zoom outlives the field. */
 @media (pointer: coarse) {
-  .field input {
+  .field-input {
     font-size: 1rem;
   }
 }
 
 .record-name {
   font-size: 0.85rem;
-  padding: 6px 8px;
-  border: 1.5px dashed var(--color-border-primary);
+  padding: 7px 10px;
+  border: 1px dashed rgba(255, 255, 255, 0.25);
   border-radius: var(--radius-medium);
-  background: var(--color-bg-tertiary);
-  color: var(--color-text-primary);
+  background: var(--import-surface);
+  color: var(--import-text);
   overflow-wrap: anywhere;
 }
 
 .record-name.invalid {
-  border-color: var(--color-error);
+  border-color: var(--import-bad);
+}
+
+.review-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--import-border);
+}
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--spacing-sm);
+}
+
+.section-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.section-sub {
+  font-size: 0.8rem;
+  color: var(--import-text-dim);
 }
 
 .issues {
-  margin: var(--spacing-md) 0 0;
+  margin: 0;
   padding-left: 1.2em;
   font-size: 0.82rem;
-  color: var(--color-text-secondary);
+}
+
+.issues li {
+  margin: 4px 0;
+  color: var(--import-text-dim);
 }
 
 .issues .blocking {
-  color: var(--color-error);
+  color: var(--import-bad);
 }
 
 .footer {
@@ -322,19 +395,19 @@ const handleReplace = (): void => {
   flex-wrap: wrap;
   gap: var(--spacing-sm);
   align-items: center;
-  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: 1px solid var(--import-border);
 }
 
 .footer-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid var(--color-primary);
-  background: var(--color-primary);
-  color: #fff;
-  border-radius: var(--radius-medium);
   min-height: 34px;
   padding: 4px 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-medium);
+  font: inherit;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
@@ -344,6 +417,12 @@ const handleReplace = (): void => {
 .footer-btn.danger {
   background: var(--color-danger);
   border-color: var(--color-danger);
+  color: #fff;
+}
+
+.footer-btn.danger:hover:not(:disabled) {
+  background: var(--color-danger-hover);
+  border-color: var(--color-danger-hover);
 }
 
 .footer-btn.danger.armed {
@@ -358,19 +437,27 @@ const handleReplace = (): void => {
 }
 
 .footer-btn.secondary {
-  background: var(--color-bg-primary);
-  color: var(--color-text-secondary);
-  border-color: var(--color-border-primary);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: var(--import-text);
+}
+
+.footer-btn.secondary:hover {
+  background: rgba(255, 255, 255, 0.14);
 }
 
 .link-btn {
   margin-left: auto;
   border: none;
   background: none;
-  color: var(--color-text-secondary);
+  color: var(--import-text-dim);
   font: inherit;
   font-size: 0.78rem;
   text-decoration: underline;
   cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--import-text);
 }
 </style>

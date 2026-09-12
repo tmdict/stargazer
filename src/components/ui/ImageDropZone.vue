@@ -22,6 +22,8 @@ const { active = true } = defineProps<{
   compact?: boolean
   // Whether window-level pastes belong to this zone right now.
   active?: boolean
+  // Frosted variant for the dark modal surfaces, where the page's cream fill glares.
+  dark?: boolean
 }>()
 
 const fileInput = ref<HTMLInputElement>()
@@ -57,7 +59,7 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 <template>
   <div
     class="upload-dropzone drop-zone"
-    :class="{ dragging: isDragging, compact }"
+    :class="{ dragging: isDragging, compact, dark }"
     role="button"
     tabindex="0"
     @click="openPicker"
@@ -98,6 +100,23 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 .drop-zone.compact {
   padding: var(--spacing-md);
   font-size: 0.88rem;
+}
+
+.drop-zone.dark {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.drop-zone.dark:hover,
+.drop-zone.dark:focus-visible,
+.drop-zone.dark.dragging {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.drop-zone.dark:focus-visible,
+.drop-zone.dark.dragging {
+  border-color: var(--color-accent);
 }
 
 .file-input {

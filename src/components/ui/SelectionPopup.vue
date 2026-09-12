@@ -9,6 +9,9 @@ import { clampX, clampY } from '@/utils/viewport'
 // of selectable items via the default slot.
 const props = defineProps<{
   position: { x: number; y: number }
+  // Layer above an open modal (the match import's review picker); the default
+  // layer sits under the modal overlay.
+  overModal?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -51,6 +54,7 @@ watch(() => props.position, reposition)
   <div
     ref="popupRef"
     class="selection-popup"
+    :class="{ 'over-modal': overModal }"
     :style="{ left: `${coords.x}px`, top: `${coords.y}px` }"
     @mouseleave="emit('close')"
   >
@@ -72,6 +76,14 @@ watch(() => props.position, reposition)
   z-index: 1000;
   max-width: 320px;
   max-height: 380px;
+  /* A column so a consumer's scrollable grid (min-height: 0) gives way to its
+     siblings inside the cap instead of spilling past the panel. */
+  display: flex;
+  flex-direction: column;
+}
+
+.selection-popup.over-modal {
+  z-index: var(--z-dropdown);
 }
 
 /* Shared slim scrollbar for any scrollable grid the consumer renders inside. */

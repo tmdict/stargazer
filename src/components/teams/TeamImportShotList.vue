@@ -1,25 +1,38 @@
 <script setup lang="ts">
-/* The dropped screenshots as cards: thumbnail, the map each one fills (read
-   from the strip, editable), this map's result, and the reading's state.
-   Two cards on one map both turn red; the modal blocks Replace on it. */
+/* The dropped screenshots as cards: the whole image, the map it fills (read
+   from the strip), who won it (read from the Ally tab), both editable, and
+   the reading's state. Two cards on one map both turn red; the modal blocks
+   Replace on it. */
 
+import IconClose from '@/components/ui/IconClose.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
+import type { RecordNames } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shots, mapCount, selectedId } = defineProps<{
+const { shots, mapCount, names, selectedId } = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
+  names: RecordNames
   selectedId: string | null
 }>()
 
 const emit = defineEmits<{
   select: [id: string]
   setMap: [id: string, mapIndex: number | null]
+  setWinner: [id: string, winner: Team | null]
   remove: [id: string]
 }>()
 
 const i18n = useI18nStore()
+
+const SIDES = [Team.ALLY, Team.ENEMY] as const
+
+// The winner segments carry the typed player names once there are any.
+const sideLabel = (team: Team): string =>
+  team === Team.ALLY
+    ? names.left.trim() || i18n.t('app.import-left')
+    : names.right.trim() || i18n.t('app.import-right')
 
 const duplicated = (shot: ImportShot): boolean =>
   shot.mapIndex !== null && shots.some((s) => s !== shot && s.mapIndex === shot.mapIndex)
@@ -27,22 +40,30 @@ const duplicated = (shot: ImportShot): boolean =>
 const reviewCount = (shot: ImportShot): number => {
   if (!shot.reading) return 0
   let n = 0
-  for (const team of [Team.ALLY, Team.ENEMY]) {
+  for (const team of SIDES) {
     for (const cell of shot.reading.sides[team]) if (!cell.recognised || cell.margin < 0.1) n++
   }
   return n
 }
 
-const status = (shot: ImportShot): string => {
-  if (shot.status === 'reading') return i18n.t('app.import-reading')
+type StatusTone = 'plain' | 'warn' | 'error'
+
+const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
+  if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
   if (shot.status === 'failed') {
-    if (shot.error === 'too-small') return i18n.t('app.import-failed-small')
-    if (shot.error === 'references' || shot.error === 'worker')
-      return i18n.t('app.import-failed-references')
-    return i18n.t('app.import-failed-unsupported')
+    const key =
+      shot.error === 'too-small'
+        ? 'app.import-failed-small'
+        : shot.error === 'references' || shot.error === 'worker'
+          ? 'app.import-failed-references'
+          : 'app.import-failed-unsupported'
+    return { text: i18n.t(key), tone: 'error' }
   }
+  if (shot.mapIndex === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
   const n = reviewCount(shot)
-  return n ? i18n.t('app.import-to-review', { count: n }) : i18n.t('app.import-ready')
+  return n
+    ? { text: i18n.t('app.import-to-review', { count: n }), tone: 'warn' }
+    : { text: i18n.t('app.import-ready'), tone: 'plain' }
 }
 </script>
 
@@ -60,38 +81,47 @@ const status = (shot: ImportShot): string => {
     >
       <img class="shot-thumb" :src="shot.thumb" alt="" />
       <div class="shot-name" :title="shot.name">{{ shot.name }}</div>
-      <div class="shot-maps" role="group" :aria-label="i18n.t('app.maps')">
-        <button
-          v-for="i in mapCount"
-          :key="i"
-          type="button"
-          class="map-seg"
-          :class="{ on: shot.mapIndex === i - 1, dup: shot.mapIndex === i - 1 && duplicated(shot) }"
-          :aria-pressed="shot.mapIndex === i - 1"
-          @click.stop="emit('setMap', shot.id, shot.mapIndex === i - 1 ? null : i - 1)"
-        >
-          {{ i }}
-        </button>
+      <div class="shot-row">
+        <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
+        <div class="seg" role="group" :aria-label="i18n.t('app.import-map')">
+          <button
+            v-for="i in mapCount"
+            :key="i"
+            type="button"
+            class="seg-btn"
+            :class="{
+              on: shot.mapIndex === i - 1,
+              dup: shot.mapIndex === i - 1 && duplicated(shot),
+            }"
+            :aria-pressed="shot.mapIndex === i - 1"
+            @click.stop="emit('setMap', shot.id, shot.mapIndex === i - 1 ? null : i - 1)"
+          >
+            {{ i }}
+          </button>
+        </div>
       </div>
-      <div class="shot-status">
-        <span v-if="shot.reading?.winner === Team.ALLY" class="result left">{{
-          i18n.t('app.import-left-won')
-        }}</span>
-        <span v-else-if="shot.reading?.winner === Team.ENEMY" class="result right">{{
-          i18n.t('app.import-right-won')
-        }}</span>
-        <span v-else-if="shot.status === 'ready' && shot.mapIndex === null">{{
-          i18n.t('app.import-choose-map')
-        }}</span>
-        <span
-          :class="{
-            warn: shot.status === 'ready' && reviewCount(shot) > 0,
-            error: shot.status === 'failed',
-          }"
-        >
-          {{ status(shot) }}
-        </span>
+      <div class="shot-row">
+        <span class="shot-label">{{ i18n.t('app.import-winner') }}</span>
+        <div class="seg" role="group" :aria-label="i18n.t('app.import-winner')">
+          <button
+            v-for="team in SIDES"
+            :key="team"
+            type="button"
+            class="seg-btn side"
+            :class="{
+              on: shot.winner === team,
+              left: team === Team.ALLY,
+              right: team === Team.ENEMY,
+            }"
+            :aria-pressed="shot.winner === team"
+            :disabled="shot.status !== 'ready'"
+            @click.stop="emit('setWinner', shot.id, shot.winner === team ? null : team)"
+          >
+            {{ sideLabel(team) }}
+          </button>
+        </div>
       </div>
+      <div class="shot-status" :class="status(shot).tone">{{ status(shot).text }}</div>
       <button
         type="button"
         class="shot-remove"
@@ -99,7 +129,7 @@ const status = (shot: ImportShot): string => {
         :title="i18n.t('app.import-remove')"
         @click.stop="emit('remove', shot.id)"
       >
-        ×
+        <IconClose :size="12" />
       </button>
     </div>
   </div>
@@ -108,128 +138,168 @@ const status = (shot: ImportShot): string => {
 <style scoped>
 .shot-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: var(--spacing-sm);
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: var(--spacing-md);
 }
 
 .shot {
   position: relative;
-  background: var(--color-bg-white);
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-large);
-  padding: var(--spacing-sm);
-  font-size: 0.78rem;
-  cursor: pointer;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm);
+  background: var(--import-surface);
+  border: 1px solid var(--import-border);
+  border-radius: var(--radius-large);
+  color: var(--import-text);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.shot:hover {
+  border-color: var(--import-border-strong);
 }
 
 .shot.selected {
-  border-color: var(--color-primary);
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 30%, transparent);
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px var(--color-accent);
 }
 
 .shot.failed {
-  border-color: var(--color-error);
+  border-color: var(--import-bad);
 }
 
 .shot-thumb {
+  display: block;
   width: 100%;
-  height: 70px;
-  object-fit: cover;
-  object-position: top;
+  max-height: 260px;
+  object-fit: contain;
   border-radius: var(--radius-medium);
-  background: #333;
+  background: rgba(0, 0, 0, 0.35);
 }
 
 .shot-name {
   font-weight: 600;
-  color: var(--color-text-primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
-.shot-maps {
-  display: inline-flex;
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: var(--radius-medium);
-  overflow: hidden;
-  align-self: flex-start;
+.shot-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
 }
 
-.map-seg {
+.shot-label {
+  flex: 0 0 48px;
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--import-label);
+}
+
+.seg {
+  display: inline-flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  border: 1px solid var(--import-border);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+}
+
+.seg-btn {
+  flex: 1 1 0;
+  min-width: 26px;
+  padding: 3px 4px;
   border: none;
-  border-right: 1px solid var(--color-border-primary);
-  background: var(--color-bg-white);
-  color: var(--color-text-secondary);
+  border-right: 1px solid var(--import-border);
+  background: transparent;
+  color: var(--import-text-dim);
   font: inherit;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
-  padding: 2px 8px;
-  min-width: 28px;
   cursor: pointer;
+  transition:
+    background var(--transition-fast),
+    color var(--transition-fast);
 }
 
-.map-seg:last-child {
+.seg-btn:last-child {
   border-right: none;
 }
 
-.map-seg.on {
-  background: var(--color-primary);
+.seg-btn:hover:not(:disabled) {
+  background: var(--import-surface-hover);
+  color: var(--import-text);
+}
+
+.seg-btn:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.seg-btn.on {
+  background: var(--color-accent-active);
   color: #fff;
 }
 
-.map-seg.dup {
-  background: var(--color-error);
+.seg-btn.on.dup {
+  background: var(--color-danger);
+}
+
+.seg-btn.side {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The game's own result colours: orange for the left player, blue for the right. */
+.seg-btn.side.on.left {
+  background: var(--import-left);
+}
+
+.seg-btn.side.on.right {
+  background: var(--import-right);
 }
 
 .shot-status {
-  display: flex;
-  justify-content: space-between;
-  gap: 6px;
-  color: var(--color-text-secondary);
-  flex-wrap: wrap;
+  font-size: 0.75rem;
+  color: var(--import-text-dim);
 }
 
-.result {
-  font-weight: 700;
+.shot-status.warn {
+  color: var(--import-warn);
 }
 
-.result.left {
-  color: #c96a25;
-}
-
-.result.right {
-  color: #5d7bb0;
-}
-
-.warn {
-  color: #8a6100;
-}
-
-.error {
-  color: var(--color-error);
+.shot-status.error {
+  color: var(--import-bad);
 }
 
 .shot-remove {
   position: absolute;
-  top: 4px;
-  right: 4px;
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 22px;
   height: 22px;
-  border-radius: 50%;
   border: none;
-  background: rgba(0, 0, 0, 0.55);
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.6);
   color: #fff;
-  font-size: 1rem;
-  line-height: 1;
   cursor: pointer;
 }
 
+.shot-remove:hover {
+  background: var(--color-danger);
+}
+
 @media (pointer: coarse) {
-  .map-seg {
+  .seg-btn {
     min-width: 36px;
     padding: 8px 6px;
   }

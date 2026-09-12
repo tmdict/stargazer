@@ -45,6 +45,8 @@ export interface ImportShot {
   reading: ScreenshotReading | null
   // 0-based board; detected from the strip, editable.
   mapIndex: number | null
+  // Who won this map; detected from the Ally tab, editable.
+  winner: Team | null
   overrides: Record<string, CellOverride>
   artifactOverrides: Partial<Record<Team, number | null>>
   // Data URLs of each card as located, keyed like overrides.
@@ -172,6 +174,7 @@ const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
   shot.reading = reading
   shot.status = 'ready'
   if (reading.mapIndex !== null) shot.mapIndex = reading.mapIndex
+  shot.winner = reading.winner
   for (const team of [Team.ALLY, Team.ENEMY]) {
     reading.sides[team].forEach((cell, row) => {
       shot.cards[overrideKey(team, row)] = imageToDataUrl(cell.card)
@@ -260,6 +263,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
   removeShot: (id: string) => void
   clear: () => void
   setMap: (id: string, mapIndex: number | null) => void
+  setWinner: (id: string, winner: Team | null) => void
   setHero: (id: string, team: Team, row: number, characterId: number | null) => void
   setLevel: (
     id: string,
@@ -290,6 +294,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
         error: null,
         reading: null,
         mapIndex: null,
+        winner: null,
         overrides: {},
         artifactOverrides: {},
         cards: {},
@@ -332,6 +337,11 @@ export function useTeamImport(mode: () => TeamModeKey): {
   const setMap = (id: string, mapIndex: number | null): void => {
     const shot = shots.value.find((s) => s.id === id)
     if (shot) shot.mapIndex = mapIndex
+  }
+
+  const setWinner = (id: string, winner: Team | null): void => {
+    const shot = shots.value.find((s) => s.id === id)
+    if (shot) shot.winner = winner
   }
 
   const setHero = (id: string, team: Team, row: number, characterId: number | null): void => {
@@ -386,6 +396,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
       .map((s) => ({
         reading: s.reading,
         mapIndex: s.mapIndex,
+        winner: s.winner,
         overrides: s.overrides,
         artifactOverrides: s.artifactOverrides,
       }))
@@ -402,6 +413,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     removeShot,
     clear,
     setMap,
+    setWinner,
     setHero,
     setLevel,
     setArtifact,

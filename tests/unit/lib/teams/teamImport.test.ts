@@ -46,6 +46,7 @@ const shot = (
 ): ShotAssignment => ({
   reading: r,
   mapIndex,
+  winner: r.winner,
   overrides,
   artifactOverrides: {},
 })
@@ -74,6 +75,11 @@ describe('mapResultsFrom', () => {
       reading([], [], { winner: Team.ALLY, mapResults: [Team.ALLY, Team.ALLY, Team.ALLY] }),
     )
     expect(mapResultsFrom([a, b], 3)).toEqual([Team.ENEMY, Team.ALLY, Team.ALLY])
+  })
+
+  it('takes the reviewed winner over the reading', () => {
+    const a = { ...shot(0, reading([], [], { winner: Team.ALLY })), winner: Team.ENEMY }
+    expect(mapResultsFrom([a], 1)).toEqual([Team.ENEMY])
   })
 })
 
