@@ -1,4 +1,10 @@
 <script setup lang="ts">
+/* Image intake shared by the Image Stitcher and the match import: drop,
+   paste, or pick, emitting the image files. Paste is window-level so it works
+   without focusing the zone, which is why `active` exists: the Stitcher stays
+   mounted behind the Teams tab, and a paste meant for the import modal must
+   not feed it too. */
+
 import { onMounted, onUnmounted, ref } from 'vue'
 
 import IconImage from '@/components/ui/IconImage.vue'
@@ -11,9 +17,11 @@ const emit = defineEmits<{
   add: [files: File[]]
 }>()
 
-// Slim "add more" affordance once the list is populated; full panel when empty.
-defineProps<{
+const { active = true } = defineProps<{
+  // Slim "add more" affordance once the list is populated; full panel when empty.
   compact?: boolean
+  // Whether window-level pastes belong to this zone right now.
+  active?: boolean
 }>()
 
 const fileInput = ref<HTMLInputElement>()
@@ -33,8 +41,8 @@ const handleDrop = (event: DragEvent) => {
   if (files.length) emit('add', files)
 }
 
-// Window-level so paste works without focusing the drop zone.
 const handlePaste = (event: ClipboardEvent) => {
+  if (!active) return
   const files = imageFilesFromPaste(event)
   if (files.length) {
     event.preventDefault()

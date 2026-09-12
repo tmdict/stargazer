@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import StitchDropZone from './StitchDropZone.vue'
 import StitchPreview from './StitchPreview.vue'
 import StitchSettings from './StitchSettings.vue'
 import StitchThumbnailList from './StitchThumbnailList.vue'
+import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useImageStitch } from '@/composables/useImageStitch'
 import { useToast } from '@/composables/useToast'
 import { useI18nStore } from '@/stores/i18n'
@@ -44,7 +44,7 @@ const handleAdd = async (files: File[]) => {
       v-model:fit="settings.fit"
     />
 
-    <StitchDropZone :compact="hasImages" @add="handleAdd" />
+    <ImageDropZone :compact="hasImages" @add="handleAdd" />
 
     <StitchThumbnailList v-if="hasImages" :images @remove="removeImage" @reorder="reorder" />
 
