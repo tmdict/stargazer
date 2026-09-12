@@ -12,7 +12,7 @@
 
 import { Team } from '@/lib/types/team'
 import { hsvAt } from './image'
-import { STRIP, TAB_REGION } from './layout'
+import { STRIP, TAB_REGION, TABS } from './layout'
 import type { RgbaImage } from './types'
 
 export interface StripReading {
@@ -170,6 +170,84 @@ export const resultHue = (
   const hue = ((Math.atan2(cy, cx) * 180) / Math.PI + 360) % 360
   if (hue >= 180 && hue <= 260) return 'lost'
   if (hue <= 60 || hue >= 330) return 'won'
+  return null
+}
+
+// One pixel as one of the two result colours: the tab and summary fills are
+// pale (saturation about a third for the blue), the panel's dark rows and
+// the cream strip are not.
+const resultColourAt = (shot: RgbaImage, x: number, y: number): 'won' | 'lost' | null => {
+  const [h, s, v] = hsvAt(shot, x, y)
+  if (v < 0.4) return null
+  if (h >= 195 && h <= 245 && s >= 0.22) return 'lost'
+  if ((h <= 60 || h >= 330) && s >= 0.4) return 'won'
+  return null
+}
+
+/* Fraction of a region painted in either result colour: about one for a
+ * tab or a summary bar, small for a card row's thin stat bars. */
+export const solidResultFraction = (
+  shot: RgbaImage,
+  x0: number,
+  x1: number,
+  y0: number,
+  y1: number,
+): number => {
+  let n = 0
+  let hit = 0
+  for (let y = y0; y < y1; y++) {
+    for (let x = x0; x < x1; x++) {
+      if (x < 0 || y < 0 || x >= shot.width || y >= shot.height) continue
+      n++
+      if (resultColourAt(shot, x, y) !== null) hit++
+    }
+  }
+  return n ? hit / n : 0
+}
+
+export interface TabBlock {
+  top: number
+  bottom: number
+  // Orange: that team won this map.
+  won: boolean
+}
+
+/* The Ally and Enemy tabs, the landmarks every panel region hangs from:
+ * the top run is the ally tab, the next run a panel below it the enemy tab.
+ * Null unless both are there. */
+export function findTabs(shot: RgbaImage): { ally: TabBlock; enemy: TabBlock } | null {
+  const [x0, x1] = TABS.x
+  const [d0, d1] = TABS.darkX
+  const runs: { top: number; bottom: number; won: boolean }[] = []
+  for (let y = 0; y < shot.height; y++) {
+    let won = 0
+    let lost = 0
+    for (let x = x0; x < x1; x++) {
+      const c = resultColourAt(shot, x, y)
+      if (c === 'won') won++
+      else if (c === 'lost') lost++
+    }
+    const fill = Math.max(won, lost) / (x1 - x0)
+    if (fill < TABS.fill) continue
+    let dark = 0
+    for (let x = d0; x < d1; x += 2) if (resultColourAt(shot, x, y) !== null) dark++
+    if (dark / ((d1 - d0) / 2) > TABS.dark) continue
+    const colourWon = won >= lost
+    const last = runs[runs.length - 1]
+    if (last && y - last.bottom <= 2 && last.won === colourWon) last.bottom = y
+    else runs.push({ top: y, bottom: y, won: colourWon })
+  }
+  const tabs = runs.filter((r) => {
+    const h = r.bottom - r.top + 1
+    return h >= TABS.height[0] && h <= TABS.height[1]
+  })
+  for (let i = 0; i < tabs.length; i++) {
+    const ally = tabs[i]!
+    const enemy = tabs
+      .slice(i + 1)
+      .find((t) => t.top - ally.top >= TABS.gap[0] && t.top - ally.top <= TABS.gap[1])
+    if (enemy) return { ally, enemy }
+  }
   return null
 }
 

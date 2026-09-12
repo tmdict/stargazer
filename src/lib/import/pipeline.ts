@@ -1,28 +1,36 @@
 /* One screenshot, already normalised to CANONICAL_WIDTH, to a reading: the
- * ally card column is anchored (at its nominal spot, else anywhere in a raw
- * capture), the enemy column below it, each card's frame pins its box, and
- * the face, star row, strip, tab and artifact icons are read from there. The
- * top panel is the viewer's team, taken to be the left player's, as in the
- * game's own history view. */
+ * Ally and Enemy tabs place the two card columns, each card's frame pins its
+ * box, and the face, star row, strip and artifact icons are read from there.
+ * The top panel is the viewer's team, taken to be the left player's, as in
+ * the game's own history view. */
 
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
-import { findPanelAnchor, matchCard, paragonFromMatch, scanForColumns } from './frames'
+import {
+  findPanelAnchor,
+  matchCard,
+  paragonFromMatch,
+  scanForColumns,
+  type PanelAnchor,
+} from './frames'
 import { assignUnique, heroDescriptor, rankHeroes } from './heroes'
 import { cropResize } from './image'
 import {
   ANCHOR_FLOOR,
   ART_BOX,
   CARD_COLUMN_X,
+  CARD_PITCH,
   CARD_ROWS,
   CARD_TOP,
   HEADER_ICON,
   PANEL_GAP,
   SCAN_FLOOR,
   STRIP,
+  TAB_ANCHOR_OX,
+  TABS,
 } from './layout'
 import { readStars } from './stars'
-import { readStrip, readTab } from './strip'
+import { findTabs, readStrip, readTab } from './strip'
 import type {
   HeroReading,
   ImportWarning,
@@ -63,18 +71,34 @@ export function readScreenshot(
 ): ScreenshotReading {
   const warnings: ImportWarning[] = []
 
-  // A crop puts the columns at their nominal spots. Anything else (a raw
-  // capture, whose background can even hold a stray comb) is found as the
-  // pair of columns anywhere in the shot.
-  let ally = findPanelAnchor(shot, refs.frames, CARD_COLUMN_X, CARD_TOP[Team.ALLY])
-  let enemy = findPanelAnchor(shot, refs.frames, ally.x, ally.y + PANEL_GAP)
-  let scanned = false
-  if (ally.mean < ANCHOR_FLOOR || enemy.mean < ANCHOR_FLOOR) {
-    const found = scanForColumns(shot, refs.frames, CARD_COLUMN_X)
-    if (found) {
-      ally = findPanelAnchor(shot, refs.frames, found.ally.x, found.ally.y, found.pitch)
-      enemy = findPanelAnchor(shot, refs.frames, found.enemy.x, found.enemy.y, found.pitch)
-      scanned = true
+  // The tabs are the landmarks: each team's cards start just under its tab,
+  // and the frame comb only settles the exact position there. Without tabs
+  // (a crop that lost them) the columns are tried at their crop positions,
+  // then found as a pair anywhere in the shot.
+  const tabs = findTabs(shot)
+  let ally: PanelAnchor
+  let enemy: PanelAnchor
+  let landmarked = tabs !== null
+  if (tabs) {
+    ally = findPanelAnchor(
+      shot,
+      refs.frames,
+      CARD_COLUMN_X,
+      tabs.ally.bottom + TABS.toCard,
+      CARD_PITCH,
+      TAB_ANCHOR_OX,
+    )
+    enemy = findPanelAnchor(shot, refs.frames, ally.x, tabs.enemy.bottom + TABS.toCard, ally.pitch)
+  } else {
+    ally = findPanelAnchor(shot, refs.frames, CARD_COLUMN_X, CARD_TOP[Team.ALLY])
+    enemy = findPanelAnchor(shot, refs.frames, ally.x, ally.y + PANEL_GAP)
+    if (ally.mean < ANCHOR_FLOOR || enemy.mean < ANCHOR_FLOOR) {
+      const found = scanForColumns(shot, refs.frames, CARD_COLUMN_X)
+      if (found) {
+        ally = findPanelAnchor(shot, refs.frames, found.ally.x, found.ally.y, found.pitch)
+        enemy = findPanelAnchor(shot, refs.frames, found.enemy.x, found.enemy.y, found.pitch)
+        landmarked = true
+      }
     }
   }
   const anchors: Record<Team, typeof ally> = { [Team.ALLY]: ally, [Team.ENEMY]: enemy }
@@ -82,14 +106,14 @@ export function readScreenshot(
   const sides = {} as Record<Team, HeroReading[]>
   for (const team of [Team.ALLY, Team.ENEMY]) {
     const anchor = anchors[team]
-    if (anchor.mean < (scanned ? SCAN_FLOOR : ANCHOR_FLOOR))
+    if (anchor.mean < (landmarked ? SCAN_FLOOR : ANCHOR_FLOOR))
       warnings.push({ kind: 'no-panel', side: team })
 
-    // Without a frame match the boxes are guesses over unknown card art
-    // (a tier whose frame is not among the references), so the cells are
-    // offered empty for the picker rather than with a stranger's face. A
-    // scanned pair is trusted down to its own floor.
-    const anchored = anchor.mean >= (scanned ? SCAN_FLOOR : ANCHOR_FLOOR)
+    // Without a frame match the boxes are guesses, so the cells are offered
+    // empty for the picker rather than with a stranger's face. A column
+    // placed by a landmark (a tab, or the scanned pair) is trusted down to
+    // the lower floor.
+    const anchored = anchor.mean >= (landmarked ? SCAN_FLOOR : ANCHOR_FLOOR)
     const cells: Omit<HeroReading, 'candidates' | 'margin' | 'recognised' | 'sure'>[] = []
     const rankings = []
     for (let row = 0; row < CARD_ROWS; row++) {
@@ -142,7 +166,7 @@ export function readScreenshot(
 
   return {
     mapIndex: strip.mapIndex,
-    winner: readTab(shot, ally.x, ally.y),
+    winner: tabs ? (tabs.ally.won ? Team.ALLY : Team.ENEMY) : readTab(shot, ally.x, ally.y),
     mapResults: strip.mapResults,
     sides,
     artifacts,

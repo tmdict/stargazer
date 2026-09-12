@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { createImage } from '@/lib/import/image'
 import { STRIP } from '@/lib/import/layout'
-import { readStrip, readTab } from '@/lib/import/strip'
+import { findTabs, readStrip, readTab } from '@/lib/import/strip'
 import { Team } from '@/lib/types/team'
 
 const W = 1150
@@ -101,5 +101,41 @@ describe('readTab', () => {
     expect(readTab(shot, 60, 100)).toBe(Team.ENEMY)
     fill(shot, [120, 120, 120])
     expect(readTab(shot, 60, 100)).toBeNull()
+  })
+})
+
+describe('findTabs', () => {
+  const block = (
+    img: ReturnType<typeof createImage>,
+    x0: number,
+    x1: number,
+    y0: number,
+    y1: number,
+    rgb: [number, number, number],
+  ) => {
+    for (let y = y0; y < y1; y++) {
+      for (let x = x0; x < x1; x++) {
+        const i = (y * img.width + x) * 4
+        img.data[i] = rgb[0]
+        img.data[i + 1] = rgb[1]
+        img.data[i + 2] = rgb[2]
+      }
+    }
+  }
+  const orange: [number, number, number] = [225, 147, 90]
+  const blue: [number, number, number] = [124, 148, 188]
+
+  it('finds the ally and enemy tabs and reads their colours', () => {
+    const shot = createImage(W, H)
+    fill(shot, [60, 55, 50])
+    block(shot, 0, W, 20, 120, orange) // the header bar spans the width: not a tab
+    block(shot, 15, 165, 160, 230, orange)
+    block(shot, 15, 165, 870, 940, blue)
+    block(shot, 0, W, 760, 800, orange) // the summary bar spans the width: not a tab
+    expect(findTabs(shot)).toEqual({
+      ally: { top: 160, bottom: 229, won: true },
+      enemy: { top: 870, bottom: 939, won: false },
+    })
+    expect(findTabs(createImage(W, H))).toBeNull()
   })
 })

@@ -22,7 +22,7 @@ export const CARD_TOP: Record<Team, number> = { [Team.ALLY]: 237, [Team.ENEMY]: 
 
 // Anchor search around the nominal column, and the per-card search around the anchor.
 export const ANCHOR_SEARCH = { oy: [-60, 40], ox: [-16, 16], step: 4 } as const
-export const CARD_SEARCH = { oy: 6, ox: 4, step: 2 } as const
+export const CARD_SEARCH = { oy: 6, ox: 4, step: 1 } as const
 export const ANCHOR_FLOOR = 0.35
 // The whole-height scan may accept a weaker pair: its two combs a panel gap
 // apart with a summary bar under each are already strong structure, and a
@@ -54,8 +54,27 @@ export const HEADER_ICON: { dx: Record<Team, number>; dy: number; diameter: numb
 }
 
 // The Ally tab, relative to the ally column anchor: orange when the top team
-// won this map, blue when it lost.
+// won this map, blue when it lost. Used when the tabs were not found outright.
 export const TAB_REGION = { dx: -18, dy: -62, w: 100, h: 30 } as const
+
+// The Ally and Enemy tabs as landmarks: each is a solid orange or blue block
+// (that team's result on this map) at the panel's top left, beside the
+// panel's dark header row, and its team's first card starts just under it.
+// Rows where the left strip is mostly that colour and the header row beside
+// it is mostly dark are tab rows; a run of them the height of a tab is a tab.
+export const TABS = {
+  x: [10, 180],
+  darkX: [180, 420],
+  fill: 0.6,
+  dark: 0.25,
+  height: [40, 100],
+  // Ally tab top to enemy tab top.
+  gap: [400, 1100],
+  toCard: 8,
+} as const
+// The column is searched more widely sideways under a tab, since a taller
+// phone puts it further from the panel's edge.
+export const TAB_ANCHOR_OX = [-16, 40] as const
 
 // The solid bar of the summary row under a panel's fifth card (orange for
 // the ally panel, blue for the enemy), relative to the column anchor's

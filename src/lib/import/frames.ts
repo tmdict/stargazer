@@ -18,7 +18,7 @@ import {
   SCAN_FLOOR,
   SUMMARY_BAR,
 } from './layout'
-import { resultHue } from './strip'
+import { solidResultFraction } from './strip'
 import type { FrameRef, Rect, RgbaImage } from './types'
 
 // A pitch step either side of the given one is tried at the anchor; a small
@@ -100,12 +100,13 @@ export function findPanelAnchor(
   columnX: number,
   top: number,
   pitch: number = CARD_PITCH,
+  oxRange: readonly [number, number] = ANCHOR_SEARCH.ox,
 ): PanelAnchor {
   let best: PanelAnchor = { x: columnX, y: top, pitch, mean: -1 }
   for (const scale of FRAME_SCALES) {
     const scaled = refs.filter((r) => r.scale === scale)
     for (const oy of range(ANCHOR_SEARCH.oy[0], ANCHOR_SEARCH.oy[1], ANCHOR_SEARCH.step)) {
-      for (const ox of range(ANCHOR_SEARCH.ox[0], ANCHOR_SEARCH.ox[1], ANCHOR_SEARCH.step)) {
+      for (const ox of range(oxRange[0], oxRange[1], ANCHOR_SEARCH.step)) {
         const mean = combMean(shot, scaled, columnX + ox, top + oy, pitch)
         if (mean > best.mean) best = { x: columnX + ox, y: top + oy, pitch, mean }
       }
@@ -167,16 +168,17 @@ export function scanForColumns(
     }
     return sum / CARD_ROWS
   }
+  // A solid band, not the thin orange and blue stat bars a card row holds.
   const hasSummaryBar = (x: number, top: number, pitch: number): boolean => {
     const fifth = Math.round(top + pitch * (CARD_ROWS - 1))
     return (
-      resultHue(
+      solidResultFraction(
         shot,
         x + SUMMARY_BAR.dx[0],
         x + SUMMARY_BAR.dx[1],
         fifth + SUMMARY_BAR.dy[0],
         fifth + SUMMARY_BAR.dy[1],
-      ) !== null
+      ) >= 0.5
     )
   }
   const pairs: { ox: number; i: number; gap: number; pitch: number; mean: number }[] = []
