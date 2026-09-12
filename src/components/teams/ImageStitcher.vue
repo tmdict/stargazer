@@ -21,6 +21,10 @@ const {
   render,
 } = useImageStitch()
 
+// The Stitcher stays mounted behind the Teams tab, so window-level pastes
+// belong to it only while its tab shows.
+const { pasteActive = true } = defineProps<{ pasteActive?: boolean }>()
+
 const { error } = useToast()
 const i18n = useI18nStore()
 
@@ -44,7 +48,7 @@ const handleAdd = async (files: File[]) => {
       v-model:fit="settings.fit"
     />
 
-    <ImageDropZone :compact="hasImages" @add="handleAdd" />
+    <ImageDropZone :compact="hasImages" :active="pasteActive" @add="handleAdd" />
 
     <StitchThumbnailList v-if="hasImages" :images @remove="removeImage" @reorder="reorder" />
 
