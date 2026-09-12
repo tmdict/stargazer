@@ -20,8 +20,10 @@ for (let y = 0; y < T; y++) {
 // inside it, so each reference contributes a few inset crops.
 const INSETS = [0, 0.05, 0.1, 0.15]
 const DIAMETERS = [-8, -2, 4, 10]
-const OFFSETS = [-12, -8, -4, 0, 4, 8, 12]
-const OFFSETS_Y = [-8, -4, 0, 4, 8]
+// Wide enough for the header's spacing to differ by a phone shape: the icons
+// sit about two dozen pixels further from the column on a taller screen.
+const OFFSETS = [-28, -21, -14, -7, 0, 7, 14, 21, 28]
+const OFFSETS_Y = [-16, -8, 0, 8, 16]
 
 export function buildArtifactTable(
   icons: readonly { artifactId: number; image: RgbaImage }[],
