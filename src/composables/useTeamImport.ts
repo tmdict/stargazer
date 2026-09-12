@@ -81,6 +81,9 @@ const loadNames = (): void => {
   learned.value = parseLearnedIcons(readStorage(LEARNED_KEY))
 }
 
+// Reactive proxies cannot be structured-cloned into the worker.
+const plainLearned = (): LearnedIcon[] => learned.value.map((icon) => ({ ...icon }))
+
 const saveNames = (): void => {
   writeStorage(
     NAMES_KEY,
@@ -158,7 +161,7 @@ async function loadReferences(): Promise<
       ),
     })),
   )
-  return { frames, portraits, artifacts, learned: learned.value }
+  return { frames, portraits, artifacts, learned: plainLearned() }
 }
 
 const post = (message: TeamImportRequest, transfer: Transferable[] = []): void => {
@@ -220,7 +223,10 @@ async function ensureReferences(): Promise<void> {
       ...refs.artifacts.map((a) => a.image.data.buffer),
     ]
     post({ type: 'references', ...refs }, transfer)
-  } catch {
+  } catch (error) {
+    // Left in the console: the modal only says the references failed, and
+    // the failing URL is what a bug report needs.
+    console.error('Match import references failed to load', error)
     referenceStatus.value = 'failed'
     for (const shot of shots.value) {
       if (shot.status === 'reading') {
@@ -346,7 +352,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     ) {
       learned.value = addLearnedIcon(learned.value, characterId, cell.descriptor, Date.now())
       writeStorage(LEARNED_KEY, serializeLearnedIcons(learned.value))
-      post({ type: 'learned', learned: learned.value })
+      post({ type: 'learned', learned: plainLearned() })
     }
   }
 
