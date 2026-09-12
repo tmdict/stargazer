@@ -58,6 +58,8 @@ export interface ArtifactReading {
 export type ImportWarning =
   | { kind: 'no-panel'; side: Team }
   | { kind: 'no-strip' }
+  // The strip has this many circles, not the mode's board count.
+  | { kind: 'map-count'; found: number }
   | { kind: 'unrecognised'; side: Team; row: number }
 
 export interface ScreenshotReading {

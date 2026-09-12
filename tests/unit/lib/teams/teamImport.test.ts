@@ -86,6 +86,17 @@ describe('mapResultsFrom', () => {
 })
 
 describe('buildTeamImportPlan', () => {
+  it('skips a screenshot with no heroes on either side', () => {
+    const r = reading([1, 2], [3])
+    for (const cell of [...r.sides[Team.ALLY], ...r.sides[Team.ENEMY]]) {
+      cell.candidates = []
+      cell.recognised = false
+    }
+    const plan = buildTeamImportPlan([shot(0, r)], '3v3', NAMES)
+    expect(plan.boards[0]).toBeNull()
+    expect(plan.issues).toEqual([{ kind: 'empty', count: 1 }])
+  })
+
   it('maps screenshots to boards with attrs, overrides, and artifacts', () => {
     const r = reading([1, 2, 3], [4, 5, 6])
     r.sides[Team.ALLY][0]!.refinement.level = 4

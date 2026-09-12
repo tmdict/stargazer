@@ -60,18 +60,35 @@ describe('readStrip', () => {
         who === Team.ALLY ? [235, 130, 60] : [60, 110, 200],
       )
     })
-    const reading = readStrip(shot, 5, 1500)
+    const reading = readStrip(shot, 1500)
+    expect(reading.mapCount).toBe(5)
     expect(reading.mapIndex).toBe(2)
     expect(reading.mapResults).toEqual(results)
+  })
+
+  it('tells a three-circle strip by its missing outer discs', () => {
+    const shot = createImage(W, H)
+    fill(shot, [60, 55, 50])
+    const pitch = STRIP.pitch * W
+    const radius = pitch * STRIP.radius
+    const cy = 1600
+    const first = STRIP.centre * W - pitch
+    for (let i = 0; i < 3; i++) {
+      const cx = first + i * pitch
+      disc(shot, cx, cy, 0, radius, [245, 238, 225])
+      if (i === 0) disc(shot, cx, cy, radius * 0.9, radius * 1.02, [60, 190, 80])
+      disc(shot, cx + radius * 0.72, cy + radius * 0.72, 0, radius * 0.3, [235, 130, 60])
+    }
+    const reading = readStrip(shot, 1500)
+    expect(reading.mapCount).toBe(3)
+    expect(reading.mapIndex).toBe(0)
+    expect(reading.mapResults).toEqual([Team.ALLY, Team.ALLY, Team.ALLY])
   })
 
   it('reports nothing when there is no ring', () => {
     const shot = createImage(W, H)
     fill(shot, [60, 55, 50])
-    expect(readStrip(shot, 5, 1500)).toEqual({
-      mapIndex: null,
-      mapResults: [null, null, null, null, null],
-    })
+    expect(readStrip(shot, 1500)).toEqual({ mapIndex: null, mapResults: [], mapCount: null })
   })
 })
 
