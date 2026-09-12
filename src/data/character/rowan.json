@@ -11,6 +11,7 @@
   "tags": {
     "energy-battery": [{ "ultimate": 1 }, { "skill2": 3 }],
     "energy-denial": [{ "skill3": 1 }],
-    "initial-energy-300": []
+    "initial-energy-300": [],
+    "temp-buff": [{ "awakening": 2 }]
   }
 }
