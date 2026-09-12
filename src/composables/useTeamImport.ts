@@ -48,6 +48,8 @@ export interface ImportShot {
   status: ShotStatus
   error: string | null
   reading: ScreenshotReading | null
+  // Boards in the mode the shot was read for.
+  mapCount: number
   // 0-based board; detected from the strip, editable.
   mapIndex: number | null
   // Who won this map; detected from the Ally tab, editable.
@@ -205,10 +207,12 @@ const post = (message: TeamImportRequest, transfer: Transferable[] = []): void =
   worker?.postMessage(message, transfer)
 }
 
-const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
+const applyReading = (shot: ImportShot, reading: ScreenshotReading, mapCount: number): void => {
   shot.reading = reading
   shot.status = 'ready'
-  if (reading.mapIndex !== null) shot.mapIndex = reading.mapIndex
+  // A map beyond the mode's boards (a five-map result in a three-map mode)
+  // stays unmapped; the card says why.
+  if (reading.mapIndex !== null && reading.mapIndex < mapCount) shot.mapIndex = reading.mapIndex
   shot.winner = reading.winner
   for (const team of [Team.ALLY, Team.ENEMY]) {
     reading.sides[team].forEach((cell, row) => {
@@ -229,7 +233,7 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
   }
   const shot = shots.value.find((s) => s.id === msg.id)
   if (!shot) return
-  if (msg.type === 'reading') applyReading(shot, msg.reading)
+  if (msg.type === 'reading') applyReading(shot, msg.reading, shot.mapCount)
   else {
     shot.status = 'failed'
     shot.error = msg.message
@@ -328,6 +332,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
         status: 'reading',
         error: null,
         reading: null,
+        mapCount,
         mapIndex: null,
         winner: null,
         overrides: {},

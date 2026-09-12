@@ -1,10 +1,11 @@
 /* The map strip at the bottom and the Ally tab. The strip's circles sit at
- * a fixed pitch whether there are three or five, so only the green ring
- * around the current map needs finding: each circle's ring band is scored
- * for green at the rows where green arcs could be, in a band below the enemy
- * panel (the panel's own bars are green too, and a raw capture goes on
- * below) and a little either side of its nominal centre; the best places the
- * whole strip. The tick or cross under a circle is the left player's result
+ * a fixed pitch about the same centre whether there are three or five, so
+ * only the green ring around the current map needs finding: each circle's
+ * ring band is scored for green at the rows where green arcs could be, in a
+ * band below the enemy panel (the panel's own bars are green too, and a raw
+ * capture goes on below) and a little either side of its nominal centre; the
+ * best places the whole strip and, with the outer discs, says how many
+ * circles it has. The tick or cross under a circle is the left player's result
  * on that map; the Ally tab's colour is the same for the map on screen and
  * is always visible, so it is read too. The header's halves show the series
  * result, not the map's, and are not read. */
@@ -17,15 +18,25 @@ import type { RgbaImage } from './types'
 export interface StripReading {
   mapIndex: number | null
   mapResults: (Team | null)[]
+  // How many circles the strip has (three or five); null when no ring was found.
+  mapCount: number | null
 }
 
 const isGreen = (r: number, g: number, b: number): boolean => g > r + 30 && g > b + 30 && g > 90
+const isCream = (r: number, g: number, b: number): boolean =>
+  r > 190 && g > 180 && b > 160 && Math.max(r, g, b) - Math.min(r, g, b) < 50
 
-export function readStrip(shot: RgbaImage, mapCount: number, searchTop: number): StripReading {
+/* The strip is read without knowing whether it has three or five circles:
+ * both layouts share the centre and the pitch, so the ring is searched over
+ * all five positions; a ring on an outer one means five circles, and a ring
+ * on an inner one is settled by whether the outer positions hold a cream
+ * disc at all. */
+export function readStrip(shot: RgbaImage, searchTop: number): StripReading {
   const W = shot.width
   const pitch = STRIP.pitch * W
-  const firstCx = STRIP.centre * W - ((mapCount - 1) / 2) * pitch
-  const empty = { mapIndex: null, mapResults: Array.from({ length: mapCount }, () => null) }
+  const centre = STRIP.centre * W
+  const positions = Array.from({ length: 5 }, (_, i) => centre + (i - 2) * pitch)
+  const empty = { mapIndex: null, mapResults: [], mapCount: null }
 
   const top = Math.max(0, searchTop)
   const bottom = Math.min(shot.height, top + Math.round(pitch * STRIP.band))
@@ -58,27 +69,50 @@ export function readStrip(shot: RgbaImage, mapCount: number, searchTop: number):
     return inRing ? green / inRing : 0
   }
 
+  // Cream fraction of a circle's inner disc: present on the strip, absent
+  // where a three-circle strip has no outer circles.
+  const discCream = (cx: number, cy: number, radius: number): number => {
+    let n = 0
+    let cream = 0
+    const r = radius * 0.45
+    for (let y = Math.round(cy - r); y <= cy + r; y++) {
+      for (let x = Math.round(cx - r); x <= cx + r; x++) {
+        if (x < 0 || y < 0 || x >= W || y >= shot.height) continue
+        if (Math.hypot(x - cx, y - cy) > r) continue
+        n++
+        const p = (y * W + x) * 4
+        if (isCream(shot.data[p]!, shot.data[p + 1]!, shot.data[p + 2]!)) cream++
+      }
+    }
+    return n ? cream / n : 0
+  }
+
   // Candidate centres: rows with a green arc about a radius above and,
   // unless the ring's lower half is cropped away, about a radius below.
-  let best = { frac: 0, index: 0, cy: 0, dx: 0, radius: 0 }
+  let best = { frac: 0, position: 0, cy: 0, dx: 0, radius: 0 }
   for (const scale of STRIP.radiusScales) {
     const radius = Math.round(pitch * STRIP.radius * scale)
     for (let cy = top + radius; cy < bottom; cy += 2) {
       const below = cy + radius
       if (!arcNear(cy - radius) || (below < shot.height - 4 && !arcNear(below))) continue
-      for (let i = 0; i < mapCount; i++) {
+      positions.forEach((cx0, i) => {
         for (let dx = -STRIP.slack; dx <= STRIP.slack; dx += 4) {
-          const frac = ringGreen(firstCx + i * pitch + dx, cy, radius)
-          if (frac > best.frac) best = { frac, index: i, cy, dx, radius }
+          const frac = ringGreen(cx0 + dx, cy, radius)
+          if (frac > best.frac) best = { frac, position: i, cy, dx, radius }
         }
-      }
+      })
     }
   }
   // The ring is two thin lines inside the band, a few percent of its area on
   // a sharp capture and about one on a soft one.
   if (best.frac < 0.012) return empty
   const { cy, radius } = best
-  const centres = Array.from({ length: mapCount }, (_, i) => firstCx + i * pitch + best.dx)
+  const outer =
+    discCream(positions[0]! + best.dx, cy, radius) > 0.5 &&
+    discCream(positions[4]! + best.dx, cy, radius) > 0.5
+  const mapCount = best.position === 0 || best.position === 4 || outer ? 5 : 3
+  const first = mapCount === 5 ? 0 : 1
+  const centres = positions.slice(first, first + mapCount).map((cx) => cx + best.dx)
 
   const mapResults = centres.map((cx) => {
     const bx = Math.round(cx + radius * 0.72)
@@ -106,7 +140,7 @@ export function readStrip(shot: RgbaImage, mapCount: number, searchTop: number):
     if (blue >= need && blue > orange) return Team.ENEMY
     return null
   })
-  return { mapIndex: best.index, mapResults }
+  return { mapIndex: best.position - first, mapResults, mapCount }
 }
 
 /* The game's two result colours, by the circular mean hue of the saturated
