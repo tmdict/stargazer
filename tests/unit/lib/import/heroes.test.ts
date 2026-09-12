@@ -10,7 +10,7 @@ import {
   heroDescriptor,
   rankHeroes,
 } from '@/lib/import/heroes'
-import { createImage } from '@/lib/import/image'
+import { createImage, cropResize } from '@/lib/import/image'
 import {
   addLearnedIcon,
   LEARNED_ICONS_CAP,
@@ -19,11 +19,12 @@ import {
 } from '@/lib/import/learned'
 import type { HeroCandidate, RgbaImage } from '@/lib/import/types'
 
-const cand = (characterId: number, score: number, learned = false): HeroCandidate => ({
-  characterId,
-  score,
-  learned,
-})
+const cand = (
+  characterId: number,
+  score: number,
+  learned = false,
+  costume = false,
+): HeroCandidate => ({ characterId, score, learned, costume })
 
 // A portrait with a distinct smooth pattern per hero: 180 × 248 art built from
 // a few sinusoids, so resampling at different scales stays correlated.
@@ -50,6 +51,7 @@ describe('assignUnique', () => {
     const out = assignUnique(rows)
     expect(out[0]!.candidates[0]!.characterId).toBe(7)
     expect(out[0]!.margin).toBeCloseTo(0.3)
+    expect(out[0]!.sure).toBe(true)
     expect(out[1]!.candidates[0]!.characterId).toBe(3)
     // Hero 7 is taken, so the row has no rival left and its score stands as the lead.
     expect(out[1]!.margin).toBeCloseTo(0.55)
@@ -66,6 +68,12 @@ describe('assignUnique', () => {
     expect(out[0]!.candidates[0]!.learned).toBe(true)
     expect(out[0]!.margin).toBeCloseTo(0.2)
   })
+
+  it('holds a costume-backed pick to the higher bar', () => {
+    expect(assignUnique([[cand(5, 0.8, false, true), cand(6, 0.68)]])[0]!.sure).toBe(false)
+    expect(assignUnique([[cand(5, 0.8), cand(6, 0.68)]])[0]!.sure).toBe(true)
+    expect(assignUnique([[cand(5, 0.8, false, true), cand(6, 0.6)]])[0]!.sure).toBe(true)
+  })
 })
 
 describe('hero table', () => {
@@ -79,6 +87,31 @@ describe('hero table', () => {
     const ranked = rankHeroes(table, [face])
     expect(ranked[0]!.characterId).toBe(2)
     expect(ranked[0]!.score).toBeGreaterThan(ranked[1]!.score + 0.1)
+  })
+
+  it("recognises a costume reference framed like the game's skin card", () => {
+    // The card shows the same painting at 60% size, higher and centred, with a
+    // margin around it, so the face falls outside the art grid's windows.
+    const card = createImage(180, 248)
+    card.data.fill(255)
+    const small = cropResize(portrait(2), { x: 0, y: 0, w: 180, h: 248 }, 108, 149)
+    for (let y = 0; y < 149; y++) {
+      for (let x = 0; x < 108; x++) {
+        const from = (y * 108 + x) * 4
+        const to = ((y + 8) * 180 + x + 36) * 4
+        card.data.set(small.data.subarray(from, from + 4), to)
+      }
+    }
+    const table = buildHeroTable([
+      { characterId: 1, image: portrait(1) },
+      { characterId: 2, image: card, costume: true },
+      { characterId: 3, image: portrait(3) },
+    ])
+    expect(table.ids.length).toBe(60 + 96 + 60)
+    const face = heroDescriptor(portrait(2), { x: 44, y: 60, w: 96, h: 72 })
+    const ranked = rankHeroes(table, [face])
+    expect(ranked[0]!.characterId).toBe(2)
+    expect(ranked[0]!.costume).toBe(true)
   })
 
   it('round-trips a learned descriptor', () => {
