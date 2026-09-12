@@ -10,6 +10,7 @@
   "season": 3,
   "tags": {
     "initial-energy-300": [],
-    "summon": [{ "ultimate": 1 }]
+    "summon": [{ "ultimate": 1 }],
+    "temp-buff": [{ "ex": 3 }]
   }
 }
