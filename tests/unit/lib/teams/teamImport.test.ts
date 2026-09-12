@@ -62,6 +62,7 @@ describe('suggestRecordName', () => {
       'S7 SL5 Group - GNX < 10 (3 < 1,2)',
     )
     expect(suggestRecordName({ ...NAMES, prefix: '' }, [null, Team.ALLY])).toBe('GNX > 10 (2 > )')
+    expect(suggestRecordName(NAMES, [Team.ENEMY])).toBe('S7 SL5 Group - GNX < 10')
   })
 })
 

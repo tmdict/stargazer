@@ -1,20 +1,23 @@
 /* One screenshot, already normalised to CANONICAL_WIDTH, to a reading: the
- * two card columns are anchored, each card's frame pins its box, and the
- * face, star row, strip, tab and artifact icons are read from there. */
+ * ally card column is anchored (at its nominal spot, else anywhere in a raw
+ * capture), the enemy column below it, each card's frame pins its box, and
+ * the face, star row, strip, tab and artifact icons are read from there. The
+ * top panel is the viewer's team, taken to be the left player's, as in the
+ * game's own history view. */
 
 import { Team } from '@/lib/types/team'
 import { readArtifact } from './artifacts'
-import { findPanelAnchor, matchCard, paragonFromMatch } from './frames'
+import { findPanelAnchor, matchCard, paragonFromMatch, scanForColumns } from './frames'
 import { assignUnique, heroDescriptor, rankHeroes } from './heroes'
 import { cropResize } from './image'
 import {
   ANCHOR_FLOOR,
   ART_BOX,
   CARD_COLUMN_X,
-  CARD_PITCH,
   CARD_ROWS,
   CARD_TOP,
   HEADER_ICON,
+  PANEL_GAP,
   STRIP,
 } from './layout'
 import { readStars } from './stars'
@@ -58,24 +61,30 @@ export function readScreenshot(
   mapCount: number,
 ): ScreenshotReading {
   const warnings: ImportWarning[] = []
-  const sides = {} as Record<Team, HeroReading[]>
-  const anchors = {} as Record<Team, ReturnType<typeof findPanelAnchor>>
 
+  // A crop puts the columns at their nominal spots. Anything else (a raw
+  // capture, whose background can even hold a stray comb) is found as the
+  // pair of columns anywhere in the shot.
+  let ally = findPanelAnchor(shot, refs.frames, CARD_COLUMN_X, CARD_TOP[Team.ALLY])
+  let enemy = findPanelAnchor(shot, refs.frames, ally.x, ally.y + PANEL_GAP)
+  if (ally.mean < ANCHOR_FLOOR || enemy.mean < ANCHOR_FLOOR) {
+    const found = scanForColumns(shot, refs.frames, CARD_COLUMN_X)
+    if (found) {
+      ally = findPanelAnchor(shot, refs.frames, found.ally.x, found.ally.y, found.pitch)
+      enemy = findPanelAnchor(shot, refs.frames, found.enemy.x, found.enemy.y, found.pitch)
+    }
+  }
+  const anchors: Record<Team, typeof ally> = { [Team.ALLY]: ally, [Team.ENEMY]: enemy }
+
+  const sides = {} as Record<Team, HeroReading[]>
   for (const team of [Team.ALLY, Team.ENEMY]) {
-    const anchor = findPanelAnchor(shot, refs.frames, CARD_COLUMN_X, CARD_TOP[team])
-    anchors[team] = anchor
+    const anchor = anchors[team]
     if (anchor.mean < ANCHOR_FLOOR) warnings.push({ kind: 'no-panel', side: team })
 
     const cells: Omit<HeroReading, 'candidates' | 'margin' | 'recognised' | 'sure'>[] = []
     const rankings = []
     for (let row = 0; row < CARD_ROWS; row++) {
-      const match = matchCard(
-        shot,
-        refs.frames,
-        CARD_COLUMN_X,
-        Math.round(CARD_TOP[team] + CARD_PITCH * row),
-        anchor,
-      )
+      const match = matchCard(shot, refs.frames, anchor, row)
       const art = artBoxOf(match.box)
       const alignments = ALIGNMENTS.map(([dx, dy]) =>
         heroDescriptor(shot, { ...art, x: art.x + dx, y: art.y + dy }),
@@ -104,12 +113,12 @@ export function readScreenshot(
     })
   }
 
-  const ally = anchors[Team.ALLY]
-  const anchorX = CARD_COLUMN_X + ally.ox
-  const anchorY = CARD_TOP[Team.ALLY] + ally.oy
-  const enemyBottom =
-    CARD_TOP[Team.ENEMY] + anchors[Team.ENEMY].oy + Math.round(CARD_PITCH * CARD_ROWS)
-  const strip = readStrip(shot, mapCount, enemyBottom + STRIP.belowPanel)
+  // A single map has no strip; the one board is the map.
+  const enemyBottom = enemy.y + Math.round(enemy.pitch * CARD_ROWS)
+  const strip =
+    mapCount > 1
+      ? readStrip(shot, mapCount, enemyBottom + STRIP.belowPanel)
+      : { mapIndex: 0, mapResults: [null] }
   if (strip.mapIndex === null) warnings.push({ kind: 'no-strip' })
 
   const artifacts = {} as Record<Team, ReturnType<typeof readArtifact> | null>
@@ -117,17 +126,12 @@ export function readScreenshot(
     artifacts[team] =
       refs.artifacts.ids.length === 0
         ? null
-        : readArtifact(
-            shot,
-            anchorX + HEADER_ICON.dx[team],
-            anchorY + HEADER_ICON.dy,
-            refs.artifacts,
-          )
+        : readArtifact(shot, ally.x + HEADER_ICON.dx[team], ally.y + HEADER_ICON.dy, refs.artifacts)
   }
 
   return {
     mapIndex: strip.mapIndex,
-    winner: readTab(shot, anchorX, anchorY),
+    winner: readTab(shot, ally.x, ally.y),
     mapResults: strip.mapResults,
     sides,
     artifacts,
