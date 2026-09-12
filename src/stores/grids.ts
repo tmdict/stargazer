@@ -42,6 +42,7 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
+import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
@@ -540,6 +541,60 @@ export const useGrids = defineStore('grids', () => {
     return { placed, skipped }
   }
 
+  // Read-only mirror of applyRosters' clear phase, for the two-step confirm.
+  const rostersWouldReplace = (plan: TeamImportPlan): boolean =>
+    plan.boards.some((board, i) => {
+      const ctx = contexts.value[i]
+      return (
+        board !== null &&
+        ctx !== undefined &&
+        (getTilesWithCharacters(ctx.grid).length > 0 ||
+          ctx.artifacts.ally !== null ||
+          ctx.artifacts.enemy !== null)
+      )
+    })
+
+  /* Stamp match-import rosters (lib/teams/teamImport) onto the mapped boards.
+   * Both sides of every mapped board clear first, so a hero moving from one
+   * board to another never trips page-wide uniqueness against its own old
+   * copy; each cleared board re-seeds its phantimal baseline so the reconcile
+   * watcher derives the phantimal from the new roster even when it is the one
+   * the old roster had (the swapBoards idiom). Then every hero auto-places
+   * with its upgrade record and each side's artifact is set; a hero or
+   * artifact already used elsewhere on that team is skipped and counted.
+   * Unmapped boards, maps, and provenance are untouched. */
+  const applyRosters = (plan: TeamImportPlan): { placed: number; skipped: number } => {
+    const targets = plan.boards.flatMap((board, i) => {
+      const ctx = contexts.value[i]
+      return board && ctx ? [{ ctx, board }] : []
+    })
+    for (const { ctx } of targets) {
+      for (const team of [Team.ALLY, Team.ENEMY]) {
+        ctx.clearTeam(team)
+        ctx.removeArtifact(team)
+      }
+      ctx.seedPhantimalBaseline()
+    }
+    let placed = 0
+    let skipped = 0
+    for (const { ctx, board } of targets) {
+      for (const team of [Team.ALLY, Team.ENEMY]) {
+        for (const { characterId, attrs } of board.sides[team]) {
+          if (isUsed(characterId, team) || !ctx.autoPlace(characterId, team)) {
+            skipped++
+            continue
+          }
+          ctx.setAttrs(team, characterId, attrs)
+          placed++
+        }
+        const artifact = artifactSlot(board.artifacts, team)
+        if (artifact !== null && !isArtifactUsed(artifact, team)) ctx.setArtifact(team, artifact)
+      }
+    }
+    deriveSynergy()
+    return { placed, skipped }
+  }
+
   // canDropCharacter's same-board leg: a move or swap that stays on one board can
   // still change a unit's team, which risks the same page-wide duplicate as a
   // cross-board transfer, a copy already on the destination team of another board.
@@ -804,6 +859,8 @@ export const useGrids = defineStore('grids', () => {
     swapBoards,
     sideLoadWouldReplace,
     loadTeamSide,
+    rostersWouldReplace,
+    applyRosters,
     clearAll,
   }
 })
