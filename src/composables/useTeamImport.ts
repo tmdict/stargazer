@@ -5,7 +5,7 @@
  * leave. Images never leave the device: the references are fetched, the
  * screenshots are drawn to a canvas and handed to the worker as pixels. */
 
-import { computed, reactive, ref, type ComputedRef } from 'vue'
+import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
 
 import { isBaseHeroId } from '@/lib/characters/character'
 import { FRAME_NAMES } from '@/lib/import/frames'
@@ -32,12 +32,19 @@ import {
 } from '@/utils/artifactImage'
 import { loadMatcherPortraits } from '@/utils/dataLoader'
 import { readStorage, writeStorage } from '@/utils/storage'
-import type { TeamImportRequest, TeamImportResponse } from '@/workers/teamImport.worker'
+import type {
+  ReferenceImages,
+  TeamImportRequest,
+  TeamImportResponse,
+} from '@/workers/teamImport.worker'
 
 const NAMES_KEY = 'stargazer.import.names'
 const LEARNED_KEY = 'stargazer.import.learned'
 
 export type ShotStatus = 'reading' | 'ready' | 'failed'
+// Why a shot failed: its file, the references (not loaded, or the worker
+// itself did not start), or the reading throwing on it.
+export type ShotError = 'too-small' | 'unsupported' | 'references' | 'worker' | 'read'
 
 export interface ImportShot {
   id: string
@@ -46,10 +53,8 @@ export interface ImportShot {
   // Object URL of the file, for the card thumbnail.
   thumb: string
   status: ShotStatus
-  error: string | null
+  error: ShotError | null
   reading: ScreenshotReading | null
-  // Boards in the mode the shot was read for.
-  mapCount: number
   // 0-based board; detected from the strip, editable.
   mapIndex: number | null
   // Who won this map; detected from the Ally tab, editable.
@@ -58,8 +63,6 @@ export interface ImportShot {
   artifactOverrides: Partial<Record<Team, number | null>>
   // Data URLs of each card as located, keyed like overrides.
   cards: Record<string, string>
-  // Cells whose hero was corrected during review.
-  edited: Set<string>
 }
 
 export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
@@ -67,7 +70,9 @@ export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 const shots = ref<ImportShot[]>([])
 const referenceStatus = ref<ReferenceStatus>('idle')
 const names = reactive<RecordNames>({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
-const learned = ref<LearnedIcon[]>([])
+// Shallow, and only ever replaced: the list is posted to the worker as is,
+// and a reactive proxy cannot be structured-cloned.
+const learned = shallowRef<LearnedIcon[]>([])
 let worker: Worker | null = null
 let nextId = 1
 let namesLoaded = false
@@ -90,14 +95,22 @@ const loadNames = (): void => {
   learned.value = parseLearnedIcons(readStorage(LEARNED_KEY))
 }
 
-// Reactive proxies cannot be structured-cloned into the worker.
-const plainLearned = (): LearnedIcon[] => learned.value.map((icon) => ({ ...icon }))
-
 const saveNames = (): void => {
   writeStorage(
     NAMES_KEY,
     JSON.stringify({ prefix: names.prefix, left: names.left, right: names.right }),
   )
+}
+
+const findShot = (id: string): ImportShot | undefined => shots.value.find((s) => s.id === id)
+
+const failReadingShots = (error: ShotError): void => {
+  for (const shot of shots.value) {
+    if (shot.status === 'reading') {
+      shot.status = 'failed'
+      shot.error = error
+    }
+  }
 }
 
 // ---------- image decoding (main thread) ----------
@@ -131,7 +144,8 @@ const imageToDataUrl = (image: RgbaImage): string => {
   canvas.height = image.height
   const ctx = canvas.getContext('2d')
   if (!ctx) return ''
-  // Copied: the worker's buffer may not be a plain ArrayBuffer for ImageData.
+  // RgbaImage admits any ArrayBufferLike behind its pixels; ImageData wants a
+  // plain ArrayBuffer, so they are copied into one.
   ctx.putImageData(
     new ImageData(new Uint8ClampedArray(image.data), image.width, image.height),
     0,
@@ -168,9 +182,7 @@ const loadCostumes = async (idOf: (slug: string) => number | undefined): Promise
   return (await Promise.all(jobs)).filter((ref): ref is PortraitRef => ref !== null)
 }
 
-async function loadReferences(): Promise<
-  Omit<Extract<TeamImportRequest, { type: 'references' }>, 'type'>
-> {
+async function loadReferences(): Promise<ReferenceImages> {
   const gameData = useGameDataStore()
   const portraitLoaders = loadMatcherPortraits()
   const heroes = gameData.characters.filter(
@@ -200,7 +212,7 @@ async function loadReferences(): Promise<
       ),
     })),
   )
-  return { frames, portraits: [...portraits, ...costumes], artifacts, learned: plainLearned() }
+  return { frames, portraits: [...portraits, ...costumes], artifacts, learned: learned.value }
 }
 
 const post = (message: TeamImportRequest, transfer: Transferable[] = []): void => {
@@ -231,33 +243,43 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
     pending.clear()
     return
   }
-  const shot = shots.value.find((s) => s.id === msg.id)
-  if (!shot) return
-  if (msg.type === 'reading') applyReading(shot, msg.reading, shot.mapCount)
-  else {
-    shot.status = 'failed'
-    shot.error = msg.message
+  if (msg.type === 'error' && msg.id === null) {
+    // The reference tables themselves failed to build.
+    console.error('Match import references failed', msg.message)
+    referenceStatus.value = 'failed'
+    failReadingShots('references')
+    return
   }
+  const shot = findShot(msg.id!)
+  if (!shot) return
+  if (msg.type === 'reading') applyReading(shot, msg.reading, msg.mapCount)
+  else {
+    console.error(`Match import could not read ${shot.name}`, msg.message)
+    shot.status = 'failed'
+    shot.error = 'read'
+  }
+}
+
+const startWorker = (): Worker => {
+  const started = new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
+    type: 'module',
+  })
+  started.onmessage = onMessage
+  // A worker that fails to start is dropped, so the next attempt gets a fresh one.
+  started.onerror = () => {
+    started.terminate()
+    worker = null
+    referenceStatus.value = 'failed'
+    failReadingShots('worker')
+  }
+  return started
 }
 
 async function ensureReferences(): Promise<void> {
   if (referenceStatus.value === 'ready' || referenceStatus.value === 'loading') return
   referenceStatus.value = 'loading'
-  loadNames()
   try {
-    worker ??= new Worker(new URL('../workers/teamImport.worker.ts', import.meta.url), {
-      type: 'module',
-    })
-    worker.onmessage = onMessage
-    worker.onerror = () => {
-      referenceStatus.value = 'failed'
-      for (const shot of shots.value) {
-        if (shot.status === 'reading') {
-          shot.status = 'failed'
-          shot.error = 'worker'
-        }
-      }
-    }
+    worker ??= startWorker()
     const refs = await loadReferences()
     const transfer = [
       ...refs.frames.map((f) => f.data.buffer),
@@ -270,12 +292,7 @@ async function ensureReferences(): Promise<void> {
     // the failing URL is what a bug report needs.
     console.error('Match import references failed to load', error)
     referenceStatus.value = 'failed'
-    for (const shot of shots.value) {
-      if (shot.status === 'reading') {
-        shot.status = 'failed'
-        shot.error = 'references'
-      }
-    }
+    failReadingShots('references')
   }
 }
 
@@ -300,7 +317,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
   plan: ComputedRef<TeamImportPlan>
   addFiles: (files: File[]) => Promise<number>
   removeShot: (id: string) => void
-  clear: () => void
   setMap: (id: string, mapIndex: number | null) => void
   setWinner: (id: string, winner: Team | null) => void
   setHero: (id: string, team: Team, row: number, characterId: number | null) => void
@@ -332,18 +348,17 @@ export function useTeamImport(mode: () => TeamModeKey): {
         status: 'reading',
         error: null,
         reading: null,
-        mapCount,
         mapIndex: null,
         winner: null,
         overrides: {},
         artifactOverrides: {},
         cards: {},
-        edited: new Set<string>(),
       }) as ImportShot
       shots.value = [...shots.value, shot]
       added++
       try {
         const image = await decodeShot(file)
+        if (!findShot(shot.id)) continue
         if (referenceStatus.value === 'ready') {
           post({ type: 'read', id: shot.id, image, mapCount }, [image.data.buffer])
         } else if (referenceStatus.value === 'failed') {
@@ -362,35 +377,28 @@ export function useTeamImport(mode: () => TeamModeKey): {
   }
 
   const removeShot = (id: string): void => {
-    const shot = shots.value.find((s) => s.id === id)
+    const shot = findShot(id)
     if (shot) URL.revokeObjectURL(shot.thumb)
     pending.delete(id)
     shots.value = shots.value.filter((s) => s.id !== id)
   }
 
-  const clear = (): void => {
-    for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
-    pending.clear()
-    shots.value = []
-  }
-
   const setMap = (id: string, mapIndex: number | null): void => {
-    const shot = shots.value.find((s) => s.id === id)
+    const shot = findShot(id)
     if (shot) shot.mapIndex = mapIndex
   }
 
   const setWinner = (id: string, winner: Team | null): void => {
-    const shot = shots.value.find((s) => s.id === id)
+    const shot = findShot(id)
     if (shot) shot.winner = winner
   }
 
   const setHero = (id: string, team: Team, row: number, characterId: number | null): void => {
-    const shot = shots.value.find((s) => s.id === id)
+    const shot = findShot(id)
     const cell = shot?.reading?.sides[team][row]
     if (!shot || !cell) return
     const key = overrideKey(team, row)
     shot.overrides[key] = { ...shot.overrides[key], characterId }
-    shot.edited.add(key)
     // A correction on a cell the reader was unsure about teaches it that
     // icon, provided the frame match was trustworthy (else the crop may be
     // off the face) and the hero was not already its confident answer.
@@ -402,7 +410,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     ) {
       learned.value = addLearnedIcon(learned.value, characterId, cell.descriptor, Date.now())
       writeStorage(LEARNED_KEY, serializeLearnedIcons(learned.value))
-      post({ type: 'learned', learned: plainLearned() })
+      post({ type: 'learned', learned: learned.value })
     }
   }
 
@@ -413,14 +421,14 @@ export function useTeamImport(mode: () => TeamModeKey): {
     field: 'paragon' | 'refinement',
     level: number,
   ): void => {
-    const shot = shots.value.find((s) => s.id === id)
+    const shot = findShot(id)
     if (!shot) return
     const key = overrideKey(team, row)
     shot.overrides[key] = { ...shot.overrides[key], [field]: level }
   }
 
   const setArtifact = (id: string, team: Team, artifactId: number | null): void => {
-    const shot = shots.value.find((s) => s.id === id)
+    const shot = findShot(id)
     if (shot) shot.artifactOverrides[team] = artifactId
   }
 
@@ -451,7 +459,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
     plan,
     addFiles,
     removeShot,
-    clear,
     setMap,
     setWinner,
     setHero,

@@ -61,6 +61,7 @@ See [Contributing](./docs/CONTRIBUTING.md) for all available commands.
 
 - [Grid & Characters](./docs/architecture/GRID.md)
 - [Teams](./docs/architecture/TEAMS.md)
+- [Team Import](./docs/architecture/IMPORT_TEAM.md)
 - [Seasonal Content](./docs/architecture/SEASONAL.md)
 - [Skills](./docs/architecture/SKILLS.md)
 - [Pathfinding](./docs/architecture/PATHFINDING.md)

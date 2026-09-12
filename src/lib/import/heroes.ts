@@ -13,6 +13,7 @@ import { cropResize, dot, flatten, normalizedVector, PORTRAIT_BACKGROUND } from 
 import type {
   CropWindow,
   HeroCandidate,
+  HeroIdentity,
   HeroTable,
   LearnedIcon,
   PortraitRef,
@@ -25,7 +26,7 @@ import type {
 // Costume references keep full size: their card windows are small, and a
 // window narrower than the descriptor would be upscaled into a smooth patch
 // that correlates with any face.
-export const PORTRAIT_SIZE = { width: 90, height: 124 } as const
+const PORTRAIT_SIZE = { width: 90, height: 124 } as const
 const COSTUME_SCALE = 2
 export const DESCRIPTOR_SIZE = { width: 32, height: 24 } as const
 export const DESCRIPTOR_LENGTH = DESCRIPTOR_SIZE.width * DESCRIPTOR_SIZE.height * 3
@@ -58,18 +59,12 @@ const CANDIDATES = 5
 
 // Descriptor components are unit-norm vectors of ~1300 entries, so they
 // rarely exceed ±0.3; Int8 at this scale keeps the correlation to two decimals.
-export const QUANT_SCALE = 400
+const QUANT_SCALE = 400
 
-export const quantize = (v: Float32Array): Int8Array => {
+const quantize = (v: Float32Array): Int8Array => {
   const out = new Int8Array(v.length)
   for (let i = 0; i < v.length; i++)
     out[i] = Math.max(-127, Math.min(127, Math.round(v[i]! * QUANT_SCALE)))
-  return out
-}
-
-export const dequantize = (q: Int8Array): Float32Array => {
-  const out = new Float32Array(q.length)
-  for (let i = 0; i < q.length; i++) out[i] = q[i]! / QUANT_SCALE
   return out
 }
 
@@ -152,6 +147,9 @@ export const decodeLearned = (encoded: string): Int8Array | null => {
 export const heroDescriptor = (shot: RgbaImage, box: Rect): Float32Array =>
   normalizedVector(cropResize(shot, box, DESCRIPTOR_SIZE.width, DESCRIPTOR_SIZE.height))
 
+const portraitOfRow = (table: HeroTable, row: number): HeroTable['portraits'][number] | undefined =>
+  table.portraits[table.sources[row]!]
+
 const rowDot = (table: HeroTable, row: number, v: Float32Array): number => {
   const base = row * DESCRIPTOR_LENGTH
   let s = 0
@@ -183,7 +181,7 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
     const key = learned ? -id : id
     const cur = best.get(key)
     if (!cur || cur.score < score) {
-      const costume = !learned && table.portraits[table.sources[row]!]!.costume
+      const costume = !learned && portraitOfRow(table, row)!.costume
       best.set(key, { characterId: id, score, learned, costume, row })
     }
   }
@@ -204,7 +202,7 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
   // window to refine.
   for (const lead of leaders.slice(0, REFINE_KEEP)) {
     if (lead.learned) continue
-    const portrait = table.portraits[table.sources[lead.row]!]
+    const portrait = portraitOfRow(table, lead.row)
     const coarse = portrait && coarseWindowOfRow(lead.row, table)
     if (!portrait || !coarse) continue
     const { scale } = portrait
@@ -238,23 +236,21 @@ function coarseWindowOfRow(row: number, table: HeroTable): CropWindow | null {
   if (table.learnedRows[row] === 1) return null
   let start = row
   while (start > 0 && table.sources[start - 1] === table.sources[row]) start--
-  return table.portraits[table.sources[row]!]?.windows[row - start] ?? null
+  return portraitOfRow(table, row)?.windows[row - start] ?? null
 }
 
-export const HERO_SCORE_FLOOR = 0.35
-export const HERO_SURE_MARGIN = 0.1
+const HERO_SCORE_FLOOR = 0.35
+const HERO_SURE_MARGIN = 0.1
 // A costume reference's looser framing and wider window search let it fit a
 // stranger's face more closely than the art grid can, so its lead must be larger.
-export const COSTUME_SURE_MARGIN = 0.15
+const COSTUME_SURE_MARGIN = 0.15
 
 /* A side fields five different heroes, so the same hero read twice on a
  * side goes to the surer cell and the other takes its next candidate. Returns
  * each cell's candidates reordered so the pick comes first, with its margin
  * over the next hero that is not the pick and whether that margin clears the
  * bar. A learned match must lead the best bundled candidate of another hero. */
-export function assignUnique(
-  rankings: readonly HeroCandidate[][],
-): { candidates: HeroCandidate[]; recognised: boolean; margin: number; sure: boolean }[] {
+export function assignUnique(rankings: readonly HeroCandidate[][]): HeroIdentity[] {
   const order = rankings
     .map((cands, i) => ({
       i,
@@ -262,7 +258,7 @@ export function assignUnique(
     }))
     .sort((a, b) => b.lead - a.lead)
   const taken = new Set<number>()
-  const out: ReturnType<typeof assignUnique> = rankings.map(() => ({
+  const out: HeroIdentity[] = rankings.map(() => ({
     candidates: [],
     recognised: false,
     margin: 0,

@@ -68,7 +68,7 @@ useScrollLock(toRef(props, 'show'))
             >
               <IconLink :size="16" />
             </a>
-            <button class="button" @click="emit('close')" aria-label="Close">
+            <button class="button" :aria-label="i18n.t('app.close')" @click="emit('close')">
               <IconClose />
             </button>
           </div>

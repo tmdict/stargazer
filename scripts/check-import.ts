@@ -30,6 +30,7 @@ import { CANONICAL_WIDTH } from '../src/lib/import/layout.ts'
 import { readScreenshot } from '../src/lib/import/pipeline.ts'
 import type { PortraitRef, RgbaImage, ScreenshotReading } from '../src/lib/import/types.ts'
 import { Team } from '../src/lib/types/team.ts'
+import { arg } from './lib/shared.ts'
 
 const ROOT = resolve(import.meta.dirname, '..')
 
@@ -39,11 +40,6 @@ interface TruthCell {
   r: number
 }
 type Truth = Record<string, { maps?: number; cells: Record<string, TruthCell> }>
-
-const arg = (name: string): string | undefined => {
-  const i = process.argv.indexOf(`--${name}`)
-  return i >= 0 ? process.argv[i + 1] : undefined
-}
 
 const toImage = async (input: Buffer | string, width?: number): Promise<RgbaImage> => {
   let p = sharp(input)
@@ -58,7 +54,7 @@ const toImage = async (input: Buffer | string, width?: number): Promise<RgbaImag
 
 async function loadHeroes(
   referenceDir: string,
-): Promise<{ names: Map<number, string>; portraits: PortraitRef[]; costumes: number }> {
+): Promise<{ names: Map<number, string>; portraits: PortraitRef[] }> {
   const dataDir = join(ROOT, 'src/data/character')
   const artDir = join(ROOT, 'src/assets/images/character')
   const names = new Map<number, string>()
@@ -77,7 +73,6 @@ async function loadHeroes(
     const webp = await sharp(art).webp({ quality: 85 }).toBuffer()
     portraits.push({ characterId: hero.id, image: await toImage(webp) })
   }
-  let costumes = 0
   const manifest = join(referenceDir, 'skins.json')
   if (existsSync(manifest)) {
     const skins = JSON.parse(await readFile(manifest, 'utf8')) as Record<string, string[]>
@@ -88,11 +83,10 @@ async function loadHeroes(
         const path = join(referenceDir, 'skin', `${file}.webp`)
         if (!existsSync(path)) continue
         portraits.push({ characterId, image: await toImage(path), costume: true })
-        costumes++
       }
     }
   }
-  return { names, portraits, costumes }
+  return { names, portraits }
 }
 
 async function loadArtifacts(
@@ -181,19 +175,19 @@ async function main(): Promise<void> {
     )
     process.exit(2)
   }
-  const truth: Truth = arg('truth')
-    ? (JSON.parse(await readFile(arg('truth')!, 'utf8')) as Truth)
-    : {}
+  const truthFile = arg('truth')
+  const truth: Truth = truthFile ? (JSON.parse(await readFile(truthFile, 'utf8')) as Truth) : {}
   const defaultMaps = Number(arg('maps') ?? 5)
 
   const frames = await Promise.all(
     FRAME_NAMES.map((n) => toImage(join(framesDir, `frame-${n}.webp`))),
   )
   const refs = prepareFrameRefs(frames)
-  const { names: heroNames, portraits, costumes } = await loadHeroes(framesDir)
+  const { names: heroNames, portraits } = await loadHeroes(framesDir)
   const heroTable = buildHeroTable(portraits)
   const { names: artifactNames, icons } = await loadArtifacts(arg('artifacts'))
   const artifactTable = buildArtifactTable(icons)
+  const costumes = portraits.filter((p) => p.costume).length
   console.log(
     `references: ${portraits.length - costumes} portraits, ${costumes} costume references, ${heroTable.ids.length} descriptors, ${icons.length} artifact icons`,
   )

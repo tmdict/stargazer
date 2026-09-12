@@ -18,7 +18,12 @@ import type { ImportShot } from '@/composables/useTeamImport'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { HeroReading } from '@/lib/import/types'
-import { cellCharacterId, overrideKey, type RecordNames } from '@/lib/teams/teamImport'
+import {
+  cellArtifactId,
+  cellCharacterId,
+  overrideKey,
+  type RecordNames,
+} from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -32,9 +37,9 @@ const { shot, names } = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  setHero: [team: Team, row: number, characterId: number | null]
-  setLevel: [team: Team, row: number, field: 'paragon' | 'refinement', level: number]
-  setArtifact: [team: Team, artifactId: number | null]
+  setHero: [id: string, team: Team, row: number, characterId: number | null]
+  setLevel: [id: string, team: Team, row: number, field: 'paragon' | 'refinement', level: number]
+  setArtifact: [id: string, team: Team, artifactId: number | null]
 }>()
 
 const gameData = useGameDataStore()
@@ -43,7 +48,7 @@ const i18n = useI18nStore()
 const SIDES = [Team.ALLY, Team.ENEMY] as const
 
 const heroName = (characterId: number | null): string => {
-  if (characterId === null) return i18n.t('app.import-no-hero')
+  if (characterId === null) return i18n.t('app.import-none')
   const slug = gameData.getCharacterNameById(characterId)
   return slug ? localizedDisplayName(i18n.t, 'character', slug) : String(characterId)
 }
@@ -54,7 +59,7 @@ const heroImage = (characterId: number | null): string => {
 }
 
 const artifactName = (artifact: ArtifactType | null): string =>
-  artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : i18n.t('app.import-no-hero')
+  artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : i18n.t('app.import-none')
 
 type CellState = 'sure' | 'review' | 'none'
 
@@ -66,6 +71,7 @@ interface CellView {
   paragon: number
   refinement: number
   state: CellState
+  // The hero was corrected in review.
   edited: boolean
   card: string
 }
@@ -77,7 +83,7 @@ const cells = (team: Team): CellView[] => {
     const key = overrideKey(team, row)
     const override = shot.overrides[key] ?? {}
     const characterId = cellCharacterId(reading, team, row, shot.overrides)
-    const edited = shot.edited.has(key)
+    const edited = override.characterId !== undefined
     const state: CellState =
       characterId === null && !edited ? 'none' : edited || cell.sure ? 'sure' : 'review'
     return {
@@ -102,7 +108,7 @@ const sideCells = computed(() => ({
 // ---------- hero picker ----------
 
 // Every real hero in roster order; a cell may take any of them, since the
-// review is board-free and page-wide uniqueness is settled on Replace.
+// review is board-free and page-wide uniqueness is settled on Save as New.
 const heroes = computed(() =>
   gameData.characters
     .filter((c) => isBaseHeroId(c.id) && !c.placeholder)
@@ -118,55 +124,58 @@ interface PickerTarget {
 
 const picker = ref<PickerTarget | null>(null)
 
-const togglePicker = (team: Team, row: number, key: string, event: MouseEvent): void => {
-  if (picker.value?.key === key) {
-    picker.value = null
-    return
-  }
+const anchorBelow = (event: MouseEvent): { x: number; y: number } => {
   const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  picker.value = { team, row, key, position: { x: rect.left, y: rect.bottom + 4 } }
+  return { x: rect.left, y: rect.bottom + 4 }
 }
 
-const pickerCell = computed(() => {
+const togglePicker = (team: Team, row: number, key: string, event: MouseEvent): void => {
+  picker.value = picker.value?.key === key ? null : { team, row, key, position: anchorBelow(event) }
+}
+
+const pickerView = computed(() => {
   const target = picker.value
-  return target ? (shot.reading?.sides[target.team][target.row] ?? null) : null
+  return target ? (sideCells.value[target.team][target.row] ?? null) : null
 })
 
 const pinned = computed(() =>
-  (pickerCell.value?.candidates ?? [])
+  (pickerView.value?.cell.candidates ?? [])
     .map((c) => gameData.getCharacterById(c.characterId))
     .filter((c): c is CharacterType => c !== undefined),
 )
 
-const pickerHasHero = computed(() => {
-  const target = picker.value
-  return (
-    target !== null &&
-    shot.reading !== null &&
-    cellCharacterId(shot.reading, target.team, target.row, shot.overrides) !== null
-  )
-})
+const pickerHasHero = computed(
+  () => pickerView.value !== null && pickerView.value.characterId !== null,
+)
 
 const setPicked = (characterId: number | null): void => {
   const target = picker.value
   if (!target) return
-  emit('setHero', target.team, target.row, characterId)
+  emit('setHero', shot.id, target.team, target.row, characterId)
   picker.value = null
 }
 
 // ---------- artifacts ----------
 
-const artifactOf = (team: Team): ArtifactType | null => {
-  const override = shot.artifactOverrides[team]
-  const id =
-    override !== undefined
-      ? override
-      : (shot.reading?.artifacts[team]?.candidates[0]?.artifactId ?? null)
-  return id === null ? null : (gameData.getArtifactById(id) ?? null)
+interface ArtifactView {
+  artifact: ArtifactType | null
+  sure: boolean
 }
 
-const artifactSure = (team: Team): boolean =>
-  shot.artifactOverrides[team] !== undefined || (shot.reading?.artifacts[team]?.margin ?? 0) >= 0.1
+const artifactView = (team: Team): ArtifactView => {
+  const reading = shot.reading
+  const id = reading ? cellArtifactId(reading, team, shot.artifactOverrides) : null
+  return {
+    artifact: id === null ? null : (gameData.getArtifactById(id) ?? null),
+    sure:
+      shot.artifactOverrides[team] !== undefined || (reading?.artifacts[team]?.margin ?? 0) >= 0.1,
+  }
+}
+
+const sideArtifacts = computed(() => ({
+  [Team.ALLY]: artifactView(Team.ALLY),
+  [Team.ENEMY]: artifactView(Team.ENEMY),
+}))
 
 // Pre-season first, then by id: the grid popup's order.
 const artifacts = computed(() =>
@@ -176,18 +185,14 @@ const artifacts = computed(() =>
 const artifactPicker = ref<{ team: Team; position: { x: number; y: number } } | null>(null)
 
 const toggleArtifactPicker = (team: Team, event: MouseEvent): void => {
-  if (artifactPicker.value?.team === team) {
-    artifactPicker.value = null
-    return
-  }
-  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
-  artifactPicker.value = { team, position: { x: rect.left, y: rect.bottom + 4 } }
+  artifactPicker.value =
+    artifactPicker.value?.team === team ? null : { team, position: anchorBelow(event) }
 }
 
 const setArtifactPicked = (artifactId: number | null): void => {
   const target = artifactPicker.value
   if (!target) return
-  emit('setArtifact', target.team, artifactId)
+  emit('setArtifact', shot.id, target.team, artifactId)
   artifactPicker.value = null
 }
 
@@ -210,14 +215,17 @@ const stateLabel = (state: CellState): string =>
           <button
             type="button"
             class="artifact-btn"
-            :class="{ unsure: !artifactSure(team), open: artifactPicker?.team === team }"
-            :title="artifactName(artifactOf(team))"
+            :class="{ unsure: !sideArtifacts[team].sure, open: artifactPicker?.team === team }"
+            :title="artifactName(sideArtifacts[team].artifact)"
             @click="toggleArtifactPicker(team, $event)"
           >
-            <span class="artifact-icon" :class="{ empty: artifactOf(team) === null }">
-              <ArtifactImage v-if="artifactOf(team)" :artifact="artifactOf(team)!" />
+            <span class="artifact-icon" :class="{ empty: sideArtifacts[team].artifact === null }">
+              <ArtifactImage
+                v-if="sideArtifacts[team].artifact"
+                :artifact="sideArtifacts[team].artifact!"
+              />
             </span>
-            <span class="artifact-name">{{ artifactName(artifactOf(team)) }}</span>
+            <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
           </button>
         </span>
       </div>
@@ -247,8 +255,8 @@ const stateLabel = (state: CellState): string =>
               :paragon="view.paragon"
               :refinement="view.refinement"
               editable
-              @paragon="emit('setLevel', team, view.row, 'paragon', $event)"
-              @refinement="emit('setLevel', team, view.row, 'refinement', $event)"
+              @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
+              @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
             />
             <span v-if="view.edited" class="cell-state edited">{{
               i18n.t('app.import-edited')
@@ -278,7 +286,7 @@ const stateLabel = (state: CellState): string =>
           :enter-hint="i18n.t('app.import-pick-hero')"
           @pick="setPicked($event.id)"
         />
-        <button v-if="pickerHasHero" type="button" class="remove-hero" @click="setPicked(null)">
+        <button v-if="pickerHasHero" type="button" class="picker-remove" @click="setPicked(null)">
           {{ i18n.t('app.import-remove-hero') }}
         </button>
       </SelectionPopup>
@@ -292,9 +300,9 @@ const stateLabel = (state: CellState): string =>
       >
         <ArtifactSelectionPalette :artifacts @pick="setArtifactPicked($event.id)" />
         <button
-          v-if="artifactOf(artifactPicker.team) !== null"
+          v-if="sideArtifacts[artifactPicker.team].artifact !== null"
           type="button"
-          class="remove-hero"
+          class="picker-remove"
           @click="setArtifactPicked(null)"
         >
           {{ i18n.t('app.import-remove-artifact') }}
@@ -503,7 +511,7 @@ const stateLabel = (state: CellState): string =>
 
 /* Rendered inside the teleported popup, hence the popup's own palette rather
    than the modal's --import-* tokens. */
-.remove-hero {
+.picker-remove {
   display: block;
   flex-shrink: 0;
   width: calc(100% - 8px);
@@ -519,7 +527,7 @@ const stateLabel = (state: CellState): string =>
   cursor: pointer;
 }
 
-.remove-hero:hover {
+.picker-remove:hover {
   color: #fff;
 }
 </style>

@@ -31,7 +31,7 @@ export type TeamImportRequest =
 
 export type TeamImportResponse =
   | { type: 'ready' }
-  | { type: 'reading'; id: string; reading: ScreenshotReading }
+  | { type: 'reading'; id: string; mapCount: number; reading: ScreenshotReading }
   | { type: 'error'; id: string | null; message: string }
 
 // The app compiles under the DOM lib, where `self` is a Window and its
@@ -81,7 +81,10 @@ scope.addEventListener('message', (event) => {
       return
     }
     const reading = readScreenshot(msg.image, refs, msg.mapCount)
-    scope.postMessage({ type: 'reading', id: msg.id, reading }, transferablesOf(reading))
+    scope.postMessage(
+      { type: 'reading', id: msg.id, mapCount: msg.mapCount, reading },
+      transferablesOf(reading),
+    )
   } catch (error) {
     scope.postMessage({
       type: 'error',

@@ -42,7 +42,7 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
-import type { TeamImportPlan } from '@/lib/teams/teamImport'
+import type { BoardRoster, TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
@@ -424,14 +424,15 @@ export const useGrids = defineStore('grids', () => {
   const sideLoadContexts = (scope: SideLoadOptions['scope']): GridContext[] =>
     scope === 'active' ? (active.value ? [active.value] : []) : contexts.value
 
+  // Whether a load onto this team would remove anything: a unit or its artifact.
+  const teamHasContent = (ctx: GridContext, team: Team): boolean =>
+    getTilesWithCharactersByTeam(ctx.grid, team).length > 0 ||
+    artifactSlot(ctx.artifacts, team) !== null
+
   // Read-only mirror of loadTeamSide's clear phase (the canDropCharacter
   // pattern): the two-step confirm must promise exactly what the load removes.
   const sideLoadWouldReplace = (dest: Team, scope: SideLoadOptions['scope']): boolean =>
-    sideLoadContexts(scope).some(
-      (ctx) =>
-        getTilesWithCharactersByTeam(ctx.grid, dest).length > 0 ||
-        artifactSlot(ctx.artifacts, dest) !== null,
-    )
+    sideLoadContexts(scope).some((ctx) => teamHasContent(ctx, dest))
 
   /* Stamp a one-side saved team (lib/teams/sideLoad) onto the live boards:
    * clear the destination side first via clearTeam (the dock's per-team wipe:
@@ -541,18 +542,18 @@ export const useGrids = defineStore('grids', () => {
     return { placed, skipped }
   }
 
-  // Read-only mirror of applyRosters' clear phase, for the two-step confirm.
-  const rostersWouldReplace = (plan: TeamImportPlan): boolean =>
-    plan.boards.some((board, i) => {
+  // The boards a match import stamps, shared by applyRosters and its
+  // read-only confirm mirror so the two can never drift.
+  const rosterTargets = (plan: TeamImportPlan): { ctx: GridContext; board: BoardRoster }[] =>
+    plan.boards.flatMap((board, i) => {
       const ctx = contexts.value[i]
-      return (
-        board !== null &&
-        ctx !== undefined &&
-        (getTilesWithCharacters(ctx.grid).length > 0 ||
-          ctx.artifacts.ally !== null ||
-          ctx.artifacts.enemy !== null)
-      )
+      return board && ctx ? [{ ctx, board }] : []
     })
+
+  const rostersWouldReplace = (plan: TeamImportPlan): boolean =>
+    rosterTargets(plan).some(({ ctx }) =>
+      [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)),
+    )
 
   /* Stamp match-import rosters (lib/teams/teamImport) onto the mapped boards.
    * Both sides of every mapped board clear first, so a hero moving from one
@@ -564,10 +565,7 @@ export const useGrids = defineStore('grids', () => {
    * artifact already used elsewhere on that team is skipped and counted.
    * Unmapped boards, maps, and provenance are untouched. */
   const applyRosters = (plan: TeamImportPlan): { placed: number; skipped: number } => {
-    const targets = plan.boards.flatMap((board, i) => {
-      const ctx = contexts.value[i]
-      return board && ctx ? [{ ctx, board }] : []
-    })
+    const targets = rosterTargets(plan)
     for (const { ctx } of targets) {
       for (const team of [Team.ALLY, Team.ENEMY]) {
         ctx.clearTeam(team)

@@ -12,12 +12,9 @@ import { readdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
 import sharp from 'sharp'
 
-const ROOT = resolve(import.meta.dirname, '..')
+import { arg } from './lib/shared.ts'
 
-const arg = (name: string): string | undefined => {
-  const i = process.argv.indexOf(`--${name}`)
-  return i >= 0 ? process.argv[i + 1] : undefined
-}
+const ROOT = resolve(import.meta.dirname, '..')
 
 const kb = async (path: string): Promise<string> =>
   `${((await stat(path)).size / 1024).toFixed(0)} KB`

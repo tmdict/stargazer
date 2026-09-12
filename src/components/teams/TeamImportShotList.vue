@@ -2,27 +2,27 @@
 /* The dropped screenshots as cards: a thumbnail that opens the full image in
    a lightbox, the map it fills (read from the strip), who won it (read from
    the Ally tab), both editable, and the reading's state. Two cards on one map
-   both turn red; the modal blocks Replace on it. */
+   both turn red; the modal blocks Save as New on it. */
 
 import { ref } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
 import IconExpand from '@/components/ui/IconExpand.vue'
 import ImageLightbox from '@/components/ui/ImageLightbox.vue'
-import type { ImportShot } from '@/composables/useTeamImport'
+import type { ImportShot, ShotError } from '@/composables/useTeamImport'
 import type { RecordNames } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shots, mapCount, names, selectedId } = defineProps<{
+const { shots, names } = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
   names: RecordNames
-  selectedId: string | null
 }>()
 
+const selectedId = defineModel<string | null>('selectedId', { required: true })
+
 const emit = defineEmits<{
-  select: [id: string]
   setMap: [id: string, mapIndex: number | null]
   setWinner: [id: string, winner: Team | null]
   remove: [id: string]
@@ -54,16 +54,18 @@ const reviewCount = (shot: ImportShot): number => {
 
 type StatusTone = 'plain' | 'warn' | 'error'
 
+const ERROR_TEXT: Record<ShotError, string> = {
+  'too-small': 'app.import-failed-small',
+  unsupported: 'app.import-failed-unsupported',
+  references: 'app.import-failed-references',
+  worker: 'app.import-failed-references',
+  read: 'app.import-failed-unsupported',
+}
+
 const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   if (shot.status === 'reading') return { text: i18n.t('app.import-reading'), tone: 'plain' }
   if (shot.status === 'failed') {
-    const key =
-      shot.error === 'too-small'
-        ? 'app.import-failed-small'
-        : shot.error === 'references' || shot.error === 'worker'
-          ? 'app.import-failed-references'
-          : 'app.import-failed-unsupported'
-    return { text: i18n.t(key), tone: 'error' }
+    return { text: i18n.t(ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
   }
   const warnings = shot.reading?.warnings ?? []
   if (warnings.some((w) => w.kind === 'no-panel'))
@@ -88,8 +90,8 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
       :class="{ selected: shot.id === selectedId, failed: shot.status === 'failed' }"
       role="button"
       tabindex="0"
-      @click="emit('select', shot.id)"
-      @keydown.enter.prevent="emit('select', shot.id)"
+      @click="selectedId = shot.id"
+      @keydown.enter.prevent="selectedId = shot.id"
     >
       <button
         type="button"

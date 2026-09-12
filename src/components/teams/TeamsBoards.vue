@@ -6,6 +6,8 @@
    the #teams panel of TeamsView's outer TabView; the tab strip and the roster
    live in TeamsView. Boards bind to their own context. */
 
+import { computed } from 'vue'
+
 import GridBoard from '@/components/grid/GridBoard.vue'
 import GridControls from '@/components/grid/GridControls.vue'
 import BoardsRow from '@/components/teams/BoardsRow.vue'
@@ -25,7 +27,7 @@ import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
-const { sourceName, pendingName } = defineProps<{
+const { sourceName, dirty, pendingName } = defineProps<{
   characters: readonly CharacterType[]
   activeMode: TeamModeKey
   // Effective grid-info visibility, derived by TeamsView from the shared pref.
@@ -66,6 +68,16 @@ const emit = defineEmits<{
 
 const grids = useGrids()
 const i18n = useI18nStore()
+
+// The dot beside the title: unsaved edits, or a match import's record name
+// still waiting for a free save slot.
+const titleStatus = computed(() =>
+  dirty
+    ? i18n.t('app.unsaved-changes')
+    : sourceName === null && pendingName !== null
+      ? i18n.t('app.unsaved-team')
+      : null,
+)
 const { dragging: swapDragging, dragPosition: swapDragPosition } = useGridSwap()
 
 // The title is a single rename target, so the composable's per-card key is a
@@ -130,7 +142,7 @@ const {
           </button>
         </template>
         <span
-          v-if="dirty || (sourceName === null && pendingName !== null)"
+          v-if="titleStatus"
           class="team-title-status"
           @mouseenter="unsavedTipOpen"
           @mouseleave="unsavedTipClose"
@@ -138,9 +150,7 @@ const {
           @touchstart.passive="unsavedTipTouchStart"
         >
           <span class="dirty-dot" />
-          <span class="status-text">{{
-            i18n.t(dirty ? 'app.unsaved-changes' : 'app.unsaved-team')
-          }}</span>
+          <span class="status-text">{{ titleStatus }}</span>
         </span>
       </span>
     </div>
@@ -205,9 +215,7 @@ const {
         variant="detailed"
         max-width="260px"
       >
-        <template #content>{{
-          i18n.t(dirty ? 'app.unsaved-changes' : 'app.unsaved-team')
-        }}</template>
+        <template #content>{{ titleStatus }}</template>
       </TooltipPopup>
     </Teleport>
   </div>

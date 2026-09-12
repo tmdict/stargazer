@@ -48,7 +48,7 @@ const handleAdd = async (files: File[]) => {
       v-model:fit="settings.fit"
     />
 
-    <ImageDropZone :compact="hasImages" :active="pasteActive" @add="handleAdd" />
+    <ImageDropZone :compact="hasImages" :paste-active="pasteActive" @add="handleAdd" />
 
     <StitchThumbnailList v-if="hasImages" :images @remove="removeImage" @reorder="reorder" />
 

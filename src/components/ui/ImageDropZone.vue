@@ -1,9 +1,9 @@
 <script setup lang="ts">
 /* Image intake shared by the Image Stitcher and the match import: drop,
    paste, or pick, emitting the image files. Paste is window-level so it works
-   without focusing the zone, which is why `active` exists: the Stitcher stays
-   mounted behind the Teams tab, and a paste meant for the import modal must
-   not feed it too. */
+   without focusing the zone, which is why `pasteActive` exists: the Stitcher
+   stays mounted behind the Teams tab, and a paste meant for the import modal
+   must not feed it too. */
 
 import { onMounted, onUnmounted, ref } from 'vue'
 
@@ -17,11 +17,11 @@ const emit = defineEmits<{
   add: [files: File[]]
 }>()
 
-const { active = true } = defineProps<{
+const { pasteActive = true } = defineProps<{
   // Slim "add more" affordance once the list is populated; full panel when empty.
   compact?: boolean
   // Whether window-level pastes belong to this zone right now.
-  active?: boolean
+  pasteActive?: boolean
   // Frosted variant for the dark modal surfaces, where the page's cream fill glares.
   dark?: boolean
 }>()
@@ -44,7 +44,7 @@ const handleDrop = (event: DragEvent) => {
 }
 
 const handlePaste = (event: ClipboardEvent) => {
-  if (!active) return
+  if (!pasteActive) return
   const files = imageFilesFromPaste(event)
   if (files.length) {
     event.preventDefault()
@@ -58,7 +58,7 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
 <template>
   <div
-    class="upload-dropzone drop-zone"
+    class="drop-zone"
     :class="{ dragging: isDragging, compact, dark }"
     role="button"
     tabindex="0"
@@ -88,9 +88,27 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
   align-items: center;
   justify-content: center;
   gap: var(--spacing-sm);
-  border-radius: var(--radius-large);
-  color: var(--color-text-secondary);
   padding: var(--spacing-2xl);
+  border: 2px dashed var(--color-border-primary);
+  border-radius: var(--radius-large);
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  text-align: center;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+/* All interactive states lift the background; focus and drag also cue the border. */
+.drop-zone:hover,
+.drop-zone:focus-visible,
+.drop-zone.dragging {
+  background: var(--color-bg-primary);
+}
+
+.drop-zone:focus-visible,
+.drop-zone.dragging {
+  border-color: var(--color-primary);
+  outline: none;
 }
 
 .drop-zone.dragging {

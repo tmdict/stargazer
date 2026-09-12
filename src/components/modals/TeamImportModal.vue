@@ -15,7 +15,12 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useTeamImport } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
-import { NAME_FORBIDDEN, type PlanIssue, type TeamImportPlan } from '@/lib/teams/teamImport'
+import {
+  isBlockingIssue,
+  NAME_FORBIDDEN,
+  type PlanIssue,
+  type TeamImportPlan,
+} from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
@@ -109,10 +114,7 @@ const issueText = (issue: PlanIssue): string => {
 
 const mappedCount = computed(() => plan.value.boards.filter((b) => b !== null).length)
 const blocked = computed(
-  () =>
-    mappedCount.value === 0 ||
-    nameInvalid.value ||
-    plan.value.issues.some((i) => i.kind === 'duplicate-map' || i.kind === 'cross-board-duplicate'),
+  () => mappedCount.value === 0 || nameInvalid.value || plan.value.issues.some(isBlockingIssue),
 )
 
 // The new team lands on the boards, so with content there it arms like
@@ -127,7 +129,7 @@ const handleSaveAsNew = (): void => {
 </script>
 
 <template>
-  <BaseModal :show="show" max-width="1000px" top-anchor @close="emit('close')">
+  <BaseModal :show max-width="1000px" top-anchor @close="emit('close')">
     <div class="import">
       <h1>{{ i18n.t('app.import-title') }}</h1>
       <div class="meta">
@@ -143,15 +145,14 @@ const handleSaveAsNew = (): void => {
         </span>
       </div>
 
-      <ImageDropZone dark :compact="shots.length > 0" :active="show" @add="handleAdd" />
+      <ImageDropZone dark :compact="shots.length > 0" :paste-active="show" @add="handleAdd" />
 
       <TeamImportShotList
         v-if="shots.length"
+        v-model:selected-id="selectedId"
         :shots
-        :map-count="mapCount"
+        :map-count
         :names
-        :selected-id="selectedId"
-        @select="selectedId = $event"
         @set-map="setMap"
         @set-winner="setWinner"
         @remove="removeShot"
@@ -205,9 +206,9 @@ const handleSaveAsNew = (): void => {
         <TeamImportReview
           :shot="selected"
           :names
-          @set-hero="(team, row, id) => setHero(selected!.id, team, row, id)"
-          @set-level="(team, row, field, level) => setLevel(selected!.id, team, row, field, level)"
-          @set-artifact="(team, id) => setArtifact(selected!.id, team, id)"
+          @set-hero="setHero"
+          @set-level="setLevel"
+          @set-artifact="setArtifact"
         />
       </section>
 
@@ -215,7 +216,7 @@ const handleSaveAsNew = (): void => {
         <li
           v-for="(issue, i) in plan.issues"
           :key="i"
-          :class="{ blocking: issue.kind !== 'unmapped' && issue.kind !== 'empty' }"
+          :class="{ blocking: isBlockingIssue(issue) }"
         >
           {{ issueText(issue) }}
         </li>

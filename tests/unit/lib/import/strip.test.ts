@@ -60,7 +60,7 @@ describe('readStrip', () => {
         who === Team.ALLY ? [235, 130, 60] : [60, 110, 200],
       )
     })
-    const reading = readStrip(shot, 1500)
+    const reading = readStrip(shot, 1500)!
     expect(reading.mapCount).toBe(5)
     expect(reading.mapIndex).toBe(2)
     expect(reading.mapResults).toEqual(results)
@@ -79,7 +79,7 @@ describe('readStrip', () => {
       if (i === 0) disc(shot, cx, cy, radius * 0.9, radius * 1.02, [60, 190, 80])
       disc(shot, cx + radius * 0.72, cy + radius * 0.72, 0, radius * 0.3, [235, 130, 60])
     }
-    const reading = readStrip(shot, 1500)
+    const reading = readStrip(shot, 1500)!
     expect(reading.mapCount).toBe(3)
     expect(reading.mapIndex).toBe(0)
     expect(reading.mapResults).toEqual([Team.ALLY, Team.ALLY, Team.ALLY])
@@ -88,7 +88,7 @@ describe('readStrip', () => {
   it('reports nothing when there is no ring', () => {
     const shot = createImage(W, H)
     fill(shot, [60, 55, 50])
-    expect(readStrip(shot, 1500)).toEqual({ mapIndex: null, mapResults: [], mapCount: null })
+    expect(readStrip(shot, 1500)).toBeNull()
   })
 })
 
@@ -133,8 +133,8 @@ describe('findTabs', () => {
     block(shot, 15, 165, 870, 940, blue)
     block(shot, 0, W, 760, 800, orange) // the summary bar spans the width: not a tab
     expect(findTabs(shot)).toEqual({
-      ally: { top: 160, bottom: 229, won: true },
-      enemy: { top: 870, bottom: 939, won: false },
+      ally: { top: 160, bottom: 229, colour: Team.ALLY },
+      enemy: { top: 870, bottom: 939, colour: Team.ENEMY },
     })
     expect(findTabs(createImage(W, H))).toBeNull()
   })
