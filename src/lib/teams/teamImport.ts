@@ -19,6 +19,8 @@ export interface ShotAssignment {
   reading: ScreenshotReading
   // 0-based board this screenshot fills; null while unmapped.
   mapIndex: number | null
+  // Who won this map as reviewed (the reading's tab colour until edited).
+  winner: Team | null
   // Review edits, keyed by `${team}:${row}`.
   overrides: Record<string, CellOverride>
   artifactOverrides: Partial<Record<Team, number | null>>
@@ -96,14 +98,14 @@ const cellArtifact = (shot: ShotAssignment, team: Team): number | null => {
 }
 
 /* Who won each map, as far as the screenshots say: a mapped screenshot's own
- * tab colour first, then the strip badges of every screenshot by majority. */
+ * result first, then the strip badges of every screenshot by majority. */
 export function mapResultsFrom(
   shots: readonly ShotAssignment[],
   mapCount: number,
 ): (Team | null)[] {
   return Array.from({ length: mapCount }, (_, map) => {
-    const own = shots.find((s) => s.mapIndex === map && s.reading.winner !== null)
-    if (own) return own.reading.winner
+    const own = shots.find((s) => s.mapIndex === map && s.winner !== null)
+    if (own) return own.winner
     let left = 0
     let right = 0
     for (const s of shots) {
