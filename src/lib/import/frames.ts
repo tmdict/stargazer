@@ -15,6 +15,7 @@ import {
   CARD_SEARCH,
   COLUMN_SCAN,
   PANEL_GAP_RANGE,
+  SCAN_FLOOR,
   SUMMARY_BAR,
 } from './layout'
 import { resultHue } from './strip'
@@ -183,10 +184,10 @@ export function scanForColumns(
     for (const pitch of range(CARD_PITCH_RANGE[0], CARD_PITCH_RANGE[1], 2)) {
       const combs = Array.from({ length: rows }, (_, i) => comb(profile, i, pitch))
       for (let i = 0; i < rows; i++) {
-        if (combs[i]! < ANCHOR_FLOOR) continue
+        if (combs[i]! < SCAN_FLOOR) continue
         for (let gap = PANEL_GAP_RANGE[0]; gap <= PANEL_GAP_RANGE[1]; gap += step) {
           const j = i + gap / step
-          if (j >= rows || combs[j]! < ANCHOR_FLOOR) continue
+          if (j >= rows || combs[j]! < SCAN_FLOOR) continue
           pairs.push({ ox: oxIndex, i, gap, pitch, mean: (combs[i]! + combs[j]!) / 2 })
         }
       }

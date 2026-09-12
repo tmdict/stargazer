@@ -1,4 +1,4 @@
 {
-  "en": "Cards not recognised: a frame the reader has no reference for",
-  "zh": "未识别到卡片：该卡框没有参考图"
+  "en": "Cards not recognised: no card frame matched",
+  "zh": "未识别到卡片：没有匹配到卡框"
 }
