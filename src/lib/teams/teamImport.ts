@@ -44,7 +44,6 @@ export type PlanIssue =
   | { kind: 'cross-board-duplicate'; team: Team; characterId: number; maps: number[] }
 
 export interface TeamImportPlan {
-  mode: TeamModeKey
   // One entry per board; null leaves that board untouched.
   boards: (BoardRoster | null)[]
   issues: PlanIssue[]
@@ -58,6 +57,11 @@ export interface RecordNames {
 }
 
 export const overrideKey = (team: Team, row: number): string => `${team}:${row}`
+
+// Unmapped and empty screenshots are simply left out; the rest would put a
+// wrong roster on a board.
+export const isBlockingIssue = (issue: PlanIssue): boolean =>
+  issue.kind === 'duplicate-map' || issue.kind === 'cross-board-duplicate'
 
 // Names sit between the operator and the brackets of the record name, so
 // those four characters are the only ones a name cannot carry.
@@ -93,10 +97,16 @@ const cellAttrs = (
   return attrs
 }
 
-const cellArtifact = (shot: ShotAssignment, team: Team): number | null => {
-  const override = shot.artifactOverrides[team]
+/* The artifact a side contributes: the override when one was made (null =
+ * removed), else the top candidate. */
+export const cellArtifactId = (
+  reading: ScreenshotReading,
+  team: Team,
+  overrides: Partial<Record<Team, number | null>>,
+): number | null => {
+  const override = overrides[team]
   if (override !== undefined) return override
-  return shot.reading.artifacts[team]?.candidates[0]?.artifactId ?? null
+  return reading.artifacts[team]?.candidates[0]?.artifactId ?? null
 }
 
 /* Who won each map, as far as the screenshots say: a mapped screenshot's own
@@ -144,7 +154,7 @@ export function buildTeamImportPlan(
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardRoster | null)[] = Array.from({ length: boardCount }, () => null)
   const issues: PlanIssue[] = []
-  const seen = new Map<number, ShotAssignment>()
+  const seen = new Set<number>()
   const unmapped = shots.filter((s) => s.mapIndex === null).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
   let empty = 0
@@ -157,7 +167,7 @@ export function buildTeamImportPlan(
       }
       continue
     }
-    seen.set(shot.mapIndex, shot)
+    seen.add(shot.mapIndex)
     const sides = {} as Record<Team, RosterEntry[]>
     for (const team of [Team.ALLY, Team.ENEMY]) {
       const entries: RosterEntry[] = []
@@ -175,7 +185,10 @@ export function buildTeamImportPlan(
     }
     boards[shot.mapIndex] = {
       sides,
-      artifacts: { ally: cellArtifact(shot, Team.ALLY), enemy: cellArtifact(shot, Team.ENEMY) },
+      artifacts: {
+        ally: cellArtifactId(shot.reading, Team.ALLY, shot.artifactOverrides),
+        enemy: cellArtifactId(shot.reading, Team.ENEMY, shot.artifactOverrides),
+      },
     }
   }
   if (empty > 0) issues.push({ kind: 'empty', count: empty })
@@ -195,7 +208,6 @@ export function buildTeamImportPlan(
   }
 
   return {
-    mode,
     boards,
     issues,
     suggestedName: suggestRecordName(names, mapResultsFrom(shots, boardCount)),

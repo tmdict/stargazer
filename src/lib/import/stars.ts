@@ -6,7 +6,7 @@
  * refined, so a short row is R0 whatever its colour. */
 
 import { hsvAt } from './image'
-import type { Rect, RgbaImage, StarFamily } from './types'
+import type { Rect, RefinementReading, RgbaImage, StarFamily } from './types'
 
 const BAND_ROWS = 7
 const SEARCH_DEPTH = 0.24
@@ -16,13 +16,6 @@ const PEAK_MIN_DISTANCE = 6
 // Six stars span most of the frame width; four or fewer peaks is a short row
 // beyond doubt, five may be two merged stars, so only four gates.
 const SHORT_ROW = 4
-
-export interface StarReading {
-  level: number
-  stars: number
-  family: StarFamily
-  band: Rect
-}
 
 const findBand = (shot: RgbaImage, box: Rect): Rect => {
   const x0 = box.x + Math.round(box.w * 0.1)
@@ -85,7 +78,7 @@ const findPeaks = (shot: RgbaImage, band: Rect): number[] => {
   return peaks.map((i) => band.x + i)
 }
 
-export function readStars(shot: RgbaImage, box: Rect): StarReading {
+export function readStars(shot: RgbaImage, box: Rect): RefinementReading {
   const band = findBand(shot, box)
   const peaks = findPeaks(shot, band)
   const stars = Math.min(6, peaks.length)
@@ -128,5 +121,5 @@ export function readStars(shot: RgbaImage, box: Rect): StarReading {
     level = 1
   }
   if (stars <= SHORT_ROW) level = 0
-  return { level, stars, family, band }
+  return { level, stars, family }
 }

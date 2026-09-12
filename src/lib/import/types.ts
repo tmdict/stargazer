@@ -31,11 +31,8 @@ export interface HeroCandidate {
 
 export type StarFamily = 'white' | 'purple' | 'gold' | 'red'
 
-export interface HeroReading {
-  // The matched frame, in the normalised screenshot's pixels.
-  box: Rect
-  // The card, cropped, for the review grid.
-  card: RgbaImage
+// Who the face is, once a side's five cells have been settled against each other.
+export interface HeroIdentity {
   // Best first. With `recognised` false none cleared the floor and the list
   // is only a hint for the picker.
   candidates: HeroCandidate[]
@@ -44,10 +41,31 @@ export interface HeroReading {
   margin: number
   // Whether the margin clears the bar for this kind of match.
   sure: boolean
+}
+
+export interface ParagonReading {
+  level: number
+  score: number
+  // Best score among the other levels' frames.
+  runnerUp: number
+  sure: boolean
+}
+
+export interface RefinementReading {
+  level: number
+  stars: number
+  family: StarFamily
+}
+
+export interface HeroReading extends HeroIdentity {
+  // The matched frame, in the normalised screenshot's pixels.
+  box: Rect
+  // The card, cropped, for the review grid.
+  card: RgbaImage
   // The face crop's descriptor, kept so a correction can be learned.
   descriptor: Float32Array
-  paragon: { level: number; score: number; runnerUp: number; sure: boolean }
-  refinement: { level: number; stars: number; family: StarFamily }
+  paragon: ParagonReading
+  refinement: RefinementReading
 }
 
 export interface ArtifactReading {
