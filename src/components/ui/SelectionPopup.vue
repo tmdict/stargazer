@@ -42,9 +42,14 @@ useOverlay({
   clickOutsideDelay: 100,
 })
 
+// Focus lands in the panel unless a child (the character palette's search
+// box) already took it, so Escape reaches a consumer's keydown handler on
+// the panel before any document-level listener.
 onMounted(() => {
   reposition()
   window.addEventListener('resize', reposition)
+  const el = popupRef.value
+  if (el && !el.contains(document.activeElement)) el.focus({ preventScroll: true })
 })
 onUnmounted(() => window.removeEventListener('resize', reposition))
 watch(() => props.position, reposition)
@@ -56,6 +61,7 @@ watch(() => props.position, reposition)
     class="selection-popup"
     :class="{ 'over-modal': overModal }"
     :style="{ left: `${coords.x}px`, top: `${coords.y}px` }"
+    tabindex="-1"
     @mouseleave="emit('close')"
   >
     <slot />
@@ -76,6 +82,7 @@ watch(() => props.position, reposition)
   z-index: 1000;
   max-width: 320px;
   max-height: 380px;
+  outline: none;
   /* A column so a consumer's scrollable grid (min-height: 0) gives way to its
      siblings inside the cap instead of spilling past the panel. */
   display: flex;

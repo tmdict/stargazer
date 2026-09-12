@@ -3,11 +3,14 @@
    card as the reader located it, the hero it matched, the paragon /
    refinement pill, and a state: sure, review (amber), or not recognised
    (red). The name opens the grid's own character palette with the reader's
-   candidates pinned first. Each side also shows its artifact with a dropdown.
-   Every edit is an override on the shot; nothing here touches a board. */
+   candidates pinned first. Each side also shows its artifact, which opens the
+   grid's artifact palette. Every edit is an override on the shot; nothing
+   here touches a board. */
 
 import { computed, ref } from 'vue'
 
+import ArtifactImage from '@/components/ArtifactImage.vue'
+import ArtifactSelectionPalette from '@/components/ArtifactSelectionPalette.vue'
 import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vue'
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
@@ -16,6 +19,7 @@ import { isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { HeroReading } from '@/lib/import/types'
 import { cellCharacterId, overrideKey, type RecordNames } from '@/lib/teams/teamImport'
+import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
@@ -49,11 +53,8 @@ const heroImage = (characterId: number | null): string => {
   return slug ? gameData.getCharacterImage(slug) : ''
 }
 
-const artifactName = (artifactId: number | null): string => {
-  if (artifactId === null) return i18n.t('app.import-no-hero')
-  const slug = gameData.getArtifactById(artifactId)?.name
-  return slug ? localizedDisplayName(i18n.t, 'artifact', slug) : String(artifactId)
-}
+const artifactName = (artifact: ArtifactType | null): string =>
+  artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : i18n.t('app.import-no-hero')
 
 type CellState = 'sure' | 'review' | 'none'
 
@@ -155,17 +156,39 @@ const setPicked = (characterId: number | null): void => {
 
 // ---------- artifacts ----------
 
-const artifactOf = (team: Team): number | null => {
+const artifactOf = (team: Team): ArtifactType | null => {
   const override = shot.artifactOverrides[team]
-  if (override !== undefined) return override
-  return shot.reading?.artifacts[team]?.candidates[0]?.artifactId ?? null
+  const id =
+    override !== undefined
+      ? override
+      : (shot.reading?.artifacts[team]?.candidates[0]?.artifactId ?? null)
+  return id === null ? null : (gameData.getArtifactById(id) ?? null)
 }
 
-const artifactSure = (team: Team): boolean => (shot.reading?.artifacts[team]?.margin ?? 0) >= 0.1
+const artifactSure = (team: Team): boolean =>
+  shot.artifactOverrides[team] !== undefined || (shot.reading?.artifacts[team]?.margin ?? 0) >= 0.1
 
-const onArtifact = (team: Team, event: Event): void => {
-  const value = (event.target as HTMLSelectElement).value
-  emit('setArtifact', team, value === '' ? null : Number(value))
+// Pre-season first, then by id: the grid popup's order.
+const artifacts = computed(() =>
+  [...gameData.artifacts].sort((a, b) => a.season - b.season || a.id - b.id),
+)
+
+const artifactPicker = ref<{ team: Team; position: { x: number; y: number } } | null>(null)
+
+const toggleArtifactPicker = (team: Team, event: MouseEvent): void => {
+  if (artifactPicker.value?.team === team) {
+    artifactPicker.value = null
+    return
+  }
+  const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+  artifactPicker.value = { team, position: { x: rect.left, y: rect.bottom + 4 } }
+}
+
+const setArtifactPicked = (artifactId: number | null): void => {
+  const target = artifactPicker.value
+  if (!target) return
+  emit('setArtifact', target.team, artifactId)
+  artifactPicker.value = null
 }
 
 const stateLabel = (state: CellState): string =>
@@ -177,25 +200,26 @@ const stateLabel = (state: CellState): string =>
 </script>
 
 <template>
-  <div class="review">
+  <div class="review-grid">
     <div v-for="team in SIDES" :key="team" class="side">
       <div class="side-head">
         <span class="side-label">{{ i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy') }}</span>
         <span class="side-player">{{ team === Team.ALLY ? names.left : names.right }}</span>
-        <label class="artifact">
+        <span class="artifact">
           <span class="artifact-label">{{ i18n.t('app.import-artifact') }}</span>
-          <select
-            class="artifact-select"
-            :class="{ review: !artifactSure(team) && shot.artifactOverrides[team] === undefined }"
-            :value="artifactOf(team) ?? ''"
-            @change="onArtifact(team, $event)"
+          <button
+            type="button"
+            class="artifact-btn"
+            :class="{ unsure: !artifactSure(team), open: artifactPicker?.team === team }"
+            :title="artifactName(artifactOf(team))"
+            @click="toggleArtifactPicker(team, $event)"
           >
-            <option value="">{{ i18n.t('app.import-no-hero') }}</option>
-            <option v-for="artifact in gameData.artifacts" :key="artifact.id" :value="artifact.id">
-              {{ artifactName(artifact.id) }}
-            </option>
-          </select>
-        </label>
+            <span class="artifact-icon" :class="{ empty: artifactOf(team) === null }">
+              <ArtifactImage v-if="artifactOf(team)" :artifact="artifactOf(team)!" />
+            </span>
+            <span class="artifact-name">{{ artifactName(artifactOf(team)) }}</span>
+          </button>
+        </span>
       </div>
       <div class="cells">
         <div v-for="view in sideCells[team]" :key="view.key" class="cell" :class="view.state">
@@ -237,7 +261,7 @@ const stateLabel = (state: CellState): string =>
       </div>
     </div>
 
-    <!-- Outside the modal's container, so its clicks and Escape are stopped
+    <!-- Outside the modal's container, so their clicks and Escape are stopped
          here rather than reaching the modal's own close listeners on document. -->
     <Teleport to="body">
       <SelectionPopup
@@ -258,12 +282,30 @@ const stateLabel = (state: CellState): string =>
           {{ i18n.t('app.import-remove-hero') }}
         </button>
       </SelectionPopup>
+      <SelectionPopup
+        v-if="artifactPicker"
+        :position="artifactPicker.position"
+        over-modal
+        @close="artifactPicker = null"
+        @click.stop
+        @keydown.esc.stop="artifactPicker = null"
+      >
+        <ArtifactSelectionPalette :artifacts @pick="setArtifactPicked($event.id)" />
+        <button
+          v-if="artifactOf(artifactPicker.team) !== null"
+          type="button"
+          class="remove-hero"
+          @click="setArtifactPicked(null)"
+        >
+          {{ i18n.t('app.import-remove-artifact') }}
+        </button>
+      </SelectionPopup>
     </Teleport>
   </div>
 </template>
 
 <style scoped>
-.review {
+.review-grid {
   display: flex;
   flex-direction: column;
   gap: var(--spacing-lg);
@@ -300,21 +342,56 @@ const stateLabel = (state: CellState): string =>
   color: var(--import-text-dim);
 }
 
-.artifact-select {
-  font: inherit;
-  font-size: 0.78rem;
-  max-width: 160px;
-  padding: 4px 6px;
+.artifact-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 200px;
+  padding: 3px 8px 3px 3px;
   border: 1px solid var(--import-border);
-  border-radius: var(--radius-medium);
+  border-radius: 999px;
   background: var(--import-surface);
   color: var(--import-text);
-  color-scheme: dark;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-fast),
+    color var(--transition-fast);
 }
 
-.artifact-select.review {
+.artifact-btn:hover,
+.artifact-btn:focus-visible,
+.artifact-btn.open {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.artifact-btn.unsure {
   border-color: var(--import-warn);
   background: var(--import-warn-tint);
+}
+
+/* The grid's round white-backed icon, at chip size. */
+.artifact-icon {
+  position: relative;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #fff;
+}
+
+.artifact-icon.empty {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.artifact-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cells {
