@@ -113,6 +113,17 @@ export function loadCharacterImages(): Record<string, string> {
   return images
 }
 
+// Portraits at the art's own width for the match-import matcher, loaded on
+// demand: the 100 px roster thumbnails lose the face detail the matcher needs.
+// Keyed by hero name; each value is a lazy import of the image URL.
+export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
+  const modules = import.meta.glob<string>('@/assets/images/character/*.png', {
+    query: { format: 'webp', quality: 85, w: 180 },
+    import: 'default',
+  })
+  return loadAssetsDict(modules)
+}
+
 export function loadArtifactImages(): Record<string, string> {
   if (artifactImagesCache) {
     return artifactImagesCache

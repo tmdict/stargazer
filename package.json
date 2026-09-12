@@ -8,6 +8,7 @@
     "build": "run-p type-check build:ssg",
     "build:ssg": "vite-ssg build",
     "build:spa": "npm run type-check && vite build",
+    "check:import": "tsx --tsconfig tsconfig.app.json scripts/check-import.ts",
     "format": "prettier --write --list-different src/ docs/ tests/",
     "import:artifacts": "tsx scripts/import-artifacts.ts",
     "import:charms": "tsx scripts/import-charms.ts",
