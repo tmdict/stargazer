@@ -436,14 +436,14 @@ export const useGrids = defineStore('grids', () => {
 
   /* Stamp a one-side saved team (lib/teams/sideLoad) onto the live boards:
    * clear the destination side first via clearTeam (the dock's per-team wipe:
-   * skill cleanup, companion cascade, attr purge), then place each unit on its
-   * saved hex, falling back to a random tile when the live map assigns that
-   * tile elsewhere or something already stands there. `invert` flips the
-   * destination team and 180-rotates every saved hex; scope 'active' targets
-   * only the active board (a 1v1 record loaded inside a multi-board mode).
-   * Units page-wide uniqueness already claims, and units with no landing tile
-   * at all, are skipped and counted. The other side, maps, and provenance are
-   * untouched. */
+   * skill cleanup, companion cascade, attr and artifact purge), then place
+   * each unit on its saved hex, falling back to a random tile when the live
+   * map assigns that tile elsewhere or something already stands there.
+   * `invert` flips the destination team and 180-rotates every saved hex; scope
+   * 'active' targets only the active board (a 1v1 record loaded inside a
+   * multi-board mode). Units page-wide uniqueness already claims, and units
+   * with no landing tile at all, are skipped and counted. The other side,
+   * maps, and provenance are untouched. */
   const loadTeamSide = (
     plan: SideLoadPlan,
     { invert, scope }: SideLoadOptions,
@@ -458,10 +458,7 @@ export const useGrids = defineStore('grids', () => {
 
     // clearTeam, not per-hex removal: it also drops the side's attr records,
     // so an evicted hero re-placed later can't resurrect its old levels.
-    for (const { ctx } of targets) {
-      ctx.clearTeam(dest)
-      ctx.removeArtifact(dest)
-    }
+    for (const { ctx } of targets) ctx.clearTeam(dest)
 
     const targetHexFor = (ctx: GridContext, unit: { hexId: number }): number | undefined =>
       invert
@@ -567,10 +564,7 @@ export const useGrids = defineStore('grids', () => {
   const applyRosters = (plan: TeamImportPlan): { placed: number; skipped: number } => {
     const targets = rosterTargets(plan)
     for (const { ctx } of targets) {
-      for (const team of [Team.ALLY, Team.ENEMY]) {
-        ctx.clearTeam(team)
-        ctx.removeArtifact(team)
-      }
+      for (const team of [Team.ALLY, Team.ENEMY]) ctx.clearTeam(team)
       ctx.seedPhantimalBaseline()
     }
     let placed = 0

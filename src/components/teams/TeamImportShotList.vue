@@ -10,14 +10,12 @@ import IconClose from '@/components/ui/IconClose.vue'
 import IconExpand from '@/components/ui/IconExpand.vue'
 import ImageLightbox from '@/components/ui/ImageLightbox.vue'
 import type { ImportShot, ShotError } from '@/composables/useTeamImport'
-import type { RecordNames } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shots, names } = defineProps<{
+const { shots } = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
-  names: RecordNames
 }>()
 
 const selectedId = defineModel<string | null>('selectedId', { required: true })
@@ -33,12 +31,6 @@ const i18n = useI18nStore()
 const SIDES = [Team.ALLY, Team.ENEMY] as const
 
 const zoomed = ref<ImportShot | null>(null)
-
-// The winner segments carry the typed player names once there are any.
-const sideLabel = (team: Team): string =>
-  team === Team.ALLY
-    ? names.left.trim() || i18n.t('app.import-left')
-    : names.right.trim() || i18n.t('app.import-right')
 
 const duplicated = (shot: ImportShot): boolean =>
   shot.mapIndex !== null && shots.some((s) => s !== shot && s.mapIndex === shot.mapIndex)
@@ -140,7 +132,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
             :disabled="shot.status !== 'ready'"
             @click.stop="emit('setWinner', shot.id, shot.winner === team ? null : team)"
           >
-            {{ sideLabel(team) }}
+            {{ i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy') }}
           </button>
         </div>
       </div>
@@ -160,10 +152,21 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 </template>
 
 <style scoped>
+/* The review grid's columns, gap, and breakpoint (TeamImportReview's .cells),
+   so the cards line up with the hero cells below and a full 5v5 set fits one
+   row. Below the breakpoint the cards wrap on a fixed minimum instead, since
+   five map buttons at touch size need the width. */
 .shot-list {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: var(--spacing-md);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--spacing-sm);
+}
+
+@media (max-width: 720px) {
+  .shot-list {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+  }
 }
 
 .shot {
@@ -251,14 +254,15 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   text-overflow: ellipsis;
 }
 
+/* At a fifth of the modal the map segments need the card's full width, so the
+   label sits above its control. */
 .shot-row {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
+  flex-direction: column;
+  gap: 3px;
 }
 
 .shot-label {
-  flex: 0 0 48px;
   font-size: 0.66rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -267,9 +271,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 }
 
 .seg {
-  display: inline-flex;
-  min-width: 0;
-  flex: 1 1 auto;
+  display: flex;
   border: 1px solid var(--import-border);
   border-radius: var(--radius-medium);
   overflow: hidden;
@@ -277,8 +279,8 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 
 .seg-btn {
   flex: 1 1 0;
-  min-width: 26px;
-  padding: 3px 4px;
+  min-width: 0;
+  padding: 3px 2px;
   border: none;
   border-right: 1px solid var(--import-border);
   background: transparent;
@@ -365,8 +367,7 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 
 @media (pointer: coarse) {
   .seg-btn {
-    min-width: 36px;
-    padding: 8px 6px;
+    padding: 8px 4px;
   }
 }
 </style>

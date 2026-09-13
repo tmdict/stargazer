@@ -2,8 +2,8 @@
 /* The match screenshot import: drop result screenshots, map each one to a
    board, review what was read, name the record, and save it as a new team on
    the boards. State lives in useTeamImport (module-level), so closing and
-   reopening keeps the shots; the modal only renders and emits the finished
-   plan upward. */
+   reopening keeps the shots; Save as New drops them once the plan is handed
+   up. The modal only renders and emits the finished plan upward. */
 
 import { computed, ref, watch } from 'vue'
 
@@ -49,6 +49,7 @@ const {
   plan,
   addFiles,
   removeShot,
+  clearShots,
   setMap,
   setWinner,
   setHero,
@@ -125,6 +126,7 @@ const handleSaveAsNew = (): void => {
   if (grids.rostersWouldReplace(plan.value) && !confirm('save')) return
   saveNames()
   emit('importMatch', plan.value)
+  clearShots()
 }
 </script>
 
@@ -152,7 +154,6 @@ const handleSaveAsNew = (): void => {
         v-model:selected-id="selectedId"
         :shots
         :map-count
-        :names
         @set-map="setMap"
         @set-winner="setWinner"
         @remove="removeShot"
