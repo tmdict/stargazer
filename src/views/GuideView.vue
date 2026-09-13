@@ -25,10 +25,13 @@ const groups = guideTagGroups()
 
 <template>
   <main>
-    <!-- Single dark column; reuses the skill reader surface (content.css). -->
     <article class="container guide-panel">
       <div class="content">
         <GuideUpgradeSection :lang />
+      </div>
+    </article>
+    <article class="container guide-panel">
+      <div class="content">
         <GuideTagSection
           v-for="g in groups"
           :key="g.tag"
@@ -42,6 +45,10 @@ const groups = guideTagGroups()
 </template>
 
 <style scoped>
+main {
+  gap: var(--stack-gap);
+}
+
 /* Override content.css's modal background/centering, as SkillReader does. */
 .guide-panel {
   background: #262626;
