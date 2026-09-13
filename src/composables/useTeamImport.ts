@@ -1,9 +1,10 @@
 /* Match screenshot import: file intake, decoding, the worker that reads the
  * screenshots, the reference images it needs, and the review state per
  * screenshot. Module-level state like useSelectionState, so the modal can be
- * closed and reopened without losing the shots; TeamsView disposes it on
- * leave. Images never leave the device: the references are fetched, the
- * screenshots are drawn to a canvas and handed to the worker as pixels. */
+ * closed and reopened without losing the shots; Save as New drops them once
+ * the plan is handed up, and TeamsView disposes everything on leave. Images
+ * never leave the device: the references are fetched, the screenshots are
+ * drawn to a canvas and handed to the worker as pixels. */
 
 import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
 
@@ -309,6 +310,13 @@ const decodeShot = async (file: File): Promise<RgbaImage> => {
   }
 }
 
+// Drop every shot; the worker and its references stay for the next import.
+const clearShots = (): void => {
+  pending.clear()
+  for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
+  shots.value = []
+}
+
 export function useTeamImport(mode: () => TeamModeKey): {
   shots: typeof shots
   referenceStatus: typeof referenceStatus
@@ -317,6 +325,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
   plan: ComputedRef<TeamImportPlan>
   addFiles: (files: File[]) => Promise<number>
   removeShot: (id: string) => void
+  clearShots: () => void
   setMap: (id: string, mapIndex: number | null) => void
   setWinner: (id: string, winner: Team | null) => void
   setHero: (id: string, team: Team, row: number, characterId: number | null) => void
@@ -459,6 +468,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
     plan,
     addFiles,
     removeShot,
+    clearShots,
     setMap,
     setWinner,
     setHero,
@@ -474,8 +484,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
 export function disposeTeamImport(): void {
   worker?.terminate()
   worker = null
-  pending.clear()
-  for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
-  shots.value = []
+  clearShots()
   referenceStatus.value = 'idle'
 }

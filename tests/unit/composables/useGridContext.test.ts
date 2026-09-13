@@ -140,4 +140,15 @@ describe('createGridContext attr re-keying and clearing', () => {
     expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_REFINEMENT)).toBe(0)
     expect(ctx.getAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON)).toBe(4)
   })
+
+  it("clearTeam drops the side's artifact and keeps the other side's", () => {
+    const ctx = setup()
+    ctx.setArtifact(Team.ALLY, 3)
+    ctx.setArtifact(Team.ENEMY, 4)
+
+    ctx.clearTeam(Team.ALLY)
+
+    expect(ctx.artifacts.ally).toBeNull()
+    expect(ctx.artifacts.enemy).toBe(4)
+  })
 })
