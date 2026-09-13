@@ -18,6 +18,7 @@ import { useSelectionState } from '@/composables/useSelectionState'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { Team } from '@/lib/types/team'
+import { artifactSlot } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
@@ -44,16 +45,16 @@ const visibleAttrIds = computed(() => (props.showUpgrades ? [ATTR_PARAGON, ATTR_
 const editLayers = computed(() => effectiveLayers(visibleAttrIds.value))
 const chipLit = (choice: AttrLayerChoice): boolean => litChoice(visibleAttrIds.value) === choice
 
-// The bulk upgrade actions edit real heroes only, but the clear removes every
-// unit — a side holding just placeholders or phantimals must still be
-// clearable.
-const sideState = (team: Team): { heroIds: number[]; hasUnits: boolean } => {
+// The bulk upgrade actions edit real heroes only, but the clear wipes the
+// whole side: a side holding just placeholders, phantimals, or an artifact
+// must still be clearable.
+const sideState = (team: Team): { heroIds: number[]; hasContent: boolean } => {
   const tiles = getTilesWithCharactersByTeam(props.context.grid, team)
   return {
     heroIds: tiles
       .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
       .map((tile) => tile.characterId!),
-    hasUnits: tiles.length > 0,
+    hasContent: tiles.length > 0 || artifactSlot(props.context.artifacts, team) !== null,
   }
 }
 
@@ -139,8 +140,8 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
       <button
         type="button"
         class="dock-chip dock-clear"
-        :class="{ armed: armed === String(side.team) }"
-        :disabled="!side.hasUnits"
+        :class="{ 'confirm-armed': armed === String(side.team) }"
+        :disabled="!side.hasContent"
         :aria-label="i18n.t('app.clear-team')"
         @click="clearTeam(side.team)"
         @mouseenter="showActionTip($event, 'app.clear-team')"
@@ -302,20 +303,9 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
   color: var(--color-danger);
 }
 .dock-clear:hover:not(:disabled),
-.dock-clear.armed {
+.dock-clear.confirm-armed {
   background: var(--color-danger);
   color: #fff;
-}
-/* Armed step of the two-step confirm: ring plus the shared confirm-ping pulse
-   (controls.css), so the state reads even at chip size. */
-.dock-clear.armed {
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-danger) 40%, transparent);
-  animation: confirm-ping 0.9s ease-out infinite;
-}
-@media (prefers-reduced-motion: reduce) {
-  .dock-clear.armed {
-    animation: none;
-  }
 }
 
 /* Centered on the bar's midline; the flanking clusters flow around it. The

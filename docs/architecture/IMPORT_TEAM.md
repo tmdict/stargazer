@@ -124,7 +124,7 @@ Pixel buffers are transferred both ways. An error with a `null` id means the tab
 
 ### Composable (`/src/composables/useTeamImport.ts`)
 
-Module-level state, so the modal can close and reopen without losing the shots; `TeamsView` disposes it on leave:
+Module-level state, so the modal can close and reopen without losing the shots; Save as New clears them once the plan is handed up, and `TeamsView` disposes it on leave:
 
 ```typescript
 interface ImportShot {
@@ -180,7 +180,7 @@ Key features:
 ### UI (`/src/components/modals/TeamImportModal.vue`, `/src/components/teams/TeamImport*.vue`)
 
 - **Modal**: Sets the `--import-*` palette (white at a few opacities, the game's orange and blue) on its root for the dark glass; renders the drop zone, the cards, the name fields and record name, the review of the selected card, the issues, and Save as New (armed confirm when a target board has content)
-- **Shot list**: A card per screenshot with a thumbnail (`ImageLightbox` on click), Map and Winner segmented controls (the winner segments carry the typed player names), and one status by priority: reading, failed, cards not recognised, wrong map count, choose a map, N to review, ready
+- **Shot list**: A card per screenshot on the review grid's five columns (the cards line up with the hero cells and a full 5v5 set fits one row), with a thumbnail (`ImageLightbox` on click), Map and Winner segmented controls (the winner segments read Ally and Enemy, so a long player name never crowds them), and one status by priority: reading, failed, cards not recognised, wrong map count, choose a map, N to review, ready
 - **Review grid**: Both sides, five cells each, with the card as located, the matched portrait, the editable paragon and refinement pill, and the cell's state. The name opens `CharacterSelectionPalette` and the artifact chip `ArtifactSelectionPalette`, the on-grid popups' own palettes, in a `SelectionPopup` layered over the modal; the popup stops clicks and Escape so the modal's own close listeners never see them
 - **Button**: `TeamImportButton`, icon-only in the control row after the Load menu; the modal is an async component so the Teams chunk stays small
 

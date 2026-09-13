@@ -13,6 +13,7 @@ import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
 import IconSwap from '@/components/ui/IconSwap.vue'
 import IconTrash from '@/components/ui/IconTrash.vue'
+import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import type { GridContext } from '@/composables/useGridContext'
 import { useGridExport } from '@/composables/useGridExport'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
@@ -59,6 +60,12 @@ const boardImageOptions = () => ({
 })
 const handleCopyImage = () => copyToClipboard(boardImageOptions())
 const handleDownloadImage = () => downloadAsImage(boardImageOptions())
+
+const { armed, confirm } = useArmedConfirm()
+const clearLabel = computed(() => i18n.t(armed.value !== null ? 'app.confirm' : 'app.clear'))
+const handleClear = (): void => {
+  if (confirm('clear')) context.clear()
+}
 </script>
 
 <template>
@@ -107,9 +114,10 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
       <button
         type="button"
         class="board-action board-clear"
-        :title="i18n.t('app.clear')"
-        :aria-label="i18n.t('app.clear')"
-        @click.stop="context.clear()"
+        :class="{ 'confirm-armed': armed !== null }"
+        :title="clearLabel"
+        :aria-label="clearLabel"
+        @click.stop="handleClear"
       >
         <IconTrash :size="16" />
       </button>
@@ -198,7 +206,8 @@ const handleDownloadImage = () => downloadAsImage(boardImageOptions())
   background: var(--color-danger);
 }
 
-.board-clear:hover {
+.board-clear:hover,
+.board-clear.confirm-armed {
   background: var(--color-danger-hover);
 }
 

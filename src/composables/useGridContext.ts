@@ -160,8 +160,8 @@ export interface GridContext {
   handleDrop: (payload: CharacterDropPayload, targetHexId: number) => boolean
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
-  // One side wiped: every unit on the team (heroes, phantimal, synergy) and
-  // its upgrade attrs; the team's artifact stays.
+  // One side wiped: every unit on the team (heroes, phantimal, synergy), its
+  // upgrade attrs, and its artifact.
   clearTeam: (team: Team) => void
   clearArtifacts: () => void
   clear: () => void
@@ -434,6 +434,7 @@ export function createGridContext(
     for (const key of attrs.keys()) {
       if (key.startsWith(`${team}:`)) attrs.delete(key)
     }
+    removeArtifact(team)
   }
 
   const clearArtifacts = (): void => {
