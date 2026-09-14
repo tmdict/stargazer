@@ -1,0 +1,4 @@
+{
+  "en": "{hero} is picked for two cells on the {side} side of map {map}; change one of them",
+  "zh": "{hero} 在第 {map} 张地图的{side}被选中了两次，请修改其中一个"
+}

@@ -248,9 +248,9 @@ export function findTabs(shot: RgbaImage): TabPair | null {
     }
     const fill = Math.max(orange, blue) / (x1 - x0)
     if (fill < TABS.fill) continue
-    let dark = 0
-    for (let x = d0; x < d1; x += 2) if (resultColourAt(shot, x, y) !== null) dark++
-    if (dark / ((d1 - d0) / 2) > TABS.dark) continue
+    let coloured = 0
+    for (let x = d0; x < d1; x += 2) if (resultColourAt(shot, x, y) !== null) coloured++
+    if (coloured / ((d1 - d0) / 2) > TABS.dark) continue
     const colour = orange >= blue ? Team.ALLY : Team.ENEMY
     const last = runs[runs.length - 1]
     if (last && y - last.bottom <= 2 && last.colour === colour) last.bottom = y

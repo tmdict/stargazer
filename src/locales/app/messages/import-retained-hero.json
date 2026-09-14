@@ -1,0 +1,4 @@
+{
+  "en": "{hero} is already on the {side} side of map {map}, which this import leaves as it is, so it will be skipped",
+  "zh": "{hero} 已在第 {map} 张地图的{side}（本次导入不改动该地图），将被跳过"
+}
