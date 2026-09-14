@@ -58,7 +58,7 @@ const ALIGNMENTS: readonly [number, number][] = [
   [2, 3],
 ]
 
-const artBoxOf = (box: Rect): Rect => {
+export const artBoxOf = (box: Rect): Rect => {
   const w = Math.round(box.w * ART_BOX.w)
   return {
     x: Math.round(box.x + box.w * ART_BOX.x),

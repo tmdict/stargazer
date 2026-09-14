@@ -19,7 +19,12 @@ const portraits = [7, 9].map((characterId) => ({ characterId, image: createImage
 
 describe('curated hero references', () => {
   it('keeps curated matches when browser learning is cleared, without duplicating promoted examples', () => {
-    const local = [icon, { ...icon, characterId: 9 }]
+    const other = {
+      ...icon,
+      characterId: 9,
+      descriptor: encodeLearned(new Float32Array(DESCRIPTOR_LENGTH).fill(-0.02)),
+    }
+    const local = [icon, other]
     const table = buildImportHeroTable(portraits, local)
     const learnedIds = (result: typeof table) =>
       Array.from(result.ids).filter((_, i) => result.learnedRows[i] === 1)
@@ -28,7 +33,16 @@ describe('curated hero references', () => {
     const cleared = buildImportHeroTable(portraits, [])
     expect(learnedIds(cleared)).toEqual([7])
     expect(rankHeroes(cleared, [face])[0]).toMatchObject({ characterId: 7, learned: true })
-    expect(local).toEqual([icon, { ...icon, characterId: 9 }])
+    expect(local).toEqual([icon, other])
+  })
+
+  it('lets a local correction override the same curated face until local learning is cleared', () => {
+    const table = buildImportHeroTable(portraits, [{ ...icon, characterId: 9 }])
+    expect(rankHeroes(table, [face])[0]).toMatchObject({ characterId: 9, learned: true })
+    expect(rankHeroes(buildImportHeroTable(portraits), [face])[0]).toMatchObject({
+      characterId: 7,
+      learned: true,
+    })
   })
 
   it('excludes descriptors for heroes absent from the loaded roster', () => {
@@ -53,6 +67,15 @@ describe('curated hero references', () => {
     const { default: data } = await vi.importActual<{ default: unknown }>(
       '@/data/import/hero-icons.json',
     )
-    expect(data).toEqual(learnedIconEnvelope(readLearnedIcons(data)))
+    const icons = readLearnedIcons(data)
+    expect(data).toEqual(learnedIconEnvelope(icons))
+    expect(new Set(icons.map((icon) => icon.descriptor)).size).toBe(icons.length)
+    const heroes = Object.values(
+      import.meta.glob<{ id: number }>('@/data/character/*.json', {
+        eager: true,
+        import: 'default',
+      }),
+    )
+    for (const icon of icons) expect(heroes.some((hero) => hero.id === icon.characterId)).toBe(true)
   })
 })

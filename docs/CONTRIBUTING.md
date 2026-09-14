@@ -34,7 +34,6 @@ npm run test:it     # Integration tests only
 npm run test:watch  # Run tests in watch mode
 npm run prep        # format + type-check + lint + test
 npm run import:seasonal  # Regenerate seasonal data/locales (see below)
-npm run import:refs      # Rewrite the match-import reference WebPs in a chaldea checkout
 npm run check:import     # Run the match-import readers over a folder of screenshots
 ```
 
@@ -73,7 +72,7 @@ Development always runs in SPA mode for hot module replacement.
 │   ├── styles/         # Global CSS styles
 │   ├── main.ts         # SPA entry point
 │   └── main.ssg.ts     # SSG entry point (pre-rendering)
-├── scripts/            # Seasonal data importers, match-import reference and check scripts
+├── scripts/            # Seasonal data importers and the match-import reader check
 └── tests/
     ├── unit/           # Mirrors src/ (lib, stores, composables, utils, skills, ...)
     └── integration/

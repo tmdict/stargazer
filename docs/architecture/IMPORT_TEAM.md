@@ -179,43 +179,30 @@ type PlanIssue =
 - **Shot list**: A card per screenshot on the review grid's five columns, with a thumbnail (`ImageLightbox` on click), Map and Winner segmented controls, and one status by priority: reading, failed, cards not recognised, wrong map count, choose a map, N to review, ready. The card selects on click; its name is a pressed-state button and the keyboard handle, so the nested buttons keep their own activation
 - **Review grid**: Both sides, five cells each, with the card as located, the matched portrait, the editable paragon and refinement pill (`UpgradePill`), and the cell's state. The name opens `CharacterSelectionPalette` and the artifact chip `ArtifactSelectionPalette` in a `SelectionPopup` layered over the modal; the popup stops clicks and Escape, one picker is open at a time, the grid is keyed by shot, and a tap elsewhere on the grid closes the picker
 - **Button**: `TeamImportButton`, icon-only after the Load menu, mounts the modal on first use and keeps it. The modal and the worker are their own chunks; the Teams chunk carries the composable (for `disposeTeamImport`) and the readers it imports
-- **Download corrections**: A footer link exports loaded screenshot edits and saved browser learning for calibration; screenshot labels live only while their cards do
+- **Download corrections**: A footer link exports loaded screenshot edits and saved browser learning for offline review; screenshot labels live only while their cards do
 
-## Calibration Boundary
+## Reference Descriptors
 
-Routine hero calibration changes reference data in [`/src/data/import/hero-icons.json`](../../src/data/import/hero-icons.json). `buildImportHeroTable` in `references.ts` is the entry point for both the worker and `check:import`; it combines portrait images, approved descriptors and browser learning without changing ranking or confidence rules. The curated file is empty until reviewed examples are promoted.
+[`hero-icons.json`](../../src/data/import/hero-icons.json) ships approved face descriptors for icons the portrait references cannot match. `buildImportHeroTable` in `references.ts` merges them with the portraits and the browser's own learning for the worker and the checker alike; the readers' geometry, ranking and confidence rules do not depend on them.
 
-| Layer                                               | Owns                                                         | Changes during routine calibration                |
-| --------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
-| Capture and export (`useTeamImport`)                | Explicit edits, diagnostics, browser learning                | None                                              |
-| Private calibration workspace                       | Screenshots, labels, crop review, experiments and evaluation | Review and evaluate new examples outside the repo |
-| Curated references (`hero-icons.json`)              | Approved hero descriptors                                    | Add, replace or remove reviewed examples          |
-| Reference assembly (`references.ts`)                | Compatible examples for known heroes, exact deduplication    | None                                              |
-| Readers (`layout`, `frames`, `heroes`, `artifacts`) | Crop geometry, descriptors, scoring and confidence           | Separate algorithm work when evidence requires it |
+- **Envelope**: The same `{ v: 1, spec: { descriptor: [32, 24], box: [0.23, 0.2, 0.69] }, icons: [{ characterId, descriptor, learnedAt }] }` as browser storage and the corrections export, validated by `readLearnedIcons`; the reference-file test rejects unknown ids, invalid envelopes and duplicate descriptors
+- **Precedence**: Each descriptor appears once in the table; a local correction for identical descriptor bytes wins over the shipped label, and forgetting local learning restores it. Different crops of the same hero stay separate examples
+- **Nature**: Reference data, never averaged or voted; shipped descriptors use the learned-match confidence rules, no screenshot is uploaded, and no client correction edits the file
+- **Boundary**: The app, build and tests consume the bundled reference file directly. Its format describes the matcher input; producing those values requires no runtime integration or external tooling dependency
 
 ### Export and Descriptor Contract
 
-- **Correction export**: `format: "stargazer-import-corrections"`, `version: 2`, `createdAt`, `shots` and `learnedIcons`; `shots` is an array of `{ source, context, predicted, labels }` records (the file's name, size and SHA-256; the season, board count and image width the labels were made under; the original reading; the explicit edits). A missing label means unreviewed, `null` an explicit removal; image buffers and per-shot descriptors are excluded
-- **Saved learning**: `learnedIcons` is a snapshot of the browser's saved hero descriptors, downloadable with no screenshots loaded; it has no source-image provenance and no artifact learning, so original screenshots are kept for crop review
-- **Descriptor data**: A 32×24 RGB face crop becomes 2,304 normalised values, quantised to Int8 at ×400 and base64 encoded; SHA-256 only identifies source files
-- **Shared envelope**: Browser storage, `learnedIcons` and `hero-icons.json` use `{ v: 1, spec: { descriptor: [32, 24], box: [0.23, 0.2, 0.69] }, icons: [{ characterId, descriptor, learnedAt }] }`; `learned.ts` validates the version, geometry and encoded length. Bump `v` when normalisation or quantisation changes; other face-crop changes regenerate descriptors from source images
-- **Reference lifetime**: Curated defaults ship with the app; browser learning is capped at 100 entries and stays separate, so forgetting it preserves the defaults. Exact duplicates for the same hero are included once; promoted examples use the learned-match confidence rules. Downloads are review input, never promoted or uploaded automatically
-
-### Promoting a Calibration Round
-
-1. Download corrections and retain their original screenshots; verify hashes before associating labels with pixels
-2. Outside the repository, confirm hero labels and crop quality, then select or regenerate descriptors with `heroes.ts` and the current envelope; a wrong crop needs localization work, not a new portrait
-3. Evaluate candidate references on labelled screenshots reserved from training, checking per-hero errors and confidently wrong readings as well as totals
-4. Promote approved entries to `hero-icons.json`, run `check:import` against the private regression set plus lint, type-check and tests, then deploy; a routine hero reference update needs no reader, UI or export change
-
-Artifacts use reference images from the app and Chaldea, not the hero descriptor file; in-game artifact examples or badge localization would be a separate reader change with its own evaluation.
+- **Download**: `stargazer-import-corrections` version 2: `createdAt`, `shots` and `learnedIcons`; each shot is `{ source, context, predicted, labels }` (filename, size and SHA-256; season, board count and image width; the original reading; sparse explicit edits). Pixels and per-shot vectors are omitted; a missing label is unreviewed, `null` an explicit removal
+- **Saved descriptors**: `learnedIcons` is the browser's learning from this and earlier sessions, without source-image provenance; the original images are what crop verification or regeneration needs
+- **Envelope**: Browser storage, `learnedIcons` and the shared JSON use `{ v: 1, spec: { descriptor: [32, 24], box: [0.23, 0.2, 0.69] }, icons: [{ characterId, descriptor, learnedAt }] }`, validated by `readLearnedIcons`
+- **Encoding**: A face crop yields 2,304 per-channel normalised RGB values, quantised to Int8 at ×400 and base64 encoded, only ever through `heroDescriptor` and `encodeLearned` in `heroes.ts`; SHA-256 identifies source files, never faces
+- **Compatibility**: Bump `v` for a change to normalisation or quantisation; a crop change updates the contract and regenerates descriptors from the original images. Reference updates must validate the complete envelope; incompatible data or dropped entries must not be accepted as a partial update
 
 ## References and Scripts
 
-- **chaldea `img/import/`**: Each reference as a PNG (the source of truth, never fetched) beside the WebP the app fetches: `frame-p0` … `frame-p4-crown` (the paragon frames), `star-r*` (the star rows, reference material only), `skins.json` (`{ "<hero slug>": ["<file>", …] }`) and `skin/<hero slug>-<name>` for costume captures. Fetched through `importReferenceUrl` and `importSkinsManifestUrl`; a missing manifest means no costumes
-- **Artifacts**: The bundled permanent icons plus the seasonal set already on chaldea (`seasonArtifactImageUrl`), resized to 128 px before the table is built
-- **`npm run import:refs -- --chaldea <checkout>`**: Rewrites every WebP from its PNG and regenerates `skins.json` from the skin folder (left as is when the folder is absent). Adding a costume is: drop the PNG, run it, commit chaldea
-- **`npm run check:import -- --samples <dir> --frames <checkout>/img/import [--artifacts <checkout>/img/seasonal/artifact] [--maps 5] [--truth <json>]`**: Runs the readers over a folder of screenshots and prints every reading, scored against a truth file when given (`{ "<file>": { "maps": 3, "cells": { "a1": { "hero": "gunnar", "p": 4, "r": 4 }, … } } }`) and flagging a strip count that disagrees with the expected maps. The only regression check on real images, and the first thing to run when the game changes its result screen. On the maintainer's sample set (15 screenshots, 110 graded hero cells) it reads 103 of the 110 heroes (every sure cell right), 108 paragon and 104 refinement levels
+- **chaldea `dist/img/import/`**: The references the app fetches from chaldea.tmdict.com, each WebP beside its PNG source: `frame-p0` … `frame-p4-crown` (the paragon frames), `star-r*` (the star rows, reference material only), `skins.json` (`{ "<hero slug>": ["<file>", …] }`) and `skin/<hero slug>-<name>` for costume captures; a missing manifest means no costumes. The manifest maps hero slugs to published costume filenames; the runtime only consumes those assets
+- **Artifacts**: The bundled permanent icons plus the seasonal set on chaldea (`seasonArtifactImageUrl`), capped at 128 px before the table is built
+- **`npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [--maps 5]`**: Runs the readers over a folder of screenshots and prints every reading, scored against the `truth.json` beside them (`{ "<file>": { "maps": 3, "cells": { "a1": { "hero": "gunnar", "p": 4, "r": 4 }, … } } }`) and flagging a strip count that disagrees with the expected maps. References come from chaldea.tmdict.com like the app's, or from a local copy of the published `img/` tree when one is named, decoded the way the app decodes them (`scripts/lib/importTooling.ts`: EXIF orientation applied, portraits re-encoded as the shipped WebP, artifact icons capped at 128 px). The only regression check on real images, and the first thing to run when the game changes its result screen
 
 ## Testing
 
