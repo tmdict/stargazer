@@ -22,6 +22,9 @@ import {
   cellArtifactId,
   cellCharacterId,
   overrideKey,
+  reviewStates,
+  SIDES,
+  type CellState,
   type RecordNames,
 } from '@/lib/teams/teamImport'
 import type { ArtifactType } from '@/lib/types/artifact'
@@ -45,8 +48,6 @@ const emit = defineEmits<{
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
 
-const SIDES = [Team.ALLY, Team.ENEMY] as const
-
 const heroName = (characterId: number | null): string => {
   if (characterId === null) return i18n.t('app.import-none')
   const slug = gameData.getCharacterNameById(characterId)
@@ -60,8 +61,6 @@ const heroImage = (characterId: number | null): string => {
 
 const artifactName = (artifact: ArtifactType | null): string =>
   artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : i18n.t('app.import-none')
-
-type CellState = 'sure' | 'review' | 'none'
 
 interface CellView {
   key: string
@@ -79,22 +78,19 @@ interface CellView {
 const cells = (team: Team): CellView[] => {
   const reading = shot.reading
   if (!reading) return []
+  const states = reviewStates(reading, team, shot.overrides)
   return reading.sides[team].map((cell, row) => {
     const key = overrideKey(team, row)
     const override = shot.overrides[key] ?? {}
-    const characterId = cellCharacterId(reading, team, row, shot.overrides)
-    const edited = override.characterId !== undefined
-    const state: CellState =
-      characterId === null && !edited ? 'none' : edited || cell.sure ? 'sure' : 'review'
     return {
       key,
       row,
       cell,
-      characterId,
+      characterId: cellCharacterId(reading, team, row, shot.overrides),
       paragon: override.paragon ?? cell.paragon.level,
       refinement: override.refinement ?? cell.refinement.level,
-      state,
-      edited,
+      state: states[row]!,
+      edited: override.characterId !== undefined,
       card: shot.cards[key] ?? '',
     }
   })
@@ -130,6 +126,7 @@ const anchorBelow = (event: MouseEvent): { x: number; y: number } => {
 }
 
 const togglePicker = (team: Team, row: number, key: string, event: MouseEvent): void => {
+  artifactPicker.value = null
   picker.value = picker.value?.key === key ? null : { team, row, key, position: anchorBelow(event) }
 }
 
@@ -185,6 +182,7 @@ const artifacts = computed(() =>
 const artifactPicker = ref<{ team: Team; position: { x: number; y: number } } | null>(null)
 
 const toggleArtifactPicker = (team: Team, event: MouseEvent): void => {
+  picker.value = null
   artifactPicker.value =
     artifactPicker.value?.team === team ? null : { team, position: anchorBelow(event) }
 }
@@ -196,16 +194,24 @@ const setArtifactPicked = (artifactId: number | null): void => {
   artifactPicker.value = null
 }
 
-const stateLabel = (state: CellState): string =>
-  state === 'sure'
-    ? ''
-    : state === 'review'
-      ? i18n.t('app.import-review')
-      : i18n.t('app.import-unrecognised')
+// The modal stops clicks before they reach the document, where the popup's
+// own click-outside listens, so a tap elsewhere on the grid closes the
+// pickers here (a mouse leaving the popup already does).
+const closePickers = (event: MouseEvent): void => {
+  if ((event.target as HTMLElement).closest('.cell-name, .artifact-btn')) return
+  picker.value = null
+  artifactPicker.value = null
+}
+
+const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
+  review: 'app.import-review',
+  none: 'app.import-unrecognised',
+  duplicate: 'app.picked-twice',
+}
 </script>
 
 <template>
-  <div class="review-grid">
+  <div class="review-grid" @click="closePickers">
     <div v-for="team in SIDES" :key="team" class="side">
       <div class="side-head">
         <span class="side-label">{{ i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy') }}</span>
@@ -227,6 +233,9 @@ const stateLabel = (state: CellState): string =>
             </span>
             <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
           </button>
+          <span v-if="!sideArtifacts[team].sure" class="cell-state review">
+            {{ i18n.t('app.import-review') }}
+          </span>
         </span>
       </div>
       <div class="cells">
@@ -258,12 +267,12 @@ const stateLabel = (state: CellState): string =>
               @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
               @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
             />
-            <span v-if="view.edited" class="cell-state edited">{{
+            <span v-if="view.state !== 'sure'" class="cell-state" :class="view.state">
+              {{ i18n.t(STATE_LABEL[view.state]) }}
+            </span>
+            <span v-else-if="view.edited" class="cell-state edited">{{
               i18n.t('app.import-edited')
             }}</span>
-            <span v-else-if="view.state !== 'sure'" class="cell-state" :class="view.state">
-              {{ stateLabel(view.state) }}
-            </span>
           </div>
         </div>
       </div>
@@ -430,7 +439,8 @@ const stateLabel = (state: CellState): string =>
   background: var(--import-warn-tint);
 }
 
-.cell.none {
+.cell.none,
+.cell.duplicate {
   border-color: var(--import-bad);
   background: var(--import-bad-tint);
 }
@@ -501,12 +511,19 @@ const stateLabel = (state: CellState): string =>
   color: var(--import-warn);
 }
 
-.cell-state.none {
+.cell-state.none,
+.cell-state.duplicate {
   color: var(--import-bad);
 }
 
 .cell-state.edited {
   color: var(--color-accent);
+}
+
+@media (pointer: coarse) {
+  .cell-name {
+    padding: 8px 6px;
+  }
 }
 
 /* Rendered inside the teleported popup, hence the popup's own palette rather

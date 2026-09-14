@@ -4,9 +4,9 @@ import { onMounted, onUnmounted, ref, watch } from 'vue'
 import { useOverlay } from '@/composables/useOverlay'
 import { clampX, clampY } from '@/utils/viewport'
 
-// Shared chrome for the on-grid selection popups (character / artifact pickers):
-// a fixed-positioned, click-outside-dismissing panel. Consumers supply the grid
-// of selectable items via the default slot.
+// Shared chrome for the selection popups (the on-grid character / artifact
+// pickers and the import review's): a fixed-positioned, click-outside-dismissing
+// panel. Consumers supply the grid of selectable items via the default slot.
 const props = defineProps<{
   position: { x: number; y: number }
   // Layer above an open modal (the match import's review picker); the default

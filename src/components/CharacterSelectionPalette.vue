@@ -12,11 +12,7 @@ import { matchCharacterNames } from '@/composables/useSkillSearch'
 import type { CharacterType } from '@/lib/types/character'
 import { useI18nStore } from '@/stores/i18n'
 
-const {
-  characters,
-  pinned = [],
-  enterHint,
-} = defineProps<{
+const { characters, pinned = [] } = defineProps<{
   // The pickable pool, in display order.
   characters: readonly CharacterType[]
   // Listed in their own row above the pool while no filter is active.
@@ -56,11 +52,12 @@ const listed = computed(() =>
     : filteredCharacters.value,
 )
 
-// Type-to-pick: focus starts in the search box even on touch — the popup only
-// exists on tablet-and-wider layouts (phones place via the roster sheet), and
-// iPad taps land here expecting to type. Focusing in the mount tick matters:
-// iPadOS raises the keyboard only while the opening tap's user activation is
-// live.
+// Type-to-pick: focus starts in the search box even on touch. The on-grid
+// popup exists only on tablet-and-wider layouts (phones place via the roster
+// sheet) and iPad taps land here expecting to type; the import review opens
+// it on phones too, where the keyboard is the way to find a hero among the
+// pinned candidates. Focusing in the mount tick matters: iPadOS raises the
+// keyboard only while the opening tap's user activation is live.
 const searchInput = ref<HTMLInputElement>()
 onMounted(() => searchInput.value?.focus({ preventScroll: true }))
 

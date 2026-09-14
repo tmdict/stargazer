@@ -9,11 +9,17 @@ import { ref } from 'vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconExpand from '@/components/ui/IconExpand.vue'
 import ImageLightbox from '@/components/ui/ImageLightbox.vue'
-import type { ImportShot, ShotError } from '@/composables/useTeamImport'
+import {
+  shotMapIndex,
+  shotWinner,
+  type ImportShot,
+  type ShotError,
+} from '@/composables/useTeamImport'
+import { reviewStates, SIDES } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { useI18nStore } from '@/stores/i18n'
 
-const { shots } = defineProps<{
+const { shots, mapCount } = defineProps<{
   shots: readonly ImportShot[]
   mapCount: number
 }>()
@@ -28,20 +34,23 @@ const emit = defineEmits<{
 
 const i18n = useI18nStore()
 
-const SIDES = [Team.ALLY, Team.ENEMY] as const
-
 const zoomed = ref<ImportShot | null>(null)
 
-const duplicated = (shot: ImportShot): boolean =>
-  shot.mapIndex !== null && shots.some((s) => s !== shot && s.mapIndex === shot.mapIndex)
+const mapIndexOf = (shot: ImportShot): number | null => shotMapIndex(shot, mapCount)
 
+const duplicated = (shot: ImportShot): boolean => {
+  const mapIndex = mapIndexOf(shot)
+  return mapIndex !== null && shots.some((s) => s !== shot && mapIndexOf(s) === mapIndex)
+}
+
+// Cells still to look at, as the review grid shows them: an edit settles its cell.
 const reviewCount = (shot: ImportShot): number => {
-  if (!shot.reading) return 0
-  let n = 0
-  for (const team of SIDES) {
-    for (const cell of shot.reading.sides[team]) if (!cell.sure) n++
-  }
-  return n
+  const reading = shot.reading
+  if (!reading) return 0
+  return SIDES.reduce(
+    (n, team) => n + reviewStates(reading, team, shot.overrides).filter((s) => s !== 'sure').length,
+    0,
+  )
 }
 
 type StatusTone = 'plain' | 'warn' | 'error'
@@ -59,13 +68,13 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   if (shot.status === 'failed') {
     return { text: i18n.t(ERROR_TEXT[shot.error ?? 'unsupported']), tone: 'error' }
   }
-  const warnings = shot.reading?.warnings ?? []
-  if (warnings.some((w) => w.kind === 'no-panel'))
+  const reading = shot.reading
+  if (reading?.warnings.some((w) => w.kind === 'no-panel'))
     return { text: i18n.t('app.import-no-panel'), tone: 'error' }
-  const count = warnings.find((w) => w.kind === 'map-count')
-  if (count?.kind === 'map-count')
-    return { text: i18n.t('app.import-mode-mismatch', { count: count.found }), tone: 'error' }
-  if (shot.mapIndex === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
+  const found = reading?.mapCount ?? null
+  if (found !== null && found !== mapCount)
+    return { text: i18n.t('app.import-mode-mismatch', { count: found }), tone: 'error' }
+  if (mapIndexOf(shot) === null) return { text: i18n.t('app.import-choose-map'), tone: 'warn' }
   const n = reviewCount(shot)
   return n
     ? { text: i18n.t('app.import-to-review', { count: n }), tone: 'warn' }
@@ -80,10 +89,9 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
       :key="shot.id"
       class="shot"
       :class="{ selected: shot.id === selectedId, failed: shot.status === 'failed' }"
-      role="button"
-      tabindex="0"
+      role="group"
+      :aria-label="shot.name"
       @click="selectedId = shot.id"
-      @keydown.enter.prevent="selectedId = shot.id"
     >
       <button
         type="button"
@@ -95,7 +103,15 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
         <img :src="shot.thumb" alt="" />
         <IconExpand :size="14" class="shot-zoom" />
       </button>
-      <div class="shot-name" :title="shot.name">{{ shot.name }}</div>
+      <button
+        type="button"
+        class="shot-name"
+        :title="shot.name"
+        :aria-pressed="shot.id === selectedId"
+        @click.stop="selectedId = shot.id"
+      >
+        {{ shot.name }}
+      </button>
       <div class="shot-row">
         <span class="shot-label">{{ i18n.t('app.import-map') }}</span>
         <div class="seg" role="group" :aria-label="i18n.t('app.import-map')">
@@ -105,11 +121,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
             type="button"
             class="seg-btn"
             :class="{
-              on: shot.mapIndex === i - 1,
-              dup: shot.mapIndex === i - 1 && duplicated(shot),
+              on: mapIndexOf(shot) === i - 1,
+              dup: mapIndexOf(shot) === i - 1 && duplicated(shot),
             }"
-            :aria-pressed="shot.mapIndex === i - 1"
-            @click.stop="emit('setMap', shot.id, shot.mapIndex === i - 1 ? null : i - 1)"
+            :aria-pressed="mapIndexOf(shot) === i - 1"
+            @click.stop="emit('setMap', shot.id, mapIndexOf(shot) === i - 1 ? null : i - 1)"
           >
             {{ i }}
           </button>
@@ -124,13 +140,13 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
             type="button"
             class="seg-btn side"
             :class="{
-              on: shot.winner === team,
+              on: shotWinner(shot) === team,
               left: team === Team.ALLY,
               right: team === Team.ENEMY,
             }"
-            :aria-pressed="shot.winner === team"
+            :aria-pressed="shotWinner(shot) === team"
             :disabled="shot.status !== 'ready'"
-            @click.stop="emit('setWinner', shot.id, shot.winner === team ? null : team)"
+            @click.stop="emit('setWinner', shot.id, shotWinner(shot) === team ? null : team)"
           >
             {{ i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy') }}
           </button>
@@ -247,11 +263,22 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
   }
 }
 
+/* The card's keyboard handle: the whole card selects on click, the name
+   carries focus and the pressed state, and the nested controls keep their own
+   activation. */
 .shot-name {
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
   font-weight: 600;
+  text-align: left;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
 
 /* At a fifth of the modal the map segments need the card's full width, so the
@@ -368,6 +395,11 @@ const status = (shot: ImportShot): { text: string; tone: StatusTone } => {
 @media (pointer: coarse) {
   .seg-btn {
     padding: 8px 4px;
+  }
+
+  .shot-remove {
+    width: 28px;
+    height: 28px;
   }
 }
 </style>

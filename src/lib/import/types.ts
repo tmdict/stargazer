@@ -76,13 +76,15 @@ export interface ArtifactReading {
 export type ImportWarning =
   | { kind: 'no-panel'; side: Team }
   | { kind: 'no-strip' }
-  // The strip has this many circles, not the mode's board count.
-  | { kind: 'map-count'; found: number }
   | { kind: 'unrecognised'; side: Team; row: number }
 
+// What one screenshot says, independent of the mode it is reviewed in: the
+// strip is always read, and the board it fills is settled at review time.
 export interface ScreenshotReading {
   // 0-based, from the green ring on the bottom strip; null when no strip.
   mapIndex: number | null
+  // How many maps the match had, from the strip's circles; null when no strip.
+  mapCount: number | null
   // The winner of this map, from the Ally tab colour.
   winner: Team | null
   // Per strip circle, who won, from the tick or cross; null where cropped off.

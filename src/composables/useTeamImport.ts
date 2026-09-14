@@ -11,7 +11,13 @@ import { computed, reactive, ref, shallowRef, type ComputedRef } from 'vue'
 import { isBaseHeroId } from '@/lib/characters/character'
 import { FRAME_NAMES } from '@/lib/import/frames'
 import { CANONICAL_WIDTH } from '@/lib/import/layout'
-import { addLearnedIcon, parseLearnedIcons, serializeLearnedIcons } from '@/lib/import/learned'
+import {
+  addLearnedIcon,
+  dropLearnedIcon,
+  learnedIconEnvelope,
+  parseLearnedIcons,
+  serializeLearnedIcons,
+} from '@/lib/import/learned'
 import type { LearnedIcon, PortraitRef, RgbaImage, ScreenshotReading } from '@/lib/import/types'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
@@ -47,6 +53,10 @@ export type ShotStatus = 'reading' | 'ready' | 'failed'
 // itself did not start), or the reading throwing on it.
 export type ShotError = 'too-small' | 'unsupported' | 'references' | 'worker' | 'read'
 
+// The reading is what the screenshot says; every review decision is an
+// override beside it, and what a card shows (its map, its winner, each cell)
+// is derived from the two, so a decision made while the shot was still
+// reading, or under another mode, is never overwritten or stranded.
 export interface ImportShot {
   id: string
   name: string
@@ -56,15 +66,27 @@ export interface ImportShot {
   status: ShotStatus
   error: ShotError | null
   reading: ScreenshotReading | null
-  // 0-based board; detected from the strip, editable.
-  mapIndex: number | null
-  // Who won this map; detected from the Ally tab, editable.
-  winner: Team | null
   overrides: Record<string, CellOverride>
   artifactOverrides: Partial<Record<Team, number | null>>
+  // The board and winner chosen in review; absent until chosen.
+  resultOverrides: { mapIndex?: number | null; winner?: Team | null }
   // Data URLs of each card as located, keyed like overrides.
   cards: Record<string, string>
 }
+
+/* The board a shot fills among `boardCount`: the reviewer's choice, else the
+ * strip's map when the mode has it; a one-board mode has only the one. */
+export const shotMapIndex = (shot: ImportShot, boardCount: number): number | null => {
+  const chosen = shot.resultOverrides.mapIndex
+  const mapIndex =
+    chosen !== undefined ? chosen : boardCount === 1 ? 0 : (shot.reading?.mapIndex ?? null)
+  return mapIndex !== null && mapIndex < boardCount ? mapIndex : null
+}
+
+export const shotWinner = (shot: ImportShot): Team | null =>
+  shot.resultOverrides.winner !== undefined
+    ? shot.resultOverrides.winner
+    : (shot.reading?.winner ?? null)
 
 export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 
@@ -77,8 +99,11 @@ const learned = shallowRef<LearnedIcon[]>([])
 let worker: Worker | null = null
 let nextId = 1
 let namesLoaded = false
-// Reads waiting on the worker, by shot id.
-const pending = new Map<string, { mapCount: number; image: RgbaImage }>()
+// A page visit is one session. Work still in flight from an earlier one (a
+// decode, a reference fetch) checks this before touching the current state.
+let session = 0
+// Decoded shots waiting on the worker, by shot id.
+const pending = new Map<string, RgbaImage>()
 
 const loadNames = (): void => {
   if (namesLoaded) return
@@ -202,17 +227,22 @@ async function loadReferences(): Promise<ReferenceImages> {
   const frames = await Promise.all(
     FRAME_NAMES.map((name) => fetchImage(importReferenceUrl(`frame-${name}`))),
   )
-  const artifacts = await Promise.all(
-    gameData.artifacts.map(async (artifact) => ({
-      artifactId: artifact.id,
-      image: await fetchImage(
-        isRemoteArtifact(artifact.season)
-          ? seasonArtifactImageUrl(artifact.name)
-          : gameData.getArtifactImage(artifact.name),
-        128,
+  // An icon that fails to load is skipped like a costume: the frames are the
+  // only references the reading cannot do without.
+  const artifacts = (
+    await Promise.all(
+      gameData.artifacts.map((artifact) =>
+        fetchImage(
+          isRemoteArtifact(artifact.season)
+            ? seasonArtifactImageUrl(artifact.name)
+            : gameData.getArtifactImage(artifact.name),
+          128,
+        )
+          .then((image) => ({ artifactId: artifact.id, image }))
+          .catch(() => null),
       ),
-    })),
-  )
+    )
+  ).filter((ref): ref is ReferenceImages['artifacts'][number] => ref !== null)
   return { frames, portraits: [...portraits, ...costumes], artifacts, learned: learned.value }
 }
 
@@ -220,13 +250,10 @@ const post = (message: TeamImportRequest, transfer: Transferable[] = []): void =
   worker?.postMessage(message, transfer)
 }
 
-const applyReading = (shot: ImportShot, reading: ScreenshotReading, mapCount: number): void => {
+const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
   shot.reading = reading
   shot.status = 'ready'
-  // A map beyond the mode's boards (a five-map result in a three-map mode)
-  // stays unmapped; the card says why.
-  if (reading.mapIndex !== null && reading.mapIndex < mapCount) shot.mapIndex = reading.mapIndex
-  shot.winner = reading.winner
+  shot.error = null
   for (const team of [Team.ALLY, Team.ENEMY]) {
     reading.sides[team].forEach((cell, row) => {
       shot.cards[overrideKey(team, row)] = imageToDataUrl(cell.card)
@@ -238,27 +265,34 @@ const onMessage = (event: MessageEvent<TeamImportResponse>): void => {
   const msg = event.data
   if (msg.type === 'ready') {
     referenceStatus.value = 'ready'
-    for (const [id, job] of pending) {
-      post({ type: 'read', id, image: job.image, mapCount: job.mapCount }, [job.image.data.buffer])
+    for (const [id, image] of pending) {
+      const shot = findShot(id)
+      if (!shot) continue
+      // Includes shots failed by an earlier reference load; this one reads them.
+      shot.status = 'reading'
+      shot.error = null
+      post({ type: 'read', id, image }, [image.data.buffer])
     }
     pending.clear()
     return
   }
-  if (msg.type === 'error' && msg.id === null) {
-    // The reference tables themselves failed to build.
-    console.error('Match import references failed', msg.message)
-    referenceStatus.value = 'failed'
-    failReadingShots('references')
-    return
-  }
-  const shot = findShot(msg.id!)
-  if (!shot) return
-  if (msg.type === 'reading') applyReading(shot, msg.reading, msg.mapCount)
-  else {
+  if (msg.type === 'error') {
+    if (msg.id === null) {
+      // The reference tables themselves failed to build.
+      console.error('Match import references failed', msg.message)
+      referenceStatus.value = 'failed'
+      failReadingShots('references')
+      return
+    }
+    const shot = findShot(msg.id)
+    if (!shot) return
     console.error(`Match import could not read ${shot.name}`, msg.message)
     shot.status = 'failed'
     shot.error = 'read'
+    return
   }
+  const shot = findShot(msg.id)
+  if (shot) applyReading(shot, msg.reading)
 }
 
 const startWorker = (): Worker => {
@@ -279,9 +313,11 @@ const startWorker = (): Worker => {
 async function ensureReferences(): Promise<void> {
   if (referenceStatus.value === 'ready' || referenceStatus.value === 'loading') return
   referenceStatus.value = 'loading'
+  const mine = session
   try {
     worker ??= startWorker()
     const refs = await loadReferences()
+    if (mine !== session) return
     const transfer = [
       ...refs.frames.map((f) => f.data.buffer),
       ...refs.portraits.map((p) => p.image.data.buffer),
@@ -289,6 +325,7 @@ async function ensureReferences(): Promise<void> {
     ]
     post({ type: 'references', ...refs }, transfer)
   } catch (error) {
+    if (mine !== session) return
     // Left in the console: the modal only says the references failed, and
     // the failing URL is what a bug report needs.
     console.error('Match import references failed to load', error)
@@ -299,7 +336,7 @@ async function ensureReferences(): Promise<void> {
 
 // ---------- shots ----------
 
-const decodeShot = async (file: File): Promise<RgbaImage> => {
+const decodeShot = async (file: Blob): Promise<RgbaImage> => {
   const bitmap = await createImageBitmap(file, { imageOrientation: 'from-image' })
   try {
     if (bitmap.width < 600) throw new Error('too small')
@@ -307,6 +344,31 @@ const decodeShot = async (file: File): Promise<RgbaImage> => {
     return drawToImage(bitmap, CANONICAL_WIDTH, height)
   } finally {
     bitmap.close()
+  }
+}
+
+// Decode a shot and hand it to the worker, or queue it until the references
+// are ready. With the references failed the shot fails too, but its pixels
+// stay queued for the retry a later open makes.
+const readShot = async (shot: ImportShot, file: Blob): Promise<void> => {
+  const mine = session
+  try {
+    const image = await decodeShot(file)
+    if (mine !== session || !findShot(shot.id)) return
+    if (referenceStatus.value === 'ready') {
+      post({ type: 'read', id: shot.id, image }, [image.data.buffer])
+      return
+    }
+    pending.set(shot.id, image)
+    if (referenceStatus.value === 'failed') {
+      shot.status = 'failed'
+      shot.error = 'references'
+    }
+  } catch (error) {
+    if (mine !== session || !findShot(shot.id)) return
+    shot.status = 'failed'
+    shot.error =
+      error instanceof Error && error.message === 'too small' ? 'too-small' : 'unsupported'
   }
 }
 
@@ -322,6 +384,8 @@ export function useTeamImport(mode: () => TeamModeKey): {
   referenceStatus: typeof referenceStatus
   names: RecordNames
   learnedCount: ComputedRef<number>
+  hasCorrections: ComputedRef<boolean>
+  exportCorrections: () => Promise<string>
   plan: ComputedRef<TeamImportPlan>
   addFiles: (files: File[]) => Promise<number>
   removeShot: (id: string) => void
@@ -343,11 +407,14 @@ export function useTeamImport(mode: () => TeamModeKey): {
 } {
   loadNames()
 
+  const boardCount = (): number => TEAM_MODES[mode()].boardCount
+
   const addFiles = async (files: File[]): Promise<number> => {
     void ensureReferences()
-    const mapCount = TEAM_MODES[mode()].boardCount
+    const mine = session
     let added = 0
     for (const file of files) {
+      if (mine !== session) break
       if (shots.value.some((s) => s.name === file.name && s.size === file.size)) continue
       const shot: ImportShot = reactive({
         id: `shot-${nextId++}`,
@@ -357,30 +424,14 @@ export function useTeamImport(mode: () => TeamModeKey): {
         status: 'reading',
         error: null,
         reading: null,
-        mapIndex: null,
-        winner: null,
         overrides: {},
         artifactOverrides: {},
+        resultOverrides: {},
         cards: {},
       }) as ImportShot
       shots.value = [...shots.value, shot]
       added++
-      try {
-        const image = await decodeShot(file)
-        if (!findShot(shot.id)) continue
-        if (referenceStatus.value === 'ready') {
-          post({ type: 'read', id: shot.id, image, mapCount }, [image.data.buffer])
-        } else if (referenceStatus.value === 'failed') {
-          shot.status = 'failed'
-          shot.error = 'references'
-        } else {
-          pending.set(shot.id, { mapCount, image })
-        }
-      } catch (error) {
-        shot.status = 'failed'
-        shot.error =
-          error instanceof Error && error.message === 'too small' ? 'too-small' : 'unsupported'
-      }
+      await readShot(shot, file)
     }
     return added
   }
@@ -394,12 +445,12 @@ export function useTeamImport(mode: () => TeamModeKey): {
 
   const setMap = (id: string, mapIndex: number | null): void => {
     const shot = findShot(id)
-    if (shot) shot.mapIndex = mapIndex
+    if (shot) shot.resultOverrides.mapIndex = mapIndex
   }
 
   const setWinner = (id: string, winner: Team | null): void => {
     const shot = findShot(id)
-    if (shot) shot.winner = winner
+    if (shot) shot.resultOverrides.winner = winner
   }
 
   const setHero = (id: string, team: Team, row: number, characterId: number | null): void => {
@@ -409,18 +460,18 @@ export function useTeamImport(mode: () => TeamModeKey): {
     const key = overrideKey(team, row)
     shot.overrides[key] = { ...shot.overrides[key], characterId }
     // A correction on a cell the reader was unsure about teaches it that
-    // icon, provided the frame match was trustworthy (else the crop may be
-    // off the face) and the hero was not already its confident answer.
-    if (
-      characterId !== null &&
-      cell.paragon.sure &&
-      !cell.sure &&
-      cell.candidates[0]?.characterId !== characterId
-    ) {
-      learned.value = addLearnedIcon(learned.value, characterId, cell.descriptor, Date.now())
-      writeStorage(LEARNED_KEY, serializeLearnedIcons(learned.value))
-      post({ type: 'learned', learned: learned.value })
-    }
+    // face, provided the frame match was trustworthy (else the crop may be
+    // off the face). Picking the reader's own top candidate, or no hero,
+    // takes back whatever the face was taught before.
+    if (!cell.paragon.sure || cell.sure) return
+    const teach = characterId !== null && cell.candidates[0]?.characterId !== characterId
+    const next = teach
+      ? addLearnedIcon(learned.value, characterId, cell.descriptor, Date.now())
+      : dropLearnedIcon(learned.value, cell.descriptor)
+    if (!teach && next.length === learned.value.length) return
+    learned.value = next
+    writeStorage(LEARNED_KEY, serializeLearnedIcons(learned.value))
+    post({ type: 'learned', learned: learned.value })
   }
 
   const setLevel = (
@@ -447,13 +498,63 @@ export function useTeamImport(mode: () => TeamModeKey): {
     post({ type: 'learned', learned: [] })
   }
 
+  const correctedShots = computed(() =>
+    shots.value.filter(
+      (shot) =>
+        shot.reading &&
+        (Object.keys(shot.overrides).length > 0 ||
+          Object.keys(shot.artifactOverrides).length > 0 ||
+          Object.keys(shot.resultOverrides).length > 0),
+    ),
+  )
+
+  const exportCorrections = async (): Promise<string> => {
+    const learnedIcons = learnedIconEnvelope(learned.value)
+    const records = await Promise.all(
+      correctedShots.value.map(async (shot) => {
+        // Taken before the first await, so an edit made while the file hashes
+        // stays out of this download; the hash itself waits until here since
+        // recognition never needs it.
+        const snapshot = {
+          context: { season: CURRENT_SEASON, mapCount: boardCount(), imageWidth: CANONICAL_WIDTH },
+          predicted: shot.reading,
+          labels: {
+            cells: { ...shot.overrides },
+            artifacts: { ...shot.artifactOverrides },
+            ...shot.resultOverrides,
+          },
+        }
+        const response = await fetch(shot.thumb)
+        if (!response.ok) throw new Error('Screenshot unavailable for correction export')
+        const hash = await crypto.subtle.digest('SHA-256', await response.arrayBuffer())
+        const sha256 = Array.from(new Uint8Array(hash), (byte) =>
+          byte.toString(16).padStart(2, '0'),
+        ).join('')
+        return { source: { name: shot.name, size: shot.size, sha256 }, ...snapshot }
+      }),
+    )
+    return JSON.stringify(
+      {
+        format: 'stargazer-import-corrections',
+        version: 2,
+        createdAt: new Date().toISOString(),
+        learnedIcons,
+        shots: records,
+      },
+      // The envelope also names its descriptor size; only per-shot vectors are omitted.
+      (key: string, value: unknown) =>
+        key === 'card' || (key === 'descriptor' && ArrayBuffer.isView(value)) ? undefined : value,
+      2,
+    )
+  }
+
   const plan = computed<TeamImportPlan>(() => {
     const assignments: ShotAssignment[] = shots.value
       .filter((s): s is ImportShot & { reading: ScreenshotReading } => s.reading !== null)
       .map((s) => ({
         reading: s.reading,
-        mapIndex: s.mapIndex,
-        winner: s.winner,
+        mapIndex: shotMapIndex(s, boardCount()),
+        winner: shotWinner(s),
         overrides: s.overrides,
         artifactOverrides: s.artifactOverrides,
       }))
@@ -465,6 +566,8 @@ export function useTeamImport(mode: () => TeamModeKey): {
     referenceStatus,
     names,
     learnedCount: computed(() => learned.value.length),
+    hasCorrections: computed(() => correctedShots.value.length > 0 || learned.value.length > 0),
+    exportCorrections,
     plan,
     addFiles,
     removeShot,
@@ -482,6 +585,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
 
 /* Drop the worker and the shots when the Teams page is left. */
 export function disposeTeamImport(): void {
+  session++
   worker?.terminate()
   worker = null
   clearShots()

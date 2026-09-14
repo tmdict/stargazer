@@ -1,0 +1,4 @@
+{
+  "en": "Record name too long: {length} of {max} characters; shorten the prefix or a name",
+  "zh": "记录名称过长：{length}/{max} 个字符，请缩短前缀或玩家名称"
+}

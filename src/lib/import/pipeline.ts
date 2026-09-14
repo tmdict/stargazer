@@ -155,11 +155,7 @@ const readSide = (
   return cells.map((cell, row) => ({ ...cell, ...identities[row]! }))
 }
 
-export function readScreenshot(
-  shot: RgbaImage,
-  refs: ReferenceSet,
-  mapCount: number,
-): ScreenshotReading {
+export function readScreenshot(shot: RgbaImage, refs: ReferenceSet): ScreenshotReading {
   const warnings: ImportWarning[] = []
   const { tabs, anchors, floor } = placeColumns(shot, refs.frames)
 
@@ -168,20 +164,16 @@ export function readScreenshot(
     const trusted = anchors[team].mean >= floor
     if (!trusted) warnings.push({ kind: 'no-panel', side: team })
     sides[team] = readSide(shot, refs, anchors[team], trusted)
+    if (!trusted) continue
     sides[team].forEach((cell, row) => {
       if (!cell.recognised) warnings.push({ kind: 'unrecognised', side: team, row })
     })
   }
 
-  // A single map has no strip; the one board is the map. Otherwise the
-  // strip says how many maps the match had, which need not be the mode's.
+  // A one-map result has no strip, so its absence is only a warning.
   const enemy = anchors[Team.ENEMY]
-  const strip =
-    mapCount > 1
-      ? readStrip(shot, enemy.y + Math.round(enemy.pitch * CARD_ROWS) + STRIP.belowPanel)
-      : { mapIndex: 0, mapResults: [null], mapCount: 1 }
+  const strip = readStrip(shot, enemy.y + Math.round(enemy.pitch * CARD_ROWS) + STRIP.belowPanel)
   if (!strip) warnings.push({ kind: 'no-strip' })
-  else if (strip.mapCount !== mapCount) warnings.push({ kind: 'map-count', found: strip.mapCount })
 
   const ally = anchors[Team.ALLY]
   const artifacts = {} as Record<Team, ArtifactReading | null>
@@ -194,6 +186,7 @@ export function readScreenshot(
 
   return {
     mapIndex: strip?.mapIndex ?? null,
+    mapCount: strip?.mapCount ?? null,
     // The Ally tab is painted in the map winner's colour.
     winner: tabs ? tabs.ally.colour : readTab(shot, ally.x, ally.y),
     mapResults: strip?.mapResults ?? [],

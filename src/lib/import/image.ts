@@ -146,10 +146,16 @@ export function dot(a: Float32Array, b: Float32Array): number {
   return s
 }
 
+// A template less visible than this at a crop edge is not scored: a sliver
+// fits any frame.
+const NCC_MIN_COVERAGE = 0.25
+
 /* Normalised cross-correlation of an RGBA template against the shot at
  * (ox, oy), over the template's opaque pixels only, sampled every `step`
  * pixels in each direction. Channels are pooled (the frame's shape matters
- * more than its tint). -1 when fewer than 100 samples overlap the shot. */
+ * more than its tint), which lets a flat patch correlate by tint alone, so a
+ * patch with no variation within its channels scores 0 instead. -1 when too
+ * little of the template lies inside the shot. */
 export function maskedNcc(
   shot: RgbaImage,
   template: RgbaImage,
@@ -157,34 +163,43 @@ export function maskedNcc(
   oy: number,
   step = 2,
 ): number {
-  let n = 0
+  let opaque = 0
+  let inside = 0
   let sa = 0
   let sb = 0
   let saa = 0
   let sbb = 0
   let sab = 0
+  const sbc = [0, 0, 0]
+  const sbbc = [0, 0, 0]
   for (let y = 0; y < template.height; y += step) {
     const sy = oy + y
-    if (sy < 0 || sy >= shot.height) continue
+    const rowInside = sy >= 0 && sy < shot.height
     for (let x = 0; x < template.width; x += step) {
       const ti = (y * template.width + x) * 4
       if (template.data[ti + 3]! < 200) continue
+      opaque++
       const sx = ox + x
-      if (sx < 0 || sx >= shot.width) continue
+      if (!rowInside || sx < 0 || sx >= shot.width) continue
+      inside++
       const si = (sy * shot.width + sx) * 4
       for (let c = 0; c < 3; c++) {
         const a = template.data[ti + c]!
         const b = shot.data[si + c]!
-        n++
         sa += a
         sb += b
         saa += a * a
         sbb += b * b
         sab += a * b
+        sbc[c]! += b
+        sbbc[c]! += b * b
       }
     }
   }
-  if (n < 100) return -1
+  if (inside === 0 || inside < opaque * NCC_MIN_COVERAGE) return -1
+  const within = sbbc.reduce((s, sq, c) => s + sq - (sbc[c]! * sbc[c]!) / inside, 0)
+  if (within < 1) return 0
+  const n = inside * 3
   const cov = sab - (sa * sb) / n
   const va = saa - (sa * sa) / n
   const vb = sbb - (sb * sb) / n

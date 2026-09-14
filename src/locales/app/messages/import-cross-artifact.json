@@ -1,0 +1,4 @@
+{
+  "en": "{artifact} is set on the {side} side of maps {maps}; the game does not allow this, so a reading is wrong",
+  "zh": "{artifact} 在第 {maps} 张地图的{side}重复出现；游戏不允许这种情况，说明识别有误"
+}

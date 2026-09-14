@@ -2,7 +2,8 @@
 // is the source of truth: the paragon frames and star rows at the top level, the
 // costume captures under skin/ (named <hero slug>-<anything>.png). This writes the
 // WebP the app fetches beside each PNG and regenerates skins.json from the skin
-// folder, so adding a costume is: drop the PNG, run this, commit chaldea.
+// folder, so adding a costume is: drop the PNG, run this, commit chaldea. Without
+// a skin folder there is nothing to regenerate from, and skins.json is left as is.
 //
 // Usage:
 //   npm run import:refs -- --chaldea <path to the chaldea checkout>
@@ -52,19 +53,21 @@ async function main(): Promise<void> {
 
   for (const file of await pngs(importDir)) await toWebp(join(importDir, file))
 
+  if (!existsSync(skinDir)) {
+    console.log('no skin folder: skins.json left as is')
+    return
+  }
   const manifest: Record<string, string[]> = {}
-  if (existsSync(skinDir)) {
-    const slugs = await heroSlugs()
-    for (const file of await pngs(skinDir)) {
-      const name = file.replace(/\.png$/, '')
-      const slug = slugs.find((s) => name.startsWith(`${s}-`))
-      if (!slug) {
-        console.warn(`skin/${file}: no hero slug prefix, skipped`)
-        continue
-      }
-      await toWebp(join(skinDir, file))
-      ;(manifest[slug] ??= []).push(name)
+  const slugs = await heroSlugs()
+  for (const file of await pngs(skinDir)) {
+    const name = file.replace(/\.png$/, '')
+    const slug = slugs.find((s) => name.startsWith(`${s}-`))
+    if (!slug) {
+      console.warn(`skin/${file}: no hero slug prefix, skipped`)
+      continue
     }
+    await toWebp(join(skinDir, file))
+    ;(manifest[slug] ??= []).push(name)
   }
   const sorted = Object.fromEntries(Object.entries(manifest).sort(([a], [b]) => a.localeCompare(b)))
   await writeFile(join(importDir, 'skins.json'), `${JSON.stringify(sorted, null, 2)}\n`)

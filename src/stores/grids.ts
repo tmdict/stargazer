@@ -42,7 +42,7 @@ import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
-import type { BoardRoster, TeamImportPlan } from '@/lib/teams/teamImport'
+import type { BoardRoster, PlanIssue, TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
@@ -552,6 +552,39 @@ export const useGrids = defineStore('grids', () => {
       [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)),
     )
 
+  // What applyRosters would skip for page-wide uniqueness: a hero or artifact
+  // already on the same side of a board the plan leaves untouched. Read-only,
+  // so the review can say so before anything is cleared.
+  const rosterConflicts = (plan: TeamImportPlan): PlanIssue[] => {
+    const targets = rosterTargets(plan)
+    const targetIds = new Set(targets.map(({ ctx }) => ctx.id))
+    const retained = contexts.value
+      .map((ctx, mapIndex) => ({ ctx, mapIndex }))
+      .filter(({ ctx }) => !targetIds.has(ctx.id))
+    const issues: PlanIssue[] = []
+    for (const { board } of targets) {
+      for (const team of [Team.ALLY, Team.ENEMY]) {
+        for (const { characterId } of board.sides[team]) {
+          const holder = retained.find(
+            ({ ctx }) => findCharacterHex(ctx.grid, characterId, team) !== null,
+          )
+          if (holder) {
+            issues.push({ kind: 'retained-hero', team, characterId, mapIndex: holder.mapIndex })
+          }
+        }
+        const artifactId = artifactSlot(board.artifacts, team)
+        const holder =
+          artifactId === null
+            ? undefined
+            : retained.find(({ ctx }) => artifactSlot(ctx.artifacts, team) === artifactId)
+        if (artifactId !== null && holder) {
+          issues.push({ kind: 'retained-artifact', team, artifactId, mapIndex: holder.mapIndex })
+        }
+      }
+    }
+    return issues
+  }
+
   /* Stamp match-import rosters (lib/teams/teamImport) onto the mapped boards.
    * Both sides of every mapped board clear first, so a hero moving from one
    * board to another never trips page-wide uniqueness against its own old
@@ -580,7 +613,9 @@ export const useGrids = defineStore('grids', () => {
           placed++
         }
         const artifact = artifactSlot(board.artifacts, team)
-        if (artifact !== null && !isArtifactUsed(artifact, team)) ctx.setArtifact(team, artifact)
+        if (artifact === null) continue
+        if (isArtifactUsed(artifact, team)) skipped++
+        else ctx.setArtifact(team, artifact)
       }
     }
     deriveSynergy()
@@ -852,6 +887,7 @@ export const useGrids = defineStore('grids', () => {
     sideLoadWouldReplace,
     loadTeamSide,
     rostersWouldReplace,
+    rosterConflicts,
     applyRosters,
     clearAll,
   }

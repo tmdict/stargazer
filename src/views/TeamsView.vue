@@ -27,7 +27,7 @@ import { useShareLink } from '@/composables/useShareLink'
 import { disposeTeamImport } from '@/composables/useTeamImport'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
-import { MAX_SAVED_TEAMS, TEAM_MODES } from '@/lib/teams/modes'
+import { MAX_SAVED_TEAMS, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
   canonicalTeamData,
   nextAutoName,
@@ -50,7 +50,7 @@ const grids = useGrids()
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { copyToClipboard, downloadAsImage } = useGridExport()
-const { success, error } = useToast()
+const { success, error, show } = useToast()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
@@ -162,6 +162,13 @@ const handleNewTeam = () => {
   pendingName.value = null
 }
 
+// The pending name belongs to the boards an import filled, not to the slot of
+// another mode.
+const handleSwitchMode = (mode: TeamModeKey) => {
+  teamsRestore.switchMode(mode)
+  pendingName.value = null
+}
+
 const handleRename = (name: string) => {
   const source = sourceTeam.value
   if (!source) return
@@ -184,7 +191,7 @@ const handleImportMatch = async (plan: TeamImportPlan) => {
   if (!gameDataStore.dataLoaded) return
   clearTargetHex()
   clearLiftedHex()
-  const { placed } = grids.applyRosters(plan)
+  const { placed, skipped } = grids.applyRosters(plan)
   const maps = plan.boards.flatMap((board, i) => (board === null ? [] : [i + 1])).join(', ')
   teamsRestore.sourceId.value = null
   await nextTick()
@@ -196,11 +203,12 @@ const handleImportMatch = async (plan: TeamImportPlan) => {
     pendingName.value = plan.suggestedName
     success(i18n.t('app.import-applied', { maps, heroes: placed }))
     error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
-    return
+  } else {
+    teamsRestore.sourceId.value = team.id
+    pendingName.value = null
+    success(i18n.t('app.import-saved', { name: team.name, maps, heroes: placed }))
   }
-  teamsRestore.sourceId.value = team.id
-  pendingName.value = null
-  success(i18n.t('app.import-saved', { name: team.name, maps, heroes: placed }))
+  if (skipped > 0) show(i18n.t('app.import-skipped', { count: skipped }), 'info')
 }
 
 // A ?g= link (mode-routed, shape-normalized) overwrites that mode's saved boards;
@@ -271,10 +279,10 @@ const handleCopyLink = () => {
                 :source-name="sourceTeam?.name ?? null"
                 :dirty="dirty"
                 :suggested-name="suggestedName"
-                :pending-name="pendingName"
+                :pending-name
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
-                @switch-mode="teamsRestore.switchMode($event)"
+                @switch-mode="handleSwitchMode"
                 @new-team="handleNewTeam"
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"

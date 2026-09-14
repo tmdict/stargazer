@@ -11,8 +11,8 @@
 //                its skins.json and skin/ folder, when present, add the costume references
 //   --artifacts  folder of seasonal artifact icons (chaldea's img/seasonal/artifact); the
 //                bundled permanent six are always included
-//   --maps       circles on the strip for every file in the folder (default 5); a truth
-//                file overrides it per file
+//   --maps       how many maps each match had (default 5; 1 means no strip), checked
+//                against what the strip reads; a truth file overrides it per file
 //   --truth      { "<file>": { "maps": 3, "cells": { "a1": { "hero": "gunnar", "p": 4, "r": 4 }, … } } }
 //
 // Decoding goes through sharp, which vite-imagetools already pulls in; portraits
@@ -25,9 +25,9 @@ import sharp from 'sharp'
 
 import { buildArtifactTable } from '../src/lib/import/artifacts.ts'
 import { FRAME_NAMES, prepareFrameRefs } from '../src/lib/import/frames.ts'
-import { buildHeroTable } from '../src/lib/import/heroes.ts'
 import { CANONICAL_WIDTH } from '../src/lib/import/layout.ts'
 import { readScreenshot } from '../src/lib/import/pipeline.ts'
+import { buildImportHeroTable } from '../src/lib/import/references.ts'
 import type { PortraitRef, RgbaImage, ScreenshotReading } from '../src/lib/import/types.ts'
 import { Team } from '../src/lib/types/team.ts'
 import { arg } from './lib/shared.ts'
@@ -39,7 +39,7 @@ interface TruthCell {
   p: number
   r: number
 }
-type Truth = Record<string, { maps?: number; cells: Record<string, TruthCell> }>
+type Truth = Record<string, { maps?: number; cells?: Record<string, TruthCell> }>
 
 const toImage = async (input: Buffer | string, width?: number): Promise<RgbaImage> => {
   let p = sharp(input)
@@ -124,12 +124,17 @@ function printReading(
   heroNames: Map<number, string>,
   artifactNames: Map<number, string>,
   truth: Truth[string] | undefined,
+  expectedMaps: number,
   tally: { hero: number[]; sure: number[]; p: number[]; r: number[] },
 ): void {
   const side = (team: Team): string => (team === Team.ALLY ? 'a' : 'e')
   const result = (t: Team | null): string => (t === Team.ALLY ? 'W' : t === Team.ENEMY ? 'L' : '?')
+  const mapsOff = expectedMaps === 1 ? reading.mapCount !== null : reading.mapCount !== expectedMaps
   console.log(
     `\n== ${file}: map ${reading.mapIndex === null ? '?' : reading.mapIndex + 1}, this map ${result(reading.winner)}, strip ${reading.mapResults.map(result).join('')}` +
+      (mapsOff
+        ? `  MAPS✗ read ${reading.mapCount ?? 'no strip'}, expected ${expectedMaps === 1 ? 'no strip' : expectedMaps}`
+        : '') +
       (reading.warnings.length
         ? `  warnings: ${reading.warnings.map((w) => w.kind).join(', ')}`
         : ''),
@@ -146,7 +151,7 @@ function printReading(
       const key = `${side(team)}${row + 1}`
       const top = cell.candidates[0]
       const name = top ? (heroNames.get(top.characterId) ?? String(top.characterId)) : '-'
-      const t = truth?.cells[key]
+      const t = truth?.cells?.[key]
       let verdict = ''
       if (t) {
         const heroOk = name === t.hero
@@ -184,7 +189,7 @@ async function main(): Promise<void> {
   )
   const refs = prepareFrameRefs(frames)
   const { names: heroNames, portraits } = await loadHeroes(framesDir)
-  const heroTable = buildHeroTable(portraits)
+  const heroTable = buildImportHeroTable(portraits)
   const { names: artifactNames, icons } = await loadArtifacts(arg('artifacts'))
   const artifactTable = buildArtifactTable(icons)
   const costumes = portraits.filter((p) => p.costume).length
@@ -198,13 +203,13 @@ async function main(): Promise<void> {
     const shot = await toImage(join(samples, file), CANONICAL_WIDTH)
     const t = truth[basename(file)]
     const started = performance.now()
-    const reading = readScreenshot(
-      shot,
-      { frames: refs, heroes: heroTable, artifacts: artifactTable },
-      t?.maps ?? defaultMaps,
-    )
+    const reading = readScreenshot(shot, {
+      frames: refs,
+      heroes: heroTable,
+      artifacts: artifactTable,
+    })
     const ms = Math.round(performance.now() - started)
-    printReading(file, reading, heroNames, artifactNames, t, tally)
+    printReading(file, reading, heroNames, artifactNames, t, t?.maps ?? defaultMaps, tally)
     console.log(`  (${ms} ms)`)
   }
   const sum = (a: number[]): string => `${a.reduce((x, y) => x + y, 0)}/${a.length}`

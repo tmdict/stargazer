@@ -309,7 +309,7 @@ const actionTipText = computed((): string => (actionTipKey.value ? i18n.t(action
 }
 
 /* Centered on the bar's midline; the flanking clusters flow around it. The
-   lit chip's fill is the whole selection signal — the portrait pills stay
+   lit chip's fill is the whole selection signal: the portrait pills stay
    plain labels and the bulk chips stay neutral regardless of layer. */
 .dock-selector {
   position: absolute;

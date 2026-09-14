@@ -108,7 +108,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
   color: #fff;
 }
 
-/* 40px tap targets on touch screens (the pill is the only control for levels). */
+/* Wider tap targets on touch screens (the pill is the only control for levels). */
 @media (pointer: coarse) {
   .useg {
     min-width: 40px;

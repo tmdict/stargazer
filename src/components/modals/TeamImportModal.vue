@@ -14,7 +14,7 @@ import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useTeamImport } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
-import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import { MAX_TEAM_NAME_LENGTH, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import {
   isBlockingIssue,
   NAME_FORBIDDEN,
@@ -25,6 +25,7 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { downloadBlob, timestampedName } from '@/utils/download'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const { show, activeMode } = defineProps<{
@@ -46,6 +47,8 @@ const {
   referenceStatus,
   names,
   learnedCount,
+  hasCorrections,
+  exportCorrections,
   plan,
   addFiles,
   removeShot,
@@ -86,15 +89,35 @@ const handleAdd = async (files: File[]): Promise<void> => {
   if (added === 0) error(i18n.t('app.no-valid-images'))
 }
 
-const nameInvalid = computed(
-  () => NAME_FORBIDDEN.test(names.left) || NAME_FORBIDDEN.test(names.right),
+const handleDownloadCorrections = async (): Promise<void> => {
+  try {
+    downloadBlob(
+      new Blob([await exportCorrections()], { type: 'application/json' }),
+      timestampedName('stargazer-import-corrections', 'json'),
+    )
+  } catch {
+    error(i18n.t('app.download-failed'))
+  }
+}
+
+const nameInvalid = computed(() =>
+  [names.prefix, names.left, names.right].some((name) => NAME_FORBIDDEN.test(name)),
 )
 const namesMissing = computed(() => names.left.trim() === '' || names.right.trim() === '')
+// The library would clip the name, losing the map lists at its end.
+const nameTooLong = computed(() => plan.value.suggestedName.length > MAX_TEAM_NAME_LENGTH)
 
 const heroLabel = (characterId: number): string => {
   const slug = gameData.getCharacterNameById(characterId)
   return slug ? localizedDisplayName(i18n.t, 'character', slug) : String(characterId)
 }
+
+const artifactLabel = (artifactId: number): string => {
+  const artifact = gameData.getArtifactById(artifactId)
+  return artifact ? localizedDisplayName(i18n.t, 'artifact', artifact.name) : String(artifactId)
+}
+
+const sideLabel = (team: Team): string => i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy')
 
 const issueText = (issue: PlanIssue): string => {
   switch (issue.kind) {
@@ -104,18 +127,52 @@ const issueText = (issue: PlanIssue): string => {
       return i18n.t('app.import-unmapped', { count: issue.count })
     case 'empty':
       return i18n.t('app.import-empty', { count: issue.count })
+    case 'duplicate-hero':
+      return i18n.t('app.import-duplicate-hero', {
+        hero: heroLabel(issue.characterId),
+        side: sideLabel(issue.team),
+        map: issue.mapIndex + 1,
+      })
     case 'cross-board-duplicate':
       return i18n.t('app.import-cross-duplicate', {
         hero: heroLabel(issue.characterId),
-        side: i18n.t(issue.team === Team.ALLY ? 'app.ally' : 'app.enemy'),
+        side: sideLabel(issue.team),
         maps: issue.maps.map((m) => m + 1).join(', '),
+      })
+    case 'cross-board-artifact':
+      return i18n.t('app.import-cross-artifact', {
+        artifact: artifactLabel(issue.artifactId),
+        side: sideLabel(issue.team),
+        maps: issue.maps.map((m) => m + 1).join(', '),
+      })
+    case 'result-undecided':
+      return i18n.t('app.import-result-undecided')
+    case 'retained-hero':
+      return i18n.t('app.import-retained-hero', {
+        hero: heroLabel(issue.characterId),
+        side: sideLabel(issue.team),
+        map: issue.mapIndex + 1,
+      })
+    case 'retained-artifact':
+      return i18n.t('app.import-retained-artifact', {
+        artifact: artifactLabel(issue.artifactId),
+        side: sideLabel(issue.team),
+        map: issue.mapIndex + 1,
       })
   }
 }
 
+// The plan's own issues plus what the live boards would make it skip.
+const issues = computed(() => [...plan.value.issues, ...grids.rosterConflicts(plan.value)])
 const mappedCount = computed(() => plan.value.boards.filter((b) => b !== null).length)
+const reading = computed(() => shots.value.some((s) => s.status === 'reading'))
 const blocked = computed(
-  () => mappedCount.value === 0 || nameInvalid.value || plan.value.issues.some(isBlockingIssue),
+  () =>
+    mappedCount.value === 0 ||
+    reading.value ||
+    nameInvalid.value ||
+    nameTooLong.value ||
+    issues.value.some(isBlockingIssue),
 )
 
 // The new team lands on the boards, so with content there it arms like
@@ -191,11 +248,22 @@ const handleSaveAsNew = (): void => {
           />
         </label>
         <div class="field wide">
-          <span class="field-label">{{ i18n.t('app.import-record-name') }}</span>
-          <output class="record-name" :class="{ invalid: nameInvalid }">{{
-            plan.suggestedName
-          }}</output>
+          <span id="import-record-name" class="field-label">{{
+            i18n.t('app.import-record-name')
+          }}</span>
+          <output
+            class="record-name"
+            :class="{ invalid: nameInvalid || nameTooLong }"
+            aria-labelledby="import-record-name"
+            >{{ plan.suggestedName }}</output
+          >
           <small v-if="nameInvalid" class="error">{{ i18n.t('app.import-name-invalid') }}</small>
+          <small v-else-if="nameTooLong" class="error">{{
+            i18n.t('app.import-name-too-long', {
+              length: plan.suggestedName.length,
+              max: MAX_TEAM_NAME_LENGTH,
+            })
+          }}</small>
         </div>
       </section>
 
@@ -204,7 +272,10 @@ const handleSaveAsNew = (): void => {
           <span class="section-title">{{ i18n.t('app.import-review') }}</span>
           <span class="section-sub">{{ selected.name }}</span>
         </div>
+        <!-- Keyed per shot: a picker opened on one screenshot must not
+             survive into another and land its pick there. -->
         <TeamImportReview
+          :key="selected.id"
           :shot="selected"
           :names
           @set-hero="setHero"
@@ -213,12 +284,8 @@ const handleSaveAsNew = (): void => {
         />
       </section>
 
-      <ul v-if="plan.issues.length" class="issues">
-        <li
-          v-for="(issue, i) in plan.issues"
-          :key="i"
-          :class="{ blocking: isBlockingIssue(issue) }"
-        >
+      <ul v-if="issues.length" class="issues">
+        <li v-for="(issue, i) in issues" :key="i" :class="{ blocking: isBlockingIssue(issue) }">
           {{ issueText(issue) }}
         </li>
       </ul>
@@ -239,6 +306,15 @@ const handleSaveAsNew = (): void => {
         </button>
         <button type="button" class="footer-btn secondary" @click="emit('close')">
           {{ i18n.t('app.cancel') }}
+        </button>
+        <button
+          v-if="hasCorrections"
+          type="button"
+          class="link-btn"
+          :title="i18n.t('app.import-download-corrections-hint')"
+          @click="handleDownloadCorrections"
+        >
+          {{ i18n.t('app.import-download-corrections') }}
         </button>
         <button v-if="learnedCount > 0" type="button" class="link-btn" @click="forgetLearned">
           {{ i18n.t('app.import-forget-learned', { count: learnedCount }) }}
@@ -377,6 +453,10 @@ const handleSaveAsNew = (): void => {
 }
 
 .section-sub {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: 0.8rem;
   color: var(--import-text-dim);
 }
@@ -465,5 +545,15 @@ const handleSaveAsNew = (): void => {
 
 .link-btn:hover {
   color: var(--import-text);
+}
+
+.link-btn + .link-btn {
+  margin-left: 0;
+}
+
+@media (pointer: coarse) {
+  .link-btn {
+    min-height: 32px;
+  }
 }
 </style>

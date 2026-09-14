@@ -13,6 +13,7 @@ import {
 import { createImage, cropResize } from '@/lib/import/image'
 import {
   addLearnedIcon,
+  dropLearnedIcon,
   LEARNED_ICONS_CAP,
   parseLearnedIcons,
   serializeLearnedIcons,
@@ -67,6 +68,13 @@ describe('assignUnique', () => {
     const out = assignUnique([[cand(5, 0.9, true), cand(5, 0.85), cand(6, 0.7)]])
     expect(out[0]!.candidates[0]!.learned).toBe(true)
     expect(out[0]!.margin).toBeCloseTo(0.2)
+  })
+
+  it('lets two faces taught as different heroes contest each other', () => {
+    const out = assignUnique([[cand(5, 0.9, true), cand(6, 0.9, true), cand(7, 0.6)]])
+    expect(out[0]!.candidates[0]!.characterId).toBe(5)
+    expect(out[0]!.margin).toBeCloseTo(0)
+    expect(out[0]!.sure).toBe(false)
   })
 
   it('holds a costume-backed pick to the higher bar', () => {
@@ -136,16 +144,36 @@ describe('learned icon envelope', () => {
   })
 
   it('keeps the newest entries under the cap', () => {
-    let icons = addLearnedIcon([], 1, v, 0)
-    for (let i = 1; i <= LEARNED_ICONS_CAP; i++) icons = addLearnedIcon(icons, i, v, i)
+    // A distinct face per lesson, since the same face taught again replaces
+    // its earlier lesson rather than adding one.
+    let icons: ReturnType<typeof addLearnedIcon> = []
+    for (let i = 0; i <= LEARNED_ICONS_CAP; i++) {
+      const face = new Float32Array(DESCRIPTOR_LENGTH)
+      face[i] = 0.1
+      icons = addLearnedIcon(icons, i, face, i)
+    }
     expect(icons.length).toBe(LEARNED_ICONS_CAP)
     expect(icons[0]!.learnedAt).toBe(1)
+  })
+
+  it('replaces the lesson for a face taught again and takes one back', () => {
+    const other = new Float32Array(DESCRIPTOR_LENGTH).fill(-0.01)
+    let icons = addLearnedIcon([], 1, v, 1)
+    icons = addLearnedIcon(icons, 2, other, 2)
+    icons = addLearnedIcon(icons, 3, v, 3)
+    expect(icons.map((i) => i.characterId)).toEqual([2, 3])
+    expect(dropLearnedIcon(icons, v).map((i) => i.characterId)).toEqual([2])
+    expect(dropLearnedIcon(icons, new Float32Array(DESCRIPTOR_LENGTH))).toEqual(icons)
   })
 })
 
 describe('paragonFromMatch', () => {
   const refs = prepareFrameRefs([createImage(280, 404)])
   const ref = refs[0]!
+
+  it('refuses an empty frame set', () => {
+    expect(() => prepareFrameRefs([])).toThrow()
+  })
   it('flags low scores and close families', () => {
     expect(
       paragonFromMatch({
