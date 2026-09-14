@@ -10,7 +10,6 @@ import { CARD_PITCH_RANGE, CARD_ROWS, PANEL_GAP_RANGE } from './layout'
 import { hasSummaryBar } from './strip'
 import type { FrameRef, ParagonReading, Rect, RgbaImage } from './types'
 
-// Reference image order: p0, p1, p2, p3, p4, p4-crown.
 export const FRAME_NAMES = ['p0', 'p1', 'p2', 'p3', 'p4', 'p4-crown'] as const
 const FRAME_LEVELS = [0, 1, 2, 3, 4, 4] as const
 const FRAME_SCALES = [0.25, 0.265, 0.28] as const
@@ -18,7 +17,7 @@ const FRAME_SCALES = [0.25, 0.265, 0.28] as const
 // Offsets tried around a column seed, and around the anchor for each card;
 // the card search is fine and covers every offset so a card's box does not
 // depend on where the anchor grid happened to fall.
-export const ANCHOR_SEARCH = { oy: [-60, 40], ox: [-16, 16], step: 4 } as const
+const ANCHOR_SEARCH = { oy: [-60, 40], ox: [-16, 16], step: 4 } as const
 const CARD_SEARCH = { oy: [-6, 6], ox: [-4, 4], step: 1 } as const
 // Under a tab the column is searched more widely sideways, since a taller
 // phone puts it further from the panel's edge.
@@ -51,6 +50,7 @@ const SURE_FLOOR = 0.5
 const SURE_GAP = 0.05
 
 export function prepareFrameRefs(images: readonly RgbaImage[]): FrameRef[] {
+  if (images.length === 0) throw new Error('no frame references')
   const refs: FrameRef[] = []
   images.forEach((image, i) => {
     for (const scale of FRAME_SCALES) {
@@ -72,7 +72,6 @@ const range = (from: number, to: number, step: number): number[] => {
   return out
 }
 
-// The best frame of any level at one position.
 const bestFrameAt = (shot: RgbaImage, refs: readonly FrameRef[], x: number, y: number): number => {
   let best = -1
   for (const ref of refs) {
@@ -125,6 +124,10 @@ export function findPanelAnchor(
       }
     }
   }
+  // The step is scored over all three scales against a one-scale best, which
+  // favours taking it. Comparing at the winning scale instead fits the frames
+  // better on a raw capture yet reads two of its faces wrong, so the bias
+  // stays until graded captures say otherwise.
   for (const pitch of [seed.pitch - PITCH_STEP, seed.pitch + PITCH_STEP]) {
     const mean = combMean(shot, refs, { x: best.x, y: best.y, pitch })
     if (mean > best.mean + PITCH_GAIN) best = { ...best, pitch, mean }
@@ -180,7 +183,7 @@ export function scanForColumns(
       for (let i = 0; i < rows; i++) {
         if (combs[i]! < LANDMARK_FLOOR) continue
         for (let gap = PANEL_GAP_RANGE[0]; gap <= PANEL_GAP_RANGE[1]; gap += step) {
-          const j = i + gap / step
+          const j = i + Math.round(gap / step)
           if (j >= rows || combs[j]! < LANDMARK_FLOOR) continue
           pairs.push({ ox: oxIndex, i, gap, pitch, mean: (combs[i]! + combs[j]!) / 2 })
         }

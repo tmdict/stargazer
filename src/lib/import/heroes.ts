@@ -93,12 +93,18 @@ export function buildHeroTable(
       PORTRAIT_SIZE.height * scale,
     )
     // Only windows that fit are kept, so a row's window is its index in the block.
-    const windows = (costume ? COSTUME_GRID : ART_GRID).filter(
-      ({ w, xc, yt }) => windowRect(w, xc, yt, portrait) !== null,
-    )
-    const source = stored.push({ image: portrait, windows, scale, costume: !!costume }) - 1
-    for (const { w, xc, yt } of windows) {
-      const rect = windowRect(w, xc, yt, portrait)!
+    const fitted = (costume ? COSTUME_GRID : ART_GRID).flatMap((window) => {
+      const rect = windowRect(window.w, window.xc, window.yt, portrait)
+      return rect ? [{ window, rect }] : []
+    })
+    const source =
+      stored.push({
+        image: portrait,
+        windows: fitted.map((f) => f.window),
+        scale,
+        costume: !!costume,
+      }) - 1
+    for (const { rect } of fitted) {
       rows.push({
         id: characterId,
         learned: false,
@@ -248,8 +254,10 @@ const COSTUME_SURE_MARGIN = 0.15
 /* A side fields five different heroes, so the same hero read twice on a
  * side goes to the surer cell and the other takes its next candidate. Returns
  * each cell's candidates reordered so the pick comes first, with its margin
- * over the next hero that is not the pick and whether that margin clears the
- * bar. A learned match must lead the best bundled candidate of another hero. */
+ * over the best remaining candidate of another hero, learned or bundled, and
+ * whether that margin clears the bar. Learned rows rank as their own
+ * candidates, so two faces taught as different heroes contest each other
+ * here instead of one of them passing as sure. */
 export function assignUnique(rankings: readonly HeroCandidate[][]): HeroIdentity[] {
   const order = rankings
     .map((cands, i) => ({
@@ -280,7 +288,7 @@ export function assignUnique(rankings: readonly HeroCandidate[][]): HeroIdentity
     const rest = cands.filter(
       (c) => c.characterId !== pick.characterId && !taken.has(c.characterId),
     )
-    const next = rest.find((c) => !pick.learned || !c.learned)
+    const next = rest[0]
     const margin = next ? pick.score - next.score : pick.score
     out[i] = {
       candidates: [pick, ...rest],

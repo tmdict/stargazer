@@ -5,9 +5,11 @@
  * map numbers in the brackets). Pure data mapping, a sibling of sideLoad. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
-import type { ScreenshotReading } from '@/lib/import/types'
+import type { HeroReading, ScreenshotReading } from '@/lib/import/types'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
+
+export const SIDES = [Team.ALLY, Team.ENEMY] as const
 
 export interface CellOverride {
   characterId?: number | null
@@ -41,7 +43,16 @@ export type PlanIssue =
   | { kind: 'unmapped'; count: number }
   // Mapped, but no hero on either side (nothing recognised, nothing picked).
   | { kind: 'empty'; count: number }
+  // The same hero picked for two cells of one side.
+  | { kind: 'duplicate-hero'; team: Team; characterId: number; mapIndex: number }
   | { kind: 'cross-board-duplicate'; team: Team; characterId: number; maps: number[] }
+  | { kind: 'cross-board-artifact'; team: Team; artifactId: number; maps: number[] }
+  // Map wins are equal or unknown; the record name falls back to the typed order.
+  | { kind: 'result-undecided' }
+  // Already on that side of a board the plan leaves untouched, so the import
+  // would skip it. Found against the live boards, not by the plan builder.
+  | { kind: 'retained-hero'; team: Team; characterId: number; mapIndex: number }
+  | { kind: 'retained-artifact'; team: Team; artifactId: number; mapIndex: number }
 
 export interface TeamImportPlan {
   // One entry per board; null leaves that board untouched.
@@ -58,10 +69,13 @@ export interface RecordNames {
 
 export const overrideKey = (team: Team, row: number): string => `${team}:${row}`
 
-// Unmapped and empty screenshots are simply left out; the rest would put a
-// wrong roster on a board.
+// An issue that would put a wrong roster on a board blocks; the others only
+// leave something out, and say so.
 export const isBlockingIssue = (issue: PlanIssue): boolean =>
-  issue.kind === 'duplicate-map' || issue.kind === 'cross-board-duplicate'
+  issue.kind === 'duplicate-map' ||
+  issue.kind === 'duplicate-hero' ||
+  issue.kind === 'cross-board-duplicate' ||
+  issue.kind === 'cross-board-artifact'
 
 // Names sit between the operator and the brackets of the record name, so
 // those four characters are the only ones a name cannot carry.
@@ -107,6 +121,34 @@ export const cellArtifactId = (
   const override = overrides[team]
   if (override !== undefined) return override
   return reading.artifacts[team]?.candidates[0]?.artifactId ?? null
+}
+
+export type CellState = 'sure' | 'review' | 'none' | 'duplicate'
+
+/* The state the review shows for a cell. A cell removed in review has nothing
+ * left to check; one nobody recognised or picked is `none`; otherwise the
+ * hero and the paragon each stand once read surely or edited (a doubtful
+ * frame match puts the whole card in doubt, levels included). */
+export const cellState = (cell: HeroReading, override: CellOverride = {}): CellState => {
+  if (override.characterId === null) return 'sure'
+  if (override.characterId === undefined && !cell.recognised) return 'none'
+  const heroSure = override.characterId !== undefined || cell.sure
+  const paragonSure = override.paragon !== undefined || cell.paragon.sure
+  return heroSure && paragonSure ? 'sure' : 'review'
+}
+
+/* Every cell's state on one side; a hero on two of its cells marks both. */
+export function reviewStates(
+  reading: ScreenshotReading,
+  team: Team,
+  overrides: Record<string, CellOverride>,
+): CellState[] {
+  const ids = reading.sides[team].map((_, row) => cellCharacterId(reading, team, row, overrides))
+  return reading.sides[team].map((cell, row) => {
+    const id = ids[row]!
+    if (id !== null && ids.indexOf(id) !== ids.lastIndexOf(id)) return 'duplicate'
+    return cellState(cell, overrides[overrideKey(team, row)])
+  })
 }
 
 /* Who won each map, as far as the screenshots say: a mapped screenshot's own
@@ -155,12 +197,14 @@ export function buildTeamImportPlan(
   const boards: (BoardRoster | null)[] = Array.from({ length: boardCount }, () => null)
   const issues: PlanIssue[] = []
   const seen = new Set<number>()
-  const unmapped = shots.filter((s) => s.mapIndex === null).length
+  const mapped = (mapIndex: number | null): mapIndex is number =>
+    mapIndex !== null && mapIndex < boardCount
+  const unmapped = shots.filter((s) => !mapped(s.mapIndex)).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
   let empty = 0
 
   for (const shot of shots) {
-    if (shot.mapIndex === null || shot.mapIndex >= boardCount) continue
+    if (!mapped(shot.mapIndex)) continue
     if (seen.has(shot.mapIndex)) {
       if (!issues.some((i) => i.kind === 'duplicate-map' && i.mapIndex === shot.mapIndex)) {
         issues.push({ kind: 'duplicate-map', mapIndex: shot.mapIndex })
@@ -169,10 +213,21 @@ export function buildTeamImportPlan(
     }
     seen.add(shot.mapIndex)
     const sides = {} as Record<Team, RosterEntry[]>
-    for (const team of [Team.ALLY, Team.ENEMY]) {
+    for (const team of SIDES) {
+      const ids = shot.reading.sides[team].map((_, row) =>
+        cellCharacterId(shot.reading, team, row, shot.overrides),
+      )
+      // The reader settles a side's five cells against each other, so a hero
+      // on two cells can only come from review edits; the first cell keeps it
+      // and the issue blocks until one is changed.
+      const repeated = new Set(
+        ids.filter((id, i): id is number => id !== null && ids.indexOf(id) !== i),
+      )
+      for (const characterId of repeated) {
+        issues.push({ kind: 'duplicate-hero', team, characterId, mapIndex: shot.mapIndex })
+      }
       const entries: RosterEntry[] = []
-      shot.reading.sides[team].forEach((_, row) => {
-        const characterId = cellCharacterId(shot.reading, team, row, shot.overrides)
+      ids.forEach((characterId, row) => {
         if (characterId === null || entries.some((e) => e.characterId === characterId)) return
         entries.push({ characterId, attrs: cellAttrs(shot.reading, team, row, shot.overrides) })
       })
@@ -193,23 +248,36 @@ export function buildTeamImportPlan(
   }
   if (empty > 0) issues.push({ kind: 'empty', count: empty })
 
-  // A hero fields once per side in a match, so the same hero on the same
-  // side of two boards is a misread or a foreign screenshot: it blocks.
-  for (const team of [Team.ALLY, Team.ENEMY]) {
-    const where = new Map<number, number[]>()
+  // A hero fields once per side in a match, and so does an artifact, so the
+  // same one on the same side of two boards is a misread or a foreign
+  // screenshot: it blocks.
+  for (const team of SIDES) {
+    const heroMaps = new Map<number, number[]>()
+    const artifactMaps = new Map<number, number[]>()
+    const note = (where: Map<number, number[]>, id: number, map: number): void => {
+      where.set(id, [...(where.get(id) ?? []), map])
+    }
     boards.forEach((board, map) => {
-      for (const entry of board?.sides[team] ?? []) {
-        where.set(entry.characterId, [...(where.get(entry.characterId) ?? []), map])
-      }
+      if (!board) return
+      for (const entry of board.sides[team]) note(heroMaps, entry.characterId, map)
+      const artifact = team === Team.ALLY ? board.artifacts.ally : board.artifacts.enemy
+      if (artifact !== null) note(artifactMaps, artifact, map)
     })
-    for (const [characterId, maps] of where) {
+    for (const [characterId, maps] of heroMaps) {
       if (maps.length > 1) issues.push({ kind: 'cross-board-duplicate', team, characterId, maps })
+    }
+    for (const [artifactId, maps] of artifactMaps) {
+      if (maps.length > 1) issues.push({ kind: 'cross-board-artifact', team, artifactId, maps })
     }
   }
 
-  return {
-    boards,
-    issues,
-    suggestedName: suggestRecordName(names, mapResultsFrom(shots, boardCount)),
+  // Equal map wins, or none read, leave the record name's winner to the typed
+  // order: said so, rather than claimed.
+  const results = mapResultsFrom(shots, boardCount)
+  const wins = (team: Team): number => results.filter((r) => r === team).length
+  if (boards.some((b) => b !== null) && wins(Team.ALLY) === wins(Team.ENEMY)) {
+    issues.push({ kind: 'result-undecided' })
   }
+
+  return { boards, issues, suggestedName: suggestRecordName(names, results) }
 }

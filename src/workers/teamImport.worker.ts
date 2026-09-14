@@ -6,8 +6,8 @@
 
 import { buildArtifactTable } from '@/lib/import/artifacts'
 import { prepareFrameRefs } from '@/lib/import/frames'
-import { buildHeroTable } from '@/lib/import/heroes'
 import { readScreenshot } from '@/lib/import/pipeline'
+import { buildImportHeroTable } from '@/lib/import/references'
 import type {
   LearnedIcon,
   PortraitRef,
@@ -27,11 +27,11 @@ export interface ReferenceImages {
 export type TeamImportRequest =
   | ({ type: 'references' } & ReferenceImages)
   | { type: 'learned'; learned: LearnedIcon[] }
-  | { type: 'read'; id: string; image: RgbaImage; mapCount: number }
+  | { type: 'read'; id: string; image: RgbaImage }
 
 export type TeamImportResponse =
   | { type: 'ready' }
-  | { type: 'reading'; id: string; mapCount: number; reading: ScreenshotReading }
+  | { type: 'reading'; id: string; reading: ScreenshotReading }
   | { type: 'error'; id: string | null; message: string }
 
 // The app compiles under the DOM lib, where `self` is a Window and its
@@ -65,26 +65,27 @@ scope.addEventListener('message', (event) => {
       portraits = msg.portraits
       refs = {
         frames: prepareFrameRefs(msg.frames),
-        heroes: buildHeroTable(portraits, msg.learned),
+        heroes: buildImportHeroTable(portraits, msg.learned),
         artifacts: buildArtifactTable(msg.artifacts),
       }
       scope.postMessage({ type: 'ready' })
+      return
+    }
+    if (msg.type === 'learned') {
+      // Before the tables exist the pending references post carries the
+      // current list itself, so there is nothing to rebuild or to fail.
+      if (refs) {
+        refs.heroes = buildImportHeroTable(portraits, msg.learned)
+        scope.postMessage({ type: 'ready' })
+      }
       return
     }
     if (!refs) {
       scope.postMessage({ type: 'error', id, message: 'references not loaded' })
       return
     }
-    if (msg.type === 'learned') {
-      refs.heroes = buildHeroTable(portraits, msg.learned)
-      scope.postMessage({ type: 'ready' })
-      return
-    }
-    const reading = readScreenshot(msg.image, refs, msg.mapCount)
-    scope.postMessage(
-      { type: 'reading', id: msg.id, mapCount: msg.mapCount, reading },
-      transferablesOf(reading),
-    )
+    const reading = readScreenshot(msg.image, refs)
+    scope.postMessage({ type: 'reading', id: msg.id, reading }, transferablesOf(reading))
   } catch (error) {
     scope.postMessage({
       type: 'error',

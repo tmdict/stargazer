@@ -25,6 +25,9 @@ const emit = defineEmits<{
 
 const i18n = useI18nStore()
 const open = ref(false)
+// Mounted on first use and kept, so the modal's leave transition plays and its
+// selected card survives a close.
+const mounted = ref(false)
 const {
   anchor: tipTarget,
   showTooltip,
@@ -35,6 +38,7 @@ const {
 
 const openModal = (): void => {
   hideTip()
+  mounted.value = true
   open.value = true
 }
 
@@ -57,7 +61,7 @@ const handleImport = (plan: TeamImportPlan): void => {
     <IconImagePlus :size="16" class="btn-icon" />
   </button>
   <TeamImportModal
-    v-if="open"
+    v-if="mounted"
     :show="open"
     :active-mode
     @close="open = false"
