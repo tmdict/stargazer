@@ -131,6 +131,22 @@ describe('shot map and winner', () => {
   })
 })
 
+describe('board sides', () => {
+  it('swaps every screenshot onto the opposite sides, outside the corrections, until the shots go', async () => {
+    const api = useTeamImport(() => '5v5')
+    api.shots.value = [shot()]
+    api.swapSides.value = true
+    const board = api.plan.value.boards[3]!
+    expect(board.sides[2].map((e) => e.characterId)).toEqual([5])
+    expect(board.sides[1]).toEqual([])
+    expect(board.artifacts).toEqual({ ally: null, enemy: 8 })
+    expect(api.hasCorrections.value).toBe(false)
+    expect(await api.exportCorrections()).not.toContain('swap')
+    api.clearShots()
+    expect(api.swapSides.value).toBe(false)
+  })
+})
+
 describe('download import corrections', () => {
   it('exports explicit labels and original image hashes without pixels or unreviewed guesses as labels', async () => {
     const fetchImage = vi.fn(async () => new Response('image bytes'))

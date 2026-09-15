@@ -6,6 +6,9 @@ export function downloadUrl(href: string, filename: string): void {
   const link = document.createElement('a')
   link.href = href
   link.download = filename
+  // The synthetic click bubbles to document like a real one, where an open
+  // overlay's click-outside listener would read it as a click past its edge.
+  link.addEventListener('click', (event) => event.stopPropagation())
   document.body.appendChild(link)
   link.click()
   link.remove()

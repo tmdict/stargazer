@@ -15,7 +15,7 @@ import CharacterSelectionPalette from '@/components/CharacterSelectionPalette.vu
 import SelectionPopup from '@/components/ui/SelectionPopup.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
 import type { ImportShot } from '@/composables/useTeamImport'
-import { isBaseHeroId } from '@/lib/characters/character'
+import { getOpposingTeam, isBaseHeroId } from '@/lib/characters/character'
 import { compareFaction } from '@/lib/filterOrder'
 import type { HeroReading } from '@/lib/import/types'
 import {
@@ -34,9 +34,11 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { localizedDisplayName } from '@/utils/nameFormatting'
 
-const { shot, names } = defineProps<{
+const { shot, names, swapSides } = defineProps<{
   shot: ImportShot
   names: RecordNames
+  // The columns land on the opposite board sides; each head says which.
+  swapSides: boolean
 }>()
 
 const emit = defineEmits<{
@@ -47,6 +49,8 @@ const emit = defineEmits<{
 
 const gameData = useGameDataStore()
 const i18n = useI18nStore()
+
+const sideLabel = (team: Team): string => i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy')
 
 const heroName = (characterId: number | null): string => {
   if (characterId === null) return i18n.t('app.import-none')
@@ -214,8 +218,11 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
   <div class="review-grid" @click="closePickers">
     <div v-for="team in SIDES" :key="team" class="side">
       <div class="side-head">
-        <span class="side-label">{{ i18n.t(team === Team.ALLY ? 'app.ally' : 'app.enemy') }}</span>
+        <span class="side-label">{{ sideLabel(team) }}</span>
         <span class="side-player">{{ team === Team.ALLY ? names.left : names.right }}</span>
+        <span v-if="swapSides" class="side-board">
+          {{ i18n.t('app.import-board-side', { side: sideLabel(getOpposingTeam(team)) }) }}
+        </span>
         <span class="artifact">
           <span class="artifact-label">{{ i18n.t('app.import-artifact') }}</span>
           <button
@@ -348,6 +355,17 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
   font-weight: 600;
   font-size: 0.85rem;
   color: var(--import-text);
+}
+
+.side-board {
+  padding: 1px 7px;
+  border: 1px solid var(--color-accent);
+  border-radius: 999px;
+  color: var(--color-accent);
+  font-size: 0.66rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .artifact {
