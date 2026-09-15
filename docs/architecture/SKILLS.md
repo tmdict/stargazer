@@ -2,456 +2,219 @@
 
 ## Overview
 
-The skill system enables characters to have unique abilities that activate when placed on the grid. Skills modify game rules, spawn companions, target enemies, and provide visual feedback through an extensible, lifecycle-managed architecture.
+The skill system gives placed units abilities that paint tiles, draw arrows and lines, or spawn companions, and it keeps that state consistent through placement, movement, and removal. A separate skill page pipeline renders each hero's in-game skill text in 16 languages from importer-generated locale files.
 
 ## Design Principles
 
-1. **Separation of Concerns**: Skills don't directly modify UI - they change state that UI reacts to
-2. **Team Awareness**: All tracking uses team context to prevent cross-team conflicts
-3. **Atomic Operations**: Multi-step operations use transactions with rollback
-4. **Clean Lifecycle**: Clear activation/deactivation with proper cleanup
-5. **Extensibility**: New skills can be added without modifying core systems
+1. **Unit ownership**: A skill is keyed `characterId-team` and lives with its unit's placement; board-level effects (artifact arrows) are derived computeds instead
+2. **One definition per hero**: The registry holds one `Skill` per base hero; synergy copies resolve to it while all instance state keys by the placed id
+3. **Transactional lifecycle**: Place, move, swap, and remove run skill hooks inside `executeTransaction`, so a throwing `onActivate` rolls the whole operation back
+4. **Refcounted paint channels**: Tile borders and fills count painters per color, so independent skills sharing a tile never clear each other
+5. **Two locale axes**: Skill text follows `SkillLocale` (16 languages, the URL prefix); chrome follows `AppLocale` (en/zh)
 
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│   Components    │────▶│ Character Store  │────▶│  Characters     │
-│                 │     │                  │     │                 │
-│ GridCharacters  │     │ - Reactive state │     │ - Entities      │
-│ DragDrop, etc.  │     │ - Actions        │     │ - Transactions  │
-└─────────────────┘     └──────────────────┘     └────────┬────────┘
-         │                                                │
-         │                                                │
-         │                                                │
-         ▼                                                ▼
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────────┐
-│  Skill Store    │────▶│  Skills          │────▶│    Grid         │
-│                 │     │                  │     │                 │
-│ - Color mods    │     │ - Skill Registry │     │ - Public props  │
-│ - Reactive      │     │ - Lifecycle      │     │ - Spatial ops   │
-└─────────────────┘     └──────────────────┘     └─────────────────┘
-
+┌─────────────────┐    ┌───────────────────┐    ┌──────────────────────┐
+│ Grid components │───▶│ useGridContext    │───▶│ lib/characters       │
+│ GridManager,    │    │ (one per board)   │    │ place / move / swap  │
+│ SkillTargeting  │    │ Grid+SkillManager │    │ remove transactions  │
+└────────▲────────┘    └───────────────────┘    └──────────┬───────────┘
+         │ targetVersion-keyed computeds                   │ activate /
+         │ (targets, paints, lines, modifiers)             ▼ deactivate
+┌────────┴────────┐    ┌───────────────────┐    ┌──────────────────────┐
+│ SkillManager    │◀───│ registry.ts       │◀───│ characters/*.ts      │
+│ skill.ts        │    │ one Skill per hero│    │ seasonal/*.ts        │
+└─────────────────┘    └───────────────────┘    └──────────────────────┘
 ```
 
-### Core Components
-
-#### 1. Skill Interface (`/src/lib/skills/skill.ts`)
-
-Skills are self-contained units that:
-
-- Define their own activation/deactivation logic
-- Can modify grid state, spawn companions, or add visual effects
-- Receive a context object with all necessary dependencies
-- Self-register with the skill registry on import
-
-```typescript
-interface Skill {
-  id: string
-  characterId: number
-  colorModifier?: string // Border color for visual effects (main unit)
-  companionImageModifier?: string // Custom image for companion units
-  companionColorModifier?: string // Border color for companion units
-  targetingColorModifier?: string // Arrow color for targeting skills
-  companionRange?: number // Override range for companion units
+Each board's context (`/src/composables/useGridContext.ts`) owns a `Grid` and a `SkillManager` and passes both to the character operations; the Pinia `skill` and `character` stores are thin adapters over the active board for debug and roster consumers.
 
-  onActivate(context: SkillContext): void
-  onDeactivate(context: SkillContext): void
-  onUpdate?(context: SkillContext): void // Called on grid changes
-}
+## Core Components
 
-interface SkillContext {
-  grid: Grid
-  hexId: number
-  team: Team
-  characterId: number
-  skillManager: SkillManager
-  lookups?: SkillLookups // injected data-store resolvers: { factionOf, classOf, ... }
-}
-```
+### Skill Registry (`/src/lib/skills/registry.ts`)
 
-#### 2. Skill Registry (`/src/lib/skills/registry.ts`)
+- **Generic base**: The registry stores `SkillBase<unknown>`; `skill.ts` binds `Skill = SkillBase<SkillContext>` through typed wrappers because `SkillContext` references `SkillManager` (circular import otherwise)
+- **Synergy lookup**: `getCharacterSkill` and `hasSkill` strip the synergy band via `decomposeUnitId` (see [GRID.md](./GRID.md)); only the definition lookup strips, so builders read `ctx.characterId`, never their config id
+- **Companion detection**: `hasCompanionSkill` is derived from `companionColorModifier` / `companionImageModifier` on the definition
+- **Self-registration**: `import.meta.glob` at the bottom of `skill.ts` eagerly imports `characters/*.ts` (permanent heroes) and `seasonal/*.ts` (deleted with the season); `registerSkill` runs as an import side effect
 
-The registry stores skills using a generic `SkillBase<Context>` interface to avoid circular dependencies with `SkillContext`. The `skill.ts` module provides typed wrappers that bind `SkillContext` to the generic functions.
+### SkillManager (`/src/lib/skills/skill.ts`)
 
-Lookups resolve a synergy copy (the `SYNERGY_ID_OFFSET` band, see GRID.md) to its base hero's skill via `decomposeUnitId`, so the two share one `Skill` object. Only the definition lookup strips the offset: every instance-keyed structure (active skills, paints, targets, companion links) keys by the placed id, which is why the builders read `ctx.characterId` rather than their config id.
+Non-reactive class, one per board, constructed with `SkillLookups` (`factionOf`, `classOf`) injected from the game-data store because that data lives outside the pure lib.
 
-```typescript
-// registry.ts - generic interface, stores SkillBase<unknown>
-interface SkillBase<Context = unknown> {
-  id: string
-  characterId: number
-  onActivate: (context: Context) => void
-  // ...
-}
+- **Key**: `characterId-team`, so the same unit can be active on both teams
+- **Activation**: `activateCharacterSkill` returns `false` and drops the active entry when `onActivate` throws; the surrounding transaction rolls the placement back
+- **Update sweep**: `updateActiveSkills` isolates each skill in its own try/catch; a unit that vanished without going through removal is fully deactivated so companions and capacity are not leaked
+- **Paint channels**: `tileColorModifiers` (border) and `tileFillModifiers` (fill) are `Map<hexId, Map<color, refcount>>`; `paintTiles` diffs against the instance's previous set, and `TilePaint.fill` selects the channel for both add and remove
+- **Lines**: `setSkillLines` replaces the instance's set outright (rendered flat, no diff needed)
+- **Reactivity bridge**: `targetVersion` increments on every visible mutation; the board's computeds read it to re-derive from this class
 
-// skill.ts - concrete type and typed wrappers
-type Skill = SkillBase<SkillContext>
-registerSkill(skill: Skill)      // Typed wrapper
-getCharacterSkill(id): Skill     // Typed wrapper
-hasSkill(characterId)            // Direct re-export
-hasCompanionSkill(characterId)   // Direct re-export
-```
+### Character Operations (`/src/lib/characters/`)
 
-#### 3. SkillManager (`/src/lib/skills/skill.ts`)
+`executePlaceCharacter`, `executeRemoveCharacter`, `executeMoveCharacter`, and `executeSwapCharacters` take `(grid, skillManager, ...)` and wrap tile mutation plus skill activation in `executeTransaction` (`transaction.ts`). Companions cannot be placed directly; only a skill creates them.
 
-The SkillManager tracks active skills and visual modifiers:
+### Builders (`/src/lib/skills/utils/builders.ts`)
 
-- **Team-aware tracking**: Uses composite keys (`characterId-team`) to support same character on different teams
-- **Active skill registry**: Tracks which characters have active skills
-- **Color modifier system**: Manages visual effects for characters, companions, and tiles
-- **Lifecycle management**: Handles skill activation/deactivation with proper cleanup
+| Factory                                  | Behavior                                                                                                     | Examples                            |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| `createTargetingSkill`                   | Stores one target; `arrowType` adds a caster-to-target arrow, omitted when `calculateTarget` builds its own  | Talene, Ravion, Aliceth             |
+| `createTileHighlightSkill`               | Paints one tile (border, or fill with `fill: true`), unpainting the previous target on update                | Daimon, Hepler, Thador              |
+| `createTilePaintSkill` / `withTilePaint` | Paints the full set `calculate(ctx)` returns for the current grid, diffed by `paintTiles`                    | Himmel; Evie, phantimal (decorator) |
+| `createLineSkill` / `withSkillLine`      | Draws the `SkillLine[]` that `calculate(ctx)` returns                                                        | Callan, Satrana, Zandrok            |
+| `createCompanionSkill`                   | Spawns `count` companions on random free tiles, raises capacity by `count`, rolls back and throws on failure | Phraesto, Zanie, Elijah-Lailah      |
 
-Key methods:
+- **Composition**: The registry allows one skill per character, so a hero with several behaviors decorates a base (Elijah-Lailah is `withSkillLine(withTilePaint(createCompanionSkill(...)))`); decorators run after the base hooks and clear before them
+- **Companion ids**: `N * grid.companionIdOffset + characterId`, so a companion resolves to its main hero for lookups
+- **Hand-written lifecycles**: Kulu (static zone with no `onUpdate`, relying on refcounts where both teams' zones overlap) and Reinier pass an object straight to `registerSkill`
 
-- `activateCharacterSkill()` - Activates a skill with rollback on failure
-- `deactivateCharacterSkill()` - Deactivates and cleans up
-- `getColorModifiersByCharacterAndTeam()` - Returns character visual modifiers for UI
-- `setTileColorModifier()` / `getTileColorModifier()` - Manages tile border colors
-- `setTileFillModifier()` / `getTileFillModifier()` - Manages tile fill colors (an independent channel rendered as a tinted cell fill instead of a border)
+### Visuals
 
-#### 4. Characters Operations (`/src/lib/characters/`)
+- **Palette**: Every effect color comes from `SKILL_COLORS` in `utils/colors.ts`, referenced by name so a hue shared across heroes retunes in one place
+- **Lines** (`utils/line.ts`): A `SkillLine` runs border to border by default; `fromCorner` / `toCorner` (indices per `Layout.hexCornerOffset`) pin it to hex corners. On one hex that is a tile edge (`outlineEdges`, `zoneOutline` for a radius around the caster); across two hexes it is a lane boundary that `SkillTargeting` clips to the visible region (`clipLaneBoundary`)
+- **Colors per visual**: Arrows take `targetingColorModifier` from the definition; lines and paints carry their own color, so they render for any skill
+- **Toggle**: `SkillTargeting.vue` (arrows, lines) and `GridTiles.vue` (paints) render only while `showSkills` is on
 
-Modular operations that integrate skills with character actions:
+Companion and targeting mechanics are documented in [COMPANION.md](./skills/COMPANION.md) and [TARGETING.md](./skills/TARGETING.md).
 
-```typescript
-// Operations in separate files for better organization
-executePlaceCharacter(grid, skillManager, hexId, characterId, team) // place.ts
-executeRemoveCharacter(grid, skillManager, hexId) // remove.ts
-executeSwapCharacters(grid, skillManager, fromHexId, toHexId) // swap.ts
-executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId) // move.ts
-```
-
-Features:
-
-- Automatic skill activation when placing characters with skills
-- Proper skill deactivation before character removal
-- Cross-team movement handles skill state transitions
-- Transaction pattern ensures atomicity
-
-## Skill Categories
+## Adding a Skill
 
-### Companion Skills
-
-Spawn linked characters that share fate with their main unit:
-
-- **Linked lifecycle**: Main and companion removed together
-- **Team capacity**: Increases beyond standard limit
-- **Visual differentiation**: Custom border colors or profile images
-- **Range independence**: Companions can have different ranges
-- **Multiple companions**: Support for spawning multiple companion units
-
-See [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) for implementation details.
+1. Add `/src/lib/skills/characters/<slug>.ts` (or `seasonal/` for a rotating unit). A block comment above `registerSkill` describing the in-game behavior is the skill's only documentation; the object carries just `id` and `characterId`.
+2. Pick a factory from `utils/builders.ts`; target helpers live in `utils/distance.ts` (`findTarget`, `TargetingMethod`, `frontmostUnit`, `rearmostUnit`), `utils/ring.ts` (`rowScan`, `spiralSearchFromTile`), `utils/targeting.ts`, and `utils/symmetry.ts`.
+3. Take colors from `SKILL_COLORS` and data-store facts from `ctx.lookups` (`classOf`, `factionOf`), never from the store directly.
+4. If no factory fits, register a plain object and mirror every paint or line add with its remove (`paintTiles` / `clearPaintedTiles` handle the diff).
+5. Reference files: `characters/himmel.ts` (tile paint with `classOf`), `characters/elijah-lailah.ts` (companion plus decorators), `characters/kulu.ts` (custom lifecycle).
 
-### Targeting Skills
+## Artifact Targeting (`/src/lib/skills/artifact.ts`)
 
-Automatically select and track enemy targets:
+Artifacts that act on specific units (Enlightening: rearmost ally; Vanguard: frontmost; Valorshield: both) draw arrows from the slot's host cell. This is a derived value, not a Skill: an artifact has no hex and no `characterId`, so nothing in the placement lifecycle could track it.
 
-- **Unified API**: Composable targeting functions eliminate duplication
-- **Dynamic recalculation**: Updates when characters move
-- **Visual feedback**: Colored arrows instead of borders
-- **Flexible patterns**: Furthest, frontmost/rearmost, same/opposing team, spiral search
-- **Performance optimized**: Efficient grid queries and early termination
-
-See [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) for implementation details.
-
-### Tile Effect Skills
-
-Highlight multiple tiles based on game state:
-
-- **Tile modifiers**: Two channels per tile: a color border, or a tinted cell fill for skills that opt in with `fill`
-- **Priority selection**: Find valid targets using tie-breaking rules
-- **Dynamic updates**: Recalculate when board state changes
-- **Layered rendering**: Skill borders always visible on top
-
-## Adding New Skills
-
-Most skills follow one of a few reusable lifecycle patterns. Prefer the matching factory in `/src/lib/skills/utils/builders.ts`; it eliminates the activate/deactivate(/update) boilerplate.
-
-Effect colors (arrows, tile borders/fills, unit borders, lines) come from the shared `SKILL_COLORS` palette in `/src/lib/skills/utils/colors.ts`. A skill picks a hue by name (`SKILL_COLORS.red`) instead of hard-coding a hex literal, so recurring hues stay identical across characters and retune in one place.
-
-Each skill file carries a short block comment above `registerSkill` describing its in-game behavior. That comment is the only documentation of the skill's effect; the skill object itself holds just `id` and `characterId` (no `name`/`description` fields).
-
-### Pattern 1: arrow-based targeting (`createTargetingSkill`)
-
-For skills that compute a target and draw an arrow (or build their own arrows for multi-target cases like Ravion / Aliceth):
-
-```typescript
-import { registerSkill } from '../registry'
-import { createTargetingSkill } from '../utils/builders'
-import { SKILL_COLORS } from '../utils/colors'
-import { findTarget, TargetingMethod } from '../utils/distance'
-
-// What it does (gameplay behavior).
-registerSkill(
-  createTargetingSkill({
-    id: 'my-skill',
-    characterId: 123,
-    color: SKILL_COLORS.red, // arrow color (becomes targetingColorModifier)
-    arrowType: 'ally', // omit when calculateTarget builds its own arrows array
-    calculateTarget: (ctx) =>
-      findTarget(ctx, {
-        targetTeam: ctx.team,
-        excludeSelf: true,
-        targetingMethod: TargetingMethod.FRONTMOST,
-      }),
-  }),
-)
-```
-
-### Pattern 2: tile highlight (`createTileHighlightSkill`)
-
-For skills that highlight a single tile and need previous-target cleanup on update:
-
-```typescript
-import { registerSkill } from '../registry'
-import { createTileHighlightSkill } from '../utils/builders'
-import { rowScan, ScanDirection } from '../utils/ring'
-
-// What it does (gameplay behavior).
-registerSkill(
-  createTileHighlightSkill({
-    id: 'my-skill',
-    characterId: 123,
-    tileColor: SKILL_COLORS.blue,
-    // fill: true,  // optional: tint the target's cell fill instead of its border
-    calculateTarget: (ctx) =>
-      rowScan(ctx, { team: ctx.team, rowDirection: ScanDirection.REARMOST }),
-  }),
-)
-```
+- **Table**: `ARTIFACT_TARGETING` keyed by artifact id, `(grid, team) => (TargetCandidate | null)[]`, using the same `frontmostUnit` / `rearmostUnit` helpers as hero skills so phantimals and companions count identically; seasonal entries sit under a season comment and are deleted with the season (see [SEASONAL.md](./SEASONAL.md))
+- **Derivation**: `artifactTargetArrows(grid, team, artifactId)` anchors on `artifactHostHex` (`/src/lib/grid.ts`) and dedupes hexes; `useGridContext.artifactArrows` is a `computed` over both slots and the grid, so no wiring in the place/move/remove paths
+- **Rendering**: `SkillTargeting.vue` draws them in `TEAM_ARROW_COLORS` (`useArrowLayer.ts`) beside skill arrows, sharing the toggle, geometry, and team view (which hides the enemy slot); `GridArrow` prefixes its marker id with the board id because SVG marker ids are document-wide and the Teams page renders several boards
 
-### Pattern 3: multi-tile paint (`createTilePaintSkill`)
-
-For skills whose whole behavior is highlighting a set of tiles that tracks the grid state (Himmel's class trio). `calculate(ctx)` returns the full set for the current grid (`{ hexId, color, fill? }[]`); the paint diff on update and the cleanup on deactivate come from `withTilePaint` (below):
-
-```typescript
-import { registerSkill } from '../registry'
-import { createTilePaintSkill } from '../utils/builders'
-
-// What it does (gameplay behavior).
-registerSkill(
-  createTilePaintSkill({
-    id: 'my-skill',
-    characterId: 123,
-    calculate: (ctx) => computeTiles(ctx), // returns { hexId, color, fill? }[]
-  }),
-)
-```
-
-### Pattern 4: companion units (`createCompanionSkill`)
-
-For skills that spawn extra units (Phraesto's shadow, Lailah, Zanie's turrets). The factory owns the whole lifecycle: random free-tile placement, the team-capacity bump (`count` companions raise it by `count`), companion links, modifiers, rollback-and-throw on placement failure, and full teardown with capacity restore on deactivation:
-
-```typescript
-import { registerSkill } from '../registry'
-import { createCompanionSkill } from '../utils/builders'
-
-// What it does (gameplay behavior).
-registerSkill(
-  createCompanionSkill({
-    id: 'my-skill',
-    characterId: 123,
-    count: 2, // companions to spawn (default 1); IDs are N * companionIdOffset + characterId
-    colorModifier: '#hexcolor', // optional - main character border
-    companionColorModifier: '#hexcolor', // optional - companion border
-    companionImageModifier: 'image-name', // optional - companion profile image
-    companionRange: 2, // optional - companion range override
-  }),
-)
-```
-
-### Pattern 5: custom lifecycle
-
-When no factory fits, pass the skill object directly to `registerSkill`. Declare a reused color as a local module const (assigned from the palette) so the activate/deactivate logic can reference it without reaching back into the registered object, and drive visuals through the SkillManager's `setTileColorModifier`/`setTileFillModifier` (or `paintTiles` for a multi-tile set). Both paint channels refcount per (tile, color), so independent skills can paint the same color on a shared tile and one skill's cleanup never clears another's; each remove call must still mirror its add. Kulu paints its cosmetic demolition zone this way (custom because its static zone deliberately skips the update repaint), leaving tile state untouched so the tiles stay placeable:
-
-```typescript
-import { registerSkill } from '../registry'
-import { type SkillContext } from '../skill'
-import { SKILL_COLORS } from '../utils/colors'
-
-const TILE_COLOR = SKILL_COLORS.slate
-
-// What it does (gameplay behavior).
-registerSkill({
-  id: 'my-skill',
-  characterId: 123,
-
-  onActivate(context: SkillContext) {
-    const { grid, team, characterId, skillManager } = context
-    // Paint tiles, spawn companions, etc.
-    // Use skillManager.setTileColorModifier(hexId, TILE_COLOR) for tiles
-  },
-
-  onDeactivate(context: SkillContext) {
-    // Use skillManager.removeTileColorModifier(hexId, TILE_COLOR)
-  },
-
-  onUpdate(context: SkillContext) {
-    // Optional - recalculate targets, update visuals, etc.
-  },
-})
-```
-
-### Composing tile highlights onto another skill (`withTilePaint`)
-
-The registry holds one skill per character, so a character that already uses a factory (e.g. a companion skill) can't register a second skill just to highlight tiles. `withTilePaint(baseSkill, calculate)` wraps a base skill and runs a multi-tile paint pass after the base's own hooks. `calculate(ctx)` returns the tiles and colors for the current grid (`{ hexId, color, fill? }[]`, where `fill: true` tints the cell instead of its border); the wrapper diffs against the previously painted set (tracked per characterId-team) so stale colors clear before new ones apply, and clears all of them on deactivate. Reach for it when a highlight spans several tiles with a per-call color; unlike `createTileHighlightSkill` (single tile). Elijah-Lailah composes it onto its companion skill to outline the allies sandwiched between the twins.
-
-```typescript
-import { createCompanionSkill, withTilePaint } from '../utils/builders'
-
-registerSkill(
-  withTilePaint(
-    createCompanionSkill({/* ... */}),
-    (ctx) => calculateTiles(ctx), // returns { hexId, color }[]
-  ),
-)
-```
-
-When `calculate` needs a data-store fact about a unit, read it from `ctx.lookups`: `ctx.lookups?.factionOf?.(id)` for faction (companion resolves to its main character, phantimal to its seasonal faction), `ctx.lookups?.classOf?.(id)` for class. The resolvers are injected as one `SkillLookups` bag because that data lives outside the pure skill lib, so a new fact is added in one place rather than threaded through every context (Himmel uses `classOf` to highlight one tank, one mage, and one support among its same-team neighbours).
-
-### Connecting hexes with a line (`withSkillLine`)
-
-`withSkillLine(baseSkill, calculate)` is the line analog of `withTilePaint`: `calculate(ctx)` returns straight connection lines (`{ fromHexId, toHexId, color }[]`) that `SkillTargeting` draws border-to-border between the hex icons; same stroke width as targeting arrows but straight, no arrowhead, and self-colored (so it renders for any skill, not just targeting ones). Stack it with `withTilePaint` to do both (Elijah-Lailah draws a line between the twins and outlines the allies between them). Both visuals, like the tile borders and arrows, only show while `showSkills` is on.
-
-A line can instead pin to hex corners via `fromCorner`/`toCorner` (indices per `Layout.hexCornerOffset`). On a single hex (`fromHexId === toHexId`) that is an exact tile edge: `outlineEdges` in `utils/line.ts` converts a tile region into those segments, and `zoneOutline` wraps it for a radius around the caster, which is how Callan and Satrana trace the outer boundary of their 2-tile zones instead of coloring each tile. Across two hexes it is a lane boundary that the renderer re-clips to the visible region (Zandrok's wedge edges). Skills whose whole behavior is lines use `createLineSkill`, the line analog of `createTilePaintSkill` (Zandrok, Callan, Satrana).
-
-Skills are automatically imported via Vite's `import.meta.glob()` when `skill.ts` is loaded, triggering their self-registration: `/src/lib/skills/characters/` holds permanent hero skills, `/src/lib/skills/seasonal/` holds rotating seasonal-unit skills, deleted wholesale when a season retires.
-
-Skills must handle:
-
-- Activation failures (rollback state)
-- Clean deactivation
-- Team changes
-- Edge cases
-
-## Artifact Targeting
-
-Some artifacts act on specific units (Enlightening: the rearmost ally; Vanguard: the frontmost; Valorshield: both), and the board draws an arrow from the artifact's host cell to each of them. This is deliberately **not a Skill**. The rule that decides between the two mechanisms is ownership:
-
-- A **Skill** is owned by a placed unit. It is keyed `characterId-team`, activates when the unit is placed, updates as the board changes, and deactivates when the unit leaves; that lifecycle is also what lets it carry side effects (companions, capacity, tile paints).
-- A **derived value** is owned by board-level state that is not a unit: the artifact slots, or the closest-target debug map. There is no placement to hook and nothing to roll back, so it is a `computed` on the board context that re-evaluates whenever the slot or the grid changes.
-
-Hero arrows that look equally "pure" (Talene, Bonnie) stay Skills because a unit owns them; an artifact has no hex and no `characterId`, so nothing in the lifecycle could track it.
-
-- `/src/lib/skills/artifact.ts` holds the definition table, keyed by artifact id: `(grid, team) => (TargetCandidate | null)[]`, the units the artifact acts on given the slot's team (a null pick is a rule that found no unit). Entries use the whole-team helpers `frontmostUnit` / `rearmostUnit` from `utils/distance.ts` (the same rule Talene and Bonnie use), so phantimals and companions count like they do for hero skills. `artifactTargetArrows(grid, team, artifactId)` resolves a slot to distinct `{ team, fromHex, toHex }` arrows, anchored on `artifactHostHex` (`/src/lib/grid.ts`). The rotating season's entries sit under a season comment in the same table and are deleted with the season's data files (SEASONAL.md lists this in the artifact retirement step).
-- `useGridContext` exposes `artifactArrows`, a `computed` over the two slots and the grid's tiles, so the arrows re-evaluate on every placement change and slot change with no wiring in the place/move/remove paths.
-- `SkillTargeting.vue` renders them next to the skill arrows in the team's arrow hue (`TEAM_ARROW_COLORS`, `useArrowLayer.ts`), so they share the Skills toggle, the arrow layer geometry, the perspective lift, and team view (which hides the enemy slot and its arrows). `GridArrow` and `GridLine` take `Hex` endpoints (an artifact host cell has no tile id) and draw through the board's `ctx.layout`; `GridArrow` prefixes its arrowhead marker id with the board id, since SVG marker ids are document-wide and the 5 v 5 page renders several boards.
-
-Adding an artifact is one table entry. If an artifact ever needs a side effect (a spawned unit, a capacity change), that is the point to give skills a caster-agnostic source rather than to extend this table.
+If an artifact ever needs a side effect (a spawned unit, a capacity change), give skills a caster-agnostic source rather than extending this table.
 
 ## Skill Page Pipeline
 
-Distinct from the in-game runtime above: this is the documentation surface, the `/skills` browser page, the `SkillModal` popup, and the per-hero SSG pages at `/<lang>/skill/<slug>`, that renders a hero's skill text, filter chips, and optional commentary.
+Distinct from the runtime above: the `/skills` browser, the `SkillModal` popup, and the pre-rendered `/<code>/skill/<slug>` pages (one per language and hero, 16 × roster) render a hero's skill text, tag chips, and optional commentary. Body text and hero name follow the text locale; chips, labels, and roster text follow the chrome locale.
 
-Skill text is served in every language the upstream feed publishes (`SKILL_LOCALES` in `/src/lib/types/i18n.ts`, 16 today) while the site chrome stays en/zh: two locale axes, `SkillLocale` for the body text and hero name, `AppLocale` for labels and chips. The URL prefix is the skill-text language; a globe dropdown (`SkillLocaleMenu`) on the reader header and in the modal switches it, while the header en/中 toggle keeps owning the chrome.
+### Locale Files (`/src/locales/skill/<code>/`)
 
-### Two sources of truth
+| File             | Written by               | Purpose                                                                             |
+| ---------------- | ------------------------ | ----------------------------------------------------------------------------------- |
+| `<slug>.json`    | `npm run import:skills`  | Per-hero skill text (shape below)                                                   |
+| `_keywords.json` | `npm run import:skills`  | Glossary key → tooltip text for `[[label\|key]]` tokens                             |
+| `_charms.json`   | `npm run import:charms`  | Seasonal charm text, rendered by `SkillCharmSection` ([SEASONAL.md](./SEASONAL.md)) |
+| `index.ts`       | importer, non-en/zh only | Eager same-dir glob that bundles the directory as one lazy chunk                    |
 
-- **`/src/data/character/<slug>.json`**: hand-curated. Owns roster membership and a `tags` overlay (filter metadata).
-- **`/src/locales/skill/<code>/<slug>.json`**: auto-generated by `npm run import:skills`, one dir per `SKILL_LOCALES` code. Owns per-language skill names, per-level descriptions, the feed's localized hero name (`_hero`), and the game's official slot-type labels (`_terms`: "Ultimate" / "Exclusive Equipment" in the file's language). Never hand-edited (the dir is also prettier-ignored so the importer's compact output is stable).
-
-en/zh are eagerly bundled (the search index, guide panels, and the en fallback read them synchronously); every other language is **one lazy chunk per locale**, produced by an importer-emitted `index.ts` in each dir and loaded via `loadSkillLocale(lang)` (promise-cached; the `warmSkillLocale` global `beforeResolve` guard warms it before any skill route renders, see [PRE_RENDERING.md](./PRE_RENDERING.md)).
-
-SSG routes are generated at build time by walking the locale dirs: every `(language, hero)` file produces a `/<code>/skill/<slug>` page (~1.9k). Coverage across languages is asserted by the importer (every locale's slug set must equal en's, or the import fails), so at runtime `hasSkillLocale(slug)` answers from en presence alone and gates the surfaces where a missing locale would otherwise surface a dead link; `SkillReader`'s `visibleSlug` computed and the info-icon button in `CharacterInfoIcons`. The importer currently covers the full roster, so the guard is dormant in practice; it exists for the transient state where a new character JSON has been added but `npm run import:skills` hasn't been re-run yet.
-
-### Locale file contract
-
-Slot keys and on-disk shape are defined in `/src/lib/types/skill.ts` and are the single source of truth for both renderer and importer:
+The directory is prettier-ignored (compact importer output) and never hand-edited. Underscore files ride the chunk but `splitSkillDict` separates them at load time, so slug walks and the search index only see heroes; the SSG route walk skips them too.
 
 ```typescript
-export const SLOT_ORDER = ['ultimate', 'skill2', 'skill3', 'mastery', 'ex', 'awakening'] as const
-export type SlotKey = (typeof SLOT_ORDER)[number]
-
-export interface SkillRefineEntry {
-  t: number // tier; 2 or 4 in current data
-  d: string // pre-rendered body text
-}
-
-export interface SkillLocaleSlot {
-  n?: string | null // the skill's name in the file's language (every slot, every locale)
-  d: string[] // d[i] is description for level i+1
-  r?: SkillRefineEntry[] // EX refinement tiers (currently only on `ex`)
-}
-// `_hero` is the feed's localized hero display name: skill pages and the
-// search index read it in every language (curated character locales stay on
-// chrome surfaces and as search aliases). `_terms` carries the game's
-// official "Ultimate" / "Exclusive Equipment" labels for heading prefixes.
-export type SkillLocaleFile = {
-  _hero?: { name: string }
-  _terms?: { ultimate: string; ex: string }
-} & Partial<Record<SlotKey, SkillLocaleSlot>>
-
-// src/locales/skill/<lang>/_keywords.json: glossary key → tooltip text.
-export type SkillKeywords = Record<string, string>
+// src/lib/types/skill.ts: on-disk shape of <slug>.json
+type SkillLocaleFile = {
+  _hero?: { name: string } // feed's localized hero name
+  _terms?: { ultimate: string; ex: string } // official slot-type labels
+} & Partial<
+  Record<
+    SlotKey,
+    {
+      n?: string | null // skill name
+      d: string[] // d[i] is the description for level i+1
+      r?: { t: number; d: string }[] // EX refinement tiers, `ex` slot only
+    }
+  >
+>
 ```
 
-Description encoding: `[[…]]` wraps highlights; `<TAG>` wraps stat-tag pills (`<ATK>`, `<HP>`). A glossary keyword carries its language-independent key after a pipe (`[[frontmost|frontest]]`); the key resolves against the language's `_keywords.json`, which sits beside the hero files so each language chunk ships its own glossary (the underscore keeps it out of the hero-slug namespace, and the SSG route walk skips underscore-prefixed files). All tokens render via `utils/textHighlight.ts`; keyword spans get their hover/tap tooltip from `SkillKeywordTooltip.vue`, which delegates on the `SkillSections` article because the spans live in `v-html` output. The `[[…]]` grammar is mirrored in `utils/searchHighlight.ts` (corpus and rich pieces keep the label, drop the key) and in `vite.config.ts`'s meta-description extraction.
+- **Slot order**: `SLOT_ORDER = ['ultimate', 'skill2', 'skill3', 'mastery', 'ex', 'awakening']` is both render order and the snippet slot contract
+- **Loading**: en/zh are eagerly bundled (`loadSkillLocales`); other languages load through `loadSkillLocale(lang)`, promise-cached with a failed fetch evicted so the next call retries
+- **Route warm-up**: `warmSkillLocale` is a global `beforeResolve` (not `beforeEnter`, which skips the globe menu's param-only navigation) that awaits the chunk before any `skill` route renders, since vite-ssg renders once without Suspense
+- **Coverage**: The importer asserts every locale's slug set equals en's, so `hasSkillLocale(slug)` answers from en presence alone and gates `CharacterInfoIcons`, `SkillModal`, and `SkillReader.visibleSlug` against dead links
 
-EX refinement tiers (`r`) only appear on the `ex` slot when the source data has them (≈99% of heroes for tier 2, ≈98% for tier 4 in current AFKJ data). Tier 2 is the class-shared Rivalry Skill unlocked at EX +27; tier 4 is the new-attribute introduction at EX +29, rendered via the localized "Lvl. N Refinement" template. They render as additional rows below the regular levels with a `REFINE N` badge in `SkillSection.vue`. Refinement tiers are not taggable; the `tags` overlay only attaches to numeric level rows.
+### Text Grammar (`/src/utils/textHighlight.ts`)
 
-### Tag overlay
+- `[[value]]` renders a highlight; `[[label|key]]` renders a glossary keyword whose tooltip resolves `key` in the language's `_keywords.json`; `<ATK>`-style tags render stat pills
+- `HIGHLIGHT_RE`, `STAT_TAG_RE`, and `splitHighlightToken` are the single grammar, imported by `searchHighlight.ts` (strips tokens for the search corpus), `scripts/import-skills.ts`, and `vite.config.ts`
+- Keyword spans sit in `v-html` output, so `SkillKeywordTooltip` delegates on the `SkillSections` article rather than binding per span
 
-`tags` on a character is a map keyed by tag name; each value is an array of `{slot: level}` attachments. An empty array means the tag is character-level only.
+### Tag Overlay (`/src/data/character/<slug>.json`)
 
 ```jsonc
 "tags": {
-  "special-target":     [{ "skill2": 1 }],
-  "temp-buff":          [{ "skill2": 1 }, { "awakening": 1 }],
-  "initial-energy-300": []
+  "special-target": [{ "skill2": 1 }],
+  "temp-buff":      [{ "skill2": 1 }, { "awakening": 1 }],
+  "initial-energy-300": []          // empty: character-level only
 }
 ```
 
-`useSkillTags(slug)` exposes `perLevel(slot, level)` and `perCharacter`. `SkillSections` renders the per-character union as a chip strip at the top, and per-section chips as the union across that slot's levels. The character-selection filter reads `Object.keys(char.tags)` directly for cross-hero filtering; no composable needed.
+- `useSkillTags(slug)` exposes `perLevel(slot, level)` and `perCharacter`; `SkillSections` shows the per-character union as a chip strip and each slot's union beside its heading, and an active chip hides levels without it
+- Refinement rows (`r`) are not taggable and disappear under any active chip
+- Labels resolve from `/src/locales/app/<tag>.json`; `useCharacterFilters` reads `Object.keys(c.tags)`, and `/skills?tag=<name>` seeds that filter
+- The importer never touches `tags`; adding a tag is one locale file plus attachments
 
-Tag display labels resolve through `/src/locales/app/<tag>.json`. Adding a new tag means adding that locale file plus the attachments to the relevant character JSONs.
+### Headings and Names (`/src/utils/skillLabels.ts`)
 
-### Render pipeline
+- `ultimate` / `ex` → `<_terms prefix>: <n>`; `skill2` / `skill3` → `n`; `mastery` / `awakening` → `n`. The app labels `ultimate`, `ex-skill`, `hero-focus`, `enhance-force` are fallbacks only, but stay the chrome-locale labels for search-result slot chips
+- `heroDisplayName` reads `_hero.name` in the text locale, then the curated en name, then the slug; curated en/zh names (`/src/locales/character/`) stay on chrome surfaces and as search aliases
+- Refinement tiers render below the level rows with an `R<tier>` badge (`SkillSection.vue`)
 
-- **`SkillSections.vue`** is the canonical wrapper used by both `SkillReader` (the left panel of the shared `SkillsBrowser`) and `SkillModal`. It owns the chip filter state, composes section headings, and provides the snippet teleport anchors. Its root is `<article>` so SSG meta extraction (`vite.config.ts`) can pull the description: the browser keeps its other column free of `<article>` so the first match stays the skill text.
-- **`SkillSection.vue`** renders one slot's heading + per-level descriptions. A level is shown if any of its tags is in the active chip set (empty filter shows all).
-- **Heading composition** (per `SLOT_ORDER`):
-  - `ultimate` / `ex` → `<prefix>: <name>` (prefix from the file's `_terms`; the `ultimate`/`ex-skill` app labels are fallbacks only)
-  - `skill2` / `skill3` → just `<name>`
-  - `mastery` / `awakening` → `n` (the invariant in-game skill name; the `hero-focus`/`enhance-force` app labels remain as fallbacks only)
-- **Label vs text locale**: skill headings are fully content-language (names from `n`, ultimate/ex prefixes from the file's `_terms`, the game's official terms); chips, tag labels, and search-result slot labels render in the chrome locale (`AppLocale`)
+### Routes and Meta
 
-### Per-hero commentary
+- Route: `/:textLocale(<SKILL_LOCALE_CODES>)/skill/:name` in `/src/router/routes.ts`; `/skills` is the SPA index. `vite.config.ts` builds the SSG list by walking each locale directory and fails on a missing one
+- `splitLocalePath` matches only `(en|zh)`, so a `/ko/...` prefix parses as unprefixed: the chrome store never pins to a non-app language, and the header toggle flips the chrome preference in place there instead of rewriting the URL
+- SSG post-processing sets `<html lang>`, adds a `modulepreload` for the page's locale chunk on non-en/zh pages, and extracts the meta description from the first `<article>` (the `SkillSections` root); the rest of the browser stays `<article>`-free so that match is the skill text
 
-Most heroes are covered entirely by the locale file. When a hero needs extra material, a mechanics explanation, a worked example, a grid visualization, drop an optional file at `/src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (one per language). It is picked up by file-name convention; no registration step.
+### Commentary Snippets (`/src/content/skill/<slug>/`)
 
-Commentary is authored against a fixed set of "slots" (the same `SLOT_ORDER` as the locale file) so each block lands next to the skill it explains. The wrapper component is `<SkillSnippets>`, with one named slot per skill section:
+Optional `<HeroNameCamelCase>.<lang>.vue` (en/zh only) is picked up by a glob in `SkillSections`; resolution order is the text locale when it is an app locale, then the chrome locale, then en.
 
 ```vue
-<template>
-  <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="how-it-works">
-        <p>Custom explanation...</p>
-      </SkillSnippet>
-    </template>
-  </SkillSnippets>
-</template>
+<SkillSnippets>
+  <template #skill2>
+    <SkillSnippet title-key="how-it-works">
+      <p>Custom explanation...</p>
+    </SkillSnippet>
+  </template>
+</SkillSnippets>
 ```
 
-`<SkillSnippet>` is the styled callout box; `title` / `title-key` / `body-key` props let it inline copy or pull shared boilerplate from `/src/locales/app/<key>.json`. Grid visualizations co-locate a `<HeroNameCamelCase>.data.ts` alongside the snippet and render via `<GridSnippet>`. The data file is pure grid config: `character` keys are roster slugs, and `GridSnippet` resolves each portrait from the shared character-image map (`loadCharacterImages`), so data files import no images.
+- Slot names are `SLOT_ORDER` keys; `useSnippetAnchors` provides one anchor per rendered section (`snippetKeys.ts`) and `SkillSnippets` teleports each filled slot into it. Without anchors (guide panels) the slots render inline in slot order
+- `SkillSnippet` takes `title`, `title-key`, or `body-key`, resolving keys from `/src/locales/app/`
+- Grid diagrams pair a `<Hero>.data.ts` with `<GridSnippet>`; the data's `character` map is keyed by roster slug and portraits come from `loadCharacterImages`, so data files import no images
 
-Under the hood, `<SkillSections>` reserves an anchor element after each rendered skill section and provides the anchor map; `<SkillSnippets>` reads it and moves each filled slot into the matching anchor at render time. The slot keys and the section order are therefore the contract; adding a new slot key is a one-line change in `src/lib/types/skill.ts` that the snippet system inherits automatically.
+### Browser and Search
 
-### Skill browser
+- **URL as state**: `SkillsBrowser.vue` backs both `/skills` and every permalink; roster cells in `SkillsSelection` are `RouterLink`s to `/<linkLocale>/skill/<slug>`, where `linkLocale` is the page's text locale on a hero page and `effectiveSkillLocale` (saved globe preference, else app locale) on the index
+- **SSG-safe data**: The browser calls `gameDataStore.initializeContentData()` so the roster and its crawlable links pre-render
+- **Locale menu**: `SkillLocaleMenu` in the reader header and in `SkillModal` (`useModalSkillLocale`) switches the text language; the header en/中 toggle owns chrome only
+- **Mobile**: At ≤768px (`TABLET_MAX_WIDTH`) the roster is a `BottomSheet`, open on the index and peeked on a hero page
+- **Overlay**: `SkillSearchOverlay` mounts once at App root and teleports after mount (SSG carries only the triggers); ⌘K / Ctrl+K toggle it, `/` opens it unless focus is in a text field, `HeaderSearchTrigger` swaps from pill to icon below 921px, and ≥1220px (`SPLIT_MIN_WIDTH`) adds a detail pane. Escape is handled in capture phase and any route change closes it, so a select-mode handler (`useSearchOverlay().openSelect`, used by the arena roster) never outlives its page. Recents persist under `stargazer.recentHeroes`
+- **Deep links**: Result rows link to `/<hit locale>/skill/<slug>#<slot>`, resolved by `SkillSection` ids and the router `scrollBehavior`
 
-One layout, `SkillsBrowser.vue`, backs both the `/skills` index (SPA) and every `/<lang>/skill/<slug>` permalink (SSG). Left column `SkillReader` shows the active hero's `SkillSections` (or an empty prompt on `/skills`); right column `SkillsSelection` is the filterable character grid (text search lives in the search overlay).
+`useSkillSearch(query, appLang, textLang)` rules:
 
-The URL is the single source of truth; there is no selection store. Each character in the grid is a `<RouterLink>` to `/<textLocale>/skill/<slug>`, so picking a hero is a navigation, not local state. Roster links keep the current text-locale prefix (browsing hero to hero never loses the reading language); on the `/skills` index the prefix is `effectiveSkillLocale` (saved globe pref, else app locale). Search-result links are WYSIWYG instead: each result links to the locale of its matched hit. On a permalink page the left column reads its hero from the route param and that hero is highlighted in the grid; on `/skills` the left column stays empty until the first click navigates into a permalink.
+| Rule     | Behavior                                                                                                                 |
+| -------- | ------------------------------------------------------------------------------------------------------------------------ |
+| Corpus   | Every warm locale; the first non-empty query loads all missing chunks and a version tick re-runs the query as each lands |
+| Names    | `_hero.name` per language plus curated en/zh aliases; ≥1 character matches names                                         |
+| Deep     | ≥3 characters (≥2 for Han, kana, Hangul) adds skill names, descriptions, and charm text                                  |
+| Priority | Text locale, then app locale, then table order; each hit records the locale it matched in and links there                |
+| Dedup    | One hit per (slug, slot) at the lowest level; charm hits share one pseudo-slot; at most 3 hits per hero                  |
+| Ranking  | Name-matched heroes first, then hit count, then curated name                                                             |
+| Picker   | `matchCharacterNames` (on-grid `CharacterSelectionPalette`) matches warm locales only and never loads                    |
 
-Because the permalink pages are pre-rendered, `SkillsBrowser` loads its data through `gameDataStore.initializeContentData()` (SSR-safe, unlike the client-only `initializeData`), so the full grid, and its crawlable inter-page links, bakes into the static HTML and hydrates without a mismatch. Chrome locale stays URL-authoritative for en/zh prefixes: `App.vue` syncs the i18n store from the path (`splitLocalePath`), and the language toggle (`useLocaleToggle`) navigates to the sibling-locale URL on `/{en,zh}/...` routes instead of flipping global state. Non-en/zh prefixes parse as unprefixed, so on those pages the toggle flips the chrome preference in place and the globe menu owns the content language.
+### Importer (`scripts/import-skills.ts`)
 
-On mobile (≤768px) the roster column becomes a **pull-up bottom sheet** over the reader via the shared `BottomSheet` component (`components/ui/BottomSheet.vue`, backed by `useBottomSheet`): the layout is CSS-driven so the SSG markup hydrates without a mismatch, and the composable adds the drag once mounted (touch or mouse). It opens on the empty `/skills` index and stays peeked on a hero page (so it doesn't cover the skill content); when expanded, a tap-scrim behind it collapses it on tap. The grid page (`HomeView`) uses the same `BottomSheet`, so the two roster sheets are identical by construction; `SkillsSelection` owns its in-sheet fill/scroll, just as the grid's `TabView` roster does.
+- Reads `<src-dir>/<feed>/skills.json` (default `../afkj-data-viewer/public/api`) or `<url-base>/<feed>/skills.json` for every `SKILL_LOCALES` row; the `feed` column maps nonstandard feed codes to the BCP-47 `code` used for directories and URLs
+- Requires `_meta.terms` and `_meta.keywords` in each feed, and fails when locales disagree on hero set, slot set, or a keyword token lacks a glossary entry
+- Read-only against character files; writes are diff-then-write, so an unchanged run is a no-op. Heroes absent from the feed and locale directories not in `SKILL_LOCALES` are warned, not failed
+- Adding a language is one `SKILL_LOCALES` row plus a re-run; removing one is deleting the row and its directory
 
-On `/skills` the search UI is a global search overlay: `SkillSearchTrigger` (a button dressed as the search input, in the roster panel) opens `SkillSearchOverlay`, mounted once at App root and rendering nothing until opened (teleported, client-only, so SSG pages carry only the trigger). Results are grouped per-hit rows: the portrait appears once per hero, continuation rows indent, each row leads with the skill's name in the hit's language and deep-links to `/<locale>/skill/<slug>#<slot>` (`SkillSection` ids + the shared router `scrollBehavior`). The empty state lists recently viewed heroes (`useRecentHeroes`, localStorage `stargazer.recentHeroes`, recorded by `SkillReader`); `⌘K`/`Ctrl+K` toggle it from any page, `/` opens it when nothing else is focused, and the site header gives every page a visible entry point: a compact `HeaderSearchTrigger` pill leading the nav tabs on wide headers, swapped below 921px for a plain search icon in the utility cluster (App.vue's `.nav-search`/`.menu-search` pair). Scroll locking rides the shared `useScrollLock`; Escape is a capture-phase handler and clicks are contained at the backdrop, so closing or clicking the overlay never disturbs a modal beneath it, and back/forward navigation closes the overlay (a select-mode handler must not outlive its page). At ≥1220px (the two-column stack point) the panel widens and splits into a hero list plus a detail pane showing the selection's full hits. The arena roster reuses the same overlay in **select mode**: its trigger passes a `select` handler (`useSearchOverlay().openSelect`), and a chosen hero is placed on the board instead of navigated to; only the on-grid picker popup keeps an inline name filter (`matchCharacterNames`).
+## Related Documentation
 
-`useSkillSearch(query, appLang, textLang)` searches **all 16 locales**. It builds an in-memory per-language index lazily over whatever corpora are warm: en/zh are always warm (eager bundle, no extra cost); the first non-empty query background-loads every missing locale chunk, and a reactive tick re-runs the open query as each arrives, so results refine live. Match priority is the active text locale, then the app locale, then the rest; every hit carries the locale its text matched in and links there (WYSIWYG per hit, since per-slot dedup can source a hero's hits from different languages). Hero names index from `_hero.name` in every language, with the curated en/zh names kept as extra aliases so zh community nicknames stay searchable. Matching rules: ≥1 char matches hero name only; ≥3 chars (≥2 for CJK) adds skill names + descriptions. At most one hit per (slug, slot), multiple-level matches collapse to the lowest level. Results capped at 3 hits per hero; name-matched heroes rank above text-only matches, then by hit count. `matchCharacterNames` (the on-grid picker) matches warm locales only and never triggers loads; chunk-load failures are soft (the language just never joins the index).
-
-### Importer
-
-`npm run import:skills` (`scripts/import-skills.ts`) reads one bulk feed per language in `SKILL_LOCALES` (mapping nonstandard feed codes like `kr`/`jp`/`tw` to the lowercase BCP-47 dir names `ko`/`ja`/`zh-tw`), walks `/src/data/character/*.json`, and writes `/src/locales/skill/<code>/<slug>.json` plus a per-dir `index.ts` chunk module for the non-en/zh locales. Per-locale source path: `<src-dir>/<feed>/skills.json` (local) or `<url-base>/<feed>/skills.json` (remote); the default `--src-dir` is the sibling afkj-data-viewer checkout's `public/api`. It emits the trimmed feed hero name as `_hero.name`, the official slot-type labels from the feed's `_meta.terms` as `_terms` (requiring their presence: a feed without them predates the producer's terms export), and `n` for every slot in every locale; it **asserts uniform coverage** (every locale's slug set must equal en's, or the run fails; hreflang and `hasSkillLocale` depend on it) and warns about locale dirs on disk that are no longer in `SKILL_LOCALES`. Read-only against character files (hand-curated `tags` are never touched) and idempotent (diff-then-write; the dir is prettier-ignored). Heroes missing from the feed entirely are reported, not failed. Adding a language is one `SKILL_LOCALES` row + a re-run; removing one is deleting the row and its dir.
+- [`/docs/architecture/skills/COMPANION.md`](./skills/COMPANION.md) - Companion spawning, links, and capacity
+- [`/docs/architecture/skills/TARGETING.md`](./skills/TARGETING.md) - Distance, ring, and symmetry targeting helpers
+- [`/docs/architecture/GRID.md`](./GRID.md) - Grid, transactions, and the synergy id band
+- [`/docs/architecture/SEASONAL.md`](./SEASONAL.md) - Seasonal skills, artifacts, and charm text
+- [`/docs/architecture/PRE_RENDERING.md`](./PRE_RENDERING.md) - SSG route generation and locale chunk warm-up

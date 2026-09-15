@@ -303,7 +303,9 @@ export const useGrids = defineStore('grids', () => {
 
   // Cross-board swap of two occupied cells: remove both, place each on the
   // other's cell, restore both originals on any failure. Routing-layer validation
-  // (uniqueness, companions, phantimal faction) ran in canDropCharacter.
+  // (uniqueness, companions, phantimal faction, capacity) ran in canDropCharacter.
+  // The second placement waits for the first to succeed: a placement can evict
+  // a board's phantimal (one per team), which a rollback could not restore.
   const crossGridSwap = (
     sourceCtx: GridContext,
     sourceHexId: number,
@@ -323,8 +325,7 @@ export const useGrids = defineStore('grids', () => {
       return false
     }
     const placedA = placeUnit(targetCtx, targetHexId, aId, bTeam)
-    const placedB = placeUnit(sourceCtx, sourceHexId, bId, aTeam)
-    if (placedA && placedB) {
+    if (placedA && placeUnit(sourceCtx, sourceHexId, bId, aTeam)) {
       // Attrs follow each hero. Take both records before writing either: a
       // same-hero cross-team swap (aId === bId) reuses a key.
       const aRecord = sourceCtx.takeAttrs(aTeam, aId)
@@ -334,7 +335,6 @@ export const useGrids = defineStore('grids', () => {
       return true
     }
     if (placedA) targetCtx.remove(targetHexId)
-    if (placedB) sourceCtx.remove(sourceHexId)
     placeUnit(sourceCtx, sourceHexId, aId, aTeam) // rollback to originals
     placeUnit(targetCtx, targetHexId, bId, bTeam)
     return false
@@ -534,6 +534,7 @@ export const useGrids = defineStore('grids', () => {
       // Re-align the phantimal reconciler so a save that deliberately omits its
       // phantimal doesn't get one auto-placed after this batch.
       ctx.seedPhantimalBaseline()
+      ctx.refreshSkills()
     }
     deriveSynergy()
     return { placed, skipped }
@@ -730,6 +731,14 @@ export const useGrids = defineStore('grids', () => {
       isUsed(residentId, sourceTeam, sourceGridId)
     ) {
       return false
+    }
+    // A hero swapped for a phantimal takes a hero slot the phantimal never
+    // held, so the board it lands on must still have one free.
+    if (isPhantimalId(residentId) && !isPhantimalId(movingId)) {
+      return getAvailableTeamSize(targetCtx.grid, residentTeam) > 0
+    }
+    if (isPhantimalId(movingId) && !isPhantimalId(residentId)) {
+      return getAvailableTeamSize(sourceCtx.grid, sourceTeam) > 0
     }
     return true
   }

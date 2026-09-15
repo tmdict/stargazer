@@ -23,6 +23,7 @@ import {
   ALLY_B,
   ENEMY_A,
   ENEMY_B,
+  EVIE,
   PHRAESTO,
   PHRAESTO_COMPANION,
 } from '../fixtures/characters'
@@ -184,6 +185,59 @@ describe('urlStateStore.restoreFromEncodedState', () => {
       restored.grid.getAllTiles.filter((t) => t.characterId === PHRAESTO_COMPANION),
     ).toHaveLength(1)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
+  })
+
+  it('recomputes skill targeting once the last companion is settled', () => {
+    // Evie's quill follows the rearmost ally (the lowest ally hex), so a
+    // companion settled on hex 1 after its main's placement is her target only
+    // if the skills are refreshed at the end. The spawn is pinned so the
+    // companion never lands on hex 1 by chance.
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const source = createStores()
+    expect(source.character.placeCharacterOnHex(5, EVIE, Team.ALLY)).toBe(true)
+    expect(source.character.placeCharacterOnHex(6, PHRAESTO, Team.ALLY)).toBe(true)
+    const spawnHexId = source.grid.getAllTiles
+      .find((t) => t.characterId === PHRAESTO_COMPANION)!
+      .hex.getId()
+    expect(spawnHexId).not.toBe(1)
+    expect(source.character.moveCharacter(spawnHexId, 1, PHRAESTO_COMPANION)).toBe(true)
+    const encoded = encodeStores(source)
+
+    const restored = createStores()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+
+    expect(restored.grid.getTile(1).characterId).toBe(PHRAESTO_COMPANION)
+    const ctx = useGrids().active!
+    expect(ctx.skillManager.getSkillTarget(EVIE, Team.ALLY)?.targetHexId).toBe(1)
+  })
+
+  it('adopts the preset a map-less payload reproduces, populated or not', () => {
+    const source = createStores()
+    expect(source.grid.switchMap('arena2')).toBe(true)
+    const spawn = source.grid.getAllTiles.find((t) => t.state === State.AVAILABLE_ALLY)!
+    expect(source.character.placeCharacterOnHex(spawn.hex.getId(), ALLY_A, Team.ALLY)).toBe(true)
+    const encoded = encodeStores(source)
+    const expected = snapshotTiles(source.grid)
+
+    const restored = createStores()
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+
+    expect(restored.grid.currentMap).toBe('arena2')
+    expect(snapshotTiles(restored.grid)).toEqual(expected)
+  })
+
+  it('keeps the current map when the tiles match no preset', () => {
+    const source = createStores()
+    source.grid.setState(source.grid.getHexById(20), State.BLOCKED)
+    const encoded = encodeStores(source)
+
+    const restored = createStores()
+    expect(restored.grid.switchMap('arena2')).toBe(true)
+    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
+
+    expect(restored.grid.currentMap).toBe('arena2')
+    expect(restored.grid.getTile(20).state).toBe(State.BLOCKED)
+    expect(snapshotTiles(restored.grid)).toEqual(snapshotTiles(source.grid))
   })
 
   it('round-trips phantimals through their local-id mapping', () => {

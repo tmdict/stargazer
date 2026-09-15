@@ -25,6 +25,7 @@ import { useGridSwap } from '@/composables/useGridSwap'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useShareLink } from '@/composables/useShareLink'
 import { disposeTeamImport } from '@/composables/useTeamImport'
+import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
 import { MAX_SAVED_TEAMS, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
@@ -51,6 +52,7 @@ const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { copyToClipboard, downloadAsImage } = useGridExport()
 const { success, error, show } = useToast()
+const { report } = useTeamLibraryFeedback()
 const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { cancel: cancelSwap } = useGridSwap()
 const shareLink = useShareLink()
@@ -140,8 +142,12 @@ const handleSave = () => {
   const canonical = canonicalActive.value
   const source = sourceTeam.value
   if (!canonical || !source) return
-  teamLibrary.update(source.id, canonical)
-  success(i18n.t('app.team-saved', { name: source.name }))
+  // Another tab can have deleted the record since the button was drawn.
+  if (!teamLibrary.update(source.id, canonical)) {
+    error(i18n.t('app.team-missing'))
+    return
+  }
+  report(i18n.t('app.team-saved', { name: source.name }))
 }
 
 const handleSaveAsNew = (name: string) => {
@@ -154,7 +160,7 @@ const handleSaveAsNew = (name: string) => {
   }
   teamsRestore.sourceId.value = team.id
   pendingName.value = null
-  success(i18n.t('app.team-saved', { name: team.name }))
+  report(i18n.t('app.team-saved', { name: team.name }))
 }
 
 const handleNewTeam = () => {
@@ -173,6 +179,7 @@ const handleRename = (name: string) => {
   const source = sourceTeam.value
   if (!source) return
   teamLibrary.rename(source.id, name)
+  report()
 }
 
 const handleLoadTeam = (team: SavedTeam) => {
@@ -206,7 +213,7 @@ const handleImportMatch = async (plan: TeamImportPlan) => {
   } else {
     teamsRestore.sourceId.value = team.id
     pendingName.value = null
-    success(i18n.t('app.import-saved', { name: team.name, maps, heroes: placed }))
+    report(i18n.t('app.import-saved', { name: team.name, maps, heroes: placed }))
   }
   if (skipped > 0) show(i18n.t('app.import-skipped', { count: skipped }), 'info')
 }

@@ -2,155 +2,132 @@
 
 ## Overview
 
-The grid system provides the spatial foundation for the game, managing hexagonal tiles, character positions, and state transitions. It integrates character management with automatic skill activation and implements atomic transactions to ensure data consistency across complex operations.
+The grid system provides the spatial foundation for the game, managing hexagonal tiles, character positions, and state transitions. Every board is a `GridContext` (a `Grid` plus its `SkillManager`), the `useGrids` store arbitrates across boards, and `lib/characters/` mutates a grid through atomic transactions that keep tile state and skill state consistent.
 
 ## Design Principles
 
-1. **Hexagonal Coordinate System**: Axial coordinates (q, r, s) for efficient neighbor calculations
-2. **Functional Character API**: Pure functions coordinate grid, skills, and UI
-3. **Transaction Pattern**: Complex operations are atomic with rollback capability
-4. **Team Isolation**: Separate tracking for ally and enemy placements
-5. **Performance Focus**: O(1) lookups using Map-based storage
+1. **Cube Coordinates**: Every hex is `(q, r, s)` with `q + r + s = 0`, enforced in the `Hex` constructor; the game's tile number is a separate `id`
+2. **Functional Character API**: `lib/characters/` is pure functions over a `Grid` and a `SkillManager`; the `Grid` exposes its team and companion state as public fields for them
+3. **Transaction Pattern**: Every composite operation runs through `executeTransaction`, with LIFO rollback from the first failing step
+4. **Identity by ID Band**: A unit's numeric band says what it is (hero, placeholder, companion, phantimal, synergy copy), so identity travels through moves, swaps, and serialization with no extra state
+5. **Boards Are Entities**: Per-board state lives on a `GridContext`; `useGrids` owns only what spans boards (active pointer, display globals, page-wide uniqueness, drop routing)
 
 ## Architecture
 
 ```
-┌─────────────────┐     ┌──────────────────┐
-│   Components    │────▶│  Store Layer     │
-│                 │     │                  │
-│ - GridTiles     │     │ - Grid Store     │
-│ - GridManager   │     │ - Character Store│
-│ - DragDrop      │     │ - Reactive state │
-└─────────────────┘     └────────┬─────────┘
-                                 │
-┌────────────────────────────────▼───────────────────────┐
-│                          Characters                    │
-│                                                        │
-│  • Character Queries      • Placement Operations       │
-│  • Team Management        • Removal Operations         │
-│  • Companion System       • Movement Operations        │
-│  • Tile Helpers           • Swap Operations            │
-│  • Transactions           • Skill Integration          │
-└─────────────────────────┬──────────────────────────────┘
-                          │
-         ┌────────────────┼───────────────────┐
-         │                │                   │
-┌────────▼──────┐ ┌───────▼───────────┐ ┌─────▼──────────┐
-│     Grid      │ │      Skills       │ │  Pathfinding   │
-│               │ │                   │ │                │
-│ Spatial State │ │ Skill Registry    │ │ A* Search      │
-│ Hex Tiles     │ │ Lifecycle Mgmt    │ │ BFS Search     │
-│ Team Tracking │ │ Visual Modifiers  │ │ Distance Calc  │
-│ Public Props  │ │ Activation System │ │ Target Finding │
-│               │ │                   │ │                │
-└───────────────┘ └───────────────────┘ └────────────────┘
+┌──────────────────────┐     ┌──────────────────────────────┐
+│      Components      │────▶│    useGrids + adapter stores │
+│                      │     │                              │
+│ - GridContainer      │     │ - board array, active id     │
+│ - GridManager        │     │ - display globals, Syn       │
+│ - GridTiles / Chars  │     │ - uniqueness, drop routing   │
+└──────────┬───────────┘     └──────────────┬───────────────┘
+           │ inject                         │ owns N
+           ▼                                ▼
+┌──────────────────────────────────────────────────────────┐
+│                GridContext (one per board)               │
+│  Grid + SkillManager + map + artifacts + attr records    │
+│  layout / crop / target maps / place / move / swap       │
+└──────────────────────────┬───────────────────────────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        ▼                  ▼                  ▼
+┌────────────────┐ ┌────────────────┐ ┌────────────────┐
+│ lib/characters │ │   lib/skills   │ │ lib/pathfinding│
+│ place / remove │ │ SkillManager   │ │ closest target │
+│ move / swap    │ │ companions     │ │ A* paths       │
+└────────────────┘ └────────────────┘ └────────────────┘
 ```
 
-## Multigrid: one or many boards
+## Boards
 
-One set of stores drives N independent boards. The Arena is the N=1 case; the Teams page's grid view is mode-driven: a `TEAM_MODES` entry (`/src/lib/teams/modes.ts`: 1v1, 3v3, 5v5, 5v5 Supreme League) selects the board count and per-board default maps, and `useTeamsRestore` (`/src/composables/useTeamsRestore.ts`) is the sole initiator of board-count changes on the page. Each mode autosaves to its own localStorage slot (`stargazer.teams.active.<mode>`, a versioned envelope with saved-team provenance), and every switch runs a pause → flush → rebuild-or-restore → resume sequence so a mode's slot is only ever written while that mode's boards are live. See [Teams](./TEAMS.md) for the page composition, mode registry, per-mode persistence, and the saved-team library built on top.
+### GridContext (`/src/composables/useGridContext.ts`)
 
-- **`GridContext` (`/src/composables/useGridContext.ts`)**: the per-board entity. Each board owns its `Grid`, `SkillManager`, current map, artifacts, derived layout/visibility/skill targets, and its place/move/swap/auto-place/clear operations. `createGridContext(id, mapKey, globals)` builds one; `provideGridContext` / `useGridContext` hand it to descendants.
-- **`useGrids` store (`/src/stores/grids.ts`)**: the aggregate. It owns the board array, the active-board pointer (`activeId` / `active`), the globals every board shares (hex size, team view, invert, and the Syn affordance `synergy`, which is never serialized: `deriveSynergy` re-reads it from board content after every restore and `setSynergy(false)` clears every team's assist slot), and the cross-board rules: page-wide character and artifact uniqueness (`findPlacement` / `isUsed`, `findArtifactPlacement` / `isArtifactUsed`), `resolvePick` (the engine's placement resolver plus page-wide uniqueness, used by every roster entry point), `placeOnActive`, `removeFromAnyBoard`, `dedupeCharacters` (post-restore uniqueness repair), and the drop routers. `routeDrop` gates every character drop through `canDropCharacter` (the predicate the drag-hover cue also reads), then roster and same-board drops use the board's own handler while cross-board drops compose remove + place as compensating transactions; `routeLiftDrop` wraps it for tap-lift drops, building the drag-style payload from the lifted cell so taps and drags share every gate; `routeArtifactDrop` does the same for artifacts via `resolveArtifactDrop` / `canDropArtifact`. Upgrade-attr records (paragon, refinement; `/src/lib/characters/attributes.ts`) travel whole with heroes on cross-board moves, swaps, and board exchanges (`swapBoards`); a same-board team change re-keys them inside the board's own move/swap. A successful drop makes the target board active. `setGridCount(n, maps?)` (re)builds the boards, clamped to `[1, MAX_GRID_COUNT]`.
-- **Adapter stores (`grid.ts`, `character.ts`, `skill.ts`, `artifact.ts`, `pathfinding.ts`)**: thin facades that forward the single-board API to `useGrids().active` (pathfinding forwards the context's closest-target maps for the debug panel). Single-board consumers (the Arena, the roster) read the active board through these and never learn how many boards exist; per-board components inject their own `GridContext` instead.
+The per-board entity. `createGridContext(id, mapKey, globals)` builds one; `provideGridContext` / `useGridContext` hand it to descendants. It owns the board's `Grid`, `SkillManager`, current map, artifact slots, and upgrade-attr records, the derived layout, crop, closest-target maps, and skill overlays, and the place / remove / move / swap / auto-place / phantimal / clear operations bound to that grid.
 
-A multi-board page renders one `GridContainer` per `GridContext` (each provides its own context); `useGrids` arbitrates across them. The Arena's `GridContainer` is bound to whichever board is _active_, and that instance is replaced when boards are rebuilt (navigating Arena ↔ Teams, or switching team modes, runs `setGridCount`), so the container provides the context through a small forwarding proxy; descendants always read the live board, never a disposed snapshot.
+- **Detached effect scope**: derived computeds and the phantimal watcher run in their own `effectScope`; `dispose()` stops it so a rebuilt board leaks no watchers
+- **Globals come from `useGrids`**: hex size, team view, invert, Syn, and the shared team-view crop are refs passed in, since every board renders at one size with one set of display flags
+- **Map switch rebuilds in place**: `switchMap` `Object.assign`s a fresh `Grid` over the reactive proxy (identity preserved), resets and re-attaches the `SkillManager`, and drops every attr record
+- **Team view**: always shows the ally side; the crop covers the visible hexes plus the ally artifact host cell, and on a multi-board page every board uses the union crop from `useGrids.sharedCrop` so the row stays even-sized
+- **Phantimal reconciliation**: a `placements` watcher removes a phantimal whose team fell below the faction requirement and auto-places one on the transition into qualifying (edge-triggered against `lastQualifyingPhantimal`); bulk restores call `seedPhantimalBaseline` afterwards so a saved state without its phantimal loads without one. See [Seasonal Content](./SEASONAL.md)
+- **`handleDrop` is same-board only**: grid-source drags move or swap, roster drops place (an occupied target is a replace resolved by `resolveReplacement`); cross-board routing lives one level up
+
+### useGrids (`/src/stores/grids.ts`)
+
+The aggregate: the board array, `activeId` / `active`, and the rules that span boards. It always holds at least one board (`setGridCount(1)` at creation); `setGridCount(n, maps?)` disposes and rebuilds, clamped to `[1, MAX_GRID_COUNT]` (5) so a crafted link cannot build arbitrary boards.
+
+- **Page-wide uniqueness**: a character is unique per (character, team) across all boards (`findPlacement` / `isUsed`); artifacts likewise per team (`findArtifactPlacement` / `isArtifactUsed`). Placeholders are exempt. `dedupeCharacters` repairs this after a bulk restore, keeping each pair's first placement in board order
+- **`resolvePick`**: the engine's `resolvePlacement` / `resolveReplacement` plus page-wide uniqueness; every roster entry point (click, tap, popup, drag gate) goes through it, so hover cues and drops cannot disagree
+- **`canDropCharacter`**: the read-only mirror of `routeDrop`'s validation, read by the drag-hover cue in `GridTiles`. The engine's per-grid checks still have the last word at drop time; a per-board rejection resolves as a silent no-op
+- **`routeDrop`**: roster and same-board drops use the board's `handleDrop`; cross-board drops compose remove + place as compensating transactions (`crossGridMove`, `crossGridSwap`, restoring the originals on failure). A successful drop makes the target board active. `routeLiftDrop` builds the drag-style payload from a lifted cell so tap-moves pass every drag gate; `routeArtifactDrop` / `canDropArtifact` do the same for artifacts via `resolveArtifactDrop`
+- **Live cells are authoritative**: drop payloads carry only source coordinates; ids and teams are read from the cells at drop time
+- **Attrs travel with heroes**: cross-board moves, swaps, and `swapBoards` transfer each hero's record with `setAttrs(dest, takeAttrs(source))`; a same-board team change re-keys inside the board's own move / swap
+- **`swapBoards`**: exchanges two boards' directly placed mains (with attrs) and artifacts, keeping teams; companions and phantimals re-derive from the roster, and placement is random, so formations are not preserved
+- **Syn flag**: `synergy` is never serialized; `deriveSynergy` re-reads it from board content after every restore, and `setSynergy(false)` removes every team's synergy unit on every board so the box always mirrors the boards
+
+### Adapter stores (`/src/stores/grid.ts`, `character.ts`, `skill.ts`, `artifact.ts`, `pathfinding.ts`)
+
+Thin facades forwarding the single-board API to `useGrids().active`. Single-board consumers (the Arena, the roster) read through these and never learn how many boards exist; per-board components inject their own `GridContext`. `GridContainer` provides its context through a forwarding `Proxy`: on the Arena the prop is bound to whichever board is active, and that instance is replaced when boards are rebuilt (page navigation and mode switches run `setGridCount`), so descendants always read the live board rather than a disposed snapshot.
+
+### Multiple boards on the Teams page
+
+A `TEAM_MODES` entry (`/src/lib/teams/modes.ts`) selects the board count and default maps; `useTeamsRestore` orchestrates every rebuild while the page is live, and `TeamsView` resets to one board on leave. Each mode autosaves to its own slot (`stargazer.teams.active.<mode>`, a versioned envelope with saved-team provenance and a default-map fingerprint). See [Teams](./TEAMS.md).
 
 ### Invert (view rotation)
 
-The engine has a fixed orientation: ally occupies the low hex-id side and targeting/pathfinding bake in "ally faces the high-id (enemy) side" (see `lib/skills/utils`, `pathfinding.ts`). Engine teams are display teams; nothing relabels them.
+The engine has one fixed orientation: ally occupies the low hex-id side and targeting assumes ally faces the high-id side (`lib/skills/utils/distance.ts`, `lib/pathfinding.ts`). Engine teams are display teams; nothing relabels them.
 
-`Invert` (`useGrids().inverted`) is a pure view transform: the board renders rotated 180 degrees, content untouched. Each board's `Layout` is rebuilt with a rotation flag (`useGridContext`'s layout computed reads `inverted`), and `Layout.hexToPixel` / `polygonCorners` reflect every position through the layout origin, the exact canvas center that the point-symmetric full grid rotates onto itself around. Because every render and interaction surface derives from that one layout (tiles, sprite positions, arrows, skill overlays, artifact host cells, popup anchors, crop bounds, and the point-in-polygon hit-testing in `GridManager.findHexUnderMouse`), the whole board flips consistently, walls and tile numbers included (which is what keeps invert correct on asymmetric maps), and clicks or drops on a rotated board resolve to the engine hex under the cursor by construction. Toggling twice is the identity.
+`inverted` (`useGrids`) is a pure view transform. Each board's `Layout` is rebuilt with the `rotated` flag: `hexToPixel` negates the offset from the origin (the canvas center the point-symmetric full grid rotates onto itself around), and `hexCornerOffset` negates too so corner index `i` keeps naming the same physical corner. Because tiles, sprites, arrows, skill overlays, artifact host cells, popup anchors, crop bounds, and `GridManager.findHexUnderMouse`'s point-in-polygon test all derive from that one layout, the board flips consistently (walls and tile numbers included) and a click on a rotated board resolves to the engine hex under the cursor by construction.
 
-Two surfaces need rotation awareness beyond the layout: `GridCharacters` paints sprites in ascending rendered-y order (near rows over far rows; grid storage order only matches on the canonical view), and `GridArtifacts` derives its front/back z-order from which host cell renders at the screen-bottom edge (`inverted` flips it). Thumbnails and guide snippets build their own layouts and never set the flag, so library and guide renderings stay canonical.
-
-The flag is serialized as a display flag (`d` bit 3) meaning "the sharer had the board rotated"; applying it on restore rotates the view and nothing else. On Teams it is a device-level view preference like the other toggles; the Arena keeps it in its own save slot. Each page resets the shared display globals (team view, invert) at setup, so a first visit with no saved state never inherits another page's toggles.
+- **Two surfaces need explicit rotation awareness**: `GridCharacters` paints sprites in ascending rendered-y order (near rows over far), since grid storage order only matches on the canonical view; `GridArtifacts` marks as `front` whichever host cell renders at the screen-bottom edge
+- **Thumbnails and snippets stay canonical**: `BoardThumbnail` and `GridSnippet` build their own layouts and never set the flag
+- **Serialized as a display flag**: `d` bit 3, meaning "the sharer had the board rotated"; restoring it rotates the view and nothing else. The Arena carries it inside its save slot; Teams stores it with the other device-level view prefs. Each page resets `teamView` and `inverted` at setup so a first visit never inherits another page's toggles
+- **Content-level rotation is separate**: `rotatedHexId` (`lib/grid.ts`) negates all three cube coordinates; side-load's invert option uses it to mirror a saved formation onto the other team
 
 ## Core Components
 
-### Grid Class (`/src/lib/grid.ts`)
+### Grid (`/src/lib/grid.ts`)
 
-Pure spatial grid and state management:
+Pure spatial state: a `Map` of tiles keyed by `"q,r,s"`, a parallel `hexById` index (hexes are immutable, so it never invalidates), and the public fields `lib/characters/` mutates directly: `maxTeamSizes` (base `BASE_TEAM_SIZE` = 5 per team; companion skills raise it while active), `companionLinks` keyed `"${mainId}-${team}"`, and an optional `skillManager` that composite operations refresh after success.
 
-```typescript
-class Grid {
-  private storage: Map<string, GridTile>
+- **Tile**: `{ hex, state, characterId?, team? }`. `clearCharacterFromTile` reverts only `OCCUPIED_*` to `AVAILABLE_*`; blocked and default tiles keep their state
+- **Map applies onto a fixed preset**: the constructor builds `FULL_GRID` and then paints the map's tile states over it, so every map shares one hex id space
+- **Artifact host cells**: `artifactHostHex` returns the off-grid neighbor left of cell 1 (ally) and right of cell 45 (enemy). They hold no tile, so placement, pathfinding, and targeting never see them; rendering and artifact arrows anchor on them
 
-  // Public for direct access by characters/
-  maxTeamSizes: Map<Team, number>
-  companionIdOffset = 10000
-  companionLinks: Map<string, Set<number>>
+### Hex and Layout (`/src/lib/hex.ts`, `/src/lib/layout.ts`)
 
-  // Spatial operations only
-  getTile(hex: Hex): GridTile
-  setState(hex: Hex, state: State): void
-}
-```
+`Hex(q, r, s, id)` throws unless the coordinates sum to zero. Direction indices 0 to 5 run clockwise from top-right, and `neighbor` normalizes negative indices. `Layout(orientation, size, origin, rotated)` converts hexes to pixels (`hexToPixel`, `polygonCorners`) and draws the arrow and line paths; every render and hit-test surface on a board shares that board's one `Layout`.
 
 ### Unit ID Namespaces
 
-Every unit on a tile is a `characterId`, and the id's numeric band encodes what
-kind of unit it is, so identity travels with the unit through moves, swaps, and
-serialization for free:
+Every unit on a tile is a `characterId`, and the id's band encodes its kind:
 
-| Band          | Unit                                                                                                                        | Wire form                       |
-| ------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------- |
-| 1–8999        | base heroes                                                                                                                 | `c`, raw id                     |
-| 9000–9999     | placeholders                                                                                                                | `c`, raw id                     |
-| 10000–99999   | companions (`N * 10000 + mainId`)                                                                                           | `c`, raw id                     |
-| 100000–199999 | phantimals                                                                                                                  | `s`, local id (offset stripped) |
-| 200000–299999 | synergy band: the friend-assist hero (or placeholder) at `200000 + baseId`, its companions at `200000 + N * 10000 + baseId` | `y`, local id (offset stripped) |
+| Band          | Unit                                                                                                | Wire form                       |
+| ------------- | --------------------------------------------------------------------------------------------------- | ------------------------------- |
+| 1–8999        | base heroes                                                                                         | `c`, raw id                     |
+| 9000–9999     | placeholders                                                                                        | `c`, raw id                     |
+| 10000–99999   | companions (`N * 10000 + mainId`)                                                                   | `c`, raw id                     |
+| 100000–199999 | phantimals                                                                                          | `s`, local id (offset stripped) |
+| 200000–299999 | synergy band: the assist hero at `200000 + baseId`, its companions at `200000 + N * 10000 + baseId` | `y`, local id (offset stripped) |
 
-The synergy band mirrors the base namespace shifted by `SYNERGY_ID_OFFSET`, so
-companion arithmetic works unchanged inside it. `decomposeUnitId`
-(`characters/synergy.ts`) is the one place the mirror is decomposed; every
-band predicate (`isPhantimalId`, `isCompanionId` and its grid-free twin
-`isCompanionUnitId`, `getMainCharacterId`, `toBaseHeroId` behind the gameData
-identity getters) consumes it. The synergy hero is exempt from team capacity and
-capped at one per team (`canPlaceCharacterOnTeam`), and its offset id keeps
-every duplicate check blind to it by construction; it cannot change teams or
-boards. `resolvePlacement` is the single decision point that turns a roster
-pick into a base or synergy placement while the Syn affordance is armed;
-`resolveReplacement` (`characters/place.ts`) is its occupied-target form,
-judged against the post-vacate board (a base hero gives back a capacity slot,
-the synergy hero the assist slot, a phantimal nothing), and both the drop gate
-and the drop handler consume it. `useGrids.resolvePick` layers page-wide
-uniqueness on top for every roster entry point.
+- **The synergy band mirrors the base namespace** shifted by `SYNERGY_ID_OFFSET`, so companion arithmetic works unchanged inside it. `decomposeUnitId` (`synergy.ts`) is the one place the mirror is decomposed; `isCompanionId`, its grid-free twin `isCompanionUnitId`, `getMainCharacterId`, and `toBaseHeroId` (behind the gameData identity getters) all consume it. `getMainCharacterId` subtracts rather than takes a modulo so a synergy companion cascades to the synergy main, never the base hero
+- **Band predicates are bounded above** (`isCompanionId`, `isPhantimalId`), so a higher band never aliases into a lower one
+- **Synergy hero rules**: exempt from capacity, capped at one per team (`canPlaceCharacterOnTeam` defers to `synergySlotFree`), invisible to every duplicate check by its offset id, and unable to change team or board. `resolvePlacement` (`character.ts`) turns a roster pick into a base or synergy placement while Syn is armed; `resolveReplacement` (`place.ts`) is its occupied-target form, judged against the post-vacate board (a base hero or placeholder gives back a capacity slot, the synergy hero the assist slot, a phantimal nothing)
+- **Phantimals**: exempt from capacity and duplicate checks, capped at one per team by `GridContext`'s placement helpers, and gated by the team's faction count (`phantimalCanJoinTeam`)
 
-### Characters (`/src/lib/characters/`)
+### Placeholder Units (`/src/lib/characters/placeholder.ts`)
 
-Modular operations with direct Grid state access:
+One stand-in per faction, placeable like a hero to reserve a slot. They join `loadCharacters()` in the 9000 band, so occupancy, capacity, targeting, and serialization treat them as ordinary characters; the roster lists them as one block after all heroes in faction-filter order. Deliberate differences, enforced at call sites via `isPlaceholderId` / the `placeholder` flag: copies repeat freely (no uniqueness, no dedupe, no roster remove-toggle), no upgrade attrs, no skill pages. The real `faction` counts toward phantimal qualification; `class` and `damage` are `none`, which no rule matches, so class-based skills ignore them without special cases. Ids are written per faction and append-only, since share links and saved teams carry them.
 
-```typescript
-// character.ts - Queries and team management
-getCharacter(grid: Grid, hexId: number): number | undefined
-getMaxTeamSize(grid: Grid, team: Team): number
-canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean
+### Hero Upgrade Attributes (`/src/lib/characters/attributes.ts`)
 
-// place.ts, remove.ts, move.ts, swap.ts - Complex operations
-executePlaceCharacter(grid, skillManager, hexId, characterId, team)
-executeRemoveCharacter(grid, skillManager, hexId)
-executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)
-executeSwapCharacters(grid, skillManager, fromHexId, toHexId)
-```
+The registry of every levelled upgrade a hero carries (paragon, EX refinement) and the only place their ids and ranges are defined. Each entry is `{ id, name, max, default }`; `name` doubles as the `app.<name>` locale key. What each level grants lives in `upgradeStats.ts`.
 
-Key features:
+- **Append-only ids**: never reused or renumbered; saved teams and links carry the number. Character id 0 is reserved for future team-scoped rows. The binary codec's 4-bit value field caps `max` at 15
+- **Clamped at every trust boundary**: `clampAttr` (unknown id or non-finite value gives 0, otherwise rounded into `[0, max]`) runs in `setAttr`, the binary decoder, and saved-team canonicalization; all three drop rows with an unknown attr id
+- **Real heroes only**: `isRealHeroId` gates the panel and dock; the serializer walks base heroes only
 
-- **Direct state manipulation** via Grid's public properties
-- **Skill integration** in all complex operations
-- **Atomic transactions** with automatic rollback
-- **Companion support** via companion.ts helpers
-
-### Hero Upgrade Attributes (`attributes.ts`)
-
-The registry of every levelled upgrade a hero carries (paragon, EX refinement), and the only place their ids and ranges are defined. Each entry is `{ id, name, max, default }`; `name` doubles as the `app.<name>` locale key. `ATTR_PARAGON` (1) and `ATTR_REFINEMENT` (2) are the current ids. What each level grants (the guide's tables, the panel's Rivalry stat) lives beside it in `upgradeStats.ts`.
-
-- **Append-only ids**: an attr id is never reused or renumbered, and a retired attr keeps its id; saved teams and links carry the number, so reassigning one would silently relabel stored levels. Character id 0 is reserved for future team-scoped rows (hero ids start at 1)
-- **Clamped at every trust boundary**: `clampAttr` (unknown id or non-finite value → 0, otherwise rounded into `[0, max]`) runs in `setAttr`, in the binary codec's validation, and in saved-team canonicalization, so an out-of-range value never reaches state or storage
-- **Unknown ids drop**: restore, the codec, and canonicalization all discard rows with an unknown attr id. The app is a single deployment, so such a row can only come from a crafted or corrupted payload
-- **Real heroes only**: placeholders, companions, phantimals, and synergy units carry no attrs (`isRealHeroId` gates the panel and dock; the serializer walks base heroes only)
-
-A hero's values form an `AttrRecord` (`{ [attrId]: value }`, absent key = default). Each `GridContext` holds one per team + character id, keyed that way rather than by hex so values follow a hero across moves and each team tracks a hero independently:
+Each `GridContext` keeps one `AttrRecord` (`{ [attrId]: value }`, absent key = default) per team + character, keyed that way rather than by hex so values follow a hero across moves and each team tracks a hero independently:
 
 ```typescript
 getAttr(team, characterId, attrId): number   // default when unset
@@ -160,214 +137,77 @@ setAttrs(team, characterId, record)           // replaces the whole record, neve
 takeAttrs(team, characterId): AttrRecord      // read and clear in one step
 ```
 
-- **Sparse**: only non-default values are stored and an all-default record is deleted, so an untouched board holds nothing and serializes nothing
-- **Survives removal**: a removed hero's record lingers (neither rendered nor serialized) until the hero returns; `clearTeam` drops one side's records, and bulk resets (clear, map switch) drop them all
-- **Transfers move the whole record**: every hand-off (in-board move and swap, cross-board move and swap, board exchange, side-load) is `setAttrs(dest, takeAttrs(source))`, so a new attr rides along with no new bookkeeping. Replace semantics let side-load stamp a full record (saved values or empty) so a stale level can't linger on the incomer, and since the team is part of the key, a team change re-keys the record
+- **Sparse**: an all-default record is deleted, so an untouched board holds and serializes nothing
+- **Survives removal**: a removed hero's record lingers (neither rendered nor serialized) until the hero returns; `clearTeam` drops one side's records, and `clearCharacters` / `switchMap` drop them all
+- **Transfers move the whole record**: every hand-off is `setAttrs(dest, takeAttrs(source))`; replace semantics let side-load stamp a full record so a stale level cannot linger. A same-hero cross-team swap reuses a key, so both records are taken before either is written
 
-Serialization is the `u` section: sparse rows `[team, characterId, attrId, value]` sorted by `compareAttrRows`, the one comparator shared by the serializer, canonicalization, and the legacy converter so identical content is always byte-identical (the unsaved-changes compare and import dedupe are byte compares). Layouts are in [URL Serialization](./URL_SERIALIZATION.md).
-
-### Placeholder Units (`placeholder.ts`)
-
-One stand-in per faction, placeable from the roster like heroes to reserve a
-slot before committing to one; the selection screens list them as one block
-after all heroes, in the faction filter icons' order. They occupy a reserved id band (9000-9999,
-below the companion namespace) and join `loadCharacters()`, so occupancy,
-team size, targeting, and serialization treat them as ordinary characters.
-Deliberate differences, enforced via `isPlaceholderId` / the `placeholder`
-flag: copies repeat freely (no uniqueness, no dedupe, no roster
-remove-toggle), no upgrade attrs, no skill pages. The real `faction` counts toward
-faction tallies (phantimal qualification), while `class` and `damage` are
-`none`, which no rule matches, so class-based checks (Himmel's trio) ignore
-them without special cases.
-
-### Tile System
-
-```typescript
-interface GridTile {
-  hex: Hex // Coordinate object
-  state: State // Visual/gameplay state
-  characterId?: number // Occupying character
-  team?: Team // Character's team
-}
-```
-
-Tile states:
-
-- `DEFAULT` - Normal unoccupied tile
-- `BLOCKED` - Impassable terrain
-- `AVAILABLE_ALLY` / `AVAILABLE_ENEMY` - Valid placement zones
-- `OCCUPIED_ALLY` / `OCCUPIED_ENEMY` - Has character
+Serialization is the `u` section: sparse rows `[team, characterId, attrId, value]` sorted by `compareAttrRows`, the one comparator shared by the serializer, canonicalization, and the legacy converter so identical content is byte-identical (the unsaved-changes compare and import dedupe are byte compares). See [URL Serialization](./URL_SERIALIZATION.md).
 
 ## Character Operations
 
+### Transactions (`/src/lib/characters/transaction.ts`)
+
+`executeTransaction(operations, rollbackOperations)` runs the steps in order and stops at the first that returns `false` or throws. Rollbacks then run in LIFO order so each sees its dependencies still applied, and a throwing rollback does not halt the rest of the chain. Composite operations call `skillManager.updateActiveSkills` only after a successful transaction.
+
 ### Placement (`/src/lib/characters/place.ts`)
 
-Character placement with skill integration:
+`executePlaceCharacter` is three steps: clear the occupant (if any) with full skill cleanup, `performPlace`, activate the newcomer's skill. Rollback removes the newcomer, re-places the occupant, re-activates its skill, and returns its companions to their tiles.
 
-```typescript
-function executePlaceCharacter(grid, skillManager, hexId, characterId, team) {
-  return executeTransaction([
-    // Replacement (occupied target only): store companion positions,
-    // deactivate the occupant's skill, then remove it
-    () => {
-      storeCompanionPositions(grid, anchorId, occupantTeam)
-      skillManager.deactivateCharacterSkill(anchorId, anchorHex, occupantTeam, grid)
-      return performRemove(grid, anchorHex)
-    },
-    () => performPlace(grid, hexId, characterId, team),
-    () => {
-      if (!hasSkill(characterId)) return true
-      return skillManager.activateCharacterSkill(characterId, hexId, team, grid)
-    },
-  ])
-}
-```
+Gates, in order:
 
-Validates:
+1. Companion ids are rejected (companions exist only through skills)
+2. The tile's zone matches the team (`canPlaceCharacterOnTile`: the available or occupied state of that team)
+3. `canPlaceCharacterOnTeam`: capacity, then no duplicate on the team (placeholders skip the duplicate check; phantimals skip both; the synergy hero replaces both with `synergySlotFree`)
+4. `performPlace` never displaces an occupant: replacement is the composite above, and swaps clear both tiles first
+5. Skill activation, if the character has one
 
-1. Tile accepts the team
-2. No duplicate characters on team
-3. Team hasn't exceeded capacity
-4. Skill activates successfully (if present)
-
-A synergy hero skips 2 and 3 in favor of its own one-per-team cap; a phantimal skips both as well (see Unit ID Namespaces).
-
-Placing onto an occupied tile replaces the occupant: its skill is deactivated and it is removed first (a companion occupant cascades to its main character), and the rollback fully restores it: re-place, re-activate skill, restore companions. The atomic `performPlace` primitive itself rejects occupied tiles.
-
-### Movement & Swapping
-
-- **Move (`move.ts`)**: Handles same-team and cross-team movements; companions and synergy heroes cannot change teams
-- **Swap (`swap.ts`)**: Atomic character exchange with skill transitions; phantimals, companions, and synergy heroes can only be swapped within their own team. A cross-team swap is rejected up front if either character already exists on its destination team (the same character may legally appear once per team). On failure, rollback clears both tiles before restoring the original placements, since `performPlace` never overwrites an occupant
-- **Cross-team logic**: Deactivate → perform operation → reactivate skills
+A companion occupant cascades to its main (removing either removes the whole unit), so the anchor is the main's hex. `executeAutoPlaceCharacter` picks a random available tile and has no replace step.
 
 ### Removal (`/src/lib/characters/remove.ts`)
 
-Cascading removal for linked characters:
+`executeRemoveCharacter` runs without a transaction because removal always succeeds: deactivate the skill (which removes any companions it spawned), then clear the tile. Removing a companion removes its main instead, so the whole unit goes together; a companion whose main is missing is cleared directly. Team membership and capacity derive from tiles, so nothing else needs updating.
 
-1. Check if character is a companion
-2. If companion, find and remove main character
-3. Deactivate skills before removal
-4. Remove all linked companions
-5. Clear the tile (team membership and capacity derive from tiles)
+### Move and Swap (`/src/lib/characters/move.ts`, `swap.ts`)
 
-### Placement interaction (desktop vs mobile)
+- **Team is the destination zone's**: a move's target team comes from the tile state, so a same-board move can change teams
+- **Skill-aware only across teams**: a same-team move or swap is remove + place; a cross-team one is deactivate, perform, reactivate on the new team, with companions restored to their saved tiles on rollback (reactivation respawns them randomly)
+- **Who may cross teams**: companions and synergy heroes cannot move across teams; phantimals, companions, and synergy heroes can only swap within their own team
+- **Cross-team swap pre-check**: rejected if either character already exists on its destination team (one hero may legally appear once per team; placeholders are exempt)
+- **Swap rollback clears first**: both tiles are emptied before the originals are re-placed, since `performPlace` never overwrites an occupant
 
-The UI for getting a character onto a tile differs by viewport. `GridManager` derives the mode from the board's render scale (`ctx.hexScale < 1` = mobile/tablet, ≤768px); a page can override it via `GridContainer`'s `tap-mode` prop (the 5 v 5 boards force the on-grid popup on desktop and the tap flow on mobile). The two modes:
+### Team Capacity and Companions (`/src/lib/characters/character.ts`, `companion.ts`)
 
-- **Desktop (wide layouts)**: drag a roster icon onto a tile (HTML5 drag, mouse-only), or tap an empty tile to open `CharacterSelectionPopup` (a small picker anchored near the tile; its search-and-grid palette is `CharacterSelectionPalette`, which the Teams match import reuses for its review cells; `ArtifactSelectionPopup` is split the same way into `ArtifactSelectionPalette`). Picks keep the popup open as a multi-add palette: the first fills the tapped tile, later ones auto-place onto a free tile of the same team, and it closes when the pointer leaves, a tap lands outside, Esc is pressed, or the team has no open slot left (`teamHasOpenSlot`: capacity, or the assist slot while Syn is on). Placed-hero gestures split per pointer (`isTouchClick`, `/src/utils/pointer.ts`): a mouse click removes the hero (moves use drag), while a touch or pen tap enters the same lift flow as mobile, so hybrid devices get input-appropriate behavior regardless of window size.
-- **Mobile/tablet**: HTML5 drag doesn't fire on touch, so interactions are tap-based, split across two gestures:
-  - **Add**: the roster lives in a **pull-up bottom sheet** (the shared `BottomSheet` component: `HomeView`'s tab panel on the Arena, `TeamsRoster` on 5 v 5). Tapping an empty tile sets a board-qualified **target** (`useSelectionState.targetHexId` + `targetGridId`, so only the tapped board highlights it, since every board shares the same hex ids; a full team still targets because a phantimal may fit and the roster re-checks capacity), highlights it (`GridTiles`), and opens the sheet; tapping a roster character places it on the targeted board's cell (the context resolved from `targetGridId`, team derived from the tile) and the sheet collapses. Artifact cells target the same way (`targetArtifactTeam` + `targetArtifactGridId`). With no target set, a roster tap auto-places onto the active board, filling the displayed-ally side first and overflowing to the enemy side once it is full (`useSelectionState.fillOrder`); there is no ally/enemy selector.
-  - **Move / remove (tap-lift, tap-drop)**: tapping a placed hero on the grid **lifts** it (`useSelectionState.liftedHexId`; the source tile tints teal and the hero enlarges slightly with a soft shadow, hover-style, and the sheet collapses so all cells stay reachable). Then: tapping an empty cell (same or another board) moves it there via `routeLiftDrop`, which builds a drag-style payload from the lifted cell and hands it to `routeDrop`, so a tap-move passes every drag gate (page-wide uniqueness, capacity, phantimal team rules; a same-board move is allowed even at full capacity since it adds no unit); tapping the lifted hero again `removes` it; tapping a _different_ placed hero on the same board swaps the two (the tap-swap passes `canDropCharacter` first, so a team change that would duplicate a hero page-wide silently no-ops), while tapping a placed hero on another board starts a fresh lift there instead of swapping. Tapping a non-placement tile cancels the lift, as does dragging the lifted hero; and `useLiftGuard` (installed once at the app root) drops the lift whenever its cell stops holding the lifted unit, so programmatic placement changes (roster removes, map switches, board swaps, phantimal reconciliation, companion cascades) can never leave a stale lift behind. The lift and swap gestures live in `GridCharacters` (the character overlay's tap); the move/target/cancel logic lives in `GridManager`'s `hex:click`.
+- **Capacity**: `getAvailableTeamSize` counts every unit on the team except phantimals and the synergy hero; companions count like any other, balanced by their skill's capacity bump. `setMaxTeamSize` is bounded by the tile count
+- **`teamHasOpenSlot`**: a capacity slot, or the assist slot while Syn is on; gates the add-only pickers
+- **Companion links**: `grid.companionLinks` maps `"${mainId}-${team}"` to the companion ids a skill spawned; `storeCompanionPositions` / `restoreCompanions` carry their tiles through a deactivate-reactivate cycle
+- **`repositionCompanions`**: lifts every target off before placing any, so two companions can trade hexes; it uses the raw primitives to sidestep the owner-removal cascade
 
-  When the sheet is expanded a tap-scrim sits behind it; tapping it collapses the sheet and clears any pending target.
+See [Skills](./SKILLS.md) for the skill side of companions.
 
-The Arena, Skills, Guide, and Teams pages share one `BottomSheet` component (`src/components/ui/BottomSheet.vue`) for the roster column (desktop card chrome + the mobile pull-up sheet: drag handle, scrim, `useBottomSheet` drag), so they stay identical by construction rather than by mirrored CSS. Each page slots its own content (tabs / roster), which owns its in-sheet fill + scroll. The Teams roster passes `:desktop-rail="false"` so it flows as a full-width card below the boards instead of a height-capped side column.
+## Placement Interaction
+
+### Desktop and mobile
+
+`GridManager` picks the mode from the board's render scale (`ctx.hexScale < 1`: the mobile and tablet breakpoints, up to 768px); a page can override it via `GridContainer`'s `tap-mode` prop, which the Teams page sets from its own breakpoint because its boards render below full scale even on desktop. Every hex-click semantic lives in `GridManager`'s `hex:click` handler; the hero-tap gestures live in `GridCharacters`.
+
+- **Desktop**: drag a roster icon onto a tile (HTML5 drag, mouse-only), or click an empty tile to open `CharacterSelectionPopup`, a multi-add palette: the first pick fills the clicked tile, later picks auto-place on the same team, and it closes on pointer leave, outside tap, Esc, or `!teamHasOpenSlot`. Placed-hero gestures split per pointer (`isTouchClick`, `/src/utils/pointer.ts`): a mouse click removes the hero (moves use drag), while a touch or pen tap enters the lift flow below
+- **Mobile add**: the roster lives in the pull-up `BottomSheet`. Tapping an empty tile sets a board-qualified target (`useSelectionState.targetHexId` + `targetGridId`, since every board shares the same hex ids); a full team still targets because a phantimal may fit. A roster tap then places on the targeted cell; with no target it auto-places on the active board, ally side first, then enemy (`fillOrder`). Artifact cells target the same way (`targetArtifactTeam` + `targetArtifactGridId`). Dismissing the sheet clears pending targets
+- **Mobile move / remove (tap-lift, tap-drop)**: tapping a placed hero lifts it (`liftedHexId`, board- and unit-qualified). Tapping an empty cell on any board drops it through `routeLiftDrop`, so a tap-move passes every drag gate; tapping the lifted hero again removes it; tapping another hero on the same board swaps (after `canDropCharacter`, so a team change that would duplicate a hero page-wide silently no-ops); tapping a hero on another board starts a fresh lift there. A non-placement tile or a drag start cancels the lift
+- **`useLiftGuard`** (installed once in `App.vue`) drops the lift whenever its cell stops holding the lifted unit, so programmatic changes (roster removes, map switches, board swaps, phantimal reconciliation, companion cascades) never leave a stale lift behind
 
 ### Syn (friend-assist) affordance
 
-The `Syn` checkbox (`GridControls`, shown only with `showSynToggle`: the Arena hides it on the Map Editor and Debug tabs, Teams offers it on `allowSynergy` modes) arms `useGrids.synergy`. Every placement entry point then resolves through `resolvePick`, so the UI surfaces agree by construction:
+The `Syn` toggle (`GridControls`, shown via `showSynToggle`: the Arena hides it on the Map Editor and Debug tabs, Teams offers it on `allowSynergy` modes) arms `useGrids.synergy`. Every placement entry point then resolves through `resolvePick`, so the surfaces agree by construction:
 
-- **Roster (`CharacterSelection`)**: a placed hero's icon greys out as the remove-toggle; while Syn is on and that hero's team still has a free assist slot (`synergySlotFree`), the grey-out lifts and the click places the synergy copy via `placeOnActive` instead. The search overlay's "already placed" toast follows the same rule.
-- **On-grid popup (`CharacterSelectionPopup`)**: an already-placed hero stays listed as its synergy copy (`resolvePick !== null`), and the popup auto-closes on `!teamHasOpenSlot`, the same predicate `GridManager`'s hex-click uses to open it.
-- **Unchecking**: `setSynergy(false)` removes both teams' synergy units on every board, so `GridControls` also clears any pending tap-target and lift state that referenced them.
-- **Display**: `GridCharacters` and `DebugPanel` resolve a synergy unit through `decomposeUnitId` / `toBaseHeroId`, so the copy keeps its hero's tooltip card, sprite drag payload (with the placed synergy id), and per-hero debug display.
+- **Roster (`CharacterSelection`)**: a placed hero's icon is normally the remove-toggle; while Syn is on and that hero's team still has a free assist slot (`synergySlotFree`), the click places the synergy copy via `placeOnActive` instead. The search overlay's "already placed" toast follows the same rule
+- **On-grid popup**: an already-placed hero stays listed as its synergy copy (`resolvePick !== null`), and the popup closes on `!teamHasOpenSlot`, the predicate `GridManager` uses to open it
+- **Unchecking**: `setSynergy(false)` removes both teams' synergy units on every board, so `GridControls` also clears any pending target and lift that referenced them
+- **Display**: `GridCharacters` and `DebugPanel` resolve a synergy unit through `decomposeUnitId` / `toBaseHeroId`, so the copy keeps its hero's card, sprite, and drag payload (with the placed synergy id)
 
-## Team & Companion Systems
+## Related Documentation
 
-### Team Management (`/src/lib/characters/character.ts`)
-
-Direct access to Grid's public properties:
-
-```typescript
-// Grid exposes these publicly
-grid.maxTeamSizes: Map<Team, number>
-
-// character.ts provides functional API
-getMaxTeamSize(grid: Grid, team: Team): number
-getAvailableTeamSize(grid: Grid, team: Team): number
-canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean
-```
-
-Features:
-
-- **Team Types**: `ALLY` and `ENEMY`
-- **Capacity**: Default 5, expandable by skills; phantimals and the synergy hero occupy tiles without holding a slot
-- **Duplicate Prevention**: Same character cannot exist twice on one team; the synergy copy's offset id is the one sanctioned duplicate
-
-### Companion System (`/src/lib/characters/companion.ts`)
-
-Helpers for skill-created linked characters:
-
-```typescript
-// Grid exposes these publicly
-grid.companionIdOffset = 10000
-grid.companionLinks: Map<string, Set<number>>
-
-// companion.ts provides functional API
-isCompanionId(grid: Grid, characterId: number): boolean
-getCompanions(grid: Grid, mainCharacterId: number, team: Team): Set<number>
-addCompanionLink(grid: Grid, mainId: number, companionId: number, team: Team): void
-```
-
-See [`/docs/architecture/SKILLS.md`](./SKILLS.md) for skill integration details.
-
-## Transaction System (`/src/lib/characters/transaction.ts`)
-
-Atomic operations with automatic rollback:
-
-```typescript
-executeTransaction(
-  operations: (() => boolean)[],
-  rollbackOperations: (() => void)[]
-): boolean
-```
-
-Example swap operation:
-
-1. Remove both characters
-2. Place in swapped positions
-3. If any step fails, rollback all
-
-Rollbacks run in LIFO order so each rollback sees its dependencies still applied, and a throwing rollback doesn't halt the rest of the chain.
-
-## Hexagonal Coordinates
-
-Uses axial coordinates with constraint q + r + s = 0:
-
-```typescript
-class Hex {
-  constructor(q: number, r: number, s: number, id: number)
-
-  neighbor(direction: number): Hex
-  distance(other: Hex): number
-  getId(): number
-}
-```
-
-The Layout class handles pixel conversions:
-
-- `hexToPixel(hex)` - Screen position
-- `polygonCorners(hex)` - Vertices for rendering
-
-## Component Usage
-
-### GridSnippet Component (`/src/components/grid/GridSnippet.vue`)
-
-A lightweight grid visualization component used for static content pages (skill documentation):
-
-```typescript
-interface Props {
-  gridStyle: GridStyleConfig
-  width?: number
-  height?: number
-  hexSize?: number
-  images?: Record<string, string> // Optional for SSG compatibility
-}
-```
-
-Key features:
-
-- **Dual-mode image loading**: Accepts images via props (for SSG) or reads from store (for SPA)
-- **Non-interactive**: Display-only, no drag & drop functionality
-- **SSG-friendly**: Avoids hydration mismatches by using props for static content
-- **Flexible styling**: Supports highlights, numeric labels, and character placement
+- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Skill activation, companions, visual modifiers
+- [`/docs/architecture/DRAG_AND_DROP.md`](./DRAG_AND_DROP.md) - Drag layers and drop registration
+- [`/docs/architecture/TEAMS.md`](./TEAMS.md) - Team modes, per-mode persistence, saved teams
+- [`/docs/architecture/SEASONAL.md`](./SEASONAL.md) - Phantimals and seasonal artifacts
+- [`/docs/architecture/URL_SERIALIZATION.md`](./URL_SERIALIZATION.md) - Section layouts and display flags

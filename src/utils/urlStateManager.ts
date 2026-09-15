@@ -75,19 +75,31 @@ export function encodeMultiGridStateToUrl(state: MultiGridState): string {
   return bytesToUrlSafe(new TextEncoder().encode(JSON.stringify(state)))
 }
 
+// Consumers past the decode boundary (canonicalization, validation, restore,
+// preview) read board keys and destructure section rows directly, so a crafted
+// payload is rejected unless every board is a plain object whose sections have
+// the serializer's shapes. Keys outside the contract are left to
+// canonicalization, which drops them.
+const ROW_SECTIONS = ['t', 'c', 's', 'y', 'u'] as const
+const isNumber = (value: unknown): boolean => typeof value === 'number'
+const isRowSection = (value: unknown): boolean =>
+  Array.isArray(value) && value.every((row) => Array.isArray(row) && row.every(isNumber))
+const isIdSection = (value: unknown): boolean =>
+  Array.isArray(value) && value.every((id) => id === null || isNumber(id))
+const isWellFormedBoard = (board: unknown): boolean => {
+  if (typeof board !== 'object' || board === null || Array.isArray(board)) return false
+  const sections = board as Record<string, unknown>
+  if (sections.m !== undefined && typeof sections.m !== 'string') return false
+  if (sections.a !== undefined && !isIdSection(sections.a)) return false
+  return ROW_SECTIONS.every((key) => sections[key] === undefined || isRowSection(sections[key]))
+}
+
 export function decodeMultiGridStateFromUrl(encoded: string): MultiGridState | null {
   try {
     const bytes = urlSafeToBytes(encoded)
     if (!bytes || bytes.length === 0) return null
     const parsed = JSON.parse(new TextDecoder().decode(bytes)) as MultiGridState
-    if (!Array.isArray(parsed.boards)) return null
-    // Every board must be a plain object: consumers (canonicalization,
-    // validation, restore) read board keys directly past this boundary, so a
-    // null/array entry in a crafted payload would throw deep inside them.
-    const plainObjects = parsed.boards.every(
-      (board) => typeof board === 'object' && board !== null && !Array.isArray(board),
-    )
-    if (!plainObjects) return null
+    if (!Array.isArray(parsed.boards) || !parsed.boards.every(isWellFormedBoard)) return null
     // Crafted junk carries no provenance; consumers treat an absent season as
     // current-pool content. The upper bound blocks absurd-but-integer values
     // (1e300 passes Number.isInteger) from persisting into records and labels.

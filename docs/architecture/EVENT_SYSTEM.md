@@ -16,17 +16,7 @@ The event system provides centralized, type-safe component communication using V
 
 ### Event API (`/src/composables/useGridEvents.ts`)
 
-Provides typed event access throughout the grid component tree (the bus is created and provided by `GridManager`):
-
-```typescript
-interface GridEventAPI {
-  emit: <K extends keyof GridEvents>(event: K, ...args: Parameters<GridEvents[K]>) => void
-  on: <K extends keyof GridEvents>(event: K, handler: GridEvents[K]) => void
-  off: <K extends keyof GridEvents>(event: K, handler: GridEvents[K]) => void
-}
-```
-
-### Event Types
+`GridEventAPI` exposes `emit`, `on` and `off`, each typed against `GridEvents` so an event name fixes its handler signature at compile time. `GridManager` creates one bus per board with `provideGridEvents()`, so an event never crosses boards; `useGridEvents()` throws outside that subtree.
 
 ```typescript
 interface GridEvents {
@@ -44,37 +34,12 @@ interface GridEvents {
 
 ### Character Events
 
-- **character:mouseenter** / **character:mouseleave**: Emitted by the GridCharacters overlay; GridTiles subscribes to drive the hover highlight on the tile beneath the character
+- **character:mouseenter** / **character:mouseleave**: Emitted by the GridCharacters overlay on every board, readonly ones included, since the emit only reports the pointer; GridTiles subscribes to drive the hover highlight on the tile beneath the portrait and applies its own policy (ignored on readonly boards, and suppressed during the post-drag hover grace period)
 
 Character and artifact removal are not bus events: GridCharacters and GridArtifacts call `ctx.remove()` / `ctx.removeArtifact()` on their injected `GridContext` directly, the same way they call its other operations.
 
-## Implementation Patterns
+## Subscription Contract
 
-### Creating Event System
-
-```typescript
-export function provideGridEvents() {
-  const api = createGridEvents()
-  provide(GridEventKey, api)
-  return api
-}
-```
-
-### Emitting Events
-
-```typescript
-const events = useGridEvents()
-events.emit('hex:click', hex)
-```
-
-### Listening to Events
-
-```typescript
-onMounted(() => {
-  events.on('hex:click', handleHexClick)
-})
-
-onUnmounted(() => {
-  events.off('hex:click', handleHexClick)
-})
-```
+- **Owner subscribes at setup**: GridManager registers its `hex:click` handler synchronously in `<script setup>` and never unsubscribes, since the bus lives and dies with it
+- **Children subscribe on mount**: GridTiles pairs `on` in `onMounted` with `off` in `onUnmounted`, passing the same handler reference, because `off` removes by identity
+- **Readonly gating is per side**: GridTiles emits `hex:click` only when the board is interactive; the character hover emits are unconditional and the subscriber filters

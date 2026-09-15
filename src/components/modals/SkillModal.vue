@@ -7,6 +7,7 @@ import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
 import { ContentInModalKey } from '@/utils/contentMeta'
 import { hasSkillLocale } from '@/utils/dataLoader'
+import { heroDisplayName } from '@/utils/skillLabels'
 
 interface Props {
   show: boolean
@@ -29,11 +30,13 @@ provide(ContentInModalKey, true)
 const { selected, applied, apply } = useModalSkillLocale(() => props.show)
 
 const hasLocaleData = computed(() => hasSkillLocale(props.skillName))
+const label = computed(() => heroDisplayName(props.skillName, selected.value))
 </script>
 
 <template>
   <BaseModal
     :show="show"
+    :label
     :link-param="skillName"
     :locale-override="selected"
     max-width="960px"

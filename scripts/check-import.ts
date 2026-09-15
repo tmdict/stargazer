@@ -7,7 +7,8 @@
 //   npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [--maps 5]
 //
 //   --samples    folder of PNG/JPEG screenshots (result screens, cropped or not)
-//   --truth      { "<file>": { "maps": 3, "cells": { "a1": { "hero": "gunnar", "p": 4, "r": 4 }, … } } }
+//   --truth      per-file cells (a1–a5, e1–e5: hero slug, p, r), optional maps,
+//                and artifacts ({ a: slug | null, e: slug | null })
 //                (default: truth.json beside the samples, when present)
 //   --references read the frames, costume captures and seasonal icons from a local copy
 //                of the published img/ tree instead of the deployed chaldea.tmdict.com
@@ -39,7 +40,14 @@ interface TruthCell {
   p: number
   r: number
 }
-type Truth = Record<string, { maps?: number; cells?: Record<string, TruthCell> }>
+type Truth = Record<
+  string,
+  {
+    maps?: number
+    cells?: Record<string, TruthCell>
+    artifacts?: Partial<Record<'a' | 'e', string | null>>
+  }
+>
 
 function printReading(
   file: string,
@@ -48,9 +56,9 @@ function printReading(
   artifactNames: Map<number, string>,
   truth: Truth[string] | undefined,
   expectedMaps: number,
-  tally: { hero: number[]; sure: number[]; p: number[]; r: number[] },
+  tally: { hero: number[]; sure: number[]; p: number[]; r: number[]; artifact: number[] },
 ): void {
-  const side = (team: Team): string => (team === Team.ALLY ? 'a' : 'e')
+  const side = (team: Team): 'a' | 'e' => (team === Team.ALLY ? 'a' : 'e')
   const result = (t: Team | null): string => (t === Team.ALLY ? 'W' : t === Team.ENEMY ? 'L' : '?')
   const mapsOff = expectedMaps === 1 ? reading.mapCount !== null : reading.mapCount !== expectedMaps
   console.log(
@@ -64,11 +72,23 @@ function printReading(
   )
   for (const team of [Team.ALLY, Team.ENEMY]) {
     const artifact = reading.artifacts[team]
-    if (artifact && artifact.candidates.length) {
-      const top = artifact.candidates[0]!
-      console.log(
-        `  ${side(team)} artifact: ${artifactNames.get(top.artifactId) ?? top.artifactId} ${top.score.toFixed(2)} lead ${artifact.margin.toFixed(2)}`,
-      )
+    const topArtifact = artifact?.candidates[0]
+    const artifactName = topArtifact
+      ? (artifactNames.get(topArtifact.artifactId) ?? String(topArtifact.artifactId))
+      : null
+    const expectedArtifact = truth?.artifacts?.[side(team)]
+    let artifactVerdict = ''
+    if (expectedArtifact !== undefined) {
+      const correct = artifactName === expectedArtifact
+      tally.artifact.push(correct ? 1 : 0)
+      artifactVerdict = `  | truth ${expectedArtifact ?? 'none'} ${correct ? '' : 'ARTIFACT✗'}`
+    }
+    if (topArtifact || expectedArtifact !== undefined) {
+      const scores =
+        artifact && topArtifact
+          ? ` ${topArtifact.score.toFixed(2)} lead ${artifact.margin.toFixed(2)}`
+          : ''
+      console.log(`  ${side(team)} artifact: ${artifactName ?? 'none'}${scores}${artifactVerdict}`)
     }
     reading.sides[team].forEach((cell, row) => {
       const key = `${side(team)}${row + 1}`
@@ -121,7 +141,13 @@ async function main(): Promise<void> {
   )
 
   const files = (await readdir(samples)).filter((f) => /\.(png|jpe?g|webp)$/i.test(f)).sort()
-  const tally = { hero: [] as number[], sure: [] as number[], p: [] as number[], r: [] as number[] }
+  const tally = {
+    hero: [] as number[],
+    sure: [] as number[],
+    p: [] as number[],
+    r: [] as number[],
+    artifact: [] as number[],
+  }
   for (const file of files) {
     const shot = await toImage(join(samples, file), { width: CANONICAL_WIDTH })
     const t = truth[basename(file)]
@@ -136,9 +162,9 @@ async function main(): Promise<void> {
     console.log(`  (${ms} ms)`)
   }
   const sum = (a: number[]): string => `${a.reduce((x, y) => x + y, 0)}/${a.length}`
-  if (tally.hero.length) {
+  if (tally.hero.length || tally.artifact.length) {
     console.log(
-      `\nheroes ${sum(tally.hero)} (high confidence ${sum(tally.sure)}), paragon ${sum(tally.p)}, refinement ${sum(tally.r)}`,
+      `\nheroes ${sum(tally.hero)} (high confidence ${sum(tally.sure)}), paragon ${sum(tally.p)}, refinement ${sum(tally.r)}, artifacts ${sum(tally.artifact)}`,
     )
   }
 }

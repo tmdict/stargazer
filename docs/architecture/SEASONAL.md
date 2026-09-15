@@ -1,387 +1,138 @@
 # Seasonal Content
 
-Three mechanics rotate with the game's seasons: **phantimals** (grid units),
-**seasonal artifacts** (the rotating subset of artifacts), and **charms**
-(per-hero seasonal skill upgrades shown with skill text). They share one
-lifecycle: data is replaced wholesale when a season flips (no version fields,
-no archives; git history is the archive), and every feature is confined to
-dedicated files plus a short seam list so retirement is deletion, not surgery.
+## Overview
 
-Text for all three originates in the sibling `afkj-data-viewer` checkout,
-which parses the raw game data and emits per-locale feeds under
-`public/api/<locale>/`. The shared ownership rule: **scripts own everything
-derivable from the feed, humans own only what requires judgment** (compact URL
-ids, board-sim ranges, curated display names), and the importers lint the
-hand-written parts against the feed instead of generating them.
-`npm run import:seasonal` chains `import:skills` (fresh keyword glossaries
-feed the charm validation) with the three seasonal importers; they share
-helpers in `scripts/lib/shared.ts`.
+Three mechanics rotate with the game's seasons: phantimals (grid units), seasonal artifacts (the rotating subset of artifacts), and charms (per-hero seasonal skill upgrades shown with skill text). Text for all three originates in the sibling `afkj-data-viewer` checkout, whose per-locale feeds under `public/api/<locale>/` are consumed by importers that generate the derivable files and lint the hand-curated ones. Season provenance on stored payloads (`src/lib/seasonal.ts`) keeps reused seasonal ids from resolving to another season's content.
+
+## Design Principles
+
+1. **Wholesale replacement**: a cutover deletes a season's data files and the next season reuses the freed ids; no version fields or archives (git history is the archive).
+2. **Scripts own the derivable, humans own judgment**: importers write everything the feed carries and lint the hand-written parts (compact ids, `season`, `range`, curated names) against it, failing loudly on drift.
+3. **Namespaced units, not new models**: phantimals share the grid's single occupant slot through an id band, so occupancy, move, targeting and pathfinding need no phantimal-aware code.
+4. **Deploy-derived season**: `CURRENT_SEASON` is the max `season` across loaded data files, so the boundary flips with the cutover deploy, never the calendar.
+5. **Retirement is deletion**: each feature is confined to dedicated files plus a short seam list keyed on `isPhantimalId`, and stored payloads self-heal at read through provenance rather than per-season migrations.
+
+## Importers (`scripts/import-*.ts`)
+
+`npm run import:seasonal` runs `import:skills` first (fresh `_keywords.json` glossaries feed charm validation), then `import:charms`, `import:artifacts`, `import:phantimals`. `scripts/lib/shared.ts` holds `DEFAULT_SRC_DIR` (`../afkj-data-viewer/public/api`), `cleanDescription` (stat/value reorder, sprite-tag strip) and the diff-then-write helpers.
+
+| Importer            | Feed file                       | Writes                                                                                             | Lints (hard fail)                                                                                                                                          | `--retire`                    |
+| ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
+| `import:phantimals` | `<locale>/phantimals.json`      | `src/locales/seasonal/phantimal/<slug>.json`: `{name, skills[].levels[]}` en/zh maps               | slug sets match both ways; structural `name` equals filename; factions agree                                                                               | deletes every locale file     |
+| `import:artifacts`  | `<locale>/artifacts.json`       | `src/locales/artifact/effects/<slug>.json` and `src/locales/seasonal/artifact/effects/<slug>.json` | structural file exists in the dir matching the feed's set, both ways; a name file per artifact; `stats` equal feed `statBonuses` through the stat-code map | deletes seasonal effects only |
+| `import:charms`     | `<locale>/charms.json` (all 16) | `src/data/seasonal/charm/charms.json`, `src/locales/skill/<code>/_charms.json`                     | identical slug sets and hero lists across feeds; exactly 4 tiers; `[[label\|key]]` tokens exist in each language's `_keywords.json`; no hero on two charms | deletes both outputs          |
+
+Shared rules: `--src-dir <PATH>` / `--url-base <URL>` override the source; an absent or unreadable feed is a hard error, never a silent wipe; each importer prunes only its own generated files whose entry left the feed (a charm feed with zero charms retires). Charm heroes outside `src/data/character/` are skipped with a warning.
 
 ## Phantimals
 
-Phantimals are a seasonal unit type that can be placed on the grid alongside
-characters. They occupy cells, can be moved, and participate in targeting and
-pathfinding exactly like characters, with three deliberate differences:
+### Id namespace (`src/lib/characters/phantimal.ts`)
 
-1. **They don't count toward team size.**
-2. **At most one phantimal per team** may be on the field; placing a new one
-   replaces the team's current phantimal.
-3. **They can be swapped only within their own team**: `executeSwapCharacters`
-   rejects any cross-team swap involving a phantimal.
+- `PHANTIMAL_ID_OFFSET = 100000`; `isPhantimalId` covers `[100000, SYNERGY_ID_OFFSET)` so synergy-band units never read as phantimals. `toPhantimalId` / `toLocalPhantimalId` convert to the local ids in `src/data/seasonal/phantimal/<slug>.json` (`{id, name, season, range, faction}`, hand-written: the ids are baked into URL serialization and `range` is board-sim semantics no feed carries).
+- The band sits above every companion id (`N * COMPANION_ID_OFFSET + characterId`); `isCompanionId` (`companion.ts`) classifies the decomposed local id and is bounded by `Grid.phantimalIdOffset`.
+- A tile whose `characterId` is in the band holds a phantimal. Targeting, pathfinding, swap, move and occupancy read the tile slot rather than the character store, so they treat it as another unit for free.
 
-### Approach: a namespaced unit
+Three rules differ from characters:
 
-The grid stores a single occupant per tile (`GridTile.characterId` / `team`).
-Targeting (`lib/skills/utils/targeting.ts`), pathfinding (`lib/pathfinding.ts`),
-swap/move and occupancy all read from that slot, **not** from the character
-store. So a phantimal placed in the same slot is treated as "another unit on the
-grid" for free.
+1. **No team slot**: `getAvailableTeamSize` skips phantimal ids and `canPlaceCharacterOnTeam` returns `true` for them (`character.ts`).
+2. **One per team**: `placePhantimal` / `autoPlacePhantimal` (`useGridContext.ts`) clear the team's current phantimal (`findTeamPhantimalHex`) before placing; `handleDrop` routes a cross-team move through the same clear.
+3. **Same-team swaps only**: `executeSwapCharacters` (`swap.ts`) rejects any cross-team swap involving a phantimal.
 
-Phantimals are distinguished by an **ID namespace**, the same technique already
-used for companions (`companionIdOffset = 10000`):
+### Seams
 
-- `lib/characters/phantimal.ts` owns `PHANTIMAL_ID_OFFSET = 100000` plus the pure
-  helpers `isPhantimalId`, `toPhantimalId(localId)`, `toLocalPhantimalId(id)`.
-- A tile whose `characterId` is in the phantimal band (100000-199999) holds
-  phantimal `characterId - PHANTIMAL_ID_OFFSET` (local IDs come from
-  `src/data/seasonal/phantimal/*.json`). `isPhantimalId` is bounded above by
-  `SYNERGY_ID_OFFSET` (200000) so synergy-band units are never mistaken for
-  phantimals.
-- `grid.ts` imports the constant as `Grid.phantimalIdOffset`. `isCompanionId`
-  classifies on the decomposed local id, bounded by the phantimal offset
-  (`local >= companionIdOffset && local < phantimalIdOffset`), so phantimal IDs
-  are never mistaken for companions while synergy companions still count. The
-  offset sits well above the companion band
-  (`N * companionIdOffset + characterId`, N ≥ 1) so a character with several
-  companions (e.g. Zanie's two turrets at `10089`/`20089`) can't spill into the
-  phantimal namespace.
+| Concern           | Where                                                                                                                                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Data lookup       | `stores/gameData.ts`: `getPhantimalById` (namespaced or local id); `getCharacterRange`, `getCharacterNameById`, `getCharacterFaction` short-circuit phantimal ids         |
+| Targeting range   | `useGridContext.ts` `buildUnitRanges` seeds the base-id-keyed range map with every on-grid namespaced unit before `getClosestTargetMap`, so a phantimal's `range` applies |
+| Spirit Mark skill | `lib/skills/seasonal/phantimal.ts`, discovered by the `./seasonal/*.ts` glob in `skill.ts`                                                                                |
+| Rendering         | `GridCharacters.vue`: an `isPhantimalId` branch swaps image source (`phantimalImageUrl`, remote) and colour; an id with no data renders a "?" placeholder                 |
+| Roster            | `PhantimalSelection.vue`, composed with the artifact roster in `SeasonalSelection.vue`                                                                                    |
+| URL               | dedicated `s` section (below)                                                                                                                                             |
 
-Because the simulation is ID-agnostic, the only code that needs phantimal
-awareness is the small set of seams below.
+Spirit Mark: each phantimal registers a tile highlight under its namespaced id on its priority-behind tile (Necrodrakon: priority-front) via `findAdjacentPriorityTarget`, shared with Daimon. Activation is gated only by the registry (`hasSkill`), so activate on place, deactivate on remove and re-derive on every mutation ride the generic `execute*` ops; the skill system holds no phantimal-aware code. The file must go together with the data files, including on a data-only rotation: retired ids restored from old URLs still place and would keep activating it.
 
-### The seams
+Skill descriptions use the same `[[value]]` / `<STAT>` markup as character skills; `highlightSkillText` renders both.
 
-| Concern                  | Where                                                                                                                             | What changes                                                                                                                                               |
-| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Team-size exemption      | `character.ts` (`getAvailableTeamSize`)                                                                                           | Occupied-tile counting skips phantimal ids.                                                                                                                |
-| Capacity/duplicate check | `character.ts` (`canPlaceCharacterOnTeam`)                                                                                        | Returns `true` for phantimal IDs.                                                                                                                          |
-| One-per-team replace     | `stores/character.ts` wrappers delegating to `useGridContext.ts` (`placePhantimal` / `autoPlacePhantimal` / `clearTeamPhantimal`) | Clears the team's existing phantimal (`findTeamPhantimalHex`) before placing. Cross-team moves route through the same clear in `handleDrop`.               |
-| Spirit Mark skill        | `lib/skills/seasonal/phantimal.ts`                                                                                                | Tile highlight registered under the namespaced ID; rides the generic skill lifecycle (see below).                                                          |
-| Data lookup              | `stores/gameData.ts`                                                                                                              | `getPhantimalById`; `getCharacterRange`/`getCharacterNameById` short-circuit phantimal IDs.                                                                |
-| On-grid rendering        | `components/grid/GridCharacters.vue`                                                                                              | An `isPhantimalId` branch swaps the image source (remote, via `phantimalImageUrl`) and colour; all positioning, drag, lift and perspective code is reused. |
-| Roster                   | `components/PhantimalSelection.vue`                                                                                               | Draggable + tap-to-place + placed state, mirroring the character roster; the info modal stays reachable via the pill.                                      |
-| URL serialization        | see below                                                                                                                         | Dedicated `s` section.                                                                                                                                     |
+### Faction requirement (`src/lib/characters/phantimalFaction.ts`)
 
-Skills: each phantimal registers a **Spirit Mark tile highlight** under its
-namespaced ID in `lib/skills/seasonal/phantimal.ts`, discovered by the
-`./seasonal/*.ts` glob in `skill.ts`. The skill marks the unit on the
-phantimal's priority-behind tile (Necrodrakon: priority-front) via
-`findAdjacentPriorityTarget` (shared with Daimon), painting a yellow fill plus
-border through the SkillManager's refcounted tile channels. Activation is gated
-only by the registry (`hasSkill`), so the whole lifecycle (activate on place,
-deactivate on remove, re-key on cross-team move, re-derive on every mutation)
-rides the generic `execute*` ops; the skill system contains no phantimal-aware
-code.
+A phantimal may only stand on a team fielding at least `PHANTIMAL_FACTION_REQUIREMENT` (3) distinct main characters of its faction; companions and phantimals do not count. `requiredFactions` carries overrides: `midnight-hunter` counts both `hypogean` and `celestial`. The rule takes a `factionOf(id)` resolver so it stays free of the data store; each board's `useGridContext.ts` injects `gameDataStore.getCharacterFaction` and enforces it at four points:
 
-Targeting range: a phantimal's `range` (from its data file) is used when it acts
-as a targeting _source_ for the on-grid arrows. `getCharacterRange` returns it,
-and the pathfinding store adds on-grid phantimals to the per-unit range map it
-passes to `getClosestTargetMap` (the static map is keyed by character id only).
+- **Placement gate**: `placePhantimal` / `autoPlacePhantimal` return `false` when the team is short, so a click or drop does nothing.
+- **Cross-team gate**: `handleDrop` blocks moving a phantimal to an empty tile on the other team unless that team qualifies.
+- **Reconcile watcher**: `watch(placements, reconcilePhantimals)` removes an on-field phantimal whose team dropped below the requirement and auto-places a faction's phantimal when a team crosses into qualifying, unless it already has one.
+- **Roster tooltip**: `PhantimalSelection.vue` shows `app.phantimal-deployable` / `app.phantimal-locked` (`src/locales/app/messages/`) with the live `count/required`.
+
+Auto-placement is edge-triggered: `lastQualifyingPhantimal` records the phantimal each team last qualified for, so placement fires once per transition and a manually removed phantimal stays gone while the count holds. `findQualifyingPhantimalId` walks data order, so when a synergy hero lets a roster satisfy two factions the first match wins and a seated phantimal keeps its seat. Bulk restores (URL, board moves, team loads) apply many characters at once, which the watcher would read as a fresh transition; callers run `seedPhantimalBaseline` afterward so a saved state that omits its phantimal loads without one. With phantimal data unloaded (unit tests) the rule is inert and placement is allowed.
 
 ### URL serialization
 
-Phantimal IDs (100000+) don't fit the character section's 16-bit ID field, so they
-get their own section rather than overloading `c`:
+Phantimal ids do not fit the character section's id field, so they get their own section:
 
-- `GridState.s`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`).
-- `binaryEncoder.ts`: a phantimal section after artifacts, a 4-bit count then
-  `hexId(6) + localId(4) + team(1)` per entry. Presence is flagged by the `s`
-  bit of the board header's section bitmap.
-- `urlState.ts` restores phantimals via `placePhantimalOnHex` after characters
-  and artifacts.
-
-States with no phantimals leave the flag unset, so the decoder never reads the
-section and such states encode byte-for-byte as if the section didn't exist.
-
-### Descriptions
-
-Phantimal skill descriptions use the same `[[value]]` / `<STAT>` markup as
-character skills, and `textHighlight` renders both. The locale files at
-`src/locales/seasonal/phantimal/<slug>.json` ({name, skills[].levels[]} en/zh
-maps) are generated by `npm run import:phantimals` from the viewer's en/zh
-feeds, with the shared `cleanDescription` normalization (stat/value reorder,
-sprite strip). The structural files stay hand-written: the compact local ids
-are baked into URL serialization and `range` is board-sim semantics no feed
-carries. The importer lints them against the feed instead (slug sets match
-both ways, factions agree), prunes locale files whose phantimal left the feed,
-and `--retire` deletes them all.
-
-### Faction requirement
-
-A phantimal may only be on a team that fields at least
-`PHANTIMAL_FACTION_REQUIREMENT` (3) characters of its faction. The rule lives in
-the pure, injectable `lib/characters/phantimalFaction.ts` (`requiredFactions`,
-`countTeamFaction`): it takes a `factionOf(id)` resolver so it stays free of the
-data store. **midnight-hunter** is special: its `requiredFactions` override counts
-both `hypogean` and `celestial`. Only distinct main characters count; companions
-and phantimals are excluded.
-
-The character store wires `gameDataStore.getCharacterFaction` into the rule and
-enforces it at five points:
-
-- **Placement gate**: `placePhantimalOnHex` / `autoPlacePhantimal` return `false`
-  if the team is short, so a click or drop simply does nothing.
-- **Cross-team gate**: `GridContext.handleDrop` blocks moving a phantimal to an
-  empty tile on the other team unless that team qualifies; the phantimal stays
-  put. Dropping a phantimal on an occupied tile on the other team is a
-  cross-team swap, which `executeSwapCharacters` rejects outright.
-- **Auto-removal**: a `watch(placements)` runs `reconcilePhantimals`, removing
-  any on-field phantimal whose team drops below the requirement (e.g. a faction
-  character is removed or moved away).
-- **Auto-placement**: the same `reconcilePhantimals` watcher places a faction's
-  phantimal the moment a team crosses _into_ qualifying, unless it already has
-  one. It is **edge-triggered**: `lastQualifyingPhantimal` records the phantimal
-  each team last qualified for, so placement fires once on the transition and a
-  manually removed phantimal stays gone while the faction count holds.
-  `findQualifyingPhantimalId` resolves which phantimal applies; with a synergy
-  hero a 6-unit roster can satisfy two factions, in which case data order picks,
-  and the one already seated keeps its seat. Bulk URL restores apply many
-  characters at once, which would otherwise read as a fresh transition;
-  `seedPhantimalBaseline` re-aligns the baseline after restore so a saved state
-  that omits its phantimal loads without one.
-- **Roster tooltip**: `PhantimalSelection` shows `app.phantimal-deployable` /
-  `app.phantimal-locked` with the live `count/required` on hover.
-
-When phantimal data isn't loaded (e.g. unit tests) the rule can't be evaluated and
-placement is allowed, so the gate is inert rather than blocking.
-
-### Modularity & removability
-
-Everything phantimal-specific is reachable from a short list of seams, each keyed
-on `isPhantimalId` or living in a dedicated file. To retire the feature:
-
-1. Delete `lib/characters/phantimal.ts`, `lib/characters/phantimalFaction.ts`,
-   `PhantimalSelection.vue`, `modals/PhantimalModal.vue`, the skill file
-   `lib/skills/seasonal/phantimal.ts` with `tests/unit/skills/phantimal.test.ts`,
-   the phantimal data/locale files (incl. `app/phantimal-deployable|locked.json`),
-   `scripts/import-phantimals.ts` with its npm scripts, and the Phantimals
-   section of this doc. The skill file must go whenever the
-   data/locale files do, including a data-only rotation: retired IDs restored
-   from old URLs still place, and would otherwise keep activating the skill.
-2. Remove the phantimal section from `binaryEncoder.ts` / `gridStateSerializer.ts`
-   / `urlState.ts` (the `s` field) and the `getPhantimalById` /
-   `getCharacterFaction` accessors. Optionally remove the `./seasonal/*.ts` glob
-   line in `skill.ts`: an unmatched literal Vite glob compiles to an empty module
-   map, so this is tidiness, not correctness. `findAdjacentPriorityTarget` stays
-   (it is Daimon's targeting); its `'front'` direction becomes unused and may
-   stay or be trimmed.
-3. Drop the phantimal helpers from the character store (placement, the faction
-   gate, and the `reconcilePhantimals` watcher), the `isPhantimalId(...)`
-   guards including the cross-team swap rejection in `swap.ts` (they collapse to
-   "always a character"), the `GridCharacters` render branch, and
-   `Grid.phantimalIdOffset` (restoring `isCompanionId` to a single lower bound).
-
-The `GridTile` model, pathfinding, move, and the `c` URL section were never
-modified for phantimals, so nothing there needs reverting.
+- `GridState.s`: `[hexId, localPhantimalId, team][]` (`gridStateSerializer.ts`), stored by local id.
+- `binaryEncoder.ts`: section bitmap bit 3; a 4-bit count, then `hexId(6) + localId(4) + team(1)` per entry, written after the artifact section. States without phantimals leave the bit unset and encode as if the section did not exist.
+- `urlState.ts` restores via `placePhantimalOnHex` after characters and artifacts, then calls `seedPhantimalBaseline`.
 
 ## Seasonal Artifacts
 
-Artifacts are the one seasonal domain with a permanent core: the 6 pre-season
-artifacts (`season: 0`) persist across rollovers, while the 12 seasonal ones
-rotate. The directory tree encodes the split: the seasonal set lives under
-`seasonal/` dirs in both trees, the pre-season set outside them, and the
-loaders merge one glob per location.
+The 6 pre-season artifacts (`season: 0`) persist across rollovers; the 12 seasonal ones rotate. The directory tree encodes the split and the loaders merge one glob per location:
 
-- Structural records (hand-curated: compact URL ids, `season` grouping):
-  `src/data/artifact/<slug>.json` for the pre-season set,
-  `src/data/seasonal/artifact/<slug>.json` for the seasonal set
-  ({id, name, season, stats}). The `season` field drives newest-first grouping
-  in `ArtifactSelection.vue` and remote-vs-bundled imagery in
-  `ArtifactImage.vue`.
-- Display names (hand-curated: the en names are deliberately shortened, the
-  feed's carry a "Spell" suffix): `src/locales/artifact/<slug>.json` and
-  `src/locales/seasonal/artifact/<slug>.json` en/zh maps.
-- Effect text (generated): `src/locales/artifact/effects/<slug>.json` and
-  `src/locales/seasonal/artifact/effects/<slug>.json`, written by
-  `npm run import:artifacts` from the viewer's en/zh `artifacts.json` feeds
-  with the shared `cleanDescription` normalization.
-- Targeting (hand-curated): artifacts that act on specific units draw an arrow
-  from their slot to each target, from the table in `src/lib/skills/artifact.ts`;
-  the season's entries sit under a season comment there (see SKILLS.md,
-  "Artifact Targeting").
+| Content                                | Pre-season                      | Seasonal                                  | Owner                                                                |
+| -------------------------------------- | ------------------------------- | ----------------------------------------- | -------------------------------------------------------------------- |
+| Structural `{id, name, season, stats}` | `src/data/artifact/`            | `src/data/seasonal/artifact/`             | hand-curated (compact URL ids)                                       |
+| Display names (en/zh)                  | `src/locales/artifact/`         | `src/locales/seasonal/artifact/`          | hand-curated (shortened; the feed's en names carry a "Spell" suffix) |
+| Effect text                            | `src/locales/artifact/effects/` | `src/locales/seasonal/artifact/effects/`  | `import:artifacts`                                                   |
+| Targeting arrows                       | `src/lib/skills/artifact.ts`    | same file, entries under a season comment | hand-curated (see [SKILLS.md](./SKILLS.md), "Artifact Targeting")    |
 
-The importer lints everything hand-written against the feed and hard-fails on
-disagreement: every feed artifact has a structural file in the dir matching
-its set (and vice versa), a display-name file exists per artifact, and
-structural `stats` match the feed's `statBonuses` through the stat-code map,
-so a balance patch fails the import loudly instead of drifting silently. It
-prunes effect files whose artifact left the feed, and
-`npm run import:artifacts -- --retire` clears the seasonal effect files.
-
-Retiring a season's artifacts is deleting the seasonal data and name files
-(the importer prunes its own effect files) and the season's entries in
-`lib/skills/artifact.ts` with their cases in `tests/unit/skills/artifact.test.ts`;
-the pre-season six are never touched. Stamped records never bring retired ids
-onto live boards (ingress strips them), but links carry no season, so a retired
-id in an old link resolves to the new season's occupant of that id; a lingering
-targeting entry would then draw the old season's arrows for it.
+- `season` drives newest-first grouping in `ArtifactSelection.vue` and the icon source: `isRemoteArtifact` (`src/utils/artifactImage.ts`) sends every season but 0 to `https://chaldea.tmdict.com/img/seasonal/artifact/<slug>.webp`; phantimal icons live beside them at `seasonal/phantimal/<slug>.webp`.
+- Retiring a season's artifacts: delete the seasonal data and name files and the season's targeting entries with their cases in `tests/unit/skills/artifact.test.ts`; the importer prunes its effect files. A lingering targeting entry would draw the old season's arrows for whichever new artifact reuses the id.
 
 ## Charms
 
-Charms are per-hero seasonal skill upgrades with four tiers (Elite, Epic,
-Legendary, Mythic). One charm is a skill family **shared by 3-16 heroes**, so
-the data model is charm-keyed, never hero-keyed: text is stored once per charm
-and heroes reference it. Charms have no player-facing names; identity is the
-raw codename slug (`SkillName` minus the `gemskill_` prefix, e.g.
-`ep7mpregen`).
+Per-hero seasonal skill upgrades with four tiers (Elite, Epic, Legendary, Mythic). One charm is a skill family shared by several heroes, so the model is charm-keyed: text is stored once per charm and heroes reference it. Charms have no player-facing name; identity is the feed slug (`SkillName` minus the `gemskill_` prefix, e.g. `ep7mpregen`), which the viewer derives from the raw `GemSuit` table so a season rollover needs no season literal.
 
-### Files
+### Data (`src/data/seasonal/charm/charms.json`, `src/locales/skill/<code>/_charms.json`)
 
-- `src/data/seasonal/charm/charms.json` (generated): charm slug → the roster
-  heroes sharing it. The inverse hero → charm lookup is derived at load time.
-- `src/locales/skill/<code>/_charms.json` (generated, one per language):
-  `{ tiers: [4 localized tier labels], charms: { slug: [4 descriptions] } }`.
+- `charms.json`: `{ "<slug>": { "heroes": [...] } }`; the hero to charm inverse is derived at load (`getCharmForHero`).
+- `_charms.json`: `{ "tiers": [4 labels], "charms": { "<slug>": [4 descriptions] } }`, one per language.
+- The underscore file rides the reserved `_` namespace of the skill locale dirs (like `_keywords.json`): the eager en/zh globs and each other language's lazy chunk, so charm text is warm exactly when the surrounding skill text is, and the SSG route walk (`vite.config.ts`) and hero-slug walks already skip `_` files. `splitSkillDict` (`dataLoader.ts`) splits it out; `getSkillCharms(lang)` reads it (en fallback at the call site), `loadCharms` / `getCharmForHero` serve the structural map (an unmatched glob is an empty map).
+- `src/data/seasonal/charm/` is listed in `.prettierignore`: the importer's compact output would churn against formatting.
 
-The underscore file piggybacks the reserved `_`-namespace of the skill locale
-dirs (like `_keywords.json`): it rides the eager en/zh globs and each other
-language's lazy chunk, so charm text is warm exactly when the surrounding
-skill text is, and the SSG route walk and hero-slug walks already skip it.
+### UI
 
-### Pipeline
+- `SkillCharmSection.vue` is rendered by `SkillSections.vue` after the slot sections and before the per-hero snippet, so it appears on every `SkillSections` surface (skill pages, skills browser, roster skill modal). `GuideCharacterPanel` and `PhantimalModal` compose `SkillSection` directly and show no charms.
+- An active tag-chip filter hides the block: charm rows carry no tags, the same rule as EX refinements.
+- `#charm` anchors search deep links. `useSkillSearch` indexes tier text per sharing hero (`loc: 'charm'`, `tier` 1-4), deduped under one pseudo-slot so a hero surfaces once per charm; `SkillSearchOverlay.vue` type-lines hits as `<charm label> · <tier name>`.
+- Labels: `src/locales/app/charm.json`, `src/locales/app/charm-shared.json`.
 
-`afkj-data-viewer` derives charms from the raw `GemSuit` table (season
-membership is self-updating; no season literal) and emits
-`public/api/<locale>/charms.json` per feed locale. `npm run import:charms`
-(`scripts/import-charms.ts`) then:
+## Season Provenance (`src/lib/seasonal.ts`)
 
-- asserts uniform charm coverage and identical hero lists across all 16 feeds;
-- normalizes text with the shared `cleanDescription` (stat/value reorder,
-  sprite-tag strip) and validates `[[label|key]]` tokens against each
-  language's `_keywords.json` glossary;
-- intersects feed heroes with the roster (`src/data/character/*.json`),
-  warning on unknowns;
-- writes both outputs diff-then-write.
+Seasonal artifact and phantimal ids are reused each season, so a bare id cannot say which season's content it names.
 
-An absent or unreadable feed is a hard error, never a silent wipe. Outputs are
-deleted only by `npm run import:charms -- --retire` (or a feed that exists with
-zero charms): nothing else ever deletes locale files, and a stale
-`_charms.json` would otherwise keep shipping invisibly inside every chunk.
+- **Stamp**: `serializeMultiGridState` writes `season = CURRENT_SEASON` on every `MultiGridState`. `canonicalTeamData` preserves a record's stamp rather than re-stamping it. `stampLegacySeason` (`src/utils/upgradeMigration.ts`, TEMPORARY) stamps pre-field payloads with 7 at the JSON decode choke point and the storage pass persists it; after the shim an unstamped payload has no provenance and resolves against the current pool.
+- **Current season**: max `season` over loaded artifacts and phantimals; 0 with empty seasonal dirs, which retires every stamp.
+- **Retired references**: a payload whose season is not current has its seasonal references treated as retired. `stripRetiredSeasonal` removes all phantimals and every artifact id outside the `season: 0` permanent set; `normalizeTeamPayload` (every Teams ingress) and side-load strip, while saved records keep theirs until re-saved. Display surfaces mask instead (`lib/teams/preview.ts`): an "S{n}" placeholder carrying only the season, tooltip `app.seasonal-retired`, raw id withheld so nothing can resolve it.
+- **Notice**: every strip (explicit loads, quiet slot and link restores, the arena rotation pass) raises the session-scoped, dismissible banner (`useSeasonNotice` + `SeasonNotice.vue` on HomeView and TeamsView), so a first visit after a cutover explains what was removed.
+- **Links**: binary links carry no season, so an old link's bare ids resolve as current-pool content (the accepted links-are-expendable mis-render).
+- **Arena autosave**: binary and stampless, so `runSeasonRotationPass` (`src/utils/seasonRotation.ts`, permanent) keeps a `stargazer.season` marker and strips the stored value once per season flip; an absent marker seeds season 7.
 
-### Loading and UI
+### Cutover checklist
 
-`splitSkillDict` (dataLoader) splits `_charms` out of each locale dict;
-`getSkillCharms(lang)` reads it (en fallback at the call site), and
-`loadCharms()` / `getCharmForHero(slug)` serve the structural map (after
-removal the unmatched glob degrades to an empty map).
+1. Viewer: `npm run build:data`, commit.
+2. Run the three importers with `--retire`.
+3. Replace the hand-curated structural and name files; new content reuses the freed ids with the new `season`. `tests/unit/lib/seasonal.test.ts` asserts every non-zero data season equals `CURRENT_SEASON` and pins the value, so a partial or forgotten bump fails loudly.
+4. Replace `lib/skills/seasonal/phantimal.ts` and the season's targeting entries in `lib/skills/artifact.ts`, with their tests.
+5. `npm run import:seasonal`.
+6. Rotate seasonal preset maps onto freed `MAP_WIRE_IDS` (`src/lib/teams/wire.ts`) and update `FIVE_V_FIVE_DEFAULT_MAPS` (`src/lib/maps.ts`) if the Supreme League rotation changed.
+7. Full tests, deploy. No stored-data rewrites: the derived season flips the read rule everywhere, and each device's rotation pass cleans its arena autosave on first visit.
 
-`SkillCharmSection.vue` is rendered by `SkillSections.vue` after the slot
-sections and before the per-hero essay snippet, so it appears on every
-`SkillSections` surface: the skill pages, the skills browser, and the roster
-skill modal. `GuideCharacterPanel` and `PhantimalModal` compose `SkillSection`
-directly and intentionally do not show charms. Details:
+### Feature retirement
 
-- Tier rows use a subgrid label column so all four descriptions start at the
-  same x in every language; badges wear rarity hues (Elite purple, Epic
-  orange, Legendary red, Mythic blue-silver).
-- Text renders through `highlightSkillText`, and keyword tooltips work via the
-  article-root delegation the block sits inside.
-- An active tag-chip filter hides the block (charm rows carry no tags, the
-  same rule as EX refinements).
-- A muted "Same charm" footer lists the other heroes sharing the charm.
-- The section id `#charm` anchors search deep links; heroes without a charm
-  (and all heroes after retirement) render no block.
+- **Phantimals**: delete `phantimal.ts`, `phantimalFaction.ts`, `PhantimalSelection.vue`, `modals/PhantimalModal.vue`, the skill file with `tests/unit/skills/phantimal.test.ts`, the data and locale files (including the two `app/messages` strings), and `scripts/import-phantimals.ts` with its npm scripts. Remove the `s` section from `binaryEncoder.ts` / `gridStateSerializer.ts` / `urlState.ts`, `getPhantimalById` and the phantimal branches of the other `gameData` accessors, the context and store helpers (placement, faction gate, reconcile watcher), the `isPhantimalId` guards including the swap rejection (they collapse to "always a character"), the `GridCharacters` branch, and `Grid.phantimalIdOffset`. The `./seasonal/*.ts` glob may stay (an unmatched literal glob compiles to an empty map) and `findAdjacentPriorityTarget` stays for Daimon. `GridTile`, pathfinding, move and the `c` section were never modified.
+- **Charms**: no URL, grid or store seams exist. `npm run import:charms -- --retire` (or delete `src/data/seasonal/charm/` and `src/locales/skill/*/_charms.json`) and drop the `.prettierignore` line; delete `SkillCharmSection.vue`, the charm computed and block in `SkillSections.vue`, the charm branches in `useSkillSearch.ts` and `SkillSearchOverlay.vue`, `tests/unit/charms.test.ts`; remove `loadCharms`, `getCharmForHero`, `getSkillCharms`, the `_charms` branch of `splitSkillDict` and the `SkillCharms` / `CharmData` types; delete `scripts/import-charms.ts`, the `import:charms` script and its `import:seasonal` entry, and the two `app/charm*.json` labels.
+- The `s` board section is file format, not season data: it stays if phantimals are replaced by another seasonal unit type. Charms have no URL presence, so their retirement has no decode story.
 
-### Search
+## Related Documentation
 
-`useSkillSearch` indexes charm tier text per sharing hero (`loc: 'charm'`,
-`tier` 1-4, deduped under one pseudo-slot so a hero surfaces once per charm).
-The search overlay chips these hits with the charm label, type-lines them as
-"Season Charm · <tier name>", and links them to `#charm`.
-
-### Rotation
-
-1. New season lands in the dump → in `afkj-data-viewer`, `npm run build:data`
-   and commit. The charm step follows GemSuit automatically; new-season slugs
-   appear, old ones vanish.
-2. Here, `npm run import:charms` and commit: the structural map and all 16
-   `_charms.json` are rewritten wholesale.
-
-### Removal checklist
-
-Charms are display-only content: no URL-serialization, grid, or store seams
-exist, so removal is files, a few dataLoader accessors, and one template block.
-
-1. `rm -r src/data/seasonal/charm/` (unmatched literal globs compile to empty
-   module maps, so deletion is safe) and drop its line from `.prettierignore`.
-2. `rm src/locales/skill/*/_charms.json` (or run
-   `npm run import:charms -- --retire`, which does both).
-3. Delete `SkillCharmSection.vue`, the charm computed + insertion block in
-   `SkillSections.vue`, the charm branches in `useSkillSearch.ts` and
-   `SkillSearchOverlay.vue`, and `tests/unit/charms.test.ts`.
-4. Revert the dataLoader accessors (`loadCharms`, `getCharmForHero`,
-   `getSkillCharms`), the `_charms` branch in `splitSkillDict`, and the
-   `SkillCharms` / `CharmData` types.
-5. Delete `scripts/import-charms.ts`, the `import:charms` npm script, and its
-   entry in the `import:seasonal` chain (`scripts/lib/shared.ts` stays; the
-   skill importer uses it).
-6. Delete `src/locales/app/charm.json` and `src/locales/app/charm-shared.json`.
-7. Delete the Charms section of this doc.
-
-## Season cutover & retirement
-
-Seasonal artifact/phantimal ids are **reused** each season: a cutover deletes
-the old season's data files and the new season's content takes over the freed
-ids. What makes that safe for stored data is **season provenance**
-(`/src/lib/seasonal.ts`):
-
-- Every serialized `MultiGridState` carries `season` — the content pool the
-  snapshot was built from. Canonicalization preserves a record's stamp rather
-  than re-stamping it. Payloads predating the field are stamped season 7 by
-  the TEMPORARY shim (read-side plus the at-rest storage pass); per the
-  shims-are-always-temporary policy there is no permanent default, so an
-  unstamped payload surfacing after the window (an old export file) has no
-  provenance and resolves its seasonal ids against the current pool — the
-  same accepted expendable-data outcome as every other post-shim legacy.
-- `CURRENT_SEASON` is deploy-derived, never calendar-derived: the max `season`
-  across the loaded seasonal data files. The boundary flips exactly when a
-  cutover deploy ships; a team saved between the game's season flip and the
-  deploy genuinely contains old-pool content and is labeled with it.
-- A payload whose season is not current has its seasonal references treated
-  as **retired**: previews and thumbnails mask them (an "S{n}" disc/dot/circle
-  with a "Season {n} · no longer available" tooltip — the raw id is withheld
-  so nothing can resolve it to the new season's content), and every Teams
-  ingress strips them via `normalizeTeamPayload` (side-load strips the same
-  way) so they never reach live boards, autosaves, or fresh links. Saved
-  records keep their content and placeholders until the user re-saves. Every
-  strip — explicit loads and quiet slot/link restores alike, plus the arena
-  rotation pass — raises the persistent, dismissible season banner
-  (`useSeasonNotice` + the `SeasonNotice` component above the boards on both
-  pages), so a first visit after a cutover explains what was removed instead
-  of flashing a toast. The pre-season artifacts (`season: 0`) are exempt
-  everywhere.
-- The arena autosave is binary and stampless, so `runSeasonRotationPass`
-  (`/src/utils/seasonRotation.ts`, permanent) keeps a `stargazer.season`
-  marker and strips the stored value once per season flip — no per-season
-  migration code.
-- Links carry no season: an old link's bare ids resolve as current-pool
-  content, the accepted links-are-expendable mis-render.
-
-The cutover-day checklist: viewer `build:data`; the three `--retire`
-importers; replace the hand-curated structural + name files (new content
-reuses the freed ids with the new `season` number — the contract test that
-every non-zero data season equals `CURRENT_SEASON` catches a partial or
-forgotten bump); replace `lib/skills/seasonal/phantimal.ts` and the season's
-targeting entries in `lib/skills/artifact.ts` (+ tests); `npm run
-import:seasonal`; rotate seasonal preset maps onto freed `MAP_WIRE_IDS` and
-update `FIVE_V_FIVE_DEFAULT_MAPS` (`src/lib/maps.ts`) if the SL rotation
-changed; bump the pinned `CURRENT_SEASON` value in
-`tests/unit/lib/seasonal.test.ts` (it fails loudly otherwise); full tests;
-deploy. No stored-data rewrites — the derived current season flips the read
-rule everywhere, and each device's rotation pass cleans its arena autosave on
-first visit.
-
-Feature-retirement notes: the `s` board section and its decode path are file
-format, not season data — they stay even if phantimals are replaced by a new
-seasonal unit type. A plain "?" placeholder remains for ids with no season
-context (an id absent from data inside a current-season payload). Charms have
-no URL presence at all, so their retirement has no decode story.
+- [`/docs/architecture/URL_SERIALIZATION.md`](./URL_SERIALIZATION.md) - Board sections, including the phantimal `s` section and map wire ids
+- [`/docs/architecture/TEAMS.md`](./TEAMS.md) - Team ingress, canonical records and default-map fingerprints
+- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Skill registry and artifact targeting

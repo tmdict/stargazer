@@ -13,7 +13,7 @@ import '@/styles/content.css'
 
 const lang = useRouteLocale()
 provide(SkillLangKey, lang)
-setupGuideContentMeta(lang.value)
+setupGuideContentMeta(lang)
 
 // SSG-safe: character/skill/prose data load eagerly, so every tag section and
 // its (hidden) expansion panels bake into the static HTML.

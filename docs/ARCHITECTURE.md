@@ -1,212 +1,154 @@
 # Architecture Overview
 
-## Introduction
+## Overview
 
-Stargazer is an AFK Journey arena simulator built with Vue 3 and TypeScript. The architecture maintains a framework-agnostic core domain layer, ensuring game logic remains portable and testable while leveraging Vue's reactivity for the UI.
+Stargazer is an AFK Journey arena simulator built with Vue 3, TypeScript, Pinia, and vite-ssg. Game logic lives in a framework-agnostic domain layer (`src/lib/`) that stores and composables adapt to Vue reactivity, and every arena board is one self-contained entity, so pages differ only in how many boards they hold. This document states the layering rules and cross-cutting invariants; each subsystem has a deep dive under `docs/architecture/`.
 
 ## Design Principles
 
-1. **Framework Agnostic Core**: Game logic in pure TypeScript, independent of Vue or any UI framework
-2. **Separation of Concerns**: Clear boundaries between UI, state management, business logic, and utilities
-3. **Atomic Operations**: Transaction pattern ensures complex state changes are all-or-nothing
-4. **Unidirectional Data Flow**: Predictable state changes from UI → Store → Domain → State
-5. **Multi-Layer Rendering**: Solves SVG limitations through independent visual and event layers
+1. **Framework-agnostic domain**: `src/lib/` imports no Vue or Pinia, so it runs unchanged in tests and in the team-import web worker
+2. **Board as entity**: `createGridContext` bundles one board's `Grid`, `SkillManager`, map, artifacts, derived values, and operations; `useGrids` holds N of them
+3. **One-way dependencies**: components call composables and stores, stores call the domain, and no layer imports from the layer above it
+4. **Atomic operations**: place, remove, move, and swap run through `executeTransaction`, so a failed step rolls back every earlier step
+5. **Layered rendering**: SVG has no z-index, so the grid stacks visual layers in draw order and puts an invisible event-capture layer on top
 
-## High-Level Architecture
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│                    UI Components Layer                      │
-│                                                             │
-│  ┌──────────────┐  ┌─────────────┐  ┌──────────────────┐    │
-│  │ GridManager  │  │ Characters  │  │  Map Editor      │    │
-│  │(Orchestrator)│  │  Selection  │  │                  │    │
-│  └───────┬──────┘  └──────┬──────┘  └────────┬─────────┘    │
-│          │                │                  │              │
-├──────────┼────────────────┼──────────────────┼──────────────┤
-│          ▼                ▼                  ▼              │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Pinia Stores (State Layer)             │    │
-│  │                                                     │    │
-│  │  Grid Store │ Character Store │ GameData │ Artifact │    │
-│  └──────────────────────┬──────────────────────────────┘    │
-│                         │                                   │
-├─────────────────────────┼───────────────────────────────────┤
-│                         ▼                                   │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │            Domain Logic (Business Layer)            │    │
-│  │                                                     │    │
-│  │   Grid │ Characters │ Pathfinding │ Skills │ Hex    │    │
-│  └──────────────────────┬──────────────────────────────┘    │
-│                         │                                   │
-├─────────────────────────┼───────────────────────────────────┤
-│                         ▼                                   │
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │              Utilities & Services                   │    │
-│  │                                                     │    │
-│  │  URL Serialization │ Binary Encoder │ Data Loading  │    │
-│  └─────────────────────────────────────────────────────┘    │
-└─────────────────────────────────────────────────────────────┘
-```
-
-## Core Systems
-
-### Grid & Characters System
-
-Separates spatial operations (Grid) from entity management (Characters folder). Grid handles hexagonal tiles and state, while Characters manages placement, removal, movement, and team operations with automatic skill integration.
-
-### Pathfinding System
-
-Pure functional algorithms (A\* and BFS) for movement calculation and target selection, with deterministic tie-breaking for consistent gameplay. Results are memoized by Vue computed properties in the pathfinding store, recomputing only when relevant grid state changes.
-
-### Skill System
-
-Handles character abilities, visual modifiers, and companion placement. Uses composition pattern for combining multiple skill effects.
-
-### Event System
-
-Type-safe component communication using Vue's provide/inject pattern. Namespaced events (`hex:*`, `character:*`) enable decoupled interactions.
-
-### Drag & Drop System
-
-Multi-layer architecture separates visual rendering from event detection. Invisible detection layer ensures reliable hex targeting even with overlapping elements.
-
-## Architectural Layers
-
-### UI Layer (`/src/components/`)
-
-Vue components with single responsibilities. Multi-layer rendering solves SVG limitations.
-
-### Composables Layer (`/src/composables/`)
-
-Shared reactive state and reusable Vue logic. Composables can call stores (one-way dependency) but stores must not call composables to prevent circular dependencies.
-
-**Key Composables:**
-
-- `useSelectionState`: Shared team selection + the mobile tap interaction state: the placement-target hex (tap an empty cell to add from the roster) and the lifted hex (tap a placed hero to move/swap it)
-- `useGridContext`: The per-board entity (its `Grid`, `SkillManager`, map, artifacts, layout, and place/move/swap operations); `useGrids` aggregates N of them (see GRID.md, Multigrid)
-- `useDragDrop`: Global drag state management (desktop/mouse only: touch placement is tap-based)
-- `useBottomSheet`: Pull-up sheet state: peek/expanded detents; drag-to-resize by touch **or** mouse (narrow desktop) from the handle or the content; tap-, flick-, or drag-to-toggle; and overscroll-to-collapse (swipe the content down once it's scrolled to the top). SSR-safe (CSS drives the resting layout; the composable only adds the inline `transform` once mounted). Consumed by the shared `BottomSheet` component (`components/ui/BottomSheet.vue`), which the Arena (`HomeView`), Teams (`TeamsRoster`), and `/skills` (`SkillsBrowser`) use for the roster column (desktop card + mobile sheet); each page slots its own content, which owns its in-sheet fill/scroll
-- `useGridEvents`: Pure pub/sub bus for grid DOM events (typed InjectionKey provide/inject; see EVENT_SYSTEM.md)
-- `useBreakpoint`: Responsive breakpoint detection
-- `useOverlay`: Escape + click-outside-to-close for modal-style surfaces
-- `useScrollLock`: Locks the page behind an open modal, ref-counted for stacked surfaces. Default strategy is `overflow: hidden` on `<html>` with scrollbar-gutter padding compensation, which keeps `window.scrollY` live for vue-router's synchronous popstate scroll snapshot; iOS/iPadOS keeps the `position: fixed` body hack (the only method it honors). Both add `overscroll-behavior: none` on `<html>` against pull-to-refresh / rubber-band. Used by `BaseModal`, `BottomSheet`, and the search overlay
-- `useCharacterFilters`: Shared faction/class/damage/tag filter state for the Characters tab and `/skills`
-- `useSkillSearch`: Lazy per-language skill-text index across all 16 skill locales (en/zh from the eager bundle; the rest stream in on first query), backing the global search overlay (`SkillSearchOverlay`); `matchCharacterNames` also serves the on-grid picker popup
-- `useSearchOverlay`: Shared open/query/select-handler state for the search overlay; `open()` is the navigate flavor, `openSelect(handler)` the pick-a-hero flavor (arena roster placement); also exports `useShortcutLabel`, the platform-aware shortcut chip label shared by the triggers
-- `useRecentHeroes`: Recently viewed skill pages (localStorage `stargazer.recentHeroes`, capped at 5), recorded by `SkillReader` and shown in the overlay's empty state
-- `useLocaleToggle`: Chrome-language switch that navigates between `/en`↔`/zh` URLs on app-locale-prefixed routes, otherwise flips the global locale (non-en/zh skill prefixes parse as unprefixed, so there it flips chrome in place without rewriting the content URL)
-- `useToast`: Global toast queue (success/error), rendered by the single `ToastContainer` in `App.vue` so toasts surface on every route
-- `useGridExport`: Captures the grid DOM to a PNG for copy/download
-- `useTouchDetection`: Module-singleton input-modality detection (touch vs mouse): gates hover tooltips
-- `useHoverTooltip`: Hover-tooltip visibility with touch suppression, the contract for action triggers (tap performs the action, never shows the tooltip): roster icons, filter buttons, save actions
-- `useInfoTip`: Tooltip for info-only triggers where click/tap shows it like hover does (the touch path; outside press or Escape dismisses): keyword glossary spans, info icons, confidence badges. Its header comment is the tooltip policy reference (including when native `title` suffices)
-- `usePressClick`: Press-duration gate so HTML5 drags don't also fire click handlers
-- `useModalLocale`: Modal-local language override (en/zh content: artifact/phantimal modals) that resets to the global locale each time the modal opens
-- `useModalSkillLocale`: Skill-modal variant across all 16 skill locales: seeds from the saved globe preference and gates rendering on the locale chunk being warm
-
-### State Layer (`/src/stores/`)
-
-Thin reactive wrappers around domain objects using Pinia. Bridges framework-agnostic domain with Vue's reactivity.
-
-**Key Stores:**
-
-- `useGrids`: The board collection: active-board pointer, shared globals (hex size, team view, invert, Syn affordance), page-wide uniqueness, drop routing
-- `GridStore` / `CharacterStore`: Single-board facades over the active board (grid state; character selection and placement)
-- `GameDataStore`: Character definitions and ranges; identity getters resolve companions and synergy copies to their base hero
-- `UrlStateStore`: Decodes shared state and applies it to the boards
-
-### Domain Layer (`/src/lib/`)
-
-Pure TypeScript game logic, completely framework-agnostic. Can be tested in isolation or ported to different frameworks.
-
-**Key Components:**
-
-- `Grid`: Hexagonal grid with public state properties
-- `Characters/`: Character operations folder
-  - `character.ts`: Queries, team management, tile helpers
-  - `place.ts`, `remove.ts`, `move.ts`, `swap.ts`: Complex operations with skills
-  - `companion.ts`: Companion system helpers
-  - `attributes.ts`, `upgradeStats.ts`: The per-hero upgrade registry (paragon, EX refinement) and what each level grants (the guide's tables and the panel's Rivalry maths)
-  - `phantimal.ts`, `placeholder.ts`, `synergy.ts`: Unit id namespaces (pure id math, see GRID.md)
-  - `transaction.ts`: Atomic operation utilities
-- `Pathfinding`: A\* and BFS algorithms
-- `Skills`: Ability system with visual effects
-
-### Content Layer (`/src/content/`)
-
-Localized content components separated from UI logic. Single source of truth for all translatable content, with locale-specific files (`.en.vue`, `.zh.vue`) and shared data files (`.data.ts`). These content pages are pre-rendered at build time for SEO and performance.
-
-**Component Architecture:**
+## Architecture
 
 ```
-GridContainer (Reusable grid wrapper)
-└── GridManager
-    ├── GridTiles (SVG base with 5 internal layers)
-    │   ├── Regular Hexes (visual)
-    │   ├── Elevated Hexes (visual)
-    │   ├── Skill-Highlighted Hexes (visual, topmost)
-    │   ├── Text Layer (hex IDs and coordinates)
-    │   └── Event Capture (invisible)
-    ├── GridArtifacts (HTML overlay)
-    ├── GridCharacters (HTML overlay)
-    ├── SkillTargeting (SVG overlay)
-    └── GridArrows (SVG overlay, Grid Info's Targeting toggle)
+┌────────────────────────────────────────────────────────────┐
+│ Views and components   src/views/   src/components/        │
+│ HomeView (/)   TeamsView (/teams)   SkillView   GuideView  │
+└─────────────┬────────────────────────────────┬─────────────┘
+              ▼                                ▼
+┌───────────────────────────┐    ┌───────────────────────────┐
+│ Composables               │    │ Stores (Pinia)            │
+│ useGridContext: one board │◀───│ useGrids: N boards        │
+│ useDragDrop, useGridEvents│───▶│ active-board facades,     │
+│ useSelectionState, ...    │    │ gameData, i18n, urlState  │
+└─────────────┬─────────────┘    └─────────────┬─────────────┘
+              ▼                                ▼
+┌────────────────────────────────────────────────────────────┐
+│ Domain  src/lib/               ◀──▶  Utilities  src/utils/ │
+│ grid, hex, characters/, pathfinding, binaryEncoder,        │
+│ skills/, teams/, import/, seasonal   urlStateManager,      │
+│                                      dataLoader, viewport  │
+└────────────────────────────────────────────────────────────┘
 ```
 
-GridArtifacts renders before GridCharacters in the DOM, ensuring that enemy artifacts appear behind character icons when they overlap in perspective view. Artifacts sit in purely-visual host cells (dashed hexes beside grid cells 1 and 45) that are excluded from the grid simulation. Skill-highlighted hexes render above elevated hexes to ensure skill borders are always visible. GridArrows (closest-target arrows) renders when Grid Info's Targeting child is on and last in the layer stack so the arrows stay readable over the pathfinding debug lines, which remain gated by the Arena's Debug tab.
+Arrows show import direction. The one reverse arrow is `useGrids` building boards through `createGridContext`; the domain and utilities import each other per module (see Layer Rules).
 
-### Utility Layer (`/src/utils/`)
+## Layer Rules
 
-Helper functions and services supporting the application.
+| Layer                | Path                            | Imports                         | Never imports                               |
+| -------------------- | ------------------------------- | ------------------------------- | ------------------------------------------- |
+| Views and components | `src/views/`, `src/components/` | composables, stores, lib, utils |                                             |
+| Composables          | `src/composables/`              | stores, lib, utils              | `.vue` components                           |
+| Stores               | `src/stores/`                   | other stores, lib, utils        | composables, components                     |
+| Domain               | `src/lib/`                      | lib, utils, `src/data/` JSON    | Vue, Pinia, stores, composables, components |
+| Utilities            | `src/utils/`                    | lib, utils, Vue reactivity      | composables, components                     |
 
-**Key Utilities:**
+Deliberate exceptions, each singular:
 
-- Two serialization boundaries: the binary link codec (`binaryEncoder.ts`) carries every `?g=` link plus the arena autosave, while JSON interchange (`urlStateManager.ts`) carries stored and exported team data (see [URL Serialization](./architecture/URL_SERIALIZATION.md))
-- Season lifecycle: `lib/seasonal.ts` derives the current season from data and governs retired-content masking/stripping; `seasonRotation.ts` re-aligns the arena autosave once per season flip; the temporary `upgradeMigration.ts` shim converts pre-release data (deleted per its own runbook)
-- Data loading and asset management
-- Formatting helpers for consistency
-- Viewport measurement (`viewport.ts`): owns all window-size reads and the clamping that keeps fixed overlays clear of classic scrollbars; ESLint bans raw `window.innerWidth`/`innerHeight` elsewhere in `src/`
+- `src/stores/grids.ts` imports `createGridContext` from `src/composables/useGridContext.ts`. That file is the board entity factory, and the collection store is what constructs boards. No other store imports a composable; `src/stores/teamLibrary.ts` states the rule in its header and returns typed results instead of toasting.
+- `src/utils/contentMeta.ts` reads `useI18nStore`. Every other utility is store-free.
+- The domain and utilities import each other per module: `lib/seasonal.ts` and `lib/maps.ts` read `utils/dataLoader.ts`, `lib/teams/` reads the serializers, and `utils/binaryEncoder.ts` reads `lib/characters/attributes.ts` and `lib/teams/wire.ts`. The "Never imports" column is the rule that holds between them, not an ordering.
 
-## Data Flow Patterns
+## Boards: the Entity Pattern
 
-### User Interaction Flow
+- `createGridContext(id, mapKey, globals)` (`src/composables/useGridContext.ts`) builds one board: its `Grid`, `SkillManager`, map, artifact slots, derived values (layout, team-view crop, closest-target maps as `computed`), and the place/remove/move/swap/clear operations. Its watchers live in a detached `effectScope`, so `dispose()` tears a board down without leaking.
+- `useGrids` (`src/stores/grids.ts`) holds the `contexts` array, the active-board pointer, the globals every board shares (hex size, team view, invert), and the cross-board rules: page-wide character and artifact uniqueness, drop routing, place-on-active, remove-from-any-board. `setGridCount(n)` rebuilds the array (Arena: 1; Teams: the mode's count, at most `MAX_GRID_COUNT`).
+- `useGridStore`, `useCharacterStore`, `useArtifactStore`, `useSkillStore`, and `usePathfindingStore` are facades over the active context, so single-board callers need no board id.
+- Board components read their own board through `useGridContext()`. `GridContainer` provides it through a Proxy bound to its `context` prop, so the Arena's descendants follow the active board when `setGridCount` swaps instances.
 
-1. Component captures user event
-2. Component emits event or calls store action
-3. Store delegates to domain logic
-4. Domain validates and updates state
-5. Reactive system updates UI
+## Data Flow
 
-### Transaction Pattern
+1. A component handles the DOM event, or the grid event bus notifies it (`useGridEvents` only notifies; the subscriber owns any state change)
+2. The component calls a store action or a context operation
+3. Single-board stores forward to the active `GridContext`; the context calls a `src/lib/characters/` operation
+4. The operation validates, then mutates the `Grid` inside `executeTransaction`
+5. Vue reactivity re-renders the layers that read the changed state
 
-```typescript
-grid.executeTransaction(
-  operations: (() => boolean)[],
-  rollbacks: (() => void)[]
-): boolean
-```
+Transactions: `executeTransaction(operations: (() => boolean)[], rollbackOperations: (() => void)[] = []): boolean` in `src/lib/characters/transaction.ts` stops at the first operation that returns false or throws, then runs the rollbacks in LIFO order. See [Grid & Characters](./architecture/GRID.md).
 
-Ensures atomic operations - all succeed or all rollback.
+## Views and Components (`src/views/`, `src/components/`)
 
-## Performance Optimizations
+| Route                    | View         | Role                                                                                            |
+| ------------------------ | ------------ | ----------------------------------------------------------------------------------------------- |
+| `/`                      | `HomeView`   | Arena: one board, autosaved                                                                     |
+| `/teams`                 | `TeamsView`  | Multi-board team builder and saved-team library ([Teams](./architecture/TEAMS.md))              |
+| `/share`                 | `ShareView`  | Read-only render of a `?g=` link                                                                |
+| `/skills`                | `SkillsView` | Skill browser                                                                                   |
+| `/:lang/skill/:name`     | `SkillView`  | Per-hero skill page, pre-rendered per locale ([Pre-Rendering](./architecture/PRE_RENDERING.md)) |
+| `/en/guide`, `/zh/guide` | `GuideView`  | Guide pages, pre-rendered                                                                       |
 
-- **Reactive Memoization**: Pathfinding target maps are Vue computed properties, recomputing only when the grid state they read changes
-- **Lazy Evaluation**: Computed properties calculate only when needed
-- **Granular Reactive State**: Character store uses separate computed properties to minimize unnecessary recalculations
-- **Layer Independence**: Each rendering layer updates separately
-- **Throttled Events**: Map editor drag-paint throttled to 50ms
+Grid rendering: `GridContainer` wraps `GridManager`, which composes `GridTiles` (SVG: regular hexes, elevated hexes, text, then the invisible event layer), `GridArtifacts` and `GridCharacters` (HTML overlays), and `SkillTargeting` and `GridArrows` (SVG overlays). Layer order and hit-testing: [Drag & Drop](./architecture/DRAG_AND_DROP.md).
+
+## Composables (`src/composables/`)
+
+Composables whose triggers and consumers sit far apart in the tree, or whose state is device-global, keep state at module scope (`useSelectionState`, `useDragDrop`, `useGridSwap`, `useSearchOverlay`, `useTouchDetection`, `useSeasonNotice`, `useAttrLayerSelection`). The ones that carry a cross-cutting contract:
+
+| Composable                                    | Contract                                                                                                                                                                              |
+| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useGridContext`                              | Board entity and its injection (above)                                                                                                                                                |
+| `useGridEvents`                               | Typed provide/inject pub/sub for grid DOM events, provided by `GridManager` ([Event System](./architecture/EVENT_SYSTEM.md))                                                          |
+| `useDragDrop`                                 | Module-singleton drag state for SVG and HTML drag sources, with position-based hex detection ([Drag & Drop](./architecture/DRAG_AND_DROP.md))                                         |
+| `useSelectionState`                           | Roster team selection plus the mobile tap state: the placement-target hex and the lifted hero, each board-qualified                                                                   |
+| `useDisplayFlags`                             | Grid toggle flags, serialized together into the link and the autosave                                                                                                                 |
+| `useGridPersistence`, `useTeamsRestore`       | Autosave slots (one for the Arena, one per Teams mode) and the Teams mode-switch sequence ([Teams](./architecture/TEAMS.md))                                                          |
+| `useTeamImport`                               | Screenshot import state and its worker ([Team Import](./architecture/IMPORT_TEAM.md))                                                                                                 |
+| `useScrollLock`, `useFocusTrap`, `useOverlay` | Modal-surface contract: ref-counted scroll lock, dialog focus that cycles inside the surface and returns to the opener, Escape and click-outside to close; `BaseModal` uses all three |
+| `useHoverTooltip`, `useInfoTip`               | Tooltip policy: action triggers never show a tooltip on touch, info-only triggers show it on tap; `useInfoTip`'s header is the reference                                              |
+| `useSkillSearch`, `useSearchOverlay`          | Lazy per-language skill-text index and the shared overlay state behind `SkillSearchOverlay`                                                                                           |
+
+## Stores (`src/stores/`)
+
+| Store                                                                                           | Role                                                                                                                                                                                   |
+| ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useGrids`                                                                                      | Board collection (above)                                                                                                                                                               |
+| `useGridStore`, `useCharacterStore`, `useArtifactStore`, `useSkillStore`, `usePathfindingStore` | Active-board facades; `usePathfindingStore` serves only the debug panel, the per-board target maps live on the context                                                                 |
+| `useGameDataStore`                                                                              | Character, artifact, and phantimal definitions loaded by `dataLoader`; resolves companion and synergy ids to their base hero                                                           |
+| `useI18nStore`                                                                                  | App locale and the skill-text locale preference; loads the dictionaries                                                                                                                |
+| `useMapEditorStore`                                                                             | Tile-state painting on the active grid ([Map Editor](./architecture/MAP_EDITOR.md))                                                                                                    |
+| `useTeamLibrary`                                                                                | Saved-team library in one versioned localStorage blob; returns typed results and never surfaces feedback ([Teams](./architecture/TEAMS.md))                                            |
+| `useUrlStateStore`                                                                              | Decodes link and stored payloads and applies them to the boards; `restoreMultiFromEncodedState` is the only bulk-apply path ([URL Serialization](./architecture/URL_SERIALIZATION.md)) |
+
+## Domain (`src/lib/`)
+
+| Module                                      | Role                                                                                                                                                                                             |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `grid.ts`, `hex.ts`, `layout.ts`, `maps.ts` | Hexagonal grid, coordinates, screen layout, arena presets ([Grid & Characters](./architecture/GRID.md))                                                                                          |
+| `characters/`                               | Queries and the place/remove/move/swap operations with skill integration; unit id namespaces (companion, phantimal, placeholder, synergy); upgrade registry (`attributes.ts`, `upgradeStats.ts`) |
+| `pathfinding.ts`                            | A\* and BFS with tie-breaking rules ([Pathfinding](./architecture/PATHFINDING.md))                                                                                                               |
+| `skills/`                                   | Skill registry, `SkillManager`, per-character skills ([Skills](./architecture/SKILLS.md))                                                                                                        |
+| `teams/`                                    | Saved-team records, modes, side-load, import plans ([Teams](./architecture/TEAMS.md))                                                                                                            |
+| `import/`                                   | Screenshot recognition over RGBA buffers; runs in `src/workers/teamImport.worker.ts`, so it stays DOM-free ([Team Import](./architecture/IMPORT_TEAM.md))                                        |
+| `seasonal.ts`                               | Season provenance for stored payloads ([Seasonal Content](./architecture/SEASONAL.md))                                                                                                           |
+
+## Content and Data (`src/content/`, `src/data/`, `src/locales/`)
+
+- `src/content/page/<Name>.<lang>.vue` (en, zh): page prose, resolved by `useContentComponent`
+- `src/content/skill/<slug>/`: optional per-hero snippet component per language plus `<Name>.data.ts` grid styles; skill text for all 16 locales lives in `src/locales/skill/<lang>/`
+- `src/data/` JSON (arena, artifact, character, import, seasonal) and `src/locales/` dictionaries load through `src/utils/dataLoader.ts`
+- Skill pages, guide pages, `/`, `/share`, and `/skills` are pre-rendered by vite-ssg ([Pre-Rendering](./architecture/PRE_RENDERING.md))
+
+## Utilities (`src/utils/`)
+
+- **Two serialization formats**: binary (`binaryEncoder.ts`) carries every `?g=` link and the Arena autosave; JSON (`urlStateManager.ts`) carries the saved-team library, mode slots, and export files. Links never use JSON ([URL Serialization](./architecture/URL_SERIALIZATION.md))
+- **Season stamping**: every serialized `MultiGridState` carries `season`, the current season is the max `season` across loaded seasonal data, and a stale payload's seasonal references are masked on display and stripped before reaching a board (`lib/seasonal.ts`). `seasonRotation.ts` re-aligns the stampless Arena autosave once per cutover; `upgradeMigration.ts` is a temporary shim whose header carries its removal runbook ([Seasonal Content](./architecture/SEASONAL.md))
+- **Viewport reads**: `viewport.ts` owns every window-size read; ESLint bans `window.innerWidth`/`innerHeight` elsewhere because they include classic scrollbars that fixed overlays are not laid out against
 
 ## Related Documentation
 
-- [`/docs/architecture/GRID.md`](./architecture/GRID.md) - Grid & character system details
+- [`/docs/architecture/GRID.md`](./architecture/GRID.md) - Grid & character system, transactions
 - [`/docs/architecture/TEAMS.md`](./architecture/TEAMS.md) - Teams page: modes, boards, saved-team library
 - [`/docs/architecture/IMPORT_TEAM.md`](./architecture/IMPORT_TEAM.md) - Team import: match screenshot readers, review, plan
 - [`/docs/architecture/SEASONAL.md`](./architecture/SEASONAL.md) - Phantimals, seasonal artifacts, and charms
 - [`/docs/architecture/SKILLS.md`](./architecture/SKILLS.md) - Skill system implementation
+- [`/docs/architecture/skills/COMPANION.md`](./architecture/skills/COMPANION.md) - Companion skills
+- [`/docs/architecture/skills/TARGETING.md`](./architecture/skills/TARGETING.md) - Targeting skills
 - [`/docs/architecture/PATHFINDING.md`](./architecture/PATHFINDING.md) - Pathfinding algorithms
-- [`/docs/architecture/PRE_RENDERING.md`](./architecture/PRE_RENDERING.md) - SSG/pre-rendering implementation
+- [`/docs/architecture/PRE_RENDERING.md`](./architecture/PRE_RENDERING.md) - SSG pre-rendering
 - [`/docs/architecture/DRAG_AND_DROP.md`](./architecture/DRAG_AND_DROP.md) - Multi-layer drag system
 - [`/docs/architecture/EVENT_SYSTEM.md`](./architecture/EVENT_SYSTEM.md) - Event communication
-- [`/docs/architecture/URL_SERIALIZATION.md`](./architecture/URL_SERIALIZATION.md) - State sharing
+- [`/docs/architecture/URL_SERIALIZATION.md`](./architecture/URL_SERIALIZATION.md) - State sharing and storage formats
 - [`/docs/architecture/MAP_EDITOR.md`](./architecture/MAP_EDITOR.md) - Map creation tools

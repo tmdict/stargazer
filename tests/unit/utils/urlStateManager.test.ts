@@ -91,6 +91,26 @@ describe('urlStateManager', () => {
       expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [[1, 2]] }))).toBeNull()
       expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{}, 'x'] }))).toBeNull()
     })
+
+    it('rejects crafted payloads whose sections are not the serializer shapes', () => {
+      // Section rows are destructured directly by preview, canonicalization
+      // and restore, so anything but numeric rows (ids/nulls for `a`, a string
+      // for `m`) must never decode; keys outside the contract are ignored.
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ c: {} }] }))).toBeNull()
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ a: {} }] }))).toBeNull()
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ t: [5] }] }))).toBeNull()
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ t: [null] }] }))).toBeNull()
+      expect(
+        decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ u: [[1, 'x', 1, 1]] }] })),
+      ).toBeNull()
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ a: ['x', null] }] }))).toBeNull()
+      expect(decodeMultiGridStateFromUrl(encodeRaw({ boards: [{ m: 3 }] }))).toBeNull()
+      expect(
+        decodeMultiGridStateFromUrl(
+          encodeRaw({ boards: [{ m: 'arena1', a: [null, 4], c: [[1, 11, 1]], zz: {} }] }),
+        ),
+      ).toMatchObject({ boards: [{ m: 'arena1', a: [null, 4], c: [[1, 11, 1]] }] })
+    })
   })
 
   describe('getEncodedStateFromUrl', () => {

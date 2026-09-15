@@ -3,6 +3,7 @@ import { computed, ref, toRef } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
 import IconLink from '@/components/ui/IconLink.vue'
+import { useFocusTrap } from '@/composables/useFocusTrap'
 import { useOverlay } from '@/composables/useOverlay'
 import { useScrollLock } from '@/composables/useScrollLock'
 import type { SkillLocale } from '@/lib/types/i18n'
@@ -13,6 +14,8 @@ import '@/styles/content.css'
 
 interface Props {
   show: boolean
+  // Announced as the dialog's name.
+  label: string
   maxWidth?: string
   // Hero slug for the permalink button; omit to hide the button (e.g. the
   // about modal, which has no standalone page).
@@ -23,10 +26,13 @@ interface Props {
   topAnchor?: boolean
 }
 
-const props = withDefaults(defineProps<Props>(), {
-  maxWidth: '800px',
-  topAnchor: false,
-})
+const {
+  show,
+  linkParam,
+  localeOverride,
+  maxWidth = '800px',
+  topAnchor = false,
+} = defineProps<Props>()
 
 const emit = defineEmits<{
   close: []
@@ -36,26 +42,30 @@ const modalRef = ref<HTMLElement>()
 const i18n = useI18nStore()
 
 // Permalink to the hero's skill page (modal-local locale override wins over global).
-const linkHref = computed(() => {
-  const locale = props.localeOverride ?? i18n.currentLocale
-  return `/${locale}/skill/${props.linkParam}`
-})
+const linkHref = computed(() => `/${localeOverride ?? i18n.currentLocale}/skill/${linkParam}`)
 
-useOverlay({
-  elementRef: modalRef,
-  onClose: () => emit('close'),
-  isOpen: toRef(props, 'show'),
-})
-
+const isOpen = toRef(() => show)
+useOverlay({ elementRef: modalRef, onClose: () => emit('close'), isOpen })
+const { trapTab } = useFocusTrap(modalRef, isOpen)
 // Lock the page behind so it can't scroll while the modal is open.
-useScrollLock(toRef(props, 'show'))
+useScrollLock(isOpen)
 </script>
 
 <template>
   <Teleport to="body">
     <Transition name="modal">
       <div v-if="show" class="overlay is-modal" :class="{ 'is-top-anchored': topAnchor }">
-        <div ref="modalRef" class="container" :style="{ maxWidth }" @click.stop>
+        <div
+          ref="modalRef"
+          class="container"
+          role="dialog"
+          aria-modal="true"
+          :aria-label="label"
+          tabindex="-1"
+          :style="{ maxWidth }"
+          @keydown="trapTab"
+          @click.stop
+        >
           <div class="buttons">
             <slot name="header-buttons" />
             <a

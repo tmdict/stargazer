@@ -47,7 +47,7 @@ const effectLevels = computed(() =>
 </script>
 
 <template>
-  <BaseModal :show="show" max-width="640px" @close="emit('close')">
+  <BaseModal :show="show" :label="title" max-width="640px" @close="emit('close')">
     <template #header-buttons>
       <ModalLocaleToggle v-model="displayLocale" />
     </template>

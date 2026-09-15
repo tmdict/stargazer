@@ -57,6 +57,9 @@ describe('isTeamModeKey', () => {
     expect(isTeamModeKey('2v2')).toBe(false)
     expect(isTeamModeKey(undefined)).toBe(false)
     expect(isTeamModeKey(3)).toBe(false)
+    // Inherited property names are not modes.
+    expect(isTeamModeKey('toString')).toBe(false)
+    expect(isTeamModeKey('__proto__')).toBe(false)
   })
 })
 

@@ -1,396 +1,152 @@
 # Documentation Style Guide
 
-This guide defines the standard format and style for architecture documentation in the project. All architecture documents should follow these conventions for consistency and clarity.
+The format and content rules for the architecture documents under `docs/architecture/` and the overview in `docs/ARCHITECTURE.md`. A doc exists to tell a reader what the code cannot: contracts that span files, invariants, the reasons behind decisions, and the formats that cross the app's boundary. Everything else belongs in the code, and the doc points at it.
+
+## What Belongs in a Doc
+
+### Keep
+
+- **Cross-file contracts**: who calls what, in what order, and what each side may assume (a store that never toasts, a codec that never carries a map for Arena boards)
+- **Invariants and rules**: uniqueness, capacity, ordering, precedence, what blocks versus what only warns
+- **Design decisions with their reasons**: why a layer exists, why an operation clears first, why a threshold sits where it does
+- **Non-obvious mechanics**: races, capture-phase handlers, memoization keys, tie-breaks, fallbacks
+- **External formats**: storage keys and envelopes, wire and file formats, URL shapes, CLI usage, JSON the app reads or writes for others
+- **Thresholds by name**: cite the constant (`ANCHOR_FLOOR`) with its meaning; add the value only when the meaning needs it
+
+### Remove
+
+- Type, interface, class or function listings copied from source: the reader has the file
+- Per-file inventories that mirror the directory
+- Narration of what a component renders or what a function plainly does
+- Restated code comments
+- Generic performance bullets (O(1) lookups, "efficient") and browser-compatibility boilerplate
+- Testing sections: the tests document themselves
+- "How to add X" walkthroughs beyond a short numbered list that points at the builders and one representative file
+- Counts that drift with data (hero counts, page counts): state the formula or omit
+
+The test for a sentence: would a reader with the file open learn anything from it? If not, cut it or replace it with a pointer.
+
+## Verification
+
+Every path, identifier, constant, number and behavioural claim is checked against the current source before it lands in a doc, and again whenever the doc is touched:
+
+- Grep every identifier the doc names; a name that does not exist is a wrong claim
+- Fix a wrong claim to match the code; drop a claim that cannot be verified. Never guess
+- A diagram must match the import direction or data flow in the code; redraw an inaccurate one rather than keep it
+- Prefer a pointer (`src/stores/grids.ts`, `applyRosters`) to a description; name at most one file or symbol per sentence
+- Every relative link must resolve; run `npx prettier --write` on the file (it aligns tables)
 
 ## Document Structure
 
 ### 1. Title
 
-- Use clear, concise titles without "Architecture" suffix
-- Format: `# System Name` (e.g., `# Grid & Character`, `# Skill System`)
-- Avoid verbose titles or unnecessary qualifiers
+`# System Name`, no "Architecture" suffix (`# Grid & Character`, `# Teams`).
 
-### 2. Overview (2-3 sentences)
+### 2. Overview (2 to 3 sentences)
 
-```markdown
-## Overview
+First sentence: what the system does. Then one or two key technical characteristics. No justification.
 
-The [system] provides [primary function]. It [key characteristic] and [secondary characteristic].
-```
-
-**Example:**
-
-> The grid system provides the spatial foundation for the game, managing hexagonal tiles, character positions, and state transitions. It integrates character management with automatic skill activation and implements atomic transactions to ensure data consistency across complex operations.
-
-**Guidelines:**
-
-- First sentence: State the system's primary purpose
-- Second sentence: Highlight 1-2 key technical characteristics
-- Keep to 2-3 sentences maximum
-- No philosophical discussions or justifications
-
-### 3. Design Principles (5 numbered points)
+### 3. Design Principles (optional)
 
 ```markdown
 ## Design Principles
 
-1. **Key Concept**: Brief explanation of the principle
-2. **Key Concept**: Brief explanation of the principle
-3. **Key Concept**: Brief explanation of the principle
-4. **Key Concept**: Brief explanation of the principle
-5. **Key Concept**: Brief explanation of the principle
+1. **Key Concept**: One line, a technical decision the code enforces
 ```
 
-**Guidelines:**
-
-- Exactly 5 principles (not more, not less)
-- Bold the concept name, follow with colon
-- One-line explanation after the colon
-- Focus on technical design decisions, not philosophy
+- Bold the concept, colon, one line
+- Each principle must be verifiable in the code (an import rule, a single restore path, an atomic operation)
+- As many as the system has: list the real ones, and omit the section when there are none; never pad to a count
 - Order from most fundamental to most specific
 
-### 4. Architecture (Optional)
+### 4. Architecture (optional)
+
+An ASCII diagram (┌ ─ ┐ │ └ ┘ ▶ ▼, under 80 columns) when it shows data flow or import direction between three or more parts. Skip it for a linear flow. Label the one arrow that breaks the general direction.
+
+### 5. Component Sections
 
 ```markdown
-## Architecture
-```
-
-[ASCII diagram showing system relationships]
-
-```
-
-```
-
-**When to Include:**
-
-- Complex multi-layer systems with non-obvious interactions
-- Systems with circular dependencies or feedback loops
-- When visual representation significantly clarifies the design
-- For showing data flow between 3+ components
-
-**When to Skip:**
-
-- Simple systems with linear flow
-- Single-responsibility modules
-- When prose description is clearer than a diagram
-
-**Example Structure (when needed):**
-
-```
-┌─────────────────┐     ┌──────────────────┐     ┌─────────────┐
-│   Components    │────▶│  Store Layer     │────▶│Domain Layer │
-│                 │     │                  │     │             │
-│ - Component1    │     │ - Store1         │     │ - Class1    │
-│ - Component2    │     │ - Store2         │     │ - Class2    │
-└─────────────────┘     └──────────────────┘     └──────┬──────┘
-                                                        │
-                        ┌───────────────────────────────┼────────────┐
-                        ▼                               ▼            ▼
-                ┌─────────────┐                ┌─────────────┐  ┌──────────┐
-                │  Subsystem1 │                │  Subsystem2 │  │Subsystem3│
-                └─────────────┘                └─────────────┘  └──────────┘
-```
-
-**Guidelines (when using):**
-
-- Use box drawing characters (┌ ─ ┐ │ └ ┘ ▶ ▼)
-- Show data flow with arrows
-- Include 2-3 key items per box
-- Keep diagram width under 80 characters
-- Show layers from left to right or top to bottom
-
-### 5. Core Components
-
-Structure each component as:
-
-````markdown
 ### Component Name (`/path/to/file.ts`)
 
-Brief description of the component's role:
+One sentence on the responsibility, then bullets:
+
+- **Contract**: what other files rely on
+- **Invariant**: what always holds, and why
+```
+
+- File path in the heading, so the reader can jump
+- Bullets with a bold key term; one or two lines each
+- A table when several parallel items share the same columns (reading, evidence, consequence; route, view, role)
+- Group related small components under one heading rather than one heading each
+
+### 6. Code Excerpts
+
+An excerpt earns its place only when it shows a contract shared across files or an external format:
 
 ```typescript
-// Key interface or class definition
-interface /
-  class Name {
-    // Only essential properties/methods
-  }
-```
-````
-
-Key features:
-
-- **Feature 1**: Brief description
-- **Feature 2**: Brief description
-- **Feature 3**: Brief description
-
-````
-
-**Guidelines:**
-- Include file path in heading
-- One-sentence description before code
-- Show only essential code (10-15 lines max)
-- Use bullet points for features
-- Bold feature names
-- Keep descriptions to one line
-
-### 6. Implementation Sections
-
-For operational sections (e.g., "Character Operations", "Skill Implementation"):
-
-```markdown
-## Section Name
-
-### Subsection
-
-Brief intro if needed.
-
-```typescript
-// Code example if helpful
-````
-
-Key points:
-
-- **Point 1**: Description
-- **Point 2**: Description
-
-OR for sequential operations:
-
-1. First step
-2. Second step
-3. Third step
-
-````
-
-**Guidelines:**
-- Use numbered lists for sequential processes
-- Use bullet points for feature lists
-- Include code only when it clarifies the concept
-- Keep code examples under 15 lines
-- Avoid redundant explanations
-
-### 7. Integration Points (Optional)
-
-```markdown
-## Integration Points
-
-### System Name
-
-- Integration point 1
-- Integration point 2
-- Integration point 3
-````
-
-**When to Include:**
-
-- Complex systems where integration is central to understanding functionality
-- Systems with non-obvious or sophisticated cross-component coordination
-- When integration patterns are unique or architecturally significant
-- Multiple bi-directional dependencies that need clarification
-
-**When to Skip:**
-
-- Simple systems with straightforward callbacks or APIs
-- Systems that primarily consume other services without complex coordination
-- When integration is standard and follows common patterns
-- Self-contained modules with minimal external dependencies
-
-**Guidelines (when using):**
-
-- Use H3 for each integrated system
-- Bullet points for integration details
-- Keep each point to one line
-- No code examples in this section
-
-### 8. Performance/Technical Considerations
-
-```markdown
-## Performance Considerations
-
-- **Optimization 1**: Brief explanation
-- **Optimization 2**: Brief explanation
-- **Optimization 3**: Brief explanation
+// The messages the worker accepts, as the composable posts them
+type TeamImportRequest =
+  | ({ type: 'references' } & ReferenceImages)
+  | { type: 'learned'; learned: LearnedIcon[] }
+  | { type: 'read'; id: string; image: RgbaImage }
 ```
 
-**Guidelines:**
+- Under 15 lines; only the essential members
+- Real code or real shapes, never pseudocode when real code exists
+- Language tag on every fence: `typescript`, `json` for external files, `sh` for commands
+- Not for a type the reader can open, a function body, or a "how to call it" sample
 
-- Focus on actual implementations, not theoretical
-- Use technical metrics (O(1), O(n), etc.)
-- Keep explanations brief and factual
+### 7. Operations
 
-### 9. Related Documentation (Optional)
+Sequential behaviour as a numbered list, each step naming the function that owns it. A step that only restates a function's own comment is dropped.
 
-```markdown
-## Related Documentation
+### 8. Optional Sections
 
-- [`/docs/architecture/RELATED.md`](./RELATED.md) - Brief description
-- [`/docs/architecture/OTHER.md`](./OTHER.md) - Brief description
-```
-
-**When to Include:**
-
-- Complex systems that heavily depend on or integrate with other systems
-- When understanding related systems is essential for full comprehension
-- Multi-part systems that are documented across several files
-- When linking provides important context not covered in the current document
-
-**When to Skip:**
-
-- Simple, self-contained systems
-- When links would be redundant (e.g., linking to GRID.md from every doc)
-- Short documents that don't need additional context
-- When the relationships are already clear from the content
-
-**Guidelines (when using):**
-
-- Use relative links within the architecture folder
-- Include brief description after dash
-- Order by relevance to the current system
-- Avoid overlinking - only include truly related documentation
+- **Integration Points**: only for non-obvious cross-system coordination; bullets, no code
+- **Performance**: only for a measured constraint or a deliberate trade-off the code cannot explain (a table size, a worker boundary, a sampling step); never generic
+- **Related Documentation**: relative links with a one-line description; link what adds context, not every doc
 
 ## Writing Style
 
-### Tone and Voice
+- Concise, neutral, current-state; state facts, with a reason only where a decision needs one
+- Lead with the why: "clears both sides first, so a hero moving between boards never trips uniqueness against its own copy", not "clears both sides, then places"
+- Present tense, present state: no "now", "previously", "replaces", "was moved" or other migration notes
+- No em dashes anywhere; use commas, colons, periods or parentheses
+- Bullets and tables over paragraphs; a paragraph only for a line of argument
+- Bold the key term at the start of a bullet, never a whole sentence
+- Short sentences, one idea each
 
-**DO:**
+## Length
 
-- Be concise and direct
-- Use technical language appropriately
-- Focus on implementation over theory
-- State facts without justification
+Shorter is better; a doc is as long as its non-obvious content:
 
-**DON'T:**
+- **Leaf docs** (one helper family, one tool): 50 to 120 lines
+- **Typical systems**: 120 to 220 lines
+- **Core docs** (`GRID.md`, `SKILLS.md`): up to 250 lines
+- Overview 2 to 3 sentences; diagram 10 to 20 lines; each component section under 30 lines; excerpts under 15 lines
 
-- Include philosophical discussions
-- Justify design decisions at length
-- Use passive voice excessively
-- Repeat information
+## Layout of `docs/`
 
-### Code Examples
-
-**DO:**
-
-- Show actual interfaces/types from the codebase
-- Include only essential properties
-- Use TypeScript syntax highlighting
-- Keep examples under 15 lines
-
-**DON'T:**
-
-- Include entire class implementations
-- Show trivial getters/setters
-- Include extensive comments
-- Use pseudocode when real code exists
-
-### Formatting
-
-**Bullet Points:**
-
-- Use for feature lists
-- Use for non-sequential items
-- Bold the key term, follow with colon
-- Keep to one line when possible
-
-**Numbered Lists:**
-
-- Use for sequential processes
-- Use for step-by-step operations
-- Don't mix with bullet points in same list
-
-**Code Blocks:**
-
-- Always specify language (```typescript)
-- Remove unnecessary whitespace
-- Focus on structure over implementation
-- Include brief inline comments only
-
-## Length Guidelines
-
-- **Total document**: 150-250 lines
-- **Overview**: 2-3 sentences
-- **Design Principles**: 5 lines (exactly)
-- **Architecture diagram**: 10-15 lines (if included)
-- **Each component section**: 15-30 lines
-- **Code examples**: 5-15 lines each
-
-## Common Patterns
-
-### Describing a Class/Interface
-
-````markdown
-### Class Name (`/src/lib/file.ts`)
-
-One-line description of purpose:
-
-```typescript
-class Name {
-  private essential: Field
-
-  coreMethod(param: Type): Return
-  otherMethod(): void
-}
-```
-````
-
-Key features:
-
-- **Feature**: What it does
-- **Feature**: What it does
-
-````
-
-### Describing Operations
-
-```markdown
-### Operation Name
-
-Brief description of when/why:
-
-```typescript
-function example(params) {
-  return implementation
-}
-````
-
-Process:
-
-1. Step one
-2. Step two
-3. Step three
-
-````
-
-### Describing Systems
-
-```markdown
-### System Name
-
-How it works:
-
-- **Component 1**: Role in system
-- **Component 2**: Role in system
-- **Storage**: How data is organized
-````
+- `docs/ARCHITECTURE.md`: layer rules, dependency direction, the entity pattern, and a pointer to every deep dive; it never duplicates them
+- `docs/architecture/<SYSTEM>.md`: one doc per system
+- `docs/architecture/<system>/<TOPIC>.md`: leaf docs a system doc points to (`skills/COMPANION.md`, `skills/TARGETING.md`); they hold only the detail the parent defers to them
+- A flow that belongs to another doc's domain is linked, not restated (the team import's apply and save flow lives in `TEAMS.md`)
 
 ## Quality Checklist
 
-Before submitting documentation, verify:
-
-- [ ] Overview is 2-3 sentences
-- [ ] Exactly 5 design principles
-- [ ] Architecture diagram included only if it adds value
-- [ ] Code examples are under 15 lines each
-- [ ] No philosophical discussions
-- [ ] No redundant information
-- [ ] Total length is 150-250 lines (shorter for simpler systems)
-- [ ] All sections follow the standard structure
-- [ ] Integration points included only for complex systems
-- [ ] Related documentation linked only when it adds context
+- [ ] Every path, identifier, constant and number verified against the source
+- [ ] No claim that cannot be verified; no drifting counts
+- [ ] Overview 2 to 3 sentences; every listed design principle enforced by code, none added to fill a count
+- [ ] Diagram only if it adds value, and it matches the code's data flow
+- [ ] File path in every component heading
+- [ ] No type listings, inventories, render narration, restated comments, Testing section or generic performance bullets
+- [ ] Every excerpt shows a shared contract or external format and stays under 15 lines
+- [ ] No em dashes, no past-state phrasing, present tense throughout
+- [ ] Every relative link resolves; prettier clean
+- [ ] Within the length band for its kind
 
 ## Example Documents
 
-The following documents exemplify this style:
-
-- `/docs/architecture/GRID.md` - Grid & character system
-- `/docs/architecture/SKILLS.md` - Skill system
-
-Use these as references when writing new documentation.
+- `/docs/architecture/GRID.md`: a core system: invariants, operations, id namespaces
+- `/docs/architecture/IMPORT_TEAM.md`: the content rule applied: evidence table, named thresholds, external formats, pointers to the owning doc
+- `/docs/architecture/skills/TARGETING.md`: a leaf doc

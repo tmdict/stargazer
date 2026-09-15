@@ -5,7 +5,9 @@
  * toasts belong to the calling components/composables (stores must not call
  * composables). Mutations re-read the stored blob first (read-modify-write) so
  * two same-origin tabs clobber each other per-mutation rather than resurrecting
- * whole stale arrays; full cross-tab sync is deliberately out of scope.
+ * whole stale arrays; full cross-tab sync is deliberately out of scope. Once a
+ * write fails the in-memory list is the only copy, so mutations build on it
+ * until a write lands again, and `persisted` lets callers report the loss.
  */
 
 import { computed, ref } from 'vue'
@@ -64,14 +66,13 @@ const readLibrary = (): SavedTeam[] => {
   return teams
 }
 
-const writeLibrary = (teams: SavedTeam[]): void => {
-  if (!writeStorage(LIBRARY_KEY, JSON.stringify({ v: LIBRARY_VERSION, teams }))) {
-    console.warn('Saved-teams library write failed; changes are in-memory only')
-  }
-}
+const writeLibrary = (teams: SavedTeam[]): boolean =>
+  writeStorage(LIBRARY_KEY, JSON.stringify({ v: LIBRARY_VERSION, teams }))
 
 export const useTeamLibrary = defineStore('teamLibrary', () => {
   const teams = ref<SavedTeam[]>(readLibrary())
+  // Whether the last mutation reached storage.
+  const persisted = ref(true)
 
   const count = computed(() => teams.value.length)
   const atCap = computed(() => teams.value.length >= MAX_SAVED_TEAMS)
@@ -82,9 +83,9 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   // Mutations re-read the stored blob first so a second tab's writes survive
   // (clobber window narrows to one mutation).
   const mutate = <T>(action: (fresh: SavedTeam[]) => T): T => {
-    const fresh = readLibrary()
+    const fresh = persisted.value ? readLibrary() : [...teams.value]
     const result = action(fresh)
-    writeLibrary(fresh)
+    persisted.value = writeLibrary(fresh)
     teams.value = fresh
     return result
   }
@@ -186,6 +187,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
 
   return {
     teams,
+    persisted,
     count,
     atCap,
     get,

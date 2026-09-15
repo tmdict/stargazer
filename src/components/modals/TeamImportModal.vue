@@ -188,7 +188,13 @@ const handleSaveAsNew = (): void => {
 </script>
 
 <template>
-  <BaseModal :show max-width="1000px" top-anchor @close="emit('close')">
+  <BaseModal
+    :show
+    :label="i18n.t('app.import-title')"
+    max-width="1000px"
+    top-anchor
+    @close="emit('close')"
+  >
     <div class="import">
       <h1>{{ i18n.t('app.import-title') }}</h1>
       <div class="meta">

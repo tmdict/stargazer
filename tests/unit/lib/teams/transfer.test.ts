@@ -62,10 +62,17 @@ describe('parseImport record validation', () => {
   it('skips invalid records without rejecting the file', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
     const result = parseImport(
-      envelope([record(), record({ mode: '9v9' as never }), 'not-an-object']),
+      envelope([
+        record(),
+        record({ mode: '9v9' as never }),
+        'not-an-object',
+        // A section of the wrong shape would throw in the preview and restore
+        // consumers; the decode boundary drops the record instead.
+        record({ data: encode({ boards: [{ a: {} }, {}, {}] } as never) }),
+      ]),
       [],
     )
-    expect(result).toMatchObject({ ok: true, skipped: 2, teams: [expect.any(Object)] })
+    expect(result).toMatchObject({ ok: true, skipped: 3, teams: [expect.any(Object)] })
     warn.mockRestore()
   })
 

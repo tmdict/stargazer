@@ -1,33 +1,39 @@
-# Drag and Drop System
+# Drag and Drop
 
 ## Overview
 
-The drag and drop system enables intuitive character placement through native HTML5 drag events combined with SVG coordinate detection. Drag state lives in a module-singleton composable (`useDragDrop`); a thin provider component scopes the document-level listeners and exposes a typed registration channel for the grid's hex detection. A two-phase detection system gives accurate hex targeting.
+The drag and drop system places, moves and swaps units through the native HTML5 drag API, with point-in-polygon hex detection for pointers that sit over a character portrait instead of a tile. Drag state is a module singleton (`useDragDrop`), a mount-scoped provider owns the document listeners and a per-board registration channel, and every drop (drag or tap) routes through `useGrids` so hover cues and drops share one validation gate.
 
 ## Design Principles
 
-1. **Multi-Layer Architecture**: Separates visual, interactive, and event layers for independent control
-2. **Hybrid Detection**: Combines SVG events with position-based verification
-3. **Visual Feedback**: Immediate hover states and clear drop zone indicators
-4. **Native HTML5**: Uses browser drag API with custom data transfer
-5. **Z-Order Management**: Strategic layer ordering solves event blocking issues
+1. **Single in-flight drag**: State and document handlers are module singletons, so listener add/remove pairs share identity no matter which component starts or ends the drag
+2. **Hybrid hex detection**: A tile's own SVG events answer directly; document-level point-in-polygon detection covers a pointer over a portrait
+3. **One routing gate**: `canDropCharacter` drives both the hover cue and `routeDrop`, so hover never promises a drop the router rejects
+4. **Live cells are authoritative**: Payloads carry only source coordinates; ids, teams and slots are read from the board at drop time
+5. **Tap flows for touch**: HTML5 drag never fires on touch, so touch input uses tap-target and tap-lift gestures that reach the same router
+
+## Architecture
+
+```
+GridManager (provides the event bus; registers this board's detector + drop handler)
+├── GridTiles (SVG: visual hex layers, transparent event layer drawn last)
+├── GridArtifacts (host-cell overlay, behind characters; own artifact drag pipeline)
+├── GridCharacters (HTML portraits, pointer-events: auto; drag sources)
+├── SkillTargeting (SVG overlay)
+├── PathfindingDebug (Arena Debug tab only)
+└── GridArrows (Grid Info's Targeting toggle; last so it stays over debug lines)
+```
+
+SVG has no z-index, so stacking inside `GridTiles` is draw order: regular hexes, elevated (occupied) hexes, skill-highlighted hexes, text, then the transparent event layer that receives every hover, click and drag event. The visual polygons carry no handlers. Portraits are HTML siblings above the SVG and keep `pointer-events: auto` so they can be dragged, which is why a drag over a portrait never reaches the event layer and needs the provider's position detection.
 
 ## Core Components
 
 ### DragDropProvider (`/src/components/DragDropProvider.vue`)
 
-Thin lifecycle wrapper around the drag UI. It owns the document-level
-`drop`/`dragover`/`mousemove` listeners (its global `dragover` calls
-`preventDefault()`, which makes the page a drop target; that must not outlive
-the drag UI, so it is mount-scoped rather than module state), and it provides
-the typed registration channel:
+Mounted once per page (`HomeView`, `TeamsView`, `ShareView`) around both the boards and the roster. It owns the document `drop`, `dragover` and `mousemove` listeners: the global `dragover` calls `preventDefault()`, which makes the whole page a drop target, and that must not outlive the drag UI, so the listeners are mount-scoped rather than module state.
 
 ```typescript
-// provided under a typed InjectionKey (useDragDrop.ts), consumed via
-// useDragDropRegistration(), which throws outside a DragDropProvider.
-// Each board registers under its own gridId so multiple boards coexist;
-// the provider probes every detector to find the board (and hex) under
-// the pointer.
+// useDragDrop.ts; consumed via useDragDropRegistration(), which throws outside a provider
 interface DragDropRegistration {
   registerHexDetector: (gridId: number, detector: HexDetector) => void
   unregisterHexDetector: (gridId: number) => void
@@ -36,299 +42,95 @@ interface DragDropRegistration {
 }
 ```
 
-GridManager registers its pointer→hex detector (built on the SVG element that
-GridTiles exposes via `defineExpose`) and its drop handler on mount, skipping
-both in readonly grids, and unregisters on unmount. All other drag state and
-actions come straight from `useDragDrop()`; components don't inject them.
+- **Detection**: On every `mousemove` and `dragover` during a drag, the provider probes each registered detector; the first board reporting a hex wins and `setHoveredHex(hexId, gridId)` records both
+- **Fallback drop**: The document `drop` runs only when `dropHandled` is false (a tile drop sets it) and dispatches to the drop handler registered under `hoveredGridId`
 
-### useDragDrop Composable (`/src/composables/useDragDrop.ts`)
+### useDragDrop (`/src/composables/useDragDrop.ts`)
 
-Core state and logic, as module-level singletons: at most one drag exists at a
-time, and the document listener add/remove pairs must share function identity
-no matter which component starts or ends the drag. `startDrag` also attaches a
-once-only document `dragend` listener as a safety net: if the source element's
-own `@dragend` binding is gone when the drag ends, state still resets and the
-ghost preview can't get stuck. `endDrag` records the drop tile in
-`lastDropHexId`, which GridTiles consumes (read + clear) to restore the hover
-highlight after its post-drag grace period.
+- **Payload**: `startDrag` writes `{ character, characterId }` under the `application/character` MIME type and sets a transparent drag image; `DragPreview` (mounted in `App.vue`) draws the ghost from `draggedCharacter` and `dragPreviewPosition` instead
+- **Dragend safety net**: `startDrag` also attaches a once-only document `dragend` listener, so state resets even when the source element's own `@dragend` binding is gone by the time the drag ends; `endDrag` is idempotent because both can fire for one drag
+- **Source node must stay attached**: The safety net depends on `dragend` bubbling to the document. Browsers pick the innermost draggable element as the source and images are draggable by default, so inner `<img>`s in grid drag wrappers set `draggable="false"` to keep the keyed wrapper as the source. Otherwise a drop that replaces the image node mid-drag (a character/phantimal swap flipping a `v-if` branch) orphans the source, `dragend` reaches no listener, and the ghost freezes
+- **Hover handoff**: `endDrag` copies the hovered hex into `lastDropHexId`/`lastDropGridId`, which `GridTiles` consumes (read and clear) after its grace period
+- **Artifact mirror**: `artifactDragPayload` mirrors the in-flight artifact payload because `dataTransfer` data is unreadable during `dragover` (only `types` is)
 
-The safety net depends on `dragend` bubbling to the document, which requires
-the drag _source node_ to still be attached (or detach as part of a subtree
-whose root carries the `@dragend` binding) when the drag ends. Browsers pick
-the innermost draggable element as the source, and images are draggable by
-default, so inner `<img>`s in grid drag wrappers must set `draggable="false"`
-to keep the keyed wrapper as the source. Otherwise a drop that replaces the
-image node mid-drag (e.g. a character↔phantimal swap flipping a `v-if` branch)
-orphans the source, `dragend` never reaches any listener, and the ghost
-freezes.
+### GridManager (`/src/components/grid/GridManager.vue`)
 
-```typescript
-// Key functions exposed
-startDrag(event, character, characterId, imageSrc)
-handleDragOver(event)
-handleDrop(event, hexId)
-endDrag(event)
-```
+- **Registration**: On mount, registers `findHexUnderMouse` and `handleDetectedHexDrop` under `ctx.id`, skipping readonly boards; unregisters on unmount so detached boards are not probed
+- **Detection**: `findHexUnderMouse` converts the screen point into SVG space through the root SVG's `getScreenCTM()` (which already includes the perspective transform) and ray-casts against each hex polygon
+- **Fallback drop**: `handleDetectedHexDrop` requires `hoveredHexId` and an unhandled drop, then calls `grids.routeDrop(payload, ctx.id, hoveredHexId)`
+- **Tap-lift drop**: The `hex:click` subscriber sends a lifted hero to `grids.routeLiftDrop` (see [Event System](./EVENT_SYSTEM.md))
 
-### Multi-Layer Architecture
+### GridTiles (`/src/components/grid/GridTiles.vue`)
 
-The GridManager orchestrates multiple independent layers to solve complex rendering and event handling challenges:
+- **Tile dragover**: Only for events carrying character data (`hasCharacterData`); calls `handleDragOver` and `setHoveredHex(hex, ctx.id)`
+- **Tile dragleave**: Clears the hover only when position detection disagrees with the tile, because `dragleave` also fires when the pointer moves onto the portrait above the same tile
+- **Tile drop**: `stopPropagation()` plus `setDropHandled(true)`, two independent guards against the provider's document `drop` processing the same event; then `grids.routeDrop`
+- **Drop cue classes**: `drag-hover` (this board's hovered hex during a drag), `occupied`, `invalid-drop` (`!canDropCharacter`), plus `hover`, `targeted` (tap target) and `lifted`. A valid target is `drag-hover` without `invalid-drop`: teal for an empty tile, orange for an occupied one, red when invalid
+- **Hover grace**: `blockHover` suppresses the non-drag hover while dragging and for 100 ms after, since mouse events fire as soon as `isDragging` drops and would flash a hover on the drop hex before the drag UI has cleaned up. When the timeout ends, the board whose id matches `lastDropGridId` restores the hover highlight on `lastDropHexId`
 
-```
-GridManager (Orchestrator)
-├── GridTiles (SVG base with event detection)
-│   ├── Regular Hexes (visual layer 1)
-│   ├── Elevated Hexes (visual layer 2)
-│   └── Invisible Event Layer (topmost)
-├── GridArtifacts (HTML overlay - behind characters)
-├── GridCharacters (HTML overlay)
-├── SkillTargeting (SVG overlay)
-├── PathfindingDebug (Debug tab only)
-└── GridArrows (SVG overlay, Grid Info's Targeting toggle)
-```
+### GridCharacters (`/src/components/grid/GridCharacters.vue`)
 
-**GridTiles Internal Structure:**
+- **Drag source**: A placed unit's payload is its base card with `id` set to the placed unit id (companion or synergy id), plus `sourceHexId` and `sourceGridId`; a phantimal sends only `{ id, sourceHexId, sourceGridId }`
+- **Lift reset**: Starting a drag clears any pending lift, since a stale lift would fire on the next empty-cell tap
+- **Click split**: Tap layouts and touch or pen clicks (`isTouchClick`) enter the lift flow (lift, tap again to remove, tap another hero on the same board to swap through `canDropCharacter`); a mouse click on a wide layout removes, mirroring the game
 
-```
-┌─────────────────────────────────────────────────┐
-│            GridTiles SVG Container              │
-│                                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ Layer 1: Regular Hexes (background)       │  │
-│  │ - Unoccupied tiles                        │  │
-│  │ - Visual representation only              │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ Layer 2: Elevated Hexes (mid-ground)      │  │
-│  │ - Occupied tiles with different styling   │  │
-│  │ - Still purely visual                     │  │
-│  └───────────────────────────────────────────┘  │
-│                                                 │
-│  ┌───────────────────────────────────────────┐  │
-│  │ Layer 3: Event Capture (invisible top)    │  │
-│  │ - Transparent polygons                    │  │
-│  │ - Captures all mouse/drag events          │  │
-│  │ - MUST be rendered last (topmost)         │  │
-│  └───────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────┘
+### Roster sources
 
-[GridArtifacts, GridCharacters, SkillTargeting, GridArrows
- render above with selective pointer-events control]
-```
+`CharacterIcon` passes the roster card as is and `PhantimalSelection` passes `{ id }`; an absent `sourceHexId` is what marks a roster placement in the router.
 
-This architecture separates responsibilities: SVG handles tile rendering and base events, HTML overlays handle interactive elements, and the invisible layer ensures reliable event capture.
-
-### Hex Detection System
-
-Dual detection systems work together for robust drag handling:
-
-1. **Position-Based Detection (Primary)**: GridManager uses point-in-polygon algorithm for accurate boundaries
-2. **SVG Event Capture (Secondary)**: Invisible layer in GridTiles provides immediate event feedback
+## Drop Routing (`/src/stores/grids.ts`)
 
 ```typescript
-// Layer 3 handles all events
-<polygon
-  v-for="hex in hexes"
-  fill="transparent"       // Invisible
-  @dragover="handleHexDragOver($event, hex)"
-  @drop="handleHexDrop($event, hex)"
-/>
-```
-
-## Drag Sources
-
-### Character Selection Panel
-
-Characters dragged from roster:
-
-- Custom MIME type: `application/character`
-- Includes character metadata
-- No source hex (new placement)
-
-### Grid Characters
-
-Characters dragged from existing positions:
-
-- Includes `sourceHexId` for move/swap
-- Preserves team assignment
-- Enables position tracking
-
-## Drop Operations
-
-### Placement Types
-
-**New Placement**:
-
-- From selection panel to grid
-- Auto-assigns team based on tile
-- Validates team capacity
-
-**Move Operation**:
-
-- From one hex to empty hex
-- Preserves character team
-- Updates position atomically
-
-**Swap Operation**:
-
-- Between two occupied hexes
-- Exchanges positions
-- Maintains consistency
-
-### Validation Flow
-
-Two layers, each with its own authority:
-
-1. **Routing layer** (`useGrids.canDropCharacter`): page-wide per-team uniqueness, companions and synergy heroes staying on their board, destination capacity, phantimal faction; a roster drop resolves its id through `useGrids.resolvePick` (base id, or the synergy copy while Syn is on)
-2. **Engine layer** (`canPlaceCharacterOnTile` / `canPlaceCharacterOnTeam` inside `performPlace`): tile accepts the team, per-grid capacity and duplicates, the synergy hero's one-per-team cap
-
-The drag-hover cue reads layer 1 only, so a layer 2 rejection resolves as a silent no-op at drop time.
-
-### Cross-board drag (multigrid)
-
-On a multi-board page (the Teams "5 v 5" view) a drag can end on a different board than it started. Each dragged character carries its `sourceGridId`, and the drop routes through `useGrids.routeDrop(payload, targetGridId, targetHexId)`. Drag is not the only caller: tap-lift drops (see the placement-interaction section in [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)) reach the same router through `routeLiftDrop`, which builds the payload from the lifted cell, so taps and drags share every gate below.
-
-Every drop first passes `canDropCharacter(characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)`, the routing-layer gate covering page-wide per-team uniqueness (including same-board cross-team moves and swaps), companions and synergy heroes staying on their board, destination capacity, and phantimal faction. A roster drop resolves through `useGrids.resolvePick` (base id, or the synergy copy while Syn is on; an occupied target is judged against the post-vacate board), the same resolver the board's drop handler places with. GridTiles reads the same gate for the drag-hover cue, so hover and drop agree for every routing-layer rule. The engine's per-grid checks still have the last word at drop time: the gate's same-board leg checks only the page-wide rule, so a same-board engine rejection (a full team on a team change, a companion changing teams, a phantimal cross-team swap) or a mid-transaction failure resolves as a silent no-op. Upgrade levels (paragon, refinement) move with a hero across boards and across team changes (records are keyed by team + character, so a team change re-keys the entry).
-
-- **Roster or same-board drop**: handled by the target board's own context (place / move / swap).
-- **Cross-board drop**: a compensating transaction across two `Grid` instances (remove from the source, place on the target, restore the source on failure), since the single-board atomic `move.ts` wrapper can't span two grids. Dropping onto an occupied cell is a paired swap with the same envelope.
-
-A successful drop of any kind (including a roster drop) makes the target board active. Drop handlers register by `gridId`, so every board's `GridManager` resolves hovers/drops against its own context (see the multigrid section in [`GRID.md`](./GRID.md)).
-
-### Artifact drag (cross-team / cross-board)
-
-Artifacts live in off-grid host cells (`GridArtifacts`), not on grid hexes, so they bypass the hex-detection pipeline entirely and use native element-level drag instead. A filled artifact icon is the drag source; an empty host-cell polygon and a filled icon are the drop targets (the same two-surface split as the click affordances, with the inner `<img>` set `draggable="false"` so the keyed wrapper stays the source). The drag carries `{ sourceCtxId, sourceTeam }` under a distinct `application/artifact` MIME. Because `dataTransfer` data is unreadable during `dragover`, the in-flight payload is also mirrored in `useDragDrop`'s `artifactDragPayload`: a target the router would reject refuses the drop at `dragover` (native not-allowed cursor plus an `invalid-drop` cue), and an accepted drop calls `stopPropagation()` so it never reaches the character pipeline's global drop.
-
-`useGrids.routeArtifactDrop(payload, targetCtxId, targetTeam)` resolves every drop with one rule (`resolveArtifactDrop`, also exposed as the `canDropArtifact` predicate driving the drag-over feedback), identical on the Arena (1 board) and Teams (5 boards): an empty target moves, an occupied target swaps, and page-wide per-team uniqueness (`isArtifactUsed`) is re-checked only when the team changes, excluding each artifact's **destination** board so a copy on the other team of either board still counts. A rejected drop is a silent no-op; a successful one makes the target board active. Team view renders one slot per board, so cross-team artifact swaps are structurally unavailable there.
-
-## Layer Implementation Details
-
-### Component Responsibilities
-
-**GridManager**: Orchestrates all layers and registers position-based detection
-**GridTiles**: Renders hexes with three-layer SVG structure and invisible events
-**GridArtifacts**: Shows team artifacts in their host cells, dashed cells beside grid cells 1 (ally) and 45 (enemy): outside the grid simulation and the hex pipeline, with their own artifact drag surfaces (renders before characters)
-**GridCharacters**: Positions character portraits with absolute positioning
-**GridArrows**: Draws the closest-target arrows (Grid Info's Targeting toggle)
-**SkillTargeting**: Shows skill-specific targeting arrows (e.g., Silvina's First Strike)
-
-### Visual Layer Separation
-
-```typescript
-// Hexes split into two visual groups for z-order control
-const regularHexes = computed(() => hexes.filter((hex) => !isOccupied(hex)))
-const elevatedHexes = computed(() => hexes.filter((hex) => isOccupied(hex)))
-```
-
-This separation allows occupied tiles to render above empty ones, creating visual hierarchy without blocking events.
-
-### Event Layer Strategy
-
-The invisible event layer solves a critical problem:
-
-1. **Problem**: Character images block hex drag events
-2. **Traditional Solution**: Complex event bubbling/capturing
-3. **Our Solution**: Separate invisible event layer on top
-
-```vue
-<!-- Characters have pointer-events disabled -->
-<div class="character" style="pointer-events: none">
-  <!-- Visual elements -->
-</div>
-
-<!-- Event layer captures everything -->
-<polygon fill="transparent" @drop="handleDrop" />
-```
-
-## Visual Feedback
-
-### Hover States
-
-Dynamic CSS classes applied to the event layer:
-
-- `.drag-hover` - Active drag over hex
-- `.valid-drop` - Placement allowed
-- `.invalid-drop` - Placement blocked
-- `.occupied` - Contains character
-
-### Hover Race Condition Fix
-
-Prevents immediate hover after drag end:
-
-```typescript
-const blockHover = ref(false)
-
-watchEffect(() => {
-  if (isDragging.value) {
-    blockHover.value = true
-  } else if (blockHover.value) {
-    setTimeout(() => (blockHover.value = false), 100)
-  }
-})
-```
-
-### Drag Preview
-
-Floating character portrait that follows cursor:
-
-- Semi-transparent overlay
-- Positioned at cursor with offset
-- Hidden immediately on drop
-
-## Event Flow
-
-### Drag Lifecycle
-
-1. **dragstart**: Capture character data, show preview
-2. **dragover**: Detect hex, update hover state
-3. **drop**: Validate and execute operation
-4. **dragend**: Clean up state, hide preview
-
-### Data Transfer
-
-Custom data format prevents conflicts:
-
-```typescript
-const CHARACTER_MIME_TYPE = 'application/character'
-
-// Transfer structure
-interface DragData {
-  character: CharacterType // carries sourceHexId/sourceGridId for moves/swaps
+// useGridContext.ts: routeDrop -> handleDrop reads only the source coordinates
+interface CharacterDropPayload {
+  character: Pick<CharacterType, 'sourceHexId' | 'sourceGridId'>
   characterId: number
 }
 ```
 
-## Integration Points
+Callers: `GridTiles.handleHexDrop`, `GridManager.handleDetectedHexDrop`, and `routeLiftDrop`, which builds the payload from the lifted cell so taps pass every drag gate.
 
-### Grid System
+1. `canDropCharacter(characterId, sourceGridId, sourceHexId, targetCtxId, targetHexId)` is the routing gate, and the same predicate the hover cue reads:
+   - **Roster drop** (no source): phantimal faction (`phantimalCanJoinTeam`), or `resolvePick` non-null (the base id, or the synergy copy while Syn is on; an occupied target is judged post-vacate)
+   - **Same board**: page-wide per-team uniqueness when the move or swap changes a unit's team, excluding this board; synergy heroes cannot change teams; phantimals are exempt
+   - **Cross board**: companions and synergy heroes cannot leave their board; phantimal faction on each destination; uniqueness for any unit whose team changes, excluding its destination board (its occupant is the counterpart, which is vacating); a hero landing where a phantimal held no hero slot needs a free one
+2. Roster and same-board drops go to `targetCtx.handleDrop`: a board-origin source swaps onto an occupied target or moves onto an empty one; a roster source places (replacing any occupant) through the same `resolveReplacement` resolver as the gate
+3. Cross-board drops run `crossGridMove` or `crossGridSwap`, compensating transactions across two `Grid` instances (remove, place, restore on failure), since the single-board transaction wrappers in `move.ts` and `swap.ts` cannot span two grids. The swap places the second unit only after the first succeeds, because a placement can evict a board's phantimal, which a rollback could not restore. Upgrade attr records travel with each hero
+4. A successful drop of any kind, roster drops included, makes the target board active
 
-- Queries tile states for validation
-- Executes character operations
-- Maintains position consistency
+The engine still has the last word: `performPlace` runs `canPlaceCharacterOnTile` (tile accepts the team) and `canPlaceCharacterOnTeam` (per-board capacity and duplicates, the synergy hero's one-per-team cap). The gate's same-board leg checks only the page-wide rule, so a same-board engine rejection (a full team on a team change, a companion changing teams) or a mid-transaction failure resolves as a silent no-op with no hover warning.
 
-### Character Store
+## Artifact Drag (`/src/components/grid/GridArtifacts.vue`)
 
-- Checks team capacity
-- Updates character placements
-- Triggers reactive updates
+Artifacts live in off-grid host cells (the hexes beside cells 1 and 45, `artifactHostHex`), which hold no tile, so they bypass the hex pipeline and use element-level native drag.
 
-### Event System
+- **Surfaces**: A filled icon is the source; an empty cell polygon or a filled icon is the target (the same two-surface split as the click affordances). Interactive boards on wide layouts only (`canDrag`)
+- **Payload**: `{ sourceCtxId, sourceTeam }` under `application/artifact`, with no artifact id: the live slot is authoritative at drop time. `useDragDrop.artifactDragPayload` mirrors it for `dragover` checks
+- **Dragover**: A target `canDropArtifact` rejects gets `stopPropagation()` without `preventDefault()`, so the native not-allowed cursor shows alongside the `invalid-drop` class and the provider's global `dragover` cannot accept it; an accepted target calls `preventDefault()`
+- **Drop**: `stopPropagation()` keeps it off the provider's document drop; `routeArtifactDrop` resolves through `resolveArtifactDrop`, the same rule as the hover predicate: an empty target moves, an occupied target swaps, and per-team uniqueness (`isArtifactUsed`) is re-checked only on a team change, excluding each artifact's destination board. Identical on the Arena and the 5 v 5 page; success makes the target board active
+- **Scope**: Team view renders one slot per board, so cross-team artifact swaps are structurally unavailable there. Artifacts have no tap-lift: touch adds and removes them, only a mouse drag repositions one
 
-- Emits character placement events
-- Coordinates with hex click handlers
-- Manages state transitions
+## Touch and Tap Flows
 
-## Performance Optimizations
+HTML5 drag never fires on touch, so touch interaction is tap-based on every layout, split by pointer type rather than viewport. `isTouchClick` (`/src/utils/pointer.ts`) records the last `pointerdown`/`pointerup` type document-wide in the capture phase and lets a press within the last 800 ms outrank the click's own `pointerType`, because Safari before 18.4 synthesizes tap clicks with a missing or wrong type.
 
-- **Event Delegation**: Single set of global listeners; hex detection runs only while a drag is active
-- **Conditional Rendering**: Preview only shown when dragging
-- **Cached Calculations**: Hex boundaries computed once
-- **Reactive State Optimization**: Character store uses granular computed properties to minimize recalculations during drag
+- **Add**: Narrow layouts tap a tile to target it and pick from the roster sheet; wide layouts tap an empty tile for the on-grid picker
+- **Move, swap, remove**: A placed hero is tap-lifted; an empty cell (same or another board) drops it through `routeLiftDrop`, so the tap passes every drag gate
 
-## Browser Compatibility
+Gesture details and the lift guard are in [Grid & Character](./GRID.md#placement-interaction-desktop-vs-mobile).
 
-- **HTML5 Drag API**: Supported in all modern browsers (mouse-only: `dataTransfer` doesn't fire on touch)
-- **SVG Events**: Pointer events with proper configuration
-- **Touch**: Drag never fires on touch, so touch interactions are tap-based on every layout, split by pointer type (`isTouchClick`), not by viewport: narrow layouts add via the tap-target + roster sheet, wide layouts add via the on-grid picker, and a placed hero moves (including cross-board), swaps, or removes via the tap-lift flow. Artifacts are the exception: they have no tap-lift, so touch adds and deletes them but only a mouse drag repositions one. See [GRID.md](./GRID.md#placement-interaction-desktop-vs-mobile)
-- **Fallback Handling**: Graceful degradation for older browsers
+## Board Swap (`/src/composables/useGridSwap.ts`)
+
+Exchanging two 5 v 5 boards is a pointer-event gesture, separate from the HTML5 pipeline, with module-singleton state for the same listener-identity reason as `useDragDrop`. One armed-source state serves three ways to pick a target:
+
+- **Desktop drag**: Press the swap button and drag; travel under `DRAG_THRESHOLD` (6 px) stays a click, beyond it the release resolves the board under the pointer via `[data-grid-board-id]`
+- **Desktop click**: Arm, then click another board's overlay
+- **Tap layout**: Arm, tap a board to preview, tap it again to confirm. A release counts as a tap only under `TAP_MOVE_MAX` (10 px) of travel, so swiping the board row never selects or cancels, and the two-step keeps a far board from committing on first touch
+
+A `pointerdown` outside every board cancels (bubble phase, since overlays stop propagation); re-pressing the armed board's own button also cancels. The commit is `grids.swapBoards`.
+
+## Related Documentation
+
+- [Grid & Character](./GRID.md) - Multigrid contexts, placement resolvers, tap-lift gestures
+- [Event System](./EVENT_SYSTEM.md) - `hex:click` and hover events between grid layers
+- [Teams](./TEAMS.md) - The 5 v 5 page that hosts cross-board drags and board swaps

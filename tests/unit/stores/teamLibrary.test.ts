@@ -11,6 +11,7 @@ import { stubLocalStorage } from '../fixtures/storage'
 const LIBRARY_KEY = 'stargazer.teams.saved'
 
 let storage: Map<string, string>
+let setItemSpy: ReturnType<typeof stubLocalStorage>['setItemSpy']
 
 const CANONICAL_3V3 = canonicalTeamData(
   encodeMultiGridStateToUrl({
@@ -40,7 +41,7 @@ const stored = (): SavedTeam[] => JSON.parse(storage.get(LIBRARY_KEY)!).teams as
 
 beforeEach(() => {
   vi.stubEnv('SSR', false)
-  ;({ storage } = stubLocalStorage())
+  ;({ storage, setItemSpy } = stubLocalStorage())
   setActivePinia(createPinia())
 })
 
@@ -185,6 +186,28 @@ describe('useTeamLibrary', () => {
         .sort(),
     ).toEqual(['Alpha', 'Bravo', 'Charlie'])
     expect(library.teams).toHaveLength(3)
+  })
+
+  it('builds on the in-memory list while writes fail, then lands it whole once storage recovers', () => {
+    seed([record('a', 'Alpha')])
+    const library = useTeamLibrary()
+    setItemSpy.mockImplementation(() => {
+      throw new Error('quota')
+    })
+
+    const first = library.saveAsNew('1v1', CANONICAL_1V1, 'First')!
+    library.saveAsNew('1v1', CANONICAL_1V1, 'Second')
+    expect(library.persisted).toBe(false)
+    expect(library.teams.map((t) => t.name)).toEqual(['Alpha', 'First', 'Second'])
+    expect(library.rename(first.id, 'Renamed')).toBe(true)
+    expect(stored().map((t) => t.name)).toEqual(['Alpha'])
+
+    setItemSpy.mockImplementation((key, value) => {
+      storage.set(key, value)
+    })
+    library.remove('a')
+    expect(library.persisted).toBe(true)
+    expect(stored().map((t) => t.name)).toEqual(['Renamed', 'Second'])
   })
 })
 
