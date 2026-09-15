@@ -93,6 +93,9 @@ export type ReferenceStatus = 'idle' | 'loading' | 'ready' | 'failed'
 const shots = ref<ImportShot[]>([])
 const referenceStatus = ref<ReferenceStatus>('idle')
 const names = reactive<RecordNames>({ prefix: `S${CURRENT_SEASON}`, left: '', right: '' })
+// Whether every screenshot's columns land on the opposite board sides: one
+// choice per match (see buildTeamImportPlan), and not a reader correction.
+const swapSides = ref(false)
 // Shallow, and only ever replaced: the list is posted to the worker as is,
 // and a reactive proxy cannot be structured-cloned.
 const learned = shallowRef<LearnedIcon[]>([])
@@ -372,17 +375,20 @@ const readShot = async (shot: ImportShot, file: Blob): Promise<void> => {
   }
 }
 
-// Drop every shot; the worker and its references stay for the next import.
+// Drop every shot and the match's side choice; the worker and its references
+// stay for the next import.
 const clearShots = (): void => {
   pending.clear()
   for (const shot of shots.value) URL.revokeObjectURL(shot.thumb)
   shots.value = []
+  swapSides.value = false
 }
 
 export function useTeamImport(mode: () => TeamModeKey): {
   shots: typeof shots
   referenceStatus: typeof referenceStatus
   names: RecordNames
+  swapSides: typeof swapSides
   learnedCount: ComputedRef<number>
   hasCorrections: ComputedRef<boolean>
   exportCorrections: () => Promise<string>
@@ -558,13 +564,14 @@ export function useTeamImport(mode: () => TeamModeKey): {
         overrides: s.overrides,
         artifactOverrides: s.artifactOverrides,
       }))
-    return buildTeamImportPlan(assignments, mode(), names)
+    return buildTeamImportPlan(assignments, mode(), names, swapSides.value)
   })
 
   return {
     shots,
     referenceStatus,
     names,
+    swapSides,
     learnedCount: computed(() => learned.value.length),
     hasCorrections: computed(() => correctedShots.value.length > 0 || learned.value.length > 0),
     exportCorrections,

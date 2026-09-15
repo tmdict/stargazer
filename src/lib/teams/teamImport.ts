@@ -1,10 +1,12 @@
 /* Match import: readings plus the user's review decisions become per-board
  * rosters the grids store can stamp, and the record name the pvp export
  * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the left
- * player is the ally half, `>` when that player won more maps, each side's
- * map numbers in the brackets). Pure data mapping, a sibling of sideLoad. */
+ * player is the screenshot's Ally tab, `>` when that player won more maps,
+ * each player's map numbers in the brackets). Pure data mapping, a sibling
+ * of sideLoad. */
 
 import { ATTR_PARAGON, ATTR_REFINEMENT, type AttrRecord } from '@/lib/characters/attributes'
+import { getOpposingTeam } from '@/lib/characters/character'
 import type { HeroReading, ScreenshotReading } from '@/lib/import/types'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
 import { Team } from '@/lib/types/team'
@@ -188,10 +190,16 @@ export function suggestRecordName(names: RecordNames, results: readonly (Team | 
   return `${players} (${leftMaps.join(',')} ${op} ${rightMaps.join(',')})`
 }
 
+/* `swapSides` puts every screenshot's Ally column on the enemy side of its
+ * board and its Enemy column on the ally side. One choice for the whole match
+ * rather than per screenshot: the game's Ally tab is the viewing player, who
+ * keeps one side of the board for every map, and the boards hold a hero once
+ * per side page-wide. Issues name board sides throughout. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
   names: RecordNames,
+  swapSides = false,
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
   const boards: (BoardRoster | null)[] = Array.from({ length: boardCount }, () => null)
@@ -199,6 +207,8 @@ export function buildTeamImportPlan(
   const seen = new Set<number>()
   const mapped = (mapIndex: number | null): mapIndex is number =>
     mapIndex !== null && mapIndex < boardCount
+  // The screenshot column that fills a board side.
+  const columnOf = (side: Team): Team => (swapSides ? getOpposingTeam(side) : side)
   const unmapped = shots.filter((s) => !mapped(s.mapIndex)).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
   let empty = 0
@@ -213,9 +223,10 @@ export function buildTeamImportPlan(
     }
     seen.add(shot.mapIndex)
     const sides = {} as Record<Team, RosterEntry[]>
-    for (const team of SIDES) {
-      const ids = shot.reading.sides[team].map((_, row) =>
-        cellCharacterId(shot.reading, team, row, shot.overrides),
+    for (const side of SIDES) {
+      const column = columnOf(side)
+      const ids = shot.reading.sides[column].map((_, row) =>
+        cellCharacterId(shot.reading, column, row, shot.overrides),
       )
       // The reader settles a side's five cells against each other, so a hero
       // on two cells can only come from review edits; the first cell keeps it
@@ -224,14 +235,14 @@ export function buildTeamImportPlan(
         ids.filter((id, i): id is number => id !== null && ids.indexOf(id) !== i),
       )
       for (const characterId of repeated) {
-        issues.push({ kind: 'duplicate-hero', team, characterId, mapIndex: shot.mapIndex })
+        issues.push({ kind: 'duplicate-hero', team: side, characterId, mapIndex: shot.mapIndex })
       }
       const entries: RosterEntry[] = []
       ids.forEach((characterId, row) => {
         if (characterId === null || entries.some((e) => e.characterId === characterId)) return
-        entries.push({ characterId, attrs: cellAttrs(shot.reading, team, row, shot.overrides) })
+        entries.push({ characterId, attrs: cellAttrs(shot.reading, column, row, shot.overrides) })
       })
-      sides[team] = entries
+      sides[side] = entries
     }
     // An empty board would only wipe what is there; the screenshot is skipped.
     if (sides[Team.ALLY].length === 0 && sides[Team.ENEMY].length === 0) {
@@ -241,8 +252,8 @@ export function buildTeamImportPlan(
     boards[shot.mapIndex] = {
       sides,
       artifacts: {
-        ally: cellArtifactId(shot.reading, Team.ALLY, shot.artifactOverrides),
-        enemy: cellArtifactId(shot.reading, Team.ENEMY, shot.artifactOverrides),
+        ally: cellArtifactId(shot.reading, columnOf(Team.ALLY), shot.artifactOverrides),
+        enemy: cellArtifactId(shot.reading, columnOf(Team.ENEMY), shot.artifactOverrides),
       },
     }
   }

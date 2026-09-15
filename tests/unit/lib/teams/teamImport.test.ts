@@ -183,6 +183,42 @@ describe('buildTeamImportPlan', () => {
     expect(plan.issues).toContainEqual({ kind: 'unmapped', count: 1 })
   })
 
+  it('fills the opposite board sides when swapped, with issues named by board side', () => {
+    const plan = buildTeamImportPlan(
+      [
+        shot(0, reading([1, 2], [3]), { [overrideKey(Team.ALLY, 1)]: { characterId: 1 } }),
+        shot(1, reading([1], [4])),
+      ],
+      '3v3',
+      NAMES,
+      true,
+    )
+    const board = plan.boards[0]!
+    expect(board.sides[Team.ALLY].map((e) => e.characterId)).toEqual([3])
+    expect(board.sides[Team.ENEMY].map((e) => e.characterId)).toEqual([1])
+    expect(board.artifacts).toEqual({ ally: null, enemy: 14 })
+    expect(plan.issues).toContainEqual({
+      kind: 'duplicate-hero',
+      team: Team.ENEMY,
+      characterId: 1,
+      mapIndex: 0,
+    })
+    expect(plan.issues).toContainEqual({
+      kind: 'cross-board-duplicate',
+      team: Team.ENEMY,
+      characterId: 1,
+      maps: [0, 1],
+    })
+    expect(plan.issues).toContainEqual({
+      kind: 'cross-board-artifact',
+      team: Team.ENEMY,
+      artifactId: 14,
+      maps: [0, 1],
+    })
+    // The record name follows the players, whichever side they fill.
+    expect(plan.suggestedName).toBe('S7 SL5 Group - GNX > 10 (1,2 > )')
+  })
+
   it('says when the map wins are equal or unread instead of claiming a winner', () => {
     const unread = buildTeamImportPlan([shot(0, reading([1], [2], { winner: null }))], '1v1', NAMES)
     expect(unread.suggestedName).toBe('S7 SL5 Group - GNX > 10')
