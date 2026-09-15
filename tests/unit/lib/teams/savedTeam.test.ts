@@ -170,6 +170,9 @@ describe('validateSavedTeam', () => {
     expect(
       validateSavedTeam(record({ data: encode({ boards: [null, {}, {}] } as never) })),
     ).toBeNull()
+    expect(
+      validateSavedTeam(record({ data: encode({ boards: [{ c: {} }, {}, {}] } as never) })),
+    ).toBeNull()
     warn.mockRestore()
   })
 

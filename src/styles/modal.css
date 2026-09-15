@@ -22,6 +22,12 @@
   z-index: 9998;
 }
 
+/* Focus lands on the panel itself when a modal opens (useFocusTrap); its
+   border already frames it, so it draws no ring of its own. */
+.overlay.is-modal > .container:focus {
+  outline: none;
+}
+
 /* Top-anchored variant. `.container` uses `margin: auto`, which in a flex
    parent absorbs free space evenly top/bottom and overrides `align-items`, so
    we have to zero the vertical autos in addition to setting flex-start. */

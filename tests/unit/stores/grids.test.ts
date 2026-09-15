@@ -16,6 +16,7 @@ import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import {
   ALLY_A,
   ALLY_B,
+  ALLY_C,
   ENEMY_A,
   ENEMY_B,
   KULU,
@@ -280,6 +281,63 @@ describe('useGrids.routeArtifactDrop', () => {
     )
     expect(a.artifacts.ally).toBe(5)
     expect(a.artifacts.enemy).toBe(5)
+  })
+})
+
+describe('useGrids.routeDrop cross-board hero/phantimal swap', () => {
+  // Every placed unit with its hex, so a rejected drop can be shown to have
+  // left companions and phantimals exactly where they were.
+  const placements = (grid: Grid): [number, number, Team][] =>
+    getTilesWithCharacters(grid)
+      .map((tile): [number, number, Team] => [tile.hex.getId(), tile.characterId!, tile.team!])
+      .sort((a, b) => a[0] - b[0])
+
+  // Board a: a phantimal and Phraesto with his companion (the phantimal goes
+  // first, since the companion spawns on a random free tile and a later
+  // placement over it would remove Phraesto too); board b: a full team of five
+  // plus the same phantimal.
+  const setupSwap = () => {
+    const { grids, a, b } = setupBoards()
+    expect(a.placePhantimal(6, toPhantimalId(1), Team.ALLY)).toBe(true)
+    expect(a.place(5, PHRAESTO, Team.ALLY)).toBe(true)
+    for (const [hex, id] of [
+      [1, ALLY_A],
+      [2, ALLY_B],
+      [3, ALLY_C],
+      [4, ENEMY_A],
+      [7, ENEMY_B],
+    ] as const) {
+      expect(b.place(hex, id, Team.ALLY)).toBe(true)
+    }
+    expect(b.placePhantimal(6, toPhantimalId(1), Team.ALLY)).toBe(true)
+    return { grids, a, b }
+  }
+
+  it('rejects a hero for a phantimal when the hero lands on a full team, leaving both boards untouched', () => {
+    const { grids, a, b } = setupSwap()
+    const before = [placements(a.grid), placements(b.grid)]
+
+    // Hero dragged onto the full board's phantimal, and the phantimal dragged
+    // onto the hero: either way the hero lands on the full board.
+    expect(grids.canDropCharacter(PHRAESTO, 0, 5, 1, 6)).toBe(false)
+    expect(grids.routeDrop(dragPayload(0, 5, PHRAESTO), 1, 6)).toBe(false)
+    expect(grids.canDropCharacter(toPhantimalId(1), 1, 6, 0, 5)).toBe(false)
+    expect(grids.routeDrop(dragPayload(1, 6, toPhantimalId(1)), 0, 5)).toBe(false)
+
+    expect([placements(a.grid), placements(b.grid)]).toEqual(before)
+  })
+
+  it('swaps a hero for a phantimal once the receiving team has a free slot', () => {
+    const { grids, a, b } = setupSwap()
+    expect(b.remove(7)).toBe(true)
+
+    expect(grids.canDropCharacter(PHRAESTO, 0, 5, 1, 6)).toBe(true)
+    expect(grids.routeDrop(dragPayload(0, 5, PHRAESTO), 1, 6)).toBe(true)
+
+    expect(getCharacter(b.grid, 6)).toBe(PHRAESTO)
+    expect(getCharacter(a.grid, 5)).toBe(toPhantimalId(1))
+    expect(findCharacterHex(b.grid, PHRAESTO_COMPANION, Team.ALLY)).not.toBeNull()
+    expect(findCharacterHex(a.grid, PHRAESTO_COMPANION, Team.ALLY)).toBeNull()
   })
 })
 

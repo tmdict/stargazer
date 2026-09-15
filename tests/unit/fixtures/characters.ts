@@ -17,3 +17,4 @@ export const PHRAESTO = 50 // companion spawn: raises capacity, throws with no f
 export const PHRAESTO_COMPANION = COMPANION_ID_OFFSET + PHRAESTO
 export const KULU = 80 // cosmetic demolition zone: ally 18-24, enemy 22-28
 export const GUNNAR = 106 // behind-tile highlight; activation never fails
+export const EVIE = 113 // targets the rearmost ally; outlines enemy-zone tiles around her mirror cell

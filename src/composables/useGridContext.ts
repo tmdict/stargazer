@@ -147,6 +147,9 @@ export interface GridContext {
   phantimalCanJoinTeam: (phantimalId: number, team: Team) => boolean
   phantimalFactionCount: (phantimalId: number, team: Team) => number
   seedPhantimalBaseline: () => void
+  // Placement operations refresh the skill results themselves; raw tile edits
+  // and companion settling do not, so their callers refresh once at the end.
+  refreshSkills: () => void
   setArtifact: (team: Team, artifactId: number) => void
   removeArtifact: (team: Team) => void
   getAttr: (team: Team, characterId: number, attrId: number) => number
@@ -406,6 +409,8 @@ export function createGridContext(
     else artifacts.enemy.value = null
   }
 
+  const refreshSkills = (): void => skillManager.updateActiveSkills(grid)
+
   // Rebuild the grid for the new map. Object.assign preserves the reactive proxy
   // identity; the skill manager must be re-attached and reset because the rebuilt
   // grid drops it.
@@ -657,6 +662,7 @@ export function createGridContext(
     phantimalCanJoinTeam,
     phantimalFactionCount,
     seedPhantimalBaseline,
+    refreshSkills,
     setArtifact,
     removeArtifact,
     getAttr,

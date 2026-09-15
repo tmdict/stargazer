@@ -41,7 +41,7 @@ const skills = computed(() =>
 </script>
 
 <template>
-  <BaseModal :show="show" max-width="960px" @close="emit('close')">
+  <BaseModal :show="show" :label="title" max-width="960px" @close="emit('close')">
     <template #header-buttons>
       <ModalLocaleToggle v-model="displayLocale" />
     </template>

@@ -21,6 +21,7 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
 import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
+import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
@@ -49,7 +50,8 @@ const emit = defineEmits<{ load: [team: SavedTeam] }>()
 
 const i18n = useI18nStore()
 const library = useTeamLibrary()
-const { show, success, error } = useToast()
+const { show, error } = useToast()
+const { report } = useTeamLibraryFeedback()
 
 // Device-level sort preference: last-modified first (the default) or by name.
 const SORT_STORAGE_KEY = 'stargazer.teams.sort'
@@ -117,13 +119,13 @@ const { armed, confirm } = useArmedConfirm()
 const handleDelete = (team: SavedTeam): void => {
   if (!confirm(team.id)) return
   library.remove(team.id)
-  success(i18n.t('app.team-deleted'))
+  report(i18n.t('app.team-deleted'))
 }
 
 const handleDeleteAll = (): void => {
   if (!confirm('all')) return
   library.removeAll()
-  success(i18n.t('app.teams-deleted'))
+  report(i18n.t('app.teams-deleted'))
 }
 
 // The card's own thumbnail is the capture target: it already renders the
@@ -152,6 +154,7 @@ const handleDuplicate = (team: SavedTeam): void => {
     error(i18n.t('app.teams-limit', { max: MAX_SAVED_TEAMS }))
     return
   }
+  report()
   // Edits made right after duplicating should land on the copy, not on
   // whatever the boards held before.
   emit('load', copy)
@@ -166,7 +169,10 @@ const {
   cancel: cancelRename,
 } = useInlineRename({
   currentName: (id) => library.get(id)?.name,
-  rename: (id, name) => library.rename(id, name),
+  rename: (id, name) => {
+    library.rename(id, name)
+    report()
+  },
 })
 
 const startRename = (team: SavedTeam): Promise<void> => start(team.id, team.name)
@@ -239,7 +245,7 @@ const handleFileChosen = async (event: Event): Promise<void> => {
     error(i18n.t('app.import-invalid'))
     return
   }
-  success(
+  report(
     result.conflicts > 0
       ? i18n.t('app.import-success-conflicts', {
           imported: result.imported,

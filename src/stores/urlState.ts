@@ -4,11 +4,12 @@ import { repositionCompanions } from '@/lib/characters/companion'
 import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { findMapByTiles } from '@/lib/maps'
 import { Team } from '@/lib/types/team'
 import {
   unpackDisplayFlags,
+  type BoardState,
   type DisplayFlags,
-  type GridState,
   type MultiGridState,
 } from '@/utils/gridStateSerializer'
 import { decodeGridStateFromUrl, decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
@@ -55,7 +56,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
     }
   }
 
-  const applyGridState = (gridState: GridState): void => {
+  const applyGridState = (gridState: BoardState): void => {
     const getValidatedTileEntry = (entry: number[]): { hexId: number; state: number } | null => {
       const hexId = entry[0]
       const state = entry[1]
@@ -77,7 +78,13 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
     characterStore.clearAllCharacters()
     artifactStore.clearAllArtifacts()
-    gridStore.resetAllTiles()
+    // A payload without a map key (the Arena's slot and links) names its preset
+    // by its tiles alone; adopting the one they reproduce keeps the map picker
+    // and Reset in step with the board. Tiles matching no preset (an edited
+    // map) leave the board's current map as it is.
+    const preset = gridState.m === undefined ? findMapByTiles(gridState.t ?? []) : undefined
+    if (preset === undefined) gridStore.resetAllTiles()
+    else gridStore.switchMap(preset)
 
     // Restore tile states from compact format: [hexId, state]
     if (gridState.t) {
@@ -194,6 +201,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
     // Auto-placement is edge-triggered; this bulk restore must not read as a
     // transition, or a saved state that omits its phantimal would gain one.
     characterStore.seedPhantimalBaseline()
+    gridStore.refreshSkills()
   }
 
   // Restore N boards: rebuild the board array, then restore each board by

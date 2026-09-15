@@ -56,3 +56,33 @@ export const getMapNames = (): Array<{ key: string; name: string }> => {
 export const getMapByKey = (key: string): MapConfig | undefined => {
   return MAPS[key]
 }
+
+// Occupied tiles read as their available state, so a populated board still
+// matches its preset.
+const AVAILABLE_STATE: Partial<Record<State, State>> = {
+  [State.OCCUPIED_ALLY]: State.AVAILABLE_ALLY,
+  [State.OCCUPIED_ENEMY]: State.AVAILABLE_ENEMY,
+}
+
+const tileKey = (hexId: number, state: State): string =>
+  `${hexId}:${AVAILABLE_STATE[state] ?? state}`
+
+const layoutKey = (tileKeys: string[]): string => tileKeys.sort().join(' ')
+
+const LAYOUTS = Object.entries(MAPS).map(([key, config]) => ({
+  key,
+  layout: layoutKey(config.grid.flatMap(({ type, hex }) => hex.map((id) => tileKey(id, type)))),
+}))
+
+// The preset whose layout the serialized `[hexId, state]` tiles (non-default
+// only, as the serializer emits them) reproduce exactly, if any. Presets that
+// share a layout (a season's preset reusing a permanent arena) are the same
+// board, and the first registered stands for both.
+export const findMapByTiles = (tiles: readonly number[][]): string | undefined => {
+  const layout = layoutKey(
+    tiles.flatMap(([hexId, state]) =>
+      hexId === undefined || state === undefined ? [] : [tileKey(hexId, state)],
+    ),
+  )
+  return LAYOUTS.find((preset) => preset.layout === layout)?.key
+}

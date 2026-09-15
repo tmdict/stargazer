@@ -66,6 +66,8 @@ export const useGridStore = defineStore('grid', () => {
 
   const switchMap = (mapKey: string): boolean => active().switchMap(mapKey)
 
+  const refreshSkills = (): void => active().refreshSkills()
+
   const getCurrentMapConfig = (): MapConfig | null => getMapByKey(active().currentMap) ?? null
 
   // No-op while the page pins a fixed hex size (5 v 5); honored on the Arena.
@@ -91,6 +93,7 @@ export const useGridStore = defineStore('grid', () => {
     getTile,
     getAllTiles,
     switchMap,
+    refreshSkills,
     getCurrentMapConfig,
     updateBreakpoint,
     getHexScale,
