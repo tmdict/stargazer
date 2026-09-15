@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* The match screenshot import: drop result screenshots, map each one to a
-   board, review what was read, name the record, and save it as a new team on
-   the boards. State lives in useTeamImport (module-level), so closing and
+   board, review what was read, name the record, pick the board sides, and
+   save it as a new team on the boards. State lives in useTeamImport (module-level), so closing and
    reopening keeps the shots; Save as New drops them once the plan is handed
    up. The modal only renders and emits the finished plan upward. */
 
@@ -46,6 +46,7 @@ const {
   shots,
   referenceStatus,
   names,
+  swapSides,
   learnedCount,
   hasCorrections,
   exportCorrections,
@@ -162,10 +163,15 @@ const issueText = (issue: PlanIssue): string => {
   }
 }
 
-// The plan's own issues plus what the live boards would make it skip.
-const issues = computed(() => [...plan.value.issues, ...grids.rosterConflicts(plan.value)])
 const mappedCount = computed(() => plan.value.boards.filter((b) => b !== null).length)
 const reading = computed(() => shots.value.some((s) => s.status === 'reading'))
+// The plan's own issues plus what the live boards would make it skip. The
+// latter waits for every shot: shots are read in drop order, and a board a
+// pending shot will fill is not one the import leaves as it is.
+const issues = computed(() => [
+  ...plan.value.issues,
+  ...(reading.value ? [] : grids.rosterConflicts(plan.value)),
+])
 const blocked = computed(
   () =>
     mappedCount.value === 0 ||
@@ -253,6 +259,19 @@ const handleSaveAsNew = (): void => {
             maxlength="30"
           />
         </label>
+        <div class="field">
+          <span class="field-label">{{ i18n.t('app.import-board-sides') }}</span>
+          <button
+            type="button"
+            class="toggle"
+            :class="{ on: swapSides }"
+            :aria-pressed="swapSides"
+            :title="i18n.t('app.import-swap-sides-hint')"
+            @click="swapSides = !swapSides"
+          >
+            {{ i18n.t('app.import-swap-sides') }}
+          </button>
+        </div>
         <div class="field wide">
           <span id="import-record-name" class="field-label">{{
             i18n.t('app.import-record-name')
@@ -284,6 +303,7 @@ const handleSaveAsNew = (): void => {
           :key="selected.id"
           :shot="selected"
           :names
+          :swap-sides
           @set-hero="setHero"
           @set-level="setLevel"
           @set-artifact="setArtifact"
@@ -417,10 +437,41 @@ const handleSaveAsNew = (): void => {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
 }
 
+/* The inputs' metrics, so the row stays level. */
+.toggle {
+  padding: 7px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: var(--radius-medium);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--import-text);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.toggle:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.toggle:focus-visible {
+  outline: none;
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-accent) 30%, transparent);
+}
+
+.toggle.on {
+  background: var(--color-accent-active);
+  border-color: var(--color-accent-active);
+  color: #fff;
+}
+
 /* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. */
+   zoom outlives the field. The toggle follows to keep the row level. */
 @media (pointer: coarse) {
-  .field-input {
+  .field-input,
+  .toggle {
     font-size: 1rem;
   }
 }
