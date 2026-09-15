@@ -2,117 +2,83 @@
 
 ## Overview
 
-The pathfinding system provides movement calculations, target selection, and distance computations for the hexagonal grid. It uses specialized algorithms for different scenarios while maintaining framework independence through pure functional design.
+The pathfinding system provides movement distances and closest-target selection for the hexagonal grid. The library (`/src/lib/pathfinding.ts`) is pure and grid-agnostic, reading tiles through callbacks; each board's context memoizes the resulting closest-target maps for the arrows overlay and the debug panel.
 
 ## Design Principles
 
-1. **Pure Functions**: All functions are side-effect free and stateless
-2. **Algorithm Specialization**: A\* for specific paths, BFS for closest targets
-3. **Performance First**: Early termination and optimized data structures
-4. **Framework Agnostic**: Works with any grid via callback functions
-5. **Deterministic Behavior**: Consistent tie-breaking rules for predictable outcomes
-6. **Team Asymmetry**: Different targeting preferences based on attacking team
+1. **Pure Functions**: Library functions are side-effect free and uncached; every call computes from the tiles it is given
+2. **Grid via Callbacks**: `getTile` and `canTraverse` callbacks decouple the algorithms from the `Grid` class
+3. **Algorithm Specialization**: BFS answers how many moves until a target is in range; A\* reconstructs a concrete path and serves only the debug panel
+4. **Bounded Search**: A\* aborts past 1000 discovered nodes and BFS past 20 moves, both reporting the target as unreachable
+5. **Deterministic, Team-Asymmetric Tie-Breaking**: Equidistant targets resolve by fixed rules whose hex-id preference flips with the source team
 
-## Core Algorithms
+## Core Algorithms (`/src/lib/pathfinding.ts`)
 
-### A\* Implementation (`/src/lib/pathfinding.ts`)
+### Traversal
 
-Finds optimal path between two specific hexes:
+`defaultCanTraverse` treats `BLOCKED` and `BLOCKED_BREAKABLE` tiles as impassable; occupied tiles are walkable.
 
-```typescript
-function findPathAStar(
-  start: Hex,
-  goal: Hex,
-  getTile: (hex: Hex) => GridTile | undefined,
-  canTraverse: (tile: GridTile) => boolean,
-): Hex[] | null
-```
+### A\* (`findPathAStar`)
 
-Features:
+- **Heuristic**: hex distance to the goal (admissible, so paths are optimal); every step costs 1
+- **Open set**: min-heap `PriorityQueue` (`/src/lib/priorityQueue.ts`) ordered by f-cost
+- **Result**: the hex list from start to goal inclusive, or `null` when the goal is unreachable or more than 1000 nodes have been discovered
 
-- **Hex Distance Heuristic**: Admissible for guaranteed optimal paths
-- **Binary Heap Priority Queue**: Efficient node selection
-- **Early Termination**: Stops when goal reached, or after 1000 explored nodes
-- **Null on Impossible**: Returns null for blocked paths
+### BFS Movement Distance (`calculateRangedMovementDistance`)
 
-### BFS Distance Calculation
+Returns the minimum number of moves before any target lies within `range`, plus every target reachable at that distance so tie-breaking can choose among them:
 
-Finds minimum tiles to move before attacking any target:
+- **Zero moves**: any target already within `range` of the start returns distance 0 without searching
+- **Frontier search**: level-by-level BFS over traversable neighbours; the first level from which a target is within `range` wins
+- **Cutoff**: gives up after 20 moves with `movementDistance: Infinity` and `canReach: false`
 
-```typescript
-function calculateRangedMovementDistance(
-  start: Hex,
-  targets: Hex[],
-  range: number,
-  getTile: (hex: Hex) => GridTile | undefined,
-  canTraverse: (tile: GridTile) => boolean,
-): { movementDistance: number; canReach: boolean; reachableTargets: Hex[] }
-```
-
-Handles both melee (range 1) and ranged attacks by finding positions within attack range. Every target reachable at the minimum distance is returned so tie-breaking can choose among them; the search gives up after 20 moves.
+Melee (range 1) therefore needs an adjacent tile; ranged units stop at their maximum range.
 
 ## Target Selection
 
+### `findClosestTarget`
+
+Runs the BFS from the source tile against all target tiles at the source's range, then applies the tie-breaking rules to the targets tied at the minimum distance. The source tile's team decides the hex-id preference, so the same layout resolves differently for the two sides.
+
 ### Tie-Breaking Rules
 
-When multiple targets are equidistant:
+Candidates are folded left to right, each compared with the current best:
 
-1. **Vertical Alignment**: Prefer same q-coordinate (straight vertical movement)
-2. **Diagonal Priority**: Within diagonal row, team-based ID preference:
-   - **ALLY → ENEMY**: Prefer higher hex ID
-   - **ENEMY → ALLY**: Prefer lower hex ID
-3. **Direct Distance**: Targets with minimum euclidean distance
-4. **ID Fallback**: Team-based preference (same as rule 2)
+| Case                                                       | Rule                                                                      |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
+| Exactly one is vertically aligned (same `q` as the source) | The vertical one wins                                                     |
+| Both on the same diagonal (same `q - r`)                   | ALLY source prefers the higher hex id, ENEMY source the lower             |
+| Neither vertical, different diagonals                      | Smaller hex distance to the source; on a tie, the same team id preference |
+| Both vertical, different diagonals                         | No rule applies; the earlier candidate stays                              |
 
-### Finding Closest Target
+The distance in the third case is hex (cube) distance, not path length.
 
-```typescript
-function findClosestTarget(
-  sourceTile: GridTile,
-  targetTiles: GridTile[],
-  sourceRange: number,
-  getTile: (hex: Hex) => GridTile | undefined,
-  canTraverse: (tile: GridTile) => boolean,
-): { hexId: number; distance: number } | null
-```
+## Closest-Target Maps
 
-Combines BFS exploration with team-aware tie-breaking for consistent target selection. The source tile's team determines ID preference during tie-breaking, creating asymmetric targeting behavior between teams.
+### `getClosestTargetMap`
 
-## Game Integration
-
-### Main API
+Runs `findClosestTarget` for every source-team tile and returns `Map<sourceHexId, TargetInfo>`:
 
 ```typescript
-function getClosestTargetMap(
-  tilesWithCharacters: GridTile[],
-  sourceTeam: Team,
-  targetTeam: Team,
-  getTile: (hex: Hex) => GridTile | undefined,
-  characterRanges?: Map<number, number>,
-): Map<number, TargetInfo>
+interface TargetInfo {
+  enemyHexId?: number // set when the target team is ENEMY
+  allyHexId?: number // set when the target team is ALLY
+  distance: number
+}
 ```
 
-Processes all source-team characters, returning optimal targets based on team and range.
+- **Range**: per-character ranges come from the caller's `characterRanges` map; a missing entry means melee (1)
+- **Consumers**: `GridArrows.vue` draws an arrow per entry of both maps; `DebugPanel.vue` lists them
 
-## Memoization Strategy
+### Memoization (`/src/composables/useGridContext.ts`)
 
-The library functions are pure and uncached: every call computes from the grid state it is given. Memoization lives one layer up, on each board's context (`/src/composables/useGridContext.ts`), where `closestEnemyMap`/`closestAllyMap` are Vue `computed` properties; the pathfinding store (`/src/stores/pathfinding.ts`) only adapts the active board's maps for the debug panel. They recompute only when the reactive grid state they read (placements, tile states, character ranges) actually changes, so results can never go stale: any mutation that affects targeting (character operations, map-editor tile painting, map switches) invalidates them automatically through Vue's dependency tracking. The per-board range map seeds an entry for every on-grid namespaced unit (companion, phantimal, synergy copy), since the static map is keyed by base hero id.
+- **Per board**: `closestEnemyMap` (ALLY to ENEMY) and `closestAllyMap` (ENEMY to ALLY) are `computed`, so they recompute only when the placements, tile states, or ranges they read change (character operations, tile painting, map switches) and can never go stale
+- **Namespaced ranges**: `buildUnitRanges` seeds the base-id keyed static range map with an entry per on-grid companion, phantimal, or synergy copy, so those units target at their own range instead of falling back to melee
+- **Pathfinding store** (`/src/stores/pathfinding.ts`): adapts the active board's maps for the debug panel and computes `debugPathfindingResults`, the A\* path from each source to its chosen target in both directions
 
-## Performance Characteristics
+Skill targeting (`/src/lib/skills/utils/distance.ts`) does not use these maps; its FURTHEST picks break distance ties with the opposite hex-id preference (ALLY lower, ENEMY higher).
 
-- **A\* Complexity**: O(b^d) reduced by heuristic
-- **BFS Complexity**: O(V + E) for local exploration
-- **Recomputation Cost**: Bounded by the 45-tile board and unit count; recomputes only on relevant reactive changes
+## Related Documentation
 
-## Movement Calculations
-
-### Effective Distance
-
-Number of tiles to move before being in attack range:
-
-- Melee (range 1): Must reach adjacent tile
-- Ranged: Can stop at maximum range
-
-### Optimal Positioning
-
-System finds all valid attack positions and selects closest reachable one.
+- [`/docs/architecture/GRID.md`](./GRID.md) - Hexagonal coordinates, hex ids, and tile states
+- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Skill targeting utilities

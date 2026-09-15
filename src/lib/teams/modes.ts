@@ -71,7 +71,7 @@ export const MAX_SAVED_TEAMS = 500
 export const MAX_TEAM_NAME_LENGTH = 60
 
 export const isTeamModeKey = (key: unknown): key is TeamModeKey =>
-  typeof key === 'string' && key in TEAM_MODES
+  typeof key === 'string' && Object.hasOwn(TEAM_MODES, key)
 
 /* Resolve the team mode for a decoded payload. A present `mode` is honored only
  * when its board count matches the payload (a contradictory or unknown mode is

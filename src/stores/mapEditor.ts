@@ -5,39 +5,31 @@ import { useCharacterStore } from './character'
 import { useGridStore } from './grid'
 
 export const useMapEditorStore = defineStore('mapEditor', () => {
-  // Store instances created once at store level
   const gridStore = useGridStore()
   const characterStore = useCharacterStore()
 
-  /**
-   * Sets a hex to the specified state (used by map editor).
-   * Removes any existing character and resets the tile completely.
-   */
+  // An occupant is removed first (its team could change under it). The refresh
+  // at the end is for terrain-aware skill paint (zone membership, blocked
+  // tiles), which a tile edit never recomputes on its own.
   const setHexState = (hexId: number, state: State): void => {
     const tile = gridStore.getTile(hexId)
     if (tile.state === State.OCCUPIED_ALLY || tile.state === State.OCCUPIED_ENEMY) {
       characterStore.removeCharacterFromHex(hexId)
     }
     gridStore.setState(gridStore.getHexById(hexId), state)
+    gridStore.refreshSkills()
   }
 
-  /**
-   * Resets all hexes to a specific state with character clearing
-   */
   const resetAllHexesToState = (state: State) => {
     characterStore.clearAllCharacters()
     gridStore.resetAllTiles(state)
   }
 
   const resetToCurrentMap = () => {
-    // Get the current map configuration
     const mapConfig = gridStore.getCurrentMapConfig()
     if (!mapConfig) return
 
-    // Reset all hexes to default first using shared utility
     resetAllHexesToState(State.DEFAULT)
-
-    // Apply the original map states
     mapConfig.grid.forEach((mapState) => {
       mapState.hex.forEach((hexId) => {
         gridStore.setState(gridStore.getHexById(hexId), mapState.type)

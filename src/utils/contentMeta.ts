@@ -1,4 +1,4 @@
-import { inject, onUnmounted, type InjectionKey } from 'vue'
+import { computed, inject, onUnmounted, type InjectionKey, type Ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import { SITE_ORIGIN } from '@/lib/site'
@@ -72,29 +72,37 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   })
 }
 
-/** Sets up meta tags for the /{locale}/guide compendium (SSG and client). */
-export function setupGuideContentMeta(locale: AppLocale): void {
-  const title = locale === 'en' ? 'Guide' : '机制'
-  const description =
-    locale === 'en'
-      ? 'In-depth guide to AFK Journey hero skill mechanics - targeting, buffs, and positioning, illustrated with grid diagrams.'
-      : '剑与远征启程英雄技能机制详解：目标选择、增益与站位，附带格子示意图。'
+/**
+ * Sets up meta tags for the /{locale}/guide compendium (SSG and client). The
+ * en and zh guide routes share one component instance, so the head follows the
+ * locale reactively instead of the value at setup.
+ */
+export function setupGuideContentMeta(locale: Ref<AppLocale>): void {
   const url = 'guide'
 
-  useHead({
-    title: `${title} | Stargazer`,
-    meta: [
-      { name: 'description', content: description },
-      { name: 'keywords', content: [...BASE_KEYWORDS, title].join(', ') },
-      { property: 'og:title', content: title },
-      { property: 'og:description', content: description },
-      { property: 'og:url', content: `${ORIGIN}/${locale}/${url}` },
-    ],
-    link: [
-      { rel: 'canonical', href: `${ORIGIN}/${locale}/${url}` },
-      { rel: 'alternate', hreflang: 'en', href: `${ORIGIN}/en/${url}` },
-      { rel: 'alternate', hreflang: 'zh', href: `${ORIGIN}/zh/${url}` },
-      { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
-    ],
-  })
+  useHead(
+    computed(() => {
+      const title = locale.value === 'en' ? 'Guide' : '机制'
+      const description =
+        locale.value === 'en'
+          ? 'In-depth guide to AFK Journey hero skill mechanics - targeting, buffs, and positioning, illustrated with grid diagrams.'
+          : '剑与远征启程英雄技能机制详解：目标选择、增益与站位，附带格子示意图。'
+      return {
+        title: `${title} | Stargazer`,
+        meta: [
+          { name: 'description', content: description },
+          { name: 'keywords', content: [...BASE_KEYWORDS, title].join(', ') },
+          { property: 'og:title', content: title },
+          { property: 'og:description', content: description },
+          { property: 'og:url', content: `${ORIGIN}/${locale.value}/${url}` },
+        ],
+        link: [
+          { rel: 'canonical', href: `${ORIGIN}/${locale.value}/${url}` },
+          { rel: 'alternate', hreflang: 'en', href: `${ORIGIN}/en/${url}` },
+          { rel: 'alternate', hreflang: 'zh', href: `${ORIGIN}/zh/${url}` },
+          { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
+        ],
+      }
+    }),
+  )
 }
