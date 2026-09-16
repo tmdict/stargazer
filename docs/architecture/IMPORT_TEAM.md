@@ -68,10 +68,11 @@ Pure, DOM-free code over `RgbaImage`, shared by the worker and the check script.
 Derived once by `cellState` and `reviewStates` (`lib/teams/teamImport.ts`) so the review grid and each card's "N to review" count agree:
 
 - **Sure**: The top candidate fills the board unless changed
-- **Review** (amber): Recognised but under the margin, or a doubtful frame match (`paragonFromMatch`), which puts the whole cell in review because the face and star crops are cut from that box
+- **Confirm {hero name}** (amber): Accepts the displayed guess without opening the picker. Confirming or selecting a hero settles identity independently of the paragon level
+- **Confirm P…** (amber): Identity is settled but the frame match was doubtful. Check the source card, then confirm the displayed paragon level or edit it with the pill; confirming preserves the level and records an explicit override
 - **None** (red): No candidate over the floor; contributes nothing until picked
 - **Duplicate** (red): The same hero on two cells of one side after edits; blocks Save as New
-- **Artifact chip**: Always reviewable; the in-game icon carries a gold ring the references lack, so margins are thin. Not counted in the card's review count
+- **Artifact chip**: A small **Confirm {artifact name}** action accepts an uncertain guess; the chip opens the picker for corrections. Confirmations and changes show **Edited** and enter the corrections export as explicit overrides. Artifacts are not counted in the card's review count
 
 ## Session and Review
 
@@ -85,6 +86,8 @@ Module-level state, so the modal can close and reopen without losing the shots; 
 - **Learning**: A correction teaches the face only when the hero was unsure and the frame match trustworthy, so a misplaced crop is never stored as an example; picking the reader's own top candidate, or no hero, retracts the lesson. Lessons persist in `stargazer.import.learned` (`LEARNED_ICONS_CAP` 100, oldest out) and the worker rebuilds its table on every change
 
 ### Plan, Apply and Save
+
+Player names are optional. Without both names, the generated record name stays blank and saving uses the library's automatic team name. Review warnings do not block saving; roster conflicts and invalid generated names do.
 
 - **Plan** (`lib/teams/teamImport.ts`): Pure data mapping, a sibling of `sideLoad.ts`: readings plus overrides, on the swapped sides when chosen, to per-board rosters, `issues` (named by board side) and the record name (`S7 - GNX > 10 (1,3,4,5 > 2)`: left player, `>` when they won more maps, each player's map numbers, unmoved by the swap). `isBlockingIssue` separates what would put a wrong roster on a board from what merely leaves something out
 - **Apply and save**: Owned by the Teams page (`grids.applyRosters`, its read-only mirrors `rostersWouldReplace` and `rosterConflicts`, and `TeamsView.handleImportMatch`); see [TEAMS.md](./TEAMS.md), Team Import. Apply and save are not one transaction: a full library leaves the boards as an unsaved team carrying the name, and skipped placements are reported rather than claimed
@@ -155,7 +158,7 @@ npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [-
 }
 ```
 
-- **Truth**: `truth.json` beside the samples by default; cells `a1`–`a5` and `e1`–`e5` score hero, paragon and refinement independently (a confidently wrong hero counts as wrong), `artifacts` is optional and scored only where labelled, and a strip count that disagrees with `maps` is flagged
+- **Truth**: `truth.json` beside the samples by default; cells `a1`–`a5` and `e1`–`e5` score hero, paragon and refinement independently (a confidently wrong hero counts as wrong). Each field is optional: omitted fields are unreviewed and excluded from totals. `artifacts` is also scored only where labelled, and a strip count that disagrees with `maps` is flagged
 - **Truth versus references**: Truth data measures the reader; reference data changes it. Fixing a wrong expected label changes the evaluation, not the matcher; a descriptor update is judged by which cells it fixes and which it newly breaks, never by its aggregate score alone
 
 ## Related Documentation
