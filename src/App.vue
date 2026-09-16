@@ -7,6 +7,7 @@ import AboutModal from '@/components/modals/AboutModal.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import ContactForm from '@/components/ui/ContactForm.vue'
+import IconGitHub from '@/components/ui/IconGitHub.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import IconMail from '@/components/ui/IconMail.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
@@ -154,6 +155,16 @@ onUnmounted(() => {
           >
             <IconInfo />
           </button>
+        </li>
+        <li>
+          <a
+            href="https://github.com/tmdict/stargazer/"
+            class="icon-link"
+            :title="i18n.t('app.code')"
+            :aria-label="i18n.t('app.code')"
+          >
+            <IconGitHub aria-hidden="true" />
+          </a>
         </li>
         <li>
           <button
