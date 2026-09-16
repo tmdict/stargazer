@@ -1,10 +1,10 @@
 <script setup lang="ts">
 /* The Teams grid panel: the team title line (document-style name with inline
-   source-team rename, plus save state), the control bar (mode picker + display
-   toggles, then team save actions + the side-load menu + share actions), and the
-   horizontally-scrolling row of boards. It's
-   the #teams panel of TeamsView's outer TabView; the tab strip and the roster
-   live in TeamsView. Boards bind to their own context. */
+   source-team rename, plus save state), the control bar (mode and type pickers
+   + display toggles, then team save actions + the side-load menu + share
+   actions), and the horizontally-scrolling row of boards. It's the #teams
+   panel of TeamsView's outer TabView; the tab strip and the roster live in
+   TeamsView. Boards bind to their own context. */
 
 import { computed } from 'vue'
 
@@ -15,13 +15,20 @@ import TeamImportButton from '@/components/teams/TeamImportButton.vue'
 import TeamLoadMenu from '@/components/teams/TeamLoadMenu.vue'
 import TeamModePicker from '@/components/teams/TeamModePicker.vue'
 import TeamSaveActions from '@/components/teams/TeamSaveActions.vue'
+import TeamVariantPicker from '@/components/teams/TeamVariantPicker.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
-import { MAX_TEAM_NAME_LENGTH, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import {
+  MAX_TEAM_NAME_LENGTH,
+  TEAM_MODES,
+  type TeamModeKey,
+  type TeamVariantChoice,
+  type VariantMatch,
+} from '@/lib/teams/modes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
@@ -30,11 +37,16 @@ import { useI18nStore } from '@/stores/i18n'
 const { sourceName, dirty, pendingName } = defineProps<{
   characters: readonly CharacterType[]
   activeMode: TeamModeKey
+  // The live boards' type (null = custom maps) and whether a type switch would
+  // drop anything, for the type picker and its confirm.
+  variant: VariantMatch
+  variantWouldReplace: boolean
   // Effective grid-info visibility, derived by TeamsView from the shared pref.
   info: GridInfoView
-  // Title-line and save-action state: source name (null = unsaved), content-dirty
-  // flag, the popover's suggested auto-name, and a match import's record name,
-  // shown as the title until the boards are saved under it.
+  // Title-line and save-action state: source id and name (null = unsaved),
+  // content-dirty flag, the popover's suggested auto-name, and a match import's
+  // record name, shown as the title until the boards are saved under it.
+  sourceId: string | null
   sourceName: string | null
   dirty: boolean
   suggestedName: string
@@ -59,6 +71,7 @@ const emit = defineEmits<{
   copyImage: []
   download: []
   switchMode: [mode: TeamModeKey]
+  selectVariant: [choice: TeamVariantChoice]
   newTeam: []
   save: []
   saveAsNew: [name: string]
@@ -169,17 +182,27 @@ const {
     >
       <template #toggles-start>
         <TeamModePicker :active-mode @switch-mode="emit('switchMode', $event)" />
+        <TeamVariantPicker
+          :active-mode
+          :match="variant"
+          :source-id
+          :would-replace="variantWouldReplace"
+          @select-variant="emit('selectVariant', $event)"
+        />
       </template>
       <template #actions-start>
         <TeamSaveActions
           :has-source="sourceName !== null"
           :suggested-name
+          :active-mode
+          :variant
+          :source-id
           @new-team="emit('newTeam')"
           @save="emit('save')"
           @save-as-new="emit('saveAsNew', $event)"
         />
         <TeamLoadMenu :active-mode />
-        <TeamImportButton :active-mode @import-match="emit('importMatch', $event)" />
+        <TeamImportButton :active-mode :variant @import-match="emit('importMatch', $event)" />
       </template>
     </GridControls>
 

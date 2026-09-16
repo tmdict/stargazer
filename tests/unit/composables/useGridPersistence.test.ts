@@ -57,12 +57,12 @@ describe('useTeamsPersistence', () => {
     expect(slot.v).toBe(1)
     expect(slot.sourceId).toBe('team-42')
     expect(typeof slot.data).toBe('string')
-    expect(storage.has(teamsSlotKey('5v5sl'))).toBe(false)
+    expect(storage.has(teamsSlotKey('5v5'))).toBe(false)
 
-    mode.value = '5v5sl'
+    mode.value = '5v5'
     sourceId.value = null
     persistence.flush()
-    expect(readEnvelope('5v5sl').sourceId).toBeNull()
+    expect(readEnvelope('5v5').sourceId).toBeNull()
   })
 
   it('load round-trips the envelope and rejects corrupt or wrong-version slots', () => {

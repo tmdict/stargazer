@@ -41,6 +41,7 @@ import { isPlaceholderId } from '@/lib/characters/placeholder'
 import { isSynergyHeroId } from '@/lib/characters/synergy'
 import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
+import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
 import type { BoardRoster, PlanIssue, TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
@@ -147,7 +148,7 @@ export const useGrids = defineStore('grids', () => {
     const clamped = Math.min(Math.max(count, 1), MAX_GRID_COUNT)
     contexts.value.forEach((ctx) => ctx.dispose())
     contexts.value = Array.from({ length: clamped }, (_, i) =>
-      createGridContext(i, maps?.[i] ?? 'arena1', {
+      createGridContext(i, maps?.[i] ?? DEFAULT_MAP_KEY, {
         hexSize,
         teamView,
         inverted,
@@ -434,7 +435,12 @@ export const useGrids = defineStore('grids', () => {
   const sideLoadWouldReplace = (dest: Team, scope: SideLoadOptions['scope']): boolean =>
     sideLoadContexts(scope).some((ctx) => teamHasContent(ctx, dest))
 
-  /* Stamp a one-side saved team (lib/teams/sideLoad) onto the live boards:
+  // Read-only mirror of a full rebuild (New, the type switch): whether any
+  // board holds anything the rebuild would drop.
+  const boardsHaveContent = (): boolean =>
+    contexts.value.some((ctx) => [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)))
+
+  /* Stamp a one-sided saved team (lib/teams/sideLoad) onto the live boards:
    * clear the destination side first via clearTeam (the dock's per-team wipe:
    * skill cleanup, companion cascade, attr and artifact purge), then place
    * each unit on its saved hex, falling back to a random tile when the live
@@ -894,6 +900,7 @@ export const useGrids = defineStore('grids', () => {
     routeArtifactDrop,
     swapBoards,
     sideLoadWouldReplace,
+    boardsHaveContent,
     loadTeamSide,
     rostersWouldReplace,
     rosterConflicts,
