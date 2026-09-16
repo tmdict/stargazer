@@ -4,7 +4,7 @@ import { repositionCompanions } from '@/lib/characters/companion'
 import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { findMapByTiles } from '@/lib/maps'
+import { findMapByTiles, resolveBoardMap } from '@/lib/maps'
 import { Team } from '@/lib/types/team'
 import {
   unpackDisplayFlags,
@@ -216,10 +216,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
 
       // Boards beyond the supported maximum (a crafted URL) are dropped.
       const boards = multi.boards.slice(0, MAX_GRID_COUNT)
-      grids.setGridCount(
-        boards.length,
-        boards.map((b) => b.m),
-      )
+      grids.setGridCount(boards.length, boards.map(resolveBoardMap))
       boards.forEach((boardState, i) => {
         grids.setActive(i)
         applyGridState(boardState)

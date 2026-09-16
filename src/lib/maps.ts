@@ -32,19 +32,11 @@ export const MAPS: Record<string, MapConfig> = Object.fromEntries(
   Object.entries(loadArenas()).map(([key, json]) => [key, parseMapConfig(json)]),
 )
 
-export const DEFAULT_MAP = MAPS['arena1']!
+// The map a board stands on when nothing names one: fresh contexts, mode
+// default lists, and boards restored without a resolvable key.
+export const DEFAULT_MAP_KEY = 'arena1'
 
-// Per-board starting arenas for the 5v5 SL team mode, by board index. Keys index
-// src/data/arena/*.json; its length is the board count. Editing this list changes
-// the mode's persisted defaults fingerprint, which hard-resets every visitor's
-// active 5v5 SL boards on next load (saved teams keep their own maps).
-export const FIVE_V_FIVE_DEFAULT_MAPS = [
-  'arena1',
-  'arena2',
-  'preset-sr2',
-  'preset-sr3',
-  'preset-sr1',
-]
+export const DEFAULT_MAP = MAPS[DEFAULT_MAP_KEY]!
 
 export const getMapNames = (): Array<{ key: string; name: string }> => {
   return Object.entries(MAPS).map(([key, config]) => ({
@@ -86,3 +78,11 @@ export const findMapByTiles = (tiles: readonly number[][]): string | undefined =
   )
   return LAYOUTS.find((preset) => preset.layout === layout)?.key
 }
+
+/* The map a serialized board stands on: its key when present, else the preset
+ * its tiles reproduce, else the default map. The one rule shared by
+ * canonicalization (which fills `m` through it) and the multi-board restore,
+ * so a saved record and the live boards it loads into always name the same
+ * maps. */
+export const resolveBoardMap = (board: { m?: string; t?: number[][] }): string =>
+  board.m ?? findMapByTiles(board.t ?? []) ?? DEFAULT_MAP_KEY

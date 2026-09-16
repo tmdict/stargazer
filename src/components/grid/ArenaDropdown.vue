@@ -2,24 +2,25 @@
 import { computed, onUnmounted, ref } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
-import { FIVE_V_FIVE_DEFAULT_MAPS } from '@/lib/maps'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { useGridStore } from '@/stores/grid'
 import { useI18nStore } from '@/stores/i18n'
 
 const gridStore = useGridStore()
 const i18nStore = useI18nStore()
 
-// Quick-select slots: Supreme League follows the season's 5v5 map list, so a
-// season rollover in maps.ts updates those entries by itself; the GD slots are
-// pinned here. One map can back several slots (SL Arena 1 and GD Arena 1 are
-// both arena1), so entries key by label and every slot backed by the current
-// map highlights.
+// Quick-select slots: one row per map of every registered team type, so a
+// season rotation in the registry updates the entries by itself. One map can
+// back several slots (SL Arena 1 and GD Arena 1 are both arena1), so entries
+// key by label and every slot backed by the current map highlights.
 const quickMaps = computed(() => {
   const arena = i18nStore.t('app.arena')
-  return [
-    ...FIVE_V_FIVE_DEFAULT_MAPS.map((key, i) => ({ label: `SL ${arena} ${i + 1}`, key })),
-    ...['arena1', 'preset-sr3', 'arena5'].map((key, i) => ({ label: `GD ${arena} ${i + 1}`, key })),
-  ]
+  return Object.values(TEAM_VARIANTS).flatMap((variant) =>
+    variant.maps.map((key, i) => ({
+      label: `${variant.key.toUpperCase()} ${arena} ${i + 1}`,
+      key,
+    })),
+  )
 })
 
 // The first matching slot names the trigger; a map picked outside this list

@@ -15,7 +15,7 @@
 
 import { ref, watch, type Ref } from 'vue'
 
-import { isTeamModeKey, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import { isTeamModeKey, type TeamModeKey } from '@/lib/teams/modes'
 import { useArtifactStore } from '@/stores/artifact'
 import { useGridStore } from '@/stores/grid'
 import { useGrids } from '@/stores/grids'
@@ -50,20 +50,15 @@ export const loadTeamsDisplayPrefs = (): Required<DisplayFlags> | null => {
   return unpackDisplayFlags(packed)
 }
 
-/* A mode's persisted active team: the encoded snapshot, the saved team it was
- * loaded from / last saved to (null = not a saved team), and a fingerprint of
- * the mode's default maps at write time. A stale fingerprint discards the slot
- * on load: updating a mode's default map list (a new Supreme League season)
- * deliberately hard-resets that mode's active boards while saved teams keep
- * their own data. Versioned so a future shape change is detected, not shape-read. */
+/* A mode's persisted active team: the encoded snapshot and the saved team it
+ * was loaded from / last saved to (null = not a saved team). Versioned so a
+ * future shape change is detected, not shape-read; unknown keys are ignored on
+ * load and dropped by the next write. */
 export interface ActiveSlot {
   v: 1
   data: string
   sourceId: string | null
-  defaults: string
 }
-
-const defaultsFingerprint = (mode: TeamModeKey): string => TEAM_MODES[mode].defaultMaps.join(',')
 
 interface GridPersistence {
   load: () => string | null
@@ -140,12 +135,7 @@ export function useTeamsPersistence(
     )
 
   const write = (encoded: string): void => {
-    const slot: ActiveSlot = {
-      v: 1,
-      data: encoded,
-      sourceId: sourceId.value,
-      defaults: defaultsFingerprint(mode.value),
-    }
+    const slot: ActiveSlot = { v: 1, data: encoded, sourceId: sourceId.value }
     writeStorage(teamsSlotKey(mode.value), JSON.stringify(slot))
   }
 
@@ -161,14 +151,10 @@ export function useTeamsPersistence(
       try {
         const slot = JSON.parse(raw) as ActiveSlot
         if (slot.v !== 1 || typeof slot.data !== 'string') return null
-        // Stale defaults = the mode's map list changed since this slot was
-        // written; discard so the mode hard-resets onto the new defaults.
-        if (slot.defaults !== defaultsFingerprint(target)) return null
         return {
           v: 1,
           data: slot.data,
           sourceId: typeof slot.sourceId === 'string' ? slot.sourceId : null,
-          defaults: slot.defaults,
         }
       } catch {
         return null

@@ -135,9 +135,9 @@ ownership rule (scripts own feed-derivable text, humans own judgment).
 ### Adding an Arena Map
 
 Add `src/data/arena/<key>.json`; `src/lib/maps.ts` discovers it by filename. The
-Supreme League per-board defaults are `FIVE_V_FIVE_DEFAULT_MAPS` in the same file
-(editing that list hard-resets visitors' active 5v5 SL boards; see
-[TEAMS.md](./architecture/TEAMS.md), Team Modes).
+per-board map lists of the team types (Supreme League, Guild Duel) are the
+`TEAM_VARIANTS` rows in `src/lib/teams/modes.ts`; editing one resets nothing (see
+[TEAMS.md](./architecture/TEAMS.md), Team Modes and Types).
 
 ### Modifying Grid Logic
 

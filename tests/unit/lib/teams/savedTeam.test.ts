@@ -1,10 +1,13 @@
 import { describe, expect, it, vi } from 'vitest'
 
+import { DEFAULT_MAP_KEY } from '@/lib/maps'
+import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import {
   canonicalTeamData,
   duplicateName,
   nextAutoName,
   sanitizeTeamName,
+  uniqueName,
   validateSavedTeam,
 } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
@@ -43,11 +46,25 @@ describe('canonicalTeamData', () => {
     expect(canonicalTeamData(reordered)).toBe(canonical)
   })
 
-  it('re-resolves a missing or contradictory mode from the board count', () => {
+  it('re-resolves a missing, contradictory, or unknown mode from the board count', () => {
     const noMode = encode({ boards: THREE_BOARDS.boards })
     expect(decodeMultiGridStateFromUrl(canonicalTeamData(noMode)!)!.mode).toBe('3v3')
-    const wrongMode = encode({ boards: THREE_BOARDS.boards, mode: '5v5sl' })
+    const wrongMode = encode({ boards: THREE_BOARDS.boards, mode: '5v5' })
     expect(decodeMultiGridStateFromUrl(canonicalTeamData(wrongMode)!)!.mode).toBe('3v3')
+    const unknownMode = encode({ boards: THREE_BOARDS.boards, mode: '5v5sl' })
+    expect(decodeMultiGridStateFromUrl(canonicalTeamData(unknownMode)!)!.mode).toBe('3v3')
+  })
+
+  // Record-level derivations (the type chip) read `m`, and the restore gives a
+  // key-less board the default map, so canonical data must say the same.
+  it('fills a missing map key with the default map', () => {
+    const noKeys = encode({ boards: [{ c: [[1, 11, Team.ALLY]] }, {}, {}], mode: '3v3' })
+    const decoded = decodeMultiGridStateFromUrl(canonicalTeamData(noKeys)!)!
+    expect(decoded.boards.map((b) => b.m)).toEqual([
+      DEFAULT_MAP_KEY,
+      DEFAULT_MAP_KEY,
+      DEFAULT_MAP_KEY,
+    ])
   })
 
   it('returns null for undecodable or empty payloads', () => {
@@ -180,5 +197,21 @@ describe('validateSavedTeam', () => {
     const valid = validateSavedTeam(record({ createdAt: 'yesterday', updatedAt: null }))
     expect(valid!.createdAt).toBe(0)
     expect(valid!.updatedAt).toBe(0)
+  })
+})
+
+describe('uniqueName', () => {
+  it('returns the base when free and numbers collisions from 2', () => {
+    expect(uniqueName([], 'S7 SL')).toBe('S7 SL')
+    expect(uniqueName(['S7 SL'], 'S7 SL')).toBe('S7 SL - 2')
+    expect(uniqueName(['S7 SL', 'S7 SL - 2'], 'S7 SL')).toBe('S7 SL - 3')
+    expect(uniqueName(['S7 SL - 2'], 'S7 SL')).toBe('S7 SL')
+  })
+
+  it('truncates the base, not the suffix, at the name cap', () => {
+    const long = 'x'.repeat(MAX_TEAM_NAME_LENGTH)
+    const numbered = uniqueName([long], long)
+    expect(numbered).toHaveLength(MAX_TEAM_NAME_LENGTH)
+    expect(numbered.endsWith(' - 2')).toBe(true)
   })
 })

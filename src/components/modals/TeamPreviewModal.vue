@@ -5,6 +5,7 @@
 import BaseModal from './BaseModal.vue'
 import TeamPreview from '@/components/teams/TeamPreview.vue'
 import { TEAM_MODES } from '@/lib/teams/modes'
+import { teamTypeLabelKey } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -25,6 +26,9 @@ const i18n = useI18nStore()
     <h1>{{ team.name }}</h1>
     <div class="team-meta">
       <span class="meta-chip">{{ i18n.t(TEAM_MODES[team.mode].labelKey) }}</span>
+      <span v-if="teamTypeLabelKey(team.data)" class="meta-chip">
+        {{ i18n.t(teamTypeLabelKey(team.data)!) }}
+      </span>
     </div>
 
     <TeamPreview :team large />

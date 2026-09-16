@@ -71,7 +71,7 @@ Thin facades forwarding the single-board API to `useGrids().active`. Single-boar
 
 ### Multiple boards on the Teams page
 
-A `TEAM_MODES` entry (`/src/lib/teams/modes.ts`) selects the board count and default maps; `useTeamsRestore` orchestrates every rebuild while the page is live, and `TeamsView` resets to one board on leave. Each mode autosaves to its own slot (`stargazer.teams.active.<mode>`, a versioned envelope with saved-team provenance and a default-map fingerprint). See [Teams](./TEAMS.md).
+A `TEAM_MODES` entry (`/src/lib/teams/modes.ts`) selects the board count and default maps; `useTeamsRestore` orchestrates every rebuild while the page is live, and `TeamsView` resets to one board on leave. Each mode autosaves to its own slot (`stargazer.teams.active.<mode>`, a versioned envelope with saved-team provenance). See [Teams](./TEAMS.md).
 
 ### Invert (view rotation)
 

@@ -14,7 +14,14 @@ import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useTeamImport } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
-import { MAX_TEAM_NAME_LENGTH, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import {
+  DEFAULT_VARIANT,
+  MAX_TEAM_NAME_LENGTH,
+  TEAM_MODES,
+  TEAM_VARIANTS,
+  type TeamModeKey,
+  type VariantMatch,
+} from '@/lib/teams/modes'
 import {
   isBlockingIssue,
   NAME_FORBIDDEN,
@@ -31,6 +38,8 @@ import { localizedDisplayName } from '@/utils/nameFormatting'
 const { show, activeMode } = defineProps<{
   show: boolean
   activeMode: TeamModeKey
+  // The live boards' type, named beside the mode in the header.
+  variant: VariantMatch
 }>()
 
 const emit = defineEmits<{
@@ -211,8 +220,11 @@ const handleForgetLearned = (): void => {
       <h1>{{ i18n.t('app.import-title') }}</h1>
       <div class="meta">
         <span class="meta-chip">
-          {{ i18n.t(TEAM_MODES[activeMode].labelKey) }} ·
-          {{ i18n.t('app.import-maps-count', { count: mapCount }) }}
+          {{ i18n.t(TEAM_MODES[activeMode].labelKey) }}
+          <template v-if="variant !== null && variant !== DEFAULT_VARIANT">
+            {{ i18n.t(TEAM_VARIANTS[variant].labelKey) }}
+          </template>
+          · {{ i18n.t('app.import-maps-count', { count: mapCount }) }}
         </span>
         <span v-if="referenceStatus === 'loading'" class="note">
           {{ i18n.t('app.import-references-loading') }}

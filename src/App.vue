@@ -22,7 +22,7 @@ import { useLiftGuard } from '@/composables/useSelectionState'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
-import { runUpgradeStoragePass } from '@/utils/upgradeMigration'
+import { runModeStoragePass, runUpgradeStoragePass } from '@/utils/upgradeMigration'
 
 const isLogoHovered = ref(false)
 const showAboutModal = ref(false)
@@ -40,8 +40,11 @@ i18n.initialize()
 
 // TEMPORARY (delete with upgradeMigration.ts). Root setup runs before any
 // route child's persistence reads, and on every entry page, so stored boards
-// convert even for visitors who never open /teams.
+// convert even for visitors who never open /teams. The u-pass runs first so a
+// device that skipped a release converts the retired slot's rows before the
+// mode pass moves it.
 runUpgradeStoragePass()
+runModeStoragePass()
 
 // Permanent: root setup runs before any route child's persistence reads, and
 // the arena autosave must re-align once per season flip before its page can

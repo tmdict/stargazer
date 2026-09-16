@@ -20,11 +20,11 @@
         preview skills and targeting, and share formations.
       </li>
       <li>
-        <strong>Teams:</strong> Build teams in 1v1, 3v3, 5v5, and 5v5 Supreme League layouts,
-        dragging heroes across boards. Each mode remembers its own boards between visits, and the
-        saved-team library keeps named snapshots with thumbnails that you can reload, duplicate,
-        rename, and back up to a file. Also includes an Image Stitcher to combine separate
-        screenshots.
+        <strong>Teams:</strong> Build teams in 1v1, 3v3, and 5v5 layouts, with the Guild Duel and
+        Supreme League map sets one click away, dragging heroes across boards. Each layout remembers
+        its own boards between visits, and the saved-team library keeps named snapshots with
+        thumbnails that you can reload, duplicate, rename, and back up to a file. Also includes an
+        Image Stitcher to combine separate screenshots.
       </li>
       <li>
         <strong>Skills:</strong> Search every hero by name or skill text and read full skill
