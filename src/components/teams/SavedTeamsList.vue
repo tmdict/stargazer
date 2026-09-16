@@ -1,8 +1,8 @@
 <script setup lang="ts">
-/* The Saved Teams roster panel: header (count, cap warning, sort, mode and
-   one-sided filters, search, and Import / Export / Delete all), a type filter
-   row for board counts with named types, plus a card grid: thumbnail, mode,
-   type and Syn chips, inline-renamable name, relative updated time, and Load /
+/* The Saved Teams roster panel: a bar (count, cap warning, sort, search, and
+   Import / Export / Delete all), a filter row (mode, the type chips for board
+   counts with named types, one-sided), plus a card grid: thumbnail, mode, type
+   and Syn chips, inline-renamable name, relative updated time, and Load /
    Duplicate / Copy / Download / Delete actions. Destructive actions use the
    app's no-modal style: a two-step inline confirm that arms for a few seconds.
    User feedback (toasts) is fired here, not in the store. */
@@ -342,30 +342,6 @@ const actionTipText = computed((): string => {
             {{ i18n.t(`app.sort-${key}`) }}
           </button>
         </div>
-        <div class="seg-group" role="group" :aria-label="i18n.t('app.teams')">
-          <button
-            v-for="key in MODE_FILTERS"
-            :key
-            type="button"
-            :aria-pressed="modeFilter === key"
-            class="seg-btn"
-            :class="{ active: modeFilter === key }"
-            @click="modeFilter = key"
-          >
-            {{ key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey) }}
-          </button>
-        </div>
-        <div class="seg-group" role="group" :aria-label="i18n.t('app.one-sided')">
-          <button
-            type="button"
-            :aria-pressed="oneSideOnly"
-            class="seg-btn"
-            :class="{ active: oneSideOnly }"
-            @click="oneSideOnly = !oneSideOnly"
-          >
-            {{ i18n.t('app.one-sided') }}
-          </button>
-        </div>
         <input
           v-if="searchVisible"
           v-model="searchQuery"
@@ -423,26 +399,54 @@ const actionTipText = computed((): string => {
       </span>
     </div>
 
-    <!-- Wrapping chips rather than a pill segment: a board count may grow many
-         types, and this row must stay readable in the phone-width sheet. -->
-    <div
-      v-if="typeFilters.length > 0"
-      class="type-row"
-      role="group"
-      :aria-label="i18n.t('app.type')"
-    >
-      <span class="type-label">{{ i18n.t('app.type') }}</span>
-      <button
-        v-for="key in typeFilters"
-        :key
-        type="button"
-        :aria-pressed="typeFilter === key"
-        class="type-chip"
-        :class="{ active: typeFilter === key }"
-        @click="typeFilter = key"
+    <!-- The filters, in pipeline order (mode, type, one-sided), on their own
+         row so the bar keeps the library-wide controls. -->
+    <div class="filter-row">
+      <div class="seg-group" role="group" :aria-label="i18n.t('app.teams')">
+        <button
+          v-for="key in MODE_FILTERS"
+          :key
+          type="button"
+          :aria-pressed="modeFilter === key"
+          class="seg-btn"
+          :class="{ active: modeFilter === key }"
+          @click="modeFilter = key"
+        >
+          {{ key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey) }}
+        </button>
+      </div>
+      <!-- Wrapping chips rather than a pill segment: a board count may grow
+           many types, and the row must stay readable in the phone-width sheet. -->
+      <div
+        v-if="typeFilters.length > 0"
+        class="type-group"
+        role="group"
+        :aria-label="i18n.t('app.type')"
       >
-        {{ key === 'all' ? i18n.t('app.all') : typeLabel(key) }}
-      </button>
+        <span class="type-label">{{ i18n.t('app.type') }}</span>
+        <button
+          v-for="key in typeFilters"
+          :key
+          type="button"
+          :aria-pressed="typeFilter === key"
+          class="type-chip"
+          :class="{ active: typeFilter === key }"
+          @click="typeFilter = key"
+        >
+          {{ key === 'all' ? i18n.t('app.all') : typeLabel(key) }}
+        </button>
+      </div>
+      <div class="seg-group" role="group" :aria-label="i18n.t('app.one-sided')">
+        <button
+          type="button"
+          :aria-pressed="oneSideOnly"
+          class="seg-btn"
+          :class="{ active: oneSideOnly }"
+          @click="oneSideOnly = !oneSideOnly"
+        >
+          {{ i18n.t('app.one-sided') }}
+        </button>
+      </div>
     </div>
 
     <p v-if="library.count === 0" class="empty-state">
@@ -644,7 +648,7 @@ const actionTipText = computed((): string => {
   color: var(--color-warning);
 }
 
-/* Sized down from TeamModePicker's segmented style to fit the library bar. */
+/* Sized down from TeamModePicker's segmented style to fit the library panel. */
 .seg-group {
   display: inline-flex;
   margin-left: var(--spacing-sm);
@@ -678,8 +682,20 @@ const actionTipText = computed((): string => {
   color: #fff;
 }
 
-.type-row {
+.filter-row {
   display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--spacing-sm) var(--spacing-md);
+}
+
+/* The row's gap spaces the groups; the bar's segment inset does not apply. */
+.filter-row > .seg-group {
+  margin-left: 0;
+}
+
+.type-group {
+  display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
   gap: 6px;

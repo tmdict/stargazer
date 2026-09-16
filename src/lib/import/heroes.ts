@@ -204,10 +204,9 @@ export function rankHeroes(table: HeroTable, alignments: readonly Float32Array[]
   }
   leaders.sort((a, b) => b.score - a.score)
 
-  // Finer windows around the winning coarse window. Learned rows have no
-  // window to refine.
-  for (const lead of leaders.slice(0, REFINE_KEEP)) {
-    if (lead.learned) continue
+  // Learned rows have no windows to refine, so they must not consume the
+  // portrait search budget.
+  for (const lead of leaders.filter((lead) => !lead.learned).slice(0, REFINE_KEEP)) {
     const portrait = portraitOfRow(table, lead.row)
     const coarse = portrait && coarseWindowOfRow(lead.row, table)
     if (!portrait || !coarse) continue
