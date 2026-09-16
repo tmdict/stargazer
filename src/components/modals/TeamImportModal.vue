@@ -101,10 +101,11 @@ const handleDownloadCorrections = async (): Promise<void> => {
   }
 }
 
-const nameInvalid = computed(() =>
-  [names.prefix, names.left, names.right].some((name) => NAME_FORBIDDEN.test(name)),
+const nameInvalid = computed(
+  () =>
+    plan.value.suggestedName !== '' &&
+    [names.prefix, names.left, names.right].some((name) => NAME_FORBIDDEN.test(name)),
 )
-const namesMissing = computed(() => names.left.trim() === '' || names.right.trim() === '')
 // The library would clip the name, losing the map lists at its end.
 const nameTooLong = computed(() => plan.value.suggestedName.length > MAX_TEAM_NAME_LENGTH)
 
@@ -190,6 +191,11 @@ const handleSaveAsNew = (): void => {
   saveNames()
   emit('importMatch', plan.value)
   clearShots()
+}
+
+const handleForgetLearned = (): void => {
+  if (!confirm('forget')) return
+  forgetLearned()
 }
 </script>
 
@@ -320,12 +326,12 @@ const handleSaveAsNew = (): void => {
         <button
           type="button"
           class="footer-btn danger"
-          :class="{ armed: armed !== null }"
-          :disabled="blocked || namesMissing"
+          :class="{ armed: armed === 'save' }"
+          :disabled="blocked"
           @click="handleSaveAsNew"
         >
           {{
-            armed !== null
+            armed === 'save'
               ? i18n.t('app.confirm')
               : i18n.t('app.import-save-as-new', { count: mappedCount })
           }}
@@ -342,8 +348,18 @@ const handleSaveAsNew = (): void => {
         >
           {{ i18n.t('app.import-download-corrections') }}
         </button>
-        <button v-if="learnedCount > 0" type="button" class="link-btn" @click="forgetLearned">
-          {{ i18n.t('app.import-forget-learned', { count: learnedCount }) }}
+        <button
+          v-if="learnedCount > 0"
+          type="button"
+          class="link-btn"
+          :class="{ armed: armed === 'forget' }"
+          @click="handleForgetLearned"
+        >
+          {{
+            armed === 'forget'
+              ? i18n.t('app.confirm')
+              : i18n.t('app.import-forget-learned', { count: learnedCount })
+          }}
         </button>
       </div>
     </div>
@@ -602,6 +618,10 @@ const handleSaveAsNew = (): void => {
 
 .link-btn:hover {
   color: var(--import-text);
+}
+
+.link-btn.armed {
+  color: var(--import-bad);
 }
 
 .link-btn + .link-btn {
