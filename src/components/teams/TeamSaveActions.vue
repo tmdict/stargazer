@@ -7,7 +7,7 @@
    the library it acts on. The root is display: contents, so every control sits
    directly in the action row's flex flow with its spacing. */
 
-import { computed, nextTick, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
 import IconSave from '@/components/ui/IconSave.vue'
@@ -15,14 +15,19 @@ import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
+import { MAX_TEAM_NAME_LENGTH, type TeamModeKey, type VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
-const { hasSource, suggestedName } = defineProps<{
+const { hasSource, suggestedName, activeMode, variant, sourceId } = defineProps<{
   // Whether Save has a source team to update; false degrades Save to Save as New.
   hasSource: boolean
-  // Prefill for the Save-as-New popover ("Team N").
+  // Prefill for the Save-as-New popover ("Team N", "S7 SL").
   suggestedName: string
+  // The boards' identity for the armed New: a change in any of the three
+  // means the boards were replaced under an armed click.
+  activeMode: TeamModeKey
+  variant: VariantMatch
+  sourceId: string | null
 }>()
 
 const emit = defineEmits<{
@@ -57,7 +62,10 @@ const handleSave = (): void => {
 }
 
 // New discards the boards' current content, so it confirms like Clear does.
-const { armed, confirm } = useArmedConfirm()
+// An armed New must not outlive the boards it was armed for: a mode switch, a
+// type switch, or a Load in the window replaces them, so the click disarms.
+const { armed, confirm, disarm } = useArmedConfirm()
+watch([() => activeMode, () => variant, () => sourceId], disarm)
 
 const handleNew = (): void => {
   if (!confirm('new')) return

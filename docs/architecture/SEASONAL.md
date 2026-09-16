@@ -122,7 +122,7 @@ Seasonal artifact and phantimal ids are reused each season, so a bare id cannot 
 3. Replace the hand-curated structural and name files; new content reuses the freed ids with the new `season`. `tests/unit/lib/seasonal.test.ts` asserts every non-zero data season equals `CURRENT_SEASON` and pins the value, so a partial or forgotten bump fails loudly.
 4. Replace `lib/skills/seasonal/phantimal.ts` and the season's targeting entries in `lib/skills/artifact.ts`, with their tests.
 5. `npm run import:seasonal`.
-6. Rotate seasonal preset maps onto freed `MAP_WIRE_IDS` (`src/lib/teams/wire.ts`) and update `FIVE_V_FIVE_DEFAULT_MAPS` (`src/lib/maps.ts`) if the Supreme League rotation changed.
+6. Rotate seasonal preset maps onto freed `MAP_WIRE_IDS` (`src/lib/teams/wire.ts`) and edit the `sl` row of `TEAM_VARIANTS` (`src/lib/teams/modes.ts`) if the Supreme League list changed. Nothing resets: slots and records keep their maps, and boards on the old list simply stop reading as Supreme League (no chip, out of the type filter).
 7. Full tests, deploy. No stored-data rewrites: the derived season flips the read rule everywhere, and each device's rotation pass cleans its arena autosave on first visit.
 
 ### Feature retirement
@@ -134,5 +134,5 @@ Seasonal artifact and phantimal ids are reused each season, so a bare id cannot 
 ## Related Documentation
 
 - [`/docs/architecture/URL_SERIALIZATION.md`](./URL_SERIALIZATION.md) - Board sections, including the phantimal `s` section and map wire ids
-- [`/docs/architecture/TEAMS.md`](./TEAMS.md) - Team ingress, canonical records and default-map fingerprints
+- [`/docs/architecture/TEAMS.md`](./TEAMS.md) - Team ingress, canonical records and team types
 - [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Skill registry and artifact targeting

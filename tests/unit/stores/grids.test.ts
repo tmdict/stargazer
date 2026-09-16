@@ -911,7 +911,7 @@ describe('useGrids.loadTeamSide', () => {
       ],
       mode: '1v1',
     })
-    const plan = buildSideLoadPlan(data, TEAM_MODES['5v5sl'].allowSynergy)!
+    const plan = buildSideLoadPlan(data, TEAM_MODES['5v5'].allowSynergy)!
     const result = grids.loadTeamSide(plan, { invert: false, scope: 'active' })
 
     expect(result).toEqual({ placed: 3, skipped: 0 })

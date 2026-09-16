@@ -28,11 +28,20 @@ import { disposeTeamImport } from '@/composables/useTeamImport'
 import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
-import { MAX_SAVED_TEAMS, TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
+import { CURRENT_SEASON } from '@/lib/seasonal'
+import {
+  DEFAULT_VARIANT,
+  MAX_SAVED_TEAMS,
+  TEAM_MODES,
+  TEAM_VARIANTS,
+  type TeamModeKey,
+  type TeamVariantChoice,
+} from '@/lib/teams/modes'
 import {
   canonicalTeamData,
   nextAutoName,
   teamContentKey,
+  uniqueName,
   type SavedTeam,
 } from '@/lib/teams/savedTeam'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
@@ -115,9 +124,12 @@ const teamsRestore = useTeamsRestore({
   // Stale provenance (deleted teams, restored backups) self-heals to null.
   resolveSourceId: (id) => (id !== null && teamLibrary.get(id) ? id : null),
 })
-const { activeMode } = teamsRestore
+const { activeMode, variant } = teamsRestore
 
 const canWrap = computed(() => !isSheet.value && TEAM_MODES[activeMode.value].canWrap)
+
+// A type switch rebuilds every board, so it confirms whenever one holds anything.
+const variantWouldReplace = computed(() => grids.boardsHaveContent())
 
 // The Save button's target and the unsaved-changes indicator. Both sides of
 // the dirty compare are content keys (canonical, viewer state stripped, and
@@ -132,11 +144,17 @@ const dirty = computed(
     teamContentKey(canonicalActive.value) !== teamContentKey(sourceTeam.value.data),
 )
 // A match import names the boards it filled; the name is offered by Save as
-// New until the boards are saved, replaced, or loaded.
+// New until the boards are saved, replaced, or loaded. Otherwise boards on a
+// named type are offered the season and type ("S7 SL", then "S7 SL - 2"),
+// the way most people already name them; anything else gets "Team N".
 const pendingName = ref<string | null>(null)
-const suggestedName = computed(
-  () => pendingName.value ?? nextAutoName(teamLibrary.teams.map((team) => team.name)),
-)
+const suggestedName = computed(() => {
+  if (pendingName.value !== null) return pendingName.value
+  const names = teamLibrary.teams.map((team) => team.name)
+  const match = variant.value
+  if (match === null || match === DEFAULT_VARIANT) return nextAutoName(names)
+  return uniqueName(names, `S${CURRENT_SEASON} ${i18n.t(TEAM_VARIANTS[match].labelKey)}`)
+})
 
 const handleSave = () => {
   const canonical = canonicalActive.value
@@ -169,9 +187,14 @@ const handleNewTeam = () => {
 }
 
 // The pending name belongs to the boards an import filled, not to the slot of
-// another mode.
+// another mode nor to the fresh boards a type switch builds.
 const handleSwitchMode = (mode: TeamModeKey) => {
   teamsRestore.switchMode(mode)
+  pendingName.value = null
+}
+
+const handleSelectVariant = (choice: TeamVariantChoice) => {
+  teamsRestore.switchVariant(choice)
   pendingName.value = null
 }
 
@@ -282,7 +305,10 @@ const handleCopyLink = () => {
                 v-model:wrap="wrapBoards"
                 :characters="gameDataStore.characters"
                 :active-mode="activeMode"
+                :variant
+                :variant-would-replace
                 :info
+                :source-id="teamsRestore.sourceId.value"
                 :source-name="sourceTeam?.name ?? null"
                 :dirty="dirty"
                 :suggested-name="suggestedName"
@@ -290,6 +316,7 @@ const handleCopyLink = () => {
                 :tap-mode="isSheet"
                 :can-wrap="canWrap"
                 @switch-mode="handleSwitchMode"
+                @select-variant="handleSelectVariant"
                 @new-team="handleNewTeam"
                 @save="handleSave"
                 @save-as-new="handleSaveAsNew"

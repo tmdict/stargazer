@@ -1,8 +1,10 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { canonicalTeamData } from '@/lib/teams/savedTeam'
+import { TEAM_VARIANTS } from '@/lib/teams/modes'
+import { canonicalTeamData, validateSavedTeam } from '@/lib/teams/savedTeam'
+import { parseImport } from '@/lib/teams/transfer'
 import { Team } from '@/lib/types/team'
-import { urlSafeToBytes } from '@/utils/binaryEncoder'
+import { bytesToUrlSafe, decodeLink, urlSafeToBytes } from '@/utils/binaryEncoder'
 import {
   packDisplayFlags,
   unpackDisplayFlags,
@@ -12,23 +14,30 @@ import { runSeasonRotationPass } from '@/utils/seasonRotation'
 import {
   convertLegacyBoard,
   decodeLegacyLink,
+  runModeStoragePass,
   runUpgradeStoragePass,
 } from '@/utils/upgradeMigration'
 import {
   decodeLinkFromUrl,
   decodeMultiGridStateFromUrl,
   encodeGridStateToUrl,
+  encodeMultiGridStateToLinkUrl,
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
 import { stubLocalStorage } from '../fixtures/storage'
 
-/* TEMPORARY suite for the one-time p -> u conversion; deleted together with
- * src/utils/upgradeMigration.ts (see its header for the removal steps). */
+/* TEMPORARY suite for the one-time p -> u conversion and the 5v5sl
+ * retirement; deleted together with src/utils/upgradeMigration.ts (see its
+ * header for the removal steps). */
 
 const MARKER_KEY = 'stargazer.migration.u'
 const ARENA_KEY = 'stargazer.arena'
 const LIBRARY_KEY = 'stargazer.teams.saved'
 const SLOT_KEY = 'stargazer.teams.active.5v5sl'
+const FIVE_SLOT_KEY = 'stargazer.teams.active.5v5'
+const TEAMS_MODE_KEY = 'stargazer.teams.mode'
+const MODE_MARKER_KEY = 'stargazer.migration.sl'
+const MODE_MOVE_KEY = 'stargazer.migration.sl.move'
 
 // LSB-first bit assembler mirroring the retired v1 writer, so the shim can be
 // fed genuine pre-v2 payloads.
@@ -437,5 +446,185 @@ describe('upgradeMigration composed with the season rotation pass', () => {
     expect(storage.get(ARENA_KEY)).toBe(
       encodeGridStateToUrl({ c: [[2, 100, Team.ALLY]], u: [[Team.ALLY, 100, 1, 4]] }),
     )
+  })
+})
+
+/* The 5v5sl retirement: Supreme League is a type of 5v5 read off the boards'
+ * maps, so links carrying wire id 4 and records saying 5v5sl convert once. */
+
+const slBoards = (): MultiGridState['boards'] =>
+  TEAM_VARIANTS.sl.maps.map((m, i) => (i === 0 ? { m, c: [[1, 11, Team.ALLY]] } : { m }))
+
+const slRecordData = (mode: string): string =>
+  encodeMultiGridStateToUrl({ boards: slBoards(), mode } as MultiGridState)
+
+describe('upgradeMigration mode retirement: links', () => {
+  const DEFAULT_FLAGS = packDisplayFlags(unpackDisplayFlags(undefined))
+
+  // A 5v5sl link is a 5v5 link whose first 3 bits say 4 instead of 3.
+  const retiredLink = (): Uint8Array => {
+    const bytes = urlSafeToBytes(
+      encodeMultiGridStateToLinkUrl({ boards: slBoards(), mode: '5v5', active: 2, d: 5 }),
+    )!
+    bytes[0] = (bytes[0]! & ~0b111) | 4
+    return bytes
+  }
+
+  it('re-reads a wire-id-4 link as 5v5 with its boards intact', () => {
+    expect(decodeLinkFromUrl(bytesToUrlSafe(retiredLink()))).toEqual({
+      mode: '5v5',
+      active: 2,
+      d: 5,
+      boards: slBoards(),
+    })
+  })
+
+  it('the strict decoder itself rejects id 4, which is what the patch relies on', () => {
+    expect(decodeLink(retiredLink())).toBeNull()
+  })
+
+  // The patch works on a copy: a v1 arena header whose tile count is 4 mod 8
+  // shares the low bits and must still reach the frozen v1 reader untouched.
+  it('leaves a v1 payload with four tiles to the v1 reader', () => {
+    const tiles: [number, number][] = [
+      [1, 1],
+      [2, 2],
+      [3, 1],
+      [4, 2],
+    ]
+    const encoded = v1Encode((push) => {
+      push(0x04, 8) // header: 4 tiles, nothing else
+      for (const [hexId, state] of tiles) {
+        push(hexId, 6)
+        push(state, 3)
+      }
+    })
+    expect(decodeLinkFromUrl(encoded)).toEqual({
+      mode: 'arena',
+      active: 0,
+      d: DEFAULT_FLAGS,
+      boards: [{ t: tiles }],
+    })
+  })
+})
+
+describe('upgradeMigration mode retirement: storage pass', () => {
+  const retiredSlot = (): string =>
+    JSON.stringify({ v: 1, data: slRecordData('5v5sl'), sourceId: 'team-sl' })
+
+  it('moves the retired slot into 5v5 when it was the last-used mode', () => {
+    storage.set(TEAMS_MODE_KEY, '5v5sl')
+    storage.set(SLOT_KEY, retiredSlot())
+    storage.set(FIVE_SLOT_KEY, 'stale-five')
+    runModeStoragePass()
+    expect(storage.get(TEAMS_MODE_KEY)).toBe('5v5')
+    expect(storage.get(FIVE_SLOT_KEY)).toBe(retiredSlot())
+    expect(storage.has(SLOT_KEY)).toBe(false)
+    expect(storage.has(MODE_MOVE_KEY)).toBe(false)
+    expect(storage.get(MODE_MARKER_KEY)).toBe('1')
+  })
+
+  it('drops the retired slot when another mode was last used, whether or not 5v5 has a slot', () => {
+    storage.set(TEAMS_MODE_KEY, '3v3')
+    storage.set(SLOT_KEY, retiredSlot())
+    storage.set(FIVE_SLOT_KEY, 'five')
+    runModeStoragePass()
+    expect(storage.get(TEAMS_MODE_KEY)).toBe('3v3')
+    expect(storage.get(FIVE_SLOT_KEY)).toBe('five')
+    expect(storage.has(SLOT_KEY)).toBe(false)
+
+    storage.delete(MODE_MARKER_KEY)
+    storage.delete(FIVE_SLOT_KEY)
+    storage.set(SLOT_KEY, retiredSlot())
+    runModeStoragePass()
+    expect(storage.has(FIVE_SLOT_KEY)).toBe(false)
+    expect(storage.has(SLOT_KEY)).toBe(false)
+    expect(storage.get(MODE_MARKER_KEY)).toBe('1')
+  })
+
+  it('rewrites library records from 5v5sl to 5v5 and leaves everything else raw', () => {
+    const sl = {
+      id: 'a',
+      name: 'SL',
+      mode: '5v5sl',
+      data: slRecordData('5v5sl'),
+      createdAt: 1,
+      updatedAt: 2,
+    }
+    const duel = { id: 'b', name: 'Duel', mode: '1v1', data: 'x', createdAt: 1, updatedAt: 2 }
+    const junk = { id: 'junk', data: 42 }
+    storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [sl, duel, junk] }))
+    runModeStoragePass()
+    const blob = JSON.parse(storage.get(LIBRARY_KEY)!) as { v: number; teams: unknown[] }
+    expect(blob.teams).toEqual([{ ...sl, mode: '5v5' }, duel, junk])
+  })
+
+  it('writes the marker LAST and keeps the old slot when the copy fails', () => {
+    storage.set(TEAMS_MODE_KEY, '5v5sl')
+    storage.set(SLOT_KEY, retiredSlot())
+    const failing = vi
+      .spyOn(globalThis.localStorage, 'setItem')
+      .mockImplementation((key: string, value: string) => {
+        if (key === FIVE_SLOT_KEY) throw new Error('quota')
+        storage.set(key, value)
+      })
+    runModeStoragePass()
+    expect(storage.get(SLOT_KEY)).toBe(retiredSlot())
+    expect(storage.get(TEAMS_MODE_KEY)).toBe('5v5sl')
+    expect(storage.get(MODE_MOVE_KEY)).toBe('1')
+    expect(storage.has(MODE_MARKER_KEY)).toBe(false)
+    failing.mockRestore()
+
+    // The decision survives even when startup has since rewritten last-used.
+    storage.set(TEAMS_MODE_KEY, '5v5')
+    runModeStoragePass()
+    expect(storage.get(FIVE_SLOT_KEY)).toBe(retiredSlot())
+    expect(storage.has(SLOT_KEY)).toBe(false)
+    expect(storage.has(MODE_MOVE_KEY)).toBe(false)
+    expect(storage.get(MODE_MARKER_KEY)).toBe('1')
+  })
+
+  it('is idempotent and byte-stable on a marker-less rerun', () => {
+    storage.set(TEAMS_MODE_KEY, '5v5sl')
+    storage.set(SLOT_KEY, retiredSlot())
+    runModeStoragePass()
+    const after = new Map(storage)
+    runModeStoragePass()
+    expect(storage).toEqual(after)
+    storage.delete(MODE_MARKER_KEY)
+    runModeStoragePass()
+    expect(storage).toEqual(after)
+  })
+})
+
+describe('upgradeMigration mode retirement: records', () => {
+  const retiredRecord = () => ({
+    id: 'team-sl',
+    name: 'S7 SL',
+    mode: '5v5sl',
+    data: slRecordData('5v5sl'),
+    createdAt: 1,
+    updatedAt: 2,
+  })
+
+  it('validateSavedTeam accepts a 5v5sl record as 5v5 with data resolving to 5v5', () => {
+    const valid = validateSavedTeam(retiredRecord())!
+    expect(valid.mode).toBe('5v5')
+    expect(decodeMultiGridStateFromUrl(valid.data)!.mode).toBe('5v5')
+    expect(valid.data).toBe(canonicalTeamData(slRecordData('5v5')))
+  })
+
+  it('parseImport accepts an export file whose records still say 5v5sl', () => {
+    const file = JSON.stringify({
+      app: 'stargazer',
+      kind: 'saved-teams',
+      version: 1,
+      exportedAt: 'x',
+      teams: [retiredRecord()],
+    })
+    const result = parseImport(file, [])
+    expect(result).toMatchObject({ ok: true, skipped: 0, conflicts: 0 })
+    const teams = result.ok ? result.teams : []
+    expect(teams.map((team) => team.mode)).toEqual(['5v5'])
   })
 })

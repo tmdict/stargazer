@@ -5,9 +5,17 @@
  * mapping unit-testable headless. */
 
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
+import { resolveBoardMap } from '@/lib/maps'
 import { isPermanentArtifactId, isRetiredSeason } from '@/lib/seasonal'
 import type { Team } from '@/lib/types/team'
 import { decodeMultiGridStateFromUrl } from '@/utils/urlStateManager'
+import {
+  DEFAULT_VARIANT,
+  matchVariant,
+  resolveTeamMode,
+  TEAM_VARIANTS,
+  type VariantMatch,
+} from './modes'
 
 export interface PreviewUnit {
   hexId: number
@@ -75,7 +83,7 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       units.push({ hexId, team: team as Team, characterId: localId })
     }
     return {
-      mapKey: board.m ?? 'arena1',
+      mapKey: resolveBoardMap(board),
       tiles: board.t,
       units,
       artifacts: { ally: artifactSlot(board.a?.[0]), enemy: artifactSlot(board.a?.[1]) },
@@ -84,6 +92,29 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
 }
 
 // Memoized on the immutable data string (records mutate by replacement).
+const variantCache = new Map<string, VariantMatch>()
+
+/* The record's type (matchVariant): derived from its boards' maps against the
+ * current registry and never stored, so a rotation that edits a registry row
+ * changes the answer for every record at once. */
+export function teamVariant(data: string): VariantMatch {
+  const cached = variantCache.get(data)
+  if (cached !== undefined) return cached
+  const decoded = decodeMultiGridStateFromUrl(data)
+  const result = decoded
+    ? matchVariant(resolveTeamMode(decoded), decoded.boards.map(resolveBoardMap))
+    : null
+  variantCache.set(data, result)
+  return result
+}
+
+/* The label key of the record's named type, for the card chips; null for
+ * default or custom maps, which get no chip. */
+export function teamTypeLabelKey(data: string): string | null {
+  const variant = teamVariant(data)
+  return variant === null || variant === DEFAULT_VARIANT ? null : TEAM_VARIANTS[variant].labelKey
+}
+
 const synergyCache = new Map<string, boolean>()
 
 /* Whether the record fields a friend-assist unit. The Syn toggle itself is

@@ -9,7 +9,7 @@ import { defineAsyncComponent, ref } from 'vue'
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import type { TeamModeKey } from '@/lib/teams/modes'
+import type { TeamModeKey, VariantMatch } from '@/lib/teams/modes'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -17,7 +17,7 @@ const TeamImportModal = defineAsyncComponent(
   () => import('@/components/modals/TeamImportModal.vue'),
 )
 
-defineProps<{ activeMode: TeamModeKey }>()
+defineProps<{ activeMode: TeamModeKey; variant: VariantMatch }>()
 
 const emit = defineEmits<{
   importMatch: [plan: TeamImportPlan]
@@ -64,6 +64,7 @@ const handleImport = (plan: TeamImportPlan): void => {
     v-if="mounted"
     :show="open"
     :active-mode
+    :variant
     @close="open = false"
     @import-match="handleImport"
   />

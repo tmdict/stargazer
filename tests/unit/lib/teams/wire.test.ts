@@ -1,8 +1,10 @@
 /* Contract tests for the wire-id registry. The registry duplicates board
  * counts and enumerates maps by hand (it must stay a pure leaf), so these
- * tests enforce the two halves of that bargain: the ids are frozen (append-only
- * — reassigning one silently re-routes every existing link) and the registry
- * stays complete against the real TEAM_MODES / MAPS data it mirrors. */
+ * tests enforce the two halves of that bargain: the ids in use are pinned
+ * (reassigning one silently re-routes every live link) and the registry stays
+ * complete against the real TEAM_MODES / MAPS data it mirrors. The mode table
+ * grows only for a new board count: an in-game mode on an existing count is a
+ * TEAM_VARIANTS row and has no wire presence. */
 
 import { describe, expect, it } from 'vitest'
 
@@ -18,14 +20,14 @@ import {
 } from '@/lib/teams/wire'
 
 describe('wire registry', () => {
-  it('pins the mode wire ids', () => {
+  it('pins the mode wire ids: arena plus exactly the TEAM_MODES board counts', () => {
     expect(WIRE_MODES).toEqual([
       { wireId: 0, key: 'arena', boardCount: 1 },
       { wireId: 1, key: '1v1', boardCount: 1 },
       { wireId: 2, key: '3v3', boardCount: 3 },
       { wireId: 3, key: '5v5', boardCount: 5 },
-      { wireId: 4, key: '5v5sl', boardCount: 5 },
     ])
+    expect(WIRE_MODES.map((mode) => mode.key)).toEqual(['arena', ...Object.keys(TEAM_MODES)])
   })
 
   it('pins the map wire ids', () => {
