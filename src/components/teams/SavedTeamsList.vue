@@ -1,10 +1,11 @@
 <script setup lang="ts">
 /* The Saved Teams roster panel: header (count, cap warning, sort, mode and
-   one-side filters, search, and Import / Export / Delete all) plus a card grid:
-   thumbnail, mode and Syn chips, inline-renamable name, relative updated time,
-   and Load / Duplicate / Copy / Download / Delete actions. Destructive actions use
-   the app's no-modal style: a two-step inline confirm that arms for a few
-   seconds. User feedback (toasts) is fired here, not in the store. */
+   one-sided filters, search, and Import / Export / Delete all), a type filter
+   row for board counts with named types, plus a card grid: thumbnail, mode,
+   type and Syn chips, inline-renamable name, relative updated time, and Load /
+   Duplicate / Copy / Download / Delete actions. Destructive actions use the
+   app's no-modal style: a two-step inline confirm that arms for a few seconds.
+   User feedback (toasts) is fired here, not in the store. */
 
 import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
@@ -26,13 +27,17 @@ import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
 import {
+  DEFAULT_VARIANT,
   MAX_SAVED_TEAMS,
   MAX_TEAM_NAME_LENGTH,
   TEAM_MODE_ORDER,
   TEAM_MODES,
+  TEAM_VARIANTS,
+  variantsForMode,
   type TeamModeKey,
+  type TeamVariantChoice,
 } from '@/lib/teams/modes'
-import { teamHasSynergy } from '@/lib/teams/preview'
+import { teamHasSynergy, teamTypeLabelKey, teamVariant } from '@/lib/teams/preview'
 import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { savedTeamSide } from '@/lib/teams/sideLoad'
 import { useI18nStore } from '@/stores/i18n'
@@ -87,13 +92,37 @@ const modeFiltered = computed(() =>
     : sorted.value.filter((team) => team.mode === modeFilter.value),
 )
 
+// The type row exists only for a board count with named types; its choices
+// come from the registry, so a new type appears here by itself. A type belongs
+// to one board count, so any change of the mode filter resets the selection:
+// a stale one would show an empty list with nothing lit.
+type TypeFilter = 'all' | TeamVariantChoice
+const typeFilter = ref<TypeFilter>('all')
+const typeFilters = computed((): TypeFilter[] => {
+  if (modeFilter.value === 'all') return []
+  const variants = variantsForMode(modeFilter.value)
+  return variants.length === 0
+    ? []
+    : ['all', DEFAULT_VARIANT, ...variants.map((variant) => variant.key)]
+})
+watch(modeFilter, () => {
+  typeFilter.value = 'all'
+})
+const typeFiltered = computed(() =>
+  typeFilter.value === 'all'
+    ? modeFiltered.value
+    : modeFiltered.value.filter((team) => teamVariant(team.data) === typeFilter.value),
+)
+const typeLabel = (choice: TeamVariantChoice): string =>
+  choice === DEFAULT_VARIANT ? i18n.t('app.default') : i18n.t(TEAM_VARIANTS[choice].labelKey)
+
 // Narrows to teams the Load menu can side-load (savedTeamSide: every unit on
 // one team). Like the mode filter, deliberately not persisted.
 const oneSideOnly = ref(false)
 const sideFiltered = computed(() =>
   oneSideOnly.value
-    ? modeFiltered.value.filter((team) => savedTeamSide(team.data) !== null)
-    : modeFiltered.value,
+    ? typeFiltered.value.filter((team) => savedTeamSide(team.data) !== null)
+    : typeFiltered.value,
 )
 
 // Matching itself (name hit with highlight snippet, hero hit at 2+ characters)
@@ -196,7 +225,8 @@ const fileInput = ref<HTMLInputElement>()
 const filterLabels = computed((): string[] => {
   const labels: string[] = []
   if (modeFilter.value !== 'all') labels.push(i18n.t(TEAM_MODES[modeFilter.value].labelKey))
-  if (oneSideOnly.value) labels.push(i18n.t('app.one-side'))
+  if (typeFilter.value !== 'all') labels.push(typeLabel(typeFilter.value))
+  if (oneSideOnly.value) labels.push(i18n.t('app.one-sided'))
   const query = searchQuery.value.trim()
   if (query) labels.push(`“${query}”`)
   return labels
@@ -325,7 +355,7 @@ const actionTipText = computed((): string => {
             {{ key === 'all' ? i18n.t('app.all') : i18n.t(TEAM_MODES[key].labelKey) }}
           </button>
         </div>
-        <div class="seg-group" role="group" :aria-label="i18n.t('app.one-side')">
+        <div class="seg-group" role="group" :aria-label="i18n.t('app.one-sided')">
           <button
             type="button"
             :aria-pressed="oneSideOnly"
@@ -333,7 +363,7 @@ const actionTipText = computed((): string => {
             :class="{ active: oneSideOnly }"
             @click="oneSideOnly = !oneSideOnly"
           >
-            {{ i18n.t('app.one-side') }}
+            {{ i18n.t('app.one-sided') }}
           </button>
         </div>
         <input
@@ -391,6 +421,28 @@ const actionTipText = computed((): string => {
           @change="handleFileChosen"
         />
       </span>
+    </div>
+
+    <!-- Wrapping chips rather than a pill segment: a board count may grow many
+         types, and this row must stay readable in the phone-width sheet. -->
+    <div
+      v-if="typeFilters.length > 0"
+      class="type-row"
+      role="group"
+      :aria-label="i18n.t('app.type')"
+    >
+      <span class="type-label">{{ i18n.t('app.type') }}</span>
+      <button
+        v-for="key in typeFilters"
+        :key
+        type="button"
+        :aria-pressed="typeFilter === key"
+        class="type-chip"
+        :class="{ active: typeFilter === key }"
+        @click="typeFilter = key"
+      >
+        {{ key === 'all' ? i18n.t('app.all') : typeLabel(key) }}
+      </button>
     </div>
 
     <p v-if="library.count === 0" class="empty-state">
@@ -461,6 +513,9 @@ const actionTipText = computed((): string => {
 
         <div class="card-meta-row">
           <span class="mode-chip">{{ modeChip(team) }}</span>
+          <span v-if="teamTypeLabelKey(team.data)" class="mode-chip">
+            {{ i18n.t(teamTypeLabelKey(team.data)!) }}
+          </span>
           <span v-if="teamHasSynergy(team.data)" class="mode-chip">
             {{ i18n.t('app.synergy') }}
           </span>
@@ -620,6 +675,47 @@ const actionTipText = computed((): string => {
 
 .seg-btn.active {
   background: var(--color-primary);
+  color: #fff;
+}
+
+.type-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.type-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--color-text-secondary);
+  margin-right: 2px;
+}
+
+.type-chip {
+  border: 1.5px solid var(--color-border-primary);
+  background: transparent;
+  border-radius: 999px;
+  padding: 2px 11px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.type-chip:hover:not(.active) {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+  background: var(--color-bg-tertiary);
+}
+
+.type-chip.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
   color: #fff;
 }
 

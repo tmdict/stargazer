@@ -91,7 +91,8 @@ const mountImport = async () => {
   const host = document.createElement('div')
   document.body.append(host)
   const app = createApp({
-    render: () => h(TeamImportModal, { show: true, activeMode: '3v3', onImportMatch: saved }),
+    render: () =>
+      h(TeamImportModal, { show: true, activeMode: '3v3', variant: null, onImportMatch: saved }),
   })
   app.use(pinia)
   app.mount(host)

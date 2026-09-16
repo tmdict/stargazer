@@ -14,6 +14,7 @@ import {
   isKnownAttrId,
   type AttrRow,
 } from '@/lib/characters/attributes'
+import { resolveBoardMap } from '@/lib/maps'
 import { hasRetiredSeasonal, hasSeasonalContent } from '@/lib/seasonal'
 import {
   BOARD_CONTENT_KEYS,
@@ -80,7 +81,10 @@ const canonicalAttrRows = (rows: unknown): AttrRow[] | undefined => {
  * BOARD_CONTENT_KEYS (the serializer's emission order) so a hand-ordered import
  * and a fresh serialize of the same content produce identical bytes, and any
  * unregistered key is dropped. The mode is re-resolved so a canonical string is
- * total and self-consistent even for hand-crafted input. Null = undecodable. */
+ * total and self-consistent even for hand-crafted input, and every board gets
+ * its map key through the restore's own rule, so record-level derivations (the
+ * type chip) and the live boards a record loads into name the same maps.
+ * Null = undecodable. */
 export function canonicalTeamData(encoded: string): string | null {
   const decoded = decodeMultiGridStateFromUrl(encoded)
   if (!decoded || decoded.boards.length === 0) return null
@@ -88,7 +92,12 @@ export function canonicalTeamData(encoded: string): string | null {
     boards: decoded.boards.map((board) => {
       const ordered: BoardState = {}
       for (const key of BOARD_CONTENT_KEYS) {
-        const value = key === 'u' ? canonicalAttrRows(board.u) : board[key]
+        const value =
+          key === 'u'
+            ? canonicalAttrRows(board.u)
+            : key === 'm'
+              ? resolveBoardMap(board)
+              : board[key]
         if (value !== undefined) (ordered as Record<string, unknown>)[key] = value
       }
       return ordered
@@ -144,6 +153,16 @@ export function suffixedName(name: string, suffix: string): string {
   return `${name.slice(0, MAX_TEAM_NAME_LENGTH - suffix.length)}${suffix}`
 }
 
+// `base` itself when free, else "base - 2", "base - 3", and so on.
+export function uniqueName(existingNames: readonly string[], base: string): string {
+  const taken = new Set(existingNames)
+  if (!taken.has(base)) return base
+  for (let n = 2; ; n++) {
+    const candidate = suffixedName(base, ` - ${n}`)
+    if (!taken.has(candidate)) return candidate
+  }
+}
+
 export function duplicateName(name: string): string {
   return suffixedName(name, ' (copy)')
 }
@@ -157,7 +176,10 @@ export function duplicateName(name: string): string {
  * highlight has nothing to point at. */
 export function validateSavedTeam(record: unknown): SavedTeam | null {
   if (typeof record !== 'object' || record === null) return null
-  const { id, name, mode, data, createdAt, updatedAt } = record as Record<string, unknown>
+  const { id, name, data, createdAt, updatedAt } = record as Record<string, unknown>
+  let { mode } = record as Record<string, unknown>
+  // TEMPORARY: delete with upgradeMigration.ts (its runbook names this line).
+  if (mode === '5v5sl') mode = '5v5'
 
   if (typeof id !== 'string' || id.length === 0) return null
   const cleanName = sanitizeTeamName(name)

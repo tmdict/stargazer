@@ -1,6 +1,7 @@
 /* The Teams page's restore/switch orchestrator, the sole initiator of board-count
- * changes on /teams. Owns the active mode, the saved-team provenance (sourceId),
- * and the mode-aware persistence, and runs the critical switch sequence:
+ * changes on /teams. Owns the active mode, the live boards' type (the variant
+ * their maps match), the saved-team provenance (sourceId), and the mode-aware
+ * persistence, and runs the critical switch sequence:
  *
  *   pause → flush old slot → set mode → restore-or-default (single rebuild) →
  *   sizing → adopt sourceId → resume + baseline write.
@@ -9,20 +10,25 @@
  * the invariant that keeps per-mode state independent. All bulk state application
  * goes through urlState.restoreMultiFromEncodedState (never a bespoke loader): it
  * encapsulates per-board apply ordering, companion settling, cross-board dedupe,
- * and the phantimal baseline re-seed.
+ * and the phantimal baseline re-seed. New and the type switch are the one
+ * exception: fresh boards on a chosen map list, built by rebuildOn.
  */
 
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { CURRENT_SEASON, hasRetiredSeasonal } from '@/lib/seasonal'
 import {
   DEFAULT_TEAM_MODE,
+  initialMaps,
   isTeamModeKey,
+  matchVariant,
   normalizeTeamPayload,
   TEAM_MODES,
+  variantMaps,
   type TeamModeKey,
+  type TeamVariantChoice,
 } from '@/lib/teams/modes'
 import { retiredSeasonOf } from '@/lib/teams/savedTeam'
 import { useGrids } from '@/stores/grids'
@@ -71,6 +77,15 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   const sourceId = ref<string | null>(null)
   const persistence = useTeamsPersistence(activeMode, sourceId, options.getFlags)
 
+  // The live boards' type, derived from their maps on every change (contexts
+  // are reactive and switchMap writes the map ref), never stored.
+  const variant = computed(() =>
+    matchVariant(
+      activeMode.value,
+      grids.contexts.map((ctx) => ctx.currentMap),
+    ),
+  )
+
   const resolveSource = (id: string | null): string | null =>
     options.resolveSourceId ? options.resolveSourceId(id) : id
 
@@ -105,9 +120,10 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     options.applySize()
   }
 
-  const buildModeDefaults = (mode: TeamModeKey): void => {
-    const cfg = TEAM_MODES[mode]
-    grids.setGridCount(cfg.boardCount, cfg.defaultMaps)
+  // A fresh slate opens on the mode's initial type, not on the neutral
+  // default maps.
+  const buildInitial = (mode: TeamModeKey): void => {
+    grids.setGridCount(TEAM_MODES[mode].boardCount, initialMaps(mode))
   }
 
   // Exactly one rebuild either way: a successful restore rebuilds internally (as
@@ -116,14 +132,14 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   const restoreOrDefault = (mode: TeamModeKey): void => {
     const slot = persistence.load(mode)
     const restored = slot !== null && applyEncoded(normalizeEncoded(mode, slot.data), false)
-    if (!restored) buildModeDefaults(mode)
+    if (!restored) buildInitial(mode)
     afterRebuild()
     sourceId.value = restored && slot ? resolveSource(slot.sourceId) : null
     if (restored && slot) notifyIfStripped(slot.data)
   }
 
-  /* Always rebuilds: equal-count modes (5v5 ↔ 5v5sl) still differ in maps and
-   * state, so a count-equality shortcut would silently share boards. */
+  // Board counts are unique across modes, so a switch always changes the count
+  // and rebuilds.
   const switchMode = (next: TeamModeKey): void => {
     if (next === activeMode.value) return
     persistence.setPaused(true)
@@ -135,16 +151,41 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
     persistence.flush()
   }
 
+  /* Fresh boards on `maps` with provenance detached, so Save can no longer
+   * overwrite the team the boards came from (Clear stays content-only and
+   * keeps the tie). Shared by New and the type switch; the previous content is
+   * discarded, which is why the callers' controls confirm first. */
+  const rebuildOn = (maps: string[]): void => {
+    persistence.setPaused(true)
+    grids.setGridCount(TEAM_MODES[activeMode.value].boardCount, maps)
+    afterRebuild()
+    sourceId.value = null
+    persistence.setPaused(false)
+    persistence.flush()
+  }
+
+  const switchVariant = (choice: TeamVariantChoice): void => {
+    rebuildOn(variantMaps(activeMode.value, choice))
+  }
+
+  /* File → New: fresh boards on the type the live boards match, or on the
+   * mode's initial type when their maps match nothing. */
+  const newTeam = (): void => {
+    const mode = activeMode.value
+    const match = variant.value
+    rebuildOn(match === null ? initialMaps(mode) : variantMaps(mode, match))
+  }
+
   /* Load a saved team as the active team. `source` becomes the provenance the
-   * Save button updates; a corrupt payload falls back to the mode's defaults
-   * with provenance cleared (returns false). */
+   * Save button updates; a corrupt payload falls back to the mode's initial
+   * boards with provenance cleared (returns false). */
   const applyTeamData = (mode: TeamModeKey, encoded: string, source: string | null): boolean => {
     persistence.setPaused(true)
     persistence.flush()
     activeMode.value = mode
     persistence.persistMode(mode)
     const applied = applyEncoded(normalizeEncoded(mode, encoded), false)
-    if (!applied) buildModeDefaults(mode)
+    if (!applied) buildInitial(mode)
     afterRebuild()
     sourceId.value = applied ? source : null
     if (applied) notifyIfStripped(encoded)
@@ -203,31 +244,22 @@ export function useTeamsRestore(options: TeamsRestoreOptions) {
   }
 
   /* Degraded startup (game data failed to load): build the active mode's
-   * default boards with no persistence reads or writes; the boards are
+   * initial boards with no persistence reads or writes; the boards are
    * display-only placeholders and must not touch any mode's slot. */
   const buildDefaults = (): void => {
-    buildModeDefaults(activeMode.value)
+    buildInitial(activeMode.value)
     afterRebuild()
-  }
-
-  /* File → New: fresh default boards with provenance detached, so Save can no
-   * longer overwrite the team the boards came from. Clear stays a content-only
-   * operation that keeps the tie. */
-  const newTeam = (): void => {
-    persistence.setPaused(true)
-    buildDefaults()
-    sourceId.value = null
-    persistence.setPaused(false)
-    persistence.flush()
   }
 
   return {
     activeMode,
+    variant,
     sourceId,
     initialize,
     buildDefaults,
     newTeam,
     switchMode,
+    switchVariant,
     applyTeamData,
     // Reactive reads, usable in computeds (the dirty compare's live side).
     snapshot: () => persistence.snapshot(),

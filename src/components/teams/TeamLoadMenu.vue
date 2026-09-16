@@ -26,7 +26,7 @@ import { useTouchDetection } from '@/composables/useTouchDetection'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
 import { getOpposingTeam } from '@/lib/characters/character'
 import { TEAM_MODES, type TeamModeKey } from '@/lib/teams/modes'
-import { teamHasSynergy } from '@/lib/teams/preview'
+import { teamHasSynergy, teamTypeLabelKey } from '@/lib/teams/preview'
 import { retiredSeasonOf, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildSideLoadPlan, savedTeamSide } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
@@ -281,6 +281,9 @@ const tipText = computed((): string =>
                     <template v-else>{{ sideName(destOf(team)) }}</template>
                   </span>
                   <span class="card-mode">{{ modeChip(team) }}</span>
+                  <span v-if="teamTypeLabelKey(team.data)" class="card-mode">
+                    {{ i18n.t(teamTypeLabelKey(team.data)!) }}
+                  </span>
                   <span v-if="teamHasSynergy(team.data)" class="card-mode">
                     {{ i18n.t('app.synergy') }}
                   </span>

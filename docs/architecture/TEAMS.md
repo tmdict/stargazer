@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry entry selects how many boards are live (1v1, 3v3, 5v5, 5v5 Supreme League) and each mode persists its own active team independently. On top sits the saved-team library: named canonical snapshots with portrait thumbnails that can be loaded whole or one side at a time, updated, duplicated, renamed, deleted, and backed up to a JSON file.
+The Teams page (`/teams`) is a mode-driven multi-board team builder: a mode is a board count (1v1, 3v3, 5v5) and each mode persists its own active team independently. Within a mode, a type (Supreme League, Guild Duel) is a named per-board map list; it is read off the live boards' maps and never stored. On top sits the saved-team library: named canonical snapshots with portrait thumbnails that can be loaded whole or one side at a time, updated, duplicated, renamed, deleted, and backed up to a JSON file.
 
 ## Design Principles
 
@@ -11,6 +11,7 @@ The Teams page (`/teams`) is a mode-driven multi-board team builder: a registry 
 3. **One slot per mode**: each mode autosaves to its own versioned localStorage envelope, so switching modes is lossless by construction
 4. **One restore path**: every whole-board apply (slot restore, mode switch, saved-team load, `?g=` ingress) goes through `restoreMultiFromEncodedState`; the side-load merge and the match import are engine-primitive edits instead (see Side Loading, Team Import)
 5. **Canonical team data**: saved-team payloads are viewer-state-free with fixed key order, so equal content is byte-equal; equality comparisons go through `teamContentKey`, which additionally ignores the `season` stamp on seasonal-free teams (a reused seasonal id names different content each season, so the stamp counts exactly when seasonal refs exist)
+6. **Type is derived, never stored**: a type is an ordered exact match of the boards' map keys against `TEAM_VARIANTS`; nothing about it reaches the JSON payload, the wire, or a storage key. An in-game mode on an existing board count is a registry row plus a label file, and a season rotation edits that row and resets nothing
 
 ## Architecture
 
@@ -47,7 +48,9 @@ The page orchestrator: an outer TabView (Teams grid / Image Stitcher, the latter
 
 ### TeamsBoards (`/src/components/teams/TeamsBoards.vue`)
 
-The grid panel: title line, `GridControls` with the teams controls slotted in (`TeamModePicker`, `TeamSaveActions`, `TeamLoadMenu`, `TeamImportButton`), and the boards row, each board bound to its own `GridContext`.
+The grid panel: title line, `GridControls` with the teams controls slotted in (`TeamModePicker`, `TeamVariantPicker`, `TeamSaveActions`, `TeamLoadMenu`, `TeamImportButton`), and the boards row, each board bound to its own `GridContext`.
+
+- **Type picker**: Default plus the mode's named types, shown only for a board count that has any (1v1 has none). The lit option is the live match (`useTeamsRestore.variant`), so hand-picked maps light nothing. Selecting rebuilds every board on the chosen list through the same `rebuildOn` New uses, which drops their content, so it confirms two-step whenever a board holds a unit or an artifact (`grids.boardsHaveContent`). The armed key is scoped to the mode and the picker disarms whenever the match or the source team changes, so an armed click can never confirm against boards other than the ones it was armed for; New in `TeamSaveActions` disarms on the same signals
 
 - **Title line**: the source team's name (renamable inline), a match import's pending name, or "Unsaved team", with a dot beside it while the boards differ from the saved copy
 - **Wrap**: the 3-2 two-row boards layout, rendered for 5-board modes on desktop only. Every consumer gates on `canWrap` / board count, so the preference survives visits to non-wrap modes; a stray wrap bit in a payload needs no reset
@@ -71,30 +74,37 @@ A desktop card below the boards / a mobile pull-up sheet. The characters, season
 `SavedTeamsList` (`/src/components/teams/SavedTeamsList.vue`) owns the library bar outright (store calls plus its own toasts):
 
 - **Import / Export / Delete all**: sit in this panel because all three act on the library, not the boards. Export and Delete all hide at zero teams; Import stays, since restoring into an empty library is its main use
-- **Filtered export**: Export follows the Mode / One-side / Search filters. With none active it backs up the whole library silently; with any active it writes only the teams shown, relabels to the shown count, names the criteria in the tooltip, and confirms count and criteria in a toast afterwards (`app.export-filtered`), so a partial backup cannot pass for a full one. A filter that matches nothing exports nothing and raises the no-matches error
+- **Filtered export**: Export follows the Mode / Type / One-sided / Search filters. With none active it backs up the whole library silently; with any active it writes only the teams shown, relabels to the shown count, names the criteria in the tooltip, and confirms count and criteria in a toast afterwards (`app.export-filtered`), so a partial backup cannot pass for a full one. A filter that matches nothing exports nothing and raises the no-matches error
 - **Sort**: last-modified first (default) or by name (locale-aware, numeric so "Team 2" precedes "Team 10"), persisted per device (`stargazer.teams.sort`)
 - **Mode filter**: All plus every key in `TEAM_MODE_ORDER`, always offered so a segment cannot vanish with its last team and strand the selection. Deliberately not persisted: a filter restored on load would read as missing teams
-- **One-side filter**: teams the Load menu can side-load (`savedTeamSide`); not persisted, for the same reason
+- **Type filter**: a second, wrapping chip row (All, Default, the mode's types) shown only while the mode filter names a board count with types; it resets to All on every mode-filter change, since a type belongs to one board count. Records are classified by `teamVariant` (memoized on the data string) against the current registry, so a rotation moves old records out of the type without touching them
+- **One-sided filter**: teams the Load menu can side-load (`savedTeamSide`); not persisted, for the same reason
 - **Search**: `useSavedTeamSearch` (shared with the Load menu): a name hit at any length, or at 2+ characters a hero on the boards (`matchCharacterNames`, the roster's multi-locale index), whose hexes get a ring in the thumbnail. Phantimals and companion summons never match. The box shows only with 2+ teams, and hiding it clears the query so the list cannot strand on "no matches"
-- **Filter order**: sort, then mode, then one-side, then search
+- **Filter order**: sort, then mode, then type, then one-sided, then search
 
-## Team Modes
+## Team Modes and Types
 
 `/src/lib/teams/modes.ts` is the single source of truth:
 
 ```typescript
 TEAM_MODES: Record<TeamModeKey, TeamModeConfig>
-// key, labelKey (i18n), boardCount, defaultMaps (length === boardCount), canWrap, allowSynergy
+// key, labelKey, boardCount, defaultMaps (length === boardCount), initialVariant?, canWrap, allowSynergy
+TEAM_VARIANTS: Record<TeamVariantKey, TeamVariantConfig>
+// key, mode, labelKey, maps (length === the mode's boardCount)
 TEAM_MODE_ORDER // picker order, ascending board count
-DEFAULT_TEAM_MODE = '5v5sl'
+DEFAULT_TEAM_MODE = '5v5'
 ```
 
-- **Default maps**: seed fresh slates and pad short payloads; 1v1/3v3/5v5 default every board to `arena1`, Supreme League uses the season's map list (`FIVE_V_FIVE_DEFAULT_MAPS` in `/src/lib/maps.ts`)
-- **Defaults fingerprint**: each active slot records its mode's default maps at write time; changing the list (a new Supreme League season) invalidates the slot on next load: a deliberate hard reset, with saved teams untouched
+- **A mode is a board count**: counts are unique across `TEAM_MODES`, so a mode key, a board count, a slot and a wire id name the same thing. A new mode exists only for a new board count; an in-game mode on an existing count is a `TEAM_VARIANTS` row (`sl` on 5v5, `gd` on 3v3) plus a label file, with no wire, JSON or storage presence
+- **Default maps**: the neutral list (`arena1` on every board): pads short payloads and is the Default choice of the type picker
+- **Initial type**: a fresh slate (first visit, corrupt slot, a mode with no slot) opens on `initialVariant` (Supreme League for 5v5, Guild Duel for 3v3), else on the default maps. New keeps the type the live boards match and falls back to the initial type when their maps match nothing
+- **`matchVariant(mode, maps)`**: ordered exact match of the boards' map keys against the default list, then the mode's types; `'default'`, a variant key, or null for custom maps. A key-less board counts as the default map. `variantMaps` inverts it for the picker and `rebuildOn`
+- **Rotation**: a season edits the `sl` row and nothing else; slots and records keep their maps, and boards on the old list simply stop matching (no chip, out of the type filter, reachable under All or by name)
 - **`t` is authoritative**: serialized tile states are self-sufficient (restore resets all tiles and replays `t`), so records referencing retired maps still restore, preview, and re-export; map configs are needed only for empty boards and the Maps-tab picker
-- **`resolveTeamMode(state)`**: a declared `mode` is honored only when its board count matches; otherwise the count decides (5 boards → Supreme League, else the smallest fitting mode)
+- **Map key resolution**: `resolveBoardMap` (`/src/lib/maps.ts`) is the one rule for a board with no `m`: the preset its tiles reproduce, else the default map. Canonicalization fills `m` through it and the multi-board restore builds contexts through it, so a record's chip and the boards it loads into always name the same maps
+- **`resolveTeamMode(state)`**: a declared `mode` is honored only when its board count matches; otherwise the smallest fitting count decides
 - **`normalizeTeamPayload`**: strips retired seasonal content, truncates/pads a payload to the mode's exact shape, and strips the `y` (synergy) section on modes without `allowSynergy`, since a crafted synergy unit would bypass the page-wide duplicate repair. Runs on every teams-page ingress (slot restore, saved-team load, `?g=`); `/share` renders payloads as-is
-- **Modes are add-only**: removing a mode key would orphan its slot and saved teams
+- **Retiring a mode** goes through a conversion window: a temporary migration converts the retired key and wire id for as long as it lives, and both are freed with its deletion (see [URL Serialization](./URL_SERIALIZATION.md), Wire registries)
 
 ## Per-Mode Persistence
 
@@ -102,19 +112,19 @@ DEFAULT_TEAM_MODE = '5v5sl'
 
 ```text
 stargazer.teams.mode                 last-used TeamModeKey
-stargazer.teams.active.<mode>        { v: 1, data: <encoded MultiGridState>, sourceId, defaults }
+stargazer.teams.active.<mode>        { v: 1, data: <encoded MultiGridState>, sourceId }
 stargazer.teams.display              packed display-flags byte (device prefs)
 stargazer.teams.saved                { v: 1, teams: SavedTeam[] }
 stargazer.teams.saved.backup         an unknown-version library blob, copied aside on read
 ```
 
-`sourceId` is the saved team the active boards were loaded from / last saved to (null = unsaved); `defaults` is the fingerprint above. A slot with an unknown version, a non-string `data`, or a stale fingerprint reads as absent, and an undecodable payload falls back to the mode's defaults. The autosave watcher (one per page instance) routes writes to the live mode's slot; `flush()` is inert until `startAutosave()` marks the instance as the slot's writer, so a degraded page can never overwrite a slot.
+`sourceId` is the saved team the active boards were loaded from / last saved to (null = unsaved). A slot with an unknown version or a non-string `data` reads as absent (unknown keys are ignored and dropped by the next write), and an undecodable payload falls back to the mode's initial boards. The autosave watcher (one per page instance) routes writes to the live mode's slot; `flush()` is inert until `startAutosave()` marks the instance as the slot's writer, so a degraded page can never overwrite a slot. The retired `5v5sl` slot is moved into the 5v5 slot (when it was the last-used mode) or dropped by the TEMPORARY mode pass in `/src/utils/upgradeMigration.ts`.
 
 `useTeamsRestore` (`/src/composables/useTeamsRestore.ts`) owns every switch, applying payloads through `restoreMultiFromEncodedState` (per-board apply order, companion settling, cross-board dedupe, phantimal baseline re-seeding):
 
 1. Pause autosave, flush the old mode's slot
 2. Set + persist the new mode
-3. Normalize and restore the new mode's slot (the restore rebuilds the boards) or build the mode's defaults; exactly one rebuild, always (equal-count modes still differ in maps and state). Display flags in the payload are ignored
+3. Normalize and restore the new mode's slot (the restore rebuilds the boards) or build the mode's initial boards; exactly one rebuild. Display flags in the payload are ignored
 4. Clear board-qualified selection, re-assert page sizing
 5. Adopt the slot's `sourceId`, normalized through the library (unresolvable → null)
 6. Resume autosave, write the baseline
@@ -150,23 +160,23 @@ interface SavedTeam {
 
 Semantics wired in `TeamsView`:
 
-- **New**: rebuilds the mode's default boards and detaches provenance, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie)
-- **Save**: updates the source team in place (a record another tab deleted reports `app.team-missing`); with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source
+- **New**: fresh boards on the type the live boards match (else the mode's initial type) with provenance detached, so Save can no longer overwrite the previous source (Clear only empties content and keeps the tie). The type picker's switch is the same rebuild on the chosen list; both go through `rebuildOn`
+- **Save**: updates the source team in place (a record another tab deleted reports `app.team-missing`); with no source it degrades to **Save as New**, whose popover names a new record and adopts it as the source. The popover prefills a match import's pending name, else boards on a named type get the season and type ("S7 SL", then "S7 SL - 2" via `uniqueName`), else "Team N"
 - **Load**: switches to the team's mode, applies its content (normalized like every ingress), and repoints `sourceId`; display toggles stay untouched. Duplicate loads the copy, so edits made right after land on it
 - **Dirty**: the live snapshot's `teamContentKey` vs the source record's; board clicks, display toggles, and a season flip over an unchanged team never trip it. The card matching `sourceId` gets the "Loaded" ring, the same provenance
 - **Thumbnail export**: `useThumbnailExport` serializes the card's `BoardThumbnail` SVGs and rasterizes them onto one canvas, because WebKit fails on DOM-snapshot capture of SVG content and the vectors upscale losslessly to full-grid resolution
 
 ## Side Loading (Load Menu)
 
-`TeamLoadMenu` (`/src/components/teams/TeamLoadMenu.vue`) stamps a saved one-side team onto the live boards without touching the other side:
+`TeamLoadMenu` (`/src/components/teams/TeamLoadMenu.vue`) stamps a saved one-sided team onto the live boards without touching the other side:
 
 - **Eligibility**: a record qualifies when every unit on every board (heroes, companions, phantimals, synergy units) belongs to one team, and at least one unit exists; the rule spans the whole record, never a single board (`savedTeamSide` in `/src/lib/teams/sideLoad.ts`, memoized per record, retired seasonal refs ignored)
-- **Two groups, two scopes**: the active mode's teams load board-for-board; a second group offers 1v1 teams in every other mode, loading onto the active board only. Units page-wide uniqueness already claims (a hero on the destination team of another board) are skipped and counted in the toast
+- **Two groups, two scopes**: the active mode's teams load board-for-board; a second group offers 1v1 teams in every other mode, loading onto the active board only. Units page-wide uniqueness already claims (a hero on the destination team of another board) are skipped and counted in the toast. Grouping is by mode, so a record of one type loads board-for-board onto boards of another (a Supreme League team onto Default 5v5 boards); a unit whose saved hex the live map assigns elsewhere takes the random-tile fallback, and the card's type chip is what tells the two apart
 - **Plan**: `buildSideLoadPlan` maps the record to per-board `{ mains, companions, phantimal, artifact }`; the synergy hero rides in `mains` only when the destination mode has `allowSynergy`
 - **Executor** (`grids.loadTeamSide`): clears the destination side via `clearTeam` (per-hex removal would leave the side's attr records behind), then places each unit on its saved hex, falling back to a random destination tile when the live map assigns that tile elsewhere or something already stands there: a stamp never replaces, so it cannot evict this load's own work. Companions spawn from their main's skill and are settled onto their saved hexes per main, the same anti-squatting pass the bulk restore runs; an unreachable target leaves the companion at its spawn tile. Every placed base hero gets its full attr record stamped (saved values or an empty record, so a stale value cannot attach), phantimals place after mains (their faction gate needs the roster), the side's artifact is carried unless the destination team already holds it on another board, and the phantimal baseline re-seeds so a deliberately phantimal-less save stays that way
 - **Invert**: flips the destination team and 180-rotates every saved hex (`rotatedHexId` in `/src/lib/grid.ts`: cube-coordinate negation, `46 - hexId` on the full arena), with the same random fallback
 - **Confirm**: a load that would remove anything on the boards it touches (`grids.sideLoadWouldReplace`, the executor's read-only mirror) arms the two-step confirm; an empty destination loads in one click
-- **Deliberately not a restore**: a one-side merge composed from engine primitives, bypassing `restoreMultiFromEncodedState` (which replaces whole boards); `sourceId`, maps, and display flags stay untouched, and the edit surfaces as normal unsaved changes that autosave persists
+- **Deliberately not a restore**: a one-sided merge composed from engine primitives, bypassing `restoreMultiFromEncodedState` (which replaces whole boards); `sourceId`, maps, and display flags stay untouched, and the edit surfaces as normal unsaved changes that autosave persists
 
 ## Team Import
 

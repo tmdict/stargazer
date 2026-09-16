@@ -19,6 +19,21 @@
  * - `runUpgradeStoragePass` runs once at app startup and rewrites the at-rest
  *   keys (library records, the four mode slots, the arena autosave) so stored
  *   data stops depending on the read-side conversions before deletion.
+ * - The 5v5sl retirement. Supreme League is a type of 5v5 derived from the
+ *   boards' maps, so the retired mode key and wire id 4 have no reader left.
+ *   `decodeLegacyLink` re-reads a link carrying id 4 as 5v5 (its boards
+ *   already carry the SL maps), `validateSavedTeam` maps a record's `mode` in
+ *   one tagged line (import files, the pre-deploy-tab race), and
+ *   `runModeStoragePass` moves the retired slot into the 5v5 slot when it was
+ *   the last-used mode, rewrites library records, and drops the retired key.
+ *   It runs under its own marker: the u marker is already set on every device
+ *   that ran the first pass. The two passes are order-independent in outcome
+ *   (a missing key reads as done; a moved payload still saying 5v5sl heals at
+ *   ingress via normalizeTeamPayload); App.vue runs the u-pass first so a
+ *   device that skipped a release converts the retired slot's rows before the
+ *   move. Its decision is recorded in a flag BEFORE the large copy: after a
+ *   failed attempt, normal startup rejects the retired key, falls back to 5v5
+ *   and persists it, so a retry alone could not tell that SL was last used.
  *
  * The pass is idempotent, so its marker is written LAST, only after every
  * attempted write landed — a failed write (quota; the library is the app's
@@ -53,16 +68,25 @@
  * 4c. In src/views/ShareView.vue: remove the tagged TEMPORARY
  *    stripRetiredSeasonal wrapper (and its import) around the multi restore —
  *    binary links carry no season, so post-shim it is a guaranteed no-op.
- * 5. In src/App.vue: remove the runUpgradeStoragePass import, its bare call
- *    in the setup block, and the ordering comment above it; drop the
- *    "Permanent:" prefix from the season-rotation comment that follows, which
- *    only contrasts with the removed block.
+ * 4d. In src/lib/teams/savedTeam.ts: delete the tagged TEMPORARY line in
+ *    validateSavedTeam and fold `mode` back into the destructuring above it.
+ * 4e. In src/lib/teams/wire.ts: delete the TEMPORARY comment naming id 4
+ *    inside WIRE_MODES; the id is then simply the next free one.
+ * 5. In src/App.vue: remove the runUpgradeStoragePass and runModeStoragePass
+ *    imports, their bare calls in the setup block, and the ordering comment
+ *    above them; drop the "Permanent:" prefix from the season-rotation
+ *    comment that follows, which only contrasts with the removed block.
  * 6. Trim every shim mention from comments and docs — these say "shim" or
  *    "legacy", not "upgradeMigration", so step 8's grep can't find them:
- *    - docs/architecture/URL_SERIALIZATION.md: the Migration shim section,
- *      the season-field sentence, the universal decoder's "falls through to
- *      the temporary legacy shim" clause, and the all-or-nothing paragraph's
- *      "lets the legacy shim probe formats safely" clause.
+ *    - docs/architecture/URL_SERIALIZATION.md: the Migration shim section
+ *      (including its wire-id-4 sentence), the season-field sentence, the
+ *      universal decoder's "falls through to the temporary legacy shim"
+ *      clause, the all-or-nothing paragraph's "lets the legacy shim probe
+ *      formats safely" clause, the wire registry's "converted by the shim
+ *      while it exists" sentence about id 4, and the growth table's "(id 4
+ *      once the shim is gone)" parenthetical in the Mode id row.
+ *    - docs/architecture/TEAMS.md: the sentence in Per-Mode Persistence about
+ *      the retired 5v5sl slot and the TEMPORARY mode pass.
  *    - docs/architecture/SEASONAL.md: the "stamped season 7 by the TEMPORARY
  *      shim" sentence in Season cutover & retirement.
  *    - docs/ARCHITECTURE.md: the utilities bullet's "the temporary
@@ -76,17 +100,24 @@
  *      order relies on" clause and decodeLink's shim-window comment.
  *    - src/lib/characters/attributes.ts: "and legacy conversion" in the
  *      compareAttrRows comment.
- * 7. The stargazer.migration.u marker key stays behind in user storage as
- *    accepted residue.
+ * 7. The stargazer.migration.u and stargazer.migration.sl marker keys stay
+ *    behind in user storage as accepted residue, as do a
+ *    stargazer.migration.sl.move flag on a device whose slot copy never
+ *    succeeded, a stargazer.teams.active.5v5sl slot on a device the mode
+ *    pass never reached, and a `defaults` field inside slot envelopes the
+ *    page never rewrote (ignored on load, dropped by the next write).
  * 8. Verify: `grep -ri upgrademigration src tests docs` and
  *    `grep -rin shim src docs` both return nothing, then lint, type-check,
  *    and the test suite pass with no further edits.
  * Expected user-visible consequences, accepted by policy (old links and
  * exports are expendable): pre-release links of every kind stop decoding
- * (empty board), and pre-release data the storage pass never reached — export
- * files on disk, plus the slots/library of a device first seen after deletion
- * — loses its paragon levels and season provenance: seasonal ids resolve as
- * current-pool content instead of "S7" placeholders.
+ * (empty board), links carrying wire id 4 fall back to the saved slot (and
+ * once a new board count takes id 4, reject as a wrong-shape link), export
+ * files whose records still say 5v5sl drop those records at import, and
+ * pre-release data the storage pass never reached (export files on disk,
+ * plus the slots/library of a device first seen after deletion) loses its
+ * paragon levels and season provenance: seasonal ids resolve as current-pool
+ * content instead of "S7" placeholders.
  *
  * The storage keys, the v1 bit reader, and the v1 field widths are all
  * duplicated here (not imported from or exported to their owners) so deleting
@@ -106,7 +137,7 @@ import {
   encodeGridStateToUrl,
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
-import type { BinaryLinkState } from './binaryEncoder'
+import { decodeLink, type BinaryLinkState } from './binaryEncoder'
 import {
   packDisplayFlags,
   unpackDisplayFlags,
@@ -117,7 +148,20 @@ import {
 const MARKER_KEY = 'stargazer.migration.u'
 const ARENA_KEY = 'stargazer.arena'
 const LIBRARY_KEY = 'stargazer.teams.saved'
+// The retired 5v5sl slot stays in this list so its rows convert before the
+// mode pass moves it.
 const TEAM_MODE_KEYS = ['1v1', '3v3', '5v5', '5v5sl'] as const
+
+const MODE_MARKER_KEY = 'stargazer.migration.sl'
+const MODE_MOVE_KEY = 'stargazer.migration.sl.move'
+const TEAMS_MODE_KEY = 'stargazer.teams.mode'
+const RETIRED_SLOT_KEY = 'stargazer.teams.active.5v5sl'
+const FIVE_V_FIVE_SLOT_KEY = 'stargazer.teams.active.5v5'
+const RETIRED_MODE = '5v5sl'
+const FIVE_V_FIVE_MODE = '5v5'
+// Wire ids duplicated from lib/teams/wire.ts, like every other constant here.
+const RETIRED_WIRE_ID = 4
+const FIVE_V_FIVE_WIRE_ID = 3
 
 /* Stamp a pre-field payload with the season its content pool can only be:
  * everything serialized before the season field existed was built from the
@@ -184,8 +228,8 @@ const rewriteModeSlot = (mode: string): boolean => {
   } catch {
     return true
   }
-  // Only the envelope's `data` converts; `v`/`sourceId`/`defaults` pass
-  // through byte-identical, and staleness stays the loader's business.
+  // Only the envelope's `data` converts; every other key passes through
+  // byte-identical, and staleness stays the loader's business.
   if (typeof slot !== 'object' || slot === null || slot.v !== 1 || typeof slot.data !== 'string') {
     return true
   }
@@ -196,22 +240,30 @@ const rewriteModeSlot = (mode: string): boolean => {
   return writeStorage(key, JSON.stringify({ ...slot, data }))
 }
 
-const rewriteLibrary = (): boolean => {
+// The stored library's records, or null when the key is absent, unparsable,
+// or not a v1 blob (its reader already discards those).
+const readLibraryTeams = (): unknown[] | null => {
   const raw = readStorage(LIBRARY_KEY)
-  if (raw === null) return true
+  if (raw === null) return null
   let blob: { v?: unknown; teams?: unknown }
   try {
     blob = JSON.parse(raw) as { v?: unknown; teams?: unknown }
   } catch {
-    return true
+    return null
   }
   if (typeof blob !== 'object' || blob === null || blob.v !== 1 || !Array.isArray(blob.teams)) {
-    return true
+    return null
   }
+  return blob.teams
+}
+
+const rewriteLibrary = (): boolean => {
+  const records = readLibraryTeams()
+  if (records === null) return true
   // Raw-preserving: a record that fails to canonicalize keeps its stored
   // bytes — this pass must never become the thing that persists a drop.
   let changed = false
-  const teams = blob.teams.map((record) => {
+  const teams = records.map((record) => {
     if (typeof record !== 'object' || record === null) return record
     const data = (record as Record<string, unknown>).data
     if (typeof data !== 'string') return record
@@ -239,6 +291,70 @@ export function runUpgradeStoragePass(): void {
     if (allOk) writeStorage(MARKER_KEY, '1')
   } catch (err) {
     console.error('Upgrade storage pass failed, will retry next load:', err)
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * The 5v5sl retirement: storage pass.
+ * ------------------------------------------------------------------------- */
+
+// Inlined rather than added to utils/storage.ts: nothing permanent needs a
+// remove, and this module must leave no orphaned exports behind.
+const removeStorage = (key: string): void => {
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // Best effort, like every other storage call.
+  }
+}
+
+/* Move or drop the retired slot. Last-used wins: when 5v5sl was the last-used
+ * mode its boards become the 5v5 slot; otherwise they are dropped. The
+ * decision is flagged before the large copy so a retry after a failed write
+ * still moves even though startup has since persisted 5v5 as last-used. Write
+ * order: flag, copy, delete old, rewrite last-used, clear flag; a failed write
+ * returns false before the delete, so nothing is ever half-moved. */
+const rewriteRetiredSlot = (): boolean => {
+  const lastUsed = readStorage(TEAMS_MODE_KEY)
+  const slot = readStorage(RETIRED_SLOT_KEY)
+  let move = readStorage(MODE_MOVE_KEY) !== null
+  if (lastUsed === RETIRED_MODE) {
+    if (!writeStorage(MODE_MOVE_KEY, '1')) return false
+    move = true
+  }
+  if (slot !== null) {
+    if (move && !writeStorage(FIVE_V_FIVE_SLOT_KEY, slot)) return false
+    removeStorage(RETIRED_SLOT_KEY)
+  }
+  if (lastUsed === RETIRED_MODE && !writeStorage(TEAMS_MODE_KEY, FIVE_V_FIVE_MODE)) return false
+  removeStorage(MODE_MOVE_KEY)
+  return true
+}
+
+// Only the record's own `mode` field converts; its data payload already
+// resolves to 5v5 through resolveTeamMode at every read.
+const rewriteLibraryModes = (): boolean => {
+  const records = readLibraryTeams()
+  if (records === null) return true
+  let changed = false
+  const teams = records.map((record) => {
+    if (typeof record !== 'object' || record === null) return record
+    if ((record as Record<string, unknown>).mode !== RETIRED_MODE) return record
+    changed = true
+    return { ...record, mode: FIVE_V_FIVE_MODE }
+  })
+  if (!changed) return true
+  return writeStorage(LIBRARY_KEY, JSON.stringify({ v: 1, teams }))
+}
+
+export function runModeStoragePass(): void {
+  if (readStorage(MODE_MARKER_KEY) !== null) return
+  try {
+    let allOk = rewriteRetiredSlot()
+    allOk = rewriteLibraryModes() && allOk
+    if (allOk) writeStorage(MODE_MARKER_KEY, '1')
+  } catch (err) {
+    console.error('Mode storage pass failed, will retry next load:', err)
   }
 }
 
@@ -410,6 +526,18 @@ const legacyFlagsByte = (d: number | undefined): number =>
  * essentially never parse as JSON with a boards array — then the frozen v1
  * binary reader (arena links and the stored arena autosave). */
 export function decodeLegacyLink(encoded: string, bytes: Uint8Array): BinaryLinkState | null {
+  // Wire id 4 is the retired 5v5sl mode's id. Its boards already carry the
+  // SL maps, so re-reading the bytes as mode 3 (5v5) is the whole conversion.
+  // Patched on a copy: the v1 reader below must see the original bytes (a v1
+  // header whose tile count is 4 mod 8 shares these low bits), and the JSON
+  // probe is untouched by construction (every payload starts with `{`).
+  if (((bytes[0] ?? 0) & 0b111) === RETIRED_WIRE_ID) {
+    const patched = bytes.slice()
+    patched[0] = ((patched[0] ?? 0) & ~0b111) | FIVE_V_FIVE_WIRE_ID
+    const link = decodeLink(patched)
+    if (link) return link
+  }
+
   const multi = decodeMultiGridStateFromUrl(encoded)
   if (multi && multi.boards.length > 0) {
     return {

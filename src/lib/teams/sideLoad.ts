@@ -1,4 +1,4 @@
-/* One-side saved-team loading: eligibility (the "single team" rule) and the
+/* One-sided saved-team loading: eligibility (the "single team" rule) and the
  * placement plan the grids store executes.
  *
  * A record is loadable when every unit on every board (heroes, companions,
@@ -10,7 +10,7 @@
  * Reads the unit-bearing sections (c/s/y) plus u and a directly, a sibling of
  * the BOARD_CONTENT_KEYS contract in gridStateSerializer.ts: a new
  * unit-bearing GridState section must be handled here (and in preview.ts)
- * too, or the one-side rule would silently miss its units.
+ * too, or the one-sided rule would silently miss its units.
  */
 
 import type { AttrRecord } from '@/lib/characters/attributes'
@@ -86,7 +86,7 @@ export function savedTeamSide(data: string): Team | null {
   return side
 }
 
-/* Null when the record isn't a one-side team. Companions (both bands) spawn
+/* Null when the record isn't a one-sided team. Companions (both bands) spawn
  * from their main's skill rather than placing directly, so they're carried as
  * settle targets, not mains. The synergy hero rides in `mains` under its band
  * id (place/autoPlace resolve it like any unit), included with its companions
