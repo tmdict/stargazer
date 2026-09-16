@@ -65,9 +65,9 @@ const cardNames = (): string[] =>
     .sort()
 
 describe('SavedTeamsList type filter', () => {
-  it('shows the type row only for a board count with named types', async () => {
+  it('offers the type chips only for a board count with named types', async () => {
     await mountList()
-    expect(document.querySelector('.type-row')).toBeNull()
+    expect(document.querySelector('.type-group')).toBeNull()
 
     byText('.seg-btn', '5v5').click()
     await nextTick()
@@ -75,7 +75,7 @@ describe('SavedTeamsList type filter', () => {
 
     byText('.seg-btn', '1v1').click()
     await nextTick()
-    expect(document.querySelector('.type-row')).toBeNull()
+    expect(document.querySelector('.type-group')).toBeNull()
   })
 
   it('filters by the derived type and resets to All on every Teams-filter change', async () => {

@@ -61,6 +61,7 @@ Pure, DOM-free code over `RgbaImage`, shared by the worker and the check script.
 
 - **Descriptor**: A 32×24 RGB face crop, each channel zero-mean and unit-norm, so the frame's warm tint cancels; 2,304 values, Int8 at ×400 in the table and in every stored descriptor
 - **Table**: Every bundled portrait cut over a grid of crop windows, since the in-game card zooms the same painting slightly differently per hero; a costume reference gets a second, smaller grid for the game's skin card. About 8,600 rows for 125 heroes and 11 costumes, near 20 MB in the worker; bundled and learned descriptors join as extra rows
+- **Fine matching**: Up to fifteen portrait candidates receive a finer crop-window search. Learned matches retain their scores without consuming this refinement budget
 - **Sure**: A pick needs `HERO_SCORE_FLOOR` and a lead of `HERO_SURE_MARGIN` over the best candidate of any other hero, learned or bundled; `COSTUME_SURE_MARGIN` when its window came from a costume reference
 
 ### Confidence

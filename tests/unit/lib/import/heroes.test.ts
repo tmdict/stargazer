@@ -122,6 +122,29 @@ describe('hero table', () => {
     expect(ranked[0]!.costume).toBe(true)
   })
 
+  it('keeps a stronger portrait match when learned examples crowd the shortlist', () => {
+    const image = portrait(2)
+    const portraits = [{ characterId: 2, image }]
+    const face = heroDescriptor(image, { x: 44, y: 60, w: 96, h: 72 })
+    const baseline = rankHeroes(buildHeroTable(portraits), [face])[0]!
+    const learned = Array.from({ length: 15 }, (_, i) => {
+      const example = face.map((value, j) => value + 0.01 * Math.sin((j + 1) * (i + 1)))
+      const norm = Math.hypot(...example)
+      return {
+        characterId: 100 + i,
+        descriptor: encodeLearned(example.map((value) => value / norm)),
+        learnedAt: i,
+      }
+    })
+
+    const ranked = rankHeroes(buildHeroTable(portraits, learned), [face])
+
+    expect(baseline.characterId).toBe(2)
+    expect(ranked[0]!.characterId).toBe(2)
+    expect(ranked[0]!.score).toBeCloseTo(baseline.score)
+    expect(ranked.slice(1).some((candidate) => candidate.learned)).toBe(true)
+  })
+
   it('round-trips a learned descriptor', () => {
     const v = new Float32Array(DESCRIPTOR_LENGTH).map((_, i) => Math.sin(i) * 0.2)
     const back = decodeLearned(encodeLearned(v))!
