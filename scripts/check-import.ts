@@ -7,7 +7,7 @@
 //   npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [--maps 5]
 //
 //   --samples    folder of PNG/JPEG screenshots (result screens, cropped or not)
-//   --truth      per-file cells (a1–a5, e1–e5: hero slug, p, r), optional maps,
+//   --truth      per-file cells (a1–a5, e1–e5: optional hero slug, p, r), optional maps,
 //                and artifacts ({ a: slug | null, e: slug | null })
 //                (default: truth.json beside the samples, when present)
 //   --references read the frames, costume captures and seasonal icons from a local copy
@@ -36,9 +36,9 @@ import {
 import { arg } from './lib/shared.ts'
 
 interface TruthCell {
-  hero: string
-  p: number
-  r: number
+  hero?: string
+  p?: number
+  r?: number
 }
 type Truth = Record<
   string,
@@ -97,14 +97,28 @@ function printReading(
       const t = truth?.cells?.[key]
       let verdict = ''
       if (t) {
-        const heroOk = name === t.hero
-        const pOk = cell.paragon.level === t.p
-        const rOk = cell.refinement.level === t.r
-        tally.hero.push(heroOk ? 1 : 0)
-        if (cell.sure) tally.sure.push(heroOk ? 1 : 0)
-        tally.p.push(pOk ? 1 : 0)
-        tally.r.push(rOk ? 1 : 0)
-        verdict = `  | truth ${t.hero} P${t.p} R${t.r} ${heroOk ? '' : 'HERO✗'}${pOk ? '' : 'P✗'}${rOk ? '' : 'R✗'}`
+        const expected: string[] = []
+        const errors: string[] = []
+        if (t.hero !== undefined) {
+          const correct = name === t.hero
+          tally.hero.push(correct ? 1 : 0)
+          if (cell.sure) tally.sure.push(correct ? 1 : 0)
+          expected.push(t.hero)
+          if (!correct) errors.push('HERO✗')
+        }
+        if (t.p !== undefined) {
+          const correct = cell.paragon.level === t.p
+          tally.p.push(correct ? 1 : 0)
+          expected.push(`P${t.p}`)
+          if (!correct) errors.push('P✗')
+        }
+        if (t.r !== undefined) {
+          const correct = cell.refinement.level === t.r
+          tally.r.push(correct ? 1 : 0)
+          expected.push(`R${t.r}`)
+          if (!correct) errors.push('R✗')
+        }
+        if (expected.length) verdict = `  | truth ${expected.join(' ')} ${errors.join('')}`
       }
       console.log(
         `  ${key} ${name.padEnd(14)} ${top ? top.score.toFixed(2) : ' -  '} lead ${cell.margin.toFixed(2)}${top?.learned ? ' learned' : ''}${top?.costume ? ' costume' : ''}${cell.sure ? '' : ' review'}` +
@@ -162,7 +176,7 @@ async function main(): Promise<void> {
     console.log(`  (${ms} ms)`)
   }
   const sum = (a: number[]): string => `${a.reduce((x, y) => x + y, 0)}/${a.length}`
-  if (tally.hero.length || tally.artifact.length) {
+  if (tally.hero.length || tally.p.length || tally.r.length || tally.artifact.length) {
     console.log(
       `\nheroes ${sum(tally.hero)} (high confidence ${sum(tally.sure)}), paragon ${sum(tally.p)}, refinement ${sum(tally.r)}, artifacts ${sum(tally.artifact)}`,
     )

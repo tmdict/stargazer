@@ -60,6 +60,14 @@ const shot = (
 const NAMES = { prefix: 'S7 SL5 Group', left: 'GNX', right: '10' }
 
 describe('suggestRecordName', () => {
+  it.each([
+    { prefix: '', left: '', right: '' },
+    { ...NAMES, left: '  ' },
+    { ...NAMES, right: '' },
+  ])('leaves the record name blank without both players: %j', (names) => {
+    expect(suggestRecordName(names, [Team.ALLY, Team.ENEMY, Team.ALLY])).toBe('')
+  })
+
   it('follows the pvp export convention', () => {
     const results = [Team.ALLY, Team.ENEMY, Team.ALLY, Team.ALLY, Team.ALLY]
     expect(suggestRecordName(NAMES, results)).toBe('S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)')
@@ -91,6 +99,17 @@ describe('mapResultsFrom', () => {
 })
 
 describe('buildTeamImportPlan', () => {
+  it('allows unnamed imports without a record-name result warning', () => {
+    const plan = buildTeamImportPlan([shot(0, reading([1], [2], { winner: null }))], '1v1', {
+      prefix: 'S7',
+      left: '',
+      right: '',
+    })
+    expect(plan.boards[0]?.sides[Team.ALLY][0]?.characterId).toBe(1)
+    expect(plan.suggestedName).toBe('')
+    expect(plan.issues).toEqual([])
+  })
+
   it('skips a screenshot with no heroes on either side', () => {
     const r = reading([1, 2], [3])
     for (const cell of [...r.sides[Team.ALLY], ...r.sides[Team.ENEMY]]) {
@@ -243,12 +262,23 @@ describe('review state', () => {
     const cell = hero(1)
     expect(cellState(cell)).toBe('sure')
     cell.paragon.sure = false
-    expect(cellState(cell)).toBe('review')
+    expect(cellState(cell)).toBe('paragon')
     expect(cellState(cell, { paragon: 4 })).toBe('sure')
     cell.paragon.sure = true
     cell.sure = false
     expect(cellState(cell)).toBe('review')
     expect(cellState(cell, { characterId: 9 })).toBe('sure')
+    expect(cellState(cell, { characterId: null })).toBe('sure')
+  })
+
+  it('identifies the remaining paragon check after the hero is corrected', () => {
+    const cell = hero(1)
+    cell.sure = false
+    cell.paragon.sure = false
+    expect(cellState(cell)).toBe('review')
+    expect(cellState(cell, { characterId: 9 })).toBe('paragon')
+    expect(cellState(cell, { characterId: 9, paragon: 4 })).toBe('sure')
+    expect(cellState(cell, { paragon: 4 })).toBe('review')
     expect(cellState(cell, { characterId: null })).toBe('sure')
   })
 

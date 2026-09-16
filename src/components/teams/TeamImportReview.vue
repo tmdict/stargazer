@@ -74,7 +74,6 @@ interface CellView {
   paragon: number
   refinement: number
   state: CellState
-  // The hero was corrected in review.
   edited: boolean
   card: string
 }
@@ -94,7 +93,7 @@ const cells = (team: Team): CellView[] => {
       paragon: override.paragon ?? cell.paragon.level,
       refinement: override.refinement ?? cell.refinement.level,
       state: states[row]!,
-      edited: override.characterId !== undefined,
+      edited: Object.keys(override).length > 0,
       card: shot.cards[key] ?? '',
     }
   })
@@ -161,15 +160,17 @@ const setPicked = (characterId: number | null): void => {
 interface ArtifactView {
   artifact: ArtifactType | null
   sure: boolean
+  edited: boolean
 }
 
 const artifactView = (team: Team): ArtifactView => {
   const reading = shot.reading
   const id = reading ? cellArtifactId(reading, team, shot.artifactOverrides) : null
+  const edited = shot.artifactOverrides[team] !== undefined
   return {
     artifact: id === null ? null : (gameData.getArtifactById(id) ?? null),
-    sure:
-      shot.artifactOverrides[team] !== undefined || (reading?.artifacts[team]?.margin ?? 0) >= 0.1,
+    sure: edited || (reading?.artifacts[team]?.margin ?? 0) >= 0.1,
+    edited,
   }
 }
 
@@ -207,7 +208,7 @@ const closePickers = (event: MouseEvent): void => {
   artifactPicker.value = null
 }
 
-const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
+const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
   review: 'app.import-review',
   none: 'app.import-unrecognised',
   duplicate: 'app.picked-twice',
@@ -240,8 +241,22 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
             </span>
             <span class="artifact-name">{{ artifactName(sideArtifacts[team].artifact) }}</span>
           </button>
-          <span v-if="!sideArtifacts[team].sure" class="cell-state review">
+          <button
+            v-if="!sideArtifacts[team].sure && sideArtifacts[team].artifact"
+            type="button"
+            class="cell-state review confirm-choice confirm-artifact"
+            :title="artifactName(sideArtifacts[team].artifact)"
+            @click="emit('setArtifact', shot.id, team, sideArtifacts[team].artifact!.id)"
+          >
+            {{
+              i18n.t('app.import-confirm', { value: artifactName(sideArtifacts[team].artifact) })
+            }}
+          </button>
+          <span v-else-if="!sideArtifacts[team].sure" class="cell-state review">
             {{ i18n.t('app.import-review') }}
+          </span>
+          <span v-else-if="sideArtifacts[team].edited" class="cell-state edited">
+            {{ i18n.t('app.import-edited') }}
           </span>
         </span>
       </div>
@@ -274,7 +289,24 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
               @paragon="emit('setLevel', shot.id, team, view.row, 'paragon', $event)"
               @refinement="emit('setLevel', shot.id, team, view.row, 'refinement', $event)"
             />
-            <span v-if="view.state !== 'sure'" class="cell-state" :class="view.state">
+            <button
+              v-if="view.state === 'review' && view.characterId !== null"
+              type="button"
+              class="cell-state review confirm-choice confirm-hero"
+              :title="heroName(view.characterId)"
+              @click="emit('setHero', shot.id, team, view.row, view.characterId)"
+            >
+              {{ i18n.t('app.import-confirm', { value: heroName(view.characterId) }) }}
+            </button>
+            <button
+              v-else-if="view.state === 'paragon'"
+              type="button"
+              class="cell-state review confirm-choice confirm-paragon"
+              @click="emit('setLevel', shot.id, team, view.row, 'paragon', view.paragon)"
+            >
+              {{ i18n.t('app.import-confirm', { value: `P${view.paragon}` }) }}
+            </button>
+            <span v-else-if="view.state !== 'sure'" class="cell-state" :class="view.state">
               {{ i18n.t(STATE_LABEL[view.state]) }}
             </span>
             <span v-else-if="view.edited" class="cell-state edited">{{
@@ -370,6 +402,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
 
 .artifact {
   margin-left: auto;
+  max-width: 100%;
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -382,6 +415,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
   align-items: center;
   gap: 6px;
   max-width: 200px;
+  min-width: 0;
   padding: 3px 8px 3px 3px;
   border: 1px solid var(--import-border);
   border-radius: 999px;
@@ -452,7 +486,8 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
   background: var(--import-surface);
 }
 
-.cell.review {
+.cell.review,
+.cell.paragon {
   border-color: var(--import-warn);
   background: var(--import-warn-tint);
 }
@@ -529,6 +564,23 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
   color: var(--import-warn);
 }
 
+.confirm-choice {
+  max-width: 100%;
+  padding: 4px 6px;
+  border: 1px solid currentColor;
+  border-radius: var(--radius-medium);
+  background: transparent;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.confirm-choice:hover,
+.confirm-choice:focus-visible {
+  background: var(--import-warn-tint);
+}
+
 .cell-state.none,
 .cell-state.duplicate {
   color: var(--import-bad);
@@ -539,6 +591,10 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure'>, string> = {
 }
 
 @media (pointer: coarse) {
+  .confirm-choice {
+    min-height: 32px;
+  }
+
   .cell-name {
     padding: 8px 6px;
   }
