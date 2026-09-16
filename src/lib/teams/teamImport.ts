@@ -125,7 +125,7 @@ export const cellArtifactId = (
   return reading.artifacts[team]?.candidates[0]?.artifactId ?? null
 }
 
-export type CellState = 'sure' | 'review' | 'none' | 'duplicate'
+export type CellState = 'sure' | 'review' | 'paragon' | 'none' | 'duplicate'
 
 /* The state the review shows for a cell. A cell removed in review has nothing
  * left to check; one nobody recognised or picked is `none`; otherwise the
@@ -136,7 +136,8 @@ export const cellState = (cell: HeroReading, override: CellOverride = {}): CellS
   if (override.characterId === undefined && !cell.recognised) return 'none'
   const heroSure = override.characterId !== undefined || cell.sure
   const paragonSure = override.paragon !== undefined || cell.paragon.sure
-  return heroSure && paragonSure ? 'sure' : 'review'
+  if (!heroSure) return 'review'
+  return paragonSure ? 'sure' : 'paragon'
 }
 
 /* Every cell's state on one side; a hero on two of its cells marks both. */
@@ -175,6 +176,9 @@ export function mapResultsFrom(
 }
 
 export function suggestRecordName(names: RecordNames, results: readonly (Team | null)[]): string {
+  const left = names.left.trim()
+  const right = names.right.trim()
+  if (!left || !right) return ''
   const leftMaps: number[] = []
   const rightMaps: number[] = []
   results.forEach((winner, i) => {
@@ -184,7 +188,7 @@ export function suggestRecordName(names: RecordNames, results: readonly (Team | 
   const op = rightMaps.length > leftMaps.length ? '<' : '>'
   const prefix = names.prefix.trim()
   const head = prefix ? `${prefix} - ` : ''
-  const players = `${head}${names.left.trim()} ${op} ${names.right.trim()}`
+  const players = `${head}${left} ${op} ${right}`
   // A single map has nothing to list; the operator already says who won it.
   if (results.length <= 1) return players
   return `${players} (${leftMaps.join(',')} ${op} ${rightMaps.join(',')})`
@@ -285,10 +289,11 @@ export function buildTeamImportPlan(
   // Equal map wins, or none read, leave the record name's winner to the typed
   // order: said so, rather than claimed.
   const results = mapResultsFrom(shots, boardCount)
+  const suggestedName = suggestRecordName(names, results)
   const wins = (team: Team): number => results.filter((r) => r === team).length
-  if (boards.some((b) => b !== null) && wins(Team.ALLY) === wins(Team.ENEMY)) {
+  if (suggestedName && boards.some((b) => b !== null) && wins(Team.ALLY) === wins(Team.ENEMY)) {
     issues.push({ kind: 'result-undecided' })
   }
 
-  return { boards, issues, suggestedName: suggestRecordName(names, results) }
+  return { boards, issues, suggestedName }
 }
