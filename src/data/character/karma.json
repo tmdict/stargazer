@@ -1,0 +1,14 @@
+{
+  "id": 126,
+  "name": "karma",
+  "level": "a",
+  "faction": "graveborn",
+  "class": "tank",
+  "damage": "physical",
+  "energy": [500],
+  "range": 1,
+  "season": 7,
+  "tags": {
+    "initial-energy-300": []
+  }
+}

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import CharacterInfoIcons from './CharacterInfoIcons.vue'
 import CharacterTooltip from './CharacterTooltip.vue'
@@ -8,6 +8,8 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { usePressClick } from '@/composables/usePressClick'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   character: CharacterType
@@ -24,6 +26,15 @@ const emit = defineEmits<{
 }>()
 
 const gameDataStore = useGameDataStore()
+const i18n = useI18nStore()
+const portraitUrl = computed(() => gameDataStore.getCharacterImage(props.character.name))
+const portraitFailed = ref(false)
+watch(portraitUrl, () => (portraitFailed.value = false))
+const displayName = computed(() =>
+  props.character.placeholder
+    ? i18n.t(`game.${props.character.faction}`)
+    : localizedDisplayName(i18n.t, 'character', props.character.name),
+)
 const { startDrag, endDrag } = useDragDrop()
 const { onMouseDown, onMouseUp } = usePressClick(() => emit('characterClick', props.character))
 const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
@@ -74,12 +85,15 @@ const handleDragEnd = (event: DragEvent) => {
       @touchstart="onTouchStart"
     >
       <img
-        :src="gameDataStore.getCharacterImage(character.name)"
+        v-if="portraitUrl && !portraitFailed"
+        :src="portraitUrl"
         loading="lazy"
         decoding="async"
         :alt="character.name"
         class="portrait"
+        @error="portraitFailed = true"
       />
+      <span v-else class="portrait-name">{{ displayName }}</span>
     </div>
     <!-- A placeholder's image is already its faction icon; the info row would
          repeat it. -->
@@ -139,6 +153,23 @@ const handleDragEnd = (event: DragEvent) => {
   height: 80px;
   object-fit: cover;
   z-index: 1;
+}
+
+.portrait-name {
+  position: relative;
+  z-index: 1;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 6px;
+  font-size: 0.8rem;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-shadow:
+    -1px -1px 0 #fff,
+    1px -1px 0 #fff,
+    -1px 1px 0 #fff,
+    1px 1px 0 #fff,
+    0 0 3px #fff;
 }
 
 .draggable {
