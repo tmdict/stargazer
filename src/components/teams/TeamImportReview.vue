@@ -335,7 +335,7 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
           @pick="setPicked($event.id)"
         />
         <button v-if="pickerHasHero" type="button" class="picker-remove" @click="setPicked(null)">
-          {{ i18n.t('app.import-remove-hero') }}
+          {{ i18n.t('app.remove-hero') }}
         </button>
       </SelectionPopup>
       <SelectionPopup

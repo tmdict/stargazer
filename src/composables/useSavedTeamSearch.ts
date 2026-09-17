@@ -1,8 +1,12 @@
-/* Saved-team search shared by the Saved Teams tab and the Load menu: a query
- * keeps a team visible on a name hit (any length; the returned snippet marks
- * the hit for highlighting) or, at 2+ characters, on a hero placed on its
+/* Saved-team search shared by the Saved Teams tab and the Load menu. Two
+ * inputs: picked heroes (the tab's pills, slugs taken from the suggestions)
+ * and free text. A team survives when it fields every picked hero and, with
+ * text present, the text hits its name (any length; the returned snippet
+ * marks the hit for highlighting) or, at 2+ characters, a hero placed on its
  * boards (matchCharacterNames, the roster search's multi-locale name index).
- * Phantimals and companion summons never match. */
+ * Phantimals and companion summons never match. Suggestions are the heroes
+ * the text matches among the teams the picks leave, so a pick can never
+ * empty the list. */
 
 import { computed, onScopeDispose, ref, watch, type ComputedRef, type Ref } from 'vue'
 
@@ -10,14 +14,23 @@ import { matchCharacterNames } from '@/composables/useSkillSearch'
 import { isStandardHero, teamPreviewBoards } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
 import { useGameDataStore } from '@/stores/gameData'
+import { useI18nStore } from '@/stores/i18n'
 import { renderSnippet, type Snippet } from '@/utils/searchHighlight'
+import { curatedHeroName } from '@/utils/skillLabels'
 
 export interface SavedTeamSearchResult {
   team: SavedTeam
   name: Snippet
-  // Present only when the team contains a matched hero. Every other card gets
-  // a stable undefined, so typing never re-renders its thumbnails.
+  // Present only when the team fields a picked or text-matched hero. Every
+  // other card gets a stable undefined, so typing never re-renders its
+  // thumbnails.
   highlightHeroes?: ReadonlySet<string>
+}
+
+// A picked or suggested hero: the slug plus its chrome-locale name.
+export interface SearchHero {
+  slug: string
+  label: string
 }
 
 // The list reacts once typing pauses rather than per keystroke: every filter
@@ -25,17 +38,30 @@ export interface SavedTeamSearchResult {
 // visible stall on mobile.
 const DEBOUNCE_MS = 200
 
+// Hero matching (filter and suggestions) waits for two characters so a single
+// letter can't pull in half the roster.
+const HERO_QUERY_MIN = 2
+
+const MAX_SUGGESTIONS = 8
+
 // Shared across consumers and keyed on the immutable data string (updates
 // replace the record), so the tab and the menu never decode a record twice.
 const heroSlugCache = new Map<string, ReadonlySet<string>>()
 
 export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
   query: Ref<string>
+  heroes: ComputedRef<SearchHero[]>
+  suggestions: ComputedRef<SearchHero[]>
   results: ComputedRef<SavedTeamSearchResult[]>
+  addHero: (slug: string) => void
+  removeHero: (slug: string) => void
+  clear: () => void
 } {
   const gameData = useGameDataStore()
+  const i18n = useI18nStore()
   const query = ref('')
   const activeQuery = ref('')
+  const heroSlugs = ref<string[]>([])
   let debounce: ReturnType<typeof setTimeout> | undefined
   watch(query, (value) => {
     clearTimeout(debounce)
@@ -43,11 +69,35 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
   })
   onScopeDispose(() => clearTimeout(debounce))
 
-  // Matches any warm locale (en/zh always are). Gated to 2+ characters so a
-  // single letter can't pull in half the roster.
-  const matchedHeroes = computed<ReadonlySet<string> | undefined>(() =>
-    activeQuery.value.length >= 2 ? matchCharacterNames(activeQuery.value) : undefined,
-  )
+  const labelled = (slug: string): SearchHero => ({
+    slug,
+    label: curatedHeroName(slug, i18n.currentLocale),
+  })
+
+  const heroes = computed(() => heroSlugs.value.map(labelled))
+
+  // Bypasses the debounce: text dropped by a pick or a clear must let go of
+  // the list at once, not narrow it for one more tick.
+  const setQueryNow = (value: string): void => {
+    clearTimeout(debounce)
+    query.value = value
+    activeQuery.value = value
+  }
+
+  // A pick also clears the text, so the next term can be typed at once.
+  const addHero = (slug: string): void => {
+    if (!heroSlugs.value.includes(slug)) heroSlugs.value = [...heroSlugs.value, slug]
+    setQueryNow('')
+  }
+
+  const removeHero = (slug: string): void => {
+    heroSlugs.value = heroSlugs.value.filter((picked) => picked !== slug)
+  }
+
+  const clear = (): void => {
+    heroSlugs.value = []
+    setQueryNow('')
+  }
 
   // Memoized only once the roster is loaded: an early lookup would pin an
   // empty set.
@@ -66,6 +116,51 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     return slugs
   }
 
+  const heroFiltered = computed(() => {
+    const picked = heroSlugs.value
+    if (picked.length === 0) return teams()
+    return teams().filter((team) => {
+      const fielded = teamHeroSlugs(team)
+      return picked.every((slug) => fielded.has(slug))
+    })
+  })
+
+  const collator = computed(() => new Intl.Collator(i18n.currentLocale, { sensitivity: 'base' }))
+
+  // Live rather than debounced: Enter takes the lit suggestion, so the list
+  // must reflect the text at the moment of the keystroke. Prefix hits on the
+  // chrome name lead; the rest follow in collation order.
+  const suggestions = computed<SearchHero[]>(() => {
+    const q = query.value.trim()
+    if (q.length < HERO_QUERY_MIN) return []
+    const matched = matchCharacterNames(q)
+    const picked = heroSlugs.value
+    const pool = new Set<string>()
+    for (const team of heroFiltered.value) {
+      for (const slug of teamHeroSlugs(team)) {
+        if (matched.has(slug) && !picked.includes(slug)) pool.add(slug)
+      }
+    }
+    const lc = q.toLowerCase()
+    const rank = (hero: SearchHero): number => (hero.label.toLowerCase().startsWith(lc) ? 0 : 1)
+    return [...pool]
+      .map(labelled)
+      .sort((a, b) => rank(a) - rank(b) || collator.value.compare(a.label, b.label))
+      .slice(0, MAX_SUGGESTIONS)
+  })
+
+  // Matches any warm locale (en/zh always are).
+  const matchedHeroes = computed<ReadonlySet<string> | undefined>(() =>
+    activeQuery.value.length >= HERO_QUERY_MIN ? matchCharacterNames(activeQuery.value) : undefined,
+  )
+
+  // One set per query, shared by every ringed card: the ring tests membership
+  // per unit, so slugs a team lacks are harmless, and a stable reference keeps
+  // a sort or filter change from re-rendering thumbnails.
+  const ringed = computed<ReadonlySet<string>>(
+    () => new Set([...heroSlugs.value, ...(matchedHeroes.value ?? [])]),
+  )
+
   const plainName = (team: SavedTeam): Snippet => ({ pre: team.name, match: '', post: '' })
 
   const hasMatchedHero = (team: SavedTeam, heroes: ReadonlySet<string>): boolean => {
@@ -73,29 +168,31 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     return false
   }
 
-  // A card survives on a name hit or a hero hit; input order is preserved.
-  // renderSnippet gets the name's full length as context, so its pieces always
-  // spell the whole name. The hero check runs even for name hits: a name-matched
-  // team still rings its matched heroes.
+  // Picked heroes narrow first; the text then keeps a card on a name hit or a
+  // hero hit. Input order is preserved. renderSnippet gets the name's full
+  // length as context, so its pieces always spell the whole name. The hero
+  // check runs even for name hits: a name-matched team still rings its
+  // matched heroes.
   const results = computed<SavedTeamSearchResult[]>(() => {
     const q = activeQuery.value
-    if (!q) {
+    const hasPicks = heroSlugs.value.length > 0
+    if (!q && !hasPicks) {
       return teams().map((team) => ({ team, name: plainName(team) }))
     }
     const heroes = matchedHeroes.value
-    return teams().flatMap((team) => {
-      const name = renderSnippet(team.name, q, team.name.length)
+    return heroFiltered.value.flatMap((team) => {
+      const name = q ? renderSnippet(team.name, q, team.name.length) : null
       const heroHit = !!heroes && hasMatchedHero(team, heroes)
-      if (!name && !heroHit) return []
+      if (q && !name && !heroHit) return []
       return [
         {
           team,
           name: name ?? plainName(team),
-          highlightHeroes: heroHit ? heroes : undefined,
+          highlightHeroes: hasPicks || heroHit ? ringed.value : undefined,
         },
       ]
     })
   })
 
-  return { query, results }
+  return { query, heroes, suggestions, results, addHero, removeHero, clear }
 }
