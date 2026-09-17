@@ -1,7 +1,7 @@
 /* Match import: readings plus the user's review decisions become per-board
  * rosters the grids store can stamp, and the record name the pvp export
- * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the left
- * player is the screenshot's Ally tab, `>` when that player won more maps,
+ * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
+ * on the ally half of the boards first, `>` when that player won more maps,
  * each player's map numbers in the brackets). Pure data mapping, a sibling
  * of sideLoad. */
 
@@ -198,7 +198,8 @@ export function suggestRecordName(names: RecordNames, results: readonly (Team | 
  * board and its Enemy column on the ally side. One choice for the whole match
  * rather than per screenshot: the game's Ally tab is the viewing player, who
  * keeps one side of the board for every map, and the boards hold a hero once
- * per side page-wide. Issues name board sides throughout. */
+ * per side page-wide. Issues and the record name follow board sides
+ * throughout. */
 export function buildTeamImportPlan(
   shots: readonly ShotAssignment[],
   mode: TeamModeKey,
@@ -213,6 +214,8 @@ export function buildTeamImportPlan(
     mapIndex !== null && mapIndex < boardCount
   // The screenshot column that fills a board side.
   const columnOf = (side: Team): Team => (swapSides ? getOpposingTeam(side) : side)
+  // A column's board side: the swap is its own inverse.
+  const sideOf = columnOf
   const unmapped = shots.filter((s) => !mapped(s.mapIndex)).length
   if (unmapped > 0) issues.push({ kind: 'unmapped', count: unmapped })
   let empty = 0
@@ -286,10 +289,15 @@ export function buildTeamImportPlan(
     }
   }
 
-  // Equal map wins, or none read, leave the record name's winner to the typed
-  // order: said so, rather than claimed.
-  const results = mapResultsFrom(shots, boardCount)
-  const suggestedName = suggestRecordName(names, results)
+  // The name reads by board half (the pvp convention: the ally half's player
+  // first), so a swap lists the right player first and each map's win moves
+  // to the side its column fills. Equal map wins, or none read, leave the
+  // winner to the listed order: said so, rather than claimed.
+  const results = mapResultsFrom(shots, boardCount).map((column) =>
+    column === null ? null : sideOf(column),
+  )
+  const sideNames = swapSides ? { ...names, left: names.right, right: names.left } : names
+  const suggestedName = suggestRecordName(sideNames, results)
   const wins = (team: Team): number => results.filter((r) => r === team).length
   if (suggestedName && boards.some((b) => b !== null) && wins(Team.ALLY) === wins(Team.ENEMY)) {
     issues.push({ kind: 'result-undecided' })
