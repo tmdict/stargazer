@@ -234,8 +234,9 @@ describe('buildTeamImportPlan', () => {
       artifactId: 14,
       maps: [0, 1],
     })
-    // The record name follows the players, whichever side they fill.
-    expect(plan.suggestedName).toBe('S7 SL5 Group - GNX > 10 (1,2 > )')
+    // The name reads by board half: the Ally column's player fills the enemy
+    // half here, so they are listed second, with their map wins.
+    expect(plan.suggestedName).toBe('S7 SL5 Group - 10 < GNX ( < 1,2)')
   })
 
   it('says when the map wins are equal or unread instead of claiming a winner', () => {
