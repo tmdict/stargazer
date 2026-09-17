@@ -10,6 +10,7 @@
 import { computed, ref, watch, type ComponentPublicInstance } from 'vue'
 
 import TeamPreviewModal from '@/components/modals/TeamPreviewModal.vue'
+import SavedTeamsSearch from '@/components/teams/SavedTeamsSearch.vue'
 import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
 import IconCopy from '@/components/ui/IconCopy.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
@@ -125,15 +126,25 @@ const sideFiltered = computed(() =>
     : typeFiltered.value,
 )
 
-// Matching itself (name hit with highlight snippet, hero hit at 2+ characters)
-// is the shared useSavedTeamSearch composable, also used by the Load menu.
+// Matching itself (hero pills, name hit with highlight snippet, hero hit at
+// 2+ characters) is the shared useSavedTeamSearch composable, also used by
+// the Load menu.
 const searchVisible = computed(() => library.count > 1)
-const { query: searchQuery, results: visibleTeams } = useSavedTeamSearch(() => sideFiltered.value)
-// The box hides below 2 teams; hiding also resets the query (which matching
-// reads), so a leftover query can never strand the list on "no matches" with
-// no visible way to clear it, and the box can't reappear pre-filtered.
+const {
+  query: searchQuery,
+  heroes: searchHeroes,
+  suggestions: searchSuggestions,
+  results: visibleTeams,
+  addHero: addSearchHero,
+  removeHero: removeSearchHero,
+  clear: clearSearch,
+} = useSavedTeamSearch(() => sideFiltered.value)
+// The box hides below 2 teams; hiding also resets pills and text (which
+// matching reads), so a leftover search can never strand the list on "no
+// matches" with no visible way to clear it, and the box can't reappear
+// pre-filtered.
 watch(searchVisible, (visible) => {
-  if (!visible) searchQuery.value = ''
+  if (!visible) clearSearch()
 })
 
 const nearCap = computed(() => library.count >= MAX_SAVED_TEAMS * 0.8)
@@ -227,6 +238,7 @@ const filterLabels = computed((): string[] => {
   if (modeFilter.value !== 'all') labels.push(i18n.t(TEAM_MODES[modeFilter.value].labelKey))
   if (typeFilter.value !== 'all') labels.push(typeLabel(typeFilter.value))
   if (oneSideOnly.value) labels.push(i18n.t('app.one-sided'))
+  for (const hero of searchHeroes.value) labels.push(hero.label)
   const query = searchQuery.value.trim()
   if (query) labels.push(`“${query}”`)
   return labels
@@ -342,14 +354,15 @@ const actionTipText = computed((): string => {
             {{ i18n.t(`app.sort-${key}`) }}
           </button>
         </div>
-        <input
+        <SavedTeamsSearch
           v-if="searchVisible"
           v-model="searchQuery"
           class="team-search"
-          type="search"
-          :placeholder="i18n.t('app.search-teams')"
-          :aria-label="i18n.t('app.search-teams')"
-          spellcheck="false"
+          :heroes="searchHeroes"
+          :suggestions="searchSuggestions"
+          @add-hero="addSearchHero"
+          @remove-hero="removeSearchHero"
+          @clear="clearSearch"
         />
       </span>
       <span class="library-actions">
@@ -741,18 +754,23 @@ const actionTipText = computed((): string => {
   min-width: 70px;
   max-width: 260px;
   margin-left: var(--spacing-sm);
-  font: inherit;
-  font-size: 0.8rem;
-  padding: 4px 12px;
-  border: 1.5px solid var(--color-border-primary);
-  border-radius: 999px;
-  background: var(--color-bg-white);
-  color: var(--color-text-primary);
 }
 
-.team-search:focus {
-  outline: none;
-  border-color: var(--color-primary);
+/* Room for several hero pills beside the text once the bar stops wrapping. */
+@media (min-width: 769px) {
+  .team-search {
+    max-width: 480px;
+  }
+}
+
+/* The phone sheet leaves the box a sliver beside the count and sort, too
+   narrow for a pill and the text together, so it takes a row of its own. */
+@media (max-width: 768px) {
+  .team-search {
+    flex-basis: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
 }
 
 .library-actions {
@@ -928,7 +946,6 @@ const actionTipText = computed((): string => {
 /* 16px floor: iOS zooms the page when a smaller field gains focus, and the
    zoom outlives the field. */
 @media (pointer: coarse) {
-  .team-search,
   .team-name-input {
     font-size: 1rem;
   }

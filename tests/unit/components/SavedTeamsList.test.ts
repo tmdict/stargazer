@@ -6,13 +6,17 @@ import { afterEach, describe, expect, it } from 'vitest'
 import SavedTeamsList from '@/components/teams/SavedTeamsList.vue'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
+import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
+import { loadSkillLocale } from '@/utils/dataLoader'
+import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-/* The type filter row: offered only for a board count with named types,
- * reset to All on every change of the Teams filter, and classifying records
- * by their maps. */
+/* The type filter row (offered only for a board count with named types,
+ * reset to All on every change of the Teams filter, classifying records by
+ * their maps) and the search field's hero pills. */
 
 let teardown: (() => void) | undefined
 
@@ -22,21 +26,46 @@ afterEach(() => {
   localStorage.clear()
 })
 
-const record = (maps: readonly string[], mode: string): string =>
-  canonicalTeamData(encodeMultiGridStateToUrl({ boards: maps.map((m) => ({ m })), mode }))!
+const record = (state: MultiGridState): string =>
+  canonicalTeamData(encodeMultiGridStateToUrl(state))!
 
-const mountList = async () => {
+const mapsRecord = (maps: readonly string[], mode: string): string =>
+  record({ boards: maps.map((m) => ({ m })), mode })
+
+type Library = ReturnType<typeof useTeamLibrary>
+
+const seedTypes = (library: Library): void => {
+  library.saveAsNew('5v5', mapsRecord(TEAM_VARIANTS.sl.maps, '5v5'), 'S7 SL')
+  library.saveAsNew(
+    '5v5',
+    mapsRecord(['arena1', 'arena3', 'arena1', 'arena1', 'arena1'], '5v5'),
+    'Custom',
+  )
+  library.saveAsNew('3v3', mapsRecord(TEAM_VARIANTS.gd.maps, '3v3'), 'S7 GD')
+}
+
+// Real roster ids: Rolan (121) and Alsa (48). Hero matching needs the store's
+// id-to-slug lookup and the en name index.
+const heroRecord = (ids: number[]): string =>
+  record({
+    boards: [
+      { m: 'arena1', c: ids.map((id, i): [number, number, Team] => [i + 1, id, Team.ALLY]) },
+    ],
+    mode: '1v1',
+  })
+
+const seedHeroes = (library: Library): void => {
+  useGameDataStore().initializeContentData()
+  library.saveAsNew('1v1', heroRecord([121, 48]), 'Duo')
+  library.saveAsNew('1v1', heroRecord([121]), 'Solo')
+  library.saveAsNew('1v1', heroRecord([48]), 'Alsa squad')
+}
+
+const mountList = async (seed: (library: Library) => void = seedTypes) => {
   const pinia = createPinia()
   setActivePinia(pinia)
   useI18nStore().initialize()
-  const library = useTeamLibrary()
-  library.saveAsNew('5v5', record(TEAM_VARIANTS.sl.maps, '5v5'), 'S7 SL')
-  library.saveAsNew(
-    '5v5',
-    record(['arena1', 'arena3', 'arena1', 'arena1', 'arena1'], '5v5'),
-    'Custom',
-  )
-  library.saveAsNew('3v3', record(TEAM_VARIANTS.gd.maps, '3v3'), 'S7 GD')
+  seed(useTeamLibrary())
   const host = document.createElement('div')
   document.body.append(host)
   const app = createApp({ render: () => h(SavedTeamsList, { loadedTeamId: null }) })
@@ -107,5 +136,54 @@ describe('SavedTeamsList type filter', () => {
       return `${name}: ${labels.join(' ')}`
     })
     expect(chips.sort()).toEqual(['Custom: 5v5', 'S7 GD: 3v3 GD', 'S7 SL: 5v5 SL'])
+  })
+})
+
+describe('SavedTeamsList hero search', () => {
+  const searchInput = (): HTMLInputElement => document.querySelector('.search-input')!
+  const options = (): string[] =>
+    [...document.querySelectorAll('.hero-option')].map((el) => el.textContent?.trim() ?? '')
+  const pills = (): string[] =>
+    [...document.querySelectorAll('.hero-pill')].map((el) => el.textContent?.trim() ?? '')
+
+  const typeText = async (text: string): Promise<void> => {
+    const input = searchInput()
+    input.value = text
+    input.dispatchEvent(new Event('input'))
+    await nextTick()
+  }
+
+  const press = async (key: string): Promise<void> => {
+    searchInput().dispatchEvent(new KeyboardEvent('keydown', { key, cancelable: true }))
+    await nextTick()
+  }
+
+  it('turns a listed hero into a pill on Enter and filters by every pill', async () => {
+    await loadSkillLocale('en')
+    await mountList(seedHeroes)
+    searchInput().dispatchEvent(new FocusEvent('focus'))
+
+    await typeText('rol')
+    expect(options()).toEqual(['Rolan'])
+    await press('Enter')
+    expect(pills()).toEqual(['Rolan'])
+    expect(searchInput().value).toBe('')
+    expect(cardNames()).toEqual(['Duo', 'Solo'])
+
+    // Aliceth is in the roster but on no team, so only Alsa is offered.
+    await typeText('al')
+    expect(options()).toEqual(['Alsa'])
+    await press('Enter')
+    expect(pills()).toEqual(['Rolan', 'Alsa'])
+    expect(cardNames()).toEqual(['Duo'])
+
+    await press('Backspace')
+    expect(pills()).toEqual(['Rolan'])
+    expect(cardNames()).toEqual(['Duo', 'Solo'])
+
+    document.querySelector<HTMLButtonElement>('.search-clear')!.click()
+    await nextTick()
+    expect(pills()).toEqual([])
+    expect(cardNames()).toEqual(['Alsa squad', 'Duo', 'Solo'])
   })
 })
