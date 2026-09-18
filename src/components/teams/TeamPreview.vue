@@ -25,6 +25,7 @@ import BoardThumbnail, {
 } from '@/components/grid/BoardThumbnail.vue'
 import {
   isStandardHero,
+  lineupHeroKey,
   teamPreviewBoards,
   type PreviewArtifact,
   type PreviewUnit,
@@ -43,7 +44,8 @@ const {
   // Modal scale: bigger boards, hex size raised in proportion so strokes stay
   // hairline.
   large?: boolean
-  // Hero slugs to ring. Companions and phantimals never match.
+  // lineupHeroKey keys of the heroes to ring; the rest of the card fades.
+  // Companions and phantimals never match.
   highlightHeroes?: ReadonlySet<string>
 }>()
 
@@ -82,10 +84,10 @@ const resolveArtifact = (slot: PreviewArtifact): ThumbnailArtifact | undefined =
     : gameData.getArtifactImage(artifact.name) || undefined
 }
 
-const isHighlighted = (unit: PreviewUnit): boolean => {
+const isHighlighted = (board: number, unit: PreviewUnit): boolean => {
   if (!highlightHeroes || !isStandardHero(unit)) return false
   const slug = gameData.getCharacterNameById(unit.characterId)
-  return slug !== undefined && highlightHeroes.has(slug)
+  return slug !== undefined && highlightHeroes.has(lineupHeroKey(board, unit.team, slug))
 }
 
 // Decoded once per record; team.data is immutable (updates replace the record).
@@ -95,14 +97,8 @@ const decoded = computed(() => teamPreviewBoards(team.data))
 // reuses it.
 const boards = computed(() => {
   if (!decoded.value) return null
-  return decoded.value.map((board) => ({
-    mapKey: board.mapKey,
-    tiles: board.tiles,
-    artifacts: {
-      ally: resolveArtifact(board.artifacts.ally),
-      enemy: resolveArtifact(board.artifacts.enemy),
-    },
-    units: board.units.map((unit): ThumbnailUnit =>
+  return decoded.value.map((board, index) => {
+    const units = board.units.map((unit): ThumbnailUnit =>
       unit.retiredSeason !== undefined
         ? {
             hexId: unit.hexId,
@@ -114,11 +110,25 @@ const boards = computed(() => {
             hexId: unit.hexId,
             team: unit.team,
             image: resolveImage(unit),
-            highlight: isHighlighted(unit),
+            highlight: isHighlighted(index, unit),
           },
-    ),
-  }))
+    )
+    return {
+      mapKey: board.mapKey,
+      tiles: board.tiles,
+      artifacts: {
+        ally: resolveArtifact(board.artifacts.ally),
+        enemy: resolveArtifact(board.artifacts.enemy),
+      },
+      units,
+      matched: units.some((unit) => unit.highlight),
+    }
+  })
 })
+
+// While any board rings a hero, the boards without one fade whole, pointing a
+// multi-board record at the board that matched.
+const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? false)
 </script>
 
 <template>
@@ -128,6 +138,7 @@ const boards = computed(() => {
         v-for="(board, index) in boards"
         :key="index"
         class="board-thumb"
+        :class="{ dimmed: spotlit && !board.matched }"
         :map-key="board.mapKey"
         :tiles="board.tiles"
         :units="board.units"
@@ -160,6 +171,12 @@ const boards = computed(() => {
   min-width: 0;
   max-width: 165px;
   height: auto;
+}
+
+/* Styled here, not on the SVG, for the reason BoardThumbnail's search marks
+   are: a card export captures the plain team. */
+.board-thumb.dimmed {
+  opacity: 0.35;
 }
 
 /* Fixed basis, not a percentage: boards render full-size at any board count,

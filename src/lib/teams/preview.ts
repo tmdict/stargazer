@@ -37,6 +37,13 @@ export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { chara
   return unit.characterId !== undefined && unit.characterId < COMPANION_ID_OFFSET
 }
 
+/* Names a hero within one lineup for search highlighting: the saved-team
+ * search builds these keys and TeamPreview tests its units against them.
+ * `board` is the index into teamPreviewBoards. */
+export function lineupHeroKey(board: number, team: Team, slug: string): string {
+  return `${board}:${team}:${slug}`
+}
+
 export interface PreviewBoard {
   mapKey: string
   // The board's serialized tile states, authoritative for rendering (an empty

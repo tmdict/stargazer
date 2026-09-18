@@ -1,18 +1,21 @@
 /* Saved-team search shared by the Saved Teams tab and the Load menu. Two
  * inputs: picked heroes (the tab's pills, slugs taken from the suggestions)
- * and free text. A team survives when it fields every picked hero and, with
- * text present, the text hits its name (any length; the returned snippet
- * marks the hit for highlighting) or, at 2+ characters, a hero placed on its
- * boards (matchCharacterNames, the roster search's multi-locale name index).
+ * and free text. Heroes match per lineup, one board's ally or enemy side, so
+ * picks never pair across boards or against the opponent. A team survives
+ * when one lineup fields every picked hero and, with text present, the text
+ * hits its name (any length; the returned snippet marks the hit for
+ * highlighting) or, at 2+ characters, a hero in such a lineup
+ * (matchCharacterNames, the roster search's multi-locale name index).
  * Phantimals and companion summons never match. Suggestions are the heroes
- * the text matches among the teams the picks leave, so a pick can never
- * empty the list. */
+ * the text matches in those lineups, so a pick can never empty the list, and
+ * the thumbnail rings mark the picked and text-matched heroes in them. */
 
 import { computed, onScopeDispose, ref, watch, type ComputedRef, type Ref } from 'vue'
 
 import { matchCharacterNames } from '@/composables/useSkillSearch'
-import { isStandardHero, teamPreviewBoards } from '@/lib/teams/preview'
+import { isStandardHero, lineupHeroKey, teamPreviewBoards } from '@/lib/teams/preview'
 import type { SavedTeam } from '@/lib/teams/savedTeam'
+import type { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { renderSnippet, type Snippet } from '@/utils/searchHighlight'
@@ -21,10 +24,17 @@ import { curatedHeroName } from '@/utils/skillLabels'
 export interface SavedTeamSearchResult {
   team: SavedTeam
   name: Snippet
-  // Present only when the team fields a picked or text-matched hero. Every
-  // other card gets a stable undefined, so typing never re-renders its
-  // thumbnails.
+  // lineupHeroKey keys of the heroes to ring. Present only when the team
+  // fields a picked or text-matched hero. Every other card gets a stable
+  // undefined, so typing never re-renders its thumbnails.
   highlightHeroes?: ReadonlySet<string>
+}
+
+// One board side's heroes, as fielded.
+interface Lineup {
+  board: number
+  team: Team
+  heroes: ReadonlySet<string>
 }
 
 // A picked or suggested hero: the slug plus its chrome-locale name.
@@ -46,7 +56,7 @@ const MAX_SUGGESTIONS = 8
 
 // Shared across consumers and keyed on the immutable data string (updates
 // replace the record), so the tab and the menu never decode a record twice.
-const heroSlugCache = new Map<string, ReadonlySet<string>>()
+const lineupCache = new Map<string, readonly Lineup[]>()
 
 export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
   query: Ref<string>
@@ -99,31 +109,42 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     setQueryNow('')
   }
 
-  // Memoized only once the roster is loaded: an early lookup would pin an
-  // empty set.
-  const teamHeroSlugs = (team: SavedTeam): ReadonlySet<string> => {
-    const cached = heroSlugCache.get(team.data)
+  // Memoized only once the roster is loaded: an early lookup would pin empty
+  // lineups.
+  const teamLineups = (team: SavedTeam): readonly Lineup[] => {
+    const cached = lineupCache.get(team.data)
     if (cached) return cached
-    const slugs = new Set<string>()
-    for (const board of teamPreviewBoards(team.data) ?? []) {
-      for (const unit of board.units) {
+    const lineups: Lineup[] = []
+    for (const [board, { units }] of (teamPreviewBoards(team.data) ?? []).entries()) {
+      const sides = new Map<Team, Set<string>>()
+      for (const unit of units) {
         if (!isStandardHero(unit)) continue
         const slug = gameData.getCharacterNameById(unit.characterId)
-        if (slug) slugs.add(slug)
+        if (!slug) continue
+        const heroes = sides.get(unit.team) ?? new Set<string>()
+        heroes.add(slug)
+        sides.set(unit.team, heroes)
       }
+      for (const [side, heroes] of sides) lineups.push({ board, team: side, heroes })
     }
-    if (gameData.dataLoaded) heroSlugCache.set(team.data, slugs)
-    return slugs
+    if (gameData.dataLoaded) lineupCache.set(team.data, lineups)
+    return lineups
   }
 
-  const heroFiltered = computed(() => {
+  // The lineups fielding every pick; all of them when nothing is picked.
+  const pickedLineups = (team: SavedTeam): readonly Lineup[] => {
     const picked = heroSlugs.value
-    if (picked.length === 0) return teams()
-    return teams().filter((team) => {
-      const fielded = teamHeroSlugs(team)
-      return picked.every((slug) => fielded.has(slug))
-    })
-  })
+    const lineups = teamLineups(team)
+    if (picked.length === 0) return lineups
+    return lineups.filter((lineup) => picked.every((slug) => lineup.heroes.has(slug)))
+  }
+
+  // Skips the decode with no picks, so a name-only query stays cheap.
+  const heroFiltered = computed(() =>
+    heroSlugs.value.length === 0
+      ? teams()
+      : teams().filter((team) => pickedLineups(team).length > 0),
+  )
 
   const collator = computed(() => new Intl.Collator(i18n.currentLocale, { sensitivity: 'base' }))
 
@@ -137,8 +158,10 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     const picked = heroSlugs.value
     const pool = new Set<string>()
     for (const team of heroFiltered.value) {
-      for (const slug of teamHeroSlugs(team)) {
-        if (matched.has(slug) && !picked.includes(slug)) pool.add(slug)
+      for (const lineup of pickedLineups(team)) {
+        for (const slug of lineup.heroes) {
+          if (matched.has(slug) && !picked.includes(slug)) pool.add(slug)
+        }
       }
     }
     const lc = q.toLowerCase()
@@ -154,25 +177,40 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     activeQuery.value.length >= HERO_QUERY_MIN ? matchCharacterNames(activeQuery.value) : undefined,
   )
 
-  // One set per query, shared by every ringed card: the ring tests membership
-  // per unit, so slugs a team lacks are harmless, and a stable reference keeps
-  // a sort or filter change from re-rendering thumbnails.
-  const ringed = computed<ReadonlySet<string>>(
-    () => new Set([...heroSlugs.value, ...(matchedHeroes.value ?? [])]),
-  )
+  // A card's ring keys, memoized until the picks or the matched heroes
+  // change: a sort or filter pass hands each card the same set, so its
+  // thumbnail doesn't re-render.
+  const ringsFor = computed(() => {
+    const ringed = new Set([...heroSlugs.value, ...(matchedHeroes.value ?? [])])
+    const memo = new Map<string, ReadonlySet<string>>()
+    return (team: SavedTeam): ReadonlySet<string> => {
+      const cached = memo.get(team.data)
+      if (cached) return cached
+      const rings = new Set<string>()
+      for (const { board, team: side, heroes } of pickedLineups(team)) {
+        for (const slug of heroes) {
+          if (ringed.has(slug)) rings.add(lineupHeroKey(board, side, slug))
+        }
+      }
+      memo.set(team.data, rings)
+      return rings
+    }
+  })
 
   const plainName = (team: SavedTeam): Snippet => ({ pre: team.name, match: '', post: '' })
 
   const hasMatchedHero = (team: SavedTeam, heroes: ReadonlySet<string>): boolean => {
-    for (const slug of teamHeroSlugs(team)) if (heroes.has(slug)) return true
+    for (const lineup of pickedLineups(team)) {
+      for (const slug of lineup.heroes) if (heroes.has(slug)) return true
+    }
     return false
   }
 
   // Picked heroes narrow first; the text then keeps a card on a name hit or a
-  // hero hit. Input order is preserved. renderSnippet gets the name's full
-  // length as context, so its pieces always spell the whole name. The hero
-  // check runs even for name hits: a name-matched team still rings its
-  // matched heroes.
+  // hero hit in a picked lineup. Input order is preserved. renderSnippet gets
+  // the name's full length as context, so its pieces always spell the whole
+  // name. The hero check runs even for name hits: a name-matched team still
+  // rings its matched heroes.
   const results = computed<SavedTeamSearchResult[]>(() => {
     const q = activeQuery.value
     const hasPicks = heroSlugs.value.length > 0
@@ -188,7 +226,7 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
         {
           team,
           name: name ?? plainName(team),
-          highlightHeroes: hasPicks || heroHit ? ringed.value : undefined,
+          highlightHeroes: hasPicks || heroHit ? ringsFor.value(team) : undefined,
         },
       ]
     })
