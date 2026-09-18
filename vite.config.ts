@@ -7,6 +7,7 @@ import { imagetools } from 'vite-imagetools'
 import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
+import { guideReports } from './scripts/guideReports.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
 import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
@@ -150,7 +151,7 @@ function processRenderedPage(route: string, html: string): string {
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(), vueDevTools(), imagetools()],
+  plugins: [vue(), vueDevTools(), imagetools(), guideReports()],
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),

@@ -12,6 +12,7 @@ import {
 } from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
 import type { CharmData, SkillCharms, SkillKeywords, SkillLocaleFile } from '@/lib/types/skill'
+import { artifactImages, characterImages } from './imageAssets'
 
 export interface ArenaJson {
   name: string
@@ -40,8 +41,6 @@ function loadAssetsDict<T>(assets: Record<string, T>): Record<string, T> {
 // Module-level cache for data
 let charactersCache: CharacterType[] | null = null
 let artifactsCache: ArtifactType[] | null = null
-let characterImagesCache: Record<string, string> | null = null
-let artifactImagesCache: Record<string, string> | null = null
 let iconsCache: Record<string, string> | null = null
 let characterRangesCache: Map<number, number> | null = null
 let arenasCache: Record<string, ArenaJson> | null = null
@@ -98,19 +97,7 @@ export function loadArtifacts(): ArtifactType[] {
 }
 
 export function loadCharacterImages(): Record<string, string> {
-  if (characterImagesCache) {
-    return characterImagesCache
-  }
-
-  const imageModules = import.meta.glob<string>('@/assets/images/character/*.png', {
-    query: { format: 'webp', quality: 80, w: 100, h: 135, fit: 'cover', position: 'bottom' },
-    eager: true,
-    import: 'default',
-  })
-  const images = loadAssetsDict(imageModules)
-
-  characterImagesCache = images
-  return images
+  return characterImages
 }
 
 // Portraits at the art's own width for the match-import matcher, loaded on
@@ -125,19 +112,7 @@ export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
 }
 
 export function loadArtifactImages(): Record<string, string> {
-  if (artifactImagesCache) {
-    return artifactImagesCache
-  }
-
-  const imageModules = import.meta.glob<string>('@/assets/images/artifact/*.png', {
-    query: { format: 'webp', quality: 80, w: 100 },
-    eager: true,
-    import: 'default',
-  })
-  const images = loadAssetsDict(imageModules)
-
-  artifactImagesCache = images
-  return images
+  return artifactImages
 }
 
 export function loadPhantimals(): PhantimalType[] {
