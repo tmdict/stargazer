@@ -9,7 +9,7 @@ import { usePressClick } from '@/composables/usePressClick'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName } from '@/utils/nameFormatting'
+import { characterDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   character: CharacterType
@@ -27,19 +27,18 @@ const emit = defineEmits<{
 
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
-const portraitUrl = computed(() => gameDataStore.getCharacterImage(props.character.name))
-const portraitFailed = ref(false)
-watch(portraitUrl, () => (portraitFailed.value = false))
-const displayName = computed(() =>
-  props.character.placeholder
-    ? i18n.t(`game.${props.character.faction}`)
-    : localizedDisplayName(i18n.t, 'character', props.character.name),
-)
 const { startDrag, endDrag } = useDragDrop()
 const { onMouseDown, onMouseUp } = usePressClick(() => emit('characterClick', props.character))
 const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
 
 const characterElement = ref<HTMLElement>()
+
+// A hero can join the roster before its portrait ships, and a portrait can
+// fail to load; the tile shows the name instead.
+const portraitUrl = computed(() => gameDataStore.getCharacterImage(props.character.name))
+const portraitFailed = ref(false)
+watch(portraitUrl, () => (portraitFailed.value = false))
+const displayName = computed(() => characterDisplayName(i18n.t, props.character))
 
 const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 
@@ -52,12 +51,7 @@ const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
   showTooltip.value = false
-  startDrag(
-    event,
-    props.character,
-    props.character.id,
-    gameDataStore.getCharacterImage(props.character.name),
-  )
+  startDrag(event, props.character, props.character.id, portraitUrl.value)
 }
 
 const handleDragEnd = (event: DragEvent) => {

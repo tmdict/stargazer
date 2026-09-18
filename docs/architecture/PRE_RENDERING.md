@@ -118,6 +118,17 @@ const initializeContentData = () => {
 - **Browser APIs**: anything touching `window`, `document`, `Image`, `matchMedia`, or storage at module or setup scope checks `import.meta.env.SSR` first (`utils/storage.ts`, `useDragDrop`, `useGridSwap`, `useScrollLock`, `useTouchDetection`, `useRecentHeroes`, `GridInfoToggle`, `ArenaDropdown`)
 - **Static content reads loaders, not the store**: `GridSnippet` resolves portraits through `loadCharacterImages()` directly, so diagrams render identically with or without store state
 
+### PvP Reports (`/scripts/guideReports.ts`, `/src/utils/imageAssets.ts`)
+
+The `guideReports` Vite plugin hydrates each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page exported by the PvP project with its own styles and scripts: it sits outside Vue routing and the SSG route list, and reaches the sitemap only because `vite-ssg-sitemap` scans the built HTML in `dist/`.
+
+- **Client build only**: the plugin skips the dev server and vite-ssg's SSR build, so a report URL resolves only in a production build
+- **Placeholders**: `{{asset:<type>/<slug>}}`, with type `character`, `artifact`, or `seasonal-artifact` and a lowercase slug; the PvP project's `report.mjs` writes them
+- **Shared images**: `character` and `artifact` resolve to the hashed files the app itself ships, so a report adds no image of its own. The plugin reads only the imports of `imageAssets.ts`, which selects the roster's display variants and leaves out other variants cut from the same PNGs (`loadMatcherPortraits`)
+- **Emitted filenames**: each vite-imagetools module carries one `__VITE_ASSET__` reference, which the bundler resolves to the final hashed name. This leans on a Vite internal; a module without exactly one reference fails the build
+- **Seasonal icons**: `seasonal-artifact` resolves to the remote `seasonArtifactImageUrl`, which the build cannot verify, so a wrong slug surfaces only as a broken image in the browser
+- **Build failures**: a placeholder naming a missing local image, a placeholder left unresolved (unknown type or malformed slug), and a `guide/pvp/s<N>/index.html` already present in `public/` or the bundle
+
 ## Hosting (`/public/_redirects`, `/public/_headers`)
 
 Netlify serves `dist/` as static files first; `_redirects` rules apply to what is left, except the forced (`!`) host rule:

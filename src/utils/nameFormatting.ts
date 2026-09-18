@@ -1,3 +1,5 @@
+import type { CharacterType } from '@/lib/types/character'
+
 /**
  * Localized display name with formatted-slug fallback: the homegrown i18n's
  * t() returns the key unchanged when no translation exists.
@@ -11,6 +13,19 @@ export function localizedDisplayName(
   const key = `${category}.${name}`
   const translated = t(key)
   return translated !== key ? translated : formatDisplayName(name)
+}
+
+/**
+ * A character's display name. Placeholders are named by their faction via the
+ * game labels: their slug is an icon key, not a character locale key.
+ */
+export function characterDisplayName(
+  t: (key: string) => string,
+  character: Pick<CharacterType, 'name' | 'faction' | 'placeholder'>,
+): string {
+  return character.placeholder
+    ? t(`game.${character.faction}`)
+    : localizedDisplayName(t, 'character', character.name)
 }
 
 /**
