@@ -9,7 +9,7 @@ import TooltipPopup from './ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName } from '@/utils/nameFormatting'
+import { characterDisplayName } from '@/utils/nameFormatting'
 
 const { character, variant = 'detailed' } = defineProps<{
   character: CharacterType
@@ -20,13 +20,7 @@ const { character, variant = 'detailed' } = defineProps<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
-// Placeholders are named by their faction via the game labels (their slug is
-// an icon key, not a character locale key).
-const formattedName = computed(() =>
-  character.placeholder
-    ? i18n.t(`game.${character.faction}`)
-    : localizedDisplayName(i18n.t, 'character', character.name),
-)
+const formattedName = computed(() => characterDisplayName(i18n.t, character))
 const damageIcon = computed(() => gameDataStore.getIcon(`damage-${character.damage}`))
 const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 

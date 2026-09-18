@@ -5,6 +5,9 @@ a real skill (Silvina for the symmetrical spiral, Aliceth for the row scan)
 through the `SkillManager` on a real `Grid`. Both suites are fixture-driven:
 their grids are built from each fixture's arena map via `helpers.ts`.
 
+`guideReports.test.ts` is the exception: it runs a real Vite build in a temp
+directory to check the PvP report plugin (`scripts/guideReports.ts`).
+
 ## Structure
 
 ```
