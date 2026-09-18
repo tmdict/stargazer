@@ -2,11 +2,13 @@ import { canvasToBlob, loadImage } from '@/utils/image'
 import { useImageExportActions } from './useImageExportActions'
 
 /* Exports a saved-team card's thumbnail as a PNG. The preview is a row of
- * self-contained BoardThumbnail SVGs (presentation attributes only, internal
- * clipPaths), so each board is serialized and rasterized through an <img>,
- * then drawn onto one canvas at the preview's own layout positions. A DOM
- * snapshot (useGridExport's html-to-image path) is deliberately avoided here:
- * WebKit fails to rasterize SVG content inside a foreignObject snapshot. */
+ * self-contained BoardThumbnail SVGs (the team drawn in presentation
+ * attributes, internal clipPaths), so each board is serialized and rasterized
+ * through an <img>, then drawn onto one canvas at the preview's own layout
+ * positions. Page CSS does not travel with the serialized SVG, which is what
+ * keeps the search marks (rings, fading) out of the export. A DOM snapshot
+ * (useGridExport's html-to-image path) is deliberately avoided here: WebKit
+ * fails to rasterize SVG content inside a foreignObject snapshot. */
 
 // The on-screen thumbnail is small; the scale brings a card export up to
 // full-grid resolution (the SVGs upscale losslessly).
