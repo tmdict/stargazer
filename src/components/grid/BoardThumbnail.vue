@@ -16,6 +16,7 @@ export interface ThumbnailUnit {
   image?: string
   label?: string
   title?: string
+  // Ringed; one ringed unit fades the board's other units and artifacts.
   highlight?: boolean
 }
 
@@ -123,6 +124,12 @@ const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c8
    rather than a sixth unit. */
 const ARTIFACT_RADIUS_RATIO = 0.62
 
+// The amber ring rides on a soft dark halo, so it reads over pale tiles and
+// bright portraits alike without a hard outline.
+const RING_RATIO = 0.3
+const RING_EDGE_RATIO = 0.5
+const RING_EDGE_BLUR_RATIO = 0.08
+
 const ARTIFACT_SIDES = [
   { side: 'ally', team: Team.ALLY },
   { side: 'enemy', team: Team.ENEMY },
@@ -192,6 +199,9 @@ const placedUnits = computed(() =>
     })),
 )
 
+const ringedUnits = computed(() => placedUnits.value.filter((unit) => unit.highlight))
+const spotlit = computed(() => ringedUnits.value.length > 0)
+
 const placedArtifacts = computed(() =>
   ARTIFACT_SIDES.flatMap(({ side, team }) => {
     const value = artifacts?.[side]
@@ -222,6 +232,11 @@ const placedArtifacts = computed(() =>
       <clipPath v-for="art in placedArtifacts" :id="`${uid}-a-${art.side}`" :key="art.side">
         <circle :cx="art.center.x" :cy="art.center.y" :r="art.radius" />
       </clipPath>
+      <!-- The region is sized off the hex's geometry, so the default 10%
+           margin would clip the halo's stroke and blur. -->
+      <filter v-if="spotlit" :id="`${uid}-ring-edge`" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur :stdDeviation="hexSize * RING_EDGE_BLUR_RATIO" />
+      </filter>
     </defs>
 
     <!-- Opaque so shared edges don't double-composite darker; a step below the
@@ -235,7 +250,11 @@ const placedArtifacts = computed(() =>
       stroke-width="1"
     />
 
-    <g v-for="unit in placedUnits" :key="`unit-${unit.hexId}`">
+    <g
+      v-for="unit in placedUnits"
+      :key="`unit-${unit.hexId}`"
+      :class="{ faded: spotlit && !unit.highlight }"
+    >
       <title v-if="unit.title">{{ unit.title }}</title>
       <template v-if="unit.image">
         <image
@@ -275,18 +294,9 @@ const placedArtifacts = computed(() =>
           {{ unit.label ?? '?' }}
         </text>
       </template>
-      <!-- Drawn last to overdraw the team ring. Literal amber, not the token:
-           exports serialize the SVG standalone. -->
-      <polygon
-        v-if="unit.highlight"
-        :points="unit.corners"
-        fill="none"
-        stroke="#f9a825"
-        stroke-width="2"
-      />
     </g>
 
-    <g v-for="art in placedArtifacts" :key="`artifact-${art.side}`">
+    <g v-for="art in placedArtifacts" :key="`artifact-${art.side}`" :class="{ faded: spotlit }">
       <title v-if="art.title">{{ art.title }}</title>
       <image
         v-if="art.image"
@@ -322,5 +332,42 @@ const placedArtifacts = computed(() =>
         stroke-width="1"
       />
     </g>
+
+    <!-- A layer of their own: drawn inside its unit's group, a ring would lose
+         its outer half under neighbors painted after it. -->
+    <template v-for="unit in ringedUnits" :key="`ring-${unit.hexId}`">
+      <polygon
+        class="ring-edge"
+        :points="unit.corners"
+        fill="none"
+        stroke-linejoin="round"
+        :stroke-width="hexSize * RING_EDGE_RATIO"
+        :filter="`url(#${uid}-ring-edge)`"
+      />
+      <polygon
+        class="ring"
+        :points="unit.corners"
+        fill="none"
+        stroke-linejoin="round"
+        :stroke-width="hexSize * RING_RATIO"
+      />
+    </template>
   </svg>
 </template>
+
+<style scoped>
+/* The search marks get their stroke color and opacity only from this sheet:
+   the card export (useThumbnailExport) serializes the SVG without page
+   styles, so it captures the plain team. */
+.faded {
+  opacity: 0.35;
+}
+
+.ring {
+  stroke: var(--color-warning);
+}
+
+.ring-edge {
+  stroke: rgba(0, 0, 0, 0.45);
+}
+</style>
