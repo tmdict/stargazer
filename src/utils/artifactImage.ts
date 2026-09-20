@@ -1,11 +1,11 @@
-// Remote seasonal icons hosted at chaldea.tmdict.com (we don't bundle these
-// locally). Pre-season artifact icons ARE bundled and go through the local
-// image pipeline (see gameData.getArtifactImage).
+// Seasonal icons live on a remote image host and are not bundled. Pre-season
+// artifact icons ARE bundled and go through the local image pipeline (see
+// gameData.getArtifactImage).
 //
 // Served as WebP and consumed via a plain <img crossorigin="anonymous">: the
 // crossorigin keeps the icon CORS-clean so the canvas-based image export can read
-// it (the host must send Access-Control-Allow-Origin, see chaldea's _headers),
-// and a single <img> (not <picture>) is what html-to-image reliably inlines.
+// it (the host must send Access-Control-Allow-Origin), and a single <img>
+// (not <picture>) is what html-to-image reliably inlines.
 const REMOTE_ROOT = 'https://chaldea.tmdict.com/img'
 const REMOTE_BASE = `${REMOTE_ROOT}/seasonal`
 

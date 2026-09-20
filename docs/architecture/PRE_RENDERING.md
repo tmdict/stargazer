@@ -120,10 +120,10 @@ const initializeContentData = () => {
 
 ### PvP Reports (`/scripts/guideReports.ts`, `/src/utils/imageAssets.ts`)
 
-The `guideReports` Vite plugin hydrates each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page exported by the PvP project with its own styles and scripts: it sits outside Vue routing and the SSG route list, and reaches the sitemap only because `vite-ssg-sitemap` scans the built HTML in `dist/`.
+The `guideReports` Vite plugin hydrates each `src/content/pvp/s<N>/index.template.html` into `dist/guide/pvp/s<N>/index.html`. A report is a standalone page exported by an external report generator with its own styles and scripts: it sits outside Vue routing and the SSG route list, and reaches the sitemap only because `vite-ssg-sitemap` scans the built HTML in `dist/`.
 
 - **Client build only**: the plugin skips the dev server and vite-ssg's SSR build, so a report URL resolves only in a production build
-- **Placeholders**: `{{asset:<type>/<slug>}}`, with type `character`, `artifact`, or `seasonal-artifact` and a lowercase slug; the PvP project's `report.mjs` writes them
+- **Placeholders**: `{{asset:<type>/<slug>}}`, with type `character`, `artifact`, or `seasonal-artifact` and a lowercase slug, written by the generator that exports the report
 - **Shared images**: `character` and `artifact` resolve to the hashed files the app itself ships, so a report adds no image of its own. The plugin reads only the imports of `imageAssets.ts`, which selects the roster's display variants and leaves out other variants cut from the same PNGs (`loadMatcherPortraits`)
 - **Emitted filenames**: each vite-imagetools module carries one `__VITE_ASSET__` reference, which the bundler resolves to the final hashed name. This leans on a Vite internal; a module without exactly one reference fails the build
 - **Seasonal icons**: `seasonal-artifact` resolves to the remote `seasonArtifactImageUrl`, which the build cannot verify, so a wrong slug surfaces only as a broken image in the browser

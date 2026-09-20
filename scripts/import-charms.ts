@@ -78,7 +78,7 @@ async function loadCharmsBulk(feed: string): Promise<CharmsBulk> {
   if (!existsSync(path)) {
     throw new Error(
       `charm data feed not found at ${path}\n` +
-        `  Run the producer's build (npm run build:data in afkj-data-viewer),\n` +
+        `  Rebuild the upstream data feed,\n` +
         `  or pass --src-dir <PATH> / --url-base <URL>.\n` +
         `  To remove charm data on purpose, run with --retire.`,
     )

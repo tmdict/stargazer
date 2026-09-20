@@ -72,6 +72,7 @@ export interface ImportShot {
   resultOverrides: { mapIndex?: number | null; winner?: Team | null }
   // Data URLs of each card as located, keyed like overrides.
   cards: Record<string, string>
+  artifactCards: Partial<Record<Team, string>>
 }
 
 /* The board a shot fills among `boardCount`: the reviewer's choice, else the
@@ -185,7 +186,7 @@ const imageToDataUrl = (image: RgbaImage): string => {
 
 // ---------- references and the worker ----------
 
-// Costume references from chaldea, or none when the manifest is missing; a
+// Costume references from the image host, or none when the manifest is missing; a
 // single file that fails to load is skipped, the rest still count.
 const loadCostumes = async (idOf: (slug: string) => number | undefined): Promise<PortraitRef[]> => {
   let manifest: Record<string, string[]>
@@ -258,6 +259,8 @@ const applyReading = (shot: ImportShot, reading: ScreenshotReading): void => {
   shot.status = 'ready'
   shot.error = null
   for (const team of [Team.ALLY, Team.ENEMY]) {
+    const artifact = reading.artifacts[team]
+    if (artifact) shot.artifactCards[team] = imageToDataUrl(artifact.card)
     reading.sides[team].forEach((cell, row) => {
       shot.cards[overrideKey(team, row)] = imageToDataUrl(cell.card)
     })
@@ -434,6 +437,7 @@ export function useTeamImport(mode: () => TeamModeKey): {
         artifactOverrides: {},
         resultOverrides: {},
         cards: {},
+        artifactCards: {},
       }) as ImportShot
       shots.value = [...shots.value, shot]
       added++

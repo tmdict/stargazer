@@ -67,7 +67,7 @@ async function loadPhantimalsBulk(feed: string): Promise<PhantimalsBulk> {
   if (!existsSync(path)) {
     throw new Error(
       `phantimal data feed not found at ${path}\n` +
-        `  Run the producer's build (npm run build:data in afkj-data-viewer),\n` +
+        `  Rebuild the upstream data feed,\n` +
         `  or pass --src-dir <PATH> / --url-base <URL>.\n` +
         `  To remove phantimal locale data on purpose, run with --retire.`,
     )

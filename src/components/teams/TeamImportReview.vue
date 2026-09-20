@@ -226,6 +226,12 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
         </span>
         <span class="artifact">
           <span class="artifact-label">{{ i18n.t('app.import-artifact') }}</span>
+          <img
+            v-if="shot.artifactCards[team]"
+            class="artifact-card"
+            :src="shot.artifactCards[team]"
+            alt=""
+          />
           <button
             type="button"
             class="artifact-btn"
@@ -406,8 +412,17 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  flex-wrap: wrap;
   font-size: 0.75rem;
   color: var(--import-text-dim);
+}
+
+.artifact-card {
+  width: 52px;
+  height: 52px;
+  flex-shrink: 0;
+  object-fit: cover;
+  border-radius: var(--radius-medium);
 }
 
 .artifact-btn {
@@ -446,8 +461,8 @@ const STATE_LABEL: Record<Exclude<CellState, 'sure' | 'paragon'>, string> = {
 .artifact-icon {
   position: relative;
   flex-shrink: 0;
-  width: 26px;
-  height: 26px;
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
   overflow: hidden;
   background: #fff;

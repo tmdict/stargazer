@@ -33,7 +33,7 @@ npm run test:unit   # Unit tests only
 npm run test:it     # Integration tests only
 npm run test:watch  # Run tests in watch mode
 npm run prep        # format + type-check + lint + test
-npm run import:seasonal  # Regenerate seasonal data/locales (see below)
+npm run import:seasonal  # Regenerate seasonal data/locales (needs the data feed, see below)
 npm run check:import     # Run the match-import readers over a folder of screenshots
 ```
 
@@ -107,8 +107,9 @@ The Teams page shares the same way for all of its boards; see [TEAMS.md](./archi
 
 ### Updating Seasonal Content (Artifacts / Phantimals / Charms)
 
-Seasonal text is sourced from **afkj-data-viewer**'s exported API
-(`/api/<locale>/{artifacts,phantimals,charms}.json`) via the importers; see
+Seasonal text is sourced from an upstream data feed
+(`<locale>/{artifacts,phantimals,charms}.json`) via the importers, which need a
+local or remote copy of that feed; it is not part of this repo. See
 [SEASONAL.md](./architecture/SEASONAL.md) for the full architecture and the
 ownership rule (scripts own feed-derivable text, humans own judgment).
 
@@ -122,15 +123,14 @@ ownership rule (scripts own feed-derivable text, humans own judgment).
   `src/locales/seasonal/artifact/`); effect text, phantimal content, and
   charm text are importer-generated.
 - **Icons:** pre-season artifacts ship local images; seasonal artifacts and
-  phantimals load **remotely** from
-  `chaldea.tmdict.com/img/seasonal/{artifact,phantimal}/<name>.webp`
-  (`utils/artifactImage.ts`). The chaldea repo's `_redirects` exempts `/img/*`
-  from its catch-all redirect and its `_headers` sends the CORS header the
-  `crossorigin="anonymous"` consumers require.
+  phantimals load **remotely** from an image host, at
+  `seasonal/{artifact,phantimal}/<name>.webp` (`utils/artifactImage.ts`). That
+  host must send the CORS header the `crossorigin="anonymous"` consumers
+  require.
 - **Each new season:** update the hand-curated structural/name files, then run
-  `npm run import:seasonal` (against a rebuilt afkj-data-viewer). The
-  importers generate all text, lint the hand-curated files against the feed,
-  and prune retired entries.
+  `npm run import:seasonal` against a rebuilt feed. The importers generate all
+  text, lint the hand-curated files against the feed, and prune retired
+  entries.
 
 ### Adding an Arena Map
 

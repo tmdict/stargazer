@@ -128,7 +128,7 @@ Composables whose triggers and consumers sit far apart in the tree, or whose sta
 
 - `src/content/page/<Name>.<lang>.vue` (en, zh): page prose, resolved by `useContentComponent`
 - `src/content/skill/<slug>/`: optional per-hero snippet component per language plus `<Name>.data.ts` grid styles; skill text for all 16 locales lives in `src/locales/skill/<lang>/`
-- `src/content/pvp/s<N>/index.template.html`: standalone PvP report exported by the PvP project, hydrated into `/guide/pvp/s<N>/` at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md))
+- `src/content/pvp/s<N>/index.template.html`: standalone PvP report exported by an external report generator, hydrated into `/guide/pvp/s<N>/` at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md))
 - `src/data/` JSON (arena, artifact, character, import, seasonal) and `src/locales/` dictionaries load through `src/utils/dataLoader.ts`
 - Skill pages, guide pages, `/`, `/share`, and `/skills` are pre-rendered by vite-ssg ([Pre-Rendering](./architecture/PRE_RENDERING.md))
 

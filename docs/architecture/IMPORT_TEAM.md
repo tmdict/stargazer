@@ -22,7 +22,7 @@ The team import reads the game's match result screenshots on the device and save
                ▼                          └────────────────────────────┘
 ┌─ useTeamImport (module state) ┐  read   ┌─ teamImport.worker ────────┐
 │ decode to 1150 px RgbaImage   │────────▶│ readScreenshot(shot, refs) │
-│ references from app + chaldea │◀────────│ lib/import: layout frames  │
+│ references: bundled + remote  │◀────────│ lib/import: layout frames  │
 │ overrides · learned icons     │ reading │ heroes stars strip artifact│
 └──────────────┬────────────────┘         └────────────────────────────┘
                ▼
@@ -73,7 +73,7 @@ Derived once by `cellState` and `reviewStates` (`lib/teams/teamImport.ts`) so th
 - **Confirm P…** (amber): Identity is settled but the frame match was doubtful. Check the source card, then confirm the displayed paragon level or edit it with the pill; confirming preserves the level and records an explicit override
 - **None** (red): No candidate over the floor; contributes nothing until picked
 - **Duplicate** (red): The same hero on two cells of one side after edits; blocks Save as New
-- **Artifact chip**: A small **Confirm {artifact name}** action accepts an uncertain guess; the chip opens the picker for corrections. Confirmations and changes show **Edited** and enter the corrections export as explicit overrides. Artifacts are not counted in the card's review count
+- **Artifact chip**: The screenshot icon crop appears beside the selected artifact for comparison and stays unchanged when the selection is corrected. A small **Confirm {artifact name}** action accepts an uncertain guess; the chip opens the picker for corrections. Confirmations and changes show **Edited** and enter the corrections export as explicit overrides. Artifacts are not counted in the card's review count
 
 ## Session and Review
 
@@ -83,14 +83,14 @@ Module-level state, so the modal can close and reopen without losing the shots; 
 
 - **Reading plus overrides**: An `ImportShot` keeps the reading as read and every review decision beside it (`overrides`, `artifactOverrides`, `resultOverrides`); a card's map and winner derive from both (`shotMapIndex`, `shotWinner`), so a mode switch re-derives every card without rereading
 - **Board sides**: `swapSides` puts every screenshot's Ally column on the enemy side of its board and the Enemy column on the ally side, since the game's Ally tab is the viewing player, whichever side of the board they fought from. One choice per match rather than per screenshot: a player keeps one side for every map, and the boards hold a hero once per side page-wide. A placement choice rather than a reader correction, so it stays out of the export and resets with the shots; while it is on, each review head says which board side its column fills
-- **Worker**: One per page visit (`teamImport.worker.ts`). References (bundled portraits, the chaldea frames and costumes, artifact icons) are fetched on first open and posted once; shots dropped meanwhile queue until `ready`, and a failed worker or reference load is retried on the next open
+- **Worker**: One per page visit (`teamImport.worker.ts`). References (bundled portraits, the remotely hosted frames and costumes, artifact icons) are fetched on first open and posted once; shots dropped meanwhile queue until `ready`, and a failed worker or reference load is retried on the next open
 - **Learning**: A correction teaches the face only when the hero was unsure and the frame match trustworthy, so a misplaced crop is never stored as an example; picking the reader's own top candidate, or no hero, retracts the lesson. Lessons persist in `stargazer.import.learned` (`LEARNED_ICONS_CAP` 100, oldest out) and the worker rebuilds its table on every change
 
 ### Plan, Apply and Save
 
 Player names are optional. Without both names, the generated record name stays blank and saving uses the library's automatic team name. Review warnings do not block saving; roster conflicts and invalid generated names do.
 
-- **Plan** (`lib/teams/teamImport.ts`): Pure data mapping, a sibling of `sideLoad.ts`: readings plus overrides, on the swapped sides when chosen, to per-board rosters, `issues` (named by board side) and the record name (`S7 - GNX > 10 (1,3,4,5 > 2)`: the ally half's player first, `>` when they won more maps, each player's map numbers). The name reads by board half, the order the pvp records pipeline parses, so a swap lists the right player first with the map groups mirrored (`S7 - 10 < GNX (2 < 1,3,4,5)`). `isBlockingIssue` separates what would put a wrong roster on a board from what merely leaves something out
+- **Plan** (`lib/teams/teamImport.ts`): Pure data mapping, a sibling of `sideLoad.ts`: readings plus overrides, on the swapped sides when chosen, to per-board rosters, `issues` (named by board side) and the record name (`S7 - GNX > 10 (1,3,4,5 > 2)`: the ally half's player first, `>` when they won more maps, each player's map numbers). The name reads by board half, the order the downstream records pipeline parses, so a swap lists the right player first with the map groups mirrored (`S7 - 10 < GNX (2 < 1,3,4,5)`). `isBlockingIssue` separates what would put a wrong roster on a board from what merely leaves something out
 - **Apply and save**: Owned by the Teams page (`grids.applyRosters`, its read-only mirrors `rostersWouldReplace` and `rosterConflicts`, and `TeamsView.handleImportMatch`); see [TEAMS.md](./TEAMS.md), Team Import. Apply and save are not one transaction: a full library leaves the boards as an unsaved team carrying the name, and skipped placements are reported rather than claimed
 
 ## Reference Descriptors
@@ -138,9 +138,9 @@ Three sources of hero evidence feed one table, assembled by `buildImportHeroTabl
 
 ## References and Scripts
 
-- **chaldea `dist/img/import/`**: The references the app fetches from chaldea.tmdict.com (`importReferenceUrl`): `frame-p0` … `frame-p4-crown` (the paragon frames), `star-r*` (star rows, reference material only), `skins.json` (`{ "<hero slug>": ["<file>", …] }`) and `skin/<hero slug>-<name>` costume captures; a missing manifest means no costumes
-- **Artifacts**: The bundled permanent icons plus the seasonal set on chaldea (`seasonArtifactImageUrl`), capped at 128 px before the table is built
-- **Checker**: The only regression check on real images, and the first thing to run when the game changes its result screen. `scripts/lib/importTooling.ts` decodes references the way the app does (EXIF applied, portraits re-encoded as the shipped WebP, icons capped at 128 px) from chaldea.tmdict.com, or from a local copy of the published `img/` tree with `--references`
+- **Remote `img/import/`**: The references the app fetches from the image host (`importReferenceUrl`): `frame-p0` … `frame-p4-crown` (the paragon frames), `star-r*` (star rows, reference material only), `skins.json` (`{ "<hero slug>": ["<file>", …] }`) and `skin/<hero slug>-<name>` costume captures; a missing manifest means no costumes
+- **Artifacts**: The bundled permanent icons plus the remotely hosted seasonal set (`seasonArtifactImageUrl`), capped at 128 px before the table is built
+- **Checker**: The only regression check on real images, and the first thing to run when the game changes its result screen. `scripts/lib/importTooling.ts` decodes references the way the app does (EXIF applied, portraits re-encoded as the shipped WebP, icons capped at 128 px) from the image host, or from a local copy of the published `img/` tree with `--references`
 
 ```sh
 npm run check:import -- --samples <dir> [--truth <json>] [--references <dir>] [--maps 5]

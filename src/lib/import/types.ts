@@ -69,6 +69,8 @@ export interface HeroReading extends HeroIdentity {
 }
 
 export interface ArtifactReading {
+  card: RgbaImage
+
   candidates: { artifactId: number; score: number }[]
   margin: number
 }

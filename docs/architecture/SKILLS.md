@@ -206,7 +206,7 @@ Optional `<HeroNameCamelCase>.<lang>.vue` (en/zh only) is picked up by a glob in
 
 ### Importer (`scripts/import-skills.ts`)
 
-- Reads `<src-dir>/<feed>/skills.json` (default `../afkj-data-viewer/public/api`) or `<url-base>/<feed>/skills.json` for every `SKILL_LOCALES` row; the `feed` column maps nonstandard feed codes to the BCP-47 `code` used for directories and URLs
+- Reads `<src-dir>/<feed>/skills.json` (default `DEFAULT_SRC_DIR`, a local checkout of the upstream data feed) or `<url-base>/<feed>/skills.json` for every `SKILL_LOCALES` row; the `feed` column maps nonstandard feed codes to the BCP-47 `code` used for directories and URLs
 - Requires `_meta.terms` and `_meta.keywords` in each feed, and fails when locales disagree on hero set, slot set, or a keyword token lacks a glossary entry
 - Read-only against character files; writes are diff-then-write, so an unchanged run is a no-op. Heroes absent from the feed and locale directories not in `SKILL_LOCALES` are warned, not failed
 - Adding a language is one `SKILL_LOCALES` row plus a re-run; removing one is deleting the row and its directory

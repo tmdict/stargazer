@@ -293,7 +293,7 @@ async function main() {
   for (const { code } of SKILL_LOCALES) {
     const terms = bulks[code]._meta.terms
     if (!terms?.ultimate || !terms?.exclusiveEquipment) {
-      throw new Error(`[${code}] feed lacks _meta.terms; re-run the producer's build:data export`)
+      throw new Error(`[${code}] feed lacks _meta.terms; rebuild the upstream data feed`)
     }
     termsByCode[code] = { ultimate: terms.ultimate, ex: terms.exclusiveEquipment }
   }
@@ -304,7 +304,7 @@ async function main() {
   for (const { code } of SKILL_LOCALES) {
     const keywords = bulks[code]._meta.keywords
     if (!keywords) {
-      throw new Error(`[${code}] feed lacks _meta.keywords; re-run the producer's export:api`)
+      throw new Error(`[${code}] feed lacks _meta.keywords; rebuild the upstream data feed`)
     }
     // Code-point order (the producer's sort), so bytes are stable across hosts.
     keywordsByCode[code] = Object.fromEntries(

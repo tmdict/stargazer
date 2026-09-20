@@ -11,7 +11,7 @@
 //                and artifacts ({ a: slug | null, e: slug | null })
 //                (default: truth.json beside the samples, when present)
 //   --references read the frames, costume captures and seasonal icons from a local copy
-//                of the published img/ tree instead of the deployed chaldea.tmdict.com
+//                of the published img/ tree instead of the deployed image host
 //   --maps       how many maps each match had (default 5; 1 means no strip), checked
 //                against what the strip reads; a truth file overrides it per file
 

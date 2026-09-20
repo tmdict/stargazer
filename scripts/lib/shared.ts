@@ -7,9 +7,9 @@ import { argv } from 'node:process'
 
 import { STAT_TAG_RE } from '../../src/utils/textHighlight.ts'
 
-// Default local source: the sibling afkj-data-viewer checkout, which emits
-// `public/api/<feed>/<file>.json`. Resolved against the repo root so it holds
-// regardless of CWD as long as the two repos are siblings. Override at
+// Default local source: a sibling checkout of the upstream data feed, which
+// emits `<feed>/<file>.json` under this path. Resolved against the repo root so
+// it holds regardless of CWD as long as the two repos are siblings. Override at
 // runtime with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
 export const DEFAULT_SRC_DIR = '../afkj-data-viewer/public/api'
 
