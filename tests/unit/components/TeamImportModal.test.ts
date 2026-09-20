@@ -33,6 +33,7 @@ const sample = (): ImportShot => ({
   status: 'ready',
   error: null,
   cards: {},
+  artifactCards: {},
   overrides: {},
   artifactOverrides: {},
   resultOverrides: {},
@@ -174,9 +175,23 @@ describe('match import review and save', () => {
     },
   )
 
+  it('keeps the screenshot artifact close-up when the selection is removed', async () => {
+    const { api } = await mountImport()
+    const crop = 'data:image/png;base64,c2NyZWVuc2hvdA=='
+    api.shots.value[0]!.artifactCards[1] = crop
+    await nextTick()
+    expect(document.querySelector('.artifact-card')?.getAttribute('src')).toBe(crop)
+    expect(document.querySelectorAll('.artifact-card')).toHaveLength(1)
+    api.setArtifact('sample', 1, null)
+    await nextTick()
+    expect(document.querySelector('.artifact-card')?.getAttribute('src')).toBe(crop)
+    expect(document.querySelector('.artifact-icon.empty')).not.toBeNull()
+  })
+
   it('accepts an artifact guess without opening the picker or changing the guess', async () => {
     const { api } = await mountImport()
     api.shots.value[0]!.reading!.artifacts[1] = {
+      card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
       candidates: [{ artifactId: 1, score: 0.5 }],
       margin: 0.02,
     }

@@ -30,13 +30,21 @@ const shot = (): ImportShot => ({
   artifactOverrides: {},
   resultOverrides: {},
   cards: {},
+  artifactCards: {},
   reading: {
     mapIndex: 3,
     mapCount: 5,
     winner: 1,
     mapResults: [1, null, null, 1, null],
     warnings: [],
-    artifacts: { 1: { candidates: [{ artifactId: 8, score: 0.5 }], margin: 0.1 }, 2: null },
+    artifacts: {
+      1: {
+        card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+        candidates: [{ artifactId: 8, score: 0.5 }],
+        margin: 0.1,
+      },
+      2: null,
+    },
     sides: {
       1: [
         {
