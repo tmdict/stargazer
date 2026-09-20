@@ -5,7 +5,7 @@
 
 import { cropResize, dot, normalizedVectorMasked } from './image'
 import { HEADER_ICON } from './layout'
-import type { ArtifactReading, ArtifactTable, RgbaImage } from './types'
+import type { ArtifactReading, ArtifactTable, Rect, RgbaImage } from './types'
 
 const T = 40
 const MASK: boolean[] = []
@@ -47,6 +47,13 @@ export function readArtifact(
   centreY: number,
   table: ArtifactTable,
 ): ArtifactReading {
+  let bestBox: Rect = {
+    x: Math.round(centreX - HEADER_ICON.diameter / 2),
+    y: Math.round(centreY - HEADER_ICON.diameter / 2),
+    w: HEADER_ICON.diameter,
+    h: HEADER_ICON.diameter,
+  }
+  let bestScore = -Infinity
   const best = new Map<number, number>()
   for (const dd of DIAMETERS) {
     const d = HEADER_ICON.diameter + dd
@@ -63,6 +70,10 @@ export function readArtifact(
         const v = normalizedVectorMasked(cropResize(shot, rect, T, T), MASK)
         table.vectors.forEach((ref, i) => {
           const s = dot(v, ref)
+          if (s > bestScore) {
+            bestScore = s
+            bestBox = rect
+          }
           const id = table.ids[i]!
           if ((best.get(id) ?? -1) < s) best.set(id, s)
         })
@@ -74,5 +85,5 @@ export function readArtifact(
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
   const margin = candidates.length > 1 ? candidates[0]!.score - candidates[1]!.score : 0
-  return { candidates, margin }
+  return { candidates, margin, card: cropResize(shot, bestBox, bestBox.w, bestBox.h) }
 }

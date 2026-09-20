@@ -38,7 +38,11 @@ const reading = (
   mapResults: [],
   sides: { [Team.ALLY]: ally.map((id) => hero(id)), [Team.ENEMY]: enemy.map((id) => hero(id)) },
   artifacts: {
-    [Team.ALLY]: { candidates: [{ artifactId: 14, score: 0.4 }], margin: 0.1 },
+    [Team.ALLY]: {
+      card: { width: 1, height: 1, data: new Uint8ClampedArray(4) },
+      candidates: [{ artifactId: 14, score: 0.4 }],
+      margin: 0.1,
+    },
     [Team.ENEMY]: null,
   },
   warnings: [],
