@@ -9,6 +9,7 @@
   "range": 20,
   "season": 6,
   "tags": {
+    "debuff-global": [{ "skill2": 1 }],
     "dot": [{ "ultimate": 1 }],
     "special-target": [{ "ultimate": 1 }, { "skill3": 1 }],
     "temp-buff": [{ "skill3": 1 }, { "awakening": 1 }],

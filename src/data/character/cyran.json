@@ -9,6 +9,7 @@
   "range": 6,
   "season": 3,
   "tags": {
+    "debuff-global": [{ "ex": 1 }],
     "execute": [{ "ultimate": 1 }],
     "initial-energy-300": []
   }

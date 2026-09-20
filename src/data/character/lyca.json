@@ -9,6 +9,7 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "debuff-global": [{ "skill3": 1 }],
     "energy-battery": [{ "skill2": 1 }],
     "initial-energy-300": [],
     "temp-buff": [{ "skill2": 1 }],

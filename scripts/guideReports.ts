@@ -1,6 +1,6 @@
 // Hydrates the PvP report templates in src/content/pvp with this client
-// build's image URLs, so a report shares the app's hashed files instead of
-// carrying copies.
+// build's shared hero and pre-season artifact URLs. Seasonal icons are
+// embedded in the template.
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { normalizePath, type Plugin, type ResolvedConfig } from 'vite'
