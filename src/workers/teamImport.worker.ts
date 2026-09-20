@@ -54,6 +54,9 @@ const transferablesOf = (reading: ScreenshotReading): Transferable[] => {
       out.push(cell.card.data.buffer, cell.descriptor.buffer)
     }
   }
+  for (const artifact of Object.values(reading.artifacts)) {
+    if (artifact) out.push(artifact.card.data.buffer)
+  }
   return out
 }
 

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Three mechanics rotate with the game's seasons: phantimals (grid units), seasonal artifacts (the rotating subset of artifacts), and charms (per-hero seasonal skill upgrades shown with skill text). Text for all three comes from the upstream data feed, whose per-locale feeds are consumed by importers that generate the derivable files and lint the hand-curated ones. Season provenance on stored payloads (`src/lib/seasonal.ts`) keeps reused seasonal ids from resolving to another season's content.
+Three mechanics rotate with the game's seasons: phantimals (grid units), seasonal artifacts (the rotating subset of artifacts), and charms (per-hero seasonal skill upgrades shown with skill text). Text for all three originates in an upstream data feed outside this repo, whose per-locale files are consumed by importers that generate the derivable files and lint the hand-curated ones. Season provenance on stored payloads (`src/lib/seasonal.ts`) keeps reused seasonal ids from resolving to another season's content.
 
 ## Design Principles
 
@@ -14,7 +14,7 @@ Three mechanics rotate with the game's seasons: phantimals (grid units), seasona
 
 ## Importers (`scripts/import-*.ts`)
 
-`npm run import:seasonal` runs `import:skills` first (fresh `_keywords.json` glossaries feed charm validation), then `import:charms`, `import:artifacts`, `import:phantimals`. `scripts/lib/shared.ts` holds `DEFAULT_SRC_DIR`, `cleanDescription` (stat/value reorder, sprite-tag strip) and the diff-then-write helpers.
+`npm run import:seasonal` runs `import:skills` first (fresh `_keywords.json` glossaries feed charm validation), then `import:charms`, `import:artifacts`, `import:phantimals`. `scripts/lib/shared.ts` holds `DEFAULT_SRC_DIR` (the feed's default local location, a sibling checkout), `cleanDescription` (stat/value reorder, sprite-tag strip) and the diff-then-write helpers.
 
 | Importer            | Feed file                       | Writes                                                                                             | Lints (hard fail)                                                                                                                                          | `--retire`                    |
 | ------------------- | ------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- |
@@ -83,7 +83,7 @@ The 6 pre-season artifacts (`season: 0`) persist across rollovers; the 12 season
 | Effect text                            | `src/locales/artifact/effects/` | `src/locales/seasonal/artifact/effects/`  | `import:artifacts`                                                   |
 | Targeting arrows                       | `src/lib/skills/artifact.ts`    | same file, entries under a season comment | hand-curated (see [SKILLS.md](./SKILLS.md), "Artifact Targeting")    |
 
-- `season` drives newest-first grouping in `ArtifactSelection.vue` and the icon source: `isRemoteArtifact` (`src/utils/artifactImage.ts`) sends every season but 0 to `https://chaldea.tmdict.com/img/seasonal/artifact/<slug>.webp`; phantimal icons live beside them at `seasonal/phantimal/<slug>.webp`.
+- `season` drives newest-first grouping in `ArtifactSelection.vue` and the icon source: `isRemoteArtifact` (`src/utils/artifactImage.ts`) sends every season but 0 to the remote image host at `seasonal/artifact/<slug>.webp`; phantimal icons live beside them at `seasonal/phantimal/<slug>.webp`.
 - Retiring a season's artifacts: delete the seasonal data and name files and the season's targeting entries with their cases in `tests/unit/skills/artifact.test.ts`; the importer prunes its effect files. A lingering targeting entry would draw the old season's arrows for whichever new artifact reuses the id.
 
 ## Charms
@@ -117,7 +117,7 @@ Seasonal artifact and phantimal ids are reused each season, so a bare id cannot 
 
 ### Cutover checklist
 
-1. Viewer: `npm run build:data`, commit.
+1. Rebuild the upstream data feed so it carries the new season.
 2. Run the three importers with `--retire`.
 3. Replace the hand-curated structural and name files; new content reuses the freed ids with the new `season`. `tests/unit/lib/seasonal.test.ts` asserts every non-zero data season equals `CURRENT_SEASON` and pins the value, so a partial or forgotten bump fails loudly.
 4. Replace `lib/skills/seasonal/phantimal.ts` and the season's targeting entries in `lib/skills/artifact.ts`, with their tests.
