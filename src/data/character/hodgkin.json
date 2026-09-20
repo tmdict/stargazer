@@ -9,6 +9,7 @@
   "range": 1,
   "season": 2,
   "tags": {
+    "debuff-global": [{ "awakening": 1 }],
     "energy-denial": [
       {
         "skill3": 1

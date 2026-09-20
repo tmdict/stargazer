@@ -10,6 +10,7 @@
   "season": 5,
   "tags": {
     "cheat-death": [{ "ex": 4 }],
+    "debuff-global": [{ "ultimate": 1 }],
     "special-target": [{ "skill2": 1 }]
   }
 }
