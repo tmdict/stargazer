@@ -1,8 +1,9 @@
 import { computed, inject, onUnmounted, type InjectionKey, type Ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
+import { guidePath, type GuidePage } from '@/lib/guide'
 import { SITE_ORIGIN } from '@/lib/site'
-import { SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
+import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 import { loadCharacterImages, loadCharacterLocales } from '@/utils/dataLoader'
 import { heroDisplayName } from '@/utils/skillLabels'
@@ -72,21 +73,46 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   })
 }
 
-/**
- * Sets up meta tags for the /{locale}/guide compendium (SSG and client). The
- * en and zh guide routes share one component instance, so the head follows the
- * locale reactively instead of the value at setup.
- */
-export function setupGuideContentMeta(locale: Ref<AppLocale>): void {
-  const url = 'guide'
+const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; description: string }>> = {
+  index: {
+    en: {
+      title: 'Guide',
+      description:
+        'AFK Journey arena guide: season PvP reports with a counter ladder, heroes grouped by skill mechanic, and Paragon and EX Refinement stat tables.',
+    },
+    zh: {
+      title: '指南',
+      description:
+        '剑与远征启程竞技场指南：赛季 PvP 报告与克制关系图、按技能机制分组的英雄，以及冠阶与精炼属性表。',
+    },
+  },
+  upgrades: {
+    en: {
+      title: 'Upgrades',
+      description: 'Paragon and EX Refinement stat gains per level for every AFK Journey faction.',
+    },
+    zh: { title: '强化', description: '剑与远征启程各阵营每级冠阶与精炼的属性加成。' },
+  },
+  mechanics: {
+    en: {
+      title: 'Mechanics',
+      description:
+        'AFK Journey heroes grouped by skill mechanic, with the skill text behind each tag.',
+    },
+    zh: { title: '机制', description: '按技能机制分组的剑与远征启程英雄，附相关技能文本。' },
+  },
+}
 
+/**
+ * Sets up meta tags for a guide page (SSG and client). The en and zh routes
+ * of a page share one view instance, so the head follows the locale
+ * reactively instead of the value at setup.
+ */
+export function setupGuideContentMeta(locale: Ref<AppLocale>, page: GuidePage): void {
   useHead(
     computed(() => {
-      const title = locale.value === 'en' ? 'Guide' : '机制'
-      const description =
-        locale.value === 'en'
-          ? 'In-depth guide to AFK Journey hero skill mechanics - targeting, buffs, and positioning, illustrated with grid diagrams.'
-          : '剑与远征启程英雄技能机制详解：目标选择、增益与站位，附带格子示意图。'
+      const { title, description } = GUIDE_META[page][locale.value]
+      const path = guidePath(locale.value, page)
       return {
         title: `${title} | Stargazer`,
         meta: [
@@ -94,13 +120,16 @@ export function setupGuideContentMeta(locale: Ref<AppLocale>): void {
           { name: 'keywords', content: [...BASE_KEYWORDS, title].join(', ') },
           { property: 'og:title', content: title },
           { property: 'og:description', content: description },
-          { property: 'og:url', content: `${ORIGIN}/${locale.value}/${url}` },
+          { property: 'og:url', content: `${ORIGIN}${path}` },
         ],
         link: [
-          { rel: 'canonical', href: `${ORIGIN}/${locale.value}/${url}` },
-          { rel: 'alternate', hreflang: 'en', href: `${ORIGIN}/en/${url}` },
-          { rel: 'alternate', hreflang: 'zh', href: `${ORIGIN}/zh/${url}` },
-          { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}/en/${url}` },
+          { rel: 'canonical', href: `${ORIGIN}${path}` },
+          ...APP_LOCALES.map((code) => ({
+            rel: 'alternate',
+            hreflang: code,
+            href: `${ORIGIN}${guidePath(code, page)}`,
+          })),
+          { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}${guidePath('en', page)}` },
         ],
       }
     }),

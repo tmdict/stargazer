@@ -38,19 +38,19 @@ The pre-rendering system uses vite-ssg to emit static HTML for every crawlable p
 
 `getSSGRoutes` is the `includedRoutes` source; the filesystem, not a hand-kept list, decides which skill pages exist:
 
-| Route                   | Baked body                                                                       | Output                     |
-| ----------------------- | -------------------------------------------------------------------------------- | -------------------------- |
-| `/`                     | Chrome and an empty grid (`initializeData` is SSR-skipped)                       | `index.html`               |
-| `/share`                | Chrome only; the grid decodes `?g=` after hydration                              | `share.html`               |
-| `/skills`               | Roster grid with a link per hero                                                 | `skills.html`              |
-| `/{en,zh}/guide`        | Upgrade matrix and tag sections with roster grids; a hero panel mounts on expand | `<code>/guide.html`        |
-| `/<code>/skill/<slug>`  | Skill text, hero name, roster grid: 16 locales × 125 heroes = 2,000 pages        | `<code>/skill/<slug>.html` |
-| `/teams`, unknown paths | Not pre-rendered; served by the hosting fallback (see Hosting)                   | none                       |
+| Route                                                   | Baked body                                                                                           | Output                                          |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| `/`                                                     | Chrome and an empty grid (`initializeData` is SSR-skipped)                                           | `index.html`                                    |
+| `/share`                                                | Chrome only; the grid decodes `?g=` after hydration                                                  | `share.html`                                    |
+| `/skills`                                               | Roster grid with a link per hero                                                                     | `skills.html`                                   |
+| `/{en,zh}/guide`, `/guide/upgrades`, `/guide/mechanics` | Index panels; the upgrade matrix; the tag sections with roster grids (a hero panel mounts on expand) | `<code>/guide.html`, `<code>/guide/<page>.html` |
+| `/<code>/skill/<slug>`                                  | Skill text, hero name, roster grid: 16 locales × 125 heroes = 2,000 pages                            | `<code>/skill/<slug>.html`                      |
+| `/teams`, unknown paths                                 | Not pre-rendered; served by the hosting fallback (see Hosting)                                       | none                                            |
 
 - **Skill routes from locale dirs**: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page (`_keywords` and `_charms` are per-language data, not heroes). A missing locale dir throws with a pointer to `npm run import:skills`: `SKILL_LOCALES` also drives the globe menu and `hreflang`, so a silent skip would ship links to pages that do not exist
-- **Guide routes from `APP_LOCALES`**: guide content is hand-written in en/zh, so the route records stay explicit
+- **Guide routes from `APP_LOCALES` and `GUIDE_PAGES`** (`src/lib/guide.ts`): guide content is hand-written in en/zh; the same page list feeds the router and the page meta ([Guide](./GUIDE.md))
 - **Shell heads**: `/share` and `/skills` set their own title and canonical through `useHead`; `/` keeps the `index.html` defaults
-- **Sitemap**: `onFinished` runs `vite-ssg-sitemap` over `dist/` (2,004 URLs; `/share` and `/forms` excluded) and writes `robots.txt`
+- **Sitemap**: `onFinished` runs `vite-ssg-sitemap` over `dist/` (every pre-rendered page and the hydrated reports; `/share` and `/forms` excluded) and writes `robots.txt`
 
 ### Entries and Guards (`/src/main.ssg.ts`, `/src/router/routes.ts`)
 
@@ -93,7 +93,7 @@ export function splitLocalePath(path: string): { locale: AppLocale | null; rest:
 ### Page Meta (`/src/utils/contentMeta.ts`, `/vite.config.ts`)
 
 - **`setupSkillContentMeta(name, locale)`** runs in `SkillSections` setup on SSG and client: title, keywords, `og:title` / `og:image` / `og:url`, canonical, and `hreflang` alternates for all 16 locales plus `x-default` (en). Skipped when `ContentInModalKey` is provided, so the skill modal leaves the host page's head alone. The description is not written here
-- **`setupGuideContentMeta(locale: Ref<AppLocale>)`** passes a computed to `useHead`: `/en/guide` and `/zh/guide` share one `GuideView` instance, so the head must follow the locale reactively
+- **`setupGuideContentMeta(locale: Ref<AppLocale>, page: GuidePage)`** passes a computed to `useHead`: the en and zh routes of a guide page share one view instance, so the head must follow the locale reactively. Titles, descriptions, canonical and `hreflang` links come from the page's entry in `GUIDE_META`
 - **Build-time description** (`extractContentDescription`, skill routes only): the first `<article>` in the rendered HTML, its first two `<p>` elements, tags and `[[...]]` highlight markers stripped, cut at 150 characters on a word boundary (spaceless text such as zh cuts at 150). Contract: `SkillSections.vue` is the only `<article>` on a skill page; a different root tag or an earlier article would silently change every description. A miss logs a warning and leaves the `index.html` default
 - **Essay snippets stay client-side**: `src/content/skill/<slug>/<Hero>.<lang>.vue` pieces teleport into per-section anchors that are template refs, unset during SSR, so they render only after hydration. The description scrape reads the skill text and does not depend on them
 - **`dedupeAssetLinks`**: vite-ssg emits asset `<link>` tags in two passes (static manifest and dynamic-import resolution), so modules reachable from both appear twice; the first occurrence per href is kept
