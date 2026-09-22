@@ -8,6 +8,7 @@ import vueDevTools from 'vite-plugin-vue-devtools'
 import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
+import { GUIDE_PAGES, guidePath } from './src/lib/guide.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
 import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
@@ -32,7 +33,9 @@ function getSSGRoutes(): string[] {
   const routes: string[] = ['/', '/share', '/skills']
 
   // Guide pages exist only in the app locales.
-  APP_LOCALES.forEach((locale) => routes.push(`/${locale}/guide`))
+  for (const locale of APP_LOCALES) {
+    for (const page of GUIDE_PAGES) routes.push(guidePath(locale, page))
+  }
 
   for (const { code } of SKILL_LOCALES) {
     const dir = join(skillLocaleRoot, code)

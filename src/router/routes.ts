@@ -5,7 +5,8 @@ import type {
   RouterScrollBehavior,
 } from 'vue-router'
 
-import { SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
+import { guidePath } from '@/lib/guide'
+import { APP_LOCALES, SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
 
 /**
@@ -121,17 +122,24 @@ export const routes: RouteRecordRaw[] = [
     props: true, // Pass route params as props for better testability
     // Locale chunk warm-up lives in warmSkillLocale (global beforeResolve).
   },
-  // Guide stays en/zh: its content is hand-written in the app locales.
-  {
-    path: '/en/guide',
-    name: 'guide-en',
-    component: () => import('@/views/GuideView.vue'),
-  },
-  {
-    path: '/zh/guide',
-    name: 'guide-zh',
-    component: () => import('@/views/GuideView.vue'),
-  },
+  // Guide pages stay en/zh: their content is hand-written in the app locales.
+  ...APP_LOCALES.flatMap((locale) => [
+    {
+      path: guidePath(locale, 'index'),
+      name: `guide-${locale}`,
+      component: () => import('@/views/GuideView.vue'),
+    },
+    {
+      path: guidePath(locale, 'upgrades'),
+      name: `guide-upgrades-${locale}`,
+      component: () => import('@/views/GuideUpgradesView.vue'),
+    },
+    {
+      path: guidePath(locale, 'mechanics'),
+      name: `guide-mechanics-${locale}`,
+      component: () => import('@/views/GuideMechanicsView.vue'),
+    },
+  ]),
   {
     path: '/skills',
     name: 'skills',

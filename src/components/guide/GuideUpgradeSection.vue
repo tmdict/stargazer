@@ -8,10 +8,11 @@
 
 import { computed } from 'vue'
 
+import UpgradeLevelPill from '@/components/ui/UpgradeLevelPill.vue'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import {
   PARAGON_RAMPS,
-  paragonGroup,
+  paragonFactions,
   pillTone,
   rampValues,
   REFINEMENT_RAMPS,
@@ -19,7 +20,6 @@ import {
   type PillTone,
   type StatRamp,
 } from '@/lib/characters/upgradeStats'
-import { FACTION_ORDER } from '@/lib/filterOrder'
 import type { AppLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { interpolate } from '@/utils/interpolate'
@@ -73,16 +73,13 @@ const levelHeads = (attrId: number, prefix: string): LevelHead[] =>
     tone: pillTone(attrId, level),
   }))
 
-const factionsOf = (group: ParagonGroup): string[] =>
-  FACTION_ORDER.filter((faction) => paragonGroup(faction) === group)
-
 const paragonRamps = (group: ParagonGroup): StatRamp[] => {
   const { energy, combat, rivalry } = PARAGON_RAMPS[group]
   return [energy, combat, rivalry]
 }
 
 const paragonBand = (group: ParagonGroup): Band => {
-  const factions = factionsOf(group)
+  const factions = paragonFactions(group)
   return {
     key: group,
     kind: 'paragon',
@@ -157,7 +154,7 @@ const valueClass = (cell: Cell, i: number) => ({
 })
 
 const intro = computed((): string => {
-  const [factionA = '', factionB = ''] = factionsOf('celestialHypogean')
+  const [factionA = '', factionB = ''] = paragonFactions('celestialHypogean')
   return interpolate(label('guide-upgrades-intro'), {
     factionA: gameLabel(factionA, props.lang),
     factionB: gameLabel(factionB, props.lang),
@@ -204,7 +201,7 @@ const intro = computed((): string => {
               scope="col"
               :class="[levelClass(band, level), { 'band-start': i === 0 }]"
             >
-              <span class="lvl" :class="[band.kind, level.tone]">{{ level.text }}</span>
+              <UpgradeLevelPill :kind="band.kind" :level="i" />
             </th>
             <th scope="col" class="step-head">{{ label('per-level') }}</th>
           </template>
@@ -266,12 +263,12 @@ const intro = computed((): string => {
             <tr>
               <td></td>
               <th
-                v-for="level in band.levels"
+                v-for="(level, i) in band.levels"
                 :key="level.text"
                 scope="col"
                 :class="levelClass(band, level)"
               >
-                <span class="lvl" :class="[band.kind, level.tone]">{{ level.text }}</span>
+                <UpgradeLevelPill :kind="band.kind" :level="i" />
               </th>
             </tr>
           </thead>
@@ -437,33 +434,6 @@ const intro = computed((): string => {
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-/* Level headers wear the portrait pill's look, one tone each. */
-.lvl {
-  display: inline-block;
-  min-width: 30px;
-  padding: 4px 6px 3px;
-  border: 1.5px solid #fff;
-  border-radius: 999px;
-  background: var(--upgrade-pill-gray);
-  color: var(--upgrade-pill-gray-text);
-  font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.03em;
-  line-height: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
-}
-.lvl.paragon.max {
-  background: var(--upgrade-pill-paragon-max);
-  color: #fff;
-}
-.lvl.refinement.mid {
-  background: var(--upgrade-pill-refinement-mid);
-}
-.lvl.refinement.max {
-  background: var(--upgrade-pill-refinement-max);
-  color: #fff;
 }
 
 /* Narrow panels: the matrix needs about 940px, so below that one table per

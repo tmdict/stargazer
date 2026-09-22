@@ -18,7 +18,8 @@ const toggle = (slug: string) => {
 </script>
 
 <template>
-  <section class="tag-section">
+  <!-- The id is the index tile's deep-link target. -->
+  <section :id="tag" class="tag-section">
     <header class="tag-head">
       <h2 class="tag-name">{{ appLabel(tag, lang) }}</h2>
       <span class="tag-count">{{ characters.length }}</span>
@@ -54,6 +55,9 @@ const toggle = (slug: string) => {
 }
 .tag-section:first-child .tag-head {
   margin-top: 0;
+}
+.tag-section {
+  scroll-margin-top: var(--spacing-lg);
 }
 
 /* Match the skill content's section headings (content.css `.content h2`). */

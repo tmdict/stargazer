@@ -38,6 +38,7 @@ For comprehensive project documentation, see:
 
 - [Grid & Character System](./docs/architecture/GRID.md) - Hexagonal grid and character management
 - [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, boards, saved-team library
+- [Guide](./docs/architecture/GUIDE.md) - Guide index and pages, season summaries, counter ladder
 - [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match screenshot import: readers, review, plan
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, and charms
 - [Skills](./docs/architecture/SKILLS.md) - Character abilities and visual effects

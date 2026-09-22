@@ -72,14 +72,14 @@ Transactions: `executeTransaction(operations: (() => boolean)[], rollbackOperati
 
 ## Views and Components (`src/views/`, `src/components/`)
 
-| Route                    | View         | Role                                                                                            |
-| ------------------------ | ------------ | ----------------------------------------------------------------------------------------------- |
-| `/`                      | `HomeView`   | Arena: one board, autosaved                                                                     |
-| `/teams`                 | `TeamsView`  | Multi-board team builder and saved-team library ([Teams](./architecture/TEAMS.md))              |
-| `/share`                 | `ShareView`  | Read-only render of a `?g=` link                                                                |
-| `/skills`                | `SkillsView` | Skill browser                                                                                   |
-| `/:lang/skill/:name`     | `SkillView`  | Per-hero skill page, pre-rendered per locale ([Pre-Rendering](./architecture/PRE_RENDERING.md)) |
-| `/en/guide`, `/zh/guide` | `GuideView`  | Guide pages, pre-rendered                                                                       |
+| Route                                                   | View                                                   | Role                                                                                            |
+| ------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| `/`                                                     | `HomeView`                                             | Arena: one board, autosaved                                                                     |
+| `/teams`                                                | `TeamsView`                                            | Multi-board team builder and saved-team library ([Teams](./architecture/TEAMS.md))              |
+| `/share`                                                | `ShareView`                                            | Read-only render of a `?g=` link                                                                |
+| `/skills`                                               | `SkillsView`                                           | Skill browser                                                                                   |
+| `/:lang/skill/:name`                                    | `SkillView`                                            | Per-hero skill page, pre-rendered per locale ([Pre-Rendering](./architecture/PRE_RENDERING.md)) |
+| `/{en,zh}/guide`, `/guide/upgrades`, `/guide/mechanics` | `GuideView`, `GuideUpgradesView`, `GuideMechanicsView` | Guide index and pages, pre-rendered ([Guide](./architecture/GUIDE.md))                          |
 
 Grid rendering: `GridContainer` wraps `GridManager`, which composes `GridTiles` (SVG: regular hexes, elevated hexes, text, then the invisible event layer), `GridArtifacts` and `GridCharacters` (HTML overlays), and `SkillTargeting` and `GridArrows` (SVG overlays). Layer order and hit-testing: [Drag & Drop](./architecture/DRAG_AND_DROP.md).
 
@@ -129,6 +129,7 @@ Composables whose triggers and consumers sit far apart in the tree, or whose sta
 - `src/content/page/<Name>.<lang>.vue` (en, zh): page prose, resolved by `useContentComponent`
 - `src/content/skill/<slug>/`: optional per-hero snippet component per language plus `<Name>.data.ts` grid styles; skill text for all 16 locales lives in `src/locales/skill/<lang>/`
 - `src/content/pvp/s<N>/index.template.html`: standalone PvP report exported by an external report generator, hydrated into `/guide/pvp/s<N>/` at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md))
+- `src/content/pvp/s<N>/summary.ts`: the finished season's team groups and counters, a locked snapshot of that report for the guide index ([Guide](./architecture/GUIDE.md))
 - `src/data/` JSON (arena, artifact, character, import, seasonal) and `src/locales/` dictionaries load through `src/utils/dataLoader.ts`
 - Skill pages, guide pages, `/`, `/share`, and `/skills` are pre-rendered by vite-ssg ([Pre-Rendering](./architecture/PRE_RENDERING.md))
 

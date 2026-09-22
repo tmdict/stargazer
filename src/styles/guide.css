@@ -1,0 +1,107 @@
+/* Guide pages: the dark panels the index and its sub-pages stack, and the
+   title link and blurb every panel opens with. Pairs with content.css, which
+   supplies the `.container` box and `.content` typography; the panel is a
+   size container so its parts can compact to the column they sit in. */
+
+.guide-panel {
+  --guide-panel-bg: #262626;
+  background: var(--guide-panel-bg);
+  margin: 0;
+  container-type: inline-size;
+}
+
+.content .guide-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 0.5rem;
+  border-bottom: 2px solid var(--color-border-primary);
+  color: #fff;
+  text-decoration: none;
+}
+
+.content .guide-title h2 {
+  margin: 0;
+  padding: 0;
+  border: none;
+  font-size: 18px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.content .guide-title:hover {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* No transitions on the hover state: the box should answer the pointer at
+   once; only the chevron's slide eases. */
+.content .guide-title svg {
+  flex: none;
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 0.1s;
+}
+
+/* A panel whose whole body opens its page: `.guide-link` is the hit area
+   (the content box, or one season block of the report), covered by the
+   title link's stretched pseudo-element, which sits above the area's
+   positioned decorations (the upgrade tracks) at z-index 1. Links inside
+   the area (chips, tiles) raise themselves above it with `position:
+   relative; z-index: 2`. Hovering anywhere on the area lights the title and
+   the panel border, so the box reads as one link. */
+.guide-link {
+  position: relative;
+  cursor: pointer;
+}
+
+.guide-link .guide-title::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.guide-panel:has(.guide-link:hover) {
+  border-color: color-mix(in srgb, var(--color-accent) 45%, transparent);
+}
+
+.guide-link:hover .guide-title h2,
+.content .guide-title:hover h2 {
+  color: var(--color-accent);
+}
+
+.guide-link:hover .guide-title svg,
+.content .guide-title:hover svg {
+  color: var(--color-accent);
+  transform: translateX(3px);
+}
+
+.content .guide-blurb {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.6);
+  opacity: 1;
+}
+
+/* Mobile: drop the card chrome so the column fills the width. */
+@media (max-width: 768px) {
+  .guide-panel {
+    max-width: 100% !important;
+    border: none;
+    box-shadow: none;
+    border-radius: var(--radius-medium);
+  }
+  .guide-panel .content {
+    padding: var(--spacing-lg);
+  }
+}
+@media (max-width: 480px) {
+  .guide-panel {
+    border-radius: 0;
+  }
+  .guide-panel .content {
+    padding: var(--spacing-md);
+  }
+}
