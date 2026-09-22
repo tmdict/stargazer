@@ -1,78 +1,77 @@
 <script setup lang="ts">
-import { provide } from 'vue'
+/* Guide index: the finished seasons' report entries and the newest season's
+   counter ladder beside the Upgrades and Mechanics entries. The panels are
+   grid areas, so the two rows pair up on wide screens and stack in reading
+   order below 1100px. */
 
-import GuideTagSection from '@/components/guide/GuideTagSection.vue'
-import GuideUpgradeSection from '@/components/guide/GuideUpgradeSection.vue'
-import { SkillLangKey } from '@/components/skill/snippetKeys'
+import GuideCounterLadder from '@/components/guide/GuideCounterLadder.vue'
+import GuideMechanicsIndex from '@/components/guide/GuideMechanicsIndex.vue'
+import GuidePvpReport from '@/components/guide/GuidePvpReport.vue'
+import GuideUpgradesIndex from '@/components/guide/GuideUpgradesIndex.vue'
 import { useRouteLocale } from '@/composables/useRouteLocale'
+import { PVP_SEASONS } from '@/content/pvp/seasons'
 import { useGameDataStore } from '@/stores/gameData'
 import { setupGuideContentMeta } from '@/utils/contentMeta'
-import { guideTagGroups } from '@/utils/guideTags'
 
 import '@/styles/content.css'
+import '@/styles/guide.css'
 
 const lang = useRouteLocale()
-provide(SkillLangKey, lang)
-setupGuideContentMeta(lang)
+setupGuideContentMeta(lang, 'index')
 
-// SSG-safe: character/skill/prose data load eagerly, so every tag section and
-// its (hidden) expansion panels bake into the static HTML.
-const gameDataStore = useGameDataStore()
-gameDataStore.initializeContentData()
+// SSG-safe: character data loads eagerly, so the portraits bake into the
+// static HTML.
+useGameDataStore().initializeContentData()
 
-const groups = guideTagGroups()
+const latest = PVP_SEASONS[0]
 </script>
 
 <template>
-  <main>
-    <article class="container guide-panel">
-      <div class="content">
-        <GuideUpgradeSection :lang />
-      </div>
-    </article>
-    <article class="container guide-panel">
-      <div class="content">
-        <GuideTagSection
-          v-for="g in groups"
-          :key="g.tag"
-          :tag="g.tag"
-          :characters="g.characters"
-          :lang
-        />
-      </div>
-    </article>
+  <main class="guide-index">
+    <GuidePvpReport v-if="latest" class="report" :seasons="PVP_SEASONS" :lang />
+    <GuideUpgradesIndex class="upgrades" :lang />
+    <GuideCounterLadder v-if="latest" class="ladder" :summary="latest" :lang />
+    <GuideMechanicsIndex class="mechanics" :lang />
   </main>
 </template>
 
 <style scoped>
-main {
+.guide-index {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'report'
+    'upgrades'
+    'ladder'
+    'mechanics';
+  align-items: start;
   gap: var(--stack-gap);
 }
-
-/* Override content.css's modal background/centering, as SkillReader does. */
-.guide-panel {
-  background: #262626;
-  margin: 0;
+.report {
+  grid-area: report;
+}
+.upgrades {
+  grid-area: upgrades;
+}
+.ladder {
+  grid-area: ladder;
+}
+.mechanics {
+  grid-area: mechanics;
 }
 
-/* Mobile: drop the card chrome so the column fills the width. */
-@media (max-width: 768px) {
-  .guide-panel {
-    max-width: 100% !important;
-    border: none;
-    box-shadow: none;
-    border-radius: var(--radius-medium);
+@media (min-width: 1100px) {
+  .guide-index {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    grid-template-areas:
+      'report upgrades'
+      'ladder mechanics';
   }
-  .content {
-    padding: var(--spacing-lg);
-  }
-}
-@media (max-width: 480px) {
-  .guide-panel {
-    border-radius: 0;
-  }
-  .content {
-    padding: var(--spacing-md);
+  /* The top pair shares a row: the shorter panel stretches to it rather
+     than floating above a gap. */
+  .report,
+  .upgrades {
+    align-self: stretch;
   }
 }
 </style>

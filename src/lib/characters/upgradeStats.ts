@@ -6,12 +6,17 @@
  * zero at P0 and climb in smaller steps, meeting every other faction at P4.
  */
 
+import { FACTION_ORDER } from '@/lib/filterOrder'
 import { ATTR_REFINEMENT, attrMax } from './attributes'
 
 export type ParagonGroup = 'standard' | 'celestialHypogean'
 
 export const paragonGroup = (faction?: string): ParagonGroup =>
   faction === 'celestial' || faction === 'hypogean' ? 'celestialHypogean' : 'standard'
+
+/** The factions on a paragon ramp, in roster order. */
+export const paragonFactions = (group: ParagonGroup): string[] =>
+  FACTION_ORDER.filter((faction) => paragonGroup(faction) === group)
 
 // Stats that share one ramp are listed together; `stats` are app locale keys.
 export interface StatRamp {
