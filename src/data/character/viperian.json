@@ -9,7 +9,8 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "debuff-global": [{ "ultimate": 1 }],
     "dot": [{ "ultimate": 1 }],
-    "energy-denial": [{ "ultimate": 1 }, { "skill3": 1 }, { "skill3": 4 }]
+    "energy-denial": [{ "skill3": 1 }, { "skill3": 4 }]
   }
 }
