@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /* The counter ladder of a finished season: team rows by rating, a rule where
-   the tier changes, and a curve per recorded counter, drawn from
-   layoutLadder. Selecting a team keeps only its curves lit, teal where it
-   wins and red where it loses; curves link to the report's evidence. */
+   the tier changes, and a curve per recorded counter carrying the winner's
+   share of the games, drawn from layoutLadder. Selecting a team keeps only
+   its curves lit, teal where it wins and red where it loses; curves link to
+   the report's evidence. */
 
 import { computed, onMounted, onUnmounted, ref } from 'vue'
 
@@ -19,7 +20,12 @@ const props = defineProps<{ summary: PvpSeasonSummary; lang: AppLocale }>()
 
 const label = (key: string): string => appLabel(key, props.lang)
 
-const layout = computed(() => layoutLadder(props.summary))
+const shareText = (counter: PvpCounter): string =>
+  interpolate(label('ladder-share'), {
+    rate: Math.round((100 * counter.wins) / (counter.wins + counter.losses)),
+    games: counter.wins + counter.losses,
+  })
+const layout = computed(() => layoutLadder(props.summary, shareText))
 // Every row reserves the widest strip, so the names line up down the column.
 const portraitSlots = computed(() =>
   Math.max(...props.summary.teams.map((team) => team.heroes.length)),
@@ -28,7 +34,8 @@ const reportHref = computed(() => pvpReportHref(props.summary.season))
 
 const teamName = (id: string): string => props.summary.teams.find((t) => t.id === id)?.name ?? id
 // Zero-width spaces let a long label wrap at its slashes.
-const wrappable = (name: string): string => name.replaceAll('/', '/​')
+const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b)
+const wrappable = (name: string): string => name.replaceAll('/', `/${ZERO_WIDTH_SPACE}`)
 const edgeText = (counter: PvpCounter): string =>
   interpolate(label('ladder-edge'), {
     winner: teamName(counter.winner),
@@ -111,6 +118,8 @@ onUnmounted(() => {
           '--rows': layout.rows.length,
           '--portraits': portraitSlots,
           '--offset': `${layout.offset}%`,
+          '--column-left': `${layout.column.left}%`,
+          '--column-width': `${layout.column.width}%`,
         }"
         role="group"
         :aria-label="label('counter-ladder')"
@@ -140,12 +149,12 @@ onUnmounted(() => {
         ></span>
         <span
           v-for="edge in layout.edges"
-          :key="`record-${edge.counter.anchor}`"
-          class="record"
-          :class="edgeState(edge)"
+          :key="`share-${edge.counter.anchor}`"
+          class="share"
+          :class="[edgeState(edge), { few: edge.few }]"
           :style="{ left: `${edge.label.left}%`, top: `${edge.label.top}%` }"
           aria-hidden="true"
-          >{{ edge.counter.wins }}–{{ edge.counter.losses }}</span
+          >{{ edge.label.text }}</span
         >
 
         <div
@@ -253,12 +262,10 @@ onUnmounted(() => {
   pointer-events: none;
 }
 
-/* The node column the curves leave from and arrive at; its edges are the
-   layout's NODE_LEFT and NODE_RIGHT as a share of the viewBox width. */
 .node {
   position: absolute;
-  left: 28.125%;
-  width: 43.75%;
+  left: var(--column-left);
+  width: var(--column-width);
   transform: translateY(-50%);
   min-height: 64px;
   display: flex;
@@ -391,7 +398,7 @@ onUnmounted(() => {
   border-right-color: var(--in);
 }
 
-.record {
+.share {
   position: absolute;
   transform: translate(-50%, -50%);
   padding: 0 5px;
@@ -407,7 +414,11 @@ onUnmounted(() => {
   z-index: 1;
   transition: opacity 0.15s;
 }
-.record.in {
+.share.few {
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 500;
+}
+.share.in {
   color: var(--in);
 }
 
@@ -473,7 +484,7 @@ onUnmounted(() => {
   .name > small {
     display: none;
   }
-  .record {
+  .share {
     font-size: 11px;
     line-height: 16px;
   }

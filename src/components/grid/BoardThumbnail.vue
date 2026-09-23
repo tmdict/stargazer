@@ -120,6 +120,42 @@ function getTileFill(state: State | undefined): string {
 
 const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c82333')
 
+/* The crisp look, for the preview modal: the thumbnail's own fills and team
+   colours, with one border on every deployment and wall tile (open ground
+   drawn first, so a shared edge never shows two colours), a dark bevel line
+   inside each framed tile, a hatch inside each wall (lighter for a breakable
+   one), and each portrait clipped
+   under a dark rim inside a 2px team frame. Ratios are of hexSize; strokes
+   are fixed in screen pixels. */
+const CRISP = {
+  inset: 1.6 / 18,
+  bevel: 2.5 / 18,
+  wall: 4 / 18,
+}
+type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
+function zoneOf(state: State | undefined): Zone {
+  switch (state) {
+    case State.AVAILABLE_ALLY:
+    case State.OCCUPIED_ALLY:
+      return 'ally'
+    case State.AVAILABLE_ENEMY:
+    case State.OCCUPIED_ENEMY:
+      return 'enemy'
+    case State.BLOCKED:
+      return 'blocked'
+    case State.BLOCKED_BREAKABLE:
+      return 'breakable'
+    default:
+      return 'void'
+  }
+}
+// A pointy-top hex of radius r around a center, as a points string.
+const hexAt = (center: Point, r: number): string =>
+  Array.from({ length: 6 }, (_, i) => {
+    const a = (Math.PI / 180) * (60 * i - 90)
+    return `${(center.x + r * Math.cos(a)).toFixed(1)},${(center.y + r * Math.sin(a)).toFixed(1)}`
+  }).join(' ')
+
 /* Well under the hex it sits in, so the icon reads as an attachment to the board
    rather than a sixth unit. */
 const ARTIFACT_RADIUS_RATIO = 0.62
@@ -148,6 +184,7 @@ const {
   artifacts,
   hexSize = 7,
   viewBoxSize,
+  crisp = false,
 } = defineProps<{
   mapKey: string
   // Explicit [hexId, state] tile states (a record's serialized `t`), the
@@ -161,6 +198,8 @@ const {
   // Square viewBox with a centered board (the maps tab's framing); omitted =
   // tight-fit bounds, the right default for card thumbnails.
   viewBoxSize?: number
+  // The report's board style, for the preview modal.
+  crisp?: boolean
 }>()
 
 const uid = useId()
@@ -184,6 +223,28 @@ const renderTiles = computed(() =>
   })),
 )
 
+// Open ground first, then every framed tile, so a shared edge always shows the
+// light border; walls carry a hatch, deployment tiles their number.
+const crispTiles = computed(() => {
+  const size = hexSize
+  return [...geometry.value.centers.entries()]
+    .map(([hexId, center]) => {
+      const zone = zoneOf(states.value.get(hexId))
+      const wall = zone === 'blocked' || zone === 'breakable'
+      return {
+        hexId,
+        zone,
+        wall,
+        fill: getTileFill(states.value.get(hexId)),
+        points: geometry.value.points.get(hexId)!,
+        bevel: hexAt(center, size - size * CRISP.bevel),
+        hatch: wall ? hexAt(center, size - size * CRISP.wall) : '',
+        center,
+      }
+    })
+    .sort((a, b) => (a.zone === 'void' ? 0 : 1) - (b.zone === 'void' ? 0 : 1))
+})
+
 // The unit's hex (portrait clip + ring) is the tile polygon itself: any inset
 // puts the ring parallel to the tile border and the two hairlines blur into
 // one thick-looking band.
@@ -196,6 +257,8 @@ const placedUnits = computed(() =>
       corners: geometry.value.points.get(unit.hexId)!,
       color: teamColor(unit.team),
       imageSize: hexSize * 2.2,
+      // The crisp look clips the portrait under the rim, inside the frame.
+      inner: hexAt(geometry.value.centers.get(unit.hexId)!, hexSize - hexSize * CRISP.inset),
     })),
 )
 
@@ -227,8 +290,28 @@ const placedArtifacts = computed(() =>
     <defs>
       <!-- Clip paths only for occupied hexes, not all 45 tiles. -->
       <clipPath v-for="unit in placedUnits" :id="`${uid}-u-${unit.hexId}`" :key="unit.hexId">
-        <polygon :points="unit.corners" />
+        <polygon :points="crisp ? unit.inner : unit.corners" />
       </clipPath>
+      <template v-if="crisp">
+        <pattern
+          :id="`${uid}-hatch`"
+          width="6"
+          height="6"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
+          <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(0, 0, 0, 0.4)" stroke-width="2" />
+        </pattern>
+        <pattern
+          :id="`${uid}-hatch-light`"
+          width="6"
+          height="6"
+          patternUnits="userSpaceOnUse"
+          patternTransform="rotate(45)"
+        >
+          <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(0, 0, 0, 0.22)" stroke-width="2" />
+        </pattern>
+      </template>
       <clipPath v-for="art in placedArtifacts" :id="`${uid}-a-${art.side}`" :key="art.side">
         <circle :cx="art.center.x" :cy="art.center.y" :r="art.radius" />
       </clipPath>
@@ -239,10 +322,36 @@ const placedArtifacts = computed(() =>
       </filter>
     </defs>
 
+    <template v-if="crisp">
+      <template v-for="tile in crispTiles" :key="tile.hexId">
+        <polygon
+          :points="tile.points"
+          :fill="tile.fill"
+          :stroke="tile.zone === 'void' ? '#8a8f96' : '#c9ced4'"
+          :stroke-width="1"
+          stroke-linejoin="round"
+          vector-effect="non-scaling-stroke"
+        />
+        <polygon
+          v-if="tile.wall"
+          :points="tile.hatch"
+          :fill="`url(#${uid}-hatch${tile.zone === 'breakable' ? '-light' : ''})`"
+        />
+        <polygon
+          v-if="tile.zone !== 'void'"
+          :points="tile.bevel"
+          fill="none"
+          stroke="rgba(0, 0, 0, 0.5)"
+          stroke-width="1"
+          vector-effect="non-scaling-stroke"
+        />
+      </template>
+    </template>
     <!-- Opaque so shared edges don't double-composite darker; a step below the
          live grid's #ccc because hairlines need more contrast at this scale. -->
     <polygon
       v-for="tile in renderTiles"
+      v-else
       :key="tile.hexId"
       :points="tile.points"
       :fill="tile.fill"
@@ -256,7 +365,33 @@ const placedArtifacts = computed(() =>
       :class="{ faded: spotlit && !unit.highlight }"
     >
       <title v-if="unit.title">{{ unit.title }}</title>
-      <template v-if="unit.image">
+      <template v-if="unit.image && crisp">
+        <image
+          :href="unit.image"
+          :x="unit.center.x - unit.imageSize / 2"
+          :y="unit.center.y - unit.imageSize / 2"
+          :width="unit.imageSize"
+          :height="unit.imageSize"
+          preserveAspectRatio="xMidYMid slice"
+          :clip-path="`url(#${uid}-u-${unit.hexId})`"
+        />
+        <polygon
+          :points="unit.inner"
+          fill="none"
+          stroke="rgba(0, 0, 0, 0.6)"
+          stroke-width="1"
+          vector-effect="non-scaling-stroke"
+        />
+        <polygon
+          :points="unit.corners"
+          fill="none"
+          :stroke="unit.color"
+          stroke-width="1.5"
+          stroke-linejoin="round"
+          vector-effect="non-scaling-stroke"
+        />
+      </template>
+      <template v-else-if="unit.image">
         <image
           :href="unit.image"
           :x="unit.center.x - unit.imageSize / 2"

@@ -3,7 +3,7 @@
  * here is routed, pre-rendered and titled in one place. Relative import:
  * vite.config.ts type-checks this file without the `@` alias. */
 
-import type { AppLocale } from './types/i18n'
+import type { AppLocale } from './types/i18n.ts'
 
 export type GuidePage = 'index' | 'upgrades' | 'mechanics'
 

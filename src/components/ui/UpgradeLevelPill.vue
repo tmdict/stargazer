@@ -3,18 +3,18 @@
    paragon silver-blue at max, refinement warming from R2 to red at max.
    The guide's level headers and the index's ramp beads wear it. */
 
+import { computed } from 'vue'
+
 import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { pillTone } from '@/lib/characters/upgradeStats'
 
 const { kind, level } = defineProps<{ kind: 'paragon' | 'refinement'; level: number }>()
 
-const attrId = kind === 'paragon' ? ATTR_PARAGON : ATTR_REFINEMENT
-const tone = pillTone(attrId, level)
-const text = `${kind === 'paragon' ? 'P' : 'R'}${level}`
+const tone = computed(() => pillTone(kind === 'paragon' ? ATTR_PARAGON : ATTR_REFINEMENT, level))
 </script>
 
 <template>
-  <span class="lvl" :class="[kind, tone]">{{ text }}</span>
+  <span class="lvl" :class="[kind, tone]">{{ kind === 'paragon' ? 'P' : 'R' }}{{ level }}</span>
 </template>
 
 <style scoped>
