@@ -327,7 +327,7 @@ const placedArtifacts = computed(() =>
         <polygon
           :points="tile.points"
           :fill="tile.fill"
-          :stroke="tile.zone === 'void' ? '#8a8f96' : '#c9ced4'"
+          :stroke="tile.zone === 'void' ? '#8a8f96' : '#a9afb7'"
           :stroke-width="1"
           stroke-linejoin="round"
           vector-effect="non-scaling-stroke"
