@@ -95,7 +95,9 @@ onUnmounted(() => {
 
 <template>
   <article class="container guide-panel">
-    <div class="content guide-link">
+    <!-- Not a .guide-link: only the title opens the report, so a click on
+         the ladder's empty space is free to clear the selection. -->
+    <div class="content">
       <a class="guide-title" :href="`${reportHref}#counter-ladder`">
         <h2>{{ label('counter-ladder') }}</h2>
         <IconChevronRight :size="18" />
@@ -248,9 +250,8 @@ onUnmounted(() => {
   /* Centred on the drawing's extremes, not the node column (see layout). */
   transform: translateX(var(--offset));
 }
-/* Above the panel's stretched title link so the curves stay clickable, but
-   transparent to the pointer everywhere else, so empty graph space still
-   opens the report's ladder. */
+/* Transparent to the pointer except along the curves' hit strokes, so a
+   click between curves reaches the ladder and clears the selection. */
 .graph > svg {
   position: absolute;
   inset: 0;
