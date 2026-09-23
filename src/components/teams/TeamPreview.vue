@@ -144,6 +144,7 @@ const spotlit = computed(() => boards.value?.some((board) => board.matched) ?? f
         :units="board.units"
         :artifacts="board.artifacts"
         :hex-size="large ? 18 : 10"
+        :crisp="large"
       />
     </template>
     <span v-else class="preview-broken" :title="i18n.t('app.team-unreadable')">⚠</span>

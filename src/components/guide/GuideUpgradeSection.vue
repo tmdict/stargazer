@@ -34,7 +34,7 @@ const label = (key: string): string => appLabel(key, props.lang)
 type UpgradeKind = 'paragon' | 'refinement'
 
 interface LevelHead {
-  text: string
+  level: number
   tone: PillTone
 }
 
@@ -67,9 +67,9 @@ interface AttrRow {
   cells: (Cell | null)[]
 }
 
-const levelHeads = (attrId: number, prefix: string): LevelHead[] =>
+const levelHeads = (attrId: number): LevelHead[] =>
   Array.from({ length: attrMax(attrId) + 1 }, (_, level) => ({
-    text: `${prefix}${level}`,
+    level,
     tone: pillTone(attrId, level),
   }))
 
@@ -86,7 +86,7 @@ const paragonBand = (group: ParagonGroup): Band => {
     title: label('paragon'),
     factions,
     who: factions.map((faction) => gameLabel(faction, props.lang)).join(' · '),
-    levels: levelHeads(ATTR_PARAGON, 'P'),
+    levels: levelHeads(ATTR_PARAGON),
     ramps: paragonRamps(group),
     attrId: ATTR_PARAGON,
   }
@@ -100,7 +100,7 @@ const bands = computed((): Band[] => [
     kind: 'refinement',
     title: label('ex-refinement'),
     factions: [],
-    levels: levelHeads(ATTR_REFINEMENT, 'R'),
+    levels: levelHeads(ATTR_REFINEMENT),
     ramps: REFINEMENT_RAMPS,
     attrId: ATTR_REFINEMENT,
   },
@@ -197,11 +197,11 @@ const intro = computed((): string => {
           <template v-for="band in bands" :key="band.key">
             <th
               v-for="(level, i) in band.levels"
-              :key="level.text"
+              :key="level.level"
               scope="col"
               :class="[levelClass(band, level), { 'band-start': i === 0 }]"
             >
-              <UpgradeLevelPill :kind="band.kind" :level="i" />
+              <UpgradeLevelPill :kind="band.kind" :level="level.level" />
             </th>
             <th scope="col" class="step-head">{{ label('per-level') }}</th>
           </template>
@@ -263,12 +263,12 @@ const intro = computed((): string => {
             <tr>
               <td></td>
               <th
-                v-for="(level, i) in band.levels"
-                :key="level.text"
+                v-for="level in band.levels"
+                :key="level.level"
                 scope="col"
                 :class="levelClass(band, level)"
               >
-                <UpgradeLevelPill :kind="band.kind" :level="i" />
+                <UpgradeLevelPill :kind="band.kind" :level="level.level" />
               </th>
             </tr>
           </thead>
