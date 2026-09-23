@@ -30,8 +30,9 @@ A finished season's summary is a typed literal (`PvpSeasonSummary`) written once
 - **Side says direction**: a higher-rated winner's curve runs down the right side of the node column, a lower-rated winner's runs up the left, so an upset reads from the side its curve is on
 - **Bow per span**: control points sit `BOW_BASE` plus `BOW_STEP` per row spanned outside the column, so longer counters run outside shorter ones
 - **Fanned ends**: curve ends sharing a node edge spread `FAN` apart in the order of the row they connect to
-- **Labels**: each record sits at its curve's outermost point; labels closer than `LABEL_H` on one side are pushed down in turn
-- **Centred on its extremes**: `offset` shifts the whole drawing so its outermost labels, not the node column, are centred in the box; the side with the longer bows would otherwise pull it off-centre
+- **Labels**: each curve carries the winner's share of the games and how many games that is (`ladder-share`); the exact record stays in the curve's hover text. A label tries `LABEL_STOPS` along its own curve, on the curve and just outside it, and takes the position that covers the fewest other curves, labels and cards (`COST`), ties going to the stop nearest the widest point; short curves place first, since they have the least room, and equal spans place in the report's team order (most played first) so every label lands where the report put it. The box is estimated from the text (`labelWidth`), counting a CJK character double
+- **Few games**: a share from under `FEW_GAMES` games is dimmed, since a percentage hides how little sits behind it
+- **Centred on its extremes**: `offset` shifts the whole drawing so its outermost curves and label boxes, not the node column, are centred in the box; the side with the longer bows would otherwise pull it off-centre
 
 These are the report's own drawing rules, so a regenerated ladder matches the report it came from. The component adds the interaction: selecting a team dims every curve not touching it and turns the curves it loses red; a pointer-up anywhere else or Escape clears it (pointerup rather than click, since a touch that scrolls ends in pointercancel and keeps the selection). Curves are links to the report's evidence sections.
 
