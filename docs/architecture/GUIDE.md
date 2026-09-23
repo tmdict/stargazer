@@ -12,7 +12,7 @@ The guide is an index of reference material for arena planning plus the pages it
 
 - **One page list**: `GUIDE_PAGES` and `guidePath` feed the router (`routes.ts`), the SSG route list (`vite.config.ts`) and `setupGuideContentMeta`, so a page added there is routed, pre-rendered and titled together
 - **Index layout**: `GuideView` places the four panels as grid areas, report beside upgrades and ladder beside mechanics from 1100px, stacked in that order below. Panels are size containers (`guide.css`), so the ladder, the tiles and the upgrade tracks compact to their column rather than to the viewport
-- **Whole-box links**: every panel's title link is stretched over its `.guide-link` area (`guide.css`), so the blurb, previews and empty space open the page too. Any control placed inside that area (chips, tiles, the ladder's team buttons and curves) must raise itself above the stretched layer with `position: relative; z-index: 2`, or the box link swallows it. The ladder's SVG sits at that layer with `pointer-events: none`, so only its curves' hit strokes take the pointer and the space between them still opens the report
+- **Whole-box links**: every panel's title link is stretched over its `.guide-link` area (`guide.css`), so the blurb, previews and empty space open the page too. Any control placed inside that area (chips, tiles) must raise itself above the stretched layer with `position: relative; z-index: 2`, or the box link swallows it. The counter ladder is the exception: only its title is a link, so a click on its empty space clears the team selection as it does in the report
 
 ## Season Summaries (`/src/content/pvp/s<N>/summary.ts`, `/src/content/pvp/seasons.ts`)
 

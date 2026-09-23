@@ -155,6 +155,12 @@ tr.match-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
   padding:0 20px 16px;width:min(1520px,calc(100vw - 20px));max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);
   margin:auto;overflow:auto;overscroll-behavior:contain}
 #pop::backdrop{background:rgba(5,7,10,.72)}
+#pop:focus{outline:none}
+/* A long press on a board selects nothing: a stray selection is all a phone
+   reader gets from it, and the boards and their side tables are not text
+   anyone copies. Explanations stay selectable. */
+#pop[data-kind="board"] .mb-grid,#pop[data-kind="match"] .mb-grid,.pop-head{
+  -webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 /* The title and close button stay in view while the contents scroll under
    them: a five-map match is taller than a phone screen, and opening the
    pop-up at one map scrolls that board up to the title. The dialog's top
@@ -167,7 +173,8 @@ tr.match-row:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
 .pop-note{font-size:13px;line-height:1.5;color:var(--dim);margin:4px 0 12px}
 .pop-close{margin-left:auto;background:var(--panel2);border:1px solid var(--line);color:var(--dim);
   border-radius:8px;font-size:20px;line-height:1;min-width:40px;min-height:40px;padding:0 10px;cursor:pointer;flex:none}
-.pop-close:hover{color:var(--fg)}
+@media (hover:hover){.pop-close:hover{color:var(--fg)}}
+.pop-close:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
 /* Three fixed tiers for a whole match: the widest windows show it in one row
    (--mb-cols is set to the game count when the dialog opens, so a three-board
    Guild Duel match spreads to the full width too), laptops wrap a five-game
@@ -327,6 +334,7 @@ figcaption{margin-top:11px;font-size:14px;line-height:1.55;color:var(--faint)}
 .hx-t{fill:#fff;font:800 14px -apple-system,sans-serif;text-anchor:middle}
 .legend{list-style:none;margin:0;padding:0}
 .legend li{display:flex;align-items:center;flex-wrap:wrap;row-gap:4px;margin:0 0 8px}
+.lg-head{display:inline-flex;align-items:center}
 .legend .tag{margin-left:9px}
 .tag-comp{color:#cd7169;border-color:#5c3a37}
 /* Same box and visual weight as the hero portraits beside it: dark disc with a
@@ -336,22 +344,53 @@ figcaption{margin-top:11px;font-size:14px;line-height:1.55;color:var(--faint)}
   color:var(--accent);margin-right:9px}
 .lg-name{font-weight:600}
 .lg-meta{color:var(--faint);font-size:14px;margin-left:9px}
-.cf{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 16px;margin:0 0 18px}
-.cf dt{color:var(--dim)}
-.cf dd{margin:0}
+/* The artifact table's header row doubles as its section label, so the column
+   names share that line. The table stops at 560px so its figures stay near the
+   names on a wide screen. */
+.side-label{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600;margin:24px 0 10px}
+.pside>.side-label:first-child{margin-top:0}
+.core-chips{display:flex;flex-wrap:wrap;gap:8px}
+.core-chip{display:inline-flex;align-items:center;gap:8px;padding:3px 12px 3px 3px;border:1px solid var(--line);border-radius:999px;background:var(--panel2)}
+.core-chip .pt{margin:0}
+.cc-name{font-weight:600}
+.cc-pct{color:var(--dim);font-variant-numeric:tabular-nums}
+table.art-table{max-width:560px;margin:24px 0 0;background:none;font-size:inherit;font-variant-numeric:tabular-nums}
+.art-table th,.art-table td{padding:7px 0 7px 16px;white-space:nowrap;text-align:right;vertical-align:middle}
+.art-table th:first-child,.art-table td:first-child{padding-left:0;text-align:left;white-space:normal;width:100%}
+.art-table th{background:none;padding-top:0;padding-bottom:8px}
+.art-table tbody tr:last-child td{border-bottom:0}
+.art-table tbody tr:hover>td{background:none}
+.art-table small{margin-left:6px;font-size:12px;color:var(--dim)}
+.art-table b.good{color:var(--good)}.art-table b.bad{color:var(--bad)}
+.art-name{display:flex;align-items:center;gap:10px;font-weight:600}
 .variants{border-top:1px solid var(--line);padding:16px 20px 8px}
 td.build-heroes{min-width:220px;line-height:1.8}
 .build-lineup{display:flex;align-items:center;gap:10px}
 .build-heroes>.build-lineup{padding-left:34px}
 .build-flex{color:var(--accent);font-weight:600;white-space:nowrap}
-.comp-artifacts{list-style:none;padding:0;margin:0}
-.comp-artifacts li{display:flex;align-items:flex-start;gap:8px;margin:0 0 10px}
-.comp-artifacts .ai{flex:none}
-.comp-artifacts small{display:block;color:var(--dim);line-height:1.6}
-.rels{margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 18px}
+.rels{margin-top:24px;display:flex;flex-wrap:wrap;gap:8px 18px}
 .rel{font-weight:600}
+.rel-label::after{content:":"}
 .rel.good{color:var(--good)}
 .rel.bad{color:var(--bad)}
+/* A phone has no room for a figure and its count side by side, or for a unit's
+   placement figures after its name, so each moves to a second line; the counter
+   labels move above their chips. */
+@media(max-width:700px){
+  .art-table td{padding-top:8px;padding-bottom:8px}
+  .art-table small{display:block;margin:0}
+  .core-chips{gap:6px}
+  .core-chip{gap:6px;padding-right:10px;font-size:15px}
+  .core-chip .pt{width:26px!important;height:26px!important}
+  .legend li{display:grid;grid-template-columns:auto minmax(0,1fr);column-gap:10px;row-gap:2px;align-items:center;line-height:1.35;margin-bottom:12px}
+  .legend li>.pt,.legend li>.pin{grid-row:span 2;margin:0}
+  .legend .tag{margin-left:6px;padding:0;border:0;background:none;font-size:13px}
+  .lg-meta{margin:0;font-size:13px;color:var(--dim)}
+  .rels{display:block;margin-top:0}
+  .rel{display:flex;flex-wrap:wrap;gap:6px}
+  .rel-label{flex-basis:100%;font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin:24px 0 4px}
+  .rel-label::after{content:none}
+}
 
 .matchup{background:var(--panel);border:1px solid var(--line);border-radius:9px;
   padding:16px 20px;margin:16px 0}
@@ -680,30 +719,34 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Gunnar <span class="dim">99%</span>, Gwyneth <span class="dim">99%</span>, Kulu <span class="dim">82%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>271 uses · 57% of teams<br>68% win rate (185–86)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>183 uses · 38% of teams<br>60% win rate (110–73)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg> <span>Surging<small>7 uses · 1% of teams<br>29% win rate (2–5)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gunnar" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Gunnar</span><span class="cc-pct">99%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gwyneth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Gwyneth</span><span class="cc-pct">99%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-kulu" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Kulu</span><span class="cc-pct">82%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>57%</b><small>271 teams</small></td>
+          <td><b class="good">68%</b><small>185&ndash;86</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>38%</b><small>183 teams</small></td>
+          <td><b class="good">60%</b><small>110&ndash;73</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg><span>Surging</span></span></td>
+          <td><b>1%</b><small>7 teams</small></td>
+          <td><b class="">29%</b><small>2&ndash;5</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-aliceth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Aliceth</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Aliceth</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 100% &middot; on 29% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-kulu" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Kulu</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Kulu</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 66%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gwyneth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Gwyneth</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Gwyneth</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gunnar" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Gunnar</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Gunnar</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-dunlingr" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Dunlingr</span>
-      <span class="tag">Tank</span>
-      <span class="lg-meta">placed here 43% &middot; on 79% of boards</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 73%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Dunlingr</span> <span class="tag">Tank</span></span>
+      <span class="lg-meta">placed here 43% &middot; on 79% of boards</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 73%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t1" title="Saida/Contess/Twins: 156-147">Saida/Contess/Twins</span> <span class="ar t2" title="Thador/Solise: 102-143">Thador/Solise</span> <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span> <span class="ar t1" title="Rolan/Twins: 61-24">Rolan/Twins</span> <span class="ar t2" title="Evie/Orion/Hepler: 6-11">Evie/Orion/Hepler</span></div>
-        <div class="rel bad">Loses to: <span class="ar t1" title="Alna/Syph/Mehira: 183-132">Alna/Syph/Mehira</span> <span class="ar t2" title="Zorya/Athalia/Pandora: 50-94">Zorya/Athalia/Pandora</span> <span class="ar t1" title="Alna/Athalia/Eryndor: 22-20">Alna/Athalia/Eryndor</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t1" title="Saida/Contess/Twins: 156-147">Saida/Contess/Twins</span> <span class="ar t2" title="Thador/Solise: 102-143">Thador/Solise</span> <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span> <span class="ar t1" title="Rolan/Twins: 61-24">Rolan/Twins</span> <span class="ar t2" title="Evie/Orion/Hepler: 6-11">Evie/Orion/Hepler</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Alna/Syph/Mehira: 183-132">Alna/Syph/Mehira</span> <span class="ar t2" title="Zorya/Athalia/Pandora: 50-94">Zorya/Athalia/Pandora</span> <span class="ar t1" title="Alna/Athalia/Eryndor: 22-20">Alna/Athalia/Eryndor</span></div>
       </div>
     </div>
   </div>
@@ -753,30 +796,34 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Orion <span class="dim">98%</span>, Evie <span class="dim">97%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg> <span>Valorshield<small>245 uses · 74% of teams<br>58% win rate (142–101)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>49 uses · 15% of teams<br>43% win rate (21–28)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>22 uses · 7% of teams<br>50% win rate (11–11)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-orion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Orion</span><span class="cc-pct">98%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-evie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Evie</span><span class="cc-pct">97%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg><span>Valorshield</span></span></td>
+          <td><b>74%</b><small>245 teams</small></td>
+          <td><b class="">58%</b><small>142&ndash;101</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>15%</b><small>49 teams</small></td>
+          <td><b class="">43%</b><small>21&ndash;28</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>7%</b><small>22 teams</small></td>
+          <td><b class="">50%</b><small>11&ndash;11</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rolan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Rolan</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Rolan</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 17% &middot; on 74% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zandrok" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Zandrok</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Zandrok</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 67% &middot; on 34% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-evie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Evie</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Evie</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 9%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-perseus" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Perseus</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Perseus</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 14% &middot; on 64% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-orion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Orion</span>
-      <span class="tag">Warrior</span>
-      <span class="lg-meta">placed here 67%</span></li><li><span class="pin">P</span><span class="lg-name">Aurelian</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 15%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Orion</span> <span class="tag">Warrior</span></span>
+      <span class="lg-meta">placed here 67%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Aurelian</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 15%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t2" title="Zorya/Athalia/Pandora: 50-94">Zorya/Athalia/Pandora</span> <span class="ar t1" title="Alna/Syph/Mehira: 183-132">Alna/Syph/Mehira</span></div>
-        <div class="rel bad">Loses to: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span> <span class="ar t1" title="Rolan/Twins: 61-24">Rolan/Twins</span> <span class="ar t1" title="Saida/Contess/Twins: 156-147">Saida/Contess/Twins</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t2" title="Zorya/Athalia/Pandora: 50-94">Zorya/Athalia/Pandora</span> <span class="ar t1" title="Alna/Syph/Mehira: 183-132">Alna/Syph/Mehira</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span> <span class="ar t1" title="Rolan/Twins: 61-24">Rolan/Twins</span> <span class="ar t1" title="Saida/Contess/Twins: 156-147">Saida/Contess/Twins</span></div>
       </div>
     </div>
   </div>
@@ -826,33 +873,36 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Contess <span class="dim">100%</span>, Saida <span class="dim">99%</span>, Elijah &amp; Lailah <span class="dim">94%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>87 uses · 27% of teams<br>52% win rate (43–39)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>83 uses · 26% of teams<br>49% win rate (35–36)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg> <span>Surging<small>74 uses · 23% of teams<br>58% win rate (43–31)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-contess" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Contess</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-saida" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Saida</span><span class="cc-pct">99%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-elijah-lailah" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Elijah &amp; Lailah</span><span class="cc-pct">94%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>27%</b><small>87 teams</small></td>
+          <td><b class="">52%</b><small>43&ndash;39</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>26%</b><small>83 teams</small></td>
+          <td><b class="">49%</b><small>35&ndash;36</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg><span>Surging</span></span></td>
+          <td><b>23%</b><small>74 teams</small></td>
+          <td><b class="">58%</b><small>43&ndash;31</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-elijah-lailah" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Elijah &amp; Lailah</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Elijah &amp; Lailah</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 88%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-contess" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Contess</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Contess</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 82%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gerda" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Gerda</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Gerda</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 35% &middot; on 68% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-aliceth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Aliceth</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Aliceth</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 52% &middot; on 62% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-saida" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Saida</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Saida</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 91%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-elijah-lailah" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Elijah &amp; Lailah</span>
-      <span class="tag tag-comp">Companion</span>
-      <span class="lg-meta">placed here 88%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 15%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Elijah &amp; Lailah</span> <span class="tag tag-comp">Companion</span></span>
+      <span class="lg-meta">placed here 88%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 15%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
-        <div class="rel bad">Loses to: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
       </div>
     </div>
   </div>
@@ -899,30 +949,34 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Sylphira <span class="dim">100%</span>, Alna <span class="dim">98%</span>, Mehira <span class="dim">93%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>279 uses · 88% of teams<br>59% win rate (164–114)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>15 uses · 5% of teams<br>53% win rate (8–7)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>8 uses · 3% of teams<br>38% win rate (3–5)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-sylphira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Sylphira</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Alna</span><span class="cc-pct">98%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-mehira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Mehira</span><span class="cc-pct">93%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>88%</b><small>279 teams</small></td>
+          <td><b class="">59%</b><small>164&ndash;114</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>5%</b><small>15 teams</small></td>
+          <td><b class="">53%</b><small>8&ndash;7</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>3%</b><small>8 teams</small></td>
+          <td><b class="bad">38%</b><small>3&ndash;5</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-mehira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Mehira</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Mehira</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 25%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zandrok" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Zandrok</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Zandrok</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 97% &middot; on 69% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Alna</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Alna</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 90%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-hepler" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Hepler</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Hepler</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 81% &middot; on 55% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-sylphira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Sylphira</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 90%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 75%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Sylphira</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 90%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 75%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
-        <div class="rel bad">Loses to: <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
       </div>
     </div>
   </div>
@@ -972,33 +1026,36 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Rolan <span class="dim">100%</span>, Elijah &amp; Lailah <span class="dim">97%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>37 uses · 43% of teams<br>77% win rate (27–8)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>34 uses · 39% of teams<br>68% win rate (23–11)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Windcall"><title>Windcall</title><use href="#a-windcall"/></svg> <span>Windcall<small>4 uses · 5% of teams<br>75% win rate (3–1)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rolan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Rolan</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-elijah-lailah" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Elijah &amp; Lailah</span><span class="cc-pct">97%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>43%</b><small>37 teams</small></td>
+          <td><b class="good">77%</b><small>27&ndash;8</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>39%</b><small>34 teams</small></td>
+          <td><b class="good">68%</b><small>23&ndash;11</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Windcall"><title>Windcall</title><use href="#a-windcall"/></svg><span>Windcall</span></span></td>
+          <td><b>5%</b><small>4 teams</small></td>
+          <td><b class="">75%</b><small>3&ndash;1</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-taichi-agumon" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Taichi &amp; Agumon</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Taichi &amp; Agumon</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 86% &middot; on 39% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-mehira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Mehira</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Mehira</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 33%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-elijah-lailah" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Elijah &amp; Lailah</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Elijah &amp; Lailah</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rolan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Rolan</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Rolan</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 94%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-sylphira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Sylphira</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Sylphira</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-elijah-lailah" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Elijah &amp; Lailah</span>
-      <span class="tag tag-comp">Companion</span>
-      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 100%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Elijah &amp; Lailah</span> <span class="tag tag-comp">Companion</span></span>
+      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 100%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
-        <div class="rel bad">Loses to: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
       </div>
     </div>
   </div>
@@ -1048,29 +1105,33 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Alna <span class="dim">100%</span>, Athalia <span class="dim">98%</span>, Eryndor <span class="dim">86%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg> <span>Magicsurge<small>20 uses · 48% of teams<br>55% win rate (11–9)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg> <span>Surging<small>14 uses · 33% of teams<br>57% win rate (8–6)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>4 uses · 10% of teams<br>25% win rate (1–3)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Alna</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Athalia</span><span class="cc-pct">98%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-eryndor" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Eryndor</span><span class="cc-pct">86%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg><span>Magicsurge</span></span></td>
+          <td><b>48%</b><small>20 teams</small></td>
+          <td><b class="">55%</b><small>11&ndash;9</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg><span>Surging</span></span></td>
+          <td><b>33%</b><small>14 teams</small></td>
+          <td><b class="">57%</b><small>8&ndash;6</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>10%</b><small>4 teams</small></td>
+          <td><b class="">25%</b><small>1&ndash;3</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Alna</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Alna</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 50%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-eryndor" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Eryndor</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Eryndor</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 45%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-shadewing" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Shadewing</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Shadewing</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 73% &middot; on 68% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-igor" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Igor</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Igor</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 91% &middot; on 50% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Athalia</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 95%</span></li><li><span class="pin">P</span><span class="lg-name">Necrodrakon</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 45%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Athalia</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 95%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Necrodrakon</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 45%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
 
       </div>
     </div>
@@ -1121,30 +1182,34 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Thador <span class="dim">97%</span>, Solise <span class="dim">93%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>86 uses · 35% of teams<br>56% win rate (48–38)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>66 uses · 27% of teams<br>30% win rate (19–45)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>36 uses · 15% of teams<br>40% win rate (14–21)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-thador" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Thador</span><span class="cc-pct">97%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-solise" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Solise</span><span class="cc-pct">93%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>35%</b><small>86 teams</small></td>
+          <td><b class="">56%</b><small>48&ndash;38</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>27%</b><small>66 teams</small></td>
+          <td><b class="bad">30%</b><small>19&ndash;45</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>15%</b><small>36 teams</small></td>
+          <td><b class="bad">40%</b><small>14&ndash;21</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-frieren" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Frieren</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Frieren</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 80%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-solise" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Solise</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Solise</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 84%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-himmel" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Himmel</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Himmel</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 94% &middot; on 89% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-thador" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Thador</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Thador</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 95%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lily-may" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Lily May</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 39% &middot; on 69% of boards</span></li><li><span class="pin">P</span><span class="lg-name">Blightshroom</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 31%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Lily May</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 39% &middot; on 69% of boards</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Blightshroom</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 31%</span></li></ol>
       <div class="rels">
 
-        <div class="rel bad">Loses to: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
       </div>
     </div>
   </div>
@@ -1194,30 +1259,34 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Zorya <span class="dim">100%</span>, Pandora <span class="dim">96%</span>, Athalia <span class="dim">95%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg> <span>Magicsurge<small>90 uses · 63% of teams<br>30% win rate (27–63)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg> <span>Surging<small>19 uses · 13% of teams<br>37% win rate (7–12)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vine Snare"><title>Vine Snare</title><use href="#a-vine-snare"/></svg> <span>Vine Snare<small>11 uses · 8% of teams<br>64% win rate (7–4)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zorya" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Zorya</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-pandora" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Pandora</span><span class="cc-pct">96%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Athalia</span><span class="cc-pct">95%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg><span>Magicsurge</span></span></td>
+          <td><b>63%</b><small>90 teams</small></td>
+          <td><b class="bad">30%</b><small>27&ndash;63</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg><span>Surging</span></span></td>
+          <td><b>13%</b><small>19 teams</small></td>
+          <td><b class="bad">37%</b><small>7&ndash;12</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vine Snare"><title>Vine Snare</title><use href="#a-vine-snare"/></svg><span>Vine Snare</span></span></td>
+          <td><b>8%</b><small>11 teams</small></td>
+          <td><b class="good">64%</b><small>7&ndash;4</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zorya" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Zorya</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Zorya</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 80%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-pandora" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Pandora</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Pandora</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 63%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-shadewing" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Shadewing</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Shadewing</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 45% &middot; on 87% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Athalia</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Athalia</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 58%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-callan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Callan</span>
-      <span class="tag">Tank</span>
-      <span class="lg-meta">placed here 72%</span></li><li><span class="pin">P</span><span class="lg-name">Necrodrakon</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 61%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Callan</span> <span class="tag">Tank</span></span>
+      <span class="lg-meta">placed here 72%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Necrodrakon</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 61%</span></li></ol>
       <div class="rels">
-        <div class="rel good">Beats: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
-        <div class="rel bad">Loses to: <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
+        <div class="rel good"><span class="rel-label">Beats</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Evie/Orion: 179-152">Evie/Orion</span></div>
       </div>
     </div>
   </div>
@@ -1267,27 +1336,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Alna <span class="dim">100%</span>, Athalia <span class="dim">100%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>9 uses · 38% of teams<br>44% win rate (4–5)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>9 uses · 38% of teams<br>22% win rate (2–7)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>5 uses · 21% of teams<br>100% win rate (5–0)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Alna</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Athalia</span><span class="cc-pct">100%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>38%</b><small>9 teams</small></td>
+          <td><b class="">44%</b><small>4&ndash;5</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>38%</b><small>9 teams</small></td>
+          <td><b class="bad">22%</b><small>2&ndash;7</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>21%</b><small>5 teams</small></td>
+          <td><b class="">100%</b><small>5&ndash;0</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-mehira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Mehira</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Mehira</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 67%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Alna</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Alna</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 67%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-hepler" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Hepler</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Hepler</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100% &middot; on 67% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-taichi-agumon" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Taichi &amp; Agumon</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Taichi &amp; Agumon</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 67%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Athalia</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 67%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Athalia</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 67%</span></li></ol>
 
     </div>
   </div>
@@ -1337,27 +1410,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Dunlingr <span class="dim">100%</span>, Pandora <span class="dim">90%</span>, Cryonaia <span class="dim">80%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>10 uses · 50% of teams<br>20% win rate (2–8)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>6 uses · 30% of teams<br>83% win rate (5–1)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vine Snare"><title>Vine Snare</title><use href="#a-vine-snare"/></svg> <span>Vine Snare<small>3 uses · 15% of teams<br>33% win rate (1–2)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-dunlingr" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Dunlingr</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-pandora" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Pandora</span><span class="cc-pct">90%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-cryonaia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Cryonaia</span><span class="cc-pct">80%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>50%</b><small>10 teams</small></td>
+          <td><b class="bad">20%</b><small>2&ndash;8</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>30%</b><small>6 teams</small></td>
+          <td><b class="">83%</b><small>5&ndash;1</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vine Snare"><title>Vine Snare</title><use href="#a-vine-snare"/></svg><span>Vine Snare</span></span></td>
+          <td><b>15%</b><small>3 teams</small></td>
+          <td><b class="">33%</b><small>1&ndash;2</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-cryonaia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Cryonaia</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Cryonaia</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 100% &middot; on 70% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-aliceth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Aliceth</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Aliceth</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-pandora" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Pandora</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Pandora</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-dunlingr" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Dunlingr</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Dunlingr</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-ravion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Ravion</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 100%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Ravion</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 100%</span></li></ol>
 
     </div>
   </div>
@@ -1407,30 +1484,34 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Orion <span class="dim">100%</span>, Evie <span class="dim">94%</span>, Hepler <span class="dim">94%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>10 uses · 59% of teams<br>30% win rate (3–7)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>5 uses · 29% of teams<br>40% win rate (2–3)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg> <span>Valorshield<small>2 uses · 12% of teams<br>50% win rate (1–1)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-orion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Orion</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-evie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Evie</span><span class="cc-pct">94%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-hepler" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Hepler</span><span class="cc-pct">94%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>59%</b><small>10 teams</small></td>
+          <td><b class="bad">30%</b><small>3&ndash;7</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>29%</b><small>5 teams</small></td>
+          <td><b class="">40%</b><small>2&ndash;3</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg><span>Valorshield</span></span></td>
+          <td><b>12%</b><small>2 teams</small></td>
+          <td><b class="">50%</b><small>1&ndash;1</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-evie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Evie</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Evie</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 67% &middot; on 75% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-koko" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Koko</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Koko</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-hepler" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Hepler</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Hepler</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-orion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Orion</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Orion</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-kordan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Kordan</span>
-      <span class="tag">Warrior</span>
-      <span class="lg-meta">placed here 100% &middot; on 50% of boards</span></li><li><span class="pin">P</span><span class="lg-name">Orson</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 75%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Kordan</span> <span class="tag">Warrior</span></span>
+      <span class="lg-meta">placed here 100% &middot; on 50% of boards</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Orson</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 75%</span></li></ol>
       <div class="rels">
 
-        <div class="rel bad">Loses to: <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
+        <div class="rel bad"><span class="rel-label">Loses to</span> <span class="ar t1" title="Gwyn/Gunnar/Kulu: 306-172">Gwyn/Gunnar/Kulu</span></div>
       </div>
     </div>
   </div>
@@ -1477,27 +1558,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Frieren <span class="dim">100%</span>, Dunlingr <span class="dim">94%</span>, Himmel <span class="dim">94%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg> <span>Valorshield<small>8 uses · 50% of teams<br>75% win rate (6–2)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>5 uses · 31% of teams<br>20% win rate (1–4)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>1 uses · 6% of teams<br>0% win rate (0–1)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-frieren" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Frieren</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-dunlingr" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Dunlingr</span><span class="cc-pct">94%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-himmel" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Himmel</span><span class="cc-pct">94%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg><span>Valorshield</span></span></td>
+          <td><b>50%</b><small>8 teams</small></td>
+          <td><b class="good">75%</b><small>6&ndash;2</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>31%</b><small>5 teams</small></td>
+          <td><b class="">20%</b><small>1&ndash;4</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>6%</b><small>1 teams</small></td>
+          <td><b class="">0%</b><small>0&ndash;1</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-frieren" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Frieren</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Frieren</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-kulu" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Kulu</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Kulu</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 100% &middot; on 75% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-himmel" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Himmel</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Himmel</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-dunlingr" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Dunlingr</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Dunlingr</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rolan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Rolan</span>
-      <span class="tag">Support</span>
-      <span class="lg-meta">placed here 75%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 75%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Rolan</span> <span class="tag">Support</span></span>
+      <span class="lg-meta">placed here 75%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 75%</span></li></ol>
 
     </div>
   </div>
@@ -1544,27 +1629,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Rowan <span class="dim">100%</span>, Saida <span class="dim">100%</span>, Contess <span class="dim">93%</span>, Evie <span class="dim">93%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>9 uses · 64% of teams<br>100% win rate (9–0)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Windcall"><title>Windcall</title><use href="#a-windcall"/></svg> <span>Windcall<small>4 uses · 29% of teams<br>25% win rate (1–3)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg> <span>Magicsurge<small>1 uses · 7% of teams<br>0% win rate (0–1)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rowan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Rowan</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-saida" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Saida</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-contess" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Contess</span><span class="cc-pct">93%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-evie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Evie</span><span class="cc-pct">93%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>64%</b><small>9 teams</small></td>
+          <td><b class="good">100%</b><small>9&ndash;0</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Windcall"><title>Windcall</title><use href="#a-windcall"/></svg><span>Windcall</span></span></td>
+          <td><b>29%</b><small>4 teams</small></td>
+          <td><b class="">25%</b><small>1&ndash;3</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg><span>Magicsurge</span></span></td>
+          <td><b>7%</b><small>1 teams</small></td>
+          <td><b class="">0%</b><small>0&ndash;1</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rolan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Rolan</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Rolan</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-rowan" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Rowan</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Rowan</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-evie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Evie</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Evie</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-saida" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Saida</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Saida</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-contess" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Contess</span>
-      <span class="tag">Support</span>
-      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 100%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Contess</span> <span class="tag">Support</span></span>
+      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 100%</span></li></ol>
 
     </div>
   </div>
@@ -1611,27 +1700,29 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Alna <span class="dim">100%</span>, Athalia <span class="dim">100%</span>, Sylphira <span class="dim">100%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>11 uses · 85% of teams<br>55% win rate (6–5)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>2 uses · 15% of teams<br>50% win rate (1–1)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Alna</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Athalia</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-sylphira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Sylphira</span><span class="cc-pct">100%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>85%</b><small>11 teams</small></td>
+          <td><b class="">55%</b><small>6&ndash;5</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>15%</b><small>2 teams</small></td>
+          <td><b class="">50%</b><small>1&ndash;1</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zorya" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Zorya</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Zorya</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Athalia</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Athalia</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-pandora" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Pandora</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Pandora</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Alna</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Alna</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-sylphira" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Sylphira</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 100%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Sylphira</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 100%</span></li></ol>
 
     </div>
   </div>
@@ -1679,27 +1770,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Gwyneth <span class="dim">100%</span>, Hugin <span class="dim">97%</span>, Cyran <span class="dim">88%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>16 uses · 47% of teams<br>19% win rate (3–13)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>15 uses · 44% of teams<br>33% win rate (5–10)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>1 uses · 3% of teams<br>100% win rate (1–0)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gwyneth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Gwyneth</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-hugin" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Hugin</span><span class="cc-pct">97%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-cyran" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Cyran</span><span class="cc-pct">88%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>47%</b><small>16 teams</small></td>
+          <td><b class="bad">19%</b><small>3&ndash;13</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>44%</b><small>15 teams</small></td>
+          <td><b class="bad">33%</b><small>5&ndash;10</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>3%</b><small>1 teams</small></td>
+          <td><b class="">100%</b><small>1&ndash;0</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gwyneth" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Gwyneth</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Gwyneth</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 40%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-cyran" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Cyran</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Cyran</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 100% &middot; on 80% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-gunnar" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Gunnar</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Gunnar</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 40%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-hugin" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Hugin</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Hugin</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Alna</span>
-      <span class="tag">Tank</span>
-      <span class="lg-meta">placed here 67% &middot; on 60% of boards</span></li><li><span class="pin">P</span><span class="lg-name">Aurelian</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 60%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Alna</span> <span class="tag">Tank</span></span>
+      <span class="lg-meta">placed here 67% &middot; on 60% of boards</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Aurelian</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 60%</span></li></ol>
 
     </div>
   </div>
@@ -1749,27 +1844,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Thador <span class="dim">100%</span>, Eryndor <span class="dim">94%</span>, Lily May <span class="dim">94%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>11 uses · 33% of teams<br>9% win rate (1–10)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>8 uses · 24% of teams<br>50% win rate (4–4)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg> <span>Valorshield<small>7 uses · 21% of teams<br>14% win rate (1–6)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-thador" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Thador</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-eryndor" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Eryndor</span><span class="cc-pct">94%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lily-may" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Lily May</span><span class="cc-pct">94%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>33%</b><small>11 teams</small></td>
+          <td><b class="bad">9%</b><small>1&ndash;10</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>24%</b><small>8 teams</small></td>
+          <td><b class="">50%</b><small>4&ndash;4</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg><span>Valorshield</span></span></td>
+          <td><b>21%</b><small>7 teams</small></td>
+          <td><b class="">14%</b><small>1&ndash;6</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lyca" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Lyca</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Lyca</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 100% &middot; on 80% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-eryndor" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Eryndor</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Eryndor</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lily-may" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Lily May</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Lily May</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 80%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-thador" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Thador</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Thador</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-taichi-agumon" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Taichi &amp; Agumon</span>
-      <span class="tag">Warrior</span>
-      <span class="lg-meta">placed here 100% &middot; on 80% of boards</span></li><li><span class="pin">P</span><span class="lg-name">Blightshroom</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 80%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Taichi &amp; Agumon</span> <span class="tag">Warrior</span></span>
+      <span class="lg-meta">placed here 100% &middot; on 80% of boards</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Blightshroom</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 80%</span></li></ol>
 
     </div>
   </div>
@@ -1816,27 +1915,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Bonnie <span class="dim">100%</span>, Satrana <span class="dim">100%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg> <span>Surging<small>16 uses · 52% of teams<br>6% win rate (1–15)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg> <span>Magicsurge<small>6 uses · 19% of teams<br>17% win rate (1–5)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vine Snare"><title>Vine Snare</title><use href="#a-vine-snare"/></svg> <span>Vine Snare<small>5 uses · 16% of teams<br>0% win rate (0–5)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-bonnie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Bonnie</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-satrana" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Satrana</span><span class="cc-pct">100%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg><span>Surging</span></span></td>
+          <td><b>52%</b><small>16 teams</small></td>
+          <td><b class="bad">6%</b><small>1&ndash;15</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg><span>Magicsurge</span></span></td>
+          <td><b>19%</b><small>6 teams</small></td>
+          <td><b class="">17%</b><small>1&ndash;5</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vine Snare"><title>Vine Snare</title><use href="#a-vine-snare"/></svg><span>Vine Snare</span></span></td>
+          <td><b>16%</b><small>5 teams</small></td>
+          <td><b class="">0%</b><small>0&ndash;5</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-niru" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Niru</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Niru</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100% &middot; on 67% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zorya" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Zorya</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Zorya</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 67%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-satrana" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Satrana</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Satrana</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 67%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-bonnie" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Bonnie</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Bonnie</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 67%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-daimon" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Daimon</span>
-      <span class="tag">Tank</span>
-      <span class="lg-meta">placed here 67%</span></li><li><span class="pin">P</span><span class="lg-name">Necrodrakon</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 67%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Daimon</span> <span class="tag">Tank</span></span>
+      <span class="lg-meta">placed here 67%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Necrodrakon</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 67%</span></li></ol>
 
     </div>
   </div>
@@ -1886,27 +1989,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Marcille <span class="dim">100%</span>, Thador <span class="dim">97%</span>, Ravion <span class="dim">93%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg> <span>Vanguard<small>9 uses · 31% of teams<br>44% win rate (4–5)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg> <span>Valorshield<small>9 uses · 31% of teams<br>11% win rate (1–8)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>7 uses · 24% of teams<br>43% win rate (3–4)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-marcille" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Marcille</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-thador" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Thador</span><span class="cc-pct">97%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-ravion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Ravion</span><span class="cc-pct">93%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Vanguard"><title>Vanguard</title><use href="#a-vanguard"/></svg><span>Vanguard</span></span></td>
+          <td><b>31%</b><small>9 teams</small></td>
+          <td><b class="">44%</b><small>4&ndash;5</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Valorshield"><title>Valorshield</title><use href="#a-valorshield"/></svg><span>Valorshield</span></span></td>
+          <td><b>31%</b><small>9 teams</small></td>
+          <td><b class="bad">11%</b><small>1&ndash;8</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>24%</b><small>7 teams</small></td>
+          <td><b class="">43%</b><small>3&ndash;4</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-solise" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Solise</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Solise</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 56% &middot; on 75% of boards</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-ravion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Ravion</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Ravion</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 64%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-marcille" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Marcille</span>
-      <span class="tag">Mage</span>
+      <span class="lg-head"><span class="lg-name">Marcille</span> <span class="tag">Mage</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-thador" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Thador</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Thador</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lily-may" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Lily May</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 83% &middot; on 50% of boards</span></li><li><span class="pin">P</span><span class="lg-name">Blightshroom</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 92%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Lily May</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 83% &middot; on 50% of boards</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Blightshroom</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 92%</span></li></ol>
 
     </div>
   </div>
@@ -1953,27 +2060,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Lyca <span class="dim">100%</span>, Perseus <span class="dim">100%</span>, Ravion <span class="dim">86%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>6 uses · 43% of teams<br>33% win rate (2–4)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg> <span>Frontline<small>6 uses · 43% of teams<br>0% win rate (0–6)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg> <span>Wing Guard<small>2 uses · 14% of teams<br>0% win rate (0–2)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lyca" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Lyca</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-perseus" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Perseus</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-ravion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Ravion</span><span class="cc-pct">86%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>43%</b><small>6 teams</small></td>
+          <td><b class="">33%</b><small>2&ndash;4</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Frontline"><title>Frontline</title><use href="#a-frontline"/></svg><span>Frontline</span></span></td>
+          <td><b>43%</b><small>6 teams</small></td>
+          <td><b class="">0%</b><small>0&ndash;6</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Wing Guard"><title>Wing Guard</title><use href="#a-wing-guard"/></svg><span>Wing Guard</span></span></td>
+          <td><b>14%</b><small>2 teams</small></td>
+          <td><b class="">0%</b><small>0&ndash;2</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-perseus" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Perseus</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Perseus</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 50%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lily-may" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Lily May</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Lily May</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 75%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-zandrok" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Zandrok</span>
-      <span class="tag">Warrior</span>
+      <span class="lg-head"><span class="lg-name">Zandrok</span> <span class="tag">Warrior</span></span>
       <span class="lg-meta">placed here 50%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-lyca" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Lyca</span>
-      <span class="tag">Marksman</span>
+      <span class="lg-head"><span class="lg-name">Lyca</span> <span class="tag">Marksman</span></span>
       <span class="lg-meta">placed here 50%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-ravion" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Ravion</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 50%</span></li><li><span class="pin">P</span><span class="lg-name">Blightshroom</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 50%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Ravion</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 50%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Blightshroom</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 50%</span></li></ol>
 
     </div>
   </div>
@@ -2023,27 +2134,31 @@ These checks do not remove differences in opponents, maps or player skill.</p>
       <button type="button" class="pop-link explain" data-explain="formation-guide">How the team and its percentages are chosen</button></figcaption>
     </figure>
     <div class="pside">
-      <dl class="cf">
-        <dt>Core</dt><dd>Athalia <span class="dim">100%</span>, Saida <span class="dim">100%</span></dd>
-        <dt>Artifacts</dt><dd><ul class="comp-artifacts"><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg> <span>Magicsurge<small>9 uses · 64% of teams<br>22% win rate (2–7)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg> <span>Breakthrough<small>3 uses · 21% of teams<br>33% win rate (1–2)</small></span></li><li><svg class="ai" viewBox="0 0 80 80" style="width:22px;height:22px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg> <span>Surging<small>2 uses · 14% of teams<br>50% win rate (1–1)</small></span></li></ul></dd>
-      </dl>
+      <div class="side-label">Core heroes</div>
+      <div class="core-chips"><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Athalia</span><span class="cc-pct">100%</span></span><span class="core-chip"><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-saida" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg><span class="cc-name">Saida</span><span class="cc-pct">100%</span></span></div>
+      <table class="art-table">
+        <thead><tr><th class="side-label">Artifacts</th><th class="side-label">Used on</th><th class="side-label">Win rate</th></tr></thead>
+        <tbody><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Magicsurge"><title>Magicsurge</title><use href="#a-magicsurge"/></svg><span>Magicsurge</span></span></td>
+          <td><b>64%</b><small>9 teams</small></td>
+          <td><b class="bad">22%</b><small>2&ndash;7</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Breakthrough"><title>Breakthrough</title><use href="#a-breakthrough"/></svg><span>Breakthrough</span></span></td>
+          <td><b>21%</b><small>3 teams</small></td>
+          <td><b class="">33%</b><small>1&ndash;2</small></td></tr><tr><td><span class="art-name"><svg class="ai" viewBox="0 0 80 80" style="width:28px;height:28px" role="img" aria-label="Surging"><title>Surging</title><use href="#a-surging"/></svg><span>Surging</span></span></td>
+          <td><b>14%</b><small>2 teams</small></td>
+          <td><b class="">50%</b><small>1&ndash;1</small></td></tr></tbody>
+      </table>
+      <div class="side-label">Usual placement</div>
       <ol class="legend"><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-damian" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Damian</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Damian</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-solise" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Solise</span>
-      <span class="tag">Support</span>
+      <span class="lg-head"><span class="lg-name">Solise</span> <span class="tag">Support</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-alna" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Alna</span>
-      <span class="tag">Tank</span>
+      <span class="lg-head"><span class="lg-name">Alna</span> <span class="tag">Tank</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-athalia" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Athalia</span>
-      <span class="tag">Rogue</span>
+      <span class="lg-head"><span class="lg-name">Athalia</span> <span class="tag">Rogue</span></span>
       <span class="lg-meta">placed here 100%</span></li><li><svg class="pt" width="30" height="30" viewBox="0 0 30 30" style="width:30px;height:30px" aria-hidden="true"><use href="#p-saida" x="-2.14" y="-8.57" width="34.29" height="47.14"/></svg>
-      <span class="lg-name">Saida</span>
-      <span class="tag">Rogue</span>
-      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-name">Midnight Hunter</span>
-       <span class="tag">Phantimal</span><span class="lg-meta">placed here 100%</span></li></ol>
+      <span class="lg-head"><span class="lg-name">Saida</span> <span class="tag">Rogue</span></span>
+      <span class="lg-meta">placed here 100%</span></li><li><span class="pin">P</span><span class="lg-head"><span class="lg-name">Midnight Hunter</span> <span class="tag">Phantimal</span></span>
+       <span class="lg-meta">placed here 100%</span></li></ol>
 
     </div>
   </div>
@@ -3875,7 +3990,7 @@ If any levels are recorded, a hero without a row is level 0.</p>
 
 
 
-<dialog id="pop" aria-labelledby="pop-title">
+<dialog id="pop" aria-labelledby="pop-title" tabindex="-1">
 <div class="pop-head"><div class="pop-title" id="pop-title"></div><button class="pop-close" id="pop-close" aria-label="Close">&times;</button></div>
 <div class="pop-body" id="pop-body"></div>
 </dialog>
@@ -4017,6 +4132,9 @@ If any levels are recorded, a hero without a row is level 0.</p>
     title.textContent = heading
     body.innerHTML = html
     if (!dlg.open) dlg.showModal()
+    // showModal focuses the close button, which then shows as pressed on a
+    // phone; the dialog itself takes focus instead, and Tab still reaches it.
+    dlg.focus({ preventScroll: true })
     dlg.scrollTop = 0
   }
   const boardGrid = (figures) => '<div class="mb-grid" style="--mb-cols:' + figures.length + '">' + figures.join('') + '</div>'
@@ -4079,13 +4197,30 @@ If any levels are recorded, a hero without a row is level 0.</p>
     else if (el.dataset.set !== undefined) openSet(Number(el.dataset.set))
     else open(Number(el.dataset.m), Number(el.dataset.map))
   })
-  document.getElementById('pop-close').addEventListener('click', () => dlg.close())
+  const close = () => {
+    document.getSelection()?.removeAllRanges()
+    dlg.close()
+  }
+  document.getElementById('pop-close').addEventListener('click', close)
+  // On iOS, once text inside the dialog is selected, taps go to the selection
+  // and never become clicks, so neither the close button nor the backdrop
+  // would work. A tap that starts and ends on either closes it from the
+  // pointer events, which still arrive.
+  let downOn = null
+  dlg.addEventListener('pointerdown', (e) => {
+    downOn = e.target === dlg ? dlg : e.target.closest('.pop-close')
+  })
+  dlg.addEventListener('pointerup', (e) => {
+    const upOn = e.target === dlg ? dlg : e.target.closest('.pop-close')
+    if (downOn && upOn === downOn && document.getSelection()?.toString()) close()
+    downOn = null
+  })
   dlg.addEventListener('click', (e) => {
     // The dialog fills the whole viewport for its backdrop, so a click that
     // lands on it rather than on its contents is a click outside the pop-up.
-    if (e.target === dlg) dlg.close()
+    if (e.target === dlg) close()
     // A link to a place on the page leaves the pop-up behind.
-    else if (e.target.closest('a[href^="#"]')) dlg.close()
+    else if (e.target.closest('a[href^="#"]')) close()
   })
 })()
 </script>
