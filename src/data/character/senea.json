@@ -1,0 +1,14 @@
+{
+  "id": 127,
+  "name": "senea",
+  "level": "s",
+  "faction": "graveborn",
+  "class": "marksman",
+  "damage": "magic",
+  "energy": [500],
+  "range": 20,
+  "season": 8,
+  "tags": {
+    "initial-energy-300": []
+  }
+}
