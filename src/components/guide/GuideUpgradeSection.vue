@@ -374,8 +374,6 @@ const intro = computed((): string => {
   white-space: nowrap;
 }
 .stat-table .step {
-  padding-left: 6px;
-  text-align: left;
   white-space: nowrap;
 }
 .none {
