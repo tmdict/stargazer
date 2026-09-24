@@ -1,0 +1,12 @@
+{
+  "id": 126,
+  "name": "aster",
+  "level": "s",
+  "faction": "hypogean",
+  "class": "mage",
+  "damage": "magic",
+  "energy": [200],
+  "range": 7,
+  "season": 8,
+  "tags": {}
+}
