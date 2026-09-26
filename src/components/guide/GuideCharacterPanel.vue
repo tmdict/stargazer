@@ -1,14 +1,20 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import SkillCharmSection from '@/components/skill/SkillCharmSection.vue'
 import SkillSection from '@/components/skill/SkillSection.vue'
 import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
 import type { AppLocale } from '@/lib/types/i18n'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
-import { loadCharacters, loadSkillLocales } from '@/utils/dataLoader'
+import {
+  getCharmForHero,
+  getSkillCharms,
+  loadCharacters,
+  loadSkillLocales,
+} from '@/utils/dataLoader'
 import { guideEntries } from '@/utils/guide'
-import { taggedSlots } from '@/utils/guideTags'
+import { taggedCharmTiers, taggedSlots } from '@/utils/guideTags'
 import { appLabel, curatedHeroName, headingFor } from '@/utils/skillLabels'
 
 const props = defineProps<{ slug: string; tag: string; lang: AppLocale }>()
@@ -58,6 +64,23 @@ const sections = computed(() => {
     .filter((s): s is NonNullable<typeof s> => s !== null)
 })
 
+// A tag the hero's charm carries shows the whole charm, the tiers carrying it
+// accented like the skill levels above.
+const charm = computed(() => {
+  const char = character.value
+  const highlightTiers = char ? taggedCharmTiers(char, props.tag) : []
+  if (highlightTiers.length === 0) return null
+  const entry = getCharmForHero(props.slug)
+  const dict = getSkillCharms(props.lang)
+  const texts = entry ? dict?.charms[entry.slug] : undefined
+  if (!dict || !texts) return null
+  return {
+    tierNames: dict.tiers,
+    tiers: texts.map((text, i) => ({ tier: i + 1, text })),
+    highlightTiers,
+  }
+})
+
 // An unset slot is skipped by the snippet, so a note only shows under the tag
 // whose section it belongs to.
 const anchors = useSnippetAnchors()
@@ -86,6 +109,14 @@ const anchors = useSnippetAnchors()
         class="char-snippet-anchor"
       />
     </template>
+
+    <SkillCharmSection
+      v-if="charm"
+      :heading="appLabel('charm', lang)"
+      :tier-names="charm.tierNames"
+      :tiers="charm.tiers"
+      :highlight-tiers="charm.highlightTiers"
+    />
 
     <!-- Hidden source: its per-slot pieces teleport into the anchors above. -->
     <component :is="proseComp" v-if="proseComp" class="char-snippet-host" />

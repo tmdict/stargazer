@@ -3,7 +3,11 @@ export const SLOT_ORDER = ['ultimate', 'skill2', 'skill3', 'mastery', 'ex', 'awa
 
 export type SlotKey = (typeof SLOT_ORDER)[number]
 
-export type TagAttachment = { readonly [K in SlotKey]?: number }
+// A tag pins a skill slot's level or, when it comes from the hero's charm, a
+// charm tier (1-4).
+export type TagPin = SlotKey | 'charm'
+
+export type TagAttachment = { readonly [K in TagPin]?: number }
 
 // Empty attachment array = character-level tag (no per-level pin). Readonly so
 // the type aligns with Vite's deeply-frozen JSON imports.
@@ -57,3 +61,10 @@ export interface SkillCharms {
 // slug → the roster heroes sharing it. The inverse hero → charm lookup is
 // derived at load time.
 export type CharmData = Record<string, { heroes: string[] }>
+
+// On-disk shape of src/data/seasonal/charm/tags.json (hand-written): charm
+// slug → tag → every tier (1-4) whose text carries the effect. Each tier's
+// text is complete on its own, unlike a skill level's upgrade line, so an
+// effect a charm has from Elite lists all four. Written once per charm, and
+// joined to each sharing hero's tags at load time.
+export type CharmTags = Readonly<Record<string, Readonly<Record<string, readonly number[]>>>>

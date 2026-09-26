@@ -1,0 +1,6 @@
+{
+  "ep8buffboost": { "temp-buff": [1, 2, 3, 4] },
+  "ep8frontbuff": { "temp-buff": [1, 2, 3, 4] },
+  "ep8heal": { "temp-buff": [1, 2, 3, 4] },
+  "ep8shield": { "temp-buff": [1, 2, 3, 4] }
+}

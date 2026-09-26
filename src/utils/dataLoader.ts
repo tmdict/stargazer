@@ -11,7 +11,14 @@ import {
   type SkillLocale,
 } from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
-import type { CharmData, SkillCharms, SkillKeywords, SkillLocaleFile } from '@/lib/types/skill'
+import type {
+  CharmData,
+  CharmTags,
+  SkillCharms,
+  SkillKeywords,
+  SkillLocaleFile,
+  TagAttachment,
+} from '@/lib/types/skill'
 import { artifactImages, characterImages } from './imageAssets'
 
 export interface ArenaJson {
@@ -59,7 +66,7 @@ export function loadCharacters(): CharacterType[] {
   })
   // Placeholder stand-ins join the roster here so selection, placement,
   // serialization, and lookups all see them as ordinary characters.
-  const characters = [...Object.values(characterModules), ...PLACEHOLDERS]
+  const characters = [...Object.values(characterModules).map(withCharmTags), ...PLACEHOLDERS]
 
   charactersCache = characters
 
@@ -131,17 +138,41 @@ export function loadPhantimals(): PhantimalType[] {
 let charmsCache: CharmData | null = null
 let heroCharmCache: Map<string, string> | null = null
 
-/** Seasonal charm registry: charm slug → the roster heroes sharing it. The
- * dir holds one generated file; after seasonal removal the unmatched glob
- * compiles to an empty module map, so this degrades to {}. */
+/** Seasonal charm registry: charm slug → the roster heroes sharing it. After
+ * seasonal removal the unmatched glob compiles to an empty module map, so this
+ * degrades to {}. */
 export function loadCharms(): CharmData {
   if (charmsCache) return charmsCache
-  const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/*.json', {
+  const modules = import.meta.glob<CharmData>('@/data/seasonal/charm/charms.json', {
     eager: true,
     import: 'default',
   })
-  charmsCache = Object.values(modules).reduce<CharmData>((acc, m) => ({ ...acc, ...m }), {})
+  charmsCache = Object.values(modules)[0] ?? {}
   return charmsCache
+}
+
+/** Hand-written charm tags; {} when the season's charms are untagged or
+ * retired. */
+export function loadCharmTags(): CharmTags {
+  const modules = import.meta.glob<CharmTags>('@/data/seasonal/charm/tags.json', {
+    eager: true,
+    import: 'default',
+  })
+  return Object.values(modules)[0] ?? {}
+}
+
+// A charm's tags join each sharing hero's own, pinned to the tiers that carry
+// them, so every tag consumer (filters, guide, skill chips) sees them as
+// ordinary hero tags.
+function withCharmTags(character: CharacterType): CharacterType {
+  const charm = getCharmForHero(character.name)
+  const charmTags = charm ? loadCharmTags()[charm.slug] : undefined
+  if (!charmTags) return character
+  const tags: Record<string, readonly TagAttachment[]> = { ...character.tags }
+  for (const [tag, tiers] of Object.entries(charmTags)) {
+    tags[tag] = [...(tags[tag] ?? []), ...tiers.map((tier) => ({ charm: tier }))]
+  }
+  return { ...character, tags }
 }
 
 /** The charm a hero shares, with the full sharer list; null when the hero has

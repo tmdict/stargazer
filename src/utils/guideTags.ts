@@ -1,5 +1,5 @@
 import type { CharacterType } from '@/lib/types/character'
-import { SLOT_ORDER, type SlotKey } from '@/lib/types/skill'
+import { SLOT_ORDER, type SlotKey, type TagPin } from '@/lib/types/skill'
 import { loadCharacters } from '@/utils/dataLoader'
 
 export interface GuideTagGroup {
@@ -22,20 +22,27 @@ export interface TaggedSlot {
   levels: number[]
 }
 
+function pinnedLevels(character: CharacterType, tag: string, pin: TagPin): number[] {
+  const levels = new Set<number>()
+  for (const att of character.tags[tag] ?? []) {
+    const level = att[pin]
+    if (level !== undefined) levels.add(level)
+  }
+  return [...levels].sort((a, b) => a - b)
+}
+
 // The (slot, level) pins a tag attaches to on a character, grouped by slot in
 // render order. Empty for character-level tags (e.g. initial-energy-300), whose
 // attachment list carries no slot.
 export function taggedSlots(character: CharacterType, tag: string): TaggedSlot[] {
-  const bySlot = new Map<SlotKey, Set<number>>()
-  for (const att of character.tags[tag] ?? []) {
-    for (const [slot, level] of Object.entries(att)) {
-      const set = bySlot.get(slot as SlotKey) ?? new Set<number>()
-      set.add(level)
-      bySlot.set(slot as SlotKey, set)
-    }
-  }
-  return SLOT_ORDER.filter((s) => bySlot.has(s)).map((slotKey) => ({
+  return SLOT_ORDER.map((slotKey) => ({
     slotKey,
-    levels: [...bySlot.get(slotKey)!].sort((a, b) => a - b),
-  }))
+    levels: pinnedLevels(character, tag, slotKey),
+  })).filter((s) => s.levels.length > 0)
+}
+
+// The charm tiers (1-4) a tag attaches to; empty when the hero's skills carry
+// the tag and its charm does not.
+export function taggedCharmTiers(character: CharacterType, tag: string): number[] {
+  return pinnedLevels(character, tag, 'charm')
 }

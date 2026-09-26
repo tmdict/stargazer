@@ -27,6 +27,7 @@ Two facts shape the design. The game reuses ids from one season to the next, so 
 | Artifact names                      | `src/locales/seasonal/artifact/`                                               | hand                |
 | Artifact effect text                | `src/locales/seasonal/artifact/effects/`                                       | `import:artifacts`  |
 | Charms                              | `src/data/seasonal/charm/charms.json`, `src/locales/skill/<code>/_charms.json` | `import:charms`     |
+| Charm tags                          | `src/data/seasonal/charm/tags.json`                                            | hand                |
 | Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`           | hand                |
 | Icons                               | image host, `seasonal/{artifact,phantimal}/<slug>.webp`                        | exported per season |
 
@@ -74,7 +75,15 @@ The six pre-season artifacts (`season: 0`) never rotate. `season` orders the ros
 
 ## Charms
 
-A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under the feed's slug and each hero points to it. `_charms.json` sits in each language's skill locale folder so it loads with that language's skill text; the route and hero walks skip files starting with `_`. Charms show under a hero's skills (`SkillCharmSection.vue`), hide while a tag filter is active because charm rows carry no tags, and are indexed by skill search.
+A charm is a four-tier skill upgrade shared by several heroes, so its text is stored once under the feed's slug and each hero points to it. `_charms.json` sits in each language's skill locale folder so it loads with that language's skill text; the route and hero walks skip files starting with `_`. Charms show under a hero's skills (`SkillCharmSection.vue`) and are indexed by skill search.
+
+Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and gives each tagged charm every tier (1 to 4) whose text carries the effect. Each tier's text is complete on its own, so an effect present from Elite lists all four:
+
+```json
+{ "ep8heal": { "temp-buff": [1, 2, 3, 4] } }
+```
+
+`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins, so the roster filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. The charm's tiers filter like skill levels. A charm's effects change with the season, so `import:charms` fails when the file names a charm the feed lacks, and `--retire` deletes it with the text.
 
 ## Season cutover
 
@@ -102,7 +111,7 @@ Phase 1 is done when the tests pass, every new icon loads, and modals without te
 
 ### Phase 2: text, when the feed carries the season
 
-Artifacts, phantimals and charms may arrive on different builds. Run `npm run import:seasonal`, review the diff, and deploy. A failed check means a phase 1 value or a stat-code mapping is wrong: fix the data file, not the check. It is done when no phantimal locale file still has `"skills": []`, every seasonal artifact has an effects file, and the charm tests run instead of skipping.
+Artifacts, phantimals and charms may arrive on different builds. Run `npm run import:seasonal`, review the diff, and deploy. Once the charm text is in, read every tier and write the season's `tags.json`, using the tags' meanings in the hero data. A failed check means a phase 1 value or a stat-code mapping is wrong: fix the data file, not the check. It is done when no phantimal locale file still has `"skills": []`, every seasonal artifact has an effects file, and the charm tests run instead of skipping.
 
 ### Phase 3: targeting
 

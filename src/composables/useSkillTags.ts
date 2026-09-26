@@ -1,12 +1,12 @@
 import { computed, type ComputedRef } from 'vue'
 
-import type { SlotKey } from '@/lib/types/skill'
+import type { TagPin } from '@/lib/types/skill'
 import { loadCharacters } from '@/utils/dataLoader'
 
 interface SkillTagsApi {
-  /** Tags attached to a specific (slot, level). Empty array if none. */
-  perLevel: (slotKey: SlotKey, level: number) => string[]
-  /** All distinct tag names on the character (skill-level + character-level). */
+  /** Tags attached to a specific (slot, level), or (charm, tier). Empty array if none. */
+  perLevel: (pin: TagPin, level: number) => string[]
+  /** All distinct tag names on the character (skill-level, charm and character-level). */
   perCharacter: ComputedRef<string[]>
 }
 
@@ -15,10 +15,10 @@ export function useSkillTags(slug: string): SkillTagsApi {
   const tagMap = character?.tags ?? {}
 
   return {
-    perLevel(slotKey, level) {
+    perLevel(pin, level) {
       const out: string[] = []
       for (const [tagName, attachments] of Object.entries(tagMap)) {
-        if (attachments.some((a) => a[slotKey] === level)) out.push(tagName)
+        if (attachments.some((a) => a[pin] === level)) out.push(tagName)
       }
       return out
     },
