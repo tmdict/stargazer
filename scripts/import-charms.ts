@@ -5,6 +5,8 @@
 // through the structural charm -> heroes map. This script owns both outputs:
 //   src/data/seasonal/charm/charms.json        charm slug -> sharing heroes
 //   src/locales/skill/<code>/_charms.json      localized tier labels + text
+// The hand-written src/data/seasonal/charm/tags.json is checked against the
+// feed and retired with the outputs.
 //
 // The underscore file rides each language's skill-locale chunk, so charm
 // text is warm exactly when the surrounding skill text is. Charms are
@@ -27,7 +29,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { SKILL_LOCALES, type SkillLocale } from '../src/lib/types/i18n.ts'
-import type { CharmData, SkillCharms, SkillKeywords } from '../src/lib/types/skill.ts'
+import type { CharmData, CharmTags, SkillCharms, SkillKeywords } from '../src/lib/types/skill.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from '../src/utils/textHighlight.ts'
 import {
   arg,
@@ -45,6 +47,7 @@ const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
 const CHARM_DATA_DIR = join(PROJECT_ROOT, 'src', 'data', 'seasonal', 'charm')
 const CHARM_DATA_FILE = join(CHARM_DATA_DIR, 'charms.json')
+const CHARM_TAGS_FILE = join(CHARM_DATA_DIR, 'tags.json')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
 
 const TIER_COUNT = 4
@@ -91,8 +94,10 @@ async function loadCharmsBulk(feed: string): Promise<CharmsBulk> {
 
 async function retire(): Promise<void> {
   let removed = 0
+  // The hand-written tags describe the retired text, so they go with it.
   const targets = [
     CHARM_DATA_FILE,
+    CHARM_TAGS_FILE,
     ...SKILL_LOCALES.map(({ code }) => join(LOCALES_DIR, code, '_charms.json')),
   ]
   for (const path of targets) {
@@ -204,6 +209,20 @@ async function main() {
       continue
     }
     structural[charm.slug] = { heroes: [...heroes].sort() }
+  }
+
+  // Charm slugs change every season, so a tag left from the last one names a
+  // charm the feed no longer has. Checked before writing, so a failed run
+  // changes nothing.
+  if (existsSync(CHARM_TAGS_FILE)) {
+    const charmTags = JSON.parse(await readFile(CHARM_TAGS_FILE, 'utf8')) as CharmTags
+    const stale = Object.keys(charmTags).filter((slug) => !(slug in structural))
+    if (stale.length > 0) {
+      throw new Error(
+        `${CHARM_TAGS_FILE} tags charm(s) not in the feed: ${stale.join(', ')}\n` +
+          `  Re-tag the season's charms, or delete the file.`,
+      )
+    }
   }
 
   // Keyword tokens in charm text resolve against the skill import's

@@ -72,7 +72,7 @@ Tags live in the character data file (`src/data/character/<slug>.json`). The imp
 }
 ```
 
-Each attachment is `{ slot: level }`. `useSkillTags` gives the per-level and per-character unions. The chip strip filters levels, and refinement rows and charm rows carry no tags, so any active chip hides them. A slot heading's chips link to `/skills?tag=<name>`, which seeds the roster filter. A tag's label is `src/locales/app/<tag>.json`, so adding a tag is data plus one locale file.
+Each attachment is `{ slot: level }`, or `{ "charm": tier }` for a tag the hero's charm carries ([Seasonal Content](./SEASONAL.md)). `useSkillTags` gives the per-level and per-character unions. The chip strip filters skill levels and charm tiers alike. Refinement rows carry no tags, so any active chip hides them. A slot heading's chips link to `/skills?tag=<name>`, which seeds the roster filter. A tag's label is `src/locales/app/<tag>.json`, so adding a tag is data plus one locale file.
 
 ## Commentary snippets
 

@@ -8,7 +8,7 @@ import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useSkillTags } from '@/composables/useSkillTags'
 import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
 import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
-import { SLOT_ORDER } from '@/lib/types/skill'
+import { SLOT_ORDER, type TagPin } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
 import { getCharmForHero, getSkillCharms, getSkillFile } from '@/utils/dataLoader'
@@ -52,32 +52,39 @@ function clearChips() {
   if (activeChips.value.size > 0) activeChips.value = new Set()
 }
 
-// A slot is shown when at least one of its levels passes the active-chip
-// filter; empty filter shows everything. `slotTags` is the union of per-level
-// tags, rendered as chips next to the heading. EX refinement tiers (`r`) aren't
-// taggable, so they show only in the unfiltered view.
+// A skill level or charm tier passes the active-chip filter when it carries an
+// active tag; an empty filter passes everything. `slotTags` is the union of
+// the rows' tags, rendered as chips next to the heading, with the raw tag name
+// (for the browser filter link) next to its label.
+function applyChips<T>(pin: TagPin, rows: T[]) {
+  const tagged = rows.map((row, i) => ({ row, tags: perLevel(pin, i + 1) }))
+  const filter = activeChips.value
+  const slotTags = [...new Set(tagged.flatMap((r) => r.tags))].map((t) => ({
+    name: t,
+    label: appLabel(t, appLang.value),
+  }))
+  const shown = tagged
+    .filter((r) => filter.size === 0 || r.tags.some((t) => filter.has(t)))
+    .map((r) => r.row)
+  return { slotTags, shown }
+}
+
+// A slot is shown when at least one of its levels passes the filter. EX
+// refinement tiers (`r`) aren't taggable, so they show only in the unfiltered
+// view.
 const sections = computed(() => {
   if (!locale.value) return []
-  const filter = activeChips.value
   return SLOT_ORDER.map((slotKey) => {
     const slot = locale.value![slotKey]
     if (!slot) return null
-    const rawLevels = slot.d.map((description, i) => ({
-      level: i + 1,
-      description,
-      rawTags: perLevel(slotKey, i + 1),
-    }))
-    const slotTagsSet = new Set<string>()
-    for (const l of rawLevels) for (const t of l.rawTags) slotTagsSet.add(t)
-    // Keep the raw tag name (for the browser filter link) next to its label.
-    const slotTags = [...slotTagsSet].map((t) => ({ name: t, label: appLabel(t, appLang.value) }))
-    const levels = rawLevels
-      .filter((l) => filter.size === 0 || l.rawTags.some((t) => filter.has(t)))
-      .map((l) => ({ level: l.level, description: l.description }))
-    // Refinements carry no tags, so an active filter hides them; they only
-    // appear in the unfiltered view.
+    const { slotTags, shown: levels } = applyChips(
+      slotKey,
+      slot.d.map((description, i) => ({ level: i + 1, description })),
+    )
     const refinements =
-      filter.size === 0 ? (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d })) : []
+      activeChips.value.size === 0
+        ? (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d }))
+        : []
     if (levels.length === 0 && refinements.length === 0) return null
     return {
       slotKey,
@@ -91,17 +98,22 @@ const sections = computed(() => {
 
 // One charm is shared by several heroes, so its text is stored charm-keyed
 // and resolved through the hero → charm mapping; the en fallback mirrors the
-// skill-file fallback above.
+// skill-file fallback above. Its tiers filter like skill levels.
 const charm = computed(() => {
   const entry = getCharmForHero(props.slug)
   if (!entry) return null
   const dict = getSkillCharms(props.lang) ?? getSkillCharms('en')
   const texts = dict?.charms[entry.slug]
   if (!dict || !texts) return null
+  const { slotTags, shown: tiers } = applyChips(
+    'charm',
+    texts.map((text, i) => ({ tier: i + 1, text })),
+  )
+  if (tiers.length === 0) return null
   const sharedNames = entry.heroes
     .filter((h) => h !== props.slug)
     .map((h) => heroDisplayName(h, props.lang))
-  return { tierNames: dict.tiers, texts, sharedNames }
+  return { tierNames: dict.tiers, slotTags, tiers, sharedNames }
 })
 
 const anchors = useSnippetAnchors()
@@ -190,14 +202,15 @@ provide(
       />
     </template>
 
-    <!-- Charm rows carry no tags, so an active chip filter hides the block,
-         same rule as EX refinements. -->
+    <!-- id anchors the search overlay's deep links (#charm). -->
     <SkillCharmSection
-      v-if="charm && activeChips.size === 0"
+      v-if="charm"
+      id="charm"
       :heading="appLabel('charm', appLang)"
-      :shared-label="appLabel('charm-shared', appLang)"
+      :slot-tags="charm.slotTags"
       :tier-names="charm.tierNames"
-      :texts="charm.texts"
+      :tiers="charm.tiers"
+      :shared-label="appLabel('charm-shared', appLang)"
       :shared-names="charm.sharedNames"
     />
 
