@@ -64,7 +64,7 @@ A companion spawns on a random free tile of its team, and if there is none, plac
 
 ### Spirit Marks and the targeting switch
 
-A Spirit Mark highlights the unit on the tile behind (or in front of) its phantimal. In the game this unlocks weeks into a season, so a mark paints only when the phantimal's data file sets `"targeting": true`. The mark can be written and tested early and turned on with a one-field edit; until then it stays hidden even with the Skills toggle on. The flag has no UI. Phantimals always draw their normal attack arrows at their range. The registry holds one skill per id, so a phantimal that has a companion takes its mark as `withTilePaint` over the companion skill.
+A Spirit Mark highlights the unit on the tile behind (or in front of) its phantimal. In the game this unlocks weeks into a season, so a mark paints only when the phantimal's data file sets `"targeting": true`. The mark can be written and tested early and turned on with a one-field edit; until then it stays hidden even with the Skills toggle on. The flag has no UI. Phantimals always draw their normal attack arrows at their range. The registry holds one skill per id, so a phantimal that has a companion takes its mark as `withTilePaint` over the companion skill. A mark goes to a hero, so another phantimal or phantimal companion on the chosen tile is passed over for the next tile in the chain. A companion can carry its own mark, measured from its own tile and painted by its owner's skill (Wedge of Power marks the hero behind it).
 
 Links store phantimals in each board's `s` section by local id, with companions as `N × 10000 + L` (bit layout in [URL Serialization](./URL_SERIALIZATION.md)). An id with no data renders on the grid as a removable "?".
 
