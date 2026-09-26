@@ -159,6 +159,14 @@ export function rearmostUnit(grid: Grid, team: Team): TargetCandidate | null {
   return rearmostCandidate(getTeamTargetCandidates(grid, team), team)
 }
 
+// The `count` frontmost units, ranked the way frontmostUnit picks its one.
+export function frontmostUnits(grid: Grid, team: Team, count: number): TargetCandidate[] {
+  const highestFirst = team === Team.ALLY
+  return getTeamTargetCandidates(grid, team)
+    .sort((a, b) => (highestFirst ? b.hexId - a.hexId : a.hexId - b.hexId))
+    .slice(0, count)
+}
+
 /**
  * Find the rearmost target of `targetTeam`. `excludeSelf` drops the caster when
  * it targets its own team.
