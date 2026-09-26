@@ -11,7 +11,7 @@
 // structural file (or leaves a stale one) fails the import loudly.
 //
 // Usage:
-//   npm run import:phantimals                          # reads DEFAULT_SRC_DIR/<feed>/phantimals.json
+//   npm run import:phantimals                          # reads DATA_FEED_DIR/<feed>/phantimals.json
 //   npm run import:phantimals -- --src-dir <PATH> | --url-base <URL>
 //   npm run import:phantimals -- --retire              # delete every generated locale file
 //
@@ -23,13 +23,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { isAppLocale, SKILL_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
-import {
-  arg,
-  cleanDescription,
-  DEFAULT_SRC_DIR,
-  hasFlag,
-  writeTextIfChanged,
-} from './lib/shared.ts'
+import { arg, cleanDescription, feedSrcDir, hasFlag, writeTextIfChanged } from './lib/shared.ts'
 
 // ---------- paths ----------
 
@@ -62,7 +56,7 @@ async function loadPhantimalsBulk(feed: string): Promise<PhantimalsBulk> {
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as PhantimalsBulk
   }
-  const base = SRC_DIR_FLAG ? resolve(SRC_DIR_FLAG) : join(PROJECT_ROOT, DEFAULT_SRC_DIR)
+  const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
   const path = join(base, feed, 'phantimals.json')
   if (!existsSync(path)) {
     throw new Error(

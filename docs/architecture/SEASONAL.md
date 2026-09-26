@@ -33,7 +33,7 @@ Two facts shape the design. The game reuses ids from one season to the next, so 
 
 Ids and ranges are hand-written because ids are baked into share links and range is a board-simulation judgment the feed does not carry.
 
-`npm run import:seasonal` runs `import:skills`, `import:charms`, `import:artifacts` and `import:phantimals` in that order (charm text is checked against the skill keyword glossaries, so skills go first). Each importer writes what the feed carries and checks the hand-written files against it: slug sets must match in both directions, phantimal factions must agree, and artifact stats must equal the feed's through the stat-code map in `scripts/import-artifacts.ts`. Any mismatch fails the run. A missing feed is an error, never a wipe. `--retire` deletes an importer's generated files on purpose, and `--src-dir` / `--url-base` point at another feed.
+`npm run import:seasonal` runs `import:skills`, `import:charms`, `import:artifacts` and `import:phantimals` in that order (charm text is checked against the skill keyword glossaries, so skills go first). Each importer writes what the feed carries and checks the hand-written files against it: slug sets must match in both directions, phantimal factions must agree, and artifact stats must equal the feed's through the stat-code map in `scripts/import-artifacts.ts`. Any mismatch fails the run. A missing feed is an error, never a wipe. `--retire` deletes an importer's generated files on purpose. The feed's location is `DATA_FEED_DIR` in `.env.local` (template: `.env.example`); `--src-dir` / `--url-base` point at another feed.
 
 ## Reused ids
 

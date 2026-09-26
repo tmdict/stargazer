@@ -14,7 +14,7 @@
 // fails the import loudly instead of drifting silently.
 //
 // Usage:
-//   npm run import:artifacts                          # reads DEFAULT_SRC_DIR/<feed>/artifacts.json
+//   npm run import:artifacts                          # reads DATA_FEED_DIR/<feed>/artifacts.json
 //   npm run import:artifacts -- --src-dir <PATH> | --url-base <URL>
 //   npm run import:artifacts -- --retire              # delete the seasonal effect files only
 //
@@ -27,13 +27,7 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { isAppLocale, SKILL_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
-import {
-  arg,
-  cleanDescription,
-  DEFAULT_SRC_DIR,
-  hasFlag,
-  writeTextIfChanged,
-} from './lib/shared.ts'
+import { arg, cleanDescription, feedSrcDir, hasFlag, writeTextIfChanged } from './lib/shared.ts'
 
 // ---------- paths ----------
 
@@ -98,7 +92,7 @@ async function loadArtifactsBulk(feed: string): Promise<ArtifactsBulk> {
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as ArtifactsBulk
   }
-  const base = SRC_DIR_FLAG ? resolve(SRC_DIR_FLAG) : join(PROJECT_ROOT, DEFAULT_SRC_DIR)
+  const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
   const path = join(base, feed, 'artifacts.json')
   if (!existsSync(path)) {
     throw new Error(

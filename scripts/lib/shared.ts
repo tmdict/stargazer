@@ -2,16 +2,23 @@
 
 import { existsSync } from 'node:fs'
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
-import { dirname } from 'node:path'
-import { argv } from 'node:process'
+import { dirname, join, resolve } from 'node:path'
+import { argv, env, loadEnvFile } from 'node:process'
 
 import { STAT_TAG_RE } from '../../src/utils/textHighlight.ts'
 
-// Default local source: a sibling checkout of the upstream data feed, which
-// emits `<feed>/<file>.json` under this path. Resolved against the repo root so
-// it holds regardless of CWD as long as the two repos are siblings. Override at
-// runtime with `--src-dir <PATH>` (local) or `--url-base <URL>` (remote).
-export const DEFAULT_SRC_DIR = '../afkj-data-viewer/public/api'
+// --src-dir, else DATA_FEED_DIR (environment or .env.local), resolved against
+// the repo root so it holds regardless of CWD.
+export function feedSrcDir(projectRoot: string, srcDirFlag: string | undefined): string {
+  if (srcDirFlag) return resolve(srcDirFlag)
+  const localEnv = join(projectRoot, '.env.local')
+  if (existsSync(localEnv)) loadEnvFile(localEnv)
+  const dir = env.DATA_FEED_DIR
+  if (!dir) {
+    throw new Error('no data feed: set DATA_FEED_DIR in .env.local, or pass --src-dir / --url-base')
+  }
+  return resolve(projectRoot, dir)
+}
 
 export function arg(name: string): string | undefined {
   const i = argv.indexOf(`--${name}`)

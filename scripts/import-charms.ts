@@ -15,7 +15,7 @@
 // inside every chunk.
 //
 // Usage:
-//   npm run import:charms                          # reads DEFAULT_SRC_DIR/<feed>/charms.json
+//   npm run import:charms                          # reads DATA_FEED_DIR/<feed>/charms.json
 //   npm run import:charms -- --src-dir <PATH>      # local: <PATH>/<feed>/charms.json
 //   npm run import:charms -- --url-base <URL>      # remote: <URL>/<feed>/charms.json
 //   npm run import:charms -- --retire              # delete every output (season retired)
@@ -34,7 +34,7 @@ import { HIGHLIGHT_RE, splitHighlightToken } from '../src/utils/textHighlight.ts
 import {
   arg,
   cleanDescription,
-  DEFAULT_SRC_DIR,
+  feedSrcDir,
   hasFlag,
   writeJsonIfChanged,
   writeTextIfChanged,
@@ -76,7 +76,7 @@ async function loadCharmsBulk(feed: string): Promise<CharmsBulk> {
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as CharmsBulk
   }
-  const base = SRC_DIR_FLAG ? resolve(SRC_DIR_FLAG) : join(PROJECT_ROOT, DEFAULT_SRC_DIR)
+  const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
   const path = join(base, feed, 'charms.json')
   if (!existsSync(path)) {
     throw new Error(

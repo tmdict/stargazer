@@ -9,7 +9,7 @@
 // Read-only against character files. The only write target is the locale dir.
 //
 // Usage:
-//   npm run import:skills                          # reads DEFAULT_SRC_DIR/<feed>/skills.json
+//   npm run import:skills                          # reads DATA_FEED_DIR/<feed>/skills.json
 //   npm run import:skills -- --src-dir <PATH>      # local: <PATH>/<feed>/skills.json
 //   npm run import:skills -- --url-base <URL>      # remote: <URL>/<feed>/skills.json
 
@@ -31,7 +31,7 @@ import { HIGHLIGHT_RE, splitHighlightToken } from '../src/utils/textHighlight.ts
 import {
   arg,
   cleanDescription,
-  DEFAULT_SRC_DIR,
+  feedSrcDir,
   writeJsonIfChanged,
   writeTextIfChanged,
 } from './lib/shared.ts'
@@ -100,7 +100,7 @@ async function loadSkillsBulk(feed: string): Promise<SkillsBulk> {
     if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
     return (await res.json()) as SkillsBulk
   }
-  const base = SRC_DIR_FLAG ? resolve(SRC_DIR_FLAG) : join(PROJECT_ROOT, DEFAULT_SRC_DIR)
+  const base = feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG)
   const path = join(base, feed, 'skills.json')
   if (!existsSync(path)) {
     throw new Error(
