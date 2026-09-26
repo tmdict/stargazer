@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, and every [[12]]s thereafter, increases all allies' ATK by [[10%]], Penetration by [[10]], and ATK SPD by [[20]] for [[6]]s.",
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒，使所有友军在接下来[[6]]秒内提高[[10%]]攻击力、[[10]]点穿透和[[20]]点攻击速度。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[12%]].",
+    "zh": "施加的攻击力加成提高至[[12%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[14%]].",
+    "zh": "施加的攻击力加成提高至[[14%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[16%]].",
+    "zh": "施加的攻击力加成提高至[[16%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[18%]].",
+    "zh": "施加的攻击力加成提高至[[18%]]。"
+  },
+  {
+    "en": "Increases the ATK bonus to [[20%]].",
+    "zh": "施加的攻击力加成提高至[[20%]]。"
+  },
+  {
+    "en": "Casting the skill also increases all allies' Life Drain by [[20]] for its duration.",
+    "zh": "释放技能时额外使友军提高[[20]]点生命汲取。"
+  }
+]

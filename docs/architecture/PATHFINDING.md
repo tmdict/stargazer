@@ -1,84 +1,49 @@
 # Pathfinding
 
-## Overview
+Pathfinding answers one question for every unit on a board: which enemy would it attack first? The answer draws the attack arrows (`GridArrows`) and fills the debug panel. The hard parts are resolving ties the same way every time and giving each kind of unit its own range.
 
-The pathfinding system provides movement distances and closest-target selection for the hexagonal grid. The library (`/src/lib/pathfinding.ts`) is pure and grid-agnostic, reading tiles through callbacks; each board's context memoizes the resulting closest-target maps for the arrows overlay and the debug panel.
+`src/lib/pathfinding.ts` is pure and knows nothing about `Grid`. It reads tiles through `getTile` and `canTraverse` callbacks and caches nothing.
 
-## Design Principles
+## Closest target
 
-1. **Pure Functions**: Library functions are side-effect free and uncached; every call computes from the tiles it is given
-2. **Grid via Callbacks**: `getTile` and `canTraverse` callbacks decouple the algorithms from the `Grid` class
-3. **Algorithm Specialization**: BFS answers how many moves until a target is in range; A\* reconstructs a concrete path and serves only the debug panel
-4. **Bounded Search**: A\* aborts past 1000 discovered nodes and BFS past 20 moves, both reporting the target as unreachable
-5. **Deterministic, Team-Asymmetric Tie-Breaking**: Equidistant targets resolve by fixed rules whose hex-id preference flips with the source team
+`findClosestTarget` asks how many moves a unit needs before some target is within its range. A target already in range costs zero moves. Otherwise a breadth-first search expands one move at a time, and the first level from which any target is within range wins. Every target reachable at that level stays a candidate for tie-breaking.
 
-## Core Algorithms (`/src/lib/pathfinding.ts`)
+Three details decide the results:
 
-### Traversal
+- Blocked and breakable-blocked tiles cannot be crossed. Occupied tiles can, so units walk through each other.
+- Range is plain hex distance, with no line of sight, so a ranged unit can reach over a wall.
+- The search gives up after 20 moves and reports the target as unreachable, which draws no arrow.
 
-`defaultCanTraverse` treats `BLOCKED` and `BLOCKED_BREAKABLE` tiles as impassable; occupied tiles are walkable.
+A melee unit (range 1) therefore has to reach an adjacent tile, and a ranged unit stops at its maximum range.
 
-### A\* (`findPathAStar`)
+## Tie-breaking
 
-- **Heuristic**: hex distance to the goal (admissible, so paths are optimal); every step costs 1
-- **Open set**: min-heap `PriorityQueue` (`/src/lib/priorityQueue.ts`) ordered by f-cost
-- **Result**: the hex list from start to goal inclusive, or `null` when the goal is unreachable or more than 1000 nodes have been discovered
+The tied candidates are folded left to right in grid storage order, each compared with the current best:
 
-### BFS Movement Distance (`calculateRangedMovementDistance`)
+| Case                                             | Rule                                                                |
+| ------------------------------------------------ | ------------------------------------------------------------------- |
+| Exactly one is in the source's column (same `q`) | The one in the column wins                                          |
+| Both on the same diagonal row (same `q - r`)     | An ally source prefers the higher hex id, an enemy source the lower |
+| Neither in the column, different diagonals       | Smaller hex distance wins, then the same hex-id preference          |
+| Both in the column                               | The earlier candidate stays                                         |
 
-Returns the minimum number of moves before any target lies within `range`, plus every target reachable at that distance so tie-breaking can choose among them:
+The distance in the third case is the straight hex distance to the source rather than the path length. The hex-id preference depends on the source's team, so the same layout can resolve differently for the two sides, which mirrors the board's 180° symmetry.
 
-- **Zero moves**: any target already within `range` of the start returns distance 0 without searching
-- **Frontier search**: level-by-level BFS over traversable neighbours; the first level from which a target is within `range` wins
-- **Cutoff**: gives up after 20 moves with `movementDistance: Infinity` and `canReach: false`
+## Ranges per unit
 
-Melee (range 1) therefore needs an adjacent tile; ranged units stop at their maximum range.
+`getClosestTargetMap` takes a range map keyed by unit id, and a unit missing from it counts as melee. The static range map from game data is keyed by base hero id, so `buildUnitRanges` (`src/composables/useGridContext.ts`) adds an entry for every companion, phantimal and synergy copy on the board, taken from `gameData.getCharacterRange`. Without that, those units would silently fall back to range 1. Where a companion's or phantimal's range comes from is covered in [Companion Skills](./skills/COMPANION.md) and [Seasonal Content](./SEASONAL.md).
 
-## Target Selection
+## Per-board maps
 
-### `findClosestTarget`
+Each board computes two maps, ally to enemy and enemy to ally, as Vue computeds over its tiles and ranges. They recompute whenever a placement, tile state or map changes, so they cannot go stale. The pathfinding store only adapts the active board's maps for the debug panel.
 
-Runs the BFS from the source tile against all target tiles at the source's range, then applies the tie-breaking rules to the targets tied at the minimum distance. The source tile's team decides the hex-id preference, so the same layout resolves differently for the two sides.
+`findPathAStar` reconstructs an actual path to the chosen target and serves only the debug panel. It uses hex distance as its heuristic, costs every step 1, and gives up once it has discovered more than 1000 nodes.
 
-### Tie-Breaking Rules
+## Skill targeting is separate
 
-Candidates are folded left to right, each compared with the current best:
+Skill targeting (`src/lib/skills/utils/distance.ts`) does not use these maps. Its furthest-unit picks break distance ties with the opposite hex-id preference (an ally caster prefers the lower id, an enemy the higher). See [Targeting Skills](./skills/TARGETING.md).
 
-| Case                                                       | Rule                                                                      |
-| ---------------------------------------------------------- | ------------------------------------------------------------------------- |
-| Exactly one is vertically aligned (same `q` as the source) | The vertical one wins                                                     |
-| Both on the same diagonal (same `q - r`)                   | ALLY source prefers the higher hex id, ENEMY source the lower             |
-| Neither vertical, different diagonals                      | Smaller hex distance to the source; on a tie, the same team id preference |
-| Both vertical, different diagonals                         | No rule applies; the earlier candidate stays                              |
+## Related documentation
 
-The distance in the third case is hex (cube) distance, not path length.
-
-## Closest-Target Maps
-
-### `getClosestTargetMap`
-
-Runs `findClosestTarget` for every source-team tile and returns `Map<sourceHexId, TargetInfo>`:
-
-```typescript
-interface TargetInfo {
-  enemyHexId?: number // set when the target team is ENEMY
-  allyHexId?: number // set when the target team is ALLY
-  distance: number
-}
-```
-
-- **Range**: per-character ranges come from the caller's `characterRanges` map; a missing entry means melee (1)
-- **Consumers**: `GridArrows.vue` draws an arrow per entry of both maps; `DebugPanel.vue` lists them
-
-### Memoization (`/src/composables/useGridContext.ts`)
-
-- **Per board**: `closestEnemyMap` (ALLY to ENEMY) and `closestAllyMap` (ENEMY to ALLY) are `computed`, so they recompute only when the placements, tile states, or ranges they read change (character operations, tile painting, map switches) and can never go stale
-- **Namespaced ranges**: `buildUnitRanges` seeds the base-id keyed static range map with an entry per on-grid companion, phantimal, or synergy copy, so those units target at their own range instead of falling back to melee
-- **Pathfinding store** (`/src/stores/pathfinding.ts`): adapts the active board's maps for the debug panel and computes `debugPathfindingResults`, the A\* path from each source to its chosen target in both directions
-
-Skill targeting (`/src/lib/skills/utils/distance.ts`) does not use these maps; its FURTHEST picks break distance ties with the opposite hex-id preference (ALLY lower, ENEMY higher).
-
-## Related Documentation
-
-- [`/docs/architecture/GRID.md`](./GRID.md) - Hexagonal coordinates, hex ids, and tile states
-- [`/docs/architecture/SKILLS.md`](./SKILLS.md) - Skill targeting utilities
+- [Grid & Characters](./GRID.md): hex coordinates, tile states and the fixed board orientation
+- [Targeting Skills](./skills/TARGETING.md): how skills pick their targets

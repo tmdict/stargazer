@@ -1,0 +1,30 @@
+[
+  {
+    "en": "When a battle starts, grants all allies different buffs for [[15]]s based on the classes deployed:\nTank: Reduces all allies' damage taken by [[12%]]; Warrior: Grants all allies [[20]] Life Drain; Rogue: Grants all allies [[20]] Penetration; Mage: Increases all allies' Energy recovery efficiency by [[10%]]; Marksman: Grants all allies [[30]] ATK SPD; Support: Grants all allies [[15]] Vitality.",
+    "zh": "战斗开始时，根据己方上阵英雄的职业种类为所有友军提供持续[[15]]秒的增益。若上阵了坦克：使所有友军受到伤害降低[[12%]]；战士：使所有友军获得[[20]]点生命汲取；游侠：使所有友军获得[[20]]点穿透；法师：使所有友军能量获取效率提高[[10%]]；射手：使所有友军提高[[30]]点攻速；辅助：使所有友军提高[[15]]点受愈。"
+  },
+  {
+    "en": "Extends the buff duration to [[17]]s.",
+    "zh": "增益持续时间延长至[[17]]秒。"
+  },
+  {
+    "en": "Extends the buff duration to [[19]]s.",
+    "zh": "增益持续时间延长至[[19]]秒。"
+  },
+  {
+    "en": "Extends the buff duration to [[21]]s.",
+    "zh": "增益持续时间延长至[[21]]秒。"
+  },
+  {
+    "en": "Extends the buff duration to [[23]]s.",
+    "zh": "增益持续时间延长至[[23]]秒。"
+  },
+  {
+    "en": "Extends the buff duration to [[25]]s.",
+    "zh": "增益持续时间延长至[[25]]秒。"
+  },
+  {
+    "en": "If this skill grants at least [[5]] different buffs at the same time, it also increases all allies' Haste by [[30]] while the buffs are active.",
+    "zh": "若该技能同时触发了至少[[5]]种不同的增益，额外使友军在增益期间提高[[30]]点急速。"
+  }
+]

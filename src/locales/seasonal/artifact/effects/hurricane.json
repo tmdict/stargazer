@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, and every [[12]]s thereafter, summons a hurricane toward the enemy side of the battlefield, knocking all enemies back 2 tiles and dealing magic damage equal to [[100%]] of [[Team ATK]]. For the next [[6]]s, increases all allies' [[ranged damage]] based on the actual distance between the attacker and target, increasing it by [[5%]] per tile, up to [[30%]].",
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒，沿敌方阵营方向召唤飓风，击退所有敌人2格并造成[[队伍攻击力]][[100%]]的魔法伤害，并使所有友军造成的[[远程伤害]]根据实际间隔距离提高，每间隔1格使伤害提高[[5%]]，至多提高[[30%]]，持续[[6]]秒。"
+  },
+  {
+    "en": "Increases the skill damage to [[110%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[110%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[120%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[120%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[130%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[130%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[140%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[140%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[150%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[150%]]。"
+  },
+  {
+    "en": "Summoning a hurricane also increases all allies' Haste by [[20]] for [[6]]s.",
+    "zh": "召唤飓风时还会使己方的急速提高[[20]]点，持续[[6]]秒。"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Every [[6]]s during battle, creates a ring of blades around each allied hero. After a brief delay, each ring of blades deals physical damage equal to [[75%]] of [[Team ATK]] to all enemies within 1 tile and increases their [[melee damage]] taken by [[10%]] for [[6]]s, up to [[3]] stacks.",
+    "zh": "战斗中每隔[[6]]秒，在每名己方英雄身边生成剑阵，短暂延迟后对其周围1格内所有敌人造成[[队伍攻击力]][[75%]]的物理伤害，并使其在后续[[6]]秒内受到的[[近距离伤害]]提高[[10%]]，最多叠加[[3]]层。"
+  },
+  {
+    "en": "Increases the skill damage to [[80%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[80%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[85%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[85%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[90%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[90%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[95%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[95%]]。"
+  },
+  {
+    "en": "Increases the skill damage to [[100%]] of [[Team ATK]].",
+    "zh": "本技能造成的伤害提高至[[队伍攻击力]][[100%]]。"
+  },
+  {
+    "en": "Converts [[60%]] of the damage dealt by each ring of blades into a shield for the corresponding hero, lasting [[6]]s. While the shield is active, that hero also gains [[30]] Life Drain.",
+    "zh": "每个剑阵造成伤害的[[60%]]会转化为对应英雄的护盾，持续[[6]]秒，护盾持续期间友军还会提高[[30]]点生命汲取。"
+  }
+]

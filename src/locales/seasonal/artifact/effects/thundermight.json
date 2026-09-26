@@ -1,0 +1,30 @@
+[
+  {
+    "en": "From the start of battle, unleashes chain lightning at each of the [[frontmost]] and [[rearmost]] enemies every [[6]]s, dealing magic damage equal to [[65%]] of [[Team ATK]]. The lightning then bounces to the nearest enemy [[3]] times, with its damage reduced by [[20%]] after each bounce.",
+    "zh": "从战斗开始起，每隔[[6]]秒对[[最靠前]]和[[最靠后]]的敌人分别发射连锁闪电，造成[[队伍攻击力]][[65%]]的魔法伤害，随后朝距离最近的敌人弹射[[3]]次，每次弹射会使伤害衰减[[20%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[70%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[70%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[75%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[75%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[80%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[80%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[85%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[85%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[90%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[90%]]。"
+  },
+  {
+    "en": "After casting this skill [[3]] times or achieving an [[assist or defeat]], the lightning unleashed at the frontmost enemy deals true damage, while the lightning unleashed at the rearmost enemy stuns them for [[1]]s on hit.",
+    "zh": "累计释放[[3]]次该技能或[[参与击败]]敌人后，靠前的闪电变为真实伤害，靠后的闪电在命中时会使目标眩晕[[1]]秒。"
+  }
+]
