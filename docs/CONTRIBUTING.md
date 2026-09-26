@@ -31,7 +31,7 @@ npm run import:skills    # skill text only (also import:charms, :artifacts, :pha
 npm run check:import     # run the screenshot-import readers over a folder of images
 ```
 
-The importers read an upstream data feed that is not part of this repo; see [Seasonal Content](./architecture/SEASONAL.md).
+The importers read an upstream data feed that is not part of this repo. To run them, copy `.env.example` to `.env.local` (gitignored) and set `DATA_FEED_DIR` to the feed's directory, or pass `--src-dir <PATH>`; see [Seasonal Content](./architecture/SEASONAL.md).
 
 ## Common tasks
 
