@@ -78,10 +78,15 @@ const arrowsToRender = computed(() => {
   return arrows
 })
 
-// An artifact arrow shows with its slot: team view hides the enemy slot, and
-// ally targets are ally tiles, which team view always shows.
+// An artifact arrow shows with its slot (team view hides the enemy slot) and
+// only while its target tile is shown: an ally slot can target enemies, whose
+// tiles team view crops out. The host cell sits outside the grid, so only the
+// target end is checked.
 const artifactArrowsToRender = computed(() =>
-  ctx.artifactArrows.filter((arrow) => !ctx.teamView || arrow.team === Team.ALLY),
+  ctx.artifactArrows.filter(
+    (arrow) =>
+      (!ctx.teamView || arrow.team === Team.ALLY) && visibleHexIds.value.has(arrow.toHex.getId()),
+  ),
 )
 
 // Lines carry their own color, so (unlike arrows) they render for any skill, not just
