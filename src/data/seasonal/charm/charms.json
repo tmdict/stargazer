@@ -1,0 +1,206 @@
+{
+  "ep6liveUpgrade": {
+    "heroes": [
+      "yamato-gabumon"
+    ]
+  },
+  "ep8aoe": {
+    "heroes": [
+      "chippy",
+      "gerda",
+      "granny-dahnie",
+      "igor",
+      "kafra",
+      "kruger",
+      "salazer",
+      "zorya"
+    ]
+  },
+  "ep8areashield": {
+    "heroes": [
+      "antandra",
+      "callan",
+      "dunlingr",
+      "lumont",
+      "ulmus"
+    ]
+  },
+  "ep8backrange": {
+    "heroes": [
+      "gunnar",
+      "hugin",
+      "niru",
+      "pandora",
+      "reinier"
+    ]
+  },
+  "ep8basic": {
+    "heroes": [
+      "bryon",
+      "cecia",
+      "dionel",
+      "gwyneth",
+      "kazim",
+      "marilee",
+      "odie",
+      "senea",
+      "silven",
+      "sinbad"
+    ]
+  },
+  "ep8buffboost": {
+    "heroes": [
+      "lyca",
+      "smokey-meerky"
+    ]
+  },
+  "ep8crit": {
+    "heroes": [
+      "atalanta",
+      "eironn",
+      "korin",
+      "kulu",
+      "lenya",
+      "lily-may",
+      "rhys",
+      "talene",
+      "valen",
+      "walker"
+    ]
+  },
+  "ep8defrush": {
+    "heroes": [
+      "alna",
+      "brutus",
+      "hepler",
+      "hodgkin",
+      "karma",
+      "kordan",
+      "lucca",
+      "seth",
+      "soren",
+      "thador"
+    ]
+  },
+  "ep8dot": {
+    "heroes": [
+      "bonnie",
+      "satrana",
+      "shadewing"
+    ]
+  },
+  "ep8enemyfield": {
+    "heroes": [
+      "orion",
+      "perseus",
+      "silvina",
+      "sylphira",
+      "valka",
+      "zandrok"
+    ]
+  },
+  "ep8fastkill": {
+    "heroes": [
+      "faramor",
+      "marcille",
+      "nara",
+      "pippa",
+      "vala",
+      "viperian",
+      "voracia"
+    ]
+  },
+  "ep8frontbuff": {
+    "heroes": [
+      "elijah-lailah",
+      "phraesto",
+      "shakir",
+      "sonja",
+      "thoran"
+    ]
+  },
+  "ep8frontmelee": {
+    "heroes": [
+      "fay",
+      "isabella",
+      "koko",
+      "lorsan",
+      "rowan"
+    ]
+  },
+  "ep8heal": {
+    "heroes": [
+      "contess",
+      "damian",
+      "evie",
+      "hewynn",
+      "ludovic",
+      "mikola",
+      "rolan",
+      "solise",
+      "velara"
+    ]
+  },
+  "ep8mpregen": {
+    "heroes": [
+      "arden",
+      "aster",
+      "cassadee",
+      "cryonaia",
+      "frieren",
+      "hammie",
+      "lucy",
+      "mehira",
+      "mirael",
+      "natsu",
+      "parisa",
+      "saida",
+      "shemira",
+      "taichi-agumon",
+      "tasi"
+    ]
+  },
+  "ep8shield": {
+    "heroes": [
+      "baelran",
+      "daimon",
+      "lucius",
+      "pang",
+      "scarlita",
+      "tilaya"
+    ]
+  },
+  "ep8shiftdmg": {
+    "heroes": [
+      "alsa",
+      "athalia",
+      "berial",
+      "harak",
+      "himmel",
+      "ravion",
+      "temesia"
+    ]
+  },
+  "ep8stable": {
+    "heroes": [
+      "aliceth",
+      "carolina",
+      "cyran",
+      "eryndor",
+      "galahad",
+      "indris",
+      "nazrik",
+      "nerion"
+    ]
+  },
+  "ep8summon": {
+    "heroes": [
+      "aurora",
+      "florabelle",
+      "laios",
+      "lamentis",
+      "peggy",
+      "zanie"
+    ]
+  }
+}

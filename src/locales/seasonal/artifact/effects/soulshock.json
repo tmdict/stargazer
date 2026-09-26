@@ -1,0 +1,30 @@
+[
+  {
+    "en": "[[3]]s into a battle, and every [[12]]s thereafter, stuns the 2 frontmost enemies for [[3]]s and deals magic damage equal to [[55%]] of [[Team ATK]]. Also reduces their Vitality by [[30]] and Phys & Magic DEF by [[30%]] for [[6]]s.",
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒，眩晕最靠前的2名敌人持续[[3]]秒并造成[[队伍攻击力]][[55%]]的魔法伤害，并使目标受愈降低[[30]]点、护甲和魔抗降低[[30%]]，持续[[6]]秒。"
+  },
+  {
+    "en": "Increases damage dealt to [[60%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[60%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[65%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[65%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[70%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[70%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[75%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[75%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[80%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[80%]]。"
+  },
+  {
+    "en": "When this skill hits a non-boss enemy, it also links that enemy's soul to the other target for [[6]]s. Whenever either linked enemy takes damage, the other loses HP equal to [[15%]] of the actual damage dealt.",
+    "zh": "技能命中非首领敌人时还会暂时链接双方灵魂，接下来[[6]]秒内目标受到伤害时，会使另一方失去实际伤害量[[15%]]的生命值。"
+  }
+]

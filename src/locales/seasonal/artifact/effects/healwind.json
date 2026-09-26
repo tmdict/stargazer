@@ -1,0 +1,30 @@
+[
+  {
+    "en": "When a battle starts, stores Life Energy equal to [[75%]] of the team's initial HP. When an ally's HP ratio falls below [[60%]], continuously consumes Life Energy to restore an equal amount of HP, consuming up to [[20%]] Life Energy per second. Whenever a non-summoned enemy is defeated, replenishes Life Energy equal to [[100%]] of initial Team ATK. While any Life Energy remains, all allies gain [[20]] Haste.",
+    "zh": "战斗开始时储存相当于队伍初始生命值[[75%]]的生命能量，当有友军生命值低于[[60%]]时，持续消耗生命能量为其提供等同于消耗量的治疗（每秒至多消耗[[20%]]生命能量），每当有非召唤物敌人被击败时，额外补充队伍初始攻击力[[100%]]的生命能量。生命能量未完全消耗时，使所有友军提高[[20]]点急速。"
+  },
+  {
+    "en": "Increases the initial Life Energy stored to [[80%]] of the team's initial HP.",
+    "zh": "初始储存量提高至[[80%]]队伍初始生命值。"
+  },
+  {
+    "en": "Increases the initial Life Energy stored to [[85%]] of the team's initial HP.",
+    "zh": "初始储存量提高至[[85%]]队伍初始生命值。"
+  },
+  {
+    "en": "Increases the initial Life Energy stored to [[90%]] of the team's initial HP.",
+    "zh": "初始储存量提高至[[90%]]队伍初始生命值。"
+  },
+  {
+    "en": "Increases the initial Life Energy stored to [[95%]] of the team's initial HP.",
+    "zh": "初始储存量提高至[[95%]]队伍初始生命值。"
+  },
+  {
+    "en": "Increases the initial Life Energy stored to [[100%]] of the team's initial HP.",
+    "zh": "初始储存量提高至[[100%]]队伍初始生命值。"
+  },
+  {
+    "en": "Damage dealt by allies also replenishes Life Energy equal to [[10%]] of the actual damage dealt. This effect can replenish up to [[400%]] of initial Team ATK as Life Energy per battle.",
+    "zh": "己方造成伤害时也会补充相当于实际伤害量[[10%]]的生命能量，每场战斗至多因此补充[[400%]]队伍初始攻击力的生命能量。"
+  }
+]

@@ -1,48 +1,32 @@
 # Guide
 
-The guide is an index of reference material for arena planning plus the pages it points at: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, and the finished seasons' PvP reports with the newest season's counter ladder. Pages exist in the two app locales and are pre-rendered ([Pre-Rendering](./PRE_RENDERING.md)).
+The guide is an index of reference material for arena planning plus the pages it points at: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, and the finished seasons' PvP reports with the newest season's counter ladder. Guide pages exist in the two app locales and are pre-rendered ([Pre-Rendering](./PRE_RENDERING.md)).
 
-## Pages (`/src/lib/guide.ts`, `/src/views/`)
+## Pages
 
-| Route                      | View                 | Body                                                                                                 |
-| -------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------- |
-| `/{en,zh}/guide`           | `GuideView`          | Report entries, upgrade tracks, counter ladder, mechanic tiles                                       |
-| `/{en,zh}/guide/upgrades`  | `GuideUpgradesView`  | `GuideUpgradeSection`, the stat matrix                                                               |
-| `/{en,zh}/guide/mechanics` | `GuideMechanicsView` | One `GuideTagSection` per tag; each section's id is its tag, the deep-link target of the index tiles |
+`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. The en and zh routes of a page share one view instance, so `setupGuideContentMeta` passes `useHead` a computed that follows the locale instead of the value at setup.
 
-- **One page list**: `GUIDE_PAGES` and `guidePath` feed the router (`routes.ts`), the SSG route list (`vite.config.ts`) and `setupGuideContentMeta`, so a page added there is routed, pre-rendered and titled together
-- **Index layout**: `GuideView` places the four panels as grid areas, report beside upgrades and ladder beside mechanics from 1100px, stacked in that order below. Panels are size containers (`guide.css`), so the ladder, the tiles and the upgrade tracks compact to their column rather than to the viewport
-- **Whole-box links**: every panel's title link is stretched over its `.guide-link` area (`guide.css`), so the blurb, previews and empty space open the page too. Any control placed inside that area (chips, tiles) must raise itself above the stretched layer with `position: relative; z-index: 2`, or the box link swallows it. The counter ladder is the exception: only its title is a link, so a click on its empty space clears the team selection as it does in the report
+Each index panel's title link is stretched over its `.guide-link` area (`src/styles/guide.css`), so the blurb, the previews and empty space open the page too. A control placed inside that area, such as a chip or tile, must raise itself with `position: relative; z-index: 2`, or the stretched link swallows its clicks. The counter ladder is the exception: only its title is a link, so a click on its empty space clears the team selection as it does in the report.
 
-## Season Summaries (`/src/content/pvp/s<N>/summary.ts`, `/src/content/pvp/seasons.ts`)
+The upgrade tracks on the index place each band's levels at their share of that band's own maximum on the energy ramp, so a band that starts higher or climbs in smaller steps shows it in the spacing.
 
-A finished season's summary is a typed literal (`PvpSeasonSummary`) written once from the season's report and never edited: the team groups (short name, hero slugs, games, rating, tier) and the counters between them (winner, loser, record, evidence band, evidence anchor). `PVP_SEASONS` lists them newest first; the index renders every entry's report block and the first entry's ladder.
+## Season summaries
 
-- **Locked snapshot**: nothing derives these numbers; they are the report's. A season is added by writing `s<N>/summary.ts` beside `s<N>/index.template.html` and putting it at the front of `PVP_SEASONS`
-- **Ids are anchor slugs**: `PvpTeam.id` and `PvpCounter.anchor` follow the report's `counter-<winner>-vs-<loser>` fragment ids, so curves link straight to the evidence
-- **The band is the report's class**, kept explicit rather than recomputed from the record, so the index never disagrees with the report
-- Every summary is checked against the roster and its report (known hero slugs, counters between listed teams, anchors present in the template) in `tests/unit/content/pvpSeasons.test.ts`
+A finished season's summary (`src/content/pvp/s<N>/summary.ts`) is a typed literal written once from the season's report and never edited: the team groups and the counters between them. Nothing derives these numbers, and each counter's evidence band is copied from the report rather than recomputed from its record, so the index never disagrees with the report. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) lists the summaries newest first. The index shows every entry's report block and the first entry's ladder.
 
-## Counter Ladder (`/src/lib/pvp/ladderLayout.ts`, `/src/components/guide/GuideCounterLadder.vue`)
+Team ids and counter anchors follow the report's `counter-<winner>-vs-<loser>` fragment ids, so the ladder's curves link straight to the evidence. `tests/unit/content/pvpSeasons.test.ts` checks every summary against the roster and its report: known hero slugs, counters only between listed teams, and anchors present in the template.
 
-`layoutLadder` turns a summary into a drawing: rows by rating (`ladderTeams`), a rule where the tier changes, and one cubic curve per counter, in viewBox units of `LADDER_WIDTH` by `LADDER_ROW` per team.
+To add a season, write `s<N>/summary.ts` beside `s<N>/index.template.html` and put it at the front of `PVP_SEASONS`.
 
-- **Side says direction**: a higher-rated winner's curve runs down the right side of the node column, a lower-rated winner's runs up the left, so an upset reads from the side its curve is on
-- **Bow per span**: control points sit `BOW_BASE` plus `BOW_STEP` per row spanned outside the column, so longer counters run outside shorter ones
-- **Fanned ends**: curve ends sharing a node edge spread `FAN` apart in the order of the row they connect to
-- **Labels**: each curve carries the winner's share of the games and how many games that is (`ladder-share`); the exact record stays in the curve's hover text. A label tries `LABEL_STOPS` along its own curve, on the curve and just outside it, and takes the position that covers the fewest other curves, labels and cards (`COST`), ties going to the stop nearest the widest point; short curves place first, since they have the least room, and equal spans place in the report's team order (most played first) so every label lands where the report put it. The box is estimated from the text (`labelWidth`), counting a CJK character double
-- **Few games**: a share from under `FEW_GAMES` games is dimmed, since a percentage hides how little sits behind it
-- **Centred on its extremes**: `offset` shifts the whole drawing so its outermost curves and label boxes, not the node column, are centred in the box; the side with the longer bows would otherwise pull it off-centre
+## Counter ladder
 
-These are the report's own drawing rules, so a regenerated ladder matches the report it came from. The component adds the interaction: selecting a team dims every curve not touching it and turns the curves it loses red; a pointer-up anywhere else or Escape clears it (pointerup rather than click, since a touch that scrolls ends in pointercancel and keeps the selection). Curves are links to the report's evidence sections.
+`layoutLadder` (`src/lib/pvp/ladderLayout.ts`) reproduces the report's own drawing rules, so a ladder matches the report it came from. Teams stack by rating with a rule where the tier changes, and each counter is one cubic curve. A higher-rated winner's curve runs down the right side of the team column and a lower-rated winner's runs up the left, so the side alone says whether a counter is an upset. Curves bow out further the more rows they span, so longer counters run outside shorter ones.
 
-## Index Entries
+Each curve is labeled with the winner's share of the games and how many games that is, and a share from under `FEW_GAMES` games is dimmed. A label tries fixed stops along its own curve, on the curve and just outside it, and takes the position that covers the least of the other curves, labels and cards. Short curves place first because they have the least room, and equal spans place in the report's team order (most played first), so every label lands where the report put it. The whole drawing is then shifted so its outermost curves and labels, not the team column, are centered.
 
-- **Report chips**: `mostPlayedTeams` orders a season's teams by games; `GuidePvpReport` shows the first `CHIP_COUNT`, each linking to the report's team table
-- **Upgrade tracks**: `GuideUpgradesIndex` places each band's level pills along a track at their share of the band's own max (the energy ramp; the other stat groups differ by a couple of percent), so the Celestial and Hypogean band's higher start and smaller steps read from the bead spacing. Bands cannot share one scale: refinement's max is a fraction of paragon's
-- **Mechanic tiles**: `GuideMechanicsIndex` takes `guideTagGroups` and shows `PREVIEW` portraits per tag with the hero count
+Selecting a team dims every curve not touching it and turns the curves it loses red. A pointer-up anywhere else, or Escape, clears it. It listens for pointerup rather than click, since a touch that scrolls ends in pointercancel and keeps the selection.
 
-## Related Documentation
+## Related documentation
 
-- [Pre-Rendering](./PRE_RENDERING.md): SSG route list, page meta, the report hydration
-- [Skills](./SKILLS.md): the tag data behind the mechanics page
+- [Pre-Rendering](./PRE_RENDERING.md): the route list and the report hydration plugin
+- [Skill Pages](./SKILL_PAGES.md): the tags behind the mechanics page

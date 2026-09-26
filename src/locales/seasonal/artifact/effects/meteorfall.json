@@ -1,0 +1,30 @@
+[
+  {
+    "en": "Whenever allied heroes cast a total of [[4]] Ultimates, calls down a meteor on the area with the most enemies, dealing true damage equal to [[70%]] of [[Team ATK]] to enemies within 2 tiles and reducing their Haste by [[20]] for [[6]]s. Each cast permanently increases the damage of subsequent casts by [[50%]] and causes subsequent hits to reduce Haste by an extra [[15]], up to [[2]] times. After this effect triggers [[2]] times, the meteor's damage range expands by 1 tile.",
+    "zh": "每当己方累计释放[[4]]次终极技能，朝敌方最密集区域落下陨石，对其周围2格范围内的敌人造成[[队伍攻击力]][[70%]]的真实伤害，同时降低目标[[20]]点急速，持续[[6]]秒。每次释放该技能后，使后续伤害提高[[50%]]，命中敌人后额外降低[[15]]点急速，至多提高[[2]]次，提高[[2]]次后陨石的伤害范围扩大一格。"
+  },
+  {
+    "en": "Increases damage dealt to [[80%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[80%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[90%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[90%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[100%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[100%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[110%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[110%]]。"
+  },
+  {
+    "en": "Increases damage dealt to [[120%]] of [[Team ATK]].",
+    "zh": "伤害量提高至[[队伍攻击力]][[120%]]。"
+  },
+  {
+    "en": "Casts this skill once when a battle starts and reduces the number of Ultimates required for subsequent casts to [[3]].",
+    "zh": "战斗开始时立即释放一次该技能，后续释放该技能所需的终极技能次数降低至[[3]]次。"
+  }
+]

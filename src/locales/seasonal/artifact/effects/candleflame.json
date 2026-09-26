@@ -1,0 +1,30 @@
+[
+  {
+    "en": "When a battle starts, summons a candleflame that follows the ally deployed in the frontmost position. Every second, it restores HP equal to [[50%]]<ATK> of the followed ally's HP to allies within 1 tile. If the followed ally is defeated, the candleflame follows the nearest surviving ally instead, but its healing is permanently reduced by [[20%]], up to [[3]] times.",
+    "zh": "战斗开始时召唤烛火跟随布阵在最靠前的友军，每秒为其周围1格范围内的友军恢复相当于跟随友军[[50%]]<ATK>的生命值。当烛火跟随的友军被击败时，烛火会转而跟随距离最近的另一名友军，但治疗量永久降低[[20%]]，至多降低[[3]]次。"
+  },
+  {
+    "en": "Increases healing to [[60%]]<ATK>.",
+    "zh": "治疗量提高至[[60%]]<ATK>。"
+  },
+  {
+    "en": "Increases healing to [[70%]]<ATK>.",
+    "zh": "治疗量提高至[[70%]]<ATK>。"
+  },
+  {
+    "en": "Increases healing to [[80%]]<ATK>.",
+    "zh": "治疗量提高至[[80%]]<ATK>。"
+  },
+  {
+    "en": "Increases healing to [[90%]]<ATK>.",
+    "zh": "治疗量提高至[[90%]]<ATK>。"
+  },
+  {
+    "en": "Increases healing to [[100%]]<ATK>.",
+    "zh": "治疗量提高至[[100%]]<ATK>。"
+  },
+  {
+    "en": "[[3]]s into a battle, and every [[12]]s thereafter, intensifies the candleflame for [[6]]s. While intensified, its range expands by 1 tile, while allies within range deal [[16%]] more damage and take [[16%]] less damage.",
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒主动释放，使其中的烛火散发更强烈的光芒持续[[6]]秒，持续期间烛火范围扩大一格，并且使范围内友军造成伤害提高[[16%]]，受到伤害降低[[16%]]。"
+  }
+]

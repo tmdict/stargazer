@@ -3,5 +3,102 @@
     "en": "Plague Creeper",
     "zh": "腐臭瘴泥"
   },
-  "skills": []
+  "skills": [
+    {
+      "name": {
+        "en": "Super Mud Bombs",
+        "zh": "超级污泥炸弹"
+      },
+      "levels": [
+        {
+          "en": "Plague Creeper continuously shakes its body, launching a total of 8 mud bombs at all enemies. Each mud bomb deals [[80%]]<ATK> damage on hit and inflicts Sludgebound on the target for [[8]]s. Sludgebound reduces the target's Haste by [[15]] and deals [[25%]]<ATK> damage per second. Subsequent hits on the same enemy deal [[40%]]<ATK> damage instead.",
+          "zh": "持续抖动身体，向所有敌人射出共计8发污泥炸弹，污泥炸弹命中造成[[80%]]<ATK>伤害，并使目标进入持续[[8]]秒的“污泥缠身”状态，“污泥缠身”状态会使敌人的急速降低[[15]]点，并且每秒受到[[25%]]<ATK>的伤害。该技能命中重复的敌人会转为造成[[40%]]<ATK>的伤害。"
+        },
+        {
+          "en": "Increases the damage dealt by Sludgebound to [[30%]]<ATK> per second.",
+          "zh": "“污泥缠身”状态的敌人每秒受到的伤害提升至[[30%]]<ATK>。"
+        },
+        {
+          "en": "Once an enemy has been affected by Sludgebound for more than [[12]]s in total, the sludge corrodes them, permanently increasing the [[continuous damage]] they take by [[15%]].",
+          "zh": "敌人处于“污泥缠身”状态累计持续超过[[12]]秒后还会被污泥腐蚀，受到的[[持续伤害]]永久提升[[15%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Noxious Mire",
+        "zh": "污沼泥潭"
+      },
+      "levels": [
+        {
+          "en": "Plague Creeper hurls a sludge ball at the area with the most enemies, creating a 1-tile mire upon impact. The mire lasts for [[6]]s, reducing the movement speed of enemies inside by [[30%]] and dealing [[40%]]<ATK> damage to them per second.",
+          "zh": "腐臭瘴泥向敌人最密集的区域格射出淤泥团，落地后生成一个半径1格的泥潭，持续[[6]]秒，区域内的敌人移动速度降低[[30%]]，每秒受到[[40%]]<ATK>的伤害。"
+        },
+        {
+          "en": "Increases damage dealt per second to [[45%]]<ATK>.",
+          "zh": "每秒伤害提升至[[45%]]<ATK>。"
+        },
+        {
+          "en": "Increases damage dealt per second to [[60%]]<ATK>.",
+          "zh": "每秒伤害提升至[[60%]]<ATK>。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Miasma",
+        "zh": "腐臭之灵能"
+      },
+      "levels": [
+        {
+          "en": "Plague Creeper applies a [[spirit mark]] to the allied hero in front of it, granting them Miasma.\nMiasma: When a battle starts, grants the [[spirit-marked hero]] a [[300%]]<ATK> shield and applies Earthen Renewal for [[10]]s. While active, Earthen Renewal increases the [[spirit-marked hero]]'s [[melee damage]] by [[10%]] and grants them a [[50%]]<ATK> shield every second. The total shield value provided by this skill cannot exceed [[700%]]<ATK>.",
+          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”腐臭之灵能“。战斗开始时，腐臭瘴泥使[[灵能者]]获得[[300%]]<ATK>护盾，并包裹“复能泥甲”，持续[[10]]秒。”复能泥甲“持续时间内，使[[灵能者]]造成的[[近距离伤害]]提升[[10%]]，同时每秒获得[[50%]]<ATK>的护盾，该技能提供护盾至多不超过[[700%]]<ATK>。"
+        },
+        {
+          "en": "When a spirit-marked hero with Earthen Renewal deals melee damage to an enemy affected by Sludgebound, the two effects mix and amplify each other:\nResets Earthen Renewal's duration and increases the spirit-marked hero's Phys & Magic DEF by [[20%]]. Also resets the enemy's Sludgebound duration and reduces their Phys & Magic DEF by [[20%]].",
+          "zh": "携带“复能泥甲”的灵能者对“污泥缠身”的敌人造成近距离伤害后，使两种淤泥互相发酵增强：“复能泥甲”重置持续时间，并且使其护甲和魔抗提升[[20%]]；“污泥缠身”重置持续时间，并且使其护甲和魔抗降低[[20%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Sludge Split",
+        "zh": "淤泥分裂"
+      },
+      "levels": [
+        {
+          "en": "Plague Creeper selects the axis line covering the most enemies. It spawns a small plaguerot at the tile on this line closest to the allied side, inheriting [[50%]] of Plague Creeper's basic stats. Upon spawning, the plaguerot crawls forward along the line to the enemy edge of the battlefield, then returns to its starting tile and disappears, leaving behind a venomous trail for [[4]]s. Enemies on the trail take damage equal to [[40%]] of the plaguerot's ATK per second and lose [[15%]] Phys & Magic DEF.",
+          "zh": "选择敌人最密集的轴线，在轴线最靠近己方的边缘位置分裂出一个继承自身[[50%]]基础属性的小型腐臭泥。小型腐臭泥会沿该轴线向前方爬行至敌方场地边缘，最后折返回原位消失，并在沿途的路径上留下毒液痕迹持续[[4]]秒。位于毒液痕迹上的敌人每秒受到小型腐臭泥[[40%]]攻击力的伤害，并降低[[15%]]魔抗和护甲。"
+        },
+        {
+          "en": "Increases the venomous trail's damage to [[50%]]<ATK>.",
+          "zh": "毒液痕迹造成的伤害提升至[[50%]]<ATK>。"
+        }
+      ]
+    }
+  ]
 }

@@ -3,5 +3,102 @@
     "en": "Seralyth",
     "zh": "奈萨雷斯"
   },
-  "skills": []
+  "skills": [
+    {
+      "name": {
+        "en": "Sacrificial Ritual",
+        "zh": "献祭仪式"
+      },
+      "levels": [
+        {
+          "en": "Seralyth leaps to the tile with the most enemies. She gains a [[600%]]<ATK> shield and begins casting a spell for [[4]]s, remaining [[unaffected]] throughout. Every [[0.25]]s during the cast, she deals [[16%]]<ATK> true damage to enemies within 2 tiles, permanently reducing their ATK, Phys DEF, and Magic DEF by [[1%]]. The stat reductions caused this way are capped at [[16%]] per stat. When an enemy's stat reductions reach this cap, they become permanently weakened.",
+          "zh": "扑向最密集的敌方区域，获得[[600%]]<ATK>护盾并持续施法[[4]]秒，施法期间处于[[霸体]]状态。施法过程中每[[0.25]]秒会使2格范围内的所有敌人受到[[16%]]<ATK>真实伤害，并永久降低[[1%]]攻击力、护甲和魔抗，至多因此降低[[16%]]攻击力、护甲和魔抗。本技能对敌人施加的属性降低效果达到上限后，使其永久陷入“虚弱”状态。"
+        },
+        {
+          "en": "Increases damage to [[20%]]<ATK>.",
+          "zh": "伤害量提升至[[20%]]<ATK>。"
+        },
+        {
+          "en": "Weakened enemies take [[50%]] more damage from this skill, and stat reductions inflicted on them are increased by [[20%]].",
+          "zh": "“虚弱”状态的敌人受到的属性降低效果提高[[20%]]，并且受到本技能的伤害提高[[50%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Eclipse Verdict",
+        "zh": "暗月制裁"
+      },
+      "levels": [
+        {
+          "en": "Seralyth swings her sword to unleash a sword shock, dealing [[200%]]<ATK> damage to enemies within a 3-tile rectangular area in front of her, and gaining a [[200%]]<ATK> shield. Hitting a weakened enemy deals [[100%]]<ATK> extra damage and grants her an extra [[100%]]<ATK> shield.",
+          "zh": "挥剑斩出剑气，对面前3格矩形范围内的敌人造成[[200%]]<ATK>伤害，并使自身获得[[200%]]<ATK>护盾。命中处于“虚弱”状态的敌人时额外造成[[100%]]<ATK>伤害，并使自身额外获得[[100%]]<ATK>护盾。"
+        },
+        {
+          "en": "Increases damage dealt to [[250%]]<ATK> and the shield value gained to [[250%]]<ATK>.",
+          "zh": "对敌人造成的伤害提升至[[250%]]<ATK>，获得的护盾量提升至[[250%]]<ATK>。"
+        },
+        {
+          "en": "Increases damage dealt to [[300%]]<ATK> and the shield value gained to [[300%]]<ATK>.",
+          "zh": "对敌人造成的伤害提升至[[300%]]<ATK>，获得的护盾量提升至[[300%]]<ATK>。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Sacrifice",
+        "zh": "献祭之灵能"
+      },
+      "levels": [
+        {
+          "en": "Seralyth applies a [[spirit mark]] to the allied hero placed behind her, granting them Sacrifice.\nSacrifice: Increases the [[spirit-marked hero]]'s damage against enemies with stat reductions by [[15%]]. Also grants the [[spirit-marked hero]] a shield of equal value whenever Seralyth receives a shield from Eclipse Verdict or Sacrificial Ritual.",
+          "zh": "使身后1名友方英雄成为[[灵能者]]，获得”献祭“之灵能，[[灵能者]]对处于属性降低状态下的敌人造成的伤害提高[[15%]]。奈萨雷斯通过“暗月制裁”和“献祭仪式”给自身施加护盾时，同时为[[灵能者]]施加等量护盾。"
+        },
+        {
+          "en": "Whenever Seralyth or the [[spirit-marked hero]] inflicts a stat reduction, they both gain a permanent boost to the corresponding stat equal to [[10%]] of the amount reduced. The total increase to each basic stat cannot exceed [[15%]] of their respective initial values, while increases to non-basic stats cannot exceed [[15]].",
+          "zh": "奈萨雷斯和[[灵能者]]在施加属性降低效果时，使双方永久获得降低属性[[10%]]的增益效果，因此提高的基础属性不超过自身初始属性的[[15%]]，其余属性不超过[[15]]点。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Tail of Sundering",
+        "zh": "巨尾横扫"
+      },
+      "levels": [
+        {
+          "en": "Seralyth performs a tail whip, dealing [[200%]]<ATK> damage to enemies within a 2-tile fan-shaped area in front of her and knocking them down for [[2]]s. Weakened enemies take [[100%]] extra damage and are knocked down for an extra [[2]]s.",
+          "zh": "奈萨雷斯甩动龙尾，击倒2格扇形范围内的敌人造成[[200%]]<ATK>伤害并使其倒地[[2]]秒，若敌人处于“虚弱”状态则额外造成[[100%]]伤害，并使其倒地时间延长[[2]]秒。"
+        },
+        {
+          "en": "Increases damage dealt to enemies to [[250%]]<ATK>.",
+          "zh": "对敌人造成的伤害提升至[[250%]]<ATK>。"
+        }
+      ]
+    }
+  ]
 }

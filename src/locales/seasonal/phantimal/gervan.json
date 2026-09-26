@@ -3,5 +3,102 @@
     "en": "Gervan",
     "zh": "格墨文"
   },
-  "skills": []
+  "skills": [
+    {
+      "name": {
+        "en": "Eclipsed Descent",
+        "zh": "月影陨落"
+      },
+      "levels": [
+        {
+          "en": "Passive. Gervan gradually draws power from moonlight. He starts the battle in Crescent state and enters Full Moon state after allies cast a total of [[4]] Ultimates. In Full Moon state, Gervan's normal attacks pierce through enemies and deal [[120%]]<ATK> damage to enemies along a 1-tile-wide line.\nActive. Gervan creates a moon shadow in the area with the most enemies for [[2]]s, dealing [[30%]]<ATK> damage every [[0.25]]s to enemies within 1 tile and immobilizing them. When the moon shadow expires, if Gervan is in Full Moon state, he summons a 3-tile-wide swinging scythe that sweeps across the battlefield, dealing [[150%]]<ATK> true damage to enemies in its path.",
+          "zh": "被动地，格墨文会逐渐从月光中汲取力量，在战斗开始时处于“残月”状态，在己方使用[[4]]次终极技能后进入“满月”状态。“满月”状态下，格墨文的普通攻击具有贯穿效果，会对1格宽直线范围内的敌人造成[[120%]]<ATK>伤害。\n主动使用时，格墨文在敌方最密集区域生成一个持续[[2]]秒的月影，其周围1格范围内的敌人每[[0.25]]秒受到[[30%]]<ATK>伤害并处于定身状态。“满月”状态下，格墨文会在月影持续时间结束后额外召唤一道3格宽的摆动镰刀划过场地，对路径上的敌人造成[[150%]]<ATK>的真实伤害。"
+        },
+        {
+          "en": "Increases the moon shadow's damage to [[40%]]<ATK> every [[0.25]]s.",
+          "zh": "月影期间范围内的敌人每[[0.25]]秒受到的伤害提升至[[40%]]<ATK>。"
+        },
+        {
+          "en": "After entering Full Moon state, Gervan permanently increases all allies' ATK by [[5%]] for every [[2]] Ultimates cast by the allied team. This effect can stack up to [[3]] times.",
+          "zh": "进入“满月”状态后，己方每使用[[2]]次终极技能，格墨文会使所有友军攻击力永久提升[[5%]]，最多叠加[[3]]次。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Edge of the Moon",
+        "zh": "月光之刃"
+      },
+      "levels": [
+        {
+          "en": "Gervan calls down moonlight on 2 enemies, dealing [[160%]]<ATK> damage. In Full Moon state, this skill targets 1 extra enemy. The moonlight instead deals [[210%]]<ATK> damage to the targets as well as all adjacent enemies.",
+          "zh": "对2名敌人降下月光，造成[[160%]]<ATK>的伤害。“满月”状态下，该技能会额外选择1名目标，并转为对目标及周围1格范围内的敌人造成[[210%]]<ATK>的伤害。"
+        },
+        {
+          "en": "Increases moonlight damage to [[180%]]<ATK>. In Full Moon state, increases moonlight damage to [[230%]]<ATK>.",
+          "zh": "月光造成的伤害提升至[[180%]]<ATK>。“满月”状态下，月光造成的伤害提升至[[230%]]<ATK>。"
+        },
+        {
+          "en": "Increases moonlight damage to [[200%]]<ATK>. In Full Moon state, increases moonlight damage to [[250%]]<ATK>.",
+          "zh": "月光造成的伤害提升至[[200%]]<ATK>。“满月”状态下，月光造成的伤害提升至[[250%]]<ATK>。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Moonphase",
+        "zh": "月相之灵能"
+      },
+      "levels": [
+        {
+          "en": "Gervan applies a [[spirit mark]] to the allied hero placed in front of him, granting them Lunar Grace.\nLunar Grace: Permanently increases the [[spirit-marked hero]]'s Energy recovery efficiency by [[10%]]. Also permanently increases Gervan's Energy recovery efficiency by [[10%]] and permanently grants the [[spirit-marked hero]] [[15%]] ATK when Gervan enters Full Moon state.",
+          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”月相“之灵能，[[灵能者]]的回能效率永久提升[[10%]]；当格墨文进入“满月”状态后，格墨文自身的回能效率永久提升[[10%]]，[[灵能者]]的攻击力永久提升[[15%]]。"
+        },
+        {
+          "en": "Increases the Ultimate damage of Gervan and the [[spirit-marked hero]] by [[20%]]. Edge of the Moon also calls down moonlight on the [[spirit-marked hero]], restoring [[90%]]<ATK> HP and [[50]] Energy to them.",
+          "zh": "格墨文和[[灵能者]]终极技能造成的伤害提升[[20%]]，“月光之刃”技能还会额外对[[灵能者]]降下月光，使其回复[[90%]]<ATK>生命值和[[50]]点能量。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Crescent Chakram",
+        "zh": "月下飞环"
+      },
+      "levels": [
+        {
+          "en": "Gervan launches the lunar rings beneath his feet, dealing [[250%]]<ATK> damage to all enemies on the battlefield and reducing their Energy recovery efficiency by [[20%]] for [[8]]s. While Gervan is in Full Moon state, enemies hit also lose [[100]] Energy.",
+          "zh": "格墨文会将脚下的月环飞出，对全场敌人造成[[250%]]<ATK>的伤害，并降低目标回能效率[[20%]]持续[[8]]秒。“满月”状态下，被命中的敌人会额外降低[[100]]点能量。"
+        },
+        {
+          "en": "Increases damage to [[300%]]<ATK>.",
+          "zh": "伤害量提升至[[300%]]<ATK>。"
+        }
+      ]
+    }
+  ]
 }

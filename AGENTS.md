@@ -26,27 +26,27 @@ Add a comment only when the code can't tell the story itself: a non-obvious mech
 
 ## DOCUMENTATION
 
-For comprehensive project documentation, see:
+This is the one index of the project docs.
 
-### Core Documentation
+- [Getting Started](./docs/CONTRIBUTING.md) - Setup, commands, common tasks
+- [Architecture](./docs/ARCHITECTURE.md) - Layers, the board object, how input reaches the screen, where state is stored
+- [Style Guide](./docs/architecture/STYLE_GUIDE.md) - How to write these docs
 
-- [Getting Started](./docs/CONTRIBUTING.md) - Setup and basic usage
-- [Architecture Overview](./docs/ARCHITECTURE.md) - High-level design and principles
-- [Style Guide](./docs/architecture/STYLE_GUIDE.md) - Documentation style guidelines
+System docs:
 
-### Architecture Deep Dives
-
-- [Grid & Character System](./docs/architecture/GRID.md) - Hexagonal grid and character management
-- [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, boards, saved-team library
-- [Guide](./docs/architecture/GUIDE.md) - Guide index and pages, season summaries, counter ladder
-- [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match screenshot import: readers, review, plan
-- [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, and charms
-- [Skills](./docs/architecture/SKILLS.md) - Character abilities and visual effects
-- [Pathfinding](./docs/architecture/PATHFINDING.md) - Targeting and movement algorithms
-- [Drag & Drop](./docs/architecture/DRAG_AND_DROP.md) - Multi-layer drag system
-- [Event System](./docs/architecture/EVENT_SYSTEM.md) - Component communication
-- [Map Editor](./docs/architecture/MAP_EDITOR.md) - Map creation tools
-- [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Binary state sharing
+- [Grid](./docs/architecture/GRID.md) - The grid engine, boards, placement rules, unit ids, map editor
+- [Board Input](./docs/architecture/DRAG_AND_DROP.md) - Drag, tap, drop routing, the event bus
+- [Pathfinding](./docs/architecture/PATHFINDING.md) - Closest-target search and tie-breaking
+- [Skills](./docs/architecture/SKILLS.md) - The skill engine on the grid, artifact targeting
+- [Companions](./docs/architecture/skills/COMPANION.md) - Skill-spawned companion units
+- [Skill Targeting](./docs/architecture/skills/TARGETING.md) - Targeting helpers for skills
+- [Skill Pages](./docs/architecture/SKILL_PAGES.md) - Skill pages, skill text loading, search
+- [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library
+- [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match screenshot import
+- [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
+- [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and storage formats
+- [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder
+- [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, hosting
 
 ## BUILD COMMANDS
 

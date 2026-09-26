@@ -3,5 +3,102 @@
     "en": "Crystal Beetle",
     "zh": "幻晶犀甲虫"
   },
-  "skills": []
+  "skills": [
+    {
+      "name": {
+        "en": "Crystal Projectile",
+        "zh": "幻晶飞弹"
+      },
+      "levels": [
+        {
+          "en": "Crystal Beetle flies into the air, becoming [[invincible]] while hurling a magic projectile at each enemy. Each projectile deals [[300%]]<ATK> damage to its target and adjacent enemies, then applies a Crystal Mark to the target for [[8]]s. Subsequent magic projectile hits on the same target deal [[100%]]<ATK> damage instead.\nWhen an enemy with Crystal Mark suffers a cumulative HP loss exceeding [[30%]] of their max HP, or when their HP ratio drops below [[30%]], Crystal Mark shatters and disappears, dealing [[120%]]<ATK> true damage to the enemy and stunning them for [[3]]s.\nMultiple Crystal Marks on the same enemy are tracked separately.",
+          "zh": "飞到半空并处于[[无敌]]状态，向每名敌人投掷一枚魔法球，对命中的目标及其周围1格范围的敌人造成[[300%]]<ATK>的伤害，并为其施加持续[[8]]秒的“魔晶印记”，命中重复目标后续伤害降低至[[100%]]<ATK>。当携带“魔晶印记”的敌人损耗超过其[[30%]]最大生命值或当前生命值比例低于[[30%]]时，“魔晶印记”会在其身上破碎消失，使其受到[[120%]]<ATK>的伤害并眩晕[[3]]秒。重复施加的“魔晶印记”会独立计算。"
+        },
+        {
+          "en": "Increases the magic projectile's damage to [[350%]]<ATK>. Subsequent hits on the same target deal [[120%]]<ATK> damage instead.",
+          "zh": "魔法球造成的伤害提升至[[350%]]<ATK>，命中重复目标后续伤害降低至[[120%]]<ATK>。"
+        },
+        {
+          "en": "Increases initial Energy by [[500]]. Deals [[80%]]<ATK> extra true damage when Crystal Mark shatters.",
+          "zh": "初始能量提升[[500]]点。“魔晶印记”破碎消失时，额外造成[[80%]]<ATK>的真实伤害。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantom Scales",
+        "zh": "鳞翅迷影"
+      },
+      "levels": [
+        {
+          "en": "When a battle starts, Crystal Beetle scatters scale dust across the column where it was deployed and the 2 adjacent columns. The scale dust clings to all units in the area for [[8]]s. Enemies affected by the dust are blinded, while affected allies gain [[50%]] movement speed.\nActive. Crystal Beetle strikes an enemy with its horn, dealing [[230%]]<ATK> damage and knocking them into the air.",
+          "zh": "战斗开始时，在布阵以及相邻的两列散布鳞粉，鳞粉会附着在范围内的角色身上持续[[8]]秒，被鳞粉附着的敌人会在持续期间内致盲，被鳞粉附着的友军会在持续期间内移动速度提升[[50%]]。主动释放时，幻晶犀甲虫使用大角将敌人挑飞，对敌人造成[[230%]]<ATK>伤害并击飞。"
+        },
+        {
+          "en": "Increases damage to [[240%]]<ATK>.",
+          "zh": "伤害量提升至[[240%]]<ATK>。"
+        },
+        {
+          "en": "Increases damage to [[250%]]<ATK>.",
+          "zh": "伤害量提升至[[250%]]<ATK>。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Mirage",
+        "zh": "迷幻之灵能"
+      },
+      "levels": [
+        {
+          "en": "Crystal Beetle applies a [[spirit mark]] to the allied hero placed in front of it, granting them Mirage.\nMirage: Reduces the [[spirit-marked hero]]'s damage taken by [[15%]]. During the scale dust effect, grants Crystal Beetle and the [[spirit-marked hero]] [[25]] Haste and makes them [[steadfast]]. The first time the spirit-marked hero deals damage to an enemy, that target receives a Crystal Mark.",
+          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”迷幻之灵能“，[[灵能者]]受到伤害降低[[15%]]。[[灵能者]]和幻晶犀甲虫在鳞粉附着期间获得[[25]]点急速并处于[[稳定]]状态，每名敌人首次受到来自灵能者的伤害时会被施加“魔晶印记”。"
+        },
+        {
+          "en": "Whenever the spirit-marked hero or Crystal Beetle [[assists or defeats]] a non-summoned enemy, both are covered in scale dust again for [[8]]s.",
+          "zh": "每当灵能者或幻晶犀甲虫[[参与击败]]非召唤物敌人后，灵能者和幻晶犀甲虫再次被鳞粉包裹[[8]]秒。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Earthbound Thrust",
+        "zh": "穿地之刺"
+      },
+      "levels": [
+        {
+          "en": "Crystal Beetle summons a spike that extends forward, knocking enemies in a 3-tile-wide area into the air, dealing [[200%]]<ATK> damage and knocking them down for [[1]]s.",
+          "zh": "前腿插入地下制造地刺，击飞面前3格宽范围内的敌人，造成[[200%]]<ATK>伤害并使其倒地[[1]]秒。"
+        },
+        {
+          "en": "Increases damage to [[250%]]<ATK>.",
+          "zh": "伤害量提升至[[250%]]<ATK>。"
+        }
+      ]
+    }
+  ]
 }

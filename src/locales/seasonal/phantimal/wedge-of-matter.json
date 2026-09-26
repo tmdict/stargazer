@@ -3,5 +3,102 @@
     "en": "Wedge of Matter",
     "zh": "物质之楔"
   },
-  "skills": []
+  "skills": [
+    {
+      "name": {
+        "en": "Stone Seal",
+        "zh": "岩石封印"
+      },
+      "levels": [
+        {
+          "en": "The Wedge of Matter summons the Wedge of Power to fight alongside it. Both wedges have access to the full skill set.\nActive. The Wedge of Matter targets the frontmost enemy and inflicts Stone Seal, dealing [[300%]]<ATK> damage and stunning them for [[3]]s. The Wedge of Power targets the rearmost enemy and inflicts Wind Seal, dealing [[300%]]<ATK> damage and stunning them for [[3]]s.",
+          "zh": "物质之楔同时召唤权能之楔一起参与战斗，可以使用全部技能。主动释放时，物质之楔选择最靠前的敌人，对其施加岩石封印，造成[[300%]]<ATK>伤害并使目标眩晕[[3]]秒。权能之楔选择最靠后的敌人，对其施加气流封印，造成[[300%]]<ATK>伤害并使目标眩晕[[3]]秒。"
+        },
+        {
+          "en": "Increases Stone Seal's damage to [[330%]]<ATK> and Wind Seal's damage to [[330%]]<ATK>.",
+          "zh": "岩石封印造成的伤害提升至[[330%]]<ATK>，气流封印造成的伤害提升至[[330%]]<ATK>。"
+        },
+        {
+          "en": "Stone Seal reduces the target's Phys & Magic DEF by [[30%]] for [[10]]s. Wind Seal reduces the target's ATK by [[30%]] for [[10]]s.",
+          "zh": "受到岩石封印的目标护甲和魔抗降低[[30%]]持续[[10]]秒，气流封印的目标降低[[30%]]攻击力持续[[10]]秒。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Blessed Ward",
+        "zh": "护佑之印"
+      },
+      "levels": [
+        {
+          "en": "The Wedge of Matter and the Wedge of Power unleash energy pulses. The Wedge of Matter deals [[220%]]<ATK> damage to all enemies, while the Wedge of Power restores [[220%]]<ATK> HP to all allies.",
+          "zh": "物质之楔和权能之楔引发能量波，物质之楔对所有敌人造成[[220%]]<ATK>伤害，权能之楔使所有友军回复[[220%]]<ATK>生命。"
+        },
+        {
+          "en": "Increases the Wedge of Matter's damage to [[250%]]<ATK> and the HP restored by the Wedge of Power to [[250%]]<ATK>.",
+          "zh": "物质之楔造成的伤害提升至[[250%]]<ATK>，权能之楔回复的生命值提升至[[250%]]<ATK>。"
+        },
+        {
+          "en": "Increases the Wedge of Matter's damage to [[280%]]<ATK> and the HP restored by the Wedge of Power to [[280%]]<ATK>.",
+          "zh": "物质之楔造成的伤害提升至[[280%]]<ATK>，权能之楔回复的生命值提升至[[280%]]<ATK>。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Phantimal Focus",
+        "zh": "幻灵专精"
+      },
+      "levels": [
+        {
+          "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+        },
+        {
+          "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+        },
+        {
+          "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+        },
+        {
+          "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Spirit Mark - Seal",
+        "zh": "封印之灵能"
+      },
+      "levels": [
+        {
+          "en": "The Wedge of Matter applies a [[spirit mark]] to the allied hero placed in front of it, granting them Matter Mark.\nMatter Mark: Increases the basic stats of the hero with Matter Mark and their associated units by [[12%]]. The hero with Matter Mark also takes [[20%]] less damage from enemies within 2 tiles.\n\nThe Wedge of Power applies a [[spirit mark]] to the allied hero placed behind it, granting them Power Mark.\nPower Mark: Grants [[20]] Haste to the hero with Power Mark and their associated units. The hero with Power Mark deals [[20%]] more damage to enemies within 2 tiles.",
+          "zh": "物质之楔使身前1名友方英雄成为[[灵能者]]，获得“物质之灵能”。物质灵能者及其所属物的基础属性提升[[12%]]，处于物质灵能者周围2格的所有敌人对其造成的伤害降低[[20%]]。\n权能之楔使身后1名友方英雄成为[[灵能者]]，获得“权能之灵能”。权能灵能者及其所属物的急速提高[[20]]点，权能灵能者对物质灵能者周围2格的敌人造成的伤害提升[[20%]]。"
+        },
+        {
+          "en": "While the hero with the Matter Mark and the hero with the Power Mark are both alive, each gains [[60%]] of the stat bonuses provided by the other's Mark.",
+          "zh": "当物质之灵能者和权能之灵能者同时存活时，双方获得[[60%]]对方灵能所带来的属性提升效果。"
+        }
+      ]
+    },
+    {
+      "name": {
+        "en": "Soul Reign",
+        "zh": "控灵之力"
+      },
+      "levels": [
+        {
+          "en": "If the hero with the Matter Mark is alive, the Wedge of Matter creates a quicksand vortex at their position for [[5]]s. Enemies within 2 tiles lose [[20]] Haste and [[50%]] movement speed, and take [[50%]]<ATK> damage per second.\nIf the hero with the Power Mark is alive, the Wedge of Power unleashes a tornado from their position. The tornado moves to the area with the most enemies, dealing [[80%]]<ATK> damage every 0.25s to enemies within 1 tile of the target tile.",
+          "zh": "当物质之灵能者存活时，物质之楔会在其脚下生成一个流沙旋涡持续[[5]]秒，使2格范围内敌人急速降低[[20]]点，移动速度降低[[50%]]并每秒受到[[50%]]<ATK>伤害；当权能之灵能者存活时，权能之楔会在其脚下召唤一个龙卷风，冲向敌人最密集的方向，对周围1格的敌人每0.25秒造成[[80%]]<ATK>伤害。"
+        },
+        {
+          "en": "Increases the quicksand vortex's damage per second to [[60%]]<ATK> and the tornado's damage to [[100%]]<ATK>.",
+          "zh": "流沙漩涡每秒造成的伤害提升至[[60%]]<ATK>，龙卷风对敌人造成的伤害提升至[[100%]]<ATK>。"
+        }
+      ]
+    }
+  ]
 }
