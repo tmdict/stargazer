@@ -1,79 +1,50 @@
 # Targeting Skills
 
-## Overview
+Targeting helpers pick the unit a skill's arrow or highlight points at. They run again on every grid change, so each one must give exactly one answer for a formation. The helpers live in `src/lib/skills/utils/`: distances and formation ends in `distance.ts`, row and ring scans in `ring.ts`, the board mirror in `symmetry.ts`, and the candidate list and adjacent-tile picks in `targeting.ts`. Each reads a `SkillContext` and returns a target or `null`, and the builder decides what to draw.
 
-Targeting helpers pick the unit a skill's arrow or highlight points at and are re-run on every grid change through the builder lifecycle. Three modules cover the three selection shapes: distance and formation ends (`distance.ts`), ring and diagonal-row scans (`ring.ts`), and the board mirror (`symmetry.ts`), all over the candidate list from `targeting.ts`.
+## One board orientation
 
-## Design Principles
+The engine never rotates the board ([Grid & Characters](../GRID.md#invert)). Ally hex ids rise toward the enemy side and enemy ids fall toward the ally side, and the enemy half is a 180° turn of the ally half. Every helper is therefore written once for the ally team and flips its scan direction for the enemy team.
 
-1. **One board orientation**: Ally ids rise toward the enemy side and enemy ids fall toward the ally side, so every helper flips its scan for the enemy team
-2. **Formation ends belong to the target team**: Frontmost and rearmost are read off the searched team, so an artifact with no caster gets the same answer as a hero
-3. **Explicit total orders**: Every sort key runs down to hex id, so a formation always yields one pick and the tie rule is visible in the helper
-4. **Pure over the grid**: A helper reads `SkillContext` and returns `SkillTargetInfo | null`; the builder decides what to draw or clear
-5. **Monotone rules only**: A pick that alternates direction or is gated on another tile stays in its character file instead of growing a helper's option set
+Formation ends belong to the team being searched. The frontmost unit of an ally team is its highest id and of an enemy team its lowest, whoever is asking. That is why artifact targeting, which has no caster, can call the same code (`rearmostUnit`) and get the same answer a hero would.
 
-## Candidates (`/src/lib/skills/utils/targeting.ts`)
+Every sort key runs down to hex id, so a tie always has a written rule. The furthest-unit pick breaks equal distances by the caster's team: an ally caster prefers the lower id, an enemy caster the higher. Formation ends cannot tie, because ids are unique.
 
-- **Candidate list**: `getTeamTargetCandidates` returns every occupied tile of a team (companions, phantimals, and placeholders included); `getCandidates` drops one id for self-exclusion; `calculateDistances` fills each candidate's `distances` map per reference hex
-- **Adjacent priority chain**: `findAdjacentPriorityTarget` (Daimon, phantimal Spirit Marks) checks up to three neighbours toward the team's back or front: straight behind or ahead, then the caster-row side neighbour, then the remaining diagonal (direction indices 3, 4, 2 toward high r; 0, 1, 5 toward low r); off-board neighbours drop out of the chain
-- **Straight behind only**: `findUnitBehind` (Gunnar, Hugin, Thador) targets the tile directly behind the caster and nothing else, even when a back-row diagonal exists
+## Candidates
 
-## Distance and Formation Ends (`/src/lib/skills/utils/distance.ts`)
+A team's candidates are every occupied tile of that team, companions, phantimals and placeholders included. A helper that targets the caster's own team drops the caster by id.
 
-`findTarget(ctx, { targetTeam, targetingMethod, excludeSelf?, referenceHexId? })` dispatches on `TargetingMethod`:
+Two adjacent-tile picks look easy to merge but differ on purpose. `findAdjacentPriorityTarget` (Daimon, phantimal Spirit Marks) tries up to three neighbours toward the team's back or front: straight behind or ahead, then the side neighbour in the caster's row, then the other diagonal. Neighbours off the board drop out of the chain. `findUnitBehind` (Gunnar, Hugin, Thador) checks only the tile straight behind and ignores the diagonals even when they exist.
 
-| Method      | Pick                                                      | Caster excluded              | Users                                          |
-| ----------- | --------------------------------------------------------- | ---------------------------- | ---------------------------------------------- |
-| `FURTHEST`  | Greatest distance from `referenceHexId` (default: caster) | Only with `excludeSelf`      | Dunlingr, Vala, Aliceth (enemy arrow)          |
-| `REARMOST`  | Lowest id on an ally team, highest on an enemy team       | `excludeSelf`, own team only | Evie, Pandora; Bonnie via `findRearmostTarget` |
-| `FRONTMOST` | Highest id on an ally team, lowest on an enemy team       | Always, own team only        | Talene, Frieren, Isabella                      |
+## Row scans
 
-- **FURTHEST tie-break**: Equal distances resolve by the caster's team: an ally caster prefers the lower hex id, an enemy caster the higher (the 180° rotation). The end picks cannot tie because ids are unique
-- **Whole-team picks**: `frontmostUnit(grid, team)` / `rearmostUnit(grid, team)` need no caster; artifact targeting uses them so companions and phantimals count exactly as in hero skills
-- **Metadata**: the `is*Target` flags and `examinedTiles` serve `DebugPanel` only; nothing in the render path reads them
+The only row that matters on this board is the diagonal row, `q - r` (`Hex.getDiagonal`). Hex ids increase along a row from a team's back to its front. `ScanDirection` names one end of the scanned team's axis (`FRONTMOST` or `REARMOST`), and each helper resolves it per team.
 
-## Ring and Row Scans (`/src/lib/skills/utils/ring.ts`)
+`rowScan` sorts candidates by distance from the caster, then by diagonal row in `rowDirection`, then by hex id in `withinRowDirection`. The within-row direction defaults to the row direction. When the two agree, the order inside each distance ring is a plain id sort, because ids follow the rows. Only a mixed pair needs the explicit row tier. `maxDistance: 1` limits the scan to the six neighbours, and `filter` keeps candidates whose id passes a predicate.
 
-The arena's only meaningful row is the diagonal row, `Hex.getDiagonal() = q - r`. Hex ids increase along a row from a team's back to its front, and the enemy team is a 180° flip of both axes, so `ScanDirection` (`FRONTMOST` / `REARMOST`) names an end of the scanned team's axis and each helper resolves it per team.
+|                   | within: `REARMOST` (lower id) | within: `FRONTMOST` (higher id) |
+| ----------------- | ----------------------------- | ------------------------------- |
+| rows: `REARMOST`  | Faramor, Cassadee, Galahad    | Himmel, Niru                    |
+| rows: `FRONTMOST` | (valid, unused)               | Aliceth fallback, Hepler        |
 
-### `rowScan(ctx, { team, rowDirection, withinRowDirection?, maxDistance?, filter? })`
+`searchByRow` (Aliceth, Alna) looks only at the caster's own diagonal row, closest first, with ties going to the searched team's frontmost unit. Aliceth falls back to `rowScan` with `FRONTMOST` rows. Her own row is always empty when the fallback runs, so the fallback needs no exclusion.
 
-Expands distance rings from the caster and orders each ring by diagonal row, then hex id within a row. Scan key: `(distance asc, diagonal by rowDirection, hex id by withinRowDirection)`, a total order with no separate tie-break.
+## Mirror and spiral
 
-- **Two independent knobs**: `rowDirection` picks which rows come first; `withinRowDirection` picks which unit of a shared row and defaults to `rowDirection`. Because ids run in diagonal-row order, an aligned pair reduces to a plain id sort within each ring; only a mixed pair needs the explicit diagonal tier
-- **`maxDistance: 1`** confines the scan to the six neighbours; **`filter`** keeps candidates whose id passes a predicate (class for Himmel, companion exclusion for Galahad)
+`getSymmetricalHexId` swaps q and r, which reflects a hex across the board's middle diagonal and keeps `q + r + s = 0`. It returns `undefined` when the mirror falls off the grid, and a hex on the middle diagonal mirrors to itself.
 
-|                       | within: `REARMOST` (lower id) | within: `FRONTMOST` (higher id) |
-| --------------------- | ----------------------------- | ------------------------------- |
-| **rows: `REARMOST`**  | Faramor, Cassadee, Galahad    | Himmel, Niru                    |
-| **rows: `FRONTMOST`** | (valid, unused)               | Aliceth fallback, Hepler        |
+`spiralSearchFromTile` (Silvina, Nara) walks rings outward from a centre hex. Within a ring an ally caster walks clockwise from just past top-right, and an enemy caster counter-clockwise from just past bottom-left. It never examines the centre tile, so callers test the mirror tile first and reach the spiral only when it holds no enemy.
 
-**Not a `rowScan`**: a pick that alternates within-row direction, is gated on another tile (Reinier's mirror-holds-enemy check), or composes stages (Aliceth's same-row-first plus a furthest enemy) stays in the character file rather than being forced into options.
+## When not to extend a helper
 
-### `searchByRow(ctx, targetTeam)` (Aliceth, Alna)
+The shared helpers cover orderings that run one way along a team's axis. Keep a rule in its character file when it alternates direction, depends on another tile, or chains stages. Reinier accepts an adjacent ally only when that ally's mirror holds an enemy. Aliceth combines a same-row search with a furthest-enemy pick. Each would add an option to `rowScan` that only one caller uses.
 
-Only the caster's own diagonal row; closest first, ties to the searched team's frontmost unit (higher id on an ally team, lower on enemy). Aliceth falls back to `rowScan` with `FRONTMOST` rows; her own row is empty whenever the fallback runs, so it needs no exclusion.
+## Drawing the result
 
-### `spiralSearchFromTile(grid, centerHexId, targetTeam, casterTeam)` (Silvina, Nara)
+`createTargetingSkill` runs the pick on activate and on every update, stores a hit with `setSkillTarget`, and clears a miss. With `arrowType` set, the factory draws one arrow from caster to target, and a hit needs a concrete `targetHexId`. With it omitted, the skill fills `metadata.arrows` itself (Ravion's two rearmost allies, Aliceth's ally and enemy). `createTileHighlightSkill` paints the target tile instead and unpaints the previous target before repainting. The `is*Target` flags and `examinedTiles` in the metadata serve only the debug panel.
 
-Rings of distance 1 outward from a centre hex, tiles within a ring ordered by angle: an ally caster walks clockwise from just past top-right, an enemy caster counter-clockwise from just past bottom-left. The centre tile itself is not examined; callers test it first and reach the spiral only when it holds no enemy. `metadata.isSymmetricalTarget` is `false` on a spiral hit and `true` on a direct mirror hit, which the debug panel labels.
+## Related documentation
 
-## Symmetry (`/src/lib/skills/utils/symmetry.ts`)
-
-- **`getSymmetricalHexId(grid, hexId)`** swaps q and r, a reflection across the board's middle diagonal (the q = r line), valid on any grid because `q + r + s` stays 0; returns `undefined` when the mirror is off-grid, and a middle-diagonal hex mirrors to itself
-- **Users**: Silvina and Nara (mirror first, then spiral), Evie (paints the mirror and its six neighbours that lie in the enemy zone), Reinier (an adjacent ally qualifies only when its mirror holds an enemy)
-
-## Lifecycle
-
-`createTargetingSkill` runs `calculateTarget` on activate and on every update, stores a hit with `setSkillTarget` and clears a miss; deactivate clears. Arrow color is the config `color` (`targetingColorModifier`).
-
-- **`arrowType` set**: the factory adds one caster-to-target arrow, and a hit requires a concrete `targetHexId`
-- **`arrowType` omitted**: `calculateTarget` fills `metadata.arrows` itself and leaves `targetHexId` null (Ravion's two rearmost allies, Aliceth's ally plus enemy)
-- **Tile instead of arrow**: `createTileHighlightSkill` paints the target's border (or fill) and unpaints the previous target before repainting; a hand-written lifecycle (Reinier) calls `setSkillTarget` and `paintTiles` itself
-
-See [Adding a Skill](../SKILLS.md#adding-a-skill) for the factory and file conventions.
-
-## Related Documentation
-
-- [`/docs/architecture/SKILLS.md`](../SKILLS.md) - Builders, SkillManager, and artifact targeting
-- [`/docs/architecture/GRID.md`](../GRID.md) - Hex coordinates, the fixed engine orientation, and unit id bands
+- [Skills](../SKILLS.md): builders, the skill registry and artifact targeting
+- [Pathfinding](../PATHFINDING.md): the closest-enemy search behind attack arrows
+- [Grid & Characters](../GRID.md): hex coordinates and unit ids

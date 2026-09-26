@@ -1,191 +1,141 @@
 # URL Serialization
 
-## Overview
+Board state leaves the app in two formats. The binary link format (`src/utils/binaryEncoder.ts`) carries every `?g=` link, whether from the Arena, the Teams page or `/share`. It also stores the Arena autosave under `stargazer.arena`, the one binary value at rest. The JSON interchange format is url-safe base64 of a `MultiGridState`, and it holds the saved-team library, the per-mode autosave slots and backup files. Links never use JSON, and nothing exported uses binary.
 
-State leaves the live boards through two serialization formats, split by exportability. The binary link codec (`/src/utils/binaryEncoder.ts`) carries every `?g=` payload (Arena, Teams and `/share` links) plus the Arena autosave (`stargazer.arena`), the one binary value at rest: compact, stateless, and versionless. The JSON interchange codec (url-safe base64 of `MultiGridState` JSON) is the format of the saved-team library, the per-mode autosave slots and backup files, the data that canonicalization and byte-equality compares operate on, and never a link.
+The split follows what each format needs. Links must be short and are allowed to break. Stored teams must compare byte for byte and survive new app versions. `src/utils/urlStateManager.ts` holds one encode and one decode per format.
 
-## Design Principles
+## Decisions
 
-1. **One generic codec**: a single self-describing format for every link; pages route on the decoded payload's mode instead of owning formats
-2. **Compact representation**: bit packing, section bitmaps, and small wire ids for minimal URL length
-3. **No version field**: the format is frozen by golden-string tests; a future change ships with its own temporary migration, since the app and its links deploy together and links are expendable by policy
-4. **Strict decoding**: unknown mode ids, map ids, or section-bitmap bits reject the payload, and the bit stream must be fully consumed: a payload either decodes exactly or not at all
-5. **Input validation**: `validateGridState()` filters out-of-range entries before encoding so bit-field truncation can never alias ids
+Every link uses one self-describing codec. The envelope names a mode (the Arena is mode 0 with one board), and each page routes on the decoded mode instead of owning a format.
 
-## Core Components
+The format has no version field. The app and its links deploy together, links are disposable, and only the Arena autosave outlives a deploy. Golden-string tests in `tests/unit/utils/binaryEncoder.test.ts` freeze the layout, so any change to field order, section order, bit width or the URL alphabet fails them.
 
-### Codec entry points (`/src/utils/urlStateManager.ts`)
+Decoding is strict, so a payload decodes exactly or not at all. Unknown mode ids, unknown map ids and unknown bitmap bits reject it. So do a counted section with a zero count (the encoder never writes an empty section) and a map id on an Arena board. After the last board the stream must end cleanly, with fewer than 8 bits left and all of them zero. These rules exist because short payloads in other formats would otherwise read as plausible near-empty links, and the migration shim relies on them to probe formats in order.
 
-| Function                                                        | Contract                                                                                                                                                                                                               |
-| --------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `decodeLinkFromUrl()`                                           | The universal link decoder, the only function any page or storage pass calls for a `?g=` payload. Returns a `BinaryLinkState` (`{ mode, active, d, boards }`) or null; strict v2 first, then the temporary legacy shim |
-| `encodeGridStateToUrl()` / `decodeGridStateFromUrl()`           | The Arena adapters: encode wraps the single board as mode `'arena'`; decode rejects any payload naming another mode, so a Teams link pasted on the Arena page fails clean instead of half-rendering one board          |
-| `encodeMultiGridStateToLinkUrl()`                               | Encodes a decoded `MultiGridState` as a binary Teams link (Copy Link decodes the persistence snapshot once and re-encodes it for the wire)                                                                             |
-| `encodeMultiGridStateToUrl()` / `decodeMultiGridStateFromUrl()` | The JSON interchange codec. Decode rejects any board that is not a plain object with the serializer's section shapes and sanitizes a non-integer or out-of-range `season` (0 to 9999)                                  |
-| `getEncodedStateFromUrl()` / `getEncodedStateFromRoute()`       | Read `?g=` from `window.location` (initial page load) or a route query (ShareView)                                                                                                                                     |
+## Binary wire format
 
-The store actions `restoreFromEncodedState()` / `restoreMultiFromDecodedState()` / `restoreMultiFromEncodedState()` (`/src/stores/urlState.ts`) apply decoded state to the boards (see Character Restoration). `useShareLink` (`/src/composables/useShareLink.ts`) copies a read-only `/share?g=<encoded>` link to the clipboard and opens the share page.
-
-### Wire registries (`/src/lib/teams/wire.ts`)
-
-Stable numeric ids for the string-keyed modes and maps, so links carry small integers instead of text. A deliberately pure leaf (no data loading, no Vue) that the codec can import; completeness against the real `TEAM_MODES` / `MAPS` data is enforced by contract tests (`tests/unit/lib/teams/wire.test.ts`) rather than imports.
-
-- **Modes** (3-bit field): `arena` 0, `1v1` 1, `3v3` 2, `5v5` 3. A mode is a board count, so it is never encoded separately and the table grows only for a new count; a type (Supreme League, Guild Duel) is carried by the boards' map ids and has no wire presence. Id 4 (the retired `5v5sl` mode) is converted by the shim while it exists and returns to the pool with its deletion
-- **Maps** (6-bit field): 0 reserved for "no map" (Arena boards carry none: their serialized tiles are authoritative, and a restore adopts the preset those tiles reproduce, if any); registered map keys get ids 1+ (`arena1` to `arena5sp` 1 to 6, `preset-as1` to `preset-as4` 7 to 10, `preset-sr1` to `preset-sr11` 11 to 21). Seasonal preset ids follow the rotation policy: a season's maps replace the last season's and freed ids return to the pool
-
-An id is stable while its mode or map exists: reassigning one that live data still carries would silently re-route those links. Retirement therefore goes through a conversion window (a temporary migration converts the retired id for as long as it lives, then the id is freed), and seasonal preset ids rotate the same way: a season's maps replace the last season's and freed ids return to the pool. Links older than the window are expendable by policy.
-
-### Binary Encoder (`/src/utils/binaryEncoder.ts`)
-
-- **`encodeLink(input)`**: `{ mode, active?, d?, boards }` → bytes. Unknown mode keys throw; a board list disagreeing with the mode's count is padded/trimmed with a warning; an arena board's `m` is stripped; entries are pre-filtered by `validateGridState()`
-- **`decodeLink(bytes)`**: bytes → `BinaryLinkState` or null, silent on failure: a failed probe is expected traffic for the universal decoder
-- **`bytesToUrlSafe()` / `urlSafeToBytes()`**: URL-safe base64 alphabet (`A-Za-z0-9-_`), shared with the JSON interchange encoding
-
-### Grid State Serializer (`/src/utils/gridStateSerializer.ts`)
-
-Converts between game state and the compact section format both codecs carry:
-
-```typescript
-interface GridState {
-  t?: number[][] // tiles: [hexId, state], non-default only
-  c?: number[][] // characters: [hexId, characterId, team]
-  a?: (number | null)[] // artifacts: [ally, enemy]
-  s?: number[][] // seasonal units: [hexId, localUnitId, team] (phantimal = L, its companion = N * 10000 + L)
-  y?: number[][] // synergy-band units: [hexId, localUnitId, team]
-  u?: number[][] // upgrade attrs: [team, characterId, attrId, value], sorted, non-default only
-  d?: number // display flags (bit-packed)
-}
-```
-
-## Binary Wire Format
-
-All fields are written LSB-first. One envelope, then one header + sections per board; the board count comes from the mode, so it is never encoded.
+All fields are written LSB-first. The board count comes from the mode, so it is never encoded.
 
 ```
-[Envelope: 14 bits]
-  - Mode id (3 bits): wire.ts registry; unknown ids reject
-  - Active board (3 bits): clamped to the mode's board range
-  - Display flags (8 bits): bit 0 wrap, 1 showSkills, 2 showPerspective,
-    3 inverted, 4 teamView (bits 5-7 spare). Always present: a state that
-    carried no `d` encodes the unpack defaults, so skills/perspective don't
-    flip on decode. Grid info is not a display flag: its visibility is the
-    viewer's device pref (`useGridInfoPrefs`), never carried by a link.
+Envelope, once (14 bits)
+  mode id          3                    wire registry
+  active board     3                    0-based, clamped to the board count
+  display flags    8                    0 wrap, 1 skills, 2 perspective,
+                                        3 inverted, 4 team view; 5-7 spare
 
-[Per board, in order: Header: 14 bits]
-  - Map id (6 bits): wire.ts registry; 0 = no map; unknown ids reject. An
-    arena-mode board carrying any map id rejects (arena boards never encode one)
-  - Section bitmap (8 bits): t=0x01, c=0x02, a=0x04, s=0x08, y=0x10, u=0x20,
-    phantimal companions=0x40 (bit 7 spare; a set spare bit rejects). A counted section with a zero
-    count rejects: the encoder never writes an empty section. Both rules exist
-    because short retired-format payloads misread as plausible near-empty
-    links without them.
+Board header, once per board (14 bits)
+  map id           6                    wire registry; 0 = no map
+  section bitmap   8                    0 t, 1 c, 2 a, 3 s phantimals, 4 y,
+                                        5 u, 6 s companions; 7 spare
 
-[Sections, in bitmap-bit order:]
-  Tiles      count (6 bits) + 9 bits each: hex ID (6) + state (3)
-  Characters count (6 bits) + 23 bits each: hex ID (6) + character ID (16) +
-             team (1)
-  Artifacts  12 bits fixed: ally (6) + enemy (6); 0 = null
-  Phantimals count (4 bits) + 11 bits each: hex ID (6) + local ID (4) + team (1)
-  Synergy    count (4 bits) + 23 bits each: hex ID (6) + local unit ID (16) +
-             team (1). Locals reuse the character field's ID space (hero =
-             base ID, spawned companion = N * 10000 + base); the 200000 band
-             offset is applied on restore.
-  Upgrades   count (6 bits) + 27 bits each: team (1) + character ID (16,
-             0 reserved for a future team-scope row) + attr ID (6) + value (4).
-             Carries every registry attr (`/src/lib/characters/attributes.ts`);
-             the registry contract test pins that attr maxes fit the value field.
-  Phantimal  count (4 bits) + 13 bits each: hex ID (6) + owner local ID (4) +
-  companions companion index N (2, 1-3) + team (1). The encoder splits `s`
-             rows at 10000 into this section and the phantimal section; the
-             decoder merges them back after the phantimals.
+Sections, in bitmap-bit order
+  tiles            count 6 + 9 each     hex 6, state 3
+  characters       count 6 + 23 each    hex 6, character id 16, team 1
+  artifacts        12, no count         ally 6, enemy 6 (0 = none)
+  phantimals       count 4 + 11 each    hex 6, local id 4, team 1
+  synergy          count 4 + 23 each    hex 6, local id 16, team 1
+  upgrades         count 6 + 27 each    team 1, character id 16,
+                                        attr id 6, value 4
+  phantimal        count 4 + 13 each    hex 6, owner local id 4,
+  companions                            companion index N 2, team 1
 ```
 
-Team values are written as `team - 1` (1 bit) and read back as `+ 1`. After the last board the stream must be at a clean end: fewer than 8 bits remaining, all zero. Trailing content, however plausible the prefix, rejects the payload. Together with the unknown-id rejections this makes decoding all-or-nothing, which is what lets the legacy shim probe formats safely.
+Teams are written as `team - 1` and read back with `+ 1`. The flags byte is always present: a state without `d` encodes the unpack defaults, so skills and perspective do not switch off on decode. Grid Info visibility is a device preference (`useGridInfoPrefs`) and never travels in a link.
 
-The wire format is frozen by golden-string tests in `tests/unit/utils/binaryEncoder.test.ts`: a change to bit layout, field order, section order, or the URL-safe alphabet fails them, because it silently breaks every existing link.
+`encodeLink` throws on an unknown mode key. A board list that disagrees with the mode's board count is trimmed or padded with empty boards, with a warning, because the decoder takes the count from the mode. An Arena board's map key is stripped, since the decoder rejects one. A map key with no wire id encodes as 0: the board still restores from its tiles, and only the Maps tab loses its highlight. `decodeLink` returns null without logging, because a failed probe is normal traffic for the shim. `bytesToUrlSafe` turns the bytes into text with a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares, and the result goes into `?g=`.
 
-### Validation & Limits
+In memory, a board keeps phantimals and their companions together in `s`, a phantimal as its local id L and a companion as `N × 10000 + L`. The encoder splits the companions into the bit 6 section so the phantimal entry keeps its fixed 4-bit id, and the decoder appends them back to `s` after the phantimals. A companion entry with index 0 rejects, because index 0 is the phantimal itself. A board without companions leaves bit 6 unset.
 
-Before encoding, `validateGridState()` filters invalid entries (with console warnings), so header counts always match the data written. `writeBits` silently truncates oversized and fractional values alike, which would alias them to different IDs on decode, so every id field also requires an integer:
+Synergy locals reuse the character field's id space (hero as its base id, a companion as `N × 10000 + base`), and restore adds the synergy band offset back. An upgrade row's character id 0 is reserved for a future team-wide row. The id ranges themselves are in [Grid & Characters](./GRID.md).
 
-- **Hex IDs**: 1-63 (6-bit field)
-- **Tile states**: 0-7 (3 bits); tiles capped at 63 entries (6-bit count)
-- **Character IDs**: 1-65535 (16 bits); characters capped at 63 entries
-- **Artifact IDs**: null or 1-63; out-of-range IDs become null so the other side's artifact survives; an `a` that is not a two-element array drops
-- **Phantimal entries**: local ID 1-15, or `N * 10000 + L` with N 1-3 for a companion; capped at 15 entries across both sections (4-bit counts)
-- **Synergy entries**: local ID 1-65535, capped at 15 entries (4-bit count)
-- **Upgrade entries**: known attr IDs only (values clamp to the registry range), character ID 0-65535, deduped last-wins with default-valued rows dropped (mirroring `canonicalAttrRows`), capped at 63 entries (6-bit count)
-- **Team values**: 1 (ALLY) or 2 (ENEMY)
-- **Empty sections**: an emptied list is omitted entirely, which the decoder's zero-count rejection relies on
+### Validation and limits
 
-### Capacity & Headroom
+`validateGridState()` filters entries before encoding, with a console warning for each, so every count matches the entries written. `writeBits` truncates oversized and fractional values alike, which would alias them to a different id on decode, so every id field must be an integer in range:
 
-A link is the 14-bit envelope, then per board a 14-bit header plus only the sections it uses, rounded up to whole bytes and base64-encoded (6 bits per URL character). An arena link holding 3 changed tiles, 2 heroes, and 1 upgrade row is 14 + 14 + (6 + 3 × 9) + (6 + 2 × 23) + (6 + 27) = 146 bits: 19 bytes, 26 characters. A fully loaded board (20 changed tiles, 10 heroes at P4/R4, both artifacts, a phantimal per side) is about 175 characters as an arena link and about 855 as a five-board link, roughly a quarter of the same boards as JSON interchange.
+- Hex ids 1 to 63, tile states 0 to 7, and at most 63 tiles and 63 characters.
+- Character and synergy local ids 1 to 65535, with at most 15 synergy entries.
+- Artifact ids 1 to 63 or null. An out-of-range id becomes null so the other side's artifact survives, and an `a` that is not a two-element array is dropped.
+- Phantimal entries L from 1 to 15, or `N × 10000 + L` with N from 1 to 3, at most 15 across both sections.
+- Upgrade rows with known attr ids only and character ids 0 to 65535. Values clamp to the registry range, duplicates keep the last row, default-valued rows drop (matching `canonicalAttrRows`), and at most 63 remain.
+- Teams 1 or 2.
 
-Every field has room beyond today's data. The registry-backed fields are pinned by contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attributes.test.ts`), so a mode, map, or attr that outgrows its field fails CI instead of truncating on the wire:
+A section left empty is omitted, which the decoder's zero-count rule relies on.
 
-| Field                  | Bits | In use                      | Capacity | Headroom                                         |
-| ---------------------- | ---- | --------------------------- | -------- | ------------------------------------------------ |
-| Mode id                | 3    | 4 modes (arena + 3 counts)  | 8        | 4 more board counts (id 4 once the shim is gone) |
-| Active board           | 3    | 5 boards max                | 8        | modes of up to 8 boards                          |
-| Display flags          | 8    | 5 flags                     | 8        | 3 more toggles                                   |
-| Map id                 | 6    | 21 maps + "none"            | 64       | 42 more maps                                     |
-| Section bitmap         | 8    | 7 sections                  | 8        | 1 more section                                   |
-| Hex id (every entry)   | 6    | 45 hexes                    | 63       | the grid can grow to 63 hexes                    |
-| Tile state             | 3    | 7 states                    | 8        | 1 more state                                     |
-| Character id           | 16   | heroes + companions         | 65,535   | companion index N ≤ 6 for base ids below 5,536   |
-| Artifact id            | 6    | 6 permanent + 12 seasonal   | 63       | seasonal ids rotate, so the pool never grows     |
-| Phantimal local id     | 4    | 5 types                     | 15       | same rotation                                    |
-| Attr id                | 6    | 2                           | 63       | 61 more upgrade kinds                            |
-| Attr value             | 4    | max level 4                 | 15       | level caps can rise to 15                        |
-| Upgrade rows per board | 6    | 20 (5 heroes × 2 sides × 2) | 63       | 6 attrs per hero on a full board                 |
+### Capacity and headroom
 
-Growth that costs nothing (no format change, no migration): new heroes, maps, team types, board counts, artifacts, phantimal types, and upgrade kinds; higher level caps up to 15; new display toggles (3 spare bits); and a whole new feature as a new section (1 spare bitmap bit). Adding content is adding a registry row; a team type does not even touch the wire.
+A link is the envelope, then per board a header plus only the sections it uses, rounded up to whole bytes and written at 6 bits per URL character. An Arena link with 3 changed tiles, 2 heroes and 1 upgrade row is 14 + 14 + (6 + 3 × 9) + (6 + 2 × 23) + (6 + 27) = 146 bits, which is 19 bytes or 26 characters. A full board (20 changed tiles, 10 heroes at P4 and R4, both artifacts, a phantimal per side) is about 175 characters as an Arena link and about 855 as a five-board link, roughly a quarter of the same boards as JSON.
 
-Growth that forces a new format, each a change to the game's shape rather than its content: a grid beyond 63 hexes, an eighth tile state, more than 8 modes or 8 boards in a mode, a ninth section, an exhausted registry (64 maps or 64 upgrade kinds), or an id scheme outgrowing 16 bits. A new format ships the way v2 did: new golden strings, a frozen copy of the old decoder in a temporary shim that converts the arena autosave once, and every existing link breaks.
+Contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attributes.test.ts`) fail when a mode, map or attr outgrows its field, including an attr whose max would not fit the 4-bit value, so nothing truncates on the wire. The "In use" column is a snapshot for planning; the tests, not this table, enforce the limits.
 
-## Link Flow
+| Field                  | Bits | In use                           | Capacity | Headroom                                           |
+| ---------------------- | ---- | -------------------------------- | -------- | -------------------------------------------------- |
+| Mode id                | 3    | 4 (the Arena and 3 board counts) | 8        | 4 more board counts (id 4 is held by the shim)     |
+| Active board           | 3    | up to 5 boards                   | 8        | modes of up to 8 boards                            |
+| Display flags          | 8    | 5 flags                          | 8        | 3 more toggles                                     |
+| Map id                 | 6    | 21 maps, plus 0 for none         | 63       | 42 more maps; seasonal preset ids rotate           |
+| Section bitmap         | 8    | 7 sections                       | 8        | 1 more section                                     |
+| Hex id                 | 6    | 45 hexes                         | 63       | the grid can grow to 63 hexes                      |
+| Tile state             | 3    | 7 states                         | 8        | 1 more state                                       |
+| Character id           | 16   | heroes and companions            | 65,535   | companion index N up to 6 for base ids below 5,536 |
+| Artifact id            | 6    | 6 permanent and 12 seasonal      | 63       | seasonal ids rotate, so the pool does not grow     |
+| Phantimal local id     | 4    | 5 per season                     | 15       | 1 to 12 usable, 13 to 15 reserved for tests        |
+| Attr id                | 6    | 2                                | 63       | 61 more upgrade kinds                              |
+| Attr value             | 4    | max level 4                      | 15       | level caps can rise to 15                          |
+| Upgrade rows per board | 6    | up to 20 (10 heroes × 2 attrs)   | 63       | 6 attrs per hero on a full board                   |
 
-1. **Encode**: serialize the live boards, `encodeLink()`, `bytesToUrlSafe()`, append as `?g=<encoded>`
-2. **Decode**: every page reads `?g=` and calls `decodeLinkFromUrl()`, then routes on the payload's own mode:
-   - `/` (Arena) accepts mode `'arena'` only (via `decodeGridStateFromUrl`)
-   - `/teams` accepts team modes: `useTeamsRestore.initialize()` adopts the link's mode, shape-normalizes, and applies it; an arena-mode payload is a wrong-page link and falls back to the saved slot
-   - `/share` renders whatever the payload says: mode `'arena'` gets the single-board viewer, team modes the multi-board viewer (`restoreMultiFromDecodedState`); its Edit action reopens the payload on `/` or `/teams`
-3. A link that fails to decode is treated as absent (the page falls back to its saved state), so a bad link can never wipe an autosave
+Adding content needs no format change: new heroes, maps, team types, board counts, artifacts, phantimal types and upgrade kinds, level caps up to 15, up to 3 more display toggles, and one more section in the spare bitmap bit. A team type does not touch the wire at all.
 
-### Migration shim (TEMPORARY)
+Changing the game's shape does need a new format: a grid beyond 63 hexes, an eighth tile state, more than 8 modes or 8 boards, a ninth section, 64 maps or upgrade kinds, or ids beyond 16 bits. A new format ships with new golden strings and a frozen copy of the old decoder in a temporary shim that converts the Arena autosave once. Every existing link breaks.
 
-`decodeLinkFromUrl` falls back to `decodeLegacyLink` (`/src/utils/upgradeMigration.ts`): a link whose mode id reads 4 (the retired `5v5sl` mode) is re-read as 5v5 on a patched copy of its bytes, then a JSON probe for pre-binary Teams links, then a frozen copy of the retired v1 binary decoder, all normalized into the v2 `BinaryLinkState` shape. Two startup storage passes in the same module rewrite at-rest legacy values (the arena autosave, the mode slots, library records) to the current formats and move or drop the retired `5v5sl` slot, each under its own marker. The whole module is planned for deletion on one date; its header carries the removal runbook.
+## Wire registries
 
-## Character Restoration
+`src/lib/teams/wire.ts` maps the string keys to small ids. Modes are `arena` 0, `1v1` 1, `3v3` 2 and `5v5` 3. A mode is a board count, so the table grows only for a new count, and a type such as Supreme League travels as the boards' map ids. Map id 0 means no map, which Arena boards always use because their serialized tiles are authoritative. `MAP_WIRE_IDS` gives every registered map key an id from 1.
 
-Applying a decoded board (`applyGridState` in `/src/stores/urlState.ts`) first picks the map: a payload without `m` (Arena links and autosave) adopts the preset its tiles reproduce (`findMapByTiles`), otherwise all tiles reset. Multi-board restores build their contexts through `resolveBoardMap` (`m`, else that preset, else the default map), the same rule canonicalization fills `m` with. It then restores, in order: tiles, mains (companions settled per main), synergy units, upgrade attrs, artifacts, phantimals, then `seedPhantimalBaseline()`.
+The file imports no data and no Vue, because the codec imports it. Contract tests check it against `TEAM_MODES` and the map data instead.
 
-- **Standard characters (ID < 9000)**: direct placement
-- **Placeholders (ID 9000-9999)**: reserved band for the per-faction stand-ins (`/src/lib/characters/placeholder.ts`); placed directly, and copies of one id may repeat within a team
-- **Companions (ID 10000-99999)**: settled per main: each main is placed (its skill spawns the companions), then those companions are repositioned onto their saved hexes before the next main is placed, so a spawned companion cannot squat on a tile a later main needs
-- **Phantimals (ID 100000-199999)**: serialized separately in the `s` section by band-local ID (a phantimal as its 4-bit local ID, a companion it spawned as `N * 10000 + L`); restore reuses the main/companion split with the phantimal placement gates
-- **Synergy-band units (ID 200000-299999)**: serialized in the `y` section by their local ID (the 200000 offset stripped); locals mirror the `c` band, so restore reuses the same main/companion split. The `y` loop runs after `c` and before phantimals, so a phantimal whose faction requirement depends on the synergy hero still qualifies, and before `seedPhantimalBaseline()` so a bulk restore never reads as a qualifying transition
-- **Crafted locals**: a phantimal- or synergy-band value inside `c` or `y` is dropped (the JSON codec has no validation pass), since `200050 % 10000` would otherwise match hero 50's companions
+An id stays fixed while its mode or map exists, since reassigning one that live data still carries would silently re-route those links. A retired id goes through a conversion window: a temporary migration converts it for as long as the migration lives, and the id is free once it is deleted. Seasonal preset maps rotate the same way. Id 4 belongs to the retired `5v5sl` mode until the shim is gone.
 
-Both restore paths end with `grids.deriveSynergy()`: the Syn affordance is never serialized, so it is re-derived from whether any restored board holds a synergy hero.
+## Reading a link
 
-## Multi-board state (JSON interchange)
+Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena accepts only mode `arena`, so a Teams link pasted there fails cleanly instead of rendering one board. The Teams page accepts team modes and falls back to the saved slot for anything else ([Teams](./TEAMS.md) owns that sequence). `/share` renders either kind as it is, and its Edit action reopens the same payload on `/` or `/teams`. A link that fails to decode counts as absent, so a bad link can never overwrite an autosave.
 
-`MultiGridState` is `{ boards, active?, d?, mode?, season? }`. Each board record is a `BoardState` `{t, c, s, y, u, a, m}`: the single-board `GridState` plus `m`, the board's map key. This is the format of the saved-team library, the per-mode autosave slots, and backup files.
+Display flags travel with every link, and a `?g=` restore applies them, since showing the sharer's view is the reason for a link. Multi-board restores report `hasDisplayFlags`, so a payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
 
-- **Serialize**: `serializeMultiGridState(boards, activeId, displayFlags, mode)` → `MultiGridState`; `encodeMultiGridStateToUrl(state)` → url-safe base64 JSON, the `data` payload of slots, saved teams, and exports
-- **`mode`**: always written by the serializer; a payload without one, or carrying a mode that contradicts the board count, resolves its mode from the count via `resolveTeamMode` (`/src/lib/teams/modes.ts`): the smallest fitting mode. A team type is never written: it is derived from the boards' `m` keys (see [Teams](./TEAMS.md), Team Modes and Types)
-- **`season`**: the content pool the snapshot was built from (`/src/lib/seasonal.ts`), always written by the serializer and preserved (never re-stamped) by canonicalization. An invalid value sanitizes away, and an absent one means no provenance (readers treat the payload as current-pool content). It drives the retired-seasonal masking and ingress strip documented in [Seasonal Content](./SEASONAL.md); binary links never carry it. Pre-field payloads are stamped season 7 by the temporary shim while it lives; there is no permanent default, per the shims-are-always-temporary policy
-- **Restore**: `restoreMultiFromDecodedState` (shared by the JSON wrapper and ShareView's binary links) caps boards at `MAX_GRID_COUNT` (5), passes the map keys into `setGridCount`, then applies each board in order as above. After all boards, `grids.dedupeCharacters()` repairs page-wide hero uniqueness that per-board validation cannot see
-- **Display flags**: the restore result reports `hasDisplayFlags`, so payloads without a `d` field (canonical saved-team data) apply board content without touching the viewer's toggles. Callers decide whether to honor a present `d`: a `?g=` link applies every flag (sharing the sharer's exact view is the point of a link), while Teams slot and saved-team restores ignore it entirely, since view toggles are device-level preferences (`stargazer.teams.display`)
-- **Teams ingress**: link, slot, and saved-team loads shape-normalize every payload against its mode via `normalizeTeamPayload`, which also strips `y` from modes without `allowSynergy`: a crafted synergy section on a multi-board mode would otherwise bypass the page-wide duplicate repair, since its ids differ from the base hero's. `/share` stays lenient and renders payloads as-is
-- **Canonical form**: the same encoding stripped of viewer state (`active` and `d`, boards rebuilt in `BOARD_CONTENT_KEYS` order, `u` rows normalized) is the payload of saved teams; see [Teams](./TEAMS.md). A saved team's `data` string is interchange data, not a link: sharing it goes through export files or the Copy Link action, which re-encodes it as binary
+The temporary shim in `src/utils/upgradeMigration.ts` catches what strict decoding rejects. `decodeLegacyLink` re-reads a link whose mode id is 4 (the retired `5v5sl` mode) as 5v5 on a patched copy of its bytes, then tries pre-binary JSON Teams links, then a frozen copy of the previous binary decoder, and converts each to the current shape. Two startup passes in the same file rewrite stored values, each under its own marker. `runUpgradeStoragePass` converts the library records, the mode slots and the Arena autosave to the current formats. `runModeStoragePass` moves the retired `5v5sl` slot into the 5v5 slot when it was the last-used mode, rewrites library records, and drops the old key. The whole file is meant to be deleted on one date, and its header holds the removal steps.
 
-Adding a section is forward-compatible for **rendering** JSON: an old client ignores the unknown key and decodes everything else. It is not compatible for **persisting**: an old client that imports a team export or re-saves a loaded team canonicalizes through its own `BOARD_CONTENT_KEYS` and permanently drops sections it doesn't know. Binary links have no such leniency: an old client rejects a link whose bitmap sets a bit it doesn't know, by design.
+## Restoring a board
 
-## Related Documentation
+`applyGridState` (`src/stores/urlState.ts`) first picks the map. A payload without `m` (Arena links and the autosave) adopts the preset its tiles reproduce, found by `findMapByTiles`, and otherwise every tile resets. Multi-board restores build each board on `resolveBoardMap`, the same rule canonicalization uses. It then restores in this order, each step for a reason:
 
-- [`/docs/architecture/TEAMS.md`](./TEAMS.md) - Per-mode slots, the saved-team library, canonical data and the restore sequences
-- [`/docs/architecture/SEASONAL.md`](./SEASONAL.md) - Season stamps, retired content masking and the ingress strip
-- [`/docs/architecture/GRID.md`](./GRID.md) - Unit id namespaces, companions, the multi-board store
+1. Tiles.
+2. Characters. Each main is placed (its skill spawns its companions), and those companions move to their saved hexes before the next main, so a spawned companion never takes a tile a later main needs.
+3. Synergy units, with the same main and companion handling. They come before phantimals so a phantimal whose faction count depends on the synergy hero still qualifies.
+4. Upgrade attributes, then artifacts.
+5. Phantimals and their companions, through the phantimal placement checks.
+6. `seedPhantimalBaseline()`, so the bulk restore does not look like a team starting to qualify.
+
+A phantimal-band or synergy-band value found inside `c` or `y` is dropped. The JSON codec has no validation pass, and `200050 % 10000` would otherwise match hero 50's companions.
+
+A multi-board restore caps the boards at `MAX_GRID_COUNT` (5) and then runs `grids.dedupeCharacters()`, because per-board checks cannot see the same hero on one team across two boards. Every restore ends with `grids.deriveSynergy()`, since the Syn toggle is never serialized.
+
+## JSON interchange format
+
+The payload is url-safe base64 (the same alphabet as links, no padding) of UTF-8 JSON:
+
+| Field    | Holds                                                                           |
+| -------- | ------------------------------------------------------------------------------- |
+| `boards` | one object per board: sections `t`, `c`, `s`, `y`, `u`, `a` as above, plus `m`  |
+| `active` | the active board index, omitted when 0                                          |
+| `d`      | the display flags byte, absent from canonical saved-team data                   |
+| `mode`   | the team mode key                                                               |
+| `season` | the season the content came from, 0 to 9999 ([Seasonal Content](./SEASONAL.md)) |
+
+`m` is the board's map key. `t` lists only tiles whose state differs from the default, and `u` rows are sorted with default values dropped. The serializer always writes `season`, and canonicalization keeps it instead of re-stamping. An absent `season` means no provenance, so readers treat the content as current. `decodeMultiGridStateFromUrl` rejects a payload unless every board is a plain object whose sections have these shapes, and it drops an invalid `season`. A payload with no mode, or a mode that disagrees with its board count, resolves to the smallest mode that fits (`resolveTeamMode`). Team types are never written: they are derived from the maps. The canonical form used by saved teams drops `active` and `d`, writes board keys in `BOARD_CONTENT_KEYS` order and normalizes `u` rows ([Teams](./TEAMS.md)). A saved team's data is interchange JSON, not a link: sharing goes through an export file or Copy Link, which re-encodes it as binary (`encodeMultiGridStateToLinkUrl`).
+
+Adding a section is forward-compatible for rendering: an older client ignores the unknown key and shows the rest. It is not compatible for saving. An older client that imports an export or re-saves a loaded team canonicalizes through its own `BOARD_CONTENT_KEYS` and drops the new section for good. Binary links have no such leniency: an older client rejects a bitmap bit it does not know.
+
+## Related documentation
+
+- [Teams](./TEAMS.md): mode slots, the saved-team library, canonical data and restore sequences
+- [Seasonal Content](./SEASONAL.md): season stamps and what loading strips
+- [Grid & Characters](./GRID.md): unit id ranges, companions and the multi-board store

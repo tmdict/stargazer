@@ -1,172 +1,64 @@
 # Getting Started
 
-## Prerequisites
-
-- **Node.js 22+** - [Download](https://nodejs.org/)
-- **Git** - [Download](https://git-scm.com/)
-- **VS Code** (recommended) with Volar extension
-
 ## Setup
 
-```bash
+You need Node.js with npm, and Git.
+
+```sh
 git clone <repository-url>
 cd stargazer
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173 in your browser.
+Then open http://localhost:5173.
 
 ## Commands
 
-```bash
-npm run dev         # Development server
-npm run build       # Production build (SSG - pre-renders content pages)
-npm run build:spa   # Traditional SPA build (no pre-rendering)
-npm run preview     # Preview production build
-npm run type-check  # TypeScript validation
-npm run format      # Code formatting (Prettier)
-npm run lint        # ESLint checks
-npm run lint:fix    # ESLint with auto-fix
-npm run test        # Run all tests
-npm run test:unit   # Unit tests only
-npm run test:it     # Integration tests only
-npm run test:watch  # Run tests in watch mode
-npm run prep        # format + type-check + lint + test
-npm run import:seasonal  # Regenerate seasonal data/locales (needs the data feed, see below)
-npm run check:import     # Run the match-import readers over a folder of screenshots
+```sh
+npm run dev           # development server (SPA, hot reload)
+npm run build         # type-check plus the pre-rendered production build
+npm run build:ssg     # the pre-rendered build alone
+npm run build:spa     # type-check plus a plain SPA build, no pre-rendering
+npm run preview       # serve the last build
+npm run prep          # format, type-check, lint and test: run before committing
+npm run format        # Prettier over src/, docs/ and tests/
+npm run lint          # ESLint (lint:fix to auto-fix)
+npm run type-check    # vue-tsc
+npm run test          # all tests (test:unit, test:it, test:watch)
+npm run import:seasonal  # skills, charms, artifacts, phantimals from the data feed
+npm run import:skills    # skill text only (also import:charms, :artifacts, :phantimals)
+npm run check:import     # run the screenshot-import readers over a folder of images
 ```
 
-Always run `npm run prep` (or at least `lint` and `type-check`) before committing.
+The importers read an upstream data feed that is not part of this repo; see [Seasonal Content](./architecture/SEASONAL.md).
 
-## Build Modes
+## Common tasks
 
-The application supports two build modes:
+### Adding a character
 
-- **SSG Mode** (`npm run build`): Pre-renders content pages at build time for SEO and performance. The interactive game remains client-side.
-- **SPA Mode** (`npm run build:spa`): Traditional single-page application without pre-rendering.
+1. Add `src/data/character/<name>.json` and the portrait `src/assets/images/character/<name>.png` (converted to WebP at build time).
+2. Add the display names in `src/locales/character/<name>.json`.
+3. Run `npm run import:skills` to bring in the skill text for every language.
 
-Development always runs in SPA mode for hot module replacement.
+The roster, skill pages and search pick the character up from those files.
 
-## Project Structure
+### Adding an arena map
 
-```
-├── src/                # Source code
-│   ├── lib/            # Domain logic (framework-agnostic)
-│   │   ├── types/      # Type definitions
-│   │   ├── characters/ # Placement, companions, synergy, phantimals
-│   │   ├── skills/     # Skill implementations
-│   │   ├── teams/      # Team modes, saved-team records, previews, backup files
-│   │   └── maps.ts     # Arena map registry (parses data/arena/*.json)
-│   ├── stores/         # Pinia state management
-│   ├── components/     # Vue UI components
-│   ├── content/        # Content components (localized, pre-rendered)
-│   ├── composables/    # Vue composition functions
-│   ├── directives/     # Custom Vue directives
-│   ├── utils/          # Helper utilities
-│   ├── views/          # Page-level components
-│   ├── router/         # Vue Router configuration
-│   ├── data/           # Static JSON data (arena, character, artifact, seasonal)
-│   ├── locales/        # i18n translations
-│   ├── assets/         # Images and styles
-│   ├── styles/         # Global CSS styles
-│   ├── main.ts         # SPA entry point
-│   └── main.ssg.ts     # SSG entry point (pre-rendering)
-├── scripts/            # Seasonal data importers and the match-import reader check
-└── tests/
-    ├── unit/           # Mirrors src/ (lib, stores, composables, utils, skills, ...)
-    └── integration/
-```
+Add `src/data/arena/<key>.json`; `src/lib/maps.ts` finds it by file name. A map that team links should be able to name also needs an id in `MAP_WIRE_IDS` (`src/lib/teams/wire.ts`); a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` ([Teams](./architecture/TEAMS.md)).
 
-## Architecture
+### Changing a placement rule
 
-- **UI Layer** (`components/`): Vue 3 components with Composition API
-- **Composables** (`composables/`): Shared reactive state and Vue logic
-- **State Layer** (`stores/`): Reactive wrappers using Pinia
-- **Domain Layer** (`lib/`): Pure TypeScript, no framework dependencies
-- **Dependency Flow**: Components → Composables → Stores → Domain (one-way)
+Placement, moves, swaps and removal live in `src/lib/characters/` and run inside `executeTransaction`, so a failed step undoes the earlier ones ([Grid](./architecture/GRID.md)).
 
-See [Architecture Overview](./ARCHITECTURE.md) for details.
+### A new season
 
-## Common Tasks
+Follow the three-phase cutover in [Seasonal Content](./architecture/SEASONAL.md). Seasonal icons load from an image host that must send CORS headers, because the image export reads them into a canvas.
 
-### Sharing a Grid
+### Styles
 
-1. Set up your grid with characters and settings
-2. Click the "Link" button in grid controls
-3. The share URL is copied to clipboard and you're redirected to the Share page
-4. Share the URL with others - they'll see a read-only view of your exact grid setup
+Component styles are scoped in each `.vue` file, global styles are in `src/styles/`, and tile-state colors are in `src/utils/tileStateFormatting.ts`.
 
-The Teams page shares the same way for all of its boards; see [TEAMS.md](./architecture/TEAMS.md).
+## Documentation
 
-### Adding a Character
-
-1. Add JSON: `src/data/character/[name].json`
-2. Add image: `src/assets/images/character/[name].png` (vite-imagetools converts to WebP at build time)
-3. Character automatically appears in roster
-
-### Updating Seasonal Content (Artifacts / Phantimals / Charms)
-
-Seasonal text is sourced from an upstream data feed
-(`<locale>/{artifacts,phantimals,charms}.json`) via the importers, which need a
-local or remote copy of that feed; it is not part of this repo. See
-[SEASONAL.md](./architecture/SEASONAL.md) for the full architecture and the
-ownership rule (scripts own feed-derivable text, humans own judgment).
-
-- **Data (hand-curated):** pre-season artifacts in `src/data/artifact/`,
-  seasonal artifacts in `src/data/seasonal/artifact/`, phantimals in
-  `src/data/seasonal/phantimal/`. `name` is the slug (artifact name minus
-  " Spell"); artifact `id` must be globally unique (URL serialization keys on
-  it); stat keys map to `ArtifactStatKey` (`src/lib/types/artifact.ts`). The
-  charm map `src/data/seasonal/charm/charms.json` is importer-generated.
-- **Locales:** display names are hand-curated (`src/locales/artifact/` and
-  `src/locales/seasonal/artifact/`); effect text, phantimal content, and
-  charm text are importer-generated.
-- **Icons:** pre-season artifacts ship local images; seasonal artifacts and
-  phantimals load **remotely** from an image host, at
-  `seasonal/{artifact,phantimal}/<name>.webp` (`utils/artifactImage.ts`). That
-  host must send the CORS header the `crossorigin="anonymous"` consumers
-  require.
-- **Each new season:** update the hand-curated structural/name files, then run
-  `npm run import:seasonal` against a rebuilt feed. The importers generate all
-  text, lint the hand-curated files against the feed, and prune retired
-  entries.
-
-### Adding an Arena Map
-
-Add `src/data/arena/<key>.json`; `src/lib/maps.ts` discovers it by filename. The
-per-board map lists of the team types (Supreme League, Guild Duel) are the
-`TEAM_VARIANTS` rows in `src/lib/teams/modes.ts`; editing one resets nothing (see
-[TEAMS.md](./architecture/TEAMS.md), Team Modes and Types).
-
-### Modifying Grid Logic
-
-Edit `src/lib/grid.ts` - ensure transaction safety for complex operations.
-
-### Changing Styles
-
-- Component styles: `<style scoped>` blocks
-- Global styles: `src/styles/`
-- Tile state colors: `src/utils/tileStateFormatting.ts`
-
-## Troubleshooting
-
-**Clean install:** Delete `node_modules` and `package-lock.json`, then `npm install`
-
-**Clear Vite cache:** Delete `node_modules/.vite`
-
-**Type errors:** Check imports have proper extensions and types are exported correctly.
-
-**Build failures:** Run `type-check` first to identify issues.
-
-## Contributing Guidelines
-
-- Follow existing patterns and TypeScript best practices
-- Test manually before committing
-- Keep commits focused and descriptive
-- Update architecture docs for major changes
-
-## Resources
-
-- [Architecture Docs](./ARCHITECTURE.md)
-- GitHub Issues for bug reports
+Architecture docs follow [the style guide](./architecture/STYLE_GUIDE.md). Update the relevant doc when a change alters how a system works, and check every name it mentions against the code.

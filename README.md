@@ -52,23 +52,10 @@ See [Contributing](./docs/CONTRIBUTING.md) for all available commands.
 
 ## Documentation
 
-**Core:**
+- [Getting Started](./docs/CONTRIBUTING.md) - Setup, commands, common tasks
+- [Architecture](./docs/ARCHITECTURE.md) - How the app fits together
 
-- [Getting Started](./docs/CONTRIBUTING.md) - Setup guide
-- [Architecture](./docs/ARCHITECTURE.md) - System design
-
-**Systems:**
-
-- [Grid & Characters](./docs/architecture/GRID.md)
-- [Teams](./docs/architecture/TEAMS.md)
-- [Team Import](./docs/architecture/IMPORT_TEAM.md)
-- [Seasonal Content](./docs/architecture/SEASONAL.md)
-- [Skills](./docs/architecture/SKILLS.md)
-- [Pathfinding](./docs/architecture/PATHFINDING.md)
-- [Drag & Drop](./docs/architecture/DRAG_AND_DROP.md)
-- [Event System](./docs/architecture/EVENT_SYSTEM.md)
-- [Map Editor](./docs/architecture/MAP_EDITOR.md)
-- [URL Serialization](./docs/architecture/URL_SERIALIZATION.md)
+Each system has its own doc in [`docs/architecture/`](./docs/architecture/); [AGENTS.md](./AGENTS.md) lists them all.
 
 ## Contributing
 
