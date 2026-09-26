@@ -2,7 +2,12 @@ import { readonly, ref } from 'vue'
 import { defineStore } from 'pinia'
 
 import { isCompanionUnitId, toBaseHeroId } from '@/lib/characters/character'
-import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
+import {
+  inPhantimalBand,
+  isPhantimalId,
+  phantimalOwnerId,
+  toLocalPhantimalId,
+} from '@/lib/characters/phantimal'
 import { getCharacterSkill } from '@/lib/skills/skill'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -65,9 +70,14 @@ export const useGameDataStore = defineStore('gameData', () => {
   }
 
   const getCharacterRange = (characterId: number): number => {
-    // Phantimals carry their own range in data; fall back to melee if missing.
-    if (isPhantimalId(characterId)) {
-      return getPhantimalById(characterId)?.range ?? 1
+    // Phantimals carry their own range in data (a companion falls back to its
+    // owner's); melee if missing.
+    if (inPhantimalBand(characterId)) {
+      const ownerId = phantimalOwnerId(characterId)
+      const companionRange = isPhantimalId(characterId)
+        ? undefined
+        : getCharacterSkill(ownerId)?.companionRange
+      return companionRange ?? getPhantimalById(ownerId)?.range ?? 1
     }
     const baseId = toBaseHeroId(characterId)
     if (isCompanionUnitId(characterId)) {
@@ -81,10 +91,18 @@ export const useGameDataStore = defineStore('gameData', () => {
     return characters.value.find((char) => char.id === characterId)
   }
 
+  // Slug of a phantimal-band unit, which names its remote portrait: the
+  // phantimal's own, or for a companion the owner skill's companion image
+  // (falling back to the owner's portrait).
+  const getPhantimalUnitSlug = (unitId: number): string | undefined => {
+    const ownerId = phantimalOwnerId(unitId)
+    const ownerName = getPhantimalById(ownerId)?.name
+    if (isPhantimalId(unitId) || ownerName === undefined) return ownerName
+    return getCharacterSkill(ownerId)?.companionImageModifier ?? ownerName
+  }
+
   const getCharacterNameById = (characterId: number): string | undefined => {
-    if (isPhantimalId(characterId)) {
-      return getPhantimalById(characterId)?.name
-    }
+    if (inPhantimalBand(characterId)) return getPhantimalUnitSlug(characterId)
     return getCharacterById(toBaseHeroId(characterId))?.name
   }
 
@@ -92,6 +110,7 @@ export const useGameDataStore = defineStore('gameData', () => {
   // companion image when one is defined (e.g. Zanie's turret), otherwise its
   // main hero's portrait, matching what the live grid renders.
   const getCharacterImageNameById = (characterId: number): string | undefined => {
+    if (inPhantimalBand(characterId)) return getPhantimalUnitSlug(characterId)
     if (isCompanionUnitId(characterId)) {
       const custom = getCharacterSkill(toBaseHeroId(characterId))?.companionImageModifier
       if (custom) return custom
@@ -109,17 +128,24 @@ export const useGameDataStore = defineStore('gameData', () => {
     return phantimals.value.find((phantimal) => phantimal.id === localId)
   }
 
+  // Whether a phantimal-band unit's seasonal skill targeting is switched on in
+  // its phantimal's data file (a companion answers for its owner).
+  const hasSeasonalTargeting = (unitId: number): boolean =>
+    inPhantimalBand(unitId) && getPhantimalById(phantimalOwnerId(unitId))?.targeting === true
+
   // Resolves a grid unit's faction by ID, mapping companions and synergy copies
-  // to their base hero and phantimals to their own faction.
+  // to their base hero and phantimal-band units to their phantimal's faction.
   const getCharacterFaction = (characterId: number): string | undefined => {
-    if (isPhantimalId(characterId)) return getPhantimalById(characterId)?.faction
+    if (inPhantimalBand(characterId)) {
+      return getPhantimalById(phantimalOwnerId(characterId))?.faction
+    }
     return getCharacterById(toBaseHeroId(characterId))?.faction
   }
 
   // Resolves a grid unit's class by ID, mapping companions and synergy copies
-  // to their base hero. Phantimals carry no class.
+  // to their base hero. Phantimal-band units carry no class.
   const getCharacterClass = (characterId: number): string | undefined => {
-    if (isPhantimalId(characterId)) return undefined
+    if (inPhantimalBand(characterId)) return undefined
     return getCharacterById(toBaseHeroId(characterId))?.class
   }
 
@@ -162,6 +188,8 @@ export const useGameDataStore = defineStore('gameData', () => {
     getCharacterImageNameById,
     getArtifactById,
     getPhantimalById,
+    getPhantimalUnitSlug,
+    hasSeasonalTargeting,
     getCharacterFaction,
     getCharacterClass,
     getCharacterImage,

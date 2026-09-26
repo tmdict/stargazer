@@ -12,12 +12,13 @@ export type ArtifactStatKey =
   | 'def'
   | 'ranged-def'
   | 'life-drain'
+  | 'crit'
 
 export type ArtifactStats = Partial<Record<ArtifactStatKey, number>>
 
 // Stats whose values render as percentages rather than flat numbers.
-// `def` parallels phys-def/magic-def (% bonus); ranged-def and life-drain are
-// point-based stats (each point ≈ 1% effect) shown as flat numbers.
+// `def` parallels phys-def/magic-def (% bonus); ranged-def, life-drain and crit
+// are point-based stats (each point ≈ 1% effect) shown as flat numbers.
 export const PERCENT_STAT_KEYS: ReadonlySet<ArtifactStatKey> = new Set([
   'atk',
   'hp',

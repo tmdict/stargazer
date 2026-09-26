@@ -8,7 +8,7 @@ import { useModalLocale } from '@/composables/useModalLocale'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
 import { formatArtifactStats } from '@/utils/artifactStats'
-import { loadArtifactLocales, loadGameLocales } from '@/utils/dataLoader'
+import { loadAppLocales, loadArtifactLocales, loadGameLocales } from '@/utils/dataLoader'
 import { formatDisplayName } from '@/utils/nameFormatting'
 
 interface Props {
@@ -44,6 +44,11 @@ const effectLevels = computed(() =>
     description: effect[displayLocale.value] || effect.en,
   })),
 )
+
+// A season can ship before the upstream feed carries its text.
+const pendingLabel = computed(
+  () => loadAppLocales()['skill-details-pending']?.[displayLocale.value] ?? '',
+)
 </script>
 
 <template>
@@ -60,7 +65,8 @@ const effectLevels = computed(() =>
       </span>
     </div>
 
-    <SkillSection :levels="effectLevels" />
+    <SkillSection v-if="effectLevels.length" :levels="effectLevels" />
+    <p v-else class="details-pending">{{ pendingLabel }}</p>
   </BaseModal>
 </template>
 
@@ -85,5 +91,11 @@ const effectLevels = computed(() =>
 .stat-chip strong {
   color: #fff;
   font-weight: 600;
+}
+
+.details-pending {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
 }
 </style>
