@@ -1,0 +1,10 @@
+{
+  "id": 10,
+  "name": "meteorfall",
+  "season": 8,
+  "stats": {
+    "atk": 19.7,
+    "def": 46.1,
+    "hp": 15.4
+  }
+}

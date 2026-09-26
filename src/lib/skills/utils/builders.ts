@@ -253,6 +253,9 @@ interface CompanionSkillConfig {
   characterId: number
   /** Number of companions to spawn; each raises team capacity by one. */
   count?: number
+  /** False for an owner that holds no team slot (a phantimal): its companions
+   * hold none either, so capacity stays put. */
+  raisesCapacity?: boolean
   colorModifier?: string
   companionColorModifier?: string
   companionImageModifier?: string
@@ -273,6 +276,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
   const {
     id,
     count = 1,
+    raisesCapacity = true,
     colorModifier,
     companionColorModifier,
     companionImageModifier,
@@ -305,7 +309,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
       }
 
       const baseSize = getMaxTeamSize(grid, team)
-      if (!setMaxTeamSize(grid, team, baseSize + count)) {
+      if (raisesCapacity && !setMaxTeamSize(grid, team, baseSize + count)) {
         console.warn(`${id}: failed to increase team size for ${team}`)
         return // Skip companion placement
       }
@@ -315,7 +319,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
           const hexId = findCharacterHex(grid, placedId, team)
           if (hexId !== null) performRemove(grid, hexId)
         }
-        setMaxTeamSize(grid, team, baseSize)
+        if (raisesCapacity) setMaxTeamSize(grid, team, baseSize)
       }
 
       const placedCompanions: number[] = []
@@ -362,6 +366,7 @@ export function createCompanionSkill(config: CompanionSkillConfig): Skill {
       }
 
       clearCompanionLinks(grid, characterId, team)
+      if (!raisesCapacity) return
 
       // Restore capacity, clamped to the base size
       const currentSize = getMaxTeamSize(grid, team)
