@@ -2,6 +2,6 @@
 # modules); formatting them would churn against the importer's output.
 src/locales/skill/
 # Auto-managed by scripts/import-charms.ts; same churn rule.
-src/data/seasonal/charm/
+src/data/seasonal/charm/charms.json
 # Generated outside this repo; preserve the exported template verbatim.
 src/content/pvp/
