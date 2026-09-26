@@ -1,4 +1,5 @@
 import { attrDefault, clampAttr, compareAttrRows, isKnownAttrId } from '@/lib/characters/attributes'
+import { joinPhantimalBandLocal, splitPhantimalBandLocal } from '@/lib/characters/phantimal'
 import { mapKeyByWireId, mapWireIdByKey, wireModeById, wireModeByKey } from '@/lib/teams/wire'
 import {
   packDisplayFlags,
@@ -28,8 +29,8 @@ import {
  * - Map id (6 bits): wire registry; 0 = none (arena boards, whose serialized
  *   tiles are authoritative).
  * - Section bitmap (8 bits): bit 0 tiles · 1 characters · 2 artifacts ·
- *   3 phantimals · 4 synergy · 5 upgrades; bits 6-7 spare for future
- *   sections. Sections are written in bit order.
+ *   3 phantimals · 4 synergy · 5 upgrades · 6 phantimal companions; bit 7
+ *   spare for a future section. Sections are written in bit order.
  *
  * Sections:
  * - tiles:      count (6) + 9 bits/entry  — hexId 6 · state 3
@@ -39,6 +40,13 @@ import {
  * - synergy:    count (4) + 23 bits/entry — hexId 6 · local id 16 · team 1
  * - upgrades:   count (6) + 27 bits/entry — team 1 · characterId 16 (0 =
  *   team-scope sentinel) · attrId 6 · value 4
+ * - phantimal companions: count (4) + 13 bits/entry: hexId 6 · owner local
+ *   id 4 · companion index N 2 · team 1
+ *
+ * GridState keeps phantimal companions in `s` as band-local values
+ * (N * 10000 + L); the encoder splits them into their own section and the
+ * decoder merges them back, so the phantimal entry layout stays fixed and a
+ * payload without companions leaves bit 6 unset.
  *
  * The 16-bit character field also carries companion ids (N * 10000 + base,
  * see grid.ts), which caps companion index N at 6 for base ids below 5536.
@@ -72,6 +80,8 @@ const ARTIFACT_BITS = 6 // Supports artifact IDs 0-63 (0 = null)
 const MAX_ARTIFACT_ID = (1 << ARTIFACT_BITS) - 1 // 63
 const PHANTIMAL_ID_BITS = 4 // Supports local phantimal IDs 1-15
 const MAX_PHANTIMAL_ID = (1 << PHANTIMAL_ID_BITS) - 1 // 15
+const COMPANION_INDEX_BITS = 2 // Supports phantimal companion index N 1-3
+const MAX_COMPANION_INDEX = (1 << COMPANION_INDEX_BITS) - 1 // 3
 const TILE_COUNT_BITS = 6 // A 45-hex board keeps every count under 63
 const MAX_TILE_COUNT = (1 << TILE_COUNT_BITS) - 1 // 63
 const CHARACTER_COUNT_BITS = 6
@@ -91,13 +101,15 @@ const SECTION_ARTIFACTS = 0x04
 const SECTION_PHANTIMALS = 0x08
 const SECTION_SYNERGY = 0x10
 const SECTION_UPGRADES = 0x20
+const SECTION_PHANTIMAL_COMPANIONS = 0x40
 const KNOWN_SECTIONS =
   SECTION_TILES |
   SECTION_CHARACTERS |
   SECTION_ARTIFACTS |
   SECTION_PHANTIMALS |
   SECTION_SYNERGY |
-  SECTION_UPGRADES
+  SECTION_UPGRADES |
+  SECTION_PHANTIMAL_COMPANIONS
 
 /* A decoded (or encodable) link: the envelope plus one content board per the
  * mode's board count. `mode` is the wire registry key — 'arena' or a team
@@ -126,6 +138,13 @@ const inRange = (value: unknown, min: number, max: number): boolean =>
   typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
 
 const isTeam = (value: unknown): boolean => value === 1 || value === 2
+
+// A phantimal (L) or one of its companions (N * 10000 + L).
+const isPhantimalBandLocal = (value: unknown): boolean => {
+  if (typeof value !== 'number') return false
+  const { ownerLocal, index } = splitPhantimalBandLocal(value)
+  return inRange(index, 0, MAX_COMPANION_INDEX) && inRange(ownerLocal, 1, MAX_PHANTIMAL_ID)
+}
 
 /* Filter a state down to entries the bit fields can carry exactly. Invalid
  * entries drop with a warning (never a throw), each list is capped at its
@@ -189,13 +208,15 @@ export function validateGridState(state: GridState): GridState {
     })
   }
 
+  // Capped at one section's count: phantimals plus companions stay far below
+  // it, and neither split section can then wrap.
   if (state.s && Array.isArray(state.s)) {
     const s = filterRows(
       state.s,
       'phantimal',
       MAX_PHANTIMAL_COUNT,
       ([hexId, localId, team]) =>
-        inRange(hexId, 1, 63) && inRange(localId, 1, MAX_PHANTIMAL_ID) && isTeam(team),
+        inRange(hexId, 1, 63) && isPhantimalBandLocal(localId) && isTeam(team),
     )
     if (s) validated.s = s
   }
@@ -333,13 +354,18 @@ function encodeBoard(writer: BitWriter, board: BoardState): void {
   }
   writer.writeBits(mapId, MAP_ID_BITS)
 
+  const isCompanionRow = (entry: number[]): boolean => splitPhantimalBandLocal(entry[1]!).index > 0
+  const phantimals = (state.s ?? []).filter((entry) => !isCompanionRow(entry))
+  const companions = (state.s ?? []).filter(isCompanionRow)
+
   let bitmap = 0
   if (state.t) bitmap |= SECTION_TILES
   if (state.c) bitmap |= SECTION_CHARACTERS
   if (state.a) bitmap |= SECTION_ARTIFACTS
-  if (state.s) bitmap |= SECTION_PHANTIMALS
+  if (phantimals.length) bitmap |= SECTION_PHANTIMALS
   if (state.y) bitmap |= SECTION_SYNERGY
   if (state.u) bitmap |= SECTION_UPGRADES
+  if (companions.length) bitmap |= SECTION_PHANTIMAL_COMPANIONS
   writer.writeBits(bitmap, SECTION_BITMAP_BITS)
 
   if (state.t) {
@@ -364,9 +390,9 @@ function encodeBoard(writer: BitWriter, board: BoardState): void {
     writer.writeBits(state.a[1] ?? 0, ARTIFACT_BITS)
   }
 
-  if (state.s) {
-    writer.writeBits(state.s.length, PHANTIMAL_COUNT_BITS)
-    for (const entry of state.s) {
+  if (phantimals.length) {
+    writer.writeBits(phantimals.length, PHANTIMAL_COUNT_BITS)
+    for (const entry of phantimals) {
       writer.writeBits(entry[0]!, HEX_ID_BITS)
       writer.writeBits(entry[1]!, PHANTIMAL_ID_BITS)
       writer.writeBits(entry[2]! - 1, TEAM_BITS)
@@ -389,6 +415,17 @@ function encodeBoard(writer: BitWriter, board: BoardState): void {
       writer.writeBits(entry[1]!, CHARACTER_ID_BITS)
       writer.writeBits(entry[2]!, ATTR_ID_BITS)
       writer.writeBits(entry[3]!, ATTR_VALUE_BITS)
+    }
+  }
+
+  if (companions.length) {
+    writer.writeBits(companions.length, PHANTIMAL_COUNT_BITS)
+    for (const entry of companions) {
+      writer.writeBits(entry[0]!, HEX_ID_BITS)
+      const { ownerLocal, index } = splitPhantimalBandLocal(entry[1]!)
+      writer.writeBits(ownerLocal, PHANTIMAL_ID_BITS)
+      writer.writeBits(index, COMPANION_INDEX_BITS)
+      writer.writeBits(entry[2]! - 1, TEAM_BITS)
     }
   }
 }
@@ -508,6 +545,20 @@ function decodeBoard(reader: BitReader): BoardState | null {
         reader.readBits(ATTR_ID_BITS),
         reader.readBits(ATTR_VALUE_BITS),
       ])
+    }
+  }
+
+  if (bitmap & SECTION_PHANTIMAL_COMPANIONS) {
+    const count = reader.readBits(PHANTIMAL_COUNT_BITS)
+    if (count === 0) return null
+    board.s ??= []
+    for (let i = 0; i < count; i++) {
+      const hexId = reader.readBits(HEX_ID_BITS)
+      const localId = reader.readBits(PHANTIMAL_ID_BITS)
+      const index = reader.readBits(COMPANION_INDEX_BITS)
+      // Index 0 is the phantimal itself, which only the phantimal section carries.
+      if (index === 0) return null
+      board.s.push([hexId, joinPhantimalBandLocal(localId, index), reader.readBits(TEAM_BITS) + 1])
     }
   }
 

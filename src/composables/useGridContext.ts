@@ -186,6 +186,7 @@ export function createGridContext(
     new SkillManager({
       factionOf: gameDataStore.getCharacterFaction,
       classOf: gameDataStore.getCharacterClass,
+      seasonalTargeting: gameDataStore.hasSeasonalTargeting,
     }),
   ) as SkillManager
   grid.skillManager = skillManager
@@ -257,7 +258,7 @@ export function createGridContext(
   const phantimalCanJoinTeam = (phantimalId: number, team: Team): boolean => {
     const phantimal = gameDataStore.getPhantimalById(phantimalId)
     if (!phantimal) return true
-    const factions = requiredFactions(phantimal.name, phantimal.faction)
+    const factions = requiredFactions(phantimal)
     const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
     return count >= PHANTIMAL_FACTION_REQUIREMENT
   }
@@ -265,7 +266,7 @@ export function createGridContext(
   const phantimalFactionCount = (phantimalId: number, team: Team): number => {
     const phantimal = gameDataStore.getPhantimalById(phantimalId)
     if (!phantimal) return 0
-    const factions = requiredFactions(phantimal.name, phantimal.faction)
+    const factions = requiredFactions(phantimal)
     return countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
   }
 
@@ -275,7 +276,7 @@ export function createGridContext(
   // the earlier-qualified one keeps its seat either way.
   const findQualifyingPhantimalId = (team: Team): number | null => {
     for (const phantimal of gameDataStore.phantimals) {
-      const factions = requiredFactions(phantimal.name, phantimal.faction)
+      const factions = requiredFactions(phantimal)
       const count = countTeamFaction(grid, team, factions, gameDataStore.getCharacterFaction)
       if (count >= PHANTIMAL_FACTION_REQUIREMENT) return toPhantimalId(phantimal.id)
     }

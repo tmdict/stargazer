@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { inPhantimalBand, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import {
   CURRENT_SEASON,
   hasRetiredSeasonal,
@@ -8,6 +9,11 @@ import {
   stripRetiredSeasonal,
   stripSeasonalBoard,
 } from '@/lib/seasonal'
+import { getRegisteredSkills } from '@/lib/skills/registry'
+
+// Side effect: registers every skill file, the seasonal ones included.
+import '@/lib/skills/skill'
+
 import { normalizeTeamPayload } from '@/lib/teams/modes'
 import { teamPreviewBoards } from '@/lib/teams/preview'
 import { canonicalTeamData, teamContentKey } from '@/lib/teams/savedTeam'
@@ -27,7 +33,7 @@ describe('seasonal', () => {
     // Pins the pool's season explicitly so a cutover is a deliberate edit here;
     // the shim's legacy stamp and the rotation pass's marker seed both assume
     // the pre-field pool was season 7.
-    expect(CURRENT_SEASON).toBe(7)
+    expect(CURRENT_SEASON).toBe(8)
   })
 
   it('classifies permanent vs seasonal artifact ids from the data', () => {
@@ -139,7 +145,7 @@ describe('season provenance across surfaces', () => {
     const board = teamPreviewBoards(stale)![0]!
     const phantimal = board.units.find((u) => u.hexId === 7)!
     expect(phantimal.retiredSeason).toBe(CURRENT_SEASON - 1)
-    expect(phantimal.phantimalId).toBeUndefined()
+    expect(phantimal.phantimalLocal).toBeUndefined()
     expect(board.artifacts.ally).toBe(1)
     expect(board.artifacts.enemy).toEqual({ retiredSeason: CURRENT_SEASON - 1 })
 
@@ -149,7 +155,7 @@ describe('season provenance across surfaces', () => {
       season: CURRENT_SEASON,
     })
     const currentBoard = teamPreviewBoards(current)![0]!
-    expect(currentBoard.units.find((u) => u.hexId === 7)!.phantimalId).toBe(2)
+    expect(currentBoard.units.find((u) => u.hexId === 7)!.phantimalLocal).toBe(2)
     expect(currentBoard.artifacts.enemy).toBe(14)
   })
 })
@@ -165,6 +171,21 @@ describe('season data contract', () => {
     for (const phantimal of loadPhantimals()) {
       expect(phantimal.season).toBe(CURRENT_SEASON)
     }
+  })
+
+  // Phantimal ids are reused each season, so a skill file left unreplaced at a
+  // cutover would run the outgoing phantimal's skill (a Spirit Mark, a
+  // companion) on the incoming one. Registrations are named phantimal-<slug>.
+  it('every phantimal skill is named for the phantimal its id holds', () => {
+    const nameByLocalId = new Map(loadPhantimals().map((p) => [p.id, p.name]))
+    const stale = getRegisteredSkills()
+      .filter((skill) => inPhantimalBand(skill.characterId))
+      .filter(
+        (skill) =>
+          skill.id !== `phantimal-${nameByLocalId.get(toLocalPhantimalId(skill.characterId))}`,
+      )
+      .map((skill) => skill.id)
+    expect(stale).toEqual([])
   })
 })
 

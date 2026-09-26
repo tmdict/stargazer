@@ -8,6 +8,8 @@ import { stubLocalStorage } from '../fixtures/storage'
 
 const SEASON_KEY = 'stargazer.season'
 const ARENA_KEY = 'stargazer.arena'
+// The seed runSeasonRotationPass uses for an absent or unreadable marker.
+const PRE_MARKER_SEASON = 7
 
 const staleArenaValue = (): string =>
   encodeGridStateToUrl({
@@ -38,13 +40,12 @@ describe('seasonRotation', () => {
     expect(storage.get(ARENA_KEY)).toBe(value)
   })
 
-  // An absent marker means the first stamped season, which is also the
-  // current one pre-cutover — a fresh device's autosave must NOT be stripped.
-  it('does nothing on a fresh device before any cutover', () => {
-    const value = staleArenaValue()
-    storage.set(ARENA_KEY, value)
-    expect(runSeasonRotationPass()).toBeNull()
-    expect(storage.get(ARENA_KEY)).toBe(value)
+  // An absent marker means the device last wrote arena data before the marker
+  // shipped, so its autosave holds the pre-marker season's content.
+  it('treats an absent marker as the pre-marker season', () => {
+    storage.set(ARENA_KEY, staleArenaValue())
+    expect(runSeasonRotationPass()).toBe(PRE_MARKER_SEASON)
+    expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
   })
 
   it('strips seasonal content from the autosave on a season flip', () => {
@@ -81,12 +82,10 @@ describe('seasonRotation', () => {
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
   })
 
-  it('treats a garbage marker as the first stamped season', () => {
+  it('treats a garbage marker as the pre-marker season', () => {
     storage.set(SEASON_KEY, 'banana')
-    const value = staleArenaValue()
-    storage.set(ARENA_KEY, value)
-    expect(runSeasonRotationPass()).toBeNull()
-    expect(storage.get(ARENA_KEY)).toBe(value)
+    storage.set(ARENA_KEY, staleArenaValue())
+    expect(runSeasonRotationPass()).toBe(PRE_MARKER_SEASON)
   })
 
   it('withholds the marker when the strip write fails, so it retries', () => {
@@ -106,15 +105,12 @@ describe('seasonRotation', () => {
   })
 
   // Number("") coerces to 0, an integer — a corrupted empty marker must fall
-  // back to the seed instead of reading as "season 0" and stripping current
-  // content.
-  it('treats an empty or coercible-garbage marker as the seed, not season 0', () => {
+  // back to the seed instead of reading as "season 0" (or 16, or 100).
+  it('treats an empty or coercible-garbage marker as the seed, not a coerced number', () => {
     for (const junk of ['', ' ', '0x10', '1e2']) {
       storage.set(SEASON_KEY, junk)
-      const value = staleArenaValue()
-      storage.set(ARENA_KEY, value)
-      expect(runSeasonRotationPass()).toBeNull()
-      expect(storage.get(ARENA_KEY)).toBe(value)
+      storage.set(ARENA_KEY, staleArenaValue())
+      expect(runSeasonRotationPass()).toBe(PRE_MARKER_SEASON)
     }
   })
 })

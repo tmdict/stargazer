@@ -1,0 +1,8 @@
+{
+  "id": 5,
+  "name": "wedge-of-matter",
+  "season": 8,
+  "range": 20,
+  "faction": "hypogean",
+  "qualifyingFactions": ["hypogean", "celestial"]
+}

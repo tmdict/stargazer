@@ -530,8 +530,10 @@ export const useGrids = defineStore('grids', () => {
         const ok =
           (hexId !== undefined && ctx.placePhantimal(hexId, board.phantimal.unitId, dest)) ||
           ctx.autoPlacePhantimal(board.phantimal.unitId, dest)
-        if (ok) placed++
-        else skipped++
+        if (ok) {
+          placed++
+          settleCompanions(ctx, board, board.phantimal.unitId)
+        } else skipped++
       }
       // Per-team artifact uniqueness spans boards; a crafted duplicate drops.
       if (board.artifact !== null && !isArtifactUsed(board.artifact, dest)) {

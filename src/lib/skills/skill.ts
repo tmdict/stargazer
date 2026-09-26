@@ -20,6 +20,8 @@ export { hasCompanionSkill, hasSkill }
 export interface SkillLookups {
   factionOf?: (characterId: number) => string | undefined
   classOf?: (characterId: number) => string | undefined
+  // Whether a phantimal's skill targeting is switched on in its data file.
+  seasonalTargeting?: (characterId: number) => boolean
 }
 
 // SkillContext defined here (not registry.ts) to avoid circular dep, as it references SkillManager

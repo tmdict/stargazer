@@ -25,7 +25,7 @@ export interface PreviewUnit {
   // only its season: the raw id is withheld so nothing can resolve it to the
   // current season's content that reuses it.
   characterId?: number
-  phantimalId?: number
+  phantimalLocal?: number // band-local: N * 10000 + L, N > 0 for a phantimal's companion
   retiredSeason?: number
 }
 
@@ -77,10 +77,10 @@ export function teamPreviewBoards(data: string): PreviewBoard[] | null {
       units.push({ hexId, team: team as Team, characterId })
     }
     for (const entry of board.s ?? []) {
-      const [hexId, phantimalId, team] = entry
-      if (hexId === undefined || phantimalId === undefined || team === undefined) continue
+      const [hexId, phantimalLocal, team] = entry
+      if (hexId === undefined || phantimalLocal === undefined || team === undefined) continue
       if (retiredSeason !== undefined) units.push({ hexId, team: team as Team, retiredSeason })
-      else units.push({ hexId, team: team as Team, phantimalId })
+      else units.push({ hexId, team: team as Team, phantimalLocal })
     }
     // Synergy-band locals reuse c's id space, so portraits, companion art, and
     // the search index handle them with the same logic as c entries.

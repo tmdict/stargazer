@@ -2,13 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { artifactHostHex, Grid } from '@/lib/grid'
-import { artifactTargetArrows } from '@/lib/skills/artifact'
+import { artifactTargetArrows, artifactTargetingRules } from '@/lib/skills/artifact'
 import { Team } from '@/lib/types/team'
+import { loadArtifacts } from '@/utils/dataLoader'
 import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 const ENLIGHTENING = 3
-const VANGUARD = 14
-const VALORSHIELD = 18
 // Awakening: no targeting rule.
 const AWAKENING = 1
 
@@ -54,23 +53,14 @@ describe('artifact targeting', () => {
       expect(arrow?.fromHex.equals(artifactHostHex(grid, team))).toBe(true)
     }
   })
+})
 
-  // Retire with the season's entries in src/lib/skills/artifact.ts.
-  describe('season 7', () => {
-    it('vanguard points at the frontmost unit of its slot team', () => {
-      expect(targetHexIds(grid, Team.ALLY, VANGUARD)).toEqual([20])
-      expect(targetHexIds(grid, Team.ENEMY, VANGUARD)).toEqual([30])
-    })
-
-    it('valorshield points at both ends of its slot team', () => {
-      expect(targetHexIds(grid, Team.ALLY, VALORSHIELD)).toEqual([20, 5])
-      expect(targetHexIds(grid, Team.ENEMY, VALORSHIELD)).toEqual([30, 40])
-    })
-
-    it('valorshield collapses to one arrow for a lone unit', () => {
-      removeFromTile(grid, 5)
-      removeFromTile(grid, 12)
-      expect(targetHexIds(grid, Team.ALLY, VALORSHIELD)).toEqual([20])
-    })
+describe('artifact targeting rules', () => {
+  // Seasonal ids are reused, so a rule left behind at a cutover would name the
+  // outgoing artifact while its id now holds the incoming one.
+  it('names the artifact each rule is keyed to', () => {
+    const nameById = new Map(loadArtifacts().map((artifact) => [artifact.id, artifact.name]))
+    const stale = artifactTargetingRules().filter((rule) => nameById.get(rule.id) !== rule.name)
+    expect(stale).toEqual([])
   })
 })

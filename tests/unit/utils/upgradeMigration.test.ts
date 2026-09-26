@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { canonicalTeamData, validateSavedTeam } from '@/lib/teams/savedTeam'
 import { parseImport } from '@/lib/teams/transfer'
@@ -432,7 +433,7 @@ describe('upgradeMigration composed with the season rotation pass', () => {
     expect(storage.get(ARENA_KEY)).toBe(
       encodeGridStateToUrl({ c: [[2, 100, Team.ALLY]], a: [1, null], u: [[Team.ALLY, 100, 1, 4]] }),
     )
-    expect(storage.get('stargazer.season')).toBe('7')
+    expect(storage.get('stargazer.season')).toBe(String(CURRENT_SEASON))
   })
 
   // If the u-pass write failed, the rotation pass converts AND strips in one

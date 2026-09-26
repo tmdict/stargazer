@@ -1,5 +1,7 @@
 /* Artifact targeting: the units an artifact in a team's slot acts on, drawn as
- * arrows from the slot's host cell.
+ * arrows from the slot's host cell. An artifact draws exactly when it has an
+ * entry here: adding its mechanic turns it on, deleting the entry at a cutover
+ * turns it off.
  *
  * Not a Skill: a Skill is owned by a placed unit and lives with its placement,
  * while an artifact is owned by board-level slot state and has no hex for the
@@ -11,7 +13,7 @@
 import { artifactHostHex, type Grid } from '../grid'
 import type { Hex } from '../hex'
 import type { Team } from '../types/team'
-import { frontmostUnit, rearmostUnit } from './utils/distance'
+import { rearmostUnit } from './utils/distance'
 import type { TargetCandidate } from './utils/targeting'
 
 // The units the artifact acts on, given the team whose slot holds it; a null
@@ -24,19 +26,22 @@ export interface ArtifactArrow {
   toHex: Hex
 }
 
-// Keyed by artifact id (src/data/artifact, src/data/seasonal/artifact).
-const ARTIFACT_TARGETING: Record<number, ArtifactTargeting> = {
+// Keyed by artifact id (src/data/artifact, src/data/seasonal/artifact). Each
+// entry names its artifact, and a test requires that name to match the data
+// file holding the id: seasonal ids are reused, so an entry left behind at a
+// cutover fails the test instead of drawing for the next season's artifact.
+const ARTIFACT_TARGETING: Record<number, { name: string; targets: ArtifactTargeting }> = {
   // Enlightening: buffs the rearmost ally.
-  3: (grid, team) => [rearmostUnit(grid, team)],
+  3: { name: 'enlightening', targets: (grid, team) => [rearmostUnit(grid, team)] },
 
-  /* Season 7. Delete these entries (and the season's cases in
-   * tests/unit/skills/artifact.test.ts) with the season's artifact data files:
-   * a retired id restored from an old URL still occupies its slot as a
-   * placeholder and would otherwise keep drawing arrows. */
-  // Vanguard: designates the frontmost ally as the vanguard.
-  14: (grid, team) => [frontmostUnit(grid, team)],
-  // Valorshield: shields the frontmost and rearmost allies.
-  18: (grid, team) => [frontmostUnit(grid, team), rearmostUnit(grid, team)],
+  /* Seasonal entries go below under a season comment, deleted (with the
+   * season's cases in tests/unit/skills/artifact.test.ts) along with the
+   * season's artifact data files. */
+}
+
+// Every rule's id and artifact name, for data consistency checks.
+export function artifactTargetingRules(): { id: number; name: string }[] {
+  return Object.entries(ARTIFACT_TARGETING).map(([id, { name }]) => ({ id: Number(id), name }))
 }
 
 export function artifactTargetArrows(
@@ -44,10 +49,10 @@ export function artifactTargetArrows(
   team: Team,
   artifactId: number | null,
 ): ArtifactArrow[] {
-  const targeting = artifactId === null ? undefined : ARTIFACT_TARGETING[artifactId]
-  if (!targeting) return []
+  const rule = artifactId === null ? undefined : ARTIFACT_TARGETING[artifactId]
+  if (!rule) return []
   const fromHex = artifactHostHex(grid, team)
   // Distinct hexes: a lone unit is both the frontmost and the rearmost pick.
-  const hexIds = new Set(targeting(grid, team).flatMap((pick) => (pick ? [pick.hexId] : [])))
+  const hexIds = new Set(rule.targets(grid, team).flatMap((pick) => (pick ? [pick.hexId] : [])))
   return [...hexIds].map((hexId) => ({ team, fromHex, toHex: grid.getHexById(hexId) }))
 }

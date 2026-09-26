@@ -23,6 +23,7 @@ import BoardThumbnail, {
   type ThumbnailArtifact,
   type ThumbnailUnit,
 } from '@/components/grid/BoardThumbnail.vue'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import {
   isStandardHero,
   lineupHeroKey,
@@ -60,9 +61,10 @@ const resolveImage = (unit: PreviewUnit): string | undefined => {
     const image = name ? gameData.getCharacterImage(name) : ''
     return image || undefined
   }
-  if (unit.phantimalId !== undefined) {
-    const name = gameData.getPhantimalById(unit.phantimalId)?.name
-    return name ? phantimalImageUrl(name) : undefined
+  if (unit.phantimalLocal !== undefined) {
+    // Band-local, so a phantimal's companion resolves too.
+    const slug = gameData.getPhantimalUnitSlug(toPhantimalId(unit.phantimalLocal))
+    return slug ? phantimalImageUrl(slug) : undefined
   }
   return undefined
 }
