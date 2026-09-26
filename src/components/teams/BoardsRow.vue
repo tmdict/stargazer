@@ -12,7 +12,7 @@ const { wrap, canWrap } = defineProps<{
 </script>
 
 <template>
-  <div v-scroll-chain.horizontal class="boards">
+  <div class="boards">
     <div class="boards-track" :class="{ wrap: wrap && canWrap }">
       <slot />
     </div>
@@ -27,8 +27,8 @@ const { wrap, canWrap } = defineProps<{
 .boards {
   display: flex;
   overflow-x: auto;
-  /* Keep horizontal overscroll in the row (the wheel handler contains the
-     vertical-wheel case; this covers native trackpad/shift-wheel scrolling). */
+  /* A trackpad swipe past the row's end stays in the row instead of triggering
+     the browser's back/forward gesture. */
   overscroll-behavior-x: contain;
   justify-content: safe center;
   margin-top: var(--spacing-lg);

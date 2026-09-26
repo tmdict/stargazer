@@ -207,7 +207,7 @@ describe('season 8', () => {
     expect(gameData.getPhantimalUnitSlug(WEDGE_OF_MATTER)).toBe('wedge-of-matter')
     expect(gameData.getPhantimalUnitSlug(WEDGE_OF_POWER)).toBe('wedge-of-power')
     expect(gameData.getCharacterRange(WEDGE_OF_POWER)).toBe(20)
-    expect(gameData.getCharacterFaction(WEDGE_OF_POWER)).toBe('hypogean')
+    expect(gameData.getCharacterFaction(WEDGE_OF_POWER)).toBe('celestial')
     // Targeting is off until the in-game unlock; the companion answers for its owner.
     expect(gameData.hasSeasonalTargeting(WEDGE_OF_MATTER)).toBe(false)
     expect(gameData.hasSeasonalTargeting(WEDGE_OF_POWER)).toBe(false)
