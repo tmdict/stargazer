@@ -2,6 +2,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { findCharacterHex, getAvailableTeamSize } from '@/lib/characters/character'
+import { addCompanionLink } from '@/lib/characters/companion'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { executePlaceCharacter } from '@/lib/characters/place'
@@ -9,6 +10,7 @@ import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { createSpiritMarkSkill } from '@/lib/skills/seasonal/phantimal'
 import {
   getCharacterSkill,
+  hasSkill,
   registerSkill,
   SkillManager,
   type SkillContext,
@@ -18,8 +20,8 @@ import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
-// Test-only local ids no season uses, so the mechanics stay covered while a
-// season lists no marks of its own.
+// Test-only local ids no season uses, so the mechanics stay covered whatever
+// the season's roster.
 const BEHIND_MARK = toPhantimalId(14)
 const FRONT_MARK = toPhantimalId(15)
 registerSkill(createSpiritMarkSkill(14, 'test-behind', 'behind'))
@@ -100,6 +102,16 @@ describe('phantimal Spirit Mark skills', () => {
     expect(skillManager.getTileFillModifier(9)).toBeDefined()
     expect(skillManager.getTileFillModifier(6)).toBeUndefined()
     expect(skillManager.getTileFillModifier(7)).toBeUndefined()
+  })
+
+  it('passes over a phantimal-range unit to the next tile in the chain', () => {
+    placeOnTile(grid, 4, FRONT_MARK, Team.ALLY)
+    placeOnTile(grid, 9, toPhantimalId(1), Team.ALLY)
+    placeOnTile(grid, 6, 101, Team.ALLY)
+
+    getCharacterSkill(FRONT_MARK)!.onActivate(ctx(4, FRONT_MARK))
+    expect(skillManager.getTileFillModifier(9)).toBeUndefined()
+    expect(skillManager.getTileFillModifier(6)).toBeDefined()
   })
 
   it('moves the mark on update when the marked unit moves', () => {
@@ -211,5 +223,71 @@ describe('season 8', () => {
     // Targeting is off until the in-game unlock; the companion answers for its owner.
     expect(gameData.hasSeasonalTargeting(WEDGE_OF_MATTER)).toBe(false)
     expect(gameData.hasSeasonalTargeting(WEDGE_OF_POWER)).toBe(false)
+  })
+
+  it('registers a Spirit Mark skill for every phantimal', () => {
+    for (const localId of [1, 2, 3, 4, 5]) {
+      expect(hasSkill(toPhantimalId(localId))).toBe(true)
+    }
+  })
+
+  it('keeps the marks hidden while the data files leave targeting off', () => {
+    const grid = new Grid()
+    const skillManager = new SkillManager()
+    const gervan = toPhantimalId(1)
+    placeOnTile(grid, 4, gervan, Team.ALLY)
+    placeOnTile(grid, 9, 100, Team.ALLY)
+
+    getCharacterSkill(gervan)!.onActivate({
+      grid,
+      hexId: 4,
+      team: Team.ALLY,
+      characterId: gervan,
+      skillManager,
+      lookups: { seasonalTargeting: useGameDataStore().hasSeasonalTargeting },
+    })
+    expect(skillManager.getTileFillModifier(9)).toBeUndefined()
+  })
+
+  describe('wedge marks, with targeting on', () => {
+    let grid: Grid
+    let skillManager: SkillManager
+    const lookups: SkillLookups = { seasonalTargeting: () => true }
+
+    // Raw placement with a hand-made link, so both wedges stand on known hexes
+    // (hex 4 ally front chain: 9 > 6 > 7; hex 23 behind: 16).
+    const paintWedges = (matterHex: number, powerHex: number): void => {
+      placeOnTile(grid, matterHex, WEDGE_OF_MATTER, Team.ALLY)
+      placeOnTile(grid, powerHex, WEDGE_OF_POWER, Team.ALLY)
+      addCompanionLink(grid, WEDGE_OF_MATTER, WEDGE_OF_POWER, Team.ALLY)
+      getCharacterSkill(WEDGE_OF_MATTER)!.onUpdate!({
+        grid,
+        hexId: matterHex,
+        team: Team.ALLY,
+        characterId: WEDGE_OF_MATTER,
+        skillManager,
+        lookups,
+      })
+    }
+
+    beforeEach(() => {
+      grid = new Grid()
+      skillManager = new SkillManager(lookups)
+    })
+
+    it('marks the hero in front of wedge of matter and the one behind wedge of power', () => {
+      placeOnTile(grid, 9, 100, Team.ALLY)
+      placeOnTile(grid, 16, 101, Team.ALLY)
+      paintWedges(4, 23)
+      expect(skillManager.getTileFillModifier(9)).toBeDefined()
+      expect(skillManager.getTileFillModifier(16)).toBeDefined()
+    })
+
+    it('never marks the other wedge', () => {
+      placeOnTile(grid, 6, 101, Team.ALLY)
+      paintWedges(4, 9)
+      expect(skillManager.getTileFillModifier(9)).toBeUndefined()
+      expect(skillManager.getTileFillModifier(6)).toBeDefined()
+    })
   })
 })

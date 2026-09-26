@@ -53,6 +53,50 @@ describe('artifact targeting', () => {
       expect(arrow?.fromHex.equals(artifactHostHex(grid, team))).toBe(true)
     }
   })
+
+  // Retire with the season's entries in src/lib/skills/artifact.ts.
+  describe('season 8', () => {
+    const CANDLEFLAME = 7
+    const SOULSHOCK = 9
+    const THUNDERMIGHT = 12
+    const BLADESUMMON = 13
+    const SOULBOUND = 14
+    const COREFORGE = 18
+
+    it('candleflame follows the frontmost ally', () => {
+      expect(targetHexIds(grid, Team.ALLY, CANDLEFLAME)).toEqual([20])
+      expect(targetHexIds(grid, Team.ENEMY, CANDLEFLAME)).toEqual([30])
+    })
+
+    it('coreforge marks the rearmost ally', () => {
+      expect(targetHexIds(grid, Team.ALLY, COREFORGE)).toEqual([5])
+      expect(targetHexIds(grid, Team.ENEMY, COREFORGE)).toEqual([40])
+    })
+
+    it('soulbound links the frontmost and rearmost allies, once for a lone unit', () => {
+      expect(targetHexIds(grid, Team.ALLY, SOULBOUND)).toEqual([20, 5])
+      removeFromTile(grid, 5)
+      removeFromTile(grid, 12)
+      expect(targetHexIds(grid, Team.ALLY, SOULBOUND)).toEqual([20])
+    })
+
+    it('bladesummon strikes the frontmost enemy', () => {
+      expect(targetHexIds(grid, Team.ALLY, BLADESUMMON)).toEqual([30])
+      expect(targetHexIds(grid, Team.ENEMY, BLADESUMMON)).toEqual([20])
+    })
+
+    it('thundermight strikes the frontmost and rearmost enemies', () => {
+      expect(targetHexIds(grid, Team.ALLY, THUNDERMIGHT)).toEqual([30, 40])
+      expect(targetHexIds(grid, Team.ENEMY, THUNDERMIGHT)).toEqual([20, 5])
+    })
+
+    it('soulshock stuns the two frontmost enemies', () => {
+      expect(targetHexIds(grid, Team.ENEMY, SOULSHOCK)).toEqual([20, 12])
+      expect(targetHexIds(grid, Team.ALLY, SOULSHOCK)).toEqual([30, 40])
+      removeFromTile(grid, 40)
+      expect(targetHexIds(grid, Team.ALLY, SOULSHOCK)).toEqual([30])
+    })
+  })
 })
 
 describe('artifact targeting rules', () => {

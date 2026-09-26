@@ -89,11 +89,13 @@ export type TargetDirection = 'behind' | 'front'
  * are the up-to-three adjacent tiles toward the team's back ('behind') or
  * front ('front'): straight behind/ahead first, then the caster-row side
  * neighbour, then the remaining diagonal. Off-board neighbours drop out of
- * the chain. The first candidate tile holding a same-team unit wins.
+ * the chain. The first candidate tile holding a same-team unit wins; a unit
+ * `isCandidate` rejects is passed over, so the chain moves to the next tile.
  */
 export function findAdjacentPriorityTarget(
   context: SkillContext,
   direction: TargetDirection = 'behind',
+  isCandidate: (characterId: number) => boolean = () => true,
 ): SkillTargetInfo | null {
   const { grid, hexId, characterId, team } = context
   const centerHex = grid.getHexById(hexId)
@@ -105,7 +107,11 @@ export function findAdjacentPriorityTarget(
     ? [3, 4, 2] // bottom-left, left, bottom-right
     : [0, 1, 5] // top-right, right, top-left
 
-  const candidateMap = new Map(getCandidates(grid, team, characterId).map((c) => [c.hexId, c]))
+  const candidateMap = new Map(
+    getCandidates(grid, team, characterId)
+      .filter((c) => isCandidate(c.characterId))
+      .map((c) => [c.hexId, c]),
+  )
 
   for (const dir of priorityDirections) {
     const tile = grid.getTileOrUndefined(centerHex.neighbor(dir))

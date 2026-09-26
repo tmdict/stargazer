@@ -10,14 +10,15 @@
  * derived, and they re-evaluate with every placement change.
  */
 
+import { getOpposingTeam } from '../characters/character'
 import { artifactHostHex, type Grid } from '../grid'
 import type { Hex } from '../hex'
 import type { Team } from '../types/team'
-import { rearmostUnit } from './utils/distance'
+import { frontmostUnit, frontmostUnits, rearmostUnit } from './utils/distance'
 import type { TargetCandidate } from './utils/targeting'
 
-// The units the artifact acts on, given the team whose slot holds it; a null
-// pick is a rule that found no unit.
+// The units the artifact acts on, on either team, given the team whose slot
+// holds it; a null pick is a rule that found no unit.
 type ArtifactTargeting = (grid: Grid, team: Team) => (TargetCandidate | null)[]
 
 export interface ArtifactArrow {
@@ -36,7 +37,37 @@ const ARTIFACT_TARGETING: Record<number, { name: string; targets: ArtifactTarget
 
   /* Seasonal entries go below under a season comment, deleted (with the
    * season's cases in tests/unit/skills/artifact.test.ts) along with the
-   * season's artifact data files. */
+   * season's artifact data files. Only base-level targets are drawn, not the
+   * extra ones an upgrade adds (Coreforge's level-7 second sigil). */
+
+  // Season 8.
+  // Candleflame: a flame follows the frontmost ally from the start of battle.
+  7: { name: 'candleflame', targets: (grid, team) => [frontmostUnit(grid, team)] },
+  // Soulshock: stuns the two frontmost enemies.
+  9: {
+    name: 'soulshock',
+    targets: (grid, team) => frontmostUnits(grid, getOpposingTeam(team), 2),
+  },
+  // Thundermight: chain lightning at the frontmost and rearmost enemies.
+  12: {
+    name: 'thundermight',
+    targets: (grid, team) => {
+      const enemy = getOpposingTeam(team)
+      return [frontmostUnit(grid, enemy), rearmostUnit(grid, enemy)]
+    },
+  },
+  // Bladesummon: portal swords strike the frontmost enemy.
+  13: {
+    name: 'bladesummon',
+    targets: (grid, team) => [frontmostUnit(grid, getOpposingTeam(team))],
+  },
+  // Soulbound: links the frontmost and rearmost allies.
+  14: {
+    name: 'soulbound',
+    targets: (grid, team) => [frontmostUnit(grid, team), rearmostUnit(grid, team)],
+  },
+  // Coreforge: a sigil beneath the rearmost ally.
+  18: { name: 'coreforge', targets: (grid, team) => [rearmostUnit(grid, team)] },
 }
 
 // Every rule's id and artifact name, for data consistency checks.

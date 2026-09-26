@@ -47,6 +47,7 @@ import {
   encodeGridStateToUrl,
   encodeMultiGridStateToUrl,
 } from '@/utils/urlStateManager'
+import { ALLY_A, ALLY_B, ALLY_C, ENEMY_A, ENEMY_B } from '../fixtures/characters'
 
 const OWNER_LOCAL = 13
 const OWNER = toPhantimalId(OWNER_LOCAL)
@@ -238,11 +239,11 @@ describe('phantimal companion serialization', () => {
     const encoded = encodeGridStateToUrl({
       t,
       c: [
-        [1, 11, Team.ALLY],
-        [2, 12, Team.ALLY],
-        [3, 13, Team.ALLY],
-        [4, 50, Team.ALLY],
-        [5, 80, Team.ALLY],
+        [1, ALLY_A, Team.ALLY],
+        [2, ALLY_B, Team.ALLY],
+        [3, ALLY_C, Team.ALLY],
+        [4, ENEMY_A, Team.ALLY],
+        [5, ENEMY_B, Team.ALLY],
       ],
       s: [
         [16, OWNER_LOCAL, Team.ALLY],
