@@ -15,7 +15,11 @@
 
 import type { AttrRecord } from '@/lib/characters/attributes'
 import { isCompanionUnitId } from '@/lib/characters/character'
-import { PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
+import {
+  PHANTIMAL_ID_OFFSET,
+  splitPhantimalBandLocal,
+  toPhantimalId,
+} from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
 import { stripRetiredSeasonal } from '@/lib/seasonal'
@@ -86,7 +90,7 @@ export function savedTeamSide(data: string): Team | null {
   return side
 }
 
-/* Null when the record isn't a one-sided team. Companions (both bands) spawn
+/* Null when the record isn't a one-sided team. Companions (every band) spawn
  * from their main's skill rather than placing directly, so they're carried as
  * settle targets, not mains. The synergy hero rides in `mains` under its band
  * id (place/autoPlace resolve it like any unit), included with its companions
@@ -142,13 +146,22 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
       }
     }
 
-    // One phantimal per team per board, so the first entry is the board's.
-    const phantimalEntry = (board.s ?? []).find(
-      ([hexId, localId]) => hexId !== undefined && localId !== undefined,
-    )
-    const phantimal: SideLoadUnit | null = phantimalEntry
-      ? { unitId: toPhantimalId(phantimalEntry[1]!), hexId: phantimalEntry[0]!, attrs: {} }
-      : null
+    // One phantimal per team per board, so the first phantimal entry is the
+    // board's; entries with a companion index are its skill-spawned companions.
+    let phantimal: SideLoadUnit | null = null
+    for (const [hexId, localId] of board.s ?? []) {
+      if (hexId === undefined || localId === undefined) continue
+      const { ownerLocal, index } = splitPhantimalBandLocal(localId)
+      if (index > 0) {
+        companions.push({
+          unitId: toPhantimalId(localId),
+          hexId,
+          mainUnitId: toPhantimalId(ownerLocal),
+        })
+      } else {
+        phantimal ??= { unitId: toPhantimalId(localId), hexId, attrs: {} }
+      }
+    }
 
     const artifact = (side === Team.ALLY ? board.a?.[0] : board.a?.[1]) ?? null
     return { mains, companions, phantimal, artifact }

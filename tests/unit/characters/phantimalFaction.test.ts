@@ -10,11 +10,13 @@ import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 describe('phantimalFaction', () => {
   describe('requiredFactions', () => {
     it('uses the phantimal faction by default', () => {
-      expect(requiredFactions('aurelian', 'lightbearer')).toEqual(['lightbearer'])
+      expect(requiredFactions({ faction: 'lightbearer' })).toEqual(['lightbearer'])
     })
 
-    it('counts both hypogean and celestial for midnight-hunter', () => {
-      expect(requiredFactions('midnight-hunter', 'hypogean')).toEqual(['hypogean', 'celestial'])
+    it('counts every qualifying faction when the data lists them', () => {
+      expect(
+        requiredFactions({ faction: 'hypogean', qualifyingFactions: ['hypogean', 'celestial'] }),
+      ).toEqual(['hypogean', 'celestial'])
     })
   })
 

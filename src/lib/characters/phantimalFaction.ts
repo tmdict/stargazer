@@ -1,4 +1,5 @@
 import type { Grid } from '../grid'
+import type { PhantimalType } from '../types/phantimal'
 import type { Team } from '../types/team'
 import { getTilesWithCharacters } from './character'
 import { isCompanionId } from './companion'
@@ -8,15 +9,13 @@ import { isPhantimalId } from './phantimal'
 // the phantimal's faction(s).
 export const PHANTIMAL_FACTION_REQUIREMENT = 3
 
-// Phantimals normally require their own faction. Overrides (keyed by phantimal
-// name) count several factions toward the total, e.g. midnight-hunter draws on
-// both hypogean and celestial.
-const FACTION_OVERRIDES: Record<string, readonly string[]> = {
-  'midnight-hunter': ['hypogean', 'celestial'],
-}
-
-export function requiredFactions(name: string, faction: string): readonly string[] {
-  return FACTION_OVERRIDES[name] ?? [faction]
+// Phantimals normally require their own faction; a data file's
+// qualifyingFactions counts several toward the total (the season's
+// hypogean/celestial phantimal draws on both).
+export function requiredFactions(
+  phantimal: Pick<PhantimalType, 'faction' | 'qualifyingFactions'>,
+): readonly string[] {
+  return phantimal.qualifyingFactions ?? [phantimal.faction]
 }
 
 // Counts distinct hero units on a team whose faction is in `factions`. Only main

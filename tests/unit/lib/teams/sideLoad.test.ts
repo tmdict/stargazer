@@ -2,12 +2,16 @@ import { describe, expect, it, vi } from 'vitest'
 
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
+import { CURRENT_SEASON } from '@/lib/seasonal'
 import { buildSideLoadPlan, savedTeamSide } from '@/lib/teams/sideLoad'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-const encode = (state: MultiGridState): string => encodeMultiGridStateToUrl(state)
+// Stamped current unless a case sets its own season: an unstamped payload
+// decodes as the legacy pre-field season, which retires after a cutover.
+const encode = (state: MultiGridState): string =>
+  encodeMultiGridStateToUrl({ season: CURRENT_SEASON, ...state })
 
 // One 1v1 board exercising every unit section: mains, a companion, a
 // phantimal, the synergy hero with its companion, upgrade attrs for both
@@ -177,7 +181,7 @@ describe('retired seasonal content in side-load', () => {
   })
 
   it('current-season records keep their seasonal refs in the plan', () => {
-    const current = encode({ ...ALLY_RECORD, season: 7 })
+    const current = encode({ ...ALLY_RECORD, season: CURRENT_SEASON })
     const plan = buildSideLoadPlan(current, true)!
     expect(plan.boards[0]!.phantimal).not.toBeNull()
     expect(plan.boards[0]!.artifact).toBe(7)

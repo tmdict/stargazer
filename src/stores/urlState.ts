@@ -111,6 +111,8 @@ export const useUrlStateStore = defineStore('urlState', () => {
     const restoreCharacterBand = (
       entries: number[][],
       toUnitId: (localId: number) => number,
+      place: (hexId: number, unitId: number, team: number) => boolean = (hexId, unitId, team) =>
+        characterStore.placeCharacterOnHex(hexId, unitId, team),
     ): void => {
       const mains: number[][] = []
       const companions: number[][] = []
@@ -132,7 +134,7 @@ export const useUrlStateStore = defineStore('urlState', () => {
         if (!validated) return
 
         const unitId = toUnitId(validated.characterId)
-        if (!characterStore.placeCharacterOnHex(validated.hexId, unitId, validated.team)) {
+        if (!place(validated.hexId, unitId, validated.team)) {
           console.warn(`Failed to place character ID ${unitId} on hex ${validated.hexId}`)
           return
         }
@@ -183,19 +185,12 @@ export const useUrlStateStore = defineStore('urlState', () => {
       }
     }
 
-    // Restore phantimals from compact format: [hexId, localPhantimalId, team]
+    // Phantimal band, [hexId, bandLocalId, team]: same main/companion split as
+    // c and y, placed through the phantimal gates (one per team, faction).
     if (gridState.s) {
-      gridState.s.forEach((entry) => {
-        const hexId = entry[0]
-        const localId = entry[1]
-        const team = entry[2]
-        if (hexId === undefined || localId === undefined || team === undefined) return
-
-        const placed = characterStore.placePhantimalOnHex(hexId, toPhantimalId(localId), team)
-        if (!placed) {
-          console.warn(`Failed to place phantimal ${localId} on hex ${hexId}`)
-        }
-      })
+      restoreCharacterBand(gridState.s, toPhantimalId, (hexId, unitId, team) =>
+        characterStore.placePhantimalOnHex(hexId, unitId, team),
+      )
     }
 
     // Auto-placement is edge-triggered; this bulk restore must not read as a

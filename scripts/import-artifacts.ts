@@ -70,6 +70,7 @@ const STAT_KEY: Record<string, string> = {
   HEAL: 'vitality',
   BLOCK: 'ranged-def',
   LFS: 'life-drain',
+  CRIT: 'crit',
 }
 
 // ---------- feed shape (single-locale per file) ----------

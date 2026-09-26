@@ -8,6 +8,8 @@ export interface PhantimalType {
   season: number
   range: number // attack range, used when the phantimal targets on the grid
   faction: string // faction slug → game.<faction> label + faction-<faction> icon
+  qualifyingFactions?: readonly string[] // factions counted toward the team requirement; default [faction]
+  targeting?: boolean // seasonal skill targeting (Spirit Mark) is live in-game; absent = off
 }
 
 // src/locales/seasonal/phantimal/<name>.json: full localized content.

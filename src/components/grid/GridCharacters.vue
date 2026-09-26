@@ -14,7 +14,7 @@ import {
   isCompanionUnitId,
   toBaseHeroId,
 } from '@/lib/characters/character'
-import { isPhantimalId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
@@ -79,16 +79,18 @@ const getCharacterName = (characterId: number, hexId: number): string => {
 // wrapper's positioning, drag, lift and perspective; only image + colour differ).
 const PHANTIMAL_COLOR = '#b0b6bb'
 
+// A companion a phantimal spawned renders through the same branch, under its
+// owner skill's companion portrait.
 const phantimalUrl = (characterId: number) =>
-  phantimalImageUrl(gameDataStore.getPhantimalById(characterId)?.name ?? '')
+  phantimalImageUrl(gameDataStore.getPhantimalUnitSlug(characterId) ?? '')
 
 const phantimalName = (characterId: number): string =>
-  gameDataStore.getPhantimalById(characterId)?.name ?? 'Phantimal'
+  gameDataStore.getPhantimalUnitSlug(characterId) ?? 'Phantimal'
 
 // A phantimal id with no data is retired seasonal content: the id stays in the
 // team (removable/replaceable like any unit) and renders as a placeholder.
 const isRetiredPhantimal = (characterId: number): boolean =>
-  isPhantimalId(characterId) && !gameDataStore.getPhantimalById(characterId)
+  inPhantimalBand(characterId) && !gameDataStore.getPhantimalById(phantimalOwnerId(characterId))
 
 // Neutral disc behind every placed hero (one color for all, not the roster's
 // per-level gold/purple). Phantimals keep their own grey; skill-driven colors
@@ -96,7 +98,7 @@ const isRetiredPhantimal = (characterId: number): boolean =>
 const CHARACTER_COLOR = '#c4baa6'
 
 const getCharacterColors = (characterId: number) => {
-  const color = isPhantimalId(characterId) ? PHANTIMAL_COLOR : CHARACTER_COLOR
+  const color = inPhantimalBand(characterId) ? PHANTIMAL_COLOR : CHARACTER_COLOR
   return { backgroundColor: color, borderColor: color }
 }
 
@@ -157,15 +159,15 @@ const handleDragStart = (event: DragEvent, hexId: number, characterId: number) =
 
   // Phantimals carry a minimal payload (the drop handler only needs id +
   // sourceHexId); their image comes from the remote phantimal sources.
-  if (isPhantimalId(characterId)) {
-    const phantimal = gameDataStore.getPhantimalById(characterId)
-    if (!phantimal) return
+  if (inPhantimalBand(characterId)) {
+    const slug = gameDataStore.getPhantimalUnitSlug(characterId)
+    if (!slug) return
     const dragData = {
       id: characterId,
       sourceHexId: hexId,
       sourceGridId: ctx.id,
     } as unknown as CharacterType
-    startDrag(event, dragData, characterId, phantimalImageUrl(phantimal.name))
+    startDrag(event, dragData, characterId, phantimalImageUrl(slug))
     return
   }
 
@@ -293,7 +295,7 @@ const visiblePlacements = computed(() => {
           ?
         </span>
         <img
-          v-else-if="isPhantimalId(characterId)"
+          v-else-if="inPhantimalBand(characterId)"
           :src="phantimalUrl(characterId)"
           :alt="phantimalName(characterId)"
           class="character-image"

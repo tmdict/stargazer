@@ -5,7 +5,7 @@ import {
   type AttrRow,
 } from '@/lib/characters/attributes'
 import { isBaseHeroId } from '@/lib/characters/character'
-import { isPhantimalId, toLocalPhantimalId } from '@/lib/characters/phantimal'
+import { inPhantimalBand, isPhantimalId, phantimalBandLocal } from '@/lib/characters/phantimal'
 import { decomposeUnitId, inSynergyBand } from '@/lib/characters/synergy'
 import type { GridTile } from '@/lib/grid'
 import { CURRENT_SEASON } from '@/lib/seasonal'
@@ -17,7 +17,7 @@ export interface GridState {
   t?: number[][] // tiles: [hexId, state] (only non-default states)
   c?: number[][] // characters: [hexId, characterId, team]
   a?: (number | null)[] // artifacts: [ally, enemy] (only if at least one set)
-  s?: number[][] // seasonal units (phantimals): [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field)
+  s?: number[][] // seasonal units (phantimals): [hexId, localUnitId, team] (kept out of c, ids 100000+ don't fit the character field; locals mirror y: phantimal = L, its companion = N*10000+L)
   y?: number[][] // synergy-band units, hero plus its companions: [hexId, localUnitId, team] (locals reuse c's id space: hero = base id, companion = N*10000+base)
   u?: number[][] // hero upgrade attrs (lib/characters/attributes): [team, characterId, attrId, value], sorted, non-default only
   d?: number // display flags: bit-packed (wrap, showSkills, showPerspective, inverted, teamView)
@@ -59,7 +59,7 @@ export function serializeGridState(
       (tile) =>
         tile.characterId &&
         tile.team !== undefined &&
-        !isPhantimalId(tile.characterId) &&
+        !inPhantimalBand(tile.characterId) &&
         !inSynergyBand(tile.characterId),
     )
     .map((tile) => [tile.hex.getId(), tile.characterId!, tile.team!])
@@ -83,15 +83,19 @@ export function serializeGridState(
     state.y = synergyUnits
   }
 
-  // Extract phantimals, stored by their local id (offset stripped).
+  // Phantimal-band units, stored band-local (offset stripped): the phantimal
+  // as L, a companion it spawned as N * 10000 + L, mirroring y. Phantimals
+  // lead, matching the binary decoder's section order, so a link round-trips
+  // to the same rows.
   const phantimals = allTiles
     .filter(
       (tile) =>
         tile.characterId !== undefined &&
         tile.team !== undefined &&
-        isPhantimalId(tile.characterId),
+        inPhantimalBand(tile.characterId),
     )
-    .map((tile) => [tile.hex.getId(), toLocalPhantimalId(tile.characterId!), tile.team!])
+    .sort((a, b) => Number(!isPhantimalId(a.characterId!)) - Number(!isPhantimalId(b.characterId!)))
+    .map((tile) => [tile.hex.getId(), phantimalBandLocal(tile.characterId!), tile.team!])
 
   if (phantimals.length > 0) {
     state.s = phantimals

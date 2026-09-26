@@ -41,7 +41,7 @@ Each board's context (`/src/composables/useGridContext.ts`) owns a `Grid` and a 
 
 ### SkillManager (`/src/lib/skills/skill.ts`)
 
-Non-reactive class, one per board, constructed with `SkillLookups` (`factionOf`, `classOf`) injected from the game-data store because that data lives outside the pure lib.
+Non-reactive class, one per board, constructed with `SkillLookups` (`factionOf`, `classOf`, `seasonalTargeting`) injected from the game-data store because that data lives outside the pure lib. `seasonalTargeting` reports whether a phantimal's data file switches its skill targeting on; Spirit Marks paint nothing while it is off, even with the Skills toggle on.
 
 - **Key**: `characterId-team`, so the same unit can be active on both teams
 - **Activation**: `activateCharacterSkill` returns `false` and drops the active entry when `onActivate` throws; the surrounding transaction rolls the placement back
@@ -56,16 +56,16 @@ Non-reactive class, one per board, constructed with `SkillLookups` (`factionOf`,
 
 ### Builders (`/src/lib/skills/utils/builders.ts`)
 
-| Factory                                  | Behavior                                                                                                     | Examples                            |
-| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
-| `createTargetingSkill`                   | Stores one target; `arrowType` adds a caster-to-target arrow, omitted when `calculateTarget` builds its own  | Talene, Ravion, Aliceth             |
-| `createTileHighlightSkill`               | Paints one tile (border, or fill with `fill: true`), unpainting the previous target on update                | Daimon, Hepler, Thador              |
-| `createTilePaintSkill` / `withTilePaint` | Paints the full set `calculate(ctx)` returns for the current grid, diffed by `paintTiles`                    | Himmel; Evie, phantimal (decorator) |
-| `createLineSkill` / `withSkillLine`      | Draws the `SkillLine[]` that `calculate(ctx)` returns                                                        | Callan, Satrana, Zandrok            |
-| `createCompanionSkill`                   | Spawns `count` companions on random free tiles, raises capacity by `count`, rolls back and throws on failure | Phraesto, Zanie, Elijah-Lailah      |
+| Factory                                  | Behavior                                                                                                                                            | Examples                                    |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| `createTargetingSkill`                   | Stores one target; `arrowType` adds a caster-to-target arrow, omitted when `calculateTarget` builds its own                                         | Talene, Ravion, Aliceth                     |
+| `createTileHighlightSkill`               | Paints one tile (border, or fill with `fill: true`), unpainting the previous target on update                                                       | Daimon, Hepler, Thador                      |
+| `createTilePaintSkill` / `withTilePaint` | Paints the full set `calculate(ctx)` returns for the current grid, diffed by `paintTiles`                                                           | Himmel; Evie, phantimal (decorator)         |
+| `createLineSkill` / `withSkillLine`      | Draws the `SkillLine[]` that `calculate(ctx)` returns                                                                                               | Callan, Satrana, Zandrok                    |
+| `createCompanionSkill`                   | Spawns `count` companions on random free tiles, raises capacity by `count` (skipped with `raisesCapacity: false`), rolls back and throws on failure | Phraesto, Zanie, Elijah-Lailah; a phantimal |
 
 - **Composition**: The registry allows one skill per character, so a hero with several behaviors decorates a base (Elijah-Lailah is `withSkillLine(withTilePaint(createCompanionSkill(...)))`); decorators run after the base hooks and clear before them
-- **Companion ids**: `N * grid.companionIdOffset + characterId`, so a companion resolves to its main hero for lookups
+- **Companion ids**: `N * grid.companionIdOffset + characterId`, so a companion resolves to its main hero for lookups; the synergy and phantimal bands mirror this, so the same arithmetic works inside them (see [SEASONAL.md](./SEASONAL.md))
 - **Hand-written lifecycles**: Kulu (static zone with no `onUpdate`, relying on refcounts where both teams' zones overlap) and Reinier pass an object straight to `registerSkill`
 
 ### Visuals
@@ -91,6 +91,7 @@ Artifacts that act on specific units (Enlightening: rearmost ally; Vanguard: fro
 
 - **Table**: `ARTIFACT_TARGETING` keyed by artifact id, `(grid, team) => (TargetCandidate | null)[]`, using the same `frontmostUnit` / `rearmostUnit` helpers as hero skills so phantimals and companions count identically; seasonal entries sit under a season comment and are deleted with the season (see [SEASONAL.md](./SEASONAL.md))
 - **Derivation**: `artifactTargetArrows(grid, team, artifactId)` anchors on `artifactHostHex` (`/src/lib/grid.ts`) and dedupes hexes; `useGridContext.artifactArrows` is a `computed` over both slots and the grid, so no wiring in the place/move/remove paths
+- **On means present**: an artifact draws exactly when it has an entry; there is no switch. Each entry names its artifact, and a test fails when the name no longer matches the data file holding its id (seasonal ids are reused)
 - **Rendering**: `SkillTargeting.vue` draws them in `TEAM_ARROW_COLORS` (`useArrowLayer.ts`) beside skill arrows, sharing the toggle, geometry, and team view (which hides the enemy slot); `GridArrow` prefixes its marker id with the board id because SVG marker ids are document-wide and the Teams page renders several boards
 
 If an artifact ever needs a side effect (a spawned unit, a capacity change), give skills a caster-agnostic source rather than extending this table.

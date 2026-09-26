@@ -1,7 +1,7 @@
 import { COMPANION_ID_OFFSET, type Grid, type GridTile } from '../grid'
 import { State } from '../types/state'
 import { Team } from '../types/team'
-import { isPhantimalId } from './phantimal'
+import { companionLocalId, inPhantimalBand, isPhantimalId } from './phantimal'
 import { isPlaceholderId } from './placeholder'
 import { decomposeUnitId, isSynergyHeroId, toSynergyId } from './synergy'
 
@@ -74,16 +74,17 @@ export function isRealHeroId(characterId: number): boolean {
   return isBaseHeroId(characterId) && !isPlaceholderId(characterId)
 }
 
-// A skill-spawned companion in either band (base or synergy). The grid-free
-// twin of companion.ts's isCompanionId for surfaces that have no Grid at hand.
+// A skill-spawned companion in any band (base, phantimal or synergy). The
+// grid-free twin of companion.ts's isCompanionId for surfaces that have no Grid
+// at hand.
 export function isCompanionUnitId(unitId: number): boolean {
-  return decomposeUnitId(unitId).localId >= COMPANION_ID_OFFSET && !isPhantimalId(unitId)
+  return companionLocalId(unitId) >= COMPANION_ID_OFFSET
 }
 
 // The hero a unit identifies as on every surface (name, art, faction, class):
-// a synergy copy or a companion in either band resolves to the base hero it
-// derives from. Phantimals have no base hero; callers branch on isPhantimalId
-// first.
+// a synergy copy or a companion in either hero band resolves to the base hero
+// it derives from. Phantimal-band units have no base hero; callers branch on
+// inPhantimalBand first.
 export function toBaseHeroId(unitId: number): number {
   return decomposeUnitId(unitId).localId % COMPANION_ID_OFFSET
 }
@@ -112,19 +113,22 @@ export function isCharacterOnTeam(grid: Grid, characterId: number, team: Team): 
 }
 
 export function getAvailableTeamSize(grid: Grid, team: Team): number {
-  // Phantimals and synergy heroes occupy tiles but don't hold a team slot (the
-  // synergy hero is the friend-assist "+1"; companions it spawns count like any
-  // other, balanced by their skill's capacity bump).
+  // Phantimals (with any companion they spawn) and synergy heroes occupy tiles
+  // but don't hold a team slot (the synergy hero is the friend-assist "+1";
+  // companions it spawns count like any other, balanced by their skill's
+  // capacity bump).
   const occupied = getTilesWithCharactersByTeam(grid, team).filter(
-    (tile) => !isPhantimalId(tile.characterId!) && !isSynergyHeroId(tile.characterId!),
+    (tile) => !inPhantimalBand(tile.characterId!) && !isSynergyHeroId(tile.characterId!),
   ).length
   return getMaxTeamSize(grid, team) - occupied
 }
 
 export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: Team): boolean {
-  // Phantimals don't count toward team size and are capped at one per team by the
-  // placement layer, so capacity/duplicate checks don't apply to them.
-  if (isPhantimalId(characterId)) return true
+  // Phantimals and their companions hold no slot, and the placement layer caps
+  // phantimals at one per team, so capacity/duplicate checks don't apply. A
+  // companion still can't be placed directly (executePlaceCharacter refuses
+  // companion ids); this lets its skill spawn, move and restore it on a full team.
+  if (inPhantimalBand(characterId)) return true
   // The synergy hero replaces capacity and duplicate checks with its own cap of
   // one per team; its offset id keeps every duplicate check blind to it. Its
   // companions fall through to the normal companion rules.

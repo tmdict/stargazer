@@ -6,7 +6,7 @@ import SkillSection from '@/components/skill/SkillSection.vue'
 import ModalLocaleToggle from '@/components/ui/ModalLocaleToggle.vue'
 import { useModalLocale } from '@/composables/useModalLocale'
 import type { PhantimalType } from '@/lib/types/phantimal'
-import { loadGameLocales, loadPhantimalLocales } from '@/utils/dataLoader'
+import { loadAppLocales, loadGameLocales, loadPhantimalLocales } from '@/utils/dataLoader'
 import { formatDisplayName } from '@/utils/nameFormatting'
 
 interface Props {
@@ -38,6 +38,11 @@ const skills = computed(() =>
     levels: skill.levels.map((lv, i) => ({ level: i + 1, description: lv[displayLocale.value] })),
   })),
 )
+
+// A season can ship before the upstream feed carries its text.
+const pendingLabel = computed(
+  () => loadAppLocales()['skill-details-pending']?.[displayLocale.value] ?? '',
+)
 </script>
 
 <template>
@@ -57,6 +62,7 @@ const skills = computed(() =>
       :heading="skill.heading"
       :levels="skill.levels"
     />
+    <p v-if="!skills.length" class="details-pending">{{ pendingLabel }}</p>
   </BaseModal>
 </template>
 
@@ -66,5 +72,11 @@ const skills = computed(() =>
   flex-wrap: wrap;
   gap: 6px;
   margin: 0 0 4px;
+}
+
+.details-pending {
+  margin: 16px 0 0;
+  color: rgba(255, 255, 255, 0.55);
+  font-style: italic;
 }
 </style>
