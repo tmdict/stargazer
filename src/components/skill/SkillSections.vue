@@ -11,7 +11,7 @@ import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type TagPin } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
-import { getCharmForHero, getSkillCharms, getSkillFile } from '@/utils/dataLoader'
+import { getCharmForHero, getSkillCharms, getSkillFile, getSkillNumbers } from '@/utils/dataLoader'
 import { formatToCamelCase } from '@/utils/nameFormatting'
 import { appLabel, headingFor, heroDisplayName } from '@/utils/skillLabels'
 import { SkillLangKey } from './snippetKeys'
@@ -36,6 +36,7 @@ const locale = computed(
   () => getSkillFile(props.lang, props.slug) ?? getSkillFile('en', props.slug),
 )
 const { perLevel, perCharacter } = useSkillTags(props.slug)
+const numbers = getSkillNumbers(props.slug)
 
 const heroName = computed(() => heroDisplayName(props.slug, props.lang))
 
@@ -89,6 +90,7 @@ const sections = computed(() => {
     return {
       slotKey,
       heading: headingFor(slotKey, slot.n, appLang.value, locale.value!._terms),
+      numbers: numbers[slotKey],
       slotTags,
       levels,
       refinements,
@@ -188,6 +190,8 @@ provide(
       <SkillSection
         :id="section.slotKey"
         :heading="section.heading"
+        :numbers="section.numbers"
+        :terms="locale._terms"
         :slot-tags="section.slotTags"
         :levels="section.levels"
         :refinements="section.refinements"
