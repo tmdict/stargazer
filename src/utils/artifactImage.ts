@@ -6,6 +6,9 @@
 // crossorigin keeps the icon CORS-clean so the canvas-based image export can read
 // it (the host must send Access-Control-Allow-Origin), and a single <img>
 // (not <picture>) is what html-to-image reliably inlines.
+//
+// The only place the host's address appears; every remote image URL, in the app
+// and the build scripts, is built from it.
 const REMOTE_ROOT = 'https://chaldea.tmdict.com/img'
 const REMOTE_BASE = `${REMOTE_ROOT}/seasonal`
 

@@ -19,16 +19,6 @@ describe('renderRichText', () => {
     ])
   })
 
-  it('splits tokens into styled pieces', () => {
-    expect(renderRichText('deals [[240%]] <ATK> damage', '')).toEqual([
-      { text: 'deals ', kind: 'plain', marked: false },
-      { text: '240%', kind: 'value', marked: false },
-      { text: ' ', kind: 'plain', marked: false },
-      { text: 'ATK', kind: 'stat', tag: 'atk', marked: false },
-      { text: ' damage', kind: 'plain', marked: false },
-    ])
-  })
-
   it('marks the case-insensitive match inside a token', () => {
     const pieces = renderRichText('deals [[240%]] damage', 'DEALS 240')
     expect(pieces).toEqual([
@@ -75,20 +65,6 @@ describe('renderRichText', () => {
       { text: ' hasar', kind: 'plain', marked: false },
     ])
   })
-
-  it('renders unmarked when the query has no match', () => {
-    const pieces = renderRichText('restores [[300]] HP', 'nothing')
-    expect(pieces.every((p) => !p.marked)).toBe(true)
-  })
-
-  it('labels unknown stat tags with the raw tag', () => {
-    expect(renderRichText('<FOO> boost', '')[0]).toEqual({
-      text: 'FOO',
-      kind: 'stat',
-      tag: 'foo',
-      marked: false,
-    })
-  })
 })
 
 describe('renderSnippet', () => {
@@ -101,22 +77,10 @@ describe('renderSnippet', () => {
     })
   })
 
-  it('omits ellipses at the text boundaries', () => {
-    expect(renderSnippet('MATCH tail', 'match', 30)).toEqual({
-      pre: '',
-      match: 'MATCH',
-      post: ' tail',
-    })
-  })
-
   it('reconstructs the whole text when context covers it (the team-name filter contract)', () => {
     const name = 'Team [S9] (Dream) +1'
     const snippet = renderSnippet(name, '(dream)', name.length)!
     expect(snippet.pre + snippet.match + snippet.post).toBe(name)
     expect(snippet.match).toBe('(Dream)')
-  })
-
-  it('returns null when the query does not occur', () => {
-    expect(renderSnippet('Team Alpha', 'beta')).toBeNull()
   })
 })

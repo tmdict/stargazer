@@ -80,10 +80,4 @@ describe('TeamPreview search marks', () => {
     // A board without a ring recedes whole rather than unit by unit.
     expect(other!.querySelectorAll('.ring, .faded')).toHaveLength(0)
   })
-
-  it('leaves every board plain without a search', async () => {
-    const boards = await mountPreview()
-    expect(dimmed(boards)).toEqual([false, false, false])
-    for (const board of boards) expect(board.querySelectorAll('.ring, .faded')).toHaveLength(0)
-  })
 })

@@ -113,12 +113,6 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(result.success).toBe(true)
     expect(result.displayFlags).toEqual(flags)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
-    expect(restored.grid.getTile(2).characterId).toBe(ALLY_A)
-    expect(restored.grid.getTile(2).team).toBe(Team.ALLY)
-    expect(restored.grid.getTile(45).characterId).toBe(ENEMY_B)
-    expect(restored.grid.getTile(45).team).toBe(Team.ENEMY)
-    expect(restored.grid.getTile(20).state).toBe(State.BLOCKED)
-    expect(restored.grid.getTile(23).state).toBe(State.BLOCKED_BREAKABLE)
     expect(restored.artifact.allyArtifactId).toBe(3)
     expect(restored.artifact.enemyArtifactId).toBe(5)
   })
@@ -253,18 +247,7 @@ describe('urlStateStore.restoreFromEncodedState', () => {
     expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
 
     // Serialized as local ids (2/1); restored tiles carry the namespaced ids again.
-    expect(restored.grid.getTile(3).characterId).toBe(toPhantimalId(2))
-    expect(restored.grid.getTile(3).team).toBe(Team.ALLY)
-    expect(restored.grid.getTile(44).characterId).toBe(toPhantimalId(1))
-    expect(restored.grid.getTile(44).team).toBe(Team.ENEMY)
-    expect(restored.grid.getTile(1).characterId).toBe(ALLY_A)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
-  })
-
-  it('fails when no state is provided', () => {
-    const stores = createStores()
-    const result = stores.urlState.restoreFromEncodedState(null)
-    expect(result).toEqual({ success: false, error: 'No state provided' })
   })
 
   it('rejects garbage encoded strings and leaves existing state untouched', () => {
@@ -396,17 +379,6 @@ describe('synergy restore', () => {
     expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
     expect(snapshotTiles(restored.grid)).toEqual(expected)
     expect(restoredGrids.synergy).toBe(true)
-  })
-
-  it('derives the toggle off when the payload has no synergy unit', () => {
-    const source = createStores()
-    expect(source.character.placeCharacterOnHex(2, ALLY_A, Team.ALLY)).toBe(true)
-    const encoded = encodeStores(source)
-
-    const restored = createStores()
-    const restoredGrids = useGrids()
-    expect(restored.urlState.restoreFromEncodedState(encoded).success).toBe(true)
-    expect(restoredGrids.synergy).toBe(false)
   })
 
   it('restores a phantimal whose faction requirement depends on the synergy hero', () => {

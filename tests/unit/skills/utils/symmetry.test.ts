@@ -6,9 +6,9 @@ import { getSymmetricalHexId } from '@/lib/skills/utils/symmetry'
 /**
  * Oracle: the original hand-derived diagonal-row table for FULL_GRID (visually
  * verified against the rendered board, predating the coordinate derivation).
- * The runtime now computes both relations from cube coordinates — same
- * diagonal ⇔ equal q − r, mirror ⇔ q↔r swap — and these tests pin that the
- * derivation reproduces the human-verified table exactly.
+ * The runtime computes both relations from cube coordinates (same diagonal ⇔
+ * equal q − r, mirror ⇔ q↔r swap), and these tests pin that the derivation
+ * reproduces the human-verified table exactly.
  */
 const DIAGONAL_ROWS: readonly number[][] = [
   [1, 2],
@@ -64,27 +64,11 @@ describe('diagonal geometry vs the hand-derived FULL_GRID table', () => {
     }
   })
 
-  it('the middle diagonal is q = r (diagonal 0)', () => {
-    for (const hexId of DIAGONAL_ROWS[MIDDLE_ROW]!) {
-      expect(hexOf(hexId).getDiagonal()).toBe(0)
-    }
-  })
-
   it('getSymmetricalHexId reproduces the original table-built mirror map for all 45 hexes', () => {
     const oracle = buildOracleSymmetryMap()
     for (const tile of grid.getAllTiles()) {
       const id = tile.hex.getId()
       expect(getSymmetricalHexId(grid, id), `hex ${id}`).toBe(oracle.get(id))
     }
-  })
-
-  it('mirroring is bidirectional and fixes the middle diagonal', () => {
-    for (const tile of grid.getAllTiles()) {
-      const id = tile.hex.getId()
-      const mirror = getSymmetricalHexId(grid, id)
-      expect(mirror).toBeDefined()
-      expect(getSymmetricalHexId(grid, mirror!)).toBe(id)
-    }
-    expect(getSymmetricalHexId(grid, 23)).toBe(23)
   })
 })

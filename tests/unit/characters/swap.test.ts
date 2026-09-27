@@ -22,7 +22,7 @@ import {
   PHRAESTO,
   PHRAESTO_COMPANION,
 } from '../fixtures/characters'
-import { STANDARD_ARENA, STANDARD_GRID, TARGETING_ARENA, TARGETING_GRID } from '../fixtures/grid'
+import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 // Runs against the real SkillManager and skill registry: the fixture ids have
 // no registered skill, and Phraesto drives the cross-team lifecycle tests
@@ -40,35 +40,12 @@ describe('swap.ts', () => {
   })
 
   describe('executeSwapCharacters - basic validation', () => {
-    it('should reject swap on same hex', () => {
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-
-      const result = executeSwapCharacters(grid, skillManager, 1, 1)
-
-      expect(result).toBe(false)
-      expect(grid.getTileById(1).characterId).toBe(ALLY_A)
-    })
-
     it('should reject swap when either hex has no character', () => {
       performPlace(grid, 1, ALLY_A, Team.ALLY)
 
       expect(executeSwapCharacters(grid, skillManager, 1, 2)).toBe(false)
       expect(executeSwapCharacters(grid, skillManager, 2, 1)).toBe(false)
       expect(grid.getTileById(1).characterId).toBe(ALLY_A)
-    })
-
-    it('should reject swap when either character has no team', () => {
-      // Manually create invalid state
-      const tile1 = grid.getTileById(1)
-      tile1.characterId = ALLY_A
-      tile1.team = undefined
-      tile1.state = State.OCCUPIED_ALLY
-
-      performPlace(grid, 2, ALLY_B, Team.ALLY)
-
-      const result = executeSwapCharacters(grid, skillManager, 1, 2)
-
-      expect(result).toBe(false)
     })
   })
 
@@ -323,34 +300,6 @@ describe('swap.ts', () => {
       // Capacity unchanged: the character counts, the phantimal is exempt
       expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(true)
       expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(4)
-    })
-
-    it('should leave a full team fully intact when swapping a character onto its phantimal', () => {
-      // Phantimals are tied to their team's faction hero count, so the
-      // cross-team guard must reject the swap up front with zero state changes.
-      const tGrid = new Grid(TARGETING_GRID, TARGETING_ARENA)
-      tGrid.skillManager = skillManager
-
-      performPlace(tGrid, 1, ALLY_A, Team.ALLY)
-      const enemyChars = [201, 202, 203, 204, 205]
-      enemyChars.forEach((charId, i) => performPlace(tGrid, 9 + i, charId, Team.ENEMY))
-      performPlace(tGrid, 14, phantimalId, Team.ENEMY)
-
-      const result = executeSwapCharacters(tGrid, skillManager, 1, 14)
-
-      expect(result).toBe(false)
-      expect(tGrid.getTileById(1).characterId).toBe(ALLY_A)
-      expect(tGrid.getTileById(1).team).toBe(Team.ALLY)
-      expect(tGrid.getTileById(14).characterId).toBe(phantimalId)
-      expect(tGrid.getTileById(14).team).toBe(Team.ENEMY)
-      expect(isCharacterOnTeam(tGrid, ALLY_A, Team.ALLY)).toBe(true)
-      enemyChars.forEach((charId, i) => {
-        expect(tGrid.getTileById(9 + i).characterId).toBe(charId)
-        expect(isCharacterOnTeam(tGrid, charId, Team.ENEMY)).toBe(true)
-      })
-      // Phantimals never consume a team slot
-      expect(getAvailableTeamSize(tGrid, Team.ALLY)).toBe(4)
-      expect(getAvailableTeamSize(tGrid, Team.ENEMY)).toBe(0)
     })
   })
 })

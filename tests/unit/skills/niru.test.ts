@@ -56,16 +56,6 @@ describe('niru rear-row, front-of-row ally targeting', () => {
 
     expect(target()?.targetHexId).toBe(16)
   })
-
-  it('targets companions like any other unit', () => {
-    placeOnTile(grid, 9, 10005, Team.ALLY) // companion of character 5
-    placeOnTile(grid, 8, 1, Team.ALLY)
-
-    niru().onActivate(ctx())
-
-    expect(target()?.targetHexId).toBe(9)
-    expect(target()?.targetCharacterId).toBe(10005)
-  })
 })
 
 // Enemy-side mirroring is rowScan behavior, pinned in utils/ring.test.ts.

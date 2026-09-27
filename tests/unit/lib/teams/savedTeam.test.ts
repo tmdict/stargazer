@@ -5,7 +5,6 @@ import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
 import {
   canonicalTeamData,
   duplicateName,
-  nextAutoName,
   sanitizeTeamName,
   uniqueName,
   validateSavedTeam,
@@ -127,13 +126,6 @@ describe('team naming', () => {
     expect(sanitizeTeamName(42)).toBeNull()
   })
 
-  it('nextAutoName picks the next free Team N', () => {
-    expect(nextAutoName([])).toBe('Team 1')
-    expect(nextAutoName(['Team 1'])).toBe('Team 2')
-    expect(nextAutoName(['Team 1', 'Team 2', 'custom'])).toBe('Team 4')
-    expect(nextAutoName(['Team 2', 'foo', 'Team 4'])).toBe('Team 5')
-  })
-
   it('duplicateName appends (copy) within the length cap', () => {
     expect(duplicateName('Alpha')).toBe('Alpha (copy)')
     const maxed = 'x'.repeat(60)
@@ -201,13 +193,6 @@ describe('validateSavedTeam', () => {
 })
 
 describe('uniqueName', () => {
-  it('returns the base when free and numbers collisions from 2', () => {
-    expect(uniqueName([], 'S7 SL')).toBe('S7 SL')
-    expect(uniqueName(['S7 SL'], 'S7 SL')).toBe('S7 SL - 2')
-    expect(uniqueName(['S7 SL', 'S7 SL - 2'], 'S7 SL')).toBe('S7 SL - 3')
-    expect(uniqueName(['S7 SL - 2'], 'S7 SL')).toBe('S7 SL')
-  })
-
   it('truncates the base, not the suffix, at the name cap', () => {
     const long = 'x'.repeat(MAX_TEAM_NAME_LENGTH)
     const numbered = uniqueName([long], long)

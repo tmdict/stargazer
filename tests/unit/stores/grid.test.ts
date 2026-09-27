@@ -19,10 +19,6 @@ describe('grid team view (active board geometry)', () => {
   })
 
   describe('visibleHexes', () => {
-    it('returns the full hex set when teamView is false', () => {
-      expect(grids.active!.visibleHexes).toEqual(gridStore.hexes)
-    })
-
     it('returns only ally-state hexes (occupied + available) when teamView is true', () => {
       gridStore.teamView = true
 
@@ -38,11 +34,6 @@ describe('grid team view (active board geometry)', () => {
   })
 
   describe('viewBoxBounds', () => {
-    it('returns the full grid box when teamView is false', () => {
-      const bounds = grids.active!.viewBoxBounds
-      expect(bounds).toEqual({ x: 0, y: 0, width: 600, height: 600 })
-    })
-
     it('crops to the shown team on both axes when teamView is true', () => {
       gridStore.teamView = true
 

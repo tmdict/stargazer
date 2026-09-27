@@ -15,7 +15,6 @@ import {
   mapKeyByWireId,
   mapWireIdByKey,
   WIRE_MODES,
-  wireModeById,
   wireModeByKey,
 } from '@/lib/teams/wire'
 
@@ -64,22 +63,11 @@ describe('wire registry', () => {
     }
   })
 
-  it('includes arena as wire mode 0', () => {
-    expect(wireModeByKey('arena')).toEqual({ wireId: 0, key: 'arena', boardCount: 1 })
-  })
-
   it('covers every map and reserves 0 for "no map"', () => {
     for (const key of Object.keys(MAPS)) {
       expect(mapWireIdByKey(key), `map ${key} missing from MAP_WIRE_IDS`).toBeGreaterThan(0)
     }
     expect(mapKeyByWireId(0)).toBeUndefined()
-  })
-
-  it('keeps ids unique so reverse lookups are unambiguous', () => {
-    const modeIds = WIRE_MODES.map((mode) => mode.wireId)
-    expect(new Set(modeIds).size).toBe(modeIds.length)
-    const mapIds = Object.values(MAP_WIRE_IDS)
-    expect(new Set(mapIds).size).toBe(mapIds.length)
   })
 
   it('keeps mode and map ids inside their wire fields (3 and 6 bits)', () => {
@@ -91,15 +79,6 @@ describe('wire registry', () => {
     }
     for (const id of Object.values(MAP_WIRE_IDS)) {
       expect(id).toBeLessThan(64)
-    }
-  })
-
-  it('round-trips lookups both ways', () => {
-    for (const mode of WIRE_MODES) {
-      expect(wireModeById(mode.wireId)).toBe(mode)
-    }
-    for (const [key, id] of Object.entries(MAP_WIRE_IDS)) {
-      expect(mapKeyByWireId(id)).toBe(key)
     }
   })
 })

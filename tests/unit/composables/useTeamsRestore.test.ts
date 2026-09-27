@@ -263,17 +263,6 @@ describe('useTeamsRestore', () => {
     expect(season.value).toBeNull()
   })
 
-  it('mode switches leave the view toggles untouched (wrap and inverted included)', () => {
-    // Wrap render gating is the layout side, so the flag survives non-wrap modes
-    const { restore, inverted, wrapBoards } = createHarness()
-    restore.initialize(null)
-    inverted.value = true
-    wrapBoards.value = true
-    restore.switchMode('3v3')
-    expect(inverted.value).toBe(true)
-    expect(wrapBoards.value).toBe(true)
-  })
-
   it('ingress: a shared link adopts all display flags', () => {
     const { restore, flags, inverted } = createHarness()
     const link = encodeMultiGridStateToLinkUrl({

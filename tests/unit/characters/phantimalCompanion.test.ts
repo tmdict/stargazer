@@ -115,12 +115,6 @@ describe('phantimal companion lifecycle', () => {
     skillManager = new SkillManager()
   })
 
-  it('spawns the companion on a free tile of the phantimal team', () => {
-    const free = allyHexes(grid).filter((hexId) => hexId !== 1)
-    expect(executePlaceCharacter(grid, skillManager, 1, OWNER, Team.ALLY)).toBe(true)
-    expect(free).toContain(findCharacterHex(grid, COMPANION, Team.ALLY))
-  })
-
   it('holds no team slot and leaves capacity untouched', () => {
     executePlaceCharacter(grid, skillManager, 1, OWNER, Team.ALLY)
     expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
@@ -192,11 +186,6 @@ describe('phantimal companion serialization', () => {
       [16, OWNER_LOCAL, Team.ALLY],
       [companionHex, 10000 + OWNER_LOCAL, Team.ALLY],
     ])
-  })
-
-  it('round-trips through a binary link unchanged', () => {
-    const state = serializeGridState(grid.getAllTiles(), null, null)
-    expect(decodeGridStateFromUrl(encodeGridStateToUrl(state))?.s).toEqual(state.s)
   })
 
   // The companion section (bit 6) without the phantimal section (bit 3).

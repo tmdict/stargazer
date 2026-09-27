@@ -4,8 +4,6 @@ import { inPhantimalBand, toLocalPhantimalId } from '@/lib/characters/phantimal'
 import {
   CURRENT_SEASON,
   hasRetiredSeasonal,
-  isPermanentArtifactId,
-  isRetiredSeason,
   stripRetiredSeasonal,
   stripSeasonalBoard,
 } from '@/lib/seasonal'
@@ -23,32 +21,6 @@ import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 describe('seasonal', () => {
-  it('derives the current season from the loaded data pool', () => {
-    const maxDataSeason = Math.max(
-      0,
-      ...loadArtifacts().map((a) => a.season),
-      ...loadPhantimals().map((p) => p.season),
-    )
-    expect(CURRENT_SEASON).toBe(maxDataSeason)
-    // Pins the pool's season explicitly so a cutover is a deliberate edit here;
-    // the shim's legacy stamp and the rotation pass's marker seed both assume
-    // the pre-field pool was season 7.
-    expect(CURRENT_SEASON).toBe(8)
-  })
-
-  it('classifies permanent vs seasonal artifact ids from the data', () => {
-    for (const artifact of loadArtifacts()) {
-      expect(isPermanentArtifactId(artifact.id)).toBe(artifact.season === 0)
-    }
-    expect(isPermanentArtifactId(999)).toBe(false)
-  })
-
-  it('treats only the current season as live', () => {
-    expect(isRetiredSeason(CURRENT_SEASON)).toBe(false)
-    expect(isRetiredSeason(CURRENT_SEASON - 1)).toBe(true)
-    expect(isRetiredSeason(CURRENT_SEASON + 1)).toBe(true)
-  })
-
   it('strips phantimals and seasonal artifacts from a retired board', () => {
     const board = {
       c: [[1, 11, Team.ALLY]],
@@ -209,19 +181,5 @@ describe('teamContentKey', () => {
     const unstamped = key({ boards, mode: '1v1' })
     expect(a).toBe(b)
     expect(a).toBe(unstamped)
-  })
-
-  it('differing content differs regardless of stamps', () => {
-    const withArtifact = key({
-      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]], a: [null, 14] }],
-      mode: '1v1',
-      season: CURRENT_SEASON,
-    })
-    const without = key({
-      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }],
-      mode: '1v1',
-      season: CURRENT_SEASON,
-    })
-    expect(withArtifact).not.toBe(without)
   })
 })

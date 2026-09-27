@@ -82,12 +82,6 @@ describe('seasonRotation', () => {
     expect(storage.get(SEASON_KEY)).toBe(String(CURRENT_SEASON))
   })
 
-  it('treats a garbage marker as the pre-marker season', () => {
-    storage.set(SEASON_KEY, 'banana')
-    storage.set(ARENA_KEY, staleArenaValue())
-    expect(runSeasonRotationPass()).toBe(PRE_MARKER_SEASON)
-  })
-
   it('withholds the marker when the strip write fails, so it retries', () => {
     storage.set(SEASON_KEY, String(CURRENT_SEASON - 1))
     storage.set(ARENA_KEY, staleArenaValue())

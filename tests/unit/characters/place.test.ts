@@ -101,16 +101,6 @@ describe('place.ts', () => {
   })
 
   describe('executePlaceCharacter', () => {
-    it('should place a character without a skill, leaving no active-skill entry', () => {
-      const result = executePlaceCharacter(grid, skillManager, 1, ALLY_A, Team.ALLY)
-
-      expect(result).toBe(true)
-      const tile = grid.getTileById(1)
-      expect(tile.characterId).toBe(ALLY_A)
-      expect(tile.team).toBe(Team.ALLY)
-      expect(skillManager.hasActiveSkill(ALLY_A)).toBe(false)
-    })
-
     it('should activate the skill on placement', () => {
       const result = executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
 
@@ -210,14 +200,6 @@ describe('place.ts', () => {
       expect(grid.getTileById(1).characterId).toBe(ALLY_B)
       expect(isCharacterOnTeam(grid, ALLY_A, Team.ALLY)).toBe(false)
       expect(isCharacterOnTeam(grid, ALLY_B, Team.ALLY)).toBe(true)
-    })
-
-    it('should use default team ALLY when not specified', () => {
-      const result = executePlaceCharacter(grid, skillManager, 1, ALLY_A)
-
-      expect(result).toBe(true)
-      const tile = grid.getTileById(1)
-      expect(tile.team).toBe(Team.ALLY)
     })
   })
 

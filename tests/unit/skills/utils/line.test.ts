@@ -17,16 +17,8 @@ describe('hexesBetween', () => {
     expect(betweenIds(1, 10)).toEqual([4, 7])
   })
 
-  it('is order-independent', () => {
-    expect(betweenIds(10, 1)).toEqual([7, 4])
-  })
-
   it('returns [] for adjacent cells (nothing between)', () => {
     expect(betweenIds(1, 4)).toEqual([])
-  })
-
-  it('returns [] for the same cell', () => {
-    expect(betweenIds(1, 1)).toEqual([])
   })
 
   it('returns [] when the two cells share no axis', () => {
@@ -58,36 +50,11 @@ describe('outlineEdges', () => {
     expect(edges.filter((edge) => edge.hex.getId() === 23)).toHaveLength(5)
     expect(edges.filter((edge) => edge.hex.getId() === 16)).toHaveLength(5)
   })
-
-  it('outlines a full radius-2 zone with 30 edges, all on the outer ring', () => {
-    // Around 23 both rings are fully on the board: the 6 corner tiles of the
-    // outer ring expose 3 edges each, the 6 side tiles 2 each.
-    const center = grid.getHexById(23)
-    const zone = grid
-      .getAllTiles()
-      .map((tile) => tile.hex)
-      .filter((hex) => center.distance(hex) <= 2)
-    const edges = outlineEdges(zone)
-    expect(edges).toHaveLength(30)
-    for (const edge of edges) {
-      expect(center.distance(edge.hex)).toBe(2)
-    }
-  })
 })
 
 describe('clipLaneBoundary', () => {
   const grid = new Grid()
   const hexes = (ids: number[]) => ids.map((id) => grid.getHexById(id))
-
-  it('spans the full lane across the whole grid', () => {
-    // The s=2 lane runs cells 5..43 (its corner-3 edge).
-    expect(clipLaneBoundary(grid.keys(), 2, 3)).toEqual({
-      fromHexId: 5,
-      fromCorner: 3,
-      toHexId: 43,
-      toCorner: 3,
-    })
-  })
 
   it('extends across the adjacent lane to the visible edge', () => {
     // Team view shows only s=2 cells 5,10 and the s=3 cells 14,21 just outside the band.

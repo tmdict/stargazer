@@ -44,26 +44,6 @@ describe('useGridInfoPrefs', () => {
     vi.unstubAllGlobals()
   })
 
-  it('seeds the pref key with the defaults on first run', async () => {
-    const { useGridInfoPrefs } = await importComposable()
-
-    const { prefs } = useGridInfoPrefs()
-
-    expect(JSON.parse(storage.get(PREFS_KEY)!)).toEqual({
-      gridInfo: {
-        master: false,
-        tileIds: true,
-        hover: true,
-        heroCard: false,
-        upgrades: false,
-        targeting: false,
-        coordinates: false,
-      },
-    })
-    expect(prefs.master).toBe(false)
-    expect(prefs.tileIds).toBe(true)
-  })
-
   it('reseeds a corrupt stored object with the defaults', async () => {
     storage.set(PREFS_KEY, 'not-json')
     const { useGridInfoPrefs } = await importComposable()

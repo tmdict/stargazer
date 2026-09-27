@@ -36,7 +36,7 @@ const LABEL_STOPS = [0.5, 0.42, 0.58, 0.34, 0.66, 0.26, 0.74, 0.18, 0.82]
 const COST = { outside: 100, label: 12, card: 40 }
 const CURVE_SAMPLES = 25
 /** A share from fewer games than this is shown dimmed. */
-export const FEW_GAMES = 8
+const FEW_GAMES = 8
 
 export type LadderSide = 'left' | 'right'
 

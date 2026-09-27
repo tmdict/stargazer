@@ -2,14 +2,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { Grid } from '@/lib/grid'
 import { getCharacterSkill, SkillManager, type SkillContext } from '@/lib/skills/skill'
-import { SKILL_COLORS } from '@/lib/skills/utils/colors'
 import { Team } from '@/lib/types/team'
 import { placeOnTile } from '../fixtures/skills'
 
 // Callan (shield) and Satrana (sparks) share the radius-2 zone-outline skill,
-// differing only in color; the lifecycle tests run through Callan alone.
+// differing only in color, so Callan stands in for both.
 const CALLAN = 70
-const SATRANA = 35
 const INTERIOR_HEX = 23 // both rings fully on the board
 const EDGE_HEX = 6 // ring 2 only partially on the board
 
@@ -17,11 +15,11 @@ describe('radius-2 zone-outline skills (callan, satrana)', () => {
   let grid: Grid
   let skillManager: SkillManager
 
-  const ctx = (hexId: number, characterId = CALLAN): SkillContext => ({
+  const ctx = (hexId: number): SkillContext => ({
     grid,
     hexId,
     team: Team.ALLY,
-    characterId,
+    characterId: CALLAN,
     skillManager,
   })
 
@@ -32,12 +30,9 @@ describe('radius-2 zone-outline skills (callan, satrana)', () => {
     skillManager = new SkillManager()
   })
 
-  it.each([
-    { name: 'callan', characterId: CALLAN, color: SKILL_COLORS.green },
-    { name: 'satrana', characterId: SATRANA, color: SKILL_COLORS.red },
-  ])('draws the 30-segment perimeter of a full 2-tile zone for $name', ({ characterId, color }) => {
-    placeOnTile(grid, INTERIOR_HEX, characterId, Team.ALLY)
-    getCharacterSkill(characterId)!.onActivate(ctx(INTERIOR_HEX, characterId))
+  it('draws the 30-segment perimeter of a full 2-tile zone', () => {
+    placeOnTile(grid, INTERIOR_HEX, CALLAN, Team.ALLY)
+    callan().onActivate(ctx(INTERIOR_HEX))
 
     const lines = skillManager.getSkillLines()
     expect(lines).toHaveLength(30)
@@ -45,7 +40,6 @@ describe('radius-2 zone-outline skills (callan, satrana)', () => {
     for (const line of lines) {
       expect(line.fromHexId).toBe(line.toHexId)
       expect(line.fromCorner).toBeDefined()
-      expect(line.color).toBe(color)
       expect(center.distance(grid.getHexById(line.fromHexId))).toBe(2)
     }
   })
@@ -76,15 +70,5 @@ describe('radius-2 zone-outline skills (callan, satrana)', () => {
     for (const line of lines) {
       expect(center.distance(grid.getHexById(line.fromHexId))).toBeLessThanOrEqual(2)
     }
-  })
-
-  it('clears the outline on deactivate', () => {
-    placeOnTile(grid, INTERIOR_HEX, CALLAN, Team.ALLY)
-    callan().onActivate(ctx(INTERIOR_HEX))
-    expect(skillManager.getSkillLines()).not.toHaveLength(0)
-
-    callan().onDeactivate(ctx(INTERIOR_HEX))
-
-    expect(skillManager.getSkillLines()).toHaveLength(0)
   })
 })

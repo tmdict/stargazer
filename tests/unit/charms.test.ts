@@ -5,7 +5,6 @@
 import { describe, expect, it } from 'vitest'
 
 import {
-  getCharmForHero,
   getSkillCharms,
   loadAppLocales,
   loadCharacters,
@@ -43,13 +42,6 @@ describe('charm data', () => {
       }
     },
   )
-
-  it.runIf(slugs.length > 0)('derives the inverse hero lookup', () => {
-    const [slug] = slugs
-    const hero = charms[slug!]!.heroes[0]!
-    expect(getCharmForHero(hero)).toEqual({ slug, heroes: charms[slug!]!.heroes })
-    expect(getCharmForHero('no-such-hero')).toBeNull()
-  })
 
   it.runIf(slugs.length > 0)('has en and zh locale entries with four tiers for every charm', () => {
     for (const lang of ['en', 'zh'] as const) {

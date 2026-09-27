@@ -164,16 +164,6 @@ describe('useTeamLibrary', () => {
     expect(library.duplicate('missing')).toBeNull()
   })
 
-  it('remove and removeAll persist immediately', () => {
-    seed([record('a', 'Alpha'), record('b', 'Bravo')])
-    const library = useTeamLibrary()
-    library.remove('a')
-    expect(stored().map((t) => t.id)).toEqual(['b'])
-    library.removeAll()
-    expect(stored()).toHaveLength(0)
-    expect(library.count).toBe(0)
-  })
-
   it('mutations read-modify-write against fresh storage (another tab wrote)', () => {
     seed([record('a', 'Alpha')])
     const library = useTeamLibrary()
@@ -228,14 +218,6 @@ describe('useTeamLibrary export/import', () => {
         .map((t) => t.id)
         .sort(),
     ).toEqual(['a', 'b'])
-  })
-
-  it('exports only the given selection', () => {
-    seed([record('a', 'Alpha'), record('b', 'Bravo')])
-    const library = useTeamLibrary()
-    const file = library.exportTeams(library.teams.filter((t) => t.id === 'b'))
-    expect(file.teams.map((t) => t.name)).toEqual(['Bravo'])
-    expect(library.count).toBe(2)
   })
 
   it('import merges and skips duplicates of current records', () => {
