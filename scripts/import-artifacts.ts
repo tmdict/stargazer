@@ -1,9 +1,9 @@
 // Artifact effect-text importer.
 //
-// Split of ownership: structural records (src/data/artifact/,
-// src/data/seasonal/artifact/) and the display-name locale files (curated
-// short names; the feed's en names carry a "Spell" suffix) are hand-written.
-// This script owns only the per-level effect text, which is feed-verbatim and
+// Split of ownership: the structural records and display-name files are
+// hand-written for the permanent six (src/data/artifact/) and written by
+// import:structure for the season's set (src/data/seasonal/artifact/). This
+// script owns only the per-level effect text, which is feed-verbatim and
 // balance-patchable:
 //   src/locales/artifact/effects/<slug>.json            pre-season set
 //   src/locales/seasonal/artifact/effects/<slug>.json   seasonal set
@@ -28,6 +28,7 @@ import { fileURLToPath } from 'node:url'
 
 import { isAppLocale, SKILL_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
 import { arg, cleanDescription, feedSrcDir, hasFlag, writeTextIfChanged } from './lib/shared.ts'
+import { STAT_KEY } from './lib/structure.ts'
 
 // ---------- paths ----------
 
@@ -50,22 +51,6 @@ const TREES = {
 } as const
 
 type ArtifactSet = keyof typeof TREES
-
-// Feed stat codes → the structural files' stats keys.
-const STAT_KEY: Record<string, string> = {
-  HP: 'hp',
-  ATK: 'atk',
-  DEF: 'def',
-  ARM: 'phys-def',
-  MR: 'magic-def',
-  HAST: 'haste',
-  ATKHAST: 'atk-spd',
-  PT: 'def-penetration',
-  HEAL: 'vitality',
-  BLOCK: 'ranged-def',
-  LFS: 'life-drain',
-  CRIT: 'crit',
-}
 
 // ---------- feed shape (single-locale per file) ----------
 

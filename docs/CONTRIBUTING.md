@@ -27,6 +27,7 @@ npm run lint          # ESLint (lint:fix to auto-fix)
 npm run type-check    # vue-tsc
 npm run test          # all tests (test:unit, test:it, test:watch)
 npm run import:seasonal  # skills, charms, artifacts, phantimals from the data feed
+npm run import:structure # a season's artifact and phantimal data files, from the data feed
 npm run import:skills    # skill text only (also import:charms, :artifacts, :phantimals)
 npm run check:import     # run the screenshot-import readers over a folder of images
 ```

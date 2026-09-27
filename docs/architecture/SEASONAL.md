@@ -21,19 +21,19 @@ Two facts shape the design. The game reuses ids from one season to the next, so 
 
 | Content                             | Files                                                                          | Written by          |
 | ----------------------------------- | ------------------------------------------------------------------------------ | ------------------- |
-| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                      | hand                |
+| Phantimal id, faction, range, flags | `src/data/seasonal/phantimal/<slug>.json`                                      | `import:structure`  |
 | Phantimal name and skill text       | `src/locales/seasonal/phantimal/<slug>.json`                                   | `import:phantimals` |
-| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`)               | hand                |
-| Artifact names                      | `src/locales/seasonal/artifact/`                                               | hand                |
+| Artifact id and stats               | `src/data/seasonal/artifact/` (pre-season: `src/data/artifact/`, by hand)      | `import:structure`  |
+| Artifact names                      | `src/locales/seasonal/artifact/`                                               | `import:structure`  |
 | Artifact effect text                | `src/locales/seasonal/artifact/effects/`                                       | `import:artifacts`  |
 | Charms                              | `src/data/seasonal/charm/charms.json`, `src/locales/skill/<code>/_charms.json` | `import:charms`     |
 | Charm tags                          | `src/data/seasonal/charm/tags.json`                                            | hand                |
 | Phantimal skills, artifact arrows   | `src/lib/skills/seasonal/phantimal.ts`, `src/lib/skills/artifact.ts`           | hand                |
 | Icons                               | image host, `seasonal/{artifact,phantimal}/<slug>.webp`                        | exported per season |
 
-Ids and ranges are hand-written because ids are baked into share links and range is a board-simulation judgment the feed does not carry.
+`npm run import:structure` writes the structural files from the feed by fixed rules (`scripts/lib/structure.ts`): an artifact's id is 6 plus its place in the season's set, a phantimal's is its camp slot, range is 1 for melee and 20 otherwise, and the camp-5 phantimal qualifies for both Hypogean and Celestial. Ids are baked into share links, so it never changes an existing file's id within a season; a clash stops it for a hand decision. Hand-set fields such as `targeting` are kept, and the previous season's files are removed.
 
-`npm run import:seasonal` runs `import:skills`, `import:charms`, `import:artifacts` and `import:phantimals` in that order (charm text is checked against the skill keyword glossaries, so skills go first). Each importer writes what the feed carries and checks the hand-written files against it: slug sets must match in both directions, phantimal factions must agree, and artifact stats must equal the feed's through the stat-code map in `scripts/import-artifacts.ts`. Any mismatch fails the run. A missing feed is an error, never a wipe. `--retire` deletes an importer's generated files on purpose. The feed's location is `DATA_FEED_DIR` in `.env.local` (template: `.env.example`); `--src-dir` / `--url-base` point at another feed.
+`npm run import:seasonal` runs `import:skills`, `import:charms`, `import:artifacts` and `import:phantimals` in that order (charm text is checked against the skill keyword glossaries, so skills go first). Each importer writes what the feed carries and checks the hand-written files against it: slug sets must match in both directions, phantimal factions must agree, and artifact stats must equal the feed's through the stat-code map in `scripts/lib/structure.ts`. Any mismatch fails the run. A missing feed is an error, never a wipe. `--retire` deletes an importer's generated files on purpose. The feed's location is `DATA_FEED_DIR` in `.env.local` (template: `.env.example`); `--src-dir` / `--url-base` point at another feed.
 
 ## Reused ids
 
@@ -101,7 +101,7 @@ It needs the new ids, en/zh names, artifact stats, phantimal factions and ranges
 
 1. Publish the new icons, companions included, to the image host before deploying.
 2. Retire the old generated text: `npm run import:phantimals -- --retire`, then the same for `import:artifacts` and `import:charms`. Charms carry no season stamp, so the old text cannot stay up.
-3. Replace the hand-written data and name files, reusing the freed ids. Leave `targeting` out, and set `qualifyingFactions` where a phantimal counts two factions. Phantimal names live in importer-owned files, so write name-only stubs (`{"name": {"en", "zh"}, "skills": []}`) for phase 2 to overwrite. A new stat needs an `ArtifactStatKey`, a label in `src/locales/game/`, and its feed code in the importer's stat-code map.
+3. Run `npm run import:structure`: it replaces the season's artifact and phantimal data files and the artifact names, reusing the freed ids. A new stat needs an `ArtifactStatKey`, a label in `src/locales/game/`, and its feed code in `STAT_KEY` (`scripts/lib/structure.ts`); the command stops on an unmapped code. Phantimal names come with their text from `import:phantimals`; if the feed does not carry the season's text yet, write name-only stubs (`{"name": {"en", "zh"}, "skills": []}`) for phase 2 to overwrite.
 4. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
 5. Bump the season pin in `tests/unit/lib/seasonal.test.ts` and replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
 6. If the Supreme League map list changed, move the new preset maps onto the ids the old ones free in `MAP_WIRE_IDS` (`src/lib/teams/wire.ts`) and edit the `sl` row of `TEAM_VARIANTS` (`src/lib/teams/modes.ts`). Boards on the old list stop reading as Supreme League.
