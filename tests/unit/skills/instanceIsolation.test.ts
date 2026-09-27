@@ -6,6 +6,10 @@
  * catches both failure shapes for current and future skills alike: a
  * config-keyed write clobbers the base instance's state, and a config-keyed
  * clear leaks state past deactivation.
+ *
+ * The board is seeded so every registered skill produces an effect, and the
+ * test requires one: a skill that stops firing fails here, and the cleanup
+ * checks always run against real state.
  */
 import { describe, expect, it } from 'vitest'
 
@@ -18,10 +22,11 @@ import { executePlaceCharacter } from '@/lib/characters/place'
 import { executeRemoveCharacter } from '@/lib/characters/remove'
 import { decomposeUnitId, toSynergyId } from '@/lib/characters/synergy'
 import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
+import type { Hex } from '@/lib/hex'
 import { getRegisteredSkills } from '@/lib/skills/registry'
 import { SkillManager } from '@/lib/skills/skill'
+import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { TARGETING_ARENA, TARGETING_GRID } from '../fixtures/grid'
 
 interface ManagerSnapshot {
   targets: [string, unknown][]
@@ -41,20 +46,65 @@ const snapshot = (sm: SkillManager): ManagerSnapshot => ({
   lineCount: sm.getSkillLines().length,
 })
 
+const hasEffect = (s: ManagerSnapshot): boolean =>
+  s.targets.length +
+    s.colors.length +
+    s.images.length +
+    s.tileColors.length +
+    s.tileFills.length +
+    s.lineCount >
+  0
+
 const keyed = <T>(entries: [string, T][], id: number): [string, T][] =>
   entries.filter(([key]) => key.startsWith(`${id}-`))
 
+// Skill-less seeds. Allies (classes by id % 4 under classOf below): a tank
+// behind the hero, a mage and a support beside it, and a warrior in its row.
+// Enemies spread across their side.
+const ALLY_SEEDS = [9100, 9101, 9103, 9102]
+const ENEMY_SEEDS = [9001, 9002, 9004]
+const SEEDS = [...ENEMY_SEEDS, ...ALLY_SEEDS]
+
+// Free ally tile: the state flips to occupied while a unit stands on it.
+const isAllyTile = (grid: Grid, hex: Hex): boolean =>
+  grid.getTileOrUndefined(hex)?.state === State.AVAILABLE_ALLY
+
 const makeHarness = () => {
-  const grid = new Grid(TARGETING_GRID, TARGETING_ARENA)
+  const grid = new Grid()
   const sm = new SkillManager({
     factionOf: (id) => ['lightbearer', 'wilder', 'graveborn', 'mauler'][id % 4],
-    classOf: (id) => ['tank', 'mage', 'warrior'][id % 3],
+    classOf: (id) => ['tank', 'mage', 'warrior', 'support'][id % 4],
   })
-  // Enemy seeds (skill-less placeholders) so targeting scans have units to find.
+  // The hero goes on an ally tile with an ally tile behind it (neighbour 3 for
+  // allies) and a row-mate (same diagonal, which is never a neighbour), so
+  // neighbour-, row- and behind-based skills all have someone to act on.
+  const allyHexes = getAllAvailableTilesForTeam(grid, Team.ALLY).map((t) => t.hex)
+  // Mapped to the grid's own hexes, which carry the tile ids.
+  const neighbours = (hex: Hex): Hex[] =>
+    hex.getNeighbors().flatMap((n) => (isAllyTile(grid, n) ? [grid.getTile(n).hex] : []))
+  const behind = (hex: Hex) => neighbours(hex).find((n) => n.equals(hex.neighbor(3)))
+  const rowMate = (hex: Hex) =>
+    allyHexes.find((h) => h !== hex && h.getDiagonal() === hex.getDiagonal())
+  const center = allyHexes
+    .filter((h) => behind(h) && rowMate(h) && neighbours(h).length >= 3)
+    .reduce((a, b) => (neighbours(b).length > neighbours(a).length ? b : a))
+  const back = behind(center)!
+  const [side1, side2] = neighbours(center).filter((n) => n !== back)
+  const seedHexes = [back, side1!, side2!, rowMate(center)!]
+  ALLY_SEEDS.forEach((id, i) => {
+    const hexId = seedHexes[i]!.getId()
+    expect(executePlaceCharacter(grid, sm, hexId, id, Team.ALLY)).toBe(true)
+  })
   const enemyTiles = getAllAvailableTilesForTeam(grid, Team.ENEMY)
-  expect(executePlaceCharacter(grid, sm, enemyTiles[0]!.hex.getId(), 9001, Team.ENEMY)).toBe(true)
-  expect(executePlaceCharacter(grid, sm, enemyTiles[1]!.hex.getId(), 9002, Team.ENEMY)).toBe(true)
-  const freeAllyHex = () => getAllAvailableTilesForTeam(grid, Team.ALLY)[0]!.hex.getId()
+  ENEMY_SEEDS.forEach((id, i) => {
+    const tile = enemyTiles[Math.floor((i * (enemyTiles.length - 1)) / (ENEMY_SEEDS.length - 1))]!
+    expect(executePlaceCharacter(grid, sm, tile.hex.getId(), id, Team.ENEMY)).toBe(true)
+  })
+  // The center while it is free, else any free ally tile.
+  const freeAllyHex = () =>
+    isAllyTile(grid, center)
+      ? center.getId()
+      : getAllAvailableTilesForTeam(grid, Team.ALLY)[0]!.hex.getId()
   return { grid, sm, freeAllyHex }
 }
 
@@ -74,6 +124,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
       const baseHex = freeAllyHex()
       expect(executePlaceCharacter(grid, sm, baseHex, baseId, Team.ALLY)).toBe(true)
       const soloState = snapshot(sm)
+      expect(hasEffect(soloState), `${skill.id} produced no effect to clean up`).toBe(true)
 
       const copyHex = freeAllyHex()
       expect(executePlaceCharacter(grid, sm, copyHex, copyId, Team.ALLY)).toBe(true)
@@ -113,7 +164,7 @@ describe('skill instance isolation (divergent-id contract)', () => {
         getTilesWithCharacters(grid)
           .map((t) => t.characterId)
           .sort(),
-      ).toEqual([9001, 9002])
+      ).toEqual([...SEEDS].sort())
     })
   }
 
