@@ -1,0 +1,3351 @@
+{
+  "aliceth": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 2,
+      "range": 8
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 4
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "alna": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 7,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 20,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "alsa": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 6
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 6
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 6,
+      "range": 6
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "antandra": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 1.25,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 15,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "arden": {
+    "ultimate": {
+      "cooldown": 3,
+      "initialCooldown": 1.25,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 1.25,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "aster": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 9,
+      "initialCooldown": 4,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    }
+  },
+  "atalanta": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 3
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": 4
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 2,
+      "range": 4
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 4
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "athalia": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 5,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "aurora": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 9,
+      "initialCooldown": 1.5,
+      "range": "global"
+    },
+    "skill3": {
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "baelran": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 4,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "berial": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 20,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "bonnie": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "range": 10
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "brutus": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 1.25,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 15,
+      "initialCooldown": 1.25,
+      "range": 1
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 5,
+      "initialCooldown": 1.25,
+      "range": 1,
+      "levels": {
+        "3": {
+          "cooldown": 0
+        }
+      }
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "bryon": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 14,
+      "initialCooldown": 0.125,
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 16,
+      "initialCooldown": 0.125,
+      "range": 5
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "callan": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 5,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "carolina": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": 4
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "cassadee": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 5
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "cecia": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 15,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "chippy": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 2,
+      "range": 1
+    },
+    "skill3": {
+      "range": "global"
+    }
+  },
+  "contess": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 8,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 10,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "cryonaia": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": 5
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "cyran": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 9,
+      "range": 6
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "daimon": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "damian": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 14,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "dionel": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 0,
+      "range": 0
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 22,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 15,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "dunlingr": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "skill3": {
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "eironn": {
+    "ultimate": {
+      "cooldown": 2,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "elijah-lailah": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "eryndor": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 3,
+      "range": 8
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    }
+  },
+  "evie": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "faramor": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "fay": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 3
+    },
+    "skill2": {
+      "cooldown": 11,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 9,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "florabelle": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 1.25,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 14,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "frieren": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 7
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 2,
+      "range": 7
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "galahad": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": 10
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 5,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "gerda": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 6,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "granny-dahnie": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "gunnar": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "gwyneth": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "hammie": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 5
+    },
+    "skill2": {
+      "cooldown": 9,
+      "initialCooldown": 2,
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 7,
+      "initialCooldown": 2,
+      "range": 5
+    }
+  },
+  "harak": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 15,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "hepler": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "hewynn": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1.25,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 5,
+      "initialCooldown": 1.25,
+      "range": 4
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "himmel": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 3
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 9,
+      "initialCooldown": 6,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "hodgkin": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 18,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 9,
+      "initialCooldown": 4,
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "hugin": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "igor": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 1,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill3": {
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "indris": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "isabella": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "kafra": {
+    "ultimate": {
+      "cooldown": 3,
+      "initialCooldown": 0.5,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 2.5,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 3,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "karma": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 4,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "range": 1
+    }
+  },
+  "kazim": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 9,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "koko": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 4,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 0,
+      "range": 4
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "kordan": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "korin": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "skill2": {
+      "cooldown": 9,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "kruger": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 5,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 2,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "kulu": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 11,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 14,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "mastery": {
+      "range": "global"
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "laios": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lamentis": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 0
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "lenya": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lily-may": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 20,
+      "initialCooldown": 0,
+      "range": 7
+    },
+    "skill3": {
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lorsan": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lucca": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 6,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lucius": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 13,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lucy": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 8,
+      "initialCooldown": 8,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "ludovic": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 5,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 3,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lumont": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 8
+    },
+    "skill2": {
+      "cooldown": 15,
+      "initialCooldown": 4,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 6,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 0,
+      "initialCooldown": 0.25,
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "lyca": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 11
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "marcille": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 1,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 1,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "marilee": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 2,
+      "levels": {
+        "2": {
+          "range": 3
+        }
+      }
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "skill3": {
+      "range": 2,
+      "levels": {
+        "3": {
+          "range": 1
+        }
+      }
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "mehira": {
+    "ultimate": {
+      "cooldown": 2,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 5,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 15,
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "mikola": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 2
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "mirael": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 1.25,
+      "range": 11
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 1.25,
+      "range": 10
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 1.25,
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "nara": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 4,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "natsu": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 11
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "nazrik": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 0,
+      "range": 10
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 8,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "nerion": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 7
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 1,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "niru": {
+    "ultimate": {
+      "cooldown": 1,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 6,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "odie": {
+    "ultimate": {
+      "cooldown": 2,
+      "initialCooldown": 1,
+      "range": 5
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "orion": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 2,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "pandora": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 5,
+      "initialCooldown": 6,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "pang": {
+    "ultimate": {
+      "cooldown": 2,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "parisa": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "peggy": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "perseus": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 3
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "phraesto": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 1.25,
+      "range": 2
+    },
+    "skill2": {
+      "cooldown": 14,
+      "initialCooldown": 4,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 11,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "pippa": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 0,
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 9,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "ravion": {
+    "ultimate": {
+      "cooldown": 2,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 10,
+      "range": 4
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "reinier": {
+    "ultimate": {
+      "cooldown": 1.25,
+      "initialCooldown": 1.25,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "rhys": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "rolan": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 4,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "rowan": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill2": {
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 3.25,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "saida": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "salazer": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "satrana": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "scarlita": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 3,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "senea": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 10,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "seth": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 6.5,
+      "initialCooldown": 2,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "shadewing": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "shakir": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "shemira": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 2,
+      "range": 4
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 4,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "silven": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 0.125,
+      "initialCooldown": 0,
+      "range": 12
+    },
+    "skill3": {
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "silvina": {
+    "ultimate": {
+      "cooldown": 2,
+      "initialCooldown": 2,
+      "range": 1
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "sinbad": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 6,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 4,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "smokey-meerky": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 2
+    },
+    "skill2": {
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 5,
+      "initialCooldown": 1,
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 4
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "solise": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 7,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "sonja": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 3
+    },
+    "skill2": {
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "soren": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 11,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "sylphira": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 14,
+      "initialCooldown": 5,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 18,
+      "initialCooldown": 3,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "taichi-agumon": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 10,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 14,
+      "initialCooldown": 9,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 10,
+      "initialCooldown": 4,
+      "range": 1
+    }
+  },
+  "talene": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "tasi": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 3,
+      "range": 10
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "temesia": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 0,
+      "range": 2
+    },
+    "skill3": {
+      "cooldown": 15,
+      "range": 3
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "thador": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 0
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 6,
+      "initialCooldown": 1,
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "thoran": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 15,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "tilaya": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "skill2": {
+      "cooldown": 6,
+      "initialCooldown": 2,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "ulmus": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 14,
+      "initialCooldown": 3,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "vala": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": 7
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 3
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "valen": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 1,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 9,
+      "initialCooldown": 1,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 11,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "valka": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 5,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "velara": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 12,
+      "initialCooldown": 5,
+      "range": "global"
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "viperian": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 1,
+      "range": 5
+    },
+    "skill3": {
+      "cooldown": 15,
+      "initialCooldown": 10,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 30,
+      "initialCooldown": 10,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "voracia": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 5,
+      "initialCooldown": 5,
+      "range": 10
+    },
+    "skill3": {
+      "cooldown": 7,
+      "initialCooldown": 2,
+      "range": 10
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 10
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "walker": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 10
+    },
+    "skill2": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "skill3": {
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "yamato-gabumon": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "cooldown": 9,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 25,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "awakening": {
+      "cooldown": 0
+    }
+  },
+  "zandrok": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill2": {
+      "range": "global"
+    },
+    "skill3": {
+      "cooldown": 7,
+      "initialCooldown": 2,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "zanie": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 6,
+      "range": "global"
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "cooldown": 15,
+      "initialCooldown": 15,
+      "range": "global",
+      "levels": {
+        "3": {
+          "cooldown": 12,
+          "initialCooldown": 12
+        }
+      }
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
+  "zorya": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 8,
+      "initialCooldown": 4,
+      "range": 2
+    },
+    "skill3": {
+      "cooldown": 8,
+      "initialCooldown": 0,
+      "range": 2
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 2
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  }
+}

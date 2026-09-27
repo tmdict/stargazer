@@ -1,5 +1,6 @@
 import { reactive } from 'vue'
 
+import skillNumbers from '@/data/skill/numbers.json'
 import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
@@ -17,6 +18,7 @@ import type {
   SkillCharms,
   SkillKeywords,
   SkillLocaleFile,
+  SkillNumbers,
   TagAttachment,
 } from '@/lib/types/skill'
 import { artifactImages, characterImages } from './imageAssets'
@@ -461,6 +463,12 @@ export function getSkillLocaleDict(lang: SkillLocale): Record<string, SkillLocal
  * loadSkillLocale explicitly. */
 export function getSkillFile(lang: SkillLocale, slug: string): SkillLocaleFile | null {
   return getSkillLocaleDict(lang)?.[slug] ?? null
+}
+
+/** A hero's per-slot cooldowns and ranges; language-independent, so one eager
+ * file serves every skill language. */
+export function getSkillNumbers(slug: string): SkillNumbers[string] {
+  return (skillNumbers as SkillNumbers)[slug] ?? {}
 }
 
 /** Sync read of a language's keyword glossary (tooltip text for the

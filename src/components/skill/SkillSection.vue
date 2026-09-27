@@ -2,6 +2,9 @@
 import { computed } from 'vue'
 
 import SkillSectionHeader from './SkillSectionHeader.vue'
+import IconArrowRight from '@/components/ui/IconArrowRight.vue'
+import type { SkillLocaleFile, SlotNumbers } from '@/lib/types/skill'
+import { skillMetaItems } from '@/utils/skillLabels'
 import { highlightSkillText } from '@/utils/textHighlight'
 
 interface LevelRow {
@@ -16,12 +19,18 @@ interface RefinementRow {
 
 const props = defineProps<{
   heading?: string
+  // Cooldown and range, shown under the heading; labels are the skill-text
+  // file's `_terms`.
+  numbers?: SlotNumbers
+  terms?: SkillLocaleFile['_terms']
   slotTags?: { name: string; label: string }[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
   /** Levels to accent as the ones that earn an active tag (guide view). */
   highlightLevels?: number[]
 }>()
+
+const meta = computed(() => skillMetaItems(props.numbers, props.terms))
 
 const rendered = computed(() =>
   props.levels.map((l) => ({
@@ -43,6 +52,21 @@ const renderedRefinements = computed(() =>
 <template>
   <section class="skill-section">
     <SkillSectionHeader :heading :slot-tags />
+    <p v-if="meta.length" class="skill-meta">
+      <span v-for="item in meta" :key="item.before"
+        >{{ item.before
+        }}<span class="skill-meta-value"
+          ><template v-for="(value, i) in item.values" :key="i"
+            ><template v-if="i > 0"
+              ><IconArrowRight class="skill-meta-arrow" aria-hidden="true" /><span
+                class="visually-hidden"
+                >→</span
+              ></template
+            >{{ value }}</template
+          ></span
+        >{{ item.after }}</span
+      >
+    </p>
     <div class="skill-levels">
       <div
         v-for="row in rendered"
@@ -75,6 +99,38 @@ const renderedRefinements = computed(() =>
   margin: var(--spacing-lg) 0;
   /* Hash-targeted sections (search deep links) land clear of the header. */
   scroll-margin-top: 80px;
+}
+
+.skill-meta {
+  display: flex;
+  flex-wrap: wrap;
+  column-gap: 18px;
+  margin: 0 0 var(--spacing-sm);
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.skill-meta-value {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+/* `middle` sets the icon's center on the lowercase letters' middle; digits
+   stand taller, so a 1px lift centers it on them. */
+.skill-meta-arrow {
+  margin: 0 5px;
+  vertical-align: middle;
+  position: relative;
+  top: -1px;
+}
+
+/* The arrow as text, for screen readers and copied text. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .skill-levels {
