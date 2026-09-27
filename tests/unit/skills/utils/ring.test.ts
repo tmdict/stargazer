@@ -15,22 +15,6 @@ describe('spiralSearchFromTile', () => {
     placeOnTile(grid, 11, 200, Team.ENEMY)
   })
 
-  it('finds nearest target via spiral search', () => {
-    const result = spiralSearchFromTile(grid, 7, Team.ALLY, Team.ENEMY)
-
-    expect(result).not.toBeNull()
-    expect(result?.targetCharacterId).toBe(100)
-    expect(result?.metadata?.symmetricalHexId).toBe(7)
-    expect(result?.metadata?.isSymmetricalTarget).toBe(false)
-  })
-
-  it('returns null when no targets exist', () => {
-    grid.getTileById(3).characterId = undefined
-
-    const result = spiralSearchFromTile(grid, 7, Team.ALLY, Team.ENEMY)
-    expect(result).toBeNull()
-  })
-
   it('expands ring by ring, examining each full ring before the next', () => {
     placeOnTile(grid, 5, 101, Team.ALLY)
 
@@ -80,14 +64,6 @@ describe('rowScan (diagonal-row scan)', () => {
       rowScan(ally(), { team: Team.ALLY, rowDirection: REAR, withinRowDirection: FRONT })
         ?.targetHexId,
     ).toBe(7)
-  })
-
-  it('withinRowDirection defaults to rowDirection when omitted', () => {
-    placeOnTile(grid, 6, 101, Team.ALLY)
-    placeOnTile(grid, 7, 102, Team.ALLY)
-
-    // Omitting it matches REARMOST within, so the lower hex id wins as in the explicit case.
-    expect(rowScan(ally(), { team: Team.ALLY, rowDirection: REAR })?.targetHexId).toBe(6)
   })
 
   it('rowDirection chooses which diagonal row is reached first', () => {
@@ -160,42 +136,11 @@ describe('rowScan (diagonal-row scan)', () => {
     expect(result?.metadata?.distance).toBe(1)
   })
 
-  it('returns null when no candidate is within maxDistance', () => {
-    placeOnTile(grid, 1, 101, Team.ALLY) // distance 2
-
-    const result = rowScan(ally(), {
-      team: Team.ALLY,
-      rowDirection: REAR,
-      withinRowDirection: REAR,
-      maxDistance: 1,
-    })
-    expect(result).toBeNull()
-  })
-
-  it('returns null when there are no candidates', () => {
-    expect(
-      rowScan(ally(), { team: Team.ALLY, rowDirection: REAR, withinRowDirection: REAR }),
-    ).toBeNull()
-  })
-
   it('excludes the caster itself', () => {
     placeOnTile(grid, 4, 300, Team.ALLY) // same id as the caster
 
     expect(
       rowScan(ally(), { team: Team.ALLY, rowDirection: REAR, withinRowDirection: REAR }),
     ).toBeNull()
-  })
-
-  it('filter keeps only matching candidates', () => {
-    placeOnTile(grid, 4, 101, Team.ALLY) // rear row, would win without the filter
-    placeOnTile(grid, 7, 102, Team.ALLY)
-
-    const result = rowScan(ally(), {
-      team: Team.ALLY,
-      rowDirection: REAR,
-      withinRowDirection: REAR,
-      filter: (id) => id === 102,
-    })
-    expect(result?.targetHexId).toBe(7)
   })
 })

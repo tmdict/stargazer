@@ -49,17 +49,6 @@ export const SMALL_BLOCKED_ARENA = {
   ],
 }
 
-/** Used with SMALL_GRID. Ally [1,2], Enemy [4,5], Default [3]. */
-export const SMALL_OPEN_ARENA = {
-  id: 1,
-  name: 'Test',
-  grid: [
-    { type: State.AVAILABLE_ALLY, hex: [1, 2] },
-    { type: State.AVAILABLE_ENEMY, hex: [4, 5] },
-    { type: State.DEFAULT, hex: [3] },
-  ],
-}
-
 /** Used with STANDARD_GRID. Ally [1,2,3], Enemy [4,5], Blocked [6], Default [7]. */
 export const STANDARD_ARENA = {
   id: 1,

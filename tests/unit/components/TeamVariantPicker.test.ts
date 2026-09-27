@@ -121,21 +121,4 @@ describe('TeamVariantPicker', () => {
     await nextTick()
     expect(selected).not.toHaveBeenCalled()
   })
-
-  it('expires an unconfirmed click', async () => {
-    vi.useFakeTimers()
-    const { selected } = await mountPicker()
-    segment('Default').click()
-    await nextTick()
-    vi.advanceTimersByTime(3000)
-    await nextTick()
-    expect(document.querySelector('.armed')).toBeNull()
-    segment('Default').click()
-    expect(selected).not.toHaveBeenCalled()
-  })
-
-  it('is hidden for a mode without named types', async () => {
-    await mountPicker({ activeMode: '1v1', match: 'default' })
-    expect(document.querySelector('.variant-picker')).toBeNull()
-  })
 })

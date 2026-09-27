@@ -147,7 +147,7 @@ export function findPathAStar(
  * Calculate minimum movement distance to reach any target using BFS.
  * Returns the movement distance and all targets reachable at that distance.
  */
-export function calculateRangedMovementDistance(
+function calculateRangedMovementDistance(
   start: Hex,
   targets: Hex[],
   range: number,

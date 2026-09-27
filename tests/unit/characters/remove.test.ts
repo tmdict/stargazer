@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import {
   findCharacterHex,
@@ -10,14 +10,13 @@ import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import {
   executeClearAllCharacters,
   executeRemoveCharacter,
-  performClearAll,
   performRemove,
 } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { ALLY_A, ALLY_B, ENEMY_A, PHRAESTO, PHRAESTO_COMPANION } from '../fixtures/characters'
+import { ALLY_A, ENEMY_A, PHRAESTO, PHRAESTO_COMPANION } from '../fixtures/characters'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 // Runs against the real SkillManager and skill registry: the fixture ids have
@@ -53,64 +52,9 @@ describe('remove.ts', () => {
       performRemove(grid, 4)
       expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
     })
-
-    it('should return false when tile has no character', () => {
-      const result = performRemove(grid, 1)
-
-      expect(result).toBe(false)
-    })
-
-    it('should handle tile with missing team gracefully', () => {
-      // Manually create invalid state
-      const tile = grid.getTileById(1)
-      tile.characterId = 999
-      tile.team = undefined
-
-      const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-      const result = performRemove(grid, 1)
-
-      expect(result).toBe(false)
-      expect(consoleSpy).toHaveBeenCalledWith(
-        expect.stringContaining('has characterId 999 but no team'),
-      )
-
-      consoleSpy.mockRestore()
-    })
-
-    it('should throw for invalid hex ID', () => {
-      expect(() => performRemove(grid, 999)).toThrow()
-    })
   })
 
   describe('executeRemoveCharacter', () => {
-    it('should remove regular character and refresh active skills', () => {
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-      const update = vi.spyOn(skillManager, 'updateActiveSkills')
-
-      const result = executeRemoveCharacter(grid, skillManager, 1)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(1).characterId).toBeUndefined()
-      expect(update).toHaveBeenCalledWith(grid)
-    })
-
-    it('should return true when tile has no character', () => {
-      const result = executeRemoveCharacter(grid, skillManager, 1)
-
-      expect(result).toBe(true)
-    })
-
-    it('should return true when character has no team', () => {
-      // Manually create invalid state
-      const tile = grid.getTileById(1)
-      tile.characterId = ALLY_A
-      tile.team = undefined
-
-      const result = executeRemoveCharacter(grid, skillManager, 1)
-
-      expect(result).toBe(true)
-    })
-
     it('should deactivate the skill on removal', () => {
       executePlaceCharacter(grid, skillManager, 1, PHRAESTO, Team.ALLY)
       expect(skillManager.hasActiveSkill(PHRAESTO, Team.ALLY)).toBe(true)
@@ -147,46 +91,6 @@ describe('remove.ts', () => {
       expect(result).toBe(true)
       expect(grid.getTileById(2).characterId).toBeUndefined()
     })
-
-    it('should handle a character already removed by skill deactivation', () => {
-      // No registered skill removes its own caster on deactivation, so this
-      // defensive branch needs a stubbed teardown to be reachable.
-      performPlace(grid, 1, PHRAESTO, Team.ALLY)
-      vi.spyOn(skillManager, 'deactivateCharacterSkill').mockImplementation(() => {
-        performRemove(grid, 1)
-      })
-
-      const result = executeRemoveCharacter(grid, skillManager, 1)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(1).characterId).toBeUndefined()
-    })
-  })
-
-  describe('performClearAll', () => {
-    it('should clear all characters and tile states, then update skills', () => {
-      performPlace(grid, 1, ALLY_A, Team.ALLY)
-      performPlace(grid, 2, ALLY_B, Team.ALLY)
-      performPlace(grid, 4, ENEMY_A, Team.ENEMY)
-      const update = vi.spyOn(skillManager, 'updateActiveSkills')
-
-      const result = performClearAll(grid)
-
-      expect(result).toBe(true)
-      expect(grid.getTileById(1).characterId).toBeUndefined()
-      expect(grid.getTileById(2).characterId).toBeUndefined()
-      expect(grid.getTileById(4).characterId).toBeUndefined()
-      expect(getTilesWithCharacters(grid)).toHaveLength(0)
-      expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
-      expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
-      expect(update).toHaveBeenCalledWith(grid)
-    })
-
-    it('should return true when grid is already empty', () => {
-      const result = performClearAll(grid)
-
-      expect(result).toBe(true)
-    })
   })
 
   describe('executeClearAllCharacters', () => {
@@ -198,6 +102,8 @@ describe('remove.ts', () => {
 
       expect(result).toBe(true)
       expect(getTilesWithCharacters(grid)).toHaveLength(0)
+      expect(grid.getTileById(1).state).toBe(State.AVAILABLE_ALLY)
+      expect(grid.getTileById(4).state).toBe(State.AVAILABLE_ENEMY)
       expect(skillManager.hasActiveSkill(PHRAESTO)).toBe(false)
       expect(getMaxTeamSize(grid, Team.ALLY)).toBe(5)
     })

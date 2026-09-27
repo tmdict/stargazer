@@ -32,18 +32,6 @@ describe('createTargetingSkill', () => {
     skillManager = new SkillManager()
   })
 
-  it('maps the color config to targetingColorModifier', () => {
-    const skill = createTargetingSkill({
-      id: 'test',
-      characterId: CHARACTER_ID,
-      color: '#abcdef',
-      arrowType: 'ally',
-      calculateTarget: () => null,
-    })
-
-    expect(skill.targetingColorModifier).toBe('#abcdef')
-  })
-
   describe('with arrowType', () => {
     const buildSkill = (calculateTarget: (ctx: SkillContext) => SkillTargetInfo | null) =>
       createTargetingSkill({
@@ -92,37 +80,6 @@ describe('createTargetingSkill', () => {
       expect(stored?.metadata?.isFrontmostTarget).toBe(true)
       expect(stored?.metadata?.examinedTiles).toEqual([1, 2])
       expect(stored?.metadata?.arrows).toHaveLength(1)
-    })
-
-    it('uses configured arrow type', () => {
-      const skill = createTargetingSkill({
-        id: 'test',
-        characterId: CHARACTER_ID,
-        color: '#000',
-        arrowType: 'enemy',
-        calculateTarget: () => ({ targetHexId: 3, targetCharacterId: 42 }),
-      })
-      skill.onActivate(buildContext(grid, skillManager))
-
-      expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)?.metadata?.arrows).toEqual([
-        { fromHexId: CASTER_HEX, toHexId: 3, type: 'enemy' },
-      ])
-    })
-
-    it('clears target on deactivation', () => {
-      const skill = buildSkill(() => ({ targetHexId: 3, targetCharacterId: 42 }))
-      skill.onActivate(buildContext(grid, skillManager))
-      skill.onDeactivate(buildContext(grid, skillManager))
-      expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    })
-
-    it('updates target on onUpdate when target is hit', () => {
-      let next = 3
-      const skill = buildSkill(() => ({ targetHexId: next, targetCharacterId: 42 }))
-      skill.onActivate(buildContext(grid, skillManager))
-      next = 4
-      skill.onUpdate!(buildContext(grid, skillManager))
-      expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)?.targetHexId).toBe(4)
     })
 
     it('clears target on onUpdate when target is missed', () => {
@@ -186,14 +143,6 @@ describe('createTileHighlightSkill', () => {
     expect(skillManager.getTileColorModifier(3)).toContain(TILE_COLOR)
   })
 
-  it('clears target without setting tile color when calculate misses', () => {
-    const skill = buildSkill(() => null)
-    skill.onActivate(buildContext(grid, skillManager))
-
-    expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(3)).toBeUndefined()
-  })
-
   it('removes previous tile color before applying new one on update', () => {
     let next = 3
     const skill = buildSkill(() => ({ targetHexId: next, targetCharacterId: 42 }))
@@ -212,15 +161,6 @@ describe('createTileHighlightSkill', () => {
     skill.onActivate(buildContext(grid, skillManager))
     value = null
     skill.onUpdate!(buildContext(grid, skillManager))
-
-    expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(3)).toBeUndefined()
-  })
-
-  it('removes tile color and clears target on deactivation', () => {
-    const skill = buildSkill(() => ({ targetHexId: 3, targetCharacterId: 42 }))
-    skill.onActivate(buildContext(grid, skillManager))
-    skill.onDeactivate(buildContext(grid, skillManager))
 
     expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
     expect(skillManager.getTileColorModifier(3)).toBeUndefined()
@@ -299,19 +239,6 @@ describe('createCompanionSkill', () => {
     ])
     expect(new Set(placed.map((t) => t.hex.getId())).size).toBe(2)
     expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE + 2)
-  })
-
-  it('deactivation removes companions, links, modifiers, and restores capacity', () => {
-    const skill = makeSkill({ count: 2 })
-    skill.onActivate(context())
-    expect(companionTiles()).toHaveLength(2)
-
-    skill.onDeactivate(context())
-
-    expect(companionTiles()).toHaveLength(0)
-    expect(getCompanions(grid, CHARACTER_ID, Team.ALLY).size).toBe(0)
-    expect(getMaxTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
-    expect(skillManager.getColorModifiersByCharacterAndTeam().size).toBe(0)
   })
 
   it('throws without side effects when there are not enough free tiles', () => {

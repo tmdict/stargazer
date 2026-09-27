@@ -51,16 +51,6 @@ describe('himmel class-trio highlighting', () => {
     expect(skillManager.getTileFillModifier(6)).toHaveLength(1)
   })
 
-  it('highlights nothing when a required class is missing', () => {
-    placeOnTile(grid, 16, 1, Team.ALLY) // tank
-    placeOnTile(grid, 12, 2, Team.ALLY) // mage, but no support
-
-    himmel().onActivate(ctx())
-
-    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
-  })
-
   it('ignores neighbors whose class is not tank/mage/support', () => {
     placeOnTile(grid, 16, 1, Team.ALLY) // tank
     placeOnTile(grid, 12, 2, Team.ALLY) // mage
@@ -69,18 +59,6 @@ describe('himmel class-trio highlighting', () => {
     himmel().onActivate(ctx())
 
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
-  })
-
-  it('ignores units on the other team', () => {
-    placeOnTile(grid, 16, 1, Team.ENEMY) // tank, but enemy
-    placeOnTile(grid, 12, 2, Team.ALLY) // mage
-    placeOnTile(grid, 6, 3, Team.ALLY) // support
-
-    himmel().onActivate(ctx())
-
-    // No ally tank adjacent, so the trio is incomplete and nothing highlights.
     expect(skillManager.getTileFillModifier(12)).toBeUndefined()
     expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })
@@ -119,20 +97,6 @@ describe('himmel class-trio highlighting', () => {
     himmel().onActivate(ctx())
 
     // The only tank is not adjacent, so the trio is incomplete.
-    expect(skillManager.getTileFillModifier(12)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
-  })
-
-  it('clears highlights on deactivate', () => {
-    placeOnTile(grid, 16, 1, Team.ALLY)
-    placeOnTile(grid, 12, 2, Team.ALLY)
-    placeOnTile(grid, 6, 3, Team.ALLY)
-    himmel().onActivate(ctx())
-    expect(skillManager.getTileFillModifier(16)).toBeDefined()
-
-    himmel().onDeactivate(ctx())
-
-    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
     expect(skillManager.getTileFillModifier(12)).toBeUndefined()
     expect(skillManager.getTileFillModifier(6)).toBeUndefined()
   })

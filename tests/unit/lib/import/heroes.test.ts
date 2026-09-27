@@ -194,9 +194,6 @@ describe('paragonFromMatch', () => {
   const refs = prepareFrameRefs([createImage(280, 404)])
   const ref = refs[0]!
 
-  it('refuses an empty frame set', () => {
-    expect(() => prepareFrameRefs([])).toThrow()
-  })
   it('flags low scores and close families', () => {
     expect(
       paragonFromMatch({

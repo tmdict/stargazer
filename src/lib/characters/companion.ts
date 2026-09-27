@@ -51,22 +51,6 @@ export function addCompanionLink(
   grid.companionLinks.get(key)!.add(companionId)
 }
 
-export function removeCompanionLink(
-  grid: Grid,
-  mainId: number,
-  companionId: number,
-  team: Team,
-): void {
-  const key = `${mainId}-${team}`
-  const companions = grid.companionLinks.get(key)
-  if (companions) {
-    companions.delete(companionId)
-    if (companions.size === 0) {
-      grid.companionLinks.delete(key)
-    }
-  }
-}
-
 export function clearCompanionLinks(grid: Grid, mainCharacterId: number, team: Team): void {
   const key = `${mainCharacterId}-${team}`
   grid.companionLinks.delete(key)

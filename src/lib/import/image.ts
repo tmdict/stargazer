@@ -72,7 +72,7 @@ export function flatten(src: RgbaImage, bg: readonly [number, number, number]): 
 export const PORTRAIT_BACKGROUND: readonly [number, number, number] = [236, 229, 216]
 
 /* Hue in degrees, saturation and value in 0..1. */
-export function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
+function rgbToHsv(r: number, g: number, b: number): [number, number, number] {
   const rr = r / 255
   const gg = g / 255
   const bb = b / 255

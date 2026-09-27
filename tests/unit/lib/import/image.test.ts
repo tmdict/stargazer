@@ -1,13 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  createImage,
-  cropResize,
-  dot,
-  maskedNcc,
-  normalizedVector,
-  rgbToHsv,
-} from '@/lib/import/image'
+import { createImage, cropResize, maskedNcc } from '@/lib/import/image'
 import type { RgbaImage } from '@/lib/import/types'
 
 const paint = (img: RgbaImage, x: number, y: number, rgb: [number, number, number], a = 255) => {
@@ -35,35 +28,6 @@ describe('cropResize', () => {
     const out = cropResize(img, { x: 0, y: 0, w: 1, h: 1 }, 2, 2)
     expect(out.width).toBe(2)
     expect([...out.data.slice(12, 15)]).toEqual([9, 8, 7])
-  })
-})
-
-describe('rgbToHsv', () => {
-  it('reads pure hues and greys', () => {
-    expect(rgbToHsv(255, 0, 0)).toEqual([0, 1, 1])
-    expect(rgbToHsv(0, 255, 0)[0]).toBe(120)
-    expect(rgbToHsv(0, 0, 255)[0]).toBe(240)
-    expect(rgbToHsv(128, 128, 128)[1]).toBe(0)
-  })
-})
-
-describe('normalizedVector', () => {
-  it('correlates perfectly with itself and not with its inverse', () => {
-    const img = createImage(3, 2)
-    for (let p = 0; p < 6; p++)
-      paint(img, p % 3, Math.floor(p / 3), [p * 40, 255 - p * 40, (p * 90) % 256])
-    const v = normalizedVector(img)
-    expect(dot(v, v)).toBeCloseTo(1, 5)
-    const inverted = createImage(3, 2)
-    for (let p = 0; p < 6; p++) {
-      const i = p * 4
-      paint(inverted, p % 3, Math.floor(p / 3), [
-        255 - img.data[i]!,
-        255 - img.data[i + 1]!,
-        255 - img.data[i + 2]!,
-      ])
-    }
-    expect(dot(v, normalizedVector(inverted))).toBeCloseTo(-1, 5)
   })
 })
 

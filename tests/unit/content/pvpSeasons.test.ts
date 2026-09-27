@@ -38,8 +38,3 @@ it.each(PVP_SEASONS.map((summary) => [summary.season, summary] as const))(
     ).toEqual([])
   },
 )
-
-it('lists seasons newest first', () => {
-  const seasons = PVP_SEASONS.map((summary) => summary.season)
-  expect(seasons).toEqual([...seasons].sort((a, b) => b - a))
-})

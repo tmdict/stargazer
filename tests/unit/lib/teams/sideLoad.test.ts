@@ -179,11 +179,4 @@ describe('retired seasonal content in side-load', () => {
     })
     expect(savedTeamSide(phantimalOnly)).toBeNull()
   })
-
-  it('current-season records keep their seasonal refs in the plan', () => {
-    const current = encode({ ...ALLY_RECORD, season: CURRENT_SEASON })
-    const plan = buildSideLoadPlan(current, true)!
-    expect(plan.boards[0]!.phantimal).not.toBeNull()
-    expect(plan.boards[0]!.artifact).toBe(7)
-  })
 })

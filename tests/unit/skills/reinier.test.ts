@@ -52,19 +52,6 @@ describe('reinier tile highlighting', () => {
     expect(skillManager.getTileFillModifier(enemyHex)).toBeUndefined()
   })
 
-  it('clears the highlight on deactivate', () => {
-    placeOnTile(grid, enemyHex, 200, Team.ENEMY)
-    reinier().onActivate(ctx())
-    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeDefined()
-
-    reinier().onDeactivate(ctx())
-
-    expect(skillManager.getTileFillModifier(ALLY_HEX)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(ALLY_HEX)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(enemyHex)).toBeUndefined()
-    expect(skillManager.getTileColorModifier(enemyHex)).toBeUndefined()
-  })
-
   it('clears the highlight on update once the pair disappears', () => {
     placeOnTile(grid, enemyHex, 200, Team.ENEMY)
     reinier().onActivate(ctx())

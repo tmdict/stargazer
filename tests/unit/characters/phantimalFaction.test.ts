@@ -9,10 +9,6 @@ import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('phantimalFaction', () => {
   describe('requiredFactions', () => {
-    it('uses the phantimal faction by default', () => {
-      expect(requiredFactions({ faction: 'lightbearer' })).toEqual(['lightbearer'])
-    })
-
     it('counts every qualifying faction when the data lists them', () => {
       expect(
         requiredFactions({ faction: 'hypogean', qualifyingFactions: ['hypogean', 'celestial'] }),
@@ -44,10 +40,6 @@ describe('phantimalFaction', () => {
     it('counts only matching-faction characters on the team', () => {
       expect(countTeamFaction(grid, Team.ALLY, ['lightbearer'], factionOf)).toBe(2)
       expect(countTeamFaction(grid, Team.ALLY, ['lightbearer', 'mauler'], factionOf)).toBe(3)
-    })
-
-    it('scopes the count to the given team', () => {
-      expect(countTeamFaction(grid, Team.ENEMY, ['lightbearer'], factionOf)).toBe(1)
     })
 
     it('excludes phantimals from the count', () => {

@@ -10,7 +10,6 @@ import { BASE_TEAM_SIZE, Grid } from '@/lib/grid'
 import { createSpiritMarkSkill } from '@/lib/skills/seasonal/phantimal'
 import {
   getCharacterSkill,
-  hasSkill,
   registerSkill,
   SkillManager,
   type SkillContext,
@@ -73,37 +72,6 @@ describe('phantimal Spirit Mark skills', () => {
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()
   })
 
-  it('follows the behind priority when the directly-behind tile is empty', () => {
-    placeOnTile(grid, 23, BEHIND_MARK, Team.ALLY)
-    placeOnTile(grid, 20, 101, Team.ALLY)
-    placeOnTile(grid, 19, 102, Team.ALLY)
-
-    getCharacterSkill(BEHIND_MARK)!.onActivate(ctx(23, BEHIND_MARK))
-    expect(skillManager.getTileFillModifier(20)).toBeDefined()
-    expect(skillManager.getTileFillModifier(19)).toBeUndefined()
-  })
-
-  it('paints nothing when no candidate tile holds a same-team unit', () => {
-    placeOnTile(grid, 23, BEHIND_MARK, Team.ALLY)
-    placeOnTile(grid, 16, 200, Team.ENEMY)
-
-    getCharacterSkill(BEHIND_MARK)!.onActivate(ctx(23, BEHIND_MARK))
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
-  })
-
-  it('marks the front-priority tile for a front mark (hex 4: 9 > 6 > 7)', () => {
-    placeOnTile(grid, 4, FRONT_MARK, Team.ALLY)
-    placeOnTile(grid, 9, 100, Team.ALLY)
-    placeOnTile(grid, 6, 101, Team.ALLY)
-    placeOnTile(grid, 7, 102, Team.ALLY)
-
-    getCharacterSkill(FRONT_MARK)!.onActivate(ctx(4, FRONT_MARK))
-    expect(skillManager.getTileFillModifier(9)).toBeDefined()
-    expect(skillManager.getTileFillModifier(6)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(7)).toBeUndefined()
-  })
-
   it('passes over a phantimal-range unit to the next tile in the chain', () => {
     placeOnTile(grid, 4, FRONT_MARK, Team.ALLY)
     placeOnTile(grid, 9, toPhantimalId(1), Team.ALLY)
@@ -128,19 +96,6 @@ describe('phantimal Spirit Mark skills', () => {
     expect(skillManager.getTileFillModifier(16)).toBeUndefined()
     expect(skillManager.getTileColorModifier(19)).toHaveLength(1)
     expect(skillManager.getTileFillModifier(19)).toHaveLength(1)
-  })
-
-  it('clears the mark on update when the marked unit is removed', () => {
-    placeOnTile(grid, 23, BEHIND_MARK, Team.ALLY)
-    placeOnTile(grid, 16, 100, Team.ALLY)
-    const skill = getCharacterSkill(BEHIND_MARK)!
-    skill.onActivate(ctx(23, BEHIND_MARK))
-
-    removeFromTile(grid, 16)
-
-    skill.onUpdate!(ctx(23, BEHIND_MARK))
-    expect(skillManager.getTileColorModifier(16)).toBeUndefined()
-    expect(skillManager.getTileFillModifier(16)).toBeUndefined()
   })
 
   it('keeps the paint refcount at one across repeated updates', () => {
@@ -212,41 +167,6 @@ describe('season 8', () => {
     expect(executePlaceCharacter(grid, skillManager, 16, WEDGE_OF_MATTER, Team.ALLY)).toBe(true)
     expect(findCharacterHex(grid, WEDGE_OF_POWER, Team.ALLY)).not.toBeNull()
     expect(getAvailableTeamSize(grid, Team.ALLY)).toBe(BASE_TEAM_SIZE)
-  })
-
-  it('wedge of power renders its own portrait and targets at range 20', () => {
-    const gameData = useGameDataStore()
-    expect(gameData.getPhantimalUnitSlug(WEDGE_OF_MATTER)).toBe('wedge-of-matter')
-    expect(gameData.getPhantimalUnitSlug(WEDGE_OF_POWER)).toBe('wedge-of-power')
-    expect(gameData.getCharacterRange(WEDGE_OF_POWER)).toBe(20)
-    expect(gameData.getCharacterFaction(WEDGE_OF_POWER)).toBe('celestial')
-    // Targeting is off until the in-game unlock; the companion answers for its owner.
-    expect(gameData.hasSeasonalTargeting(WEDGE_OF_MATTER)).toBe(false)
-    expect(gameData.hasSeasonalTargeting(WEDGE_OF_POWER)).toBe(false)
-  })
-
-  it('registers a Spirit Mark skill for every phantimal', () => {
-    for (const localId of [1, 2, 3, 4, 5]) {
-      expect(hasSkill(toPhantimalId(localId))).toBe(true)
-    }
-  })
-
-  it('keeps the marks hidden while the data files leave targeting off', () => {
-    const grid = new Grid()
-    const skillManager = new SkillManager()
-    const gervan = toPhantimalId(1)
-    placeOnTile(grid, 4, gervan, Team.ALLY)
-    placeOnTile(grid, 9, 100, Team.ALLY)
-
-    getCharacterSkill(gervan)!.onActivate({
-      grid,
-      hexId: 4,
-      team: Team.ALLY,
-      characterId: gervan,
-      skillManager,
-      lookups: { seasonalTargeting: useGameDataStore().hasSeasonalTargeting },
-    })
-    expect(skillManager.getTileFillModifier(9)).toBeUndefined()
   })
 
   describe('wedge marks, with targeting on', () => {

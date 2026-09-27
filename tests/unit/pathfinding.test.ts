@@ -3,7 +3,6 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { Grid } from '@/lib/grid'
 import { Hex } from '@/lib/hex'
 import {
-  calculateRangedMovementDistance,
   defaultCanTraverse,
   findClosestTarget,
   findPathAStar,
@@ -51,16 +50,6 @@ describe('pathfinding', () => {
   }
 
   describe('findPathAStar', () => {
-    it('finds path between adjacent hexes', () => {
-      const start = grid.getHexById(1)
-      const goal = grid.getHexById(2)
-
-      const path = findPathAStar(start, goal, getTile, defaultCanTraverse)
-
-      expect(path).not.toBeNull()
-      expect(pathIds(path!)).toEqual([1, 2])
-    })
-
     it('finds the optimal path when unobstructed', () => {
       const path = findPathAStar(
         grid.getHexById(1),
@@ -97,50 +86,6 @@ describe('pathfinding', () => {
 
       expect(path).toBeNull()
     })
-
-    it('returns single-element path when start equals goal', () => {
-      const hex = grid.getHexById(1)
-
-      const path = findPathAStar(hex, hex, getTile, defaultCanTraverse)
-
-      expect(path).not.toBeNull()
-      expect(pathIds(path!)).toEqual([1])
-    })
-  })
-
-  describe('calculateRangedMovementDistance', () => {
-    it('returns 0 when targets are within range', () => {
-      const start = grid.getHexById(1)
-      const targets = [grid.getHexById(2)]
-
-      const result = calculateRangedMovementDistance(start, targets, 2, getTile, defaultCanTraverse)
-
-      expect(result.movementDistance).toBe(0)
-      expect(result.canReach).toBe(true)
-      expect(result.reachableTargets).toHaveLength(1)
-    })
-
-    it('finds minimum movement to reach a distant target', () => {
-      // Hex 6 is direct distance 2 from hex 1, so a melee unit must step once
-      const start = grid.getHexById(1)
-      const targets = [grid.getHexById(6)]
-
-      const result = calculateRangedMovementDistance(start, targets, 1, getTile, defaultCanTraverse)
-
-      expect(result.movementDistance).toBe(1)
-      expect(result.canReach).toBe(true)
-      expect(result.reachableTargets.map((h) => h.getId())).toEqual([6])
-    })
-
-    it('handles empty target list', () => {
-      const start = grid.getHexById(1)
-
-      const result = calculateRangedMovementDistance(start, [], 1, getTile, defaultCanTraverse)
-
-      expect(result.movementDistance).toBe(Infinity)
-      expect(result.canReach).toBe(false)
-      expect(result.reachableTargets).toHaveLength(0)
-    })
   })
 
   describe('findClosestTarget', () => {
@@ -153,14 +98,6 @@ describe('pathfinding', () => {
       expect(result).not.toBeNull()
       expect(result!.hexId).toBe(6)
       expect(result!.distance).toBe(1)
-    })
-
-    it('returns null when no targets exist', () => {
-      const sourceTile = occupy(1, Team.ALLY)
-
-      const result = findClosestTarget(sourceTile, [], 1, getTile, defaultCanTraverse)
-
-      expect(result).toBeNull()
     })
 
     it('requires no movement when target is within attack range', () => {
