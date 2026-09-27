@@ -1,9 +1,9 @@
 // Phantimal locale-text importer.
 //
 // Split of ownership: the structural files (src/data/seasonal/phantimal/
-// <slug>.json: id, range, faction) are hand-written, because the compact ids
-// are baked into URL serialization and `range` is board-sim semantics no feed
-// carries. This script owns only the localized content:
+// <slug>.json: id, range, faction) are written by import:structure, which keeps
+// their ids stable within a season because ids are baked into share links. This
+// script owns only the localized content:
 //   src/locales/seasonal/phantimal/<slug>.json   {name, skills[].levels[]} en/zh maps
 //
 // Hand-written structure is linted against the feed: the slug sets must match
@@ -117,9 +117,7 @@ async function main() {
   const structuralSlugs = await jsonSlugs(DATA_DIR)
   for (const slug of feedSlugs) {
     if (!structuralSlugs.has(slug)) {
-      problems.push(
-        `${slug}: no structural file in ${DATA_DIR} (id/range/faction are hand-curated)`,
-      )
+      problems.push(`${slug}: no structural file in ${DATA_DIR} (run import:structure)`)
       continue
     }
     const structural = JSON.parse(await readFile(join(DATA_DIR, `${slug}.json`), 'utf8')) as {

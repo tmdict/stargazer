@@ -1,9 +1,9 @@
 // Artifact effect-text importer.
 //
-// Split of ownership: structural records (src/data/artifact/,
-// src/data/seasonal/artifact/) and the display-name locale files (curated
-// short names; the feed's en names carry a "Spell" suffix) are hand-written.
-// This script owns only the per-level effect text, which is feed-verbatim and
+// Split of ownership: the structural records and display-name files are
+// hand-written for the permanent six (src/data/artifact/) and written by
+// import:structure for the season's set (src/data/seasonal/artifact/). This
+// script owns only the per-level effect text, which is feed-verbatim and
 // balance-patchable:
 //   src/locales/artifact/effects/<slug>.json            pre-season set
 //   src/locales/seasonal/artifact/effects/<slug>.json   seasonal set
@@ -50,8 +50,6 @@ const TREES = {
 } as const
 
 type ArtifactSet = keyof typeof TREES
-
-}
 
 // ---------- feed shape (single-locale per file) ----------
 
