@@ -85,6 +85,16 @@ While Syn is on, a roster click on a hero already placed on a team with a free a
 
 `isTouchClick` (`src/utils/pointer.ts`) decides whether a click came from touch. It records the type of the last `pointerdown` or `pointerup` document-wide in the capture phase, and a press within `PRESS_CLICK_WINDOW_MS` (800) outranks the click's own `pointerType`. Safari before 18.4 synthesizes tap clicks with a missing or wrong `pointerType`, so trusting the click alone would read every tap as a mouse.
 
+## Inspecting units
+
+A placed unit opens its details without leaving the board: heroes open the skill modal, phantimals the phantimal modal, and artifacts the artifact modal. Companions and synergy copies open their owner's page. A unit with no page (a placeholder, a hero without skill text, retired content) has no inspect gesture and keeps the browser's own menu.
+
+Three gestures reach it. A long-press works with any pointer and matches the game. A right-click opens directly, while Shift+right-click still shows the browser menu. A lifted unit shows a Skills button above it, so touch users can find the feature without knowing the gesture. The desktop hover card names the first two in a footer line.
+
+`useLongPress` shares the press with click-to-remove, tap-to-lift and HTML5 drag. A press released before the ring appears (250 ms) stays an ordinary click or tap. Moving past 8 px or starting a drag abandons the hold. Once the ring shows, the release does nothing, and a completed hold (550 ms) opens the modal. Both endings swallow the click the release produces, in a document capture listener. That click would otherwise remove or lift the unit, and since the modal opens under the pointer, it would also land outside the modal and trip `useOverlay`'s click-outside close. The next `pointerdown` disarms the swallow, so a browser that sends no click after a long-press cannot eat a later one.
+
+Android reports a touch long-press as a `contextmenu` event, sometimes before the timer fires. That event completes the hold in progress, and one that arrives after the hold has ended is ignored, so the modal opens once. Units set `-webkit-touch-callout: none` and `user-select: none`, because iOS would otherwise answer the press with its image menu.
+
 ## Grid events
 
 `GridManager` creates one small typed pub/sub bus per board (`provideGridEvents`), so events never cross boards. Emitting only notifies subscribers, and all state changes happen in the subscribers. An event exists only when another component subscribes to it, and a component that can reach a store calls its actions directly. The bus carries `hex:click`, which passes the DOM event along so handlers can call `isTouchClick`, and the character `mouseenter` and `mouseleave` events that let `GridTiles` highlight the tile under a hovered portrait.
