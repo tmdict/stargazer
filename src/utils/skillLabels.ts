@@ -1,5 +1,5 @@
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
-import type { SkillLocaleFile, SlotKey } from '@/lib/types/skill'
+import type { SkillLocaleFile, SlotKey, SlotNumbers, SlotValues } from '@/lib/types/skill'
 import {
   getSkillFile,
   loadAppLocales,
@@ -79,4 +79,57 @@ export function headingFor(
   const term = slotKey === 'ex' ? terms?.ex : terms?.ultimate
   const prefix = term ?? appLabel(prefixKey, lang)
   return trimmedName ? `${prefix}: ${trimmedName}` : prefix
+}
+
+// A label template split around its value, so the value can be styled apart.
+// `values` is the Lv1 figure and each later level's change; the component
+// draws an arrow between them.
+export interface SkillMetaItem {
+  before: string
+  values: string[]
+  after: string
+}
+
+const fillTemplate = (template: string, token: string, values: string[]): SkillMetaItem => {
+  const at = template.indexOf(token)
+  return { before: template.slice(0, at), values, after: template.slice(at + token.length) }
+}
+
+// A value's Lv1 figure followed by each later level's change, in level order.
+function valueChain<K extends keyof SlotValues>(
+  numbers: SlotNumbers,
+  key: K,
+): NonNullable<SlotValues[K]>[] {
+  const later = Object.entries(numbers.levels ?? {})
+    .sort(([a], [b]) => Number(a) - Number(b))
+    .map(([, values]) => values[key])
+  return [numbers[key], ...later].filter((v): v is NonNullable<SlotValues[K]> => v !== undefined)
+}
+
+/** Cooldown and range items for a skill, in the game's skill-panel wording
+ * from `_terms`. The cooldown template has one line per value (`${1}` the
+ * cooldown, `${2}` the initial cooldown), and a line whose value is absent is
+ * dropped. Values are bare numbers, as the game shows them, and a value that a
+ * later level changes carries its whole chain. A global range fills the range
+ * template with the game's word for it. */
+export function skillMetaItems(
+  numbers: SlotNumbers | undefined,
+  terms: SkillLocaleFile['_terms'] | undefined,
+): SkillMetaItem[] {
+  if (!numbers || !terms) return []
+  const items: SkillMetaItem[] = []
+  const cooldowns: Record<string, string[]> = {
+    '${1}': valueChain(numbers, 'cooldown').map(String),
+    '${2}': valueChain(numbers, 'initialCooldown').map(String),
+  }
+  for (const line of terms.cooldown.split('\n')) {
+    const token = Object.keys(cooldowns).find((t) => line.includes(t))
+    const values = token === undefined ? [] : cooldowns[token]!
+    if (token && values.length > 0) items.push(fillTemplate(line, token, values))
+  }
+  const ranges = valueChain(numbers, 'range').map((r) =>
+    r === 'global' ? terms.rangeGlobal : String(r),
+  )
+  if (ranges.length > 0) items.push(fillTemplate(terms.range, '${1}', ranges))
+  return items
 }

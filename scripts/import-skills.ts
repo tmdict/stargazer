@@ -6,7 +6,11 @@
 // plus (for non-en/zh locales) a per-dir `index.ts` chunk module that the app
 // dynamically imports as one lazy chunk per language.
 //
-// Read-only against character files. The only write target is the locale dir.
+// It also reads the feed's language-independent skillNumbers.json and writes
+// the cooldowns and ranges shown under skill headings to
+// `src/data/skill/numbers.json` (rules in lib/skillNumbers.ts).
+//
+// Read-only against character files.
 //
 // Usage:
 //   npm run import:skills                          # reads DATA_FEED_DIR/<feed>/skills.json
@@ -17,6 +21,7 @@ import { existsSync } from 'node:fs'
 import { readdir, readFile } from 'node:fs/promises'
 import { basename, dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
+import * as prettier from 'prettier'
 
 import { isAppLocale, SKILL_LOCALES, type SkillLocale } from '../src/lib/types/i18n.ts'
 import {
@@ -35,6 +40,7 @@ import {
   writeJsonIfChanged,
   writeTextIfChanged,
 } from './lib/shared.ts'
+import { skillNumbers, type FeedHeroNumbers } from './lib/skillNumbers.ts'
 
 // ---------- paths ----------
 
@@ -42,6 +48,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url))
 const PROJECT_ROOT = resolve(__dirname, '..')
 const CHARACTER_DIR = join(PROJECT_ROOT, 'src', 'data', 'character')
 const LOCALES_DIR = join(PROJECT_ROOT, 'src', 'locales', 'skill')
+const NUMBERS_PATH = join(PROJECT_ROOT, 'src', 'data', 'skill', 'numbers.json')
 
 // ---------- feed shape (single-locale per file) ----------
 
@@ -75,13 +82,25 @@ interface SkillsBulk {
     generatedAt: string
     locale: string
     heroCount: number
-    terms?: { ultimate: string; exclusiveEquipment: string }
+    terms?: {
+      ultimate: string
+      exclusiveEquipment: string
+      cooldown?: string
+      range?: string
+      rangeGlobal?: string
+    }
     keywords?: Record<string, string>
   }
   heroes: Record<string, HeroEntry>
 }
 
 type SlotTerms = NonNullable<SkillLocaleFile['_terms']>
+
+// The game's English range label names the unit ("Tiles: 1", "Tiles: Global"),
+// where the CJK languages say "skill range"; every other term is the game's.
+const TERM_OVERRIDES: Partial<Record<SkillLocale, Partial<SlotTerms>>> = {
+  en: { range: 'Range: ${1}' },
+}
 
 type LocaleFile = SkillLocaleFile
 
@@ -111,6 +130,34 @@ async function loadSkillsBulk(feed: string): Promise<SkillsBulk> {
   }
   console.log(`import-skills: reading ${path}`)
   return JSON.parse(await readFile(path, 'utf8')) as SkillsBulk
+}
+
+interface SkillNumbersFeed {
+  heroes: Record<string, FeedHeroNumbers>
+}
+
+// Language-independent, so it sits at the feed root rather than in a locale dir.
+async function loadSkillNumbers(): Promise<Record<string, FeedHeroNumbers>> {
+  if (URL_BASE_FLAG) {
+    const url = `${URL_BASE_FLAG.replace(/\/$/, '')}/skillNumbers.json`
+    const res = await fetch(url)
+    if (!res.ok) throw new Error(`fetch ${url} → HTTP ${res.status}`)
+    return ((await res.json()) as SkillNumbersFeed).heroes
+  }
+  const path = join(feedSrcDir(PROJECT_ROOT, SRC_DIR_FLAG), 'skillNumbers.json')
+  if (!existsSync(path)) throw new Error(`skill numbers feed not found at ${path}`)
+  return (JSON.parse(await readFile(path, 'utf8')) as SkillNumbersFeed).heroes
+}
+
+// Committed and reviewed by hand, so it goes through Prettier; indented input
+// keeps Prettier's objects expanded, which keeps the bytes stable.
+async function formatJson(path: string, value: unknown): Promise<string> {
+  const options = (await prettier.resolveConfig(path)) ?? {}
+  return prettier.format(JSON.stringify(value, null, 2), {
+    ...options,
+    filepath: path,
+    parser: 'json',
+  })
 }
 
 interface CharacterFile {
@@ -286,17 +333,32 @@ async function main() {
   for (const { feed, code } of SKILL_LOCALES) bulks[code] = await loadSkillsBulk(feed)
   assertUniformCoverage(bulks)
 
-  // Official slot-type labels per locale, stamped into every written file so
-  // skill headings render entirely from game data. Their absence means the
-  // feed predates the producer's terms export.
+  // Official slot-type labels and skill-panel templates per locale, stamped
+  // into every written file so skill headings and the numbers under them
+  // render entirely from game data. Their absence means the feed predates the
+  // producer's terms export.
   const termsByCode = {} as Record<SkillLocale, SlotTerms>
   for (const { code } of SKILL_LOCALES) {
     const terms = bulks[code]._meta.terms
-    if (!terms?.ultimate || !terms?.exclusiveEquipment) {
+    if (
+      !terms?.ultimate ||
+      !terms.exclusiveEquipment ||
+      !terms.cooldown ||
+      !terms.range ||
+      !terms.rangeGlobal
+    ) {
       throw new Error(`[${code}] feed lacks _meta.terms; rebuild the upstream data feed`)
     }
-    termsByCode[code] = { ultimate: terms.ultimate, ex: terms.exclusiveEquipment }
+    termsByCode[code] = {
+      ultimate: terms.ultimate,
+      ex: terms.exclusiveEquipment,
+      cooldown: terms.cooldown,
+      range: terms.range,
+      rangeGlobal: terms.rangeGlobal,
+      ...TERM_OVERRIDES[code],
+    }
   }
+  const numbersFeed = await loadSkillNumbers()
 
   // Keyword glossaries per locale, resolving the `[[label|key]]` tokens the
   // producer embeds in slot text.
@@ -326,6 +388,12 @@ async function main() {
   }
 
   const knownSlugs = new Set(characters.map((c) => c.slug))
+
+  const numbers = skillNumbers(
+    numbersFeed,
+    characters.map((c) => c.slug).filter((slug) => slug in bulks.en.heroes),
+  )
+  const numbersText = await formatJson(NUMBERS_PATH, numbers.numbers)
 
   // Slot-level drift (a language's feed carrying no content for a slot en
   // has) would silently render pages missing a section; fail like the
@@ -384,6 +452,8 @@ async function main() {
     }
   }
 
+  const numbersWritten = await writeTextIfChanged(NUMBERS_PATH, numbersText)
+
   // Chunk modules for the non-app locales (en/zh are eagerly bundled; a chunk
   // there would ship the same JSON twice).
   let chunksWritten = 0
@@ -416,6 +486,12 @@ async function main() {
   console.log(`  locale files: ${written} written, ${unchanged} unchanged`)
   if (keywordsWritten > 0) console.log(`  keyword glossaries: ${keywordsWritten} written`)
   if (chunksWritten > 0) console.log(`  chunk modules: ${chunksWritten} written`)
+  if (numbersWritten) console.log(`  skill numbers: written`)
+
+  if (numbers.problems.length > 0) {
+    console.warn(`\n  ${numbers.problems.length} skill number issue(s):`)
+    for (const p of numbers.problems) console.warn(`    - ${p}`)
+  }
 
   if (summary.missingFromFeed.length > 0) {
     console.warn(

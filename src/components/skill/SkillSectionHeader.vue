@@ -24,7 +24,7 @@ defineProps<{
 /* Border lives on the wrapper (not the h2) so it spans full section width. */
 .skill-section-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   gap: 10px;
   flex-wrap: wrap;
   margin: 0 0 var(--spacing-sm);
@@ -40,10 +40,14 @@ defineProps<{
   font-weight: 600;
 }
 
+/* The heading's capitals sit about half a pixel below the middle of its line
+   box, so centered chips read high; 1px of top margin moves them down half a
+   pixel, onto the capitals' middle. */
 .skill-section-chips {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
+  margin-top: 1px;
 }
 
 .skill-level-chip {

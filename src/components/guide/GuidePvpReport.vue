@@ -22,35 +22,40 @@ const title = (season: number): string =>
 
 <template>
   <article class="container guide-panel">
-    <div class="content">
-      <section v-for="summary in seasons" :key="summary.season" class="season guide-link">
-        <a class="guide-title" :href="pvpReportHref(summary.season)">
-          <h2>{{ title(summary.season) }}</h2>
-          <IconChevronRight :size="18" />
+    <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
+      <a class="guide-title" :href="pvpReportHref(summary.season)">
+        <h2>{{ title(summary.season) }}</h2>
+        <IconChevronRight :size="18" />
+      </a>
+      <p class="guide-blurb">{{ label('pvp-report-blurb') }}</p>
+      <div class="chips">
+        <a
+          v-for="team in mostPlayedTeams(summary, CHIP_COUNT)"
+          :key="team.id"
+          class="chip"
+          :href="`${pvpReportHref(summary.season)}#comps`"
+        >
+          <span class="stack">
+            <GuidePortrait v-for="slug in team.heroes" :key="slug" :slug :lang :size="24" />
+          </span>
+          {{ team.name }}
         </a>
-        <p class="guide-blurb">{{ label('pvp-report-blurb') }}</p>
-        <div class="chips">
-          <a
-            v-for="team in mostPlayedTeams(summary, CHIP_COUNT)"
-            :key="team.id"
-            class="chip"
-            :href="`${pvpReportHref(summary.season)}#comps`"
-          >
-            <span class="stack">
-              <GuidePortrait v-for="slug in team.heroes" :key="slug" :slug :lang :size="24" />
-            </span>
-            {{ team.name }}
-          </a>
-        </div>
-      </section>
-    </div>
+      </div>
+    </section>
   </article>
 </template>
 
 <style scoped>
+/* GuideView stretches this panel to its row neighbour; the last season grows
+   into that space so none of the panel is left unclickable. */
+.guide-panel {
+  display: flex;
+  flex-direction: column;
+}
+.season:last-child {
+  flex: 1;
+}
 .season + .season {
-  margin-top: 20px;
-  padding-top: 20px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 }
 

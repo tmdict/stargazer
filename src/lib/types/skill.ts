@@ -34,11 +34,30 @@ export interface SkillLocaleSlot {
 // search index read it in every language (curated character locales stay on
 // chrome surfaces and as search aliases). `_terms` is the game's official
 // "Ultimate" / "Exclusive Equipment" labels in the file's language, used as
-// heading prefixes for those slots.
+// heading prefixes for those slots, and its skill-panel templates: cooldown
+// ("Cooldown: ${1}\nInitial Cooldown: ${2}"), range ("Range: ${1}") and the
+// word a global range shows as.
 export type SkillLocaleFile = {
   _hero?: { name: string }
-  _terms?: { ultimate: string; ex: string }
+  _terms?: { ultimate: string; ex: string; cooldown: string; range: string; rangeGlobal: string }
 } & Partial<Record<SlotKey, SkillLocaleSlot>>
+
+// On-disk shape of src/data/skill/numbers.json (auto-managed by the importer):
+// hero slug → slot → the numbers shown with that skill. Only displayable
+// values are written (scripts/lib/skillNumbers.ts holds the rules), so the app
+// renders whatever is present. Cooldowns are seconds, range is tiles.
+export interface SlotValues {
+  cooldown?: number
+  initialCooldown?: number
+  range?: number | 'global'
+}
+
+// The Lv1 values, plus per later level only the values that level changes.
+export interface SlotNumbers extends SlotValues {
+  levels?: Record<number, SlotValues>
+}
+
+export type SkillNumbers = Record<string, Partial<Record<SlotKey, SlotNumbers>>>
 
 // On-disk shape of src/locales/skill/<lang>/_keywords.json: glossary key →
 // tooltip text in that language, resolving the `[[label|key]]` tokens in slot

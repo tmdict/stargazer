@@ -15,7 +15,7 @@ Two locale axes run through all of it. Skill text and the hero name follow the t
 | `_charms.json`   | `import:charms` | seasonal charm text ([Seasonal Content](./SEASONAL.md))   |
 | `index.ts`       | `import:skills` | the lazy chunk module, in every language except en and zh |
 
-A hero file holds the feed's localized name in `_hero.name`, the official labels for the ultimate and EX slots in `_terms`, and one entry per slot in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and on `ex` only, refinement tiers `r`. `SLOT_ORDER` is both the render order and the set of slot names commentary snippets can fill.
+A hero file holds the feed's localized name in `_hero.name`, the official labels for the ultimate and EX slots and the skill panel's cooldown and range templates in `_terms`, and one entry per slot in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and on `ex` only, refinement tiers `r`. `SLOT_ORDER` is both the render order and the set of slot names commentary snippets can fill.
 
 Files starting with `_` hold per-language data rather than a hero. They travel in the same globs and chunks, and `splitSkillDict` separates them at load time, so slug walks and the search index see only heroes. The pre-render route walk skips them too.
 
@@ -52,6 +52,16 @@ The modal awaits its own load (`useModalSkillLocale`) and keeps showing the prev
 Skill text uses one small grammar in `src/utils/textHighlight.ts`: `[[value]]` is a highlight, `[[label|key]]` is a keyword whose tooltip text is `key` in that language's `_keywords.json`, and `<ATK>`-style tags are stat pills. `HIGHLIGHT_RE` and `splitHighlightToken` are imported by search, both importers and `vite.config.ts`, so validation, rendering and the description scrape cannot disagree. Keyword spans sit in `v-html` output, so `SkillKeywordTooltip` listens on the `SkillSections` article instead of on each span.
 
 A hero's display name is `_hero.name` in the text locale, then the curated en name, then the slug (`heroDisplayName`). The curated en/zh names in `src/locales/character/` stay on chrome surfaces and serve as search aliases. The ultimate and EX headings are the `_terms` label plus the skill name, and the app's own slot labels are only a fallback there.
+
+## Cooldowns and range
+
+A line under a skill's heading shows what the game's own skill panel shows: cooldown, initial cooldown and range. The numbers are the same in every language, so `import:skills` writes them once, to `src/data/skill/numbers.json`, from the feed's language-independent numbers file. The rules for what shows live in `scripts/lib/skillNumbers.ts`, and the app renders whatever the file holds.
+
+A cooldown shows unless it is one of the game's "no timer" values (9999 and above): 0 is an instant skill and shows, and so would a long real cooldown. The initial cooldown follows the same rule, so a skill with no timed first cast (Temesia's Skill 3) shows only its cooldown. A range shows unless it is absent, and 15 tiles and above reads as the game's word for global. The same rules apply to every slot.
+
+The game's panel shows the hero's current level, while a skill page lists every level. So the data file keeps each slot's Lv1 values plus only the values a later level changes, and the line shows a changed value as a chain in level order (Zanie's EX "Cooldown: 15 → 12", Marilee's ultimate "Range: 2 → 3"). The numbers are base values: an awakening or EX that changes another skill's cooldown says so in its text.
+
+The labels come from `_terms` (`cooldown` with one line per value, `range` and `rangeGlobal`), so the line reads in the skill-text language, and values are bare numbers as in the game. Every label is the game's own except English range: the game's "Tiles: 1" names the unit, so the importer's `TERM_OVERRIDES` writes "Range: 1".
 
 ## Pages and meta
 

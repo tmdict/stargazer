@@ -10,6 +10,7 @@ import { useI18nStore } from '@/stores/i18n'
 import {
   getCharmForHero,
   getSkillCharms,
+  getSkillNumbers,
   loadCharacters,
   loadSkillLocales,
 } from '@/utils/dataLoader'
@@ -57,6 +58,8 @@ const sections = computed(() => {
       return {
         slotKey,
         heading: headingFor(slotKey, slot.n, props.lang, file._terms),
+        numbers: getSkillNumbers(props.slug)[slotKey],
+        terms: file._terms,
         levels: slot.d.map((description, i) => ({ level: i + 1, description })),
         highlightLevels,
       }
@@ -99,7 +102,13 @@ const anchors = useSnippetAnchors()
     </div>
 
     <template v-for="s in sections" :key="s.slotKey">
-      <SkillSection :heading="s.heading" :levels="s.levels" :highlight-levels="s.highlightLevels" />
+      <SkillSection
+        :heading="s.heading"
+        :numbers="s.numbers"
+        :terms="s.terms"
+        :levels="s.levels"
+        :highlight-levels="s.highlightLevels"
+      />
       <div
         :ref="
           (el) => {
