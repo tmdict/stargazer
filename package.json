@@ -15,6 +15,7 @@
     "import:phantimals": "tsx scripts/import-phantimals.ts",
     "import:seasonal": "run-s import:skills import:charms import:artifacts import:phantimals",
     "import:skills": "tsx scripts/import-skills.ts",
+    "import:structure": "tsx scripts/import-structure.ts",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "prep": "run-s format type-check lint test",
