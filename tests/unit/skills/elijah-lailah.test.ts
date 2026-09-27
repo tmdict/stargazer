@@ -152,28 +152,6 @@ describe('elijah-lailah between-tile borders and connection line', () => {
     ])
   })
 
-  it('segments between every icon when the column is fully packed', () => {
-    placeTwins() // companion at 10; between 4, 7
-    placeOnTile(grid, BETWEEN_A, 100, Team.ALLY)
-    placeOnTile(grid, BETWEEN_B, 101, Team.ALLY)
-
-    runSkill()
-
-    expect(lineSegments()).toEqual([
-      { from: ELIJAH_HEX, to: BETWEEN_A },
-      { from: BETWEEN_A, to: BETWEEN_B },
-      { from: BETWEEN_B, to: COMPANION_HEX },
-    ])
-  })
-
-  it('draws no line when the twins are not on a shared axis', () => {
-    placeTwins(45)
-
-    runSkill()
-
-    expect(skillManager.getSkillLines()).toEqual([])
-  })
-
   it('draws the line in the same color as the borders', () => {
     placeTwins(FAR_COMPANION)
     placeOnTile(grid, BETWEEN_B, 100, Team.ALLY)

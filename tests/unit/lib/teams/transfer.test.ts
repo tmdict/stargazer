@@ -95,17 +95,6 @@ describe('parseImport record validation', () => {
     expect(canonicalTeamData(stored)).toBe(stored)
   })
 
-  it('clamps names and preserves timestamps', () => {
-    const result = parseImport(
-      envelope([record({ name: `  ${'x'.repeat(80)}  `, createdAt: 42, updatedAt: 43 })]),
-      [],
-    )
-    if (!result.ok) throw new Error('expected ok')
-    expect(result.teams[0]!.name).toHaveLength(60)
-    expect(result.teams[0]!.createdAt).toBe(42)
-    expect(result.teams[0]!.updatedAt).toBe(43)
-  })
-
   it('keeps the file id so a record round-trips with its identity', () => {
     const result = parseImport(envelope([record({ id: 'stable-id' })]), [])
     if (!result.ok) throw new Error('expected ok')

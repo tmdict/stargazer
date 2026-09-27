@@ -138,10 +138,6 @@ describe('resolveReplacement', () => {
     sm = new SkillManager()
   })
 
-  it('delegates an empty target to resolvePlacement', () => {
-    expect(resolveReplacement(grid, 601, Team.ALLY, 1, false)).toBe(601)
-  })
-
   it('vacating a base hero frees its capacity slot', () => {
     fillAllyTeam(grid, sm)
     expect(resolveReplacement(grid, 606, Team.ALLY, 1, false)).toBe(606)

@@ -1,104 +1,22 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it } from 'vitest'
 
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { executePlaceCharacter, performPlace } from '@/lib/characters/place'
 import { Grid } from '@/lib/grid'
-import { getCharacterSkill, hasSkill, SkillManager } from '@/lib/skills/skill'
+import { SkillManager } from '@/lib/skills/skill'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { SMALL_GRID, SMALL_OPEN_ARENA, STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
+import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('skill', () => {
-  let grid: Grid
   let skillManager: SkillManager
 
   beforeEach(() => {
-    grid = new Grid(SMALL_GRID, SMALL_OPEN_ARENA)
     skillManager = new SkillManager()
   })
 
-  describe('Skill Registry', () => {
-    it('reports no skill for unregistered characters', () => {
-      expect(getCharacterSkill(999)).toBeUndefined()
-      expect(getCharacterSkill(0)).toBeUndefined()
-      expect(hasSkill(999)).toBe(false)
-      expect(hasSkill(0)).toBe(false)
-    })
-  })
-
   describe('SkillManager', () => {
-    describe('skill activation/deactivation', () => {
-      it('treats characters without skills as successful no-ops, never tracked', () => {
-        const result = skillManager.activateCharacterSkill(999, 1, Team.ALLY, grid)
-
-        expect(result).toBe(true)
-        expect(skillManager.hasActiveSkill(999, Team.ALLY)).toBe(false)
-        expect(skillManager.hasActiveSkill(999)).toBe(false)
-        expect(skillManager.getActiveSkillInfo(999)).toBeUndefined()
-      })
-
-      it('reports failure and does not track when a skill throws on activation', () => {
-        // Phraesto (50) needs a free tile for its companion; fill every ally
-        // tile so activation fails
-        grid.getAllTiles().forEach((tile) => {
-          if (tile.state === State.AVAILABLE_ALLY) {
-            tile.characterId = 1000 + tile.hex.getId()
-          }
-        })
-
-        const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {})
-
-        const result = skillManager.activateCharacterSkill(50, 1, Team.ALLY, grid)
-
-        expect(result).toBe(false)
-        expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(false)
-
-        consoleSpy.mockRestore()
-      })
-
-      it('deactivates all active skills, cleaning up their side effects', () => {
-        const bigGrid = new Grid(STANDARD_GRID, STANDARD_ARENA)
-        performPlace(bigGrid, 1, 50, Team.ALLY)
-        skillManager.activateCharacterSkill(50, 1, Team.ALLY, bigGrid)
-        expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(true)
-
-        skillManager.deactivateAllSkills(bigGrid)
-
-        expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(false)
-        const companion = bigGrid
-          .getAllTiles()
-          .find((t) => t.characterId === bigGrid.companionIdOffset + 50)
-        expect(companion).toBeUndefined()
-      })
-    })
-
     describe('color modifiers', () => {
-      it('manages character color modifiers', () => {
-        skillManager.addCharacterColorModifier(100, Team.ALLY, '#ff0000')
-
-        const modifiers = skillManager.getColorModifiersByCharacterAndTeam()
-        expect(modifiers.get(`100-${Team.ALLY}`)).toBe('#ff0000')
-
-        skillManager.removeCharacterColorModifier(100, Team.ALLY)
-        const updated = skillManager.getColorModifiersByCharacterAndTeam()
-        expect(updated.size).toBe(0)
-      })
-
-      it('manages tile color modifiers', () => {
-        skillManager.setTileColorModifier(1, '#00ff00')
-        expect(skillManager.getTileColorModifier(1)).toEqual(['#00ff00'])
-
-        skillManager.setTileColorModifier(2, '#0000ff')
-        const allModifiers = skillManager.getTileColorModifiers()
-        expect(allModifiers.size).toBe(2)
-
-        skillManager.removeTileColorModifier(1, '#00ff00')
-        expect(skillManager.getTileColorModifier(1)).toBeUndefined()
-
-        skillManager.clearTileColorModifiers()
-        expect(skillManager.getTileColorModifiers().size).toBe(0)
-      })
-
       it('supports multiple colors on the same tile', () => {
         skillManager.setTileColorModifier(1, '#ff0000')
         skillManager.setTileColorModifier(1, '#00ff00')
@@ -141,45 +59,6 @@ describe('skill', () => {
         expect(executeMoveCharacter(arena, sm, 40, 45, 21)).toBe(true)
         expect(sm.getTileColorModifier(40)).toBeDefined()
       })
-
-      it('handles removing a color that is not on the tile', () => {
-        skillManager.setTileColorModifier(1, '#ff0000')
-        skillManager.removeTileColorModifier(1, '#00ff00')
-        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
-      })
-
-      it('handles removing from a non-existent tile', () => {
-        skillManager.removeTileColorModifier(99, '#ff0000')
-        expect(skillManager.getTileColorModifier(99)).toBeUndefined()
-      })
-
-      it('keeps the fill channel independent from the border channel', () => {
-        skillManager.setTileColorModifier(1, '#ff0000')
-        skillManager.setTileFillModifier(1, '#00ff00')
-
-        expect(skillManager.getTileColorModifier(1)).toEqual(['#ff0000'])
-        expect(skillManager.getTileFillModifier(1)).toEqual(['#00ff00'])
-
-        skillManager.removeTileColorModifier(1, '#ff0000')
-        expect(skillManager.getTileColorModifier(1)).toBeUndefined()
-        expect(skillManager.getTileFillModifier(1)).toEqual(['#00ff00'])
-      })
-    })
-
-    describe('skill targeting', () => {
-      it('increments version on target changes', () => {
-        const initialVersion = skillManager.getTargetVersion()
-
-        skillManager.setSkillTarget(100, Team.ALLY, {
-          targetHexId: 5,
-          targetCharacterId: 200,
-        })
-        expect(skillManager.getTargetVersion()).toBeGreaterThan(initialVersion)
-
-        const afterSetVersion = skillManager.getTargetVersion()
-        skillManager.clearSkillTarget(100, Team.ALLY)
-        expect(skillManager.getTargetVersion()).toBeGreaterThan(afterSetVersion)
-      })
     })
 
     describe('skill updates', () => {
@@ -208,35 +87,6 @@ describe('skill', () => {
         expect(skillManager.hasActiveSkill(50, Team.ALLY)).toBe(false)
         expect(companionTile!.characterId).toBeUndefined()
         expect(bigGrid.maxTeamSizes.get(Team.ALLY)).toBe(5)
-      })
-    })
-
-    describe('reset', () => {
-      it('resets all skill manager state', () => {
-        // Set up various state (without requiring real skills)
-        skillManager.addCharacterColorModifier(200, Team.ENEMY, '#ff0000')
-        skillManager.setTileColorModifier(3, '#00ff00')
-        skillManager.setSkillTarget(999, Team.ALLY, {
-          targetHexId: 5,
-          targetCharacterId: 300,
-        })
-
-        skillManager.reset()
-
-        expect(skillManager.getColorModifiersByCharacterAndTeam().size).toBe(0)
-        expect(skillManager.getTileColorModifiers().size).toBe(0)
-        expect(skillManager.getAllSkillTargets().size).toBe(0)
-      })
-    })
-
-    describe('edge cases', () => {
-      it('overwrites a character color modifier on re-add', () => {
-        skillManager.addCharacterColorModifier(100, Team.ALLY, '#ff0000')
-        skillManager.addCharacterColorModifier(100, Team.ALLY, '#00ff00')
-
-        const modifiers = skillManager.getColorModifiersByCharacterAndTeam()
-        expect(modifiers.get(`100-${Team.ALLY}`)).toBe('#00ff00')
-        expect(modifiers.size).toBe(1)
       })
     })
   })

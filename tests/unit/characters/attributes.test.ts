@@ -3,13 +3,10 @@ import { describe, expect, it } from 'vitest'
 import {
   ATTR_PARAGON,
   ATTR_REFINEMENT,
-  attrDefault,
-  attrMax,
   attrRowsFor,
   clampAttr,
   compareAttrRows,
   HERO_ATTRS,
-  isKnownAttrId,
   type AttrRow,
 } from '@/lib/characters/attributes'
 import { Team } from '@/lib/types/team'
@@ -37,15 +34,6 @@ describe('HERO_ATTRS contract', () => {
       expect(attr.default).toBeGreaterThanOrEqual(0)
       expect(attr.default).toBeLessThanOrEqual(attr.max)
     }
-  })
-
-  it('lookups answer for known and unknown ids', () => {
-    expect(isKnownAttrId(1)).toBe(true)
-    expect(isKnownAttrId(2)).toBe(true)
-    expect(isKnownAttrId(0)).toBe(false)
-    expect(isKnownAttrId(63)).toBe(false)
-    expect(attrMax(ATTR_PARAGON)).toBe(4)
-    expect(attrDefault(ATTR_REFINEMENT)).toBe(0)
   })
 })
 

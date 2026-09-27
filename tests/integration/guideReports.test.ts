@@ -16,6 +16,7 @@ import { imagetools } from 'vite-imagetools'
 import { expect, test } from 'vitest'
 
 import { guideReports } from '../../scripts/guideReports'
+import { seasonArtifactImageUrl } from '../../src/utils/artifactImage'
 
 const root = fileURLToPath(new URL('../../', import.meta.url))
 
@@ -66,7 +67,8 @@ test('guide templates reuse display assets, preserve content and reject bad inpu
     const artifact = await sharp(join(dir, 'dist', urls[1]!.slice('/test/'.length))).metadata()
     expect([portrait.width, portrait.height]).toEqual([100, 135])
     expect([artifact.width, artifact.height]).toEqual([100, 100])
-    expect(urls[2]).toBe('https://chaldea.tmdict.com/img/seasonal/artifact/frosthelm.webp')
+    // A seasonal artifact stays on the image host rather than being bundled.
+    expect(urls[2]).toBe(seasonArtifactImageUrl('frosthelm'))
     expect(html.replace(/href="[^"]+"/g, 'href="image"')).toBe(
       template.replace(/href="[^"]+"/g, 'href="image"'),
     )

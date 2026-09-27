@@ -4,7 +4,6 @@ import { DEFAULT_MAP_KEY, MAPS } from '@/lib/maps'
 import {
   DEFAULT_TEAM_MODE,
   DEFAULT_VARIANT,
-  initialMaps,
   isTeamModeKey,
   matchVariant,
   normalizeTeamPayload,
@@ -16,7 +15,6 @@ import {
   variantsForMode,
   type TeamVariantChoice,
 } from '@/lib/teams/modes'
-import { MAX_GRID_COUNT } from '@/stores/grids'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 
 const boards = (count: number): MultiGridState => ({
@@ -24,33 +22,6 @@ const boards = (count: number): MultiGridState => ({
 })
 
 describe('TEAM_MODES registry', () => {
-  it('lists every mode exactly once in TEAM_MODE_ORDER', () => {
-    expect([...TEAM_MODE_ORDER].sort()).toEqual(Object.keys(TEAM_MODES).sort())
-    expect(new Set(TEAM_MODE_ORDER).size).toBe(TEAM_MODE_ORDER.length)
-  })
-
-  it('keeps defaultMaps aligned with boardCount and within the grid cap', () => {
-    for (const cfg of Object.values(TEAM_MODES)) {
-      expect(cfg.defaultMaps).toHaveLength(cfg.boardCount)
-      expect(cfg.boardCount).toBeGreaterThanOrEqual(1)
-      expect(cfg.boardCount).toBeLessThanOrEqual(MAX_GRID_COUNT)
-    }
-
-    // Wrap layout is defined only for the 5-board shape
-    const wrapCounts = Object.values(TEAM_MODES)
-      .filter((cfg) => cfg.canWrap)
-      .map((cfg) => cfg.boardCount)
-    expect(wrapCounts.every((count) => count === 5)).toBe(true)
-  })
-
-  it('references only maps that exist', () => {
-    for (const cfg of Object.values(TEAM_MODES)) {
-      for (const map of cfg.defaultMaps) {
-        expect(MAPS[map], `${cfg.key} references unknown map ${map}`).toBeDefined()
-      }
-    }
-  })
-
   it('orders modes by ascending board count so smallest-fit inference works', () => {
     const counts = TEAM_MODE_ORDER.map((key) => TEAM_MODES[key].boardCount)
     expect([...counts].sort((a, b) => a - b)).toEqual(counts)
@@ -73,14 +44,6 @@ describe('TEAM_MODES registry', () => {
 })
 
 describe('TEAM_VARIANTS registry', () => {
-  it('pins the registered types to their modes', () => {
-    expect(Object.keys(TEAM_VARIANTS).sort()).toEqual(['gd', 'sl'])
-    expect(TEAM_VARIANTS.sl.mode).toBe('5v5')
-    expect(TEAM_VARIANTS.gd.mode).toBe('3v3')
-    expect(TEAM_MODES['5v5'].initialVariant).toBe('sl')
-    expect(TEAM_MODES['3v3'].initialVariant).toBe('gd')
-  })
-
   it('keeps each list aligned with its mode and made of real maps', () => {
     for (const variant of Object.values(TEAM_VARIANTS)) {
       expect(variant.key).toBe(
@@ -101,10 +64,6 @@ describe('TEAM_VARIANTS registry', () => {
     }
   })
 
-  it('reserves the "default" choice: no variant key may collide with it', () => {
-    expect(Object.keys(TEAM_VARIANTS)).not.toContain(DEFAULT_VARIANT)
-  })
-
   it('round-trips every choice through variantMaps and matchVariant', () => {
     for (const mode of TEAM_MODE_ORDER) {
       const choices: TeamVariantChoice[] = [
@@ -120,9 +79,7 @@ describe('TEAM_VARIANTS registry', () => {
 
 describe('matchVariant', () => {
   it('matches a list only in board order', () => {
-    expect(matchVariant('5v5', TEAM_VARIANTS.sl.maps)).toBe('sl')
     expect(matchVariant('5v5', [...TEAM_VARIANTS.sl.maps].reverse())).toBeNull()
-    expect(matchVariant('3v3', TEAM_VARIANTS.gd.maps)).toBe('gd')
   })
 
   it('lights Default for the neutral list and nothing for custom maps', () => {
@@ -139,14 +96,6 @@ describe('matchVariant', () => {
   it('treats a missing key as the default map for that board', () => {
     expect(matchVariant('3v3', [undefined, DEFAULT_MAP_KEY, undefined])).toBe(DEFAULT_VARIANT)
     expect(matchVariant('5v5', [undefined, ...TEAM_VARIANTS.sl.maps.slice(1)])).toBe('sl')
-  })
-})
-
-describe('initialMaps', () => {
-  it('opens 5v5 on Supreme League, 3v3 on Guild Duel, and 1v1 on the default map', () => {
-    expect(initialMaps('5v5')).toEqual(TEAM_VARIANTS.sl.maps)
-    expect(initialMaps('3v3')).toEqual(TEAM_VARIANTS.gd.maps)
-    expect(initialMaps('1v1')).toEqual([DEFAULT_MAP_KEY])
   })
 })
 

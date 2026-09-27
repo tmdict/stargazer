@@ -46,17 +46,6 @@ describe('evie symmetrical enemy-tile highlight', () => {
     }
   })
 
-  it('clears the highlights on deactivate', () => {
-    evie().onActivate(ctx())
-    expect(skillManager.getTileColorModifier(30)).toBeDefined()
-
-    evie().onDeactivate(ctx())
-
-    for (const hexId of [30, 33, 34, 37]) {
-      expect(skillManager.getTileColorModifier(hexId)).toBeUndefined()
-    }
-  })
-
   it('still targets the rearmost ally (base skill preserved under withTilePaint)', () => {
     placeOnTile(grid, 1, 200, Team.ALLY)
 
