@@ -15,6 +15,7 @@ const { character, variant = 'detailed' } = defineProps<{
   character: CharacterType
   targetElement: HTMLElement
   variant?: 'simple' | 'detailed'
+  hint?: string
 }>()
 
 const gameDataStore = useGameDataStore()
@@ -99,6 +100,7 @@ const formattedEnergy = computed(() => {
               <span class="tooltip-value">{{ character.season }}</span>
             </div>
           </div>
+          <div v-if="hint" class="tooltip-hint">{{ hint }}</div>
         </template>
       </template>
     </TooltipPopup>
@@ -159,6 +161,15 @@ const formattedEnergy = computed(() => {
 .tooltip-value {
   font-weight: 500;
   text-transform: capitalize;
+}
+
+.tooltip-hint {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
 }
 
 /* Rows without an icon align their label to where the icon-bearing ones start. */

@@ -1,12 +1,15 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, shallowRef } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import ArtifactTooltip from '@/components/ArtifactTooltip.vue'
+import ArtifactModal from '@/components/modals/ArtifactModal.vue'
+import HoldRing from '@/components/ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
+import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
 import type { Hex } from '@/lib/hex'
@@ -141,6 +144,23 @@ const enemyRetired = computed(
   () =>
     props.enemyArtifactId !== null && props.enemyArtifactId !== undefined && !enemyArtifact.value,
 )
+
+// Inspect: long-press or right-click opens the artifact's details. The modal
+// mounts closed on first use and opens a tick later, so its enter transition
+// plays. A retired artifact has no record and so no details.
+const inspectedArtifact = shallowRef<ArtifactType | null>(null)
+const inspectOpen = ref(false)
+
+const inspectArtifact = async (team: Team): Promise<void> => {
+  const artifact = team === Team.ALLY ? allyArtifact.value : enemyArtifact.value
+  if (!artifact) return
+  hideArtifactTooltip()
+  inspectedArtifact.value = artifact
+  await nextTick()
+  inspectOpen.value = true
+}
+
+const { pressing: holdingTeam, start: startHold, onContextMenu } = useLongPress(inspectArtifact)
 
 // "Front" is the slot that renders at the screen-bottom (near) edge, which must
 // sit above the sprites behind it; the inverted view rotates the enemy cell down
@@ -349,12 +369,15 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @drop="handleArtifactDrop($event, Team.ALLY)"
       @mouseenter="allyArtifact && showArtifactTooltip($event, allyArtifact)"
       @mouseleave="hideArtifactTooltip"
+      @pointerdown="allyArtifact && startHold($event, Team.ALLY)"
+      @contextmenu="allyArtifact && onContextMenu($event, Team.ALLY)"
     >
       <div class="artifact-circle">
         <ArtifactImage v-if="allyArtifact" :artifact="allyArtifact" />
         <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
+      <HoldRing v-if="holdingTeam === Team.ALLY" />
     </div>
 
     <!-- Enemy artifact (host cell: right of cell 45). Behind the character layer
@@ -373,12 +396,15 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       @drop="handleArtifactDrop($event, Team.ENEMY)"
       @mouseenter="enemyArtifact && showArtifactTooltip($event, enemyArtifact)"
       @mouseleave="hideArtifactTooltip"
+      @pointerdown="enemyArtifact && startHold($event, Team.ENEMY)"
+      @contextmenu="enemyArtifact && onContextMenu($event, Team.ENEMY)"
     >
       <div class="artifact-circle">
         <ArtifactImage v-if="enemyArtifact" :artifact="enemyArtifact" />
         <span v-else class="retired-artifact" :title="i18n.t('app.retired')">?</span>
       </div>
       <div v-if="showPerspective" class="artifact-pointer" />
+      <HoldRing v-if="holdingTeam === Team.ENEMY" />
     </div>
 
     <ArtifactTooltip
@@ -386,6 +412,14 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       :artifact="hoveredArtifact"
       :target-element="hoveredEl"
       variant="detailed"
+      :hint="i18n.t('app.hold-for-details')"
+    />
+
+    <ArtifactModal
+      v-if="inspectedArtifact"
+      :show="inspectOpen"
+      :artifact="inspectedArtifact"
+      @close="inspectOpen = false"
     />
 
     <Teleport to="body">
@@ -467,10 +501,14 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
   opacity: 0.55;
 }
 
+/* Long-press inspects: iOS would otherwise answer it with the image callout,
+   and every touch browser with text selection. */
 .grid-artifact {
   position: absolute;
   cursor: pointer;
   pointer-events: auto;
+  -webkit-touch-callout: none;
+  user-select: none;
   transform-origin: center;
   /* Always present (not inline-only) so the perspective<->flat transform animates
      in both directions, in sync with the grid + character icons. */

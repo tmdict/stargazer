@@ -1,11 +1,16 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, nextTick, ref, shallowRef } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
+import PhantimalModal from '../modals/PhantimalModal.vue'
+import SkillModal from '../modals/SkillModal.vue'
+import HoldRing from '../ui/HoldRing.vue'
+import IconInfo from '../ui/IconInfo.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
+import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import {
   getCharacter,
@@ -17,11 +22,13 @@ import {
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import type { CharacterType } from '@/lib/types/character'
+import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
+import { hasSkillLocale } from '@/utils/dataLoader'
 import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
@@ -62,6 +69,74 @@ const baseCharacterAt = (characterId: number): CharacterType | undefined => {
   const { localId } = decomposeUnitId(characterId)
   return isBaseHeroId(localId) ? props.characters.find((c) => c.id === localId) : undefined
 }
+
+// Inspect (long-press, right-click, the lifted unit's Skills button).
+// Companions and synergy copies open their owner hero's skills; a phantimal's
+// companion opens its phantimal's. Units with no page (placeholders, heroes
+// without skill text, retired phantimals) have no inspect gesture at all.
+type InspectTarget =
+  { kind: 'hero'; slug: string } | { kind: 'phantimal'; phantimal: PhantimalType }
+
+const inspectTargetOf = (unitId: number): InspectTarget | null => {
+  if (inPhantimalBand(unitId)) {
+    const phantimal = gameDataStore.getPhantimalById(phantimalOwnerId(unitId))
+    return phantimal ? { kind: 'phantimal', phantimal } : null
+  }
+  const hero = props.characters.find((c) => c.id === toBaseHeroId(unitId))
+  return hero && !hero.placeholder && hasSkillLocale(hero.name)
+    ? { kind: 'hero', slug: hero.name }
+    : null
+}
+
+const heroSkill = ref('')
+const inspectedPhantimal = shallowRef<PhantimalType | null>(null)
+const openModal = ref<InspectTarget['kind'] | null>(null)
+
+// The modal mounts closed on first use and opens a tick later, so its enter
+// transition plays; it stays mounted after that.
+const inspectAt = async (hexId: number): Promise<void> => {
+  const unitId = getCharacter(ctx.grid, hexId)
+  const target = unitId === undefined ? null : inspectTargetOf(unitId)
+  if (!target) return
+  hideTooltip()
+  if (target.kind === 'hero') heroSkill.value = target.slug
+  else inspectedPhantimal.value = target.phantimal
+  await nextTick()
+  openModal.value = target.kind
+}
+
+const { pressing: holdingHexId, start: startHold, onContextMenu } = useLongPress(inspectAt)
+
+const handlePointerDown = (event: PointerEvent, hexId: number, characterId: number) => {
+  if (!props.isMapEditorMode && inspectTargetOf(characterId)) startHold(event, hexId)
+}
+
+// A unit with no page keeps the browser's own menu.
+const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number) => {
+  if (!props.isMapEditorMode && inspectTargetOf(characterId)) onContextMenu(event, hexId)
+}
+
+const hoverHint = computed(() => {
+  const hero = hoveredCharacter.value
+  return hero && !hero.placeholder && hasSkillLocale(hero.name)
+    ? i18n.t('app.hold-for-skills')
+    : undefined
+})
+
+// Anchored to the lifted unit's visual top edge. Perspective lifts the sprite
+// and squashes it about its center (getCharacterStyle), so the edge moves too.
+const liftButtonStyle = computed(() => {
+  const hexId = liftedHexId.value
+  if (hexId === null || liftedGridId.value !== ctx.id) return null
+  const unitId = getCharacter(ctx.grid, hexId)
+  if (unitId === undefined || !inspectTargetOf(unitId)) return null
+  const { x, y } = ctx.layout.hexToPixel(ctx.grid.getHexById(hexId))
+  const half = characterDimensions.value.size / 2
+  const top = props.showPerspective
+    ? y - BASE_PERSPECTIVE_LIFT * ctx.hexScale - half * props.scaleY
+    : y - half
+  return { left: `${x}px`, top: `${top}px` }
+})
 
 const getCharacterName = (characterId: number, hexId: number): string => {
   const team = getCharacterTeam(ctx.grid, hexId)
@@ -105,6 +180,8 @@ const getCharacterColors = (characterId: number) => {
 // Base character size (at 40px hex radius)
 const BASE_CHARACTER_SIZE = 60
 const BASE_CHARACTER_OFFSET = 30
+// How far perspective raises a sprite above its hex center.
+const BASE_PERSPECTIVE_LIFT = 70
 
 const characterDimensions = computed(() => {
   const scale = ctx.hexScale
@@ -142,7 +219,7 @@ const getCharacterStyle = (hexId: number) => {
   }
 
   if (props.showPerspective) {
-    const verticalOffset = -70 * ctx.hexScale
+    const verticalOffset = -BASE_PERSPECTIVE_LIFT * ctx.hexScale
     baseStyle.transform = `translateY(${verticalOffset}px) scaleY(${props.scaleY})`
     baseStyle.transformOrigin = 'center'
   }
@@ -276,6 +353,8 @@ const visiblePlacements = computed(() => {
       @dragstart="!readonly && handleDragStart($event, hexId, characterId)"
       @dragend="!readonly && handleDragEnd($event)"
       @click="!readonly && handleClick($event, hexId, characterId)"
+      @pointerdown="handlePointerDown($event, hexId, characterId)"
+      @contextmenu="handleContextMenu($event, hexId, characterId)"
       @mouseenter="handleMouseEnter($event, hexId, characterId)"
       @mouseleave="handleMouseLeave(hexId)"
     >
@@ -311,14 +390,40 @@ const visiblePlacements = computed(() => {
           draggable="false"
         />
         <div v-if="showPerspective" class="character-pointer" />
+        <HoldRing v-if="holdingHexId === hexId" />
       </div>
     </div>
+
+    <button
+      v-if="liftButtonStyle && liftedHexId !== null"
+      type="button"
+      class="lift-inspect capture-exclude"
+      :style="liftButtonStyle"
+      @click="inspectAt(liftedHexId)"
+    >
+      <IconInfo :size="16" />
+      {{ i18n.t('app.skills') }}
+    </button>
 
     <CharacterTooltip
       v-if="hoveredEl && hoveredCharacter"
       :character="hoveredCharacter"
       :target-element="hoveredEl"
       variant="detailed"
+      :hint="hoverHint"
+    />
+
+    <SkillModal
+      v-if="heroSkill"
+      :show="openModal === 'hero'"
+      :skill-name="heroSkill"
+      @close="openModal = null"
+    />
+    <PhantimalModal
+      v-if="inspectedPhantimal"
+      :show="openModal === 'phantimal'"
+      :phantimal="inspectedPhantimal"
+      @close="openModal = null"
     />
   </div>
 </template>
@@ -333,10 +438,14 @@ const visiblePlacements = computed(() => {
   pointer-events: none;
 }
 
+/* A long-press is the inspect gesture: iOS would otherwise answer it with the
+   image callout, and every touch browser with text selection. */
 .character {
   pointer-events: auto;
   cursor: grab;
   transition: transform 0.3s ease-out;
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .character:active {
@@ -367,6 +476,36 @@ const visiblePlacements = computed(() => {
 .character.lifted .character-content {
   transform: scale(1.08);
   filter: drop-shadow(0 5px 8px rgba(0, 0, 0, 0.28));
+}
+
+.lift-inspect {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 8px));
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px 4px 5px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.lift-inspect::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-bottom: 0;
+  border-top-color: var(--color-primary);
 }
 
 .character-background {
