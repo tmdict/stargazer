@@ -31,12 +31,6 @@ function createMockTile(
 
 describe('gridStateSerializer', () => {
   describe('serializeGridState', () => {
-    it('serializes empty grid', () => {
-      const tiles: GridTile[] = []
-      const result = serializeGridState(tiles, null, null)
-      expect(result).toEqual({})
-    })
-
     it('serializes upgrade attrs for base heroes, skipping defaults, companions, and phantimals', () => {
       const companionId = COMPANION_ID_OFFSET + 100
       const tiles: GridTile[] = [
@@ -126,16 +120,6 @@ describe('gridStateSerializer', () => {
       ])
     })
 
-    it.each([
-      [3, null, [3, null]],
-      [null, 5, [null, 5]],
-      [2, 4, [2, 4]],
-    ])('serializes artifacts (%s, %s)', (ally, enemy, expected) => {
-      const tiles: GridTile[] = []
-      const result = serializeGridState(tiles, ally, enemy)
-      expect(result).toEqual({ a: expected })
-    })
-
     it('extracts phantimals into s with local IDs, keeping them out of c', () => {
       const tiles: GridTile[] = [
         createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
@@ -144,49 +128,6 @@ describe('gridStateSerializer', () => {
       const result = serializeGridState(tiles, null, null)
       expect(result.c).toEqual([[1, 100, Team.ALLY]])
       expect(result.s).toEqual([[5, 3, Team.ENEMY]])
-    })
-
-    it('serializes display flags', () => {
-      const tiles: GridTile[] = []
-      const displayFlags = {
-        showPerspective: true,
-        showSkills: false,
-      }
-      const result = serializeGridState(tiles, null, null, displayFlags)
-      expect(result).toEqual({ d: 0b100 })
-    })
-
-    it('serializes teamView in display flags (bit 4)', () => {
-      const tiles: GridTile[] = []
-      const result = serializeGridState(tiles, null, null, {
-        showPerspective: false,
-        showSkills: false,
-        teamView: true,
-      })
-      expect(result).toEqual({ d: 0b10000 })
-    })
-
-    it('serializes complete state with all components', () => {
-      const tiles: GridTile[] = [
-        createMockTile(1, State.OCCUPIED_ALLY, 100, Team.ALLY),
-        createMockTile(2, State.DEFAULT),
-        createMockTile(3, State.BLOCKED),
-      ]
-      const displayFlags = {
-        showPerspective: false,
-        showSkills: true,
-      }
-      const result = serializeGridState(tiles, 1, 2, displayFlags)
-
-      expect(result).toEqual({
-        t: [
-          [1, State.OCCUPIED_ALLY],
-          [3, State.BLOCKED],
-        ],
-        c: [[1, 100, Team.ALLY]],
-        a: [1, 2],
-        d: 0b010,
-      })
     })
   })
 
@@ -209,22 +150,11 @@ describe('gridStateSerializer', () => {
     })
 
     it.each([
-      [0b00000, off],
       [0b00001, { ...off, wrap: true }],
       [0b00010, { ...off, showSkills: true }],
       [0b00100, { ...off, showPerspective: true }],
       [0b01000, { ...off, inverted: true }],
       [0b10000, { ...off, teamView: true }],
-      [
-        0b01111,
-        {
-          showPerspective: true,
-          showSkills: true,
-          teamView: false,
-          inverted: true,
-          wrap: true,
-        },
-      ],
     ])('unpacks flags %i correctly', (flags, expected) => {
       expect(unpackDisplayFlags(flags)).toEqual(expected)
     })

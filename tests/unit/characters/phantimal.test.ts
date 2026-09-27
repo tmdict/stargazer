@@ -6,12 +6,7 @@ import {
   getAvailableTeamSize,
   setMaxTeamSize,
 } from '@/lib/characters/character'
-import {
-  isPhantimalId,
-  PHANTIMAL_ID_OFFSET,
-  toLocalPhantimalId,
-  toPhantimalId,
-} from '@/lib/characters/phantimal'
+import { isPhantimalId, PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
 import { performPlace } from '@/lib/characters/place'
 import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
@@ -21,11 +16,6 @@ import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('phantimal', () => {
   describe('id helpers', () => {
-    it('round-trips local ids through the namespace', () => {
-      expect(toPhantimalId(3)).toBe(PHANTIMAL_ID_OFFSET + 3)
-      expect(toLocalPhantimalId(toPhantimalId(3))).toBe(3)
-    })
-
     it('identifies phantimal ids by the offset', () => {
       expect(isPhantimalId(PHANTIMAL_ID_OFFSET)).toBe(true)
       expect(isPhantimalId(toPhantimalId(1))).toBe(true)

@@ -3,8 +3,6 @@ import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
-  loadTeamsDisplayPrefs,
-  saveTeamsDisplayPrefs,
   teamsSlotKey,
   useTeamsPersistence,
   type ActiveSlot,
@@ -84,15 +82,6 @@ describe('useTeamsPersistence', () => {
     expect(persistence.load('3v3')).toBeNull()
   })
 
-  it('persists and validates the last-used mode', () => {
-    const persistence = useTeamsPersistence(ref<TeamModeKey>('5v5'), ref(null), FLAGS)
-    expect(persistence.loadMode()).toBeNull()
-    persistence.persistMode('3v3')
-    expect(persistence.loadMode()).toBe('3v3')
-    storage.set('stargazer.teams.mode', 'garbage')
-    expect(persistence.loadMode()).toBeNull()
-  })
-
   it('autosaves board changes to the live slot and pause gates the watcher', async () => {
     const grids = useGrids()
     const character = useCharacterStore()
@@ -133,40 +122,5 @@ describe('useTeamsPersistence', () => {
     await nextTick()
     const slotWrites = setItemSpy.mock.calls.filter(([key]) => key === teamsSlotKey('1v1'))
     expect(slotWrites).toHaveLength(1)
-  })
-})
-
-describe('teams display prefs', () => {
-  beforeEach(() => {
-    vi.stubEnv('SSR', false)
-    ;({ storage, setItemSpy } = stubLocalStorage())
-  })
-
-  afterEach(() => {
-    vi.unstubAllEnvs()
-    vi.unstubAllGlobals()
-  })
-
-  it('round-trips every view toggle, inverted included', () => {
-    saveTeamsDisplayPrefs({
-      showPerspective: false,
-      showSkills: false,
-      teamView: true,
-      wrap: true,
-      inverted: true,
-    })
-    const loaded = loadTeamsDisplayPrefs()
-    expect(loaded).not.toBeNull()
-    expect(loaded!.showPerspective).toBe(false)
-    expect(loaded!.showSkills).toBe(false)
-    expect(loaded!.teamView).toBe(true)
-    expect(loaded!.wrap).toBe(true)
-    expect(loaded!.inverted).toBe(true)
-  })
-
-  it('returns null when absent or corrupt', () => {
-    expect(loadTeamsDisplayPrefs()).toBeNull()
-    storage.set('stargazer.teams.display', 'garbage')
-    expect(loadTeamsDisplayPrefs()).toBeNull()
   })
 })

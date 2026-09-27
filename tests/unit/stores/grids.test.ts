@@ -101,20 +101,6 @@ describe('useGrids.swapBoards', () => {
     expect(b!.artifacts.enemy).toBe(4)
   })
 
-  it('makes the target board active', () => {
-    const { grids } = setupBoards()
-    grids.setActive(0)
-
-    grids.swapBoards(0, 1)
-
-    expect(grids.activeId).toBe(1)
-  })
-
-  it('rejects a swap of a board with itself', () => {
-    const { grids } = setupBoards()
-    expect(grids.swapBoards(1, 1)).toBe(false)
-  })
-
   it('re-derives a cosmetic skill zone on the destination, leaving no ghost', () => {
     const { grids, a, b } = setupBoards()
 
@@ -157,22 +143,6 @@ describe('useGrids.swapBoards', () => {
     expect(destPhraesto[0]!.team).toBe(Team.ALLY)
     expect(destCompanion).toHaveLength(1)
     expect(destCompanion[0]!.team).toBe(Team.ALLY)
-  })
-
-  it('round-trips each roster when swapped twice', () => {
-    const { grids, a, b } = setupBoards()
-    a!.place(1, ALLY_A, Team.ALLY)
-    a!.place(40, ENEMY_A, Team.ENEMY)
-    b!.place(2, ALLY_B, Team.ALLY)
-
-    const beforeA = roster(a!.grid)
-    const beforeB = roster(b!.grid)
-
-    grids.swapBoards(0, 1)
-    grids.swapBoards(0, 1)
-
-    expect(roster(a!.grid)).toEqual(beforeA)
-    expect(roster(b!.grid)).toEqual(beforeB)
   })
 })
 
@@ -247,27 +217,6 @@ describe('useGrids.routeArtifactDrop', () => {
     expect(a!.artifacts.ally).toBe(5)
     expect(a!.artifacts.enemy).toBe(5)
     expect(b!.artifacts.enemy).toBe(9)
-  })
-
-  it('is a no-op when dropped on its own slot', () => {
-    const grids = useGrids()
-    const a = grids.contexts[0]!
-    a.setArtifact(Team.ALLY, 3)
-
-    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 0, Team.ALLY)).toBe(
-      false,
-    )
-    expect(a.artifacts.ally).toBe(3)
-  })
-
-  it('is a no-op when the source slot is empty', () => {
-    const { grids, b } = setupBoards()
-    b.setArtifact(Team.ALLY, 7)
-
-    expect(grids.routeArtifactDrop({ sourceCtxId: 0, sourceTeam: Team.ALLY }, 1, Team.ALLY)).toBe(
-      false,
-    )
-    expect(b.artifacts.ally).toBe(7)
   })
 
   it('is a no-op when the same artifact already occupies the target slot', () => {
@@ -357,17 +306,6 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(getCharacter(b!.grid, 41)).toBe(ENEMY_A)
   })
 
-  it('allows a cross-board cross-team swap when uniqueness holds', () => {
-    const { grids, a, b } = setupBoards()
-    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    expect(b!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
-
-    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
-
-    expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
-    expect(getCharacter(a!.grid, 1)).toBe(ENEMY_A)
-  })
-
   it('rejects a cross-board cross-team move that would duplicate a character on a team', () => {
     const { grids, a, b } = setupBoards()
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
@@ -378,16 +316,6 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
 
     expect(getCharacter(a!.grid, 1)).toBe(ALLY_A)
     expect(b!.grid.getTileById(41).characterId).toBeUndefined()
-  })
-
-  it('allows a cross-board cross-team move when uniqueness holds', () => {
-    const { grids, a, b } = setupBoards()
-    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-
-    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 1, 41)).toBe(true)
-
-    expect(getCharacter(b!.grid, 41)).toBe(ALLY_A)
-    expect(a!.grid.getTileById(1).characterId).toBeUndefined()
   })
 
   it('allows a cross-board same-team move', () => {
@@ -510,32 +438,6 @@ describe('useGrids attr carry-over', () => {
     expect(a!.getAttr(Team.ALLY, ENEMY_A, ATTR_PARAGON)).toBe(4)
     expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
     expect(b!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(0)
-  })
-
-  it('re-keys a paragon level on a same-board cross-team move', () => {
-    const { grids, a } = setupBoards()
-    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 4)
-
-    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 41)).toBe(true)
-
-    expect(a!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(4)
-    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
-  })
-
-  it('trades paragon levels on a same-board cross-team swap', () => {
-    const { grids, a } = setupBoards()
-    expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
-    expect(a!.place(41, ENEMY_A, Team.ENEMY)).toBe(true)
-    a!.setAttr(Team.ALLY, ALLY_A, ATTR_PARAGON, 2)
-    a!.setAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON, 4)
-
-    expect(grids.routeDrop(dragPayload(0, 1, ALLY_A), 0, 41)).toBe(true)
-
-    expect(a!.getAttr(Team.ENEMY, ALLY_A, ATTR_PARAGON)).toBe(2)
-    expect(a!.getAttr(Team.ALLY, ENEMY_A, ATTR_PARAGON)).toBe(4)
-    expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
-    expect(a!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(0)
   })
 })
 

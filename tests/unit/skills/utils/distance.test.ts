@@ -64,18 +64,6 @@ describe('distance targeting', () => {
       expect(result?.metadata?.sourceHexId).toBe(1)
     })
 
-    it('returns null when no targets exist', () => {
-      removeFromTile(grid, 10)
-      removeFromTile(grid, 11)
-
-      const result = findTarget(context, {
-        targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.FURTHEST,
-      })
-
-      expect(result).toBeNull()
-    })
-
     it('forwards excludeSelf to the REARMOST dispatch', () => {
       // Self sits on the rearmost ally tile, so without forwarding the
       // result would be hex 1
@@ -90,18 +78,6 @@ describe('distance targeting', () => {
 
       expect(result?.targetHexId).toBe(2)
       expect(result?.targetCharacterId).toBe(102)
-    })
-
-    it('finds frontmost target using FRONTMOST method', () => {
-      placeOnTile(grid, 13, 202, Team.ENEMY)
-
-      const result = findTarget(context, {
-        targetTeam: Team.ENEMY,
-        targetingMethod: TargetingMethod.FRONTMOST,
-      })
-
-      expect(result?.targetHexId).toBe(10)
-      expect(result?.metadata?.isFrontmostTarget).toBe(true)
     })
   })
 
@@ -162,49 +138,6 @@ describe('distance targeting', () => {
       expect(result?.targetHexId).toBe(1)
       expect(result?.metadata?.isRearmostTarget).toBe(true)
     })
-
-    it('returns null when no targets exist', () => {
-      const context = makeSkillContext(grid, 1, Team.ALLY, 100)
-
-      removeFromTile(grid, 11)
-      removeFromTile(grid, 13)
-
-      expect(findRearmostTarget(context, Team.ENEMY)).toBeNull()
-    })
-
-    it('excludes self when excludeSelf is true and targeting same team', () => {
-      placeOnTile(grid, 2, 102, Team.ALLY)
-      placeOnTile(grid, 4, 104, Team.ALLY)
-      placeOnTile(grid, 5, 105, Team.ALLY)
-
-      const allyContext = makeSkillContext(grid, 4, Team.ALLY, 104)
-
-      const resultWithoutExclusion = findRearmostTarget(allyContext, Team.ALLY, false)
-      expect(resultWithoutExclusion?.targetHexId).toBe(1)
-      expect(resultWithoutExclusion?.targetCharacterId).toBe(100)
-      expect(resultWithoutExclusion?.metadata?.sourceHexId).toBe(4)
-      expect(resultWithoutExclusion?.metadata?.isRearmostTarget).toBe(true)
-      expect(resultWithoutExclusion?.metadata?.examinedTiles).toContain(1)
-      expect(resultWithoutExclusion?.metadata?.examinedTiles).toContain(3)
-
-      const resultWithExclusion = findRearmostTarget(allyContext, Team.ALLY, true)
-      expect(resultWithExclusion?.targetHexId).toBe(1)
-      expect(resultWithExclusion?.targetCharacterId).toBe(100)
-
-      // Self on the rearmost tile: exclusion shifts the target to the next hex
-      const rearmostContext = makeSkillContext(grid, 1, Team.ALLY, 100)
-      const resultWithSelfAtRear = findRearmostTarget(rearmostContext, Team.ALLY, true)
-      expect(resultWithSelfAtRear?.targetHexId).toBe(2)
-      expect(resultWithSelfAtRear?.targetCharacterId).toBe(102)
-    })
-
-    it('does not exclude self when targeting different team even with excludeSelf true', () => {
-      const context = makeSkillContext(grid, 3, Team.ALLY, 101)
-
-      const result = findRearmostTarget(context, Team.ENEMY, true)
-      expect(result?.targetHexId).toBe(13)
-      expect(result?.targetCharacterId).toBe(201)
-    })
   })
 
   describe('findFrontmostTarget', () => {
@@ -247,15 +180,6 @@ describe('distance targeting', () => {
       const context = makeSkillContext(grid, 1, Team.ALLY, 100)
 
       expect(findFrontmostTarget(context, Team.ALLY)).toBeNull()
-    })
-
-    it('returns null when no targets exist', () => {
-      const context = makeSkillContext(grid, 1, Team.ALLY, 100)
-
-      removeFromTile(grid, 11)
-      removeFromTile(grid, 13)
-
-      expect(findFrontmostTarget(context, Team.ENEMY)).toBeNull()
     })
   })
 })

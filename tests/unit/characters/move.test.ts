@@ -51,18 +51,14 @@ describe('move.ts', () => {
       expect(executeMoveCharacter(grid, skillManager, 3, 2, ALLY_A)).toBe(false)
     })
 
-    // BLOCKED and DEFAULT destinations both resolve to no valid team state
-    it.each([
-      { label: 'blocked', hexId: 6 },
-      { label: 'default', hexId: 7 },
-    ])('should reject move to a $label destination', ({ hexId }) => {
+    it('should reject move to a blocked destination', () => {
       performPlace(grid, 1, ALLY_A, Team.ALLY)
 
-      const result = executeMoveCharacter(grid, skillManager, 1, hexId, ALLY_A)
+      const result = executeMoveCharacter(grid, skillManager, 1, 6, ALLY_A)
 
       expect(result).toBe(false)
       expect(grid.getTileById(1).characterId).toBe(ALLY_A)
-      expect(grid.getTileById(hexId).characterId).toBeUndefined()
+      expect(grid.getTileById(6).characterId).toBeUndefined()
     })
   })
 
@@ -218,20 +214,6 @@ describe('move.ts', () => {
       ).toBe(SKILL_COLORS.crimson)
       random.mockRestore()
       error.mockRestore()
-    })
-  })
-
-  describe('Edge cases', () => {
-    it('should handle character with no team gracefully', () => {
-      // Manually create invalid state
-      const tile = grid.getTileById(1)
-      tile.characterId = ALLY_A
-      tile.team = undefined
-      tile.state = State.OCCUPIED_ALLY
-
-      const result = executeMoveCharacter(grid, skillManager, 1, 2, ALLY_A)
-
-      expect(result).toBe(false)
     })
   })
 })

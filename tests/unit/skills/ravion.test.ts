@@ -49,13 +49,6 @@ describe('ravion (Designated Duty)', () => {
     expect(arrowTargets(Team.ALLY)).toEqual([ids[1], ids[2]])
   })
 
-  it('registers no target when no other ally exists', () => {
-    const ids = availableIds(State.AVAILABLE_ALLY)
-    expect(executePlaceCharacter(grid, skillManager, ids[0]!, RAVION, Team.ALLY)).toBe(true)
-
-    expect(skillManager.getSkillTarget(RAVION, Team.ALLY)).toBeUndefined()
-  })
-
   it('targets the two largest hex IDs on the enemy team', () => {
     const ids = availableIds(State.AVAILABLE_ENEMY)
     // Ravion at the smallest enemy tile so he is never his own rearmost

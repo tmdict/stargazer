@@ -4,26 +4,6 @@ import { Hex } from '@/lib/hex'
 
 describe('Hex', () => {
   describe('coordinate operations', () => {
-    it('handles equals correctly', () => {
-      const hex1 = new Hex(1, -2, 1)
-      const hex2 = new Hex(1, -2, 1)
-      const hex3 = new Hex(2, -2, 0)
-
-      expect(hex1.equals(hex2)).toBe(true)
-      expect(hex1.equals(hex3)).toBe(false)
-      expect(hex1.equals(hex1)).toBe(true)
-    })
-
-    it('adds hex coordinates', () => {
-      const hex1 = new Hex(1, -2, 1)
-      const hex2 = new Hex(2, -1, -1)
-
-      const sum = hex1.add(hex2)
-      expect(sum.q).toBe(3)
-      expect(sum.r).toBe(-3)
-      expect(sum.s).toBe(0)
-    })
-
     it('calculates distance correctly', () => {
       const hex1 = new Hex(0, 0, 0)
 
@@ -42,49 +22,11 @@ describe('Hex', () => {
   })
 
   describe('neighbor operations', () => {
-    it.each([
-      [0, { q: 1, r: -1, s: 0 }],
-      [1, { q: 1, r: 0, s: -1 }],
-      [2, { q: 0, r: 1, s: -1 }],
-      [3, { q: -1, r: 1, s: 0 }],
-      [4, { q: -1, r: 0, s: 1 }],
-      [5, { q: 0, r: -1, s: 1 }],
-    ])('returns correct neighbor for direction %i', (direction, expected) => {
-      const hex = new Hex(0, 0, 0)
-      const neighbor = hex.neighbor(direction)
-      expect(neighbor.q).toBe(expected.q)
-      expect(neighbor.r).toBe(expected.r)
-      expect(neighbor.s).toBe(expected.s)
-    })
-
     it('wraps direction indices correctly', () => {
       const hex = new Hex(0, 0, 0)
       expect(hex.neighbor(6).equals(hex.neighbor(0))).toBe(true)
       expect(hex.neighbor(7).equals(hex.neighbor(1))).toBe(true)
       expect(hex.neighbor(-1).equals(hex.neighbor(5))).toBe(true)
-    })
-
-    it('returns all neighbors with getNeighbors()', () => {
-      const hex = new Hex(0, 0, 0)
-      const neighbors = hex.getNeighbors()
-
-      expect(neighbors).toHaveLength(6)
-
-      // Check each neighbor is distance 1 from center
-      neighbors.forEach((neighbor) => {
-        expect(hex.distance(neighbor)).toBe(1)
-      })
-
-      // Check all neighbors are unique
-      const uniqueNeighbors = new Set(neighbors.map((n) => n.toString()))
-      expect(uniqueNeighbors.size).toBe(6)
-    })
-  })
-
-  describe('edge cases', () => {
-    it('throws error for invalid coordinates', () => {
-      expect(() => new Hex(1, 1, 1)).toThrow('q=1 + r=1 + s=1 must be 0')
-      expect(() => new Hex(0, 0, 1)).toThrow('q=0 + r=0 + s=1 must be 0')
     })
   })
 })

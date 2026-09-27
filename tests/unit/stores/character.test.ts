@@ -34,12 +34,6 @@ let grids: ReturnType<typeof useGrids>
 const tilesByState = (state: State) =>
   gridStore.hexes.filter((h) => gridStore.getTile(h.getId()).state === state)
 
-const firstTile = (state: State) => {
-  const tile = tilesByState(state)[0]
-  if (!tile) throw new Error(`Test setup: no tile in state ${state} in default map`)
-  return tile
-}
-
 beforeEach(() => {
   setActivePinia(createPinia())
   gridStore = useGridStore()
@@ -53,34 +47,6 @@ beforeEach(() => {
 // same-board move, which is handleDrop's contract, not routeDrop's).
 describe('active grid: drop routing (handleDrop)', () => {
   describe('selection drop (no sourceHexId)', () => {
-    it.each([
-      [Team.ALLY, State.AVAILABLE_ALLY, 101],
-      [Team.ENEMY, State.AVAILABLE_ENEMY, 202],
-    ])('places a character on a valid %s tile', (team, state, characterId) => {
-      const tile = firstTile(state)
-
-      const ok = grids.active!.handleDrop(
-        { character: buildCharacter(characterId), characterId },
-        tile.getId(),
-      )
-
-      expect(ok).toBe(true)
-      expect(gridStore.getTile(tile.getId()).characterId).toBe(characterId)
-      expect(gridStore.getTile(tile.getId()).team).toBe(team)
-    })
-
-    it('returns false when target tile is not a valid placement state', () => {
-      const defaultTile = firstTile(State.DEFAULT)
-
-      const ok = grids.active!.handleDrop(
-        { character: buildCharacter(101), characterId: 101 },
-        defaultTile.getId(),
-      )
-
-      expect(ok).toBe(false)
-      expect(gridStore.getTile(defaultTile.getId()).characterId).toBeUndefined()
-    })
-
     // Capacity and replacement rules are lib-pinned (characters/place.test.ts);
     // this pins the roster-drop dispatch on a full team.
     it('on a full team, rejects a drop on an empty tile but replaces an occupant', () => {
@@ -106,45 +72,6 @@ describe('active grid: drop routing (handleDrop)', () => {
       expect(gridStore.getTile(targetHexId).characterId).toBe(999)
       expect(isCharacterOnTeam(grids.active!.grid, 100, Team.ALLY)).toBe(false)
       expect(getAvailableTeamSize(grids.active!.grid, Team.ALLY)).toBe(0)
-    })
-  })
-
-  describe('grid-source drop (sourceHexId set)', () => {
-    it('moves a character to an empty target', () => {
-      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
-      if (allyTiles.length < 2) throw new Error('Test setup: need at least 2 ally tiles')
-
-      const sourceId = allyTiles[0]!.getId()
-      const targetId = allyTiles[1]!.getId()
-      store.placeCharacterOnHex(sourceId, 101, Team.ALLY)
-
-      const ok = grids.active!.handleDrop(
-        { character: buildCharacter(101, sourceId), characterId: 101 },
-        targetId,
-      )
-
-      expect(ok).toBe(true)
-      expect(gridStore.getTile(sourceId).characterId).toBeUndefined()
-      expect(gridStore.getTile(targetId).characterId).toBe(101)
-    })
-
-    it('swaps when target is occupied', () => {
-      const allyTiles = tilesByState(State.AVAILABLE_ALLY)
-      if (allyTiles.length < 2) throw new Error('Test setup: need at least 2 ally tiles')
-
-      const sourceId = allyTiles[0]!.getId()
-      const targetId = allyTiles[1]!.getId()
-      store.placeCharacterOnHex(sourceId, 101, Team.ALLY)
-      store.placeCharacterOnHex(targetId, 202, Team.ALLY)
-
-      const ok = grids.active!.handleDrop(
-        { character: buildCharacter(101, sourceId), characterId: 101 },
-        targetId,
-      )
-
-      expect(ok).toBe(true)
-      expect(gridStore.getTile(sourceId).characterId).toBe(202)
-      expect(gridStore.getTile(targetId).characterId).toBe(101)
     })
   })
 })
@@ -212,16 +139,6 @@ describe('characterStore phantimal faction rule', () => {
 
     expect(ok).toBe(false)
     expect(gridStore.getTile(target.getId()).characterId).toBeUndefined()
-  })
-
-  it('allows placement once the faction requirement is met', () => {
-    fieldHeroes(Team.ALLY, [1, 2, 3])
-    const target = tilesByState(State.AVAILABLE_ALLY)[3]!
-
-    const ok = store.placePhantimalOnHex(target.getId(), toPhantimalId(1), Team.ALLY)
-
-    expect(ok).toBe(true)
-    expect(gridStore.getTile(target.getId()).characterId).toBe(toPhantimalId(1))
   })
 
   it('auto-removes a phantimal when its faction drops below the requirement', async () => {

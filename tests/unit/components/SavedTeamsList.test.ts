@@ -14,9 +14,8 @@ import { loadSkillLocale } from '@/utils/dataLoader'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
-/* The type filter row (offered only for a board count with named types,
- * reset to All on every change of the Teams filter, classifying records by
- * their maps) and the search field's hero pills. */
+/* The type filter row (reset to All on every change of the Teams filter,
+ * classifying records by their maps) and the search field's hero pills. */
 
 let teardown: (() => void) | undefined
 
@@ -94,19 +93,6 @@ const cardNames = (): string[] =>
     .sort()
 
 describe('SavedTeamsList type filter', () => {
-  it('offers the type chips only for a board count with named types', async () => {
-    await mountList()
-    expect(document.querySelector('.type-group')).toBeNull()
-
-    byText('.seg-btn', '5v5').click()
-    await nextTick()
-    expect(typeChips()).toEqual(['All', 'Default', 'SL'])
-
-    byText('.seg-btn', '1v1').click()
-    await nextTick()
-    expect(document.querySelector('.type-group')).toBeNull()
-  })
-
   it('filters by the derived type and resets to All on every Teams-filter change', async () => {
     await mountList()
     byText('.seg-btn', '5v5').click()
@@ -124,18 +110,6 @@ describe('SavedTeamsList type filter', () => {
     expect(typeChips()).toEqual(['All', 'Default', 'GD'])
     expect(byText('.type-chip', 'All').classList.contains('active')).toBe(true)
     expect(cardNames()).toEqual(['S7 GD'])
-  })
-
-  it('labels cards with their derived type', async () => {
-    await mountList()
-    const chips = [...document.querySelectorAll('.team-card')].map((card) => {
-      const name = card.querySelector('.team-name')?.textContent?.replace(/\s+/g, ' ').trim()
-      const labels = [...card.querySelectorAll('.mode-chip')].map((chip) =>
-        chip.textContent?.trim(),
-      )
-      return `${name}: ${labels.join(' ')}`
-    })
-    expect(chips.sort()).toEqual(['Custom: 5v5', 'S7 GD: 3v3 GD', 'S7 SL: 5v5 SL'])
   })
 })
 

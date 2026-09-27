@@ -14,7 +14,7 @@ export interface ParagonHero {
 export const paragonStatValue = (level: number, faction?: string): number =>
   rampValue(PARAGON_RAMPS[paragonGroup(faction)].rivalry, level)
 
-export const teamPowerTotal = (heroes: ParagonHero[]): number =>
+const teamPowerTotal = (heroes: ParagonHero[]): number =>
   heroes.reduce((sum, hero) => sum + paragonStatValue(hero.level, hero.faction), 0)
 
 export const teamPowerNet = (allyHeroes: ParagonHero[], enemyHeroes: ParagonHero[]): number =>

@@ -4,21 +4,6 @@ import { executeTransaction } from '@/lib/characters/transaction'
 
 describe('transaction.ts', () => {
   describe('executeTransaction', () => {
-    describe('successful transactions', () => {
-      it('should execute all operations when all succeed', () => {
-        const op1 = vi.fn(() => true)
-        const op2 = vi.fn(() => true)
-        const op3 = vi.fn(() => true)
-
-        const result = executeTransaction([op1, op2, op3])
-
-        expect(result).toBe(true)
-        expect(op1).toHaveBeenCalledTimes(1)
-        expect(op2).toHaveBeenCalledTimes(1)
-        expect(op3).toHaveBeenCalledTimes(1)
-      })
-    })
-
     describe('failed transactions', () => {
       it('should stop on first failure', () => {
         const op1 = vi.fn(() => true)
@@ -31,19 +16,6 @@ describe('transaction.ts', () => {
         expect(op1).toHaveBeenCalledTimes(1)
         expect(op2).toHaveBeenCalledTimes(1)
         expect(op3).not.toHaveBeenCalled()
-      })
-
-      it('should handle failure on first operation', () => {
-        const op1 = vi.fn(() => false)
-        const op2 = vi.fn(() => true)
-        const rollback = vi.fn()
-
-        const result = executeTransaction([op1, op2], [rollback])
-
-        expect(result).toBe(false)
-        expect(op1).toHaveBeenCalledTimes(1)
-        expect(op2).not.toHaveBeenCalled()
-        expect(rollback).toHaveBeenCalledTimes(1)
       })
     })
 

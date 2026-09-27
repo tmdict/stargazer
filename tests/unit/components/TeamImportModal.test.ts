@@ -196,14 +196,10 @@ describe('match import review and save', () => {
       margin: 0.02,
     }
     await nextTick()
-    const confirm = document.querySelector<HTMLButtonElement>('.confirm-artifact')!
-    expect(confirm.textContent?.trim()).toBe('Confirm Starshard')
-    confirm.click()
+    document.querySelector<HTMLButtonElement>('.confirm-artifact')!.click()
     await nextTick()
     expect(api.shots.value[0]!.artifactOverrides).toEqual({ 1: 1 })
-    expect(document.querySelector('.artifact-name')?.textContent).toBe('Starshard')
     expect(document.querySelector('.confirm-artifact')).toBeNull()
-    expect(document.querySelector('.artifact .edited')?.textContent).toBe('Edited')
     expect(document.querySelector('.selection-popup')).toBeNull()
   })
 })

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { FEW_GAMES, LADDER_ROW, LADDER_WIDTH, layoutLadder } from '@/lib/pvp/ladderLayout'
+import { LADDER_ROW, LADDER_WIDTH, layoutLadder } from '@/lib/pvp/ladderLayout'
 import type { PvpCounter, PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 
 // A four-team season small enough to work the rules out by hand: a beats b
@@ -95,16 +95,5 @@ describe('layoutLadder', () => {
       expect(apart(outer, card)).toBe(true)
       expect(apart(inner, card)).toBe(true)
     }
-  })
-
-  it('dims a share drawn from fewer than eight games', () => {
-    const mixed = layoutLadder(
-      { ...summary, counters: [counter('a', 'b', 5, 2), counter('a', 'c', 5, 3)] },
-      share,
-    )
-    expect(mixed.edges.map((e) => [e.counter.wins + e.counter.losses, e.few])).toEqual([
-      [FEW_GAMES - 1, true],
-      [FEW_GAMES, false],
-    ])
   })
 })

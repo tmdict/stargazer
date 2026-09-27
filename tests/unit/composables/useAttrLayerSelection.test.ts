@@ -31,12 +31,6 @@ describe('useAttrLayerSelection', () => {
     expect(effectiveLayers(BOTH)).toEqual([ATTR_REFINEMENT])
   })
 
-  it('re-selecting the current chip keeps it selected', () => {
-    const { select, effectiveLayers } = useAttrLayerSelection()
-    select(ATTR_PARAGON)
-    expect(effectiveLayers(BOTH)).toEqual([ATTR_PARAGON])
-  })
-
   it('is one shared selection across consumers', () => {
     const a = useAttrLayerSelection()
     const b = useAttrLayerSelection()

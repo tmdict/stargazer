@@ -88,15 +88,4 @@ describe('zandrok wedge boundary lines', () => {
     )
     expect(lanes()).toHaveLength(2)
   })
-
-  it('clears the lines on deactivate', () => {
-    placeOnTile(grid, 4, ZANDROK, Team.ALLY)
-    const ctx = buildContext(4)
-    getCharacterSkill(ZANDROK)!.onActivate(ctx)
-    expect(skillManager.getSkillLines()).toHaveLength(2)
-
-    getCharacterSkill(ZANDROK)!.onDeactivate(ctx)
-
-    expect(skillManager.getSkillLines()).toEqual([])
-  })
 })

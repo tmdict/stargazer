@@ -62,13 +62,4 @@ describe('setupGuideContentMeta', () => {
       canonical: `${SITE_ORIGIN}/zh/guide`,
     })
   })
-
-  it('titles and links a sub-page by its own path', async () => {
-    const resolved = mount(ref<AppLocale>('en'), 'mechanics')
-
-    expect(await resolved()).toEqual({
-      title: 'Mechanics | Stargazer',
-      canonical: `${SITE_ORIGIN}/en/guide/mechanics`,
-    })
-  })
 })

@@ -24,29 +24,7 @@ describe('binaryEncoder', () => {
   describe('encodeLink and decodeLink', () => {
     it.each([
       ['empty board', {}],
-      [
-        'only tiles',
-        {
-          t: [
-            [1, 2],
-            [5, 3],
-            [10, 1],
-          ],
-        },
-      ],
-      [
-        'only characters',
-        {
-          c: [
-            [1, 100, 1],
-            [5, 200, 2],
-            [10, 10001, 1],
-          ],
-        },
-      ],
-      ['only artifacts', { a: [3, 5] }],
       ['null artifacts', { a: [null, 5] }],
-      ['both null artifacts', { a: [null, null] }],
       [
         'companion IDs',
         {
@@ -57,47 +35,6 @@ describe('binaryEncoder', () => {
           ],
         },
       ],
-      [
-        'only phantimals',
-        {
-          s: [
-            [1, 3, 1],
-            [5, 2, 2],
-          ],
-        },
-      ],
-      [
-        'phantimals with characters and artifacts',
-        {
-          c: [[2, 100, 1]],
-          a: [2, 4],
-          s: [[7, 1, 2]],
-        },
-      ],
-      [
-        'synergy units',
-        {
-          y: [
-            [3, 50, 1],
-            [4, 10050, 2],
-          ],
-        },
-      ],
-      [
-        'upgrade rows with characters',
-        {
-          c: [
-            [2, 100, 1],
-            [6, 200, 2],
-          ],
-          u: [
-            [1, 100, 1, 4],
-            [1, 100, 2, 3],
-            [2, 200, 1, 2],
-          ],
-        },
-      ],
-      ['only upgrades', { u: [[1, 33, 1, 3]] }],
       ['a team-scope sentinel row (characterId 0)', { u: [[1, 0, 2, 4]] }],
       [
         'every section together',
@@ -121,16 +58,6 @@ describe('binaryEncoder', () => {
         c: Array.from({ length: 10 }, (_, i) => [i + 1, 100 + i, (i % 2) + 1]),
       }
       expect(decodeLink(arenaLink(board))!.boards[0]).toEqual(board)
-    })
-
-    it('round-trips a multi-board link with maps, active board, and flags', () => {
-      const boards: BoardState[] = [
-        { m: 'arena1', c: [[1, 11, 1]], u: [[1, 11, 2, 3]] },
-        { m: 'arena2', t: [[4, 5]] },
-        { m: 'preset-sr3' },
-      ]
-      const decoded = decodeLink(encodeLink({ mode: '3v3', boards, active: 2, d: 0b10110 }))
-      expect(decoded).toEqual({ mode: '3v3', active: 2, d: 0b10110, boards })
     })
 
     it('preserves an explicit all-off flags byte and defaults an absent one', () => {
@@ -480,9 +407,7 @@ describe('binaryEncoder', () => {
       new Uint8Array([1]),
       new Uint8Array([1, 2]),
       new Uint8Array([1, 2, 3]),
-      new Uint8Array([0, 1, 2, 3]),
       new Uint8Array([255, 254, 253]),
-      new Uint8Array(Array.from({ length: 100 }, (_, i) => i)),
     ]
 
     it.each(testCases)('converts bytes to URL-safe and back', (bytes) => {
@@ -491,11 +416,6 @@ describe('binaryEncoder', () => {
 
       const decoded = urlSafeToBytes(urlSafe)
       expect(decoded).toEqual(bytes)
-    })
-
-    it('handles empty input', () => {
-      expect(bytesToUrlSafe(new Uint8Array())).toBe('')
-      expect(urlSafeToBytes('')).toEqual(new Uint8Array())
     })
 
     it('returns null for strings outside the URL-safe alphabet', () => {

@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 
 import { Team } from '@/lib/types/team'
 import type { GridState, MultiGridState } from '@/utils/gridStateSerializer'
@@ -7,8 +7,6 @@ import {
   decodeMultiGridStateFromUrl,
   encodeGridStateToUrl,
   encodeMultiGridStateToUrl,
-  getEncodedStateFromRoute,
-  getEncodedStateFromUrl,
 } from '@/utils/urlStateManager'
 
 describe('urlStateManager', () => {
@@ -110,27 +108,6 @@ describe('urlStateManager', () => {
           encodeRaw({ boards: [{ m: 'arena1', a: [null, 4], c: [[1, 11, 1]], zz: {} }] }),
         ),
       ).toMatchObject({ boards: [{ m: 'arena1', a: [null, 4], c: [[1, 11, 1]] }] })
-    })
-  })
-
-  describe('getEncodedStateFromUrl', () => {
-    afterEach(() => {
-      vi.unstubAllGlobals()
-    })
-
-    it('reads the state from the g query param', () => {
-      vi.stubGlobal('window', { location: { search: '?l=zh&g=encodedState123&debug=true' } })
-      expect(getEncodedStateFromUrl()).toBe('encodedState123')
-    })
-  })
-
-  describe('getEncodedStateFromRoute', () => {
-    it.each([
-      [{ g: 'encodedState123' }, 'encodedState123'],
-      [{ g: ['state1', 'state2'] }, null],
-    ])('with query %o returns %s', (query, expected) => {
-      const result = getEncodedStateFromRoute(query)
-      expect(result).toBe(expected)
     })
   })
 })

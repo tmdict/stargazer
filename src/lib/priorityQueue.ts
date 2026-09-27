@@ -160,11 +160,4 @@ export class PriorityQueue<T> {
       index = smallest
     }
   }
-
-  /**
-   * Clear all items from the queue
-   */
-  clear(): void {
-    this.heap.length = 0
-  }
 }

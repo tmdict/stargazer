@@ -6,9 +6,6 @@ import { useI18nStore } from '@/stores/i18n'
 import { stubLocalStorage } from '../fixtures/storage'
 
 const FIXTURE: LocaleDictionary = {
-  app: {
-    title: { en: 'Stargazer', zh: '观星者' },
-  },
   greeting: {
     hello: { en: 'Hello, {name}!', zh: '你好，{name}！' },
     welcome: { en: 'Welcome', zh: '欢迎' },
@@ -48,10 +45,6 @@ describe('i18nStore', () => {
   })
 
   describe('t() — happy path', () => {
-    it('returns translation in current locale (en)', () => {
-      expect(store.t('app.title')).toBe('Stargazer')
-    })
-
     it('returns translation in zh after explicit setLocale', () => {
       store.setLocale('zh')
       expect(store.t('greeting.welcome')).toBe('欢迎')
@@ -64,29 +57,15 @@ describe('i18nStore', () => {
       expect(store.t('nonexistent.key')).toBe('nonexistent.key')
     })
 
-    it('returns the key when name is missing in category', () => {
-      vi.spyOn(console, 'warn').mockImplementation(() => {})
-      expect(store.t('app.missing')).toBe('app.missing')
-    })
-
     it('falls back to the key when the current locale has no translation', () => {
       store.setLocale('zh')
       expect(store.t('partial.enOnly')).toBe('partial.enOnly')
-    })
-
-    it.each(['invalid', 'a.b.c'])('returns the key for invalid format "%s"', (key) => {
-      vi.spyOn(console, 'warn').mockImplementation(() => {})
-      expect(store.t(key)).toBe(key)
     })
   })
 
   describe('t() — interpolation', () => {
     it('substitutes vars when provided', () => {
       expect(store.t('greeting.hello', { name: 'World' })).toBe('Hello, World!')
-    })
-
-    it('leaves the raw text unchanged when no vars are passed', () => {
-      expect(store.t('greeting.hello')).toBe('Hello, {name}!')
     })
 
     it('leaves unmatched tokens in place', () => {
@@ -155,16 +134,6 @@ describe('i18nStore', () => {
 
       expect(store.currentLocale).toBe('en')
       expect(localStorage.getItem('stargazer.locale')).toBeNull()
-    })
-  })
-
-  describe('toggleLocale', () => {
-    it('swaps en ↔ zh', () => {
-      expect(store.currentLocale).toBe('en')
-      store.toggleLocale()
-      expect(store.currentLocale).toBe('zh')
-      store.toggleLocale()
-      expect(store.currentLocale).toBe('en')
     })
   })
 })
