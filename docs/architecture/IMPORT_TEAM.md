@@ -128,7 +128,8 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 ```json
 {
-  "format": "stargazer-import-corrections",
+  "app": "stargazer",
+  "kind": "import-corrections",
   "createdAt": "2026-09-27T10:00:00.000Z",
   "learnedIcons": {
     "spec": { "descriptor": [32, 24], "box": [0.23, 0.2, 0.69] },
@@ -194,6 +195,8 @@ Each descriptor appears once. A local lesson for identical descriptor bytes over
 
 | Field                              | Rule                                                                                                                                                                                                                                                   |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `app`, `kind`                      | Always `"stargazer"` and `"import-corrections"`: which Stargazer file this is.                                                                                                                                                                         |
+| `createdAt`                        | When the file was made, ISO 8601.                                                                                                                                                                                                                      |
 | `learnedIcons`                     | The learned faces, in the format above.                                                                                                                                                                                                                |
 | `source`                           | The screenshot's file name, size in bytes, and SHA-256 in hex. It identifies the file, never a face.                                                                                                                                                   |
 | `context`                          | The app's season, the board count of the Teams mode at export, and the width screenshots are scaled to before reading.                                                                                                                                 |
