@@ -74,16 +74,38 @@ SVG has no z-index, so the board draws its layers in order and puts an invisible
 
 ## Where state is stored
 
-| Key                                                                                      | Holds                                             | Format                                              |
-| ---------------------------------------------------------------------------------------- | ------------------------------------------------- | --------------------------------------------------- |
-| `stargazer.arena`                                                                        | the Arena board                                   | binary, same as a link                              |
-| `stargazer.season`                                                                       | the season the Arena board was last cleaned for   | number                                              |
-| `stargazer.teams.*`                                                                      | Teams modes, slots, display, library, sort        | JSON ([Teams](./architecture/TEAMS.md))             |
-| `stargazer.import.learned`, `stargazer.import.names`                                     | screenshot-import corrections                     | JSON ([Team Import](./architecture/IMPORT_TEAM.md)) |
-| `stargazer.prefs`, `stargazer.locale`, `stargazer.skillLocale`, `stargazer.recentHeroes` | device preferences                                | JSON or string                                      |
-| `stargazer.migration.*`                                                                  | one-time conversion markers of the temporary shim | string                                              |
+Everything persists in the browser's `localStorage` under `stargazer.*` keys. Each key's exact shape, with an example, lives in the doc of the feature that owns it:
 
-Only links (`?g=`) and the Arena board use the binary format; everything else stores the JSON interchange format ([URL Serialization](./architecture/URL_SERIALIZATION.md)). Stored data is never migrated per season. Instead, every Teams page load passes through `normalizeTeamPayload`, which fixes the shape and drops other seasons' content ([Seasonal Content](./architecture/SEASONAL.md)), and the Arena board is cleaned once per season change. `src/utils/upgradeMigration.ts` is a temporary shim for older formats; its header explains when and how to delete it.
+| Key                                                                                | Holds                                                           | Shape in                                                 |
+| ---------------------------------------------------------------------------------- | --------------------------------------------------------------- | -------------------------------------------------------- |
+| `stargazer.arena`                                                                  | the Arena board, as a binary link payload                       | [URL Serialization](./architecture/URL_SERIALIZATION.md) |
+| `stargazer.season`                                                                 | the season the Arena board was last cleaned for                 | [Seasonal Content](./architecture/SEASONAL.md)           |
+| `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort`            | Teams modes, working boards, toggles, library, sort             | [Teams](./architecture/TEAMS.md)                         |
+| `stargazer.import.names`, `stargazer.import.learned`                               | screenshot-import names and learned faces                       | [Team Import](./architecture/IMPORT_TEAM.md)             |
+| `stargazer.skillLocale`, `stargazer.skillLocaleHintSeen`, `stargazer.recentHeroes` | skill text language, tip dismissal, recent heroes               | [Skill Pages](./architecture/SKILL_PAGES.md)             |
+| `stargazer.prefs`                                                                  | device preferences                                              | below                                                    |
+| `stargazer.locale`                                                                 | the app language, `"en"` or `"zh"`; anything else reads as `en` | here                                                     |
+| `stargazer.migration.*`                                                            | markers of the temporary `src/utils/upgradeMigration.ts`        | its header                                               |
+
+The one `sessionStorage` key is covered in [Pre-Rendering](./architecture/PRE_RENDERING.md). Every reader falls back to a default when it cannot read a value, and the next write replaces what was there. Readers ignore fields they do not know, and the next write drops them.
+
+`stargazer.prefs` holds preference groups, today only Grid Info. A write replaces its own group and keeps the others, a missing or non-boolean field takes its default, and a value that does not parse is replaced with the defaults. The example shows the defaults:
+
+```json
+{
+  "gridInfo": {
+    "master": false,
+    "tileIds": true,
+    "hover": true,
+    "heroCard": false,
+    "upgrades": false,
+    "targeting": false,
+    "coordinates": false
+  }
+}
+```
+
+Only links (`?g=`) and the Arena board use the binary format; everything else stores the JSON interchange format ([URL Serialization](./architecture/URL_SERIALIZATION.md)). Stored data is never migrated per season. Instead, every Teams page load passes through `normalizeTeamPayload`, which fixes the shape and drops other seasons' content ([Seasonal Content](./architecture/SEASONAL.md)), and the Arena board is cleaned once per season change. `src/utils/upgradeMigration.ts` is a temporary shim; its header explains when and how to delete it.
 
 ## Rules that apply everywhere
 

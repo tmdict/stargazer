@@ -39,6 +39,7 @@ import {
   getTilesWithCharactersByTeam,
   hasCharacter,
   isBaseHeroId,
+  isRealHeroId,
 } from '@/lib/characters/character'
 import { executeMoveCharacter } from '@/lib/characters/move'
 import { isPhantimalId, toPhantimalId } from '@/lib/characters/phantimal'
@@ -154,12 +155,11 @@ export interface GridContext {
   removeArtifact: (team: Team) => void
   getAttr: (team: Team, characterId: number, attrId: number) => number
   getAttrs: (team: Team, characterId: number) => AttrRecord
+  // Writes are ignored unless the hero stands on that side of this board, so
+  // callers set a hero's record after placing it.
   setAttr: (team: Team, characterId: number, attrId: number, value: number) => void
-  // Replaces the hero's whole record (never merges): side-load stamps records
-  // including defaults so a stale value can't linger.
+  // Replaces the hero's whole record (never merges).
   setAttrs: (team: Team, characterId: number, record: AttrRecord) => void
-  // Reads and clears a record in one step, so a transfer's clear can't be missed.
-  takeAttrs: (team: Team, characterId: number) => AttrRecord
   handleDrop: (payload: CharacterDropPayload, targetHexId: number) => boolean
   switchMap: (mapKey: string) => boolean
   clearCharacters: () => void
@@ -194,14 +194,14 @@ export function createGridContext(
   const currentMap = ref(mapKey)
   const artifacts = { ally: ref<number | null>(null), enemy: ref<number | null>(null) }
 
-  // Upgrade attrs (lib/characters/attributes) per placed hero, keyed by team +
+  // Upgrade attrs (lib/characters/attributes) per real hero, keyed by team +
   // character rather than hex, so values follow their hero across moves and each
-  // team tracks a hero independently. Sparse: only non-default records are
-  // stored, and a removed hero's record lingers harmlessly (neither rendered nor
-  // serialized) until the hero returns; bulk resets (clear, map switch) drop the
-  // lot. The team in the key means a team change must re-key the record:
-  // move/swap below transfer it whole via takeAttrs, as do the grids store's
-  // cross-board transfers.
+  // team tracks a hero independently. Sparse: only non-default values are
+  // stored. A record exists only while its hero stands on that side of this
+  // board: writes for anyone else are ignored, and every operation that can take
+  // a hero off the board prunes afterwards, so a hero that comes back starts at
+  // defaults. A team change re-keys the record (move/swap below, and the grids
+  // store's cross-board transfers).
   const attrs = reactive(new Map<string, AttrRecord>())
   const attrKey = (team: Team, characterId: number): string => `${team}:${characterId}`
   const getAttr = (team: Team, characterId: number, attrId: number): number =>
@@ -212,7 +212,22 @@ export function createGridContext(
     if (Object.keys(record).length > 0) attrs.set(key, record)
     else attrs.delete(key)
   }
+  // Only real heroes carry upgrades. Companions and phantimals also leave the
+  // board through skills and the phantimal reconciler, which don't prune, and
+  // placeholder copies repeat on a team and would share one key.
+  const holdsAttrs = (team: Team, characterId: number): boolean =>
+    isRealHeroId(characterId) && findCharacterHex(grid, characterId, team) !== null
+  const pruneAttrs = (): void => {
+    if (attrs.size === 0) return
+    const onBoard = new Set(
+      getTilesWithCharacters(grid).map((tile) => attrKey(tile.team!, tile.characterId!)),
+    )
+    for (const key of attrs.keys()) {
+      if (!onBoard.has(key)) attrs.delete(key)
+    }
+  }
   const setAttr = (team: Team, characterId: number, attrId: number, value: number): void => {
+    if (!holdsAttrs(team, characterId)) return
     const key = attrKey(team, characterId)
     const record = { ...attrs.get(key) }
     const clamped = clampAttr(attrId, value)
@@ -221,6 +236,7 @@ export function createGridContext(
     storeAttrs(key, record)
   }
   const setAttrs = (team: Team, characterId: number, record: AttrRecord): void => {
+    if (!holdsAttrs(team, characterId)) return
     const next: AttrRecord = {}
     for (const [id, value] of Object.entries(record)) {
       const attrId = Number(id)
@@ -229,13 +245,6 @@ export function createGridContext(
     }
     storeAttrs(attrKey(team, characterId), next)
   }
-  const takeAttrs = (team: Team, characterId: number): AttrRecord => {
-    const key = attrKey(team, characterId)
-    const record = attrs.get(key) ?? {}
-    attrs.delete(key)
-    return record
-  }
-  const clearAttrs = (): void => attrs.clear()
 
   const scope = effectScope(true)
 
@@ -307,21 +316,30 @@ export function createGridContext(
     }
   }
 
-  const place = (hexId: number, characterId: number, team: Team = Team.ALLY): boolean =>
-    executePlaceCharacter(grid, skillManager, hexId, characterId, team)
+  // Placing onto an occupied tile evicts the occupant, so a place can take a
+  // hero off the board too.
+  const place = (hexId: number, characterId: number, team: Team = Team.ALLY): boolean => {
+    const placed = executePlaceCharacter(grid, skillManager, hexId, characterId, team)
+    pruneAttrs()
+    return placed
+  }
 
-  const remove = (hexId: number): boolean => executeRemoveCharacter(grid, skillManager, hexId)
+  const remove = (hexId: number): boolean => {
+    const removed = executeRemoveCharacter(grid, skillManager, hexId)
+    pruneAttrs()
+    return removed
+  }
 
   // The engine is attr-agnostic, and a move or swap can change a unit's team
-  // (the destination zone decides), so a team change transfers each record to
-  // its hero's new key.
+  // (the destination zone decides), so each record is read before the change
+  // and written under its hero's new key; pruning drops the old key.
   const move = (fromHexId: number, toHexId: number, characterId: number): boolean => {
     const fromTeam = getCharacterTeam(grid, fromHexId)
+    const record = fromTeam === undefined ? {} : getAttrs(fromTeam, characterId)
     if (!executeMoveCharacter(grid, skillManager, fromHexId, toHexId, characterId)) return false
     const toTeam = getCharacterTeam(grid, toHexId)
-    if (fromTeam !== undefined && toTeam !== undefined && toTeam !== fromTeam) {
-      setAttrs(toTeam, characterId, takeAttrs(fromTeam, characterId))
-    }
+    if (toTeam !== undefined) setAttrs(toTeam, characterId, record)
+    pruneAttrs()
     return true
   }
 
@@ -330,21 +348,21 @@ export function createGridContext(
     const toId = getCharacter(grid, toHexId)
     const fromTeam = getCharacterTeam(grid, fromHexId)
     const toTeam = getCharacterTeam(grid, toHexId)
-    if (!executeSwapCharacters(grid, skillManager, fromHexId, toHexId)) return false
     if (
-      fromId !== undefined &&
-      toId !== undefined &&
-      fromTeam !== undefined &&
-      toTeam !== undefined &&
-      fromTeam !== toTeam
-    ) {
-      // Take both records before writing either: a same-hero cross-team swap
-      // (fromId === toId) reuses a key.
-      const fromRecord = takeAttrs(fromTeam, fromId)
-      const toRecord = takeAttrs(toTeam, toId)
-      setAttrs(toTeam, fromId, fromRecord)
-      setAttrs(fromTeam, toId, toRecord)
-    }
+      fromId === undefined ||
+      toId === undefined ||
+      fromTeam === undefined ||
+      toTeam === undefined
+    )
+      return false
+    // Read both records before writing either: a same-hero cross-team swap
+    // (fromId === toId) writes both of its keys.
+    const fromRecord = getAttrs(fromTeam, fromId)
+    const toRecord = getAttrs(toTeam, toId)
+    if (!executeSwapCharacters(grid, skillManager, fromHexId, toHexId)) return false
+    setAttrs(toTeam, fromId, fromRecord)
+    setAttrs(fromTeam, toId, toRecord)
+    pruneAttrs()
     return true
   }
 
@@ -354,7 +372,7 @@ export function createGridContext(
   const placePhantimal = (hexId: number, phantimalId: number, team: Team = Team.ALLY): boolean => {
     if (!phantimalCanJoinTeam(phantimalId, team)) return false
     clearTeamPhantimal(team, hexId)
-    return executePlaceCharacter(grid, skillManager, hexId, phantimalId, team)
+    return place(hexId, phantimalId, team)
   }
 
   const autoPlacePhantimal = (phantimalId: number, team: Team): boolean => {
@@ -422,24 +440,20 @@ export function createGridContext(
     skillManager.reset()
     grid.skillManager = skillManager
     currentMap.value = mapKey
-    clearAttrs()
+    pruneAttrs()
     return true
   }
 
   const clearCharacters = (): void => {
     executeClearAllCharacters(grid, skillManager)
-    clearAttrs()
+    pruneAttrs()
   }
 
   const clearTeam = (team: Team): void => {
     for (const tile of getTilesWithCharactersByTeam(grid, team)) {
       executeRemoveCharacter(grid, skillManager, tile.hex.getId())
     }
-    // Unlike a single removal's harmlessly lingering record, a cleared side is a
-    // fresh slate: a returning hero must not resurrect its old values.
-    for (const key of attrs.keys()) {
-      if (key.startsWith(`${team}:`)) attrs.delete(key)
-    }
+    pruneAttrs()
     removeArtifact(team)
   }
 
@@ -670,7 +684,6 @@ export function createGridContext(
     getAttrs,
     setAttr,
     setAttrs,
-    takeAttrs,
     handleDrop,
     switchMap,
     clearCharacters,

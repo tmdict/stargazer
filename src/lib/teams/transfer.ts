@@ -1,4 +1,4 @@
-/* Saved-team backup files: a versioned JSON envelope holding the whole library.
+/* Saved-team backup files: a JSON envelope holding the whole library.
  * Import is merge-only (never replaces the library): records are re-validated
  * and canonicalized through the same rules as hydration, duplicates of existing
  * teams are skipped, and accepted records keep the file's id, so a team's
@@ -13,7 +13,6 @@ import { suffixedName, teamContentKey, validateSavedTeam, type SavedTeam } from 
 export interface TeamsExportFile {
   app: 'stargazer'
   kind: 'saved-teams'
-  version: 1
   exportedAt: string
   teams: SavedTeam[]
 }
@@ -29,7 +28,6 @@ export function buildExport(teams: readonly SavedTeam[], exportedAt: string): Te
   return {
     app: 'stargazer',
     kind: 'saved-teams',
-    version: 1,
     exportedAt,
     teams: [...teams],
   }
@@ -61,8 +59,8 @@ export function parseImport(raw: string, existing: readonly SavedTeam[]): Import
     return { ok: false }
   }
   if (typeof envelope !== 'object' || envelope === null) return { ok: false }
-  const { app, kind, version, teams } = envelope as Record<string, unknown>
-  if (app !== 'stargazer' || kind !== 'saved-teams' || version !== 1) return { ok: false }
+  const { app, kind, teams } = envelope as Record<string, unknown>
+  if (app !== 'stargazer' || kind !== 'saved-teams') return { ok: false }
   if (!Array.isArray(teams)) return { ok: false }
 
   const seen = new Set(existing.map(dedupeKey))

@@ -3,7 +3,7 @@
  *
  * Arena: one slot holding the same encoded `g` string a share link carries.
  *
- * Teams: one slot PER TEAM MODE, each holding a versioned envelope of the encoded
+ * Teams: one slot PER TEAM MODE, each holding an envelope of the encoded
  * multi-board string plus the saved-team provenance (sourceId). The autosave
  * watcher routes writes to the live mode's slot; the mode-switch sequence in
  * useTeamsRestore pauses it around rebuilds so a mode's slot is only ever written
@@ -51,11 +51,9 @@ export const loadTeamsDisplayPrefs = (): Required<DisplayFlags> | null => {
 }
 
 /* A mode's persisted active team: the encoded snapshot and the saved team it
- * was loaded from / last saved to (null = not a saved team). Versioned so a
- * future shape change is detected, not shape-read; unknown keys are ignored on
- * load and dropped by the next write. */
+ * was loaded from / last saved to (null = not a saved team). Unknown keys are
+ * ignored on load and dropped by the next write. */
 export interface ActiveSlot {
-  v: 1
   data: string
   sourceId: string | null
 }
@@ -99,7 +97,7 @@ export interface TeamsPersistence {
   // Last-used mode key, or null when absent/unknown.
   loadMode: () => TeamModeKey | null
   persistMode: (mode: TeamModeKey) => void
-  // The mode's stored envelope, or null when absent/corrupt/wrong version.
+  // The mode's stored envelope, or null when absent or corrupt.
   load: (mode: TeamModeKey) => ActiveSlot | null
   // The live boards as an encoded string (reactive reads, usable in computeds).
   snapshot: () => string
@@ -135,7 +133,7 @@ export function useTeamsPersistence(
     )
 
   const write = (encoded: string): void => {
-    const slot: ActiveSlot = { v: 1, data: encoded, sourceId: sourceId.value }
+    const slot: ActiveSlot = { data: encoded, sourceId: sourceId.value }
     writeStorage(teamsSlotKey(mode.value), JSON.stringify(slot))
   }
 
@@ -150,9 +148,8 @@ export function useTeamsPersistence(
       if (!raw) return null
       try {
         const slot = JSON.parse(raw) as ActiveSlot
-        if (slot.v !== 1 || typeof slot.data !== 'string') return null
+        if (typeof slot.data !== 'string') return null
         return {
-          v: 1,
           data: slot.data,
           sourceId: typeof slot.sourceId === 'string' ? slot.sourceId : null,
         }

@@ -34,6 +34,14 @@
  *   move. Its decision is recorded in a flag BEFORE the large copy: after a
  *   failed attempt, normal startup rejects the retired key, falls back to 5v5
  *   and persists it, so a retry alone could not tell that SL was last used.
+ * - The `v` retirement. `runVersionStoragePass` (own marker, last in App.vue)
+ *   rewrites the library from `{ v, teams }` to the plain array of its
+ *   records, removes `v` from each mode slot, and deletes the library backup
+ *   key and learned import faces still in the `v` format (learning restarts
+ *   empty). `readLibraryTeams` accepts both library formats, so the two
+ *   earlier passes work whether or not it has run, and the store reads both
+ *   in one tagged line, so a library this pass failed to rewrite still loads
+ *   whole.
  *
  * The pass is idempotent, so its marker is written LAST, only after every
  * attempted write landed — a failed write (quota; the library is the app's
@@ -72,25 +80,30 @@
  *    validateSavedTeam and fold `mode` back into the destructuring above it.
  * 4e. In src/lib/teams/wire.ts: delete the TEMPORARY comment naming id 4
  *    inside WIRE_MODES; the id is then simply the next free one.
- * 5. In src/App.vue: remove the runUpgradeStoragePass and runModeStoragePass
- *    imports, their bare calls in the setup block, and the ordering comment
- *    above them; drop the "Permanent:" prefix from the season-rotation
- *    comment that follows, which only contrasts with the removed block.
+ * 4f. In src/stores/teamLibrary.ts: in readLibrary, replace the tagged
+ *    TEMPORARY `records` line (and its comment) with
+ *    `if (!Array.isArray(parsed)) return []`, iterating `parsed`.
+ * 5. In src/App.vue: remove the runUpgradeStoragePass, runModeStoragePass
+ *    and runVersionStoragePass imports, their bare calls in the setup block,
+ *    and the ordering comment above them; drop the "Permanent:" prefix from
+ *    the season-rotation comment that follows, which only contrasts with the
+ *    removed block.
  * 6. Trim every shim mention from comments and docs — these say "shim" or
  *    "legacy", not "upgradeMigration", so step 8's grep can't find them:
- *    - docs/architecture/URL_SERIALIZATION.md: the Migration shim section
- *      (including its wire-id-4 sentence), the season-field sentence, the
- *      universal decoder's "falls through to the temporary legacy shim"
- *      clause, the all-or-nothing paragraph's "lets the legacy shim probe
- *      formats safely" clause, the wire registry's "converted by the shim
- *      while it exists" sentence about id 4, and the growth table's "(id 4
- *      once the shim is gone)" parenthetical in the Mode id row.
- *    - docs/architecture/TEAMS.md: the sentence in Per-Mode Persistence about
- *      the retired 5v5sl slot and the TEMPORARY mode pass.
- *    - docs/architecture/SEASONAL.md: the "stamped season 7 by the TEMPORARY
- *      shim" sentence in Season cutover & retirement.
- *    - docs/ARCHITECTURE.md: the utilities bullet's "the temporary
- *      upgradeMigration.ts shim ..." clause.
+ *    - docs/architecture/URL_SERIALIZATION.md: the "The temporary shim in
+ *      src/utils/upgradeMigration.ts catches..." paragraph in Reading a
+ *      link; the "and the migration shim relies on them to probe formats in
+ *      order" clause in the strict-decoding paragraph; "a failed probe is
+ *      normal traffic for the shim" (after encodeLink); the "(id 4 is held
+ *      by the shim)" note in the Mode id row of the growth table; "Id 4
+ *      belongs to the retired 5v5sl mode until the shim is gone" in Wire
+ *      registries; and reword "in a temporary shim" in the new-format
+ *      paragraph of Capacity and headroom.
+ *    - docs/architecture/SEASONAL.md: the "stamped 7 by the temporary shim"
+ *      sentence in Reused ids, and "and the shim's 7" in Season cutover.
+ *    - docs/ARCHITECTURE.md: in Where state is stored, the
+ *      `stargazer.migration.*` row of the key table and the last sentence
+ *      ("src/utils/upgradeMigration.ts is a temporary shim ...").
  *    - src/lib/seasonal.ts: the header's shim-window sentences (keep the
  *      unstamped-payload rule itself).
  *    - src/utils/seasonRotation.ts: "unlike the temporary migration shim"
@@ -100,12 +113,15 @@
  *      order relies on" clause and decodeLink's shim-window comment.
  *    - src/lib/characters/attributes.ts: "and legacy conversion" in the
  *      compareAttrRows comment.
- * 7. The stargazer.migration.u and stargazer.migration.sl marker keys stay
- *    behind in user storage as accepted residue, as do a
+ * 7. The stargazer.migration.u, stargazer.migration.sl and
+ *    stargazer.migration.v marker keys stay behind in user storage as
+ *    accepted residue, as do a
  *    stargazer.migration.sl.move flag on a device whose slot copy never
  *    succeeded, a stargazer.teams.active.5v5sl slot on a device the mode
- *    pass never reached, and a `defaults` field inside slot envelopes the
- *    page never rewrote (ignored on load, dropped by the next write).
+ *    pass never reached, a stargazer.teams.saved.backup key on a device the
+ *    v pass never reached, and `defaults` or `v` fields inside slot
+ *    envelopes the page never rewrote (ignored on load, dropped by the next
+ *    write).
  * 8. Verify: `grep -ri upgrademigration src tests docs` and
  *    `grep -rin shim src docs` both return nothing, then lint, type-check,
  *    and the test suite pass with no further edits.
@@ -230,7 +246,7 @@ const rewriteModeSlot = (mode: string): boolean => {
   }
   // Only the envelope's `data` converts; every other key passes through
   // byte-identical, and staleness stays the loader's business.
-  if (typeof slot !== 'object' || slot === null || slot.v !== 1 || typeof slot.data !== 'string') {
+  if (typeof slot !== 'object' || slot === null || typeof slot.data !== 'string') {
     return true
   }
   const decoded = decodeMultiGridStateFromUrl(slot.data)
@@ -240,22 +256,25 @@ const rewriteModeSlot = (mode: string): boolean => {
   return writeStorage(key, JSON.stringify({ ...slot, data }))
 }
 
-// The stored library's records, or null when the key is absent, unparsable,
-// or not a v1 blob (its reader already discards those).
+// The stored library's records in either format (the plain array, or the
+// `{ v, teams }` object the v pass unwraps), or null when the key is absent,
+// unparsable, or holds neither (its reader already discards those).
 const readLibraryTeams = (): unknown[] | null => {
   const raw = readStorage(LIBRARY_KEY)
   if (raw === null) return null
-  let blob: { v?: unknown; teams?: unknown }
+  let parsed: unknown
   try {
-    blob = JSON.parse(raw) as { v?: unknown; teams?: unknown }
+    parsed = JSON.parse(raw)
   } catch {
     return null
   }
-  if (typeof blob !== 'object' || blob === null || blob.v !== 1 || !Array.isArray(blob.teams)) {
-    return null
-  }
-  return blob.teams
+  if (Array.isArray(parsed)) return parsed
+  const teams = (parsed as { teams?: unknown } | null)?.teams
+  return Array.isArray(teams) ? teams : null
 }
+
+const writeLibraryTeams = (teams: unknown[]): boolean =>
+  writeStorage(LIBRARY_KEY, JSON.stringify(teams))
 
 const rewriteLibrary = (): boolean => {
   const records = readLibraryTeams()
@@ -273,7 +292,7 @@ const rewriteLibrary = (): boolean => {
     return { ...record, data: canonical }
   })
   if (!changed) return true
-  return writeStorage(LIBRARY_KEY, JSON.stringify({ v: 1, teams }))
+  return writeLibraryTeams(teams)
 }
 
 export function runUpgradeStoragePass(): void {
@@ -344,7 +363,7 @@ const rewriteLibraryModes = (): boolean => {
     return { ...record, mode: FIVE_V_FIVE_MODE }
   })
   if (!changed) return true
-  return writeStorage(LIBRARY_KEY, JSON.stringify({ v: 1, teams }))
+  return writeLibraryTeams(teams)
 }
 
 export function runModeStoragePass(): void {
@@ -355,6 +374,63 @@ export function runModeStoragePass(): void {
     if (allOk) writeStorage(MODE_MARKER_KEY, '1')
   } catch (err) {
     console.error('Mode storage pass failed, will retry next load:', err)
+  }
+}
+
+/* ------------------------------------------------------------------------- *
+ * The `v` retirement: storage pass.
+ * ------------------------------------------------------------------------- */
+
+const VERSION_MARKER_KEY = 'stargazer.migration.v'
+const LIBRARY_BACKUP_KEY = 'stargazer.teams.saved.backup'
+const LEARNED_KEY = 'stargazer.import.learned'
+
+// The stored object at `key` when it still carries `v`, else null.
+const withVersion = (key: string): Record<string, unknown> | null => {
+  const raw = readStorage(key)
+  if (raw === null) return null
+  let value: unknown
+  try {
+    value = JSON.parse(raw)
+  } catch {
+    return null
+  }
+  return typeof value === 'object' && value !== null && 'v' in value
+    ? (value as Record<string, unknown>)
+    : null
+}
+
+// Records pass through as stored, invalid ones included, like every pass
+// here; a library already stored as the plain array is left untouched.
+const unwrapLibrary = (): boolean => {
+  const records = readLibraryTeams()
+  if (records === null || readStorage(LIBRARY_KEY) === JSON.stringify(records)) return true
+  return writeLibraryTeams(records)
+}
+
+// Only `v` goes; `data`, `sourceId` and any other field keep their bytes. The
+// retired 5v5sl slot is included because a mode-pass retry copies it into 5v5.
+const stripSlotVersion = (mode: string): boolean => {
+  const key = `stargazer.teams.active.${mode}`
+  const slot = withVersion(key)
+  if (slot === null) return true
+  delete slot.v
+  return writeStorage(key, JSON.stringify(slot))
+}
+
+export function runVersionStoragePass(): void {
+  if (readStorage(VERSION_MARKER_KEY) !== null) return
+  try {
+    let allOk = unwrapLibrary()
+    for (const mode of TEAM_MODE_KEYS) {
+      allOk = stripSlotVersion(mode) && allOk
+    }
+    removeStorage(LIBRARY_BACKUP_KEY)
+    // Only the old format goes: faces learned after a failed attempt are kept.
+    if (withVersion(LEARNED_KEY) !== null) removeStorage(LEARNED_KEY)
+    if (allOk) writeStorage(VERSION_MARKER_KEY, '1')
+  } catch (err) {
+    console.error('Version storage pass failed, will retry next load:', err)
   }
 }
 

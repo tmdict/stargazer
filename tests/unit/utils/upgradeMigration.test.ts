@@ -17,6 +17,7 @@ import {
   decodeLegacyLink,
   runModeStoragePass,
   runUpgradeStoragePass,
+  runVersionStoragePass,
 } from '@/utils/upgradeMigration'
 import {
   decodeLinkFromUrl,
@@ -214,11 +215,11 @@ describe('upgradeMigration storage pass', () => {
   it('leaves unparsable or wrong-shape values untouched', () => {
     storage.set(SLOT_KEY, 'not json')
     storage.set(ARENA_KEY, '!!!invalid!!!')
-    storage.set(LIBRARY_KEY, JSON.stringify({ v: 2, teams: [] }))
+    storage.set(LIBRARY_KEY, JSON.stringify({ teams: 'x' }))
     runUpgradeStoragePass()
     expect(storage.get(SLOT_KEY)).toBe('not json')
     expect(storage.get(ARENA_KEY)).toBe('!!!invalid!!!')
-    expect(storage.get(LIBRARY_KEY)).toBe(JSON.stringify({ v: 2, teams: [] }))
+    expect(storage.get(LIBRARY_KEY)).toBe(JSON.stringify({ teams: 'x' }))
     expect(storage.get(MARKER_KEY)).toBe('1')
   })
 
@@ -234,9 +235,10 @@ describe('upgradeMigration storage pass', () => {
     const junk = { id: 'junk', data: 42 }
     storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [record, junk] }))
     runUpgradeStoragePass()
-    const blob = JSON.parse(storage.get(LIBRARY_KEY)!) as { v: number; teams: unknown[] }
-    expect(blob.v).toBe(1)
-    const [converted, keptJunk] = blob.teams as [typeof record, typeof junk]
+    const [converted, keptJunk] = JSON.parse(storage.get(LIBRARY_KEY)!) as [
+      typeof record,
+      typeof junk,
+    ]
     expect(converted.id).toBe('team-1')
     expect(converted.data).toBe(canonicalTeamData(record.data))
     expect(decodeMultiGridStateFromUrl(converted.data)!.boards[0]!.u).toEqual([
@@ -556,8 +558,7 @@ describe('upgradeMigration mode retirement: storage pass', () => {
     const junk = { id: 'junk', data: 42 }
     storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [sl, duel, junk] }))
     runModeStoragePass()
-    const blob = JSON.parse(storage.get(LIBRARY_KEY)!) as { v: number; teams: unknown[] }
-    expect(blob.teams).toEqual([{ ...sl, mode: '5v5' }, duel, junk])
+    expect(JSON.parse(storage.get(LIBRARY_KEY)!)).toEqual([{ ...sl, mode: '5v5' }, duel, junk])
   })
 
   it('writes the marker LAST and keeps the old slot when the copy fails', () => {
@@ -627,5 +628,75 @@ describe('upgradeMigration mode retirement: records', () => {
     expect(result).toMatchObject({ ok: true, skipped: 0, conflicts: 0 })
     const teams = result.ok ? result.teams : []
     expect(teams.map((team) => team.mode)).toEqual(['5v5'])
+  })
+})
+
+describe('upgradeMigration v retirement: storage pass', () => {
+  const VERSION_MARKER_KEY = 'stargazer.migration.v'
+  const BACKUP_KEY = 'stargazer.teams.saved.backup'
+  const LEARNED_KEY = 'stargazer.import.learned'
+  const ONE_SLOT_KEY = 'stargazer.teams.active.1v1'
+  const record = { id: 'a', name: 'Alpha', mode: '1v1', data: 'x', createdAt: 1, updatedAt: 2 }
+  const junk = { id: 'junk', data: 42 }
+
+  const seedOldFormat = (): void => {
+    storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [record, junk] }))
+    storage.set(
+      ONE_SLOT_KEY,
+      JSON.stringify({ v: 1, data: 'boards', sourceId: 'a', defaults: 'x' }),
+    )
+    storage.set(BACKUP_KEY, JSON.stringify({ v: 2, teams: [] }))
+    storage.set(LEARNED_KEY, JSON.stringify({ v: 1, spec: {}, icons: [] }))
+  }
+
+  it('unwraps the library, strips v from slots, and deletes the backup and learned faces', () => {
+    seedOldFormat()
+    runVersionStoragePass()
+    // Records pass through as stored, invalid ones included.
+    expect(JSON.parse(storage.get(LIBRARY_KEY)!)).toEqual([record, junk])
+    expect(JSON.parse(storage.get(ONE_SLOT_KEY)!)).toEqual({
+      data: 'boards',
+      sourceId: 'a',
+      defaults: 'x',
+    })
+    expect(storage.has(BACKUP_KEY)).toBe(false)
+    expect(storage.has(LEARNED_KEY)).toBe(false)
+    expect(storage.get(VERSION_MARKER_KEY)).toBe('1')
+  })
+
+  it('keeps faces learned after a failed attempt', () => {
+    seedOldFormat()
+    const failing = vi
+      .spyOn(globalThis.localStorage, 'setItem')
+      .mockImplementation((key: string, value: string) => {
+        if (key === ONE_SLOT_KEY) throw new Error('quota')
+        storage.set(key, value)
+      })
+    runVersionStoragePass()
+    expect(storage.has(VERSION_MARKER_KEY)).toBe(false)
+    expect(storage.has(LEARNED_KEY)).toBe(false)
+    failing.mockRestore()
+
+    const learnedSince = JSON.stringify({ spec: {}, icons: [{ characterId: 7 }] })
+    storage.set(LEARNED_KEY, learnedSince)
+    runVersionStoragePass()
+    expect(storage.get(LEARNED_KEY)).toBe(learnedSince)
+    expect(storage.get(VERSION_MARKER_KEY)).toBe('1')
+  })
+
+  it('leaves the library in the format the store reads after all three passes', () => {
+    storage.set(
+      LIBRARY_KEY,
+      JSON.stringify({
+        v: 1,
+        teams: [{ ...record, mode: '5v5sl', data: slRecordData('5v5sl') }],
+      }),
+    )
+    runUpgradeStoragePass()
+    runModeStoragePass()
+    runVersionStoragePass()
+    const [stored] = JSON.parse(storage.get(LIBRARY_KEY)!) as [{ mode: string }]
+    expect(stored.mode).toBe('5v5')
+    expect(validateSavedTeam(stored)).not.toBeNull()
   })
 })

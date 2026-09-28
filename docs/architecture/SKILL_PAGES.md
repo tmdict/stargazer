@@ -104,6 +104,18 @@ An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh)
 | Ranking  | name matches first, then hit count, then curated name                                                       |
 | Picker   | `matchCharacterNames` (the on-grid picker) searches warm languages only and never loads a chunk             |
 
+## Stored preferences
+
+| Key                             | Example   | Holds                                                                                           |
+| ------------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
+| `stargazer.skillLocale`         | `"ja"`    | The globe menu's text language, one of `SKILL_LOCALES`. Anything else follows the app language. |
+| `stargazer.skillLocaleHintSeen` | `"1"`     | Present once the skill-language tip is dismissed.                                               |
+| `stargazer.recentHeroes`        | see below | Recently viewed hero slugs, newest first, at most 5. Entries that are not strings are dropped.  |
+
+```json
+["valen", "rowan", "athalia"]
+```
+
 ## Related documentation
 
 - [Pre-Rendering](./PRE_RENDERING.md): the route list, hydration and hosting

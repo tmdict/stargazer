@@ -48,7 +48,7 @@ vite-ssg creates its own unhead instance on the server and the client, and `src/
 
 ## Chunk error recovery
 
-A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered URL in `sessionStorage` (`stargazer.chunk-recovery`), so a persistent failure does not loop.
+A deploy purges the previous build's hashed chunks, so a stale tab's next lazy route import fails: the host answers the miss with `index.html`, which fails as a module script, and vue-router swallows the aborted navigation. `installChunkErrorRecovery` completes that navigation as a full page load onto the new build. It remembers the last recovered route path in `sessionStorage` (`stargazer.chunk-recovery`, for example `"/teams"`), so a persistent failure does not loop.
 
 ## PvP reports
 

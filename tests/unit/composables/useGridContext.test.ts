@@ -126,6 +126,24 @@ describe('createGridContext attr re-keying and clearing', () => {
     expect(ctx.getAttr(Team.ENEMY, DUMMY_2, ATTR_PARAGON)).toBe(0)
   })
 
+  it('keeps a record only while its hero is on the board', () => {
+    const ctx = setup()
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 3)
+    expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
+
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 3)
+    expect(ctx.remove(1)).toBe(true)
+    expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
+
+    // Replaced by a drop onto its tile.
+    ctx.setAttr(Team.ALLY, DUMMY, ATTR_PARAGON, 3)
+    expect(ctx.place(1, DUMMY_2, Team.ALLY)).toBe(true)
+    expect(ctx.place(2, DUMMY, Team.ALLY)).toBe(true)
+    expect(ctx.getAttr(Team.ALLY, DUMMY, ATTR_PARAGON)).toBe(0)
+  })
+
   it('clearTeam wipes every attr for that team only', () => {
     const ctx = setup()
     expect(ctx.place(1, DUMMY, Team.ALLY)).toBe(true)
