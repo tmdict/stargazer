@@ -1,0 +1,4 @@
+{
+  "en": "Imported {imported} rosters ({skipped} skipped). {conflicts} older versions of existing rosters marked \"(imported)\"",
+  "zh": "已导入 {imported} 个英雄池（跳过 {skipped} 个）。{conflicts} 个为现有英雄池的旧版本，已标记 \"(imported)\""
+}

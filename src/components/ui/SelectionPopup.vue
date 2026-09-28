@@ -7,6 +7,9 @@ import { clampX, clampY } from '@/utils/viewport'
 // Shared chrome for the selection popups (the on-grid character / artifact
 // pickers and the import review's): a fixed-positioned, click-outside-dismissing
 // panel. Consumers supply the grid of selectable items via the default slot.
+// It closes on mouse-leave, so it is a dropdown boundary (usePanelFit): a
+// dropdown list inside stays within it, and picking an item never leaves the
+// cursor outside the popup.
 const props = defineProps<{
   position: { x: number; y: number }
   // Layer above an open modal (the match import's review picker); the default
@@ -21,8 +24,7 @@ const emit = defineEmits<{
 const popupRef = ref<HTMLElement>()
 
 // Keep the panel fully on screen: render at the caller's anchor, then shift it back
-// inside the viewport (minus a margin) if it would overflow an edge. The panel
-// mounts at full size, so measuring once on open (and on resize) is enough.
+// inside the viewport (minus a margin) if it would overflow an edge.
 const VIEWPORT_MARGIN = 8
 const coords = ref({ ...props.position })
 
@@ -35,6 +37,20 @@ const reposition = () => {
     y: clampY(props.position.y, height, VIEWPORT_MARGIN),
   }
 }
+
+// Content can change height while open (switching the roster in the character
+// popup): the panel re-clamps as it grows and never shrinks, since a shrinking
+// edge could pass under the cursor and close it via mouse-leave.
+const minHeight = ref(0)
+const contentObserver =
+  typeof ResizeObserver === 'undefined'
+    ? null
+    : new ResizeObserver(() => {
+        const el = popupRef.value
+        if (!el) return
+        minHeight.value = Math.max(minHeight.value, el.offsetHeight)
+        reposition()
+      })
 
 useOverlay({
   elementRef: popupRef,
@@ -49,9 +65,13 @@ onMounted(() => {
   reposition()
   window.addEventListener('resize', reposition)
   const el = popupRef.value
+  if (el) contentObserver?.observe(el)
   if (el && !el.contains(document.activeElement)) el.focus({ preventScroll: true })
 })
-onUnmounted(() => window.removeEventListener('resize', reposition))
+onUnmounted(() => {
+  window.removeEventListener('resize', reposition)
+  contentObserver?.disconnect()
+})
 watch(() => props.position, reposition)
 </script>
 
@@ -60,8 +80,9 @@ watch(() => props.position, reposition)
     ref="popupRef"
     class="selection-popup"
     :class="{ 'over-modal': overModal }"
-    :style="{ left: `${coords.x}px`, top: `${coords.y}px` }"
+    :style="{ left: `${coords.x}px`, top: `${coords.y}px`, minHeight: `${minHeight}px` }"
     tabindex="-1"
+    data-dropdown-boundary
     @mouseleave="emit('close')"
   >
     <slot />

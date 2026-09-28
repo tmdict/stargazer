@@ -83,13 +83,14 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
         {{ seasonLabel(group.season) }}
       </h3>
       <div class="artifacts">
-        <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-profile">
-          <ArtifactIcon
-            :artifact="artifact"
-            :is-placed="isArtifactPlaced(artifact.id)"
-            @artifact-click="handleArtifactClick"
-          />
-        </div>
+        <ArtifactIcon
+          v-for="artifact in group.artifacts"
+          :key="artifact.id"
+          :artifact
+          :is-placed="isArtifactPlaced(artifact.id)"
+          inspectable
+          @artifact-click="handleArtifactClick"
+        />
       </div>
     </section>
   </div>
@@ -125,14 +126,6 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   border-radius: var(--radius-large);
 }
 
-.artifact-profile {
-  font-size: 1rem;
-  font-weight: 600;
-  text-align: center;
-  margin-top: var(--spacing-xs);
-  color: var(--color-text-primary);
-}
-
 @media (max-width: 768px) {
   .artifacts {
     gap: var(--spacing-lg);
@@ -148,10 +141,6 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   .artifacts {
     gap: var(--spacing-md);
     padding: var(--spacing-sm);
-  }
-
-  .artifact-profile {
-    font-size: 0.9rem;
   }
 }
 </style>

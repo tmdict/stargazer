@@ -1,9 +1,9 @@
 import { nextTick, ref } from 'vue'
 
-import { sanitizeTeamName } from '@/lib/teams/savedTeam'
+import { sanitizeName } from '@/lib/names'
 
-/* Inline team-rename edit state shared by the boards title and the saved-team
- * cards: one input at a time, focused and pre-selected on entry; Enter/blur
+/* Inline rename edit state shared by the boards title, the saved-team cards
+ * and the roster name: one input at a time, focused and pre-selected on entry; Enter/blur
  * commit, Esc cancels. `key` distinguishes sibling targets sharing an instance
  * (e.g. one per card); a single-target caller passes any constant. */
 export function useInlineRename(options: {
@@ -38,7 +38,7 @@ export function useInlineRename(options: {
     const key = editingKey.value
     editingKey.value = null
     if (key === null) return
-    if (sanitizeTeamName(editingName.value) === options.currentName(key)) return
+    if (sanitizeName(editingName.value) === options.currentName(key)) return
     options.rename(key, editingName.value)
   }
 

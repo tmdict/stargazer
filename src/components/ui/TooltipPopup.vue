@@ -55,7 +55,7 @@ let contentObserver: ResizeObserver | null = null
 onMounted(() => {
   updatePosition()
   // Capture phase: scroll events don't bubble, so this is the only way to
-  // hear scrolls inside nested containers (e.g. the roster panel) and keep
+  // hear scrolls inside nested containers (e.g. the side panel) and keep
   // the tooltip anchored to its target.
   window.addEventListener('scroll', updatePosition, { capture: true })
   window.addEventListener('resize', updatePosition)

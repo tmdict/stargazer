@@ -5,7 +5,7 @@
  * when one lineup fields every picked hero and, with text present, the text
  * hits its name (any length; the returned snippet marks the hit for
  * highlighting) or, at 2+ characters, a hero in such a lineup
- * (matchCharacterNames, the roster search's multi-locale name index).
+ * (matchCharacterNames, the picker search's multi-locale name index).
  * Phantimals and companion summons never match. Suggestions are the heroes
  * the text matches in those lineups, so a pick can never empty the list, and
  * the thumbnail rings mark the picked and text-matched heroes in them. */
@@ -49,7 +49,7 @@ export interface SearchHero {
 const DEBOUNCE_MS = 200
 
 // Hero matching (filter and suggestions) waits for two characters so a single
-// letter can't pull in half the roster.
+// letter can't pull in half the hero list.
 const HERO_QUERY_MIN = 2
 
 const MAX_SUGGESTIONS = 8
@@ -109,7 +109,7 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
     setQueryNow('')
   }
 
-  // Memoized only once the roster is loaded: an early lookup would pin empty
+  // Memoized only once the hero list is loaded: an early lookup would pin empty
   // lineups.
   const teamLineups = (team: SavedTeam): readonly Lineup[] => {
     const cached = lineupCache.get(team.data)

@@ -1,6 +1,6 @@
 /* Single-board character actions over the active grid context.
  *
- * Adapts the active board in useGrids to the character API the Arena roster and
+ * Adapts the active board in useGrids to the character API the Arena picker and
  * grid components consume. Placement logic and the phantimal faction guardrail
  * live on the context (per board); this store forwards to the active one.
  */

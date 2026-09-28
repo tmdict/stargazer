@@ -123,7 +123,7 @@ export function executePlaceCharacter(
   return result
 }
 
-// Which id a roster drop of baseId onto targetHexId should place, or null. An
+// Which id a picker drop of baseId onto targetHexId should place, or null. An
 // occupied target is a replace, so the pick is judged against the post-vacate
 // board: the occupant's anchor (a companion cascades to its main, as in
 // executePlaceCharacter) gives back what it holds first. A base hero or

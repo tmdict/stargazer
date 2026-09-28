@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* Hover tooltip for an artifact, shared by the roster icon (ArtifactIcon) and the
+/* Hover tooltip for an artifact, shared by the picker icon (ArtifactIcon) and the
    placed grid icons (GridArtifacts). The caller decides when to show it and supplies
    the anchor element; this owns the popup body (name only, or name + stats). */
 

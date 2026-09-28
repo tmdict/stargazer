@@ -1,14 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, shallowRef } from 'vue'
+import { computed, ref } from 'vue'
 
 import ArtifactImage from '@/components/ArtifactImage.vue'
 import ArtifactSelectionPopup from '@/components/ArtifactSelectionPopup.vue'
 import ArtifactTooltip from '@/components/ArtifactTooltip.vue'
-import ArtifactModal from '@/components/modals/ArtifactModal.vue'
 import HoldRing from '@/components/ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
+import { useInspect } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { artifactHostHex } from '@/lib/grid'
@@ -40,7 +40,7 @@ const grids = useGrids()
 const { setArtifactTarget, requestTab } = useSelectionState()
 const { artifactDragPayload } = useDragDrop()
 
-// Hover tooltip: the same artifact card as the roster, shown only on a still
+// Hover tooltip: the same artifact card as the picker, shown only on a still
 // hover and only while the hover pref is on. Native HTML5 drag suppresses
 // mouse events, so it can't appear mid-drag; the click and dragstart handlers
 // also dismiss it, and it clears on any artifact change.
@@ -145,19 +145,15 @@ const enemyRetired = computed(
     props.enemyArtifactId !== null && props.enemyArtifactId !== undefined && !enemyArtifact.value,
 )
 
-// Inspect: long-press or right-click opens the artifact's details. The modal
-// mounts closed on first use and opens a tick later, so its enter transition
-// plays. A retired artifact has no record and so no details.
-const inspectedArtifact = shallowRef<ArtifactType | null>(null)
-const inspectOpen = ref(false)
+// Inspect: long-press or right-click opens the artifact's details. A retired
+// artifact has no record and so no details.
+const { inspect } = useInspect()
 
-const inspectArtifact = async (team: Team): Promise<void> => {
+const inspectArtifact = (team: Team): void => {
   const artifact = team === Team.ALLY ? allyArtifact.value : enemyArtifact.value
   if (!artifact) return
   hideArtifactTooltip()
-  inspectedArtifact.value = artifact
-  await nextTick()
-  inspectOpen.value = true
+  void inspect({ kind: 'artifact', artifact })
 }
 
 const { pressing: holdingTeam, start: startHold, onContextMenu } = useLongPress(inspectArtifact)
@@ -413,13 +409,6 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
       :target-element="hoveredEl"
       variant="detailed"
       :hint="i18n.t('app.hold-for-details')"
-    />
-
-    <ArtifactModal
-      v-if="inspectedArtifact"
-      :show="inspectOpen"
-      :artifact="inspectedArtifact"
-      @close="inspectOpen = false"
     />
 
     <Teleport to="body">

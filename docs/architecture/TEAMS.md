@@ -11,9 +11,10 @@ What makes the page tricky is that the same team data enters from many places (t
 │ tab state · display flags · save/load handlers                 │
 └──────────┬────────────────────────────────────┬────────────────┘
            ▼                                    ▼
-┌─ TeamsBoards ──────────────┐    ┌─ TeamsRoster ────────────────┐
-│ - GridControls + picker    │    │ - characters/seasonal/maps   │
-│   and team save actions    │    │ - SavedTeamsList (default)   │
+┌─ TeamsBoards ──────────────┐    ┌─ TeamsPanel ─────────────────┐
+│ - GridControls + picker    │    │ - characters/seasonal/maps/  │
+│   and team save actions    │    │   rosters                    │
+│                            │    │ - SavedTeamsList (default)   │
 │ - BoardsRow → GridBoard ×N │    │   → TeamPreview thumbnails   │
 └──────────┬─────────────────┘    └──────────────┬───────────────┘
            ▼                                     ▼
@@ -99,7 +100,7 @@ Display toggles (skills, perspective, team view, invert, wrap) are device prefer
 | Field       | Type   | Rule                                                                                                                                                            |
 | ----------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `id`        | string | Required, not empty. Kept across export and import.                                                                                                             |
-| `name`      | string | Required. Trimmed and cut to `MAX_TEAM_NAME_LENGTH` (60) characters, not empty after trimming.                                                                  |
+| `name`      | string | Required. Trimmed and cut to `MAX_NAME_LENGTH` (60) characters, not empty after trimming.                                                                       |
 | `mode`      | string | Required: `1v1`, `3v3` or `5v5`. The number of boards in `data` must match (1, 3 or 5).                                                                         |
 | `data`      | string | Required. The boards in the JSON interchange format ([URL Serialization](./URL_SERIALIZATION.md)), canonical: no `active` or `d`, fixed key order. Must decode. |
 | `createdAt` | number | Milliseconds since the epoch. Missing or not a number reads as `0`.                                                                                             |
@@ -124,13 +125,13 @@ Search matches heroes per lineup, meaning one board's ally or enemy side, so pic
 
 The Load menu stamps a saved one-sided team onto the live boards without touching the other side (`src/lib/teams/sideLoad.ts`, executed by `grids.loadTeamSide`). A team qualifies when every unit on every board belongs to the same side.
 
-It is deliberately not a restore. It clears the destination side with `clearTeam`, then places each unit on its saved hex, or a random free tile when the map puts that hex elsewhere or something already stands there. It never replaces a unit, so it cannot undo its own work. Companions are moved onto their saved hexes right after their main places. Phantimals place after the heroes, because their faction check needs the roster. Maps, display flags and `sourceId` stay as they were, and the change shows up as ordinary unsaved edits.
+It is deliberately not a restore. It clears the destination side with `clearTeam`, then places each unit on its saved hex, or a random free tile when the map puts that hex elsewhere or something already stands there. It never replaces a unit, so it cannot undo its own work. Companions are moved onto their saved hexes right after their main places. Phantimals place after the heroes, because their faction check needs the lineup. Maps, display flags and `sourceId` stay as they were, and the change shows up as ordinary unsaved edits.
 
 The active mode's teams load board for board. A second group offers 1v1 teams in every mode, loading onto the active board. Invert loads onto the other side and rotates every hex 180° (`rotatedHexId`).
 
 ## Screenshot import
 
-The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. `grids.applyRosters` clears both sides of each mapped board and places the plan's rosters, again without a restore. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
+The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. `grids.applyLineups` clears both sides of each mapped board and places the plan's lineups, again without a restore. The page then waits a tick for the phantimal watcher and saves the boards as a new team under the suggested name. If the library is full, the boards stay unsaved and keep the name.
 
 ## Thumbnails
 
@@ -165,7 +166,70 @@ The match-screenshot import ([Team Import](./IMPORT_TEAM.md)) ends here. `grids.
 | `exportedAt` | string | When the file was made, ISO 8601. Written, never read.                    |
 | `teams`      | array  | Saved-team records, each following the library's rules and checked alone. |
 
-A field the reader does not know is ignored. Import only merges; replacing everything is Delete all followed by Import. A malformed file is rejected whole, while each record is validated on its own. Duplicates of existing teams are skipped, keyed on content plus name, so an old export of an unchanged team still matches after a season change. Records keep their ids across a round trip. An id that is too long gets a fresh one, and a record whose id belongs to a different existing team (an old export of it, edited since) comes in under a fresh id with an "(imported)" suffix.
+A field the reader does not know is ignored. Import only merges; replacing everything is Delete all followed by Import. A malformed file is rejected whole, while each record is validated on its own. Duplicates of existing teams are skipped, keyed on content plus name, so an old export of an unchanged team still matches after a season change. Records keep their ids across a round trip. An id that is too long gets a fresh one, and a record whose id belongs to a different existing team (an old export of it, edited since) comes in under a fresh id with an "(imported)" suffix. The reading and merging live in `src/lib/exportFile.ts`, shared with the roster file.
+
+## Rosters
+
+A roster is a named hero pool with each hero's upgrade levels (`src/lib/rosters.ts`, `src/stores/rosters.ts`). The Rosters tab, on both the Arena and Teams pages, edits them, and the menu at the head of the Characters tab and of the empty-tile popup picks the active one. The active roster decides two things: which heroes the picker and the empty-tile popup offer, and the levels a hero starts with when placed from them. Search still finds every hero, but picking one outside the roster places nothing and shows a toast. Faction placeholders are always offered. With no active roster the source is All heroes, the full list at default levels.
+
+After placement the hero and its levels belong to the board. Editing levels on the board never reaches the roster, and editing the roster never changes placed heroes. Boards, saved teams, links and restores never refer to a roster.
+
+| Key                        | Holds                                                                                            |
+| -------------------------- | ------------------------------------------------------------------------------------------------ |
+| `stargazer.rosters`        | a JSON array of rosters, at most `MAX_ROSTERS` (100); a value that is not an array reads as none |
+| `stargazer.rosters.active` | the active roster's `id` as a plain string; absent, or naming a deleted roster, means All heroes |
+
+```json
+[
+  {
+    "id": "2b7e4c19-8a0d-4f36-b5e1-9c3a7d2f6e80",
+    "name": "Main account",
+    "heroes": {
+      "5": {},
+      "33": { "1": 4, "2": 2 },
+      "43": { "1": 4, "2": 4 }
+    },
+    "createdAt": 1790000000000,
+    "updatedAt": 1790500000000
+  }
+]
+```
+
+| Field       | Type   | Rule                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ----------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `id`        | string | Required, not empty. Kept across export and import.                                                                                                                                                                                                                                                                                                                                                            |
+| `name`      | string | Required. Trimmed and cut to `MAX_NAME_LENGTH` (60) characters, not empty after trimming.                                                                                                                                                                                                                                                                                                                      |
+| `heroes`    | object | Required. Keyed by real hero id; a key means the hero is in the pool. Each value is that hero's level record, keyed by upgrade attribute id (`HERO_ATTRS`: 1 paragon, 2 EX refinement), so a new upgrade needs no roster change. Default levels are left out, so `{}` means owned at default levels. Unknown attributes and entries that are not real hero ids drop, and levels clamp to each attribute's max. |
+| `createdAt` | number | Milliseconds since the epoch. Missing or not a number reads as `0`.                                                                                                                                                                                                                                                                                                                                            |
+| `updatedAt` | number | Milliseconds since the epoch, changed only by edits to `heroes`. Missing or not a number reads as `0`.                                                                                                                                                                                                                                                                                                         |
+
+A roster that breaks a rule is dropped with a console warning, and the others still load. Heroes are stored in ascending id order with levels in canonical form, so equal content is byte-equal.
+
+The Rosters tab exports every roster, and imports merge with the backup-file rules above (dedupe on content plus name, "(imported)" on an id conflict), keyed on the `heroes` object:
+
+```json
+{
+  "app": "stargazer",
+  "kind": "rosters",
+  "exportedAt": "2026-09-27T10:00:00.000Z",
+  "rosters": [
+    {
+      "id": "2b7e4c19-8a0d-4f36-b5e1-9c3a7d2f6e80",
+      "name": "Main account",
+      "heroes": { "5": {}, "33": { "1": 4, "2": 2 } },
+      "createdAt": 1790000000000,
+      "updatedAt": 1790500000000
+    }
+  ]
+}
+```
+
+| Field        | Type   | Rule                                                            |
+| ------------ | ------ | --------------------------------------------------------------- |
+| `app`        | string | Must be `"stargazer"`, or the whole file is rejected.           |
+| `kind`       | string | Must be `"rosters"`, or the whole file is rejected.             |
+| `exportedAt` | string | When the file was made, ISO 8601. Written, never read.          |
+| `rosters`    | array  | Rosters, each following the rules above and checked on its own. |
 
 ## Related documentation
 

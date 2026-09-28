@@ -21,7 +21,7 @@ const props = defineProps<{
 const gameDataStore = useGameDataStore()
 gameDataStore.initializeContentData()
 
-// Mobile: the roster is a pull-up sheet. It opens on the empty /skills index,
+// Mobile: the hero list is a pull-up sheet. It opens on the empty /skills index,
 // stays peeked on a hero page (so it doesn't cover the reader), and collapses
 // when navigating to a hero. Tapping the empty reader re-reveals it.
 const expanded = ref(false)
@@ -31,7 +31,7 @@ watch(
   () => [props.slug, props.lang] as const,
   ([slug]) => {
     expanded.value = false
-    // Narrow-desktop stacked layout only: the roster sits below the reader, so
+    // Narrow-desktop stacked layout only: the hero list sits below the reader, so
     // selecting a hero leaves the user scrolled past the content. Jump back to
     // the top to reveal it. Side-by-side (>= SPLIT_MIN_WIDTH) keeps the reader
     // in view, and the mobile sheet (<= TABLET_MAX_WIDTH) collapses to reveal
@@ -96,7 +96,7 @@ const sheet = ref<InstanceType<typeof BottomSheet> | null>(null)
   }
 }
 
-/* Mobile: clear the collapsed sheet peek. The roster sheet chrome lives in
+/* Mobile: clear the collapsed sheet peek. The hero list sheet chrome lives in
    BottomSheet; SkillsSelection owns its own in-sheet fill/scroll/inset. */
 @media (max-width: 768px) {
   main {

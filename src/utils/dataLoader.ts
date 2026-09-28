@@ -66,7 +66,7 @@ export function loadCharacters(): CharacterType[] {
     eager: true,
     import: 'default',
   })
-  // Placeholder stand-ins join the roster here so selection, placement,
+  // Placeholder stand-ins join the hero list here so selection, placement,
   // serialization, and lookups all see them as ordinary characters.
   const characters = [...Object.values(characterModules).map(withCharmTags), ...PLACEHOLDERS]
 
@@ -110,7 +110,7 @@ export function loadCharacterImages(): Record<string, string> {
 }
 
 // Portraits at the art's own width for the match-import matcher, loaded on
-// demand: the 100 px roster thumbnails lose the face detail the matcher needs.
+// demand: the 100 px picker thumbnails lose the face detail the matcher needs.
 // Keyed by hero name; each value is a lazy import of the image URL.
 export function loadMatcherPortraits(): Record<string, () => Promise<string>> {
   const modules = import.meta.glob<string>('@/assets/images/character/*.png', {
@@ -140,7 +140,7 @@ export function loadPhantimals(): PhantimalType[] {
 let charmsCache: CharmData | null = null
 let heroCharmCache: Map<string, string> | null = null
 
-/** Seasonal charm registry: charm slug → the roster heroes sharing it. After
+/** Seasonal charm registry: charm slug → the heroes sharing it. After
  * seasonal removal the unmatched glob compiles to an empty module map, so this
  * degrades to {}. */
 export function loadCharms(): CharmData {

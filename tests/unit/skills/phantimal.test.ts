@@ -20,7 +20,7 @@ import { useGameDataStore } from '@/stores/gameData'
 import { placeOnTile, removeFromTile } from '../fixtures/skills'
 
 // Test-only local ids no season uses, so the mechanics stay covered whatever
-// the season's roster.
+// the season's phantimals.
 const BEHIND_MARK = toPhantimalId(14)
 const FRONT_MARK = toPhantimalId(15)
 registerSkill(createSpiritMarkSkill(14, 'test-behind', 'behind'))

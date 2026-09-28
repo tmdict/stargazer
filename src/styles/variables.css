@@ -58,7 +58,7 @@
   --color-text-secondary: #666;
   --color-text-muted: #484848;
 
-  /* Roster "already placed on the board" state, shared by the character,
+  /* Picker "already placed on the board" state, shared by the character,
      phantimal, and artifact icons: desaturate the icon and dim the fill with an
      inset overlay, leaving the white border/ring untouched. */
   --placed-filter: grayscale(1);
@@ -78,7 +78,7 @@
   --spacing-xl: 1.5rem;
   --spacing-2xl: 2rem;
 
-  /* Shared horizontal inset for tab content and the BottomSheet roster. */
+  /* Shared horizontal inset for tab content and the BottomSheet side panel. */
   --content-padding-x: var(--spacing-xl);
 
   /* Tab-strip label size (tabs + arena dropdown); smaller at the chrome extremes. */
@@ -88,9 +88,9 @@
      via `gap: var(--stack-gap)` on their layout container. */
   --stack-gap: var(--spacing-xl);
 
-  /* Min content height shared by the tab-panel / roster components
-     (CharacterSelection, SeasonalSelection, MapEditor, SkillsSelection) so
-     panels stay the same height and the layout doesn't jump between tabs. */
+  /* Min content height shared by the tab-panel components (CharacterSelection,
+     SeasonalSelection, MapEditor, RosterPanel, SkillsSelection) so panels stay
+     the same height and the layout doesn't jump between tabs. */
   --panel-min-height: 656px;
 
   /* Transitions */

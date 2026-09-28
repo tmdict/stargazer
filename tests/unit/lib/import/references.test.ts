@@ -45,7 +45,7 @@ describe('curated hero references', () => {
     })
   })
 
-  it('excludes descriptors for heroes absent from the loaded roster', () => {
+  it('excludes descriptors for heroes absent from the loaded hero list', () => {
     const table = buildImportHeroTable(portraits, [{ ...icon, characterId: 999 }])
     expect(Array.from(table.ids)).not.toContain(999)
   })

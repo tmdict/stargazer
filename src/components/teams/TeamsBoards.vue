@@ -3,7 +3,7 @@
    source-team rename, plus save state), the control bar (mode and type pickers
    + display toggles, then team save actions + the side-load menu + share
    actions), and the horizontally-scrolling row of boards. It's the #teams
-   panel of TeamsView's outer TabView; the tab strip and the roster live in
+   panel of TeamsView's outer TabView; the tab strip and the side panel live in
    TeamsView. Boards bind to their own context. */
 
 import { computed } from 'vue'
@@ -22,8 +22,8 @@ import type { GridInfoView } from '@/composables/useGridInfoPrefs'
 import { useGridSwap } from '@/composables/useGridSwap'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
+import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
-  MAX_TEAM_NAME_LENGTH,
   TEAM_MODES,
   type TeamModeKey,
   type TeamVariantChoice,
@@ -51,7 +51,7 @@ const { sourceName, dirty, pendingName } = defineProps<{
   dirty: boolean
   suggestedName: string
   pendingName: string | null
-  // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid popup.
+  // Mobile: tap a cell to target it for the picker sheet; desktop: the on-grid popup.
   tapMode: boolean
   // Wrap is a desktop-only, 5-board-only layout: its toggle is hidden and the row
   // stays single on the narrow (sheet) view and in smaller modes.
@@ -132,7 +132,7 @@ const {
           v-model="renameValue"
           class="team-title-input"
           type="text"
-          :maxlength="MAX_TEAM_NAME_LENGTH"
+          :maxlength="MAX_NAME_LENGTH"
           spellcheck="false"
           :aria-label="i18n.t('app.team-name')"
           @keydown.enter.prevent="commitRename"

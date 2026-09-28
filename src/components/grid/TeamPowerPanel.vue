@@ -335,7 +335,7 @@ const hoveredStat = computed(
 
 /* Each team has up to 5 heroes: a fixed fifth-of-the-column basis (no grow, no wrap)
    makes them fill exactly one row when full, stays a consistent size when fewer, and
-   tracks the column width without wrapping. Capped at the roster icon size (70px, see
+   tracks the column width without wrapping. Capped at the picker icon size (70px, see
    CharacterIcon) so they never grow larger than a character-selection icon. */
 .hero {
   flex: 0 0 calc((100% - 4 * var(--hero-gap)) / 5);

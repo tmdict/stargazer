@@ -32,7 +32,7 @@ export interface PreviewUnit {
 // An artifact slot: a resolvable id, a retired seasonal placeholder, or empty.
 export type PreviewArtifact = number | { retiredSeason: number } | null
 
-/* A main-roster hero: not a phantimal, not a companion summon. */
+/* A main-lineup hero: not a phantimal, not a companion summon. */
 export function isStandardHero(unit: PreviewUnit): unit is PreviewUnit & { characterId: number } {
   return unit.characterId !== undefined && unit.characterId < COMPANION_ID_OFFSET
 }

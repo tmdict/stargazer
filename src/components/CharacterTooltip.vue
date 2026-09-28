@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* Hover tooltip for a character, shared by the roster icon (CharacterIcon) and the
+/* Hover tooltip for a character, shared by the picker icon (CharacterIcon) and the
    placed grid icons (GridCharacters). The caller decides when to show it and supplies
    the anchor element; this owns the popup body (name only, or the full stat card). */
 

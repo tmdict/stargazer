@@ -3,7 +3,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import { TEAM_VARIANTS } from '@/lib/teams/modes'
 import { canonicalTeamData, validateSavedTeam } from '@/lib/teams/savedTeam'
-import { parseImport } from '@/lib/teams/transfer'
 import { Team } from '@/lib/types/team'
 import { bytesToUrlSafe, decodeLink, urlSafeToBytes } from '@/utils/binaryEncoder'
 import {
@@ -614,20 +613,6 @@ describe('upgradeMigration mode retirement: records', () => {
     expect(valid.mode).toBe('5v5')
     expect(decodeMultiGridStateFromUrl(valid.data)!.mode).toBe('5v5')
     expect(valid.data).toBe(canonicalTeamData(slRecordData('5v5')))
-  })
-
-  it('parseImport accepts an export file whose records still say 5v5sl', () => {
-    const file = JSON.stringify({
-      app: 'stargazer',
-      kind: 'saved-teams',
-      version: 1,
-      exportedAt: 'x',
-      teams: [retiredRecord()],
-    })
-    const result = parseImport(file, [])
-    expect(result).toMatchObject({ ok: true, skipped: 0, conflicts: 0 })
-    const teams = result.ok ? result.teams : []
-    expect(teams.map((team) => team.mode)).toEqual(['5v5'])
   })
 })
 

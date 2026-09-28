@@ -1,15 +1,14 @@
 <script setup lang="ts">
-import { computed, nextTick, ref, shallowRef } from 'vue'
+import { computed } from 'vue'
 
 import CharacterTooltip from '../CharacterTooltip.vue'
-import PhantimalModal from '../modals/PhantimalModal.vue'
-import SkillModal from '../modals/SkillModal.vue'
 import HoldRing from '../ui/HoldRing.vue'
 import IconInfo from '../ui/IconInfo.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
 import { useGridHoverTooltip } from '@/composables/useGridHoverTooltip'
+import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { useSelectionState } from '@/composables/useSelectionState'
 import {
@@ -22,13 +21,11 @@ import {
 import { inPhantimalBand, phantimalOwnerId } from '@/lib/characters/phantimal'
 import { decomposeUnitId } from '@/lib/characters/synergy'
 import type { CharacterType } from '@/lib/types/character'
-import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
-import { hasSkillLocale } from '@/utils/dataLoader'
 import { isTouchClick } from '@/utils/pointer'
 
 interface Props {
@@ -54,7 +51,7 @@ const gridEvents = useGridEvents()
 const { startDrag, endDrag } = useDragDrop()
 const { liftedHexId, liftedGridId, setLiftedHex, clearLiftedHex } = useSelectionState()
 
-// Hover tooltip: the same character card as the roster. Dismissed on any
+// Hover tooltip: the same character card as the picker. Dismissed on any
 // placement change, since an icon removed/swapped from under a still cursor
 // fires no mouseleave.
 const {
@@ -74,8 +71,7 @@ const baseCharacterAt = (characterId: number): CharacterType | undefined => {
 // Companions and synergy copies open their owner hero's skills; a phantimal's
 // companion opens its phantimal's. Units with no page (placeholders, heroes
 // without skill text, retired phantimals) have no inspect gesture at all.
-type InspectTarget =
-  { kind: 'hero'; slug: string } | { kind: 'phantimal'; phantimal: PhantimalType }
+const { inspect } = useInspect()
 
 const inspectTargetOf = (unitId: number): InspectTarget | null => {
   if (inPhantimalBand(unitId)) {
@@ -83,26 +79,15 @@ const inspectTargetOf = (unitId: number): InspectTarget | null => {
     return phantimal ? { kind: 'phantimal', phantimal } : null
   }
   const hero = props.characters.find((c) => c.id === toBaseHeroId(unitId))
-  return hero && !hero.placeholder && hasSkillLocale(hero.name)
-    ? { kind: 'hero', slug: hero.name }
-    : null
+  return hero ? heroInspectTarget(hero) : null
 }
 
-const heroSkill = ref('')
-const inspectedPhantimal = shallowRef<PhantimalType | null>(null)
-const openModal = ref<InspectTarget['kind'] | null>(null)
-
-// The modal mounts closed on first use and opens a tick later, so its enter
-// transition plays; it stays mounted after that.
-const inspectAt = async (hexId: number): Promise<void> => {
+const inspectAt = (hexId: number): void => {
   const unitId = getCharacter(ctx.grid, hexId)
   const target = unitId === undefined ? null : inspectTargetOf(unitId)
   if (!target) return
   hideTooltip()
-  if (target.kind === 'hero') heroSkill.value = target.slug
-  else inspectedPhantimal.value = target.phantimal
-  await nextTick()
-  openModal.value = target.kind
+  void inspect(target)
 }
 
 const { pressing: holdingHexId, start: startHold, onContextMenu } = useLongPress(inspectAt)
@@ -116,12 +101,11 @@ const handleContextMenu = (event: MouseEvent, hexId: number, characterId: number
   if (!props.isMapEditorMode && inspectTargetOf(characterId)) onContextMenu(event, hexId)
 }
 
-const hoverHint = computed(() => {
-  const hero = hoveredCharacter.value
-  return hero && !hero.placeholder && hasSkillLocale(hero.name)
+const hoverHint = computed(() =>
+  hoveredCharacter.value && heroInspectTarget(hoveredCharacter.value)
     ? i18n.t('app.hold-for-skills')
-    : undefined
-})
+    : undefined,
+)
 
 // Anchored to the lifted unit's visual top edge. Perspective lifts the sprite
 // and squashes it about its center (getCharacterStyle), so the edge moves too.
@@ -167,7 +151,7 @@ const phantimalName = (characterId: number): string =>
 const isRetiredPhantimal = (characterId: number): boolean =>
   inPhantimalBand(characterId) && !gameDataStore.getPhantimalById(phantimalOwnerId(characterId))
 
-// Neutral disc behind every placed hero (one color for all, not the roster's
+// Neutral disc behind every placed hero (one color for all, not the picker's
 // per-level gold/purple). Phantimals keep their own grey; skill-driven colors
 // (companion/skill image borders, tile tints) are separate and unaffected.
 const CHARACTER_COLOR = '#c4baa6'
@@ -411,19 +395,6 @@ const visiblePlacements = computed(() => {
       :target-element="hoveredEl"
       variant="detailed"
       :hint="hoverHint"
-    />
-
-    <SkillModal
-      v-if="heroSkill"
-      :show="openModal === 'hero'"
-      :skill-name="heroSkill"
-      @close="openModal = null"
-    />
-    <PhantimalModal
-      v-if="inspectedPhantimal"
-      :show="openModal === 'phantimal'"
-      :phantimal="inspectedPhantimal"
-      @close="openModal = null"
     />
   </div>
 </template>

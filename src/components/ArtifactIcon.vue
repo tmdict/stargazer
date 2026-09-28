@@ -1,21 +1,24 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 
 import ArtifactImage from './ArtifactImage.vue'
 import ArtifactTooltip from './ArtifactTooltip.vue'
-import ArtifactModal from './modals/ArtifactModal.vue'
-import InfoPill from './ui/InfoPill.vue'
+import HoldRing from './ui/HoldRing.vue'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
+import { useInspect } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useI18nStore } from '@/stores/i18n'
-import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const i18n = useI18nStore()
 
-const props = defineProps<{
+defineProps<{
   artifact: ArtifactType
   isPlaced?: boolean
   showSimpleTooltip?: boolean
+  // Right-click or hold opens the artifact's details, as on the board (the
+  // Seasonal tab).
+  inspectable?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -26,54 +29,50 @@ const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverToolti
 
 const artifactElement = ref<HTMLElement>()
 
-const formattedArtifactName = computed(() =>
-  localizedDisplayName(i18n.t, 'artifact', props.artifact.name),
-)
-
-// Effects live in a popup modal (info button), not the hover tooltip.
-const showInfoModal = ref(false)
-const openInfoModal = () => {
-  showInfoModal.value = true
-}
-
-const handleClick = () => {
-  emit('artifactClick', props.artifact)
-}
+const { inspect } = useInspect()
+const {
+  pressing,
+  start: startHold,
+  onContextMenu,
+} = useLongPress<ArtifactType>((artifact) => {
+  showTooltip.value = false
+  void inspect({ kind: 'artifact', artifact })
+})
 </script>
 
 <template>
-  <div class="artifact-wrapper">
+  <!-- The frame holds the hold ring outside the icon's clipped circle. -->
+  <div class="artifact-frame">
     <div
       ref="artifactElement"
       class="artifact"
-      :class="{ placed: isPlaced }"
-      @click="handleClick"
+      :class="{ placed: isPlaced, inspectable }"
+      @click="emit('artifactClick', artifact)"
+      @pointerdown="inspectable && startHold($event, artifact)"
+      @contextmenu="inspectable && onContextMenu($event, artifact)"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
       @touchstart="onTouchStart"
     >
       <ArtifactImage :artifact />
     </div>
-
-    <InfoPill :label="formattedArtifactName" @click="openInfoModal" />
-
-    <ArtifactModal :show="showInfoModal" :artifact @close="showInfoModal = false" />
+    <HoldRing v-if="pressing" />
 
     <ArtifactTooltip
       v-if="showTooltip && artifactElement"
       :artifact
       :target-element="artifactElement"
       :variant="showSimpleTooltip ? 'simple' : 'detailed'"
+      :hint="inspectable ? i18n.t('app.hold-for-details') : undefined"
     />
   </div>
 </template>
 
 <style scoped>
-/* Center the icon and the (wider, name-bearing) info pill on one column. */
-.artifact-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+.artifact-frame {
+  position: relative;
+  width: fit-content;
+  margin-top: var(--spacing-xs);
 }
 
 .artifact {
@@ -92,10 +91,16 @@ const handleClick = () => {
   font-size: 1rem;
   font-weight: 600;
   text-align: center;
-  margin-top: var(--spacing-xs);
   color: var(--color-text-primary);
   cursor: pointer;
   transition: transform var(--transition-fast);
+}
+
+/* A long-press is the inspect gesture: iOS would otherwise answer it with the
+   image callout, and every touch browser with text selection. */
+.artifact.inspectable {
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .artifact::before {
@@ -110,7 +115,7 @@ const handleClick = () => {
   transform: scale(1.05);
 }
 
-/* Placed on either team: desaturate + dim the fill like the character roster,
+/* Placed on either team: desaturate + dim the fill like the character picker,
    keeping the white border/ring. */
 .artifact.placed {
   filter: var(--placed-filter);

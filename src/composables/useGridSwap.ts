@@ -1,7 +1,7 @@
 /* Grid-swap interaction state for the 5 v 5 boards.
  *
  * Drives the per-board "swap" affordance: arming a source board, then choosing a
- * target to exchange their rosters via grids.swapBoards. State is a module-level
+ * target to exchange their lineups via grids.swapBoards. State is a module-level
  * singleton (like useDragDrop) since at most one swap is in flight and the document
  * listeners must share identity across the boards that add/remove them.
  *

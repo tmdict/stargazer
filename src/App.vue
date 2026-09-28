@@ -4,6 +4,7 @@ import { RouterLink, RouterView, useRoute } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
+import InspectModals from '@/components/modals/InspectModals.vue'
 import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import ContactForm from '@/components/ui/ContactForm.vue'
@@ -209,6 +210,9 @@ onUnmounted(() => {
 
   <!-- Global skill search overlay; renders nothing until opened -->
   <SkillSearchOverlay />
+
+  <!-- Inspect detail modals (useInspect); render nothing until first used -->
+  <InspectModals />
 </template>
 
 <style scoped>

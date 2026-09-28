@@ -17,7 +17,7 @@ export function useCharacterFilters(characters: Ref<readonly CharacterType[]>) {
     if (damageFilter.value) filtered = filtered.filter((c) => c.damage === damageFilter.value)
     if (selectedTagNames.value)
       filtered = filtered.filter((c) => Object.keys(c.tags).includes(selectedTagNames.value!))
-    // Placeholders trail the whole roster as one block, in the faction filter
+    // Placeholders trail the whole hero list as one block, in the faction filter
     // icons' order (compareFaction follows the same FACTION_ORDER).
     return filtered.sort(
       (a, b) =>

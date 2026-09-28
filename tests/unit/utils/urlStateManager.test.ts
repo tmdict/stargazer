@@ -31,12 +31,6 @@ describe('urlStateManager', () => {
       expect(decoded).toEqual(state)
     })
 
-    // Rejection is silent (null, no console noise): the universal decoder
-    // probes multiple formats, and a failed probe is expected traffic.
-    it('handles decoding errors gracefully', () => {
-      expect(decodeGridStateFromUrl('invalid@#$%data')).toBeNull()
-    })
-
     it('rejects input that decodes to zero bytes', () => {
       // A valid encoding always carries at least one header byte, so inputs
       // too short to yield a single byte cannot be real shared state

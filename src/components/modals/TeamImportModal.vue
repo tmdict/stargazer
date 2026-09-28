@@ -14,9 +14,9 @@ import ImageDropZone from '@/components/ui/ImageDropZone.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useTeamImport } from '@/composables/useTeamImport'
 import { useToast } from '@/composables/useToast'
+import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
   DEFAULT_VARIANT,
-  MAX_TEAM_NAME_LENGTH,
   TEAM_MODES,
   TEAM_VARIANTS,
   type TeamModeKey,
@@ -116,7 +116,7 @@ const nameInvalid = computed(
     [names.prefix, names.left, names.right].some((name) => NAME_FORBIDDEN.test(name)),
 )
 // The library would clip the name, losing the map lists at its end.
-const nameTooLong = computed(() => plan.value.suggestedName.length > MAX_TEAM_NAME_LENGTH)
+const nameTooLong = computed(() => plan.value.suggestedName.length > MAX_NAME_LENGTH)
 
 const heroLabel = (characterId: number): string => {
   const slug = gameData.getCharacterNameById(characterId)
@@ -180,7 +180,7 @@ const reading = computed(() => shots.value.some((s) => s.status === 'reading'))
 // pending shot will fill is not one the import leaves as it is.
 const issues = computed(() => [
   ...plan.value.issues,
-  ...(reading.value ? [] : grids.rosterConflicts(plan.value)),
+  ...(reading.value ? [] : grids.lineupConflicts(plan.value)),
 ])
 const blocked = computed(
   () =>
@@ -196,7 +196,7 @@ const blocked = computed(
 const { armed, confirm } = useArmedConfirm()
 const handleSaveAsNew = (): void => {
   if (blocked.value) return
-  if (grids.rostersWouldReplace(plan.value) && !confirm('save')) return
+  if (grids.lineupsWouldReplace(plan.value) && !confirm('save')) return
   saveNames()
   emit('importMatch', plan.value)
   clearShots()
@@ -304,7 +304,7 @@ const handleForgetLearned = (): void => {
           <small v-else-if="nameTooLong" class="error">{{
             i18n.t('app.import-name-too-long', {
               length: plan.suggestedName.length,
-              max: MAX_TEAM_NAME_LENGTH,
+              max: MAX_NAME_LENGTH,
             })
           }}</small>
         </div>

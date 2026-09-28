@@ -7,7 +7,6 @@ import {
   getMainCharacterId,
   isCompanionId,
   restoreCompanions,
-  storeCompanionPositions,
   type CompanionPosition,
 } from '@/lib/characters/companion'
 import { Grid } from '@/lib/grid'
@@ -68,70 +67,8 @@ describe('companion', () => {
   })
 
   describe('companion position management', () => {
-    describe('storeCompanionPositions', () => {
-      it('stores positions of placed companions', () => {
-        // Place main character
-        const tile1 = grid.getTileById(1)
-        tile1.characterId = 100
-        tile1.team = Team.ALLY
-
-        // Place companions
-        const tile2 = grid.getTileById(2)
-        tile2.characterId = 10100
-        tile2.team = Team.ALLY
-
-        const tile3 = grid.getTileById(3)
-        tile3.characterId = 10101
-        tile3.team = Team.ALLY
-
-        // Add companion links
-        addCompanionLink(grid, 100, 10100, Team.ALLY)
-        addCompanionLink(grid, 100, 10101, Team.ALLY)
-
-        const positions = storeCompanionPositions(grid, 100, Team.ALLY)
-
-        expect(positions).toHaveLength(2)
-        expect(positions).toContainEqual({
-          companionId: 10100,
-          hexId: 2,
-          team: Team.ALLY,
-          mainCharId: 100,
-        })
-        expect(positions).toContainEqual({
-          companionId: 10101,
-          hexId: 3,
-          team: Team.ALLY,
-          mainCharId: 100,
-        })
-      })
-    })
-
+    // The store-and-restore round trip runs for real in move.test.ts's rollback.
     describe('restoreCompanions', () => {
-      it('restores companions to original positions', () => {
-        const companionPositions: CompanionPosition[] = [
-          { companionId: 10100, hexId: 2, team: Team.ALLY, mainCharId: 100 },
-          { companionId: 10101, hexId: 3, team: Team.ALLY, mainCharId: 100 },
-        ]
-
-        // Place companions in wrong positions
-        const tile4 = grid.getTileById(4)
-        tile4.characterId = 10100
-        tile4.team = Team.ALLY
-
-        const tile5 = grid.getTileById(5)
-        tile5.characterId = 10101
-        tile5.team = Team.ALLY
-
-        restoreCompanions(grid, skillManager, 100, companionPositions)
-
-        // Companions are now at their stored positions
-        expect(grid.getTileById(2).characterId).toBe(10100)
-        expect(grid.getTileById(3).characterId).toBe(10101)
-        // And cleared from the wrong positions
-        expect(grid.getTileById(4).characterId).toBeUndefined()
-        expect(grid.getTileById(5).characterId).toBeUndefined()
-      })
-
       it('only restores companions for specified main character', () => {
         const companionPositions: CompanionPosition[] = [
           { companionId: 10100, hexId: 2, team: Team.ALLY, mainCharId: 100 },

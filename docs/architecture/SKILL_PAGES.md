@@ -2,7 +2,7 @@
 
 Three surfaces show a hero's in-game skill text: the `/skills` browser, the skill modal, and a pre-rendered page at `/<code>/skill/<slug>` for each of the 16 languages × every hero. Each shows the skill text, tag chips and optional commentary.
 
-Two locale axes run through all of it. Skill text and the hero name follow the text locale (`SkillLocale`, the languages in `SKILL_LOCALES`, which is also the URL prefix). Chips, labels and the roster follow the chrome locale (`AppLocale`, en or zh). All 16 languages cannot ship in the main bundle, yet a pre-rendered page must bake its real text in one render pass. Most of the design follows from those two facts.
+Two locale axes run through all of it. Skill text and the hero name follow the text locale (`SkillLocale`, the languages in `SKILL_LOCALES`, which is also the URL prefix). Chips, labels and the hero list follow the chrome locale (`AppLocale`, en or zh). All 16 languages cannot ship in the main bundle, yet a pre-rendered page must bake its real text in one render pass. Most of the design follows from those two facts.
 
 ## Locale files
 
@@ -21,7 +21,7 @@ Files starting with `_` hold per-language data rather than a hero. They travel i
 
 The importer requires `_meta.terms` and `_meta.keywords` in each feed. It fails when languages disagree on the hero set or a hero's slot set, or when a keyword token has no glossary entry. Heroes missing from the feed, tag attachments pointing at a slot or level the hero lacks, and locale directories not in `SKILL_LOCALES` are warnings. It only writes files whose content changed. Adding a language is one `SKILL_LOCALES` row (the `feed` column maps the feed's own code to the BCP-47 `code`) and a re-run.
 
-Because every language must cover exactly the en hero set, `hasSkillLocale(slug)` answers from en alone. It gates the info button, the modal and the reader, so a hero with data but no text never shows a dead link.
+Because every language must cover exactly the en hero set, `hasSkillLocale(slug)` answers from en alone. It gates the inspect gesture, the modal and the reader, so a hero with data but no text never shows a dead link.
 
 ## Loading languages
 
@@ -65,7 +65,7 @@ The labels come from `_terms` (`cooldown` with one line per value, `range` and `
 
 ## Pages and meta
 
-`SkillsBrowser` backs both `/skills` and every hero page, so the URL is the whole state. Roster links point at the page's text locale on a hero page, and at `effectiveSkillLocale` (the saved globe choice in `stargazer.skillLocale`, else the chrome locale) on the index and on other surfaces with no text locale of their own. The globe menu (`SkillLocaleMenu`) switches text only, and the header toggle switches chrome only.
+`SkillsBrowser` backs both `/skills` and every hero page, so the URL is the whole state. Hero-list links point at the page's text locale on a hero page, and at `effectiveSkillLocale` (the saved globe choice in `stargazer.skillLocale`, else the chrome locale) on the index and on other surfaces with no text locale of their own. The globe menu (`SkillLocaleMenu`) switches text only, and the header toggle switches chrome only.
 
 `setupSkillContentMeta` runs in `SkillSections` on the server and the client. It sets the title, Open Graph tags, canonical and `hreflang` alternates for every language, and takes `<html lang>` for the text locale through an owner token, so keyed remounts in either order cannot clear a newer owner. The modal provides `ContentInModalKey`, which skips all of this so the popup leaves the host page's head alone.
 
@@ -82,7 +82,7 @@ Tags live in the character data file (`src/data/character/<slug>.json`). The imp
 }
 ```
 
-Each attachment is `{ slot: level }`, or `{ "charm": tier }` for a tag the hero's charm carries ([Seasonal Content](./SEASONAL.md)). `useSkillTags` gives the per-level and per-character unions. The chip strip filters skill levels and charm tiers alike. Refinement rows carry no tags, so any active chip hides them. A slot heading's chips link to `/skills?tag=<name>`, which seeds the roster filter. A tag's label is `src/locales/app/<tag>.json`, so adding a tag is data plus one locale file.
+Each attachment is `{ slot: level }`, or `{ "charm": tier }` for a tag the hero's charm carries ([Seasonal Content](./SEASONAL.md)). `useSkillTags` gives the per-level and per-character unions. The chip strip filters skill levels and charm tiers alike. Refinement rows carry no tags, so any active chip hides them. A slot heading's chips link to `/skills?tag=<name>`, which seeds the hero-list filter. A tag's label is `src/locales/app/<tag>.json`, so adding a tag is data plus one locale file.
 
 ## Commentary snippets
 
@@ -90,7 +90,7 @@ An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh)
 
 ## Search
 
-`SkillSearchOverlay` mounts once at the app root and teleports only after mount, so pre-rendered HTML carries just the triggers. ⌘K or Ctrl+K toggles it, and `/` opens it outside text fields. The same overlay has a select mode (`useSearchOverlay().openSelect`) that hands the chosen hero to its opener, such as the Arena roster. Escape is handled in the capture phase and any route change closes the overlay, so a select handler never outlives its page. Recent picks persist under `stargazer.recentHeroes`. A result links to `/<hit locale>/skill/<slug>#<slot>`, resolved by the section ids and the router's `scrollBehavior`.
+`SkillSearchOverlay` mounts once at the app root and teleports only after mount, so pre-rendered HTML carries just the triggers. ⌘K or Ctrl+K toggles it, and `/` opens it outside text fields. The same overlay has a select mode (`useSearchOverlay().openSelect`) that hands the chosen hero to its opener, such as the Arena picker. Escape is handled in the capture phase and any route change closes the overlay, so a select handler never outlives its page. Recent picks persist under `stargazer.recentHeroes`. A result links to `/<hit locale>/skill/<slug>#<slot>`, resolved by the section ids and the router's `scrollBehavior`.
 
 `useSkillSearch` follows these rules:
 

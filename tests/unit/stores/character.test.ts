@@ -48,7 +48,7 @@ beforeEach(() => {
 describe('active grid: drop routing (handleDrop)', () => {
   describe('selection drop (no sourceHexId)', () => {
     // Capacity and replacement rules are lib-pinned (characters/place.test.ts);
-    // this pins the roster-drop dispatch on a full team.
+    // this pins the picker-drop dispatch on a full team.
     it('on a full team, rejects a drop on an empty tile but replaces an occupant', () => {
       const allyTiles = tilesByState(State.AVAILABLE_ALLY)
       const maxAlly = getMaxTeamSize(grids.active!.grid, Team.ALLY)
@@ -77,9 +77,9 @@ describe('active grid: drop routing (handleDrop)', () => {
 })
 
 // Phantimal placement rules (team-size exemption, one per team) are lib-pinned
-// in characters/phantimal.test.ts; this pins the roster-drop dispatch.
+// in characters/phantimal.test.ts; this pins the picker-drop dispatch.
 describe('characterStore phantimals', () => {
-  it('routes a roster phantimal drop through one-per-team placement', () => {
+  it('routes a picker phantimal drop through one-per-team placement', () => {
     const tiles = tilesByState(State.AVAILABLE_ALLY)
     grids.active!.handleDrop(
       { character: buildCharacter(toPhantimalId(1)), characterId: toPhantimalId(1) },

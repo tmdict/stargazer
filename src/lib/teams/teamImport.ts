@@ -1,5 +1,5 @@
 /* Match import: readings plus the user's review decisions become per-board
- * rosters the grids store can stamp, and the record name the pvp export
+ * lineups the grids store can stamp, and the record name the pvp export
  * convention expects ("S7 SL5 Group - GNX > 10 (1,3,4,5 > 2)": the player
  * on the ally half of the boards first, `>` when that player won more maps,
  * each player's map numbers in the brackets). Pure data mapping, a sibling
@@ -30,13 +30,13 @@ export interface ShotAssignment {
   artifactOverrides: Partial<Record<Team, number | null>>
 }
 
-export interface RosterEntry {
+export interface LineupEntry {
   characterId: number
   attrs: AttrRecord
 }
 
-export interface BoardRoster {
-  sides: Record<Team, RosterEntry[]>
+export interface BoardLineup {
+  sides: Record<Team, LineupEntry[]>
   artifacts: { ally: number | null; enemy: number | null }
 }
 
@@ -58,7 +58,7 @@ export type PlanIssue =
 
 export interface TeamImportPlan {
   // One entry per board; null leaves that board untouched.
-  boards: (BoardRoster | null)[]
+  boards: (BoardLineup | null)[]
   issues: PlanIssue[]
   suggestedName: string
 }
@@ -71,7 +71,7 @@ export interface RecordNames {
 
 export const overrideKey = (team: Team, row: number): string => `${team}:${row}`
 
-// An issue that would put a wrong roster on a board blocks; the others only
+// An issue that would put a wrong lineup on a board blocks; the others only
 // leave something out, and say so.
 export const isBlockingIssue = (issue: PlanIssue): boolean =>
   issue.kind === 'duplicate-map' ||
@@ -207,7 +207,7 @@ export function buildTeamImportPlan(
   swapSides = false,
 ): TeamImportPlan {
   const { boardCount } = TEAM_MODES[mode]
-  const boards: (BoardRoster | null)[] = Array.from({ length: boardCount }, () => null)
+  const boards: (BoardLineup | null)[] = Array.from({ length: boardCount }, () => null)
   const issues: PlanIssue[] = []
   const seen = new Set<number>()
   const mapped = (mapIndex: number | null): mapIndex is number =>
@@ -229,7 +229,7 @@ export function buildTeamImportPlan(
       continue
     }
     seen.add(shot.mapIndex)
-    const sides = {} as Record<Team, RosterEntry[]>
+    const sides = {} as Record<Team, LineupEntry[]>
     for (const side of SIDES) {
       const column = columnOf(side)
       const ids = shot.reading.sides[column].map((_, row) =>
@@ -244,7 +244,7 @@ export function buildTeamImportPlan(
       for (const characterId of repeated) {
         issues.push({ kind: 'duplicate-hero', team: side, characterId, mapIndex: shot.mapIndex })
       }
-      const entries: RosterEntry[] = []
+      const entries: LineupEntry[] = []
       ids.forEach((characterId, row) => {
         if (characterId === null || entries.some((e) => e.characterId === characterId)) return
         entries.push({ characterId, attrs: cellAttrs(shot.reading, column, row, shot.overrides) })

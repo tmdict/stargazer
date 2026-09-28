@@ -8,7 +8,7 @@ Two things make it hard. Many kinds of unit share one tile slot (heroes, placeho
 
 ```
 ┌──────────────────────────┐              ┌──────────────────────────┐
-│ Pages, roster, pickers   │              │ Grid components          │
+│ Pages, pickers           │              │ Grid components          │
 │ (Arena, Teams, Share)    │              │ (one set per board)      │
 └────────────┬─────────────┘              └───────┬─────────────┬────┘
              │                                    │             │
@@ -50,9 +50,9 @@ The Teams page decides how many boards exist and restores them ([Teams](./TEAMS.
 
 A hero is unique per team across all boards, and so is an artifact. Placeholders, companions and phantimals are exempt. A bulk restore validates one board at a time, so `dedupeCharacters` repairs uniqueness afterwards by keeping each hero's first placement in board order.
 
-Every roster pick (click, tap, popup, drag gate) goes through `resolvePick`, which combines the engine's resolver with page-wide uniqueness, so hover cues and drops cannot disagree. A drop that stays on one board runs the board's own `handleDrop`. A drop across boards is a remove on one board plus a place on the other, and restores the original if the place fails. Drop payloads carry only source coordinates, and ids and teams are read from the live cells at drop time. Drag gestures and drop routing are covered in [Drag & Drop](./DRAG_AND_DROP.md).
+Every pick (click, tap, popup, drag gate) goes through `resolvePick`, which combines the engine's resolver with page-wide uniqueness, so hover cues and drops cannot disagree. Clicks, taps and the popup place through `placePick`, and a drag from the picker through `routeDrop`. Both then give the hero the active roster's levels, the one place a roster touches a board ([Teams](./TEAMS.md)). A drop that stays on one board runs the board's own `handleDrop`. A drop across boards is a remove on one board plus a place on the other, and restores the original if the place fails. Drop payloads carry only source coordinates, and ids and teams are read from the live cells at drop time. Drag gestures and drop routing are covered in [Drag & Drop](./DRAG_AND_DROP.md).
 
-Upgrade records follow their hero. Cross-board moves and swaps read the record before removing the hero, since the remove drops it, then write it on the destination, or back on the source when the move rolls back. `swapBoards` carries each hero's record the same way, and a same-board team change re-keys it inside the board's own move or swap. `swapBoards` exchanges only the directly placed heroes and the artifacts. Companions and phantimals are derived from the roster, so they are re-derived on the destination, and units land on random tiles, so formations are not kept.
+Upgrade records follow their hero. Cross-board moves and swaps read the record before removing the hero, since the remove drops it, then write it on the destination, or back on the source when the move rolls back. `swapBoards` carries each hero's record the same way, and a same-board team change re-keys it inside the board's own move or swap. `swapBoards` exchanges only the directly placed heroes and the artifacts. Companions and phantimals are derived from the lineup, so they are re-derived on the destination, and units land on random tiles, so formations are not kept.
 
 The Syn toggle (friend assist) is never serialized. `deriveSynergy` re-reads it from the boards after every restore, and turning it off removes every synergy unit from every board, so the box always matches the boards.
 
@@ -93,7 +93,7 @@ Phantimal companions hold no slot either. The one-per-team and faction checks fo
 3. `performPlace`: the tile must be an available or occupied tile of that team, `canPlaceCharacterOnTeam` must pass, and the tile must be empty.
 4. Activate the newcomer's skill.
 
-`performPlace` never displaces an occupant. Replacing is the composite above, and swaps clear both tiles first. `resolveReplacement` judges a roster drop on an occupied tile against the board after the occupant leaves: a hero or placeholder gives back a slot, the synergy hero gives back the assist slot, and a phantimal gives back nothing.
+`performPlace` never displaces an occupant. Replacing is the composite above, and swaps clear both tiles first. `resolveReplacement` judges a picker drop on an occupied tile against the board after the occupant leaves: a hero or placeholder gives back a slot, the synergy hero gives back the assist slot, and a phantimal gives back nothing.
 
 Removal always succeeds, so `executeRemoveCharacter` uses no transaction. Removing a companion removes its main instead, and the main's skill then removes the companions. Team membership and capacity are read from tiles, so nothing else needs updating. Companion spawning, rollback and the capacity bump are covered in [Companion Skills](./skills/COMPANION.md).
 

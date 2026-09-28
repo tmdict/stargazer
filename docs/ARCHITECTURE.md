@@ -81,6 +81,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.arena`                                                                  | the Arena board, as a binary link payload                       | [URL Serialization](./architecture/URL_SERIALIZATION.md) |
 | `stargazer.season`                                                                 | the season the Arena board was last cleaned for                 | [Seasonal Content](./architecture/SEASONAL.md)           |
 | `stargazer.teams.mode`, `.active.<mode>`, `.display`, `.saved`, `.sort`            | Teams modes, working boards, toggles, library, sort             | [Teams](./architecture/TEAMS.md)                         |
+| `stargazer.rosters`, `stargazer.rosters.active`                                    | the roster library and the active roster                        | [Teams](./architecture/TEAMS.md)                         |
 | `stargazer.import.names`, `stargazer.import.learned`                               | screenshot-import names and learned faces                       | [Team Import](./architecture/IMPORT_TEAM.md)             |
 | `stargazer.skillLocale`, `stargazer.skillLocaleHintSeen`, `stargazer.recentHeroes` | skill text language, tip dismissal, recent heroes               | [Skill Pages](./architecture/SKILL_PAGES.md)             |
 | `stargazer.prefs`                                                                  | device preferences                                              | below                                                    |

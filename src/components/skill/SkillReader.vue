@@ -16,7 +16,7 @@ const props = defineProps<{
   lang: SkillLocale
 }>()
 
-// Tapping the empty placeholder reveals the roster (the mobile sheet); the
+// Tapping the empty placeholder reveals the hero list (the mobile sheet); the
 // parent decides what that means.
 const emit = defineEmits<{ emptyClick: [] }>()
 
@@ -182,7 +182,7 @@ watch(
   .content {
     padding: var(--spacing-lg);
   }
-  /* On mobile the empty placeholder is a tap target that reveals the roster. */
+  /* On mobile the empty placeholder is a tap target that reveals the hero list. */
   .empty-state {
     cursor: pointer;
   }

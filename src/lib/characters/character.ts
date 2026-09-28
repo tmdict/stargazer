@@ -68,7 +68,7 @@ export function isBaseHeroId(characterId: number): boolean {
   return characterId < COMPANION_ID_OFFSET
 }
 
-// Identity for hero-only surfaces (roster card, paragon): isBaseHeroId alone
+// Identity for hero-only surfaces (hero card, paragon): isBaseHeroId alone
 // admits the placeholder band.
 export function isRealHeroId(characterId: number): boolean {
   return isBaseHeroId(characterId) && !isPlaceholderId(characterId)
@@ -141,7 +141,7 @@ export function canPlaceCharacterOnTeam(grid: Grid, characterId: number, team: T
   return !isCharacterOnTeam(grid, characterId, team)
 }
 
-// Which id a roster pick of baseId should place: the base id when it passes the
+// Which id a picker click of baseId should place: the base id when it passes the
 // normal gate, else the synergy copy when the affordance is on and the team's
 // slot is free, else nothing. The single decision point for every placement
 // entry (click, tap, popup, drag), so hover cues and drops can't disagree.
@@ -172,7 +172,7 @@ export function synergySlotFree(grid: Grid, team: Team): boolean {
   return findTeamSynergyHex(grid, team) === null
 }
 
-// Whether any roster pick can still land on the team: a capacity slot, or the
+// Whether any pick can still land on the team: a capacity slot, or the
 // assist slot while the Syn affordance is on. Gates the add-only pickers.
 export function teamHasOpenSlot(grid: Grid, team: Team, synergyOn: boolean): boolean {
   return getAvailableTeamSize(grid, team) > 0 || (synergyOn && synergySlotFree(grid, team))
