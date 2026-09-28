@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 
-import CharacterInfoIcons from './CharacterInfoIcons.vue'
 import CharacterTooltip from './CharacterTooltip.vue'
+import HoldRing from './ui/HoldRing.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
+import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
@@ -14,10 +16,16 @@ import { characterDisplayName } from '@/utils/nameFormatting'
 const props = defineProps<{
   character: CharacterType
   isDraggable?: boolean
-  isPlaced?: boolean
+  // Greyed out: placed on the board in the picker, not owned in the Rosters tab.
+  dimmed?: boolean
   isSelected?: boolean
   showSimpleTooltip?: boolean
-  hideInfo?: boolean
+  // No hover detail card, where a click already acts or opens the hero's page
+  // (the Rosters tab, the Skills hero list).
+  hideTooltip?: boolean
+  // Right-click or hold opens the hero's skills, as on the board (the
+  // Arena/Teams picker).
+  inspectable?: boolean
   selectedFilter?: string | null
 }>()
 
@@ -33,7 +41,7 @@ const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverToolti
 
 const characterElement = ref<HTMLElement>()
 
-// A hero can join the roster before its portrait ships, and a portrait can
+// A hero can join the hero list before its portrait ships, and a portrait can
 // fail to load; the tile shows the name instead.
 const portraitUrl = computed(() => gameDataStore.getCharacterImage(props.character.name))
 const portraitFailed = ref(false)
@@ -47,6 +55,20 @@ const showEnergy = computed(() => props.selectedFilter === 'initial-energy-300')
 
 // Under-icon badge: single summed value to keep the grid layout tight
 const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum + n, 0))
+
+// The skill page opens on the active tag filter's chip.
+const inspectTarget = computed(() =>
+  props.inspectable ? heroInspectTarget(props.character, props.selectedFilter) : null,
+)
+const { inspect } = useInspect()
+const {
+  pressing,
+  start: startHold,
+  onContextMenu,
+} = useLongPress<InspectTarget>((target) => {
+  showTooltip.value = false
+  void inspect(target)
+})
 
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
@@ -62,40 +84,47 @@ const handleDragEnd = (event: DragEvent) => {
 
 <template>
   <div class="character-wrapper">
-    <div
-      ref="characterElement"
-      class="character-display"
-      :class="{ draggable: isDraggable, placed: isPlaced, selected: isSelected }"
-      :style="{
-        background: `url(${gameDataStore.getIcon(`bg-${character.level}`)}) center/cover`,
-      }"
-      :draggable="isDraggable"
-      @dragstart="handleDragStart"
-      @dragend="handleDragEnd"
-      @mousedown="onMouseDown"
-      @mouseup="onMouseUp"
-      @mouseenter="onMouseEnter"
-      @mouseleave="onMouseLeave"
-      @touchstart="onTouchStart"
-    >
-      <img
-        v-if="portraitUrl && !portraitFailed"
-        :src="portraitUrl"
-        loading="lazy"
-        decoding="async"
-        :alt="character.name"
-        class="portrait"
-        @error="portraitFailed = true"
-      />
-      <span v-else class="portrait-name">{{ displayName }}</span>
+    <!-- The frame holds the hold ring outside the portrait's clipped circle. -->
+    <div class="portrait-frame">
+      <div
+        ref="characterElement"
+        class="character-display"
+        :class="{
+          draggable: isDraggable,
+          dimmed,
+          selected: isSelected,
+          inspectable: inspectTarget,
+        }"
+        :style="{
+          background: `url(${gameDataStore.getIcon(`bg-${character.level}`)}) center/cover`,
+        }"
+        :draggable="isDraggable"
+        @dragstart="handleDragStart"
+        @dragend="handleDragEnd"
+        @mousedown="onMouseDown"
+        @mouseup="onMouseUp"
+        @pointerdown="inspectTarget && startHold($event, inspectTarget)"
+        @contextmenu="inspectTarget && onContextMenu($event, inspectTarget)"
+        @mouseenter="onMouseEnter"
+        @mouseleave="onMouseLeave"
+        @touchstart="onTouchStart"
+      >
+        <img
+          v-if="portraitUrl && !portraitFailed"
+          :src="portraitUrl"
+          loading="lazy"
+          decoding="async"
+          :alt="character.name"
+          class="portrait"
+          @error="portraitFailed = true"
+        />
+        <span v-else class="portrait-name">{{ displayName }}</span>
+      </div>
+      <HoldRing v-if="pressing" />
     </div>
-    <!-- A placeholder's image is already its faction icon; the info row would
-         repeat it. -->
-    <CharacterInfoIcons
-      v-if="!hideInfo && !character.placeholder"
-      :character
-      :selected-filter="selectedFilter"
-    />
+    <div v-if="$slots.badge" class="portrait-badge">
+      <slot name="badge" />
+    </div>
 
     <!-- Energy Display -->
     <div v-if="showEnergy" class="character-energy">
@@ -104,10 +133,11 @@ const handleDragEnd = (event: DragEvent) => {
     </div>
 
     <CharacterTooltip
-      v-if="showTooltip && characterElement"
+      v-if="showTooltip && characterElement && !hideTooltip"
       :character
       :target-element="characterElement"
       :variant="showSimpleTooltip ? 'simple' : 'detailed'"
+      :hint="inspectTarget ? i18n.t('app.hold-for-skills') : undefined"
     />
   </div>
 </template>
@@ -119,6 +149,12 @@ const handleDragEnd = (event: DragEvent) => {
   text-align: center;
   margin-top: 0.25rem;
   color: #333;
+}
+
+.portrait-frame {
+  position: relative;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .character-display {
@@ -166,29 +202,40 @@ const handleDragEnd = (event: DragEvent) => {
     0 0 3px #fff;
 }
 
-.draggable {
-  cursor: grab;
+/* Every portrait acts on click (or drag), so every one grows on hover. */
+.character-display {
   transition:
     transform 0.2s ease,
     opacity 0.2s ease;
 }
 
-.draggable:hover {
+.character-display:hover {
   transform: scale(1.05);
+}
+
+.draggable {
+  cursor: grab;
+}
+
+/* A long-press is the inspect gesture: iOS would otherwise answer it with the
+   image callout, and every touch browser with text selection. */
+.inspectable {
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .draggable:active {
   cursor: grabbing;
 }
 
-/* Placed on the board: desaturate the icon and dim only the fill (the ::after
-   overlay) so the white ring survives, since a whole-element filter/opacity
-   would dim it too. Distinct from the red selected ring; --placed-* tokens are
-   shared with the phantimal/artifact rosters. */
-.character-display.placed {
+/* Desaturate the icon and dim only the fill (the ::after overlay) so the white
+   ring survives, since a whole-element filter/opacity would dim it too.
+   Distinct from the red selected ring; --placed-* tokens are shared with the
+   phantimal/artifact pickers. */
+.character-display.dimmed {
   filter: var(--placed-filter);
 }
-.character-display.placed::after {
+.character-display.dimmed::after {
   /* Clipped to the circle by the parent's overflow: hidden; z-index clears the
      z-index:1 portrait. */
   content: '';
@@ -201,6 +248,19 @@ const handleDragEnd = (event: DragEvent) => {
 
 .character-display.selected {
   box-shadow: 0 0 0 5px #c05b4d;
+}
+
+/* Seated on the portrait's bottom edge, over the white ring, like the board's
+   hero panel pills. */
+/* The portrait's 5px ring sits outside its box, so this small pull seats the
+   badge over the ring's visible edge by about a third of its height, as the
+   board hero card's pill does. */
+.portrait-badge {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  justify-content: center;
+  margin-top: -2px;
 }
 
 /* Energy Display */

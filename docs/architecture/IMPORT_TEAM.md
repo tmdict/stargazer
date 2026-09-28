@@ -1,6 +1,6 @@
 # Team Import
 
-The team import reads the game's match result screenshots on the device and saves what they show as a new team: both rosters with each hero's paragon and refinement, both artifacts, and a record name. Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`), run in a web worker. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save as New changes the boards.
+The team import reads the game's match result screenshots on the device and saves what they show as a new team: both lineups with each hero's paragon and refinement, both artifacts, and a record name. Recognition is pure TypeScript over RGBA buffers (`src/lib/import/`), run in a web worker. It produces evidence, the review turns evidence plus the user's edits into a plan, and only Save as New changes the boards.
 
 The hard part is that screenshots vary. Players crop them, phones have different shapes, and the in-game card zooms each portrait slightly differently. The readers have to find the cards before they can read them, and say how sure they are.
 
@@ -8,7 +8,7 @@ The hard part is that screenshots vary. Players crop them, phones have different
 
 ```
 ┌─ TeamImportModal ────────┐            ┌─ TeamsView ──────────────┐
-│ drop zone, review,       │    plan    │ grids.applyRosters       │
+│ drop zone, review,       │    plan    │ grids.applyLineups       │
 │ Save as New              │───────────▶│ teamLibrary.saveAsNew    │
 └───────────────────┬──┬───┘            └──────────────────────────┘
        shots, edits │  ▲
@@ -85,7 +85,7 @@ The prefix and names persist in `stargazer.import.names`. A missing or non-strin
 }
 ```
 
-`isBlockingIssue` separates issues that would put a wrong roster on a board (a map filled twice, a duplicate hero, a hero or artifact repeated across boards) from ones that only leave something out. Blocking issues and invalid names stop Save as New, and warnings do not. Applying and saving belong to the Teams page ([Teams](./TEAMS.md)). They are not one transaction: a full library leaves the boards as an unsaved team carrying the name, and skipped placements are reported.
+`isBlockingIssue` separates issues that would put a wrong lineup on a board (a map filled twice, a duplicate hero, a hero or artifact repeated across boards) from ones that only leave something out. Blocking issues and invalid names stop Save as New, and warnings do not. Applying and saving belong to the Teams page ([Teams](./TEAMS.md)). They are not one transaction: a full library leaves the boards as an unsaved team carrying the name, and skipped placements are reported.
 
 ## Reference descriptors
 

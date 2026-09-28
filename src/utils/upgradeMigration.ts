@@ -143,7 +143,7 @@
 import { clampAttr, compareAttrRows, type AttrRow } from '@/lib/characters/attributes'
 import { resolveTeamMode } from '@/lib/teams/modes'
 import { canonicalTeamData } from '@/lib/teams/savedTeam'
-import { readStorage, writeStorage } from '@/utils/storage'
+import { readStorage, removeStorage, writeStorage } from '@/utils/storage'
 // Import cycle with urlStateManager (it calls back into this shim): safe
 // because every cross-reference is call-time, but neither module may use the
 // other's exports at module-init level while this file exists.
@@ -316,16 +316,6 @@ export function runUpgradeStoragePass(): void {
 /* ------------------------------------------------------------------------- *
  * The 5v5sl retirement: storage pass.
  * ------------------------------------------------------------------------- */
-
-// Inlined rather than added to utils/storage.ts: nothing permanent needs a
-// remove, and this module must leave no orphaned exports behind.
-const removeStorage = (key: string): void => {
-  try {
-    localStorage.removeItem(key)
-  } catch {
-    // Best effort, like every other storage call.
-  }
-}
 
 /* Move or drop the retired slot. Last-used wins: when 5v5sl was the last-used
  * mode its boards become the 5v5 slot; otherwise they are dropped. The

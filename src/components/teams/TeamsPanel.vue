@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* The Teams roster: a separate card on desktop, a pull-up sheet over the grids on
-   mobile. The characters / seasonal / maps tabs act on the active board; saved
-   teams (the default tab) manages the library. The mobile tap flow drives the
+/* The Teams side panel: a separate card on desktop, a pull-up sheet over the
+   grids on mobile. The characters / seasonal / maps tabs act on the active board;
+   rosters manages the hero pools the picker draws from, and saved teams (the
+   default tab) manages the library. The mobile tap flow drives the
    sheet, so the selection watches + sheet state live here alongside the
    BottomSheet they control: a targeted cell opens it on Characters, an on-grid
    artifact opens it on Seasonal, lifting a hero collapses it, and loading a saved
@@ -11,6 +12,7 @@ import { computed, ref, watch } from 'vue'
 
 import CharacterSelection from '@/components/CharacterSelection.vue'
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
+import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import SavedTeamsList from '@/components/teams/SavedTeamsList.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
@@ -41,12 +43,14 @@ const { targetHexId, tabRequest, liftedHexId, clearTargets } = useSelectionState
 
 const activeTab = ref('saved')
 const tabs = computed(() => [
-  { key: 'characters', label: i18n.t('app.characters') },
+  { key: 'characters', label: i18n.t('app.characters'), shortLabel: i18n.t('app.heroes') },
   { key: 'seasonal', label: i18n.t('app.seasonal') },
   { key: 'maps', label: i18n.t('app.maps') },
+  { key: 'rosters', label: i18n.t('app.rosters') },
   {
     key: 'saved',
     label: i18n.t('app.saved-teams'),
+    shortLabel: i18n.t('app.saved'),
     badge: library.count > 0 ? library.count : undefined,
   },
 ])
@@ -104,6 +108,9 @@ const handleArenaSelected = (mapKey: string) => {
         <div class="maps-tab">
           <ArenaPreviewGrid @arena-selected="handleArenaSelected" />
         </div>
+      </template>
+      <template #rosters>
+        <RosterPanel :scrollable="false" />
       </template>
       <template #saved>
         <SavedTeamsList :loaded-team-id @load="handleLoadTeam" />

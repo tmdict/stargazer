@@ -7,13 +7,14 @@ const CLICK_THRESHOLD_MS = 200
  * Distinguishes a click from a drag by press duration: HTML5 drags fire
  * mousedown/mouseup around the drag, so a plain click handler would also
  * fire after every drag. Bind `onMouseDown`/`onMouseUp` to the element;
- * `onMouseUp` forwards its arguments to the click callback.
+ * `onMouseUp` forwards its arguments to the click callback. Only the primary
+ * button counts, since a right-click is the inspect gesture (useLongPress).
  */
 export function usePressClick<T extends unknown[]>(onClick: (...args: T) => void) {
   const pressStart = ref<number | null>(null)
 
-  const onMouseDown = () => {
-    pressStart.value = Date.now()
+  const onMouseDown = (event: MouseEvent) => {
+    pressStart.value = event.button === 0 ? Date.now() : null
   }
 
   const onMouseUp = (...args: T) => {

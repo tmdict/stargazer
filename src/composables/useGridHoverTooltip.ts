@@ -11,7 +11,7 @@ import { useTouchDetection } from './useTouchDetection'
  * cursor (removal, swap, team-view crop) fires no mouseleave.
  *
  * Touch suppression relies on useTouchDetection's global flag already being set when the
- * synthetic post-tap mouseenter fires; the roster icons instead track touch
+ * synthetic post-tap mouseenter fires; the picker icons instead track touch
  * per-interaction via useHoverTooltip, whose single-element model doesn't fit a
  * many-icon overlay.
  *

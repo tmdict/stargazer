@@ -34,7 +34,7 @@ This is the one index of the project docs.
 
 - [Getting Started](./docs/CONTRIBUTING.md) - Setup, commands, common tasks
 - [Architecture](./docs/ARCHITECTURE.md) - Layers, the board object, how input reaches the screen, where state is stored
-- [Style Guide](./docs/architecture/STYLE_GUIDE.md) - How to write these docs
+- [Style Guide](./docs/STYLE_GUIDE.md) - How to write these docs
 
 System docs:
 
@@ -45,7 +45,7 @@ System docs:
 - [Companions](./docs/architecture/skills/COMPANION.md) - Skill-spawned companion units
 - [Skill Targeting](./docs/architecture/skills/TARGETING.md) - Targeting helpers for skills
 - [Skill Pages](./docs/architecture/SKILL_PAGES.md) - Skill pages, skill text loading, search
-- [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library
+- [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library, rosters
 - [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match screenshot import
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
 - [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats

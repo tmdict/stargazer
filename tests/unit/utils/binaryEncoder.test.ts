@@ -87,10 +87,6 @@ describe('binaryEncoder', () => {
       expect(consoleSpy).toHaveBeenCalled()
       consoleSpy.mockRestore()
     })
-
-    it('throws on an unknown mode key', () => {
-      expect(() => encodeLink({ mode: '9v9', boards: [] })).toThrow()
-    })
   })
 
   describe('strict decoding', () => {

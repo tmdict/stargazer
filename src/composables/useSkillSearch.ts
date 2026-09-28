@@ -150,7 +150,7 @@ function localesInPriority(textLang: SkillLocale, appLang: AppLocale): SkillLoca
 }
 
 /** Slugs whose display name matches the query in any warm locale: the same
- * name index the roster search uses, for name-only consumers (the on-grid
+ * name index the picker search uses, for name-only consumers (the on-grid
  * picker popup). Matches whatever is warm; never triggers corpus loads. */
 export function matchCharacterNames(query: string): Set<string> {
   const lc = query.toLowerCase()

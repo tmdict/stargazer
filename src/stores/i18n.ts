@@ -146,7 +146,7 @@ export const useI18nStore = defineStore('i18n', () => {
     }
   }
 
-  // Skill-text language for surfaces with no content context: /skills roster
+  // Skill-text language for surfaces with no content context: /skills hero list
   // tiles, guide panel links, and modal seeding. Skill pages themselves read
   // the URL prefix instead.
   const effectiveSkillLocale = computed<SkillLocale>(() => skillLocale.value ?? currentLocale.value)

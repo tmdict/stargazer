@@ -1,6 +1,6 @@
 // Charm data integrity: the generated structural map and locale files must
 // stay mutually consistent, and every referenced hero must exist in the
-// roster. Guards the import-charms outputs the UI consumes without runtime
+// hero list. Guards the import-charms outputs the UI consumes without runtime
 // checks.
 import { describe, expect, it } from 'vitest'
 
@@ -28,20 +28,17 @@ describe('charm data', () => {
     }
   })
 
-  it.runIf(slugs.length > 0)(
-    'references only roster heroes, each hero on at most one charm',
-    () => {
-      const roster = new Set(loadCharacters().map((c) => c.name))
-      const seen = new Set<string>()
-      for (const slug of slugs) {
-        for (const hero of charms[slug]!.heroes) {
-          expect(roster.has(hero), `${slug}: ${hero} not in roster`).toBe(true)
-          expect(seen.has(hero), `${hero} appears on two charms`).toBe(false)
-          seen.add(hero)
-        }
+  it.runIf(slugs.length > 0)('references only known heroes, each hero on at most one charm', () => {
+    const heroNames = new Set(loadCharacters().map((c) => c.name))
+    const seen = new Set<string>()
+    for (const slug of slugs) {
+      for (const hero of charms[slug]!.heroes) {
+        expect(heroNames.has(hero), `${slug}: ${hero} not in the hero list`).toBe(true)
+        expect(seen.has(hero), `${hero} appears on two charms`).toBe(false)
+        seen.add(hero)
       }
-    },
-  )
+    }
+  })
 
   it.runIf(slugs.length > 0)('has en and zh locale entries with four tiers for every charm', () => {
     for (const lang of ['en', 'zh'] as const) {

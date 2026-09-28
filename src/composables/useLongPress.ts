@@ -2,8 +2,9 @@ import { getCurrentScope, onScopeDispose, shallowRef } from 'vue'
 
 import { isTouchClick } from '@/utils/pointer'
 
-/* Press-and-hold "inspect" gesture for board units, the game's long-press.
- * It shares the press with click-to-remove, tap-to-lift and HTML5 drag, so:
+/* Press-and-hold "inspect" gesture for board units and picker icons, the
+ * game's long-press (useInspect opens the details). It shares the press with
+ * click-to-place/remove, tap-to-lift and HTML5 drag, so:
  *   - a press released before the ring delay stays an ordinary click or tap;
  *   - moving past the tolerance, or a drag starting, abandons the hold;
  *   - once the ring shows, releasing does nothing, and a completed hold opens.

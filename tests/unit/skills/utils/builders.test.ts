@@ -56,14 +56,11 @@ describe('createTargetingSkill', () => {
       ])
     })
 
-    it('does not set target when calculateTarget returns null', () => {
-      const skill = buildSkill(() => null)
-      skill.onActivate(buildContext(grid, skillManager))
-      expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
-    })
-
-    it('does not set target when targetHexId is null', () => {
-      const skill = buildSkill(() => ({ targetHexId: null, targetCharacterId: null }))
+    it.each([
+      ['calculateTarget finds nothing', () => null],
+      ['the target has no hex', () => ({ targetHexId: null, targetCharacterId: null })],
+    ])('sets no target when %s', (_label, calculate) => {
+      const skill = buildSkill(calculate)
       skill.onActivate(buildContext(grid, skillManager))
       expect(skillManager.getSkillTarget(CHARACTER_ID, Team.ALLY)).toBeUndefined()
     })

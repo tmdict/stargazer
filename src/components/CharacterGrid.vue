@@ -1,6 +1,6 @@
 <!-- Responsive wrap-grid of character icons shared by the arena
-     (CharacterSelection) and skills/guide (SkillsSelection) rosters. Owns the
-     default roster inset; callers can override the padding. -->
+     picker (CharacterSelection) and the skills/guide hero list (SkillsSelection).
+     Owns the default grid inset; callers can override the padding. -->
 <template>
   <div class="character-grid">
     <slot />

@@ -7,12 +7,12 @@ import { PVP_SEASONS } from '@/content/pvp/seasons'
 import { loadCharacters } from '@/utils/dataLoader'
 
 const root = fileURLToPath(new URL('../../../', import.meta.url))
-const roster = new Set(loadCharacters().map((character) => character.name))
+const heroNames = new Set(loadCharacters().map((character) => character.name))
 
 // A summary is transcribed by hand from a finished season's report, so every
-// reference it makes is checked against the roster and the report it cites.
+// reference it makes is checked against the hero list and the report it cites.
 it.each(PVP_SEASONS.map((summary) => [summary.season, summary] as const))(
-  'season %i summary is consistent with the roster and its report',
+  'season %i summary is consistent with the hero list and its report',
   (season, summary) => {
     const template = readFileSync(
       join(root, `src/content/pvp/s${season}/index.template.html`),
@@ -22,7 +22,7 @@ it.each(PVP_SEASONS.map((summary) => [summary.season, summary] as const))(
 
     expect(ids.size).toBe(summary.teams.length)
     expect(
-      summary.teams.flatMap((team) => team.heroes.filter((slug) => !roster.has(slug))),
+      summary.teams.flatMap((team) => team.heroes.filter((slug) => !heroNames.has(slug))),
     ).toEqual([])
     expect(summary.counters.length).toBeGreaterThan(0)
     expect(

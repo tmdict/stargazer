@@ -35,7 +35,7 @@ export function slotLabel(slot: SlotKey, lang: AppLocale): string {
  * every language (falling back to the curated en name, then the slug). The
  * single copy of this fallback chain, shared by the skill header, search
  * index, and page meta. Curated character-locale names stay on chrome
- * surfaces (roster, search-result cards) and as search aliases. */
+ * surfaces (hero list, search-result cards) and as search aliases. */
 export function heroDisplayName(slug: string, lang: SkillLocale): string {
   return getSkillFile(lang, slug)?._hero?.name ?? loadCharacterLocales()[slug]?.en ?? slug
 }

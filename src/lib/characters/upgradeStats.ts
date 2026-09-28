@@ -14,7 +14,7 @@ export type ParagonGroup = 'standard' | 'celestialHypogean'
 export const paragonGroup = (faction?: string): ParagonGroup =>
   faction === 'celestial' || faction === 'hypogean' ? 'celestialHypogean' : 'standard'
 
-/** The factions on a paragon ramp, in roster order. */
+/** The factions on a paragon ramp, in hero list order. */
 export const paragonFactions = (group: ParagonGroup): string[] =>
   FACTION_ORDER.filter((faction) => paragonGroup(faction) === group)
 
