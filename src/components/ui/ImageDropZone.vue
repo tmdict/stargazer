@@ -78,7 +78,9 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
       @change="handleFileInput"
     />
     <IconImage :size="compact ? 18 : 22" class="drop-icon" />
-    <span class="drop-text">{{ i18n.t('app.upload-hint') }}</span>
+    <!-- Both render; CSS picks one, so the prerendered markup fits any device. -->
+    <span class="drop-text pointer-fine">{{ i18n.t('app.upload-hint') }}</span>
+    <span class="drop-text pointer-coarse">{{ i18n.t('app.upload-hint-touch') }}</span>
   </div>
 </template>
 
@@ -151,5 +153,20 @@ onUnmounted(() => window.removeEventListener('paste', handlePaste))
 
 .drop-zone.compact .drop-text {
   font-size: 0.85rem;
+}
+
+/* Touch screens can't drag files in or use the paste shortcut. */
+.pointer-coarse {
+  display: none;
+}
+
+@media (pointer: coarse) {
+  .pointer-fine {
+    display: none;
+  }
+
+  .pointer-coarse {
+    display: inline;
+  }
 }
 </style>

@@ -279,35 +279,45 @@ const {
 
     <template v-if="rosters.active">
       <UpgradeDock class="roster-dock">
-        <UpgradeDockLabel>{{ i18n.t('app.heroes') }}</UpgradeDockLabel>
-        <UpgradeDockChip
-          text
-          :disabled="shownUnowned.length === 0"
-          :tip="i18n.t('app.tooltip-select-all-shown')"
-          @click="selectAll"
-        >
-          {{ i18n.t('app.all') }}
-        </UpgradeDockChip>
-        <UpgradeDockChip
-          text
-          danger
-          :armed="armed === 'remove-shown'"
-          :disabled="shownLevels.length === 0"
-          :tip="i18n.t('app.tooltip-remove-all-shown')"
-          @click="removeShown"
-        >
-          {{ i18n.t('app.clear') }}
-        </UpgradeDockChip>
-        <UpgradeDockDivider />
-        <UpgradeDockLabel>{{ i18n.t('app.upgrades') }}</UpgradeDockLabel>
-        <UpgradeLayerChips :lit="layer" @select="layer = $event" />
-        <UpgradeBulkActions
-          :can-reset
-          :can-raise
-          @reset="editShown(() => 0)"
-          @raise="editShown((level) => level + 1)"
-          @max="editShown((_, attrId) => attrMax(attrId))"
-        />
+        <div class="dock-rows">
+          <span class="dock-group">
+            <UpgradeDockLabel>{{ i18n.t('app.heroes') }}</UpgradeDockLabel>
+            <span class="dock-controls">
+              <UpgradeDockChip
+                text
+                :disabled="shownUnowned.length === 0"
+                :tip="i18n.t('app.tooltip-select-all-shown')"
+                @click="selectAll"
+              >
+                {{ i18n.t('app.all') }}
+              </UpgradeDockChip>
+              <UpgradeDockChip
+                text
+                danger
+                :armed="armed === 'remove-shown'"
+                :disabled="shownLevels.length === 0"
+                :tip="i18n.t('app.tooltip-remove-all-shown')"
+                @click="removeShown"
+              >
+                {{ i18n.t('app.clear') }}
+              </UpgradeDockChip>
+            </span>
+          </span>
+          <UpgradeDockDivider />
+          <span class="dock-group">
+            <UpgradeDockLabel>{{ i18n.t('app.upgrades') }}</UpgradeDockLabel>
+            <span class="dock-controls">
+              <UpgradeLayerChips :lit="layer" @select="layer = $event" />
+              <UpgradeBulkActions
+                :can-reset
+                :can-raise
+                @reset="editShown(() => 0)"
+                @raise="editShown((level) => level + 1)"
+                @max="editShown((_, attrId) => attrMax(attrId))"
+              />
+            </span>
+          </span>
+        </div>
       </UpgradeDock>
       <p class="roster-hint">{{ i18n.t('app.rosters-hint') }}</p>
 
@@ -329,10 +339,11 @@ const {
           :selected-filter="selectedTagNames"
           @character-click="toggle"
         >
+          <!-- Reserved, not removed: revealing a pill on select would reflow the
+               grid and move the next tap target. -->
           <template #badge>
             <UpgradePill
-              :class="{ 'pill-reserved': !levelsOf(character) }"
-              :aria-hidden="levelsOf(character) ? undefined : 'true'"
+              :reserved="!levelsOf(character)"
               :paragon="levelsOf(character)?.[ATTR_PARAGON] ?? 0"
               :refinement="levelsOf(character)?.[ATTR_REFINEMENT] ?? 0"
               editable
@@ -374,8 +385,36 @@ const {
 }
 
 .roster-dock {
-  flex-wrap: wrap;
+  container-type: inline-size;
+}
+
+.dock-rows {
+  display: flex;
+  align-items: center;
   gap: var(--spacing-sm);
+  width: 100%;
+}
+
+.dock-group,
+.dock-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+/* Too narrow for one line (English needs about 416px): each group takes a row,
+   labels in one column so the controls line up, instead of wrapping mid-group. */
+@container (max-width: 440px) {
+  .dock-rows {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+  .dock-group {
+    display: contents;
+  }
+  .dock-divider {
+    display: none;
+  }
 }
 
 /* Clear the panel's scrollbar on desktop, as CharacterSelection's search row
@@ -447,13 +486,6 @@ const {
 
 .file-input {
   display: none;
-}
-
-/* Every hero holds its pill's space, shown or not: the pill is wider than a
-   phone portrait and adds height, so revealing it on select would reflow the
-   grid and move the next tap target. Hidden, it also takes no clicks. */
-.pill-reserved {
-  visibility: hidden;
 }
 
 /* A tap edits the roster, so heroes read as buttons, not drag handles. */
