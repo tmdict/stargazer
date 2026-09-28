@@ -148,8 +148,10 @@ const handleResultSelect = (slug: string) => {
         inspectable
         @character-click="handleCharacterClick"
       >
-        <template v-if="rosters.levelsFor(character.id)" #badge>
+        <!-- Placeholders have no levels; their pill is reserved to keep the grid even. -->
+        <template v-if="rosters.active" #badge>
           <UpgradePill
+            :reserved="!rosters.levelsFor(character.id)"
             :paragon="rosters.levelsFor(character.id)?.[ATTR_PARAGON] ?? 0"
             :refinement="rosters.levelsFor(character.id)?.[ATTR_REFINEMENT] ?? 0"
           />
@@ -175,6 +177,11 @@ const handleResultSelect = (slug: string) => {
   padding-right: var(--spacing-lg);
 }
 
+/* Shrinks with its placeholder cut short instead of pushing the row off screen. */
+.search-row :deep(.search-trigger) {
+  min-width: 0;
+}
+
 @media (max-width: 768px) {
   .search-row {
     padding: var(--spacing-sm) var(--spacing-md) 0;
@@ -184,9 +191,13 @@ const handleResultSelect = (slug: string) => {
   }
 }
 
+/* Phones: the search box gets the room, the roster name truncates. */
 @media (max-width: 480px) {
   .search-row {
     padding: var(--spacing-sm) var(--spacing-sm) 0;
+  }
+  .search-row :deep(.roster-menu) {
+    --dropdown-trigger-width: 7rem;
   }
 }
 

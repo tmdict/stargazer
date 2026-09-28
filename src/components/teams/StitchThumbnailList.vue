@@ -128,4 +128,21 @@ const handleDrop = (to: number) => {
 .thumb-remove:hover {
   background: var(--color-danger-hover);
 }
+
+/* Touch has no reorder: a long-press would start a half-supported drag or
+   the image callout instead of scrolling. */
+@media (pointer: coarse) {
+  .thumb {
+    -webkit-user-drag: none;
+    -webkit-touch-callout: none;
+    cursor: default;
+  }
+
+  .thumb-remove {
+    top: -10px;
+    right: -10px;
+    width: 26px;
+    height: 26px;
+  }
+}
 </style>

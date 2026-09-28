@@ -67,10 +67,9 @@ i18n.initialize()
 useHead({ title: 'Teams | Stargazer' })
 
 const activeTab = ref('teams')
-// Image Stitcher is a wide-window-only tool: its tab is hidden on mobile.
 const tabs = computed(() => [
   { key: 'teams', label: i18n.t('app.teams') },
-  { key: 'imageStitcher', label: i18n.t('app.image-stitcher'), hideMobile: true },
+  { key: 'imageStitcher', label: i18n.t('app.image-stitcher') },
 ])
 const isGridTab = computed(() => activeTab.value === 'teams')
 
