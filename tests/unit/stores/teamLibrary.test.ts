@@ -33,11 +33,11 @@ const record = (id: string, name: string): SavedTeam => ({
   updatedAt: 1,
 })
 
-const seed = (teams: SavedTeam[], version = 1): void => {
-  storage.set(LIBRARY_KEY, JSON.stringify({ v: version, teams }))
+const seed = (teams: SavedTeam[]): void => {
+  storage.set(LIBRARY_KEY, JSON.stringify(teams))
 }
 
-const stored = (): SavedTeam[] => JSON.parse(storage.get(LIBRARY_KEY)!).teams as SavedTeam[]
+const stored = (): SavedTeam[] => JSON.parse(storage.get(LIBRARY_KEY)!) as SavedTeam[]
 
 beforeEach(() => {
   vi.stubEnv('SSR', false)
@@ -60,28 +60,13 @@ describe('useTeamLibrary', () => {
     warn.mockRestore()
   })
 
-  it('treats unknown versions and corrupt blobs as empty', () => {
-    seed([record('a', 'Alpha')], 2)
+  it('treats corrupt blobs as empty', () => {
+    storage.set(LIBRARY_KEY, 'not json')
     expect(useTeamLibrary().teams).toHaveLength(0)
 
     setActivePinia(createPinia())
-    storage.set(LIBRARY_KEY, 'not json')
+    storage.set(LIBRARY_KEY, JSON.stringify({ teams: 'x' }))
     expect(useTeamLibrary().teams).toHaveLength(0)
-  })
-
-  it('preserves an unknown-version blob under the backup key before overwriting it', () => {
-    seed([record('a', 'Alpha')], 2)
-    const library = useTeamLibrary()
-    expect(library.teams).toHaveLength(0)
-
-    library.saveAsNew('3v3', CANONICAL_3V3, 'New')
-    expect(JSON.parse(storage.get(LIBRARY_KEY)!).v).toBe(1)
-    const backup = JSON.parse(storage.get(`${LIBRARY_KEY}.backup`)!) as {
-      v: number
-      teams: unknown[]
-    }
-    expect(backup.v).toBe(2)
-    expect(backup.teams).toHaveLength(1)
   })
 
   it('one poison record drops alone without hiding the rest of the library', () => {
@@ -247,11 +232,23 @@ describe('useTeamLibrary export/import', () => {
     const file = JSON.stringify({
       app: 'stargazer',
       kind: 'saved-teams',
-      version: 1,
       teams: [record('x', 'New One'), record('y', 'New Two')],
     })
     const result = library.importTeams(file)
     expect(result).toEqual({ imported: 1, skipped: 1, conflicts: 0, invalid: false })
     expect(library.count).toBe(MAX_SAVED_TEAMS)
+  })
+})
+
+// TEMPORARY: deleted with src/utils/upgradeMigration.ts.
+describe('upgradeMigration library read', () => {
+  // A library the v pass failed to rewrite.
+  it('loads a { v, teams } library and keeps every team through the next save', () => {
+    storage.set(LIBRARY_KEY, JSON.stringify({ v: 1, teams: [record('a', 'Alpha')] }))
+    const library = useTeamLibrary()
+    expect(library.teams.map((t) => t.id)).toEqual(['a'])
+
+    library.saveAsNew('3v3', CANONICAL_3V3, 'New')
+    expect(stored().map((t) => t.name)).toEqual(['Alpha', 'New'])
   })
 })

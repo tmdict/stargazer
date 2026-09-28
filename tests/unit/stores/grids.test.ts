@@ -1,7 +1,7 @@
 import { createPinia, setActivePinia } from 'pinia'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { ATTR_PARAGON, type AttrRecord } from '@/lib/characters/attributes'
+import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { findCharacterHex, getCharacter, getTilesWithCharacters } from '@/lib/characters/character'
 import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
@@ -575,10 +575,9 @@ describe('useGrids.loadTeamSide', () => {
     mains: [number, number, number?][],
     extra: Partial<SideLoadBoard> = {},
   ): SideLoadBoard => ({
-    mains: mains.map(([unitId, hexId, paragon]) => {
-      const attrs: AttrRecord = paragon ? { [ATTR_PARAGON]: paragon } : {}
-      return { unitId, hexId, attrs }
-    }),
+    mains: mains.map(([unitId, hexId, paragon]) =>
+      paragon ? { unitId, hexId, attrs: { [ATTR_PARAGON]: paragon } } : { unitId, hexId },
+    ),
     companions: [],
     phantimal: null,
     artifact: null,
@@ -649,7 +648,7 @@ describe('useGrids.loadTeamSide', () => {
     expect(findCharacterHex(ctx.grid, 12, Team.ALLY)).toBeNull()
   })
 
-  it("applies saved paragon, resets stale paragon, and swaps only the destination side's artifact", () => {
+  it("applies saved paragon, starts unsaved heroes at defaults, and swaps only the destination side's artifact", () => {
     const { grids, a: ctx } = setupBoards(1)
     expect(ctx.place(1, 11, Team.ALLY)).toBe(true)
     ctx.setAttr(Team.ALLY, 11, ATTR_PARAGON, 3)
@@ -672,7 +671,7 @@ describe('useGrids.loadTeamSide', () => {
       { invert: false, scope: 'all' },
     )
 
-    // 11 returns without a saved level: the lingering 3 must not resurface.
+    // 11 comes back without a saved level, so its earlier 3 must not return.
     expect(findCharacterHex(ctx.grid, 11, Team.ALLY)).toBe(2)
     expect(ctx.getAttr(Team.ALLY, 11, ATTR_PARAGON)).toBe(0)
     expect(ctx.getAttr(Team.ALLY, 12, ATTR_PARAGON)).toBe(4)
@@ -726,9 +725,7 @@ describe('useGrids.loadTeamSide', () => {
     grids.loadTeamSide(
       {
         side: Team.ALLY,
-        boards: [
-          board([[11, 1]], { phantimal: { unitId: toPhantimalId(1), hexId: 4, attrs: {} } }),
-        ],
+        boards: [board([[11, 1]], { phantimal: { unitId: toPhantimalId(1), hexId: 4 } })],
       },
       { invert: false, scope: 'all' },
     )

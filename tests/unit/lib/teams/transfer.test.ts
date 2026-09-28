@@ -27,7 +27,7 @@ const record = (overrides: Partial<SavedTeam> = {}): SavedTeam => ({
 })
 
 const envelope = (teams: unknown[], overrides: Record<string, unknown> = {}): string =>
-  JSON.stringify({ app: 'stargazer', kind: 'saved-teams', version: 1, teams, ...overrides })
+  JSON.stringify({ app: 'stargazer', kind: 'saved-teams', teams, ...overrides })
 
 describe('buildExport', () => {
   // parseImport accepting the export proves the envelope is well-formed; its
@@ -46,11 +46,7 @@ describe('parseImport envelope rejection', () => {
     ['non-object', '"string"'],
     ['wrong app', envelope([], { app: 'other' })],
     ['wrong kind', envelope([], { kind: 'settings' })],
-    ['wrong version', envelope([], { version: 2 })],
-    [
-      'teams not an array',
-      JSON.stringify({ app: 'stargazer', kind: 'saved-teams', version: 1, teams: 'x' }),
-    ],
+    ['teams not an array', JSON.stringify({ app: 'stargazer', kind: 'saved-teams', teams: 'x' })],
   ])('rejects %s wholesale', (_label, raw) => {
     expect(parseImport(raw, [])).toEqual({ ok: false })
   })
