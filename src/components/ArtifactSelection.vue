@@ -7,6 +7,7 @@ import type { ArtifactType } from '@/lib/types/artifact'
 import { Team } from '@/lib/types/team'
 import { artifactSlot, useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { localizedDisplayName } from '@/utils/nameFormatting'
 
 const props = defineProps<{
   artifacts: readonly ArtifactType[]
@@ -83,14 +84,19 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
         {{ seasonLabel(group.season) }}
       </h3>
       <div class="artifacts">
-        <ArtifactIcon
-          v-for="artifact in group.artifacts"
-          :key="artifact.id"
-          :artifact
-          :is-placed="isArtifactPlaced(artifact.id)"
-          inspectable
-          @artifact-click="handleArtifactClick"
-        />
+        <!-- Named under the icon: artifacts rotate every season, so their
+             icons are harder to learn than hero portraits. -->
+        <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-cell">
+          <ArtifactIcon
+            :artifact
+            :is-placed="isArtifactPlaced(artifact.id)"
+            inspectable
+            @artifact-click="handleArtifactClick"
+          />
+          <span class="artifact-name">
+            {{ localizedDisplayName(i18n.t, 'artifact', artifact.name) }}
+          </span>
+        </div>
       </div>
     </section>
   </div>
@@ -117,18 +123,45 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   color: var(--color-text-secondary, var(--color-text-primary));
 }
 
+/* Cells are wider than the icons to fit the name, so the column gap is small:
+   icon spacing stays close to the rows'. */
 .artifacts {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xl);
+  gap: var(--spacing-lg) var(--spacing-sm);
   justify-content: flex-start;
   padding: var(--spacing-lg);
   border-radius: var(--radius-large);
 }
 
+/* Fixed width, sized to the longest one-word names, and at most two lines, so
+   long names never shift the grid. A longer word breaks inside the cell
+   rather than overlapping the next. */
+.artifact-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-xs);
+  width: 84px;
+}
+
+.artifact-name {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
 @media (max-width: 768px) {
   .artifacts {
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md) var(--spacing-xs);
     padding: var(--spacing-md);
   }
 }
@@ -139,7 +172,7 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   }
 
   .artifacts {
-    gap: var(--spacing-md);
+    gap: var(--spacing-md) var(--spacing-xs);
     padding: var(--spacing-sm);
   }
 }

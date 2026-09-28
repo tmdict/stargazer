@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /* Picks the active roster: the picker's source of heroes, and the roster the
-   Rosters tab edits. The Characters tab adds a Manage entry that jumps to that
-   tab; the on-grid popup uses the dark variant, whose list stays inside the
-   popup so hovering it never trips the popup's mouse-leave dismissal. */
+   Rosters tab edits. The Characters tab and the on-grid popup add a Manage
+   entry that jumps to that tab; the popup uses the dark variant, whose list
+   stays inside the popup so hovering it never trips the popup's mouse-leave
+   dismissal. */
 
 import { computed } from 'vue'
 

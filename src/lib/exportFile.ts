@@ -67,8 +67,9 @@ const MAX_ID_LENGTH = 64
  * never collide with an existing record) or overlong; those get fresh ids. An
  * id held by an existing record is the same-lineage case (an old export of a
  * record edited since, which the content-plus-name dedupe can't catch), so
- * that record also gets a marked name and counts in `conflicts`; otherwise the
- * library would show two same-named records with no explanation. `skipped`
+ * the incoming record also gets a marked name and counts in `conflicts`;
+ * otherwise the library would show two same-named records with no
+ * explanation. `skipped`
  * counts invalid records and duplicates (same content key and name as an
  * existing or already-accepted record). Cap enforcement stays with the caller,
  * which owns the library size. */
