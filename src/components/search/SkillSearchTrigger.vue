@@ -4,7 +4,7 @@ import { useSearchOverlay, useShortcutLabel } from '@/composables/useSearchOverl
 import { useI18nStore } from '@/stores/i18n'
 
 // With `select`, the overlay opens in select mode and hands the chosen slug
-// to this handler instead of navigating (the arena roster placing a hero).
+// to this handler instead of navigating (the arena picker placing a hero).
 const { select } = defineProps<{
   select?: (slug: string) => void
 }>()

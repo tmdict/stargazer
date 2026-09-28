@@ -71,7 +71,7 @@ Links store phantimals in each board's `s` section by local id, with companions 
 
 ## Seasonal artifacts
 
-The six pre-season artifacts (`season: 0`) never rotate. `season` orders the roster newest first and picks the icon source: pre-season icons are bundled, all others load from the image host (`isRemoteArtifact`). An artifact draws targeting arrows exactly when `ARTIFACT_TARGETING` has an entry for it, so adding the rule turns it on and deleting it at a cutover turns it off.
+The six pre-season artifacts (`season: 0`) never rotate. `season` orders the artifact picker newest first and picks the icon source: pre-season icons are bundled, all others load from the image host (`isRemoteArtifact`). An artifact draws targeting arrows exactly when `ARTIFACT_TARGETING` has an entry for it, so adding the rule turns it on and deleting it at a cutover turns it off.
 
 ## Charms
 
@@ -83,7 +83,7 @@ Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and 
 { "ep8heal": { "temp-buff": [1, 2, 3, 4] } }
 ```
 
-`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins, so the roster filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. The charm's tiers filter like skill levels. A charm's effects change with the season, so `import:charms` fails when the file names a charm the feed lacks, and `--retire` deletes it with the text.
+`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. The charm's tiers filter like skill levels. A charm's effects change with the season, so `import:charms` fails when the file names a charm the feed lacks, and `--retire` deletes it with the text.
 
 ## Season cutover
 

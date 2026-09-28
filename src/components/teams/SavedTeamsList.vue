@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/* The Saved Teams roster panel: a bar (count, cap warning, sort, search, and
+/* The Saved Teams side-panel tab: a bar (count, cap warning, sort, search, and
    Import / Export / Delete all), a filter row (mode, the type chips for board
    counts with named types, one-sided), plus a card grid: thumbnail, mode, type
    and Syn chips, inline-renamable name, relative updated time, and Load /
@@ -22,15 +22,16 @@ import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { useInfoTip } from '@/composables/useInfoTip'
 import { useInlineRename } from '@/composables/useInlineRename'
+import { useLibraryTransfer } from '@/composables/useLibraryTransfer'
 import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
 import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useThumbnailExport } from '@/composables/useThumbnailExport'
 import { useToast } from '@/composables/useToast'
 import { useUpdatedLabel } from '@/composables/useUpdatedLabel'
+import { MAX_NAME_LENGTH } from '@/lib/names'
 import {
   DEFAULT_VARIANT,
   MAX_SAVED_TEAMS,
-  MAX_TEAM_NAME_LENGTH,
   TEAM_MODE_ORDER,
   TEAM_MODES,
   TEAM_VARIANTS,
@@ -43,7 +44,6 @@ import { type SavedTeam } from '@/lib/teams/savedTeam'
 import { savedTeamSide } from '@/lib/teams/sideLoad'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { downloadBlob, timestampedName } from '@/utils/download'
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const { loadedTeamId } = defineProps<{
@@ -228,8 +228,19 @@ const {
 } = useInfoTip()
 
 // Import and Export act on the library rather than the boards, which is why
-// they belong in this panel rather than the boards' action row.
-const fileInput = ref<HTMLInputElement>()
+// they belong in this panel rather than the boards' action row. Import merges
+// into the library and never replaces it; "replace everything" is Delete all
+// followed by Import.
+const { fileInput, download, handleFileChosen } = useLibraryTransfer({
+  filePrefix: 'stargazer-teams',
+  importFile: library.importTeams,
+  report,
+  messages: {
+    invalid: 'app.import-invalid',
+    success: 'app.import-success',
+    successConflicts: 'app.import-success-conflicts',
+  },
+})
 
 // A filtered export names its criteria back to the user (button label and
 // tooltip before, toast after), so a partial backup can't pass for a full one.
@@ -258,10 +269,7 @@ const handleExport = (): void => {
     error(i18n.t('app.teams-no-matches'))
     return
   }
-  downloadBlob(
-    new Blob([JSON.stringify(library.exportTeams(selection))], { type: 'application/json' }),
-    timestampedName('stargazer-teams', 'json'),
-  )
+  download(library.exportTeams(selection))
   if (exportFiltered.value) {
     show(
       i18n.t('app.export-filtered', {
@@ -273,29 +281,6 @@ const handleExport = (): void => {
       5000,
     )
   }
-}
-
-// Import merges into the library and never replaces it; "replace everything" is
-// Delete all followed by Import.
-const handleFileChosen = async (event: Event): Promise<void> => {
-  const input = event.target as HTMLInputElement
-  const file = input.files?.[0]
-  input.value = '' // allow re-importing the same file
-  if (!file) return
-  const result = library.importTeams(await file.text())
-  if (result.invalid) {
-    error(i18n.t('app.import-invalid'))
-    return
-  }
-  report(
-    result.conflicts > 0
-      ? i18n.t('app.import-success-conflicts', {
-          imported: result.imported,
-          skipped: result.skipped,
-          conflicts: result.conflicts,
-        })
-      : i18n.t('app.import-success', { imported: result.imported, skipped: result.skipped }),
-  )
 }
 
 // Hover-only, unlike the storage hint: these act on tap, so the composable
@@ -502,7 +487,7 @@ const actionTipText = computed((): string => {
             v-model="editingName"
             class="team-name-input"
             type="text"
-            :maxlength="MAX_TEAM_NAME_LENGTH"
+            :maxlength="MAX_NAME_LENGTH"
             spellcheck="false"
             @keydown.enter.prevent="commitRename"
             @keydown.esc="cancelRename"

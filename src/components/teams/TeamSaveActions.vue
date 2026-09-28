@@ -15,7 +15,8 @@ import IconSavePlus from '@/components/ui/IconSavePlus.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { MAX_TEAM_NAME_LENGTH, type TeamModeKey, type VariantMatch } from '@/lib/teams/modes'
+import { MAX_NAME_LENGTH } from '@/lib/names'
+import { type TeamModeKey, type VariantMatch } from '@/lib/teams/modes'
 import { useI18nStore } from '@/stores/i18n'
 
 const { hasSource, suggestedName, activeMode, variant, sourceId } = defineProps<{
@@ -155,7 +156,7 @@ const tipText = computed((): string => {
           v-model="popoverName"
           class="name-popover-input"
           type="text"
-          :maxlength="MAX_TEAM_NAME_LENGTH"
+          :maxlength="MAX_NAME_LENGTH"
           spellcheck="false"
           @keydown.enter.prevent="commitPopover"
           @keydown.esc="popoverOpen = false"

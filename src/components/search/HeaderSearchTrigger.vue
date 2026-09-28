@@ -3,7 +3,7 @@ import IconSearch from '@/components/ui/IconSearch.vue'
 import { useSearchOverlay, useShortcutLabel } from '@/composables/useSearchOverlay'
 import { useI18nStore } from '@/stores/i18n'
 
-// Navigate flavor only: header search must never inherit a roster's select mode.
+// Navigate flavor only: header search must never inherit a picker's select mode.
 const { open } = useSearchOverlay()
 const i18n = useI18nStore()
 const shortcut = useShortcutLabel()

@@ -5,8 +5,8 @@
    changes (per-mode persistence slots, the pause/flush/rebuild/restore/resume
    switch sequence, and ?g= ingress routing all live there). onScopeDispose resets
    to the Arena's one board on leave (synchronously, so an HMR reload can't clobber
-   it). Renders one TabView (Teams / Image Stitcher) inside a card, plus the roster
-   as a separate sibling card shown for the grid tab. */
+   it). Renders one TabView (Teams / Image Stitcher) inside a card, plus the side
+   panel as a separate sibling card shown for the grid tab. */
 
 import { computed, nextTick, onScopeDispose, ref, watch } from 'vue'
 import { useHead } from '@unhead/vue'
@@ -15,7 +15,7 @@ import DragDropProvider from '@/components/DragDropProvider.vue'
 import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import ImageStitcher from '@/components/teams/ImageStitcher.vue'
 import TeamsBoards from '@/components/teams/TeamsBoards.vue'
-import TeamsRoster from '@/components/teams/TeamsRoster.vue'
+import TeamsPanel from '@/components/teams/TeamsPanel.vue'
 import TabView from '@/components/ui/TabView.vue'
 import { useDisplayFlags } from '@/composables/useDisplayFlags'
 import { useGridExport } from '@/composables/useGridExport'
@@ -28,6 +28,7 @@ import { disposeTeamImport } from '@/composables/useTeamImport'
 import { useTeamLibraryFeedback } from '@/composables/useTeamLibraryFeedback'
 import { useTeamsRestore } from '@/composables/useTeamsRestore'
 import { useToast } from '@/composables/useToast'
+import { nextAutoName, uniqueName } from '@/lib/names'
 import { CURRENT_SEASON } from '@/lib/seasonal'
 import {
   DEFAULT_VARIANT,
@@ -37,13 +38,7 @@ import {
   type TeamModeKey,
   type TeamVariantChoice,
 } from '@/lib/teams/modes'
-import {
-  canonicalTeamData,
-  nextAutoName,
-  teamContentKey,
-  uniqueName,
-  type SavedTeam,
-} from '@/lib/teams/savedTeam'
+import { canonicalTeamData, teamContentKey, type SavedTeam } from '@/lib/teams/savedTeam'
 import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
@@ -89,8 +84,8 @@ const { showSkills, showPerspective, currentBreakpoint, toFlags, applyFlags } = 
 const { prefs: gridInfoPrefs } = useGridInfoPrefs()
 const info = computed(() => deriveGridInfoView(gridInfoPrefs))
 
-// At sheet widths (<= tablet) the roster is a pull-up sheet and boards place via
-// the cell-tap flow; on desktop the roster is a card and cells use the on-grid popup.
+// At sheet widths (<= tablet) the side panel is a pull-up sheet and boards place via
+// the cell-tap flow; on desktop the panel is a card and cells use the on-grid popup.
 const isSheet = computed(() => currentBreakpoint.value !== 'desktop')
 
 // Grid tabs pin their own size per breakpoint, not the breakpoint-driven Arena
@@ -152,7 +147,7 @@ const suggestedName = computed(() => {
   if (pendingName.value !== null) return pendingName.value
   const names = teamLibrary.teams.map((team) => team.name)
   const match = variant.value
-  if (match === null || match === DEFAULT_VARIANT) return nextAutoName(names)
+  if (match === null || match === DEFAULT_VARIANT) return nextAutoName(names, 'Team')
   return uniqueName(names, `S${CURRENT_SEASON} ${i18n.t(TEAM_VARIANTS[match].labelKey)}`)
 })
 
@@ -212,7 +207,7 @@ const handleLoadTeam = (team: SavedTeam) => {
   success(i18n.t('app.team-loaded'))
 }
 
-// Replace the mapped boards with the screenshots' rosters and save them as a
+// Replace the mapped boards with the screenshots' lineups and save them as a
 // new team named after the match (never over the record the boards came
 // from). The save waits a tick so the reconcile watcher has placed the
 // phantimals; a full library leaves the boards as an unsaved team that still
@@ -221,7 +216,7 @@ const handleImportMatch = async (plan: TeamImportPlan) => {
   if (!gameDataStore.dataLoaded) return
   clearTargetHex()
   clearLiftedHex()
-  const { placed, skipped } = grids.applyRosters(plan)
+  const { placed, skipped } = grids.applyLineups(plan)
   const maps = plan.boards.flatMap((board, i) => (board === null ? [] : [i + 1])).join(', ')
   teamsRestore.sourceId.value = null
   await nextTick()
@@ -288,7 +283,7 @@ const handleCopyLink = () => {
 
 <template>
   <main>
-    <!-- DragDropProvider wraps both the boards (TabView panel) and the roster sibling
+    <!-- DragDropProvider wraps both the boards (TabView panel) and the side panel
          so characters can be dragged between them. -->
     <DragDropProvider>
       <div class="teams-layout">
@@ -334,9 +329,9 @@ const handleCopyLink = () => {
           </TabView>
         </section>
 
-        <!-- TeamsRoster's root is BottomSheet, a multi-root (fragment) component that
+        <!-- TeamsPanel's root is BottomSheet, a multi-root (fragment) component that
              v-show can't bind to, so gate visibility with v-if. -->
-        <TeamsRoster
+        <TeamsPanel
           v-if="isGridTab"
           :characters="gameDataStore.characters"
           :artifacts="gameDataStore.artifacts"
@@ -350,7 +345,7 @@ const handleCopyLink = () => {
 </template>
 
 <style scoped>
-/* Single column: the boards card on top, the roster card/sheet below. */
+/* Single column: the boards card on top, the side panel card/sheet below. */
 .teams-layout {
   display: flex;
   flex-direction: column;
@@ -365,7 +360,7 @@ const handleCopyLink = () => {
   color: var(--color-text-primary);
 }
 
-/* Clear the collapsed roster sheet's peek so page content isn't hidden behind it. */
+/* Clear the collapsed panel sheet's peek so page content isn't hidden behind it. */
 @media (max-width: 768px) {
   main {
     padding-bottom: 64px;

@@ -13,9 +13,9 @@ import { useGrids } from '@/stores/grids'
 const targetArtifactTeam = ref<Team | null>(null)
 const targetArtifactGridId = ref<number | null>(null)
 
-// Mobile: the grid cell a tapped roster character should fill. Board-qualified
+// Mobile: the grid cell a tapped picker character should fill. Board-qualified
 // (gridId) so only the tapped board highlights it: every board shares the same
-// hex ids. Set by tapping an empty tile (GridManager), read + cleared by the roster.
+// hex ids. Set by tapping an empty tile (GridManager), read + cleared by the picker.
 const targetHexId = ref<number | null>(null)
 const targetGridId = ref<number | null>(null)
 
@@ -40,7 +40,7 @@ const clearLiftedHex = () => {
 }
 
 /* Gesture handlers clear the lift on taps and drags, but placements also change
- * under it programmatically (roster remove, map switch, board swap, phantimal
+ * under it programmatically (picker remove, map switch, board swap, phantimal
  * reconciliation, companion cascade). Installed once at the app root, this
  * watcher drops the lift as soon as its cell stops holding the lifted unit, so
  * a stale lift can never eat a tap or move a hero the user didn't lift. */
@@ -60,7 +60,7 @@ export function useLiftGuard(): void {
   )
 }
 
-// Mobile: a deep component asking HomeView to open the roster sheet on a given
+// Mobile: a deep component asking HomeView to open the picker sheet on a given
 // tab (e.g. an on-grid artifact cell → Seasonal tab). A fresh object per call so
 // repeated requests for the same tab still fire the watcher.
 const tabRequest = ref<{ tab: string } | null>(null)

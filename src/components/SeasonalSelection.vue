@@ -8,7 +8,7 @@ const {
   artifacts,
   phantimals,
   isDraggable,
-  // See CharacterSelection: off when the roster flows in normal page height (5 v 5).
+  // See CharacterSelection: off when the picker flows in normal page height (5 v 5).
   scrollable = true,
 } = defineProps<{
   artifacts: readonly ArtifactType[]

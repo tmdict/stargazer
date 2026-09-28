@@ -5,7 +5,7 @@ import { ref } from 'vue'
  * show hover tooltips (mouse) or suppress them (touch).
  *
  * State and listeners are module-level singletons: input modality is a
- * device-global fact, and this composable is called by every roster icon.
+ * device-global fact, and this composable is called by every picker icon.
  * Per-instance document listeners would pile up hundreds of identical
  * handlers. The listeners live for the app's lifetime.
  */

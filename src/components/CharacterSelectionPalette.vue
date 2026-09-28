@@ -34,7 +34,7 @@ const factionFiltered = computed(() =>
 )
 
 // Name search composes on top of the faction filter, matching any locale's
-// display name like the main roster search does.
+// display name like the main picker search does.
 const searchQuery = ref('')
 const filteredCharacters = computed(() => {
   const q = searchQuery.value.trim()
@@ -53,7 +53,7 @@ const listed = computed(() =>
 )
 
 // Type-to-pick: focus starts in the search box even on touch. The on-grid
-// popup exists only on tablet-and-wider layouts (phones place via the roster
+// popup exists only on tablet-and-wider layouts (phones place via the picker
 // sheet) and iPad taps land here expecting to type; the import review opens
 // it on phones too, where the keyboard is the way to find a hero among the
 // pinned candidates. Focusing in the mount tick matters: iPadOS raises the
@@ -215,8 +215,8 @@ function handleEnter(event: KeyboardEvent) {
   transition: all 0.15s ease;
 }
 
+/* The portrait grows itself on hover (CharacterIcon); the cell only brightens. */
 .character-item:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
 }
 
@@ -229,10 +229,6 @@ function handleEnter(event: KeyboardEvent) {
 .character-item :deep(.portrait) {
   width: 50px !important;
   height: 50px !important;
-}
-
-.character-item :deep(.character-info) {
-  display: none !important;
 }
 
 .no-characters {

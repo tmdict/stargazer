@@ -12,7 +12,7 @@ interface GridStyleConfig {
   highlight?: number[]
   highlight2?: number[]
   highlight3?: number[]
-  // Keyed by roster slug; portraits resolve from the shared character-image map.
+  // Keyed by hero slug; portraits resolve from the shared character-image map.
   character?: Record<string, number>
   imaginaryHexes?: Array<{
     relativeToHex: number

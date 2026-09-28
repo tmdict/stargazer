@@ -4,22 +4,26 @@ import { computed } from 'vue'
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
+import RosterMenu from './RosterMenu.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
+import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { useToast } from '@/composables/useToast'
+import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { isCharacterOnTeam, synergySlotFree } from '@/lib/characters/character'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
+import { useRosters } from '@/stores/rosters'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const {
   characters,
   isDraggable,
   // Internal flex-fill + own scroll on wide screens (the Arena's height-capped
-  // column). Off when the roster flows in normal page height (5 v 5).
+  // column). Off when the picker flows in normal page height (5 v 5).
   scrollable = true,
 } = defineProps<{
   characters: readonly CharacterType[]
@@ -27,15 +31,16 @@ const {
   scrollable?: boolean
 }>()
 
-const { fillOrder, targetHexId, targetGridId, clearTargetHex } = useSelectionState()
+const { fillOrder, targetHexId, targetGridId, clearTargetHex, requestTab } = useSelectionState()
 const grids = useGrids()
 const i18n = useI18nStore()
 const toast = useToast()
+const rosters = useRosters()
 
 // Text search lives in the search overlay (select mode: a picked hero is placed,
 // not navigated to); the panel keeps only the icon filters.
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
-  useCharacterFilters(computed(() => characters))
+  useCharacterFilters(computed(() => characters.filter(rosters.isPickable)))
 
 // Placement, uniqueness, and removal are page-wide (across every board); on the
 // single Arena board this is identical to a per-board check. A hero is "placed"
@@ -68,10 +73,7 @@ const handleCharacterClick = (character: CharacterType) => {
     const ctx = grids.getContext(targetGridId.value)
     if (ctx) {
       const team = getTeamFromTileState(ctx.grid.getTileById(targetHexId.value).state)
-      if (team) {
-        const resolved = grids.resolvePick(ctx, character.id, team, targetHexId.value)
-        if (resolved !== null) ctx.place(targetHexId.value, resolved, team)
-      }
+      if (team) grids.placePick(ctx, character.id, team, targetHexId.value)
     }
     clearTargetHex()
     return
@@ -92,18 +94,23 @@ const handleCharacterClick = (character: CharacterType) => {
   }
 }
 
-// A search result places its hero like a roster-icon click, minus the
-// click's remove-toggle: the roster is hidden behind the overlay, so
+// A search result places its hero like a picker-icon click, minus the
+// click's remove-toggle: the picker is hidden behind the overlay, so
 // "select" must never act as removal. Targeted-tile placement still applies.
 const handleResultSelect = (slug: string) => {
   const character = characters.find((c) => c.name === slug)
   if (!character) return
+  // The overlay has already closed, so each no-op below gets a toast; without
+  // one it reads as a bug. Search finds every hero, the roster offers fewer.
+  if (!rosters.isPickable(character)) {
+    toast.show(i18n.t('app.no-available-heroes'), 'info')
+    return
+  }
   if (
     targetHexId.value === null &&
     isCharacterPlaced(character.id) &&
     !synergyCopyAvailable(character.id)
   ) {
-    // The overlay has already closed; without feedback the no-op reads as a bug.
     toast.show(i18n.t('app.search-already-placed'), 'info')
     return
   }
@@ -114,6 +121,7 @@ const handleResultSelect = (slug: string) => {
 <template>
   <div v-scroll-chain class="character-selection" :class="{ scrollable }">
     <div class="search-row">
+      <RosterMenu manage @manage="requestTab('rosters')" />
       <SkillSearchTrigger :select="handleResultSelect" />
     </div>
 
@@ -131,14 +139,22 @@ const handleResultSelect = (slug: string) => {
         :key="character.id"
         :character
         :is-draggable
-        :is-placed="
+        :dimmed="
           !character.placeholder &&
           isCharacterPlaced(character.id) &&
           !synergyCopyAvailable(character.id)
         "
         :selected-filter="selectedTagNames"
+        inspectable
         @character-click="handleCharacterClick"
-      />
+      >
+        <template v-if="rosters.levelsFor(character.id)" #badge>
+          <UpgradePill
+            :paragon="rosters.levelsFor(character.id)?.[ATTR_PARAGON] ?? 0"
+            :refinement="rosters.levelsFor(character.id)?.[ATTR_REFINEMENT] ?? 0"
+          />
+        </template>
+      </CharacterIcon>
     </CharacterGrid>
   </div>
 </template>
@@ -154,6 +170,8 @@ const handleResultSelect = (slug: string) => {
 /* Clear the panel's scrollbar on desktop. */
 .search-row {
   display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
   padding-right: var(--spacing-lg);
 }
 

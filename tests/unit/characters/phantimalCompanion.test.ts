@@ -3,7 +3,7 @@
  * companion lifecycle running inside it, and the serialization, restore and
  * side-load paths that carry them. Uses a test-only owner (local id 13; ids
  * 13-15 are reserved for tests, which caps a season at 12 phantimals) so the
- * suite outlives any season's roster; delete this file together with the
+ * suite outlives any season's phantimals; delete this file together with the
  * phantimal-companion seams if the feature is removed.
  */
 import { createPinia, setActivePinia } from 'pinia'

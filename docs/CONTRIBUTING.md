@@ -42,7 +42,7 @@ The importers read an upstream data feed that is not part of this repo. To run t
 2. Add the display names in `src/locales/character/<name>.json`.
 3. Run `npm run import:skills` to bring in the skill text for every language.
 
-The roster, skill pages and search pick the character up from those files.
+The hero list, skill pages and search pick the character up from those files.
 
 ### Adding an arena map
 
@@ -62,4 +62,4 @@ Component styles are scoped in each `.vue` file, global styles are in `src/style
 
 ## Documentation
 
-Architecture docs follow [the style guide](./architecture/STYLE_GUIDE.md). Update the relevant doc when a change alters how a system works, and check every name it mentions against the code.
+Architecture docs follow [the style guide](./STYLE_GUIDE.md). Update the relevant doc when a change alters how a system works, and check every name it mentions against the code.

@@ -1,14 +1,8 @@
 import { describe, expect, it, vi } from 'vitest'
 
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
-import { MAX_TEAM_NAME_LENGTH } from '@/lib/teams/modes'
-import {
-  canonicalTeamData,
-  duplicateName,
-  sanitizeTeamName,
-  uniqueName,
-  validateSavedTeam,
-} from '@/lib/teams/savedTeam'
+import { duplicateName, MAX_NAME_LENGTH, sanitizeName, uniqueName } from '@/lib/names'
+import { canonicalTeamData, validateSavedTeam } from '@/lib/teams/savedTeam'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
@@ -117,13 +111,13 @@ describe('canonicalTeamData', () => {
   })
 })
 
-describe('team naming', () => {
-  it('sanitizeTeamName trims, clamps to 60, and rejects empties', () => {
-    expect(sanitizeTeamName('  My Team  ')).toBe('My Team')
-    expect(sanitizeTeamName('x'.repeat(80))).toHaveLength(60)
-    expect(sanitizeTeamName('   ')).toBeNull()
-    expect(sanitizeTeamName(undefined)).toBeNull()
-    expect(sanitizeTeamName(42)).toBeNull()
+describe('naming', () => {
+  it('sanitizeName trims, clamps to 60, and rejects empties', () => {
+    expect(sanitizeName('  My Team  ')).toBe('My Team')
+    expect(sanitizeName('x'.repeat(80))).toHaveLength(60)
+    expect(sanitizeName('   ')).toBeNull()
+    expect(sanitizeName(undefined)).toBeNull()
+    expect(sanitizeName(42)).toBeNull()
   })
 
   it('duplicateName appends (copy) within the length cap', () => {
@@ -194,9 +188,9 @@ describe('validateSavedTeam', () => {
 
 describe('uniqueName', () => {
   it('truncates the base, not the suffix, at the name cap', () => {
-    const long = 'x'.repeat(MAX_TEAM_NAME_LENGTH)
+    const long = 'x'.repeat(MAX_NAME_LENGTH)
     const numbered = uniqueName([long], long)
-    expect(numbered).toHaveLength(MAX_TEAM_NAME_LENGTH)
+    expect(numbered).toHaveLength(MAX_NAME_LENGTH)
     expect(numbered.endsWith(' - 2')).toBe(true)
   })
 })

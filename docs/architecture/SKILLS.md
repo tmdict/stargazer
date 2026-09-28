@@ -33,7 +33,7 @@ Skill text and the skill pages are a separate system, described in [Skill Pages]
                             └────────────────────┘      └────────────────────┘
 ```
 
-Each board's context (`src/composables/useGridContext.ts`) owns a `Grid` and a `SkillManager` and hands both to the character operations. The Pinia `skill` and `character` stores only forward to the active board, for the debug panel and the Arena roster. Boards, contexts and id ranges are covered in [Grid](./GRID.md).
+Each board's context (`src/composables/useGridContext.ts`) owns a `Grid` and a `SkillManager` and hands both to the character operations. The Pinia `skill` and `character` stores only forward to the active board, for the debug panel and the Arena picker. Boards, contexts and id ranges are covered in [Grid](./GRID.md).
 
 ## Registry and skill lifecycle
 

@@ -7,7 +7,7 @@ import type { CharacterType } from '@/lib/types/character'
  * them as ordinary characters for free; the deliberate differences are small
  * and enforced at call sites via isPlaceholderId / the `placeholder` flag:
  * no uniqueness (copies repeat freely, each standing for a different
- * undecided hero), no paragon, no skill pages, no roster remove-toggle.
+ * undecided hero), no paragon, no skill pages, no picker remove-toggle.
  *
  * The real `faction` makes them count toward faction tallies (phantimal
  * qualification); `class` and `damage` are PLACEHOLDER_NONE, which no game

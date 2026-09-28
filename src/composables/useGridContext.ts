@@ -98,7 +98,7 @@ export interface GridContextGlobals {
 
 // The drop chain (routeDrop -> handleDrop) reads only the drag-source
 // coordinates from the payload; live cells are authoritative for everything
-// else at drop time. Absent coordinates mean a roster placement.
+// else at drop time. Absent coordinates mean a picker placement.
 export interface CharacterDropPayload {
   character: Pick<CharacterType, 'sourceHexId' | 'sourceGridId'>
   characterId: number
@@ -280,7 +280,7 @@ export function createGridContext(
   }
 
   // The phantimal a team currently qualifies for, or null. With a synergy hero
-  // a 6-unit roster can satisfy two factions at once; data order picks the
+  // a 6-unit lineup can satisfy two factions at once; data order picks the
   // match, and the auto-place below never fires while a phantimal stands, so
   // the earlier-qualified one keeps its seat either way.
   const findQualifyingPhantimalId = (team: Team): number | null => {
@@ -381,7 +381,7 @@ export function createGridContext(
     return executeAutoPlaceCharacter(grid, skillManager, phantimalId, team)
   }
 
-  // Same-board drop dispatch: grid-source drags move or swap, roster drops place
+  // Same-board drop dispatch: grid-source drags move or swap, picker drops place
   // and replace any occupant. Cross-board routing is one level up.
   const handleDrop = (payload: CharacterDropPayload, targetHexId: number): boolean => {
     const { character, characterId } = payload
@@ -406,7 +406,7 @@ export function createGridContext(
     if (isPhantimalId(characterId)) {
       return placePhantimal(targetHexId, characterId, team)
     }
-    // The same resolver as canDropCharacter's roster leg (an occupied target is
+    // The same resolver as canDropCharacter's picker leg (an occupied target is
     // a replace, judged post-vacate), so hover cues and drops agree.
     const resolved = resolveReplacement(
       grid,

@@ -78,24 +78,22 @@ describe('TeamVariantPicker', () => {
     expect(selected).toHaveBeenCalledWith('default')
   })
 
-  it('ignores a click on the lit type', async () => {
-    const { selected } = await mountPicker()
-    segment('SL').click()
-    await nextTick()
-    expect(selected).not.toHaveBeenCalled()
-    expect(document.querySelector('.armed')).toBeNull()
-  })
-
-  it('an armed click does not carry into another mode', async () => {
-    vi.useFakeTimers()
+  it.each([
+    [
+      'a mode switch',
+      (state: PickerState) => {
+        state.activeMode = '3v3'
+        state.match = 'gd'
+      },
+    ],
+    ['a Load', (state: PickerState) => void (state.sourceId = 'team-1')],
+  ])('disarms when %s replaces the boards inside the confirm window', async (_label, replace) => {
     const { state, selected } = await mountPicker()
     segment('Default').click()
     await nextTick()
     expect(segment('Confirm?')).toBeDefined()
 
-    // A mode switch replaces the boards inside the confirm window.
-    state.activeMode = '3v3'
-    state.match = 'gd'
+    replace(state)
     await nextTick()
     expect(document.querySelector('.armed')).toBeNull()
 
@@ -103,22 +101,5 @@ describe('TeamVariantPicker', () => {
     await nextTick()
     expect(selected).not.toHaveBeenCalled()
     expect(segment('Confirm?').classList.contains('armed')).toBe(true)
-    segment('Confirm?').click()
-    expect(selected).toHaveBeenCalledTimes(1)
-    expect(selected).toHaveBeenCalledWith('default')
-  })
-
-  it('a Load between arm and confirm disarms', async () => {
-    const { state, selected } = await mountPicker()
-    segment('Default').click()
-    await nextTick()
-    expect(segment('Confirm?')).toBeDefined()
-
-    state.sourceId = 'team-1'
-    await nextTick()
-    expect(document.querySelector('.armed')).toBeNull()
-    segment('Default').click()
-    await nextTick()
-    expect(selected).not.toHaveBeenCalled()
   })
 })

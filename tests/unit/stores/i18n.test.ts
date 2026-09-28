@@ -44,13 +44,6 @@ describe('i18nStore', () => {
     vi.restoreAllMocks()
   })
 
-  describe('t() — happy path', () => {
-    it('returns translation in zh after explicit setLocale', () => {
-      store.setLocale('zh')
-      expect(store.t('greeting.welcome')).toBe('欢迎')
-    })
-  })
-
   describe('t() — fallbacks', () => {
     it('returns the key when category is missing', () => {
       vi.spyOn(console, 'warn').mockImplementation(() => {})

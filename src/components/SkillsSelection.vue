@@ -9,7 +9,6 @@ import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
-import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 
 const props = defineProps<{
@@ -21,12 +20,11 @@ const props = defineProps<{
   currentSlug?: string | null
 }>()
 
-const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 // Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
-// Placeholders have no skill pages, so the skills roster leaves them out.
+// Placeholders have no skill pages, so the skills hero list leaves them out.
 const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
   useCharacterFilters(computed(() => props.characters.filter((c) => !c.placeholder)))
 
@@ -42,7 +40,7 @@ watch(
 </script>
 
 <template>
-  <!-- Roster text (names, filters, results chrome) is app-locale even on
+  <!-- Hero list text (names, filters, results chrome) is app-locale even on
        exotic skill pages, so it carries its own lang under the content-locale
        <html lang> (fonts + screen readers follow the chrome language). -->
   <div v-scroll-chain class="skills-selection" :lang="i18n.currentLocale">
@@ -58,7 +56,6 @@ watch(
       :characters
     />
 
-    <!-- Meta row mirrors CharacterInfoIcons; wider gap replaces info button. -->
     <CharacterGrid>
       <RouterLink
         v-for="character in filteredCharacters"
@@ -68,22 +65,10 @@ watch(
       >
         <CharacterIcon
           :character
-          :hide-info="true"
+          hide-tooltip
           :is-selected="currentSlug === character.name"
           :selected-filter="selectedTagNames"
         />
-        <div class="meta-row">
-          <img
-            :src="gameDataStore.getIcon(`faction-${character.faction}`)"
-            :alt="character.faction"
-            class="meta-icon"
-          />
-          <img
-            :src="gameDataStore.getIcon(`class-${character.class}`)"
-            :alt="character.class"
-            class="meta-icon"
-          />
-        </div>
       </RouterLink>
     </CharacterGrid>
   </div>
@@ -114,46 +99,13 @@ watch(
 }
 
 .character-cell {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   cursor: pointer;
   text-decoration: none;
   color: inherit;
 }
 
-/* Flatten so energy badge and meta-row share one flex order. */
-.character-cell :deep(.character-wrapper) {
-  display: contents;
-}
-.character-cell :deep(.character-display) {
-  order: 1;
-}
-.character-cell .meta-row {
-  order: 2;
-}
-.character-cell :deep(.character-energy) {
-  order: 3;
-}
-
-/* Wider gap (0.6 vs 0.2rem) compensates for the missing info button. */
-.meta-row {
-  display: flex;
-  justify-content: center;
-  gap: 0.6rem;
-  padding-top: 0.4rem;
-}
-
-.meta-icon {
-  width: 21px;
-  height: 21px;
-  border: 1px solid #484848;
-  border-radius: 50%;
-  object-fit: cover;
-}
-
 @media (max-width: 768px) {
-  /* Fill the mobile roster sheet and scroll within it. No panel inset: the grid
+  /* Fill the mobile hero list sheet and scroll within it. No panel inset: the grid
      insets itself (CharacterGrid) and the filter/results go edge-to-edge; the
      search row keeps its own horizontal inset (see .search-row below). */
   .skills-selection {
@@ -178,14 +130,6 @@ watch(
   }
   .search-row {
     padding: var(--spacing-sm) var(--spacing-sm) 0;
-  }
-  /* Match CharacterInfoIcons mobile sizing. */
-  .meta-row {
-    gap: 0.25rem;
-  }
-  .meta-icon {
-    width: 18px;
-    height: 18px;
   }
 }
 </style>

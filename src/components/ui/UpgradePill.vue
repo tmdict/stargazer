@@ -1,8 +1,9 @@
 <script setup lang="ts">
 /* The paragon / refinement pill, board-free: levels in, taps out. The hero
    panel's pill edits a placed hero through the grid context; this one lets
-   the import review edit a reading before it reaches a board. Same fills and
-   slanted seam, so a level reads the same in both places. */
+   the import review and the Rosters tab edit levels off the board, and shows
+   a roster's levels read-only in the picker. Same fills and slanted seam, so
+   a level reads the same everywhere. */
 
 import { computed } from 'vue'
 
@@ -14,10 +15,13 @@ const {
   paragon,
   refinement,
   editable = false,
+  compact = false,
 } = defineProps<{
   paragon: number
   refinement: number
   editable?: boolean
+  // Narrower touch halves for a dense grid (the Rosters tab), keeping their height.
+  compact?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -51,7 +55,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 </script>
 
 <template>
-  <span class="upill" :class="{ editable }" :style="{ background }">
+  <span class="upill" :class="{ editable, compact }" :style="{ background }">
     <button
       type="button"
       class="useg"
@@ -110,9 +114,14 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 
 /* Wider tap targets on touch screens (the pill is the only control for levels). */
 @media (pointer: coarse) {
-  .useg {
+  .editable .useg {
     min-width: 40px;
     padding: 10px 8px 9px;
+  }
+
+  .editable.compact .useg {
+    min-width: 28px;
+    padding-inline: 4px;
   }
 }
 </style>

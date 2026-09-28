@@ -95,6 +95,17 @@
   flex-shrink: 0;
 }
 
+/* Compact: panel bars (the Rosters tab), level with a pill dropdown the way
+   the Saved Teams buttons sit level with their chips. Phones keep the round
+   icon buttons below. */
+@media (min-width: 769px) {
+  .control-btn.compact {
+    min-height: 28px;
+    padding: 2px 10px;
+    font-size: 0.78rem;
+  }
+}
+
 @media (max-width: 768px) {
   .control-btn {
     border-radius: 999px;

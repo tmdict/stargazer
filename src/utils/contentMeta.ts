@@ -38,7 +38,7 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   // Warm by the route guard before this runs.
   const heroName = heroDisplayName(name, locale)
   const url = `skill/${name}`
-  // Per-hero preview reusing the small roster thumbnail: Discord renders it, but
+  // Per-hero preview reusing the small picker thumbnail: Discord renders it, but
   // it is below the size FB/X require, so they fall back to a text-only card.
   // Absolute URL for crawlers; left unset (default og:image applies) for any hero
   // without a portrait.

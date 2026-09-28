@@ -1,5 +1,5 @@
-/* Saved-team records: types, naming rules, canonical data, and per-record
- * validation shared by library hydration and file import.
+/* Saved-team records: types, canonical data, and per-record validation shared
+ * by library hydration and file import.
  *
  * `data` is always CANONICAL: the encoded MultiGridState stripped of viewer
  * state (`active` board pointer and `d` display flags) and re-encoded through
@@ -15,6 +15,7 @@ import {
   type AttrRow,
 } from '@/lib/characters/attributes'
 import { resolveBoardMap } from '@/lib/maps'
+import { sanitizeName } from '@/lib/names'
 import { hasRetiredSeasonal, hasSeasonalContent } from '@/lib/seasonal'
 import {
   BOARD_CONTENT_KEYS,
@@ -22,13 +23,7 @@ import {
   type MultiGridState,
 } from '@/utils/gridStateSerializer'
 import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
-import {
-  isTeamModeKey,
-  MAX_TEAM_NAME_LENGTH,
-  resolveTeamMode,
-  TEAM_MODES,
-  type TeamModeKey,
-} from './modes'
+import { isTeamModeKey, resolveTeamMode, TEAM_MODES, type TeamModeKey } from './modes'
 
 export interface SavedTeam {
   id: string
@@ -134,39 +129,6 @@ export function teamContentKey(encoded: string): string | null {
   return encodeMultiGridStateToUrl(decoded)
 }
 
-export function sanitizeTeamName(raw: unknown): string | null {
-  if (typeof raw !== 'string') return null
-  const name = raw.trim().slice(0, MAX_TEAM_NAME_LENGTH)
-  return name.length > 0 ? name : null
-}
-
-export function nextAutoName(existingNames: readonly string[]): string {
-  const taken = new Set(existingNames)
-  let n = existingNames.length + 1
-  while (taken.has(`Team ${n}`)) n++
-  return `Team ${n}`
-}
-
-// Truncate the base, not the suffix, so a max-length name still gets a
-// visibly distinct derived name.
-export function suffixedName(name: string, suffix: string): string {
-  return `${name.slice(0, MAX_TEAM_NAME_LENGTH - suffix.length)}${suffix}`
-}
-
-// `base` itself when free, else "base - 2", "base - 3", and so on.
-export function uniqueName(existingNames: readonly string[], base: string): string {
-  const taken = new Set(existingNames)
-  if (!taken.has(base)) return base
-  for (let n = 2; ; n++) {
-    const candidate = suffixedName(base, ` - ${n}`)
-    if (!taken.has(candidate)) return candidate
-  }
-}
-
-export function duplicateName(name: string): string {
-  return suffixedName(name, ' (copy)')
-}
-
 /* Validate one record from untrusted storage (hydration) or an import file.
  * Returns a normalized record (name sanitized, data canonicalized) or null.
  * Rules: known mode; decodable data whose board count matches the mode. Map keys
@@ -182,7 +144,7 @@ export function validateSavedTeam(record: unknown): SavedTeam | null {
   if (mode === '5v5sl') mode = '5v5'
 
   if (typeof id !== 'string' || id.length === 0) return null
-  const cleanName = sanitizeTeamName(name)
+  const cleanName = sanitizeName(name)
   if (!cleanName) return null
   if (!isTeamModeKey(mode)) return null
   if (typeof data !== 'string') return null

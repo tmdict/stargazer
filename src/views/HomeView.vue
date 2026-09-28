@@ -12,6 +12,7 @@ import SeasonNotice from '@/components/grid/SeasonNotice.vue'
 import TeamPowerDock from '@/components/grid/TeamPowerDock.vue'
 import TeamPowerPanel from '@/components/grid/TeamPowerPanel.vue'
 import MapEditor from '@/components/MapEditor.vue'
+import RosterPanel from '@/components/RosterPanel.vue'
 import SeasonalSelection from '@/components/SeasonalSelection.vue'
 import BottomSheet from '@/components/ui/BottomSheet.vue'
 import TabView from '@/components/ui/TabView.vue'
@@ -63,7 +64,7 @@ const { copyToClipboard, downloadAsImage } = useGridExport()
 const shareLink = useShareLink()
 
 // Tab state management
-const validTabs = ['characters', 'seasonal', 'mapEditor', 'debug'] as const
+const validTabs = ['characters', 'seasonal', 'mapEditor', 'rosters', 'debug'] as const
 type ValidTab = (typeof validTabs)[number]
 
 // The `?t=skills` query param resolves to the dedicated /skills route.
@@ -81,21 +82,26 @@ const getInitialTab = (): string => {
 
 const activeTab = ref(getInitialTab())
 
-// Roster tabs. Debug is desktop-only (hidden on mobile to save space; the arena
+// Side panel tabs. Debug is desktop-only (hidden on mobile to save space; the arena
 // is selectable in the Map Editor tab).
 const tabs = computed(() => [
-  { key: 'characters', label: i18nStore.t('app.characters') },
+  {
+    key: 'characters',
+    label: i18nStore.t('app.characters'),
+    shortLabel: i18nStore.t('app.heroes'),
+  },
   { key: 'seasonal', label: i18nStore.t('app.seasonal') },
   { key: 'mapEditor', label: i18nStore.t('app.maps') },
+  { key: 'rosters', label: i18nStore.t('app.rosters') },
   { key: 'debug', label: i18nStore.t('app.debug'), hideMobile: true },
 ])
 
-// Mobile: the tab panel (roster) is a pull-up bottom sheet over the grid.
+// Mobile: the side panel is a pull-up bottom sheet over the grid.
 const { targetHexId, liftedHexId, tabRequest, clearTargetHex, clearTargets, clearLiftedHex } =
   useSelectionState()
 const sheetExpanded = ref(false)
 
-// Tapping a grid cell targets it: jump to the roster, open the sheet; placing
+// Tapping a grid cell targets it: jump to the picker, open the sheet; placing
 // (which clears the target) collapses it so the grid result is visible.
 watch(targetHexId, (id) => {
   if (id !== null) {
@@ -106,7 +112,7 @@ watch(targetHexId, (id) => {
   }
 })
 
-// Mobile: a component (e.g. an on-grid artifact cell) requesting the roster open
+// Mobile: a component (e.g. an on-grid artifact cell) requesting the side panel open
 // on a specific tab: switch to it and expand the sheet.
 watch(tabRequest, (req) => {
   if (!req) return
@@ -320,7 +326,7 @@ const handleResetMap = () => {
           />
         </div>
 
-        <!-- Roster (a pull-up bottom sheet over the grid on mobile). -->
+        <!-- Side panel (a pull-up bottom sheet over the grid on mobile). -->
         <BottomSheet v-model:expanded="sheetExpanded" @dismiss="clearTargets">
           <TabView
             :tabs="tabs"
@@ -348,6 +354,9 @@ const handleResetMap = () => {
                 @arena-selected="handleMapChange"
               />
             </template>
+            <template #rosters>
+              <RosterPanel />
+            </template>
             <template #debug>
               <DebugPanel ref="debugPanelRef" />
             </template>
@@ -370,7 +379,7 @@ const handleResetMap = () => {
 }
 
 /* Mobile: clear the collapsed sheet peek and trim the grid card's side padding
-   so the grid claims the narrow viewport. The roster sheet chrome lives in
+   so the grid claims the narrow viewport. The panel sheet chrome lives in
    BottomSheet; TabView owns its own in-sheet fill/scroll. */
 @media (max-width: 768px) {
   main {
@@ -390,7 +399,7 @@ const handleResetMap = () => {
 
    NOTE: this breakpoint must stay in sync with the @media rules in each
    tab-content panel component (CharacterSelection, SeasonalSelection,
-   MapEditor, DebugPanel): they own the flex-fill + internal scroll on the same
+   MapEditor, RosterPanel, DebugPanel): they own the flex-fill + internal scroll on the same
    condition (TabView provides the flex shell; the panels scroll). */
 @media (min-width: 1220px) {
   .sections-container {

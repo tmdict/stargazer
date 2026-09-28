@@ -1,6 +1,6 @@
 # Pre-Rendering
 
-The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` roster and the guide. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. `/teams` is client-only. Game state never enters the baked HTML.
+The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` hero list and the guide. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. `/teams` is client-only. Game state never enters the baked HTML.
 
 The hard rule is that the client's first render must equal the baked HTML, or hydration breaks. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
 
@@ -30,7 +30,7 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
 
 ## Static input
 
-The game-data store has two loaders with one body. `initializeContentData()` also runs during pre-rendering, and the skill browser and guide views call it in setup so the roster and its crawlable links bake. `initializeData()` returns early during SSR, and the home, share and Teams views call it, which keeps game state out of the baked HTML. Both read deterministic glob imports, so the client's first render matches.
+The game-data store has two loaders with one body. `initializeContentData()` also runs during pre-rendering, and the skill browser and guide views call it in setup so the hero list and its crawlable links bake. `initializeData()` returns early during SSR, and the home, share and Teams views call it, which keeps game state out of the baked HTML. Both read deterministic glob imports, so the client's first render matches.
 
 Any code touching `window`, `document`, `Image`, `matchMedia` or storage at module or setup scope checks `import.meta.env.SSR` first. Static content reads the data loaders directly instead of the store: `GridSnippet` resolves portraits through `loadCharacterImages()`, so a diagram renders the same with or without store state.
 
@@ -56,7 +56,7 @@ The `guideReports` plugin (`scripts/guideReports.ts`) turns each `src/content/pv
 
 The generator writes placeholders in the form `{{asset:<type>/<slug>}}`. `character` and `artifact` resolve to the hashed images the app itself ships, so reports share them instead of embedding copies. `seasonal-artifact` resolves to the icon's URL on the image host.
 
-The plugin takes images only from the imports of `src/utils/imageAssets.ts`, which holds the roster's display variants, so other variants cut from the same PNGs stay out of the reports. That file must import nothing local, because its integration test copies it on its own. Each image module must carry exactly one `__VITE_ASSET__` reference, which the bundler resolves to the final file name. This leans on a Vite internal, so re-run `tests/integration/guideReports.test.ts` after a Vite upgrade.
+The plugin takes images only from the imports of `src/utils/imageAssets.ts`, which holds the hero list's display variants, so other variants cut from the same PNGs stay out of the reports. That file must import nothing local, because its integration test copies it on its own. Each image module must carry exactly one `__VITE_ASSET__` reference, which the bundler resolves to the final file name. This leans on a Vite internal, so re-run `tests/integration/guideReports.test.ts` after a Vite upgrade.
 
 The build fails on a placeholder naming a missing image, a placeholder left unresolved, or a `guide/pvp/s<N>/index.html` already present in `public/` or the bundle.
 

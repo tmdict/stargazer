@@ -49,7 +49,7 @@ onMounted(() => {
 })
 onUnmounted(() => wideMq?.removeEventListener('change', onWideChange))
 
-// Select mode: a trigger opened the overlay to pick a hero (the arena roster);
+// Select mode: a trigger opened the overlay to pick a hero (the arena picker);
 // activating a row hands the slug to the opener instead of navigating.
 const selectMode = computed(() => selectHandler.value !== null)
 

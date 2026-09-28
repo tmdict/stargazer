@@ -13,15 +13,10 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { importInto, type ImportOutcome } from '@/lib/exportFile'
+import { duplicateName, nextAutoName, sanitizeName } from '@/lib/names'
 import { MAX_SAVED_TEAMS, type TeamModeKey } from '@/lib/teams/modes'
-import {
-  canonicalTeamData,
-  duplicateName,
-  nextAutoName,
-  sanitizeTeamName,
-  validateSavedTeam,
-  type SavedTeam,
-} from '@/lib/teams/savedTeam'
+import { canonicalTeamData, validateSavedTeam, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildExport, parseImport, type TeamsExportFile } from '@/lib/teams/transfer'
 import { readStorage, writeStorage } from '@/utils/storage'
 
@@ -93,7 +88,12 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
       const now = Date.now()
       const team: SavedTeam = {
         id: crypto.randomUUID(),
-        name: sanitizeTeamName(name) ?? nextAutoName(fresh.map((t) => t.name)),
+        name:
+          sanitizeName(name) ??
+          nextAutoName(
+            fresh.map((t) => t.name),
+            'Team',
+          ),
         mode,
         data: canonical,
         createdAt: now,
@@ -119,7 +119,7 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const rename = (id: string, name: string): boolean =>
     mutate((fresh) => {
       const team = fresh.find((t) => t.id === id)
-      const clean = sanitizeTeamName(name)
+      const clean = sanitizeName(name)
       if (!team || !clean) return false
       team.name = clean
       return true
@@ -156,25 +156,9 @@ export const useTeamLibrary = defineStore('teamLibrary', () => {
   const exportTeams = (selection: readonly SavedTeam[] = teams.value): TeamsExportFile =>
     buildExport(selection, new Date().toISOString())
 
-  /* Merge-only: `invalid` means the envelope itself was rejected (library
-   * untouched); records past the cap count as skipped. */
-  const importTeams = (
-    raw: string,
-  ): { imported: number; skipped: number; conflicts: number; invalid: boolean } =>
-    mutate((fresh) => {
-      const parsed = parseImport(raw, fresh)
-      if (!parsed.ok) return { imported: 0, skipped: 0, conflicts: 0, invalid: true }
-      let imported = 0
-      let skipped = parsed.skipped
-      for (const team of parsed.teams) {
-        if (fresh.length >= MAX_SAVED_TEAMS) skipped++
-        else {
-          fresh.push(team)
-          imported++
-        }
-      }
-      return { imported, skipped, conflicts: parsed.conflicts, invalid: false }
-    })
+  // Merge-only (lib/exportFile).
+  const importTeams = (raw: string): ImportOutcome =>
+    mutate((fresh) => importInto(fresh, parseImport(raw, fresh), MAX_SAVED_TEAMS))
 
   return {
     teams,

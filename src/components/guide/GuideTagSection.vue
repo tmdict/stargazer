@@ -30,7 +30,6 @@ const toggle = (slug: string) => {
         v-for="c in characters"
         :key="c.id"
         :character="c"
-        :hide-info="true"
         :is-selected="expanded === c.name"
         :selected-filter="tag"
         @character-click="toggle(c.name)"
@@ -75,8 +74,8 @@ const toggle = (slug: string) => {
   color: rgba(255, 255, 255, 0.55);
 }
 
-/* Smaller than the roster default; icons here are toggles, not drag handles.
-   The wrapper text color (#333) targets light roster surfaces, so re-light the
+/* Smaller than the picker default; icons here are toggles, not drag handles.
+   The wrapper text color (#333) targets light picker surfaces, so re-light the
    energy badge shown under icons in the initial-energy-300 section. */
 .tag-section :deep(.character-display) {
   width: 56px;

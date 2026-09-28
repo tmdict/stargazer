@@ -66,7 +66,7 @@ const showCharacterModal = ref(false)
 const modalHex = ref<Hex | null>(null)
 const modalPosition = ref({ x: 0, y: 0 })
 
-// Mobile/tablet places via the pull-up roster sheet: a cell tap targets the tile,
+// Mobile/tablet places via the pull-up picker sheet: a cell tap targets the tile,
 // or drops a lifted hero onto it. The desktop popup is used only at full scale.
 const { liftedHexId, liftedGridId, setTargetHex, clearLiftedHex } = useSelectionState()
 
@@ -110,8 +110,8 @@ gridEvents.on('hex:click', (hex: Hex, event: MouseEvent) => {
   }
 
   if (tap) {
-    // Target this empty tile so a roster tap fills it. Allowed even when the
-    // team is full: a phantimal can still be placed there, and the roster
+    // Target this empty tile so a picker tap fills it. Allowed even when the
+    // team is full: a phantimal can still be placed there, and the picker
     // re-checks character capacity before placing a character.
     if (tile.characterId === undefined) {
       clearLiftedHex()

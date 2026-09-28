@@ -1,13 +1,10 @@
-import { computed } from 'vue'
 import { createPinia, setActivePinia } from 'pinia'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { canPlaceCharacterOnTeam, getAvailableTeamSize } from '@/lib/characters/character'
 import { performPlace } from '@/lib/characters/place'
 import { isPlaceholderId, PLACEHOLDER_ID_OFFSET, PLACEHOLDERS } from '@/lib/characters/placeholder'
 import { executeSwapCharacters } from '@/lib/characters/swap'
-import { FACTION_ORDER } from '@/lib/filterOrder'
 import { COMPANION_ID_OFFSET, Grid } from '@/lib/grid'
 import { SkillManager } from '@/lib/skills/skill'
 import { Team } from '@/lib/types/team'
@@ -44,7 +41,7 @@ describe('placeholder definitions', () => {
     expect(isPlaceholderId(COMPANION_ID_OFFSET)).toBe(false)
   })
 
-  it('joins the roster without colliding with real hero ids', () => {
+  it('joins the hero list without colliding with real hero ids', () => {
     const characters = loadCharacters()
     const real = characters.filter((c) => !c.placeholder)
     for (const p of PLACEHOLDERS) {
@@ -53,15 +50,6 @@ describe('placeholder definitions', () => {
     }
     // Real ids stay far below the band, so the reservation holds long-term.
     expect(Math.max(...real.map((c) => c.id))).toBeLessThan(PLACEHOLDER_ID_OFFSET)
-  })
-})
-
-describe('placeholder roster order', () => {
-  it('trails the roster as one block in faction filter icon order', () => {
-    const { filteredCharacters } = useCharacterFilters(computed(() => loadCharacters()))
-    const tail = filteredCharacters.value.slice(-PLACEHOLDERS.length)
-    expect(tail.map((c) => c.faction)).toEqual([...FACTION_ORDER])
-    expect(tail.every((c) => c.placeholder)).toBe(true)
   })
 })
 

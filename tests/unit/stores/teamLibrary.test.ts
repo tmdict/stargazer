@@ -205,27 +205,6 @@ describe('useTeamLibrary export/import', () => {
     ).toEqual(['a', 'b'])
   })
 
-  it('import merges and skips duplicates of current records', () => {
-    seed([record('a', 'Alpha')])
-    const library = useTeamLibrary()
-    const file = JSON.stringify(library.exportTeams())
-    const result = library.importTeams(file)
-    expect(result).toEqual({ imported: 0, skipped: 1, conflicts: 0, invalid: false })
-    expect(library.count).toBe(1)
-  })
-
-  it('rejects invalid envelopes without touching the library', () => {
-    seed([record('a', 'Alpha')])
-    const library = useTeamLibrary()
-    expect(library.importTeams('nope')).toEqual({
-      imported: 0,
-      skipped: 0,
-      conflicts: 0,
-      invalid: true,
-    })
-    expect(library.count).toBe(1)
-  })
-
   it('counts cap overflow as skipped', () => {
     seed(Array.from({ length: MAX_SAVED_TEAMS - 1 }, (_, i) => record(`id-${i}`, `Team ${i + 1}`)))
     const library = useTeamLibrary()

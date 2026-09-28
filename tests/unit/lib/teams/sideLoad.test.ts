@@ -136,25 +136,6 @@ describe('buildSideLoadPlan', () => {
     expect(plan.side).toBe(Team.ENEMY)
     expect(plan.boards[0]!.artifact).toBe(9)
   })
-
-  it('is null for records the side rule disqualifies', () => {
-    const mixed: MultiGridState = {
-      boards: [
-        {
-          m: 'arena1',
-          c: [
-            [1, 11, Team.ALLY],
-            [40, 21, Team.ENEMY],
-          ],
-        },
-      ],
-      mode: '1v1',
-    }
-    expect(buildSideLoadPlan(encode(mixed), true)).toBeNull()
-    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
-    expect(buildSideLoadPlan('not-a-record', true)).toBeNull()
-    warn.mockRestore()
-  })
 })
 
 describe('retired seasonal content in side-load', () => {

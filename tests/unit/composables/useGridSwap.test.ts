@@ -56,7 +56,7 @@ describe('useGridSwap target selection', () => {
       expect(swapBoards).toHaveBeenCalledWith(SOURCE, TARGET)
       expect(swap.isSwapping.value).toBe(false)
       // The swap really happened: the unit now lives on the target board
-      // (swapBoards re-places rosters, so only membership is stable)
+      // (swapBoards re-places lineups, so only membership is stable)
       const onBoard = (boardId: number) =>
         grids.contexts[boardId]!.grid.getAllTiles().some((tile) => tile.characterId === ALLY_A)
       expect(onBoard(SOURCE)).toBe(false)

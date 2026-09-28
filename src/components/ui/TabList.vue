@@ -3,6 +3,8 @@
 export interface TabItem {
   key: string
   label: string
+  // Replaces `label` on mobile, where a full strip must fit the sheet's width.
+  shortLabel?: string
   badge?: number | string
   hideMobile?: boolean
 }
@@ -66,7 +68,8 @@ watchEffect(() => {
         :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
         @click="select(tab)"
       >
-        {{ tab.label }}
+        <span :class="{ 'tab-label-long': tab.shortLabel }">{{ tab.label }}</span>
+        <span v-if="tab.shortLabel" class="tab-label-short">{{ tab.shortLabel }}</span>
         <span v-if="tab.badge" class="tab-badge">{{ tab.badge }}</span>
       </button>
     </div>
@@ -106,6 +109,10 @@ watchEffect(() => {
     color var(--transition-fast),
     border-color var(--transition-fast),
     background var(--transition-fast);
+}
+
+.tab-label-short {
+  display: none;
 }
 
 .tab-badge {
@@ -160,8 +167,13 @@ watchEffect(() => {
 
 @media (max-width: 768px) {
   .hide-mobile,
-  .tab-bar.mobile-hidden {
+  .tab-bar.mobile-hidden,
+  .tab-label-long {
     display: none;
+  }
+
+  .tab-label-short {
+    display: inline;
   }
 
   .tab-buttons {
@@ -210,10 +222,18 @@ watchEffect(() => {
   }
 }
 
+/* Phones: the strip stays one row (a wrapped tab drops below the collapsed
+   sheet), so tabs share the width and pad tighter instead of keeping a
+   minimum width. */
 @media (max-width: 480px) {
+  .tab-buttons {
+    flex-wrap: nowrap;
+  }
+
   .tab-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-    min-width: 80px;
+    min-width: 0;
+    padding: var(--spacing-sm) 6px;
+    letter-spacing: 0.03em;
   }
 }
 </style>

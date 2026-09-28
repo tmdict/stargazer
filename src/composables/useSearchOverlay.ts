@@ -1,13 +1,13 @@
 import { onMounted, ref } from 'vue'
 
 // Shared state for the skill search overlay. Module scope: the triggers (in
-// the roster panels) and the overlay (mounted at App root) sit far apart in
+// the picker panels) and the overlay (mounted at App root) sit far apart in
 // the component tree, and the query surviving close/reopen within a session
 // is a feature (reopening restores the last search, pre-selected).
 //
 // Two flavors share the one overlay: `open()` is the navigate flavor (rows
 // route to skill pages); `openSelect(handler)` is the select flavor (rows
-// hand the chosen slug to the opener, e.g. the arena roster placing a hero).
+// hand the chosen slug to the opener, e.g. the arena picker placing a hero).
 // Each open() call resets the flavor, so a stale handler never outlives its
 // context.
 const isOpen = ref(false)
