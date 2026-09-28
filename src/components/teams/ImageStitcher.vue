@@ -69,4 +69,11 @@ const handleAdd = async (files: File[]) => {
   gap: var(--spacing-xl);
   width: 100%;
 }
+
+/* The TabView bleeds the card's side padding away on narrow screens. */
+@media (max-width: 768px) {
+  .stitcher {
+    padding: 0 var(--spacing-lg);
+  }
+}
 </style>
