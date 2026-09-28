@@ -84,8 +84,7 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
         {{ seasonLabel(group.season) }}
       </h3>
       <div class="artifacts">
-        <!-- Named under the icon: artifacts rotate every season, so their
-             icons are harder to learn than hero portraits. -->
+        <!-- Named: artifacts rotate each season, so their icons are hard to learn. -->
         <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-cell">
           <ArtifactIcon
             :artifact
@@ -123,8 +122,7 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   color: var(--color-text-secondary, var(--color-text-primary));
 }
 
-/* Cells are wider than the icons to fit the name, so the column gap is small:
-   icon spacing stays close to the rows'. */
+/* Small column gap: the name-wide cells already space the icons. */
 .artifacts {
   display: flex;
   flex-wrap: wrap;
@@ -134,9 +132,7 @@ const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${seas
   border-radius: var(--radius-large);
 }
 
-/* Fixed width, sized to the longest one-word names, and at most two lines, so
-   long names never shift the grid. A longer word breaks inside the cell
-   rather than overlapping the next. */
+/* Fits the longest one-word names; fixed width and two lines keep the grid even. */
 .artifact-cell {
   display: flex;
   flex-direction: column;
