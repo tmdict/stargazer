@@ -20,26 +20,30 @@
         preview skills and targeting, and share formations.
       </li>
       <li>
-        <strong>Teams:</strong> Build teams in 1v1, 3v3, and 5v5 layouts, with the Guild Duel and
-        Supreme League map sets one click away, dragging heroes across boards. Each layout remembers
-        its own boards between visits, and the saved-team library keeps named snapshots with
-        thumbnails that you can reload, duplicate, rename, and back up to a file. Also includes an
-        Image Stitcher to combine separate screenshots.
+        <strong>Teams:</strong> Build 1v1, 3v3, and 5v5 teams and switch to the Guild Duel or
+        Supreme League maps in one click. Save teams to a library you can search and back up to a
+        file, or import a match straight from its screenshots. There's also an Image Stitcher for
+        combining screenshots into one image.
       </li>
       <li>
-        <strong>Skills:</strong> Search every hero by name or skill text and read full skill
-        descriptions.
+        <strong>Skills:</strong> Search heroes by name or skill text and read their full skills,
+        including cooldowns. Skill text comes in 16 languages.
       </li>
-      <li><strong>Guide:</strong> Per-hero notes on skills and mechanics.</li>
+      <li>
+        <strong>Guide:</strong> Season PvP reports with a counter ladder, Paragon and EX Refinement
+        tables, and notes on game mechanics.
+      </li>
     </ul>
 
     <h2>Tips</h2>
     <ul>
-      <li>Click any empty tile to place a character from a popup menu.</li>
-      <li>Toggle overlays to preview flat view, grid info, skills, targeting, and debug.</li>
+      <li>Click or tap an empty tile to put a hero there.</li>
+      <li>
+        The <strong>Skills</strong>, <strong>Flat</strong>, <strong>Invert</strong>, and
+        <strong>Grid Info</strong> toggles change what the board shows.
+      </li>
       <li><strong>Team</strong> crops the board to your side for a clean formation screenshot.</li>
       <li>Use the <strong>Maps</strong> tab to load a preset arena or paint a custom one.</li>
-      <li>Heroes with special abilities reshape the map or trigger special effects.</li>
       <li>
         Share the board with <strong>Link</strong> (URL), or <strong>Copy</strong> /
         <strong>Download</strong> to export an image.
@@ -49,6 +53,15 @@
         <strong>New</strong> starts fresh boards; saved teams live in your browser, so use
         <strong>Export</strong> occasionally to keep a backup.
       </li>
+      <li>
+        Make a <strong>Roster</strong> of the heroes you own and their upgrades, and the hero picker
+        will only show those heroes, already upgraded.
+      </li>
+      <li>
+        Press <strong>Ctrl + K</strong> (<strong>⌘ + K</strong> on Mac) or <strong>/</strong> on any
+        page to search heroes and skills.
+      </li>
+      <li>Right-click or long-press a hero, phantimal, or artifact to see its skills.</li>
       <li>
         Press <strong>Alt + L</strong> (or <strong>Option + L</strong> on Mac) to switch language.
       </li>
