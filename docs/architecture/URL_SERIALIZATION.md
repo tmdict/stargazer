@@ -101,7 +101,7 @@ Every page calls `decodeLinkFromUrl` and routes on the payload's mode. The Arena
 
 Display flags travel with every link, and a `?g=` restore applies them, since showing the sharer's view is the reason for a link. Multi-board restores report `hasDisplayFlags`, so a payload without `d` (canonical saved-team data) leaves the viewer's toggles alone.
 
-The temporary shim in `src/utils/upgradeMigration.ts` catches what strict decoding rejects. `decodeLegacyLink` re-reads a link whose mode id is 4 (the retired `5v5sl` mode) as 5v5 on a patched copy of its bytes, then tries pre-binary JSON Teams links, then a frozen copy of the previous binary decoder, and converts each to the current shape. Two startup passes in the same file rewrite stored values, each under its own marker. `runUpgradeStoragePass` converts the library records, the mode slots and the Arena autosave to the current formats. `runModeStoragePass` moves the retired `5v5sl` slot into the 5v5 slot when it was the last-used mode, rewrites library records, and drops the old key. The whole file is meant to be deleted on one date, and its header holds the removal steps.
+The temporary shim in `src/utils/upgradeMigration.ts` catches what strict decoding rejects. `decodeLegacyLink` re-reads a link whose mode id is 4 (the retired `5v5sl` mode) as 5v5 on a patched copy of its bytes, then tries pre-binary JSON Teams links, then a frozen copy of the previous binary decoder, and converts each to the current shape. Startup passes in the same file rewrite stored values into the current formats, each under its own marker. `runUpgradeStoragePass` converts the library records, the mode slots and the Arena autosave. `runModeStoragePass` moves the retired `5v5sl` slot into the 5v5 slot when it was the last-used mode, rewrites library records, and drops the old key. `runVersionStoragePass` rewrites the library and mode slots into their current shapes ([Teams](./TEAMS.md)). The whole file is meant to be deleted on one date, and its header holds the removal steps.
 
 ## Restoring a board
 
@@ -120,17 +120,48 @@ A multi-board restore caps the boards at `MAX_GRID_COUNT` (5) and then runs `gri
 
 ## JSON interchange format
 
-The payload is url-safe base64 (the same alphabet as links, no padding) of UTF-8 JSON:
+The payload is url-safe base64 (the same alphabet as links, no padding) of UTF-8 JSON. This example is a 1v1 on arena1 with Valen (43) at P4 R2 on ally hex 1, Rowan (33) on ally hex 2, and ally artifact 3, as canonical saved-team data:
+
+```json
+{
+  "boards": [
+    {
+      "c": [
+        [1, 43, 1],
+        [2, 33, 1]
+      ],
+      "u": [
+        [1, 43, 1, 4],
+        [1, 43, 2, 2]
+      ],
+      "a": [3, null],
+      "m": "arena1"
+    }
+  ],
+  "mode": "1v1",
+  "season": 8
+}
+```
 
 | Field    | Holds                                                                           |
 | -------- | ------------------------------------------------------------------------------- |
-| `boards` | one object per board: sections `t`, `c`, `s`, `y`, `u`, `a` as above, plus `m`  |
+| `boards` | one object per board, with the sections below, each optional                    |
 | `active` | the active board index, omitted when 0                                          |
 | `d`      | the display flags byte, absent from canonical saved-team data                   |
 | `mode`   | the team mode key                                                               |
 | `season` | the season the content came from, 0 to 9999 ([Seasonal Content](./SEASONAL.md)) |
 
-`m` is the board's map key. `t` lists only tiles whose state differs from the default, and `u` rows are sorted with default values dropped. The serializer always writes `season`, and canonicalization keeps it instead of re-stamping. An absent `season` means no provenance, so readers treat the content as current. `decodeMultiGridStateFromUrl` rejects a payload unless every board is a plain object whose sections have these shapes, and it drops an invalid `season`. A payload with no mode, or a mode that disagrees with its board count, resolves to the smallest mode that fits (`resolveTeamMode`). Team types are never written: they are derived from the maps. The canonical form used by saved teams drops `active` and `d`, writes board keys in `BOARD_CONTENT_KEYS` order and normalizes `u` rows ([Teams](./TEAMS.md)). A saved team's data is interchange JSON, not a link: sharing goes through an export file or Copy Link, which re-encodes it as binary (`encodeMultiGridStateToLinkUrl`).
+| Board field | Rows                                 | Holds                                                                                  |
+| ----------- | ------------------------------------ | -------------------------------------------------------------------------------------- |
+| `t`         | `[hexId, state]`                     | tiles whose state differs from the map's default (`State` in `src/lib/types/state.ts`) |
+| `c`         | `[hexId, characterId, team]`         | heroes and their skill companions; team 1 is ally, 2 is enemy                          |
+| `s`         | `[hexId, localId, team]`             | phantimals (local id L) and their companions (`N × 10000 + L`)                         |
+| `y`         | `[hexId, localId, team]`             | the synergy hero and its companions, ids as in `c`                                     |
+| `u`         | `[team, characterId, attrId, value]` | upgrade levels (attr 1 paragon, 2 EX refinement), sorted, default values left out      |
+| `a`         | `[allyArtifact, enemyArtifact]`      | artifact ids, `null` for none                                                          |
+| `m`         | a string                             | the board's map key                                                                    |
+
+The serializer always writes `season`, and canonicalization keeps it instead of re-stamping. An absent `season` means no provenance, so readers treat the content as current. `decodeMultiGridStateFromUrl` rejects a payload unless every board is a plain object whose sections have these shapes, and it drops an invalid `season`. A payload with no mode, or a mode that disagrees with its board count, resolves to the smallest mode that fits (`resolveTeamMode`). Team types are never written: they are derived from the maps. The canonical form used by saved teams drops `active` and `d`, writes board keys in `BOARD_CONTENT_KEYS` order and normalizes `u` rows ([Teams](./TEAMS.md)). A saved team's data is interchange JSON, not a link: sharing goes through an export file or Copy Link, which re-encodes it as binary (`encodeMultiGridStateToLinkUrl`).
 
 Adding a section is forward-compatible for rendering: an older client ignores the unknown key and shows the rest. It is not compatible for saving. An older client that imports an export or re-saves a loaded team canonicalizes through its own `BOARD_CONTENT_KEYS` and drops the new section for good. Binary links have no such leniency: an older client rejects a bitmap bit it does not know.
 

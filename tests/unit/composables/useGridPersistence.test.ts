@@ -44,7 +44,7 @@ describe('useTeamsPersistence', () => {
     expect(storage.get(teamsSlotKey('3v3'))).toBe('existing-slot')
   })
 
-  it('routes flush writes to the live mode slot with a versioned envelope', () => {
+  it('routes flush writes to the live mode slot as { data, sourceId }', () => {
     const mode = ref<TeamModeKey>('3v3')
     const sourceId = ref<string | null>('team-42')
     const persistence = useTeamsPersistence(mode, sourceId, FLAGS)
@@ -52,7 +52,7 @@ describe('useTeamsPersistence', () => {
 
     persistence.flush()
     const slot = readEnvelope('3v3')
-    expect(slot.v).toBe(1)
+    expect(Object.keys(slot).sort()).toEqual(['data', 'sourceId'])
     expect(slot.sourceId).toBe('team-42')
     expect(typeof slot.data).toBe('string')
     expect(storage.has(teamsSlotKey('5v5'))).toBe(false)
@@ -63,7 +63,7 @@ describe('useTeamsPersistence', () => {
     expect(readEnvelope('5v5').sourceId).toBeNull()
   })
 
-  it('load round-trips the envelope and rejects corrupt or wrong-version slots', () => {
+  it('load round-trips the envelope and rejects corrupt slots', () => {
     const mode = ref<TeamModeKey>('1v1')
     const persistence = useTeamsPersistence(mode, ref('abc'), FLAGS)
     persistence.startAutosave()
@@ -76,9 +76,7 @@ describe('useTeamsPersistence', () => {
     expect(persistence.load('3v3')).toBeNull()
     storage.set(teamsSlotKey('3v3'), 'not json')
     expect(persistence.load('3v3')).toBeNull()
-    storage.set(teamsSlotKey('3v3'), JSON.stringify({ v: 2, data: 'x', sourceId: null }))
-    expect(persistence.load('3v3')).toBeNull()
-    storage.set(teamsSlotKey('3v3'), JSON.stringify({ v: 1, data: 42, sourceId: null }))
+    storage.set(teamsSlotKey('3v3'), JSON.stringify({ data: 42, sourceId: null }))
     expect(persistence.load('3v3')).toBeNull()
   })
 

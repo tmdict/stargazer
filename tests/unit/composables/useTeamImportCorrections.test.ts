@@ -175,8 +175,7 @@ describe('download import corrections', () => {
     const raw = await pending
     expect(JSON.parse(raw)).toMatchObject({
       format: 'stargazer-import-corrections',
-      version: 2,
-      learnedIcons: { v: 1, icons: [] },
+      learnedIcons: { icons: [] },
       shots: [
         {
           source: {

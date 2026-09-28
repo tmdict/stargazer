@@ -546,7 +546,6 @@ export function useTeamImport(mode: () => TeamModeKey): {
     return JSON.stringify(
       {
         format: 'stargazer-import-corrections',
-        version: 2,
         createdAt: new Date().toISOString(),
         learnedIcons,
         shots: records,

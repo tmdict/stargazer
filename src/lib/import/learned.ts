@@ -1,6 +1,7 @@
 /* The descriptor format shared by browser learning, correction exports and
- * curated references. Geometry checks prevent matching stale face crops;
- * changes to normalisation or quantisation must also bump the version. */
+ * curated references. `spec` checks prevent matching stale face crops; a
+ * change to normalisation or quantisation must add a field to SPEC and
+ * specMatches, so faces encoded the old way stop matching. */
 
 import { decodeLearned, DESCRIPTOR_SIZE, encodeLearned } from './heroes'
 import { ART_BOX } from './layout'
@@ -9,7 +10,6 @@ import type { LearnedIcon } from './types'
 export const LEARNED_ICONS_CAP = 100
 
 interface LearnedEnvelope {
-  v: 1
   spec: { descriptor: [number, number]; box: [number, number, number] }
   icons: LearnedIcon[]
 }
@@ -40,7 +40,7 @@ const isIcon = (value: unknown): value is LearnedIcon => {
 export function readLearnedIcons(value: unknown): LearnedIcon[] {
   if (typeof value !== 'object' || value === null) return []
   const env = value as Partial<LearnedEnvelope>
-  if (env.v !== 1 || !specMatches(env.spec) || !Array.isArray(env.icons)) return []
+  if (!specMatches(env.spec) || !Array.isArray(env.icons)) return []
   return env.icons.filter(isIcon)
 }
 
@@ -54,7 +54,6 @@ export function parseLearnedIcons(raw: string | null): LearnedIcon[] {
 }
 
 export const learnedIconEnvelope = (icons: readonly LearnedIcon[]): LearnedEnvelope => ({
-  v: 1,
   spec: SPEC,
   icons: [...icons],
 })

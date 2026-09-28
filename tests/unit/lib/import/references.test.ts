@@ -52,7 +52,6 @@ describe('curated hero references', () => {
 
   it('rejects incompatible descriptors and skips malformed entries', () => {
     const envelope = learnedIconEnvelope([icon])
-    expect(readLearnedIcons({ ...envelope, v: 2 })).toEqual([])
     expect(readLearnedIcons({ ...envelope, spec: { ...envelope.spec, box: [0, 0, 1] } })).toEqual(
       [],
     )
