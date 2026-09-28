@@ -1,5 +1,5 @@
 /* The saved-teams library: named canonical snapshots of N-grid teams, persisted
- * under one versioned localStorage blob.
+ * under one localStorage blob.
  *
  * Layering: this store returns typed results and never surfaces user feedback;
  * toasts belong to the calling components/composables (stores must not call
@@ -26,33 +26,24 @@ import { buildExport, parseImport, type TeamsExportFile } from '@/lib/teams/tran
 import { readStorage, writeStorage } from '@/utils/storage'
 
 const LIBRARY_KEY = 'stargazer.teams.saved'
-const BACKUP_KEY = `${LIBRARY_KEY}.backup`
-const LIBRARY_VERSION = 1
 
-interface LibraryBlob {
-  v: number
-  teams: unknown[]
-}
-
+// The stored value is a plain array of records (docs/architecture/TEAMS.md).
 const readLibrary = (): SavedTeam[] => {
   const raw = readStorage(LIBRARY_KEY)
   if (!raw) return []
-  let blob: LibraryBlob
+  let parsed: unknown
   try {
-    blob = JSON.parse(raw) as LibraryBlob
+    parsed = JSON.parse(raw)
   } catch {
     return []
   }
-  if (typeof blob !== 'object' || blob === null) return []
-  if (blob.v !== LIBRARY_VERSION || !Array.isArray(blob.teams)) {
-    // An unknown version is treated as empty, never shape-read, but it is
-    // likely a NEWER app version's library, and this version's next mutation
-    // will overwrite the live key, so preserve the blob under a backup key.
-    if (readStorage(BACKUP_KEY) === null) writeStorage(BACKUP_KEY, raw)
-    return []
-  }
+  // TEMPORARY: delete with upgradeMigration.ts (its runbook names this line).
+  // A library its v pass has not rewritten yet still loads, and the next write
+  // stores it as the plain array, so a failed rewrite can't lose a team.
+  const records = Array.isArray(parsed) ? parsed : (parsed as { teams?: unknown } | null)?.teams
+  if (!Array.isArray(records)) return []
   const teams: SavedTeam[] = []
-  for (const record of blob.teams) {
+  for (const record of records) {
     // Per-record isolation: one malformed record must drop alone, never hide
     // (or, via the next write, wipe) the rest of the library.
     try {
@@ -67,7 +58,7 @@ const readLibrary = (): SavedTeam[] => {
 }
 
 const writeLibrary = (teams: SavedTeam[]): boolean =>
-  writeStorage(LIBRARY_KEY, JSON.stringify({ v: LIBRARY_VERSION, teams }))
+  writeStorage(LIBRARY_KEY, JSON.stringify(teams))
 
 export const useTeamLibrary = defineStore('teamLibrary', () => {
   const teams = ref<SavedTeam[]>(readLibrary())

@@ -89,15 +89,15 @@ describe('buildSideLoadPlan', () => {
     const board = plan.boards[0]!
     expect(board.mains).toEqual([
       { unitId: 11, hexId: 1, attrs: { 1: 3, 2: 4 } },
-      { unitId: 12, hexId: 2, attrs: {} },
-      { unitId: toSynergyId(16), hexId: 5, attrs: {} },
+      { unitId: 12, hexId: 2 },
+      { unitId: toSynergyId(16), hexId: 5 },
     ])
     // Companions become settle targets tied to their band-preserving main.
     expect(board.companions).toEqual([
       { unitId: 10012, hexId: 3, mainUnitId: 12 },
       { unitId: toSynergyId(10016), hexId: 6, mainUnitId: toSynergyId(16) },
     ])
-    expect(board.phantimal).toEqual({ unitId: toPhantimalId(1), hexId: 4, attrs: {} })
+    expect(board.phantimal).toEqual({ unitId: toPhantimalId(1), hexId: 4 })
     expect(board.artifact).toBe(7)
   })
 

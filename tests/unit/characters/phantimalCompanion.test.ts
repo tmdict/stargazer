@@ -260,7 +260,7 @@ describe('phantimal companion serialization', () => {
       season: CURRENT_SEASON,
     })
     const board = buildSideLoadPlan(record, false)!.boards[0]!
-    expect(board.phantimal).toEqual({ unitId: OWNER, hexId: 16, attrs: {} })
+    expect(board.phantimal).toEqual({ unitId: OWNER, hexId: 16 })
     expect(board.companions).toEqual([{ unitId: COMPANION, hexId: 9, mainUnitId: OWNER }])
   })
 })

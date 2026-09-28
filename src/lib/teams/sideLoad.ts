@@ -32,10 +32,8 @@ export interface SideLoadUnit {
   unitId: number
   // The record's own hex; the executor resolves it against the live map.
   hexId: number
-  // Saved upgrade attrs. The executor stamps the whole record with replace
-  // semantics, so an empty record still clears stale values lingering on the
-  // board (attrs survive removal) before the incoming hero would adopt them.
-  attrs: AttrRecord
+  // Saved upgrade attrs, present only when the record holds some for the unit.
+  attrs?: AttrRecord
 }
 
 export interface SideLoadCompanion {
@@ -75,7 +73,7 @@ function sideOfDecoded(decoded: MultiGridState): Team | null {
 
 // Memoized on the immutable data string (records mutate by replacement, so
 // entries never go stale). Unbounded by design: entries are tiny and the
-// library caps at 200 records.
+// library caps at MAX_SAVED_TEAMS records.
 const sideCache = new Map<string, Team | null>()
 
 export function savedTeamSide(data: string): Team | null {
@@ -127,7 +125,8 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
           mainUnitId: characterId % COMPANION_ID_OFFSET,
         })
       } else {
-        mains.push({ unitId: characterId, hexId, attrs: attrsByHero.get(characterId) ?? {} })
+        const attrs = attrsByHero.get(characterId)
+        mains.push(attrs ? { unitId: characterId, hexId, attrs } : { unitId: characterId, hexId })
       }
     }
     if (allowSynergy) {
@@ -141,7 +140,7 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
             mainUnitId: toSynergyId(localId % COMPANION_ID_OFFSET),
           })
         } else {
-          mains.push({ unitId: toSynergyId(localId), hexId, attrs: {} })
+          mains.push({ unitId: toSynergyId(localId), hexId })
         }
       }
     }
@@ -159,7 +158,7 @@ export function buildSideLoadPlan(data: string, allowSynergy: boolean): SideLoad
           mainUnitId: toPhantimalId(ownerLocal),
         })
       } else {
-        phantimal ??= { unitId: toPhantimalId(localId), hexId, attrs: {} }
+        phantimal ??= { unitId: toPhantimalId(localId), hexId }
       }
     }
 

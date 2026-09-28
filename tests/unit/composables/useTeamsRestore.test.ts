@@ -187,7 +187,6 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('5v5'),
       JSON.stringify({
-        v: 1,
         data: encodeMultiGridStateToUrl({
           boards: ['arena1', 'arena3', 'arena1', 'arena1', 'arena1'].map((m) => ({ m })),
           mode: '5v5',
@@ -205,7 +204,6 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        v: 1,
         data: encodeMultiGridStateToUrl({
           boards: [{ m: 'arena1' }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
@@ -228,7 +226,6 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        v: 1,
         data: encodeMultiGridStateToUrl({
           boards: [{ m: 'arena1', s: [[7, 2, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
@@ -249,7 +246,6 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        v: 1,
         data: encodeMultiGridStateToUrl({
           boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
           mode: '3v3',
@@ -313,7 +309,6 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('3v3'),
       JSON.stringify({
-        v: 1,
         data: encode3v3Empty(),
         sourceId: 'dead',
       } satisfies ActiveSlot),
@@ -349,7 +344,6 @@ describe('useTeamsRestore', () => {
     storage.set(
       teamsSlotKey('1v1'),
       JSON.stringify({
-        v: 1,
         data: encode1v1WithUnit(),
         sourceId: 'team-1',
       } satisfies ActiveSlot),

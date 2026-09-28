@@ -9,6 +9,10 @@
 - Test changes: `npm run lint` and `npm run type-check`
 - Update relevant architecture docs when making major changes
 
+### Data Contracts
+
+Any new or changed data contract requires the owner's explicit approval before it is implemented, however small. This covers localStorage keys and every field or shape inside a stored value, export and import file formats, and share-link formats. A version field, a backup key or a default field counts. Present the exact keys and field-by-field shapes for approval, then document each one, with a complete example payload, in the doc of the feature that owns it, and list new keys in the key index under "Where state is stored" in [Architecture](./docs/ARCHITECTURE.md), in the same change.
+
 ### Comments
 
 Add a comment only when the code can't tell the story itself: a non-obvious mechanic, something that looks wrong but is intentional, a cross-file contract, or a real gotcha. If a competent reader could already know it from the code, omit it.
@@ -44,7 +48,7 @@ System docs:
 - [Teams](./docs/architecture/TEAMS.md) - Teams page: modes, storage, saved-team library
 - [Team Import](./docs/architecture/IMPORT_TEAM.md) - Match screenshot import
 - [Seasonal Content](./docs/architecture/SEASONAL.md) - Phantimals, seasonal artifacts, charms, season cutover
-- [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and storage formats
+- [URL Serialization](./docs/architecture/URL_SERIALIZATION.md) - Link and interchange formats
 - [Guide](./docs/architecture/GUIDE.md) - Guide pages, season summaries, counter ladder
 - [Pre-Rendering](./docs/architecture/PRE_RENDERING.md) - Static-site build, meta, hosting
 

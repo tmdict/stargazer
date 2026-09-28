@@ -30,7 +30,6 @@ import {
   getTilesWithCharacters,
   getTilesWithCharactersByTeam,
   hasCharacter,
-  isBaseHeroId,
   isCompanionUnitId,
   resolvePlacement,
 } from '@/lib/characters/character'
@@ -292,13 +291,15 @@ export const useGrids = defineStore('grids', () => {
     const characterId = getCharacter(sourceCtx.grid, sourceHexId)
     const sourceTeam = getCharacterTeam(sourceCtx.grid, sourceHexId)
     if (characterId === undefined || sourceTeam === undefined) return false
+    // Read before the remove, which drops the hero's record from its board.
+    const record = sourceCtx.getAttrs(sourceTeam, characterId)
     if (!sourceCtx.remove(sourceHexId)) return false
     if (placeUnit(targetCtx, targetHexId, characterId, destTeam)) {
-      // Attrs follow the hero to its destination board and team.
-      targetCtx.setAttrs(destTeam, characterId, sourceCtx.takeAttrs(sourceTeam, characterId))
+      targetCtx.setAttrs(destTeam, characterId, record)
       return true
     }
     placeUnit(sourceCtx, sourceHexId, characterId, sourceTeam) // rollback
+    sourceCtx.setAttrs(sourceTeam, characterId, record)
     return false
   }
 
@@ -320,17 +321,17 @@ export const useGrids = defineStore('grids', () => {
     if (aId === undefined || bId === undefined || aTeam === undefined || bTeam === undefined) {
       return false
     }
+    // Read before the removes, which drop both records from their boards.
+    const aRecord = sourceCtx.getAttrs(aTeam, aId)
+    const bRecord = targetCtx.getAttrs(bTeam, bId)
     if (!sourceCtx.remove(sourceHexId)) return false
     if (!targetCtx.remove(targetHexId)) {
       placeUnit(sourceCtx, sourceHexId, aId, aTeam) // rollback
+      sourceCtx.setAttrs(aTeam, aId, aRecord)
       return false
     }
     const placedA = placeUnit(targetCtx, targetHexId, aId, bTeam)
     if (placedA && placeUnit(sourceCtx, sourceHexId, bId, aTeam)) {
-      // Attrs follow each hero. Take both records before writing either: a
-      // same-hero cross-team swap (aId === bId) reuses a key.
-      const aRecord = sourceCtx.takeAttrs(aTeam, aId)
-      const bRecord = targetCtx.takeAttrs(bTeam, bId)
       targetCtx.setAttrs(bTeam, aId, aRecord)
       sourceCtx.setAttrs(aTeam, bId, bRecord)
       return true
@@ -338,6 +339,8 @@ export const useGrids = defineStore('grids', () => {
     if (placedA) targetCtx.remove(targetHexId)
     placeUnit(sourceCtx, sourceHexId, aId, aTeam) // rollback to originals
     placeUnit(targetCtx, targetHexId, bId, bTeam)
+    sourceCtx.setAttrs(aTeam, aId, aRecord)
+    targetCtx.setAttrs(bTeam, bId, bRecord)
     return false
   }
 
@@ -442,7 +445,7 @@ export const useGrids = defineStore('grids', () => {
 
   /* Stamp a one-sided saved team (lib/teams/sideLoad) onto the live boards:
    * clear the destination side first via clearTeam (the dock's per-team wipe:
-   * skill cleanup, companion cascade, attr and artifact purge), then place
+   * skill cleanup, companion cascade, artifact), then place
    * each unit on its saved hex, falling back to a random tile when the live
    * map assigns that tile elsewhere or something already stands there.
    * `invert` flips the destination team and 180-rotates every saved hex; scope
@@ -462,8 +465,6 @@ export const useGrids = defineStore('grids', () => {
       return ctx ? [{ ctx, board }] : []
     })
 
-    // clearTeam, not per-hex removal: it also drops the side's attr records,
-    // so an evicted hero re-placed later can't resurrect its old levels.
     for (const { ctx } of targets) ctx.clearTeam(dest)
 
     const targetHexFor = (ctx: GridContext, unit: { hexId: number }): number | undefined =>
@@ -522,7 +523,7 @@ export const useGrids = defineStore('grids', () => {
           continue
         }
         placed++
-        if (isBaseHeroId(unit.unitId)) ctx.setAttrs(dest, unit.unitId, unit.attrs)
+        if (unit.attrs) ctx.setAttrs(dest, unit.unitId, unit.attrs)
         settleCompanions(ctx, board, unit.unitId)
       }
       if (board.phantimal) {

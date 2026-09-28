@@ -154,9 +154,10 @@ export const useUrlStateStore = defineStore('urlState', () => {
     if (gridState.y) restoreCharacterBand(gridState.y, toSynergyId)
 
     // Restore upgrade attrs from compact format: [team, characterId, attrId,
-    // value]. Characters are already placed; setAttr keys by team + character,
-    // so it doesn't depend on hex placement, and an unknown attrId (crafted
-    // payload) clamps to default and stores nothing.
+    // value]. Runs after the characters are placed, because setAttr ignores a
+    // hero that isn't on the board (a row whose hero failed to place is
+    // dropped); an unknown attrId (crafted payload) clamps to default and
+    // stores nothing.
     if (gridState.u) {
       const ctx = grids.active!
       gridState.u.forEach((entry) => {
