@@ -81,8 +81,10 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   letter-spacing: 0.03em;
 }
 
+/* The fields' min-height, so every label in a row sits level. */
 .segmented {
   display: inline-flex;
+  min-height: 34px;
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-medium);
   overflow: hidden;
@@ -132,6 +134,15 @@ select.setting-input {
 
 .setting-input.gap {
   width: 64px;
+}
+
+/* 16px floor: iOS zooms the page when a smaller field gains focus. The toggle
+   follows so its text matches. */
+@media (pointer: coarse) {
+  .setting-input,
+  .seg-btn {
+    font-size: 1rem;
+  }
 }
 
 .unit {

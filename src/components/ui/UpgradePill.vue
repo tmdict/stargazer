@@ -16,12 +16,16 @@ const {
   refinement,
   editable = false,
   compact = false,
+  reserved = false,
 } = defineProps<{
   paragon: number
   refinement: number
   editable?: boolean
   // Narrower touch halves for a dense grid (the Rosters tab), keeping their height.
   compact?: boolean
+  // Invisible but still sized, so a hero grid's cells stay one width: the pill is
+  // wider than a phone portrait.
+  reserved?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -55,7 +59,12 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 </script>
 
 <template>
-  <span class="upill" :class="{ editable, compact }" :style="{ background }">
+  <span
+    class="upill"
+    :class="{ editable, compact, reserved }"
+    :style="{ background }"
+    :aria-hidden="reserved || undefined"
+  >
     <button
       type="button"
       class="useg"
@@ -106,6 +115,11 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 
 .editable .useg {
   cursor: pointer;
+}
+
+/* Hidden, it also takes no clicks. */
+.reserved {
+  visibility: hidden;
 }
 
 .useg.max {
