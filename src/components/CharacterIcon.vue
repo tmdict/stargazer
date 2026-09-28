@@ -36,7 +36,11 @@ const emit = defineEmits<{
 const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 const { startDrag, endDrag } = useDragDrop()
-const { onMouseDown, onMouseUp } = usePressClick(() => emit('characterClick', props.character))
+const {
+  onMouseDown,
+  onMouseUp,
+  cancel: cancelPress,
+} = usePressClick(() => emit('characterClick', props.character))
 const { showTooltip, onMouseEnter, onMouseLeave, onTouchStart } = useHoverTooltip()
 
 const characterElement = ref<HTMLElement>()
@@ -69,6 +73,11 @@ const {
   showTooltip.value = false
   void inspect(target)
 })
+
+const handleContextMenu = (event: MouseEvent) => {
+  cancelPress()
+  if (inspectTarget.value) onContextMenu(event, inspectTarget.value)
+}
 
 const handleDragStart = (event: DragEvent) => {
   if (!props.isDraggable) return
@@ -104,7 +113,7 @@ const handleDragEnd = (event: DragEvent) => {
         @mousedown="onMouseDown"
         @mouseup="onMouseUp"
         @pointerdown="inspectTarget && startHold($event, inspectTarget)"
-        @contextmenu="inspectTarget && onContextMenu($event, inspectTarget)"
+        @contextmenu="handleContextMenu"
         @mouseenter="onMouseEnter"
         @mouseleave="onMouseLeave"
         @touchstart="onTouchStart"
@@ -250,8 +259,6 @@ const handleDragEnd = (event: DragEvent) => {
   box-shadow: 0 0 0 5px #c05b4d;
 }
 
-/* Seated on the portrait's bottom edge, over the white ring, like the board's
-   hero panel pills. */
 /* The portrait's 5px ring sits outside its box, so this small pull seats the
    badge over the ring's visible edge by about a third of its height, as the
    board hero card's pill does. */

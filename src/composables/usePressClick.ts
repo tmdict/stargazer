@@ -9,6 +9,8 @@ const CLICK_THRESHOLD_MS = 200
  * fire after every drag. Bind `onMouseDown`/`onMouseUp` to the element;
  * `onMouseUp` forwards its arguments to the click callback. Only the primary
  * button counts, since a right-click is the inspect gesture (useLongPress).
+ * macOS Ctrl+click reports the primary button yet opens the context menu, so
+ * bind `cancel` on `contextmenu` too: that press is an inspect, not a click.
  */
 export function usePressClick<T extends unknown[]>(onClick: (...args: T) => void) {
   const pressStart = ref<number | null>(null)
@@ -24,5 +26,9 @@ export function usePressClick<T extends unknown[]>(onClick: (...args: T) => void
     if (duration < CLICK_THRESHOLD_MS) onClick(...args)
   }
 
-  return { onMouseDown, onMouseUp }
+  const cancel = () => {
+    pressStart.value = null
+  }
+
+  return { onMouseDown, onMouseUp, cancel }
 }

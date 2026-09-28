@@ -71,7 +71,7 @@ const handleClick = (): void => {
   padding: 0;
   border: none;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.09);
   color: var(--color-text-secondary);
   font-size: 0.62rem;
   font-weight: 800;
@@ -81,7 +81,7 @@ const handleClick = (): void => {
 }
 
 .dock-chip:hover:not(:disabled):not(.danger) {
-  background: rgba(0, 0, 0, 0.18);
+  background: rgba(0, 0, 0, 0.14);
   color: var(--color-text-primary);
 }
 

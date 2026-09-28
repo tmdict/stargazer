@@ -78,7 +78,7 @@ const handlePhantimalClick = (phantimal: PhantimalType) => {
 }
 
 // A drag must not also fire a placement, so clicks are press-duration gated.
-const { onMouseDown, onMouseUp } = usePressClick(handlePhantimalClick)
+const { onMouseDown, onMouseUp, cancel: cancelPress } = usePressClick(handlePhantimalClick)
 
 const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   if (!isDraggable) return
@@ -123,6 +123,11 @@ const {
   onPortraitLeave()
   void inspect({ kind: 'phantimal', phantimal })
 })
+
+const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void => {
+  cancelPress()
+  onContextMenu(event, phantimal)
+}
 </script>
 
 <template>
@@ -139,7 +144,7 @@ const {
           @mousedown="onMouseDown"
           @mouseup="onMouseUp(phantimal)"
           @pointerdown="startHold($event, phantimal)"
-          @contextmenu="onContextMenu($event, phantimal)"
+          @contextmenu="handleContextMenu($event, phantimal)"
           @mouseenter="onPortraitEnter($event, phantimal)"
           @mouseleave="onPortraitLeave"
           @touchstart.passive="onPortraitTouchStart"
