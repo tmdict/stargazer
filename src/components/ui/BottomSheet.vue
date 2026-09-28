@@ -4,10 +4,10 @@ import { computed, watch } from 'vue'
 import { useBottomSheet } from '@/composables/useBottomSheet'
 import { useScrollLock } from '@/composables/useScrollLock'
 
-// Shared roster panel for the grid (`HomeView`), skills (`SkillsBrowser`), and
+// Shared side panel for the grid (`HomeView`), skills (`SkillsBrowser`), and
 // guide (`GuideView`) pages: a card column on desktop, a drag-to-resize
 // pull-up sheet on mobile.
-// The slot holds the page's content (tabs / roster); its own fill + scroll
+// The slot holds the page's content (tabs / hero list); its own fill + scroll
 // stays in the page since each content component scrolls differently.
 const {
   peek = 56,
@@ -78,8 +78,8 @@ const onScrimClick = () => {
   emit('dismiss')
 }
 
-// Imperative open for "tap the empty content to reveal the roster": a no-op on
-// desktop, where the roster column is always visible (there's no sheet).
+// Imperative open for "tap the empty content to reveal the panel": a no-op on
+// desktop, where the panel column is always visible (there's no sheet).
 const expand = () => {
   if (isMobile.value) sheetExpanded.value = true
 }
@@ -150,7 +150,7 @@ const onSheetClickCapture = (e: MouseEvent) => {
 .bottom-sheet {
   width: 100%;
   /* The inset vars ARE the card's padding (horizontal uses the shared token so a
-     plain roster's inset matches a TabView's); TabView reads them to bleed its
+     plain panel's inset matches a TabView's); TabView reads them to bleed its
      strip to the card edge, so the two can't drift apart. */
   --tabview-inset-y: 2em;
   --tabview-inset-x: var(--content-padding-x);

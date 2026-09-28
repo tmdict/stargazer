@@ -14,7 +14,7 @@ The upgrade tracks on the index place each band's levels at their share of that 
 
 A finished season's summary (`src/content/pvp/s<N>/summary.ts`) is a typed literal written once from the season's report and never edited: the team groups and the counters between them. Nothing derives these numbers, and each counter's evidence band is copied from the report rather than recomputed from its record, so the index never disagrees with the report. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) lists the summaries newest first. The index shows every entry's report block and the first entry's ladder.
 
-Team ids and counter anchors follow the report's `counter-<winner>-vs-<loser>` fragment ids, so the ladder's curves link straight to the evidence. `tests/unit/content/pvpSeasons.test.ts` checks every summary against the roster and its report: known hero slugs, counters only between listed teams, and anchors present in the template.
+Team ids and counter anchors follow the report's `counter-<winner>-vs-<loser>` fragment ids, so the ladder's curves link straight to the evidence. `tests/unit/content/pvpSeasons.test.ts` checks every summary against the hero list and its report: known hero slugs, counters only between listed teams, and anchors present in the template.
 
 To add a season, write `s<N>/summary.ts` beside `s<N>/index.template.html` and put it at the front of `PVP_SEASONS`.
 

@@ -43,7 +43,7 @@ const seedTypes = (library: Library): void => {
   library.saveAsNew('3v3', mapsRecord(TEAM_VARIANTS.gd.maps, '3v3'), 'S7 GD')
 }
 
-// Real roster ids: Rolan (121) and Alsa (48). Hero matching needs the store's
+// Real hero ids: Rolan (121) and Alsa (48). Hero matching needs the store's
 // id-to-slug lookup and the en name index.
 const heroRecord = (ids: number[]): string =>
   record({
@@ -144,7 +144,7 @@ describe('SavedTeamsList hero search', () => {
     expect(searchInput().value).toBe('')
     expect(cardNames()).toEqual(['Duo', 'Solo'])
 
-    // Aliceth is in the roster but on no team, so only Alsa is offered.
+    // Aliceth is in the hero list but on no team, so only Alsa is offered.
     await typeText('al')
     expect(options()).toEqual(['Alsa'])
     await press('Enter')

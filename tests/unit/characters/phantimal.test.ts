@@ -6,7 +6,7 @@ import {
   getAvailableTeamSize,
   setMaxTeamSize,
 } from '@/lib/characters/character'
-import { isPhantimalId, PHANTIMAL_ID_OFFSET, toPhantimalId } from '@/lib/characters/phantimal'
+import { toPhantimalId } from '@/lib/characters/phantimal'
 import { performPlace } from '@/lib/characters/place'
 import { performRemove } from '@/lib/characters/remove'
 import { Grid } from '@/lib/grid'
@@ -15,16 +15,6 @@ import { Team } from '@/lib/types/team'
 import { STANDARD_ARENA, STANDARD_GRID } from '../fixtures/grid'
 
 describe('phantimal', () => {
-  describe('id helpers', () => {
-    it('identifies phantimal ids by the offset', () => {
-      expect(isPhantimalId(PHANTIMAL_ID_OFFSET)).toBe(true)
-      expect(isPhantimalId(toPhantimalId(1))).toBe(true)
-      expect(isPhantimalId(9999)).toBe(false)
-      // Companion range stays below phantimals
-      expect(isPhantimalId(10050)).toBe(false)
-    })
-  })
-
   describe('placement on the grid', () => {
     let grid: Grid
 

@@ -9,15 +9,16 @@
    two-step confirm; search matches team names and hero names exactly like the
    Saved Teams tab (shared composable). */
 
-import { computed, nextTick, onUnmounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 
 import TeamPreview, { estimatedPreviewHeight } from '@/components/teams/TeamPreview.vue'
 import IconFolderOpen from '@/components/ui/IconFolderOpen.vue'
 import MountOnVisible from '@/components/ui/MountOnVisible.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useArmedConfirm } from '@/composables/useArmedConfirm'
+import { useDropdown } from '@/composables/useDropdown'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
-import { useOverlay } from '@/composables/useOverlay'
+import { usePanelClamp } from '@/composables/usePanelClamp'
 import { useSavedTeamSearch } from '@/composables/useSavedTeamSearch'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useSelectionState } from '@/composables/useSelectionState'
@@ -34,7 +35,6 @@ import { useGameDataStore } from '@/stores/gameData'
 import { useGrids, type SideLoadOptions } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { useTeamLibrary } from '@/stores/teamLibrary'
-import { clampX } from '@/utils/viewport'
 
 const { activeMode } = defineProps<{ activeMode: TeamModeKey }>()
 
@@ -48,49 +48,31 @@ const { clearTargetHex, clearLiftedHex } = useSelectionState()
 const { isTouchDevice } = useTouchDetection()
 const updatedLabel = useUpdatedLabel()
 
-// One wrapper contains trigger and panel (the ArenaDropdown pattern), so the
-// toggle click can never race the overlay's outside-click close.
+// Click-only: opening focuses the search box, so hover-open would pull focus
+// as the pointer passes.
 const rootRef = ref<HTMLElement>()
 const triggerRef = ref<HTMLElement>()
 const panelRef = ref<HTMLElement>()
 const searchInput = ref<HTMLInputElement>()
-const open = ref(false)
-
-// The panel centers under the trigger; the shift nudges it back inside the
-// viewport when the trigger sits close to an edge (small screens, wrapped rows).
-const panelShift = ref(0)
-const clampPanel = (): void => {
-  const panel = panelRef.value
-  const trigger = triggerRef.value
-  if (!panel || !trigger) return
-  const rect = trigger.getBoundingClientRect()
-  const left = rect.left + rect.width / 2 - panel.offsetWidth / 2
-  panelShift.value = clampX(left, panel.offsetWidth, 8) - left
-}
+const {
+  open,
+  show,
+  hide: closeMenu,
+} = useDropdown({
+  rootRef,
+  onClose: () => {
+    armed.value = null
+  },
+})
+const panelShift = usePanelClamp(triggerRef, panelRef, () => open.value)
 
 const openMenu = async (): Promise<void> => {
   hideTip()
-  open.value = true
-  window.addEventListener('resize', clampPanel)
+  show()
   await nextTick()
-  clampPanel()
   // On touch, focusing would pop the keyboard over the panel.
   if (!isTouchDevice.value) searchInput.value?.focus()
 }
-
-const closeMenu = (): void => {
-  if (!open.value) return
-  open.value = false
-  armed.value = null
-  // A stale shift would flash for one frame on the next open if the trigger
-  // moved while closed.
-  panelShift.value = 0
-  window.removeEventListener('resize', clampPanel)
-}
-
-onUnmounted(() => window.removeEventListener('resize', clampPanel))
-
-useOverlay({ elementRef: rootRef, isOpen: open, onClose: closeMenu })
 
 // Memoized in the lib on the immutable data string.
 const sideOf = (team: SavedTeam): Team | null => savedTeamSide(team.data)

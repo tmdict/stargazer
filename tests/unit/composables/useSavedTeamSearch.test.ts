@@ -12,9 +12,9 @@ import { loadSkillLocale } from '@/utils/dataLoader'
 import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 import { GUNNAR } from '../fixtures/characters'
 
-/* Runs over the real roster and the en name index. Rolan and Alsa are the
+/* Runs over the real hero list and the en name index. Rolan and Alsa are the
  * fielded heroes; Rowan and Aliceth share their prefixes but sit on no team,
- * so they prove the suggestion pool is the teams, not the roster. Gunnar
+ * so they prove the suggestion pool is the teams, not the hero list. Gunnar
  * shares records with Rolan but never a lineup, and Duo's enemy side mirrors
  * Rolan outside the Rolan + Alsa lineup. */
 

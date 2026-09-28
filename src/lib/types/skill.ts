@@ -77,7 +77,7 @@ export interface SkillCharms {
 }
 
 // On-disk shape of src/data/seasonal/charm/charms.json (auto-managed): charm
-// slug → the roster heroes sharing it. The inverse hero → charm lookup is
+// slug → the heroes sharing it. The inverse hero → charm lookup is
 // derived at load time.
 export type CharmData = Record<string, { heroes: string[] }>
 

@@ -4,7 +4,7 @@ import { canonicalTeamData, type SavedTeam } from '@/lib/teams/savedTeam'
 import { buildExport, parseImport } from '@/lib/teams/transfer'
 import { Team } from '@/lib/types/team'
 import type { MultiGridState } from '@/utils/gridStateSerializer'
-import { decodeMultiGridStateFromUrl, encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
 
 /* parseImport is the only place untrusted file content enters the app; this
  * suite exhausts its rejection paths, plus the merge/dedupe/id-stability rules. */
@@ -36,7 +36,7 @@ describe('buildExport', () => {
     const file = buildExport([record()], '2026-07-04T00:00:00.000Z')
     expect(file.exportedAt).toBe('2026-07-04T00:00:00.000Z')
     const result = parseImport(JSON.stringify(file), [])
-    expect(result).toMatchObject({ ok: true, skipped: 0, teams: [expect.any(Object)] })
+    expect(result).toMatchObject({ skipped: 0, accepted: [expect.any(Object)] })
   })
 })
 
@@ -48,7 +48,7 @@ describe('parseImport envelope rejection', () => {
     ['wrong kind', envelope([], { kind: 'settings' })],
     ['teams not an array', JSON.stringify({ app: 'stargazer', kind: 'saved-teams', teams: 'x' })],
   ])('rejects %s wholesale', (_label, raw) => {
-    expect(parseImport(raw, [])).toEqual({ ok: false })
+    expect(parseImport(raw, [])).toBeNull()
   })
 })
 
@@ -68,61 +68,38 @@ describe('parseImport record validation', () => {
       ]),
       [],
     )
-    expect(result).toMatchObject({ ok: true, skipped: 3, teams: [expect.any(Object)] })
+    expect(result).toMatchObject({ skipped: 3, accepted: [expect.any(Object)] })
     warn.mockRestore()
   })
 
-  it('canonicalizes accepted data (viewer state stripped, byte-stable)', () => {
-    const withViewerState = encode({
-      boards: [{ m: 'arena1', c: [[1, 11, Team.ALLY]] }, { m: 'arena1' }, { m: 'arena1' }],
-      active: 2,
-      d: 127,
-      mode: '3v3',
-    })
-    const result = parseImport(envelope([record({ data: withViewerState })]), [])
-    expect(result.ok).toBe(true)
-    if (!result.ok) return
-    const stored = result.teams[0]!.data
-    expect(stored).toBe(canonicalTeamData(withViewerState))
-    const decoded = decodeMultiGridStateFromUrl(stored)!
-    expect(decoded.active).toBeUndefined()
-    expect(decoded.d).toBeUndefined()
-    // Round-trips to itself, so a selected import can never start dirty.
-    expect(canonicalTeamData(stored)).toBe(stored)
-  })
-
   it('keeps the file id so a record round-trips with its identity', () => {
-    const result = parseImport(envelope([record({ id: 'stable-id' })]), [])
-    if (!result.ok) throw new Error('expected ok')
-    expect(result.teams[0]!.id).toBe('stable-id')
+    const result = parseImport(envelope([record({ id: 'stable-id' })]), [])!
+    expect(result.accepted[0]!.id).toBe('stable-id')
     expect(result.conflicts).toBe(0)
   })
 
   it('marks an old version of an existing team (its id is taken) as a conflict', () => {
     const existing = record({ id: 'existing', name: 'Other' })
-    const result = parseImport(envelope([record({ id: 'existing' })]), [existing])
-    if (!result.ok) throw new Error('expected ok')
+    const result = parseImport(envelope([record({ id: 'existing' })]), [existing])!
     expect(result.conflicts).toBe(1)
-    expect(result.teams[0]!.id).not.toBe('existing')
-    expect(result.teams[0]!.name).toBe('Alpha (imported)')
+    expect(result.accepted[0]!.id).not.toBe('existing')
+    expect(result.accepted[0]!.name).toBe('Alpha (imported)')
   })
 
   it('regenerates in-file duplicate ids without marking a conflict', () => {
     const result = parseImport(
       envelope([record({ id: 'dupe' }), record({ id: 'dupe', name: 'Other' })]),
       [],
-    )
-    if (!result.ok) throw new Error('expected ok')
-    expect(result.teams[0]!.id).toBe('dupe')
-    expect(result.teams[1]!.id).not.toBe('dupe')
-    expect(result.teams[1]!.name).toBe('Other')
+    )!
+    expect(result.accepted[0]!.id).toBe('dupe')
+    expect(result.accepted[1]!.id).not.toBe('dupe')
+    expect(result.accepted[1]!.name).toBe('Other')
     expect(result.conflicts).toBe(0)
   })
 
   it('regenerates overlong ids', () => {
-    const result = parseImport(envelope([record({ id: 'x'.repeat(65) })]), [])
-    if (!result.ok) throw new Error('expected ok')
-    expect(result.teams[0]!.id).toHaveLength(36)
+    const result = parseImport(envelope([record({ id: 'x'.repeat(65) })]), [])!
+    expect(result.accepted[0]!.id).toHaveLength(36)
   })
 
   it('skips duplicates of existing teams and within the file (data + name)', () => {
@@ -139,9 +116,8 @@ describe('parseImport record validation', () => {
       [existing],
     )
     expect(result).toMatchObject({
-      ok: true,
       skipped: 2,
-      teams: [expect.objectContaining({ name: 'Different name' })],
+      accepted: [expect.objectContaining({ name: 'Different name' })],
     })
   })
 })

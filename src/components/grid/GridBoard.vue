@@ -1,7 +1,7 @@
 <script setup lang="ts">
 /* One board on the 5 v 5 page: the active-ring chrome around a reused
    GridContainer, plus a per-board clear. Interacting with the board (anywhere)
-   makes it the active board, which is what roster clicks and the Maps preset
+   makes it the active board, which is what picker clicks and the Maps preset
    target. GridContainer provides the board's context to its descendants. */
 
 import { computed } from 'vue'
@@ -28,8 +28,8 @@ const { context, info, showSkills, showPerspective, tapMode } = defineProps<{
   info: GridInfoView
   showSkills: boolean
   showPerspective: boolean
-  // Mobile: tap a cell to target it for the roster sheet; desktop: the on-grid
-  // popup. Driven by the page's breakpoint (the roster is a sheet at the same width).
+  // Mobile: tap a cell to target it for the picker sheet; desktop: the on-grid
+  // popup. Driven by the page's breakpoint (the picker is a sheet at the same width).
   tapMode: boolean
 }>()
 

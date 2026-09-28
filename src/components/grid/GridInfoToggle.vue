@@ -1,27 +1,27 @@
 <script setup lang="ts">
 /* The Grid Info control: a split chip whose body toggles the master pref and
-   whose caret opens the children panel. Three presentations: wide screens get a
-   checkbox checklist, narrow (Arena/Teams) gets a chip tray opened by tapping
-   the pill (master chip first), and ShareView gets a hover-opening,
-   right-aligned checklist. State lives in the shared device pref
+   whose caret opens the children panel; a mouse also opens it on hover. Three
+   presentations: wide screens get a checkbox checklist, narrow (Arena/Teams)
+   gets a chip tray opened by tapping the pill (master chip first), and
+   ShareView gets a right-aligned checklist. State lives in the shared device pref
    (useGridInfoPrefs); enable cascades run there, so a tap on a nested child
    also lights its parents. A row whose surface is ineffective (master or a
    structural parent off) dims but keeps its remembered checked state. */
 
-import { computed, nextTick, onMounted, onUnmounted, ref, useId } from 'vue'
+import { computed, onMounted, onUnmounted, ref, useId } from 'vue'
 
+import { useDropdown } from '@/composables/useDropdown'
 import {
   GRID_INFO_PARENTS,
   useGridInfoPrefs,
   type GridInfoKey,
 } from '@/composables/useGridInfoPrefs'
-import { useOverlay } from '@/composables/useOverlay'
+import { usePanelClamp } from '@/composables/usePanelClamp'
 import { useI18nStore } from '@/stores/i18n'
 import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
-import { clampX } from '@/utils/viewport'
 
 const { share = false } = defineProps<{
-  // ShareView presentation: hover-open, right-aligned, checklist everywhere.
+  // ShareView presentation: right-aligned, checklist everywhere.
   share?: boolean
 }>()
 
@@ -75,68 +75,23 @@ const rootRef = ref<HTMLElement>()
 const triggerRef = ref<HTMLElement>()
 const panelRef = ref<HTMLElement>()
 const panelId = useId()
-const open = ref(false)
+const {
+  open,
+  toggle: togglePanel,
+  onMouseEnter,
+  onMouseLeave,
+  onTouchStart,
+} = useDropdown({ rootRef, hover: true })
 
-// The panel centers under the trigger; the shift nudges it back inside the
-// viewport near an edge. The share panel right-aligns instead (never shifted).
-const panelShift = ref(0)
-const clampPanel = (): void => {
-  const panel = panelRef.value
-  const trigger = triggerRef.value
-  if (share || !panel || !trigger) return
-  const rect = trigger.getBoundingClientRect()
-  const left = rect.left + rect.width / 2 - panel.offsetWidth / 2
-  panelShift.value = clampX(left, panel.offsetWidth, 8) - left
-}
-
-const openPanel = async (): Promise<void> => {
-  cancelClose()
-  if (open.value) return
-  open.value = true
-  window.addEventListener('resize', clampPanel)
-  await nextTick()
-  clampPanel()
-}
-
-const closePanel = (): void => {
-  cancelClose()
-  if (!open.value) return
-  open.value = false
-  panelShift.value = 0
-  window.removeEventListener('resize', clampPanel)
-}
-
-const togglePanel = (): void => {
-  if (open.value) closePanel()
-  else void openPanel()
-}
-
-// ShareView auto-expands on hover (the ArenaDropdown mechanic): mouse pointers
-// only, since a touch tap synthesizes mouseenter before click, and the brief
-// close delay lets the cursor cross the chip-to-panel gap.
-const canHover = !import.meta.env.SSR && window.matchMedia('(hover: hover)').matches
-let closeTimer: ReturnType<typeof setTimeout> | null = null
-const cancelClose = (): void => {
-  if (closeTimer) clearTimeout(closeTimer)
-  closeTimer = null
-}
-const closeSoon = (): void => {
-  cancelClose()
-  closeTimer = setTimeout(closePanel, 100)
-}
-const hoverOpen = (): void => {
-  if (share && canHover) void openPanel()
-}
-const hoverClose = (): void => {
-  if (share && canHover) closeSoon()
-}
-
-useOverlay({ elementRef: rootRef, isOpen: open, onClose: closePanel })
-
-// Unmount with the panel open (route change, chip hidden by map-editor
-// painting) must still drop the resize listener; closePanel also cancels any
-// pending hover-close timer.
-onUnmounted(closePanel)
+// The checklist starts at the chip's left edge and the tray centres under the
+// pill, both nudged inside the viewport; the share panel right-aligns instead
+// (never shifted).
+const panelShift = usePanelClamp(
+  triggerRef,
+  panelRef,
+  () => open.value && !share,
+  () => (tray.value ? 'center' : 'left'),
+)
 </script>
 
 <template>
@@ -144,8 +99,9 @@ onUnmounted(closePanel)
     ref="rootRef"
     class="grid-info-toggle"
     :class="{ share }"
-    @mouseenter="hoverOpen"
-    @mouseleave="hoverClose"
+    @mouseenter="onMouseEnter"
+    @mouseleave="onMouseLeave"
+    @touchstart.passive="onTouchStart"
   >
     <!-- Narrow Arena/Teams: one pill, tap opens the tray (master lives inside). -->
     <button
@@ -191,7 +147,7 @@ onUnmounted(closePanel)
       :id="panelId"
       ref="panelRef"
       class="panel"
-      :class="{ tray, ralign: share }"
+      :class="{ tray, lalign: !tray && !share, ralign: share }"
       :style="{ '--panel-shift': `${panelShift}px` }"
     >
       <template v-if="tray">
@@ -382,7 +338,8 @@ onUnmounted(closePanel)
   color: rgba(255, 255, 255, 0.95);
 }
 
-/* Children panel, centered under the trigger and clamped to the viewport. */
+/* Children panel, centered under the trigger (or left-aligned) and clamped to
+   the viewport. */
 .panel {
   position: absolute;
   top: calc(100% + 4px);
@@ -395,6 +352,11 @@ onUnmounted(closePanel)
   padding: var(--spacing-sm);
   z-index: var(--z-dropdown);
   min-width: max-content;
+}
+
+.panel.lalign {
+  left: 0;
+  transform: translateX(var(--panel-shift, 0px));
 }
 
 .panel.ralign {

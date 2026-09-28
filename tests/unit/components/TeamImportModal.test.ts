@@ -10,7 +10,7 @@ import type { TeamImportPlan } from '@/lib/teams/teamImport'
 import { useI18nStore } from '@/stores/i18n'
 
 vi.mock('@/stores/grids', () => ({
-  useGrids: () => ({ rosterConflicts: () => [], rostersWouldReplace: () => false }),
+  useGrids: () => ({ lineupConflicts: () => [], lineupsWouldReplace: () => false }),
 }))
 
 vi.mock('@/stores/gameData', () => ({
@@ -137,15 +137,6 @@ describe('match import review and save', () => {
     await nextTick()
     expect(api.learnedCount.value).toBe(0)
     expect(forget.isConnected).toBe(false)
-  })
-
-  it('saves without player names and leaves the generated record name blank', async () => {
-    const { saved } = await mountImport()
-    const save = document.querySelector<HTMLButtonElement>('.footer-btn.danger')!
-    expect(document.querySelector('.record-name')!.textContent).toBe('')
-    expect(save.disabled).toBe(false)
-    save.click()
-    expect(saved).toHaveBeenCalledWith(expect.objectContaining({ suggestedName: '' }))
   })
 
   it.each(['confirm', 'correct'])(

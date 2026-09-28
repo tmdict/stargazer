@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 
-import PhantimalModal from './modals/PhantimalModal.vue'
-import InfoPill from './ui/InfoPill.vue'
+import HoldRing from './ui/HoldRing.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
+import { useInspect } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { toPhantimalId } from '@/lib/characters/phantimal'
@@ -37,7 +38,7 @@ const heading = computed(() => {
 })
 
 // Hex a phantimal currently occupies on a team, or null. Phantimals are capped at
-// one per team, so this also drives the "placed" affordance for the roster.
+// one per team, so this also drives the "placed" affordance for the picker.
 const placedHexForTeam = (phantimal: PhantimalType, team: Team) => {
   const id = toPhantimalId(phantimal.id)
   const tile = characterStore
@@ -83,7 +84,7 @@ const handleDragStart = (event: DragEvent, phantimal: PhantimalType) => {
   if (!isDraggable) return
   const id = toPhantimalId(phantimal.id)
   // Minimal character-shaped payload: the drop handler only needs the id (no
-  // sourceHexId marks it as a roster placement).
+  // sourceHexId marks it as a picker placement).
   const dragData = { id } as unknown as CharacterType
   startDrag(event, dragData, id, phantimalImageUrl(phantimal.name))
 }
@@ -112,12 +113,16 @@ const tooltipText = computed(() => {
   return i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT })
 })
 
-const selected = ref<PhantimalType | null>(null)
-const showModal = ref(false)
-const openModal = (phantimal: PhantimalType) => {
-  selected.value = phantimal
-  showModal.value = true
-}
+// Right-click or hold opens the phantimal's details, as on the board.
+const { inspect } = useInspect()
+const {
+  pressing,
+  start: startHold,
+  onContextMenu,
+} = useLongPress<PhantimalType>((phantimal) => {
+  onPortraitLeave()
+  void inspect({ kind: 'phantimal', phantimal })
+})
 </script>
 
 <template>
@@ -133,6 +138,8 @@ const openModal = (phantimal: PhantimalType) => {
           @dragend="handleDragEnd"
           @mousedown="onMouseDown"
           @mouseup="onMouseUp(phantimal)"
+          @pointerdown="startHold($event, phantimal)"
+          @contextmenu="onContextMenu($event, phantimal)"
           @mouseenter="onPortraitEnter($event, phantimal)"
           @mouseleave="onPortraitLeave"
           @touchstart.passive="onPortraitTouchStart"
@@ -146,21 +153,18 @@ const openModal = (phantimal: PhantimalType) => {
             crossorigin="anonymous"
           />
         </div>
-        <InfoPill :label="i18n.t(`game.${phantimal.faction}`)" @click="openModal(phantimal)" />
+        <HoldRing v-if="pressing === phantimal" />
       </div>
     </div>
-
-    <PhantimalModal
-      v-if="selected"
-      :show="showModal"
-      :phantimal="selected"
-      @close="showModal = false"
-    />
 
     <Teleport to="body">
       <TooltipPopup v-if="hovered && hoveredEl" :target-element="hoveredEl" variant="simple">
         <template #content>
-          <div class="phantimal-tooltip">{{ tooltipText }}</div>
+          <div class="phantimal-tooltip">
+            <div class="phantimal-tooltip-faction">{{ i18n.t(`game.${hovered.faction}`) }}</div>
+            <div>{{ tooltipText }}</div>
+            <div class="phantimal-tooltip-hint">{{ i18n.t('app.hold-for-details') }}</div>
+          </div>
         </template>
       </TooltipPopup>
     </Teleport>
@@ -190,11 +194,9 @@ const openModal = (phantimal: PhantimalType) => {
   padding: var(--spacing-lg);
 }
 
-/* Center the portrait and the (wider, name-bearing) info pill on one column. */
+/* Positioned so the hold ring can sit outside the portrait's clipped circle. */
 .phantimal-profile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  position: relative;
   margin-top: var(--spacing-xs);
 }
 
@@ -210,6 +212,10 @@ const openModal = (phantimal: PhantimalType) => {
   padding: 0;
   cursor: pointer;
   transition: transform var(--transition-fast);
+  /* A long-press is the inspect gesture: iOS would otherwise answer it with
+     the image callout, and every touch browser with text selection. */
+  -webkit-touch-callout: none;
+  user-select: none;
 }
 
 .phantimal.draggable {
@@ -224,7 +230,7 @@ const openModal = (phantimal: PhantimalType) => {
   transform: scale(1.05);
 }
 
-/* Placed on either team: desaturate + dim the fill like the character roster,
+/* Placed on either team: desaturate + dim the fill like the character picker,
    keeping the white border/ring. */
 .phantimal.placed {
   filter: var(--placed-filter);
@@ -243,6 +249,22 @@ const openModal = (phantimal: PhantimalType) => {
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
+}
+
+.phantimal-tooltip-faction {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Matches the hero and artifact cards' hint row. */
+.phantimal-tooltip-hint {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 12px;
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .portrait {

@@ -42,9 +42,10 @@ import { rotatedHexId } from '@/lib/grid'
 import type { Point } from '@/lib/layout'
 import { DEFAULT_MAP_KEY } from '@/lib/maps'
 import type { SideLoadBoard, SideLoadPlan } from '@/lib/teams/sideLoad'
-import type { BoardRoster, PlanIssue, TeamImportPlan } from '@/lib/teams/teamImport'
+import type { BoardLineup, PlanIssue, TeamImportPlan } from '@/lib/teams/teamImport'
 import { Team } from '@/lib/types/team'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
+import { useRosters } from './rosters'
 
 export type HexSizeMode = 'breakpoint' | 'fixed-medium'
 
@@ -73,6 +74,7 @@ export interface SideLoadOptions {
 }
 
 export const useGrids = defineStore('grids', () => {
+  const rosters = useRosters()
   const contexts = shallowRef<GridContext[]>([])
   const activeId = ref(0)
 
@@ -192,11 +194,11 @@ export const useGrids = defineStore('grids', () => {
     return placement !== null && placement.ctxId !== exceptCtxId
   }
 
-  // The id a roster pick lands as on a board, or null: the engine resolver
-  // (judged against the post-vacate board when a target tile is given) plus
-  // page-wide uniqueness, which still gates a base-id placement since the hero
-  // may sit on another board's same team; the synergy id is invisible to it by
-  // design. Every roster entry point (click, tap, popup, drag gate) goes
+  // The id a pick from the hero picker lands as on a board, or null: the engine
+  // resolver (judged against the post-vacate board when a target tile is given)
+  // plus page-wide uniqueness, which still gates a base-id placement since the
+  // hero may sit on another board's same team; the synergy id is invisible to it
+  // by design. Every picker entry point (click, tap, popup, drag gate) goes
   // through here.
   const resolvePick = (
     ctx: GridContext,
@@ -212,11 +214,33 @@ export const useGrids = defineStore('grids', () => {
     return resolved
   }
 
+  // A hero picked from the picker starts at the active roster's levels.
+  // setAttrs ignores units that carry none (a synergy copy, a placeholder).
+  const applyRosterLevels = (ctx: GridContext, unitId: number, team: Team): void => {
+    const levels = rosters.levelsFor(unitId)
+    if (levels) ctx.setAttrs(team, unitId, levels)
+  }
+
+  // Every pick that is not a drag (click, tap on a targeted tile, the
+  // empty-tile popup, search) places through here: onto `hexId` when given,
+  // else onto a free tile.
+  const placePick = (
+    ctx: GridContext,
+    characterId: number,
+    team: Team,
+    hexId?: number,
+  ): boolean => {
+    const resolved = resolvePick(ctx, characterId, team, hexId)
+    if (resolved === null) return false
+    const placed =
+      hexId === undefined ? ctx.autoPlace(resolved, team) : ctx.place(hexId, resolved, team)
+    if (placed) applyRosterLevels(ctx, resolved, team)
+    return placed
+  }
+
   const placeOnActive = (characterId: number, team: Team): boolean => {
     const ctx = active.value
-    if (!ctx) return false
-    const resolved = resolvePick(ctx, characterId, team)
-    return resolved !== null && ctx.autoPlace(resolved, team)
+    return ctx !== undefined && placePick(ctx, characterId, team)
   }
 
   const removeFromAnyBoard = (characterId: number, team: Team): boolean => {
@@ -344,9 +368,9 @@ export const useGrids = defineStore('grids', () => {
     return false
   }
 
-  // A board's directly-placed roster: the main characters with their upgrade
+  // A board's directly-placed lineup: the main characters with their upgrade
   // attrs, dropping skill-derived units (companions, faction phantimals) since
-  // those re-derive from the roster.
+  // those re-derive from the lineup.
   const collectMainUnits = (
     ctx: GridContext,
   ): { characterId: number; team: Team; attrs: AttrRecord }[] =>
@@ -375,7 +399,7 @@ export const useGrids = defineStore('grids', () => {
     }
   }
 
-  // Exchange two boards' rosters (with upgrade attrs) and artifacts, keeping each
+  // Exchange two boards' lineups (with upgrade attrs) and artifacts, keeping each
   // unit/artifact's team (ally <-> ally, enemy <-> enemy). Only directly-placed
   // mains move; companions, faction phantimals, and tile zones (e.g. Kulu's) are
   // skill-derived, so clearing deactivates them on the source and autoPlace
@@ -399,7 +423,7 @@ export const useGrids = defineStore('grids', () => {
     source.clearCharacters()
     target.clearCharacters()
     // Re-seed each now-empty board's phantimal baseline so the post-placement
-    // reconcile reads the incoming roster as a fresh qualifying transition and
+    // reconcile reads the incoming lineup as a fresh qualifying transition and
     // re-derives the phantimal, even when both boards ran the same faction.
     source.seedPhantimalBaseline()
     target.seedPhantimalBaseline()
@@ -549,24 +573,24 @@ export const useGrids = defineStore('grids', () => {
     return { placed, skipped }
   }
 
-  // The boards a match import stamps, shared by applyRosters and its
+  // The boards a match import stamps, shared by applyLineups and its
   // read-only confirm mirror so the two can never drift.
-  const rosterTargets = (plan: TeamImportPlan): { ctx: GridContext; board: BoardRoster }[] =>
+  const lineupTargets = (plan: TeamImportPlan): { ctx: GridContext; board: BoardLineup }[] =>
     plan.boards.flatMap((board, i) => {
       const ctx = contexts.value[i]
       return board && ctx ? [{ ctx, board }] : []
     })
 
-  const rostersWouldReplace = (plan: TeamImportPlan): boolean =>
-    rosterTargets(plan).some(({ ctx }) =>
+  const lineupsWouldReplace = (plan: TeamImportPlan): boolean =>
+    lineupTargets(plan).some(({ ctx }) =>
       [Team.ALLY, Team.ENEMY].some((team) => teamHasContent(ctx, team)),
     )
 
-  // What applyRosters would skip for page-wide uniqueness: a hero or artifact
+  // What applyLineups would skip for page-wide uniqueness: a hero or artifact
   // already on the same side of a board the plan leaves untouched. Read-only,
   // so the review can say so before anything is cleared.
-  const rosterConflicts = (plan: TeamImportPlan): PlanIssue[] => {
-    const targets = rosterTargets(plan)
+  const lineupConflicts = (plan: TeamImportPlan): PlanIssue[] => {
+    const targets = lineupTargets(plan)
     const targetIds = new Set(targets.map(({ ctx }) => ctx.id))
     const retained = contexts.value
       .map((ctx, mapIndex) => ({ ctx, mapIndex }))
@@ -595,17 +619,17 @@ export const useGrids = defineStore('grids', () => {
     return issues
   }
 
-  /* Stamp match-import rosters (lib/teams/teamImport) onto the mapped boards.
+  /* Stamp match-import lineups (lib/teams/teamImport) onto the mapped boards.
    * Both sides of every mapped board clear first, so a hero moving from one
    * board to another never trips page-wide uniqueness against its own old
    * copy; each cleared board re-seeds its phantimal baseline so the reconcile
-   * watcher derives the phantimal from the new roster even when it is the one
-   * the old roster had (the swapBoards idiom). Then every hero auto-places
+   * watcher derives the phantimal from the new lineup even when it is the one
+   * the old lineup had (the swapBoards idiom). Then every hero auto-places
    * with its upgrade record and each side's artifact is set; a hero or
    * artifact already used elsewhere on that team is skipped and counted.
    * Unmapped boards, maps, and provenance are untouched. */
-  const applyRosters = (plan: TeamImportPlan): { placed: number; skipped: number } => {
-    const targets = rosterTargets(plan)
+  const applyLineups = (plan: TeamImportPlan): { placed: number; skipped: number } => {
+    const targets = lineupTargets(plan)
     for (const { ctx } of targets) {
       for (const team of [Team.ALLY, Team.ENEMY]) ctx.clearTeam(team)
       ctx.seedPhantimalBaseline()
@@ -686,7 +710,7 @@ export const useGrids = defineStore('grids', () => {
     const destTeam = getTeamFromTileState(targetCtx.grid.getTileById(targetHexId).state)
     if (destTeam === null) return false
 
-    // Roster placement (an occupied target is a replace).
+    // Picker placement (an occupied target is a replace).
     if (sourceGridId === undefined || sourceHexId === undefined) {
       if (isPhantimalId(characterId)) return targetCtx.phantimalCanJoinTeam(characterId, destTeam)
       return resolvePick(targetCtx, characterId, destTeam, targetHexId) !== null
@@ -752,11 +776,11 @@ export const useGrids = defineStore('grids', () => {
     return true
   }
 
-  // Resolve a drop onto a board. Roster and same-board drops use the board's own
+  // Resolve a drop onto a board. Picker and same-board drops use the board's own
   // handler (place/move/swap); cross-board drops compose remove + place. All
   // routing-layer validation is canDropCharacter, the same gate the hover cue
   // reads. A successful drop makes the destination board active (active follows
-  // interaction, so a roster drop targets the board it just landed on).
+  // interaction, so a picker drop targets the board it just landed on).
   const routeDrop = (
     payload: CharacterDropPayload,
     targetCtxId: number,
@@ -773,8 +797,15 @@ export const useGrids = defineStore('grids', () => {
     }
     if (sourceGridId === undefined || sourceGridId === targetCtxId) {
       const ok = targetCtx.handleDrop(payload, targetHexId)
-      if (ok) activeId.value = targetCtxId
-      return ok
+      if (!ok) return false
+      activeId.value = targetCtxId
+      // A picker drop lands as the base hero or its synergy copy; the tile says which.
+      const placedId = getCharacter(targetCtx.grid, targetHexId)
+      const placedTeam = getCharacterTeam(targetCtx.grid, targetHexId)
+      if (sourceHexId === undefined && placedId !== undefined && placedTeam !== undefined) {
+        applyRosterLevels(targetCtx, placedId, placedTeam)
+      }
+      return true
     }
     const sourceCtx = getContext(sourceGridId)
     if (!sourceCtx || sourceHexId === undefined) return false
@@ -890,6 +921,7 @@ export const useGrids = defineStore('grids', () => {
     findPlacement,
     isUsed,
     resolvePick,
+    placePick,
     placeOnActive,
     removeFromAnyBoard,
     dedupeCharacters,
@@ -905,9 +937,9 @@ export const useGrids = defineStore('grids', () => {
     sideLoadWouldReplace,
     boardsHaveContent,
     loadTeamSide,
-    rostersWouldReplace,
-    rosterConflicts,
-    applyRosters,
+    lineupsWouldReplace,
+    lineupConflicts,
+    applyLineups,
     clearAll,
   }
 })

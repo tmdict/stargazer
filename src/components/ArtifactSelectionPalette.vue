@@ -48,20 +48,18 @@ const emit = defineEmits<{
   transition: all 0.15s ease;
 }
 
+/* The icon grows itself on hover (ArtifactIcon); the cell only brightens. */
 .artifact-item:hover {
-  transform: scale(1.1);
   filter: brightness(1.2);
 }
 
-/* Compact: drop the name pill. The hover tooltip still shows the name. */
-.artifact-item :deep(.info-pill-wrap) {
-  display: none;
+.artifact-item :deep(.artifact-frame) {
+  margin-top: 0;
 }
 
 /* Match the character-popup icon style: smaller, borderless, subtle 1px ring
    (no thick white edge or white wash). */
 .artifact-item :deep(.artifact) {
-  margin-top: 0;
   width: 45px;
   height: 45px;
   border: none;

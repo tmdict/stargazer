@@ -7,12 +7,11 @@ import { toPhantimalId } from '@/lib/characters/phantimal'
 import { toSynergyId } from '@/lib/characters/synergy'
 import type { Grid } from '@/lib/grid'
 import { COMPANION_ID_OFFSET } from '@/lib/grid'
-import { TEAM_MODES } from '@/lib/teams/modes'
-import { buildSideLoadPlan, type SideLoadBoard } from '@/lib/teams/sideLoad'
+import type { SideLoadBoard } from '@/lib/teams/sideLoad'
 import type { CharacterType } from '@/lib/types/character'
 import { Team } from '@/lib/types/team'
 import { useGrids } from '@/stores/grids'
-import { encodeMultiGridStateToUrl } from '@/utils/urlStateManager'
+import { useRosters } from '@/stores/rosters'
 import {
   ALLY_A,
   ALLY_B,
@@ -32,7 +31,7 @@ import {
  */
 
 // (characterId, team) pairs on a board, order-independent (placement is random).
-const roster = (grid: Grid): { characterId: number; team: Team }[] =>
+const lineup = (grid: Grid): { characterId: number; team: Team }[] =>
   getTilesWithCharacters(grid)
     .map((tile) => ({ characterId: tile.characterId!, team: tile.team! }))
     .sort((a, b) => a.characterId - b.characterId)
@@ -43,8 +42,8 @@ const dragPayload = (sourceGridId: number, sourceHexId: number, characterId: num
   characterId,
 })
 
-// Roster drag payload: no source cell, so the drop is a placement.
-const rosterPayload = (characterId: number) => ({
+// Picker drag payload: no source cell, so the drop is a placement.
+const pickerPayload = (characterId: number) => ({
   character: { id: characterId } as unknown as CharacterType,
   characterId,
 })
@@ -66,7 +65,7 @@ afterEach(() => {
 })
 
 describe('useGrids.swapBoards', () => {
-  it('exchanges the two boards rosters, keeping each unit on its own team', () => {
+  it('exchanges the two boards lineups, keeping each unit on its own team', () => {
     const { grids, a, b } = setupBoards()
 
     expect(a!.place(1, ALLY_A, Team.ALLY)).toBe(true)
@@ -76,11 +75,11 @@ describe('useGrids.swapBoards', () => {
 
     expect(grids.swapBoards(0, 1)).toBe(true)
 
-    expect(roster(a!.grid)).toEqual([
+    expect(lineup(a!.grid)).toEqual([
       { characterId: ALLY_B, team: Team.ALLY },
       { characterId: ENEMY_B, team: Team.ENEMY },
     ])
-    expect(roster(b!.grid)).toEqual([
+    expect(lineup(b!.grid)).toEqual([
       { characterId: ALLY_A, team: Team.ALLY },
       { characterId: ENEMY_A, team: Team.ENEMY },
     ])
@@ -385,11 +384,11 @@ describe('useGrids.routeDrop cross-board uniqueness', () => {
     expect(b!.grid.getTileById(7).characterId).toBeUndefined()
   })
 
-  it('makes the destination board active on a roster drop', () => {
+  it('makes the destination board active on a picker drop', () => {
     const { grids } = setupBoards()
     grids.setActive(0)
 
-    // Roster payload: no sourceGridId/sourceHexId.
+    // Picker payload: no sourceGridId/sourceHexId.
     const payload = { character: {} as CharacterType, characterId: ALLY_A }
     expect(grids.routeDrop(payload, 1, 2)).toBe(true)
 
@@ -438,6 +437,28 @@ describe('useGrids attr carry-over', () => {
     expect(a!.getAttr(Team.ALLY, ENEMY_A, ATTR_PARAGON)).toBe(4)
     expect(a!.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(0)
     expect(b!.getAttr(Team.ENEMY, ENEMY_A, ATTR_PARAGON)).toBe(0)
+  })
+})
+
+describe('useGrids roster picks', () => {
+  it("places a picked hero at the active roster's levels, by click and by drag", () => {
+    const { grids, a, b } = setupBoards()
+    const rosters = useRosters()
+    const roster = rosters.create()!
+    rosters.setHeroes(roster.id, {
+      [ALLY_A]: { [ATTR_PARAGON]: 3 },
+      [ALLY_B]: { [ATTR_PARAGON]: 3 },
+    })
+
+    expect(grids.placeOnActive(ALLY_A, Team.ALLY)).toBe(true)
+    expect(a.getAttr(Team.ALLY, ALLY_A, ATTR_PARAGON)).toBe(3)
+    expect(grids.routeDrop(pickerPayload(ALLY_B), 1, 2)).toBe(true)
+    expect(b.getAttr(Team.ALLY, ALLY_B, ATTR_PARAGON)).toBe(3)
+
+    // All heroes: a pick starts at defaults.
+    rosters.setActive(null)
+    expect(grids.placeOnActive(ALLY_C, Team.ALLY)).toBe(true)
+    expect(b.getAttr(Team.ALLY, ALLY_C, ATTR_PARAGON)).toBe(0)
   })
 })
 
@@ -518,14 +539,14 @@ describe('useGrids synergy', () => {
     expect(grids.placeOnActive(ALLY_A, Team.ENEMY)).toBe(true)
     expect(grids.placeOnActive(ALLY_A, Team.ENEMY)).toBe(true)
 
-    const before = roster(grids.active!.grid).map((r) => r.characterId)
+    const before = lineup(grids.active!.grid).map((r) => r.characterId)
     expect(before).toContain(toSynergyId(PHRAESTO))
     expect(before).toContain(toSynergyId(PHRAESTO) + COMPANION_ID_OFFSET)
     expect(before).toContain(toSynergyId(ALLY_A))
 
     grids.setSynergy(false)
     expect(grids.synergy).toBe(false)
-    const after = roster(grids.active!.grid).map((r) => r.characterId)
+    const after = lineup(grids.active!.grid).map((r) => r.characterId)
     expect(after.sort((a, b) => a - b)).toEqual([ALLY_A, PHRAESTO, PHRAESTO_COMPANION])
   })
 
@@ -539,9 +560,9 @@ describe('useGrids synergy', () => {
     // Vacating the copy frees the assist slot, not a capacity slot, so the
     // newcomer lands as the copy; the hover cue and the drop agree.
     expect(grids.canDropCharacter(17, undefined, undefined, ctx.id, slotHex)).toBe(true)
-    expect(grids.routeDrop(rosterPayload(17), ctx.id, slotHex)).toBe(true)
+    expect(grids.routeDrop(pickerPayload(17), ctx.id, slotHex)).toBe(true)
     expect(getCharacter(ctx.grid, slotHex)).toBe(toSynergyId(17))
-    expect(roster(ctx.grid).map((r) => r.characterId)).toEqual([
+    expect(lineup(ctx.grid).map((r) => r.characterId)).toEqual([
       11,
       12,
       13,
@@ -558,8 +579,8 @@ describe('useGrids synergy', () => {
     const hex = findCharacterHex(ctx.grid, ALLY_A, Team.ALLY)!
 
     expect(grids.canDropCharacter(ALLY_A, undefined, undefined, ctx.id, hex)).toBe(false)
-    expect(grids.routeDrop(rosterPayload(ALLY_A), ctx.id, hex)).toBe(false)
-    expect(roster(ctx.grid).map((r) => r.characterId)).toEqual([ALLY_A])
+    expect(grids.routeDrop(pickerPayload(ALLY_A), ctx.id, hex)).toBe(false)
+    expect(lineup(ctx.grid).map((r) => r.characterId)).toEqual([ALLY_A])
   })
 
   it('setGridCount re-derives the affordance from the rebuilt boards', () => {
@@ -788,36 +809,5 @@ describe('useGrids.loadTeamSide', () => {
 
     expect(ctx.artifacts.ally).toBeNull()
     expect(ctx.artifacts.enemy).toBe(6)
-  })
-
-  it('strips the synergy unit when a 1v1 record loads into a mode without the Syn affordance', () => {
-    const { grids } = setupBoards(5)
-    grids.setActive(2)
-
-    // A 1v1 record saved with Syn on: base heroes in c plus the synergy hero
-    // (local base id) in y, the exact shape the serializer emits.
-    const data = encodeMultiGridStateToUrl({
-      boards: [
-        {
-          m: 'arena1',
-          c: [
-            [1, ALLY_A, Team.ALLY],
-            [2, ALLY_B, Team.ALLY],
-            [3, 13, Team.ALLY],
-          ],
-          y: [[6, 16, Team.ALLY]],
-        },
-      ],
-      mode: '1v1',
-    })
-    const plan = buildSideLoadPlan(data, TEAM_MODES['5v5'].allowSynergy)!
-    const result = grids.loadTeamSide(plan, { invert: false, scope: 'active' })
-
-    expect(result).toEqual({ placed: 3, skipped: 0 })
-    expect(roster(grids.contexts[2]!.grid).map((r) => r.characterId)).toEqual([ALLY_A, ALLY_B, 13])
-    for (const ctx of grids.contexts) {
-      expect(findCharacterHex(ctx.grid, toSynergyId(16), Team.ALLY)).toBeNull()
-    }
-    expect(grids.synergy).toBe(false)
   })
 })

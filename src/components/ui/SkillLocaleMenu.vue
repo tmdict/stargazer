@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
+import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import IconGlobe from './IconGlobe.vue'
-import { useTouchDetection } from '@/composables/useTouchDetection'
+import { useDropdown } from '@/composables/useDropdown'
+import { usePanelFit } from '@/composables/usePanelFit'
 import { SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
@@ -23,35 +24,13 @@ const emit = defineEmits<{ select: [locale: SkillLocale] }>()
 
 const i18n = useI18nStore()
 
-const open = ref(false)
-const root = ref<HTMLElement | null>(null)
-
-// Hover opens the menu for mouse users; touch users still open it with the
-// click toggle. Hover is suppressed for touch (as in useHoverTooltip) because
-// a tap fires a synthetic mouseenter whose hover-open the tap's own click
-// toggle would immediately undo. Closing on leave waits a grace period so the
-// cursor can cross the 8px gap between the trigger and the panel.
-const HOVER_CLOSE_GRACE_MS = 150
-const { isTouchDevice } = useTouchDetection()
-const interactionStartedAsTouch = ref(false)
-let closeTimer: ReturnType<typeof setTimeout> | undefined
-
-const onMouseEnter = () => {
-  if (isTouchDevice.value || interactionStartedAsTouch.value) return
-  clearTimeout(closeTimer)
-  open.value = true
-}
-
-const onMouseLeave = () => {
-  interactionStartedAsTouch.value = false
-  if (isTouchDevice.value) return
-  clearTimeout(closeTimer)
-  closeTimer = setTimeout(() => (open.value = false), HOVER_CLOSE_GRACE_MS)
-}
-
-const onTouchStart = () => {
-  interactionStartedAsTouch.value = true
-}
+const root = ref<HTMLElement>()
+const panel = ref<HTMLElement>()
+const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDropdown({
+  rootRef: root,
+  hover: true,
+})
+const panelMaxHeight = usePanelFit(panel, () => open.value)
 
 const currentDef = computed(() => SKILL_LOCALES.find((l) => l.code === props.current))
 // Teal state signals the text language differs from the site chrome.
@@ -59,34 +38,14 @@ const isActive = computed(() => props.current !== i18n.currentLocale)
 
 const pickLink = (locale: SkillLocale) => {
   i18n.setSkillLocale(locale)
-  open.value = false
+  hide()
 }
 
 const pickSelect = (locale: SkillLocale) => {
   i18n.setSkillLocale(locale)
   emit('select', locale)
-  open.value = false
+  hide()
 }
-
-const onDocPointerDown = (e: PointerEvent) => {
-  if (open.value && root.value && !root.value.contains(e.target as Node)) open.value = false
-}
-// Capture phase so an open dropdown consumes Escape before bubble-phase
-// overlay handlers (the skill modal's useOverlay) close the modal with it.
-const onKeyDown = (e: KeyboardEvent) => {
-  if (e.key !== 'Escape' || !open.value) return
-  e.stopPropagation()
-  open.value = false
-}
-onMounted(() => {
-  document.addEventListener('pointerdown', onDocPointerDown)
-  document.addEventListener('keydown', onKeyDown, { capture: true })
-})
-onUnmounted(() => {
-  document.removeEventListener('pointerdown', onDocPointerDown)
-  document.removeEventListener('keydown', onKeyDown, { capture: true })
-  clearTimeout(closeTimer)
-})
 </script>
 
 <template>
@@ -103,7 +62,7 @@ onUnmounted(() => {
       :class="{ 'is-active': isActive }"
       :aria-label="i18n.t('app.skill-locale')"
       :aria-expanded="open"
-      @click="open = !open"
+      @click="toggle"
     >
       <IconGlobe :size="16" aria-hidden="true" />
       <span class="trigger-label">{{ currentDef?.native ?? current }}</span>
@@ -114,7 +73,7 @@ onUnmounted(() => {
          promise arrow-key navigation). v-show (not v-if) keeps all locale
          links in the DOM, so the baked HTML carries crawlable hrefs to every
          language of this page. -->
-    <div v-show="open" class="panel">
+    <div v-show="open" ref="panel" class="panel" :style="{ maxHeight: panelMaxHeight }">
       <template v-if="mode === 'links' && slug">
         <RouterLink
           v-for="l in SKILL_LOCALES"
@@ -196,10 +155,8 @@ onUnmounted(() => {
      than the trigger. */
   width: max-content;
   min-width: 100%;
-  /* Tall enough that all 16 fit on normal viewports; short screens get a
-     subtle thin scrollbar instead of the default high-contrast one. */
-  max-height: min(560px, 70vh);
-  overflow: auto;
+  /* Scrolls only past the viewport (usePanelFit). */
+  overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
   padding: 6px;
@@ -208,19 +165,6 @@ onUnmounted(() => {
   border-radius: 10px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
   z-index: 20;
-}
-
-.panel::-webkit-scrollbar {
-  width: 6px;
-}
-
-.panel::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-}
-
-.panel::-webkit-scrollbar-track {
-  background: transparent;
 }
 
 .item {

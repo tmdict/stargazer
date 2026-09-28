@@ -106,7 +106,7 @@ const sideCells = computed(() => ({
 
 // ---------- hero picker ----------
 
-// Every real hero in roster order; a cell may take any of them, since the
+// Every real hero in hero list order; a cell may take any of them, since the
 // review is board-free and page-wide uniqueness is settled on Save as New.
 const heroes = computed(() =>
   gameData.characters

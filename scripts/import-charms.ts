@@ -191,8 +191,8 @@ async function main() {
     }
   }
 
-  // Roster intersection: the structural map only lists heroes this app knows.
-  const rosterSlugs = new Set(
+  // Hero-list intersection: the structural map only lists heroes this app knows.
+  const heroSlugs = new Set(
     (await readdir(CHARACTER_DIR)).filter((f) => f.endsWith('.json')).map((f) => f.slice(0, -5)),
   )
   const unknownHeroes = new Set<string>()
@@ -200,12 +200,12 @@ async function main() {
   const structural: CharmData = {}
   for (const charm of [...bulks.en.charms].sort((a, b) => a.slug.localeCompare(b.slug))) {
     const heroes = charm.heroes.filter((h) => {
-      if (rosterSlugs.has(h)) return true
+      if (heroSlugs.has(h)) return true
       unknownHeroes.add(h)
       return false
     })
     if (heroes.length === 0) {
-      console.warn(`  skipping charm "${charm.slug}": no sharing hero is in the roster`)
+      console.warn(`  skipping charm "${charm.slug}": no sharing hero is in the hero list`)
       continue
     }
     structural[charm.slug] = { heroes: [...heroes].sort() }
