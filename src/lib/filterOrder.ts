@@ -1,10 +1,12 @@
 /**
  * Canonical display orders for faction and class, used by:
  * - `FilterIcons.vue` for the icon row
- * - `compareFaction` for character grid sorting
+ * - `compareFaction` / `compareCharacters` for character grid sorting
  *
  * Anything not in the order list falls through to alphabetical at the end.
  */
+
+import type { CharacterType } from '@/lib/types/character'
 
 export const FACTION_ORDER: readonly string[] = [
   'lightbearer',
@@ -36,4 +38,15 @@ export function compareByOrder(a: string, b: string, order: readonly string[]): 
 
 export function compareFaction(a: string, b: string): number {
   return compareByOrder(a, b, FACTION_ORDER)
+}
+
+type SortableCharacter = Pick<CharacterType, 'faction' | 'placeholder' | 'id'>
+
+// Shared by the picker and the on-grid popup so their orders always match.
+export function compareCharacters(a: SortableCharacter, b: SortableCharacter): number {
+  return (
+    compareFaction(a.faction, b.faction) ||
+    (a.placeholder ? 1 : 0) - (b.placeholder ? 1 : 0) ||
+    a.id - b.id
+  )
 }

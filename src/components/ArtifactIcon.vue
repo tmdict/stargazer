@@ -75,9 +75,10 @@ const {
   margin-top: var(--spacing-xs);
 }
 
+/* Under the phantimals' 70px: full-bleed art looks bigger at equal size. */
 .artifact {
-  width: 50px;
-  height: 50px;
+  width: 58px;
+  height: 58px;
   border-radius: var(--radius-round);
   border: 2px solid var(--color-bg-white);
   /* White backing for every season (icons may have transparency). */
