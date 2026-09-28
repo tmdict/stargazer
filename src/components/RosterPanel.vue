@@ -93,9 +93,10 @@ const shownUnowned = computed(() => filteredCharacters.value.filter((c) => !leve
 const selectAll = (): void =>
   editHeroes(Object.fromEntries(shownUnowned.value.map((c) => [c.id, {}])))
 
-// A changed filter or roster would point an armed Clear at other heroes.
+// A changed filter, roster or hero set would point an armed Clear at other
+// heroes than the ones shown when it was armed.
 const { armed, confirm, disarm } = useArmedConfirm()
-watch([filteredCharacters, () => rosters.activeId], disarm)
+watch([filteredCharacters, () => rosters.activeId, () => rosters.active?.heroes], disarm)
 const removeShown = (): void => {
   if (confirm('remove-shown'))
     editHeroes(Object.fromEntries(shownLevels.value.map(({ id }) => [id, null])))

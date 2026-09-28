@@ -3,12 +3,26 @@
    the current target's kind is mounted, so nothing renders until the first
    inspect. */
 
+import { watch } from 'vue'
+import { useRoute } from 'vue-router'
+
 import ArtifactModal from './ArtifactModal.vue'
 import PhantimalModal from './PhantimalModal.vue'
 import SkillModal from './SkillModal.vue'
 import { useInspect } from '@/composables/useInspect'
 
 const { target, open, close } = useInspect()
+
+// Living at the root, the modal outlives the page that opened it, so any
+// navigation (a tag chip link inside the skill page, browser Back) closes it,
+// as the search overlay does.
+const route = useRoute()
+watch(
+  () => route.fullPath,
+  () => {
+    if (open.value) close()
+  },
+)
 </script>
 
 <template>
