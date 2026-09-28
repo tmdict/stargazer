@@ -174,7 +174,8 @@ describe('download import corrections', () => {
     api.setHero('sample', 1, 0, 9)
     const raw = await pending
     expect(JSON.parse(raw)).toMatchObject({
-      format: 'stargazer-import-corrections',
+      app: 'stargazer',
+      kind: 'import-corrections',
       learnedIcons: { icons: [] },
       shots: [
         {
