@@ -7,7 +7,7 @@ import SelectionPopup from './ui/SelectionPopup.vue'
 import { useGridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
 import { teamHasOpenSlot } from '@/lib/characters/character'
-import { compareFaction } from '@/lib/filterOrder'
+import { compareCharacters } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
 import type { CharacterType } from '@/lib/types/character'
 import { useGrids } from '@/stores/grids'
@@ -51,16 +51,7 @@ const availableCharacters = computed(() => {
   )
 })
 
-// Match the main picker's order (CharacterSelection): canonical faction order,
-// placeholders trailing as one block in the faction filter icons' order.
-const sortedCharacters = computed(() =>
-  [...availableCharacters.value].sort(
-    (a, b) =>
-      (a.placeholder ? 1 : 0) - (b.placeholder ? 1 : 0) ||
-      compareFaction(a.faction, b.faction) ||
-      a.id - b.id,
-  ),
-)
+const sortedCharacters = computed(() => [...availableCharacters.value].sort(compareCharacters))
 
 // The Rosters tab lives in the side panel, so the popup gives way to it.
 const manageRosters = (): void => {
