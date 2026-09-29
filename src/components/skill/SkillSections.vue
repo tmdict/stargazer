@@ -243,8 +243,6 @@ provide(
 
 .skill-hero-name {
   margin: 0 0 var(--spacing-md);
-  font-size: 24px;
-  font-weight: 600;
   text-align: left;
 }
 

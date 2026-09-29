@@ -9,6 +9,7 @@ import generateSitemap from 'vite-ssg-sitemap'
 
 import { guideReports } from './scripts/guideReports.ts'
 import { GUIDE_PAGES, guidePath } from './src/lib/guide.ts'
+import { helpPath } from './src/lib/help.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
 import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
@@ -32,9 +33,10 @@ function getSSGRoutes(): string[] {
   // Pre-render static HTML so canonical/meta are correct without JS.
   const routes: string[] = ['/', '/share', '/skills']
 
-  // Guide pages exist only in the app locales.
+  // Guide and Help pages exist only in the app locales.
   for (const locale of APP_LOCALES) {
     for (const page of GUIDE_PAGES) routes.push(guidePath(locale, page))
+    routes.push(helpPath(locale))
   }
 
   for (const { code } of SKILL_LOCALES) {

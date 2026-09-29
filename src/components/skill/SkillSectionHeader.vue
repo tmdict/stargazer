@@ -36,8 +36,6 @@ defineProps<{
   margin: 0;
   padding: 0;
   border-bottom: none;
-  font-size: 18px;
-  font-weight: 600;
 }
 
 /* The heading's capitals sit about half a pixel below the middle of its line

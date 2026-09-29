@@ -8,6 +8,7 @@
 - Use functional and stateless approaches when possible
 - Test changes: `npm run lint` and `npm run type-check`
 - Update relevant architecture docs when making major changes
+- Content text (popups, skill page, Help) uses the text roles in `src/styles/content.css` (plain `h1`/`h2`/`h3`/`p`/`li` inside `.content`, plus `.reading-secondary` and `.reading-meta`) instead of setting its own size, line height or color; detailed tooltips use `TooltipCard`
 
 ### Data Contracts
 

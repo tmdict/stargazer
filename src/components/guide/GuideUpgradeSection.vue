@@ -13,11 +13,9 @@ import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attribu
 import {
   PARAGON_RAMPS,
   paragonFactions,
-  pillTone,
   rampValues,
   REFINEMENT_RAMPS,
   type ParagonGroup,
-  type PillTone,
   type StatRamp,
 } from '@/lib/characters/upgradeStats'
 import type { AppLocale } from '@/lib/types/i18n'
@@ -35,7 +33,7 @@ type UpgradeKind = 'paragon' | 'refinement'
 
 interface LevelHead {
   level: number
-  tone: PillTone
+  max: boolean
 }
 
 interface Band {
@@ -70,7 +68,7 @@ interface AttrRow {
 const levelHeads = (attrId: number): LevelHead[] =>
   Array.from({ length: attrMax(attrId) + 1 }, (_, level) => ({
     level,
-    tone: pillTone(attrId, level),
+    max: level >= attrMax(attrId),
   }))
 
 const paragonRamps = (group: ParagonGroup): StatRamp[] => {
@@ -144,8 +142,8 @@ const stackRows = computed(() =>
 const isMax = (values: readonly unknown[], i: number): boolean => i === values.length - 1
 
 const levelClass = (band: Band, level: LevelHead) => ({
-  'max-col': level.tone === 'max',
-  [band.kind]: level.tone === 'max',
+  'max-col': level.max,
+  [band.kind]: level.max,
 })
 
 const valueClass = (cell: Cell, i: number) => ({
@@ -305,7 +303,7 @@ const intro = computed((): string => {
   margin: 0;
   padding-bottom: var(--spacing-sm);
   border-bottom: 2px solid var(--color-border-primary);
-  font-size: 18px;
+  font-size: var(--reading-heading-size);
   font-weight: 600;
 }
 .intro {
@@ -419,8 +417,8 @@ const intro = computed((): string => {
   width: 18px;
   height: 18px;
   border-radius: 50%;
-  background: #262626;
-  box-shadow: 0 0 0 1.5px #262626;
+  background: var(--color-bg-reading);
+  box-shadow: 0 0 0 1.5px var(--color-bg-reading);
 }
 .faction-icons img + img {
   margin-left: -5px;
