@@ -17,7 +17,7 @@ import { helpPath } from '@/lib/help'
       recommend using <a href="https://www.yaphalla.com/editor">Yaphalla's builder</a>.
     </p>
     <p>
-      For a walkthrough of the features, see
+      To learn how each feature works, see
       <RouterLink :to="helpPath('en')">How to use Stargazer</RouterLink>.
     </p>
 
