@@ -142,6 +142,7 @@
 @media (max-width: 768px) {
   :root {
     --stack-gap: var(--spacing-md);
+    --reading-title-size: 22px;
   }
 }
 
@@ -149,6 +150,7 @@
   :root {
     --stack-gap: var(--spacing-xs);
     --tab-font-size: 0.8rem;
+    --reading-title-size: 20px;
   }
 }
 
