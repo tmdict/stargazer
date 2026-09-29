@@ -126,7 +126,7 @@ const SKILL = {
               <span class="help-touch">
                 To swap two grids, tap
                 <span class="help-inline-btn round"><IconSwap :size="10" /></span>, then tap the
-                other one.
+                other one. If it says <b>Tap again to swap</b>, tap it once more.
               </span>
             </span>
           </li>
