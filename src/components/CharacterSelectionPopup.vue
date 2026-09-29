@@ -4,8 +4,10 @@ import { computed } from 'vue'
 import CharacterSelectionPalette from './CharacterSelectionPalette.vue'
 import RosterMenu from './RosterMenu.vue'
 import SelectionPopup from './ui/SelectionPopup.vue'
+import UpgradeBars from './ui/UpgradeBars.vue'
 import { useGridContext } from '@/composables/useGridContext'
 import { useSelectionState } from '@/composables/useSelectionState'
+import { ATTR_PARAGON, ATTR_REFINEMENT } from '@/lib/characters/attributes'
 import { teamHasOpenSlot } from '@/lib/characters/character'
 import { compareCharacters } from '@/lib/filterOrder'
 import type { Hex } from '@/lib/hex'
@@ -84,7 +86,15 @@ function handleSelect(character: CharacterType): void {
       :characters="sortedCharacters"
       :enter-hint="i18n.t('app.place-hero')"
       @pick="handleSelect"
-    />
+    >
+      <template v-if="rosters.active" #badge="{ character }">
+        <UpgradeBars
+          :reserved="!rosters.levelsFor(character.id)"
+          :paragon="rosters.levelsFor(character.id)?.[ATTR_PARAGON] ?? 0"
+          :refinement="rosters.levelsFor(character.id)?.[ATTR_REFINEMENT] ?? 0"
+        />
+      </template>
+    </CharacterSelectionPalette>
   </SelectionPopup>
 </template>
 
