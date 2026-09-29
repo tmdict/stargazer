@@ -31,7 +31,7 @@ const hatch = computed(() => getTileHatchFill(id, state))
 </script>
 
 <template>
-  <TileHatchPatterns v-if="hatch" :id :hex-size />
+  <TileHatchPatterns v-if="hatch" :id :hex-size light />
   <polygon :points :fill="getTileFillColor(state)" stroke="#888" stroke-width="2" />
   <polygon v-if="hatch" :points="getTileHatchPoints(corners)" :fill="hatch" />
 </template>
