@@ -2,10 +2,10 @@
 import { ref } from 'vue'
 
 import ArenaPreviewGrid from '@/components/grid/ArenaPreviewGrid.vue'
+import TileSwatch from '@/components/grid/TileSwatch.vue'
 import IconFill from '@/components/ui/IconFill.vue'
 import { State } from '@/lib/types/state'
 import { useI18nStore } from '@/stores/i18n'
-import { getTileFillColor } from '@/utils/tileStateFormatting'
 
 const i18n = useI18nStore()
 
@@ -75,12 +75,7 @@ const handleArenaSelected = (mapKey: string) => {
         >
           <div class="hex-preview">
             <svg width="60" height="60" viewBox="0 0 60 60">
-              <polygon
-                points="30,7 46,15 46,37 30,45 14,37 14,15"
-                :fill="getTileFillColor(option.state)"
-                stroke="#888888"
-                stroke-width="2"
-              />
+              <TileSwatch :state="option.state" points="30,7 46,15 46,37 30,45 14,37 14,15" />
             </svg>
           </div>
           <span class="state-label">{{ i18n.t(option.labelKey) }}</span>
