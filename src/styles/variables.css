@@ -143,6 +143,7 @@
   :root {
     --stack-gap: var(--spacing-md);
     --reading-title-size: 22px;
+    --reading-heading-size: 17px;
   }
 }
 
@@ -151,6 +152,7 @@
     --stack-gap: var(--spacing-xs);
     --tab-font-size: 0.8rem;
     --reading-title-size: 20px;
+    --reading-heading-size: 16px;
   }
 }
 
