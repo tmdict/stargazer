@@ -187,7 +187,6 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
 
 .filter-icon {
   object-fit: contain;
-  border-radius: var(--radius-sm);
 }
 
 .filter-icon.dark-bg {

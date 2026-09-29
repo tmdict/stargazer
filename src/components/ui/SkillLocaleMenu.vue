@@ -163,7 +163,7 @@ const pickSelect = (locale: SkillLocale) => {
   background: #15171c;
   border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 10px;
-  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+  box-shadow: var(--shadow-float);
   z-index: 20;
 }
 

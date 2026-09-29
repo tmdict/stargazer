@@ -458,7 +458,7 @@ const handleArtifactDrop = (event: DragEvent, targetTeam: Team) => {
 }
 
 .artifact-cell-border {
-  stroke: var(--color-text-tertiary, #8a8f98);
+  stroke: #8a8f98;
 }
 
 /* Empty host cells invite a click to open the artifact picker. */

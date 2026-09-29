@@ -591,7 +591,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   border: 1px solid #3a3e46;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.55);
+  box-shadow: var(--shadow-float);
 }
 
 .sso-panel.wide {
