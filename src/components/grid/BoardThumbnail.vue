@@ -1,11 +1,13 @@
 <script lang="ts">
 import { computed, useId } from 'vue'
 
+import TileHatchPatterns from './TileHatchPatterns.vue'
 import { artifactHostHex, Grid } from '@/lib/grid'
 import { Layout, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
+import { getTileHatchFill, getTileHatchPoints } from '@/utils/tileStateFormatting'
 
 /* One unit on a thumbnail: a portrait clipped to its hex, or a team-colored
    dot when the unit is unresolvable — "?" by default, or the caller's label
@@ -26,6 +28,7 @@ export type ThumbnailArtifact = string | { label: string; title?: string }
 interface Geometry {
   viewBox: string
   points: Map<number, string>
+  hatches: Map<number, string>
   centers: Map<number, Point>
   // `renderTiles` walks `points`, so an artifact cell listed there would draw
   // as a tile.
@@ -47,6 +50,7 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
   const grid = new Grid()
 
   const points = new Map<number, string>()
+  const hatches = new Map<number, string>()
   const centers = new Map<number, Point>()
   let minX = Infinity
   let maxX = -Infinity
@@ -61,6 +65,7 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
       if (corner.y > maxY) maxY = corner.y
     }
     points.set(hex.getId(), corners.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' '))
+    hatches.set(hex.getId(), getTileHatchPoints(corners))
     centers.set(hex.getId(), layout.hexToPixel(hex))
   }
 
@@ -76,6 +81,7 @@ function getGeometry(hexSize: number, viewBoxSize?: number): Geometry {
       ? `0 0 ${viewBoxSize} ${viewBoxSize}`
       : `${(minX - 1).toFixed(1)} ${(minY - 1).toFixed(1)} ${(maxX - minX + 2).toFixed(1)} ${(maxY - minY + 2).toFixed(1)}`,
     points,
+    hatches,
     centers,
     artifactCenters,
   }
@@ -123,14 +129,11 @@ const teamColor = (team: Team): string => (team === Team.ALLY ? '#36958e' : '#c8
 /* The crisp look, for the preview modal: the thumbnail's own fills and team
    colours, with one border on every deployment and wall tile (open ground
    drawn first, so a shared edge never shows two colours), a dark bevel line
-   inside each framed tile, a hatch inside each wall (lighter for a breakable
-   one), and each portrait clipped
-   under a dark rim inside a 2px team frame. Ratios are of hexSize; strokes
+   inside each framed tile, and each portrait clipped under a dark rim inside a 2px team frame. Ratios are of hexSize; strokes
    are fixed in screen pixels. */
 const CRISP = {
   inset: 1.6 / 18,
   bevel: 2.5 / 18,
-  wall: 4 / 18,
 }
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {
@@ -223,22 +226,27 @@ const renderTiles = computed(() =>
   })),
 )
 
+const hatchedTiles = computed(() =>
+  [...geometry.value.hatches.entries()].flatMap(([hexId, points]) => {
+    const state = states.value.get(hexId)
+    const fill = state === undefined ? null : getTileHatchFill(uid, state)
+    return fill ? [{ hexId, points, fill }] : []
+  }),
+)
+
 // Open ground first, then every framed tile, so a shared edge always shows the
-// light border; walls carry a hatch, deployment tiles their number.
+// light border.
 const crispTiles = computed(() => {
   const size = hexSize
   return [...geometry.value.centers.entries()]
     .map(([hexId, center]) => {
       const zone = zoneOf(states.value.get(hexId))
-      const wall = zone === 'blocked' || zone === 'breakable'
       return {
         hexId,
         zone,
-        wall,
         fill: getTileFill(states.value.get(hexId)),
         points: geometry.value.points.get(hexId)!,
         bevel: hexAt(center, size - size * CRISP.bevel),
-        hatch: wall ? hexAt(center, size - size * CRISP.wall) : '',
         center,
       }
     })
@@ -292,26 +300,7 @@ const placedArtifacts = computed(() =>
       <clipPath v-for="unit in placedUnits" :id="`${uid}-u-${unit.hexId}`" :key="unit.hexId">
         <polygon :points="crisp ? unit.inner : unit.corners" />
       </clipPath>
-      <template v-if="crisp">
-        <pattern
-          :id="`${uid}-hatch`"
-          width="6"
-          height="6"
-          patternUnits="userSpaceOnUse"
-          patternTransform="rotate(45)"
-        >
-          <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(0, 0, 0, 0.4)" stroke-width="2" />
-        </pattern>
-        <pattern
-          :id="`${uid}-hatch-light`"
-          width="6"
-          height="6"
-          patternUnits="userSpaceOnUse"
-          patternTransform="rotate(45)"
-        >
-          <line x1="0" y1="0" x2="0" y2="6" stroke="rgba(0, 0, 0, 0.22)" stroke-width="2" />
-        </pattern>
-      </template>
+      <TileHatchPatterns v-if="hatchedTiles.length" :id="uid" :hex-size="hexSize" />
       <clipPath v-for="art in placedArtifacts" :id="`${uid}-a-${art.side}`" :key="art.side">
         <circle :cx="art.center.x" :cy="art.center.y" :r="art.radius" />
       </clipPath>
@@ -333,11 +322,6 @@ const placedArtifacts = computed(() =>
           vector-effect="non-scaling-stroke"
         />
         <polygon
-          v-if="tile.wall"
-          :points="tile.hatch"
-          :fill="`url(#${uid}-hatch${tile.zone === 'breakable' ? '-light' : ''})`"
-        />
-        <polygon
           v-if="tile.zone !== 'void'"
           :points="tile.bevel"
           fill="none"
@@ -357,6 +341,12 @@ const placedArtifacts = computed(() =>
       :fill="tile.fill"
       stroke="#aaa"
       stroke-width="1"
+    />
+    <polygon
+      v-for="tile in hatchedTiles"
+      :key="`hatch-${tile.hexId}`"
+      :points="tile.points"
+      :fill="tile.fill"
     />
 
     <g

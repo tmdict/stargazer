@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { computed, onBeforeUnmount, onMounted, onUnmounted, ref, useId, watchEffect } from 'vue'
 
+import TileHatchPatterns from './TileHatchPatterns.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useGridContext } from '@/composables/useGridContext'
 import { useGridEvents } from '@/composables/useGridEvents'
@@ -11,7 +12,7 @@ import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import { getTileFillColor } from '@/utils/tileStateFormatting'
+import { getTileFillColor, getTileHatchFill, getTileHatchPoints } from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
@@ -342,6 +343,18 @@ const elevatedHexes = computed(() =>
 )
 const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkillHighlight(hex)))
 
+// The hatch layer sits under the skill-highlight layer, whose opaque fills
+// would hide it, so a skill-highlighted wall shows its highlight instead.
+const hatchId = useId()
+const hatchedHexes = computed(() =>
+  regularHexes.value.flatMap((hex) => {
+    const fill = getTileHatchFill(hatchId, ctx.grid.getTile(hex).state)
+    return fill
+      ? [{ id: hex.getId(), fill, points: getTileHatchPoints(props.layout.polygonCorners(hex)) }]
+      : []
+  }),
+)
+
 const handleCharacterHoverEnter = (hexId: number) => {
   if (!blockHover.value && !props.readonly) {
     hoveredHex.value = hexId
@@ -378,6 +391,7 @@ onUnmounted(() => {
   >
     <defs>
       <slot name="defs" />
+      <TileHatchPatterns :id="hatchId" :hex-size="layout.size.x" />
     </defs>
     <g>
       <g>
@@ -395,6 +409,14 @@ onUnmounted(() => {
             :stroke-width="getHexStrokeWidth(hex)"
           />
         </g>
+
+        <polygon
+          v-for="tile in hatchedHexes"
+          :key="`hatch-${tile.id}`"
+          class="grid-tile"
+          :points="tile.points"
+          :fill="tile.fill"
+        />
 
         <!-- Elevated hexes (render above regular hexes, but below skill highlights) -->
         <g v-for="hex in elevatedHexes" :key="`elevated-${hex.getId()}`" class="grid-tile">

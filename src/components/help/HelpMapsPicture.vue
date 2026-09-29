@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TileSwatch from '@/components/grid/TileSwatch.vue'
 import HelpBoard from '@/components/help/HelpBoard.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
@@ -7,7 +8,6 @@ import IconFill from '@/components/ui/IconFill.vue'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { State } from '@/lib/types/state'
 import { appLabel } from '@/utils/skillLabels'
-import { getTileFillColor } from '@/utils/tileStateFormatting'
 
 const lang = useRouteLocale()
 const label = (key: string): string => appLabel(key, lang.value)
@@ -43,12 +43,7 @@ const PAINT = [
             :class="{ on: type.state === State.BLOCKED }"
           >
             <svg viewBox="0 0 32 32" width="26" height="26">
-              <polygon
-                points="16,2 28,9 28,23 16,30 4,23 4,9"
-                :fill="getTileFillColor(type.state)"
-                stroke="#888"
-                stroke-width="2"
-              />
+              <TileSwatch :state="type.state" points="16,2 28,9 28,23 16,30 4,23 4,9" />
             </svg>
             {{ label(type.key) }}
           </span>

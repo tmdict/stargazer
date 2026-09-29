@@ -1,3 +1,4 @@
+import type { Point } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
 
@@ -58,4 +59,22 @@ export const getTeamFromTileState = (state: State): Team | null => {
   if (state === State.AVAILABLE_ALLY || state === State.OCCUPIED_ALLY) return Team.ALLY
   if (state === State.AVAILABLE_ENEMY || state === State.OCCUPIED_ENEMY) return Team.ENEMY
   return null
+}
+
+// Walls carry a diagonal hatch (TileHatchPatterns), so blocked tiles read as
+// walls apart from their fill.
+export const getTileHatchFill = (patternId: string, state: State): string | null => {
+  if (state === State.BLOCKED) return `url(#${patternId}-blocked)`
+  if (state === State.BLOCKED_BREAKABLE) return `url(#${patternId}-breakable)`
+  return null
+}
+
+// The hatch stops short of the tile border so the border stays a clean line.
+const HATCH_INSET = 4 / 18
+
+export const getTileHatchPoints = (corners: Point[]): string => {
+  const cx = corners.reduce((sum, p) => sum + p.x, 0) / corners.length
+  const cy = corners.reduce((sum, p) => sum + p.y, 0) / corners.length
+  const k = 1 - HATCH_INSET
+  return corners.map((p) => `${cx + (p.x - cx) * k},${cy + (p.y - cy) * k}`).join(' ')
 }

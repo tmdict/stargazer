@@ -3,9 +3,10 @@
 
 import { computed, useId } from 'vue'
 
+import TileHatchPatterns from '@/components/grid/TileHatchPatterns.vue'
 import type { State } from '@/lib/types/state'
 import { useGameDataStore } from '@/stores/gameData'
-import { getTileFillColor } from '@/utils/tileStateFormatting'
+import { getTileFillColor, getTileHatchFill, getTileHatchPoints } from '@/utils/tileStateFormatting'
 
 type Cell = readonly [row: number, col: number]
 
@@ -41,16 +42,18 @@ const ROW_FILL = ['#fde6e6', '#efefef', '#fff']
 // Pointy-top rows alternate their offset, as on the arena.
 const center = ([row, col]: Cell) => ({ x: col * W + (row % 2 ? W : HALF), y: row * RISE + R })
 
-const points = ({ x, y }: { x: number; y: number }): string =>
-  [
-    [x, y - R],
-    [x + HALF, y - R / 2],
-    [x + HALF, y + R / 2],
-    [x, y + R],
-    [x - HALF, y + R / 2],
-    [x - HALF, y - R / 2],
-  ]
-    .map((p) => p.join(','))
+const corners = ({ x, y }: { x: number; y: number }) => [
+  { x, y: y - R },
+  { x: x + HALF, y: y - R / 2 },
+  { x: x + HALF, y: y + R / 2 },
+  { x, y: y + R },
+  { x: x - HALF, y: y + R / 2 },
+  { x: x - HALF, y: y - R / 2 },
+]
+
+const points = (center: { x: number; y: number }): string =>
+  corners(center)
+    .map((p) => `${p.x},${p.y}`)
     .join(' ')
 
 const tiles = computed(() =>
@@ -62,6 +65,8 @@ const tiles = computed(() =>
       key: i,
       fill: painted ? getTileFillColor(painted.state) : ROW_FILL[row],
       points: points(center([row, col])),
+      hatch: painted ? getTileHatchFill(id, painted.state) : null,
+      hatchPoints: getTileHatchPoints(corners(center([row, col]))),
     }
   }),
 )
@@ -115,15 +120,12 @@ const arrowPath = computed(() => {
       >
         <path d="M0,0 L10,5 L0,10z" :class="`help-arrow-${arrow?.kind ?? 'move'}`" />
       </marker>
+      <TileHatchPatterns :id :hex-size="R" />
     </defs>
-    <polygon
-      v-for="tile in tiles"
-      :key="tile.key"
-      :points="tile.points"
-      :fill="tile.fill"
-      stroke="#d4cfc0"
-      stroke-width="1"
-    />
+    <template v-for="tile in tiles" :key="tile.key">
+      <polygon :points="tile.points" :fill="tile.fill" stroke="#d4cfc0" stroke-width="1" />
+      <polygon v-if="tile.hatch" :points="tile.hatchPoints" :fill="tile.hatch" />
+    </template>
     <polygon
       v-if="highlight"
       :points="points(center(highlight))"
