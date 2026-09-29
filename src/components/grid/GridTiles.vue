@@ -391,7 +391,7 @@ onUnmounted(() => {
   >
     <defs>
       <slot name="defs" />
-      <TileHatchPatterns :id="hatchId" :hex-size="layout.size.x" />
+      <TileHatchPatterns :id="hatchId" :hex-size="layout.size.x" light />
     </defs>
     <g>
       <g>
