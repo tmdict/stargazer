@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
+import UpgradeLevelLabel from '@/components/ui/UpgradeLevelLabel.vue'
 import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import type { GridContext } from '@/composables/useGridContext'
 import { useInfoTip } from '@/composables/useInfoTip'
@@ -196,10 +197,10 @@ const hoveredStat = computed(
             :style="{ background: pillBackground(hero.paragon, hero.refinement) }"
           >
             <span class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
-              P{{ hero.paragon }}
+              <UpgradeLevelLabel kind="paragon" :level="hero.paragon" />
             </span>
             <span class="useg" :class="{ max: hero.refinement >= MAX_REFINEMENT }">
-              R{{ hero.refinement }}
+              <UpgradeLevelLabel kind="refinement" :level="hero.refinement" />
             </span>
           </span>
           <span class="hero-name" :title="hero.name">{{ hero.name }}</span>
@@ -377,19 +378,14 @@ const hoveredStat = computed(
   position: relative;
   z-index: 1;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  line-height: 1;
   font-size: 7.5px;
   font-weight: 800;
   letter-spacing: 0.02em;
 }
-/* Vertical padding is asymmetric on purpose: at line-height 1 the font's
-   descender space hangs below the baseline, and P/R levels never use it, so
-   symmetric padding reads as the glyphs floating high. */
 .useg {
   flex: 1 1 0;
   min-width: 17px;
-  padding: 2.4px 3px 1.6px;
-  text-align: center;
+  padding: 2px 3px;
   color: var(--upgrade-pill-gray-text);
 }
 .useg.max {
@@ -424,7 +420,7 @@ const hoveredStat = computed(
   }
   .useg {
     min-width: 21px;
-    padding: 3px 4px 2px;
+    padding: 2.5px 4px;
   }
 }
 </style>
