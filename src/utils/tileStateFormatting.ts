@@ -37,12 +37,12 @@ const STATE_FORMATS: Record<State, StateFormat> = {
   [State.BLOCKED]: {
     name: 'Blocked',
     cssClass: 'state-blocked',
-    fillColor: '#74777e',
+    fillColor: '#a9adb3',
   },
   [State.BLOCKED_BREAKABLE]: {
     name: 'Blocked (Breakable)',
     cssClass: 'state-blocked-breakable',
-    fillColor: '#9097a0',
+    fillColor: '#c9cdd2',
   },
 }
 

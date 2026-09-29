@@ -226,12 +226,15 @@ const renderTiles = computed(() =>
   })),
 )
 
+// Walls are hatched only in the crisp look; at card size the hatch is noise.
 const hatchedTiles = computed(() =>
-  [...geometry.value.hatches.entries()].flatMap(([hexId, points]) => {
-    const state = states.value.get(hexId)
-    const fill = state === undefined ? null : getTileHatchFill(uid, state)
-    return fill ? [{ hexId, points, fill }] : []
-  }),
+  crisp
+    ? [...geometry.value.hatches.entries()].flatMap(([hexId, points]) => {
+        const state = states.value.get(hexId)
+        const fill = state === undefined ? null : getTileHatchFill(uid, state)
+        return fill ? [{ hexId, points, fill }] : []
+      })
+    : [],
 )
 
 // Open ground first, then every framed tile, so a shared edge always shows the
