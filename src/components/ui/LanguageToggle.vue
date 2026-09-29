@@ -29,7 +29,6 @@ const toggle = useLocaleToggle()
   display: flex;
   align-items: center;
   justify-content: center;
-  color: var(--color-text);
   transition:
     opacity 0.2s,
     transform 0.2s;

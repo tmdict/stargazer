@@ -198,7 +198,7 @@ const tipText = computed((): string => {
   background: var(--color-bg-primary);
   border: 1.5px solid var(--color-border-primary);
   border-radius: var(--radius-large);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.18);
+  box-shadow: var(--shadow-float);
   padding: var(--spacing-md);
   display: flex;
   flex-direction: column;

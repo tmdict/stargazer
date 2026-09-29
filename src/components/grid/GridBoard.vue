@@ -265,6 +265,6 @@ const handleClear = (): void => {
   background: var(--color-bg-white);
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
-  box-shadow: var(--shadow-soft, 0 1px 4px rgba(0, 0, 0, 0.15));
+  box-shadow: var(--shadow-float);
 }
 </style>
