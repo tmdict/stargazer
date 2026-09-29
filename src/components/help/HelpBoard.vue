@@ -120,7 +120,7 @@ const arrowPath = computed(() => {
       >
         <path d="M0,0 L10,5 L0,10z" :class="`help-arrow-${arrow?.kind ?? 'move'}`" />
       </marker>
-      <TileHatchPatterns :id :hex-size="R" />
+      <TileHatchPatterns :id :hex-size="R" light />
     </defs>
     <template v-for="tile in tiles" :key="tile.key">
       <polygon :points="tile.points" :fill="tile.fill" stroke="#d4cfc0" stroke-width="1" />
