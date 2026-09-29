@@ -29,7 +29,7 @@ const tiles = guideTagGroups().map((group) => ({
 </script>
 
 <template>
-  <article class="container guide-panel">
+  <article class="container page-panel guide-panel">
     <div class="content guide-link">
       <RouterLink class="guide-title" :to="page">
         <h2>{{ label('mechanics') }}</h2>

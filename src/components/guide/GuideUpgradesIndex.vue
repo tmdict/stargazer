@@ -69,7 +69,7 @@ const bands = computed((): Band[] => [
 </script>
 
 <template>
-  <article class="container guide-panel">
+  <article class="container page-panel guide-panel">
     <div class="content guide-link">
       <RouterLink class="guide-title" :to="guidePath(lang, 'upgrades')">
         <h2>{{ label('upgrades') }}</h2>
@@ -180,8 +180,10 @@ const bands = computed((): Band[] => [
   background: color-mix(in srgb, var(--upgrade-pill-refinement-max) 40%, transparent);
 }
 
+/* Above the bars: the ::after fill comes later in paint order. */
 .track .bead {
   position: absolute;
+  z-index: 1;
   top: 50%;
   left: var(--v);
   transform: translate(-50%, -50%);

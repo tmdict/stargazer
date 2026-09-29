@@ -94,7 +94,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <article class="container guide-panel">
+  <article class="container page-panel guide-panel">
     <!-- Not a .guide-link: only the title opens the report, so a click on
          the ladder's empty space is free to clear the selection. -->
     <div class="content">

@@ -98,26 +98,29 @@ onUnmounted(() => {
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   pointer-events: none;
   color: #fff;
+  /* Tooltip type: slot content inherits it, and TooltipCard reads the
+     colours, so callers don't restate either. */
+  font-size: 14px;
+  line-height: 1.4;
+  --tooltip-muted: rgba(255, 255, 255, 0.7);
+  --tooltip-divider: rgba(255, 255, 255, 0.1);
 }
 
-.tooltip :deep(*) {
+/* Undoes base.css element colours; :where keeps it below callers' classes. */
+:where(.tooltip) :deep(*) {
   color: inherit;
 }
 
 .tooltip-simple {
   border-radius: 6px;
   padding: 6px 12px;
-  font-size: 14px;
   white-space: nowrap;
   animation: tooltipFadeIn 0.15s ease-out;
 }
 
-/* Prose typography inherits into slot content, so callers don't restate it. */
 .tooltip-detailed {
   border-radius: 8px;
   padding: 12px 16px;
-  font-size: 0.85rem;
-  line-height: 1.4;
   animation: tooltipFadeIn 0.2s ease-out;
 }
 

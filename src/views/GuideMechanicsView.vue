@@ -24,7 +24,7 @@ const groups = guideTagGroups()
 
 <template>
   <main>
-    <article class="container guide-panel">
+    <article class="container page-panel guide-panel">
       <div class="content">
         <GuideTagSection
           v-for="g in groups"

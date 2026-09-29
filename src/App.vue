@@ -9,6 +9,7 @@ import HeaderSearchTrigger from '@/components/search/HeaderSearchTrigger.vue'
 import SkillSearchOverlay from '@/components/search/SkillSearchOverlay.vue'
 import ContactForm from '@/components/ui/ContactForm.vue'
 import IconGitHub from '@/components/ui/IconGitHub.vue'
+import IconHelp from '@/components/ui/IconHelp.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import IconMail from '@/components/ui/IconMail.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
@@ -20,6 +21,7 @@ import { useLocaleToggle } from '@/composables/useLocaleToggle'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
+import { helpPath } from '@/lib/help'
 import { useI18nStore } from '@/stores/i18n'
 import { splitLocalePath } from '@/utils/routeLocale'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
@@ -71,6 +73,12 @@ watch(
     if (locale) i18n.setLocale(locale, { persist: false })
   },
   { immediate: true },
+)
+
+// About links to Help; the popup must not stay open over the page it opened.
+watch(
+  () => route.path,
+  () => (showAboutModal.value = false),
 )
 
 // The unprefixed shells (/, /skills, …) are pre-rendered in English; applying
@@ -165,6 +173,16 @@ onUnmounted(() => {
           >
             <IconInfo />
           </button>
+        </li>
+        <li>
+          <RouterLink
+            :to="helpPath(i18n.currentLocale)"
+            class="icon-link"
+            :title="i18n.t('app.help')"
+            :aria-label="i18n.t('app.help')"
+          >
+            <IconHelp aria-hidden="true" />
+          </RouterLink>
         </li>
         <li>
           <a

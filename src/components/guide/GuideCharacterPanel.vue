@@ -151,7 +151,7 @@ const anchors = useSnippetAnchors()
 
 .char-panel-name {
   margin: 0;
-  font-size: 18px;
+  font-size: var(--reading-heading-size);
   font-weight: 600;
 }
 

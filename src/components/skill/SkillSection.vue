@@ -52,7 +52,7 @@ const renderedRefinements = computed(() =>
 <template>
   <section class="skill-section">
     <SkillSectionHeader :heading :slot-tags />
-    <p v-if="meta.length" class="skill-meta">
+    <p v-if="meta.length" class="skill-meta reading-meta">
       <span v-for="item in meta" :key="item.before"
         >{{ item.before
         }}<span class="skill-meta-value"
@@ -76,7 +76,7 @@ const renderedRefinements = computed(() =>
       >
         <div v-if="row.isUpgrade" class="skill-level-row">
           <span class="skill-level-badge">LV {{ row.level }}</span>
-          <p class="skill-level-desc" v-html="row.html" />
+          <p class="skill-level-desc reading-secondary" v-html="row.html" />
         </div>
         <p v-else class="skill-level-desc" v-html="row.html" />
       </div>
@@ -87,7 +87,7 @@ const renderedRefinements = computed(() =>
       >
         <div class="skill-level-row">
           <span class="skill-level-badge refine-badge">R{{ row.tier }}</span>
-          <p class="skill-level-desc" v-html="row.html" />
+          <p class="skill-level-desc reading-secondary" v-html="row.html" />
         </div>
       </div>
     </div>
@@ -106,8 +106,6 @@ const renderedRefinements = computed(() =>
   flex-wrap: wrap;
   column-gap: 18px;
   margin: 0 0 var(--spacing-sm);
-  font-size: 13px;
-  color: rgba(255, 255, 255, 0.62);
 }
 
 .skill-meta-value {
@@ -185,11 +183,6 @@ const renderedRefinements = computed(() =>
 .skill-level-desc {
   margin: 0;
   white-space: pre-line;
-  line-height: 1.55;
   flex: 1;
-}
-
-.skill-level.upgrade .skill-level-desc {
-  font-size: 15px;
 }
 </style>
