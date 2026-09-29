@@ -25,6 +25,10 @@ const emit = defineEmits<{
   pick: [character: CharacterType]
 }>()
 
+defineSlots<{
+  badge?: (props: { character: CharacterType }) => unknown
+}>()
+
 const i18n = useI18nStore()
 
 const factionFilter = ref('')
@@ -104,7 +108,11 @@ function handleEnter(event: KeyboardEvent) {
       class="character-item"
       @click="emit('pick', character)"
     >
-      <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true" />
+      <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true">
+        <template v-if="$slots.badge" #badge>
+          <slot name="badge" :character />
+        </template>
+      </CharacterIcon>
     </div>
   </div>
   <div class="characters-grid">
@@ -115,7 +123,11 @@ function handleEnter(event: KeyboardEvent) {
       :class="{ 'enter-target': enterTarget === character }"
       @click="emit('pick', character)"
     >
-      <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true" />
+      <CharacterIcon :character :is-draggable="false" :show-simple-tooltip="true">
+        <template v-if="$slots.badge" #badge>
+          <slot name="badge" :character />
+        </template>
+      </CharacterIcon>
     </div>
     <div v-if="listed.length === 0 && pinnedRow.length === 0" class="no-characters">
       {{ i18n.t('app.no-available-heroes') }}
@@ -207,7 +219,7 @@ function handleEnter(event: KeyboardEvent) {
 
 .character-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   cursor: pointer;
   padding: 2px;
@@ -229,6 +241,11 @@ function handleEnter(event: KeyboardEvent) {
 .character-item :deep(.portrait) {
   width: 50px !important;
   height: 50px !important;
+}
+
+/* Only visible badge content should add height to a grid row. */
+.character-item :deep(.portrait-badge) {
+  margin-top: 0;
 }
 
 .no-characters {
