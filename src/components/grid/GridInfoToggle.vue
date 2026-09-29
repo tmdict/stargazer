@@ -326,7 +326,6 @@ const panelShift = usePanelClamp(
   background: rgba(20, 20, 20, 0.92);
   backdrop-filter: blur(10px);
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 
 .grid-info-toggle.share .row {
@@ -348,7 +347,7 @@ const panelShift = usePanelClamp(
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-float);
   padding: var(--spacing-sm);
   z-index: var(--z-dropdown);
   min-width: max-content;

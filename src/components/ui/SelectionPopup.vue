@@ -98,7 +98,7 @@ watch(() => props.position, reposition)
   border-radius: 8px;
   padding: 10px;
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.5),
+    var(--shadow-float),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   z-index: 1000;
   max-width: 320px;

@@ -371,6 +371,6 @@ const {
   background: var(--color-primary);
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
-  box-shadow: var(--shadow-soft, 0 2px 8px rgba(0, 0, 0, 0.25));
+  box-shadow: var(--shadow-float);
 }
 </style>
