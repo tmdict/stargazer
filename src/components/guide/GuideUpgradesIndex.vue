@@ -188,7 +188,7 @@ const bands = computed((): Band[] => [
   left: var(--v);
   transform: translate(-50%, -50%);
   min-width: 28px;
-  padding: 3px 4px 2px;
+  padding: 2.5px 4px;
   font-size: 9.5px;
 }
 

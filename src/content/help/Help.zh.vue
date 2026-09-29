@@ -109,7 +109,7 @@ const SKILL = {
             <span class="help-touch"
               >像在竞技场里一样布置每个棋盘。想交换两个棋盘，先点<span class="help-inline-btn round"
                 ><IconSwap :size="10" /></span
-              >，再点另一个棋盘。</span
+              >，再点另一个棋盘。如果显示<b>再次点击交换</b>，再点一次即可。</span
             >
           </li>
           <li>

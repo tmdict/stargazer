@@ -59,7 +59,7 @@ onMounted(() => {
 
 /* ---- Copies of app controls ---- */
 
-.help :deep(:is(.help-tab, .help-inline-btn, .upgrade-dock, .upill)) {
+.help :deep(:is(.help-tab, .help-inline-btn, .upgrade-dock)) {
   font-family: var(--font-ui);
 }
 

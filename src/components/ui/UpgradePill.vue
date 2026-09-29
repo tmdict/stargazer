@@ -7,6 +7,7 @@
 
 import { computed } from 'vue'
 
+import UpgradeLevelLabel from '@/components/ui/UpgradeLevelLabel.vue'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { pillBackground } from '@/lib/characters/upgradeStats'
 import { useI18nStore } from '@/stores/i18n'
@@ -57,7 +58,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
       :aria-label="`${i18n.t('app.paragon')} ${paragon}`"
       @click="emit('paragon', next(paragon, MAX_PARAGON))"
     >
-      P{{ paragon }}
+      <UpgradeLevelLabel kind="paragon" :level="paragon" />
     </button>
     <button
       type="button"
@@ -67,7 +68,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
       :aria-label="`${i18n.t('app.refinement')} ${refinement}`"
       @click="emit('refinement', next(refinement, MAX_REFINEMENT))"
     >
-      R{{ refinement }}
+      <UpgradeLevelLabel kind="refinement" :level="refinement" />
     </button>
   </span>
 </template>
@@ -79,7 +80,6 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
   overflow: hidden;
   border: 1.5px solid #fff;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  line-height: 1;
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -88,11 +88,10 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 .useg {
   flex: 1 1 0;
   min-width: 26px;
-  padding: 3px 6px 4px;
+  padding: 3.5px 6px;
   border: none;
   background: transparent;
   font: inherit;
-  text-align: center;
   color: var(--upgrade-pill-gray-text);
   cursor: default;
 }
@@ -114,7 +113,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 @media (pointer: coarse) {
   .editable .useg {
     min-width: 40px;
-    padding: 9px 8px 10px;
+    padding: 9.5px 8px;
   }
 
   .editable.compact .useg {
