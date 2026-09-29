@@ -134,7 +134,7 @@ const runAction = (): void => {
   background: var(--color-bg-primary);
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
-  box-shadow: var(--shadow-medium);
+  box-shadow: var(--shadow-float);
   z-index: var(--z-dropdown);
 }
 

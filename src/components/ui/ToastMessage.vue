@@ -1,29 +1,31 @@
 <script setup lang="ts">
+import type { Component } from 'vue'
+
+import IconCheckCircle from '@/components/ui/IconCheckCircle.vue'
+import IconCloseCircle from '@/components/ui/IconCloseCircle.vue'
+import IconInfo from '@/components/ui/IconInfo.vue'
+import type { ToastItem } from '@/composables/useToast'
+
 const { type = 'success' } = defineProps<{
   message: string
-  type?: 'success' | 'error' | 'info'
+  type?: ToastItem['type']
 }>()
 
 const emit = defineEmits<{
   close: []
 }>()
 
-const getIcon = () => {
-  switch (type) {
-    case 'error':
-      return '✕'
-    case 'info':
-      return 'ℹ'
-    default:
-      return '✓'
-  }
+const ICONS: Record<ToastItem['type'], Component> = {
+  success: IconCheckCircle,
+  error: IconCloseCircle,
+  info: IconInfo,
 }
 </script>
 
 <template>
   <div :class="`toast toast-${type}`" @click="emit('close')">
     <div class="toast-content">
-      <span class="toast-icon">{{ getIcon() }}</span>
+      <component :is="ICONS[type]" :size="18" class="toast-icon" aria-hidden="true" />
       <span class="toast-message">{{ message }}</span>
     </div>
   </div>
@@ -34,10 +36,8 @@ const getIcon = () => {
   min-width: 250px;
   padding: var(--spacing-md) var(--spacing-lg);
   border-radius: var(--radius-large);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: var(--shadow-float);
   cursor: pointer;
-  font-weight: var(--font-weight-medium);
-  font-size: var(--font-size-sm);
 }
 
 .toast-content {
@@ -47,8 +47,12 @@ const getIcon = () => {
 }
 
 .toast-icon {
-  font-size: var(--font-size-md);
-  font-weight: var(--font-weight-bold);
+  flex: none;
+  color: var(--color-accent);
+}
+
+.toast-error .toast-icon {
+  color: var(--color-danger);
 }
 
 .toast-message {

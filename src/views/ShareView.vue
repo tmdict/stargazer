@@ -209,7 +209,7 @@ const editLink = computed(() =>
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   box-shadow:
-    0 10px 30px rgba(0, 0, 0, 0.5),
+    var(--shadow-float),
     0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   /* Top padding clears the absolutely positioned action cluster (modal.css
      .buttons: 12px offset + 32px buttons) so the board starts below it. */

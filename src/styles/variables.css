@@ -119,9 +119,12 @@
   --transition-fast: 0.2s ease;
   --transition-medium: 0.3s ease;
 
-  /* Shadows */
+  /* Shadows. Panel: page panels resting on the page. Float: anything that
+     pops up over it (menus, tooltips, popups), kept light because most open
+     over the cream Arena and Teams panels. */
   --shadow-small: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --shadow-medium: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-panel: 0 1px 2px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.22);
+  --shadow-float: 0 1px 3px rgba(0, 0, 0, 0.1), 0 6px 16px rgba(0, 0, 0, 0.12);
 
   /* Z-index scale */
   --z-grid-base: 1;
