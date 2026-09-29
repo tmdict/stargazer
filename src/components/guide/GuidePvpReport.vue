@@ -21,7 +21,7 @@ const title = (season: number): string =>
 </script>
 
 <template>
-  <article class="container guide-panel">
+  <article class="container page-panel guide-panel">
     <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
       <a class="guide-title" :href="pvpReportHref(summary.season)">
         <h2>{{ title(summary.season) }}</h2>

@@ -57,18 +57,15 @@ const resolvedBody = computed(() => {
   margin: 0 0 var(--spacing-xs);
   padding: 0;
   border-bottom: none;
-  font-size: 13px;
+  font-size: var(--reading-small-size);
   font-weight: 600;
   color: var(--color-accent);
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 
-/* Body text matches `.skill-level-desc` default so it reads as a peer to
-   the surrounding skill description text. */
 .skill-snippet-body :deep(p) {
   margin: 0;
-  line-height: 1.55;
 }
 
 .skill-snippet-body :deep(p + p) {

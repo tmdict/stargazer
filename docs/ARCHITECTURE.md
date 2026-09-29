@@ -118,4 +118,4 @@ Action buttons never show a tooltip on touch devices; info-only triggers show th
 
 ## Content and data
 
-Page prose is in `src/content/page/` (en and zh). Per-hero skill notes are in `src/content/skill/<slug>/`, while skill text for all languages is in `src/locales/skill/<lang>/`. Game data (`src/data/`) and dictionaries (`src/locales/`) load through `src/utils/dataLoader.ts`. PvP reports produced by an external report generator sit in `src/content/pvp/s<N>/` and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).
+The About popup's text is in `src/content/about/` and the Help page's in `src/content/help/`, one file per app locale (en and zh), each imported directly by its view. Per-hero skill notes are in `src/content/skill/<slug>/`, while skill text for all languages is in `src/locales/skill/<lang>/`. Game data (`src/data/`) and dictionaries (`src/locales/`) load through `src/utils/dataLoader.ts`. PvP reports produced by an external report generator sit in `src/content/pvp/s<N>/` and are published at build time ([Pre-Rendering](./architecture/PRE_RENDERING.md)).

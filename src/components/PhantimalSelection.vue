@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import HoldRing from './ui/HoldRing.vue'
+import TooltipCard from './ui/TooltipCard.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import { useDragDrop } from '@/composables/useDragDrop'
 import { useHoverTooltip } from '@/composables/useHoverTooltip'
@@ -163,13 +164,14 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
     </div>
 
     <Teleport to="body">
-      <TooltipPopup v-if="hovered && hoveredEl" :target-element="hoveredEl" variant="simple">
+      <TooltipPopup v-if="hovered && hoveredEl" :target-element="hoveredEl" variant="detailed">
         <template #content>
-          <div class="phantimal-tooltip">
-            <div class="phantimal-tooltip-faction">{{ i18n.t(`game.${hovered.faction}`) }}</div>
-            <div>{{ tooltipText }}</div>
-            <div class="phantimal-tooltip-hint">{{ i18n.t('app.hold-for-details') }}</div>
-          </div>
+          <TooltipCard :hint="i18n.t('app.hold-for-details')">
+            <div class="phantimal-tooltip">
+              <div class="phantimal-tooltip-faction">{{ i18n.t(`game.${hovered.faction}`) }}</div>
+              <div>{{ tooltipText }}</div>
+            </div>
+          </TooltipCard>
         </template>
       </TooltipPopup>
     </Teleport>
@@ -250,26 +252,13 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
 }
 
 .phantimal-tooltip {
-  font-size: 14px;
-  font-weight: 600;
   text-align: center;
   white-space: nowrap;
 }
 
 .phantimal-tooltip-faction {
   margin-bottom: 4px;
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-/* Matches the hero and artifact cards' hint row. */
-.phantimal-tooltip-hint {
-  margin-top: 8px;
-  padding-top: 6px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--tooltip-muted);
 }
 
 .portrait {

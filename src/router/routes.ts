@@ -6,6 +6,7 @@ import type {
 } from 'vue-router'
 
 import { guidePath } from '@/lib/guide'
+import { helpPath } from '@/lib/help'
 import { APP_LOCALES, SKILL_LOCALE_CODES, type SkillLocale } from '@/lib/types/i18n'
 import { loadSkillLocale } from '@/utils/dataLoader'
 
@@ -140,6 +141,11 @@ export const routes: RouteRecordRaw[] = [
       component: () => import('@/views/GuideMechanicsView.vue'),
     },
   ]),
+  ...APP_LOCALES.map((locale) => ({
+    path: helpPath(locale),
+    name: `help-${locale}`,
+    component: () => import('@/views/HelpView.vue'),
+  })),
   {
     path: '/skills',
     name: 'skills',

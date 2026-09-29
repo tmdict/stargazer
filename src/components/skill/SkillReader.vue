@@ -67,7 +67,7 @@ watch(
 
 <template>
   <!-- .container + .content from content.css: visual match to SkillModal. -->
-  <div class="container">
+  <div class="container page-panel">
     <div class="content">
       <!-- Chrome-language sentence inside the content region: own lang. -->
       <div v-if="visibleSlug && showLocaleHint" class="locale-hint" :lang="i18n.currentLocale">
@@ -98,12 +98,9 @@ watch(
 </template>
 
 <style scoped>
-/* Slightly lighter than modal.css's default so the inline panel reads as a
-   distinct surface from the popup modal. `margin: 0` overrides the modal-
-   context `margin: auto`, which would otherwise vertical-center the panel
-   inside its flex slot. */
+/* content.css centers .container with `margin: auto`, which would
+   vertically center the panel in its flex slot. */
 .container {
-  background: #262626;
   margin: 0;
 }
 
@@ -167,32 +164,10 @@ watch(
   color: rgba(255, 255, 255, 0.9);
 }
 
-/* Mobile: drop the modal card chrome (border, shadow, large radius) so the
-   reader fills the width edge-to-edge like the grid page's panel, and tighten
-   the prose inset so it doesn't waste horizontal space. Mirrors `.section`'s
-   responsive chrome (radius-medium at ≤768, flat at ≤480). Overrides
-   content.css's `max-width: 90% !important` and the card border/shadow. */
+/* On mobile the empty placeholder is a tap target that reveals the hero list. */
 @media (max-width: 768px) {
-  .container {
-    max-width: 100% !important;
-    border: none;
-    box-shadow: none;
-    border-radius: var(--radius-medium);
-  }
-  .content {
-    padding: var(--spacing-lg);
-  }
-  /* On mobile the empty placeholder is a tap target that reveals the hero list. */
   .empty-state {
     cursor: pointer;
-  }
-}
-@media (max-width: 480px) {
-  .container {
-    border-radius: 0;
-  }
-  .content {
-    padding: var(--spacing-md);
   }
 }
 </style>
