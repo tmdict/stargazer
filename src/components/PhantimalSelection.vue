@@ -15,9 +15,12 @@ import { PHANTIMAL_FACTION_REQUIREMENT } from '@/lib/characters/phantimalFaction
 import type { CharacterType } from '@/lib/types/character'
 import type { PhantimalType } from '@/lib/types/phantimal'
 import { Team } from '@/lib/types/team'
+import { useGameDataStore } from '@/stores/gameData'
 import { useGrids } from '@/stores/grids'
 import { useI18nStore } from '@/stores/i18n'
 import { phantimalImageUrl } from '@/utils/artifactImage'
+import { loadPhantimalLocales } from '@/utils/dataLoader'
+import { formatDisplayName } from '@/utils/nameFormatting'
 import { getTeamFromTileState } from '@/utils/tileStateFormatting'
 
 const { phantimals, isDraggable = false } = defineProps<{
@@ -26,6 +29,7 @@ const { phantimals, isDraggable = false } = defineProps<{
 }>()
 
 const i18n = useI18nStore()
+const gameDataStore = useGameDataStore()
 const grids = useGrids()
 const { fillOrder, targetHexId, targetGridId, clearTargetHex, characterStore } = useSelectionState()
 const { startDrag, endDrag } = useDragDrop()
@@ -105,13 +109,30 @@ const {
   onTouchStart: onPortraitTouchStart,
 } = useHoverTooltip<PhantimalType>()
 
-const tooltipText = computed(() => {
+const tooltipName = computed(() => {
   const phantimal = hovered.value
   if (!phantimal) return ''
+  const name = loadPhantimalLocales()[phantimal.name]?.name[i18n.currentLocale]
+  return name || formatDisplayName(phantimal.name)
+})
+
+const tooltipRows = computed(() => {
+  const phantimal = hovered.value
+  if (!phantimal) return []
   const count = characterStore.phantimalFactionCount(toPhantimalId(phantimal.id), fillOrder[0])
   const canPlace = count >= PHANTIMAL_FACTION_REQUIREMENT
   const key = canPlace ? 'app.phantimal-deployable' : 'app.phantimal-locked'
-  return i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT })
+  return [
+    {
+      label: `${i18n.t('game.faction')}:`,
+      value: i18n.t(`game.${phantimal.faction}`),
+      icon: gameDataStore.getIcon(`faction-${phantimal.faction}`),
+    },
+    {
+      label: `${i18n.t('app.availability')}:`,
+      value: i18n.t(key, { count, required: PHANTIMAL_FACTION_REQUIREMENT }),
+    },
+  ]
 })
 
 // Right-click or hold opens the phantimal's details, as on the board.
@@ -166,12 +187,11 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
     <Teleport to="body">
       <TooltipPopup v-if="hovered && hoveredEl" :target-element="hoveredEl" variant="detailed">
         <template #content>
-          <TooltipCard :hint="i18n.t('app.hold-for-details')">
-            <div class="phantimal-tooltip">
-              <div class="phantimal-tooltip-faction">{{ i18n.t(`game.${hovered.faction}`) }}</div>
-              <div>{{ tooltipText }}</div>
-            </div>
-          </TooltipCard>
+          <TooltipCard
+            :name="tooltipName"
+            :rows="tooltipRows"
+            :hint="i18n.t('app.hold-for-details')"
+          />
         </template>
       </TooltipPopup>
     </Teleport>
@@ -249,16 +269,6 @@ const handleContextMenu = (event: MouseEvent, phantimal: PhantimalType): void =>
   z-index: 2;
   background: var(--placed-overlay);
   pointer-events: none;
-}
-
-.phantimal-tooltip {
-  text-align: center;
-  white-space: nowrap;
-}
-
-.phantimal-tooltip-faction {
-  margin-bottom: 4px;
-  color: var(--tooltip-muted);
 }
 
 .portrait {
