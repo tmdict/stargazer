@@ -1,6 +1,6 @@
 # Pre-Rendering
 
-The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` hero list and the guide. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. `/teams` is client-only. Game state never enters the baked HTML.
+The production build uses vite-ssg to write static HTML for every crawlable page, and the same bundle hydrates each page into the full app. Content pages bake their bodies: the skill pages, the `/skills` hero list, the guide and the Help page. The interactive pages `/` and `/share` bake only chrome and meta tags, so each still has its own canonical and resolves on direct navigation. `/teams` is client-only. Game state never enters the baked HTML.
 
 The hard rule is that the client's first render must equal the baked HTML, or hydration breaks. Everything a pre-rendered view reads while rendering must therefore be synchronous and deterministic, or awaited before the render starts.
 
@@ -22,7 +22,9 @@ The hard rule is that the client's first render must equal the baked HTML, or hy
 
 `npm run build` runs the type check and `build:ssg` in parallel. `build:spa` skips pre-rendering, and the dev server is SPA only.
 
-`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page, so 16 languages × every hero with text. A locale directory missing for a `SKILL_LOCALES` row fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `APP_LOCALES` × `GUIDE_PAGES` ([Guide](./GUIDE.md)).
+`getSSGRoutes` (`vite.config.ts`) lists the pages. The skill pages come from the filesystem: every non-underscore `.json` under `src/locales/skill/<code>/` becomes a page, so 16 languages × every hero with text. A locale directory missing for a `SKILL_LOCALES` row fails the build, because that table also drives the globe menu and `hreflang`, and a silent skip would ship links to pages that do not exist. Guide pages come from `APP_LOCALES` × `GUIDE_PAGES` ([Guide](./GUIDE.md)), and the Help page from `APP_LOCALES` (`helpPath`, `src/lib/help.ts`).
+
+The Help page's text lives in `src/content/help/Help.<lang>.vue`, imported by `HelpView`, so it ships only in the Help page's chunk. Its pictures (`src/components/help/`) are the app's own components and classes shown look-only (`inert`), plus copies of the few controls whose styles are scoped to their components. The Mouse / Touch wording bakes as mouse and switches to touch after mount on a coarse-pointer device, so hydration matches.
 
 `processRenderedPage` stamps `<html lang>` from the URL prefix and removes duplicate asset links, since vite-ssg emits asset `<link>` tags in two passes and a module reachable from both appears twice. On skill pages it also preloads the language chunk and writes the meta description ([Skill Pages](./SKILL_PAGES.md)). The chunk lookup reads `dist/assets`, which works because vite-ssg finishes the client build before rendering.
 

@@ -16,7 +16,7 @@ useGameDataStore().initializeContentData()
 
 <template>
   <main>
-    <article class="container guide-panel">
+    <article class="container page-panel guide-panel">
       <div class="content">
         <GuideUpgradeSection :lang />
       </div>

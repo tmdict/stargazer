@@ -1,5 +1,5 @@
 /* Shared content surface: the bordered box and prose typography used by the
-   modal popups (BaseModal) and the inline skill reader panel. Pairs with
+   modal popups (BaseModal) and the static pages (.page-panel). Pairs with
    modal.css, which supplies the overlay/popup chrome (and the mobile
    button-clearance padding for `.content` rendered inside an overlay). */
 
@@ -22,34 +22,36 @@
 /* Content styles */
 .content {
   padding: 24px 32px 32px 32px;
-  color: #fff;
+  color: var(--reading-text);
 }
 
-/* Typography styles */
+/* Text roles. Pages and popups use these elements, or the role classes
+   below, instead of restyling text themselves. */
 .content h1 {
   margin: 0 0 20px 0;
-  font-size: 24px;
+  font-size: var(--reading-title-size);
   font-weight: 600;
-  color: #fff;
+  color: var(--reading-text);
 }
 
 .content h2 {
   margin: 28px 0 12px 0;
-  font-size: 18px;
+  font-size: var(--reading-heading-size);
   font-weight: 600;
-  color: #fff;
+  color: var(--reading-text);
 }
 
 .content h3 {
   margin-top: 24px;
-  font-size: 16px;
+  font-size: var(--reading-subheading-size);
+  font-weight: 600;
 }
 
 .content p {
   margin: 12px 0;
-  line-height: 1.6;
-  color: #fff;
-  opacity: 0.9;
+  line-height: var(--reading-leading);
+  color: var(--reading-text);
+  opacity: var(--reading-text-opacity);
 }
 
 .content ul,
@@ -60,9 +62,19 @@
 
 .content li {
   margin: 6px 0;
-  line-height: 1.6;
-  color: #fff;
-  opacity: 0.9;
+  line-height: var(--reading-leading);
+  color: var(--reading-text);
+  opacity: var(--reading-text-opacity);
+}
+
+/* base.css sizes li directly, so a list's items take the role themselves. */
+.content :is(.reading-secondary, .reading-secondary li) {
+  font-size: var(--reading-secondary-size);
+}
+
+.content .reading-meta {
+  font-size: var(--reading-small-size);
+  color: var(--reading-muted);
 }
 
 .content ul ul {
@@ -93,7 +105,7 @@
   border-radius: 999px;
   background: rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
+  font-size: var(--reading-small-size);
   line-height: 1.6;
 }
 
@@ -155,26 +167,43 @@
   .content {
     padding: 24px;
   }
-
-  .content h1 {
-    font-size: 22px;
-  }
-
-  .content h2 {
-    font-size: 17px;
-  }
 }
 
 @media (max-width: 480px) {
   .content {
     padding: 20px;
   }
+}
 
-  .content h1 {
-    font-size: 20px;
+/* Static pages (skill page, guide, Help): a solid panel that drops the card
+   and runs full width on narrow screens, like the grid page's `.section`. */
+.page-panel {
+  background: var(--color-bg-reading);
+}
+
+.page-panel > * {
+  padding: 24px 32px 32px 32px;
+}
+
+@media (max-width: 768px) {
+  .page-panel {
+    max-width: 100% !important;
+    border: none;
+    box-shadow: none;
+    border-radius: var(--radius-medium);
   }
 
-  .content h2 {
-    font-size: 16px;
+  .page-panel > * {
+    padding: var(--spacing-lg);
+  }
+}
+
+@media (max-width: 480px) {
+  .page-panel {
+    border-radius: 0;
+  }
+
+  .page-panel > * {
+    padding: var(--spacing-md);
   }
 }

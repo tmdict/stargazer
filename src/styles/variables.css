@@ -21,14 +21,18 @@
   --color-tier-3: #dd7a6c;
   --color-tier-4: #b3c9e2;
 
-  /* Hero upgrade pills (the panel's portrait pills, the guide's level headers):
-     gray below max; paragon turns silver-blue at max, refinement warms through
-     a tint from R2 to red at max. */
+  /* Hero upgrade pills, read by pillFill (upgradeStats.ts). Levels 1-3 stay
+     light enough for the gray text to hold 4.5:1 contrast. */
   --upgrade-pill-gray: #cfc8bb;
   --upgrade-pill-gray-text: #4a463d;
-  --upgrade-pill-paragon-max: #8fa7c8;
-  --upgrade-pill-refinement-mid: #f5cdc2;
-  --upgrade-pill-refinement-max: #e4938a;
+  --upgrade-pill-paragon-1: #d6e1f0;
+  --upgrade-pill-paragon-2: #bdcee5;
+  --upgrade-pill-paragon-3: #a2b8d7;
+  --upgrade-pill-paragon-max: #728cb1;
+  --upgrade-pill-refinement-1: #fbd6d0;
+  --upgrade-pill-refinement-2: #f4bcb5;
+  --upgrade-pill-refinement-3: #eda59b;
+  --upgrade-pill-refinement-max: #ce756b;
 
   /* Team Colors */
   --color-ally: #36958e;
@@ -80,6 +84,24 @@
 
   /* Shared horizontal inset for tab content and the BottomSheet side panel. */
   --content-padding-x: var(--spacing-xl);
+
+  --font-ui: sans-serif;
+  --font-content: Verdana, Arial, 'Microsoft YaHei', sans-serif;
+
+  /* Content text: popups (content.css), the skill page and Help. */
+  --reading-title-size: 24px;
+  --reading-heading-size: 18px;
+  --reading-subheading-size: 16px;
+  --reading-body-size: 16px;
+  --reading-secondary-size: 15px;
+  --reading-small-size: 13px;
+  --reading-leading: 1.55;
+  --reading-text: #fff;
+  --reading-text-opacity: 0.9;
+  --reading-muted: rgba(255, 255, 255, 0.62);
+
+  /* Background of static content pages (skill page, guide, Help). */
+  --color-bg-reading: #262626;
 
   /* Tab-strip label size (tabs + arena dropdown); smaller at the chrome extremes. */
   --tab-font-size: 0.85rem;

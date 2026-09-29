@@ -2,6 +2,7 @@ import { computed, inject, onUnmounted, type InjectionKey, type Ref } from 'vue'
 import { useHead } from '@unhead/vue'
 
 import { guidePath, type GuidePage } from '@/lib/guide'
+import { helpPath } from '@/lib/help'
 import { SITE_ORIGIN } from '@/lib/site'
 import { APP_LOCALES, SKILL_LOCALES, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
@@ -103,16 +104,32 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
   },
 }
 
+const HELP_META: Record<AppLocale, { title: string; description: string }> = {
+  en: {
+    title: 'Help',
+    description:
+      'How to use Stargazer: placing heroes, reading skills, sharing boards, rosters, and saving teams.',
+  },
+  zh: {
+    title: '帮助',
+    description: 'Stargazer 使用说明：放置英雄、查看技能、分享棋盘、英雄池与保存阵容。',
+  },
+}
+
 /**
- * Sets up meta tags for a guide page (SSG and client). The en and zh routes
- * of a page share one view instance, so the head follows the locale
- * reactively instead of the value at setup.
+ * Sets up meta tags for a page with one route per app locale (SSG and client).
+ * The en and zh routes of a page share one view instance, so the head follows
+ * the locale reactively instead of the value at setup.
  */
-export function setupGuideContentMeta(locale: Ref<AppLocale>, page: GuidePage): void {
+function setupLocalePageMeta(
+  locale: Ref<AppLocale>,
+  meta: (locale: AppLocale) => { title: string; description: string },
+  pathFor: (locale: AppLocale) => string,
+): void {
   useHead(
     computed(() => {
-      const { title, description } = GUIDE_META[page][locale.value]
-      const path = guidePath(locale.value, page)
+      const { title, description } = meta(locale.value)
+      const path = pathFor(locale.value)
       return {
         title: `${title} | Stargazer`,
         meta: [
@@ -127,11 +144,21 @@ export function setupGuideContentMeta(locale: Ref<AppLocale>, page: GuidePage): 
           ...APP_LOCALES.map((code) => ({
             rel: 'alternate',
             hreflang: code,
-            href: `${ORIGIN}${guidePath(code, page)}`,
+            href: `${ORIGIN}${pathFor(code)}`,
           })),
-          { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}${guidePath('en', page)}` },
+          { rel: 'alternate', hreflang: 'x-default', href: `${ORIGIN}${pathFor('en')}` },
         ],
       }
     }),
   )
 }
+
+export const setupGuideContentMeta = (locale: Ref<AppLocale>, page: GuidePage): void =>
+  setupLocalePageMeta(
+    locale,
+    (l) => GUIDE_META[page][l],
+    (l) => guidePath(l, page),
+  )
+
+export const setupHelpContentMeta = (locale: Ref<AppLocale>): void =>
+  setupLocalePageMeta(locale, (l) => HELP_META[l], helpPath)

@@ -8,7 +8,7 @@ import { useInfoTip } from '@/composables/useInfoTip'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
-import { pillTone, type PillTone } from '@/lib/characters/upgradeStats'
+import { pillBackground } from '@/lib/characters/upgradeStats'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -110,28 +110,8 @@ const cycle = (team: Team, hero: PanelHero): void => {
   }
 }
 
-// One fill per pillTone (the tone rule is shared with the guide's level
-// headers); the two fills meet in a slanted seam.
-const PILL_GRAY = 'var(--upgrade-pill-gray)'
-const P_FILL: Record<PillTone, string> = {
-  base: PILL_GRAY,
-  mid: PILL_GRAY,
-  max: 'var(--upgrade-pill-paragon-max)',
-}
-const R_FILL: Record<PillTone, string> = {
-  base: PILL_GRAY,
-  mid: 'var(--upgrade-pill-refinement-mid)',
-  max: 'var(--upgrade-pill-refinement-max)',
-}
 const MAX_PARAGON = attrMax(ATTR_PARAGON)
 const MAX_REFINEMENT = attrMax(ATTR_REFINEMENT)
-const pillBackground = (hero: PanelHero): string => {
-  const pFill = P_FILL[pillTone(ATTR_PARAGON, hero.paragon)]
-  const rFill = R_FILL[pillTone(ATTR_REFINEMENT, hero.refinement)]
-  // The white sliver keeps the slanted split visible even when both halves
-  // share the gray, so the pill reads the same at every level combination.
-  return `linear-gradient(112deg, ${pFill} 48.6%, #fff 49.4%, #fff 50.6%, ${rFill} 51.4%)`
-}
 
 const heroAria = (hero: PanelHero): string => {
   const parts = [hero.name]
@@ -210,7 +190,11 @@ const hoveredStat = computed(
           <span class="portrait">
             <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
           </span>
-          <span v-if="showUpgrades" class="upill" :style="{ background: pillBackground(hero) }">
+          <span
+            v-if="showUpgrades"
+            class="upill"
+            :style="{ background: pillBackground(hero.paragon, hero.refinement) }"
+          >
             <span class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
               P{{ hero.paragon }}
             </span>

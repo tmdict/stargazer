@@ -45,7 +45,7 @@ const sharedLine = computed(() =>
     <div class="charm-tiers">
       <div v-for="row in rows" :key="row.tier" class="charm-tier" :class="{ tagged: row.isTagged }">
         <span class="charm-tier-badge" :class="row.tierClass">{{ row.name }}</span>
-        <p class="charm-tier-desc" v-html="row.html" />
+        <p class="charm-tier-desc reading-secondary" v-html="row.html" />
       </div>
     </div>
     <p v-if="sharedLine" class="charm-shared">{{ sharedLine }}</p>
@@ -103,8 +103,6 @@ const sharedLine = computed(() =>
 .charm-tier-desc {
   margin: 0;
   white-space: pre-line;
-  line-height: 1.55;
-  font-size: 15px;
 }
 
 .charm-shared {

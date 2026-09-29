@@ -5,6 +5,7 @@
 
 import { computed } from 'vue'
 
+import TooltipCard from './ui/TooltipCard.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
@@ -22,8 +23,6 @@ const gameDataStore = useGameDataStore()
 const i18n = useI18nStore()
 
 const formattedName = computed(() => characterDisplayName(i18n.t, character))
-const damageIcon = computed(() => gameDataStore.getIcon(`damage-${character.damage}`))
-const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
 
 // "base (bonus)" when a skill grants extra starting energy; else just the base.
 const formattedEnergy = computed(() => {
@@ -31,6 +30,32 @@ const formattedEnergy = computed(() => {
   if (bonuses.length === 0) return String(base)
   return `${base} (${bonuses.reduce((sum, n) => sum + n, 0)})`
 })
+
+const rows = computed(() => [
+  {
+    label: `${i18n.t('game.faction')}:`,
+    value: i18n.t(`game.${character.faction}`),
+    icon: gameDataStore.getIcon(`faction-${character.faction}`),
+  },
+  {
+    label: `${i18n.t('game.class')}:`,
+    value: i18n.t(`game.${character.class}`),
+    icon: gameDataStore.getIcon(`class-${character.class}`),
+  },
+  {
+    label: `${i18n.t('game.damage')}:`,
+    value: i18n.t(`game.${character.damage}`),
+    icon: gameDataStore.getIcon(`damage-${character.damage}`),
+  },
+  {
+    label: `${i18n.t('game.energy')}:`,
+    value: formattedEnergy.value,
+    icon: gameDataStore.getIcon('initial-energy'),
+    iconClass: 'energy-icon',
+  },
+  { label: `${i18n.t('game.range')}:`, value: character.range },
+  { label: `${i18n.t('game.season')}:`, value: character.season },
+])
 </script>
 
 <template>
@@ -41,67 +66,7 @@ const formattedEnergy = computed(() => {
         <div v-if="variant === 'simple' || character.placeholder" class="simple-tooltip">
           {{ formattedName }}
         </div>
-
-        <template v-else>
-          <div class="tooltip-header">
-            <h3>{{ formattedName }}</h3>
-          </div>
-
-          <div class="tooltip-content">
-            <div class="tooltip-row">
-              <img
-                :src="gameDataStore.getIcon(`faction-${character.faction}`)"
-                :alt="character.faction"
-                class="tooltip-icon"
-              />
-              <span class="tooltip-label">{{ i18n.t('game.faction') }}:</span>
-              <span class="tooltip-value">{{ i18n.t(`game.${character.faction}`) }}</span>
-            </div>
-
-            <div class="tooltip-row">
-              <img
-                :src="gameDataStore.getIcon(`class-${character.class}`)"
-                :alt="character.class"
-                class="tooltip-icon"
-              />
-              <span class="tooltip-label">{{ i18n.t('game.class') }}:</span>
-              <span class="tooltip-value">{{ i18n.t(`game.${character.class}`) }}</span>
-            </div>
-
-            <div class="tooltip-row">
-              <img
-                v-if="damageIcon"
-                :src="damageIcon"
-                :alt="String(character.damage)"
-                class="tooltip-icon"
-              />
-              <span class="tooltip-label">{{ i18n.t('game.damage') }}:</span>
-              <span class="tooltip-value">{{ i18n.t(`game.${character.damage}`) }}</span>
-            </div>
-
-            <div class="tooltip-row">
-              <img
-                v-if="energyIcon"
-                :src="energyIcon"
-                :alt="formattedEnergy"
-                class="tooltip-icon energy-icon"
-              />
-              <span class="tooltip-label">{{ i18n.t('game.energy') }}:</span>
-              <span class="tooltip-value">{{ formattedEnergy }}</span>
-            </div>
-
-            <div class="tooltip-row">
-              <span class="tooltip-label">{{ i18n.t('game.range') }}:</span>
-              <span class="tooltip-value">{{ character.range }}</span>
-            </div>
-
-            <div class="tooltip-row">
-              <span class="tooltip-label">{{ i18n.t('game.season') }}:</span>
-              <span class="tooltip-value">{{ character.season }}</span>
-            </div>
-          </div>
-          <div v-if="hint" class="tooltip-hint">{{ hint }}</div>
-        </template>
+        <TooltipCard v-else :name="formattedName" :rows :hint />
       </template>
     </TooltipPopup>
   </Teleport>
@@ -109,71 +74,13 @@ const formattedEnergy = computed(() => {
 
 <style scoped>
 .simple-tooltip {
-  font-size: 14px;
   font-weight: 600;
   text-align: center;
   white-space: nowrap;
 }
 
-.tooltip-header {
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.tooltip-header h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.tooltip-content {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.tooltip-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.tooltip-icon {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0;
-}
-
-.tooltip-icon.energy-icon {
+/* The energy icon is darker than the others. */
+:deep(.energy-icon) {
   filter: brightness(1.5);
-}
-
-.tooltip-label {
-  color: rgba(255, 255, 255, 0.7);
-  min-width: 60px;
-}
-
-.tooltip-value {
-  font-weight: 500;
-  text-transform: capitalize;
-}
-
-.tooltip-hint {
-  margin-top: 10px;
-  padding-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  font-size: 12px;
-  color: rgba(255, 255, 255, 0.7);
-  text-align: center;
-}
-
-/* Rows without an icon align their label to where the icon-bearing ones start. */
-.tooltip-row:not(:has(.tooltip-icon)) .tooltip-label {
-  margin-left: 28px;
 }
 </style>

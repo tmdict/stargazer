@@ -59,14 +59,13 @@ const toggle = (slug: string) => {
   scroll-margin-top: var(--spacing-lg);
 }
 
-/* Match the skill content's section headings (content.css `.content h2`). */
 .tag-name {
   margin: 0;
   padding: 0;
   border-bottom: none;
-  font-size: 18px;
+  font-size: var(--reading-heading-size);
   font-weight: 600;
-  color: #fff;
+  color: var(--reading-text);
 }
 .tag-count {
   font-size: 0.9rem;

@@ -7,7 +7,7 @@
  */
 
 import { FACTION_ORDER } from '@/lib/filterOrder'
-import { ATTR_REFINEMENT, attrMax } from './attributes'
+import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax, HERO_ATTRS } from './attributes'
 
 export type ParagonGroup = 'standard' | 'celestialHypogean'
 
@@ -58,10 +58,14 @@ export const rampValue = (ramp: StatRamp, level: number): number => ramp.base + 
 export const rampValues = (ramp: StatRamp, attrId: number): number[] =>
   Array.from({ length: attrMax(attrId) + 1 }, (_, level) => rampValue(ramp, level))
 
-/* Pill tone for a level, shared by the panel's portrait pills and the guide's
- * level headers: paragon colors at max only, while refinement warms up from
- * R2 so mid progress shows without stealing the maxed pop. */
-export type PillTone = 'base' | 'mid' | 'max'
+/* Reads the variables.css tokens named after the attribute:
+ * --upgrade-pill-<name>-<level>, and -max at the top level. */
+export const pillFill = (attrId: number, level: number): string => {
+  if (level <= 0) return 'var(--upgrade-pill-gray)'
+  const name = HERO_ATTRS.find((attr) => attr.id === attrId)?.name
+  return `var(--upgrade-pill-${name}-${level >= attrMax(attrId) ? 'max' : level})`
+}
 
-export const pillTone = (attrId: number, level: number): PillTone =>
-  level >= attrMax(attrId) ? 'max' : attrId === ATTR_REFINEMENT && level >= 2 ? 'mid' : 'base'
+// The white sliver keeps the slanted split visible when both halves share a fill.
+export const pillBackground = (paragon: number, refinement: number): string =>
+  `linear-gradient(112deg, ${pillFill(ATTR_PARAGON, paragon)} 48.6%, #fff 49.4%, #fff 50.6%, ${pillFill(ATTR_REFINEMENT, refinement)} 51.4%)`
