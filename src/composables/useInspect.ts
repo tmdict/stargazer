@@ -6,12 +6,12 @@ import type { PhantimalType } from '@/lib/types/phantimal'
 import { hasSkillLocale } from '@/utils/dataLoader'
 
 /* The inspect gesture's detail popup (long-press, right-click, the lifted
- * unit's Skills button), shared by the boards and the Arena/Teams pickers.
+ * unit's Skills button), shared by the boards and every icon that inspects.
  * State is a module-level singleton and InspectModals (mounted once at the
  * app root) renders it, so every surface opens the same modal instance. */
 
 export type InspectTarget =
-  // `chip` opens the skill page on a tag's chip (the picker's active tag filter).
+  // `chip` opens the skill page on a tag's chip (a hero list's active tag filter).
   | { kind: 'hero'; slug: string; chip?: string | null }
   | { kind: 'phantimal'; phantimal: PhantimalType }
   | { kind: 'artifact'; artifact: ArtifactType }
