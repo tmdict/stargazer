@@ -146,6 +146,7 @@ const handleResultSelect = (slug: string) => {
         "
         :selected-filter="selectedTagNames"
         inspectable
+        :inspect-chip="selectedTagNames"
         @character-click="handleCharacterClick"
       >
         <!-- Placeholders have no levels; their pill is reserved to keep the grid even. -->
