@@ -42,7 +42,7 @@ Sections, in bitmap-bit order
 
 Teams are written as `team - 1` and read back with `+ 1`. The flags byte is always present: a state without `d` encodes the unpack defaults, so skills and perspective do not switch off on decode. Grid Info visibility is a device preference (`useGridInfoPrefs`) and never travels in a link.
 
-`encodeLink` throws on an unknown mode key. A board list that disagrees with the mode's board count is trimmed or padded with empty boards, with a warning, because the decoder takes the count from the mode. An Arena board's map key is stripped, since the decoder rejects one. A map key with no wire id encodes as 0: the board still restores from its tiles, and only the Maps tab loses its highlight. `decodeLink` returns null without logging, because a failed probe is normal traffic for the shim. `bytesToUrlSafe` turns the bytes into text with a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares, and the result goes into `?g=`.
+`encodeLink` throws on an unknown mode key. A board list that disagrees with the mode's board count is trimmed or padded with empty boards, with a warning, because the decoder takes the count from the mode. An Arena board's map key is stripped, since the decoder rejects one. A map key that names no registered map encodes as 0: the board still restores from its tiles, and only the Maps tab loses its highlight. `decodeLink` returns null without logging, because a failed probe is normal traffic for the shim. `bytesToUrlSafe` turns the bytes into text with a base64 variant (alphabet `A-Za-z0-9-_`, no padding) that the JSON format shares, and the result goes into `?g=`.
 
 In memory, a board keeps phantimals and their companions together in `s`, a phantimal as its local id L and a companion as `N × 10000 + L`. The encoder splits the companions into the bit 6 section so the phantimal entry keeps its fixed 4-bit id, and the decoder appends them back to `s` after the phantimals. A companion entry with index 0 rejects, because index 0 is the phantimal itself. A board without companions leaves bit 6 unset.
 
@@ -72,7 +72,7 @@ Contract tests (`tests/unit/lib/teams/wire.test.ts`, `tests/unit/characters/attr
 | Mode id                | 3    | 4 (the Arena and 3 board counts) | 8        | 4 more board counts (id 4 is held by the shim)     |
 | Active board           | 3    | up to 5 boards                   | 8        | modes of up to 8 boards                            |
 | Display flags          | 8    | 5 flags                          | 8        | 3 more toggles                                     |
-| Map id                 | 6    | 21 maps, plus 0 for none         | 63       | 42 more maps; seasonal preset ids rotate           |
+| Map id                 | 6    | 22 maps, plus 0 for none         | 63       | 41 more maps; seasonal preset ids rotate           |
 | Section bitmap         | 8    | 7 sections                       | 8        | 1 more section                                     |
 | Hex id                 | 6    | 45 hexes                         | 63       | the grid can grow to 63 hexes                      |
 | Tile state             | 3    | 7 states                         | 8        | 1 more state                                       |
@@ -89,9 +89,9 @@ Changing the game's shape does need a new format: a grid beyond 63 hexes, an eig
 
 ## Wire registries
 
-`src/lib/teams/wire.ts` maps the string keys to small ids. Modes are `arena` 0, `1v1` 1, `3v3` 2 and `5v5` 3. A mode is a board count, so the table grows only for a new count, and a type such as Supreme League travels as the boards' map ids. Map id 0 means no map, which Arena boards always use because their serialized tiles are authoritative. `MAP_WIRE_IDS` gives every registered map key an id from 1.
+`src/lib/teams/wire.ts` maps the string keys to small ids. Modes are `arena` 0, `1v1` 1, `3v3` 2 and `5v5` 3. A mode is a board count, so the table grows only for a new count, and a type such as Supreme League travels as the boards' map ids. Map id 0 means no map, which Arena boards always use because their serialized tiles are authoritative. Every other map id is the `id` in the map's own arena JSON (`src/data/arena/`), which `src/lib/maps.ts` loads and checks for uniqueness; `wire.ts` looks it up in both directions.
 
-The file imports no data and no Vue, because the codec imports it. Contract tests check it against `TEAM_MODES` and the map data instead.
+The file imports no Vue and, apart from `maps.ts` (which loads only the arena JSON), no data, because the codec imports it. Contract tests check the mode table against `TEAM_MODES` instead.
 
 An id stays fixed while its mode or map exists, since reassigning one that live data still carries would silently re-route those links. A retired id goes through a conversion window: a temporary migration converts it for as long as the migration lives, and the id is free once it is deleted. Seasonal preset maps rotate the same way. Id 4 belongs to the retired `5v5sl` mode until the shim is gone.
 
