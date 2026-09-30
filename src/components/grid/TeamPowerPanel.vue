@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import HoldRing from '@/components/ui/HoldRing.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import UpgradeLevelLabel from '@/components/ui/UpgradeLevelLabel.vue'
 import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import type { GridContext } from '@/composables/useGridContext'
 import { useInfoTip } from '@/composables/useInfoTip'
+import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
+import { useLongPress } from '@/composables/useLongPress'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
@@ -35,6 +38,7 @@ interface PanelHero {
   paragon: number
   refinement: number
   faction?: string
+  inspectTarget: InspectTarget | null
 }
 
 // Only real heroes carry upgrade attrs.
@@ -43,14 +47,16 @@ const heroesFor = (team: Team): PanelHero[] =>
     .filter((tile) => tile.characterId !== undefined && isRealHeroId(tile.characterId))
     .map((tile) => {
       const characterId = tile.characterId!
-      const canonicalName = gameData.getCharacterNameById(characterId) ?? ''
+      const character = gameData.getCharacterById(characterId)
+      const canonicalName = character?.name ?? ''
       return {
         characterId,
         name: localizedDisplayName(i18n.t, 'character', canonicalName),
         image: gameData.getCharacterImage(canonicalName),
         paragon: props.context.getAttr(team, characterId, ATTR_PARAGON),
         refinement: props.context.getAttr(team, characterId, ATTR_REFINEMENT),
-        faction: gameData.getCharacterFaction(characterId),
+        faction: character?.faction,
+        inspectTarget: character ? heroInspectTarget(character) : null,
       }
     })
 
@@ -110,6 +116,17 @@ const cycle = (team: Team, hero: PanelHero): void => {
     props.context.setAttr(team, hero.characterId, attrId, allMaxed ? 0 : value + 1)
   }
 }
+
+// Right-click or hold opens the hero's skills, as on the board. Not gated on
+// readonly: a shared board inspects too.
+const { inspect } = useInspect()
+const {
+  pressing,
+  start: startHold,
+  onContextMenu,
+} = useLongPress<PanelHero>((hero) => {
+  if (hero.inspectTarget) void inspect(hero.inspectTarget)
+})
 
 const MAX_PARAGON = attrMax(ATTR_PARAGON)
 const MAX_REFINEMENT = attrMax(ATTR_REFINEMENT)
@@ -187,9 +204,23 @@ const hoveredStat = computed(
           :aria-label="heroAria(hero)"
           :title="canEdit ? i18n.t('app.upgrade-cycle') : undefined"
           @click="canEdit && cycle(side.team, hero)"
+          @pointerdown="hero.inspectTarget && startHold($event, hero)"
+          @contextmenu="hero.inspectTarget && onContextMenu($event, hero)"
         >
-          <span class="portrait">
-            <img v-if="hero.image" class="portrait-img" :src="hero.image" alt="" />
+          <!-- The frame holds the hold ring outside the portrait's clipped circle.
+               draggable=false: a native image drag would start inside the
+               hold's move tolerance and abandon it. -->
+          <span class="portrait-frame">
+            <span class="portrait">
+              <img
+                v-if="hero.image"
+                class="portrait-img"
+                :src="hero.image"
+                alt=""
+                draggable="false"
+              />
+            </span>
+            <HoldRing v-if="pressing === hero" />
           </span>
           <span
             v-if="showUpgrades"
@@ -335,6 +366,14 @@ const hoveredStat = computed(
   background: none;
   cursor: pointer;
   font: inherit;
+  /* A long-press is the inspect gesture: iOS would otherwise answer it with the
+     image callout, and every touch browser with text selection. */
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+.portrait-frame {
+  position: relative;
+  width: 100%;
 }
 /* Oversized image centered in an overflow-clipped circle (mirrors CharacterIcon)
    so the portrait frames the face instead of sitting too high. The circle fills its

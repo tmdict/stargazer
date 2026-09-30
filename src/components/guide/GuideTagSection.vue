@@ -32,6 +32,7 @@ const toggle = (slug: string) => {
         :character="c"
         :is-selected="expanded === c.name"
         :selected-filter="tag"
+        inspectable
         @character-click="toggle(c.name)"
       />
     </CharacterGrid>
