@@ -37,12 +37,12 @@ const STATE_FORMATS: Record<State, StateFormat> = {
   [State.BLOCKED]: {
     name: 'Blocked',
     cssClass: 'state-blocked',
-    fillColor: '#a9adb3',
+    fillColor: '#979b9f',
   },
   [State.BLOCKED_BREAKABLE]: {
     name: 'Blocked (Breakable)',
     cssClass: 'state-blocked-breakable',
-    fillColor: '#c9cdd2',
+    fillColor: '#d0d1cf',
   },
 }
 
@@ -69,7 +69,14 @@ export const getTileHatchFill = (patternId: string, state: State): string | null
   return null
 }
 
-// The hatch stops short of the tile border so the border stays a clean line.
+export const getWallStrokeColor = (state: State): string =>
+  state === State.BLOCKED ? '#7e837b' : '#a0a59d'
+
+// Blocked walls draw after breakable ones so the darker stroke wins a shared edge.
+export const compareWallDrawOrder = (a: State, b: State): number =>
+  Number(a === State.BLOCKED) - Number(b === State.BLOCKED)
+
+// Framed thumbnails leave room for their inner border.
 const HATCH_INSET = 4 / 18
 
 export const getTileHatchPoints = (corners: Point[]): string => {

@@ -8,13 +8,13 @@
  * migration is deleted, exactly as seasonal preset maps rotate with the season
  * and hand their freed ids back. A mode is a board count (variants live in the
  * boards' map ids), so the mode table grows only for a new board count.
- * Deliberately a pure leaf: the codec imports this file, so it must stay free
- * of data loading (maps.ts eagerly loads every arena JSON) and Vue. Board
- * counts are duplicated from TEAM_MODES for the same reason; completeness
- * and equality against the real TEAM_MODES / MAPS data are enforced by the
- * registry contract tests, not by importing the data here.
+ * The codec imports this file, so it stays free of dataLoader and Vue: map ids
+ * come from maps.ts, which loads only the arena JSON, and board counts are
+ * duplicated from TEAM_MODES rather than imported, with the registry contract
+ * tests checking them against the real TEAM_MODES data.
  */
 
+import { MAPS } from '../maps'
 import type { TeamModeKey } from './modes'
 
 export interface WireMode {
@@ -35,37 +35,13 @@ export const WIRE_MODES: readonly WireMode[] = [
   // is gone.
 ]
 
-/* Map keys (arena JSON filenames) → wire ids. 0 is reserved for "no map":
- * arena boards carry none in links — their serialized tiles are authoritative.
- * Seasonal preset ids follow the owner's rotation policy: a season's maps
- * replace the last season's, and freed ids return to this pool. */
-export const MAP_WIRE_IDS: Readonly<Record<string, number>> = {
-  arena1: 1,
-  arena2: 2,
-  arena3: 3,
-  arena4: 4,
-  arena5: 5,
-  arena5sp: 6,
-  'preset-as1': 7,
-  'preset-as2': 8,
-  'preset-as3': 9,
-  'preset-as4': 10,
-  'preset-sr1': 11,
-  'preset-sr2': 12,
-  'preset-sr3': 13,
-  'preset-sr4': 14,
-  'preset-sr5': 15,
-  'preset-sr6': 16,
-  'preset-sr7': 17,
-  'preset-sr8': 18,
-  'preset-sr9': 19,
-  'preset-sr10': 20,
-  'preset-sr11': 21,
-}
-
 const MODE_BY_ID = new Map(WIRE_MODES.map((mode) => [mode.wireId, mode]))
 const MODE_BY_KEY = new Map<string, WireMode>(WIRE_MODES.map((mode) => [mode.key, mode]))
-const MAP_KEY_BY_ID = new Map(Object.entries(MAP_WIRE_IDS).map(([key, id]) => [id, key]))
+
+// Map ids are each arena file's `id` (maps.ts keeps them unique). 0 is
+// reserved for "no map": arena boards carry none in links, since their
+// serialized tiles are authoritative.
+const MAP_KEY_BY_ID = new Map(Object.entries(MAPS).map(([key, map]) => [map.id, key]))
 
 export const wireModeById = (wireId: number): WireMode | undefined => MODE_BY_ID.get(wireId)
 
@@ -73,4 +49,4 @@ export const wireModeByKey = (key: string): WireMode | undefined => MODE_BY_KEY.
 
 export const mapKeyByWireId = (wireId: number): string | undefined => MAP_KEY_BY_ID.get(wireId)
 
-export const mapWireIdByKey = (key: string): number | undefined => MAP_WIRE_IDS[key]
+export const mapWireIdByKey = (key: string): number | undefined => MAPS[key]?.id

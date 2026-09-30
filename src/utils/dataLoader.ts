@@ -23,16 +23,6 @@ import type {
 } from '@/lib/types/skill'
 import { artifactImages, characterImages } from './imageAssets'
 
-export interface ArenaJson {
-  name: string
-  grid: {
-    ally: number[]
-    enemy: number[]
-    blocked: number[]
-    breakable: number[]
-  }
-}
-
 function extractFileName(path: string): string {
   const fileName = path.split('/').pop() || 'Unknown'
   return fileName.replace(/\.\w+$/, '')
@@ -52,7 +42,6 @@ let charactersCache: CharacterType[] | null = null
 let artifactsCache: ArtifactType[] | null = null
 let iconsCache: Record<string, string> | null = null
 let characterRangesCache: Map<number, number> | null = null
-let arenasCache: Record<string, ArenaJson> | null = null
 let artifactEffectsCache: Record<string, LocaleData[]> | null = null
 let phantimalsCache: PhantimalType[] | null = null
 let phantimalLocalesCache: Record<string, PhantimalLocale> | null = null
@@ -211,28 +200,6 @@ export function loadPhantimalLocales(): Record<string, PhantimalLocale> {
   return result
 }
 
-export function loadArenas(): Record<string, ArenaJson> {
-  if (arenasCache) {
-    return arenasCache
-  }
-
-  const arenaModules = import.meta.glob<ArenaJson>('@/data/arena/*.json', {
-    eager: true,
-    import: 'default',
-  })
-  const result: Record<string, ArenaJson> = {}
-
-  Object.entries(arenaModules)
-    .sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true }))
-    .forEach(([path, content]) => {
-      const fileName = extractFileName(path)
-      result[fileName] = content
-    })
-
-  arenasCache = result
-  return result
-}
-
 // Per-artifact effect descriptions, keyed by artifact name (matches the JSON filename).
 // Each entry is an ordered list of localized effect strings.
 export function loadArtifactEffects(): Record<string, LocaleData[]> {
@@ -289,7 +256,6 @@ export function loadAllData() {
   const characters = loadCharacters()
   const artifacts = loadArtifacts()
   const phantimals = loadPhantimals()
-  const arenas = loadArenas()
   const characterImages = loadCharacterImages()
   const artifactImages = loadArtifactImages()
   const icons = loadIcons()
@@ -299,7 +265,6 @@ export function loadAllData() {
     characters,
     artifacts,
     phantimals,
-    arenas,
     characterImages,
     artifactImages,
     icons,
