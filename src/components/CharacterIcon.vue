@@ -23,9 +23,13 @@ const props = defineProps<{
   // No hover detail card, where a click already acts or opens the hero's page
   // (the Rosters tab, the Skills hero list).
   hideTooltip?: boolean
-  // Right-click or hold opens the hero's skills, as on the board (the
-  // Arena/Teams picker).
+  // Right-click or hold opens the hero's skills, as on the board. Off where it
+  // would fight the host: the Skills hero list's icons are links, and the
+  // empty-tile popup closes when the pointer leaves it.
   inspectable?: boolean
+  // Tag chip the skills open on (a host's user-set tag filter). Unset opens
+  // the full page.
+  inspectChip?: string | null
   selectedFilter?: string | null
 }>()
 
@@ -60,9 +64,8 @@ const showEnergy = computed(() => props.selectedFilter === 'initial-energy-300')
 // Under-icon badge: single summed value to keep the grid layout tight
 const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum + n, 0))
 
-// The skill page opens on the active tag filter's chip.
 const inspectTarget = computed(() =>
-  props.inspectable ? heroInspectTarget(props.character, props.selectedFilter) : null,
+  props.inspectable ? heroInspectTarget(props.character, props.inspectChip) : null,
 )
 const { inspect } = useInspect()
 const {
@@ -118,6 +121,8 @@ const handleDragEnd = (event: DragEvent) => {
         @mouseleave="onMouseLeave"
         @touchstart="onTouchStart"
       >
+        <!-- The image drags only where the tile does: elsewhere a native image
+             drag would start inside the hold's move tolerance and abandon it. -->
         <img
           v-if="portraitUrl && !portraitFailed"
           :src="portraitUrl"
@@ -125,6 +130,7 @@ const handleDragEnd = (event: DragEvent) => {
           decoding="async"
           :alt="character.name"
           class="portrait"
+          :draggable="isDraggable"
           @error="portraitFailed = true"
         />
         <span v-else class="portrait-name">{{ displayName }}</span>

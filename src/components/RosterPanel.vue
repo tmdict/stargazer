@@ -337,6 +337,8 @@ const {
           :dimmed="!levelsOf(character)"
           hide-tooltip
           :selected-filter="selectedTagNames"
+          inspectable
+          :inspect-chip="selectedTagNames"
           @character-click="toggle"
         >
           <!-- Reserved, not removed: revealing a pill on select would reflow the
