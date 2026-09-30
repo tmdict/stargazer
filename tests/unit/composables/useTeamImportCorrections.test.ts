@@ -16,7 +16,6 @@ vi.mock('@/utils/dataLoader', () => ({
   loadMatcherPortraits: vi.fn(),
   loadArtifacts: () => [],
   loadPhantimals: () => [],
-  loadArenas: () => ({}),
 }))
 
 const shot = (): ImportShot => ({

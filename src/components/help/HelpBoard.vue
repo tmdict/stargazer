@@ -4,9 +4,14 @@
 import { computed, useId } from 'vue'
 
 import TileHatchPatterns from '@/components/grid/TileHatchPatterns.vue'
-import type { State } from '@/lib/types/state'
+import { State } from '@/lib/types/state'
 import { useGameDataStore } from '@/stores/gameData'
-import { getTileFillColor, getTileHatchFill, getTileHatchPoints } from '@/utils/tileStateFormatting'
+import {
+  compareWallDrawOrder,
+  getTileFillColor,
+  getTileHatchFill,
+  getWallStrokeColor,
+} from '@/utils/tileStateFormatting'
 
 type Cell = readonly [row: number, col: number]
 
@@ -61,14 +66,19 @@ const tiles = computed(() =>
     const row = Math.floor(i / COLS)
     const col = i % COLS
     const painted = paint.find(({ at }) => at[0] === row && at[1] === col)
+    const state = painted?.state ?? State.DEFAULT
     return {
       key: i,
-      fill: painted ? getTileFillColor(painted.state) : ROW_FILL[row],
+      state,
+      fill: painted ? getTileFillColor(state) : ROW_FILL[row],
       points: points(center([row, col])),
-      hatch: painted ? getTileHatchFill(id, painted.state) : null,
-      hatchPoints: getTileHatchPoints(corners(center([row, col]))),
+      hatch: getTileHatchFill(id, state),
     }
   }),
+)
+
+const wallTiles = computed(() =>
+  tiles.value.filter((tile) => tile.hatch).sort((a, b) => compareWallDrawOrder(a.state, b.state)),
 )
 
 const placed = computed(() =>
@@ -124,8 +134,16 @@ const arrowPath = computed(() => {
     </defs>
     <template v-for="tile in tiles" :key="tile.key">
       <polygon :points="tile.points" :fill="tile.fill" stroke="#d4cfc0" stroke-width="1" />
-      <polygon v-if="tile.hatch" :points="tile.hatchPoints" :fill="tile.hatch" />
+      <polygon v-if="tile.hatch" :points="tile.points" :fill="tile.hatch" />
     </template>
+    <polygon
+      v-for="tile in wallTiles"
+      :key="`wall-border-${tile.key}`"
+      :points="tile.points"
+      fill="none"
+      :stroke="getWallStrokeColor(tile.state)"
+      stroke-width="1"
+    />
     <polygon
       v-if="highlight"
       :points="points(center(highlight))"

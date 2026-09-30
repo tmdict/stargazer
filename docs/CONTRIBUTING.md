@@ -46,7 +46,7 @@ The hero list, skill pages and search pick the character up from those files.
 
 ### Adding an arena map
 
-Add `src/data/arena/<key>.json`; `src/lib/maps.ts` finds it by file name. A map that team links should be able to name also needs an id in `MAP_WIRE_IDS` (`src/lib/teams/wire.ts`); a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` ([Teams](./architecture/TEAMS.md)).
+Add `src/data/arena/<key>.json` with a `name`, the tile lists and an `id` no other map uses; `src/lib/maps.ts` finds it by file name and refuses a duplicate `id`. Links carry the `id`, so it never changes while the map exists; a season's preset maps take over the ids the previous season's presets free up. The per-board map lists of Supreme League and Guild Duel are the `TEAM_VARIANTS` rows in `src/lib/teams/modes.ts` ([Teams](./architecture/TEAMS.md)).
 
 ### Changing a placement rule
 
@@ -58,7 +58,7 @@ Follow the three-phase cutover in [Seasonal Content](./architecture/SEASONAL.md)
 
 ### Styles
 
-Component styles are scoped in each `.vue` file, global styles are in `src/styles/`, tile-state colors are in `src/utils/tileStateFormatting.ts`, and every board draws its walls with the shared hatch in `src/components/grid/TileHatchPatterns.vue`.
+Component styles are scoped in each `.vue` file, global styles are in `src/styles/`, tile-state colors and wall strokes are in `src/utils/tileStateFormatting.ts`, and boards draw their walls with the shared hatch in `src/components/grid/TileHatchPatterns.vue`.
 
 ## Documentation
 
