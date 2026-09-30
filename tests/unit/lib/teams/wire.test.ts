@@ -1,8 +1,8 @@
-/* Contract tests for the wire-id registry. The registry duplicates board
- * counts and enumerates maps by hand (it must stay a pure leaf), so these
- * tests enforce the two halves of that bargain: the ids in use are pinned
- * (reassigning one silently re-routes every live link) and the registry stays
- * complete against the real TEAM_MODES / MAPS data it mirrors. The mode table
+/* Contract tests for the wire-id registry. The mode table duplicates board
+ * counts by hand (the file must stay a pure leaf), so these tests pin the ids
+ * in use (reassigning one silently re-routes every live link) and keep the
+ * table complete against the real TEAM_MODES data it mirrors. Map ids are the
+ * arena files' own; here they only have to fit the wire field. The mode table
  * grows only for a new board count: an in-game mode on an existing count is a
  * TEAM_VARIANTS row and has no wire presence. */
 
@@ -10,13 +10,7 @@ import { describe, expect, it } from 'vitest'
 
 import { MAPS } from '@/lib/maps'
 import { TEAM_MODES } from '@/lib/teams/modes'
-import {
-  MAP_WIRE_IDS,
-  mapKeyByWireId,
-  mapWireIdByKey,
-  WIRE_MODES,
-  wireModeByKey,
-} from '@/lib/teams/wire'
+import { mapKeyByWireId, WIRE_MODES, wireModeByKey } from '@/lib/teams/wire'
 
 describe('wire registry', () => {
   it('pins the mode wire ids: arena plus exactly the TEAM_MODES board counts', () => {
@@ -29,45 +23,12 @@ describe('wire registry', () => {
     expect(WIRE_MODES.map((mode) => mode.key)).toEqual(['arena', ...Object.keys(TEAM_MODES)])
   })
 
-  it('pins the map wire ids', () => {
-    expect(MAP_WIRE_IDS).toEqual({
-      arena1: 1,
-      arena2: 2,
-      arena3: 3,
-      arena4: 4,
-      arena5: 5,
-      arena5sp: 6,
-      'preset-as1': 7,
-      'preset-as2': 8,
-      'preset-as3': 9,
-      'preset-as4': 10,
-      'preset-sr1': 11,
-      'preset-sr2': 12,
-      'preset-sr3': 13,
-      'preset-sr4': 14,
-      'preset-sr5': 15,
-      'preset-sr6': 16,
-      'preset-sr7': 17,
-      'preset-sr8': 18,
-      'preset-sr9': 19,
-      'preset-sr10': 20,
-      'preset-sr11': 21,
-    })
-  })
-
   it('covers every team mode with the real board count', () => {
     for (const [key, config] of Object.entries(TEAM_MODES)) {
       const wire = wireModeByKey(key)
       expect(wire, `mode ${key} missing from WIRE_MODES`).toBeDefined()
       expect(wire!.boardCount, `mode ${key} board count`).toBe(config.boardCount)
     }
-  })
-
-  it('covers every map and reserves 0 for "no map"', () => {
-    for (const key of Object.keys(MAPS)) {
-      expect(mapWireIdByKey(key), `map ${key} missing from MAP_WIRE_IDS`).toBeGreaterThan(0)
-    }
-    expect(mapKeyByWireId(0)).toBeUndefined()
   })
 
   it('keeps mode and map ids inside their wire fields (3 and 6 bits)', () => {
@@ -77,8 +38,9 @@ describe('wire registry', () => {
       // format change, not just a registry entry.
       expect(mode.boardCount).toBeLessThanOrEqual(8)
     }
-    for (const id of Object.values(MAP_WIRE_IDS)) {
-      expect(id).toBeLessThan(64)
+    for (const [key, { id }] of Object.entries(MAPS)) {
+      expect(id, `map ${key}`).toBeLessThan(64)
     }
+    expect(mapKeyByWireId(0), 'map id 0 is "no map"').toBeUndefined()
   })
 })

@@ -12,7 +12,12 @@ import type { Layout } from '@/lib/layout'
 import { State } from '@/lib/types/state'
 import { useGrids } from '@/stores/grids'
 import { useMapEditorStore } from '@/stores/mapEditor'
-import { getTileFillColor, getTileHatchFill, getTileHatchPoints } from '@/utils/tileStateFormatting'
+import {
+  compareWallDrawOrder,
+  getTileFillColor,
+  getTileHatchFill,
+  getWallStrokeColor,
+} from '@/utils/tileStateFormatting'
 
 interface Props {
   hexes: Hex[]
@@ -348,11 +353,26 @@ const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkil
 const hatchId = useId()
 const hatchedHexes = computed(() =>
   regularHexes.value.flatMap((hex) => {
-    const fill = getTileHatchFill(hatchId, ctx.grid.getTile(hex).state)
+    const state = ctx.grid.getTile(hex).state
+    const fill = getTileHatchFill(hatchId, state)
     return fill
-      ? [{ id: hex.getId(), fill, points: getTileHatchPoints(props.layout.polygonCorners(hex)) }]
+      ? [
+          {
+            id: hex.getId(),
+            state,
+            fill,
+            points: props.layout
+              .polygonCorners(hex)
+              .map((p) => `${p.x},${p.y}`)
+              .join(' '),
+          },
+        ]
       : []
   }),
+)
+
+const wallBorderHexes = computed(() =>
+  [...hatchedHexes.value].sort((a, b) => compareWallDrawOrder(a.state, b.state)),
 )
 
 const handleCharacterHoverEnter = (hexId: number) => {
@@ -432,6 +452,17 @@ onUnmounted(() => {
             :stroke-width="getHexStrokeWidth(hex)"
           />
         </g>
+
+        <!-- Darker wall seams win over lighter borders, but skill paint takes priority. -->
+        <polygon
+          v-for="tile in wallBorderHexes"
+          :key="`wall-border-${tile.id}`"
+          class="grid-tile"
+          :points="tile.points"
+          fill="none"
+          :stroke="getWallStrokeColor(tile.state)"
+          :stroke-width="scaledStrokeWidth"
+        />
 
         <!-- Skill-highlighted hexes (render on top to ensure skill borders are visible) -->
         <g

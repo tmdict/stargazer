@@ -3,6 +3,8 @@
    getTileHatchFill. Spacing scales with the board's hex radius so the hatch
    reads the same at every board size. Goes inside the SVG's <defs>. */
 
+import { computed } from 'vue'
+
 const {
   id,
   hexSize,
@@ -10,21 +12,22 @@ const {
 } = defineProps<{
   id: string
   hexSize: number
-  // Pale boards take a fainter, finer hatch so walls don't dominate them.
   light?: boolean
 }>()
 
-const spacing = hexSize / 3
-const stroke = light ? hexSize / 14 : hexSize / 9
-const hatches = light
-  ? [
-      { suffix: 'blocked', color: 'rgba(0, 0, 0, 0.2)' },
-      { suffix: 'breakable', color: 'rgba(0, 0, 0, 0.12)' },
-    ]
-  : [
-      { suffix: 'blocked', color: 'rgba(0, 0, 0, 0.4)' },
-      { suffix: 'breakable', color: 'rgba(0, 0, 0, 0.22)' },
-    ]
+const spacing = computed(() => hexSize * (light ? 3 / 8 : 1 / 3))
+const stroke = computed(() => hexSize / (light ? 10 : 9))
+const hatches = computed(() =>
+  light
+    ? [
+        { suffix: 'blocked', color: '#62696f' },
+        { suffix: 'breakable', color: '#a0a39f' },
+      ]
+    : [
+        { suffix: 'blocked', color: 'rgba(0, 0, 0, 0.4)' },
+        { suffix: 'breakable', color: 'rgba(0, 0, 0, 0.22)' },
+      ],
+)
 </script>
 
 <template>
