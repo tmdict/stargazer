@@ -25,15 +25,16 @@ const attrId = computed(() => (kind === 'paragon' ? ATTR_PARAGON : ATTR_REFINEME
 <style scoped>
 .lvl {
   display: inline-block;
-  min-width: 30px;
-  padding: 3.5px 6px;
-  border: 1.5px solid #fff;
+  min-width: 28px;
+  padding: 2.5px 5px;
   border-radius: 999px;
   color: var(--upgrade-pill-gray-text);
   font-size: 11px;
   font-weight: 800;
   letter-spacing: 0.03em;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+  box-shadow:
+    var(--upgrade-pill-rim),
+    0 1px 3px rgba(0, 0, 0, 0.35);
 }
 .lvl.max {
   color: #fff;

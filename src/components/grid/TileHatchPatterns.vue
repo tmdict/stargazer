@@ -25,7 +25,7 @@ const hatches = computed(() =>
       ]
     : [
         { suffix: 'blocked', color: 'rgba(0, 0, 0, 0.4)' },
-        { suffix: 'breakable', color: 'rgba(0, 0, 0, 0.22)' },
+        { suffix: 'breakable', color: 'rgba(255, 255, 255, 0.18)' },
       ],
 )
 </script>

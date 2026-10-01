@@ -1,9 +1,9 @@
 <script setup lang="ts">
-/* The paragon / refinement pill, board-free: levels in, taps out. The hero
-   panel's pill edits a placed hero through the grid context; this one lets
-   the import review and the Rosters tab edit levels off the board, and shows
-   a roster's levels read-only in the picker. Same fills and slanted seam, so
-   a level reads the same everywhere. */
+/* The paragon / refinement pill, board-free: levels in, taps out. It lets the
+   import review and the Rosters tab edit levels off the board, and shows levels
+   read-only in the picker and under the board panel's portraits (whose taps the
+   panel handles through the grid context). One component, so a level reads the
+   same everywhere. */
 
 import { computed } from 'vue'
 
@@ -18,6 +18,7 @@ const {
   editable = false,
   compact = false,
   reserved = false,
+  nested = false,
 } = defineProps<{
   paragon: number
   refinement: number
@@ -27,6 +28,10 @@ const {
   // Invisible but still sized, so a hero grid's cells stay one width: the pill is
   // wider than a phone portrait.
   reserved?: boolean
+  // Inside another control (the board panel's hero button): the halves are plain
+  // spans, since a button can't hold buttons and a disabled one would swallow the
+  // host's taps.
+  nested?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -39,6 +44,8 @@ const i18n = useI18nStore()
 const MAX_PARAGON = attrMax(ATTR_PARAGON)
 const MAX_REFINEMENT = attrMax(ATTR_REFINEMENT)
 const background = computed(() => pillBackground(paragon, refinement))
+const segment = computed(() => (nested ? 'span' : 'button'))
+const segmentAttrs = computed(() => (nested ? {} : { type: 'button', disabled: !editable }))
 
 const next = (level: number, max: number): number => (level >= max ? 0 : level + 1)
 </script>
@@ -46,30 +53,30 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 <template>
   <span
     class="upill"
-    :class="{ editable, compact, reserved }"
+    :class="{ editable, compact, reserved, nested }"
     :style="{ background }"
     :aria-hidden="reserved || undefined"
   >
-    <button
-      type="button"
+    <component
+      :is="segment"
+      v-bind="segmentAttrs"
       class="useg"
       :class="{ max: paragon >= MAX_PARAGON }"
-      :disabled="!editable"
-      :aria-label="`${i18n.t('app.paragon')} ${paragon}`"
-      @click="emit('paragon', next(paragon, MAX_PARAGON))"
+      :aria-label="nested ? undefined : `${i18n.t('app.paragon')} ${paragon}`"
+      @click="editable && emit('paragon', next(paragon, MAX_PARAGON))"
     >
       <UpgradeLevelLabel kind="paragon" :level="paragon" />
-    </button>
-    <button
-      type="button"
+    </component>
+    <component
+      :is="segment"
+      v-bind="segmentAttrs"
       class="useg"
       :class="{ max: refinement >= MAX_REFINEMENT }"
-      :disabled="!editable"
-      :aria-label="`${i18n.t('app.refinement')} ${refinement}`"
-      @click="emit('refinement', next(refinement, MAX_REFINEMENT))"
+      :aria-label="nested ? undefined : `${i18n.t('app.refinement')} ${refinement}`"
+      @click="editable && emit('refinement', next(refinement, MAX_REFINEMENT))"
     >
       <UpgradeLevelLabel kind="refinement" :level="refinement" />
-    </button>
+    </component>
   </span>
 </template>
 
@@ -78,17 +85,19 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
   display: inline-flex;
   border-radius: 999px;
   overflow: hidden;
-  border: 1.5px solid #fff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  font-size: 10px;
+  box-shadow:
+    var(--upgrade-pill-rim),
+    0 1px 3px rgba(0, 0, 0, 0.22);
+  /* Size knobs a host sets on the pill: the board panel sizes it per container width. */
+  font-size: var(--upill-font-size, 10px);
   font-weight: 800;
   letter-spacing: 0.02em;
 }
 
 .useg {
   flex: 1 1 0;
-  min-width: 26px;
-  padding: 3.5px 6px;
+  min-width: var(--upill-min-width, 24px);
+  padding: var(--upill-pad-block, 2.5px) var(--upill-pad-inline, 5px);
   border: none;
   background: transparent;
   font: inherit;
@@ -98,6 +107,10 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 
 .editable .useg {
   cursor: pointer;
+}
+
+.nested .useg {
+  cursor: inherit;
 }
 
 /* Hidden, it also takes no clicks. */
@@ -113,7 +126,7 @@ const next = (level: number, max: number): number => (level >= max ? 0 : level +
 @media (pointer: coarse) {
   .editable .useg {
     min-width: 40px;
-    padding: 9.5px 8px;
+    padding: 11px 8px;
   }
 
   .editable.compact .useg {
