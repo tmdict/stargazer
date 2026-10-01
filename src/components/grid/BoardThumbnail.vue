@@ -230,7 +230,7 @@ const renderTiles = computed(() =>
   })),
 )
 
-// Walls are hatched only in the crisp look; at card size the hatch is noise.
+// At card size the breakable hatch is noise, so only the crisp look uses it.
 const hatchedTiles = computed(() =>
   crisp
     ? [...geometry.value.hatches.entries()].flatMap(([hexId, points]) => {
