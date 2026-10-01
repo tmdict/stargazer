@@ -1,6 +1,7 @@
 <script setup lang="ts">
 /* One tile state drawn as a hex inside the caller's SVG, for tile-type
-   pickers and legends: the board fill, plus the wall hatch and border. */
+   pickers and legends: the board fill, plus a wall's border and a breakable
+   wall's hatch. */
 
 import { computed, useId } from 'vue'
 
@@ -28,16 +29,11 @@ const hexSize = computed(() => {
 })
 
 const hatch = computed(() => getTileHatchFill(id, state))
+const stroke = computed(() => getWallStrokeColor(state))
 </script>
 
 <template>
-  <TileHatchPatterns v-if="hatch" :id :hex-size light />
+  <TileHatchPatterns v-if="hatch" :id :hex-size light :stroke-width="hexSize / 10" />
   <polygon :points :fill="getTileFillColor(state)" stroke="#888" stroke-width="2" />
-  <polygon
-    v-if="hatch"
-    :points
-    :fill="hatch"
-    :stroke="getWallStrokeColor(state)"
-    stroke-width="2"
-  />
+  <polygon v-if="stroke" :points :fill="hatch ?? 'none'" :stroke stroke-width="2" />
 </template>
