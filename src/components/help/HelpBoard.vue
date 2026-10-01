@@ -73,12 +73,15 @@ const tiles = computed(() =>
       fill: painted ? getTileFillColor(state) : ROW_FILL[row],
       points: points(center([row, col])),
       hatch: getTileHatchFill(id, state),
+      stroke: getWallStrokeColor(state),
     }
   }),
 )
 
 const wallTiles = computed(() =>
-  tiles.value.filter((tile) => tile.hatch).sort((a, b) => compareWallDrawOrder(a.state, b.state)),
+  tiles.value
+    .filter((tile): tile is typeof tile & { stroke: string } => tile.stroke !== null)
+    .sort((a, b) => compareWallDrawOrder(a.state, b.state)),
 )
 
 const placed = computed(() =>
@@ -141,7 +144,7 @@ const arrowPath = computed(() => {
       :key="`wall-border-${tile.key}`"
       :points="tile.points"
       fill="none"
-      :stroke="getWallStrokeColor(tile.state)"
+      :stroke="tile.stroke"
       stroke-width="1"
     />
     <polygon

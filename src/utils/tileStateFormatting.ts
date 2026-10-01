@@ -37,12 +37,12 @@ const STATE_FORMATS: Record<State, StateFormat> = {
   [State.BLOCKED]: {
     name: 'Blocked',
     cssClass: 'state-blocked',
-    fillColor: '#979b9f',
+    fillColor: '#b5b9bd',
   },
   [State.BLOCKED_BREAKABLE]: {
     name: 'Blocked (Breakable)',
     cssClass: 'state-blocked-breakable',
-    fillColor: '#d0d1cf',
+    fillColor: '#e1e2e0',
   },
 }
 
@@ -61,16 +61,14 @@ export const getTeamFromTileState = (state: State): Team | null => {
   return null
 }
 
-// Walls carry a diagonal hatch (TileHatchPatterns), so blocked tiles read as
-// walls apart from their fill.
-export const getTileHatchFill = (patternId: string, state: State): string | null => {
-  if (state === State.BLOCKED) return `url(#${patternId}-blocked)`
-  if (state === State.BLOCKED_BREAKABLE) return `url(#${patternId}-breakable)`
+export const getTileHatchFill = (patternId: string, state: State): string | null =>
+  state === State.BLOCKED_BREAKABLE ? `url(#${patternId}-breakable)` : null
+
+export const getWallStrokeColor = (state: State): string | null => {
+  if (state === State.BLOCKED) return '#858b91'
+  if (state === State.BLOCKED_BREAKABLE) return '#a0a59d'
   return null
 }
-
-export const getWallStrokeColor = (state: State): string =>
-  state === State.BLOCKED ? '#7e837b' : '#a0a59d'
 
 // Blocked walls draw after breakable ones so the darker stroke wins a shared edge.
 export const compareWallDrawOrder = (a: State, b: State): number =>

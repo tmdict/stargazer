@@ -351,16 +351,17 @@ const skillHighlightedHexes = computed(() => props.hexes.filter((hex) => hasSkil
 // The hatch layer sits under the skill-highlight layer, whose opaque fills
 // would hide it, so a skill-highlighted wall shows its highlight instead.
 const hatchId = useId()
-const hatchedHexes = computed(() =>
+const wallHexes = computed(() =>
   regularHexes.value.flatMap((hex) => {
     const state = ctx.grid.getTile(hex).state
-    const fill = getTileHatchFill(hatchId, state)
-    return fill
+    const stroke = getWallStrokeColor(state)
+    return stroke
       ? [
           {
             id: hex.getId(),
             state,
-            fill,
+            fill: getTileHatchFill(hatchId, state),
+            stroke,
             points: props.layout
               .polygonCorners(hex)
               .map((p) => `${p.x},${p.y}`)
@@ -371,8 +372,11 @@ const hatchedHexes = computed(() =>
   }),
 )
 
+const hatchedHexes = computed(() =>
+  wallHexes.value.filter((tile): tile is typeof tile & { fill: string } => tile.fill !== null),
+)
 const wallBorderHexes = computed(() =>
-  [...hatchedHexes.value].sort((a, b) => compareWallDrawOrder(a.state, b.state)),
+  [...wallHexes.value].sort((a, b) => compareWallDrawOrder(a.state, b.state)),
 )
 
 const handleCharacterHoverEnter = (hexId: number) => {
@@ -460,7 +464,7 @@ onUnmounted(() => {
           class="grid-tile"
           :points="tile.points"
           fill="none"
-          :stroke="getWallStrokeColor(tile.state)"
+          :stroke="tile.stroke"
           :stroke-width="scaledStrokeWidth"
         />
 

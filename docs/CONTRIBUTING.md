@@ -58,7 +58,7 @@ Follow the three-phase cutover in [Seasonal Content](./architecture/SEASONAL.md)
 
 ### Styles
 
-Component styles are scoped in each `.vue` file, global styles are in `src/styles/`, tile-state colors and wall strokes are in `src/utils/tileStateFormatting.ts`, and boards draw their walls with the shared hatch in `src/components/grid/TileHatchPatterns.vue`.
+Component styles are scoped in each `.vue` file, global styles are in `src/styles/`, tile-state colors and wall strokes are in `src/utils/tileStateFormatting.ts`, and boards draw breakable walls with the shared hatch in `src/components/grid/TileHatchPatterns.vue`.
 
 ## Documentation
 
