@@ -230,12 +230,14 @@ const renderTiles = computed(() =>
   })),
 )
 
-// At card size the breakable hatch is noise, so only the crisp look uses it.
+// At card size the hatch is noise, so only the crisp look uses it.
+const crispHatchFill = (state: State): string | null =>
+  state === State.BLOCKED ? `url(#${uid}-blocked)` : getTileHatchFill(uid, state)
 const hatchedTiles = computed(() =>
   crisp
     ? [...geometry.value.hatches.entries()].flatMap(([hexId, points]) => {
         const state = states.value.get(hexId)
-        const fill = state === undefined ? null : getTileHatchFill(uid, state)
+        const fill = state === undefined ? null : crispHatchFill(state)
         return fill ? [{ hexId, points, fill }] : []
       })
     : [],

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-/* The breakable wall hatch for one board SVG, referenced through
-   getTileHatchFill. Spacing scales with the board's hex radius so the hatch
-   reads the same at every board size. Goes inside the SVG's <defs>. */
+/* The wall hatch patterns for one board SVG: breakable walls, referenced
+   through getTileHatchFill, and on the dark preview board solid walls too, to
+   match the report's board style. Spacing scales with the board's hex radius so
+   the hatch reads the same at every board size. Goes inside the SVG's <defs>. */
 
 import { computed } from 'vue'
 
@@ -21,17 +22,26 @@ const {
 
 const spacing = computed(() => hexSize / (light ? 2 : 3))
 const stroke = computed(() => strokeWidth ?? hexSize / (light ? 20 : 9))
-const color = computed(() => (light ? '#b2b6af' : 'rgba(255, 255, 255, 0.18)'))
+const hatches = computed(() =>
+  light
+    ? [{ suffix: 'breakable', color: '#b2b6af' }]
+    : [
+        { suffix: 'blocked', color: 'rgba(0, 0, 0, 0.4)' },
+        { suffix: 'breakable', color: 'rgba(255, 255, 255, 0.18)' },
+      ],
+)
 </script>
 
 <template>
   <pattern
-    :id="`${id}-breakable`"
+    v-for="hatch in hatches"
+    :id="`${id}-${hatch.suffix}`"
+    :key="hatch.suffix"
     :width="spacing"
     :height="spacing"
     patternUnits="userSpaceOnUse"
     patternTransform="rotate(45)"
   >
-    <line x1="0" y1="0" x2="0" :y2="spacing" :stroke="color" :stroke-width="stroke" />
+    <line x1="0" y1="0" x2="0" :y2="spacing" :stroke="hatch.color" :stroke-width="stroke" />
   </pattern>
 </template>
