@@ -30,12 +30,13 @@ const layout = computed(() => layoutLadder(props.summary, shareText))
 const portraitSlots = computed(() =>
   Math.max(...props.summary.teams.map((team) => team.heroes.length)),
 )
-const reportHref = computed(() => pvpReportHref(props.summary.season))
+const reportHref = computed(() => pvpReportHref(props.summary.season, props.lang))
 
-const teamName = (id: string): string => props.summary.teams.find((t) => t.id === id)?.name ?? id
-// Zero-width spaces let a long label wrap at its slashes.
+const teamName = (id: string): string =>
+  props.summary.teams.find((t) => t.id === id)?.name[props.lang] ?? id
+// Zero-width spaces let a long label wrap between its heroes.
 const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b)
-const wrappable = (name: string): string => name.replaceAll('/', `/${ZERO_WIDTH_SPACE}`)
+const wrappable = (name: string): string => name.replace(/[/·]/g, `$&${ZERO_WIDTH_SPACE}`)
 const edgeText = (counter: PvpCounter): string =>
   interpolate(label('ladder-edge'), {
     winner: teamName(counter.winner),
@@ -176,14 +177,14 @@ onUnmounted(() => {
           :class="{ dim: rowDim(row.team) }"
           :style="{ top: `${row.top}%` }"
           :aria-pressed="selected === row.team.id"
-          :aria-label="interpolate(label('ladder-highlight'), { team: row.team.name })"
+          :aria-label="interpolate(label('ladder-highlight'), { team: row.team.name[lang] })"
           @click="toggle(row.team.id)"
         >
           <span class="portraits">
             <GuidePortrait v-for="slug in row.team.heroes" :key="slug" :slug :lang />
           </span>
           <span class="name">
-            <span>{{ wrappable(row.team.name) }}</span>
+            <span>{{ wrappable(row.team.name[lang]) }}</span>
             <small>{{ label('rating') }} {{ row.team.rating.toFixed(2) }}</small>
           </span>
         </button>
