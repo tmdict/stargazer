@@ -23,7 +23,7 @@ const title = (season: number): string =>
 <template>
   <article class="container page-panel guide-panel">
     <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
-      <a class="guide-title" :href="pvpReportHref(summary.season)">
+      <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
         <h2>{{ title(summary.season) }}</h2>
         <IconChevronRight :size="18" />
       </a>
@@ -33,12 +33,12 @@ const title = (season: number): string =>
           v-for="team in mostPlayedTeams(summary, CHIP_COUNT)"
           :key="team.id"
           class="chip"
-          :href="`${pvpReportHref(summary.season)}#comps`"
+          :href="`${pvpReportHref(summary.season, lang)}#comps`"
         >
           <span class="stack">
             <GuidePortrait v-for="slug in team.heroes" :key="slug" :slug :lang :size="24" />
           </span>
-          {{ team.name }}
+          {{ team.name[lang] }}
         </a>
       </div>
     </section>

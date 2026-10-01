@@ -1,4 +1,4 @@
 {
   "en": "{rate}% of {games}",
-  "zh": "{games} 场胜 {rate}%"
+  "zh": "{games}场胜率{rate}%"
 }

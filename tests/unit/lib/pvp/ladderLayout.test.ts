@@ -8,7 +8,7 @@ import type { PvpCounter, PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 // (left side, three rows up).
 const team = (id: string, rating: number, tier: number): PvpTeam => ({
   id,
-  name: id,
+  name: { en: id, zh: id },
   heroes: [],
   games: 1,
   rating,
