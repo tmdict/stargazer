@@ -1,10 +1,14 @@
 /* Readings of a season summary shared by the guide index's report entry and
  * counter ladder. */
 
+import type { AppLocale } from '@/lib/types/i18n'
 import type { PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 
-/** The season's static report, hydrated to this path at build (scripts/guideReports.ts). */
-export const pvpReportHref = (season: number): string => `/guide/pvp/s${season}/`
+/** The season's static report, hydrated to this path at build (scripts/guideReports.ts).
+ * It sits outside the locale-prefixed routes and opens in English unless the
+ * link asks for Chinese with `?lang=zh`; a fragment goes after the query. */
+export const pvpReportHref = (season: number, lang: AppLocale): string =>
+  `/guide/pvp/s${season}/${lang === 'zh' ? '?lang=zh' : ''}`
 
 /** Ladder order: best rating first; games break ties so the order is total. */
 export const ladderTeams = (summary: PvpSeasonSummary): PvpTeam[] =>
