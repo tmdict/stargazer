@@ -33,6 +33,8 @@
   --upgrade-pill-refinement-2: #f4bcb5;
   --upgrade-pill-refinement-3: #eda59b;
   --upgrade-pill-refinement-max: #ce756b;
+  /* The white rim is a box-shadow ring outside the pill so it adds no height. */
+  --upgrade-pill-rim: 0 0 0 1px rgba(255, 255, 255, 0.9);
 
   /* Team Colors */
   --color-ally: #36958e;

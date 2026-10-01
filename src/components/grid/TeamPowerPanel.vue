@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import HoldRing from '@/components/ui/HoldRing.vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
-import UpgradeLevelLabel from '@/components/ui/UpgradeLevelLabel.vue'
+import UpgradePill from '@/components/ui/UpgradePill.vue'
 import { useAttrLayerSelection } from '@/composables/useAttrLayerSelection'
 import type { GridContext } from '@/composables/useGridContext'
 import { useInfoTip } from '@/composables/useInfoTip'
@@ -12,7 +12,6 @@ import { useLongPress } from '@/composables/useLongPress'
 import { ATTR_PARAGON, ATTR_REFINEMENT, attrMax } from '@/lib/characters/attributes'
 import { getTilesWithCharactersByTeam, isRealHeroId } from '@/lib/characters/character'
 import { teamPowerNet } from '@/lib/characters/paragon'
-import { pillBackground } from '@/lib/characters/upgradeStats'
 import { Team } from '@/lib/types/team'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -128,9 +127,6 @@ const {
   if (hero.inspectTarget) void inspect(hero.inspectTarget)
 })
 
-const MAX_PARAGON = attrMax(ATTR_PARAGON)
-const MAX_REFINEMENT = attrMax(ATTR_REFINEMENT)
-
 const heroAria = (hero: PanelHero): string => {
   const parts = [hero.name]
   if (props.showUpgrades) {
@@ -222,18 +218,13 @@ const hoveredStat = computed(
             </span>
             <HoldRing v-if="pressing === hero" />
           </span>
-          <span
+          <UpgradePill
             v-if="showUpgrades"
-            class="upill"
-            :style="{ background: pillBackground(hero.paragon, hero.refinement) }"
-          >
-            <span class="useg" :class="{ max: hero.paragon >= MAX_PARAGON }">
-              <UpgradeLevelLabel kind="paragon" :level="hero.paragon" />
-            </span>
-            <span class="useg" :class="{ max: hero.refinement >= MAX_REFINEMENT }">
-              <UpgradeLevelLabel kind="refinement" :level="hero.refinement" />
-            </span>
-          </span>
+            class="pill"
+            :paragon="hero.paragon"
+            :refinement="hero.refinement"
+            nested
+          />
           <span class="hero-name" :title="hero.name">{{ hero.name }}</span>
         </button>
       </div>
@@ -407,28 +398,15 @@ const hoveredStat = computed(
   transform: none;
 }
 /* The upgrade pill seats on the portrait's bottom edge (no corner overhang, so
-   neighboring heroes can never collide) with the numbers centered per half. */
-.upill {
-  display: inline-flex;
-  border-radius: 999px;
-  overflow: hidden;
-  border: 1.5px solid #fff;
-  margin-top: -7px;
+   neighboring heroes can never collide). */
+.pill {
+  margin-top: -6px;
   position: relative;
   z-index: 1;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
-  font-size: 7.5px;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-}
-.useg {
-  flex: 1 1 0;
-  min-width: 17px;
-  padding: 2px 3px;
-  color: var(--upgrade-pill-gray-text);
-}
-.useg.max {
-  color: #fff;
+  --upill-font-size: 7.5px;
+  --upill-min-width: 17px;
+  --upill-pad-block: 2px;
+  --upill-pad-inline: 3px;
 }
 .hero-name {
   display: none;
@@ -453,13 +431,12 @@ const hoveredStat = computed(
   .hero-name {
     display: block;
   }
-  .upill {
-    font-size: 9px;
-    margin-top: -9px;
-  }
-  .useg {
-    min-width: 21px;
-    padding: 2.5px 4px;
+  .pill {
+    margin-top: -7px;
+    --upill-font-size: 9px;
+    --upill-min-width: 21px;
+    --upill-pad-block: 2.5px;
+    --upill-pad-inline: 4px;
   }
 }
 </style>

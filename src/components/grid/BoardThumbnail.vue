@@ -135,6 +135,10 @@ const CRISP = {
   inset: 1.6 / 18,
   bevel: 2.5 / 18,
 }
+/* On the crisp look's dark backdrop a faded breakable fill sinks into the
+   ground, so breakable walls keep the ground tone and stand apart by their
+   light hatch (TileHatchPatterns). */
+const CRISP_BREAKABLE_FILL = getTileFill(undefined)
 type Zone = 'void' | 'ally' | 'enemy' | 'blocked' | 'breakable'
 function zoneOf(state: State | undefined): Zone {
   switch (state) {
@@ -243,11 +247,12 @@ const crispTiles = computed(() => {
   const size = hexSize
   return [...geometry.value.centers.entries()]
     .map(([hexId, center]) => {
-      const zone = zoneOf(states.value.get(hexId))
+      const state = states.value.get(hexId)
+      const zone = zoneOf(state)
       return {
         hexId,
         zone,
-        fill: getTileFill(states.value.get(hexId)),
+        fill: state === State.BLOCKED_BREAKABLE ? CRISP_BREAKABLE_FILL : getTileFill(state),
         points: geometry.value.points.get(hexId)!,
         bevel: hexAt(center, size - size * CRISP.bevel),
         center,

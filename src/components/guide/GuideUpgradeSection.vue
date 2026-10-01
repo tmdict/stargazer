@@ -472,8 +472,8 @@ const intro = computed((): string => {
     white-space: normal;
   }
   .lvl {
-    min-width: 28px;
-    padding: 3px 5px;
+    min-width: 26px;
+    padding: 2px 4px;
     font-size: 10px;
   }
   .faction-icons img {
