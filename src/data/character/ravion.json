@@ -12,7 +12,7 @@
     "cheat-death": [{ "ex": 3 }],
     "energy-battery": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
-    "temp-buff": [{ "skill2": 1 }, { "awakening": 1 }],
-    "temp-buff-opening": [{ "skill2": 1 }]
+    "temp-buff": [{ "skill2": 1 }, { "ex": 3 }, { "awakening": 1 }],
+    "temp-buff-opening": [{ "awakening": 1 }]
   }
 }

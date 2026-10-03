@@ -33,5 +33,10 @@ import { gridStyles } from './Niru.data'
         </p>
       </SkillSnippet>
     </template>
+    <template #awakening>
+      <SkillSnippet title-key="guide-targeting">
+        <p>Spirit Devour's temporary buff only applies to Shemira and Daimon.</p>
+      </SkillSnippet>
+    </template>
   </SkillSnippets>
 </template>
