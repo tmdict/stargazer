@@ -26,7 +26,7 @@ const props = defineProps<{
   slotTags?: { name: string; label: string }[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
-  /** Levels to accent as the ones that earn an active tag (guide view). */
+  /** Levels to accent as the ones that earn an active tag. */
   highlightLevels?: number[]
 }>()
 
@@ -146,8 +146,8 @@ const renderedRefinements = computed(() =>
   border-top: none;
 }
 
-/* Accent the level(s) responsible for the active tag in the guide view:
-   background tint only, matching the content snippets (no left bar, square). */
+/* Accent the level(s) responsible for the active tag: background tint only,
+   matching the content snippets (no left bar, square). */
 .skill-level.tagged {
   padding: 6px var(--spacing-md);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);

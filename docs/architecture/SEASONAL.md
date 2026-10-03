@@ -83,7 +83,7 @@ Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and 
 { "ep8heal": { "temp-buff": [1, 2, 3, 4] } }
 ```
 
-`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. The charm's tiers filter like skill levels. A charm's effects change with the season, so `import:charms` fails when the file names a charm the feed lacks, and `--retire` deletes it with the text.
+`loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. An active tag shows the whole charm with the pinned tiers accented, as it does a skill slot. A charm's effects change with the season, so `import:charms` fails when the file names a charm the feed lacks, and `--retire` deletes it with the text.
 
 ## Season cutover
 

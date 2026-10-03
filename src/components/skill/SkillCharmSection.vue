@@ -9,9 +9,8 @@ const props = defineProps<{
   slotTags?: { name: string; label: string }[]
   /** Localized tier labels, Elite → Mythic order. */
   tierNames: string[]
-  /** The tiers to show (1-4), which a tag filter can narrow. */
   tiers: { tier: number; text: string }[]
-  /** Tiers to accent as the ones that earn an active tag (guide view). */
+  /** Tiers to accent as the ones that earn an active tag. */
   highlightTiers?: number[]
   sharedLabel?: string
   /** Display names of the other heroes sharing this charm. */
@@ -68,7 +67,7 @@ const sharedLine = computed(() =>
   border-top: none;
 }
 
-/* Same accent as a tagged skill level in the guide view. */
+/* Same accent as a tagged skill level. */
 .charm-tier.tagged {
   padding: 6px var(--spacing-md);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
