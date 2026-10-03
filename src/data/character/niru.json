@@ -10,7 +10,8 @@
   "season": 0,
   "tags": {
     "cheat-death": [{ "ultimate": 1 }],
-    "instant-ult": [{ "ex": 1 }],
+    "heal-denial": [{ "awakening": 1 }],
+    "opening-ult": [{ "ex": 1 }],
     "special-target": [{ "ex": 1 }]
   }
 }

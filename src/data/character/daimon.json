@@ -5,10 +5,11 @@
   "faction": "graveborn",
   "class": "tank",
   "damage": "magic",
-  "energy": [0],
+  "energy": [400],
   "range": 3,
   "season": 4,
   "tags": {
+    "initial-energy-300": [],
     "special-target": [{ "skill3": 1 }],
     "summon": [{ "ultimate": 1 }],
     "temp-buff": [{ "skill3": 1 }]

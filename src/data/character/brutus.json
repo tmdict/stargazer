@@ -8,5 +8,7 @@
   "energy": [0],
   "range": 1,
   "season": 0,
-  "tags": {}
+  "tags": {
+    "cheat-death": [{ "skill3": 1 }]
+  }
 }
