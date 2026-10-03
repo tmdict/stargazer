@@ -12,7 +12,7 @@
     "dot": [{ "ex": 4 }],
     "initial-energy-300": [],
     "summon": [{ "ex": 1 }],
-    "temp-buff": [{ "awakening": 1 }],
+    "temp-buff": [{ "skill2": 1 }, { "awakening": 1 }],
     "temp-buff-opening": [{ "awakening": 1 }]
   }
 }

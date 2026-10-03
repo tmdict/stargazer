@@ -5,9 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #ultimate>
-      <SkillSnippet title-key="guide-tile">
-        <p>“绝对防御”会为“灾厄枢纽”内的友军提供非永久增益。</p>
+    <template #skill3>
+      <SkillSnippet title-key="energy-battery">
+        <p>“迷宫美食家”的充能效果仅对玛露西尔生效。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

@@ -6,7 +6,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
+      <SkillSnippet title-key="guide-tile">
+        <p>Absolute Defense grants a temporary buff to the ally in the Doomfield.</p>
+      </SkillSnippet>
     </template>
   </SkillSnippets>
 </template>

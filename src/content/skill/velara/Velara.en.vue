@@ -6,7 +6,12 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
+      <SkillSnippet title-key="temp-buff">
+        <p>
+          Ruthless Rite's stat transfer is a temp buff. However, with Enhance Force it lasts until
+          the battle ends and is no longer considered a temporary buff.
+        </p>
+      </SkillSnippet>
     </template>
   </SkillSnippets>
 </template>

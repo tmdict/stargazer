@@ -5,9 +5,12 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #ultimate>
-      <SkillSnippet title-key="guide-tile">
-        <p>“绝对防御”会为“灾厄枢纽”内的友军提供非永久增益。</p>
+    <template #skill2>
+      <SkillSnippet title-key="guide-targeting">
+        <p>
+          Energizing Formula's temp buff reaches allies through the aroma that Special Aroma creates
+          at the start of battle.
+        </p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

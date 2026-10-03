@@ -14,6 +14,7 @@ import { gridStyles } from './Daimon.data'
         </p>
         <p>当戴蒙处于敌方阵营时，则优先选择较低ID格子上的队友（180°旋转）。</p>
         <GridSnippet :grid-style="gridStyles.main" />
+        <p>战斗开始时，“生命转移”为戴蒙提供首个护盾，伙伴随即获得“伙伴契约”的非永久增益。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

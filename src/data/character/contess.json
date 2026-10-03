@@ -11,6 +11,6 @@
   "tags": {
     "dot": [{ "ex": 4 }],
     "energy-denial": [{ "skill3": 1 }, { "mastery": 1 }],
-    "ult-denial": [{ "skill3": 1 }, { "ex": 1 }, { "awakening": 1 }]
+    "ult-denial": [{ "ex": 1 }, { "awakening": 1 }]
   }
 }

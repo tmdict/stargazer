@@ -5,9 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #ultimate>
-      <SkillSnippet title-key="guide-tile">
-        <p>“绝对防御”会为“灾厄枢纽”内的友军提供非永久增益。</p>
+    <template #skill2>
+      <SkillSnippet title-key="guide-targeting">
+        <p>“提神配方”的非永久增益通过“特制香薰”在战斗开始时制造的香薰作用于友军。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>
