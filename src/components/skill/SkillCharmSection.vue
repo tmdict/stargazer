@@ -10,7 +10,6 @@ const props = defineProps<{
   /** Localized tier labels, Elite → Mythic order. */
   tierNames: string[]
   tiers: { tier: number; text: string }[]
-  /** Tiers to accent as the ones that earn an active tag. */
   highlightTiers?: number[]
   sharedLabel?: string
   /** Display names of the other heroes sharing this charm. */
@@ -67,8 +66,9 @@ const sharedLine = computed(() =>
   border-top: none;
 }
 
-/* Same accent as a tagged skill level. */
+/* The tint bleeds into the container's gutter so the text keeps the other tiers' column. */
 .charm-tier.tagged {
+  margin: 0 calc(-1 * var(--spacing-md));
   padding: 6px var(--spacing-md);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }

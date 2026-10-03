@@ -9,6 +9,7 @@
   "range": 5,
   "season": 0,
   "tags": {
+    "cheat-death": [{ "ex": 2 }],
     "energy-denial": [{ "skill3": 1 }],
     "initial-energy-300": [],
     "opening-ult": [{ "ultimate": 1 }],

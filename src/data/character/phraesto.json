@@ -10,6 +10,7 @@
   "season": 1,
   "tags": {
     "dot": [{ "skill3": 1 }],
+    "energy-battery": [{ "skill2": 2 }],
     "summon": [{ "ex": 4 }]
   }
 }

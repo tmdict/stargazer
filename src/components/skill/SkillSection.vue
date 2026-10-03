@@ -26,7 +26,6 @@ const props = defineProps<{
   slotTags?: { name: string; label: string }[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
-  /** Levels to accent as the ones that earn an active tag. */
   highlightLevels?: number[]
 }>()
 
@@ -146,15 +145,13 @@ const renderedRefinements = computed(() =>
   border-top: none;
 }
 
-/* Accent the level(s) responsible for the active tag: background tint only,
-   matching the content snippets (no left bar, square). */
+/* The tint bleeds into the container's gutter so the text keeps the other rows' column. */
 .skill-level.tagged {
+  margin: 0 calc(-1 * var(--spacing-md));
   padding: 6px var(--spacing-md);
   background: color-mix(in srgb, var(--color-accent) 8%, transparent);
 }
 
-/* Badge + description form a sub-row so chips (when present) sit above as a
-   normal block and the badge column stays aligned across levels. */
 .skill-level-row {
   display: flex;
   gap: 10px;

@@ -11,8 +11,9 @@
   "tags": {
     "debuff-global": [{ "ultimate": 1 }],
     "dot": [{ "ultimate": 1 }],
-    "energy-battery": [{ "ultimate": 1 }],
-    "energy-denial": [{ "skill3": 1 }],
+    "energy-battery": [{ "skill2": 1 }, { "skill3": 1 }],
+    "energy-denial": [{ "skill3": 1 }, { "ex": 1 }],
+    "invincibility": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
     "summon": [{ "ex": 1 }],
     "temp-buff": [{ "skill2": 1 }]
