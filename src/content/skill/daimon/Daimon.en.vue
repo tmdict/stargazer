@@ -18,6 +18,10 @@ import { gridStyles } from './Daimon.data'
           When on enemy team, Daimon prioritize teammates with the lower hex ID (180° rotation).
         </p>
         <GridSnippet :grid-style="gridStyles.main" />
+        <p>
+          The bonded ally gets Buddy Barrier's temp buff at the start of battle, when Playtime
+          Plunder gives Daimon his first shield.
+        </p>
       </SkillSnippet>
     </template>
   </SkillSnippets>
