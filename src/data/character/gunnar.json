@@ -9,9 +9,9 @@
   "range": 20,
   "season": 6,
   "tags": {
-    "anti-heal": [{ "awakening": 1 }],
     "cheat-death": [{ "ex": 4 }],
     "dot": [{ "ultimate": 1 }],
+    "heal-denial": [{ "awakening": 1 }],
     "temp-buff": [{ "ultimate": 1 }, { "skill3": 1 }],
     "temp-buff-opening": [{ "ultimate": 1 }],
     "tile-effect": [{ "ultimate": 1 }]

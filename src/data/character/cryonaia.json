@@ -9,6 +9,7 @@
   "range": 5,
   "season": 3,
   "tags": {
-    "execute": [{ "awakening": 1 }]
+    "execute": [{ "awakening": 1 }],
+    "ult-denial": [{ "ultimate": 1 }]
   }
 }

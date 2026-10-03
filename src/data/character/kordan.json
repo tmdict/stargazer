@@ -9,7 +9,9 @@
   "range": 1,
   "season": 5,
   "tags": {
+    "heal-denial": [{ "ultimate": 1 }],
     "initial-energy-300": [],
+    "opening-ult": [{ "ultimate": 1 }],
     "temp-buff": [{ "ultimate": 1 }]
   }
 }

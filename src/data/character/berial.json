@@ -9,6 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
+    "cheat-death": [{ "skill3": 1 }],
     "energy-denial": [{ "ultimate": 1 }, { "ex": 1 }, { "ex": 3 }],
     "summon": [{ "ex": 1 }]
   }
