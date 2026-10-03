@@ -61,6 +61,7 @@ const sections = computed(() => {
         numbers: getSkillNumbers(props.slug)[slotKey],
         terms: file._terms,
         levels: slot.d.map((description, i) => ({ level: i + 1, description })),
+        refinements: (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d })),
         highlightLevels,
       }
     })
@@ -107,6 +108,7 @@ const anchors = useSnippetAnchors()
         :numbers="s.numbers"
         :terms="s.terms"
         :levels="s.levels"
+        :refinements="s.refinements"
         :highlight-levels="s.highlightLevels"
       />
       <div

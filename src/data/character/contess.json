@@ -9,6 +9,7 @@
   "range": 6,
   "season": 6,
   "tags": {
+    "dot": [{ "ex": 4 }],
     "ult-denial": [{ "skill3": 1 }, { "ex": 1 }, { "awakening": 1 }]
   }
 }

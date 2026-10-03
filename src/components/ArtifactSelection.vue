@@ -73,16 +73,17 @@ const seasonGroups = computed(() => {
     }))
 })
 
-// Pre-season (0) renders without a heading; only real seasons are labelled.
-const seasonLabel = (season: number): string => `${i18n.t('game.season')} ${season}`
+// Pre-season (0) is the evergreen set, so it carries no season number.
+const seasonLabel = (season: number): string =>
+  season === 0
+    ? i18n.t('game.artifact')
+    : `${i18n.t('game.season')} ${season} ${i18n.t('game.artifact')}`
 </script>
 
 <template>
   <div class="artifact-selection">
     <section v-for="group in seasonGroups" :key="group.season" class="artifact-group">
-      <h3 v-if="group.season !== 0" class="artifact-group-title">
-        {{ seasonLabel(group.season) }}
-      </h3>
+      <h3 class="artifact-group-title">{{ seasonLabel(group.season) }}</h3>
       <div class="artifacts">
         <!-- Named: artifacts rotate each season, so their icons are hard to learn. -->
         <div v-for="artifact in group.artifacts" :key="artifact.id" class="artifact-cell">

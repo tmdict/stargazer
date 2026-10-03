@@ -10,7 +10,7 @@
   "season": 4,
   "tags": {
     "cheat-death": [{ "skill3": 1 }],
-    "dot": [{ "ultimate": 1 }, { "ex": 1 }],
+    "dot": [{ "ex": 4 }],
     "energy-denial": [{ "ultimate": 1 }],
     "initial-energy-300": []
   }

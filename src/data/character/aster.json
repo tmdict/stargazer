@@ -8,5 +8,7 @@
   "energy": [200],
   "range": 7,
   "season": 8,
-  "tags": {}
+  "tags": {
+    "dot": [{ "ex": 1 }]
+  }
 }

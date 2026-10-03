@@ -53,69 +53,61 @@ function clearChips() {
   if (activeChips.value.size > 0) activeChips.value = new Set()
 }
 
-// A skill level or charm tier passes the active-chip filter when it carries an
-// active tag; an empty filter passes everything. `slotTags` is the union of
-// the rows' tags, rendered as chips next to the heading, with the raw tag name
-// (for the browser filter link) next to its label.
-function applyChips<T>(pin: TagPin, rows: T[]) {
-  const tagged = rows.map((row, i) => ({ row, tags: perLevel(pin, i + 1) }))
+// Active chips filter whole slots, not rows: an upgrade line reads only
+// against the levels before it, so a slot or charm with a tagged row shows in
+// full and `highlight` lists the rows carrying an active tag. `slotTags` keeps
+// the raw tag name for the heading chips' browser filter link.
+function applyChips(pin: TagPin, rowCount: number) {
+  const rowTags = Array.from({ length: rowCount }, (_, i) => perLevel(pin, i + 1))
   const filter = activeChips.value
-  const slotTags = [...new Set(tagged.flatMap((r) => r.tags))].map((t) => ({
+  const slotTags = [...new Set(rowTags.flat())].map((t) => ({
     name: t,
     label: appLabel(t, appLang.value),
   }))
-  const shown = tagged
-    .filter((r) => filter.size === 0 || r.tags.some((t) => filter.has(t)))
-    .map((r) => r.row)
-  return { slotTags, shown }
+  const highlight = rowTags.flatMap((tags, i) => (tags.some((t) => filter.has(t)) ? [i + 1] : []))
+  return { slotTags, highlight, visible: filter.size === 0 || highlight.length > 0 }
 }
 
-// A slot is shown when at least one of its levels passes the filter. EX
-// refinement tiers (`r`) aren't taggable, so they show only in the unfiltered
-// view.
 const sections = computed(() => {
   if (!locale.value) return []
   return SLOT_ORDER.map((slotKey) => {
     const slot = locale.value![slotKey]
     if (!slot) return null
-    const { slotTags, shown: levels } = applyChips(
-      slotKey,
-      slot.d.map((description, i) => ({ level: i + 1, description })),
-    )
-    const refinements =
-      activeChips.value.size === 0
-        ? (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d }))
-        : []
-    if (levels.length === 0 && refinements.length === 0) return null
+    const { slotTags, highlight, visible } = applyChips(slotKey, slot.d.length)
+    if (!visible) return null
     return {
       slotKey,
       heading: headingFor(slotKey, slot.n, appLang.value, locale.value!._terms),
       numbers: numbers[slotKey],
       slotTags,
-      levels,
-      refinements,
+      levels: slot.d.map((description, i) => ({ level: i + 1, description })),
+      refinements: (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d })),
+      highlightLevels: highlight,
     }
   }).filter((s): s is NonNullable<typeof s> => s !== null)
 })
 
 // One charm is shared by several heroes, so its text is stored charm-keyed
 // and resolved through the hero → charm mapping; the en fallback mirrors the
-// skill-file fallback above. Its tiers filter like skill levels.
+// skill-file fallback above.
 const charm = computed(() => {
   const entry = getCharmForHero(props.slug)
   if (!entry) return null
   const dict = getSkillCharms(props.lang) ?? getSkillCharms('en')
   const texts = dict?.charms[entry.slug]
   if (!dict || !texts) return null
-  const { slotTags, shown: tiers } = applyChips(
-    'charm',
-    texts.map((text, i) => ({ tier: i + 1, text })),
-  )
-  if (tiers.length === 0) return null
+  const { slotTags, highlight, visible } = applyChips('charm', texts.length)
+  if (!visible) return null
   const sharedNames = entry.heroes
     .filter((h) => h !== props.slug)
     .map((h) => heroDisplayName(h, props.lang))
-  return { tierNames: dict.tiers, slotTags, tiers, sharedNames }
+  return {
+    tierNames: dict.tiers,
+    slotTags,
+    tiers: texts.map((text, i) => ({ tier: i + 1, text })),
+    highlightTiers: highlight,
+    sharedNames,
+  }
 })
 
 const anchors = useSnippetAnchors()
@@ -195,6 +187,7 @@ provide(
         :slot-tags="section.slotTags"
         :levels="section.levels"
         :refinements="section.refinements"
+        :highlight-levels="section.highlightLevels"
       />
       <div
         :ref="
@@ -214,6 +207,7 @@ provide(
       :slot-tags="charm.slotTags"
       :tier-names="charm.tierNames"
       :tiers="charm.tiers"
+      :highlight-tiers="charm.highlightTiers"
       :shared-label="appLabel('charm-shared', appLang)"
       :shared-names="charm.sharedNames"
     />
