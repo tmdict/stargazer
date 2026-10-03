@@ -5,11 +5,12 @@
   "faction": "graveborn",
   "class": "marksman",
   "damage": "physical",
-  "energy": [0],
+  "energy": [0, 500],
   "range": 5,
   "season": 0,
   "tags": {
     "dot": [{ "ultimate": 1 }, { "ex": 1 }],
+    "initial-energy-300": [],
     "summon": [{ "ultimate": 1 }]
   }
 }

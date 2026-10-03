@@ -10,6 +10,7 @@
   "season": 2,
   "tags": {
     "dot": [{ "ultimate": 1 }],
-    "execute": [{ "skill3": 1 }]
+    "execute": [{ "skill3": 1 }],
+    "heal-denial": [{ "ultimate": 1 }]
   }
 }
