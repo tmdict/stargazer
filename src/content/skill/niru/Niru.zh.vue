@@ -26,5 +26,10 @@ import { gridStyles } from './Niru.data'
         <p>尼汝也可以选择召唤物和分身为目标，例如蝎子的分身或双子的副体（粉色双子）。</p>
       </SkillSnippet>
     </template>
+    <template #awakening>
+      <SkillSnippet title-key="guide-targeting">
+        <p>“吞灵汲命”的非永久增益仅对雪米拉和戴蒙生效。</p>
+      </SkillSnippet>
+    </template>
   </SkillSnippets>
 </template>

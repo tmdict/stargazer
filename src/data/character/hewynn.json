@@ -9,6 +9,6 @@
   "range": 4,
   "season": 0,
   "tags": {
-    "temp-buff": [{ "ex": 3 }, { "awakening": 1 }]
+    "temp-buff": [{ "awakening": 1 }]
   }
 }
