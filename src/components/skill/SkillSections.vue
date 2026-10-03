@@ -53,10 +53,8 @@ function clearChips() {
   if (activeChips.value.size > 0) activeChips.value = new Set()
 }
 
-// Active chips filter whole slots, not rows: an upgrade line reads only
-// against the levels before it, so a slot or charm with a tagged row shows in
-// full and `highlight` lists the rows carrying an active tag. `slotTags` keeps
-// the raw tag name for the heading chips' browser filter link.
+// Chips filter whole slots, not rows: an upgrade line reads only against the
+// levels before it, so a tagged row is never shown alone.
 function applyChips(pin: TagPin, rowCount: number) {
   const rowTags = Array.from({ length: rowCount }, (_, i) => perLevel(pin, i + 1))
   const filter = activeChips.value
