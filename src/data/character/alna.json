@@ -11,6 +11,7 @@
   "tags": {
     "cheat-death": [{ "ex": 4 }],
     "debuff-global": [{ "ultimate": 1 }],
+    "invincibility": [{ "ex": 4 }],
     "special-target": [{ "skill2": 1 }]
   }
 }

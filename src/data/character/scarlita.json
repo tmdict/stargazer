@@ -9,7 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "execute": [{ "ex": 3 }, { "ex": 4 }],
+    "execute": [{ "ex": 3 }],
     "temp-buff": [{ "skill3": 1 }, { "skill3": 4 }]
   }
 }

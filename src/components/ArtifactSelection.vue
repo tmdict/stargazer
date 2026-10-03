@@ -73,7 +73,7 @@ const seasonGroups = computed(() => {
     }))
 })
 
-// Pre-season (0) is the evergreen set, so it carries no season number.
+// Season 0 is the evergreen pre-season set.
 const seasonLabel = (season: number): string =>
   season === 0
     ? i18n.t('game.artifact')

@@ -10,7 +10,6 @@
   "season": 2,
   "tags": {
     "dot": [{ "skill2": 1 }],
-    "execute": [{ "ultimate": 1 }],
     "initial-energy-300": [],
     "special-target": [{ "skill2": 1 }]
   }
