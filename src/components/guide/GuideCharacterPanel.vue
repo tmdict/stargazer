@@ -46,7 +46,6 @@ const energyStat = computed(() => {
   return bonus ? `${base} (${bonus})` : String(base)
 })
 
-// The tagged slot section(s): the full slot, with tag-bearing levels accented.
 const sections = computed(() => {
   const char = character.value
   const file = char ? loadSkillLocales()[props.lang][props.slug] : undefined
@@ -68,8 +67,6 @@ const sections = computed(() => {
     .filter((s): s is NonNullable<typeof s> => s !== null)
 })
 
-// A tag the hero's charm carries shows the whole charm, the tiers carrying it
-// accented like the skill levels above.
 const charm = computed(() => {
   const char = character.value
   const highlightTiers = char ? taggedCharmTiers(char, props.tag) : []

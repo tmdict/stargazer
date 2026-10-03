@@ -10,6 +10,6 @@
   "season": 3,
   "tags": {
     "execute": [{ "awakening": 1 }],
-    "ult-denial": [{ "ultimate": 1 }]
+    "ult-denial": [{ "ex": 1 }]
   }
 }
