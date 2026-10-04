@@ -54,8 +54,10 @@ const i18n = useI18nStore()
 const { error, success } = useToast()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
-const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
+const { factionFilter, classFilter, tagFilter, tagPool, filteredCharacters } =
   useCharacterFilters(heroes)
+
+const inspectChips = computed(() => (tagFilter.value ? [tagFilter.value] : undefined))
 
 // A change is applied in memory even when its write fails, so the loss is
 // reported in place of any success message.
@@ -324,9 +326,9 @@ const {
       <CharacterFilterStrip
         v-model:faction-filter="factionFilter"
         v-model:class-filter="classFilter"
-        v-model:damage-filter="damageFilter"
-        v-model:tag-filter="selectedTagNames"
+        v-model:tag-filter="tagFilter"
         :characters="heroes"
+        :tag-pool
       />
 
       <CharacterGrid>
@@ -336,9 +338,9 @@ const {
           :character
           :dimmed="!levelsOf(character)"
           hide-tooltip
-          :selected-filter="selectedTagNames"
+          :selected-filter="tagFilter?.tag"
           inspectable
-          :inspect-chip="selectedTagNames"
+          :inspect-chips
           @character-click="toggle"
         >
           <!-- Reserved, not removed: revealing a pill on select would reflow the

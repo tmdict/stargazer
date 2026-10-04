@@ -5,6 +5,7 @@ import BaseModal from './BaseModal.vue'
 import SkillSections from '@/components/skill/SkillSections.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useModalSkillLocale } from '@/composables/useModalSkillLocale'
+import type { TagPick } from '@/lib/types/skill'
 import { ContentInModalKey } from '@/utils/contentMeta'
 import { hasSkillLocale } from '@/utils/dataLoader'
 import { heroDisplayName } from '@/utils/skillLabels'
@@ -12,7 +13,7 @@ import { heroDisplayName } from '@/utils/skillLabels'
 interface Props {
   show: boolean
   skillName: string
-  initialChip?: string | null
+  initialChips?: readonly TagPick[]
 }
 
 const props = defineProps<Props>()
@@ -39,7 +40,7 @@ const label = computed(() => heroDisplayName(props.skillName, selected.value))
     :label
     :link-param="skillName"
     :locale-override="selected"
-    max-width="960px"
+    max-width="var(--skill-popup-width)"
     :top-anchor="true"
     @close="emit('close')"
   >
@@ -50,7 +51,7 @@ const label = computed(() => heroDisplayName(props.skillName, selected.value))
       v-if="hasLocaleData && applied"
       :slug="skillName"
       :lang="applied"
-      :initial-chip="initialChip"
+      :initial-chips
     />
     <div v-else-if="!hasLocaleData">Content not found for skill: {{ skillName }}</div>
   </BaseModal>

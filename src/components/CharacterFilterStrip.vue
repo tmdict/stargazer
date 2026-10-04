@@ -1,49 +1,54 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import TagsDisplay from './TagsDisplay.vue'
+import CharacterFilterMechanics from './CharacterFilterMechanics.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import { PLACEHOLDER_NONE } from '@/lib/characters/placeholder'
 import type { CharacterType } from '@/lib/types/character'
+import type { TagPick } from '@/lib/types/skill'
 
 const factionFilter = defineModel<string>('factionFilter', { default: '' })
 const classFilter = defineModel<string>('classFilter', { default: '' })
-const damageFilter = defineModel<string>('damageFilter', { default: '' })
-const tagFilter = defineModel<string | null>('tagFilter', { default: null })
+const tagFilter = defineModel<TagPick | null>('tagFilter', { default: null })
 
-const props = defineProps<{ characters: readonly CharacterType[] }>()
+const props = defineProps<{
+  characters: readonly CharacterType[]
+  // `characters` with the icon filters applied: what the tag menu counts in.
+  tagPool: readonly CharacterType[]
+}>()
 
 const optionsOf = (pick: (c: CharacterType) => string) =>
   [...new Set(props.characters.map(pick))].filter((v) => v !== PLACEHOLDER_NONE).sort()
 
 const factionOptions = computed(() => optionsOf((c) => c.faction))
 const classOptions = computed(() => optionsOf((c) => c.class))
-const damageOptions = computed(() => optionsOf((c) => c.damage))
 
 const hasActiveFilter = computed(
-  () =>
-    factionFilter.value !== '' ||
-    classFilter.value !== '' ||
-    damageFilter.value !== '' ||
-    tagFilter.value !== null,
+  () => factionFilter.value !== '' || classFilter.value !== '' || tagFilter.value !== null,
 )
 
 // Clicks on the strip background (gaps, between rows) clear every filter.
-// FilterIcons + FilterPills render their options as <button>s, so a closest()
-// check skips any click that actually landed on a filter.
+// The filters render their options as <button>s, so a closest() check skips
+// any click that actually landed on one. While a dropdown in the strip is
+// open, a click outside it is only its dismissal; the host's dropdowns are
+// slot content, so the open one is found by its trigger's aria-expanded.
 function handleStripClick(e: MouseEvent) {
   if (!hasActiveFilter.value) return
+  if ((e.currentTarget as HTMLElement).querySelector('[aria-expanded="true"]')) return
   if ((e.target as HTMLElement).closest('button')) return
   factionFilter.value = ''
   classFilter.value = ''
-  damageFilter.value = ''
   tagFilter.value = null
 }
 </script>
 
 <template>
   <div class="filter-strip" :class="{ resettable: hasActiveFilter }" @click="handleStripClick">
-    <div class="filters-row">
+    <div class="menus-row">
+      <slot name="menus" />
+      <CharacterFilterMechanics v-model="tagFilter" :pool="tagPool" />
+    </div>
+    <div class="icons-row">
       <FilterIcons
         v-model="factionFilter"
         icon-prefix="faction"
@@ -56,15 +61,7 @@ function handleStripClick(e: MouseEvent) {
         :options="classOptions"
         active-border-color="var(--color-primary)"
       />
-      <FilterIcons
-        v-model="damageFilter"
-        icon-prefix="damage"
-        :options="damageOptions"
-        active-border-color="var(--color-primary)"
-        class="filter-damage"
-      />
     </div>
-    <TagsDisplay v-model="tagFilter" :characters class="filter-tags" />
   </div>
 </template>
 
@@ -72,44 +69,50 @@ function handleStripClick(e: MouseEvent) {
 .filter-strip {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--spacing-md);
 }
 
 .filter-strip.resettable {
   cursor: pointer;
 }
 
-.filters-row {
+.icons-row {
   display: flex;
   gap: var(--spacing-md);
-  align-items: end;
+  align-items: center;
   flex-wrap: wrap;
 }
 
-.filter-strip :deep(.filter-tags .pill) {
-  padding: 3px var(--spacing-md);
-  line-height: 1.4;
-}
-
-.filter-strip :deep(.filter-tags .pill.selected) {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
+.menus-row {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 @media (max-width: 768px) {
-  .filters-row {
+  .filter-strip {
+    gap: var(--spacing-sm);
+  }
+
+  .icons-row {
     gap: var(--spacing-sm);
     flex-direction: column;
     align-items: stretch;
   }
-  /* Tag chips ("Energy Recharge", etc.) and the magic/physical damage filter
-     are hidden on mobile to save space. The hero list's only mobile surface is
-     the skills sheet. Scoped under their parents so these win the specificity
-     tie against the children's own `display` rules regardless of bundle order. */
-  .filter-strip .filter-tags,
-  .filters-row .filter-damage {
-    display: none;
+
+  /* The icon rows are centred and need no inset. A picker that runs edge to
+     edge on phones passes the inset of its other rows as --filter-inset. */
+  .menus-row {
+    padding: 0 var(--filter-inset, 0);
+  }
+
+  /* `.large` outranks the width each dropdown sets for wide screens. */
+  .menus-row :deep(.dropdown.large) {
+    flex: 1;
+    min-width: 0;
+    --dropdown-trigger-width: 100%;
+    --dropdown-trigger-min-width: 0;
   }
 }
 </style>

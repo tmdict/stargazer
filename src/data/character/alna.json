@@ -10,7 +10,7 @@
   "season": 5,
   "tags": {
     "cheat-death": [{ "ex": 4 }],
-    "debuff-global": [{ "ultimate": 1 }],
+    "debuff": [{ "ultimate": 1, "mods": ["global"] }],
     "invincibility": [{ "ex": 4 }],
     "special-target": [{ "skill2": 1 }]
   }

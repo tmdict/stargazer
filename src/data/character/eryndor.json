@@ -9,7 +9,10 @@
   "range": 8,
   "season": 7,
   "tags": {
-    "debuff-global": [{ "ultimate": 1 }, { "awakening": 1 }],
+    "debuff": [
+      { "ultimate": 1, "mods": ["global"] },
+      { "awakening": 1, "mods": ["global"] }
+    ],
     "initial-energy-300": []
   }
 }

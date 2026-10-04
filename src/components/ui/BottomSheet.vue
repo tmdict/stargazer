@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 
 import { useBottomSheet } from '@/composables/useBottomSheet'
+import { closeDropdowns } from '@/composables/useDropdown'
 import { useScrollLock } from '@/composables/useScrollLock'
 
 // Shared side panel for the grid (`HomeView`), skills (`SkillsBrowser`), and
@@ -63,6 +64,12 @@ const sheetVars = computed(() => ({
 
 watch(sheetExpanded, (v) => (expanded.value = v))
 watch(expanded, (v) => (sheetExpanded.value = !!v), { immediate: true })
+
+// A collapsing sheet carries its dropdowns' triggers off screen, and the tap
+// or drag that collapsed it is no click outside them.
+watch(sheetExpanded, (open) => {
+  if (!open && isMobile.value) closeDropdowns()
+})
 
 // Lock the page behind while the sheet is expanded on mobile, so dragging the
 // scrim (or anywhere off the sheet) can't scroll the page underneath. No-op on

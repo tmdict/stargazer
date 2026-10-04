@@ -46,7 +46,12 @@ const pendingLabel = computed(
 </script>
 
 <template>
-  <BaseModal :show="show" :label="title" max-width="960px" @close="emit('close')">
+  <BaseModal
+    :show="show"
+    :label="title"
+    max-width="var(--skill-popup-width)"
+    @close="emit('close')"
+  >
     <template #header-buttons>
       <ModalLocaleToggle v-model="displayLocale" />
     </template>

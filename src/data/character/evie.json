@@ -9,11 +9,13 @@
   "range": 20,
   "season": 6,
   "tags": {
-    "debuff-global": [{ "skill2": 1 }, { "ex": 1 }],
+    "debuff": [
+      { "skill2": 1, "mods": ["global"] },
+      { "ex": 1, "mods": ["global"] }
+    ],
     "dot": [{ "ultimate": 1 }],
     "special-target": [{ "ultimate": 1 }, { "skill3": 1 }],
-    "temp-buff": [{ "skill3": 1 }, { "awakening": 1 }],
-    "temp-buff-opening": [{ "skill3": 1 }],
+    "temp-buff": [{ "skill3": 1, "mods": ["opening"] }, { "awakening": 1 }],
     "ult-denial": [{ "ultimate": 1 }]
   }
 }
