@@ -451,7 +451,7 @@ const handleForgetLearned = (): void => {
 
 .field-input {
   font: inherit;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--field-min-font-size));
   padding: 7px 10px;
   border: 1px solid rgba(255, 255, 255, 0.22);
   border-radius: var(--radius-medium);
@@ -473,7 +473,7 @@ const handleForgetLearned = (): void => {
   background: rgba(255, 255, 255, 0.07);
   color: var(--import-text);
   font: inherit;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--field-min-font-size));
   font-weight: 600;
   cursor: pointer;
   transition: all var(--transition-fast);
@@ -493,15 +493,6 @@ const handleForgetLearned = (): void => {
   background: var(--color-accent-active);
   border-color: var(--color-accent-active);
   color: #fff;
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. The toggle follows to keep the row level. */
-@media (pointer: coarse) {
-  .field-input,
-  .toggle {
-    font-size: 1rem;
-  }
 }
 
 .record-name {

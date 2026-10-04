@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 
 import GuideMechanicsCard from '@/components/guide/GuideMechanicsCard.vue'
 import GuideMechanicsStrip from '@/components/guide/GuideMechanicsStrip.vue'
+import FilterChip from '@/components/ui/FilterChip.vue'
 import FilterIcons from '@/components/ui/FilterIcons.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
@@ -74,12 +75,13 @@ const hits = computed(() => {
 const found = computed(() =>
   hits.value.length > 0 ? new Set(hits.value.map((hero) => hero.name)) : null,
 )
+// With one hero found, the kept cards are that hero's tags; the search note
+// offers them as chips that pick a tag as its card does.
 const onlyHit = computed(() => (hits.value.length === 1 ? hits.value[0]! : null))
-const onlyHitTags = computed(() =>
-  onlyHit.value ? groups.filter((group) => group.characters.includes(onlyHit.value!)) : [],
-)
 
 const picked = computed(() => new Set(picks.value.map((pick) => pick.tag)))
+const countLit = (heroes: readonly CharacterType[]): number =>
+  heroes.filter((hero) => matches(hero.tags)).length
 
 // A search keeps the cards its heroes are in. The icon filters drop a card
 // they empty, unless it is picked; a pick never drops one.
@@ -150,9 +152,15 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
         </p>
         <p v-else-if="onlyHit" class="search-note reading-meta">
           <strong>{{ curatedHeroName(onlyHit.name, lang) }}</strong>
-          <a v-for="group in onlyHitTags" :key="group.tag" :href="`#${group.tag}`">
-            {{ tagLabel(group.tag, lang) }}
-          </a>
+          <FilterChip
+            v-for="card in cards"
+            :key="card.tag"
+            dark
+            :label="tagLabel(card.tag, lang)"
+            :count="countLit(card.heroes)"
+            :active="picked.has(card.tag)"
+            @click="toggleTag(card.tag)"
+          />
         </p>
 
         <GuideMechanicsStrip
@@ -228,7 +236,7 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
   background: none;
   color: var(--reading-text);
   font: inherit;
-  font-size: var(--reading-secondary-size);
+  font-size: max(var(--reading-secondary-size), var(--field-min-font-size));
 }
 
 .search-clear {
@@ -247,7 +255,8 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
 .search-note {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--spacing-xs) var(--spacing-md);
+  align-items: center;
+  gap: var(--spacing-sm);
   margin: 0 0 var(--spacing-md);
 }
 

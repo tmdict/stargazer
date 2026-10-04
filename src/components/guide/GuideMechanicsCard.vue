@@ -1,8 +1,8 @@
 <script setup lang="ts">
 /* One tag on the Mechanics guide: its title, its modifiers as chips, and its
    heroes. A click anywhere on the card picks the tag, except on a chip or a
-   hero, which act on themselves. A hero the page's picks leave out is dimmed
-   in place, so the card keeps its shape. */
+   hero, which act on themselves. A hero the page's picks or its name search
+   leave out is dimmed in place, so the card keeps its shape. */
 
 import { computed } from 'vue'
 
@@ -20,7 +20,8 @@ const props = defineProps<{
   heroes: readonly CharacterType[]
   // Every pick on the page; this card's own is the one for `tag`.
   picks: readonly TagPick[]
-  // Hero names a search found, ringed here; null without a search.
+  // Hero names a search found, ringed here with the rest dimmed; null without
+  // a search.
   found: ReadonlySet<string> | null
   vocabulary: TagVocabulary
   lang: AppLocale
@@ -40,6 +41,10 @@ const label = computed(() => tagLabel(props.tag, props.lang))
 const isLit = (hero: CharacterType): boolean =>
   props.picks.every((pick) => matchesPick(hero.tags, pick))
 const litCount = computed(() => props.heroes.filter(isLit).length)
+
+// A search dims without counting: the count stays the picks' answer.
+const isDimmed = (hero: CharacterType): boolean =>
+  !isLit(hero) || (props.found !== null && !props.found.has(hero.name))
 
 // Each chip's count is what the card would keep lit with that chip switched
 // on, so a zero is a dead end; an active chip shows the current count.
@@ -108,7 +113,7 @@ function open(hero: CharacterType) {
         v-for="hero in heroes"
         :key="hero.id"
         :character="hero"
-        :dimmed="!isLit(hero)"
+        :dimmed="isDimmed(hero)"
         :is-selected="found?.has(hero.name)"
         :selected-filter="tag"
         inspectable

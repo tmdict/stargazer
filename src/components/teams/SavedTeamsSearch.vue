@@ -190,20 +190,12 @@ const onKeydown = (event: KeyboardEvent): void => {
   background: none;
   padding: 1px 2px;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: max(0.8rem, var(--field-min-font-size));
   color: var(--color-text-primary);
 }
 
 .search-input:focus {
   outline: none;
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. */
-@media (pointer: coarse) {
-  .search-input {
-    font-size: 1rem;
-  }
 }
 
 .hero-pill {

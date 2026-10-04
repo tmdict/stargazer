@@ -113,6 +113,12 @@
   --control-font-size: 0.85rem;
   --control-font-weight: 600;
 
+  /* iOS zooms the page when a text field under 16px gains focus, and the zoom
+     outlives the field. A field sets `font-size: max(<its size>,
+     var(--field-min-font-size))`, which is 1rem on touch screens. The 0px
+     keeps its unit: max() rejects a bare 0. */
+  --field-min-font-size: 0px;
+
   /* Large pills: the dropdowns of a hero list's filter row and the modifier
      chips beside them. One height, border and padding, so the row lines up. */
   --pill-large-height: 36px;
@@ -186,5 +192,11 @@
 @media (min-width: 1280px) {
   :root {
     --tab-font-size: 0.8rem;
+  }
+}
+
+@media (pointer: coarse) {
+  :root {
+    --field-min-font-size: 1rem;
   }
 }

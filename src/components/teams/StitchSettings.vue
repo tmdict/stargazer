@@ -94,7 +94,8 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   border: none;
   background: var(--color-bg-white);
   color: var(--color-primary);
-  font-size: 0.85rem;
+  /* The fields' size, so the row's text matches. */
+  font-size: max(0.85rem, var(--field-min-font-size));
   font-weight: 600;
   padding: var(--spacing-xs) var(--spacing-md);
   cursor: pointer;
@@ -111,7 +112,7 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   border-radius: var(--radius-medium);
   background: var(--color-bg-white);
   color: var(--color-text-primary);
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--field-min-font-size));
   padding: var(--spacing-xs) var(--spacing-sm);
   min-height: 34px;
 }
@@ -134,15 +135,6 @@ select.setting-input {
 
 .setting-input.gap {
   width: 64px;
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus. The toggle
-   follows so its text matches. */
-@media (pointer: coarse) {
-  .setting-input,
-  .seg-btn {
-    font-size: 1rem;
-  }
 }
 
 .unit {

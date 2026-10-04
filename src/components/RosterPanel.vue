@@ -469,7 +469,7 @@ const {
   min-height: 28px;
   font: inherit;
   font-weight: 700;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--field-min-font-size));
   color: var(--color-text-primary);
   border: 2px solid var(--color-primary);
   border-radius: var(--radius-medium);
@@ -479,13 +479,6 @@ const {
 
 .roster-name-input:focus {
   outline: none;
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus. */
-@media (pointer: coarse) {
-  .roster-name-input {
-    font-size: 1rem;
-  }
 }
 
 .file-input {

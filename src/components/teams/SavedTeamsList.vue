@@ -917,7 +917,7 @@ const actionTipText = computed((): string => {
   min-width: 0;
   font: inherit;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: max(0.95rem, var(--field-min-font-size));
   color: var(--color-text-primary);
   border: 1px solid var(--color-primary);
   border-radius: var(--radius-small);
@@ -927,13 +927,6 @@ const actionTipText = computed((): string => {
 
 .team-name-input:focus {
   outline: none;
-}
-/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. */
-@media (pointer: coarse) {
-  .team-name-input {
-    font-size: 1rem;
-  }
 }
 
 .rename-btn {
