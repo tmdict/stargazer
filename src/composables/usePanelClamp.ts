@@ -1,6 +1,6 @@
 import { nextTick, onUnmounted, ref, watch, type Ref } from 'vue'
 
-import { clampX } from '@/utils/viewport'
+import { clampX, VIEWPORT_MARGIN } from '@/utils/viewport'
 
 /* Horizontal nudge for a dropdown panel centred under its trigger (or, with
  * `align: 'left'`, starting at its left edge): while `active`, the returned
@@ -21,7 +21,7 @@ export function usePanelClamp(
     if (!panel || !trigger) return
     const rect = trigger.getBoundingClientRect()
     const left = align() === 'left' ? rect.left : rect.left + rect.width / 2 - panel.offsetWidth / 2
-    shift.value = clampX(left, panel.offsetWidth, 8) - left
+    shift.value = clampX(left, panel.offsetWidth, VIEWPORT_MARGIN) - left
   }
 
   watch(active, async (on) => {

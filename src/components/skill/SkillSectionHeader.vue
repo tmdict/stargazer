@@ -1,7 +1,13 @@
 <script setup lang="ts">
+// A heading chip: its label and the tag link it opens on `/skills`.
+export interface SlotChip {
+  label: string
+  query: { tag: string; mods?: string }
+}
+
 defineProps<{
   heading?: string
-  slotTags?: { name: string; label: string }[]
+  slotTags?: SlotChip[]
 }>()
 </script>
 
@@ -10,11 +16,11 @@ defineProps<{
     <h2 v-if="heading" class="skill-section-heading">{{ heading }}</h2>
     <span v-if="slotTags?.length" class="skill-section-chips">
       <RouterLink
-        v-for="tag in slotTags"
-        :key="tag.name"
+        v-for="chip in slotTags"
+        :key="chip.label"
         class="skill-level-chip"
-        :to="{ path: '/skills', query: { tag: tag.name } }"
-        >{{ tag.label }}</RouterLink
+        :to="{ path: '/skills', query: chip.query }"
+        >{{ chip.label }}</RouterLink
       >
     </span>
   </header>

@@ -1,15 +1,37 @@
+import { tagPick } from '@/lib/tags'
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
-import type { SkillLocaleFile, SlotKey, SlotNumbers, SlotValues } from '@/lib/types/skill'
+import type { SkillLocaleFile, SlotKey, SlotNumbers, SlotValues, TagPick } from '@/lib/types/skill'
 import {
   getSkillFile,
   loadAppLocales,
   loadCharacterLocales,
   loadGameLocales,
 } from '@/utils/dataLoader'
+import { isHeroModifier, loadTagVocabulary } from '@/utils/tagData'
 
 /** App-locale label for a key (tag name, slot prefix, etc.); falls back to the key. */
 export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
+}
+
+/** A tag modifier's label; a hero's name as a modifier reads "<Hero> Synergy". */
+export function modifierLabel(mod: string, lang: AppLocale): string {
+  return isHeroModifier(mod)
+    ? `${curatedHeroName(mod, lang)} ${appLabel('synergy', lang)}`
+    : appLabel(mod, lang)
+}
+
+/** A tag with its modifiers: "Debuff", "Debuff (Global, Eryndor Synergy)". */
+export function tagPickLabel(pick: TagPick, lang: AppLocale): string {
+  const tag = appLabel(pick.tag, lang)
+  if (pick.mods.length === 0) return tag
+  return `${tag} (${pick.mods.map((mod) => modifierLabel(mod, lang)).join(', ')})`
+}
+
+/** A tag named by itself. One that shows as one entry includes its modifier
+ * ("Ult (Opening)"). */
+export function tagLabel(tag: string, lang: AppLocale): string {
+  return tagPickLabel(tagPick(tag, loadTagVocabulary()), lang)
 }
 
 /** Game-locale label (faction, class, stat); falls back to the key. */
@@ -41,7 +63,7 @@ export function heroDisplayName(slug: string, lang: SkillLocale): string {
 }
 
 /** Curated chrome-locale hero name, for surfaces that speak the app language
- * (guide panels, search-overlay alt text and recents, result ordering). */
+ * (the Mechanics guide, search-overlay alt text and recents, result ordering). */
 export function curatedHeroName(slug: string, lang: AppLocale): string {
   return loadCharacterLocales()[slug]?.[lang] ?? slug
 }

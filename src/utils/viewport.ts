@@ -8,6 +8,14 @@
 // the box down to its minimum width. ESLint bans the raw globals outside this
 // file.
 
+/** Gap a positioned panel or popup keeps from the viewport's edges. */
+export const VIEWPORT_MARGIN = 8
+
+/** Floor for a dropdown panel's height cap: a few rows stay reachable when
+ * little room is left under its trigger. A negative cap would be dropped by
+ * the browser, letting the list overflow unclamped. */
+export const PANEL_MIN_HEIGHT = 120
+
 /** Layout viewport width: the coordinate space of `position: fixed` boxes. */
 export function viewportWidth(): number {
   return document.documentElement.clientWidth

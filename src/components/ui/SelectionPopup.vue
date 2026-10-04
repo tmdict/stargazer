@@ -2,7 +2,7 @@
 import { onMounted, onUnmounted, ref, watch } from 'vue'
 
 import { useOverlay } from '@/composables/useOverlay'
-import { clampX, clampY } from '@/utils/viewport'
+import { clampX, clampY, VIEWPORT_MARGIN } from '@/utils/viewport'
 
 // Shared chrome for the selection popups (the on-grid character / artifact
 // pickers and the import review's): a fixed-positioned, click-outside-dismissing
@@ -25,7 +25,6 @@ const popupRef = ref<HTMLElement>()
 
 // Keep the panel fully on screen: render at the caller's anchor, then shift it back
 // inside the viewport (minus a margin) if it would overflow an edge.
-const VIEWPORT_MARGIN = 8
 const coords = ref({ ...props.position })
 
 const reposition = () => {

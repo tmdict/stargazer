@@ -4,6 +4,7 @@
 // checks.
 import { describe, expect, it } from 'vitest'
 
+import { pinnedLevels } from '@/lib/tags'
 import {
   getSkillCharms,
   loadAppLocales,
@@ -11,7 +12,6 @@ import {
   loadCharms,
   loadCharmTags,
 } from '@/utils/dataLoader'
-import { taggedCharmTiers } from '@/utils/guideTags'
 
 describe('charm data', () => {
   const charms = loadCharms()
@@ -80,9 +80,8 @@ describe('charm tags', () => {
       for (const hero of charms[slug]!.heroes) {
         const character = characters.get(hero)!
         for (const [tag, tiers] of Object.entries(tags)) {
-          expect(taggedCharmTiers(character, tag), `${hero} ${tag}`).toEqual(
-            [...tiers].sort((a, b) => a - b),
-          )
+          const pinned = pinnedLevels(character.tags, [{ tag, mods: [] }], 'charm')
+          expect(pinned, `${hero} ${tag}`).toEqual([...tiers].sort((a, b) => a - b))
         }
       }
     }

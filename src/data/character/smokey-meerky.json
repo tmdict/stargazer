@@ -9,7 +9,6 @@
   "range": 8,
   "season": 0,
   "tags": {
-    "temp-buff": [{ "ultimate": 1 }, { "skill2": 1 }],
-    "temp-buff-opening": [{ "skill2": 1 }]
+    "temp-buff": [{ "ultimate": 1 }, { "skill2": 1, "mods": ["opening"] }]
   }
 }

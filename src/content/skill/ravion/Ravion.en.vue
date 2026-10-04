@@ -32,7 +32,7 @@ import { gridStyles } from './Ravion.data'
       </SkillSnippet>
     </template>
     <template #awakening>
-      <SkillSnippet title-key="temp-buff-opening">
+      <SkillSnippet title="Temp Buff (Opening)">
         <p>
           At battle start, allies who receive an Objective from Designated Duty also gain Enhance
           Force's temporary buff.

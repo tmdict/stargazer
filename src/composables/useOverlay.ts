@@ -2,6 +2,9 @@ import { onMounted, onUnmounted, watch, type Ref } from 'vue'
 
 interface UseOverlayOptions {
   elementRef: Ref<HTMLElement | undefined | null>
+  /** A part of the surface rendered outside `elementRef`, such as a panel
+   * teleported to <body>: a click in it is not an outside click. */
+  detachedRef?: Ref<HTMLElement | undefined | null>
   onClose: () => void
   /** Omit when the component mounts only while open (e.g. CharacterSelectionPopup).
    * Provide when it stays mounted across open/closed transitions
@@ -25,6 +28,7 @@ const DEFAULT_DELAY_MS = 50
  */
 export function useOverlay({
   elementRef,
+  detachedRef,
   onClose,
   isOpen,
   clickOutsideDelay = DEFAULT_DELAY_MS,
@@ -35,6 +39,9 @@ export function useOverlay({
     onClose()
   }
 
+  const isInside = (target: Node): boolean =>
+    !!elementRef.value?.contains(target) || !!detachedRef?.value?.contains(target)
+
   // A click target detached mid-bubble (a pick removing itself from a list, a
   // hero removed by the click) can't be attributed by contains(), so record
   // where the press started on capture, before any handler can detach it, and
@@ -42,15 +49,13 @@ export function useOverlay({
   let pressStartedInside = false
 
   const handlePointerDown = (e: PointerEvent) => {
-    const el = elementRef.value
-    pressStartedInside = !!el && e.target instanceof Node && el.contains(e.target)
+    pressStartedInside = e.target instanceof Node && isInside(e.target)
   }
 
   const handleClickOutside = (e: MouseEvent) => {
     if (isOpen && !isOpen.value) return
-    const el = elementRef.value
-    if (!el || !(e.target instanceof Node)) return
-    if (e.target.isConnected ? el.contains(e.target) : pressStartedInside) return
+    if (!elementRef.value || !(e.target instanceof Node)) return
+    if (e.target.isConnected ? isInside(e.target) : pressStartedInside) return
     onClose()
   }
 

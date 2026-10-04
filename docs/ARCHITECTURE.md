@@ -84,6 +84,7 @@ Everything persists in the browser's `localStorage` under `stargazer.*` keys. Ea
 | `stargazer.rosters`, `stargazer.rosters.active`                                    | the roster library and the active roster                        | [Teams](./architecture/TEAMS.md)                         |
 | `stargazer.import.names`, `stargazer.import.learned`                               | screenshot-import names and learned faces                       | [Team Import](./architecture/IMPORT_TEAM.md)             |
 | `stargazer.skillLocale`, `stargazer.skillLocaleHintSeen`, `stargazer.recentHeroes` | skill text language, tip dismissal, recent heroes               | [Skill Pages](./architecture/SKILL_PAGES.md)             |
+| `stargazer.tags.expanded`                                                          | the mechanic filter shown as chips in the hero lists            | [Skill Pages](./architecture/SKILL_PAGES.md)             |
 | `stargazer.prefs`                                                                  | device preferences                                              | below                                                    |
 | `stargazer.locale`                                                                 | the app language, `"en"` or `"zh"`; anything else reads as `en` | here                                                     |
 | `stargazer.migration.*`                                                            | markers of the temporary `src/utils/upgradeMigration.ts`        | its header                                               |

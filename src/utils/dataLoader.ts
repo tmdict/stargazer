@@ -356,8 +356,8 @@ let skillKeywordsCache: Record<AppLocale, SkillKeywords> | null = null
 let skillCharmsCache: Record<AppLocale, SkillCharms | null> | null = null
 
 /** Per-language skill text for the app locales (en/zh), keyed by character
- * slug (filename basename). Eager: the search index, the guide panels, and
- * the en fallback all read it synchronously. */
+ * slug (filename basename). Eager: the search index and the en fallback read
+ * it synchronously. */
 export function loadSkillLocales(): Record<AppLocale, Record<string, SkillLocaleFile>> {
   if (skillLocalesCache) return skillLocalesCache
   const en = splitSkillDict(

@@ -1,30 +1,31 @@
 import { computed, ref, type Ref } from 'vue'
 
 import { compareCharacters } from '@/lib/filterOrder'
+import { matchesPick } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
+import type { TagPick } from '@/lib/types/skill'
 
 /** Filter state + filtered list. UI lives in CharacterFilterStrip. */
 export function useCharacterFilters(characters: Ref<readonly CharacterType[]>) {
   const factionFilter = ref('')
   const classFilter = ref('')
-  const damageFilter = ref('')
-  const selectedTagNames = ref<string | null>(null)
+  const tagFilter = ref<TagPick | null>(null)
+
+  // Every filter but the tag one applied: the list the tag menu counts in, so
+  // each count is what picking that entry would leave.
+  const tagPool = computed(() =>
+    characters.value.filter(
+      (c) =>
+        (!factionFilter.value || c.faction === factionFilter.value) &&
+        (!classFilter.value || c.class === classFilter.value),
+    ),
+  )
 
   const filteredCharacters = computed(() => {
-    let filtered = [...characters.value]
-    if (factionFilter.value) filtered = filtered.filter((c) => c.faction === factionFilter.value)
-    if (classFilter.value) filtered = filtered.filter((c) => c.class === classFilter.value)
-    if (damageFilter.value) filtered = filtered.filter((c) => c.damage === damageFilter.value)
-    if (selectedTagNames.value)
-      filtered = filtered.filter((c) => Object.keys(c.tags).includes(selectedTagNames.value!))
-    return filtered.sort(compareCharacters)
+    const pick = tagFilter.value
+    const filtered = pick ? tagPool.value.filter((c) => matchesPick(c.tags, pick)) : tagPool.value
+    return [...filtered].sort(compareCharacters)
   })
 
-  return {
-    factionFilter,
-    classFilter,
-    damageFilter,
-    selectedTagNames,
-    filteredCharacters,
-  }
+  return { factionFilter, classFilter, tagFilter, tagPool, filteredCharacters }
 }

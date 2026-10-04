@@ -41,6 +41,7 @@ import {
   writeTextIfChanged,
 } from './lib/shared.ts'
 import { skillNumbers, type FeedHeroNumbers } from './lib/skillNumbers.ts'
+import { orphanTags, type OrphanTag } from './lib/tagCheck.ts'
 
 // ---------- paths ----------
 
@@ -249,13 +250,6 @@ function assertUniformCoverage(bulks: Record<SkillLocale, SkillsBulk>): void {
   }
 }
 
-interface OrphanTag {
-  slug: string
-  tag: string
-  attachment: string // e.g. "ultimate:5"
-  reason: string
-}
-
 // Keyword tokens `[[label|key]]` in projected slot text, parsed with the same
 // grammar the renderer uses so validation can't drift from what ships.
 function collectKeywordKeys(data: SkillLocaleFile): Set<string> {
@@ -271,39 +265,6 @@ function collectKeywordKeys(data: SkillLocaleFile): Set<string> {
     }
   }
   return keys
-}
-
-function validateTagAttachments(slug: string, char: CharacterFile, hero: HeroEntry): OrphanTag[] {
-  if (!char.tags) return []
-  const orphans: OrphanTag[] = []
-  for (const [tag, attachments] of Object.entries(char.tags)) {
-    if (!Array.isArray(attachments)) continue
-    for (const att of attachments) {
-      const entries = Object.entries(att)
-      if (entries.length === 0) continue // explicit character-level: always valid
-      for (const [slotKey, level] of entries) {
-        const slot = hero.skills[slotKey as SlotKey]
-        if (!slot) {
-          orphans.push({
-            slug,
-            tag,
-            attachment: `${slotKey}:${level}`,
-            reason: `slot "${slotKey}" not in hero's kit`,
-          })
-          continue
-        }
-        if (!slot.levels.some((l) => l.level === level)) {
-          orphans.push({
-            slug,
-            tag,
-            attachment: `${slotKey}:${level}`,
-            reason: `level ${level} not in ${slotKey} (have: ${slot.levels.map((l) => l.level).join(', ')})`,
-          })
-        }
-      }
-    }
-  }
-  return orphans
 }
 
 // ---------- main ----------
@@ -408,7 +369,7 @@ async function main() {
       summary.missingFromFeed.push(slug)
       continue
     }
-    summary.orphans.push(...validateTagAttachments(slug, file, enHero))
+    summary.orphans.push(...orphanTags(slug, file.tags, enHero))
 
     let written = 0
     let unchanged = 0

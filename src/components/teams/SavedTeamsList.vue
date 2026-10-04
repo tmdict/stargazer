@@ -519,7 +519,7 @@ const actionTipText = computed((): string => {
             {{ i18n.t(teamTypeLabelKey(team.data)!) }}
           </span>
           <span v-if="teamHasSynergy(team.data)" class="mode-chip">
-            {{ i18n.t('app.synergy') }}
+            {{ i18n.t('app.syn') }}
           </span>
           <span class="card-meta">{{ updatedLabel(team.updatedAt) }}</span>
         </div>

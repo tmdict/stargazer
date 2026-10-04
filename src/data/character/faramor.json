@@ -11,7 +11,6 @@
   "tags": {
     "heal-denial": [{ "ultimate": 1 }],
     "special-target": [{ "skill3": 1 }],
-    "temp-buff": [{ "skill3": 1 }],
-    "temp-buff-opening": [{ "skill3": 1 }]
+    "temp-buff": [{ "skill3": 1, "mods": ["opening"] }]
   }
 }

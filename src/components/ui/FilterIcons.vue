@@ -18,7 +18,7 @@ const {
   activeBorderColor = 'var(--color-bg-white)',
 } = defineProps<{
   options: string[]
-  iconPrefix: string // e.g., 'class', 'faction', 'damage'
+  iconPrefix: string // 'class' or 'faction'
   size?: number // button size in px
   showTooltip?: boolean
   activeBorderColor?: string // CSS color for the selected icon's border
@@ -28,9 +28,6 @@ const modelValue = defineModel<string>({ required: true })
 const iconSize = computed(() => Math.round(size * 0.78))
 const factionIconSize = computed(() => Math.round(size * 0.89))
 const borderWidth = computed(() => (size >= 36 ? 4 : 3))
-// "All" is a text button, not a portrait. Keep its underline slimmer than
-// the icon borders so it reads as a delicate accent.
-const clearBorderWidth = computed(() => (size >= 36 ? 2 : 2))
 
 const PREFIX_ORDERS: Record<string, readonly string[]> = {
   faction: FACTION_ORDER,
@@ -73,7 +70,6 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
         :style="{
           width: `${size}px`,
           height: `${size}px`,
-          borderWidth: modelValue === '' ? `${clearBorderWidth}px 0` : '0',
           '--active-border-color': activeBorderColor,
         }"
         @click="modelValue = ''"
@@ -102,7 +98,7 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
         <img
           :src="getIconPath(iconPrefix, option)"
           :alt="option"
-          :class="['filter-icon', { 'dark-bg': iconPrefix === 'damage' }]"
+          class="filter-icon"
           :style="{
             width: `${iconPrefix === 'faction' ? factionIconSize : iconSize}px`,
             height: `${iconPrefix === 'faction' ? factionIconSize : iconSize}px`,
@@ -164,34 +160,35 @@ const handleMouseEnter = (option: string, event: MouseEvent) => {
 }
 
 .clear-option {
+  border-width: 0;
   color: var(--color-text-secondary);
 }
 
-.clear-option:hover {
-  color: var(--color-primary);
-}
-
+.clear-option:hover,
 .clear-option.active {
   color: var(--color-primary);
-  border-style: solid;
-  border-top-color: transparent;
-  border-bottom-color: var(--active-border-color, var(--color-bg-white));
-  border-radius: 0;
 }
 
+/* The active underline sits under the word, not on the button's bottom edge,
+   where "All" would read as bottom-aligned beside the icons. The matching top
+   border keeps the bare word on the icons' centre line. */
 .clear-label {
+  padding: 3px 1px;
+  border-block: 2px solid transparent;
   font-weight: 700;
   line-height: 1;
   user-select: none;
+  transition: translate var(--transition-fast);
+}
+
+/* An optical correction: with the underline showing, the pair looks low at
+   the word's true centre, so both are lifted. */
+.clear-option.active .clear-label {
+  border-bottom-color: var(--active-border-color, var(--color-bg-white));
+  translate: 0 -2px;
 }
 
 .filter-icon {
   object-fit: contain;
-}
-
-.filter-icon.dark-bg {
-  background-color: rgba(0, 0, 0, 0.6);
-  padding: 2px;
-  border-radius: 50%;
 }
 </style>

@@ -7,11 +7,23 @@ export type SlotKey = (typeof SLOT_ORDER)[number]
 // charm tier (1-4).
 export type TagPin = SlotKey | 'charm'
 
-export type TagAttachment = { readonly [K in TagPin]?: number }
+// One effect: where it is pinned and the modifiers that describe it. Two
+// separate effects on one skill level are two attachments, so modifiers on the
+// same attachment always belong to the same effect.
+export type TagAttachment = { readonly [K in TagPin]?: number } & {
+  readonly mods?: readonly string[]
+}
 
 // Empty attachment array = character-level tag (no per-level pin). Readonly so
 // the type aligns with Vite's deeply-frozen JSON imports.
 export type CharacterTags = Readonly<Record<string, readonly TagAttachment[]>>
+
+// A tag and the modifiers one of its attachments must all carry: what a tag
+// filter, a chip and a tag link each stand for.
+export interface TagPick {
+  readonly tag: string
+  readonly mods: readonly string[]
+}
 
 // On-disk shape of src/locales/skill/<lang>/<slug>.json (auto-managed by the
 // importer). Skill content is entirely feed-sourced: every slot carries `n`,

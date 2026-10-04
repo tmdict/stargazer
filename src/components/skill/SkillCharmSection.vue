@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import SkillSectionHeader from './SkillSectionHeader.vue'
+import SkillSectionHeader, { type SlotChip } from './SkillSectionHeader.vue'
 import { highlightSkillText } from '@/utils/textHighlight'
 
 const props = defineProps<{
   heading: string
-  slotTags?: { name: string; label: string }[]
+  slotTags?: SlotChip[]
   /** Localized tier labels, Elite → Mythic order. */
   tierNames: string[]
   tiers: { tier: number; text: string }[]

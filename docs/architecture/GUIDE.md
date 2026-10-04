@@ -10,6 +10,18 @@ Each index panel's title link is stretched over its `.guide-link` area (`src/sty
 
 The upgrade tracks on the index place each band's levels at their share of that band's own maximum on the energy ramp, so a band that starts higher or climbs in smaller steps shows it in the spacing.
 
+## Mechanics page
+
+The page has one card per tag, holding every hero that carries it. The tags and modifiers are themselves the controls: a click anywhere on a card picks its tag, except on a hero or a chip, and its chips pick modifiers. [Skill Pages](./SKILL_PAGES.md) defines tags, modifiers and when a hero satisfies a pick. The card's title is a button without a handler of its own, so the same click reaches the card from the keyboard. Picks combine as all-of, so two picks answer which heroes have both.
+
+A pick never hides or moves anything. Heroes outside the selection dim where they stand, so every card keeps its place and shape while picks change, and a card's count is the heroes still lit. With two or more picks no single card holds the answer, so the selection strip lists the matching heroes itself. The faction and class icons work differently: they narrow the page and drop a card they empty, unless it is picked. A name search rings its heroes and keeps only the cards they appear in.
+
+`useMechanicPicks` keeps whether a tag's title is picked apart from its picked modifiers. Switching the last modifier off therefore returns the tag to what it was before any was on: still picked if its title was, unpicked otherwise.
+
+Skill text is read in the skill modal, which a click on a hero opens. From a picked card it opens on the picks the hero has skill text for, and from an unpicked card on that card's tag. A dimmed hero may satisfy none of the picks, and then it opens on its card's tag as well, never on an empty list. Initial energy is a character-level tag with no skill behind it, so its heroes open the whole skill list.
+
+The selection lives in memory only. A tag link replaces it, applied after mount because the baked page has nothing picked ([Pre-Rendering](./PRE_RENDERING.md)). The index's tiles also put the tag in the URL fragment, which is the card's id, so the router's `scrollBehavior` brings the card into view and Back restores the earlier position as on any page.
+
 ## Season summaries
 
 A finished season's summary (`src/content/pvp/s<N>/summary.ts`) is a typed literal written once from the season's report and never edited: the team groups and the counters between them. Nothing derives these numbers, and each counter's evidence band is copied from the report rather than recomputed from its record, so the index never disagrees with the report. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) lists the summaries newest first. The index shows every entry's report block and the first entry's ladder.

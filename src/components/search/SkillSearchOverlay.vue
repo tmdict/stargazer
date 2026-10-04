@@ -582,11 +582,17 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   font-family: Verdana, Arial, 'Microsoft YaHei', sans-serif;
 }
 
+/* --sso-width is the panel's width with its detail pane. Its width without
+   the pane and its height cap are both 640/820 of that, the proportions it
+   was drawn with, so a wider panel keeps its shape. */
 .sso-panel {
+  --sso-width: 820px;
+  --sso-short: calc(var(--sso-width) * 640 / 820);
+  --sso-height: 72vh;
   display: flex;
   flex-direction: column;
-  width: min(640px, 94vw);
-  max-height: min(72vh, 640px);
+  width: min(var(--sso-short), 94vw);
+  max-height: min(var(--sso-height), var(--sso-short));
   background: #23262c;
   border: 1px solid #3a3e46;
   border-radius: 14px;
@@ -595,7 +601,19 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 }
 
 .sso-panel.wide {
-  width: min(820px, 94vw);
+  width: min(var(--sso-width), 94vw);
+}
+
+/* Only the box grows where the pane exists: type and rows keep their size. */
+@media (min-width: 1220px) {
+  .sso-backdrop {
+    padding-top: 8vh;
+  }
+
+  .sso-panel {
+    --sso-width: var(--skill-popup-width);
+    --sso-height: 84vh;
+  }
 }
 
 .sso-body {
@@ -732,13 +750,13 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 .sso-pane-title {
   color: var(--color-accent);
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: var(--reading-subheading-size);
 }
 
 .sso-pane-desc {
   margin: 4px 0 2px;
   color: #b8bdc6;
-  font-size: 0.8rem;
+  font-size: var(--reading-secondary-size);
   line-height: 1.6;
 }
 

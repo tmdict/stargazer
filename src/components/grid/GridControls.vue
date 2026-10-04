@@ -81,7 +81,7 @@ const synergyView = computed({
       </label>
       <label v-if="showSynToggle" class="grid-toggle-btn" :class="{ active: synergyView }">
         <input type="checkbox" v-model="synergyView" class="grid-toggle-checkbox" />
-        <span class="grid-toggle-text">{{ i18n.t('app.synergy') }}</span>
+        <span class="grid-toggle-text">{{ i18n.t('app.syn') }}</span>
       </label>
       <label class="grid-toggle-btn" :class="{ active: flatView }">
         <input type="checkbox" v-model="flatView" class="grid-toggle-checkbox" />
@@ -142,8 +142,8 @@ const synergyView = computed({
   align-items: center;
   gap: var(--spacing-xs);
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
   user-select: none;
   border: 2px solid var(--color-border-primary);
   border-radius: var(--radius-medium);

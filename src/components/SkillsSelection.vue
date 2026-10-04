@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
@@ -7,9 +7,11 @@ import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
+import { fromTagQuery } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
+import { loadTagVocabulary } from '@/utils/tagData'
 
 const props = defineProps<{
   characters: readonly CharacterType[]
@@ -25,18 +27,19 @@ const i18n = useI18nStore()
 // Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
 // Placeholders have no skill pages, so the skills hero list leaves them out.
-const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
-  useCharacterFilters(computed(() => props.characters.filter((c) => !c.placeholder)))
-
-// Seed the tag filter from `/skills?tag=<name>` (e.g. a clicked skill chip).
-const route = useRoute()
-watch(
-  () => route.query.tag,
-  (tag) => {
-    selectedTagNames.value = typeof tag === 'string' ? tag : null
-  },
-  { immediate: true },
+const { factionFilter, classFilter, tagFilter, tagPool, filteredCharacters } = useCharacterFilters(
+  computed(() => props.characters.filter((c) => !c.placeholder)),
 )
+
+// A tag link (`/skills?tag=debuff&mods=global`, e.g. a clicked skill chip)
+// seeds the tag filter. First applied after mount: the baked page has no
+// query, and the first client render has to match it.
+const route = useRoute()
+const applyTagLink = () => {
+  tagFilter.value = fromTagQuery(route.query, loadTagVocabulary())
+}
+onMounted(applyTagLink)
+watch([() => route.query.tag, () => route.query.mods], applyTagLink)
 </script>
 
 <template>
@@ -51,9 +54,9 @@ watch(
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
       v-model:class-filter="classFilter"
-      v-model:damage-filter="damageFilter"
-      v-model:tag-filter="selectedTagNames"
+      v-model:tag-filter="tagFilter"
       :characters
+      :tag-pool
     />
 
     <CharacterGrid>
@@ -67,7 +70,7 @@ watch(
           :character
           hide-tooltip
           :is-selected="currentSlug === character.name"
-          :selected-filter="selectedTagNames"
+          :selected-filter="tagFilter?.tag"
         />
       </RouterLink>
     </CharacterGrid>
@@ -113,6 +116,7 @@ watch(
     min-height: 0;
     overflow-y: auto;
     padding: 0 0 var(--spacing-lg);
+    --filter-inset: var(--spacing-md);
   }
   /* The panel goes edge-to-edge in the sheet; inset the trigger row itself. */
   .search-row {
@@ -127,6 +131,7 @@ watch(
   .skills-selection {
     gap: var(--spacing-sm);
     padding: 0 0 var(--spacing-md);
+    --filter-inset: var(--spacing-sm);
   }
   .search-row {
     padding: var(--spacing-sm) var(--spacing-sm) 0;
