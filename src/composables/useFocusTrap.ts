@@ -18,10 +18,13 @@ export function useFocusTrap(surface: Ref<HTMLElement | undefined>, isOpen: Ref<
   watch(isOpen, (open) => {
     if (open) {
       opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
-      // The surface renders on the tick after `isOpen` flips.
-      void nextTick(() => surface.value?.focus())
+      // The surface renders on the tick after `isOpen` flips; focusing one
+      // taller than the viewport would scroll its top gap away.
+      void nextTick(() => surface.value?.focus({ preventScroll: true }))
     } else {
-      if (opener?.isConnected) opener.focus()
+      // A long press leaves focus on an earlier control, which may have
+      // scrolled off screen; the page must not jump back to it.
+      if (opener?.isConnected) opener.focus({ preventScroll: true })
       opener = null
     }
   })

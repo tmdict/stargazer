@@ -369,7 +369,8 @@ watch(
 )
 
 // Focus moves into the input on open (query pre-selected so typing replaces
-// it) and returns to whatever opened the overlay on close.
+// it) and returns to whatever opened the overlay on close, without scrolling
+// the page to it: the shortcut opens the overlay wherever focus was left.
 let opener: HTMLElement | null = null
 watch(isOpen, (open) => {
   if (open) {
@@ -379,7 +380,7 @@ watch(isOpen, (open) => {
       inputRef.value?.select()
     })
   } else {
-    opener?.focus()
+    opener?.focus({ preventScroll: true })
     opener = null
   }
 })
