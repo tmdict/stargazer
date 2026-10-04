@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /* Mechanics entry on the guide index: one tile per tag, deep-linking to that
-   tag's section on the mechanics page. */
+   tag's card on the mechanics page. */
 
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -8,24 +8,31 @@ import { RouterLink } from 'vue-router'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import { guidePath } from '@/lib/guide'
+import { tagPick, toTagQuery } from '@/lib/tags'
 import type { AppLocale } from '@/lib/types/i18n'
-import { guideTagGroups } from '@/utils/guideTags'
 import { interpolate } from '@/utils/interpolate'
-import { appLabel } from '@/utils/skillLabels'
+import { appLabel, tagPickLabel } from '@/utils/skillLabels'
+import { loadTagGroups, loadTagVocabulary } from '@/utils/tagData'
 
 const props = defineProps<{ lang: AppLocale }>()
 
-// Portraits per tile; the section itself lists every hero.
+// Portraits per tile; the card itself lists every hero.
 const PREVIEW = 4
 
 const label = (key: string): string => appLabel(key, props.lang)
 const page = computed(() => guidePath(props.lang, 'mechanics'))
 
-const tiles = guideTagGroups().map((group) => ({
-  tag: group.tag,
-  heroes: group.characters.slice(0, PREVIEW).map((c) => c.name),
-  count: group.characters.length,
-}))
+// The query picks the tag on the page; the hash scrolls to its card.
+const tiles = loadTagGroups().map((group) => {
+  const pick = tagPick(group.tag, loadTagVocabulary())
+  return {
+    tag: group.tag,
+    pick,
+    link: { query: toTagQuery(pick), hash: `#${group.tag}` },
+    heroes: group.characters.slice(0, PREVIEW).map((c) => c.name),
+    count: group.characters.length,
+  }
+})
 </script>
 
 <template>
@@ -41,9 +48,9 @@ const tiles = guideTagGroups().map((group) => ({
           v-for="tile in tiles"
           :key="tile.tag"
           class="tile"
-          :to="{ path: page, hash: `#${tile.tag}` }"
+          :to="{ path: page, ...tile.link }"
         >
-          <span class="tile-name">{{ label(tile.tag) }}</span>
+          <span class="tile-name">{{ tagPickLabel(tile.pick, lang) }}</span>
           <span class="stack">
             <GuidePortrait v-for="slug in tile.heroes" :key="slug" :slug :lang />
           </span>

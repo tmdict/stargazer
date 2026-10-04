@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, ref, toRef } from 'vue'
+import { computed, ref, toRef, watch } from 'vue'
 
 import IconClose from '@/components/ui/IconClose.vue'
 import IconLink from '@/components/ui/IconLink.vue'
+import { closeDropdowns } from '@/composables/useDropdown'
 import { useFocusTrap } from '@/composables/useFocusTrap'
 import { useOverlay } from '@/composables/useOverlay'
 import { useScrollLock } from '@/composables/useScrollLock'
@@ -49,6 +50,9 @@ useOverlay({ elementRef: modalRef, onClose: () => emit('close'), isOpen })
 const { trapTab } = useFocusTrap(modalRef, isOpen)
 // Lock the page behind so it can't scroll while the modal is open.
 useScrollLock(isOpen)
+// A long press or right-click opens a modal with no click to close a dropdown
+// left open on the page, which would then sit above the modal.
+watch(isOpen, (open) => open && closeDropdowns(), { immediate: true })
 </script>
 
 <template>

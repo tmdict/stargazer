@@ -30,7 +30,7 @@ import { gridStyles } from './Ravion.data'
       </SkillSnippet>
     </template>
     <template #awakening>
-      <SkillSnippet title-key="temp-buff-opening">
+      <SkillSnippet title="非永久增益 (开场)">
         <p>战斗开始时，收到“奉命行事”任务牌的友军也会获得觉醒之力的非永久增益。</p>
       </SkillSnippet>
     </template>

@@ -141,8 +141,8 @@ const handleArenaSelected = (mapKey: string) => {
   align-items: center;
   gap: var(--spacing-xs);
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
   user-select: none;
   border: 2px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
@@ -245,8 +245,8 @@ const handleArenaSelected = (mapKey: string) => {
   align-items: center;
   gap: var(--spacing-xs);
   cursor: pointer;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
   user-select: none;
   border: 2px solid;
   border-radius: var(--radius-medium);

@@ -42,7 +42,7 @@ export function compareFaction(a: string, b: string): number {
 
 type SortableCharacter = Pick<CharacterType, 'faction' | 'placeholder' | 'id'>
 
-// Shared by the picker and the on-grid popup so their orders always match.
+// The one hero order: every hero list sorts with it, so their orders match.
 export function compareCharacters(a: SortableCharacter, b: SortableCharacter): number {
   return (
     compareFaction(a.faction, b.faction) ||

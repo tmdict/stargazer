@@ -8,7 +8,7 @@
    also lights its parents. A row whose surface is ineffective (master or a
    structural parent off) dims but keeps its remembered checked state. */
 
-import { computed, onMounted, onUnmounted, ref, useId } from 'vue'
+import { computed, ref, useId } from 'vue'
 
 import { useDropdown } from '@/composables/useDropdown'
 import {
@@ -16,9 +16,9 @@ import {
   useGridInfoPrefs,
   type GridInfoKey,
 } from '@/composables/useGridInfoPrefs'
+import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { usePanelClamp } from '@/composables/usePanelClamp'
 import { useI18nStore } from '@/stores/i18n'
-import { TABLET_MAX_WIDTH } from '@/utils/breakpoints'
 
 const { share = false } = defineProps<{
   // ShareView presentation: right-aligned, checklist everywhere.
@@ -51,23 +51,8 @@ const ghosted = (key: GridInfoKey): boolean =>
 
 const toggle = (key: GridInfoKey): void => setPref(key, !prefs[key])
 
-// Narrow layouts swap the checklist trigger for the tray pill. The initial
-// read waits for onMounted (the useBreakpoint pattern): the prerendered pages
-// carry the wide chip, so a setup-time matchMedia read would hydration-
-// mismatch the trigger on narrow viewports. The panel itself is closed at
-// mount either way.
-const narrowQuery = import.meta.env.SSR
-  ? null
-  : window.matchMedia(`(max-width: ${TABLET_MAX_WIDTH}px)`)
-const isNarrow = ref(false)
-const onNarrowChange = (): void => {
-  isNarrow.value = narrowQuery!.matches
-}
-narrowQuery?.addEventListener('change', onNarrowChange)
-onMounted(() => {
-  if (narrowQuery) isNarrow.value = narrowQuery.matches
-})
-onUnmounted(() => narrowQuery?.removeEventListener('change', onNarrowChange))
+// Narrow layouts swap the checklist trigger for the tray pill.
+const isNarrow = useNarrowViewport()
 
 const tray = computed(() => !share && isNarrow.value)
 
@@ -207,8 +192,8 @@ const panelShift = usePanelClamp(
   min-height: 36px;
   background: var(--color-bg-primary);
   color: var(--color-text-secondary);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
   white-space: nowrap;
   user-select: none;
   transition: all var(--transition-fast);
@@ -384,7 +369,7 @@ const panelShift = usePanelClamp(
 }
 
 .row.sub {
-  margin-left: 18px;
+  margin-left: var(--dropdown-sub-indent);
 }
 
 .row.dim {

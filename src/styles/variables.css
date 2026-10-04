@@ -108,6 +108,26 @@
   /* Tab-strip label size (tabs + arena dropdown); smaller at the chrome extremes. */
   --tab-font-size: 0.85rem;
 
+  /* The label of a control: the grid and map editor toggles, the action
+     buttons and the dropdown pills all set their text with these. */
+  --control-font-size: 0.85rem;
+  --control-font-weight: 600;
+
+  /* Large pills: the dropdowns of a hero list's filter row and the modifier
+     chips beside them. One height, border and padding, so the row lines up. */
+  --pill-large-height: 36px;
+  --pill-large-border: 2px;
+  --pill-large-padding: 14px;
+
+  /* Dropdowns: the width of a large pill, so the ones in a row match, and the
+     indent of a row nested under another (DropdownRow, the Grid Info list). */
+  --dropdown-large-width: 12.5rem;
+  --dropdown-sub-indent: 18px;
+
+  /* The skill popups (hero, phantimal), and the search overlay once its
+     detail pane is open. */
+  --skill-popup-width: 960px;
+
   /* Inter-section gap that tightens as viewports narrow. Pages opt in
      via `gap: var(--stack-gap)` on their layout container. */
   --stack-gap: var(--spacing-xl);

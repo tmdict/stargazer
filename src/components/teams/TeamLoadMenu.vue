@@ -267,7 +267,7 @@ const tipText = computed((): string =>
                     {{ i18n.t(teamTypeLabelKey(team.data)!) }}
                   </span>
                   <span v-if="teamHasSynergy(team.data)" class="card-mode">
-                    {{ i18n.t('app.synergy') }}
+                    {{ i18n.t('app.syn') }}
                   </span>
                   <span class="card-when">{{ updatedLabel(team.updatedAt) }}</span>
                 </span>
@@ -297,7 +297,9 @@ const tipText = computed((): string =>
   top: calc(100% + 8px);
   left: 50%;
   transform: translateX(calc(-50% + var(--panel-shift, 0px)));
-  z-index: var(--z-dropdown);
+  /* A layer under the other dropdowns: a click opened this one, so it is still
+     open when hover opens another over it, and the newer one belongs in front. */
+  z-index: calc(var(--z-dropdown) - 1);
   width: min(640px, calc(100vw - 16px));
   background: var(--color-bg-primary);
   border: 1.5px solid var(--color-border-primary);

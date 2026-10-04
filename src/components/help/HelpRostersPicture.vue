@@ -2,15 +2,19 @@
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import HelpMock from '@/components/help/HelpMock.vue'
 import HelpScene from '@/components/help/HelpScene.vue'
+import DropdownSelect from '@/components/ui/DropdownSelect.vue'
 import IconEdit from '@/components/ui/IconEdit.vue'
 import IconFilePlus from '@/components/ui/IconFilePlus.vue'
+import IconFilter from '@/components/ui/IconFilter.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
 import IconUpload from '@/components/ui/IconUpload.vue'
+import IconUser from '@/components/ui/IconUser.vue'
 import UpgradeDock from '@/components/ui/UpgradeDock.vue'
 import UpgradeDockChip from '@/components/ui/UpgradeDockChip.vue'
 import UpgradeDockLabel from '@/components/ui/UpgradeDockLabel.vue'
 import UpgradeLayerChips from '@/components/ui/UpgradeLayerChips.vue'
 import UpgradePill from '@/components/ui/UpgradePill.vue'
+import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { ATTR_PARAGON } from '@/lib/characters/attributes'
 import { useGameDataStore } from '@/stores/gameData'
@@ -19,6 +23,8 @@ import { appLabel } from '@/utils/skillLabels'
 const lang = useRouteLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 const gameData = useGameDataStore()
+// The real filter has no + on phones.
+const narrow = useNarrowViewport()
 
 // New rosters are auto-named "Roster N" in every language.
 const ROSTER_NAME = 'Roster 1'
@@ -36,7 +42,7 @@ const HEROES = [
     <template #from>
       <HelpMock :caption="label('rosters')">
         <div class="help-mock-bar">
-          <span class="help-dd">{{ ROSTER_NAME }}</span>
+          <DropdownSelect :label="ROSTER_NAME" lit />
           <IconEdit :size="13" class="help-mock-muted" />
           <span class="help-mock-fill" />
           <span class="control-btn compact danger">
@@ -79,11 +85,20 @@ const HEROES = [
 
     <template #to>
       <HelpMock :caption="label('characters')">
+        <div class="help-mock-search">
+          <IconSearch :size="11" />{{ label('search-heroes-placeholder') }}
+        </div>
         <div class="help-mock-bar">
-          <span class="help-dd">{{ ROSTER_NAME }}</span>
-          <span class="help-mock-search">
-            <IconSearch :size="11" />{{ label('search-heroes-placeholder') }}
-          </span>
+          <DropdownSelect large lit :label="ROSTER_NAME">
+            <template #icon>
+              <IconUser :size="15" />
+            </template>
+          </DropdownSelect>
+          <DropdownSelect large :label="label('mechanics')" :segment="narrow ? undefined : '+'">
+            <template #icon>
+              <IconFilter :size="15" />
+            </template>
+          </DropdownSelect>
         </div>
         <div class="help-heroes">
           <span v-for="hero in HEROES.filter((h) => h.owned)" :key="hero.slug" class="help-hero">
@@ -126,10 +141,9 @@ const HEROES = [
 
 .help-mock-search {
   display: flex;
-  flex: 1;
   align-items: center;
   gap: 7px;
-  min-width: 0;
+  margin-bottom: 10px;
   padding: 5px 11px;
   overflow: hidden;
   white-space: nowrap;
@@ -164,25 +178,5 @@ const HEROES = [
   height: 34px;
   border-radius: 50%;
   box-shadow: 0 0 0 2px #fff;
-}
-
-/* Copy of DropdownSelect's pill variant. */
-.help-dd {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 2px 12px;
-  white-space: nowrap;
-  color: var(--color-primary);
-  background: var(--color-bg-white);
-  border: 1.5px solid var(--color-primary);
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-}
-
-.help-dd::after {
-  content: '▾';
-  font-size: 0.6rem;
 }
 </style>

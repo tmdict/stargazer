@@ -9,6 +9,7 @@ import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables
 import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
 import type { CharacterType } from '@/lib/types/character'
+import type { TagPick } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
 import { characterDisplayName } from '@/utils/nameFormatting'
@@ -27,9 +28,9 @@ const props = defineProps<{
   // would fight the host: the Skills hero list's icons are links, and the
   // empty-tile popup closes when the pointer leaves it.
   inspectable?: boolean
-  // Tag chip the skills open on (a host's user-set tag filter). Unset opens
-  // the full page.
-  inspectChip?: string | null
+  // Tag chips the skills open on (a host's tag filter, the Mechanics guide's
+  // picks). Unset opens the full page.
+  inspectChips?: readonly TagPick[]
   selectedFilter?: string | null
 }>()
 
@@ -65,7 +66,7 @@ const showEnergy = computed(() => props.selectedFilter === 'initial-energy-300')
 const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum + n, 0))
 
 const inspectTarget = computed(() =>
-  props.inspectable ? heroInspectTarget(props.character, props.inspectChip) : null,
+  props.inspectable ? heroInspectTarget(props.character, props.inspectChips) : null,
 )
 const { inspect } = useInspect()
 const {

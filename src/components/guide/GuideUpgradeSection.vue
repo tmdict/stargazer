@@ -298,7 +298,6 @@ const intro = computed((): string => {
   container-type: inline-size;
 }
 
-/* Heading rule matches GuideTagSection's. */
 .section-title {
   margin: 0;
   padding-bottom: var(--spacing-sm);

@@ -36,6 +36,8 @@ The game-data store has two loaders with one body. `initializeContentData()` als
 
 Any code touching `window`, `document`, `Image`, `matchMedia` or storage at module or setup scope checks `import.meta.env.SSR` first. Static content reads the data loaders directly instead of the store: `GridSnippet` resolves portraits through `loadCharacterImages()`, so a diagram renders the same with or without store state.
 
+A page is baked once per path, so nothing from the query string is in its HTML. The tag link on `/skills` and on the Mechanics guide ([Skill Pages](./SKILL_PAGES.md)) therefore applies its filter after mount.
+
 ## Two locale axes
 
 The skill-text locale is the URL prefix on skill pages and has 16 values. The chrome locale is en or zh. `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleToggle`, and its regex must stay `(en|zh)`. A `/ko/...` path then parses as unprefixed, so chrome is never pinned to a language without chrome strings, and the header toggle flips the chrome preference instead of rewriting the content URL.

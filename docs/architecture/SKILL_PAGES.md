@@ -41,7 +41,7 @@ Because every language must cover exactly the en hero set, `hasSkillLocale(slug)
       synchronous, null until the language is warm
 ```
 
-en and zh are always loaded, since search, the guide panels and the en fallback read them synchronously. Each other language is one chunk: its `index.ts` globs its own directory eagerly, so a single dynamic import brings in the whole language. `loadSkillLocale` caches the promise per language and evicts a rejected one, so the next call retries. Components render through the synchronous getters, which keeps `SkillSections` a synchronous component.
+en and zh are always loaded, since search and the en fallback read them synchronously. Each other language is one chunk: its `index.ts` globs its own directory eagerly, so a single dynamic import brings in the whole language. `loadSkillLocale` caches the promise per language and evicts a rejected one, so the next call retries. Components render through the synchronous getters, which keeps `SkillSections` a synchronous component.
 
 That puts the burden on whoever navigates. `warmSkillLocale` (`src/router/routes.ts`) awaits the chunk before any `skill` route resolves. vite-ssg renders each route once with no `<Suspense>`, so without the guard a page would bake en fallback text and the meta description would come from the wrong language. The guard is a global `beforeResolve` because `beforeEnter` skips param-only navigation, and the globe menu's language switch is exactly that. If the chunk fails mid-session (offline, or a stale tab after a deploy), the guard hard-navigates to the target URL to pick up fresh HTML. On the initial load it proceeds and the reader shows the en fallback.
 
@@ -78,15 +78,39 @@ Tags live in the character data file (`src/data/character/<slug>.json`). The imp
 ```jsonc
 "tags": {
   "special-target": [{ "skill2": 1 }],
+  "temp-buff": [{ "ultimate": 1 }, { "skill3": 1, "mods": ["opening"] }],
+  "debuff": [{ "ex": 1, "mods": ["eryndor", "global"] }],
   "initial-energy-300": []   // empty: character-level only
 }
 ```
 
-Each attachment is `{ slot: level }`, or `{ "charm": tier }` for a tag the hero's charm carries ([Seasonal Content](./SEASONAL.md)). `useSkillTags` gives the per-level and per-character unions. The chip strip filters whole slots: a slot or charm with a level or tier carrying an active tag shows in full, with those rows accented, and the rest are hidden. An upgrade line reads only against the levels before it, so a tagged level is never shown alone. Refinement rows carry no tags, so they show with their EX slot and are never accented. The Mechanics guide's hero panel shows a tag's slots the same way. A slot heading's chips link to `/skills?tag=<name>`, which seeds the hero-list filter. A tag's label is `src/locales/app/<tag>.json`, so adding a tag is data plus one locale file.
+An attachment is one effect. It names where the effect is pinned, as `{ slot: level }` or as `{ "charm": tier }` for a tag the hero's charm carries ([Seasonal Content](./SEASONAL.md)), and it may list modifiers (`mods`) that describe that effect. Two effects on the same skill level are two attachments, so modifiers that share an attachment always describe the same effect. A modifier is a label key such as `opening` or `global`, or a hero's slug, which marks a synergy with that hero and reads "Eryndor Synergy". `tests/unit/lib/tags.test.ts` checks the hero data: every tag and modifier has a label, and every attachment pins one slot the app knows.
+
+Nothing declares the list of tags or modifiers: `tagVocabulary` reads it from the hero data, so adding either is data plus one label file, `src/locales/app/<key>.json`. A tag whose every attachment carries the same single modifier leaves nothing to choose under it, so it shows everywhere as one entry ("Ult (Opening)") with no plain "Ult" beside it.
+
+A pick (`TagPick`) is a tag plus the modifiers wanted, and a hero satisfies it when one attachment of that tag carries all of them. The rules live in `src/lib/tags.ts`, which does not import the data loader, so the hero-list filter, the chips, the Mechanics guide and the importer's check share one copy. The hero-list filter holds one pick: a tag from its menu, then that tag's modifiers as chips. The menu can be swapped for a row of chips, one per tag; that choice is one value for every hero list (`useMechanicsExpanded`), kept in `stargazer.tags.expanded` ([Stored preferences](#stored-preferences)). Phones always show the menu and leave the stored choice as it is.
+
+A hero's chip strip has one chip per tag and one per modifier the hero carries under it ("Temp Buff", "Temp Buff (Opening)"). Active chips combine as any-of and filter whole slots: a slot or charm with a level or tier that an active chip matches shows in full, with those rows accented, and the rest are hidden. An upgrade line reads only against the levels before it, so a tagged level is never shown alone. Refinement rows carry no tags, so they show with their EX slot and are never accented. The skill modal opened from a filtered picker or Rosters list, or from the Mechanics guide, starts on that filter's chips, less any the hero has no skill text for. The Skills page's own list links to the skill page, which opens unfiltered.
+
+### Tag links
+
+A slot heading's chips link to the hero list filtered by that chip, and the guide index links to the Mechanics guide the same way. `/skills` and the Mechanics guide each read one pick from the query:
+
+| Parameter | Example          | Holds                                                                                |
+| --------- | ---------------- | ------------------------------------------------------------------------------------ |
+| `tag`     | `debuff`         | A tag in use in the hero data.                                                       |
+| `mods`    | `eryndor,global` | Optional. The pick's modifiers, comma-separated and sorted, each in use under `tag`. |
+
+```
+/skills?tag=debuff&mods=eryndor,global
+/en/guide/mechanics?tag=temp-buff&mods=opening#temp-buff
+```
+
+The guide index adds the tag as the fragment, which scrolls to its card. A link that names an unknown tag, a modifier not in use under its tag, or a parameter twice applies no filter, because a wider or narrower one is not what the link's author saw. A tag that shows as one entry is written with its modifier (`?tag=ult&mods=opening`), and `?tag=ult` reads the same. Both pages apply the link after mount ([Pre-Rendering](./PRE_RENDERING.md)).
 
 ## Commentary snippets
 
-An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh) adds commentary. `SkillSections` picks the text locale if it is an app locale, then the chrome locale, then en. Each slot of `SkillSnippets` teleports into the matching section's anchor from `useSnippetAnchors`. The anchors are template refs, unset during pre-rendering, so commentary appears only after hydration and never reaches the description scrape. Without anchors, as in the guide panels, the slots render inline in slot order. A grid diagram pairs `<Hero>.data.ts` with `GridSnippet`, which resolves portraits through `loadCharacterImages`, so data files import no images.
+An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh) adds commentary. `SkillSections` picks the text locale if it is an app locale, then the chrome locale, then en. Each slot of `SkillSnippets` teleports into the matching section's anchor from `useSnippetAnchors`. The anchors are template refs, unset during pre-rendering, so commentary appears only after hydration and never reaches the description scrape. Without anchors the slots render inline in slot order. A grid diagram pairs `<Hero>.data.ts` with `GridSnippet`, which resolves portraits through `loadCharacterImages`, so data files import no images.
 
 ## Search
 
@@ -111,6 +135,7 @@ An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh)
 | `stargazer.skillLocale`         | `"ja"`    | The globe menu's text language, one of `SKILL_LOCALES`. Anything else follows the app language. |
 | `stargazer.skillLocaleHintSeen` | `"1"`     | Present once the skill-language tip is dismissed.                                               |
 | `stargazer.recentHeroes`        | see below | Recently viewed hero slugs, newest first, at most 5. Entries that are not strings are dropped.  |
+| `stargazer.tags.expanded`       | `"1"`     | Present while the hero lists show the mechanic filter as chips. Anything else reads as absent.  |
 
 ```json
 ["valen", "rowan", "athalia"]

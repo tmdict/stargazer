@@ -11,8 +11,8 @@
   "tags": {
     "cheat-death": [{ "ultimate": 1 }],
     "heal-denial": [{ "awakening": 1 }],
-    "opening-ult": [{ "ex": 1 }],
     "special-target": [{ "ex": 1 }],
-    "temp-buff": [{ "awakening": 2 }]
+    "temp-buff": [{ "awakening": 2 }],
+    "ult": [{ "ex": 1, "mods": ["opening"] }]
   }
 }

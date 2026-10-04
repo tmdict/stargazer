@@ -1,12 +1,6 @@
 import { nextTick, onUnmounted, ref, watch, type Ref } from 'vue'
 
-import { viewportHeight } from '@/utils/viewport'
-
-const VIEWPORT_MARGIN = 8
-// A few rows always stay reachable: a boundary with little room below the
-// trigger (a short popup) would otherwise leave a sliver, or a negative value
-// the browser drops, letting the list overflow unclamped.
-const MIN_HEIGHT = 120
+import { PANEL_MIN_HEIGHT, VIEWPORT_MARGIN, viewportHeight } from '@/utils/viewport'
 
 /* Max height for a dropdown panel so it never runs past the bottom of the
  * viewport, or of the nearest ancestor marked `data-dropdown-boundary`: bind
@@ -29,7 +23,7 @@ export function usePanelFit(
       ? Math.min(boundary.getBoundingClientRect().bottom, viewportHeight())
       : viewportHeight()
     const room = bottom - panel.getBoundingClientRect().top - VIEWPORT_MARGIN
-    maxHeight.value = `${Math.max(room, MIN_HEIGHT)}px`
+    maxHeight.value = `${Math.max(room, PANEL_MIN_HEIGHT)}px`
   }
 
   watch(active, async (on) => {

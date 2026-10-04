@@ -13,17 +13,34 @@ import { useTouchDetection } from './useTouchDetection'
  *   useHoverTooltip: a tap fires a synthetic mouseenter whose hover-open the
  *   tap's own click toggle would immediately undo. Leaving waits a grace period
  *   so the cursor can cross the gap between the trigger and the panel.
+ * - A panel teleported out of the root is passed as `panelRef`, so a click in
+ *   it is not an outside click, and binds the two mouse handlers itself: the
+ *   root does not hear the pointer while it is over the panel.
+ * - Hover opens one dropdown at a time. A second one closes the first at once:
+ *   left to its grace period, it would overlap the new panel of a neighbor.
+ *   A dropdown a click opened stays until a click closes it.
  *
  * Bind the three pointer handlers on the root element (touchstart passive). */
 
 const HOVER_CLOSE_GRACE_MS = 150
 
+const openDropdowns = new Set<() => void>()
+let closeHoverOpened: (() => void) | null = null
+
+/* Closes every open dropdown. For a surface that takes the screen with no
+ * click outside them: a popup opened by a long press, a sheet sliding away. */
+export function closeDropdowns(): void {
+  for (const hide of [...openDropdowns]) hide()
+}
+
 export function useDropdown({
   rootRef,
+  panelRef,
   hover = false,
   onClose,
 }: {
   rootRef: Ref<HTMLElement | undefined | null>
+  panelRef?: Ref<HTMLElement | undefined | null>
   hover?: boolean
   // Runs whenever an open dropdown closes, whatever closed it.
   onClose?: () => void
@@ -31,16 +48,23 @@ export function useDropdown({
   const open = ref(false)
   let closeTimer: ReturnType<typeof setTimeout> | undefined
 
-  const show = (): void => {
-    clearTimeout(closeTimer)
-    open.value = true
-  }
-
   const hide = (): void => {
     clearTimeout(closeTimer)
     if (!open.value) return
     open.value = false
+    forget()
     onClose?.()
+  }
+
+  const forget = (): void => {
+    openDropdowns.delete(hide)
+    if (closeHoverOpened === hide) closeHoverOpened = null
+  }
+
+  const show = (): void => {
+    clearTimeout(closeTimer)
+    open.value = true
+    openDropdowns.add(hide)
   }
 
   const toggle = (): void => (open.value ? hide() : show())
@@ -50,6 +74,10 @@ export function useDropdown({
 
   const onMouseEnter = (): void => {
     if (!hover || isTouchDevice.value || interactionStartedAsTouch.value) return
+    if (!open.value) {
+      closeHoverOpened?.()
+      closeHoverOpened = hide
+    }
     show()
   }
   const onMouseLeave = (): void => {
@@ -62,7 +90,7 @@ export function useDropdown({
     interactionStartedAsTouch.value = true
   }
 
-  useOverlay({ elementRef: rootRef, isOpen: open, onClose: hide })
+  useOverlay({ elementRef: rootRef, detachedRef: panelRef, isOpen: open, onClose: hide })
 
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key !== 'Escape' || !open.value) return
@@ -73,6 +101,7 @@ export function useDropdown({
   onUnmounted(() => {
     document.removeEventListener('keydown', onKeyDown, { capture: true })
     clearTimeout(closeTimer)
+    forget()
   })
 
   return { open: readonly(open), show, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart }

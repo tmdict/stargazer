@@ -14,8 +14,8 @@
   border-radius: var(--radius-medium);
   padding: var(--spacing-xs) var(--spacing-md);
   min-height: 36px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--control-font-size);
+  font-weight: var(--control-font-weight);
   cursor: pointer;
   transition: all var(--transition-fast);
   flex-shrink: 0;
