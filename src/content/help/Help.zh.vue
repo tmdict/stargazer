@@ -81,9 +81,14 @@ const SKILL = {
         <p class="help-touch">在棋盘上或英雄列表里长按任意英雄，等圆圈转满即可。</p>
       </li>
       <li>
-        <HelpBasicsPicture kind="share" />
-        <h3>分享棋盘</h3>
-        <p><b>链接</b>会复制当前棋盘的链接，<b>复制</b>和<b>下载</b>可以把棋盘存成图片。</p>
+        <HelpBasicsPicture kind="mechanics" />
+        <h3>按机制筛选</h3>
+        <p>
+          在英雄列表上方的<b>机制</b>里选一种效果，比如<b>召唤</b>或<b>削能</b>。有些还能再细分，比如<b>非永久增益</b>里的<b>开场</b>。<span
+            class="help-mouse"
+            >点 <b>+</b> 可以把全部机制展开成按钮。</span
+          >
+        </p>
       </li>
     </ol>
   </section>
@@ -264,17 +269,17 @@ const SKILL = {
       </li>
       <li><IconChevronRight :size="18" /><span>幻灵和神器也能像英雄一样查看技能。</span></li>
       <li>
-        <IconLink :size="18" /><span>分享的链接包含棋盘上的全部内容，朋友看到的和你一模一样。</span>
+        <IconLink :size="18" /><span
+          ><b>链接</b
+          >会复制包含棋盘全部内容的链接，朋友看到的和你一模一样。<b>复制</b>和<b>下载</b>可以把棋盘存成图片。</span
+        >
       </li>
       <li>
         <IconChevronRight :size="18" /><span>棋盘上弹出的英雄列表顶部，也可以切换英雄池。</span>
       </li>
       <li>
         <IconFilter :size="18" /><span
-          >英雄列表里的<b>机制</b>可以按技能效果找英雄，比如<b>召唤</b>或<b>削能</b>。<span
-            class="help-mouse"
-            >点旁边的 <b>+</b> 可以让全部机制一直显示。</span
-          ></span
+          ><b>指南</b>的机制页列出了每种机制的全部英雄，同时选两种以上，可以看到谁全都有。</span
         >
       </li>
       <li><IconGlobe :size="18" /><span>技能页面支持 16 种语言，在页面顶部的菜单里切换。</span></li>
@@ -285,6 +290,12 @@ const SKILL = {
       <li>
         <IconSave :size="18" /><span
           ><b>清除</b>会清空棋盘，但仍关联到你载入的阵容，<b>保存</b>依旧会更新它。</span
+        >
+      </li>
+      <li>
+        <IconChevronRight :size="18" /><span
+          >在竞技场页面的网址后面加上
+          <kbd>?t=debug</kbd>，可以打开隐藏的<b>调试</b>标签页，查看每个英雄走向目标的路径。</span
         >
       </li>
     </ul>

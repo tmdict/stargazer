@@ -81,7 +81,7 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
 .skills-selection {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--picker-row-gap);
   min-height: var(--panel-min-height);
   /* Contain overscroll so collapsing the sheet doesn't pull/refresh the page. */
   overscroll-behavior: contain;
@@ -129,7 +129,6 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
 
 @media (max-width: 480px) {
   .skills-selection {
-    gap: var(--spacing-sm);
     padding: 0 0 var(--spacing-md);
     --filter-inset: var(--spacing-sm);
   }

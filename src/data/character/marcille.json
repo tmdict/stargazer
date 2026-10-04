@@ -9,7 +9,7 @@
   "range": 6,
   "season": 5,
   "tags": {
-    "cheat-death": [{ "ex": 1 }],
+    "cheat-death": [{ "ex": 1, "mods": ["ally"] }],
     "initial-energy-300": []
   }
 }

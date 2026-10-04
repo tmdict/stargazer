@@ -227,7 +227,7 @@ provide(
       :shared-names="charm.sharedNames"
     />
 
-    <component :is="snippetComp" v-if="snippetComp" class="skill-snippet-host" />
+    <component :is="snippetComp" v-if="snippetComp" />
 
     <SkillKeywordTooltip :lang :container="rootEl" />
   </article>
@@ -297,9 +297,5 @@ provide(
 
 .skill-snippet-anchor {
   /* Teleport target: empty when no snippet present. */
-}
-
-.skill-snippet-host {
-  display: none;
 }
 </style>

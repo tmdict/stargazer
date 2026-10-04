@@ -376,7 +376,7 @@ const {
 .roster-panel {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-lg);
+  gap: var(--picker-row-gap);
   min-height: var(--panel-min-height);
 }
 

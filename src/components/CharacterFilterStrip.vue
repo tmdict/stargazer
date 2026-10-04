@@ -69,7 +69,7 @@ function handleStripClick(e: MouseEvent) {
 .filter-strip {
   display: flex;
   flex-direction: column;
-  gap: var(--spacing-md);
+  gap: var(--picker-row-gap);
 }
 
 .filter-strip.resettable {
@@ -91,10 +91,6 @@ function handleStripClick(e: MouseEvent) {
 }
 
 @media (max-width: 768px) {
-  .filter-strip {
-    gap: var(--spacing-sm);
-  }
-
   .icons-row {
     gap: var(--spacing-sm);
     flex-direction: column;

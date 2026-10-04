@@ -1,7 +1,6 @@
 /* Hero tags: which heroes a pick matches, which skill levels it tints, which
  * chips a hero shows, and the tag link format. Pure and free of the data
- * loader, so the app and the import scripts share one copy of each rule.
- * Relative imports: the scripts load this file without the `@` alias. */
+ * loader, so every surface shares one copy of each rule. */
 
 import {
   SLOT_ORDER,
@@ -9,7 +8,7 @@ import {
   type TagAttachment,
   type TagPick,
   type TagPin,
-} from './types/skill.ts'
+} from '@/lib/types/skill'
 
 const PINS: readonly TagPin[] = [...SLOT_ORDER, 'charm']
 

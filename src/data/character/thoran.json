@@ -9,6 +9,9 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "cheat-death": [{ "skill3": 1 }, { "ex": 1 }]
+    "cheat-death": [
+      { "skill3": 1, "mods": ["self"] },
+      { "ex": 1, "mods": ["self"] }
+    ]
   }
 }
