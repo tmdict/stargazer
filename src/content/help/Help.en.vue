@@ -7,6 +7,7 @@ import HelpTeamsPicture from '@/components/help/HelpTeamsPicture.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import IconDownload from '@/components/ui/IconDownload.vue'
+import IconFilter from '@/components/ui/IconFilter.vue'
 import IconGlobe from '@/components/ui/IconGlobe.vue'
 import IconImage from '@/components/ui/IconImage.vue'
 import IconImagePlus from '@/components/ui/IconImagePlus.vue'
@@ -290,7 +291,7 @@ const SKILL = {
         <h3 class="help-col-h">Side panel tabs</h3>
         <div class="help-rows">
           <span class="help-tab">Characters</span>
-          <p>All heroes, with filters for faction, class and skill type</p>
+          <p>All heroes, with filters for faction, class and mechanics</p>
           <span class="help-tab">Seasonal</span>
           <p>This season's phantimals and artifacts</p>
           <span class="help-tab">Maps</span>
@@ -328,6 +329,14 @@ const SKILL = {
       <li>
         <IconChevronRight :size="18" />
         <span>The pop-up hero list has its own roster menu at the top.</span>
+      </li>
+      <li>
+        <IconFilter :size="18" />
+        <span>
+          <b>Mechanics</b> in the hero list finds heroes by what their skills do, like
+          <b>Summon</b> or <b>Energy Denial</b>.
+          <span class="help-mouse">The <b>+</b> beside it keeps every mechanic in view.</span>
+        </span>
       </li>
       <li>
         <IconGlobe :size="18" />

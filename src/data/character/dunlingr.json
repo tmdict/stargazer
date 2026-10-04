@@ -9,7 +9,7 @@
   "range": 1,
   "season": 2,
   "tags": {
-    "debuff-global": [{ "awakening": 2 }],
+    "debuff": [{ "awakening": 2, "mods": ["global"] }],
     "energy-denial": [{ "awakening": 2 }],
     "heal-denial": [{ "ultimate": 1 }],
     "special-target": [{ "ex": 1 }],

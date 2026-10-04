@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import SkillSectionHeader from './SkillSectionHeader.vue'
+import SkillSectionHeader, { type SlotChip } from './SkillSectionHeader.vue'
 import IconArrowRight from '@/components/ui/IconArrowRight.vue'
 import type { SkillLocaleFile, SlotNumbers } from '@/lib/types/skill'
 import { skillMetaItems } from '@/utils/skillLabels'
@@ -23,7 +23,7 @@ const props = defineProps<{
   // file's `_terms`.
   numbers?: SlotNumbers
   terms?: SkillLocaleFile['_terms']
-  slotTags?: { name: string; label: string }[]
+  slotTags?: SlotChip[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
   highlightLevels?: number[]

@@ -30,7 +30,7 @@ watch(
     v-if="target?.kind === 'hero'"
     :show="open"
     :skill-name="target.slug"
-    :initial-chip="target.chip"
+    :initial-chips="target.chips"
     @close="close"
   />
   <PhantimalModal

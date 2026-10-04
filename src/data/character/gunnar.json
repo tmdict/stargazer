@@ -12,8 +12,7 @@
     "dot": [{ "ultimate": 1 }, { "awakening": 1 }],
     "heal-denial": [{ "awakening": 1 }],
     "invincibility": [{ "ex": 4 }],
-    "temp-buff": [{ "skill3": 1 }],
-    "temp-buff-opening": [{ "skill3": 1 }],
+    "temp-buff": [{ "skill3": 1, "mods": ["opening"] }],
     "tile-effect": [{ "ultimate": 1 }]
   }
 }

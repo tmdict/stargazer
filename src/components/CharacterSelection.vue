@@ -39,8 +39,11 @@ const rosters = useRosters()
 
 // Text search lives in the search overlay (select mode: a picked hero is placed,
 // not navigated to); the panel keeps only the icon filters.
-const { factionFilter, classFilter, damageFilter, selectedTagNames, filteredCharacters } =
-  useCharacterFilters(computed(() => characters.filter(rosters.isPickable)))
+const { factionFilter, classFilter, tagFilter, tagPool, filteredCharacters } = useCharacterFilters(
+  computed(() => characters.filter(rosters.isPickable)),
+)
+
+const inspectChips = computed(() => (tagFilter.value ? [tagFilter.value] : undefined))
 
 // Placement, uniqueness, and removal are page-wide (across every board); on the
 // single Arena board this is identical to a per-board check. A hero is "placed"
@@ -121,17 +124,20 @@ const handleResultSelect = (slug: string) => {
 <template>
   <div v-scroll-chain class="character-selection" :class="{ scrollable }">
     <div class="search-row">
-      <RosterMenu manage @manage="requestTab('rosters')" />
       <SkillSearchTrigger :select="handleResultSelect" />
     </div>
 
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
       v-model:class-filter="classFilter"
-      v-model:damage-filter="damageFilter"
-      v-model:tag-filter="selectedTagNames"
+      v-model:tag-filter="tagFilter"
       :characters
-    />
+      :tag-pool
+    >
+      <template #menus>
+        <RosterMenu manage large @manage="requestTab('rosters')" />
+      </template>
+    </CharacterFilterStrip>
 
     <CharacterGrid>
       <CharacterIcon
@@ -144,9 +150,9 @@ const handleResultSelect = (slug: string) => {
           isCharacterPlaced(character.id) &&
           !synergyCopyAvailable(character.id)
         "
-        :selected-filter="selectedTagNames"
+        :selected-filter="tagFilter?.tag"
         inspectable
-        :inspect-chip="selectedTagNames"
+        :inspect-chips
         @character-click="handleCharacterClick"
       >
         <!-- Placeholders have no levels; their pill is reserved to keep the grid even. -->
@@ -173,17 +179,13 @@ const handleResultSelect = (slug: string) => {
 /* Clear the panel's scrollbar on desktop. */
 .search-row {
   display: flex;
-  align-items: center;
-  gap: var(--spacing-sm);
   padding-right: var(--spacing-lg);
 }
 
-/* Shrinks with its placeholder cut short instead of pushing the row off screen. */
-.search-row :deep(.search-trigger) {
-  min-width: 0;
-}
-
 @media (max-width: 768px) {
+  .character-selection {
+    --filter-inset: var(--spacing-md);
+  }
   .search-row {
     padding: var(--spacing-sm) var(--spacing-md) 0;
   }
@@ -192,13 +194,12 @@ const handleResultSelect = (slug: string) => {
   }
 }
 
-/* Phones: the search box gets the room, the roster name truncates. */
 @media (max-width: 480px) {
+  .character-selection {
+    --filter-inset: var(--spacing-sm);
+  }
   .search-row {
     padding: var(--spacing-sm) var(--spacing-sm) 0;
-  }
-  .search-row :deep(.roster-menu) {
-    --dropdown-trigger-width: 7rem;
   }
 }
 

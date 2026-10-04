@@ -5,15 +5,29 @@ import SkillCharmSection from './SkillCharmSection.vue'
 import SkillKeywordTooltip from './SkillKeywordTooltip.vue'
 import SkillSection from './SkillSection.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
-import { useSkillTags } from '@/composables/useSkillTags'
 import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
+import {
+  chipActive,
+  heroChips,
+  pinnedLevels,
+  toggleChip,
+  toTagQuery,
+  usablePicks,
+} from '@/lib/tags'
 import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
-import { SLOT_ORDER, type TagPin } from '@/lib/types/skill'
+import { SLOT_ORDER, type TagPick, type TagPin } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
-import { getCharmForHero, getSkillCharms, getSkillFile, getSkillNumbers } from '@/utils/dataLoader'
+import {
+  getCharmForHero,
+  getSkillCharms,
+  getSkillFile,
+  getSkillNumbers,
+  loadCharacters,
+} from '@/utils/dataLoader'
 import { formatToCamelCase } from '@/utils/nameFormatting'
-import { appLabel, headingFor, heroDisplayName } from '@/utils/skillLabels'
+import { appLabel, headingFor, heroDisplayName, tagPickLabel } from '@/utils/skillLabels'
+import { loadTagVocabulary } from '@/utils/tagData'
 import { SkillLangKey } from './snippetKeys'
 
 const props = defineProps<{
@@ -21,7 +35,8 @@ const props = defineProps<{
   // Skill-text language for the body text and hero name; slot/chip labels
   // render in the chrome locale (the store).
   lang: SkillLocale
-  initialChip?: string | null
+  // Chips to open on: a hero list's tag filter, the Mechanics guide's picks.
+  initialChips?: readonly TagPick[]
 }>()
 
 setupSkillContentMeta(props.slug, props.lang)
@@ -35,35 +50,37 @@ const inModal = inject(ContentInModalKey, false)
 const locale = computed(
   () => getSkillFile(props.lang, props.slug) ?? getSkillFile('en', props.slug),
 )
-const { perLevel, perCharacter } = useSkillTags(props.slug)
+const tags = loadCharacters().find((c) => c.name === props.slug)?.tags ?? {}
+const vocabulary = loadTagVocabulary()
+const chips = heroChips(tags, vocabulary)
 const numbers = getSkillNumbers(props.slug)
 
 const heroName = computed(() => heroDisplayName(props.slug, props.lang))
 
-const activeChips = ref<Set<string>>(new Set(props.initialChip ? [props.initialChip] : []))
+// A pick the hero has no skill text for would hide every slot (the hero list's
+// Init Energy filter, a pick this hero does not satisfy), so those are left off.
+const picks = ref<readonly TagPick[]>(usablePicks(tags, props.initialChips ?? []))
 
-function toggleChip(tag: string) {
-  const next = new Set(activeChips.value)
-  if (next.has(tag)) next.delete(tag)
-  else next.add(tag)
-  activeChips.value = next
+const chipKey = (chip: TagPick): string => `${chip.tag}:${chip.mods.join(',')}`
+
+function toggle(chip: TagPick) {
+  picks.value = toggleChip(picks.value, chip)
 }
 
 function clearChips() {
-  if (activeChips.value.size > 0) activeChips.value = new Set()
+  if (picks.value.length > 0) picks.value = []
 }
 
 // Chips filter whole slots, not rows: an upgrade line reads only against the
 // levels before it, so a tagged row is never shown alone.
-function applyChips(pin: TagPin, rowCount: number) {
-  const rowTags = Array.from({ length: rowCount }, (_, i) => perLevel(pin, i + 1))
-  const filter = activeChips.value
-  const slotTags = [...new Set(rowTags.flat())].map((t) => ({
-    name: t,
-    label: appLabel(t, appLang.value),
+function applyChips(pin: TagPin) {
+  const filter = usablePicks(tags, picks.value)
+  const slotTags = heroChips(tags, vocabulary, pin).map((chip) => ({
+    label: tagPickLabel(chip, appLang.value),
+    query: toTagQuery(chip),
   }))
-  const highlight = rowTags.flatMap((tags, i) => (tags.some((t) => filter.has(t)) ? [i + 1] : []))
-  return { slotTags, highlight, visible: filter.size === 0 || highlight.length > 0 }
+  const highlight = pinnedLevels(tags, filter, pin)
+  return { slotTags, highlight, visible: filter.length === 0 || highlight.length > 0 }
 }
 
 const sections = computed(() => {
@@ -71,7 +88,7 @@ const sections = computed(() => {
   return SLOT_ORDER.map((slotKey) => {
     const slot = locale.value![slotKey]
     if (!slot) return null
-    const { slotTags, highlight, visible } = applyChips(slotKey, slot.d.length)
+    const { slotTags, highlight, visible } = applyChips(slotKey)
     if (!visible) return null
     return {
       slotKey,
@@ -94,7 +111,7 @@ const charm = computed(() => {
   const dict = getSkillCharms(props.lang) ?? getSkillCharms('en')
   const texts = dict?.charms[entry.slug]
   if (!dict || !texts) return null
-  const { slotTags, highlight, visible } = applyChips('charm', texts.length)
+  const { slotTags, highlight, visible } = applyChips('charm')
   if (!visible) return null
   const sharedNames = entry.heroes
     .filter((h) => h !== props.slug)
@@ -147,7 +164,7 @@ provide(
 <template>
   <div v-if="!locale" class="skill-empty">No skill data available for this character.</div>
   <article v-else ref="rootEl" class="skill-sections">
-    <div class="skill-header" :class="{ resettable: activeChips.size > 0 }" @click="clearChips">
+    <div class="skill-header" :class="{ resettable: picks.length > 0 }" @click="clearChips">
       <div class="skill-title-row">
         <h1 class="skill-hero-name">{{ heroName }}</h1>
         <!-- Page-only: the modal hosts its own globe in the header cluster. -->
@@ -161,16 +178,16 @@ provide(
         />
       </div>
 
-      <div v-if="perCharacter.length > 0" class="skill-chips">
+      <div v-if="chips.length > 0" class="skill-chips">
         <button
-          v-for="tag in perCharacter"
-          :key="tag"
+          v-for="chip in chips"
+          :key="chipKey(chip)"
           type="button"
           class="skill-chip"
-          :class="{ 'is-active': activeChips.has(tag) }"
-          @click.stop="toggleChip(tag)"
+          :class="{ 'is-active': chipActive(picks, chip) }"
+          @click.stop="toggle(chip)"
         >
-          {{ appLabel(tag, appLang) }}
+          {{ tagPickLabel(chip, appLang) }}
         </button>
       </div>
     </div>

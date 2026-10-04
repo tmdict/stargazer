@@ -3,15 +3,21 @@
    Rosters tab edits. The Characters tab and the on-grid popup add a Manage
    entry that jumps to that tab; the popup uses the dark variant, whose list
    stays inside the popup so hovering it never trips the popup's mouse-leave
-   dismissal. */
+   dismissal. In the side panels the list floats, since a panel scrolls and
+   can be shorter than the list. */
 
 import { computed } from 'vue'
 
 import DropdownSelect, { type DropdownItem } from '@/components/ui/DropdownSelect.vue'
+import IconUser from '@/components/ui/IconUser.vue'
 import { useI18nStore } from '@/stores/i18n'
 import { useRosters } from '@/stores/rosters'
 
-const { manage = false, dark = false } = defineProps<{ manage?: boolean; dark?: boolean }>()
+const { manage = false, dark = false } = defineProps<{
+  manage?: boolean
+  dark?: boolean
+  large?: boolean
+}>()
 
 const emit = defineEmits<{ manage: [] }>()
 
@@ -36,6 +42,8 @@ const items = computed((): DropdownItem[] => [
   <DropdownSelect
     class="roster-menu"
     :variant="dark ? 'dark' : 'pill'"
+    :large
+    :floating="!dark"
     :label="rosters.active?.name ?? i18n.t('app.all-heroes')"
     :title="rosters.active?.name"
     :lit="!!rosters.active"
@@ -43,7 +51,11 @@ const items = computed((): DropdownItem[] => [
     :action="manage ? i18n.t('app.manage-rosters') : undefined"
     @select="rosters.setActive($event === ALL_HEROES ? null : $event)"
     @action="emit('manage')"
-  />
+  >
+    <template v-if="large" #icon>
+      <IconUser :size="15" />
+    </template>
+  </DropdownSelect>
 </template>
 
 <style scoped>
@@ -51,6 +63,10 @@ const items = computed((): DropdownItem[] => [
    spans the palette like the search box. */
 .roster-menu {
   --dropdown-trigger-width: 10rem;
+}
+
+.roster-menu.large {
+  --dropdown-trigger-width: var(--dropdown-large-width);
 }
 
 .roster-menu.dark {
