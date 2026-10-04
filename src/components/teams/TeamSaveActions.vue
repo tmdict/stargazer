@@ -216,7 +216,7 @@ const tipText = computed((): string => {
 
 .name-popover-input {
   font: inherit;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--field-min-font-size));
   padding: 6px 8px;
   border: 1.5px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
@@ -227,14 +227,6 @@ const tipText = computed((): string => {
 .name-popover-input:focus {
   outline: none;
   border-color: var(--color-primary);
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. */
-@media (pointer: coarse) {
-  .name-popover-input {
-    font-size: 1rem;
-  }
 }
 
 .name-popover-actions {

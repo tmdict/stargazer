@@ -321,20 +321,12 @@ const tipText = computed((): string =>
   flex: 1;
   min-width: 0;
   font: inherit;
-  font-size: 0.85rem;
+  font-size: max(0.85rem, var(--field-min-font-size));
   padding: 5px 12px;
   border: 1.5px solid var(--color-border-primary);
   border-radius: 999px;
   background: var(--color-bg-white);
   color: var(--color-text-primary);
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. */
-@media (pointer: coarse) {
-  .panel-search {
-    font-size: 1rem;
-  }
 }
 
 .panel-search:focus {

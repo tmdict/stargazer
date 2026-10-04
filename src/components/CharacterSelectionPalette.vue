@@ -144,20 +144,12 @@ function handleEnter(event: KeyboardEvent) {
   margin: 0 4px 8px;
   padding: 4px 8px;
   font: inherit;
-  font-size: 12px;
+  font-size: max(12px, var(--field-min-font-size));
   color: #fff;
   background: rgba(255, 255, 255, 0.08);
   border: 1px solid rgba(255, 255, 255, 0.15);
   border-radius: 6px;
   transition: border-color 0.15s ease;
-}
-
-/* 16px floor: iOS zooms the page when a smaller field gains focus, and the
-   zoom outlives the field. */
-@media (pointer: coarse) {
-  .search-input {
-    font-size: 1rem;
-  }
 }
 
 .search-input::placeholder {
