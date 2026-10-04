@@ -6,12 +6,11 @@ export interface TabItem {
   // Replaces `label` on mobile, where a full strip must fit the sheet's width.
   shortLabel?: string
   badge?: number | string
-  hideMobile?: boolean
 }
 </script>
 
 <script setup lang="ts" generic="T extends string">
-import { computed, onMounted, onUnmounted, ref, watchEffect } from 'vue'
+import { computed } from 'vue'
 
 const { tabs, ariaId } = defineProps<{
   tabs: TabItem[]
@@ -23,39 +22,14 @@ const active = defineModel<T>({ required: true })
 
 const showStrip = computed(() => tabs.length > 1)
 
-// A strip whose hideMobile tabs leave at most one visible button is pure chrome
-// on mobile; hide it entirely there (CSS, so SSG markup stays viewport-agnostic).
-const stripHiddenOnMobile = computed(() => tabs.filter((t) => !t.hideMobile).length <= 1)
-
 // Keys come from the host's own tabs array, so they satisfy the host's model type.
 const select = (tab: TabItem) => {
   active.value = tab.key as T
 }
-
-// hideMobile hides a tab's button with CSS, but the ACTIVE tab must never be a
-// hidden one (no highlighted button, and its pane would stay live); when the
-// viewport crosses into mobile, fall back to the first visible tab.
-const isMobile = ref(false)
-let mq: MediaQueryList | undefined
-const syncMobile = () => {
-  isMobile.value = mq?.matches ?? false
-}
-onMounted(() => {
-  mq = window.matchMedia('(max-width: 768px)')
-  syncMobile()
-  mq.addEventListener('change', syncMobile)
-})
-onUnmounted(() => mq?.removeEventListener('change', syncMobile))
-watchEffect(() => {
-  if (!isMobile.value) return
-  if (!tabs.find((t) => t.key === active.value)?.hideMobile) return
-  const fallback = tabs.find((t) => !t.hideMobile)
-  if (fallback) select(fallback)
-})
 </script>
 
 <template>
-  <div v-if="showStrip" class="tab-bar" :class="{ 'mobile-hidden': stripHiddenOnMobile }">
+  <div v-if="showStrip" class="tab-bar">
     <div class="tab-buttons" role="tablist">
       <button
         v-for="tab in tabs"
@@ -65,7 +39,7 @@ watchEffect(() => {
         role="tab"
         :aria-selected="active === tab.key"
         :aria-controls="ariaId ? `${ariaId}-panel-${tab.key}` : undefined"
-        :class="['tab-btn', { active: active === tab.key, 'hide-mobile': tab.hideMobile }]"
+        :class="['tab-btn', { active: active === tab.key }]"
         @click="select(tab)"
       >
         <span :class="{ 'tab-label-long': tab.shortLabel }">{{ tab.label }}</span>
@@ -166,8 +140,6 @@ watchEffect(() => {
 }
 
 @media (max-width: 768px) {
-  .hide-mobile,
-  .tab-bar.mobile-hidden,
   .tab-label-long {
     display: none;
   }
@@ -224,10 +196,12 @@ watchEffect(() => {
 
 /* Phones: the strip stays one row (a wrapped tab drops below the collapsed
    sheet), so tabs share the width and pad tighter instead of keeping a
-   minimum width. */
+   minimum width. The row needs its own floor lifted too, or its tabs' full
+   widths hold it wider than a narrow screen. */
 @media (max-width: 480px) {
   .tab-buttons {
     flex-wrap: nowrap;
+    min-width: 0;
   }
 
   .tab-btn {

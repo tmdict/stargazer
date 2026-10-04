@@ -9,6 +9,6 @@
   "range": 2,
   "season": 6,
   "tags": {
-    "cheat-death": [{ "awakening": 1 }]
+    "cheat-death": [{ "awakening": 1, "mods": ["self"] }]
   }
 }

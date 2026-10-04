@@ -284,12 +284,13 @@ defineExpose({
       :default-svg-height="defaultSvgHeight"
     />
 
-    <!-- Debug layer (Debug tab only) -->
+    <!-- Debug layer (Debug tab only). Capped like the tiles layer, or it
+         widens the page on a screen narrower than the board. -->
     <svg
       v-if="showDebug"
       :width="600 * ctx.hexScale"
       :height="defaultSvgHeight * ctx.hexScale"
-      style="position: absolute; pointer-events: none"
+      style="position: absolute; max-width: 100%; pointer-events: none"
     >
       <g>
         <PathfindingDebug :debug-panel-ref="props.debugPanelRef" />

@@ -222,7 +222,7 @@ function toggleTag(pick: TagPick) {
   display: flex;
   flex-wrap: wrap;
   flex-basis: 100%;
-  gap: 6px;
+  gap: var(--spacing-sm) var(--spacing-md);
 }
 
 @media (max-width: 768px) {
