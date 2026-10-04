@@ -1,15 +1,20 @@
 <script setup lang="ts">
+import { computed } from 'vue'
+
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import HelpBoard from '@/components/help/HelpBoard.vue'
 import HelpToggle from '@/components/help/HelpToggle.vue'
-import IconCopy from '@/components/ui/IconCopy.vue'
-import IconDownload from '@/components/ui/IconDownload.vue'
-import IconLink from '@/components/ui/IconLink.vue'
+import DropdownSelect from '@/components/ui/DropdownSelect.vue'
+import FilterChip from '@/components/ui/FilterChip.vue'
+import IconFilter from '@/components/ui/IconFilter.vue'
+import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useRouteLocale } from '@/composables/useRouteLocale'
-import { appLabel } from '@/utils/skillLabels'
+import { matchesPick } from '@/lib/tags'
+import { appLabel, modifierLabel, tagLabel } from '@/utils/skillLabels'
+import { loadTagGroups } from '@/utils/tagData'
 
 defineProps<{
-  kind: 'add' | 'skills' | 'move' | 'remove' | 'target' | 'share'
+  kind: 'add' | 'skills' | 'move' | 'remove' | 'target' | 'mechanics'
   // The skills window's text, from the content file so it is in the page's
   // language. `hero` is the portrait slug.
   skill?: { hero: string; heroName: string; title: string; meta: string; text: string }
@@ -19,6 +24,17 @@ const lang = useRouteLocale()
 const label = (key: string): string => appLabel(key, lang.value)
 
 const POPUP_HEROES = ['frieren', 'alna', 'rhys', 'gerda', 'thoran']
+
+// The mechanics picture is a real filter, so its count and heroes stay true.
+const MECHANIC_TAG = 'temp-buff'
+const MECHANIC_MOD = 'opening'
+const mechanicHeroes = computed(() => {
+  const pick = { tag: MECHANIC_TAG, mods: [MECHANIC_MOD] }
+  const tagged = loadTagGroups().find((group) => group.tag === MECHANIC_TAG)?.characters ?? []
+  return tagged.filter((hero) => matchesPick(hero.tags, pick))
+})
+// The real filter has no + on phones.
+const narrow = useNarrowViewport()
 </script>
 
 <template>
@@ -106,23 +122,36 @@ const POPUP_HEROES = ['frieren', 'alna', 'rhys', 'gerda', 'thoran']
       </span>
     </template>
 
-    <span v-else-if="kind === 'share'" class="help-pic-buttons">
-      <span class="control-btn"
-        ><IconLink :size="14" class="btn-icon" /><span class="btn-text">{{
-          label('link')
-        }}</span></span
-      >
-      <span class="control-btn"
-        ><IconCopy :size="14" class="btn-icon" /><span class="btn-text">{{
-          label('copy')
-        }}</span></span
-      >
-      <span class="control-btn"
-        ><IconDownload :size="14" class="btn-icon" /><span class="btn-text">{{
-          label('download')
-        }}</span></span
-      >
-    </span>
+    <div v-else-if="kind === 'mechanics'" class="help-pic-stack help-pic-filter">
+      <div class="help-pic-list">
+        <DropdownSelect
+          large
+          lit
+          clearable
+          :label="tagLabel(MECHANIC_TAG, lang)"
+          :segment="narrow ? undefined : '+'"
+        >
+          <template #icon>
+            <IconFilter :size="15" />
+          </template>
+        </DropdownSelect>
+        <FilterChip
+          large
+          active
+          :label="modifierLabel(MECHANIC_MOD, lang)"
+          :count="mechanicHeroes.length"
+        />
+      </div>
+      <div class="help-pic-list">
+        <GuidePortrait
+          v-for="hero in mechanicHeroes.slice(0, 5)"
+          :key="hero.name"
+          :slug="hero.name"
+          :lang
+          :size="36"
+        />
+      </div>
+    </div>
   </div>
 </template>
 
@@ -156,10 +185,18 @@ const POPUP_HEROES = ['frieren', 'alna', 'rhys', 'gerda', 'thoran']
   width: 112px;
 }
 
-.help-pic-list,
-.help-pic-buttons {
+.help-pic-list {
   display: flex;
   gap: 8px;
+}
+
+/* The filter's controls are drawn for the pickers' light panel, and at full
+   size the row is wider than a narrow card. */
+.help-pic-filter {
+  padding: 12px 14px;
+  background: var(--color-bg-primary);
+  border-radius: var(--radius-medium);
+  zoom: 0.8;
 }
 
 .help-pic-stack {

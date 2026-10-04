@@ -124,6 +124,10 @@
   --dropdown-large-width: 12.5rem;
   --dropdown-sub-indent: 18px;
 
+  /* The step between the control rows of a hero list panel (search box,
+     dropdowns, filter icons): one value, so they are evenly spaced. */
+  --picker-row-gap: var(--spacing-lg);
+
   /* The skill popups (hero, phantimal), and the search overlay once its
      detail pane is open. */
   --skill-popup-width: 960px;
@@ -163,6 +167,7 @@
 
 @media (max-width: 768px) {
   :root {
+    --picker-row-gap: var(--spacing-md);
     --stack-gap: var(--spacing-md);
     --reading-title-size: 22px;
     --reading-heading-size: 17px;
