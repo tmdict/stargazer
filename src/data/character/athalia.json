@@ -9,6 +9,6 @@
   "range": 1,
   "season": 3,
   "tags": {
-    "cheat-death": [{ "ultimate": 1 }]
+    "cheat-death": [{ "ultimate": 1, "mods": ["self"] }]
   }
 }

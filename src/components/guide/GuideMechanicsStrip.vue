@@ -11,7 +11,7 @@ import { openingPicks } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { AppLocale } from '@/lib/types/i18n'
 import type { TagPick } from '@/lib/types/skill'
-import { appLabel, tagPickLabel } from '@/utils/skillLabels'
+import { appLabel, curatedHeroName, tagPickLabel } from '@/utils/skillLabels'
 
 const props = defineProps<{
   picks: readonly TagPick[]
@@ -52,7 +52,14 @@ function handleStripClick(e: MouseEvent) {
       <span class="pick-remove" aria-hidden="true"><IconClose :size="9" /></span>
     </button>
     <span v-if="picks.length > 1" class="faces">
-      <button v-for="hero in heroes" :key="hero.id" type="button" class="face" @click="open(hero)">
+      <button
+        v-for="hero in heroes"
+        :key="hero.id"
+        type="button"
+        class="face"
+        :aria-label="curatedHeroName(hero.name, lang)"
+        @click="open(hero)"
+      >
         <GuidePortrait :slug="hero.name" :lang :size="30" />
       </button>
     </span>

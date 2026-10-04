@@ -9,7 +9,7 @@
   "range": 1,
   "season": 0,
   "tags": {
-    "cheat-death": [{ "ultimate": 1 }],
+    "cheat-death": [{ "ultimate": 1, "mods": ["ally"] }],
     "heal-denial": [{ "awakening": 1 }],
     "special-target": [{ "ex": 1 }],
     "temp-buff": [{ "awakening": 2 }],

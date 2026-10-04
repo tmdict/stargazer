@@ -82,8 +82,8 @@ const getInitialTab = (): string => {
 
 const activeTab = ref(getInitialTab())
 
-// Side panel tabs. Debug is desktop-only (hidden on mobile to save space; the arena
-// is selectable in the Map Editor tab).
+// Side panel tabs. Debug has no entry point on the page: `?t=debug` opens it,
+// and its tab is in the strip only while it is open.
 const tabs = computed(() => [
   {
     key: 'characters',
@@ -93,7 +93,7 @@ const tabs = computed(() => [
   { key: 'seasonal', label: i18nStore.t('app.seasonal') },
   { key: 'mapEditor', label: i18nStore.t('app.maps') },
   { key: 'rosters', label: i18nStore.t('app.rosters') },
-  { key: 'debug', label: i18nStore.t('app.debug'), hideMobile: true },
+  ...(activeTab.value === 'debug' ? [{ key: 'debug', label: i18nStore.t('app.debug') }] : []),
 ])
 
 // Mobile: the side panel is a pull-up bottom sheet over the grid.

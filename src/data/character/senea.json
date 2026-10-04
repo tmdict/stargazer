@@ -9,7 +9,7 @@
   "range": 20,
   "season": 8,
   "tags": {
-    "cheat-death": [{ "ex": 3 }],
+    "cheat-death": [{ "ex": 3, "mods": ["self"] }],
     "initial-energy-300": []
   }
 }

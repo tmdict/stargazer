@@ -74,6 +74,7 @@ defineSlots<{
 const i18n = useI18nStore()
 
 const rootRef = ref<HTMLElement>()
+const triggerRef = ref<HTMLElement>()
 const listRef = ref<HTMLElement>()
 const { open, hide, toggle, onMouseEnter, onMouseLeave, onTouchStart } = useDropdown({
   rootRef,
@@ -95,7 +96,16 @@ const leave = (): void => {
   hoverPaused = false
   onMouseLeave()
 }
-watch(open, (isOpen) => isOpen && emit('open'))
+
+const focusTrigger = (): void => triggerRef.value?.focus({ preventScroll: true })
+
+// A closing list takes its rows off the page, and focus on one of them would
+// fall to <body>, so the trigger takes it. Focus a click has already moved
+// elsewhere stays there.
+watch(open, (isOpen) => {
+  if (isOpen) emit('open')
+  else if (listRef.value?.contains(document.activeElement)) focusTrigger()
+})
 
 /* A floating list sits at the end of <body>, outside the Tab order. Tab from
    the dropdown's last control enters it, and Tab or Shift+Tab off either end
@@ -139,6 +149,8 @@ const runAction = (): void => {
 const clear = (): void => {
   hoverPaused = true
   hide()
+  // The clear button is about to go, with the focus a press gave it.
+  focusTrigger()
   emit('clear')
 }
 
@@ -161,6 +173,7 @@ const pressSegment = (): void => {
     <!-- Hover opens from the trigger as well as the root: coming back from the
          segment, the pointer never left the root. -->
     <button
+      ref="triggerRef"
       type="button"
       class="trigger"
       :class="{ lit, clearing }"

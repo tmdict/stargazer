@@ -93,11 +93,12 @@ const SKILL = {
         </p>
       </li>
       <li>
-        <HelpBasicsPicture kind="share" />
-        <h3>Share your grid</h3>
+        <HelpBasicsPicture kind="mechanics" />
+        <h3>Filter by mechanic</h3>
         <p>
-          <b>Link</b> copies a link to your grid. <b>Copy</b> and <b>Download</b> save it as a
-          picture.
+          Pick an effect in <b>Mechanics</b>, above the hero list, like <b>Summon</b> or
+          <b>Energy Denial</b>. Some narrow further, like <b>Temp Buff</b> to <b>Opening</b>.
+          <span class="help-mouse"><b>+</b> lays every mechanic out as buttons.</span>
         </p>
       </li>
     </ol>
@@ -322,9 +323,10 @@ const SKILL = {
       </li>
       <li>
         <IconLink :size="18" />
-        <span
-          >A shared link includes everything on the grid, so friends see exactly what you see.</span
-        >
+        <span>
+          <b>Link</b> copies a link to everything on your grid, so friends see exactly what you see.
+          <b>Copy</b> and <b>Download</b> save the grid as a picture.
+        </span>
       </li>
       <li>
         <IconChevronRight :size="18" />
@@ -333,9 +335,8 @@ const SKILL = {
       <li>
         <IconFilter :size="18" />
         <span>
-          <b>Mechanics</b> in the hero list finds heroes by what their skills do, like
-          <b>Summon</b> or <b>Energy Denial</b>.
-          <span class="help-mouse">The <b>+</b> beside it keeps every mechanic in view.</span>
+          The <b>Guide</b> has a Mechanics page with every hero for each mechanic. Pick two or more
+          to see who has them all.
         </span>
       </li>
       <li>
@@ -358,6 +359,13 @@ const SKILL = {
         <span>
           <b>Clear</b> empties the grids but keeps the team you loaded, so <b>Save</b> still updates
           it.
+        </span>
+      </li>
+      <li>
+        <IconChevronRight :size="18" />
+        <span>
+          Add <kbd>?t=debug</kbd> to the Arena's address for a hidden <b>Debug</b> tab, which draws
+          the path each hero takes to its target.
         </span>
       </li>
     </ul>
