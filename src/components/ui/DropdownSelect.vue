@@ -294,6 +294,7 @@ const pressSegment = (): void => {
   left: 0;
   min-width: 100%;
   max-width: 16rem;
+  padding: var(--dropdown-list-padding);
   /* Scrolls only past the viewport (usePanelFit). */
   overflow-x: hidden;
   overflow-y: auto;
@@ -312,7 +313,6 @@ const pressSegment = (): void => {
   min-width: 0;
 }
 
-/* The owner's content sets its own width. */
 .list.custom {
   max-width: calc(100vw - 2 * var(--spacing-sm));
 }
@@ -321,6 +321,11 @@ const pressSegment = (): void => {
 
 .pill {
   font-size: var(--control-font-size);
+}
+
+.list.pill {
+  --dropdown-row-hover: var(--color-bg-primary);
+  background: var(--color-bg-white);
 }
 
 .pill .trigger {
@@ -357,7 +362,6 @@ const pressSegment = (): void => {
 
 .split {
   --dropdown-segment-width: 34px;
-  /* What the segment and its rule take from the trigger's end. */
   --dropdown-segment-reach: calc(var(--dropdown-segment-width) + var(--pill-large-border));
 }
 
@@ -429,7 +433,7 @@ const pressSegment = (): void => {
 }
 
 .tab .item {
-  padding: var(--spacing-md) var(--spacing-lg);
+  padding-block: var(--spacing-md);
 }
 
 /* ---- dark: matches the popup's translucent search box ---- */

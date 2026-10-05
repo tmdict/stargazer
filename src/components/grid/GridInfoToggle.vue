@@ -333,7 +333,7 @@ const panelShift = usePanelClamp(
   border: 1px solid var(--color-border-primary);
   border-radius: var(--radius-medium);
   box-shadow: var(--shadow-float);
-  padding: var(--spacing-sm);
+  padding: var(--dropdown-list-padding);
   z-index: var(--z-dropdown);
   min-width: max-content;
 }
@@ -354,7 +354,7 @@ const panelShift = usePanelClamp(
   align-items: center;
   gap: var(--spacing-sm);
   padding: var(--spacing-xs) var(--spacing-md);
-  border-radius: var(--radius-small);
+  border-radius: var(--dropdown-row-radius);
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--color-text-secondary);
@@ -364,12 +364,12 @@ const panelShift = usePanelClamp(
 }
 
 .row:hover {
-  background: var(--color-bg-tertiary);
+  background: var(--dropdown-row-hover);
   color: var(--color-primary);
 }
 
 .row.sub {
-  margin-left: var(--dropdown-sub-indent);
+  padding-left: calc(var(--spacing-md) + var(--dropdown-sub-indent));
 }
 
 .row.dim {

@@ -97,8 +97,6 @@ function handleStripClick(e: MouseEvent) {
     align-items: stretch;
   }
 
-  /* The icon rows are centred and need no inset. A picker that runs edge to
-     edge on phones passes the inset of its other rows as --filter-inset. */
   .menus-row {
     padding: 0 var(--filter-inset, 0);
   }
