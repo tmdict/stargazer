@@ -605,7 +605,6 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
   width: min(var(--sso-width), 94vw);
 }
 
-/* Only the box grows where the pane exists: type and rows keep their size. */
 @media (min-width: 1220px) {
   .sso-backdrop {
     padding-top: 8vh;
