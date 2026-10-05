@@ -94,7 +94,6 @@ const fit = defineModel<StitchFit>('fit', { required: true })
   border: none;
   background: var(--color-bg-white);
   color: var(--color-primary);
-  /* The fields' size, so the row's text matches. */
   font-size: max(0.85rem, var(--field-min-font-size));
   font-weight: 600;
   padding: var(--spacing-xs) var(--spacing-md);

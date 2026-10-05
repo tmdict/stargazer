@@ -190,8 +190,6 @@ const narrow = useNarrowViewport()
   gap: 8px;
 }
 
-/* The filter's controls are drawn for the pickers' light panel, and at full
-   size the row is wider than a narrow card. */
 .help-pic-filter {
   padding: 12px 14px;
   background: var(--color-bg-primary);
