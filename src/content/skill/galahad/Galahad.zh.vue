@@ -7,6 +7,11 @@ import { gridStyles } from './Galahad.data'
 
 <template>
   <SkillSnippets>
+    <template #ultimate>
+      <SkillSnippet title-key="summon">
+        <p>加拉哈德的残影视为召唤物。</p>
+      </SkillSnippet>
+    </template>
     <template #ex>
       <SkillSnippet title-key="guide-targeting">
         <p>
@@ -26,7 +31,9 @@ import { gridStyles } from './Galahad.data'
         <p>
           加拉哈德只会选择本体角色为目标，跳过召唤物和分身，例如蝎子的分身或双子的副体（粉色双子）。
         </p>
-        <p>加拉哈德的残影以及被标记的友方英雄的残影均视为召唤物。</p>
+      </SkillSnippet>
+      <SkillSnippet title-key="summon">
+        <p>被标记的友方英雄的残影视为召唤物。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

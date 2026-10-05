@@ -6,12 +6,12 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="guide-companion">
+      <SkillSnippet title-key="summon">
         <p>普鲁斯托在备战阶段放置的第一个幻象不是召唤物。</p>
       </SkillSnippet>
     </template>
     <template #ex>
-      <SkillSnippet title-key="guide-companion">
+      <SkillSnippet title-key="summon">
         <p>当第一个幻象被击败后生成的第二个幻象是召唤物。</p>
       </SkillSnippet>
     </template>
