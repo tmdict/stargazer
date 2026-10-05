@@ -37,8 +37,9 @@ defineProps<{
   justify-content: space-between;
   gap: var(--spacing-lg);
   width: 100%;
-  padding: var(--spacing-sm) var(--spacing-lg);
+  padding: var(--spacing-sm) var(--spacing-md);
   border: none;
+  border-radius: var(--dropdown-row-radius);
   background: transparent;
   color: var(--color-text-secondary);
   font: inherit;
@@ -51,7 +52,7 @@ defineProps<{
 }
 
 .row:hover {
-  background: var(--color-bg-tertiary);
+  background: var(--dropdown-row-hover);
   color: var(--color-primary);
 }
 
@@ -71,8 +72,18 @@ defineProps<{
 }
 
 .row.action {
-  border-top: 1px solid var(--color-border-light);
+  position: relative;
+  margin-top: calc(2 * var(--spacing-xs) + 1px);
   color: var(--color-primary);
+}
+
+.row.action::before {
+  content: '';
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--spacing-xs));
+  left: 0;
+  border-top: 1px solid var(--color-border-light);
 }
 
 .label {
@@ -82,7 +93,7 @@ defineProps<{
 }
 
 .sub {
-  padding-left: calc(var(--spacing-lg) + var(--dropdown-sub-indent));
+  padding-left: calc(var(--spacing-md) + var(--dropdown-sub-indent));
 }
 
 .sub .label::before {

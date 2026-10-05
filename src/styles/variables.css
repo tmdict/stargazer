@@ -126,9 +126,12 @@
   --pill-large-padding: 14px;
 
   /* Dropdowns: the width of a large pill, so the ones in a row match, and the
-     indent of a row nested under another (DropdownRow, the Grid Info list). */
+     values a list's rows share with the Grid Info list. */
   --dropdown-large-width: 12.5rem;
   --dropdown-sub-indent: 18px;
+  --dropdown-list-padding: var(--spacing-sm);
+  --dropdown-row-radius: var(--radius-small);
+  --dropdown-row-hover: var(--color-bg-secondary);
 
   /* The step between the control rows of a hero list panel (search box,
      dropdowns, filter icons): one value, so they are evenly spaced. */

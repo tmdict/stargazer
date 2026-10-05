@@ -186,28 +186,26 @@ function toggleTag(pick: TagPick) {
   display: contents;
 }
 
-/* A minimum, not a width: a long tag name widens the pill instead of being
-   cut short. */
 .menu {
   --dropdown-trigger-min-width: var(--dropdown-large-width);
 }
 
-/* "All" spans both columns: on the far edge its count would sit a whole
-   panel away from the word. */
 .all {
   justify-content: flex-start;
   gap: 6px;
-  border-bottom: 1px solid var(--color-border-light);
 }
 
 .items {
   columns: 2;
-  column-gap: 0;
+  column-gap: calc(2 * var(--dropdown-list-padding) + 1px);
   column-rule: 1px solid var(--color-border-light);
+  margin-top: var(--spacing-xs);
+  padding-top: var(--spacing-xs);
+  border-top: 1px solid var(--color-border-light);
 }
 
 .item {
-  min-width: 13.4rem;
+  min-width: 12.9rem;
   break-inside: avoid;
 }
 
@@ -226,9 +224,8 @@ function toggleTag(pick: TagPick) {
 }
 
 @media (max-width: 768px) {
-  /* Less the list's two borders. */
   .menu-body {
-    width: calc(100vw - 2 * var(--spacing-sm) - 2px);
+    width: calc(100vw - 2 * var(--spacing-sm) - 2px - 2 * var(--dropdown-list-padding));
   }
 
   .items {

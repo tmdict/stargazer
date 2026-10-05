@@ -226,14 +226,10 @@ function open(hero: CharacterType) {
     0 0 0 5px var(--color-accent);
 }
 
-/* The icon's own dimmed state is tuned for the light picker; on this dark
-   panel a left-out hero has to recede further. */
 .faces :deep(.character-display.dimmed) {
   opacity: 0.25;
 }
 
-/* The icon's text color (#333) is for the light pickers; the energy value
-   under the Init Energy card's icons is re-lit for this dark panel. */
 .faces :deep(.character-energy) {
   padding-right: 0;
   font-size: 0.7rem;
