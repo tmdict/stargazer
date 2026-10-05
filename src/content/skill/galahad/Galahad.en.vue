@@ -7,6 +7,11 @@ import { gridStyles } from './Galahad.data'
 
 <template>
   <SkillSnippets>
+    <template #ultimate>
+      <SkillSnippet title-key="summon">
+        <p>Galahad's shadow is considered a summon.</p>
+      </SkillSnippet>
+    </template>
     <template #ex>
       <SkillSnippet title-key="guide-targeting">
         <p>
@@ -33,7 +38,9 @@ import { gridStyles } from './Galahad.data'
           Galahad will only target main characters, skipping summons and clones such as Phraesto's
           clone or Elijah &amp; Lailah's Lailah (pink twin).
         </p>
-        <p>Both Galahad's shadow, as well as the marked ally's shadow, are considered summons.</p>
+      </SkillSnippet>
+      <SkillSnippet title-key="summon">
+        <p>The marked ally's shadow is considered a summon.</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>
