@@ -6,12 +6,12 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="guide-companion">
+      <SkillSnippet title-key="summon">
         <p>Phraesto's first clone placed during battle preparation is not a summon.</p>
       </SkillSnippet>
     </template>
     <template #ex>
-      <SkillSnippet title-key="guide-companion">
+      <SkillSnippet title-key="summon">
         <p>Phraesto's second clone created when the first dies is a summon.</p>
       </SkillSnippet>
     </template>
