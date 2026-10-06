@@ -6,7 +6,12 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #skill2>
-      <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
+      <SkillSnippet title-key="temp-buff">
+        <p>
+          The Honor Arena's ATK bonus is a temporary buff for all allies while Mikola's side
+          controls the arena.
+        </p>
+      </SkillSnippet>
     </template>
   </SkillSnippets>
 </template>

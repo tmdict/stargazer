@@ -32,7 +32,6 @@ const props = defineProps<{
   // Tag chips the skills open on (a host's tag filter, the Mechanics guide's
   // picks). Unset opens the full page.
   inspectChips?: readonly TagPick[]
-  // The hero's total starting energy, under the portrait.
   showEnergy?: boolean
 }>()
 

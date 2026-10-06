@@ -9,7 +9,7 @@
   "range": 1,
   "season": 4,
   "tags": {
-    "debuff": [{ "ex": 1, "mods": ["global"] }],
+    "debuff": [{ "ex": 1, "mods": ["eryndor", "global"] }],
     "energy-battery": [{ "ex": 3 }]
   }
 }

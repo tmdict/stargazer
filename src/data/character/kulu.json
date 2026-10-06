@@ -9,6 +9,7 @@
   "range": 6,
   "season": 4,
   "tags": {
+    "debuff": [{ "ex": 1, "mods": ["global"] }],
     "tile-effect": [{ "skill2": 1 }]
   }
 }

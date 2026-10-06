@@ -6,7 +6,11 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
+      <SkillSnippet title-key="temp-buff">
+        <p>
+          The fertile ground's ATK and DEF bonuses are a temporary buff for allies standing on it.
+        </p>
+      </SkillSnippet>
     </template>
     <template #ex>
       <SkillSnippet title-key="temp-buff" body-key="temp-buff-definition">
