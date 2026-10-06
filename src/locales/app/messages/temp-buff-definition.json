@@ -1,0 +1,4 @@
+{
+  "en": "A temporary stat buff is one that ends during the battle. It either runs on a timer or lasts only while its condition holds, such as standing in an area. It has to raise a stat like ATK, DEF, Haste or ATK SPD. Shields, control immunity and bonuses to damage dealt or damage taken don't count.",
+  "zh": "非永久属性提升效果是指会在战斗中结束的属性增益，可以是限时效果，也可以是只在条件满足时持续的效果，例如站在某个区域内。它必须提高攻击力、护甲魔抗、急速或攻击速度等属性。护盾、免控以及造成伤害或受到伤害的加成不计入。"
+}

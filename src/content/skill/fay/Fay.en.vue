@@ -5,12 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
-        <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
-        </p>
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff">
+        <p>The DEF buff only reaches allies within 1 tile of the enemy hit by the gem.</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

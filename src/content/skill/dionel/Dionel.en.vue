@@ -5,10 +5,8 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
-        <p>祖娅在备战阶段放置的2个激光塔不算作召唤物。她的机枪塔算作召唤物。</p>
-      </SkillSnippet>
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff" body-key="temp-buff-definition" />
     </template>
   </SkillSnippets>
 </template>

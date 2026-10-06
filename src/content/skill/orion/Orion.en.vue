@@ -5,11 +5,11 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff" body-key="temp-buff-definition">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          Each ally can become a Supporter only once. More buffs from the same ally do not extend
+          the enchantment again.
         </p>
       </SkillSnippet>
     </template>

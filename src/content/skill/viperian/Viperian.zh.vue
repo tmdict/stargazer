@@ -5,12 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
-        <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
-        </p>
+    <template #ultimate>
+      <SkillSnippet title-key="energy-denial">
+        <p>“冥蛇”附身会降低敌人的受击回能，不会扣除其已有的能量。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

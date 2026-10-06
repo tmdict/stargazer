@@ -5,11 +5,10 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #awakening>
+      <SkillSnippet title-key="energy-battery">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          Only Gabumon can receive the extra Energy, and he must be positioned behind Wargreymon.
         </p>
       </SkillSnippet>
     </template>

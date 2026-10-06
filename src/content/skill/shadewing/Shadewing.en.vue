@@ -5,11 +5,12 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #skill3>
+      <SkillSnippet title-key="dot">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          Continuous damage is the damage or HP loss dealt by a lasting debuff such as poison, burn
+          or bleed. Repeated hits do not count as continuous damage just because they happen every
+          second.
         </p>
       </SkillSnippet>
     </template>

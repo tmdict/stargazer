@@ -5,12 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
-        <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
-        </p>
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff">
+        <p>护甲魔抗增益只对被宝石命中的敌人周围1格内的友军生效。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

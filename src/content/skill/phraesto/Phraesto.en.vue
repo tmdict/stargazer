@@ -12,7 +12,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
     </template>
     <template #ex>
       <SkillSnippet title-key="summon">
-        <p>Phraesto's second clone created when the first dies is a summon.</p>
+        <p>The replacement illusion is considered a summon.</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

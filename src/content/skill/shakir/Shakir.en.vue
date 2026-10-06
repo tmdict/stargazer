@@ -5,11 +5,10 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          All-Conquering shares this ATK bonus with allies in the Lupine Aura as a temporary buff.
         </p>
       </SkillSnippet>
     </template>

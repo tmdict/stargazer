@@ -5,11 +5,11 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          With Enhance Force, the shielded ally also gets a temporary Phys &amp; Magic DEF buff. The
+          shield alone does not count as a temporary stat buff.
         </p>
       </SkillSnippet>
     </template>

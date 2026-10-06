@@ -5,11 +5,11 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #ultimate>
+      <SkillSnippet title-key="energy-denial">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          Darkviper possession reduces the Energy an enemy gains from being hit. It does not drain
+          Energy they already have.
         </p>
       </SkillSnippet>
     </template>

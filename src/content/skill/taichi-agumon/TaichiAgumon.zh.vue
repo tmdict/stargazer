@@ -5,12 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
-        <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
-        </p>
+    <template #awakening>
+      <SkillSnippet title-key="energy-battery">
+        <p>只有加布兽能获得额外能量，并且他必须位于战斗暴龙兽身后。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

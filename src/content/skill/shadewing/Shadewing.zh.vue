@@ -5,11 +5,10 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #skill3>
+      <SkillSnippet title-key="dot">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          持续伤害指中毒、燃烧、流血等持续性状态造成的伤害或生命流失。反复命中的技能不会仅因为每秒造成一次伤害就算作持续伤害。
         </p>
       </SkillSnippet>
     </template>

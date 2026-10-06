@@ -5,11 +5,10 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff">
         <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
+          拥有觉醒之力时，受护盾保护的友军还会获得非永久的护甲与魔抗增益。仅有护盾不算作非永久属性提升效果。
         </p>
       </SkillSnippet>
     </template>

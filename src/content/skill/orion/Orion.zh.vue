@@ -5,12 +5,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 
 <template>
   <SkillSnippets>
-    <template #skill2>
-      <SkillSnippet title-key="summon">
-        <p>
-          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
-          gun turret counts as a summon.
-        </p>
+    <template #skill3>
+      <SkillSnippet title-key="temp-buff" body-key="temp-buff-definition">
+        <p>每名友军只能成为一次“党羽”。同一名友军之后施加的增益不会再次延长“细剑附魔”。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>
