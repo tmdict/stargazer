@@ -10,8 +10,8 @@
   "season": 4,
   "tags": {
     "debuff": [
-      { "ultimate": 1, "mods": ["global"] },
-      { "ex": 1, "mods": ["global"] }
+      { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "ex": 1, "mods": ["eryndor", "global"] }
     ],
     "dot": [{ "ultimate": 1 }],
     "energy-battery": [{ "skill2": 1 }, { "skill3": 1 }],

@@ -15,11 +15,12 @@ export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
 }
 
-/** A tag modifier's label; a hero's name as a modifier reads "<Hero> Synergy". */
+/** A tag modifier's label; a hero's name as a modifier reads "<Hero> Synergy", joined
+ * without a space in Chinese. */
 export function modifierLabel(mod: string, lang: AppLocale): string {
-  return isHeroModifier(mod)
-    ? `${curatedHeroName(mod, lang)} ${appLabel('synergy', lang)}`
-    : appLabel(mod, lang)
+  if (!isHeroModifier(mod)) return appLabel(mod, lang)
+  const gap = lang === 'zh' ? '' : ' '
+  return `${curatedHeroName(mod, lang)}${gap}${appLabel('synergy', lang)}`
 }
 
 /** A tag with its modifiers: "Debuff", "Debuff (Global, Eryndor Synergy)". */

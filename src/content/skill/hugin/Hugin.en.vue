@@ -6,7 +6,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #skill3>
-      <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
+      <SkillSnippet title-key="temp-buff">
+        <p>The mechanical sigil's ATK bonus is a temporary buff for the ally standing on it.</p>
+      </SkillSnippet>
     </template>
   </SkillSnippets>
 </template>

@@ -25,7 +25,6 @@ const i18n = useI18nStore()
 
 const formattedName = computed(() => characterDisplayName(i18n.t, character))
 
-// "own (added)" when a skill grants extra starting energy; else just its own.
 const formattedEnergy = computed(() => {
   const added = addedEnergy(character)
   return added > 0 ? `${ownEnergy(character)} (${added})` : String(ownEnergy(character))

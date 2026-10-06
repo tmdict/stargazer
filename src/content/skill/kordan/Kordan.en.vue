@@ -6,7 +6,9 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
 <template>
   <SkillSnippets>
     <template #ultimate>
-      <SkillSnippet title-key="guide-tile" body-key="tile-positional-buff" />
+      <SkillSnippet title-key="temp-buff">
+        <p>The hunting circle's ATK bonus is a temporary buff for allies standing inside it.</p>
+      </SkillSnippet>
     </template>
   </SkillSnippets>
 </template>
