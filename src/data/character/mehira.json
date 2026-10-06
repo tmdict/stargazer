@@ -9,7 +9,10 @@
   "range": 3,
   "season": 5,
   "tags": {
-    "debuff": [{ "skill3": 1, "mods": ["global"] }],
+    "debuff": [
+      { "skill3": 1, "mods": ["eryndor", "global"] },
+      { "awakening": 1, "mods": ["global"] }
+    ],
     "temp-buff": [{ "skill2": 1 }]
   }
 }

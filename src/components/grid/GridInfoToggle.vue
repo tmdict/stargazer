@@ -369,7 +369,7 @@ const panelShift = usePanelClamp(
 }
 
 .row.sub {
-  padding-left: calc(var(--spacing-md) + var(--dropdown-sub-indent));
+  padding-left: calc(var(--spacing-md) + 18px);
 }
 
 .row.dim {

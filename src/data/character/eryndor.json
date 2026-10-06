@@ -10,8 +10,8 @@
   "season": 7,
   "tags": {
     "debuff": [
-      { "ultimate": 1, "mods": ["global"] },
-      { "awakening": 1, "mods": ["global"] }
+      { "ultimate": 1, "mods": ["eryndor", "global"] },
+      { "awakening": 1, "mods": ["eryndor", "global"] }
     ]
   }
 }
