@@ -7,6 +7,11 @@ import { gridStyles } from './Niru.data'
 
 <template>
   <SkillSnippets>
+    <template #ultimate>
+      <SkillSnippet title-key="guide-targeting">
+        <p>没有其他友军时，尼汝可以以自己为目标。</p>
+      </SkillSnippet>
+    </template>
     <template #ex>
       <SkillSnippet title-key="guide-targeting">
         <p>

@@ -7,7 +7,10 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
   <SkillSnippets>
     <template #skill2>
       <SkillSnippet title-key="summon">
-        <p>The 2 laser turrets Zanie deploys during battle preparation do not count as summons.</p>
+        <p>
+          The 2 laser turrets Zanie deploys during battle preparation do not count as summons. Her
+          gun turret counts as a summon.
+        </p>
       </SkillSnippet>
     </template>
   </SkillSnippets>

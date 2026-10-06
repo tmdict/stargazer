@@ -7,6 +7,11 @@ import { gridStyles } from './Niru.data'
 
 <template>
   <SkillSnippets>
+    <template #ultimate>
+      <SkillSnippet title-key="guide-targeting">
+        <p>Niru can target himself if no other ally is left.</p>
+      </SkillSnippet>
+    </template>
     <template #ex>
       <SkillSnippet title-key="guide-targeting">
         <p>

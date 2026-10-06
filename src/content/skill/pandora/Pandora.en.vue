@@ -31,5 +31,10 @@ import { gridStyles } from './Pandora.data'
         <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
+    <template #ex>
+      <SkillSnippet title-key="summon">
+        <p>The box that remains after Pandora is defeated counts as a summon.</p>
+      </SkillSnippet>
+    </template>
   </SkillSnippets>
 </template>
