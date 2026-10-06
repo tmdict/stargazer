@@ -1,25 +1,34 @@
 <script setup lang="ts">
-/* One tag on the Mechanics guide: its title, its modifiers as chips, and its
-   heroes. A click anywhere on the card picks the tag, except on a chip or a
-   hero, which act on themselves. A hero the page's picks or its name search
-   leave out is dimmed in place, so the card keeps its shape. */
+/* One mechanic on the Mechanics guide: its title, its controls (a tag's
+   modifiers as chips, or what the `controls` slot holds) and its heroes. A
+   click anywhere on the card picks it, except on a control or a hero, which
+   act on themselves. A hero the page's picks or its name search leave out is
+   dimmed in place, so the card keeps its shape. */
 
 import { computed } from 'vue'
 
 import CharacterIcon from '@/components/CharacterIcon.vue'
 import FilterChip from '@/components/ui/FilterChip.vue'
 import { heroInspectTarget, useInspect } from '@/composables/useInspect'
+import {
+  ENERGY_KEY,
+  matchesMechanic,
+  pickKey,
+  tagPicksOf,
+  type MechanicPick,
+} from '@/lib/mechanics'
 import { matchesPick, openingPicks, tagPick, type TagVocabulary } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { AppLocale } from '@/lib/types/i18n'
 import type { TagPick } from '@/lib/types/skill'
-import { modifierLabel, tagLabel } from '@/utils/skillLabels'
+import { mechanicLabel, modifierLabel } from '@/utils/skillLabels'
 
 const props = defineProps<{
-  tag: string
+  // A tag, or the energy filter's key.
+  entry: string
   heroes: readonly CharacterType[]
-  // Every pick on the page; this card's own is the one for `tag`.
-  picks: readonly TagPick[]
+  // Every pick on the page; this card's own is the one for `entry`.
+  picks: readonly MechanicPick[]
   // Hero names a search found, ringed here with the rest dimmed; null without
   // a search.
   found: ReadonlySet<string> | null
@@ -28,18 +37,25 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  toggleTag: []
+  toggle: []
   toggleModifier: [mod: string]
+}>()
+
+defineSlots<{
+  // Shown with the modifier chips, for a mechanic that has its own control.
+  controls?(): unknown
 }>()
 
 const { inspect } = useInspect()
 
-const own = computed(() => props.picks.find((pick) => pick.tag === props.tag))
-const others = computed(() => props.picks.filter((pick) => pick.tag !== props.tag))
-const label = computed(() => tagLabel(props.tag, props.lang))
+// A tag card's skills can be opened on its tag; energy has no skill behind it.
+const tag = computed(() => (props.entry === ENERGY_KEY ? null : props.entry))
+const picked = computed(() => props.picks.some((pick) => pickKey(pick) === props.entry))
+const others = computed(() => props.picks.filter((pick) => pickKey(pick) !== props.entry))
+const label = computed(() => mechanicLabel(props.entry, props.lang))
 
 const isLit = (hero: CharacterType): boolean =>
-  props.picks.every((pick) => matchesPick(hero.tags, pick))
+  props.picks.every((pick) => matchesMechanic(hero, pick))
 const litCount = computed(() => props.heroes.filter(isLit).length)
 
 // A search dims without counting: the count stays the picks' answer.
@@ -49,15 +65,15 @@ const isDimmed = (hero: CharacterType): boolean =>
 // Each chip's count is what the card would keep lit with that chip switched
 // on, so a zero is a dead end; an active chip shows the current count.
 const chips = computed(() => {
-  const info = props.vocabulary.get(props.tag)
+  const info = props.vocabulary.get(props.entry)
   if (!info || info.solo) return []
-  const mods = own.value?.mods ?? []
+  const mods = tagPicksOf(props.picks).find((pick) => pick.tag === props.entry)?.mods ?? []
   const candidates = props.heroes.filter((hero) =>
-    others.value.every((pick) => matchesPick(hero.tags, pick)),
+    others.value.every((pick) => matchesMechanic(hero, pick)),
   )
   return info.mods.map((mod) => {
     const active = mods.includes(mod)
-    const toggled = { tag: props.tag, mods: active ? mods : [...mods, mod] }
+    const toggled = { tag: props.entry, mods: active ? mods : [...mods, mod] }
     return {
       mod,
       label: modifierLabel(mod, props.lang),
@@ -69,12 +85,14 @@ const chips = computed(() => {
 
 // A hero opened from a picked card shows the skill behind every pick; from an
 // unpicked card, this tag's.
-const chipsFor = (hero: CharacterType): TagPick[] =>
-  openingPicks(
+const chipsFor = (hero: CharacterType): TagPick[] => {
+  const own = tag.value ? [tagPick(tag.value, props.vocabulary)] : []
+  return openingPicks(
     hero.tags,
-    own.value ? props.picks : [tagPick(props.tag, props.vocabulary)],
-    props.tag,
+    picked.value ? tagPicksOf(props.picks) : own,
+    tag.value ?? undefined,
   )
+}
 
 function open(hero: CharacterType) {
   const target = heroInspectTarget(hero, chipsFor(hero))
@@ -86,16 +104,17 @@ function open(hero: CharacterType) {
   <!-- The id is the index tile's deep-link target. The title button has no
        handler of its own: its click reaches the card's, and it keeps the card
        reachable from the keyboard. -->
-  <section :id="tag" class="card" :class="{ picked: own }" @click="emit('toggleTag')">
+  <section :id="entry" class="card" :class="{ picked }" @click="emit('toggle')">
     <h2 class="card-title">
-      <button type="button" class="title-button" :aria-pressed="!!own">
-        <span class="check" aria-hidden="true">{{ own ? '✓' : '' }}</span>
+      <button type="button" class="title-button" :aria-pressed="picked">
+        <span class="check" aria-hidden="true">{{ picked ? '✓' : '' }}</span>
         <span>{{ label }}</span>
         <span class="count">{{ litCount }}</span>
       </button>
     </h2>
 
-    <div v-if="chips.length > 0" class="chips">
+    <div v-if="chips.length > 0 || $slots.controls" class="chips">
+      <slot name="controls" />
       <FilterChip
         v-for="chip in chips"
         :key="chip.mod"
@@ -115,7 +134,7 @@ function open(hero: CharacterType) {
         :character="hero"
         :dimmed="isDimmed(hero)"
         :is-selected="found?.has(hero.name)"
-        :selected-filter="tag"
+        :show-energy="!tag"
         inspectable
         :inspect-chips="chipsFor(hero)"
         @click.stop
@@ -226,7 +245,8 @@ function open(hero: CharacterType) {
     0 0 0 5px var(--color-accent);
 }
 
-.faces :deep(.character-display.dimmed) {
+.faces :deep(.character-display.dimmed),
+.faces :deep(.character-energy.dimmed) {
   opacity: 0.25;
 }
 

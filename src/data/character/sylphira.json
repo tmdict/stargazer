@@ -10,7 +10,6 @@
   "season": 7,
   "tags": {
     "energy-denial": [{ "skill2": 1 }],
-    "initial-energy-300": [],
     "ult-denial": [{ "ultimate": 1 }]
   }
 }

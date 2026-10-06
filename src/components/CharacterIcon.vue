@@ -8,6 +8,7 @@ import { useHoverTooltip } from '@/composables/useHoverTooltip'
 import { heroInspectTarget, useInspect, type InspectTarget } from '@/composables/useInspect'
 import { useLongPress } from '@/composables/useLongPress'
 import { usePressClick } from '@/composables/usePressClick'
+import { totalEnergy } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import type { TagPick } from '@/lib/types/skill'
 import { useGameDataStore } from '@/stores/gameData'
@@ -31,7 +32,8 @@ const props = defineProps<{
   // Tag chips the skills open on (a host's tag filter, the Mechanics guide's
   // picks). Unset opens the full page.
   inspectChips?: readonly TagPick[]
-  selectedFilter?: string | null
+  // The hero's total starting energy, under the portrait.
+  showEnergy?: boolean
 }>()
 
 const emit = defineEmits<{
@@ -58,12 +60,6 @@ watch(portraitUrl, () => (portraitFailed.value = false))
 const displayName = computed(() => characterDisplayName(i18n.t, props.character))
 
 const energyIcon = computed(() => gameDataStore.getIcon('initial-energy'))
-
-// Show the energy badge when the initial-energy-300 filter is active
-const showEnergy = computed(() => props.selectedFilter === 'initial-energy-300')
-
-// Under-icon badge: single summed value to keep the grid layout tight
-const totalEnergy = computed(() => props.character.energy.reduce((sum, n) => sum + n, 0))
 
 const inspectTarget = computed(() =>
   props.inspectable ? heroInspectTarget(props.character, props.inspectChips) : null,
@@ -142,10 +138,9 @@ const handleDragEnd = (event: DragEvent) => {
       <slot name="badge" />
     </div>
 
-    <!-- Energy Display -->
-    <div v-if="showEnergy" class="character-energy">
+    <div v-if="showEnergy" class="character-energy" :class="{ dimmed }">
       <img :src="energyIcon" alt="Energy" class="energy-icon" />
-      <span class="energy-value">{{ totalEnergy }}</span>
+      <span class="energy-value">{{ totalEnergy(character) }}</span>
     </div>
 
     <CharacterTooltip

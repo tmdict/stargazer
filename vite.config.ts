@@ -64,13 +64,17 @@ function extractContentDescription(html: string): string | null {
   if (!articleMatch) return null
 
   // `<p` must be followed by whitespace or `>` so `<path>` (svg) doesn't match.
-  const paragraphs = [...articleMatch[1].matchAll(/<p(?:\s[^>]*)?>([\s\S]*?)<\/p>/g)]
+  // The numbers line under a skill heading (SkillSection's `.skill-meta`) is a
+  // paragraph too, but it is labels and figures, not the skill's text.
+  const paragraphs = [...articleMatch[1].matchAll(/<p(\s[^>]*)?>([\s\S]*?)<\/p>/g)].filter(
+    (m) => !/\bskill-meta\b/.test(m[1] ?? ''),
+  )
   if (paragraphs.length === 0) return null
 
   const text = paragraphs
     .slice(0, 2)
     .map((m) =>
-      m[1]
+      m[2]
         .replace(/<[^>]+>/g, '') // Strip HTML tags
         // Strip [[]] skill markers, dropping a keyword token's `|key` suffix
         .replace(HIGHLIGHT_RE, (_, inner: string) => splitHighlightToken(inner).label)

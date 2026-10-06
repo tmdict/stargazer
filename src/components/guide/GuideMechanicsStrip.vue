@@ -7,28 +7,28 @@
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconClose from '@/components/ui/IconClose.vue'
 import { heroInspectTarget, useInspect } from '@/composables/useInspect'
+import { pickKey, tagPicksOf, type MechanicPick } from '@/lib/mechanics'
 import { openingPicks } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { AppLocale } from '@/lib/types/i18n'
-import type { TagPick } from '@/lib/types/skill'
-import { appLabel, curatedHeroName, tagPickLabel } from '@/utils/skillLabels'
+import { appLabel, curatedHeroName, mechanicPickLabel } from '@/utils/skillLabels'
 
 const props = defineProps<{
-  picks: readonly TagPick[]
+  picks: readonly MechanicPick[]
   // The heroes that satisfy every pick.
   heroes: readonly CharacterType[]
   lang: AppLocale
 }>()
 
 const emit = defineEmits<{
-  remove: [tag: string]
+  remove: [key: string]
   clear: []
 }>()
 
 const { inspect } = useInspect()
 
 function open(hero: CharacterType) {
-  const target = heroInspectTarget(hero, openingPicks(hero.tags, props.picks))
+  const target = heroInspectTarget(hero, openingPicks(hero.tags, tagPicksOf(props.picks)))
   if (target) void inspect(target)
 }
 
@@ -42,13 +42,13 @@ function handleStripClick(e: MouseEvent) {
   <div class="strip" @click="handleStripClick">
     <button
       v-for="pick in picks"
-      :key="pick.tag"
+      :key="pickKey(pick)"
       type="button"
       class="pick"
       :title="appLabel('clear', lang)"
-      @click="emit('remove', pick.tag)"
+      @click="emit('remove', pickKey(pick))"
     >
-      {{ tagPickLabel(pick, lang) }}
+      {{ mechanicPickLabel(pick, lang) }}
       <span class="pick-remove" aria-hidden="true"><IconClose :size="9" /></span>
     </button>
     <span v-if="picks.length > 1" class="faces">

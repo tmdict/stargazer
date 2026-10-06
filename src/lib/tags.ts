@@ -29,11 +29,8 @@ function matchingEntries(tags: CharacterTags, pick: TagPick): readonly TagAttach
   return (tags[pick.tag] ?? []).filter((entry) => hasAll(entry.mods, pick.mods))
 }
 
-/** A character-level tag has no attachment to carry a modifier, so it matches
- * only a pick without any. */
 export function matchesPick(tags: CharacterTags, pick: TagPick): boolean {
-  if (!Object.hasOwn(tags, pick.tag)) return false
-  return pick.mods.length === 0 || matchingEntries(tags, pick).length > 0
+  return Object.hasOwn(tags, pick.tag) && matchingEntries(tags, pick).length > 0
 }
 
 /** Levels of a slot, or tiers of the charm, that any of the picks tints. */
@@ -52,8 +49,8 @@ export function pinnedLevels(
   return [...levels].sort((a, b) => a - b)
 }
 
-/** The picks a hero has skill text for. A pick the hero does not satisfy, or
- * one on a character-level tag, would filter its skills down to nothing. */
+/** The picks a hero has skill text for. A pick the hero does not satisfy
+ * would filter its skills down to nothing. */
 export function usablePicks(tags: CharacterTags, picks: readonly TagPick[]): TagPick[] {
   return picks.filter((pick) => matchingEntries(tags, pick).some((entry) => entryPin(entry)))
 }
@@ -88,7 +85,6 @@ export function tagVocabulary(heroes: readonly { readonly tags: CharacterTags }[
     for (const [tag, entries] of Object.entries(tags)) {
       const info = seen.get(tag) ?? { mods: new Set<string>(), bare: false }
       seen.set(tag, info)
-      if (entries.length === 0) info.bare = true
       for (const entry of entries) {
         if (!entry.mods?.length) info.bare = true
         for (const mod of entry.mods ?? []) info.mods.add(mod)

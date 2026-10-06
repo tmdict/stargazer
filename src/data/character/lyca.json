@@ -11,7 +11,6 @@
   "tags": {
     "debuff": [{ "skill3": 1, "mods": ["global"] }],
     "energy-battery": [{ "skill2": 1 }],
-    "initial-energy-300": [],
     "temp-buff": [{ "skill2": 1, "mods": ["opening"] }]
   }
 }

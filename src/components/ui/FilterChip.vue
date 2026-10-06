@@ -22,7 +22,7 @@ defineProps<{
 .chip {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: var(--chip-count-gap);
   padding: 3px 10px;
   border: 1.5px solid var(--color-border-primary);
   border-radius: 999px;
@@ -40,7 +40,7 @@ defineProps<{
 }
 
 .count {
-  opacity: 0.6;
+  opacity: var(--chip-count-opacity);
 }
 
 .chip:hover {
@@ -71,12 +71,12 @@ defineProps<{
 }
 
 .dark {
-  padding: 2px 9px;
+  padding: var(--chip-dark-padding-block) 9px;
   border-width: 1px;
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: var(--chip-dark-border-color);
   background: transparent;
-  color: rgba(255, 255, 255, 0.74);
-  font-size: 0.72rem;
+  color: var(--chip-dark-color);
+  font-size: var(--chip-dark-font-size);
 }
 
 .dark:hover {
@@ -85,11 +85,11 @@ defineProps<{
 
 .dark.active {
   border-color: var(--color-accent);
-  background: color-mix(in srgb, var(--color-accent) 18%, transparent);
+  background: var(--chip-dark-active-background);
   color: var(--color-accent);
 }
 
 .dark:disabled:hover {
-  border-color: rgba(255, 255, 255, 0.22);
+  border-color: var(--chip-dark-border-color);
 }
 </style>

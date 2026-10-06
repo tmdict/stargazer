@@ -9,7 +9,6 @@
   "range": 10,
   "season": 7,
   "tags": {
-    "energy-denial": [{ "ex": 1 }],
-    "initial-energy-300": []
+    "energy-denial": [{ "ex": 1 }]
   }
 }
