@@ -29,5 +29,10 @@ import { gridStyles } from './Pandora.data'
         <GridSnippet :grid-style="gridStyles.main" />
       </SkillSnippet>
     </template>
+    <template #ex>
+      <SkillSnippet title-key="summon">
+        <p>潘多拉被击败后留在场上的魔盒算作召唤物。</p>
+      </SkillSnippet>
+    </template>
   </SkillSnippets>
 </template>
