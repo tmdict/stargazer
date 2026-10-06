@@ -1,6 +1,6 @@
 <script setup lang="ts">
-/* Mechanics entry on the guide index: one tile per tag, deep-linking to that
-   tag's card on the mechanics page. */
+/* Mechanics entry on the guide index: one tile per mechanic, deep-linking to
+   its card on the mechanics page. */
 
 import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
@@ -8,11 +8,18 @@ import { RouterLink } from 'vue-router'
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
 import { guidePath } from '@/lib/guide'
-import { tagPick, toTagQuery } from '@/lib/tags'
+import {
+  ENERGY_DEFAULT,
+  ENERGY_KEY,
+  matchesMechanic,
+  toMechanicQuery,
+  type MechanicPick,
+} from '@/lib/mechanics'
+import { tagPick } from '@/lib/tags'
 import type { AppLocale } from '@/lib/types/i18n'
 import { interpolate } from '@/utils/interpolate'
-import { appLabel, tagPickLabel } from '@/utils/skillLabels'
-import { loadTagGroups, loadTagVocabulary } from '@/utils/tagData'
+import { appLabel, mechanicPickLabel } from '@/utils/skillLabels'
+import { loadMechanicGroups, loadTagVocabulary } from '@/utils/tagData'
 
 const props = defineProps<{ lang: AppLocale }>()
 
@@ -22,15 +29,20 @@ const PREVIEW = 4
 const label = (key: string): string => appLabel(key, props.lang)
 const page = computed(() => guidePath(props.lang, 'mechanics'))
 
-// The query picks the tag on the page; the hash scrolls to its card.
-const tiles = loadTagGroups().map((group) => {
-  const pick = tagPick(group.tag, loadTagVocabulary())
+// The query picks the mechanic on the page; the hash scrolls to its card. A
+// tile shows the heroes its pick leaves lit there, which for a tag is the
+// whole card and for energy the heroes above the starting value.
+const vocabulary = loadTagVocabulary()
+const tiles = loadMechanicGroups().map((group) => {
+  const pick: MechanicPick =
+    group.key === ENERGY_KEY ? { energyAbove: ENERGY_DEFAULT } : tagPick(group.key, vocabulary)
+  const heroes = group.characters.filter((hero) => matchesMechanic(hero, pick))
   return {
-    tag: group.tag,
+    key: group.key,
     pick,
-    link: { query: toTagQuery(pick), hash: `#${group.tag}` },
-    heroes: group.characters.slice(0, PREVIEW).map((c) => c.name),
-    count: group.characters.length,
+    link: { query: toMechanicQuery(pick), hash: `#${group.key}` },
+    heroes: heroes.slice(0, PREVIEW).map((c) => c.name),
+    count: heroes.length,
   }
 })
 </script>
@@ -46,11 +58,11 @@ const tiles = loadTagGroups().map((group) => {
       <div class="tiles">
         <RouterLink
           v-for="tile in tiles"
-          :key="tile.tag"
+          :key="tile.key"
           class="tile"
           :to="{ path: page, ...tile.link }"
         >
-          <span class="tile-name">{{ tagPickLabel(tile.pick, lang) }}</span>
+          <span class="tile-name">{{ mechanicPickLabel(tile.pick, lang) }}</span>
           <span class="stack">
             <GuidePortrait v-for="slug in tile.heroes" :key="slug" :slug :lang />
           </span>

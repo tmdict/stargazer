@@ -8,6 +8,9 @@
 // The game's panel shows the hero's current level, while a skill page lists
 // every level, so a slot carries its Lv1 values plus, per later level, only
 // the values that level changes.
+//
+// The same feed carries each hero's starting energy. The app shows the hero
+// file's own copy, so the import only compares the two (energyMismatches).
 
 import {
   SLOT_ORDER,
@@ -24,6 +27,7 @@ export interface FeedLevelNumbers {
 }
 
 export interface FeedHeroNumbers {
+  // The energy the hero starts a battle with.
   skills: Partial<Record<SlotKey, FeedLevelNumbers[]>>
 }
 
@@ -79,6 +83,23 @@ export function heroSkillNumbers(
     if (!isEmpty(result.numbers)) numbers[slot] = result.numbers
   }
   return { numbers, problems }
+}
+
+/** Hero files whose starting energy is not the feed's. A file's first energy
+ * number is typed by hand and is the one the app shows and filters by, so a
+ * balance change reaches it only through this report. A feed that stops
+ * carrying the number is reported too, or the comparison would pass by
+ * finding nothing to compare. A hero the feed lacks is reported by
+ * skillNumbers. */
+export function energyMismatches(
+  heroes: Record<string, FeedHeroNumbers>,
+  files: readonly { slug: string; energy: readonly number[] }[],
+): string[] {
+  return files.flatMap(({ slug, energy }) => {
+    const hero = heroes[slug]
+    if (!hero) return []
+      ? []
+  })
 }
 
 /** The whole file, for the given heroes in slug order. */

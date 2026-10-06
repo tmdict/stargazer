@@ -54,10 +54,15 @@ const i18n = useI18nStore()
 const { error, success } = useToast()
 
 const heroes = computed(() => gameData.characters.filter((c) => !c.placeholder))
-const { factionFilter, classFilter, tagFilter, tagPool, filteredCharacters } =
-  useCharacterFilters(heroes)
-
-const inspectChips = computed(() => (tagFilter.value ? [tagFilter.value] : undefined))
+const {
+  factionFilter,
+  classFilter,
+  mechanicFilter,
+  mechanicPool,
+  filteredCharacters,
+  energyPicked,
+  inspectChips,
+} = useCharacterFilters(heroes)
 
 // A change is applied in memory even when its write fails, so the loss is
 // reported in place of any success message.
@@ -326,9 +331,9 @@ const {
       <CharacterFilterStrip
         v-model:faction-filter="factionFilter"
         v-model:class-filter="classFilter"
-        v-model:tag-filter="tagFilter"
+        v-model:mechanic-filter="mechanicFilter"
         :characters="heroes"
-        :tag-pool
+        :mechanic-pool
       />
 
       <CharacterGrid>
@@ -338,7 +343,7 @@ const {
           :character
           :dimmed="!levelsOf(character)"
           hide-tooltip
-          :selected-filter="tagFilter?.tag"
+          :show-energy="energyPicked"
           inspectable
           :inspect-chips
           @character-click="toggle"

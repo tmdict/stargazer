@@ -1,27 +1,39 @@
 <script setup lang="ts">
-/* The mechanic (tag) filter of a hero list: a menu of every tag with its
-   modifiers, the picked tag's modifiers as chips beside it, and a switch that
-   lays the tags out as chips instead. Counts come from `pool`, the list with
-   the host's other filters applied. */
+/* The mechanic filter of a hero list: a menu of every tag with its modifiers
+   and of the energy filter, the pick's own controls beside it (a tag's
+   modifiers as chips, the energy value's stepper), and a switch that lays the
+   menu out as chips instead. Counts come from `pool`, the list with the host's
+   other filters applied. */
 
 import { computed } from 'vue'
 
+import CharacterFilterEnergy from './CharacterFilterEnergy.vue'
 import DropdownRow from './ui/DropdownRow.vue'
 import DropdownSelect from './ui/DropdownSelect.vue'
 import FilterChip from './ui/FilterChip.vue'
 import IconFilter from './ui/IconFilter.vue'
+import { useEnergyValue } from '@/composables/useEnergyValue'
 import { useMechanicsExpanded } from '@/composables/useMechanicsExpanded'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { guidePath } from '@/lib/guide'
-import { matchesPick, tagPick } from '@/lib/tags'
+import {
+  ENERGY_KEY,
+  ENERGY_MIN,
+  isEnergyPick,
+  matchesMechanic,
+  mechanicKeys,
+  pickKey,
+  type MechanicPick,
+} from '@/lib/mechanics'
+import { tagPick } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { TagPick } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
-import { modifierLabel, tagLabel, tagPickLabel } from '@/utils/skillLabels'
+import { mechanicLabel, mechanicPickLabel, modifierLabel } from '@/utils/skillLabels'
 import { loadTagVocabulary } from '@/utils/tagData'
 
 const { pool } = defineProps<{ pool: readonly CharacterType[] }>()
-const model = defineModel<TagPick | null>({ default: null })
+const model = defineModel<MechanicPick | null>({ default: null })
 
 const i18n = useI18nStore()
 const lang = computed(() => i18n.currentLocale)
@@ -34,35 +46,57 @@ const narrow = useNarrowViewport()
 const expanded = computed(() => wantsChips.value && !narrow.value)
 const segment = computed(() => (narrow.value ? undefined : expanded.value ? '−' : '+'))
 
-const count = (pick: TagPick): number => pool.filter((c) => matchesPick(c.tags, pick)).length
+const count = (pick: MechanicPick): number => pool.filter((c) => matchesMechanic(c, pick)).length
 
+// Unpicked, the energy entry already names the value a pick would filter by.
+const energyValue = useEnergyValue()
+const energyAbove = computed({
+  get: () => energyValue.value,
+  set: (value) => {
+    model.value = { energyAbove: value }
+  },
+})
+
+// An entry no hero in the pool can match is a dead end. For a tag that is a
+// zero count; the energy entry at zero can still be stepped down, so it is one
+// only when no hero has any energy.
 const items = computed(() =>
-  [...vocabulary].map(([tag, { mods, solo }]) => {
-    const pick = tagPick(tag, vocabulary)
+  mechanicKeys(vocabulary).map((key) => {
+    const info = vocabulary.get(key)
+    const pick: MechanicPick = info ? tagPick(key, vocabulary) : { energyAbove: energyAbove.value }
+    const matching = count(pick)
     return {
+      key,
       pick,
-      label: tagPickLabel(pick, lang.value),
-      count: count(pick),
+      label: mechanicPickLabel(pick, lang.value),
+      count: matching,
+      deadEnd: (info ? matching : count({ energyAbove: ENERGY_MIN })) === 0,
       // A solo tag's one modifier is already in its label.
-      mods: (solo ? [] : mods).map((mod) => ({
+      mods: (info && !info.solo ? info.mods : []).map((mod) => ({
         mod,
-        pick: { tag, mods: [mod] },
+        pick: { tag: key, mods: [mod] },
         label: modifierLabel(mod, lang.value),
-        count: count({ tag, mods: [mod] }),
+        count: count({ tag: key, mods: [mod] }),
       })),
     }
   }),
 )
 
-// Expanded, the picked tag shows as its chip, so the pill keeps its own name.
+const pickedKey = computed(() => (model.value ? pickKey(model.value) : null))
+const pickedTag = computed(() => (model.value && !isEnergyPick(model.value) ? model.value : null))
+const energyCount = computed(() => count({ energyAbove: energyAbove.value }))
+
+// Expanded, the pick shows as its chip, so the pill keeps its own name.
 const triggerLabel = computed(() =>
-  model.value && !expanded.value ? tagLabel(model.value.tag, lang.value) : i18n.t('app.mechanics'),
+  pickedKey.value && !expanded.value
+    ? mechanicLabel(pickedKey.value, lang.value)
+    : i18n.t('app.mechanics'),
 )
 
 // Each chip's count is what the list would hold with that chip switched on,
 // so a zero is a dead end; an active chip shows the current count.
 const chips = computed(() => {
-  const pick = model.value
+  const pick = pickedTag.value
   const info = pick && vocabulary.get(pick.tag)
   if (!pick || !info || info.solo) return []
   return info.mods.map((mod) => {
@@ -79,17 +113,17 @@ const chips = computed(() => {
 })
 
 const isPicked = (pick: TagPick): boolean => {
-  const current = model.value
+  const current = pickedTag.value
   return current?.tag === pick.tag && pick.mods.every((mod) => current.mods.includes(mod))
 }
 
-function choose(pick: TagPick | null, close: () => void) {
+function choose(pick: MechanicPick | null, close: () => void) {
   model.value = pick
   close()
 }
 
-function toggleTag(pick: TagPick) {
-  model.value = model.value?.tag === pick.tag ? null : pick
+function toggle(item: { key: string; pick: MechanicPick }) {
+  model.value = pickedKey.value === item.key ? null : item.pick
 }
 </script>
 
@@ -122,12 +156,12 @@ function toggleTag(pick: TagPick) {
             @click="choose(null, close)"
           />
           <div class="items">
-            <div v-for="item in items" :key="item.pick.tag" class="item">
+            <div v-for="item in items" :key="item.key" class="item">
               <DropdownRow
                 :label="item.label"
                 :meta="item.count"
-                :selected="model?.tag === item.pick.tag"
-                :disabled="item.count === 0 && model?.tag !== item.pick.tag"
+                :selected="pickedKey === item.key"
+                :disabled="item.deadEnd && pickedKey !== item.key"
                 @click="choose(item.pick, close)"
               />
               <DropdownRow
@@ -152,7 +186,14 @@ function toggleTag(pick: TagPick) {
       </template>
     </DropdownSelect>
 
-    <div v-if="chips.length > 0" class="mods">
+    <div v-if="pickedKey === ENERGY_KEY || chips.length > 0" class="mods">
+      <CharacterFilterEnergy
+        v-if="pickedKey === ENERGY_KEY"
+        v-model="energyAbove"
+        active
+        :count="energyCount"
+        :lang
+      />
       <FilterChip
         v-for="chip in chips"
         :key="chip.mod"
@@ -168,12 +209,12 @@ function toggleTag(pick: TagPick) {
     <div v-if="expanded" class="tray">
       <FilterChip
         v-for="item in items"
-        :key="item.pick.tag"
+        :key="item.key"
         :label="item.label"
         :count="item.count"
-        :active="model?.tag === item.pick.tag"
-        :disabled="item.count === 0 && model?.tag !== item.pick.tag"
-        @click="toggleTag(item.pick)"
+        :active="pickedKey === item.key"
+        :disabled="item.deadEnd && pickedKey !== item.key"
+        @click="toggle(item)"
       />
     </div>
   </div>

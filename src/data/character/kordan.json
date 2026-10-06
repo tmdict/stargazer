@@ -10,7 +10,6 @@
   "season": 5,
   "tags": {
     "heal-denial": [{ "ultimate": 1 }],
-    "initial-energy-300": [],
     "temp-buff": [{ "ultimate": 1 }],
     "ult": [{ "ultimate": 1, "mods": ["opening"] }]
   }

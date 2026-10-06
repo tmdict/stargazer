@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, shallowRef, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
+import CharacterFilterEnergy from '@/components/CharacterFilterEnergy.vue'
 import GuideMechanicsCard from '@/components/guide/GuideMechanicsCard.vue'
 import GuideMechanicsStrip from '@/components/guide/GuideMechanicsStrip.vue'
 import FilterChip from '@/components/ui/FilterChip.vue'
@@ -12,13 +13,13 @@ import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { useMechanicPicks } from '@/composables/useMechanicPicks'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { matchCharacterNames } from '@/composables/useSkillSearch'
-import { fromTagQuery } from '@/lib/tags'
+import { ENERGY_KEY, fromMechanicQuery, pickKey } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { setupGuideContentMeta } from '@/utils/contentMeta'
 import { interpolate } from '@/utils/interpolate'
-import { appLabel, curatedHeroName, tagLabel } from '@/utils/skillLabels'
-import { loadTagGroups, loadTagVocabulary } from '@/utils/tagData'
+import { appLabel, curatedHeroName, mechanicLabel } from '@/utils/skillLabels'
+import { loadMechanicGroups, loadTagVocabulary } from '@/utils/tagData'
 
 import '@/styles/content.css'
 import '@/styles/guide.css'
@@ -31,10 +32,10 @@ setupGuideContentMeta(lang, 'mechanics')
 useGameDataStore().initializeContentData()
 
 const vocabulary = loadTagVocabulary()
-const groups = loadTagGroups()
-const tagged = [...new Set(groups.flatMap((group) => group.characters))]
+const groups = loadMechanicGroups()
+const listed = [...new Set(groups.flatMap((group) => group.characters))]
 
-const optionsOf = (pick: (c: CharacterType) => string) => [...new Set(tagged.map(pick))]
+const optionsOf = (pick: (c: CharacterType) => string) => [...new Set(listed.map(pick))]
 const factionOptions = optionsOf((c) => c.faction)
 const classOptions = optionsOf((c) => c.class)
 
@@ -43,12 +44,12 @@ const {
   factionFilter,
   classFilter,
   filteredCharacters: pool,
-} = useCharacterFilters(shallowRef(tagged))
+} = useCharacterFilters(shallowRef(listed))
 const inPool = computed(() => new Set(pool.value))
 
-const { picks, toggleTag, toggleModifier, remove, clear, open, matches } =
+const { picks, energyValue, toggle, toggleModifier, setEnergy, remove, clear, open, matches } =
   useMechanicPicks(vocabulary)
-const matching = computed(() => pool.value.filter((hero) => matches(hero.tags)))
+const matching = computed(() => pool.value.filter(matches))
 
 const hasFilter = computed(
   () => factionFilter.value !== '' || classFilter.value !== '' || picks.value.length > 0,
@@ -75,39 +76,38 @@ const hits = computed(() => {
 const found = computed(() =>
   hits.value.length > 0 ? new Set(hits.value.map((hero) => hero.name)) : null,
 )
-// With one hero found, the kept cards are that hero's tags; the search note
-// offers them as chips that pick a tag as its card does.
+// With one hero found, the kept cards are that hero's mechanics; the search
+// note offers them as chips that pick a mechanic as its card does.
 const onlyHit = computed(() => (hits.value.length === 1 ? hits.value[0]! : null))
 
-const picked = computed(() => new Set(picks.value.map((pick) => pick.tag)))
-const countLit = (heroes: readonly CharacterType[]): number =>
-  heroes.filter((hero) => matches(hero.tags)).length
+const picked = computed(() => new Set(picks.value.map(pickKey)))
+const countLit = (heroes: readonly CharacterType[]): number => heroes.filter(matches).length
 
 // A search keeps the cards its heroes are in. The icon filters drop a card
 // they empty, unless it is picked; a pick never drops one.
 const cards = computed(() =>
   groups
     .map((group) => ({
-      tag: group.tag,
+      key: group.key,
       heroes: group.characters.filter((hero) => inPool.value.has(hero)),
     }))
-    .filter(({ tag, heroes }) =>
+    .filter(({ key, heroes }) =>
       found.value
         ? heroes.some((hero) => found.value!.has(hero.name))
-        : heroes.length > 0 || picked.value.has(tag),
+        : heroes.length > 0 || picked.value.has(key),
     ),
 )
 
-// A tag link (`?tag=debuff&mods=global`, e.g. a guide index tile) picks that
-// tag. First applied after mount: the baked page has nothing picked, and the
-// first client render has to match it.
+// A mechanic link (`?tag=debuff&mods=global` or `?energy=500`, e.g. a guide
+// index tile) picks that mechanic. First applied after mount: the baked page
+// has nothing picked, and the first client render has to match it.
 const route = useRoute()
-const applyTagLink = () => {
-  const pick = fromTagQuery(route.query, vocabulary)
+const applyLink = () => {
+  const pick = fromMechanicQuery(route.query, vocabulary)
   if (pick) open(pick)
 }
-onMounted(applyTagLink)
-watch([() => route.query.tag, () => route.query.mods], applyTagLink)
+onMounted(applyLink)
+watch([() => route.query.tag, () => route.query.mods, () => route.query.energy], applyLink)
 </script>
 
 <template>
@@ -154,12 +154,12 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
           <strong>{{ curatedHeroName(onlyHit.name, lang) }}</strong>
           <FilterChip
             v-for="card in cards"
-            :key="card.tag"
+            :key="card.key"
             dark
-            :label="tagLabel(card.tag, lang)"
+            :label="mechanicLabel(card.key, lang)"
             :count="countLit(card.heroes)"
-            :active="picked.has(card.tag)"
-            @click="toggleTag(card.tag)"
+            :active="picked.has(card.key)"
+            @click="toggle(card.key)"
           />
         </p>
 
@@ -175,16 +175,27 @@ watch([() => route.query.tag, () => route.query.mods], applyTagLink)
         <div class="cards">
           <GuideMechanicsCard
             v-for="card in cards"
-            :key="card.tag"
-            :tag="card.tag"
+            :key="card.key"
+            :entry="card.key"
             :heroes="card.heroes"
             :picks
             :found
             :vocabulary
             :lang
-            @toggle-tag="toggleTag(card.tag)"
-            @toggle-modifier="toggleModifier(card.tag, $event)"
-          />
+            @toggle="toggle(card.key)"
+            @toggle-modifier="toggleModifier(card.key, $event)"
+          >
+            <template v-if="card.key === ENERGY_KEY" #controls>
+              <CharacterFilterEnergy
+                dark
+                :model-value="energyValue"
+                :active="picked.has(ENERGY_KEY)"
+                :lang
+                @update:model-value="setEnergy"
+                @click.stop
+              />
+            </template>
+          </GuideMechanicsCard>
         </div>
       </div>
     </article>
