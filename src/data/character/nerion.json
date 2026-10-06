@@ -9,7 +9,6 @@
   "range": 7,
   "season": 6,
   "tags": {
-    "dot": [{ "ex": 1 }],
-    "initial-energy-300": []
+    "dot": [{ "ex": 1 }]
   }
 }

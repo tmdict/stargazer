@@ -11,7 +11,6 @@
   "tags": {
     "cheat-death": [{ "skill3": 1, "mods": ["self"] }],
     "dot": [{ "ex": 4 }],
-    "energy-denial": [{ "ultimate": 1 }],
-    "initial-energy-300": []
+    "energy-denial": [{ "ultimate": 1 }]
   }
 }

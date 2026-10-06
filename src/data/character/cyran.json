@@ -5,12 +5,11 @@
   "faction": "lightbearer",
   "class": "mage",
   "damage": "magic",
-  "energy": [400],
+  "energy": [400, 200],
   "range": 6,
   "season": 3,
   "tags": {
     "debuff": [{ "ex": 1, "mods": ["global"] }],
-    "execute": [{ "ultimate": 1 }],
-    "initial-energy-300": []
+    "execute": [{ "ultimate": 1 }]
   }
 }

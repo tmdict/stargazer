@@ -93,7 +93,7 @@ defineProps<{
 }
 
 .sub {
-  padding-left: calc(var(--spacing-md) + var(--dropdown-sub-indent));
+  padding-left: calc(var(--spacing-md) + var(--spacing-sm));
 }
 
 .sub .label::before {

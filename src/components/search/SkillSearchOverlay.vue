@@ -324,6 +324,9 @@ function onInputKeydown(e: KeyboardEvent): void {
   } else if (e.key === 'Enter') {
     const row = rows.value[selected.value]
     if (!row) return
+    // Closing refocuses the opener mid key press; without this, the Enter
+    // keypress lands on the trigger button and clicks it, reopening the overlay.
+    e.preventDefault()
     const href = paneVisible.value
       ? (paneHits.value[paneHitIndex.value]?.href ?? row.href)
       : row.href

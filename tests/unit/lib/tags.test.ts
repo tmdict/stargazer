@@ -37,7 +37,6 @@ describe('skill text', () => {
   const tags: CharacterTags = {
     'temp-buff': [{ skill3: 1 }, { skill3: 4, mods: ['opening'] }],
     dot: [{ skill3: 2 }],
-    'initial-energy-300': [],
   }
 
   it('tints the levels of the attachments that satisfy any of the picks', () => {
@@ -49,11 +48,7 @@ describe('skill text', () => {
   })
 
   it('opens a hero on the picks it has text for, else on the tag it was clicked under', () => {
-    const picks = [
-      pick('temp-buff', 'opening'),
-      pick('temp-buff', 'global'),
-      pick('initial-energy-300'),
-    ]
+    const picks = [pick('temp-buff', 'opening'), pick('temp-buff', 'global'), pick('summon')]
     expect(openingPicks(tags, picks, 'dot')).toEqual([pick('temp-buff', 'opening')])
     expect(openingPicks(tags, [pick('temp-buff', 'global'), pick('summon')], 'temp-buff')).toEqual([
       pick('temp-buff'),
@@ -70,7 +65,6 @@ describe('vocabulary', () => {
     expect(solo([opening, opening])!.solo).toBe('opening')
     expect(solo([opening, { ult: [{ ex: 1 }] }])!.solo).toBeNull()
     expect(solo([opening, { ult: [{ charm: 1 }, { ex: 1, mods: ['opening'] }] }])!.solo).toBeNull()
-    expect(solo([opening, { ult: [] }])!.solo).toBeNull()
     expect(solo([opening, { ult: [{ ex: 1, mods: ['global'] }] }])!.solo).toBeNull()
   })
 })
@@ -102,7 +96,7 @@ describe('tag links', () => {
 })
 
 // A typo in a hero file would otherwise ship as a new tag or modifier, or pin
-// a slot that does not exist.
+// a slot that does not exist. A tag without an attachment would match no pick.
 describe('hero tag data', () => {
   const heroes = loadCharacters()
   const labels = loadAppLocales()
@@ -121,6 +115,7 @@ describe('hero tag data', () => {
   it('pins one slot per attachment', () => {
     for (const { name, tags } of heroes) {
       for (const [tag, entries] of Object.entries(tags)) {
+        expect(entries.length, `${name}: tag "${tag}" has no attachment`).toBeGreaterThan(0)
         for (const entry of entries) {
           const pins = Object.keys(entry).filter((key) => key !== 'mods')
           expect(pins, `${name} ${tag}`).toHaveLength(1)
