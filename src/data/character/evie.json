@@ -10,8 +10,8 @@
   "season": 6,
   "tags": {
     "debuff": [
-      { "skill2": 1, "mods": ["global"] },
-      { "ex": 1, "mods": ["global"] }
+      { "skill2": 1, "mods": ["eryndor", "global"] },
+      { "ex": 1, "mods": ["eryndor", "global"] }
     ],
     "dot": [{ "ultimate": 1 }],
     "special-target": [{ "ultimate": 1 }, { "skill3": 1 }],

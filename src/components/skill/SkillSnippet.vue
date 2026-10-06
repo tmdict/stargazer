@@ -7,7 +7,7 @@ import { SkillLangKey } from './snippetKeys'
 // Callout wrapper inside a hero's snippet file. `titleKey` / `bodyKey` resolve
 // against `src/locales/app/<key>.json` using the lang injected by
 // <SkillSections>; use them for reusable boilerplate (the per-category
-// "guide-*" titles, the "tile-positional-buff" note) so shared copy lives in
+// "guide-*" titles, the "temp-buff-definition" note) so shared copy lives in
 // one place. Slot paragraphs follow the shared body because they qualify it.
 
 const props = defineProps<{

@@ -9,7 +9,7 @@
   "range": 6,
   "season": 3,
   "tags": {
-    "debuff": [{ "ex": 1, "mods": ["global"] }],
+    "debuff": [{ "ex": 1, "mods": ["eryndor", "global"] }],
     "execute": [{ "ultimate": 1 }]
   }
 }

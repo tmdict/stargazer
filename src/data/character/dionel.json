@@ -9,6 +9,6 @@
   "range": 5,
   "season": 0,
   "tags": {
-    "debuff": [{ "ex": 3, "mods": ["global"] }]
+    "debuff": [{ "ex": 3, "mods": ["eryndor", "global"] }]
   }
 }
