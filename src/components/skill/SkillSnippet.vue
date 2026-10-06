@@ -8,7 +8,7 @@ import { SkillLangKey } from './snippetKeys'
 // against `src/locales/app/<key>.json` using the lang injected by
 // <SkillSections>; use them for reusable boilerplate (the per-category
 // "guide-*" titles, the "tile-positional-buff" note) so shared copy lives in
-// one place.
+// one place. Slot paragraphs follow the shared body because they qualify it.
 
 const props = defineProps<{
   title?: string
@@ -38,8 +38,8 @@ const resolvedBody = computed(() => {
   <section class="skill-snippet">
     <h3 v-if="resolvedTitle" class="skill-snippet-title">{{ resolvedTitle }}</h3>
     <div class="skill-snippet-body">
-      <slot />
       <p v-if="resolvedBody">{{ resolvedBody }}</p>
+      <slot />
     </div>
   </section>
 </template>

@@ -12,7 +12,7 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
     </template>
     <template #ex>
       <SkillSnippet title-key="summon">
-        <p>当第一个幻象被击败后生成的第二个幻象是召唤物。</p>
+        <p>重新召唤的新幻象视为召唤物。</p>
       </SkillSnippet>
     </template>
   </SkillSnippets>
