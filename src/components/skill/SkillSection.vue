@@ -23,13 +23,15 @@ const props = defineProps<{
   // file's `_terms`.
   numbers?: SlotNumbers
   terms?: SkillLocaleFile['_terms']
+  // The hero's own starting energy, shown with the numbers of its ultimate.
+  initialEnergy?: number
   slotTags?: SlotChip[]
   levels: LevelRow[]
   refinements?: RefinementRow[]
   highlightLevels?: number[]
 }>()
 
-const meta = computed(() => skillMetaItems(props.numbers, props.terms))
+const meta = computed(() => skillMetaItems(props.numbers, props.terms, props.initialEnergy))
 
 const rendered = computed(() =>
   props.levels.map((l) => ({
@@ -51,6 +53,8 @@ const renderedRefinements = computed(() =>
 <template>
   <section class="skill-section">
     <SkillSectionHeader :heading :slot-tags />
+    <!-- The build leaves this line out of the page description by its
+         `skill-meta` class (extractContentDescription in vite.config.ts). -->
     <p v-if="meta.length" class="skill-meta reading-meta">
       <span v-for="item in meta" :key="item.before"
         >{{ item.before

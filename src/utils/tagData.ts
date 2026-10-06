@@ -2,6 +2,7 @@
  * every tag menu, chip and link. */
 
 import { compareCharacters } from '@/lib/filterOrder'
+import { ENERGY_KEY, mechanicKeys, totalEnergy } from '@/lib/mechanics'
 import { tagVocabulary, type TagVocabulary } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import { loadCharacters } from './dataLoader'
@@ -18,17 +19,21 @@ export function isHeroModifier(mod: string): boolean {
   return loadCharacters().some((c) => !c.placeholder && c.name === mod)
 }
 
-interface TagGroup {
-  tag: string
+interface MechanicGroup {
+  // A tag, or the energy filter's key.
+  key: string
   characters: CharacterType[]
 }
 
-/** The heroes carrying each tag: tags in vocabulary order, heroes in the order
- * every hero list uses. */
-export function loadTagGroups(): TagGroup[] {
+/** The heroes under each mechanic: a tag's carriers, and under the energy
+ * filter every hero with starting energy. Mechanics in menu order, heroes in
+ * the order every hero list uses. */
+export function loadMechanicGroups(): MechanicGroup[] {
   const characters = [...loadCharacters()].sort(compareCharacters)
-  return [...loadTagVocabulary().keys()].map((tag) => ({
-    tag,
-    characters: characters.filter((c) => Object.hasOwn(c.tags, tag)),
+  return mechanicKeys(loadTagVocabulary()).map((key) => ({
+    key,
+    characters: characters.filter((c) =>
+      key === ENERGY_KEY ? totalEnergy(c) > 0 : Object.hasOwn(c.tags, key),
+    ),
   }))
 }

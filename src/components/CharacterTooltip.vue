@@ -7,6 +7,7 @@ import { computed } from 'vue'
 
 import TooltipCard from './ui/TooltipCard.vue'
 import TooltipPopup from './ui/TooltipPopup.vue'
+import { addedEnergy, ownEnergy } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import { useGameDataStore } from '@/stores/gameData'
 import { useI18nStore } from '@/stores/i18n'
@@ -24,11 +25,10 @@ const i18n = useI18nStore()
 
 const formattedName = computed(() => characterDisplayName(i18n.t, character))
 
-// "base (bonus)" when a skill grants extra starting energy; else just the base.
+// "own (added)" when a skill grants extra starting energy; else just its own.
 const formattedEnergy = computed(() => {
-  const [base = 0, ...bonuses] = character.energy
-  if (bonuses.length === 0) return String(base)
-  return `${base} (${bonuses.reduce((sum, n) => sum + n, 0)})`
+  const added = addedEnergy(character)
+  return added > 0 ? `${ownEnergy(character)} (${added})` : String(ownEnergy(character))
 })
 
 const rows = computed(() => [

@@ -11,7 +11,6 @@
   "tags": {
     "energy-battery": [{ "awakening": 1 }],
     "execute": [{ "ex": 1 }],
-    "initial-energy-300": [],
     "temp-buff": [{ "awakening": 1, "mods": ["opening"] }]
   }
 }

@@ -12,7 +12,6 @@
     "debuff": [
       { "ultimate": 1, "mods": ["global"] },
       { "awakening": 1, "mods": ["global"] }
-    ],
-    "initial-energy-300": []
+    ]
   }
 }

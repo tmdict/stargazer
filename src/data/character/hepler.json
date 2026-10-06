@@ -10,7 +10,6 @@
   "season": 6,
   "tags": {
     "cheat-death": [{ "ex": 1, "mods": ["ally"] }],
-    "initial-energy-300": [],
     "special-target": [{ "ex": 1 }]
   }
 }

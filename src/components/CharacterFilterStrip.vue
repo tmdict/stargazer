@@ -4,17 +4,17 @@ import { computed } from 'vue'
 import CharacterFilterMechanics from './CharacterFilterMechanics.vue'
 import FilterIcons from './ui/FilterIcons.vue'
 import { PLACEHOLDER_NONE } from '@/lib/characters/placeholder'
+import type { MechanicPick } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
-import type { TagPick } from '@/lib/types/skill'
 
 const factionFilter = defineModel<string>('factionFilter', { default: '' })
 const classFilter = defineModel<string>('classFilter', { default: '' })
-const tagFilter = defineModel<TagPick | null>('tagFilter', { default: null })
+const mechanicFilter = defineModel<MechanicPick | null>('mechanicFilter', { default: null })
 
 const props = defineProps<{
   characters: readonly CharacterType[]
-  // `characters` with the icon filters applied: what the tag menu counts in.
-  tagPool: readonly CharacterType[]
+  // `characters` with the icon filters applied: what the mechanics menu counts in.
+  mechanicPool: readonly CharacterType[]
 }>()
 
 const optionsOf = (pick: (c: CharacterType) => string) =>
@@ -24,21 +24,24 @@ const factionOptions = computed(() => optionsOf((c) => c.faction))
 const classOptions = computed(() => optionsOf((c) => c.class))
 
 const hasActiveFilter = computed(
-  () => factionFilter.value !== '' || classFilter.value !== '' || tagFilter.value !== null,
+  () => factionFilter.value !== '' || classFilter.value !== '' || mechanicFilter.value !== null,
 )
 
 // Clicks on the strip background (gaps, between rows) clear every filter.
 // The filters render their options as <button>s, so a closest() check skips
-// any click that actually landed on one. While a dropdown in the strip is
-// open, a click outside it is only its dismissal; the host's dropdowns are
-// slot content, so the open one is found by its trigger's aria-expanded.
+// any click that actually landed on one, and on a group of them (the energy
+// stepper), whose readout is not background. closest() and not contains():
+// the pill's clear button has removed itself by the time its click arrives.
+// While a dropdown in the strip is open, a click outside it is only its
+// dismissal; the host's dropdowns are slot content, so the open one is found
+// by its trigger's aria-expanded.
 function handleStripClick(e: MouseEvent) {
   if (!hasActiveFilter.value) return
   if ((e.currentTarget as HTMLElement).querySelector('[aria-expanded="true"]')) return
-  if ((e.target as HTMLElement).closest('button')) return
+  if ((e.target as HTMLElement).closest('button, [role="group"]')) return
   factionFilter.value = ''
   classFilter.value = ''
-  tagFilter.value = null
+  mechanicFilter.value = null
 }
 </script>
 
@@ -46,7 +49,7 @@ function handleStripClick(e: MouseEvent) {
   <div class="filter-strip" :class="{ resettable: hasActiveFilter }" @click="handleStripClick">
     <div class="menus-row">
       <slot name="menus" />
-      <CharacterFilterMechanics v-model="tagFilter" :pool="tagPool" />
+      <CharacterFilterMechanics v-model="mechanicFilter" :pool="mechanicPool" />
     </div>
     <div class="icons-row">
       <FilterIcons

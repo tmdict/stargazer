@@ -39,11 +39,15 @@ const rosters = useRosters()
 
 // Text search lives in the search overlay (select mode: a picked hero is placed,
 // not navigated to); the panel keeps only the icon filters.
-const { factionFilter, classFilter, tagFilter, tagPool, filteredCharacters } = useCharacterFilters(
-  computed(() => characters.filter(rosters.isPickable)),
-)
-
-const inspectChips = computed(() => (tagFilter.value ? [tagFilter.value] : undefined))
+const {
+  factionFilter,
+  classFilter,
+  mechanicFilter,
+  mechanicPool,
+  filteredCharacters,
+  energyPicked,
+  inspectChips,
+} = useCharacterFilters(computed(() => characters.filter(rosters.isPickable)))
 
 // Placement, uniqueness, and removal are page-wide (across every board); on the
 // single Arena board this is identical to a per-board check. A hero is "placed"
@@ -130,9 +134,9 @@ const handleResultSelect = (slug: string) => {
     <CharacterFilterStrip
       v-model:faction-filter="factionFilter"
       v-model:class-filter="classFilter"
-      v-model:tag-filter="tagFilter"
+      v-model:mechanic-filter="mechanicFilter"
       :characters
-      :tag-pool
+      :mechanic-pool
     >
       <template #menus>
         <RosterMenu manage large @manage="requestTab('rosters')" />
@@ -150,7 +154,7 @@ const handleResultSelect = (slug: string) => {
           isCharacterPlaced(character.id) &&
           !synergyCopyAvailable(character.id)
         "
-        :selected-filter="tagFilter?.tag"
+        :show-energy="energyPicked"
         inspectable
         :inspect-chips
         @character-click="handleCharacterClick"

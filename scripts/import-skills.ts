@@ -10,7 +10,8 @@
 // the cooldowns and ranges shown under skill headings to
 // `src/data/skill/numbers.json` (rules in lib/skillNumbers.ts).
 //
-// Read-only against character files.
+// Read-only against character files. It reports the ones whose tags or
+// starting energy no longer agree with the feed.
 //
 // Usage:
 //   npm run import:skills                          # reads DATA_FEED_DIR/<feed>/skills.json
@@ -40,7 +41,7 @@ import {
   writeJsonIfChanged,
   writeTextIfChanged,
 } from './lib/shared.ts'
-import { skillNumbers, type FeedHeroNumbers } from './lib/skillNumbers.ts'
+import { energyMismatches, skillNumbers, type FeedHeroNumbers } from './lib/skillNumbers.ts'
 import { orphanTags, type OrphanTag } from './lib/tagCheck.ts'
 
 // ---------- paths ----------
@@ -89,6 +90,7 @@ interface SkillsBulk {
       cooldown?: string
       range?: string
       rangeGlobal?: string
+      initialEnergy?: string
     }
     keywords?: Record<string, string>
   }
@@ -163,6 +165,7 @@ async function formatJson(path: string, value: unknown): Promise<string> {
 
 interface CharacterFile {
   name: string
+  energy: readonly number[]
   tags?: CharacterTags
   [k: string]: unknown
 }
@@ -306,7 +309,8 @@ async function main() {
       !terms.exclusiveEquipment ||
       !terms.cooldown ||
       !terms.range ||
-      !terms.rangeGlobal
+      !terms.rangeGlobal ||
+      !terms.initialEnergy
     ) {
       throw new Error(`[${code}] feed lacks _meta.terms; rebuild the upstream data feed`)
     }
@@ -316,6 +320,7 @@ async function main() {
       cooldown: terms.cooldown,
       range: terms.range,
       rangeGlobal: terms.rangeGlobal,
+      initialEnergy: terms.initialEnergy,
       ...TERM_OVERRIDES[code],
     }
   }
@@ -355,6 +360,10 @@ async function main() {
     characters.map((c) => c.slug).filter((slug) => slug in bulks.en.heroes),
   )
   const numbersText = await formatJson(NUMBERS_PATH, numbers.numbers)
+  const energyProblems = energyMismatches(
+    numbersFeed,
+    characters.map((c) => ({ slug: c.slug, energy: c.file.energy })),
+  )
 
   // Slot-level drift (a language's feed carrying no content for a slot en
   // has) would silently render pages missing a section; fail like the
@@ -452,6 +461,13 @@ async function main() {
   if (numbers.problems.length > 0) {
     console.warn(`\n  ${numbers.problems.length} skill number issue(s):`)
     for (const p of numbers.problems) console.warn(`    - ${p}`)
+  }
+
+  if (energyProblems.length > 0) {
+    console.warn(
+      `\n  ${energyProblems.length} hero file(s) disagree with the feed on starting energy:`,
+    )
+    for (const p of energyProblems) console.warn(`    - ${p}`)
   }
 
   if (summary.missingFromFeed.length > 0) {

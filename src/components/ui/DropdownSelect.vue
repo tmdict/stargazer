@@ -361,8 +361,7 @@ const pressSegment = (): void => {
 /* ---- split: a segment on the end of a large pill ---- */
 
 .split {
-  --dropdown-segment-width: 34px;
-  --dropdown-segment-reach: calc(var(--dropdown-segment-width) + var(--pill-large-border));
+  --dropdown-segment-reach: calc(var(--pill-segment-width) + var(--pill-large-border));
 }
 
 .segment {
@@ -372,7 +371,7 @@ const pressSegment = (): void => {
   bottom: var(--pill-large-border);
   display: grid;
   place-items: center;
-  width: var(--dropdown-segment-width);
+  width: var(--pill-segment-width);
   padding: 0;
   border: none;
   border-left: var(--pill-large-border) solid var(--color-border-primary);
@@ -380,7 +379,7 @@ const pressSegment = (): void => {
   background: none;
   color: var(--color-text-secondary);
   font: inherit;
-  font-size: 1.15rem;
+  font-size: var(--pill-segment-font-size);
   line-height: 1;
   cursor: pointer;
   transition: all var(--transition-fast);

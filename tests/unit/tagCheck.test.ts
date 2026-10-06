@@ -11,7 +11,6 @@ describe('orphanTags', () => {
   it('reports a slot or level the kit lacks and a key that is no slot, and nothing else', () => {
     const tags = {
       debuff: [{ ultimate: 1, mods: ['global'] }, { ex: 4 }],
-      'initial-energy-300': [],
       dot: [{ skill3: 1 }, { ultmate: 1 }],
       summon: [{ ex: 5, mods: ['global'] }],
     } as unknown as CharacterTags

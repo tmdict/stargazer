@@ -6,6 +6,7 @@ import SkillKeywordTooltip from './SkillKeywordTooltip.vue'
 import SkillSection from './SkillSection.vue'
 import SkillLocaleMenu from '@/components/ui/SkillLocaleMenu.vue'
 import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
+import { ownEnergy } from '@/lib/mechanics'
 import {
   chipActive,
   heroChips,
@@ -50,15 +51,15 @@ const inModal = inject(ContentInModalKey, false)
 const locale = computed(
   () => getSkillFile(props.lang, props.slug) ?? getSkillFile('en', props.slug),
 )
-const tags = loadCharacters().find((c) => c.name === props.slug)?.tags ?? {}
+const hero = loadCharacters().find((c) => c.name === props.slug)
+const tags = hero?.tags ?? {}
 const vocabulary = loadTagVocabulary()
 const chips = heroChips(tags, vocabulary)
 const numbers = getSkillNumbers(props.slug)
 
 const heroName = computed(() => heroDisplayName(props.slug, props.lang))
 
-// A pick the hero has no skill text for would hide every slot (the hero list's
-// Init Energy filter, a pick this hero does not satisfy), so those are left off.
+// A pick this hero does not satisfy would hide every slot, so those are left off.
 const picks = ref<readonly TagPick[]>(usablePicks(tags, props.initialChips ?? []))
 
 const chipKey = (chip: TagPick): string => `${chip.tag}:${chip.mods.join(',')}`
@@ -94,6 +95,9 @@ const sections = computed(() => {
       slotKey,
       heading: headingFor(slotKey, slot.n, appLang.value, locale.value!._terms),
       numbers: numbers[slotKey],
+      // The game shows a hero's starting energy on its ultimate. This is the
+      // hero's own; what a later skill level adds is in that level's text.
+      initialEnergy: slotKey === 'ultimate' && hero ? ownEnergy(hero) : undefined,
       slotTags,
       levels: slot.d.map((description, i) => ({ level: i + 1, description })),
       refinements: (slot.r ?? []).map((r) => ({ tier: r.t, description: r.d })),
@@ -198,6 +202,7 @@ provide(
         :id="section.slotKey"
         :heading="section.heading"
         :numbers="section.numbers"
+        :initial-energy="section.initialEnergy"
         :terms="locale._terms"
         :slot-tags="section.slotTags"
         :levels="section.levels"

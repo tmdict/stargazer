@@ -10,7 +10,6 @@
   "season": 2,
   "tags": {
     "energy-battery": [{ "skill3": 1 }],
-    "initial-energy-300": [],
     "temp-buff": [{ "ultimate": 1 }, { "skill3": 1, "mods": ["opening"] }],
     "tile-effect": [{ "skill3": 1 }]
   }

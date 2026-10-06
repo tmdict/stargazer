@@ -124,6 +124,17 @@
   --pill-large-height: 36px;
   --pill-large-border: 2px;
   --pill-large-padding: 14px;
+  --pill-segment-width: 34px;
+  --pill-segment-font-size: 1.15rem;
+
+  /* Filter chips */
+  --chip-count-gap: 5px;
+  --chip-count-opacity: 0.6;
+  --chip-dark-border-color: rgba(255, 255, 255, 0.22);
+  --chip-dark-color: rgba(255, 255, 255, 0.74);
+  --chip-dark-font-size: 0.72rem;
+  --chip-dark-padding-block: 2px;
+  --chip-dark-active-background: color-mix(in srgb, var(--color-accent) 18%, transparent);
 
   /* Dropdowns: the width of a large pill, so the ones in a row match, and the
      values a list's rows share with the Grid Info list. */

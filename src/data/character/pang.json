@@ -10,7 +10,6 @@
   "season": 4,
   "tags": {
     "energy-denial": [{ "ultimate": 1 }],
-    "initial-energy-300": [],
     "temp-buff": [{ "ex": 3 }]
   }
 }

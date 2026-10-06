@@ -14,8 +14,7 @@ export type TagAttachment = { readonly [K in TagPin]?: number } & {
   readonly mods?: readonly string[]
 }
 
-// Empty attachment array = character-level tag (no per-level pin). Readonly so
-// the type aligns with Vite's deeply-frozen JSON imports.
+// Readonly so the type aligns with Vite's deeply-frozen JSON imports.
 export type CharacterTags = Readonly<Record<string, readonly TagAttachment[]>>
 
 // A tag and the modifiers one of its attachments must all carry: what a tag
@@ -47,11 +46,18 @@ export interface SkillLocaleSlot {
 // chrome surfaces and as search aliases). `_terms` is the game's official
 // "Ultimate" / "Exclusive Equipment" labels in the file's language, used as
 // heading prefixes for those slots, and its skill-panel templates: cooldown
-// ("Cooldown: ${1}\nInitial Cooldown: ${2}"), range ("Range: ${1}") and the
-// word a global range shows as.
+// ("Cooldown: ${1}\nInitial Cooldown: ${2}"), range ("Range: ${1}"), the word
+// a global range shows as, and initial energy ("Initial Energy: ${1}").
 export type SkillLocaleFile = {
   _hero?: { name: string }
-  _terms?: { ultimate: string; ex: string; cooldown: string; range: string; rangeGlobal: string }
+  _terms?: {
+    ultimate: string
+    ex: string
+    cooldown: string
+    range: string
+    rangeGlobal: string
+    initialEnergy: string
+  }
 } & Partial<Record<SlotKey, SkillLocaleSlot>>
 
 // On-disk shape of src/data/skill/numbers.json (auto-managed by the importer):

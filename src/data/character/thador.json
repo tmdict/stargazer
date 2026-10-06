@@ -10,7 +10,6 @@
   "season": 4,
   "tags": {
     "debuff": [{ "ex": 1, "mods": ["global"] }],
-    "energy-battery": [{ "ex": 3 }],
-    "initial-energy-300": []
+    "energy-battery": [{ "ex": 3 }]
   }
 }

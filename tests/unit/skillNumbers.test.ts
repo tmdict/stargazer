@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  energyMismatches,
   heroSkillNumbers,
   skillNumbers,
   type FeedHeroNumbers,
@@ -18,7 +19,10 @@ const level = (overrides: Partial<FeedLevelNumbers> = {}, n = 1): FeedLevelNumbe
 const levels = (overrides: Partial<FeedLevelNumbers>, count = 4) =>
   Array.from({ length: count }, (_, i) => level(overrides, i + 1))
 
-const hero = (skills: FeedHeroNumbers['skills']): FeedHeroNumbers => ({ skills })
+const hero = (skills: FeedHeroNumbers['skills'], startMp = 0): FeedHeroNumbers => ({
+  startMp,
+  skills,
+})
 
 const numbersOf = (skills: FeedHeroNumbers['skills']) => heroSkillNumbers('x', hero(skills)).numbers
 
@@ -114,5 +118,26 @@ describe('skillNumbers', () => {
     const { numbers, problems } = skillNumbers({}, ['ghost'])
     expect(numbers).toEqual({})
     expect(problems).toEqual(["ghost: not in the feed's skill numbers"])
+  })
+})
+
+describe('energyMismatches', () => {
+  it("compares a hero file's own starting energy with the feed's, not what skills add", () => {
+    const heroes = { lyca: hero({}, 200), cyran: hero({}, 500) }
+    const files = [
+      { slug: 'lyca', energy: [200, 300] },
+      { slug: 'cyran', energy: [400, 200] },
+      { slug: 'ghost', energy: [0] },
+    ]
+    expect(energyMismatches(heroes, files)).toEqual([
+      'cyran: the hero file starts at 400, the feed at 500',
+    ])
+  })
+
+  it('reports a feed that carries the hero without the number', () => {
+    const files = [{ slug: 'lyca', energy: [200, 300] }]
+    expect(energyMismatches({ lyca: { skills: {} } }, files)).toEqual([
+      'lyca: the feed has no starting energy',
+    ])
   })
 })

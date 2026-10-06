@@ -1,3 +1,4 @@
+import { ENERGY_KEY, energyAboveLabel, isEnergyPick, type MechanicPick } from '@/lib/mechanics'
 import { tagPick } from '@/lib/tags'
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 import type { SkillLocaleFile, SlotKey, SlotNumbers, SlotValues, TagPick } from '@/lib/types/skill'
@@ -32,6 +33,18 @@ export function tagPickLabel(pick: TagPick, lang: AppLocale): string {
  * ("Ult (Opening)"). */
 export function tagLabel(tag: string, lang: AppLocale): string {
   return tagPickLabel(tagPick(tag, loadTagVocabulary()), lang)
+}
+
+/** A mechanic named by itself: a tag, or the energy filter ("Init Energy"). */
+export function mechanicLabel(key: string, lang: AppLocale): string {
+  return key === ENERGY_KEY ? appLabel(key, lang) : tagLabel(key, lang)
+}
+
+/** A pick as a filter reads: a tag pick's label, or "Init Energy > 500". */
+export function mechanicPickLabel(pick: MechanicPick, lang: AppLocale): string {
+  return isEnergyPick(pick)
+    ? `${appLabel(ENERGY_KEY, lang)} ${energyAboveLabel(pick.energyAbove)}`
+    : tagPickLabel(pick, lang)
 }
 
 /** Game-locale label (faction, class, stat); falls back to the key. */
@@ -133,25 +146,32 @@ function valueChain<K extends keyof SlotValues>(
  * cooldown, `${2}` the initial cooldown), and a line whose value is absent is
  * dropped. Values are bare numbers, as the game shows them, and a value that a
  * later level changes carries its whole chain. A global range fills the range
- * template with the game's word for it. */
+ * template with the game's word for it. `initialEnergy` is the hero's, which
+ * the game's panel shows last on the ultimate. */
 export function skillMetaItems(
   numbers: SlotNumbers | undefined,
   terms: SkillLocaleFile['_terms'] | undefined,
+  initialEnergy?: number,
 ): SkillMetaItem[] {
-  if (!numbers || !terms) return []
+  if (!terms) return []
   const items: SkillMetaItem[] = []
-  const cooldowns: Record<string, string[]> = {
-    '${1}': valueChain(numbers, 'cooldown').map(String),
-    '${2}': valueChain(numbers, 'initialCooldown').map(String),
+  if (numbers) {
+    const cooldowns: Record<string, string[]> = {
+      '${1}': valueChain(numbers, 'cooldown').map(String),
+      '${2}': valueChain(numbers, 'initialCooldown').map(String),
+    }
+    for (const line of terms.cooldown.split('\n')) {
+      const token = Object.keys(cooldowns).find((t) => line.includes(t))
+      const values = token === undefined ? [] : cooldowns[token]!
+      if (token && values.length > 0) items.push(fillTemplate(line, token, values))
+    }
+    const ranges = valueChain(numbers, 'range').map((r) =>
+      r === 'global' ? terms.rangeGlobal : String(r),
+    )
+    if (ranges.length > 0) items.push(fillTemplate(terms.range, '${1}', ranges))
   }
-  for (const line of terms.cooldown.split('\n')) {
-    const token = Object.keys(cooldowns).find((t) => line.includes(t))
-    const values = token === undefined ? [] : cooldowns[token]!
-    if (token && values.length > 0) items.push(fillTemplate(line, token, values))
+  if (initialEnergy !== undefined) {
+    items.push(fillTemplate(terms.initialEnergy, '${1}', [String(initialEnergy)]))
   }
-  const ranges = valueChain(numbers, 'range').map((r) =>
-    r === 'global' ? terms.rangeGlobal : String(r),
-  )
-  if (ranges.length > 0) items.push(fillTemplate(terms.range, '${1}', ranges))
   return items
 }

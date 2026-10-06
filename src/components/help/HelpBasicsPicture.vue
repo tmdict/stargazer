@@ -11,7 +11,7 @@ import { useNarrowViewport } from '@/composables/useNarrowViewport'
 import { useRouteLocale } from '@/composables/useRouteLocale'
 import { matchesPick } from '@/lib/tags'
 import { appLabel, modifierLabel, tagLabel } from '@/utils/skillLabels'
-import { loadTagGroups } from '@/utils/tagData'
+import { loadMechanicGroups } from '@/utils/tagData'
 
 defineProps<{
   kind: 'add' | 'skills' | 'move' | 'remove' | 'target' | 'mechanics'
@@ -30,7 +30,7 @@ const MECHANIC_TAG = 'temp-buff'
 const MECHANIC_MOD = 'opening'
 const mechanicHeroes = computed(() => {
   const pick = { tag: MECHANIC_TAG, mods: [MECHANIC_MOD] }
-  const tagged = loadTagGroups().find((group) => group.tag === MECHANIC_TAG)?.characters ?? []
+  const tagged = loadMechanicGroups().find((group) => group.key === MECHANIC_TAG)?.characters ?? []
   return tagged.filter((hero) => matchesPick(hero.tags, pick))
 })
 // The real filter has no + on phones.
