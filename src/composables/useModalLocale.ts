@@ -4,7 +4,7 @@ import type { AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
 /**
- * Modal-local locale for en/zh-only content (artifact/phantimal modals):
+ * Modal-local locale for app-locale content (artifact/phantimal modals):
  * starts from the global locale and resets to it every time the modal opens,
  * letting the modal switch language without mutating the global preference.
  * The skill modal uses useModalSkillLocale instead (16-locale content).

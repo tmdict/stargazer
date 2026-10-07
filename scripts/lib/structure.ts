@@ -3,6 +3,9 @@
 // importer (import-structure.ts) reads the feed and the existing files and
 // writes what these return.
 
+import { APP_LOCALES, type AppLocale, type LocaleData } from '../../src/lib/types/i18n.ts'
+import { perAppLocale } from './shared.ts'
+
 // Feed stat codes → the artifact files' stats keys.
 export const STAT_KEY: Record<string, string> = {
   HP: 'hp',
@@ -51,7 +54,7 @@ export interface FeedPhantimal {
 
 export interface Structure {
   data: Record<string, Json>
-  names: Record<string, { en: string; zh: string }>
+  names: Record<string, LocaleData>
   problems: string[]
 }
 
@@ -76,12 +79,11 @@ function idProblem(slug: string, generated: Json, existing: Json | undefined): s
 }
 
 export function artifactStructure(
-  en: Record<string, FeedArtifact>,
-  zh: Record<string, FeedArtifact>,
+  feeds: Record<AppLocale, Record<string, FeedArtifact>>,
   existing: Record<string, Json>,
 ): Structure {
   const out: Structure = { data: {}, names: {}, problems: [] }
-  const season = Object.values(en).filter((a) => a.set === 'season')
+  const season = Object.values(feeds.en).filter((a) => a.set === 'season')
   if (season.some((a) => a.fairyId == null || a.seasonType == null)) {
     out.problems.push('the feed has no fairyId/seasonType on artifacts; rebuild it')
     return out
@@ -103,13 +105,16 @@ export function artifactStructure(
     const problem = idProblem(a.slug, generated, existing[a.slug])
     if (problem) out.problems.push(problem)
     out.data[a.slug] = withCurated(generated, existing[a.slug])
-    const zhName = zh[a.slug]?.name
-    if (!a.name || !zhName) {
-      out.problems.push(`${a.slug}: the feed has no en or zh name`)
+    const unnamed = APP_LOCALES.filter((code) => !feeds[code][a.slug]?.name)
+    if (unnamed.length > 0) {
+      out.problems.push(`${a.slug}: the feed has no ${unnamed.join(' or ')} name`)
       return
     }
     // The feed's English names carry a " Spell" suffix the game's short names drop.
-    out.names[a.slug] = { en: a.name.replace(/\s*Spell$/, ''), zh: zhName }
+    out.names[a.slug] = perAppLocale((code) => {
+      const name = feeds[code][a.slug]!.name!
+      return code === 'en' ? name.replace(/\s*Spell$/, '') : name
+    })
   })
   return out
 }

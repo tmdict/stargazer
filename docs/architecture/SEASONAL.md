@@ -97,11 +97,11 @@ Each phase ships on its own.
 
 ### Phase 1: structure, at the game's flip
 
-It needs the new ids, en/zh names, artifact stats, phantimal factions and ranges, and portraits, but no text.
+It needs the new ids, names in every app locale, artifact stats, phantimal factions and ranges, and portraits, but no text.
 
 1. Publish the new icons, companions included, to the image host before deploying.
 2. Retire the old generated text: `npm run import:phantimals -- --retire`, then the same for `import:artifacts` and `import:charms`. Charms carry no season stamp, so the old text cannot stay up.
-3. Run `npm run import:structure`: it replaces the season's artifact and phantimal data files and the artifact names, reusing the freed ids. A new stat needs an `ArtifactStatKey`, a label in `src/locales/game/`, and its feed code in `STAT_KEY` (`scripts/lib/structure.ts`); the command stops on an unmapped code. Phantimal names come with their text from `import:phantimals`; if the feed does not carry the season's text yet, write name-only stubs (`{"name": {"en", "zh"}, "skills": []}`) for phase 2 to overwrite.
+3. Run `npm run import:structure`: it replaces the season's artifact and phantimal data files and the artifact names, reusing the freed ids. A new stat needs an `ArtifactStatKey`, a label in `src/locales/game/`, and its feed code in `STAT_KEY` (`scripts/lib/structure.ts`); the command stops on an unmapped code. Phantimal names come with their text from `import:phantimals`; if the feed does not carry the season's text yet, write name-only stubs (`{"name": {"en", "zh", "ko"}, "skills": []}`) for phase 2 to overwrite.
 4. Replace `src/lib/skills/seasonal/phantimal.ts` (usually no Spirit Marks yet, one companion skill per phantimal that has a companion) and delete the old season's `ARTIFACT_TARGETING` entries, with their tests.
 5. Bump the season pin in `tests/unit/lib/seasonal.test.ts` and replace the `season N` block in `tests/unit/skills/phantimal.test.ts`.
 6. If the Supreme League map list changed, give the new preset maps the ids the old ones free (the `id` in each arena JSON under `src/data/arena/`) and edit the `sl` row of `TEAM_VARIANTS` (`src/lib/teams/modes.ts`). Boards on the old list stop reading as Supreme League.

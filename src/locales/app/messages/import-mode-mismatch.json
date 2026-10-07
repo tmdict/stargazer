@@ -1,4 +1,5 @@
 {
   "en": "A {count}-map match: switch the mode",
-  "zh": "这是 {count} 张地图的对局，请切换模式"
+  "zh": "这是 {count} 张地图的对局，请切换模式",
+  "ko": "맵 {count}개 대전입니다. 모드를 변경하세요"
 }

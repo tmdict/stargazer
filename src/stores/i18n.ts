@@ -34,9 +34,13 @@ export const useI18nStore = defineStore('i18n', () => {
   const htmlLangOverride = ref<SkillLocale | null>(null)
   let htmlLangOwner: symbol | null = null
 
+  // <html lang> is the page's language, for the head and for crawlers; <body
+  // lang> is the app's, so whatever the app draws, wherever it is mounted,
+  // reads as the chrome locale unless it declares another language itself.
   const applyDocumentLang = () => {
     if (import.meta.env.SSR) return
     document.documentElement.lang = htmlLangOverride.value ?? currentLocale.value
+    document.body.lang = currentLocale.value
   }
 
   const setHtmlLangOverride = (locale: SkillLocale): symbol => {
@@ -63,8 +67,6 @@ export const useI18nStore = defineStore('i18n', () => {
    * - On client: Also updates document.lang and persists to localStorage.
    *   Pass persist: false for URL-derived locales (locale-prefixed routes):
    *   they are display-only and must not overwrite the user's saved choice.
-   *
-   * @param locale - The locale to set ('en' or 'zh')
    */
   const setLocale = (locale: AppLocale, { persist = true }: { persist?: boolean } = {}) => {
     currentLocale.value = locale
@@ -206,11 +208,6 @@ export const useI18nStore = defineStore('i18n', () => {
     }
   }
 
-  const toggleLocale = () => {
-    const newLocale = currentLocale.value === 'en' ? 'zh' : 'en'
-    setLocale(newLocale)
-  }
-
   return {
     // State (readonly through refs)
     currentLocale,
@@ -230,6 +227,5 @@ export const useI18nStore = defineStore('i18n', () => {
     setSkillLocale,
     setHtmlLangOverride,
     clearHtmlLangOverride,
-    toggleLocale,
   }
 })

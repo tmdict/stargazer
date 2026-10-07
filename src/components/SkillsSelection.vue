@@ -10,7 +10,6 @@ import { useCharacterFilters } from '@/composables/useCharacterFilters'
 import { fromMechanicQuery } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
-import { useI18nStore } from '@/stores/i18n'
 import { loadTagVocabulary } from '@/utils/tagData'
 
 const props = defineProps<{
@@ -21,8 +20,6 @@ const props = defineProps<{
   linkLocale: SkillLocale
   currentSlug?: string | null
 }>()
-
-const i18n = useI18nStore()
 
 // Text search lives in the search overlay (SkillSearchOverlay); the panel keeps
 // only the icon filters, so the grid is always visible.
@@ -49,10 +46,7 @@ watch([() => route.query.tag, () => route.query.mods, () => route.query.energy],
 </script>
 
 <template>
-  <!-- Hero list text (names, filters, results chrome) is app-locale even on
-       exotic skill pages, so it carries its own lang under the content-locale
-       <html lang> (fonts + screen readers follow the chrome language). -->
-  <div v-scroll-chain class="skills-selection" :lang="i18n.currentLocale">
+  <div v-scroll-chain class="skills-selection">
     <div class="search-row">
       <SkillSearchTrigger />
     </div>

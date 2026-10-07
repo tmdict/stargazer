@@ -1,4 +1,5 @@
 {
   "en": "Every point of Intimidation reduces all enemies' healing effects, shield value, extra Energy gains, and buff effects by 1%. It is offset by enemy unit's Inspiration.",
-  "zh": "每1点威压，将使得所有对方角色的治疗效果、护盾强度、额外充能、属性增益效力降低1%。与对方角色的“统率”属性相抵消。"
+  "zh": "每1点威压，将使得所有对方角色的治疗效果、护盾强度、额外充能、属性增益效力降低1%。与对方角色的“统率”属性相抵消。",
+  "ko": "위압 1포인트마다 모든 상대 유닛의 치료 효과, 실드 강도, 추가 에너지 획득, 속성 버프 효과가 1% 감소합니다. 상대 유닛의 \"통솔\" 속성과 상쇄됩니다."
 }

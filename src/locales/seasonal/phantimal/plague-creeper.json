@@ -1,102 +1,122 @@
 {
   "name": {
     "en": "Plague Creeper",
-    "zh": "腐臭瘴泥"
+    "zh": "腐臭瘴泥",
+    "ko": "역병 크리퍼"
   },
   "skills": [
     {
       "name": {
         "en": "Super Mud Bombs",
-        "zh": "超级污泥炸弹"
+        "zh": "超级污泥炸弹",
+        "ko": "초강력 진흙 폭탄"
       },
       "levels": [
         {
           "en": "Plague Creeper continuously shakes its body, launching a total of 8 mud bombs at all enemies. Each mud bomb deals [[80%]]<ATK> damage on hit and inflicts Sludgebound on the target for [[8]]s. Sludgebound reduces the target's Haste by [[15]] and deals [[25%]]<ATK> damage per second. Subsequent hits on the same enemy deal [[40%]]<ATK> damage instead.",
-          "zh": "持续抖动身体，向所有敌人射出共计8发污泥炸弹，污泥炸弹命中造成[[80%]]<ATK>伤害，并使目标进入持续[[8]]秒的“污泥缠身”状态，“污泥缠身”状态会使敌人的急速降低[[15]]点，并且每秒受到[[25%]]<ATK>的伤害。该技能命中重复的敌人会转为造成[[40%]]<ATK>的伤害。"
+          "zh": "持续抖动身体，向所有敌人射出共计8发污泥炸弹，污泥炸弹命中造成[[80%]]<ATK>伤害，并使目标进入持续[[8]]秒的“污泥缠身”状态，“污泥缠身”状态会使敌人的急速降低[[15]]点，并且每秒受到[[25%]]<ATK>的伤害。该技能命中重复的敌人会转为造成[[40%]]<ATK>的伤害。",
+          "ko": "몸을 계속 흔들어 모든 적군을 향해 총 8발의 진흙 폭탄을 발사한다. 진흙 폭탄 명중 시 [[80%]]<ATK>의 대미지를 입히고, 목표에게 [[8]]초 동안 지속되는 진흙 범벅 상태를 부여한다. 해당 상태에서는 적군의 급속이 [[15]] 감소하고 초당 [[25%]]<ATK>의 대미지를 받는다. 해당 스킬이 동일한 적군에게 중복 명중 시, 대미지가 [[40%]]<ATK>로 변경된다."
         },
         {
           "en": "Increases the damage dealt by Sludgebound to [[30%]]<ATK> per second.",
-          "zh": "“污泥缠身”状态的敌人每秒受到的伤害提升至[[30%]]<ATK>。"
+          "zh": "“污泥缠身”状态的敌人每秒受到的伤害提升至[[30%]]<ATK>。",
+          "ko": "진흙 범벅 상태의 적군이 초당 받는 대미지가 [[30%]]<ATK>로 증가한다."
         },
         {
           "en": "Once an enemy has been affected by Sludgebound for more than [[12]]s in total, the sludge corrodes them, permanently increasing the [[continuous damage]] they take by [[15%]].",
-          "zh": "敌人处于“污泥缠身”状态累计持续超过[[12]]秒后还会被污泥腐蚀，受到的[[持续伤害]]永久提升[[15%]]。"
+          "zh": "敌人处于“污泥缠身”状态累计持续超过[[12]]秒后还会被污泥腐蚀，受到的[[持续伤害]]永久提升[[15%]]。",
+          "ko": "적군의 진흙 범벅 상태가 누적 [[12]]초 초과 시, 진흙에 부식되어 받는 [[지속 대미지]]가 영구적으로 [[15%]] 증가한다."
         }
       ]
     },
     {
       "name": {
         "en": "Noxious Mire",
-        "zh": "污沼泥潭"
+        "zh": "污沼泥潭",
+        "ko": "진흙 늪"
       },
       "levels": [
         {
           "en": "Plague Creeper hurls a sludge ball at the area with the most enemies, creating a 1-tile mire upon impact. The mire lasts for [[6]]s, reducing the movement speed of enemies inside by [[30%]] and dealing [[40%]]<ATK> damage to them per second.",
-          "zh": "腐臭瘴泥向敌人最密集的区域格射出淤泥团，落地后生成一个半径1格的泥潭，持续[[6]]秒，区域内的敌人移动速度降低[[30%]]，每秒受到[[40%]]<ATK>的伤害。"
+          "zh": "腐臭瘴泥向敌人最密集的区域格射出淤泥团，落地后生成一个半径1格的泥潭，持续[[6]]秒，区域内的敌人移动速度降低[[30%]]，每秒受到[[40%]]<ATK>的伤害。",
+          "ko": "역병 크리퍼가 적군이 가장 밀집한 구역에 진흙 덩어리를 발사한다. 진흙 덩어리가 떨어진 자리 반경 1칸에 [[6]]초 동안 진흙 늪이 생성되어, 범위 내 적군의 이동 속도가 [[30%]] 감소하고 초당 [[40%]]<ATK>의 대미지를 받는다."
         },
         {
           "en": "Increases damage dealt per second to [[45%]]<ATK>.",
-          "zh": "每秒伤害提升至[[45%]]<ATK>。"
+          "zh": "每秒伤害提升至[[45%]]<ATK>。",
+          "ko": "초당 대미지가 [[45%]]<ATK>로 증가한다."
         },
         {
           "en": "Increases damage dealt per second to [[60%]]<ATK>.",
-          "zh": "每秒伤害提升至[[60%]]<ATK>。"
+          "zh": "每秒伤害提升至[[60%]]<ATK>。",
+          "ko": "초당 대미지가 [[60%]]<ATK>로 증가한다."
         }
       ]
     },
     {
       "name": {
         "en": "Phantimal Focus",
-        "zh": "幻灵专精"
+        "zh": "幻灵专精",
+        "ko": "팬텀 마스터리"
       },
       "levels": [
         {
           "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。",
+          "ko": "전투 중 자신의 HP가 [[8%]], 물리 방어력과 마법 방어력이 [[8%]], 공격력이 [[4%]] 증가한다."
         },
         {
           "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。",
+          "ko": "전투 중 자신의 HP가 [[16%]], 물리 방어력과 마법 방어력이 [[16%]], 공격력이 [[8%]] 증가한다."
         },
         {
           "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。",
+          "ko": "전투 중 자신의 HP가 [[24%]], 물리 방어력과 마법 방어력이 [[24%]], 공격력이 [[12%]] 증가한다."
         },
         {
           "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。",
+          "ko": "전투 중 자신의 HP가 [[32%]], 물리 방어력과 마법 방어력이 [[32%]], 공격력이 [[16%]] 증가한다."
         }
       ]
     },
     {
       "name": {
         "en": "Spirit Mark - Miasma",
-        "zh": "腐臭之灵能"
+        "zh": "腐臭之灵能",
+        "ko": "부패의 능력"
       },
       "levels": [
         {
           "en": "Plague Creeper applies a [[spirit mark]] to the allied hero in front of it, granting them Miasma.\nMiasma: When a battle starts, grants the [[spirit-marked hero]] a [[300%]]<ATK> shield and applies Earthen Renewal for [[10]]s. While active, Earthen Renewal increases the [[spirit-marked hero]]'s [[melee damage]] by [[10%]] and grants them a [[50%]]<ATK> shield every second. The total shield value provided by this skill cannot exceed [[700%]]<ATK>.",
-          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”腐臭之灵能“。战斗开始时，腐臭瘴泥使[[灵能者]]获得[[300%]]<ATK>护盾，并包裹“复能泥甲”，持续[[10]]秒。”复能泥甲“持续时间内，使[[灵能者]]造成的[[近距离伤害]]提升[[10%]]，同时每秒获得[[50%]]<ATK>的护盾，该技能提供护盾至多不超过[[700%]]<ATK>。"
+          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”腐臭之灵能“。战斗开始时，腐臭瘴泥使[[灵能者]]获得[[300%]]<ATK>护盾，并包裹“复能泥甲”，持续[[10]]秒。”复能泥甲“持续时间内，使[[灵能者]]造成的[[近距离伤害]]提升[[10%]]，同时每秒获得[[50%]]<ATK>的护盾，该技能提供护盾至多不超过[[700%]]<ATK>。",
+          "ko": "자신 앞의 아군 영웅 1명을 [[능력자]]로 만들어 부패의 능력을 부여한다. 전투 시작 시, 역병 크리퍼가 [[능력자]]에게 [[300%]]<ATK>의 실드를 부여하고 [[10]]초 동안 재생 진흙 갑옷으로 감싼다. 진흙 갑옷이 유지되는 동안 [[능력자]]가 입히는 [[근접 대미지]]가 [[10%]] 증가하고 초당 [[50%]]<ATK>의 실드를 획득한다(해당 스킬로 획득하는 실드는 최대 [[700%]]<ATK>를 초과하지 않음)."
         },
         {
           "en": "When a spirit-marked hero with Earthen Renewal deals melee damage to an enemy affected by Sludgebound, the two effects mix and amplify each other:\nResets Earthen Renewal's duration and increases the spirit-marked hero's Phys & Magic DEF by [[20%]]. Also resets the enemy's Sludgebound duration and reduces their Phys & Magic DEF by [[20%]].",
-          "zh": "携带“复能泥甲”的灵能者对“污泥缠身”的敌人造成近距离伤害后，使两种淤泥互相发酵增强：“复能泥甲”重置持续时间，并且使其护甲和魔抗提升[[20%]]；“污泥缠身”重置持续时间，并且使其护甲和魔抗降低[[20%]]。"
+          "zh": "携带“复能泥甲”的灵能者对“污泥缠身”的敌人造成近距离伤害后，使两种淤泥互相发酵增强：“复能泥甲”重置持续时间，并且使其护甲和魔抗提升[[20%]]；“污泥缠身”重置持续时间，并且使其护甲和魔抗降低[[20%]]。",
+          "ko": "재생 진흙 갑옷을 보유한 능력자가 진흙 범벅 상태의 적군에게 근접 대미지를 입히면, 두 종류의 진흙이 발효해 강화되어 재생 진흙 갑옷의 지속 시간이 초기화되고 물리 방어력과 마법 방어력이 [[20%]] 증가한다. 진흙 범벅 지속 시간도 초기화되고 물리 방어력과 마법 방어력이 [[20%]] 감소한다."
         }
       ]
     },
     {
       "name": {
         "en": "Sludge Split",
-        "zh": "淤泥分裂"
+        "zh": "淤泥分裂",
+        "ko": "진흙 분열"
       },
       "levels": [
         {
           "en": "Plague Creeper selects the axis line covering the most enemies. It spawns a small plaguerot at the tile on this line closest to the allied side, inheriting [[50%]] of Plague Creeper's basic stats. Upon spawning, the plaguerot crawls forward along the line to the enemy edge of the battlefield, then returns to its starting tile and disappears, leaving behind a venomous trail for [[4]]s. Enemies on the trail take damage equal to [[40%]] of the plaguerot's ATK per second and lose [[15%]] Phys & Magic DEF.",
-          "zh": "选择敌人最密集的轴线，在轴线最靠近己方的边缘位置分裂出一个继承自身[[50%]]基础属性的小型腐臭泥。小型腐臭泥会沿该轴线向前方爬行至敌方场地边缘，最后折返回原位消失，并在沿途的路径上留下毒液痕迹持续[[4]]秒。位于毒液痕迹上的敌人每秒受到小型腐臭泥[[40%]]攻击力的伤害，并降低[[15%]]魔抗和护甲。"
+          "zh": "选择敌人最密集的轴线，在轴线最靠近己方的边缘位置分裂出一个继承自身[[50%]]基础属性的小型腐臭泥。小型腐臭泥会沿该轴线向前方爬行至敌方场地边缘，最后折返回原位消失，并在沿途的路径上留下毒液痕迹持续[[4]]秒。位于毒液痕迹上的敌人每秒受到小型腐臭泥[[40%]]攻击力的伤害，并降低[[15%]]魔抗和护甲。",
+          "ko": "적군이 가장 밀집한 직선 경로를 선택해, 해당 경로에서 아군과 가장 가까운 가장자리를 향해 자신의 기본 속성 [[50%]]를 계승한 소형 역병 진흙으로 분열한다. 소형 역병 진흙은 해당 경로를 따라 전방으로 기어가 적군 필드 가장자리에 도달한 뒤 다시 원래 위치로 돌아와 사라지며, 이동 경로에 [[4]]초 동안 지속되는 독액 흔적을 남긴다. 독액 흔적 위의 적군은 초당 소형 역병 진흙 공격력 [[40%]]의 대미지를 받고 물리 방어력과 마법 방어력이 [[15%]] 감소한다."
         },
         {
           "en": "Increases the venomous trail's damage to [[50%]]<ATK>.",
-          "zh": "毒液痕迹造成的伤害提升至[[50%]]<ATK>。"
+          "zh": "毒液痕迹造成的伤害提升至[[50%]]<ATK>。",
+          "ko": "독액 흔적이 입히는 대미지가 [[50%]]<ATK>로 증가한다."
         }
       ]
     }

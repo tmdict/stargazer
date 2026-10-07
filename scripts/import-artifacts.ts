@@ -26,8 +26,16 @@ import { readdir, readFile, unlink } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { isAppLocale, SKILL_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
-import { arg, cleanDescription, feedSrcDir, hasFlag, writeTextIfChanged } from './lib/shared.ts'
+import { APP_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
+import {
+  APP_LOCALE_FEEDS,
+  arg,
+  cleanDescription,
+  feedSrcDir,
+  hasFlag,
+  perAppLocale,
+  writeTextIfChanged,
+} from './lib/shared.ts'
 import { STAT_KEY } from './lib/structure.ts'
 
 // ---------- paths ----------
@@ -120,19 +128,17 @@ async function main() {
     return
   }
 
-  const appLocales = SKILL_LOCALES.filter(
-    (l): l is (typeof SKILL_LOCALES)[number] & { code: AppLocale } => isAppLocale(l.code),
-  )
   const bulks = {} as Record<AppLocale, ArtifactsBulk>
-  for (const { feed, code } of appLocales) bulks[code] = await loadArtifactsBulk(feed)
+  for (const { feed, code } of APP_LOCALE_FEEDS) bulks[code] = await loadArtifactsBulk(feed)
 
   const en = bulks.en.artifacts
-  const zh = bulks.zh.artifacts
   const feedSlugs = Object.keys(en).sort()
   const problems: string[] = []
 
-  if (Object.keys(zh).sort().join(',') !== feedSlugs.join(',')) {
-    throw new Error('artifact feed slug sets differ between en and zh')
+  for (const code of APP_LOCALES) {
+    if (Object.keys(bulks[code].artifacts).sort().join(',') !== feedSlugs.join(',')) {
+      throw new Error(`artifact feed slug sets differ between en and ${code}`)
+    }
   }
 
   // Structural lint: hand-written files must mirror the feed exactly.
@@ -208,17 +214,21 @@ async function main() {
   const payloads: { path: string; text: string }[] = []
   for (const slug of feedSlugs) {
     const enLevels = en[slug]!.levels
-    const zhLevels = zh[slug]!.levels
-    if (enLevels.length !== zhLevels.length) {
-      throw new Error(`${slug}: en has ${enLevels.length} levels, zh has ${zhLevels.length}`)
-    }
-    const effects = enLevels.map((l, i) => {
-      const zhDesc = zhLevels[i]!.description
-      if (l.description == null || zhDesc == null) {
-        throw new Error(`${slug}: level ${l.level} has a null description`)
+    for (const code of APP_LOCALES) {
+      const count = bulks[code].artifacts[slug]!.levels.length
+      if (count !== enLevels.length) {
+        throw new Error(`${slug}: en has ${enLevels.length} levels, ${code} has ${count}`)
       }
-      return { en: cleanDescription(l.description), zh: cleanDescription(zhDesc) }
-    })
+    }
+    const effects = enLevels.map((l, i) =>
+      perAppLocale((code) => {
+        const description = bulks[code].artifacts[slug]!.levels[i]!.description
+        if (description == null) {
+          throw new Error(`${slug}: level ${l.level} has a null ${code} description`)
+        }
+        return cleanDescription(description)
+      }),
+    )
     payloads.push({
       path: join(TREES[en[slug]!.set].effects, `${slug}.json`),
       text: JSON.stringify(effects, null, 2) + '\n',

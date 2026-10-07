@@ -46,7 +46,7 @@ describe('setupGuideContentMeta', () => {
     }
   }
 
-  it('follows the route locale reactively, as the en and zh guides share one instance', async () => {
+  it("follows the route locale reactively, as a guide's locale routes share one instance", async () => {
     const locale = ref<AppLocale>('en')
     const resolved = mount(locale, 'index')
 

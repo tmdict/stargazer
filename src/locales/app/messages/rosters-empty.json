@@ -1,4 +1,5 @@
 {
   "en": "No rosters yet. Create one with the heroes you own and their upgrades, and the hero picker will show only those heroes, already upgraded.",
-  "zh": "还没有英雄池。新建一个，记录你拥有的英雄和强化，挑选英雄时只显示这些英雄，并自动带上强化等级。"
+  "zh": "还没有英雄池。新建一个，记录你拥有的英雄和强化，挑选英雄时只显示这些英雄，并自动带上强化等级。",
+  "ko": "아직 영웅 풀이 없습니다. 보유한 영웅과 강화 단계를 담아 영웅 풀을 만들면, 영웅 선택 목록에 해당 영웅만 강화가 적용된 상태로 표시됩니다."
 }

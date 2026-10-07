@@ -1,4 +1,5 @@
 {
   "en": "{count}-map match",
-  "zh": "{count} 张地图"
+  "zh": "{count} 张地图",
+  "ko": "맵 {count}개 대전"
 }

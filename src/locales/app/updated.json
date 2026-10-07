@@ -1,4 +1,5 @@
 {
   "en": "Updated {time}",
-  "zh": "更新于{time}"
+  "zh": "更新于{time}",
+  "ko": "{time} 수정"
 }

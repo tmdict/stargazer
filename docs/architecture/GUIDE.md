@@ -1,10 +1,10 @@
 # Guide
 
-The guide is an index of reference material for arena planning plus the pages it points at: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, and the finished seasons' PvP reports with the newest season's counter ladder. Guide pages exist in the two app locales and are pre-rendered ([Pre-Rendering](./PRE_RENDERING.md)).
+The guide is an index of reference material for arena planning plus the pages it points at: the Paragon and EX Refinement matrix, the heroes grouped by skill mechanic, and the finished seasons' PvP reports with the newest season's counter ladder. Guide pages exist in every app locale and are pre-rendered ([Pre-Rendering](./PRE_RENDERING.md)).
 
 ## Pages
 
-`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. The en and zh routes of a page share one view instance, so `setupGuideContentMeta` passes `useHead` a computed that follows the locale instead of the value at setup.
+`GUIDE_PAGES` and `guidePath` (`src/lib/guide.ts`) feed the router, the pre-render route list and the page meta, so a page added there is routed, pre-rendered and titled together. A page's locale routes share one view instance, so `setupGuideContentMeta` passes `useHead` a computed that follows the locale instead of the value at setup.
 
 Each index panel's title link is stretched over its `.guide-link` area (`src/styles/guide.css`), so the blurb, the previews and empty space open the page too. A control placed inside that area, such as a chip or tile, must raise itself with `position: relative; z-index: 2`, or the stretched link swallows its clicks. The counter ladder is the exception: only its title is a link, so a click on its empty space clears the team selection as it does in the report.
 
@@ -12,7 +12,7 @@ The upgrade tracks on the index place each band's levels at their share of that 
 
 ## Mechanics page
 
-The page has one card per tag, holding every hero that carries it, and one for initial energy, holding every hero that starts a battle with any. The tags and modifiers are themselves the controls: a click anywhere on a card picks its tag, except on a hero or a chip, and its chips pick modifiers. [Skill Pages](./SKILL_PAGES.md) defines tags, modifiers, the energy filter and when a hero satisfies a pick. The card's title is a button without a handler of its own, so the same click reaches the card from the keyboard. Picks combine as all-of, so two picks answer which heroes have both.
+The page has one card per tag, holding every hero that carries it, and one for initial energy, holding every hero that starts a battle with any. The tags and modifiers are themselves the controls: a click anywhere on a card picks it, except on a hero or a chip, and its chips pick modifiers. [Skill Pages](./SKILL_PAGES.md) defines tags, modifiers, the energy filter and when a hero satisfies a pick. The card's title is a button without a handler of its own, so the same click reaches the card from the keyboard. Picks combine as all-of, so two picks answer which heroes have both.
 
 A pick never hides or moves anything. Heroes outside the selection dim where they stand, so every card keeps its place and shape while picks change, and a card's count is the heroes still lit. With two or more picks no single card holds the answer, so the selection strip lists the matching heroes itself. The faction and class icons work differently: they narrow the page and drop a card they empty, unless it is picked. A name search keeps only the cards its heroes appear in, rings those heroes and dims the rest, and leaves each card's count alone. When it finds a single hero, the page lists the cards that hero is in as chips, and a chip picks its card as a click on the card does.
 
@@ -27,6 +27,8 @@ The selection lives in memory only. A tag or energy link replaces it, applied af
 ## Season summaries
 
 A finished season's summary (`src/content/pvp/s<N>/summary.ts`) is a typed literal written once from the season's report and never edited: the team groups and the counters between them. Nothing derives these numbers, and each counter's evidence band is copied from the report rather than recomputed from its record, so the index never disagrees with the report. `PVP_SEASONS` (`src/content/pvp/seasons.ts`) lists the summaries newest first. The index shows every entry's report block and the first entry's ladder.
+
+A report is written in English and Chinese (`ReportLocale`), and a summary carries each team's label in those two only. In an app locale the report is not written in, a team is named by its `heroes`, in portrait order, each by its name in that locale (`pvpTeamName`). The report links open the English report (`pvpReportHref`), which the report entry's title marks. A season therefore needs nothing per app locale beyond the hero names the app already has.
 
 Team ids and counter anchors follow the report's `counter-<winner>-vs-<loser>` fragment ids, so the ladder's curves link straight to the evidence. `tests/unit/content/pvpSeasons.test.ts` checks every summary against the hero list and its report: known hero slugs, counters only between listed teams, and anchors present in the template.
 

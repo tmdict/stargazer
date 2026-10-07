@@ -1,30 +1,37 @@
 [
   {
     "en": "Links the [[frontmost]] and the [[rearmost]] heroes when a battle starts. The frontmost hero takes [[20%]] of the damage that would otherwise be dealt to the rearmost hero. Whenever the rearmost hero deals damage, the frontmost hero recovers HP equal to [[30%]] of the damage dealt. Whenever either linked hero gains Energy through any means other than this skill, the other hero gains [[15%]] of that Energy.",
-    "zh": "战斗开始时，链接己方[[最靠后]]和[[最靠前]]的各一名不同英雄。链接的前方英雄代替后方英雄承担[[20%]]的伤害；链接的后方英雄造成伤害时，使链接的前方英雄回复伤害量[[30%]]的生命值。链接双方的英雄通过该技能以外的方式获得能量时，使另一名友军获得这部分能量的[[15%]]。"
+    "zh": "战斗开始时，链接己方[[最靠后]]和[[最靠前]]的各一名不同英雄。链接的前方英雄代替后方英雄承担[[20%]]的伤害；链接的后方英雄造成伤害时，使链接的前方英雄回复伤害量[[30%]]的生命值。链接双方的英雄通过该技能以外的方式获得能量时，使另一名友军获得这部分能量的[[15%]]。",
+    "ko": "전투 시작 시, 아군 [[가장 뒤]]와 [[가장 앞]]의 영웅 각각 1명을 연결한다. 앞쪽 영웅은 뒤쪽 영웅이 받는 대미지의 [[20%]]를 부담하며, 뒤쪽 영웅이 적군에게 대미지를 입히면 앞쪽 영웅이 대미지량의 [[30%]]에 해당하는 HP를 회복한다. 연결된 영웅이 해당 스킬 이외의 방식으로 에너지 획득 시, 연결된 다른 아군이 해당 에너지의 [[15%]]를 획득한다."
   },
   {
     "en": "Increases HP recovery to [[32%]] of the damage dealt.",
-    "zh": "生命值回复量提高至[[32%]]伤害量。"
+    "zh": "生命值回复量提高至[[32%]]伤害量。",
+    "ko": "HP 회복량이 대미지량의 [[32%]]로 증가한다."
   },
   {
     "en": "Increases HP recovery to [[34%]] of the damage dealt.",
-    "zh": "生命值回复量提高至[[34%]]伤害量。"
+    "zh": "生命值回复量提高至[[34%]]伤害量。",
+    "ko": "HP 회복량이 대미지량의 [[34%]]로 증가한다."
   },
   {
     "en": "Increases HP recovery to [[36%]] of the damage dealt.",
-    "zh": "生命值回复量提高至[[36%]]伤害量。"
+    "zh": "生命值回复量提高至[[36%]]伤害量。",
+    "ko": "HP 회복량이 대미지량의 [[36%]]로 증가한다."
   },
   {
     "en": "Increases HP recovery to [[38%]] of the damage dealt.",
-    "zh": "生命值回复量提高至[[38%]]伤害量。"
+    "zh": "生命值回复量提高至[[38%]]伤害量。",
+    "ko": "HP 회복량이 대미지량의 [[38%]]로 증가한다."
   },
   {
     "en": "Increases HP recovery to [[40%]] of the damage dealt.",
-    "zh": "生命值回复量提高至[[40%]]伤害量。"
+    "zh": "生命值回复量提高至[[40%]]伤害量。",
+    "ko": "HP 회복량이 대미지량의 [[40%]]로 증가한다."
   },
   {
     "en": "After the link has remained active for a total of [[20]]s, increases both linked allies' ATK by [[25%]].",
-    "zh": "链接累积持续[[20]]秒后，使链接双方的友军提高[[25%]]攻击力。"
+    "zh": "链接累积持续[[20]]秒后，使链接双方的友军提高[[25%]]攻击力。",
+    "ko": "누적 [[20]]초 연결 후, 연결된 두 아군의 공격력이 [[25%]] 증가한다."
   }
 ]

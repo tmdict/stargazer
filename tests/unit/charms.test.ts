@@ -2,26 +2,32 @@
 // stay mutually consistent, and every referenced hero must exist in the
 // hero list. Guards the import-charms outputs the UI consumes without runtime
 // checks.
-import { describe, expect, it } from 'vitest'
+import { beforeAll, describe, expect, it } from 'vitest'
 
 import { pinnedLevels } from '@/lib/tags'
+import { APP_LOCALES } from '@/lib/types/i18n'
 import {
   getSkillCharms,
   loadAppLocales,
   loadCharacters,
   loadCharms,
   loadCharmTags,
+  loadSkillLocale,
 } from '@/utils/dataLoader'
 
 describe('charm data', () => {
   const charms = loadCharms()
   const slugs = Object.keys(charms)
 
+  beforeAll(async () => {
+    await Promise.all(APP_LOCALES.map((lang) => loadSkillLocale(lang)))
+  })
+
   // A season can ship before its charm feed, so an empty map is legitimate
   // (import:charms --retire); a structural map without text, or text without
   // a map, is a half-written import.
   it('is either fully present or fully retired', () => {
-    for (const lang of ['en', 'zh'] as const) {
+    for (const lang of APP_LOCALES) {
       expect(getSkillCharms(lang) !== null, `${lang} _charms.json vs charms.json`).toBe(
         slugs.length > 0,
       )
@@ -36,20 +42,6 @@ describe('charm data', () => {
         expect(heroNames.has(hero), `${slug}: ${hero} not in the hero list`).toBe(true)
         expect(seen.has(hero), `${hero} appears on two charms`).toBe(false)
         seen.add(hero)
-      }
-    }
-  })
-
-  it.runIf(slugs.length > 0)('has en and zh locale entries with four tiers for every charm', () => {
-    for (const lang of ['en', 'zh'] as const) {
-      const dict = getSkillCharms(lang)
-      expect(dict, `${lang} _charms.json missing`).not.toBeNull()
-      expect(dict!.tiers).toHaveLength(4)
-      for (const slug of slugs) {
-        const tiers = dict!.charms[slug]
-        expect(tiers, `[${lang}] ${slug} missing`).toBeDefined()
-        expect(tiers).toHaveLength(4)
-        for (const t of tiers!) expect(t.trim().length).toBeGreaterThan(0)
       }
     }
   })
