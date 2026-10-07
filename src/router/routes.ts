@@ -42,7 +42,7 @@ async function warmSkillLocale(
     // Chunk fetch failed: offline, or a stale tab importing a re-hashed chunk
     // after a deploy. A hard navigation picks up fresh HTML and chunk URLs; on
     // the initial load (nothing fresher to fetch) proceed and let the reader
-    // render the en fallback.
+    // say the text could not be loaded.
     if (!import.meta.env.SSR && from.matched.length > 0) {
       window.location.assign(to.fullPath)
       return false
@@ -116,14 +116,14 @@ export const routes: RouteRecordRaw[] = [
   },
   {
     // The prefix is the skill-text language, one route across all 16 locales.
-    // Chrome stays en/zh and is resolved separately (see routeLocale.ts).
+    // Chrome follows it only when it is also an app locale (see routeLocale.ts).
     path: `/:textLocale(${SKILL_LOCALE_PATTERN})/skill/:name`,
     name: 'skill',
     component: () => import('@/views/SkillView.vue'),
     props: true, // Pass route params as props for better testability
     // Locale chunk warm-up lives in warmSkillLocale (global beforeResolve).
   },
-  // Guide pages stay en/zh: their content is hand-written in the app locales.
+  // Guide pages exist per app locale: their content is hand-written in those.
   ...APP_LOCALES.flatMap((locale) => [
     {
       path: guidePath(locale, 'index'),
@@ -156,6 +156,13 @@ export const routes: RouteRecordRaw[] = [
     path: '/teams',
     name: 'teams',
     component: () => import('@/views/TeamsView.vue'),
+  },
+  // TEMPORARY, this branch only: the Korean translation review page. Removal
+  // steps are in the view's header.
+  {
+    path: '/ko-review',
+    name: 'ko-review',
+    component: () => import('@/review/TranslationReviewView.vue'),
   },
   // Unknown URLs (stale links, typos) redirect home instead of rendering a
   // blank router-view. Dynamic path: skipped by SSG pre-rendering.

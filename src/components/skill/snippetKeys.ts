@@ -8,7 +8,7 @@ import type { SlotKey } from '@/lib/types/skill'
 export const SkillSnippetAnchorsKey: InjectionKey<Record<SlotKey, Ref<HTMLElement | null>>> =
   Symbol('SkillSnippetAnchors')
 
-// Computed so modal locale toggles propagate to descendant <SkillSnippet>s.
-// Stays AppLocale: snippets resolve their strings from app locales (en/zh),
+// Computed so modal locale switches propagate to descendant <SkillSnippet>s.
+// Stays AppLocale: snippets resolve their strings from the app locales,
 // so the provider passes the locale of the snippet file actually rendered.
 export const SkillLangKey: InjectionKey<ComputedRef<AppLocale>> = Symbol('SkillLang')

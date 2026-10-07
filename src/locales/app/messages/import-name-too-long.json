@@ -1,4 +1,5 @@
 {
   "en": "Record name too long: {length} of {max} characters; shorten the prefix or a name",
-  "zh": "记录名称过长：{length}/{max} 个字符，请缩短前缀或玩家名称"
+  "zh": "记录名称过长：{length}/{max} 个字符，请缩短前缀或玩家名称",
+  "ko": "기록 이름이 너무 깁니다 ({length}/{max}자). 접두사나 이름을 줄여 주세요"
 }

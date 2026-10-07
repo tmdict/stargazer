@@ -1,4 +1,5 @@
 {
   "en": "Exported {count} of {total} teams matching {filters}",
-  "zh": "已导出符合 {filters} 的 {count} 个阵容（共 {total} 个）"
+  "zh": "已导出符合 {filters} 的 {count} 个阵容（共 {total} 个）",
+  "ko": "{filters} 조건에 맞는 진형 {count}개를 내보냈습니다 (전체 {total}개)"
 }

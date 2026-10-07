@@ -39,8 +39,8 @@ The importers read an upstream data feed that is not part of this repo. To run t
 ### Adding a character
 
 1. Add `src/data/character/<name>.json` and the portrait `src/assets/images/character/<name>.png` (converted to WebP at build time).
-2. Add the display names in `src/locales/character/<name>.json`.
-3. Run `npm run import:skills` to bring in the skill text for every language.
+2. Add the English and Chinese display names in `src/locales/character/<name>.json`.
+3. Run `npm run import:skills` to bring in the skill text for every language. It also writes the hero's Korean display name, the game's own, into that file.
 
 The hero list, skill pages and search pick the character up from those files.
 

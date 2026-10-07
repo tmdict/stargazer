@@ -1,4 +1,5 @@
 {
   "en": "Two screenshots are set to map {map}",
-  "zh": "有两张截图都指向第 {map} 张地图"
+  "zh": "有两张截图都指向第 {map} 张地图",
+  "ko": "스크린샷 두 장이 모두 맵 {map}에 지정되어 있습니다"
 }

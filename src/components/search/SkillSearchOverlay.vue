@@ -417,7 +417,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
 <template>
   <Teleport v-if="mounted" to="body">
     <Transition name="sso">
-      <div v-if="isOpen" class="sso-backdrop" :lang="i18n.currentLocale" @click="onBackdropClick">
+      <div v-if="isOpen" class="sso-backdrop" @click="onBackdropClick">
         <div
           class="sso-panel"
           :class="{ wide: paneVisible }"
@@ -531,10 +531,7 @@ onUnmounted(() => window.removeEventListener('keydown', onGlobalKeydown))
                     >{{ paneHit.title.pre }}<mark>{{ paneHit.title.match }}</mark
                     >{{ paneHit.title.post }}</span
                   >
-                  <!-- Chrome-language heading above content-language body. -->
-                  <span v-else class="sso-pane-title" :lang="i18n.currentLocale">{{
-                    paneHit.typeLine
-                  }}</span>
+                  <span v-else class="sso-pane-title">{{ paneHit.typeLine }}</span>
                   <p v-if="paneHit.body" class="sso-pane-desc" :lang="paneHit.lang">
                     <template v-for="(piece, pi) in paneHit.body" :key="pi">
                       <span

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, onUnmounted, ref, watch } from 'vue'
-import { RouterLink, RouterView, useRoute } from 'vue-router'
+import { RouterLink, RouterView, useRoute, useRouter } from 'vue-router'
 
 import DragPreview from '@/components/DragPreview.vue'
 import AboutModal from '@/components/modals/AboutModal.vue'
@@ -13,16 +13,18 @@ import IconHelp from '@/components/ui/IconHelp.vue'
 import IconInfo from '@/components/ui/IconInfo.vue'
 import IconMail from '@/components/ui/IconMail.vue'
 import IconSearch from '@/components/ui/IconSearch.vue'
-import LanguageToggle from '@/components/ui/LanguageToggle.vue'
+import LocaleMenu from '@/components/ui/LocaleMenu.vue'
 import ToastContainer from '@/components/ui/ToastContainer.vue'
 import rowanGif from '@/assets/rowan.gif'
 import rowanSvg from '@/assets/rowan.svg'
-import { useLocaleToggle } from '@/composables/useLocaleToggle'
+import { useLocaleSwitch } from '@/composables/useLocaleSwitch'
 import { useSearchOverlay } from '@/composables/useSearchOverlay'
 import { useSeasonNotice } from '@/composables/useSeasonNotice'
 import { useLiftGuard } from '@/composables/useSelectionState'
 import { helpPath } from '@/lib/help'
+import { APP_LOCALES } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
+import { loadSkillLocale } from '@/utils/dataLoader'
 import { splitLocalePath } from '@/utils/routeLocale'
 import { runSeasonRotationPass } from '@/utils/seasonRotation'
 import {
@@ -37,7 +39,8 @@ const contactOpen = ref(false)
 const contactButton = ref<HTMLElement | null>(null)
 const i18n = useI18nStore()
 const route = useRoute()
-const toggleLocale = useLocaleToggle()
+const router = useRouter()
+const { target: localeTarget, pick: pickLocale } = useLocaleSwitch()
 const { open: openSearch } = useSearchOverlay()
 useLiftGuard()
 
@@ -65,7 +68,7 @@ if (strippedSeason !== null) useSeasonNotice().notify(strippedSeason)
 // path so the header and skill browser render in the URL's language (during
 // SSG and client navigation alike). URL-derived locale is display-only:
 // following a shared /zh/... link must not overwrite the saved preference
-// (only the language toggle and ?l= persist).
+// (only the language menu and ?l= persist).
 watch(
   () => route.path,
   (path) => {
@@ -81,6 +84,20 @@ watch(
   () => (showAboutModal.value = false),
 )
 
+// No skill text ships with the app, so the reader's language is fetched in
+// the background and the first skill popup or text search finds it warm. It
+// waits for the first route: until then the path has not pinned the locale,
+// and a /zh/ page would fetch English. A skill page has loaded the language
+// it shows and needs no other. A failed fetch is left to the surface that
+// needs the text, which reports it.
+const routeSettled = ref(false)
+watch(
+  () => (routeSettled.value && route.name !== 'skill' ? i18n.effectiveSkillLocale : null),
+  (lang) => {
+    if (lang) void loadSkillLocale(lang).catch(() => {})
+  },
+)
+
 // The unprefixed shells (/, /skills, …) are pre-rendered in English; applying
 // the saved locale only after mount keeps hydration matched to the baked HTML
 // (the post-mount swap updates text and link hrefs alike). Prefixed routes are
@@ -90,15 +107,18 @@ onMounted(() => {
   if (!splitLocalePath(window.location.pathname).locale) {
     i18n.initializeLocale()
   }
+  void router.isReady().then(() => (routeSettled.value = true))
 })
 
 // Keyboard shortcut handler
 const handleKeyDown = (e: KeyboardEvent) => {
-  // Alt+L (Option+L on macOS) to toggle language. Match the physical key via
-  // `code`: macOS composes a different `key` value when Option is held.
+  // Alt+L (Option+L on macOS) steps to the next language in menu order. Match
+  // the physical key via `code`: macOS composes a different `key` value when
+  // Option is held.
   if (e.altKey && e.code === 'KeyL') {
     e.preventDefault()
-    toggleLocale()
+    const next = APP_LOCALES.indexOf(i18n.currentLocale) + 1
+    pickLocale(APP_LOCALES[next % APP_LOCALES.length]!)
   }
 }
 
@@ -112,11 +132,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <!-- Chrome renders in the app locale even when the page's html lang is a
-       skill-text locale (content owns <html lang> on skill routes); the
-       explicit lang keeps screen readers and the browser's per-language font
-       fallback on the chrome language. -->
-  <header :lang="i18n.currentLocale">
+  <header>
     <nav>
       <RouterLink
         to="/"
@@ -207,8 +223,12 @@ onUnmounted(() => {
             <IconMail />
           </button>
         </li>
-        <li>
-          <LanguageToggle class="icon-link" />
+        <li class="menu-locale">
+          <LocaleMenu
+            :current="i18n.currentLocale"
+            :link-to="localeTarget"
+            @select="i18n.setLocale"
+          />
         </li>
       </ul>
     </nav>
@@ -283,7 +303,8 @@ nav ul li {
 }
 
 .menu a,
-.menu button {
+.menu button,
+.menu-locale {
   color: #ddd;
   text-decoration: none;
   font-size: 1.1rem;
@@ -292,8 +313,13 @@ nav ul li {
 }
 
 .menu a:hover,
-.menu button:hover {
+.menu button:hover,
+.menu-locale:hover {
   color: #f7d87c;
+}
+
+.menu-locale {
+  display: flex;
 }
 
 /* Wide headers: the search pill leads the right-side cluster and its auto

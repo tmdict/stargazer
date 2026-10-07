@@ -48,8 +48,6 @@ export function useCharacterFilters(characters: Ref<readonly CharacterType[]>) {
     return [...filtered].sort(compareCharacters)
   })
 
-  // The chips a hero's skills open on from this list. Energy belongs to the
-  // hero, not to a skill, so only a tag pick is one.
   const inspectChips = computed(() => (tagFilter.value ? [tagFilter.value] : undefined))
 
   return {

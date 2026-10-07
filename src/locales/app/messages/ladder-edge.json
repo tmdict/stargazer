@@ -1,4 +1,5 @@
 {
   "en": "{winner} beats {loser} {wins}–{losses}",
-  "zh": "{winner}以{wins}–{losses}击败{loser}"
+  "zh": "{winner}以{wins}–{losses}击败{loser}",
+  "ko": "{winner} 승 · {loser} 패 ({wins}승 {losses}패)"
 }

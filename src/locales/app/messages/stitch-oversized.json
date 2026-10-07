@@ -1,4 +1,5 @@
 {
   "en": "Result is too large to render ({width} × {height} px). Remove images or switch direction.",
-  "zh": "拼接结果过大，无法渲染（{width} × {height} 像素）。请移除部分图片或切换方向。"
+  "zh": "拼接结果过大，无法渲染（{width} × {height} 像素）。请移除部分图片或切换方向。",
+  "ko": "결과 이미지가 너무 커서 표시할 수 없습니다 ({width} × {height} px). 이미지를 줄이거나 방향을 바꿔 주세요."
 }

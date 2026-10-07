@@ -2,11 +2,15 @@
  * counter ladder. */
 
 import type { AppLocale } from '@/lib/types/i18n'
-import type { PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
+import type { PvpSeasonSummary, PvpTeam, ReportLocale } from '@/lib/types/pvp'
+
+export const isReportLocale = (lang: AppLocale): lang is ReportLocale =>
+  lang === 'en' || lang === 'zh'
 
 /** The season's static report, hydrated to this path at build (scripts/guideReports.ts).
  * It sits outside the locale-prefixed routes and opens in English unless the
- * link asks for Chinese with `?lang=zh`; a fragment goes after the query. */
+ * link asks for Chinese with `?lang=zh`, so a site language the report is not
+ * written in reads the English one; a fragment goes after the query. */
 export const pvpReportHref = (season: number, lang: AppLocale): string =>
   `/guide/pvp/s${season}/${lang === 'zh' ? '?lang=zh' : ''}`
 

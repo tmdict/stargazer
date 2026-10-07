@@ -47,7 +47,8 @@ const appLang = computed<AppLocale>(() => i18n.currentLocale)
 const inModal = inject(ContentInModalKey, false)
 
 // The locale is warm before mount (route guard on pages, ready gate in the
-// modal); the en fallback covers a failed chunk fetch on a cold initial load.
+// modal). When its chunk could not be fetched, English stands in if it is
+// warm; otherwise there is no text to show.
 const locale = computed(
   () => getSkillFile(props.lang, props.slug) ?? getSkillFile('en', props.slug),
 )
@@ -166,8 +167,10 @@ provide(
 </script>
 
 <template>
-  <div v-if="!locale" class="skill-empty">No skill data available for this character.</div>
-  <article v-else ref="rootEl" class="skill-sections">
+  <div v-if="!locale" class="skill-empty" :lang="appLang">
+    {{ i18n.t('app.skill-load-failed') }}
+  </div>
+  <article v-else ref="rootEl" class="skill-sections" :lang>
     <div class="skill-header" :class="{ resettable: picks.length > 0 }" @click="clearChips">
       <div class="skill-title-row">
         <h1 class="skill-hero-name">{{ heroName }}</h1>
@@ -182,7 +185,7 @@ provide(
         />
       </div>
 
-      <div v-if="chips.length > 0" class="skill-chips">
+      <div v-if="chips.length > 0" class="skill-chips" :lang="appLang">
         <button
           v-for="chip in chips"
           :key="chipKey(chip)"

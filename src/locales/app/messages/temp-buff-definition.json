@@ -1,4 +1,5 @@
 {
   "en": "A temporary stat buff is one that ends during the battle. It either runs on a timer or lasts only while its condition holds, such as standing in an area. It has to raise a stat like ATK, DEF, Haste or ATK SPD. Shields, control immunity and bonuses to damage dealt or damage taken don't count.",
-  "zh": "非永久属性提升效果是指会在战斗中结束的属性增益，可以是限时效果，也可以是只在条件满足时持续的效果，例如站在某个区域内。它必须提高攻击力、护甲魔抗、急速或攻击速度等属性。护盾、免控以及造成伤害或受到伤害的加成不计入。"
+  "zh": "非永久属性提升效果是指会在战斗中结束的属性增益，可以是限时效果，也可以是只在条件满足时持续的效果，例如站在某个区域内。它必须提高攻击力、护甲魔抗、急速或攻击速度等属性。护盾、免控以及造成伤害或受到伤害的加成不计入。",
+  "ko": "비영구 속성 버프는 전투 도중에 끝나는 버프입니다. 지속 시간이 정해져 있거나, 특정 범위 안에 서 있는 것처럼 조건이 유지되는 동안에만 적용됩니다. 공격력, 방어력, 급속, 공격 속도 같은 속성을 올리는 효과여야 합니다. 실드, 제어 면역, 주는 대미지나 받는 대미지에 대한 보정은 포함되지 않습니다."
 }

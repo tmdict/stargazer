@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18nStore } from '@/stores/i18n'
+
 // A heading chip: its label and the tag link it opens on `/skills`.
 export interface SlotChip {
   label: string
@@ -9,12 +11,15 @@ defineProps<{
   heading?: string
   slotTags?: SlotChip[]
 }>()
+
+// Chip labels are in the app locale, whatever language the heading is in.
+const i18n = useI18nStore()
 </script>
 
 <template>
   <header v-if="heading || slotTags?.length" class="skill-section-header">
     <h2 v-if="heading" class="skill-section-heading">{{ heading }}</h2>
-    <span v-if="slotTags?.length" class="skill-section-chips">
+    <span v-if="slotTags?.length" class="skill-section-chips" :lang="i18n.currentLocale">
       <RouterLink
         v-for="chip in slotTags"
         :key="chip.label"

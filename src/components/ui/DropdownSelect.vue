@@ -7,9 +7,11 @@
 
    Variants: `pill` (bordered, on light panels), `tab` (bare text sized like
    the tab strip, list right-aligned), `dark` (translucent, inside the dark
-   on-grid popup). The owner can fix the trigger width with
-   `--dropdown-trigger-width` or give it a floor with
-   `--dropdown-trigger-min-width`.
+   on-grid popup), `icon` (the `icon` slot alone on dark chrome, `label` its
+   accessible name, list dark and right-aligned). The owner can fix the
+   trigger width with `--dropdown-trigger-width` or give it a floor with
+   `--dropdown-trigger-min-width`. An `icon` trigger is bare unless
+   `triggerClass` names the class that draws its box.
 
    `floating` moves the list to <body>, for a dropdown inside a scrolling
    panel that would otherwise cut the list off. `clickOnly` and the `open`
@@ -17,10 +19,11 @@
    list only on request. */
 
 import { computed, ref, watch } from 'vue'
+import type { RouteLocationRaw } from 'vue-router'
 
 import DropdownRow from './DropdownRow.vue'
 import IconClose from './IconClose.vue'
-import { useDropdown } from '@/composables/useDropdown'
+import { opensElsewhere, useDropdown } from '@/composables/useDropdown'
 import { useFloatingPanel } from '@/composables/useFloatingPanel'
 import { usePanelFit } from '@/composables/usePanelFit'
 import { useI18nStore } from '@/stores/i18n'
@@ -31,6 +34,8 @@ export interface DropdownItem {
   // Trailing detail, e.g. a count.
   meta?: string | number
   selected: boolean
+  // Makes the row a link; `select` still fires when it is followed here.
+  to?: RouteLocationRaw
 }
 
 const {
@@ -43,7 +48,8 @@ const {
 } = defineProps<{
   label: string
   items?: readonly DropdownItem[]
-  variant?: 'pill' | 'tab' | 'dark'
+  variant?: 'pill' | 'tab' | 'dark' | 'icon'
+  triggerClass?: string
   large?: boolean
   floating?: boolean
   // Accent the trigger, e.g. while a non-default choice is active.
@@ -136,9 +142,10 @@ const listEvents = floating
   ? { mouseenter: onMouseEnter, mouseleave: onMouseLeave, keydown: tabOutOfList }
   : {}
 
-const select = (key: string): void => {
+const select = (item: DropdownItem, e: MouseEvent): void => {
+  if (item.to && opensElsewhere(e)) return
   hide()
-  emit('select', key)
+  emit('select', item.key)
 }
 
 const runAction = (): void => {
@@ -176,8 +183,9 @@ const pressSegment = (): void => {
       ref="triggerRef"
       type="button"
       class="trigger"
-      :class="{ lit, clearing }"
+      :class="[triggerClass ?? (variant === 'icon' ? 'bare' : undefined), { lit, clearing }]"
       :title
+      :aria-label="variant === 'icon' ? label : undefined"
       :aria-expanded="open"
       @click="toggle"
       @mouseenter="hoverTrigger"
@@ -228,7 +236,8 @@ const pressSegment = (): void => {
             :label="item.label"
             :meta="item.meta"
             :selected="item.selected"
-            @click="select(item.key)"
+            :to="item.to"
+            @click="select(item, $event)"
           />
           <DropdownRow v-if="action" class="item" :label="action" action @click="runAction" />
         </slot>
@@ -247,11 +256,16 @@ const pressSegment = (): void => {
   display: inline-flex;
   align-items: center;
   gap: var(--spacing-xs);
-  width: var(--dropdown-trigger-width, auto);
-  min-width: var(--dropdown-trigger-min-width, auto);
   font: inherit;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+.pill .trigger,
+.tab .trigger,
+.dark .trigger {
+  width: var(--dropdown-trigger-width, auto);
+  min-width: var(--dropdown-trigger-min-width, auto);
 }
 
 .trigger-label {
@@ -458,22 +472,52 @@ const pressSegment = (): void => {
 
 .dark .list {
   max-width: 100%;
+}
+
+.dark .list,
+.icon .list {
   background: rgb(32, 32, 32);
   border-color: rgba(255, 255, 255, 0.15);
 }
 
 .dark .item,
-.dark .item.action {
+.dark .item.action,
+.icon .item {
   color: rgba(255, 255, 255, 0.8);
 }
 
-.dark .item:hover {
+.dark .item:hover,
+.icon .item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
 }
 
-.dark .item.selected {
+.dark .item.selected,
+.icon .item.selected {
   background: var(--color-primary);
   color: #fff;
+}
+
+/* ---- icon ---- */
+
+.icon {
+  font-size: var(--control-font-size);
+}
+
+.icon .trigger.bare {
+  padding: 0;
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.icon .trigger-label,
+.icon .caret {
+  display: none;
+}
+
+.icon .list {
+  right: 0;
+  left: auto;
 }
 </style>

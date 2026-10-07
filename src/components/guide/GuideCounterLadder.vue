@@ -14,7 +14,7 @@ import { pvpReportHref } from '@/lib/pvp/summary'
 import type { AppLocale } from '@/lib/types/i18n'
 import type { PvpCounter, PvpSeasonSummary, PvpTeam } from '@/lib/types/pvp'
 import { interpolate } from '@/utils/interpolate'
-import { appLabel } from '@/utils/skillLabels'
+import { appLabel, pvpTeamName } from '@/utils/skillLabels'
 
 const props = defineProps<{ summary: PvpSeasonSummary; lang: AppLocale }>()
 
@@ -32,8 +32,11 @@ const portraitSlots = computed(() =>
 )
 const reportHref = computed(() => pvpReportHref(props.summary.season, props.lang))
 
-const teamName = (id: string): string =>
-  props.summary.teams.find((t) => t.id === id)?.name[props.lang] ?? id
+const nameOf = (team: PvpTeam): string => pvpTeamName(team, props.lang)
+const teamName = (id: string): string => {
+  const team = props.summary.teams.find((t) => t.id === id)
+  return team ? nameOf(team) : id
+}
 // Zero-width spaces let a long label wrap between its heroes.
 const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b)
 const wrappable = (name: string): string => name.replace(/[/·]/g, `$&${ZERO_WIDTH_SPACE}`)
@@ -177,14 +180,14 @@ onUnmounted(() => {
           :class="{ dim: rowDim(row.team) }"
           :style="{ top: `${row.top}%` }"
           :aria-pressed="selected === row.team.id"
-          :aria-label="interpolate(label('ladder-highlight'), { team: row.team.name[lang] })"
+          :aria-label="interpolate(label('ladder-highlight'), { team: nameOf(row.team) })"
           @click="toggle(row.team.id)"
         >
           <span class="portraits">
             <GuidePortrait v-for="slug in row.team.heroes" :key="slug" :slug :lang />
           </span>
           <span class="name">
-            <span>{{ wrappable(row.team.name[lang]) }}</span>
+            <span>{{ wrappable(nameOf(row.team)) }}</span>
             <small>{{ label('rating') }} {{ row.team.rating.toFixed(2) }}</small>
           </span>
         </button>
