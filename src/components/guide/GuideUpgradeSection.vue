@@ -4,7 +4,7 @@
    for Celestial and Hypogean, EX refinement), each band P0..P4 plus its step.
    A stat an upgrade does not touch shows a dash. Narrow panels swap the matrix
    for one table per band with the step under the stat name. Labels resolve
-   through the route locale so SSG bakes both languages. */
+   through the route locale so SSG bakes every app locale. */
 
 import { computed } from 'vue'
 

@@ -1,4 +1,5 @@
 {
   "en": "{count} screenshot(s) with no recognised heroes are skipped",
-  "zh": "{count} 张截图没有识别出英雄，已跳过"
+  "zh": "{count} 张截图没有识别出英雄，已跳过",
+  "ko": "영웅이 인식되지 않은 스크린샷 {count}장을 건너뛰었습니다"
 }

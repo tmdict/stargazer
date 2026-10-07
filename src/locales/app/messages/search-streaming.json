@@ -1,4 +1,5 @@
 {
   "en": "searching {n} of {total} languages…",
-  "zh": "正在搜索 {n}/{total} 种语言…"
+  "zh": "正在搜索 {n}/{total} 种语言…",
+  "ko": "{total}개 언어 중 {n}개 검색 중…"
 }

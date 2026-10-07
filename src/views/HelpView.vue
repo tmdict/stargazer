@@ -2,6 +2,7 @@
 import { computed, onMounted, type Component } from 'vue'
 
 import HelpEn from '@/content/help/Help.en.vue'
+import HelpKo from '@/content/help/Help.ko.vue'
 import HelpZh from '@/content/help/Help.zh.vue'
 import { provideHelpTouch } from '@/composables/useHelpTouch'
 import { useRouteLocale } from '@/composables/useRouteLocale'
@@ -11,7 +12,7 @@ import { setupHelpContentMeta } from '@/utils/contentMeta'
 
 import '@/styles/content.css'
 
-const CONTENT: Record<AppLocale, Component> = { en: HelpEn, zh: HelpZh }
+const CONTENT: Record<AppLocale, Component> = { en: HelpEn, zh: HelpZh, ko: HelpKo }
 
 const lang = useRouteLocale()
 setupHelpContentMeta(lang)

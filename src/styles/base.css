@@ -62,6 +62,24 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Per-language typography */
+
+[lang]:lang(ko) {
+  word-break: keep-all;
+}
+
+[lang]:not(:lang(ko)) {
+  word-break: normal;
+}
+
+/* Apple SD Gothic Neo, the Mac's Korean font, sets its letters above the
+   middle of its line box, so the line is measured from a Latin font named
+   first. Without that font the list falls through to sans-serif. <body lang>
+   is the interface language. */
+body:lang(ko) {
+  --font-ui: 'Helvetica Neue', sans-serif;
+}
+
 /* Common layout styles */
 
 #app {

@@ -5,7 +5,20 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { argv, env, loadEnvFile } from 'node:process'
 
+import { APP_LOCALES, SKILL_LOCALES, type AppLocale } from '../../src/lib/types/i18n.ts'
 import { STAT_TAG_RE } from '../../src/utils/textHighlight.ts'
+
+/** Each app locale with the upstream feed directory that carries it. */
+export const APP_LOCALE_FEEDS = APP_LOCALES.map((code) => ({
+  code,
+  feed: SKILL_LOCALES.find((l) => l.code === code)!.feed,
+}))
+
+/** One value per app locale, keyed in APP_LOCALES order: the shape of every
+ * chrome-language text the importers write. */
+export function perAppLocale<T>(value: (code: AppLocale) => T): Record<AppLocale, T> {
+  return Object.fromEntries(APP_LOCALES.map((code) => [code, value(code)])) as Record<AppLocale, T>
+}
 
 // --src-dir, else DATA_FEED_DIR (environment or .env.local), resolved against
 // the repo root so it holds regardless of CWD.

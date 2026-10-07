@@ -2,9 +2,12 @@
 import { computed } from 'vue'
 
 import SkillSectionHeader, { type SlotChip } from './SkillSectionHeader.vue'
+import { useI18nStore } from '@/stores/i18n'
 import { highlightSkillText } from '@/utils/textHighlight'
 
 const props = defineProps<{
+  /** In the app locale, like `sharedLabel`; the tiers and names are in the
+   * skill text's language. */
   heading: string
   slotTags?: SlotChip[]
   /** Localized tier labels, Elite → Mythic order. */
@@ -15,6 +18,8 @@ const props = defineProps<{
   /** Display names of the other heroes sharing this charm. */
   sharedNames?: string[]
 }>()
+
+const i18n = useI18nStore()
 
 // Badge tints index by tier, not by label text, so they hold in every content
 // language.
@@ -29,24 +34,20 @@ const rows = computed(() =>
     isTagged: props.highlightTiers?.includes(tier) ?? false,
   })),
 )
-
-const sharedLine = computed(() =>
-  props.sharedLabel && props.sharedNames?.length
-    ? `${props.sharedLabel}: ${props.sharedNames.join(', ')}`
-    : null,
-)
 </script>
 
 <template>
   <section class="charm-section">
-    <SkillSectionHeader :heading :slot-tags />
+    <SkillSectionHeader :heading :slot-tags :lang="i18n.currentLocale" />
     <div class="charm-tiers">
       <div v-for="row in rows" :key="row.tier" class="charm-tier" :class="{ tagged: row.isTagged }">
         <span class="charm-tier-badge" :class="row.tierClass">{{ row.name }}</span>
         <p class="charm-tier-desc reading-secondary" v-html="row.html" />
       </div>
     </div>
-    <p v-if="sharedLine" class="charm-shared">{{ sharedLine }}</p>
+    <p v-if="sharedLabel && sharedNames?.length" class="charm-shared">
+      <span :lang="i18n.currentLocale">{{ sharedLabel }}:</span> {{ sharedNames.join(', ') }}
+    </p>
   </section>
 </template>
 

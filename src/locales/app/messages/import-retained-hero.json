@@ -1,4 +1,5 @@
 {
   "en": "{hero} is already on the {side} side of map {map}, which this import leaves as it is, so it will be skipped",
-  "zh": "{hero} 已在第 {map} 张地图的{side}（本次导入不改动该地图），将被跳过"
+  "zh": "{hero} 已在第 {map} 张地图的{side}（本次导入不改动该地图），将被跳过",
+  "ko": "{hero}: 이번 가져오기에서 변경하지 않는 맵 {map}의 {side} 진영에 이미 있어 건너뜁니다"
 }

@@ -1,4 +1,5 @@
 {
   "en": "Remove {name}",
-  "zh": "移除 {name}"
+  "zh": "移除 {name}",
+  "ko": "{name} 제거"
 }

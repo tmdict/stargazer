@@ -23,7 +23,6 @@ const props = defineProps<{
   // file's `_terms`.
   numbers?: SlotNumbers
   terms?: SkillLocaleFile['_terms']
-  // The hero's own starting energy, shown with the numbers of its ultimate.
   initialEnergy?: number
   slotTags?: SlotChip[]
   levels: LevelRow[]

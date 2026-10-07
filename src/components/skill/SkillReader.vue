@@ -69,8 +69,7 @@ watch(
   <!-- .container + .content from content.css: visual match to SkillModal. -->
   <div class="container page-panel">
     <div class="content">
-      <!-- Chrome-language sentence inside the content region: own lang. -->
-      <div v-if="visibleSlug && showLocaleHint" class="locale-hint" :lang="i18n.currentLocale">
+      <div v-if="visibleSlug && showLocaleHint" class="locale-hint">
         <IconGlobe :size="15" class="locale-hint-icon" aria-hidden="true" />
         <span>{{ i18n.t('app.skill-locale-hint') }}</span>
         <button
