@@ -85,7 +85,7 @@ export const TEAM_VARIANTS: Record<TeamVariantKey, TeamVariantConfig> = {
     key: 'sl',
     mode: '5v5',
     labelKey: 'app.mode-sl',
-    maps: ['arena1', 'arena2', 'preset-sr2', 'preset-sr3', 'preset-sr1'],
+    maps: ['arena1', 'arena2', 'arena3', 'preset-sr11', 'preset-sr2'],
   },
   gd: {
     key: 'gd',
