@@ -1,4 +1,5 @@
 {
   "en": "Board: {side}",
-  "zh": "棋盘：{side}"
+  "zh": "棋盘：{side}",
+  "ko": "보드: {side}"
 }

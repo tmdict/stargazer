@@ -1,4 +1,5 @@
 {
   "en": "{team}: teal lines are the teams it beats, red lines the teams that beat it.",
-  "zh": "{team}：青色连线是它克制的阵容，红色连线是克制它的阵容。"
+  "zh": "{team}：青色连线是它克制的阵容，红色连线是克制它的阵容。",
+  "ko": "{team}: 청록색 선은 이기는 상대, 빨간색 선은 지는 상대입니다."
 }

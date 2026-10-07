@@ -1,4 +1,5 @@
 {
   "en": "Team loaded ({skipped} skipped)",
-  "zh": "已载入阵容（跳过 {skipped} 个）"
+  "zh": "已载入阵容（跳过 {skipped} 个）",
+  "ko": "진형을 불러왔습니다 ({skipped}개 건너뜀)"
 }

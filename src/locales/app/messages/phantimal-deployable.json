@@ -1,4 +1,5 @@
 {
   "en": "Can deploy ({count}/{required})",
-  "zh": "可上场 ({count}/{required})"
+  "zh": "可上场 ({count}/{required})",
+  "ko": "출전 가능 ({count}/{required})"
 }
