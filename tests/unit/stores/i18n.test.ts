@@ -7,12 +7,12 @@ import { stubLocalStorage } from '../fixtures/storage'
 
 const FIXTURE: LocaleDictionary = {
   greeting: {
-    hello: { en: 'Hello, {name}!', zh: '你好，{name}！' },
-    welcome: { en: 'Welcome', zh: '欢迎' },
+    hello: { en: 'Hello, {name}!', zh: '你好，{name}！', ko: '안녕하세요, {name}!' },
+    welcome: { en: 'Welcome', zh: '欢迎', ko: '환영합니다' },
   },
   partial: {
     // Translation exists in en but not in zh
-    enOnly: { en: 'English only', zh: '' },
+    enOnly: { en: 'English only', zh: '', ko: '' },
   },
 }
 
@@ -20,13 +20,13 @@ vi.mock('@/utils/dataLoader', () => ({
   loadAllLocales: () => FIXTURE,
 }))
 
-// The store reads/writes localStorage, document.documentElement.lang, and
+// The store reads/writes localStorage, the document's lang attributes, and
 // window.location.search on creation. Stub minimal in-memory shims since the
 // project runs unit tests in the node environment without jsdom.
 function stubDomGlobals() {
   stubLocalStorage()
   vi.stubGlobal('window', { location: { search: '' } })
-  vi.stubGlobal('document', { documentElement: { lang: '' } })
+  vi.stubGlobal('document', { documentElement: { lang: '' }, body: { lang: '' } })
 }
 
 describe('i18nStore', () => {
@@ -80,6 +80,15 @@ describe('i18nStore', () => {
     it('setLocale persists by default', () => {
       store.setLocale('zh')
       expect(localStorage.getItem('stargazer.locale')).toBe('zh')
+    })
+
+    it('a skill page keeps its text language while the app around it follows the site language', () => {
+      store.setLocale('ko')
+      const token = store.setHtmlLangOverride('ja')
+      expect([document.documentElement.lang, document.body.lang]).toEqual(['ja', 'ko'])
+
+      store.clearHtmlLangOverride(token)
+      expect([document.documentElement.lang, document.body.lang]).toEqual(['ko', 'ko'])
     })
 
     it('setLocale with persist: false updates the render locale only', () => {

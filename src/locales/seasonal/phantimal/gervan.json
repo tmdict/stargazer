@@ -1,102 +1,122 @@
 {
   "name": {
     "en": "Gervan",
-    "zh": "格墨文"
+    "zh": "格墨文",
+    "ko": "그로웬"
   },
   "skills": [
     {
       "name": {
         "en": "Eclipsed Descent",
-        "zh": "月影陨落"
+        "zh": "月影陨落",
+        "ko": "월영 강림"
       },
       "levels": [
         {
           "en": "Passive. Gervan gradually draws power from moonlight. He starts the battle in Crescent state and enters Full Moon state after allies cast a total of [[4]] Ultimates. In Full Moon state, Gervan's normal attacks pierce through enemies and deal [[120%]]<ATK> damage to enemies along a 1-tile-wide line.\nActive. Gervan creates a moon shadow in the area with the most enemies for [[2]]s, dealing [[30%]]<ATK> damage every [[0.25]]s to enemies within 1 tile and immobilizing them. When the moon shadow expires, if Gervan is in Full Moon state, he summons a 3-tile-wide swinging scythe that sweeps across the battlefield, dealing [[150%]]<ATK> true damage to enemies in its path.",
-          "zh": "被动地，格墨文会逐渐从月光中汲取力量，在战斗开始时处于“残月”状态，在己方使用[[4]]次终极技能后进入“满月”状态。“满月”状态下，格墨文的普通攻击具有贯穿效果，会对1格宽直线范围内的敌人造成[[120%]]<ATK>伤害。\n主动使用时，格墨文在敌方最密集区域生成一个持续[[2]]秒的月影，其周围1格范围内的敌人每[[0.25]]秒受到[[30%]]<ATK>伤害并处于定身状态。“满月”状态下，格墨文会在月影持续时间结束后额外召唤一道3格宽的摆动镰刀划过场地，对路径上的敌人造成[[150%]]<ATK>的真实伤害。"
+          "zh": "被动地，格墨文会逐渐从月光中汲取力量，在战斗开始时处于“残月”状态，在己方使用[[4]]次终极技能后进入“满月”状态。“满月”状态下，格墨文的普通攻击具有贯穿效果，会对1格宽直线范围内的敌人造成[[120%]]<ATK>伤害。\n主动使用时，格墨文在敌方最密集区域生成一个持续[[2]]秒的月影，其周围1格范围内的敌人每[[0.25]]秒受到[[30%]]<ATK>伤害并处于定身状态。“满月”状态下，格墨文会在月影持续时间结束后额外召唤一道3格宽的摆动镰刀划过场地，对路径上的敌人造成[[150%]]<ATK>的真实伤害。",
+          "ko": "패시브: 그로웬이 서서히 달빛을 흡수해 전투 시작 시 잔월 상태가 된다. 아군이 궁극기를 [[4]]회 사용하면 만월 상태가 된다. 만월 상태에서 그로웬의 일반 공격에 관통 효과가 부여되고, 1칸 너비의 직선 범위 내 적군에게 [[120%]]<ATK>의 대미지를 입힌다.\n액티브: 그로웬이 적군이 가장 밀집한 지역에 [[2]]초 동안 달의 그림자를 생성해 그 주변 1칸 범위 내 적군에게 [[0.25]]초마다 [[30%]]<ATK>의 대미지를 입히고 결박시킨다.\n만월 상태: 달의 그림자 지속 시간 종료 후, 추가로 필드를 가로지르는 3칸 너비의 낫을 소환하여 경로상의 적군에게 [[150%]]<ATK>의 고정 대미지를 입힌다."
         },
         {
           "en": "Increases the moon shadow's damage to [[40%]]<ATK> every [[0.25]]s.",
-          "zh": "月影期间范围内的敌人每[[0.25]]秒受到的伤害提升至[[40%]]<ATK>。"
+          "zh": "月影期间范围内的敌人每[[0.25]]秒受到的伤害提升至[[40%]]<ATK>。",
+          "ko": "달의 그림자가 지속 시간 동안 범위 내 적군에게 [[0.25]]초마다 입히는 대미지가 [[40%]]<ATK>로 증가한다."
         },
         {
           "en": "After entering Full Moon state, Gervan permanently increases all allies' ATK by [[5%]] for every [[2]] Ultimates cast by the allied team. This effect can stack up to [[3]] times.",
-          "zh": "进入“满月”状态后，己方每使用[[2]]次终极技能，格墨文会使所有友军攻击力永久提升[[5%]]，最多叠加[[3]]次。"
+          "zh": "进入“满月”状态后，己方每使用[[2]]次终极技能，格墨文会使所有友军攻击力永久提升[[5%]]，最多叠加[[3]]次。",
+          "ko": "만월 상태에 진입한 후, 아군이 궁극기를 [[2]]회 사용할 때마다 그로웬이 모든 아군의 공격력을 영구적으로 [[5%]] 증가시킨다(최대 [[3]]스택 중첩 가능)."
         }
       ]
     },
     {
       "name": {
         "en": "Edge of the Moon",
-        "zh": "月光之刃"
+        "zh": "月光之刃",
+        "ko": "월광의 칼날"
       },
       "levels": [
         {
           "en": "Gervan calls down moonlight on 2 enemies, dealing [[160%]]<ATK> damage. In Full Moon state, this skill targets 1 extra enemy. The moonlight instead deals [[210%]]<ATK> damage to the targets as well as all adjacent enemies.",
-          "zh": "对2名敌人降下月光，造成[[160%]]<ATK>的伤害。“满月”状态下，该技能会额外选择1名目标，并转为对目标及周围1格范围内的敌人造成[[210%]]<ATK>的伤害。"
+          "zh": "对2名敌人降下月光，造成[[160%]]<ATK>的伤害。“满月”状态下，该技能会额外选择1名目标，并转为对目标及周围1格范围内的敌人造成[[210%]]<ATK>的伤害。",
+          "ko": "적군 2명에게 달빛을 내려 [[160%]]<ATK>의 대미지를 입힌다. 만월 상태에서는 목표 1명을 추가로 선택해 목표와 그 주변 1칸 범위 내의 적군에게 [[210%]]<ATK>의 대미지를 입히는 방식으로 변경된다."
         },
         {
           "en": "Increases moonlight damage to [[180%]]<ATK>. In Full Moon state, increases moonlight damage to [[230%]]<ATK>.",
-          "zh": "月光造成的伤害提升至[[180%]]<ATK>。“满月”状态下，月光造成的伤害提升至[[230%]]<ATK>。"
+          "zh": "月光造成的伤害提升至[[180%]]<ATK>。“满月”状态下，月光造成的伤害提升至[[230%]]<ATK>。",
+          "ko": "달빛이 입히는 대미지가 [[180%]]<ATK>로 증가한다. 만월 상태에서 달빛이 입히는 대미지가 [[230%]]<ATK>로 증가한다."
         },
         {
           "en": "Increases moonlight damage to [[200%]]<ATK>. In Full Moon state, increases moonlight damage to [[250%]]<ATK>.",
-          "zh": "月光造成的伤害提升至[[200%]]<ATK>。“满月”状态下，月光造成的伤害提升至[[250%]]<ATK>。"
+          "zh": "月光造成的伤害提升至[[200%]]<ATK>。“满月”状态下，月光造成的伤害提升至[[250%]]<ATK>。",
+          "ko": "달빛이 입히는 대미지가 [[200%]]<ATK>로 증가한다. 만월 상태에서 달빛이 입히는 대미지가 [[250%]]<ATK>로 증가한다."
         }
       ]
     },
     {
       "name": {
         "en": "Phantimal Focus",
-        "zh": "幻灵专精"
+        "zh": "幻灵专精",
+        "ko": "팬텀 마스터리"
       },
       "levels": [
         {
           "en": "Increases HP by [[8%]], Phys & Magic DEF by [[8%]], and ATK by [[4%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。"
+          "zh": "战斗中，自身的生命值提升[[8%]]，护甲和魔抗提升[[8%]]，攻击力提升[[4%]]。",
+          "ko": "전투 중 자신의 HP가 [[8%]], 물리 방어력과 마법 방어력이 [[8%]], 공격력이 [[4%]] 증가한다."
         },
         {
           "en": "Increases HP by [[16%]], Phys & Magic DEF by [[16%]], and ATK by [[8%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。"
+          "zh": "战斗中，自身的生命值提升[[16%]]，护甲和魔抗提升[[16%]]，攻击力提升[[8%]]。",
+          "ko": "전투 중 자신의 HP가 [[16%]], 물리 방어력과 마법 방어력이 [[16%]], 공격력이 [[8%]] 증가한다."
         },
         {
           "en": "Increases HP by [[24%]], Phys & Magic DEF by [[24%]], and ATK by [[12%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。"
+          "zh": "战斗中，自身的生命值提升[[24%]]，护甲和魔抗提升[[24%]]，攻击力提升[[12%]]。",
+          "ko": "전투 중 자신의 HP가 [[24%]], 물리 방어력과 마법 방어력이 [[24%]], 공격력이 [[12%]] 증가한다."
         },
         {
           "en": "Increases HP by [[32%]], Phys & Magic DEF by [[32%]], and ATK by [[16%]] during battle.",
-          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。"
+          "zh": "战斗中，自身的生命值提升[[32%]]，护甲和魔抗提升[[32%]]，攻击力提升[[16%]]。",
+          "ko": "전투 중 자신의 HP가 [[32%]], 물리 방어력과 마법 방어력이 [[32%]], 공격력이 [[16%]] 증가한다."
         }
       ]
     },
     {
       "name": {
         "en": "Spirit Mark - Moonphase",
-        "zh": "月相之灵能"
+        "zh": "月相之灵能",
+        "ko": "달의 능력"
       },
       "levels": [
         {
           "en": "Gervan applies a [[spirit mark]] to the allied hero placed in front of him, granting them Lunar Grace.\nLunar Grace: Permanently increases the [[spirit-marked hero]]'s Energy recovery efficiency by [[10%]]. Also permanently increases Gervan's Energy recovery efficiency by [[10%]] and permanently grants the [[spirit-marked hero]] [[15%]] ATK when Gervan enters Full Moon state.",
-          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”月相“之灵能，[[灵能者]]的回能效率永久提升[[10%]]；当格墨文进入“满月”状态后，格墨文自身的回能效率永久提升[[10%]]，[[灵能者]]的攻击力永久提升[[15%]]。"
+          "zh": "使身前1名友方英雄成为[[灵能者]]，获得”月相“之灵能，[[灵能者]]的回能效率永久提升[[10%]]；当格墨文进入“满月”状态后，格墨文自身的回能效率永久提升[[10%]]，[[灵能者]]的攻击力永久提升[[15%]]。",
+          "ko": "자신 앞의 아군 영웅 1명을 [[능력자]]로 만들어 달의 능력을 부여한다. [[능력자]]의 에너지 회복 효율이 영구적으로 [[10%]] 증가하고, 그로웬이 만월 상태가 되면 자신의 에너지 회복 효율이 영구적으로 [[10%]] 증가하며 [[능력자]]의 공격력이 영구적으로 [[15%]] 증가한다."
         },
         {
           "en": "Increases the Ultimate damage of Gervan and the [[spirit-marked hero]] by [[20%]]. Edge of the Moon also calls down moonlight on the [[spirit-marked hero]], restoring [[90%]]<ATK> HP and [[50]] Energy to them.",
-          "zh": "格墨文和[[灵能者]]终极技能造成的伤害提升[[20%]]，“月光之刃”技能还会额外对[[灵能者]]降下月光，使其回复[[90%]]<ATK>生命值和[[50]]点能量。"
+          "zh": "格墨文和[[灵能者]]终极技能造成的伤害提升[[20%]]，“月光之刃”技能还会额外对[[灵能者]]降下月光，使其回复[[90%]]<ATK>生命值和[[50]]点能量。",
+          "ko": "그로웬과 [[능력자]]의 궁극기 대미지가 [[20%]] 증가한다. 월광의 칼날 스킬이 추가로 [[능력자]]에게 달빛을 내려 HP를 [[90%]]<ATK>, 에너지를 [[50]] 회복시킨다."
         }
       ]
     },
     {
       "name": {
         "en": "Crescent Chakram",
-        "zh": "月下飞环"
+        "zh": "月下飞环",
+        "ko": "달빛의 고리"
       },
       "levels": [
         {
           "en": "Gervan launches the lunar rings beneath his feet, dealing [[250%]]<ATK> damage to all enemies on the battlefield and reducing their Energy recovery efficiency by [[20%]] for [[8]]s. While Gervan is in Full Moon state, enemies hit also lose [[100]] Energy.",
-          "zh": "格墨文会将脚下的月环飞出，对全场敌人造成[[250%]]<ATK>的伤害，并降低目标回能效率[[20%]]持续[[8]]秒。“满月”状态下，被命中的敌人会额外降低[[100]]点能量。"
+          "zh": "格墨文会将脚下的月环飞出，对全场敌人造成[[250%]]<ATK>的伤害，并降低目标回能效率[[20%]]持续[[8]]秒。“满月”状态下，被命中的敌人会额外降低[[100]]点能量。",
+          "ko": "그로웬이 발밑의 달의 고리를 날려 필드의 모든 적군에게 [[250%]]<ATK>의 대미지를 입히고, 에너지 회복 효율을 [[8]]초 동안 [[20%]] 감소시킨다. 만월 상태에서는 명중한 적군의 에너지가 추가로 [[100]] 감소한다."
         },
         {
           "en": "Increases damage to [[300%]]<ATK>.",
-          "zh": "伤害量提升至[[300%]]<ATK>。"
+          "zh": "伤害量提升至[[300%]]<ATK>。",
+          "ko": "대미지량이 [[300%]]<ATK>로 증가한다."
         }
       ]
     }

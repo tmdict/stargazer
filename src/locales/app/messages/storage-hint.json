@@ -1,4 +1,5 @@
 {
   "en": "Saved teams live only in this browser. Clearing site data removes them; use Export to back them up or move them to another device.",
-  "zh": "已保存的阵容仅存于当前浏览器，清除站点数据会将其删除；请用导出功能备份或转移到其他设备。"
+  "zh": "已保存的阵容仅存于当前浏览器，清除站点数据会将其删除；请用导出功能备份或转移到其他设备。",
+  "ko": "저장한 진형은 이 브라우저에만 보관됩니다. 사이트 데이터를 지우면 함께 삭제되므로, 내보내기로 백업하거나 다른 기기로 옮겨 두세요."
 }

@@ -6,6 +6,7 @@ import {
   getCharmForHero,
   getSkillCharms,
   getSkillLocaleDict,
+  hasSkillLocale,
   loadCharacterLocales,
   loadSkillLocale,
 } from '@/utils/dataLoader'
@@ -44,16 +45,32 @@ interface DeepEntry {
 }
 
 // Per-language index, built lazily on first query over whatever corpora are
-// warm. en/zh are always warm (eager bundle); the other languages join as
-// their chunks arrive. ~2.5k entries per language, trivial to build.
+// warm; languages join as their chunks arrive. ~2.5k entries per language,
+// trivial to build.
 const indexCache = new Map<SkillLocale, { names: NameEntry[]; deep: DeepEntry[] }>()
+
+// A site language's curated names are always loaded, unlike its skill text,
+// so a name matches before any corpus has arrived. zh also carries community
+// nicknames ("阿尔萨 (滚滚)") that players actually type.
+const curatedCache = new Map<AppLocale, NameEntry[]>()
+function curatedNames(lang: AppLocale): NameEntry[] {
+  let names = curatedCache.get(lang)
+  if (!names) {
+    names = Object.entries(loadCharacterLocales())
+      // A name file still missing this language must not break every search.
+      .filter(([slug, name]) => hasSkillLocale(slug) && name[lang])
+      .map(([slug, name]) => ({ slug, text: name[lang] }))
+    curatedCache.set(lang, names)
+  }
+  return names
+}
 
 // Bumped when a chunk lands so an open query re-runs over the new corpus.
 const indexVersion = ref(0)
 
 // Kicked on the first non-empty query: stream in every missing locale in the
 // background. Failures are soft (results just lack that language), but they
-// release the latch so a later query retries the missing chunks.
+// release the latch so a later query asks for the missing chunks again.
 let warmKicked = false
 function warmAllLocales(): void {
   if (warmKicked) return
@@ -76,15 +93,7 @@ function buildIndex(lang: SkillLocale, dict: NonNullable<ReturnType<typeof getSk
 
   for (const slug of Object.keys(dict)) {
     const locale = dict[slug]
-    const display = heroDisplayName(slug, lang)
-    names.push({ slug, text: display })
-    // Curated app-locale names are indexed as aliases: zh carries community
-    // nicknames ("阿尔萨 (滚滚)") that players actually type. Display entries
-    // come first so an official-name match snippets the official name.
-    if (isAppLocale(lang)) {
-      const curated = loadCharacterLocales()[slug]?.[lang]
-      if (curated && curated !== display) names.push({ slug, text: curated })
-    }
+    names.push({ slug, text: heroDisplayName(slug, lang) })
 
     for (const slot of SLOT_ORDER) {
       const slotData = locale[slot]
@@ -138,7 +147,14 @@ function getIndex(lang: SkillLocale) {
   return built
 }
 
-/** Warm languages, priority first: the active text locale wins snippet dedup,
+/** A language's names: the game's once its corpus is warm, then a site
+ * language's curated ones. The game's come first so a match on either
+ * snippets the official name. */
+function nameEntries(lang: SkillLocale): NameEntry[] {
+  return [...(getIndex(lang)?.names ?? []), ...(isAppLocale(lang) ? curatedNames(lang) : [])]
+}
+
+/** Every language, priority first: the active text locale wins snippet dedup,
  * then the app locale, then the rest in table order. */
 function localesInPriority(textLang: SkillLocale, appLang: AppLocale): SkillLocale[] {
   const priority: SkillLocale[] = [textLang]
@@ -146,19 +162,17 @@ function localesInPriority(textLang: SkillLocale, appLang: AppLocale): SkillLoca
   for (const { code } of SKILL_LOCALES) {
     if (!priority.includes(code)) priority.push(code)
   }
-  return priority.filter((code) => getSkillLocaleDict(code) !== null)
+  return priority
 }
 
-/** Slugs whose display name matches the query in any warm locale: the same
- * name index the picker search uses, for name-only consumers (the on-grid
- * picker popup). Matches whatever is warm; never triggers corpus loads. */
+/** Slugs whose name matches the query in any language: the same names the
+ * picker search uses, for name-only consumers (the on-grid picker popup).
+ * Matches whatever is warm; never triggers corpus loads. */
 export function matchCharacterNames(query: string): Set<string> {
   const lc = query.toLowerCase()
   const slugs = new Set<string>()
   for (const { code } of SKILL_LOCALES) {
-    const index = getIndex(code)
-    if (!index) continue
-    for (const e of index.names) {
+    for (const e of nameEntries(code)) {
       if (e.text.toLowerCase().includes(lc)) slugs.add(e.slug)
     }
   }
@@ -220,7 +234,7 @@ export function useSkillSearch(
     const locales = localesInPriority(textLang.value, appLang.value)
 
     for (const locale of locales) {
-      for (const e of getIndex(locale)!.names) {
+      for (const e of nameEntries(locale)) {
         if (namedSlugs.has(e.slug)) continue
         if (!includesQuery(e.text)) continue
         const s = renderSnippet(e.text, q)
@@ -232,7 +246,7 @@ export function useSkillSearch(
 
     if (q.length >= deepSearchMinLength(q)) {
       for (const locale of locales) {
-        for (const e of getIndex(locale)!.deep) {
+        for (const e of getIndex(locale)?.deep ?? []) {
           if (!includesQuery(e.text)) continue
           const s = renderSnippet(e.text, q)
           if (!s) continue

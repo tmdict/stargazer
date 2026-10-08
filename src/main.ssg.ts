@@ -15,11 +15,12 @@ import './styles/variables.css'
  * Uses the same route definitions as the SPA (imported from router/routes.ts)
  * to ensure consistency between modes. vite-ssg pre-renders every route in
  * vite.config's getSSGRoutes: the skill permalinks across all SKILL_LOCALES
- * languages, the en/zh guide pages, and the interactive shells (/, /share,
- * /skills), which carry canonical/meta and hydrate into the app.
+ * languages, the guide and Help pages per app locale, and the interactive
+ * shells (/, /share, /skills), which carry canonical/meta and hydrate into
+ * the app.
  *
- * Chrome locale comes from the en/zh URL prefix (App.vue store sync); skill
- * pages read their text locale from the :textLocale route param.
+ * Chrome locale comes from an app-locale URL prefix (App.vue store sync);
+ * skill pages read their text locale from the :textLocale route param.
  */
 export const createApp = ViteSSG(App, { routes, scrollBehavior }, async ({ app, router }) => {
   app.use(createPinia())

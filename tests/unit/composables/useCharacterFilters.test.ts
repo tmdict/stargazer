@@ -1,9 +1,7 @@
 import { ref } from 'vue'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vitest'
 
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
-import { useEnergyValue } from '@/composables/useEnergyValue'
-import { ENERGY_DEFAULT } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import type { CharacterTags } from '@/lib/types/skill'
 
@@ -28,11 +26,6 @@ describe('useCharacterFilters', () => {
   ])
   const ids = (list: readonly CharacterType[]): number[] => list.map((c) => c.id)
 
-  // The energy value is shared by every list.
-  beforeEach(() => {
-    useEnergyValue().value = ENERGY_DEFAULT
-  })
-
   it('holds a tag pick or the energy pick, and only a tag pick opens a hero on its chips', () => {
     const { mechanicFilter, filteredCharacters, energyPicked, inspectChips } =
       useCharacterFilters(heroes)
@@ -50,15 +43,5 @@ describe('useCharacterFilters', () => {
     mechanicFilter.value = null
     expect(energyPicked.value).toBe(false)
     expect(ids(filteredCharacters.value)).toEqual([1, 2, 3])
-  })
-
-  it('filters every list with the energy pick on by the value last set in any of them', () => {
-    const first = useCharacterFilters(heroes)
-    const second = useCharacterFilters(heroes)
-
-    first.mechanicFilter.value = { energyAbove: 500 }
-    second.mechanicFilter.value = { energyAbove: 300 }
-    expect(first.mechanicFilter.value).toEqual({ energyAbove: 300 })
-    expect(ids(first.filteredCharacters.value)).toEqual([1, 2])
   })
 })

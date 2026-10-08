@@ -20,7 +20,6 @@ const { min, max, step } = defineProps<{
 const model = defineModel<number>({ required: true })
 
 defineSlots<{
-  // How the value reads, e.g. "> 500"; the bare number without it.
   default?(): unknown
 }>()
 

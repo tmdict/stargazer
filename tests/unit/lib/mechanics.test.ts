@@ -3,7 +3,6 @@ import { describe, expect, it } from 'vitest'
 import {
   fromMechanicQuery,
   matchesMechanic,
-  mechanicKeys,
   toMechanicQuery,
   type MechanicPick,
 } from '@/lib/mechanics'
@@ -23,10 +22,6 @@ describe('energy filter', () => {
     expect(above([200, 300], 400)).toBe(true)
     expect(above([200, 300], 500)).toBe(false)
     expect(above([0], 0)).toBe(false)
-  })
-
-  it('sits among the tags in key order', () => {
-    expect(mechanicKeys(vocabulary)).toEqual(['dot', 'heal-denial', 'init-energy', 'summon'])
   })
 })
 

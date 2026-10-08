@@ -123,21 +123,16 @@ describe('skillNumbers', () => {
 
 describe('energyMismatches', () => {
   it("compares a hero file's own starting energy with the feed's, not what skills add", () => {
-    const heroes = { lyca: hero({}, 200), cyran: hero({}, 500) }
+    const heroes = { lyca: hero({}, 200), cyran: hero({}, 500), odie: { skills: {} } }
     const files = [
       { slug: 'lyca', energy: [200, 300] },
       { slug: 'cyran', energy: [400, 200] },
+      { slug: 'odie', energy: [300] },
       { slug: 'ghost', energy: [0] },
     ]
     expect(energyMismatches(heroes, files)).toEqual([
       'cyran: the hero file starts at 400, the feed at 500',
-    ])
-  })
-
-  it('reports a feed that carries the hero without the number', () => {
-    const files = [{ slug: 'lyca', energy: [200, 300] }]
-    expect(energyMismatches({ lyca: { skills: {} } }, files)).toEqual([
-      'lyca: the feed has no starting energy',
+      'odie: the feed has no starting energy',
     ])
   })
 })

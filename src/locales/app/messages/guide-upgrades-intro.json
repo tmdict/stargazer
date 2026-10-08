@@ -1,4 +1,5 @@
 {
   "en": "Stat gains per upgrade level. Every faction reaches the same P4 values; {factionA} and {factionB} heroes start higher and climb in smaller steps.",
-  "zh": "每级升级提供的属性加成。所有阵营在 P4 达到相同数值；{factionA}与{factionB}英雄起点更高、每级增幅更小。"
+  "zh": "每级升级提供的属性加成。所有阵营在 P4 达到相同数值；{factionA}与{factionB}英雄起点更高、每级增幅更小。",
+  "ko": "강화 단계별 속성 증가량입니다. 모든 진영이 P4에서 같은 수치에 도달하며, {factionA}, {factionB} 영웅은 더 높은 수치에서 시작해 더 작은 폭으로 오릅니다."
 }

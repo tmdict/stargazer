@@ -1,4 +1,5 @@
 {
   "en": "Export {count} of {total}",
-  "zh": "导出 {count}/{total}"
+  "zh": "导出 {count}/{total}",
+  "ko": "{total}개 중 {count}개 내보내기"
 }

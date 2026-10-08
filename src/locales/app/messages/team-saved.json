@@ -1,4 +1,5 @@
 {
   "en": "Saved to {name}",
-  "zh": "已保存至 {name}"
+  "zh": "已保存至 {name}",
+  "ko": "{name}에 저장했습니다"
 }

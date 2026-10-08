@@ -27,7 +27,7 @@ export const addedEnergy = (hero: HeroEnergy): number =>
 export const totalEnergy = (hero: HeroEnergy): number => ownEnergy(hero) + addedEnergy(hero)
 
 /** Heroes whose total starting energy is above the value. */
-export interface EnergyPick {
+interface EnergyPick {
   readonly energyAbove: number
 }
 

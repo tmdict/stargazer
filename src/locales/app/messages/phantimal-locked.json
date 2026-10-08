@@ -1,4 +1,5 @@
 {
   "en": "Cannot deploy ({count}/{required})",
-  "zh": "不可上场 ({count}/{required})"
+  "zh": "不可上场 ({count}/{required})",
+  "ko": "출전 불가 ({count}/{required})"
 }

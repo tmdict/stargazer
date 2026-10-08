@@ -2,18 +2,18 @@
 
 Three surfaces show a hero's in-game skill text: the `/skills` browser, the skill modal, and a pre-rendered page at `/<code>/skill/<slug>` for each of the 16 languages × every hero. Each shows the skill text, tag chips and optional commentary.
 
-Two locale axes run through all of it. Skill text and the hero name follow the text locale (`SkillLocale`, the languages in `SKILL_LOCALES`, which is also the URL prefix). Chips, labels and the hero list follow the chrome locale (`AppLocale`, en or zh). All 16 languages cannot ship in the main bundle, yet a pre-rendered page must bake its real text in one render pass. Most of the design follows from those two facts.
+Two locale axes run through all of it. Skill text and the hero name follow the text locale (`SkillLocale`, the languages in `SKILL_LOCALES`, which is also the URL prefix). Chips, labels and the hero list follow the chrome locale (`AppLocale`, the languages in `APP_LOCALES`: en, zh and ko). No language's skill text ships in the main bundle, so a page downloads only the one it shows, yet a pre-rendered page must bake its real text in one render pass. Most of the design follows from those two facts.
 
 ## Locale files
 
 `npm run import:skills` writes `src/locales/skill/<code>/` for every row of `SKILL_LOCALES` from the upstream data feed. The directory is prettier-ignored and never hand-edited.
 
-| File             | Written by      | Holds                                                     |
-| ---------------- | --------------- | --------------------------------------------------------- |
-| `<slug>.json`    | `import:skills` | one hero's skill text                                     |
-| `_keywords.json` | `import:skills` | glossary text for `[[label\|key]]` tokens                 |
-| `_charms.json`   | `import:charms` | seasonal charm text ([Seasonal Content](./SEASONAL.md))   |
-| `index.ts`       | `import:skills` | the lazy chunk module, in every language except en and zh |
+| File             | Written by      | Holds                                                   |
+| ---------------- | --------------- | ------------------------------------------------------- |
+| `<slug>.json`    | `import:skills` | one hero's skill text                                   |
+| `_keywords.json` | `import:skills` | glossary text for `[[label\|key]]` tokens               |
+| `_charms.json`   | `import:charms` | seasonal charm text ([Seasonal Content](./SEASONAL.md)) |
+| `index.ts`       | `import:skills` | the language's lazy chunk module                        |
 
 A hero file holds the feed's localized name in `_hero.name`, the official labels for the ultimate and EX slots and the skill panel's cooldown, range and initial energy templates in `_terms`, and one entry per slot in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and on `ex` only, refinement tiers `r`. `SLOT_ORDER` is both the render order and the set of slot names commentary snippets can fill.
 
@@ -21,37 +21,39 @@ Files starting with `_` hold per-language data rather than a hero. They travel i
 
 The importer requires `_meta.terms` and `_meta.keywords` in each feed. It fails when languages disagree on the hero set or a hero's slot set, or when a keyword token has no glossary entry. Heroes missing from the feed, tag attachments pointing at a slot or level the hero lacks, hero files whose initial energy differs from the feed's, and locale directories not in `SKILL_LOCALES` are warnings. It only writes files whose content changed. Adding a language is one `SKILL_LOCALES` row (the `feed` column maps the feed's own code to the BCP-47 `code`) and a re-run.
 
-Because every language must cover exactly the en hero set, `hasSkillLocale(slug)` answers from en alone. It gates the inspect gesture, the modal and the reader, so a hero with data but no text never shows a dead link.
+The importer also lists the heroes it wrote text for in `src/data/skill/heroes.json`, a sorted array of slugs. `hasSkillLocale(slug)` answers from that list, so it needs no language loaded, and because every language must cover exactly the en hero set, one list answers for all 16. It gates the inspect gesture, the modal and the reader, so a hero with data but no text never shows a dead link.
+
+Hero names on chrome surfaces come from `src/locales/character/<slug>.json`, one name per app locale. The en and zh names there are curated by hand. The importer writes the others (`FEED_NAMED_LOCALES`, today ko) from the feed's own name on every run.
 
 ## Loading languages
 
 ```
   import:skills ──▶ src/locales/skill/<code>/*.json
                             │
-            ┌───────────────┴─────────────┐
-            ▼                             ▼
-      en, zh: eager glob            other languages: one lazy
-      in the main bundle            chunk each (index.ts)
-            │                             │
-            │                             ▼
-            │                       loadSkillLocale ◀── warmSkillLocale,
-            │                             │             modal, search
-            ▼                             ▼
+                            ▼
+              one lazy chunk per language (index.ts)
+                            │
+                            ▼
+                     loadSkillLocale ◀── warmSkillLocale, modal,
+                            │             search, App.vue
+                            ▼
       getSkillFile, getSkillLocaleDict, getSkillKeywords:
       synchronous, null until the language is warm
 ```
 
-en and zh are always loaded, since search and the en fallback read them synchronously. Each other language is one chunk: its `index.ts` globs its own directory eagerly, so a single dynamic import brings in the whole language. `loadSkillLocale` caches the promise per language and evicts a rejected one, so the next call retries. Components render through the synchronous getters, which keeps `SkillSections` a synchronous component.
+Every language is one chunk: its `index.ts` globs its own directory eagerly, so a single dynamic import brings in the whole language. `loadSkillLocale` caches the promise per language and evicts a rejected one, so the next call asks again. Chrome remembers a failed import and repeats the failure until the page is reloaded, which is why the could-not-load line asks for a reload. Components render through the synchronous getters, which keeps `SkillSections` a synchronous component.
 
-That puts the burden on whoever navigates. `warmSkillLocale` (`src/router/routes.ts`) awaits the chunk before any `skill` route resolves. vite-ssg renders each route once with no `<Suspense>`, so without the guard a page would bake en fallback text and the meta description would come from the wrong language. The guard is a global `beforeResolve` because `beforeEnter` skips param-only navigation, and the globe menu's language switch is exactly that. If the chunk fails mid-session (offline, or a stale tab after a deploy), the guard hard-navigates to the target URL to pick up fresh HTML. On the initial load it proceeds and the reader shows the en fallback.
+Outside skill pages nothing has asked for a language yet, so `App.vue` fetches `effectiveSkillLocale` in the background once the first route has settled, and the first skill popup or text search finds it warm. It waits for the route because the path has not pinned the chrome locale before that, and it skips skill pages, which have loaded the language they show.
 
-The modal awaits its own load (`useModalSkillLocale`) and keeps showing the previous language until the new one arrives, falling back to en on failure. On a pre-rendered non-en/zh page, the build adds a `modulepreload` for that language's chunk, found in `dist/assets` by its `<code>-<hash>.js` name, to save a round trip on cold loads.
+That puts the burden on whoever navigates. `warmSkillLocale` (`src/router/routes.ts`) awaits the chunk before any `skill` route resolves. vite-ssg renders each route once with no `<Suspense>`, so without the guard a page would bake the could-not-load line in place of its text and have no description to derive from it. The guard is a global `beforeResolve` because `beforeEnter` skips param-only navigation, and the globe menu's language switch is exactly that. If the chunk fails mid-session (offline, or a stale tab after a deploy), the guard hard-navigates to the target URL to pick up fresh HTML. On the initial load it proceeds, and the reader shows en if that happens to be warm, otherwise a line saying the text could not be loaded.
+
+The modal awaits its own load (`useModalSkillLocale`) and keeps showing the previous language until the new one arrives. When a language cannot be fetched it tries en, and when it has no text to keep and none arrives it shows the same line. On every pre-rendered skill page the build adds a `modulepreload` for that language's chunk, to save a round trip on cold loads. The chunk's file comes from the build's own manifest (`dist/.vite/ssr-manifest.json`), keyed by the language's `index.ts`; file names cannot identify it, since a dependency's `es-<hash>.js` sits beside the Spanish chunk.
 
 ## Text and names
 
 Skill text uses one small grammar in `src/utils/textHighlight.ts`: `[[value]]` is a highlight, `[[label|key]]` is a keyword whose tooltip text is `key` in that language's `_keywords.json`, and `<ATK>`-style tags are stat pills. `HIGHLIGHT_RE` and `splitHighlightToken` are imported by search, both importers and `vite.config.ts`, so validation, rendering and the description scrape cannot disagree. Keyword spans sit in `v-html` output, so `SkillKeywordTooltip` listens on the `SkillSections` article instead of on each span.
 
-A hero's display name is `_hero.name` in the text locale, then the curated en name, then the slug (`heroDisplayName`). The curated en/zh names in `src/locales/character/` stay on chrome surfaces and serve as search aliases. The ultimate and EX headings are the `_terms` label plus the skill name, and the app's own slot labels are only a fallback there.
+A hero's display name is `_hero.name` in the text locale, then the curated en name, then the slug (`heroDisplayName`). The app-locale names in `src/locales/character/` stay on chrome surfaces and serve as search aliases. The ultimate and EX headings are the `_terms` label plus the skill name, and the app's own slot labels are only a fallback there.
 
 ## Cooldowns and range
 
@@ -61,13 +63,13 @@ A cooldown shows unless it is one of the game's "no timer" values (9999 and abov
 
 The game's panel shows the hero's current level, while a skill page lists every level. So the data file keeps each slot's Lv1 values plus only the values a later level changes, and the line shows a changed value as a chain in level order (Zanie's EX "Cooldown: 15 → 12", Marilee's ultimate "Range: 2 → 3"). The numbers are base values: an awakening or EX that changes another skill's cooldown says so in its text.
 
-The ultimate's line ends with the hero's initial energy, where the game's panel shows it. That number is not in the numbers file. It is the first `energy` number of the hero's data file, the energy the hero starts a battle with on its own, and the hero tooltip and the energy filter read the same number, so the app holds it once. Energy a later skill level adds is in that level's text and in the file's second number, which only the tooltip and the filter count. The hero file is written by hand, so `import:skills` compares its first number with the feed's value on every run and lists the heroes that differ, or whose number the feed no longer carries (`energyMismatches`).
+The ultimate's line ends with the hero's initial energy, where the game's panel shows it. That number is not in the numbers file. It is the first `energy` number of the hero's data file, the energy the hero starts a battle with on its own, and the hero tooltip and the energy filter read the same number, so the app holds it once. Energy a later skill level adds is in that level's text and in the file's second number, which only the tooltip and the filter count. The hero file is written by hand, so `import:skills` compares its first number with the feed's value on every run and lists the heroes that differ, or whose number the feed does not carry (`energyMismatches`).
 
 The labels come from `_terms` (`cooldown` with one line per value, `range`, `rangeGlobal` and `initialEnergy`), so the line reads in the skill-text language, and values are bare numbers as in the game. Every label is the game's own except English range: the game's "Tiles: 1" names the unit, so the importer's `TERM_OVERRIDES` writes "Range: 1".
 
 ## Pages and meta
 
-`SkillsBrowser` backs both `/skills` and every hero page, so the URL is the whole state. Hero-list links point at the page's text locale on a hero page, and at `effectiveSkillLocale` (the saved globe choice in `stargazer.skillLocale`, else the chrome locale) on the index and on other surfaces with no text locale of their own. The globe menu (`SkillLocaleMenu`) switches text only, and the header toggle switches chrome only.
+`SkillsBrowser` backs both `/skills` and every hero page, so the URL is the whole state. Hero-list links point at the page's text locale on a hero page, and at `effectiveSkillLocale` (the saved globe choice in `stargazer.skillLocale`, else the chrome locale) on the index and on other surfaces with no text locale of their own. The globe menu (`SkillLocaleMenu`) picks the text locale and the header's language menu the chrome locale. The two meet when the text locale is also an app locale: the path then pins chrome to it ([Pre-Rendering](./PRE_RENDERING.md)), so `/ko/skill/<slug>` reads in Korean throughout.
 
 `setupSkillContentMeta` runs in `SkillSections` on the server and the client. It sets the title, Open Graph tags, canonical and `hreflang` alternates for every language, and takes `<html lang>` for the text locale through an owner token, so keyed remounts in either order cannot clear a newer owner. The modal provides `ContentInModalKey`, which skips all of this so the popup leaves the host page's head alone.
 
@@ -120,7 +122,7 @@ The guide index adds the card's id as the fragment, which scrolls to it: the tag
 
 ## Commentary snippets
 
-An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh) adds commentary. `SkillSections` picks the text locale if it is an app locale, then the chrome locale, then en. Each slot of `SkillSnippets` teleports into the matching section's anchor from `useSnippetAnchors`. The anchors are template refs, unset during pre-rendering, so commentary appears only after hydration and never reaches the description scrape. Without anchors the slots render inline in slot order. A grid diagram pairs `<Hero>.data.ts` with `GridSnippet`, which resolves portraits through `loadCharacterImages`, so data files import no images.
+An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` adds commentary. A hero that has a note has one per app locale, which `tests/unit/locales.test.ts` checks. `SkillSections` picks the text locale if it is an app locale, then the chrome locale, then en. Each slot of `SkillSnippets` teleports into the matching section's anchor from `useSnippetAnchors`. The anchors are template refs, unset during pre-rendering, so commentary appears only after hydration and never reaches the description scrape. Without anchors the slots render inline in slot order. A grid diagram pairs `<Hero>.data.ts` with `GridSnippet`, which resolves portraits through `loadCharacterImages`, so data files import no images.
 
 ## Search
 
@@ -128,15 +130,15 @@ An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` (en or zh)
 
 `useSkillSearch` follows these rules:
 
-| Rule     | Behavior                                                                                                    |
-| -------- | ----------------------------------------------------------------------------------------------------------- |
-| Corpus   | every warm language; the first non-empty query loads the missing chunks and re-runs as each one lands       |
-| Names    | `_hero.name` per language plus the curated en/zh aliases; one character is enough                           |
-| Deep     | from 3 characters (2 for Han, kana or Hangul), adds skill names, descriptions and charm text                |
-| Priority | text locale, then chrome locale, then table order; each hit records the language it matched and links there |
-| Dedup    | one hit per hero and slot at the lowest level, charm hits share one slot, at most 3 hits per hero           |
-| Ranking  | name matches first, then hit count, then curated name                                                       |
-| Picker   | `matchCharacterNames` (the on-grid picker) searches warm languages only and never loads a chunk             |
+| Rule     | Behavior                                                                                                     |
+| -------- | ------------------------------------------------------------------------------------------------------------ |
+| Corpus   | every warm language; the first non-empty query loads the missing chunks and re-runs as each one lands        |
+| Names    | `_hero.name` per warm language plus the app locales' names, which need no chunk; one character is enough     |
+| Deep     | from 3 characters (2 for Han, kana or Hangul), adds skill names, descriptions and charm text                 |
+| Priority | text locale, then chrome locale, then table order; each hit records the language it matched and links there  |
+| Dedup    | one hit per hero and slot at the lowest level, charm hits share one slot, at most 3 hits per hero            |
+| Ranking  | name matches first, then hit count, then curated name                                                        |
+| Picker   | `matchCharacterNames` (the on-grid picker) searches the same names in warm languages and never loads a chunk |
 
 ## Stored preferences
 

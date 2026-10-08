@@ -1,4 +1,5 @@
 {
   "en": "No hero matches \"{query}\". To filter by a mechanic, pick it on a card.",
-  "zh": "没有英雄匹配“{query}”。如需按机制筛选，请在卡片上选择。"
+  "zh": "没有英雄匹配“{query}”。如需按机制筛选，请在卡片上选择。",
+  "ko": "\"{query}\"에 해당하는 영웅이 없습니다. 메커니즘으로 필터링하려면 카드에서 선택하세요."
 }

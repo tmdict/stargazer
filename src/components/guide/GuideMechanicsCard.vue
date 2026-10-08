@@ -42,7 +42,6 @@ const emit = defineEmits<{
 }>()
 
 defineSlots<{
-  // Shown with the modifier chips, for a mechanic that has its own control.
   controls?(): unknown
 }>()
 

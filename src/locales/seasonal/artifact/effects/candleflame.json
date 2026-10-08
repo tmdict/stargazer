@@ -1,30 +1,37 @@
 [
   {
     "en": "When a battle starts, summons a candleflame that follows the ally deployed in the frontmost position. Every second, it restores HP equal to [[50%]]<ATK> of the followed ally's HP to allies within 1 tile. If the followed ally is defeated, the candleflame follows the nearest surviving ally instead, but its healing is permanently reduced by [[20%]], up to [[3]] times.",
-    "zh": "战斗开始时召唤烛火跟随布阵在最靠前的友军，每秒为其周围1格范围内的友军恢复相当于跟随友军[[50%]]<ATK>的生命值。当烛火跟随的友军被击败时，烛火会转而跟随距离最近的另一名友军，但治疗量永久降低[[20%]]，至多降低[[3]]次。"
+    "zh": "战斗开始时召唤烛火跟随布阵在最靠前的友军，每秒为其周围1格范围内的友军恢复相当于跟随友军[[50%]]<ATK>的生命值。当烛火跟随的友军被击败时，烛火会转而跟随距离最近的另一名友军，但治疗量永久降低[[20%]]，至多降低[[3]]次。",
+    "ko": "전투 시작 시 가장 앞의 아군을 따라다니는 촛불을 소환해, 초당 그 주변 1칸 범위 내 아군의 HP를 촛불이 따라다니는 아군 [[50%]]<ATK>만큼 회복시킨다. 촛불이 따라다니는 아군이 처치당할 시, 촛불은 가장 가까운 다른 아군을 따라다니지만 치료량이 영구적으로 [[20%]] 감소한다(최대 [[3]]회 감소)."
   },
   {
     "en": "Increases healing to [[60%]]<ATK>.",
-    "zh": "治疗量提高至[[60%]]<ATK>。"
+    "zh": "治疗量提高至[[60%]]<ATK>。",
+    "ko": "치료량이 [[60%]]<ATK>로 증가한다."
   },
   {
     "en": "Increases healing to [[70%]]<ATK>.",
-    "zh": "治疗量提高至[[70%]]<ATK>。"
+    "zh": "治疗量提高至[[70%]]<ATK>。",
+    "ko": "치료량이 [[70%]]<ATK>로 증가한다."
   },
   {
     "en": "Increases healing to [[80%]]<ATK>.",
-    "zh": "治疗量提高至[[80%]]<ATK>。"
+    "zh": "治疗量提高至[[80%]]<ATK>。",
+    "ko": "치료량이 [[80%]]<ATK>로 증가한다."
   },
   {
     "en": "Increases healing to [[90%]]<ATK>.",
-    "zh": "治疗量提高至[[90%]]<ATK>。"
+    "zh": "治疗量提高至[[90%]]<ATK>。",
+    "ko": "치료량이 [[90%]]<ATK>로 증가한다."
   },
   {
     "en": "Increases healing to [[100%]]<ATK>.",
-    "zh": "治疗量提高至[[100%]]<ATK>。"
+    "zh": "治疗量提高至[[100%]]<ATK>。",
+    "ko": "치료량이 [[100%]]<ATK>로 증가한다."
   },
   {
     "en": "[[3]]s into a battle, and every [[12]]s thereafter, intensifies the candleflame for [[6]]s. While intensified, its range expands by 1 tile, while allies within range deal [[16%]] more damage and take [[16%]] less damage.",
-    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒主动释放，使其中的烛火散发更强烈的光芒持续[[6]]秒，持续期间烛火范围扩大一格，并且使范围内友军造成伤害提高[[16%]]，受到伤害降低[[16%]]。"
+    "zh": "战斗开始第[[3]]秒起，每隔[[12]]秒主动释放，使其中的烛火散发更强烈的光芒持续[[6]]秒，持续期间烛火范围扩大一格，并且使范围内友军造成伤害提高[[16%]]，受到伤害降低[[16%]]。",
+    "ko": "전투 시작 [[3]]초부터 [[12]]초마다 액티브로 시전하여, 촛불이 [[6]]초 동안 더욱 강렬한 빛을 발산한다. 지속 시간 동안 촛불 범위가 1칸 증가하며 범위 내 아군이 입히는 대미지가 [[16%]] 증가하고, 받는 대미지가 [[16%]] 감소한다."
   }
 ]

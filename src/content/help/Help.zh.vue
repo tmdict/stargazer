@@ -233,7 +233,7 @@ const SKILL = {
           <span><kbd>/</kbd></span>
           <p>也能打开搜索</p>
           <span><kbd>Alt</kbd> <kbd>L</kbd></span>
-          <p>切换中英文</p>
+          <p>切换到下一种语言</p>
           <span><kbd>Esc</kbd></span>
           <p>关闭弹窗</p>
         </div>

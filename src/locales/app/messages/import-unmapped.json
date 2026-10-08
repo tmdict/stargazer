@@ -1,4 +1,5 @@
 {
   "en": "{count} screenshot(s) without a map",
-  "zh": "{count} 张截图未指定地图"
+  "zh": "{count} 张截图未指定地图",
+  "ko": "맵이 지정되지 않은 스크린샷 {count}장"
 }

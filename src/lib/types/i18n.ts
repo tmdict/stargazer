@@ -1,13 +1,18 @@
 // i18n type definitions.
 //
 // Two locale axes: AppLocale is the site chrome (nav, labels, character and
-// artifact names) and stays en/zh. SkillLocale is the reading language of
-// skill-page text and covers every language the upstream skill feed publishes.
+// artifact names), the few languages in APP_LOCALES. SkillLocale is the
+// reading language of skill-page text and covers every language the upstream
+// skill feed publishes.
 
-export interface LocaleData {
-  en: string
-  zh: string
-}
+// List order is the language menu's order. Adding a site language is a row
+// here plus its strings: LocaleData makes every chrome string carry it, and
+// routes, the pre-render list, hreflang and the menu derive from the list.
+export const APP_LOCALES = ['en', 'zh', 'ko'] as const
+
+export type AppLocale = (typeof APP_LOCALES)[number]
+
+export type LocaleData = Record<AppLocale, string>
 
 export interface LocaleDictionary {
   [category: string]: {
@@ -15,12 +20,8 @@ export interface LocaleDictionary {
   }
 }
 
-export type AppLocale = 'en' | 'zh'
-
-export const APP_LOCALES: readonly AppLocale[] = ['en', 'zh']
-
-/** True for the languages with chrome strings, curated names, and eagerly
- * bundled skill text; everything downstream branches on this membership. */
+/** True for the languages with chrome strings and curated names; everything
+ * downstream branches on this membership. */
 export function isAppLocale(value: string): value is AppLocale {
   return (APP_LOCALES as readonly string[]).includes(value)
 }
@@ -62,4 +63,9 @@ export const SKILL_LOCALE_CODES: readonly SkillLocale[] = SKILL_LOCALES.map((l) 
 
 export function isSkillLocale(value: string): value is SkillLocale {
   return (SKILL_LOCALE_CODES as readonly string[]).includes(value)
+}
+
+/** A language's name in itself, as every language menu writes it. */
+export function localeNativeName(code: SkillLocale): string {
+  return SKILL_LOCALES.find((l) => l.code === code)!.native
 }

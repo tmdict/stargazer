@@ -25,10 +25,11 @@ const emit = defineEmits<{
 provide(ContentInModalKey, true)
 
 // Modal-local skill-text locale, seeded from the saved preference; `applied`
-// gates rendering on the locale chunk being warm. The permalink follows
+// gates rendering on the locale chunk being warm, and `failed` lets the
+// sections render their own could-not-load line. The permalink follows
 // `selected` (the user's choice, warm or not); the target page handles its
 // own loading.
-const { selected, applied, apply } = useModalSkillLocale(() => props.show)
+const { selected, applied, failed, apply } = useModalSkillLocale(() => props.show)
 
 const hasLocaleData = computed(() => hasSkillLocale(props.skillName))
 const label = computed(() => heroDisplayName(props.skillName, selected.value))
@@ -48,9 +49,9 @@ const label = computed(() => heroDisplayName(props.skillName, selected.value))
       <SkillLocaleMenu mode="select" :current="selected" @select="apply" />
     </template>
     <SkillSections
-      v-if="hasLocaleData && applied"
+      v-if="hasLocaleData && (applied || failed)"
       :slug="skillName"
-      :lang="applied"
+      :lang="applied ?? selected"
       :initial-chips
     />
     <div v-else-if="!hasLocaleData">Content not found for skill: {{ skillName }}</div>

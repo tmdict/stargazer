@@ -13,7 +13,7 @@ import { heroDisplayName } from '@/utils/skillLabels'
 export const ContentInModalKey: InjectionKey<boolean> = Symbol('ContentInModal')
 
 const ORIGIN = SITE_ORIGIN
-const BASE_KEYWORDS = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远征']
+const BASE_KEYWORDS = ['AFK Journey', 'AFKJ', '剑与远征启程', '剑与远征', 'AFK: 새로운 여정']
 
 /**
  * Sets up meta tags for skill pages, deriving title/keywords and a per-hero
@@ -45,7 +45,7 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   // without a portrait.
   const ogImage = loadCharacterImages()[name]
 
-  const keywords = [...BASE_KEYWORDS, nameLocale?.en, nameLocale?.zh, heroName]
+  const keywords = [...BASE_KEYWORDS, ...APP_LOCALES.map((l) => nameLocale?.[l]), heroName]
 
   useHead({
     title: `${heroName} | Stargazer`,
@@ -86,6 +86,11 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
       description:
         '剑与远征启程竞技场指南：赛季 PvP 报告与克制关系图、按技能机制分组的英雄，以及冠阶与精炼属性表。',
     },
+    ko: {
+      title: '가이드',
+      description:
+        'AFK: 새로운 여정 아레나 가이드. 시즌 PvP 리포트와 상성표, 스킬 메커니즘별 영웅, 파라곤 및 전용 장비 제련 속성표를 제공합니다.',
+    },
   },
   upgrades: {
     en: {
@@ -93,6 +98,11 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
       description: 'Paragon and EX Refinement stat gains per level for every AFK Journey faction.',
     },
     zh: { title: '强化', description: '剑与远征启程各阵营每级冠阶与精炼的属性加成。' },
+    ko: {
+      title: '강화',
+      description:
+        'AFK: 새로운 여정 모든 진영의 파라곤 및 전용 장비 제련 단계별 속성 증가량을 정리했습니다.',
+    },
   },
   mechanics: {
     en: {
@@ -101,6 +111,11 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
         'AFK Journey heroes grouped by skill mechanic, with the skill text behind each tag.',
     },
     zh: { title: '机制', description: '按技能机制分组的剑与远征启程英雄，附相关技能文本。' },
+    ko: {
+      title: '메커니즘',
+      description:
+        'AFK: 새로운 여정 영웅을 스킬 메커니즘별로 모았습니다. 태그별 관련 스킬 설명도 함께 확인할 수 있습니다.',
+    },
   },
 }
 
@@ -114,11 +129,15 @@ const HELP_META: Record<AppLocale, { title: string; description: string }> = {
     title: '帮助',
     description: 'Stargazer 使用说明：放置英雄、查看技能、分享棋盘、英雄池与保存阵容。',
   },
+  ko: {
+    title: '도움말',
+    description: 'Stargazer 사용법: 영웅 배치, 스킬 확인, 보드 공유, 로스터, 진형 저장.',
+  },
 }
 
 /**
  * Sets up meta tags for a page with one route per app locale (SSG and client).
- * The en and zh routes of a page share one view instance, so the head follows
+ * A page's locale routes share one view instance, so the head follows
  * the locale reactively instead of the value at setup.
  */
 function setupLocalePageMeta(
