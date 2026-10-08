@@ -1,4 +1,5 @@
 {
   "en": "Heroes: {heroes} · Hits: {hits}",
-  "zh": "英雄 {heroes} · 匹配 {hits}"
+  "zh": "英雄 {heroes} · 匹配 {hits}",
+  "ko": "영웅 {heroes} · 일치 {hits}"
 }

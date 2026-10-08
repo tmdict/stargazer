@@ -3,6 +3,7 @@ import { computed, type Component } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import AboutEn from '@/content/about/About.en.vue'
+import AboutKo from '@/content/about/About.ko.vue'
 import AboutZh from '@/content/about/About.zh.vue'
 import type { AppLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
@@ -16,7 +17,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-const CONTENT: Record<AppLocale, Component> = { en: AboutEn, zh: AboutZh }
+const CONTENT: Record<AppLocale, Component> = { en: AboutEn, zh: AboutZh, ko: AboutKo }
 
 const i18n = useI18nStore()
 

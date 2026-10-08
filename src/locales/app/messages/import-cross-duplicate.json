@@ -1,4 +1,5 @@
 {
   "en": "{hero} appears on the {side} side of maps {maps}; the game does not allow this, so a reading is wrong or a screenshot is from another match",
-  "zh": "{hero} 在第 {maps} 张地图的{side}重复出现；游戏不允许这种情况，说明识别有误或截图来自其他对局"
+  "zh": "{hero} 在第 {maps} 张地图的{side}重复出现；游戏不允许这种情况，说明识别有误或截图来自其他对局",
+  "ko": "{hero}: 맵 {maps}의 {side} 진영에 중복 등장합니다. 게임에서 허용되지 않으므로 인식 결과에 오류가 있거나 다른 대전의 스크린샷이 섞여 있습니다"
 }

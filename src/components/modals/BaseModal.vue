@@ -21,6 +21,8 @@ interface Props {
   // Hero slug for the permalink button; omit to hide the button (e.g. the
   // about modal, which has no standalone page).
   linkParam?: string
+  // The language of the content, for a popup with its own language menu; the
+  // permalink follows it.
   localeOverride?: SkillLocale
   // Anchor to viewport top instead of centering. Use when content height can
   // change at runtime so the top edge stays put.
@@ -87,7 +89,7 @@ watch(isOpen, (open) => open && closeDropdowns(), { immediate: true })
             </button>
           </div>
 
-          <div class="content">
+          <div class="content" :lang="localeOverride">
             <slot />
           </div>
         </div>

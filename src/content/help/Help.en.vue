@@ -283,7 +283,7 @@ const SKILL = {
           <span><kbd>/</kbd></span>
           <p>Also opens the search</p>
           <span><kbd>Alt</kbd> <kbd>L</kbd></span>
-          <p>Switch between English and Chinese</p>
+          <p>Switch to the next language</p>
           <span><kbd>Esc</kbd></span>
           <p>Close a popup</p>
         </div>

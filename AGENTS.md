@@ -9,6 +9,7 @@
 - Test changes: `npm run lint` and `npm run type-check`
 - Update relevant architecture docs when making major changes
 - Content text (popups, skill page, Help) uses the text roles in `src/styles/content.css` (plain `h1`/`h2`/`h3`/`p`/`li` inside `.content`, plus `.reading-secondary` and `.reading-meta`) instead of setting its own size, line height or color; detailed tooltips use `TooltipCard`
+- Korean text written for the site calls a place on the map 타일 (빈 타일, 44번 타일, 타일 번호) and uses 칸 only to count tiles or measure distance (인접한 6칸, 2칸 이내); imported game text is kept word for word
 - A control that must match another shares its definition, never a copy of its values: the same component first, else a token in `src/styles/variables.css`. A new dropdown is a `DropdownSelect` (custom menu content in its default slot, every row a `DropdownRow`) instead of its own trigger, panel and rows; a hero list is sorted with `compareCharacters`
 - A text field (`input`, `textarea`, `select`) sets `font-size: max(<its size>, var(--field-min-font-size))`: iOS zooms the page when a field under 16px gains focus, and the token is that floor on touch screens
 

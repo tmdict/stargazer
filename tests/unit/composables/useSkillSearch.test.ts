@@ -1,8 +1,16 @@
 import { ref } from 'vue'
 import { describe, expect, it } from 'vitest'
 
-import { useSkillSearch } from '@/composables/useSkillSearch'
+import { matchCharacterNames, useSkillSearch } from '@/composables/useSkillSearch'
 import { loadSkillLocale } from '@/utils/dataLoader'
+
+// First in the file: no corpus is warm yet. Skill text loads on demand, and
+// the pickers' name search must not wait for it.
+describe('name search', () => {
+  it('finds a hero by name before any skill text has loaded', () => {
+    expect(matchCharacterNames('rowan')).toEqual(new Set(['rowan']))
+  })
+})
 
 // Runs over the real locale corpora. pt is loaded explicitly because it holds
 // the known cross-language collision: Alsa's pt kit ("rolando", "Pedregulho
