@@ -1,4 +1,5 @@
 {
   "en": "Download only the teams shown ({filters}) as a backup file",
-  "zh": "仅将当前显示的阵容（{filters}）下载为备份文件"
+  "zh": "仅将当前显示的阵容（{filters}）下载为备份文件",
+  "ko": "표시된 진형({filters})만 백업 파일로 다운로드"
 }

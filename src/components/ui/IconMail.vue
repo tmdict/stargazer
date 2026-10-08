@@ -13,7 +13,7 @@ const { size = 24 } = defineProps<{
     xmlns="http://www.w3.org/2000/svg"
   >
     <!-- Envelope knocked out of a filled circle via mask, matching the other
-         circular menu icons (IconInfo, IconLocaleEn/Zh). -->
+         circular menu icons (IconInfo, IconLocale). -->
     <defs>
       <mask id="mail-mask">
         <rect x="0" y="0" width="24" height="24" fill="white" />

@@ -6,7 +6,8 @@ import { useTouchDetection } from './useTouchDetection'
 /* Open state for a dropdown whose root element wraps both the trigger and the
  * panel, so the trigger's own click never counts as an outside click.
  *
- * - Outside clicks close it (useOverlay).
+ * - Outside clicks close it (useOverlay), heard on capture so one inside a
+ *   modal, which stops its clicks, still counts.
  * - Escape closes only the dropdown: the capture-phase handler stops the key
  *   before bubble-phase handlers (a surrounding modal or popup) see it.
  * - `hover` opens it for mouse pointers. Touch is excluded, as in
@@ -31,6 +32,12 @@ let closeHoverOpened: (() => void) | null = null
  * click outside them: a popup opened by a long press, a sheet sliding away. */
 export function closeDropdowns(): void {
   for (const hide of [...openDropdowns]) hide()
+}
+
+/* A link row clicked with a modifier key opens in another tab or window, and
+ * the page it was clicked on keeps the choice it had. */
+export function opensElsewhere(e: MouseEvent): boolean {
+  return e.metaKey || e.ctrlKey || e.shiftKey || e.altKey
 }
 
 export function useDropdown({
@@ -90,7 +97,13 @@ export function useDropdown({
     interactionStartedAsTouch.value = true
   }
 
-  useOverlay({ elementRef: rootRef, detachedRef: panelRef, isOpen: open, onClose: hide })
+  useOverlay({
+    elementRef: rootRef,
+    detachedRef: panelRef,
+    isOpen: open,
+    onClose: hide,
+    capture: true,
+  })
 
   const onKeyDown = (e: KeyboardEvent): void => {
     if (e.key !== 'Escape' || !open.value) return

@@ -1,4 +1,5 @@
 {
   "en": "Saved team limit reached ({max})",
-  "zh": "已达到阵容保存上限（{max}）"
+  "zh": "已达到阵容保存上限（{max}）",
+  "ko": "저장할 수 있는 진형 수의 한도에 도달했습니다 ({max})"
 }

@@ -11,6 +11,10 @@ interface UseOverlayOptions {
    * (e.g. BaseModal); handlers no-op while `false`. */
   isOpen?: Ref<boolean>
   clickOutsideDelay?: number
+  /** Hear the outside click before a surface around this one (a modal's
+   * container) can stop it. Only for a surface that holds its own opener: a
+   * toggle outside it would run after the close and open it again. */
+  capture?: boolean
 }
 
 const DEFAULT_DELAY_MS = 50
@@ -32,6 +36,7 @@ export function useOverlay({
   onClose,
   isOpen,
   clickOutsideDelay = DEFAULT_DELAY_MS,
+  capture = false,
 }: UseOverlayOptions): void {
   const handleEscape = (e: KeyboardEvent) => {
     if (e.key !== 'Escape') return
@@ -69,7 +74,7 @@ export function useOverlay({
     // this surface; treat it as outside rather than trusting a stale flag.
     pressStartedInside = false
     document.addEventListener('pointerdown', handlePointerDown, true)
-    document.addEventListener('click', handleClickOutside)
+    document.addEventListener('click', handleClickOutside, capture)
     clickAttached = true
   }
 
@@ -80,7 +85,7 @@ export function useOverlay({
     }
     if (clickAttached) {
       document.removeEventListener('pointerdown', handlePointerDown, true)
-      document.removeEventListener('click', handleClickOutside)
+      document.removeEventListener('click', handleClickOutside, capture)
       clickAttached = false
     }
   }

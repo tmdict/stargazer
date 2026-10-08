@@ -2,10 +2,16 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
 
+import { APP_LOCALES } from '@/lib/types/i18n'
+import { formatToCamelCase } from '@/utils/nameFormatting'
+
 /**
- * Guards the homegrown i18n's two blind spots:
+ * Guards the homegrown i18n's blind spots:
  *  1. a typo'd literal `t('cat.key')` only fails at runtime (renders the key)
- *  2. locale files could drift from the `{ en, zh }` shape unnoticed
+ *  2. locale files could drift from one string per app locale unnoticed, or
+ *     lose a `{placeholder}` in one language
+ *  3. a hero note could exist in some app locales only, and its page would
+ *     silently show another language's
  *
  * Key resolution mirrors dataLoader: app/character/artifact/game keys are flat
  * filenames (subfolders are organizational).
@@ -67,12 +73,42 @@ function loadCategoryKeys(category: string): Map<string, Record<string, unknown>
 describe('locale files', () => {
   const dicts = new Map(T_CATEGORIES.map((c) => [c as string, loadCategoryKeys(c)]))
 
-  it('every entry has exactly { en, zh } string values', () => {
+  it('every entry has exactly one string per app locale', () => {
+    const locales = [...APP_LOCALES].sort()
     for (const [category, entries] of dicts) {
       for (const [key, value] of entries) {
-        expect(Object.keys(value).sort(), `${category}.${key}`).toEqual(['en', 'zh'])
-        expect(typeof value.en, `${category}.${key}.en`).toBe('string')
-        expect(typeof value.zh, `${category}.${key}.zh`).toBe('string')
+        expect(Object.keys(value).sort(), `${category}.${key}`).toEqual(locales)
+        for (const locale of locales) {
+          expect(typeof value[locale], `${category}.${key}.${locale}`).toBe('string')
+        }
+      }
+    }
+  })
+
+  it('every entry carries the same placeholders in each app locale', () => {
+    const placeholders = (text: unknown) =>
+      String(text)
+        .match(/\{[a-zA-Z]+\}/g)
+        ?.sort() ?? []
+    for (const [category, entries] of dicts) {
+      for (const [key, value] of entries) {
+        for (const locale of APP_LOCALES) {
+          expect(placeholders(value[locale]), `${category}.${key}.${locale}`).toEqual(
+            placeholders(value.en),
+          )
+        }
+      }
+    }
+  })
+
+  it('every hero note exists in each app locale', () => {
+    const dir = 'src/content/skill'
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      if (!entry.isDirectory()) continue
+      const slug = entry.name
+      const files = readdirSync(join(dir, slug))
+      for (const locale of APP_LOCALES) {
+        expect(files, `${slug} (${locale})`).toContain(`${formatToCamelCase(slug)}.${locale}.vue`)
       }
     }
   })

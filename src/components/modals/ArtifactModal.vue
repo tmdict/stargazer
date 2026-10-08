@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import BaseModal from './BaseModal.vue'
 import SkillSection from '@/components/skill/SkillSection.vue'
-import ModalLocaleToggle from '@/components/ui/ModalLocaleToggle.vue'
+import LocaleMenu from '@/components/ui/LocaleMenu.vue'
 import { useModalLocale } from '@/composables/useModalLocale'
 import type { ArtifactType } from '@/lib/types/artifact'
 import { useGameDataStore } from '@/stores/gameData'
@@ -52,9 +52,15 @@ const pendingLabel = computed(
 </script>
 
 <template>
-  <BaseModal :show="show" :label="title" max-width="640px" @close="emit('close')">
+  <BaseModal
+    :show="show"
+    :label="title"
+    :locale-override="displayLocale"
+    max-width="640px"
+    @close="emit('close')"
+  >
     <template #header-buttons>
-      <ModalLocaleToggle v-model="displayLocale" />
+      <LocaleMenu :current="displayLocale" in-modal @select="displayLocale = $event" />
     </template>
 
     <h1>{{ title }}</h1>

@@ -172,7 +172,7 @@ export function useSavedTeamSearch(teams: () => readonly SavedTeam[]): {
       .slice(0, MAX_SUGGESTIONS)
   })
 
-  // Matches any warm locale (en/zh always are).
+  // Matches the site languages' curated names and any warm locale.
   const matchedHeroes = computed<ReadonlySet<string> | undefined>(() =>
     activeQuery.value.length >= HERO_QUERY_MIN ? matchCharacterNames(activeQuery.value) : undefined,
   )
