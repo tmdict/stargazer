@@ -47,20 +47,20 @@ const SKILL = {
         <HelpBasicsPicture kind="add" />
         <h3>영웅 추가</h3>
         <p class="help-mouse">
-          빈 칸을 클릭하면 그 자리에 영웅 목록이 나타납니다. 영웅을 클릭하거나, 이름을 입력해 영웅이
-          하나만 남으면 <kbd>Enter</kbd>를 누르세요. 커서가 검색창에 그대로 있으므로 계속 입력하고
-          <kbd>Enter</kbd>를 눌러 영웅을 더 추가할 수 있습니다.
+          빈 타일을 클릭하면 그 자리에 영웅 목록이 나타납니다. 영웅을 클릭하거나, 이름을 입력해
+          영웅이 하나만 남으면 <kbd>Enter</kbd>를 누르세요. 커서가 검색창에 그대로 있으므로 계속
+          입력하고 <kbd>Enter</kbd>를 눌러 영웅을 더 추가할 수 있습니다.
         </p>
-        <p class="help-touch">빈 칸을 누른 뒤 아래 목록에서 영웅을 누르세요.</p>
+        <p class="help-touch">빈 타일을 누른 뒤 아래 목록에서 영웅을 누르세요.</p>
       </li>
       <li>
         <HelpBasicsPicture kind="move" />
         <h3>이동 또는 교체</h3>
         <p class="help-mouse">
-          영웅을 다른 칸으로 드래그하세요. 다른 영웅 위에 놓으면 서로 자리가 바뀝니다.
+          영웅을 다른 타일로 드래그하세요. 다른 영웅 위에 놓으면 서로 자리가 바뀝니다.
         </p>
         <p class="help-touch">
-          영웅을 누른 뒤 옮길 칸을 누르세요. 다른 영웅을 누르면 서로 자리가 바뀝니다.
+          영웅을 누른 뒤 옮길 타일을 누르세요. 다른 영웅을 누르면 서로 자리가 바뀝니다.
         </p>
       </li>
       <li>
@@ -162,19 +162,19 @@ const SKILL = {
   </section>
 
   <section id="rosters" class="help-sec">
-    <h2>영웅 풀</h2>
+    <h2>영웅 로스터</h2>
     <div class="help-grid">
       <HelpRostersPicture />
       <div class="help-side">
         <p class="help-lead">
-          영웅 풀은 보유한 영웅과 그 레벨을 담은 목록입니다. 하나를 선택하면 영웅 목록에 해당 영웅만
+          로스터는 보유한 영웅과 그 레벨을 담은 목록입니다. 하나를 선택하면 영웅 목록에 해당 영웅만
           표시됩니다.
         </p>
         <ol class="help-steps">
           <li>
             <span
-              ><b>영웅 풀</b> 탭에서 <b>새로 만들기</b>를 선택하세요. 연필 아이콘으로 이름을 바꿀 수
-              있습니다.</span
+              ><b>영웅 로스터</b> 탭에서 <b>새로 만들기</b>를 선택하세요. 연필 아이콘으로 이름을
+              바꿀 수 있습니다.</span
             >
           </li>
           <li>
@@ -189,7 +189,7 @@ const SKILL = {
           </li>
           <li>
             <span>
-              영웅 목록 맨 위에서 영웅 풀을 선택하세요. 영웅이 설정한 레벨로 맵에 배치됩니다.
+              영웅 목록 맨 위에서 로스터를 선택하세요. 영웅이 설정한 레벨로 맵에 배치됩니다.
             </span>
           </li>
         </ol>
@@ -201,7 +201,7 @@ const SKILL = {
         </li>
         <li><b>모든 영웅</b>을 선택하면 전체 영웅이 다시 표시됩니다.</li>
         <li>
-          영웅 풀은 브라우저에 저장됩니다. <b>내보내기</b>와 <b>가져오기</b>로 다른 기기에 옮길 수
+          로스터는 브라우저에 저장됩니다. <b>내보내기</b>와 <b>가져오기</b>로 다른 기기에 옮길 수
           있습니다.
         </li>
       </ul>
@@ -213,32 +213,32 @@ const SKILL = {
     <div class="help-grid">
       <HelpMapsPicture />
       <div class="help-side">
-        <p class="help-lead">아레나의 칸을 바꾸거나 나만의 맵을 직접 그려 보세요.</p>
+        <p class="help-lead">아레나의 타일을 바꾸거나 나만의 맵을 직접 그려 보세요.</p>
         <ol class="help-steps">
           <li>
-            <span>아레나에서 <b>맵</b> 탭으로 이동해 <b>칸 편집</b>을 켜세요.</span>
+            <span>아레나에서 <b>맵</b> 탭으로 이동해 <b>타일 편집</b>을 켜세요.</span>
           </li>
           <li>
             <span>
-              칸 종류를 선택하세요: <b>빈 칸</b>, <b>아군 칸</b>, <b>적군 칸</b>, <b>장애물</b>,
-              <b>파괴 가능</b>.
+              타일 종류를 선택하세요: <b>빈 타일</b>, <b>아군 타일</b>, <b>적군 타일</b>,
+              <b>장애물</b>, <b>파괴 가능</b>.
             </span>
           </li>
           <li>
             <span class="help-mouse">
-              칸을 클릭해 칠하거나, 버튼을 누른 채 여러 칸 위로 드래그하세요.
+              타일을 클릭해 칠하거나, 버튼을 누른 채 여러 타일 위로 드래그하세요.
             </span>
-            <span class="help-touch">칠할 칸을 하나씩 누르세요.</span>
+            <span class="help-touch">칠할 타일을 하나씩 누르세요.</span>
           </li>
           <li>
-            <span><b>칸 편집</b>을 끄면 다시 영웅을 배치할 수 있습니다.</span>
+            <span><b>타일 편집</b>을 끄면 다시 영웅을 배치할 수 있습니다.</span>
           </li>
         </ol>
       </div>
       <ul class="help-notes reading-secondary">
-        <li>영웅이 있는 칸을 칠하면 그 영웅은 제거됩니다.</li>
+        <li>영웅이 있는 타일을 칠하면 그 영웅은 제거됩니다.</li>
         <li>
-          <b>채우기</b>는 모든 칸을 선택한 종류로 칠합니다. <b>지우기</b>는 아레나를 원래 상태로
+          <b>채우기</b>는 모든 타일을 선택한 종류로 칠합니다. <b>지우기</b>는 아레나를 원래 상태로
           되돌립니다. 둘 다 모든 영웅을 제거합니다.
         </li>
         <li>공유 링크에는 편집한 맵이 그대로 담깁니다.</li>
@@ -305,7 +305,7 @@ const SKILL = {
           <p>이번 시즌의 팬텀과 메아리</p>
           <span class="help-tab">맵</span>
           <p>다른 아레나를 선택하거나 직접 그립니다</p>
-          <span class="help-tab">영웅 풀</span>
+          <span class="help-tab">영웅 로스터</span>
           <p>보유한 영웅과 레벨</p>
           <span class="help-tab">저장 목록</span>
           <p>진형 페이지에 있는 저장한 진형</p>
@@ -338,7 +338,7 @@ const SKILL = {
       </li>
       <li>
         <IconChevronRight :size="18" />
-        <span>팝업 영웅 목록 맨 위에도 영웅 풀 메뉴가 있습니다.</span>
+        <span>팝업 영웅 목록 맨 위에도 로스터 메뉴가 있습니다.</span>
       </li>
       <li>
         <IconFilter :size="18" />
