@@ -1,4 +1,5 @@
 {
   "en": "Map(s) {maps} imported, {heroes} heroes placed",
-  "zh": "已导入地图 {maps}，放置 {heroes} 名英雄"
+  "zh": "已导入地图 {maps}，放置 {heroes} 名英雄",
+  "ko": "맵 {maps} 가져오기 완료: 영웅 {heroes}명을 배치했습니다"
 }

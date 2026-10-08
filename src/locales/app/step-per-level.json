@@ -1,4 +1,5 @@
 {
   "en": "+{step} per level",
-  "zh": "每级 +{step}"
+  "zh": "每级 +{step}",
+  "ko": "레벨당 +{step}"
 }

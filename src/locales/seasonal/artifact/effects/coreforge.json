@@ -1,30 +1,37 @@
 [
   {
     "en": "When a battle starts, creates a magic sigil beneath the [[rearmost]] ally. While standing on the sigil, the ally becomes [[unaffected]] and gains [[30]] Haste and [[20%]] DMG Reduction. When the ally leaves the sigil, these bonuses are lost for [[3]]s before the sigil relocates beneath the ally's new position. If the sigil remains active for [[10]] consecutive seconds, the Haste bonus further increases to [[50]]. The [[unaffected]] effect can last up to [[15]]s. Once the ally has left the sigil, it no longer grants [[unaffected]].",
-    "zh": "战斗开始时，在布阵时[[最靠后]]的友军脚下生成法阵。法阵会使该友军获得[[30]]点急速、[[20%]]伤害减免以及[[霸体]]。当该友军离开法阵后，效果会中断[[3]]秒，随后重新在该友军脚下生成。法阵连续生效[[10]]秒后，其提供的急速值提高至[[50]]点。[[霸体]]至多持续[[15]]秒，且友军离开过法阵后，该法阵不再提供[[霸体]]效果。"
+    "zh": "战斗开始时，在布阵时[[最靠后]]的友军脚下生成法阵。法阵会使该友军获得[[30]]点急速、[[20%]]伤害减免以及[[霸体]]。当该友军离开法阵后，效果会中断[[3]]秒，随后重新在该友军脚下生成。法阵连续生效[[10]]秒后，其提供的急速值提高至[[50]]点。[[霸体]]至多持续[[15]]秒，且友军离开过法阵后，该法阵不再提供[[霸体]]效果。",
+    "ko": "전투 시작 시, [[가장 뒤]]에 배치된 아군의 위치에 마법진을 생성한다. 마법진을 통해 해당 아군은 급속을 [[30]], 대미지 감면을 [[20%]] 획득하고 [[제어 면역]] 상태가 된다. 해당 아군이 마법진을 떠나면 효과가 [[3]]초 동안 중단되고, 이후 다시 아군의 위치에 마법진이 생성된다. 마법진 [[10]]초 지속 후, 해당 아군이 획득하는 급속이 [[50]]로 증가한다. [[제어 면역]]은 최대 [[15]]초 동안 지속되며, 아군이 마법진을 벗어나면 해당 마법진은 더 이상 [[제어 면역]] 효과를 제공하지 않는다."
   },
   {
     "en": "If the magic sigil remains active for [[10]] consecutive seconds, the Haste bonus further increases to [[52]].",
-    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[52]]点。"
+    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[52]]点。",
+    "ko": "마법진 지속 [[10]]초 후 획득하는 급속이 [[52]]로 증가한다."
   },
   {
     "en": "If the magic sigil remains active for [[10]] consecutive seconds, the Haste bonus further increases to [[54]].",
-    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[54]]点。"
+    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[54]]点。",
+    "ko": "마법진 지속 [[10]]초 후 획득하는 급속이 [[54]]로 증가한다."
   },
   {
     "en": "If the magic sigil remains active for [[10]] consecutive seconds, the Haste bonus further increases to [[56]].",
-    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[56]]点。"
+    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[56]]点。",
+    "ko": "마법진 지속 [[10]]초 후 획득하는 급속이 [[56]]로 증가한다."
   },
   {
     "en": "If the magic sigil remains active for [[10]] consecutive seconds, the Haste bonus further increases to [[58]].",
-    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[58]]点。"
+    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[58]]点。",
+    "ko": "마법진 지속 [[10]]초 후 획득하는 급속이 [[58]]로 증가한다."
   },
   {
     "en": "If the magic sigil remains active for [[10]] consecutive seconds, the Haste bonus further increases to [[60]].",
-    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[60]]点。"
+    "zh": "法阵连续生效[[10]]秒后，其提供的急速值提高至[[60]]点。",
+    "ko": "마법진 지속 [[10]]초 후 획득하는 급속이 [[60]]로 증가한다."
   },
   {
     "en": "Also creates a secondary sigil beneath the frontmost ally. It grants [[50%]] of the buffs provided by the original sigil and is interrupted whenever the original sigil is interrupted.",
-    "zh": "额外为最靠前的友军提供次级法阵，次级法阵提供的增益效果为原法阵的[[50%]]，且原法阵中断时次级法阵也会中断。"
+    "zh": "额外为最靠前的友军提供次级法阵，次级法阵提供的增益效果为原法阵的[[50%]]，且原法阵中断时次级法阵也会中断。",
+    "ko": "추가로 가장 앞의 아군에게 보조 마법진을 제공한다. 보조 마법진이 제공하는 버프 효과는 기존 마법진의 [[50%]]이며, 기존 마법진이 중단되면 보조 마법진도 함께 중단된다."
   }
 ]

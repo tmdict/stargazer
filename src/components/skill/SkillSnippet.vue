@@ -35,7 +35,7 @@ const resolvedBody = computed(() => {
 </script>
 
 <template>
-  <section class="skill-snippet">
+  <section class="skill-snippet" :lang>
     <h3 v-if="resolvedTitle" class="skill-snippet-title">{{ resolvedTitle }}</h3>
     <div class="skill-snippet-body">
       <p v-if="resolvedBody">{{ resolvedBody }}</p>

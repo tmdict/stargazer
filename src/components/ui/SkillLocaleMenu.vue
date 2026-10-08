@@ -3,16 +3,16 @@ import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 
 import IconGlobe from './IconGlobe.vue'
-import { useDropdown } from '@/composables/useDropdown'
+import { opensElsewhere, useDropdown } from '@/composables/useDropdown'
 import { usePanelFit } from '@/composables/usePanelFit'
 import { SKILL_LOCALES, type SkillLocale } from '@/lib/types/i18n'
 import { useI18nStore } from '@/stores/i18n'
 
-// Globe dropdown for the skill-text language, distinct from the header en/中
-// chrome toggle. `links` mode (skill pages) renders real hrefs to the sibling
-// locale URLs; `select` mode (skill modal) emits and lets the caller own the
-// chunk loading. An explicit pick persists the preference in both modes; only
-// picks persist (URL visits never do).
+// Globe dropdown for the skill-text language, distinct from the header's
+// site-language menu. `links` mode (skill pages) renders real hrefs to the
+// sibling locale URLs; `select` mode (skill modal) emits and lets the caller
+// own the chunk loading. An explicit pick persists the preference in both
+// modes; only picks persist (URL visits never do).
 const props = defineProps<{
   current: SkillLocale
   mode: 'links' | 'select'
@@ -36,7 +36,8 @@ const currentDef = computed(() => SKILL_LOCALES.find((l) => l.code === props.cur
 // Teal state signals the text language differs from the site chrome.
 const isActive = computed(() => props.current !== i18n.currentLocale)
 
-const pickLink = (locale: SkillLocale) => {
+const pickLink = (locale: SkillLocale, e: MouseEvent) => {
+  if (opensElsewhere(e)) return
   i18n.setSkillLocale(locale)
   hide()
 }
@@ -81,7 +82,7 @@ const pickSelect = (locale: SkillLocale) => {
           :to="`/${l.code}/skill/${slug}`"
           class="item"
           :class="{ 'is-selected': l.code === current }"
-          @click="pickLink(l.code)"
+          @click="pickLink(l.code, $event)"
         >
           {{ l.native }}
         </RouterLink>

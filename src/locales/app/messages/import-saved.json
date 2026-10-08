@@ -1,4 +1,5 @@
 {
   "en": "{name} saved: {heroes} heroes on map(s) {maps}",
-  "zh": "已保存 {name}：{heroes} 名英雄，地图 {maps}"
+  "zh": "已保存 {name}：{heroes} 名英雄，地图 {maps}",
+  "ko": "{name} 저장 완료: 맵 {maps}, 영웅 {heroes}명"
 }

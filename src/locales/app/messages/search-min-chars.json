@@ -1,4 +1,5 @@
 {
   "en": "Skill text search starts at 3 characters (2 for Chinese, Japanese, or Korean).",
-  "zh": "技能文本搜索需至少 3 个字符（中日韩文为 2 个）。"
+  "zh": "技能文本搜索需至少 3 个字符（中日韩文为 2 个）。",
+  "ko": "스킬 설명 검색은 3글자부터 가능합니다 (한국어, 중국어, 일본어는 2글자)."
 }

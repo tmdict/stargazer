@@ -1,4 +1,5 @@
 {
   "en": "{count} skipped: already on the same side of a map this import left as it was",
-  "zh": "已跳过 {count} 项：本次导入未改动的地图上同侧已有相同英雄或神器"
+  "zh": "已跳过 {count} 项：本次导入未改动的地图上同侧已有相同英雄或神器",
+  "ko": "{count}건 건너뜀: 이번 가져오기에서 변경하지 않은 맵의 같은 진영에 이미 있습니다"
 }

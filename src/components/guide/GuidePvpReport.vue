@@ -5,11 +5,11 @@
 
 import GuidePortrait from '@/components/guide/GuidePortrait.vue'
 import IconChevronRight from '@/components/ui/IconChevronRight.vue'
-import { mostPlayedTeams, pvpReportHref } from '@/lib/pvp/summary'
+import { isReportLocale, mostPlayedTeams, pvpReportHref } from '@/lib/pvp/summary'
 import type { AppLocale } from '@/lib/types/i18n'
 import type { PvpSeasonSummary } from '@/lib/types/pvp'
 import { interpolate } from '@/utils/interpolate'
-import { appLabel } from '@/utils/skillLabels'
+import { appLabel, pvpTeamName } from '@/utils/skillLabels'
 
 const props = defineProps<{ seasons: readonly PvpSeasonSummary[]; lang: AppLocale }>()
 
@@ -24,7 +24,10 @@ const title = (season: number): string =>
   <article class="container page-panel guide-panel">
     <section v-for="summary in seasons" :key="summary.season" class="content season guide-link">
       <a class="guide-title" :href="pvpReportHref(summary.season, lang)">
-        <h2>{{ title(summary.season) }}</h2>
+        <h2>
+          {{ title(summary.season) }}
+          <span v-if="!isReportLocale(lang)" class="report-language">{{ label('english') }}</span>
+        </h2>
         <IconChevronRight :size="18" />
       </a>
       <p class="guide-blurb">{{ label('pvp-report-blurb') }}</p>
@@ -38,7 +41,7 @@ const title = (season: number): string =>
           <span class="stack">
             <GuidePortrait v-for="slug in team.heroes" :key="slug" :slug :lang :size="24" />
           </span>
-          {{ team.name[lang] }}
+          {{ pvpTeamName(team, lang) }}
         </a>
       </div>
     </section>
@@ -57,6 +60,18 @@ const title = (season: number): string =>
 }
 .season + .season {
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.report-language {
+  margin-left: 6px;
+  padding: 0 7px;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 18px;
+  color: rgba(255, 255, 255, 0.65);
+  vertical-align: middle;
 }
 
 .chips {

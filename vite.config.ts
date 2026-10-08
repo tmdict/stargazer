@@ -1,4 +1,4 @@
-import { existsSync, readdirSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath, URL } from 'node:url'
 import vue from '@vitejs/plugin-vue'
@@ -11,7 +11,7 @@ import { guideReports } from './scripts/guideReports.ts'
 import { GUIDE_PAGES, guidePath } from './src/lib/guide.ts'
 import { helpPath } from './src/lib/help.ts'
 import { SITE_ORIGIN } from './src/lib/site.ts'
-import { APP_LOCALES, SKILL_LOCALES } from './src/lib/types/i18n.ts'
+import { APP_LOCALES, isAppLocale, SKILL_LOCALES } from './src/lib/types/i18n.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from './src/utils/textHighlight.ts'
 
 // SSG Helpers
@@ -105,29 +105,36 @@ function dedupeAssetLinks(html: string): string {
 
 // The lazy locale chunk is imported by the route guard only after the app
 // bundle executes; preloading it on its own pages saves a round trip on cold
-// loads (the primary path for shared/SEO links into non-en/zh pages).
-let assetFiles: string[] | null = null
+// loads (the primary path for shared/SEO links into skill pages). The build's
+// own manifest names the chunk: file names are no guide, a dependency's
+// `es-<hash>.js` sits beside the Spanish one.
+let chunkManifest: Record<string, string[]> | null = null
 function localeChunkHref(code: string): string | null {
-  if (!assetFiles) {
-    const assetsDir = fileURLToPath(new URL('./dist/assets', import.meta.url))
-    assetFiles = existsSync(assetsDir) ? readdirSync(assetsDir) : []
+  if (!chunkManifest) {
+    const path = fileURLToPath(new URL('./dist/.vite/ssr-manifest.json', import.meta.url))
+    chunkManifest = existsSync(path)
+      ? (JSON.parse(readFileSync(path, 'utf8')) as Record<string, string[]>)
+      : {}
   }
-  const chunkRe = new RegExp(`^${code}-[\\w-]+\\.js$`)
-  const file = assetFiles.find((f) => chunkRe.test(f))
-  return file ? `/assets/${file}` : null
+  return chunkManifest[`src/locales/skill/${code}/index.ts`]?.[0] ?? null
 }
 
 /** Post-processes SSG-rendered pages: sets lang attribute and derives skill descriptions */
 function processRenderedPage(route: string, html: string): string {
+  // Mirrors the i18n store: the page in its prefix's language, the app around
+  // it in the chrome locale, English where the prefix is a text-only language.
   const match = route.match(LOCALE_PREFIX_RE)
   if (match) {
-    html = html.replace(/<html[^>]*>/, `<html lang="${match[1]}">`)
+    const chrome = isAppLocale(match[1]) ? match[1] : 'en'
+    html = html
+      .replace(/<html[^>]*>/, `<html lang="${match[1]}">`)
+      .replace(/<body[^>]*>/, `<body lang="${chrome}">`)
   }
 
   html = dedupeAssetLinks(html)
 
   const skillMatch = route.match(SKILL_ROUTE_RE)
-  if (skillMatch && !(APP_LOCALES as readonly string[]).includes(skillMatch[1])) {
+  if (skillMatch) {
     const href = localeChunkHref(skillMatch[1])
     if (href) {
       html = html.replace('</head>', `<link rel="modulepreload" crossorigin href="${href}"></head>`)

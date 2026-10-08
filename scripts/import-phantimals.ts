@@ -4,7 +4,7 @@
 // <slug>.json: id, range, faction) are written by import:structure, which keeps
 // their ids stable within a season because ids are baked into share links. This
 // script owns only the localized content:
-//   src/locales/seasonal/phantimal/<slug>.json   {name, skills[].levels[]} en/zh maps
+//   src/locales/seasonal/phantimal/<slug>.json   {name, skills[].levels[]} app-locale maps
 //
 // Hand-written structure is linted against the feed: the slug sets must match
 // both ways and factions must agree, so a season rotation that forgets a
@@ -22,8 +22,16 @@ import { readdir, readFile, unlink } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-import { isAppLocale, SKILL_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
-import { arg, cleanDescription, feedSrcDir, hasFlag, writeTextIfChanged } from './lib/shared.ts'
+import { APP_LOCALES, type AppLocale } from '../src/lib/types/i18n.ts'
+import {
+  APP_LOCALE_FEEDS,
+  arg,
+  cleanDescription,
+  feedSrcDir,
+  hasFlag,
+  perAppLocale,
+  writeTextIfChanged,
+} from './lib/shared.ts'
 
 // ---------- paths ----------
 
@@ -99,17 +107,15 @@ async function main() {
     return
   }
 
-  const appLocales = SKILL_LOCALES.filter(
-    (l): l is (typeof SKILL_LOCALES)[number] & { code: AppLocale } => isAppLocale(l.code),
-  )
   const bulks = {} as Record<AppLocale, PhantimalsBulk>
-  for (const { feed, code } of appLocales) bulks[code] = await loadPhantimalsBulk(feed)
+  for (const { feed, code } of APP_LOCALE_FEEDS) bulks[code] = await loadPhantimalsBulk(feed)
 
   const en = bulks.en.phantimals
-  const zh = bulks.zh.phantimals
   const feedSlugs = Object.keys(en).sort()
-  if (Object.keys(zh).sort().join(',') !== feedSlugs.join(',')) {
-    throw new Error('phantimal feed slug sets differ between en and zh')
+  for (const code of APP_LOCALES) {
+    if (Object.keys(bulks[code].phantimals).sort().join(',') !== feedSlugs.join(',')) {
+      throw new Error(`phantimal feed slug sets differ between en and ${code}`)
+    }
   }
 
   // Structural lint: the hand-written files must mirror the feed.
@@ -148,30 +154,35 @@ async function main() {
   const payloads: { path: string; text: string }[] = []
   for (const slug of feedSlugs) {
     const enEntry = en[slug]!
-    const zhEntry = zh[slug]!
-    if (enEntry.skills.length !== zhEntry.skills.length) {
-      throw new Error(
-        `${slug}: en has ${enEntry.skills.length} skills, zh has ${zhEntry.skills.length}`,
-      )
+    for (const code of APP_LOCALES) {
+      const count = bulks[code].phantimals[slug]!.skills.length
+      if (count !== enEntry.skills.length) {
+        throw new Error(`${slug}: en has ${enEntry.skills.length} skills, ${code} has ${count}`)
+      }
     }
     const skills = enEntry.skills.map((skill, si) => {
-      const zhSkill = zhEntry.skills[si]!
-      if (skill.levels.length !== zhSkill.levels.length) {
-        throw new Error(`${slug}: skill ${si + 1} level count differs between en and zh`)
+      for (const code of APP_LOCALES) {
+        if (bulks[code].phantimals[slug]!.skills[si]!.levels.length !== skill.levels.length) {
+          throw new Error(`${slug}: skill ${si + 1} level count differs between en and ${code}`)
+        }
       }
       return {
-        name: { en: skill.name ?? '', zh: zhSkill.name ?? '' },
-        levels: skill.levels.map((l, li) => {
-          const zhDesc = zhSkill.levels[li]!.description
-          if (l.description == null || zhDesc == null) {
-            throw new Error(`${slug}: skill ${si + 1} level ${l.level} has a null description`)
-          }
-          return { en: cleanDescription(l.description), zh: cleanDescription(zhDesc) }
-        }),
+        name: perAppLocale((code) => bulks[code].phantimals[slug]!.skills[si]!.name ?? ''),
+        levels: skill.levels.map((l, li) =>
+          perAppLocale((code) => {
+            const description = bulks[code].phantimals[slug]!.skills[si]!.levels[li]!.description
+            if (description == null) {
+              throw new Error(
+                `${slug}: skill ${si + 1} level ${l.level} has a null ${code} description`,
+              )
+            }
+            return cleanDescription(description)
+          }),
+        ),
       }
     })
     const content = {
-      name: { en: enEntry.name ?? slug, zh: zhEntry.name ?? slug },
+      name: perAppLocale((code) => bulks[code].phantimals[slug]!.name ?? slug),
       skills,
     }
     payloads.push({

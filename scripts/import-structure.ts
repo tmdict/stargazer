@@ -1,7 +1,7 @@
 // Season structural importer: writes the files a season cutover used to write
 // by hand, from the feed.
 //   src/data/seasonal/artifact/<slug>.json      {id, name, season, stats}
-//   src/locales/seasonal/artifact/<slug>.json   {en, zh} display names
+//   src/locales/seasonal/artifact/<slug>.json   display names, one per app locale
 //   src/data/seasonal/phantimal/<slug>.json     {id, name, season, range, faction, …}
 // The rules are in scripts/lib/structure.ts. Curated fields (a phantimal's
 // `targeting`, an existing `qualifyingFactions`) are kept, an id never changes
@@ -19,7 +19,8 @@ import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import * as prettier from 'prettier'
 
-import { arg, feedSrcDir, writeTextIfChanged } from './lib/shared.ts'
+import type { AppLocale } from '../src/lib/types/i18n.ts'
+import { APP_LOCALE_FEEDS, arg, feedSrcDir, writeTextIfChanged } from './lib/shared.ts'
 import {
   artifactStructure,
   phantimalStructure,
@@ -74,17 +75,17 @@ async function format(path: string, value: unknown): Promise<string> {
 }
 
 async function main() {
-  const artifacts = {
-    en: (await loadFeed<{ artifacts: Record<string, FeedArtifact> }>('en', 'artifacts.json'))
-      .artifacts,
-    zh: (await loadFeed<{ artifacts: Record<string, FeedArtifact> }>('zh', 'artifacts.json'))
-      .artifacts,
+  const artifacts = {} as Record<AppLocale, Record<string, FeedArtifact>>
+  for (const { code, feed } of APP_LOCALE_FEEDS) {
+    artifacts[code] = (
+      await loadFeed<{ artifacts: Record<string, FeedArtifact> }>(feed, 'artifacts.json')
+    ).artifacts
   }
   const phantimals = (
     await loadFeed<{ phantimals: Record<string, FeedPhantimal> }>('en', 'phantimals.json')
   ).phantimals
 
-  const art = artifactStructure(artifacts.en, artifacts.zh, await readDir(DIRS.artifactData))
+  const art = artifactStructure(artifacts, await readDir(DIRS.artifactData))
   const pet = phantimalStructure(phantimals, await readDir(DIRS.phantimalData))
   const problems = [...art.problems, ...pet.problems]
   if (problems.length > 0) {

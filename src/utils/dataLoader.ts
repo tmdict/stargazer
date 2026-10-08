@@ -1,16 +1,11 @@
-import { reactive } from 'vue'
+import { shallowReactive } from 'vue'
 
+import skillHeroes from '@/data/skill/heroes.json'
 import skillNumbers from '@/data/skill/numbers.json'
 import { PLACEHOLDERS } from '@/lib/characters/placeholder'
 import type { ArtifactType } from '@/lib/types/artifact'
 import type { CharacterType } from '@/lib/types/character'
-import {
-  isAppLocale,
-  type AppLocale,
-  type LocaleData,
-  type LocaleDictionary,
-  type SkillLocale,
-} from '@/lib/types/i18n'
+import type { LocaleData, LocaleDictionary, SkillLocale } from '@/lib/types/i18n'
 import type { PhantimalLocale, PhantimalType } from '@/lib/types/phantimal'
 import type {
   CharmData,
@@ -278,12 +273,11 @@ let appLocalesCache: Record<string, LocaleData> | null = null
 let characterLocalesCache: Record<string, LocaleData> | null = null
 let artifactLocalesCache: Record<string, LocaleData> | null = null
 let gameLocalesCache: Record<string, LocaleData> | null = null
-let skillLocalesCache: Record<AppLocale, Record<string, SkillLocaleFile>> | null = null
 
 // import.meta.glob needs a literal pattern, so each loader globs its own directory
 // and passes the modules in rather than this helper globbing them.
-function buildLocaleDict<T = LocaleData>(modules: Record<string, T>): Record<string, T> {
-  const result: Record<string, T> = {}
+function buildLocaleDict(modules: Record<string, LocaleData>): Record<string, LocaleData> {
+  const result: Record<string, LocaleData> = {}
   for (const [path, content] of Object.entries(modules)) {
     const key = extractFileName(path)
     if (key in result) {
@@ -352,53 +346,24 @@ function splitSkillDict(dict: Record<string, SkillLocaleFile>): {
   return { heroes, keywords, charms }
 }
 
-let skillKeywordsCache: Record<AppLocale, SkillKeywords> | null = null
-let skillCharmsCache: Record<AppLocale, SkillCharms | null> | null = null
-
-/** Per-language skill text for the app locales (en/zh), keyed by character
- * slug (filename basename). Eager: the search index and the en fallback read
- * it synchronously. */
-export function loadSkillLocales(): Record<AppLocale, Record<string, SkillLocaleFile>> {
-  if (skillLocalesCache) return skillLocalesCache
-  const en = splitSkillDict(
-    buildLocaleDict<SkillLocaleFile>(
-      import.meta.glob<SkillLocaleFile>('@/locales/skill/en/*.json', {
-        eager: true,
-        import: 'default',
-      }),
-    ),
-  )
-  const zh = splitSkillDict(
-    buildLocaleDict<SkillLocaleFile>(
-      import.meta.glob<SkillLocaleFile>('@/locales/skill/zh/*.json', {
-        eager: true,
-        import: 'default',
-      }),
-    ),
-  )
-  skillLocalesCache = { en: en.heroes, zh: zh.heroes }
-  skillKeywordsCache = { en: en.keywords, zh: zh.keywords }
-  skillCharmsCache = { en: en.charms, zh: zh.charms }
-  return skillLocalesCache
-}
-
-// Non-app skill locales ship as one lazy chunk per language: each locale dir
-// holds an importer-emitted index.ts whose eager same-dir glob inlines that
-// dir's JSON into a single chunk. Loading is promise-cached per locale; the
-// route warm-up guard, the skill modal, and the search index all share it.
+// Skill text ships as one lazy chunk per language, so no page downloads a
+// language it does not show: each locale dir holds an importer-emitted
+// index.ts whose eager same-dir glob inlines that dir's JSON into a single
+// chunk. Loading is promise-cached per locale; the route warm-up guard, the
+// skill modal, the search index and the app's background fetch of the
+// reader's language all share it.
 const skillLocaleChunks = import.meta.glob<Record<string, SkillLocaleFile>>(
   '@/locales/skill/*/index.ts',
   { import: 'default' },
 )
-// Reactive so a chunk that arrives after a failed warm-up (offline first
-// load, later retried by search) re-renders anything computed from it.
-const warmedSkillLocales = reactive(new Map<SkillLocale, Record<string, SkillLocaleFile>>())
-const warmedSkillKeywords = reactive(new Map<SkillLocale, SkillKeywords>())
-const warmedSkillCharms = reactive(new Map<SkillLocale, SkillCharms>())
+// Reactive so whatever was computed before a language arrived re-renders when
+// it lands. Shallow: the text itself never changes.
+const warmedSkillLocales = shallowReactive(new Map<SkillLocale, Record<string, SkillLocaleFile>>())
+const warmedSkillKeywords = shallowReactive(new Map<SkillLocale, SkillKeywords>())
+const warmedSkillCharms = shallowReactive(new Map<SkillLocale, SkillCharms>())
 const skillLocalePromises = new Map<SkillLocale, Promise<Record<string, SkillLocaleFile>>>()
 
 export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, SkillLocaleFile>> {
-  if (isAppLocale(lang)) return Promise.resolve(loadSkillLocales()[lang])
   const pending = skillLocalePromises.get(lang)
   if (pending) return pending
   const loader = skillLocaleChunks[`/src/locales/skill/${lang}/index.ts`]
@@ -410,16 +375,16 @@ export function loadSkillLocale(lang: SkillLocale): Promise<Record<string, Skill
     if (charms) warmedSkillCharms.set(lang, charms)
     return heroes
   })
-  // A failed fetch must not poison the cache; the next call retries.
+  // A failed load is dropped so the next call asks again. Chrome remembers a
+  // failed import and repeats the failure until the page is reloaded.
   promise.catch(() => skillLocalePromises.delete(lang))
   skillLocalePromises.set(lang, promise)
   return promise
 }
 
 /** Sync read of a language's hero dict; null until loadSkillLocale has
- * resolved. en/zh are always warm (eager). */
+ * resolved. */
 export function getSkillLocaleDict(lang: SkillLocale): Record<string, SkillLocaleFile> | null {
-  if (isAppLocale(lang)) return loadSkillLocales()[lang]
   return warmedSkillLocales.get(lang) ?? null
 }
 
@@ -437,35 +402,27 @@ export function getSkillNumbers(slug: string): SkillNumbers[string] {
 }
 
 /** Sync read of a language's keyword glossary (tooltip text for the
- * `[[label|key]]` tokens in skill text); null until the locale is warmed.
- * en/zh are always warm (eager). */
+ * `[[label|key]]` tokens in skill text); null until the locale is warmed. */
 export function getSkillKeywords(lang: SkillLocale): SkillKeywords | null {
-  if (isAppLocale(lang)) {
-    loadSkillLocales()
-    return skillKeywordsCache![lang]
-  }
   return warmedSkillKeywords.get(lang) ?? null
 }
 
 /** Sync read of a language's seasonal charm text (`_charms.json`); null until
- * the locale is warmed, and always null once charms are retired. en/zh are
- * always warm (eager). */
+ * the locale is warmed, and always null once charms are retired. */
 export function getSkillCharms(lang: SkillLocale): SkillCharms | null {
-  if (isAppLocale(lang)) {
-    loadSkillLocales()
-    return skillCharmsCache![lang]
-  }
   return warmedSkillCharms.get(lang) ?? null
 }
 
-/** True iff the importer has produced an `en` locale file for `slug`. Gates
- * the surfaces where a missing locale would surface a dead link (the info
- * button, the modal, the reader's visibleSlug) so a character JSON without a
- * matching locale file degrades gracefully. Coverage across languages is
- * asserted at import time (every locale's slug set equals en's), so en
- * presence answers for all 16 locales. */
+const SKILL_HEROES: ReadonlySet<string> = new Set(skillHeroes)
+
+/** True iff the importer wrote skill text for `slug`, read from its hero list
+ * so the answer needs no language loaded. Gates the surfaces where a missing
+ * locale would surface a dead link (the info button, the modal, the reader's
+ * visibleSlug) so a character JSON without a matching locale file degrades
+ * gracefully. Coverage across languages is asserted at import time (every
+ * locale's slug set equals en's), so one list answers for all 16 locales. */
 export function hasSkillLocale(slug: string): boolean {
-  return !!loadSkillLocales().en[slug]
+  return SKILL_HEROES.has(slug)
 }
 
 export function loadGameLocales(): Record<string, LocaleData> {
