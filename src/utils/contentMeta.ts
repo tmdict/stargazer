@@ -74,10 +74,7 @@ export function setupSkillContentMeta(name: string, locale: SkillLocale): void {
   })
 }
 
-export const GUIDE_META: Record<
-  GuidePage,
-  Record<AppLocale, { title: string; description: string }>
-> = {
+const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; description: string }>> = {
   index: {
     en: {
       title: 'Guide',
@@ -122,7 +119,7 @@ export const GUIDE_META: Record<
   },
 }
 
-export const HELP_META: Record<AppLocale, { title: string; description: string }> = {
+const HELP_META: Record<AppLocale, { title: string; description: string }> = {
   en: {
     title: 'Help',
     description:
@@ -134,7 +131,7 @@ export const HELP_META: Record<AppLocale, { title: string; description: string }
   },
   ko: {
     title: '도움말',
-    description: 'Stargazer 사용법: 영웅 배치, 스킬 확인, 보드 공유, 영웅 풀, 진형 저장.',
+    description: 'Stargazer 사용법: 영웅 배치, 스킬 확인, 보드 공유, 로스터, 진형 저장.',
   },
 }
 
