@@ -14,8 +14,8 @@ import SkillSnippets from '@/components/skill/SkillSnippets.vue'
         </p>
         <p>거리가 같은 영웅이 여럿일 때:</p>
         <ul>
-          <li><strong>아군 진영 던릴:</strong> 칸 번호가 더 작은 영웅을 우선합니다</li>
-          <li><strong>적군 진영 던릴:</strong> 칸 번호가 더 큰 영웅을 우선합니다 (180° 회전)</li>
+          <li><strong>아군 진영 던릴:</strong> 타일 번호가 더 작은 영웅을 우선합니다</li>
+          <li><strong>적군 진영 던릴:</strong> 타일 번호가 더 큰 영웅을 우선합니다 (180° 회전)</li>
         </ul>
       </SkillSnippet>
     </template>

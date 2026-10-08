@@ -157,13 +157,6 @@ export const routes: RouteRecordRaw[] = [
     name: 'teams',
     component: () => import('@/views/TeamsView.vue'),
   },
-  // TEMPORARY, this branch only: the Korean translation review page. Removal
-  // steps are in the view's header.
-  {
-    path: '/ko-review',
-    name: 'ko-review',
-    component: () => import('@/review/TranslationReviewView.vue'),
-  },
   // Unknown URLs (stale links, typos) redirect home instead of rendering a
   // blank router-view. Dynamic path: skipped by SSG pre-rendering.
   {
