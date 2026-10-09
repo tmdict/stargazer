@@ -504,6 +504,11 @@ const pressSegment = (): void => {
   font-size: var(--control-font-size);
 }
 
+/* As a block, the root gains a text line's descent under the icon. */
+.dropdown.icon {
+  display: inline-flex;
+}
+
 .icon .trigger.bare {
   padding: 0;
   border: none;
