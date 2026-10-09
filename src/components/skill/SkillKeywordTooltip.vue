@@ -10,12 +10,12 @@ import { computed, onUnmounted, watch } from 'vue'
 import TooltipPopup from '@/components/ui/TooltipPopup.vue'
 import { useInfoTip } from '@/composables/useInfoTip'
 import type { SkillLocale } from '@/lib/types/i18n'
-import { getSkillKeywords } from '@/utils/dataLoader'
+import type { SkillKeywords } from '@/lib/types/skill'
 
 const props = defineProps<{
-  // Language of the surrounding skill text; the glossary follows the same en
-  // fallback SkillSections applies to the text itself.
+  // Language of the surrounding skill text, and its glossary.
   lang: SkillLocale
+  keywords: SkillKeywords
   // The rendered skill content root the [data-kw] spans live under.
   container: HTMLElement | null
 }>()
@@ -30,11 +30,7 @@ const {
   close,
 } = useInfoTip<string>()
 
-const tip = computed(() => {
-  if (!kwKey.value) return null
-  const glossary = getSkillKeywords(props.lang) ?? getSkillKeywords('en')
-  return glossary?.[kwKey.value] ?? null
-})
+const tip = computed(() => (kwKey.value ? (props.keywords[kwKey.value] ?? null) : null))
 
 const keywordAt = (e: Event): HTMLElement | null => {
   const target = e.target
