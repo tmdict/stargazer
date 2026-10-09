@@ -25,11 +25,9 @@ export interface TagPick {
 }
 
 // On-disk shape of src/locales/skill/<lang>/<slug>.json (auto-managed by the
-// importer). Skill content is entirely feed-sourced: every slot carries `n`,
-// and `_terms` carries the game's official slot-type labels for the heading
-// prefixes (chrome surfaces such as search-result labels keep app-locale
-// labels instead). `r` carries EX refinement tiers (Refine 2, Refine 4) and
-// is only emitted on the `ex` slot when the source data has them.
+// importer). Skill content is entirely feed-sourced: every slot carries `n`.
+// `r` carries EX refinement tiers (Refine 2, Refine 4) and is only emitted on
+// the `ex` slot when the source data has them.
 export interface SkillRefineEntry {
   t: number // tier: 2 or 4 in current data
   d: string // pre-rendered body text in the entry's locale
@@ -43,22 +41,25 @@ export interface SkillLocaleSlot {
 
 // `_hero` is the feed's localized hero display name: skill pages and the
 // search index read it in every language (curated character locales stay on
-// chrome surfaces and as search aliases). `_terms` is the game's official
-// "Ultimate" / "Exclusive Equipment" labels in the file's language, used as
-// heading prefixes for those slots, and its skill-panel templates: cooldown
-// ("Cooldown: ${1}\nInitial Cooldown: ${2}"), range ("Range: ${1}"), the word
-// a global range shows as, and initial energy ("Initial Energy: ${1}").
+// chrome surfaces and as search aliases).
 export type SkillLocaleFile = {
   _hero?: { name: string }
-  _terms?: {
-    ultimate: string
-    ex: string
-    cooldown: string
-    range: string
-    rangeGlobal: string
-    initialEnergy: string
-  }
 } & Partial<Record<SlotKey, SkillLocaleSlot>>
+
+// On-disk shape of src/locales/skill/<lang>/_terms.json (auto-managed by the
+// importer): the game's official "Ultimate" / "Exclusive Equipment" labels in
+// that language, used as heading prefixes for those slots, and its skill-panel
+// templates: cooldown ("Cooldown: ${1}\nInitial Cooldown: ${2}"), range
+// ("Range: ${1}"), the word a global range shows as, and initial energy
+// ("Initial Energy: ${1}").
+export interface SkillTerms {
+  ultimate: string
+  ex: string
+  cooldown: string
+  range: string
+  rangeGlobal: string
+  initialEnergy: string
+}
 
 // On-disk shape of src/data/skill/numbers.json (auto-managed by the importer):
 // hero slug → slot → the numbers shown with that skill. Only displayable
@@ -92,6 +93,15 @@ export type SkillKeywords = Record<string, string>
 export interface SkillCharms {
   tiers: string[]
   charms: Record<string, string[]>
+}
+
+// One language's chunk once loaded: its hero files by slug, and the
+// per-language files beside them. `charms` is null while charms are retired.
+export interface SkillLanguage {
+  heroes: Record<string, SkillLocaleFile>
+  terms: SkillTerms
+  keywords: SkillKeywords
+  charms: SkillCharms | null
 }
 
 // On-disk shape of src/data/seasonal/charm/charms.json (auto-managed): charm

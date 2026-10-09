@@ -764,6 +764,33 @@
       "range": 1
     }
   },
+  "estrilda": {
+    "ultimate": {
+      "cooldown": 0,
+      "initialCooldown": 0,
+      "range": "global"
+    },
+    "skill2": {
+      "cooldown": 7,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "skill3": {
+      "cooldown": 12,
+      "initialCooldown": 0,
+      "range": 1
+    },
+    "mastery": {
+      "range": 1
+    },
+    "ex": {
+      "range": 1
+    },
+    "awakening": {
+      "cooldown": 0,
+      "initialCooldown": 0
+    }
+  },
   "evie": {
     "ultimate": {
       "cooldown": 0,

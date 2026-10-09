@@ -21,8 +21,7 @@ import { useI18nStore } from '@/stores/i18n'
 import { ContentInModalKey, setupSkillContentMeta } from '@/utils/contentMeta'
 import {
   getCharmForHero,
-  getSkillCharms,
-  getSkillFile,
+  getSkillLanguage,
   getSkillNumbers,
   loadCharacters,
 } from '@/utils/dataLoader'
@@ -33,8 +32,8 @@ import { SkillLangKey } from './snippetKeys'
 
 const props = defineProps<{
   slug: string
-  // Skill-text language for the body text and hero name; slot/chip labels
-  // render in the chrome locale (the store).
+  // Skill-text language for the body text and hero name; chip labels render
+  // in the chrome locale (the store).
   lang: SkillLocale
   // Chips to open on: a hero list's tag filter, the Mechanics guide's picks.
   initialChips?: readonly TagPick[]
@@ -48,10 +47,10 @@ const inModal = inject(ContentInModalKey, false)
 
 // The locale is warm before mount (route guard on pages, ready gate in the
 // modal). When its chunk could not be fetched, English stands in if it is
-// warm; otherwise there is no text to show.
-const locale = computed(
-  () => getSkillFile(props.lang, props.slug) ?? getSkillFile('en', props.slug),
-)
+// warm; otherwise there is no text to show. Text, labels, glossary and charm
+// text all come from this one language.
+const language = computed(() => getSkillLanguage(props.lang) ?? getSkillLanguage('en'))
+const locale = computed(() => language.value?.heroes[props.slug] ?? null)
 const hero = loadCharacters().find((c) => c.name === props.slug)
 const tags = hero?.tags ?? {}
 const vocabulary = loadTagVocabulary()
@@ -86,7 +85,8 @@ function applyChips(pin: TagPin) {
 }
 
 const sections = computed(() => {
-  if (!locale.value) return []
+  const terms = language.value?.terms
+  if (!locale.value || !terms) return []
   return SLOT_ORDER.map((slotKey) => {
     const slot = locale.value![slotKey]
     if (!slot) return null
@@ -94,7 +94,7 @@ const sections = computed(() => {
     if (!visible) return null
     return {
       slotKey,
-      heading: headingFor(slotKey, slot.n, appLang.value, locale.value!._terms),
+      heading: headingFor(slotKey, slot.n, appLang.value, terms),
       numbers: numbers[slotKey],
       // The game shows a hero's starting energy on its ultimate. This is the
       // hero's own; what a later skill level adds is in that level's text.
@@ -108,12 +108,11 @@ const sections = computed(() => {
 })
 
 // One charm is shared by several heroes, so its text is stored charm-keyed
-// and resolved through the hero → charm mapping; the en fallback mirrors the
-// skill-file fallback above.
+// and resolved through the hero → charm mapping.
 const charm = computed(() => {
   const entry = getCharmForHero(props.slug)
   if (!entry) return null
-  const dict = getSkillCharms(props.lang) ?? getSkillCharms('en')
+  const dict = language.value?.charms
   const texts = dict?.charms[entry.slug]
   if (!dict || !texts) return null
   const { slotTags, highlight, visible } = applyChips('charm')
@@ -167,7 +166,7 @@ provide(
 </script>
 
 <template>
-  <div v-if="!locale" class="skill-empty" :lang="appLang">
+  <div v-if="!language || !locale" class="skill-empty" :lang="appLang">
     {{ i18n.t('app.skill-load-failed') }}
   </div>
   <article v-else ref="rootEl" class="skill-sections" :lang>
@@ -206,7 +205,7 @@ provide(
         :heading="section.heading"
         :numbers="section.numbers"
         :initial-energy="section.initialEnergy"
-        :terms="locale._terms"
+        :terms="language.terms"
         :slot-tags="section.slotTags"
         :levels="section.levels"
         :refinements="section.refinements"
@@ -237,7 +236,7 @@ provide(
 
     <component :is="snippetComp" v-if="snippetComp" />
 
-    <SkillKeywordTooltip :lang :container="rootEl" />
+    <SkillKeywordTooltip :lang :keywords="language.keywords" :container="rootEl" />
   </article>
 </template>
 

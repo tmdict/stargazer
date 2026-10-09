@@ -35,6 +35,7 @@ import {
   type SkillKeywords,
   type SkillLocaleFile,
   type SkillRefineEntry,
+  type SkillTerms,
   type SlotKey,
 } from '../src/lib/types/skill.ts'
 import { HIGHLIGHT_RE, splitHighlightToken } from '../src/utils/textHighlight.ts'
@@ -108,11 +109,9 @@ interface SkillsBulk {
   heroes: Record<string, HeroEntry>
 }
 
-type SlotTerms = NonNullable<SkillLocaleFile['_terms']>
-
 // The game's English range label names the unit ("Tiles: 1", "Tiles: Global"),
 // where the CJK languages say "skill range"; every other term is the game's.
-const TERM_OVERRIDES: Partial<Record<SkillLocale, Partial<SlotTerms>>> = {
+const TERM_OVERRIDES: Partial<Record<SkillLocale, Partial<SkillTerms>>> = {
   en: { range: 'Range: ${1}' },
 }
 
@@ -198,12 +197,11 @@ async function loadCharacters(): Promise<CharacterListing[]> {
 
 // ---------- projection ----------
 
-function projectLocale(hero: HeroEntry, terms: SlotTerms): LocaleFile {
+function projectLocale(hero: HeroEntry): LocaleFile {
   const out: LocaleFile = {}
   // Trimmed: the feed carries stray whitespace on some names.
   const heroName = hero.name?.trim()
   if (heroName) out._hero = { name: heroName }
-  out._terms = terms
   for (const slotKey of SLOT_ORDER) {
     const slot = hero.skills[slotKey]
     if (!slot) continue
@@ -308,11 +306,10 @@ async function main() {
   for (const { feed, code } of SKILL_LOCALES) bulks[code] = await loadSkillsBulk(feed)
   assertUniformCoverage(bulks)
 
-  // Official slot-type labels and skill-panel templates per locale, stamped
-  // into every written file so skill headings and the numbers under them
-  // render entirely from game data. Their absence means the feed predates the
-  // producer's terms export.
-  const termsByCode = {} as Record<SkillLocale, SlotTerms>
+  // Official slot-type labels and skill-panel templates per locale, so skill
+  // headings and the numbers under them render entirely from game data. Their
+  // absence means the feed predates the producer's terms export.
+  const termsByCode = {} as Record<SkillLocale, SkillTerms>
   for (const { code } of SKILL_LOCALES) {
     const terms = bulks[code]._meta.terms
     if (
@@ -397,7 +394,7 @@ async function main() {
     for (const { code } of SKILL_LOCALES) {
       const hero = bulks[code].heroes[slug]
       if (!hero) continue
-      const data = projectLocale(hero, termsByCode[code])
+      const data = projectLocale(hero)
       for (const key of collectKeywordKeys(data)) {
         if (!(key in keywordsByCode[code])) missingKeywords.push(`[${code}] ${slug}: ${key}`)
       }
@@ -424,10 +421,14 @@ async function main() {
     throw new Error(`keyword token(s) missing from glossaries:\n  ${missingKeywords.join('\n  ')}`)
   }
 
-  // One keyword glossary per language, beside the hero files so the language
-  // chunk carries it automatically.
+  // One set of terms and one keyword glossary per language, beside the hero
+  // files so the language chunk carries them automatically.
+  let termsWritten = 0
   let keywordsWritten = 0
   for (const { code } of SKILL_LOCALES) {
+    if (await writeJsonIfChanged(join(LOCALES_DIR, code, '_terms.json'), termsByCode[code])) {
+      termsWritten++
+    }
     if (await writeJsonIfChanged(join(LOCALES_DIR, code, '_keywords.json'), keywordsByCode[code])) {
       keywordsWritten++
     }
@@ -477,6 +478,7 @@ async function main() {
   const written = summary.imported.reduce((n, r) => n + r.written, 0)
   const unchanged = summary.imported.reduce((n, r) => n + r.unchanged, 0)
   console.log(`  locale files: ${written} written, ${unchanged} unchanged`)
+  if (termsWritten > 0) console.log(`  terms: ${termsWritten} written`)
   if (keywordsWritten > 0) console.log(`  keyword glossaries: ${keywordsWritten} written`)
   if (chunksWritten > 0) console.log(`  chunk modules: ${chunksWritten} written`)
   if (numbersWritten) console.log(`  skill numbers: written`)

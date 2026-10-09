@@ -11,11 +11,25 @@ Two locale axes run through all of it. Skill text and the hero name follow the t
 | File             | Written by      | Holds                                                   |
 | ---------------- | --------------- | ------------------------------------------------------- |
 | `<slug>.json`    | `import:skills` | one hero's skill text                                   |
+| `_terms.json`    | `import:skills` | the game's slot labels and skill-panel templates        |
 | `_keywords.json` | `import:skills` | glossary text for `[[label\|key]]` tokens               |
 | `_charms.json`   | `import:charms` | seasonal charm text ([Seasonal Content](./SEASONAL.md)) |
 | `index.ts`       | `import:skills` | the language's lazy chunk module                        |
 
-A hero file holds the feed's localized name in `_hero.name`, the official labels for the ultimate and EX slots and the skill panel's cooldown, range and initial energy templates in `_terms`, and one entry per slot in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and on `ex` only, refinement tiers `r`. `SLOT_ORDER` is both the render order and the set of slot names commentary snippets can fill.
+A hero file holds the feed's localized name in `_hero.name` and one entry per slot in `SLOT_ORDER`. A slot has a name `n`, descriptions `d` where `d[i]` is level i+1, and on `ex` only, refinement tiers `r`. `SLOT_ORDER` is both the render order and the set of slot names commentary snippets can fill.
+
+`_terms.json` holds the game's own labels in that language. `ultimate` and `ex` are the heading prefixes of those two slots, and the rest are the skill panel's templates, where `${1}` and `${2}` stand for the values.
+
+```json
+{
+  "ultimate": "Ultimate",
+  "ex": "Exclusive Equipment",
+  "cooldown": "Cooldown: ${1}\nInitial Cooldown: ${2}",
+  "range": "Range: ${1}",
+  "rangeGlobal": "Global",
+  "initialEnergy": "Initial Energy: ${1}"
+}
+```
 
 Files starting with `_` hold per-language data rather than a hero. They travel in the same globs and chunks, and `splitSkillDict` separates them at load time, so slug walks and the search index see only heroes. The pre-render route walk skips them too.
 
@@ -37,11 +51,13 @@ Hero names on chrome surfaces come from `src/locales/character/<slug>.json`, one
                      loadSkillLocale ◀── warmSkillLocale, modal,
                             │             search, App.vue
                             ▼
-      getSkillFile, getSkillLocaleDict, getSkillKeywords:
+      getSkillLanguage, getSkillFile, getSkillLocaleDict:
       synchronous, null until the language is warm
 ```
 
 Every language is one chunk: its `index.ts` globs its own directory eagerly, so a single dynamic import brings in the whole language. `loadSkillLocale` caches the promise per language and evicts a rejected one, so the next call asks again. Chrome remembers a failed import and repeats the failure until the page is reloaded, which is why the could-not-load line asks for a reload. Components render through the synchronous getters, which keeps `SkillSections` a synchronous component.
+
+A loaded language is one object: its heroes, terms, glossary and charm text. `SkillSections` picks one language, the one it was asked for or en when that one is not warm, and takes all four from it, so the labels and tooltips are always in the language of the text.
 
 Outside skill pages nothing has asked for a language yet, so `App.vue` fetches `effectiveSkillLocale` in the background once the first route has settled, and the first skill popup or text search finds it warm. It waits for the route because the path has not pinned the chrome locale before that, and it skips skill pages, which have loaded the language they show.
 
@@ -53,7 +69,7 @@ The modal awaits its own load (`useModalSkillLocale`) and keeps showing the prev
 
 Skill text uses one small grammar in `src/utils/textHighlight.ts`: `[[value]]` is a highlight, `[[label|key]]` is a keyword whose tooltip text is `key` in that language's `_keywords.json`, and `<ATK>`-style tags are stat pills. `HIGHLIGHT_RE` and `splitHighlightToken` are imported by search, both importers and `vite.config.ts`, so validation, rendering and the description scrape cannot disagree. Keyword spans sit in `v-html` output, so `SkillKeywordTooltip` listens on the `SkillSections` article instead of on each span.
 
-A hero's display name is `_hero.name` in the text locale, then the curated en name, then the slug (`heroDisplayName`). The app-locale names in `src/locales/character/` stay on chrome surfaces and serve as search aliases. The ultimate and EX headings are the `_terms` label plus the skill name, and the app's own slot labels are only a fallback there.
+A hero's display name is `_hero.name` in the text locale, then the curated en name, then the slug (`heroDisplayName`). The app-locale names in `src/locales/character/` stay on chrome surfaces and serve as search aliases. The ultimate and EX headings are the `_terms.json` label plus the skill name.
 
 ## Cooldowns and range
 
@@ -65,7 +81,7 @@ The game's panel shows the hero's current level, while a skill page lists every 
 
 The ultimate's line ends with the hero's initial energy, where the game's panel shows it. That number is not in the numbers file. It is the first `energy` number of the hero's data file, the energy the hero starts a battle with on its own, and the hero tooltip and the energy filter read the same number, so the app holds it once. Energy a later skill level adds is in that level's text and in the file's second number, which only the tooltip and the filter count. The hero file is written by hand, so `import:skills` compares its first number with the feed's value on every run and lists the heroes that differ, or whose number the feed does not carry (`energyMismatches`).
 
-The labels come from `_terms` (`cooldown` with one line per value, `range`, `rangeGlobal` and `initialEnergy`), so the line reads in the skill-text language, and values are bare numbers as in the game. Every label is the game's own except English range: the game's "Tiles: 1" names the unit, so the importer's `TERM_OVERRIDES` writes "Range: 1".
+The labels come from `_terms.json` (`cooldown` with one line per value, `range`, `rangeGlobal` and `initialEnergy`), so the line reads in the skill-text language, and values are bare numbers as in the game. Every label is the game's own except English range: the game's "Tiles: 1" names the unit, so the importer's `TERM_OVERRIDES` writes "Range: 1".
 
 ## Pages and meta
 

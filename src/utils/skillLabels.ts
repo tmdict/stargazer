@@ -3,7 +3,7 @@ import { isReportLocale } from '@/lib/pvp/summary'
 import { tagPick } from '@/lib/tags'
 import type { AppLocale, SkillLocale } from '@/lib/types/i18n'
 import type { PvpTeam } from '@/lib/types/pvp'
-import type { SkillLocaleFile, SlotKey, SlotNumbers, SlotValues, TagPick } from '@/lib/types/skill'
+import type { SkillTerms, SlotKey, SlotNumbers, SlotValues, TagPick } from '@/lib/types/skill'
 import {
   getSkillFile,
   loadAppLocales,
@@ -94,17 +94,12 @@ export function pvpTeamName(team: PvpTeam, lang: AppLocale): string {
 
 // Heading composition per slot. Skill content is feed-sourced end to end:
 // names come from each slot's `n` and the ultimate/ex prefixes from the
-// file's `_terms` (the game's official slot-type labels). The app-locale
-// entries below are fallbacks only; chrome surfaces (search-result labels)
-// keep using them by design.
+// language's terms (the game's official slot-type labels). The app-locale
+// entries below stand in for a missing name only; chrome surfaces
+// (search-result labels) keep using app-locale labels by design.
 //   ultimate / ex        →  "<term>: <name>"
 //   skill2 / skill3      →  just <name>  (name carries the slot)
 //   mastery / awakening  →  `n`          (invariant in-game skill name)
-const PREFIX_LABEL_KEY: Partial<Record<SlotKey, string>> = {
-  ultimate: 'ultimate',
-  ex: 'ex-skill',
-}
-
 const INVARIANT_NAME_KEY: Partial<Record<SlotKey, string>> = {
   mastery: 'hero-focus',
   awakening: 'enhance-force',
@@ -114,16 +109,14 @@ export function headingFor(
   slotKey: SlotKey,
   name: string | null | undefined,
   lang: AppLocale,
-  terms?: SkillLocaleFile['_terms'],
+  terms: SkillTerms,
 ): string {
   const invariantKey = INVARIANT_NAME_KEY[slotKey]
   if (invariantKey) return name?.trim() || appLabel(invariantKey, lang)
 
   const trimmedName = name?.trim() ?? ''
-  const prefixKey = PREFIX_LABEL_KEY[slotKey]
-  if (!prefixKey) return trimmedName || slotKey
-  const term = slotKey === 'ex' ? terms?.ex : terms?.ultimate
-  const prefix = term ?? appLabel(prefixKey, lang)
+  if (slotKey !== 'ultimate' && slotKey !== 'ex') return trimmedName || slotKey
+  const prefix = terms[slotKey]
   return trimmedName ? `${prefix}: ${trimmedName}` : prefix
 }
 
@@ -153,7 +146,7 @@ function valueChain<K extends keyof SlotValues>(
 }
 
 /** Cooldown and range items for a skill, in the game's skill-panel wording
- * from `_terms`. The cooldown template has one line per value (`${1}` the
+ * from `_terms.json`. The cooldown template has one line per value (`${1}` the
  * cooldown, `${2}` the initial cooldown), and a line whose value is absent is
  * dropped. Values are bare numbers, as the game shows them, and a value that a
  * later level changes carries its whole chain. A global range fills the range
@@ -161,7 +154,7 @@ function valueChain<K extends keyof SlotValues>(
  * the game's panel shows last on the ultimate. */
 export function skillMetaItems(
   numbers: SlotNumbers | undefined,
-  terms: SkillLocaleFile['_terms'] | undefined,
+  terms: SkillTerms | undefined,
   initialEnergy?: number,
 ): SkillMetaItem[] {
   if (!terms) return []

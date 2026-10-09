@@ -65,7 +65,8 @@ export function isSkillLocale(value: string): value is SkillLocale {
   return (SKILL_LOCALE_CODES as readonly string[]).includes(value)
 }
 
-/** A language's name in itself, as every language menu writes it. */
-export function localeNativeName(code: SkillLocale): string {
+/** A language's label in the site-language menu. Overrides zh with a simpler name. */
+export function localeNativeName(code: AppLocale): string {
+  if (code === 'zh') return '中文'
   return SKILL_LOCALES.find((l) => l.code === code)!.native
 }

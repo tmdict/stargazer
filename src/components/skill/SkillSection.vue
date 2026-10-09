@@ -3,7 +3,7 @@ import { computed } from 'vue'
 
 import SkillSectionHeader, { type SlotChip } from './SkillSectionHeader.vue'
 import IconArrowRight from '@/components/ui/IconArrowRight.vue'
-import type { SkillLocaleFile, SlotNumbers } from '@/lib/types/skill'
+import type { SkillTerms, SlotNumbers } from '@/lib/types/skill'
 import { skillMetaItems } from '@/utils/skillLabels'
 import { highlightSkillText } from '@/utils/textHighlight'
 
@@ -20,9 +20,9 @@ interface RefinementRow {
 const props = defineProps<{
   heading?: string
   // Cooldown and range, shown under the heading; labels are the skill-text
-  // file's `_terms`.
+  // language's terms.
   numbers?: SlotNumbers
-  terms?: SkillLocaleFile['_terms']
+  terms?: SkillTerms
   initialEnergy?: number
   slotTags?: SlotChip[]
   levels: LevelRow[]
