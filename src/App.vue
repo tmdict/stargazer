@@ -307,19 +307,19 @@ nav ul li {
 .menu-locale {
   color: #ddd;
   text-decoration: none;
-  font-size: 1.1rem;
   font-weight: 600;
   border-radius: 6px;
+}
+
+.menu a,
+.menu button {
+  font-size: 1.1rem;
 }
 
 .menu a:hover,
 .menu button:hover,
 .menu-locale:hover {
   color: #f7d87c;
-}
-
-.menu-locale {
-  display: flex;
 }
 
 /* Wide headers: the search pill leads the right-side cluster and its auto

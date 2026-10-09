@@ -48,8 +48,7 @@ function getSSGRoutes(): string[] {
       throw new Error(`[ssg] missing skill locale dir "${code}"; run npm run import:skills`)
     }
     readdirSync(dir)
-      // Underscore-prefixed files are per-language data (the `_keywords`
-      // glossary), not hero pages.
+      // Underscore-prefixed files are per-language data, not hero pages.
       .filter((f) => f.endsWith('.json') && !f.startsWith('_'))
       .sort()
       .forEach((f) => routes.push(`/${code}/skill/${f.replace(/\.json$/, '')}`))
@@ -172,6 +171,11 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+  },
+  build: {
+    // Each skill-text language is one lazy chunk of text, and the largest is
+    // over 1 MB before compression.
+    chunkSizeWarningLimit: 1500,
   },
   // @ts-expect-error - vite-ssg extends config at runtime
   ssgOptions: {

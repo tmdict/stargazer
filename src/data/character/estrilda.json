@@ -1,0 +1,14 @@
+{
+  "id": 129,
+  "name": "estrilda",
+  "level": "a",
+  "faction": "lightbearer",
+  "class": "rogue",
+  "damage": "physical",
+  "energy": [300],
+  "range": 1,
+  "season": 8,
+  "tags": {
+    "temp-buff": [{ "ex": 1 }]
+  }
+}
