@@ -7,10 +7,14 @@ import { Layout, POINTY, type Point } from '@/lib/layout'
 import { getMapByKey } from '@/lib/maps'
 import { State } from '@/lib/types/state'
 import { Team } from '@/lib/types/team'
-import { getTileHatchFill, getTileHatchPoints } from '@/utils/tileStateFormatting'
+import {
+  getTileHatchFill,
+  getTileHatchPoints,
+  TILE_STROKE_COLOR,
+} from '@/utils/tileStateFormatting'
 
 /* One unit on a thumbnail: a portrait clipped to its hex, or a team-colored
-   dot when the unit is unresolvable — "?" by default, or the caller's label
+   dot when the unit is unresolvable: "?" by default, or the caller's label
    (retired seasonal content shows its season, e.g. "S7"). */
 export interface ThumbnailUnit {
   hexId: number
@@ -341,15 +345,14 @@ const placedArtifacts = computed(() =>
         />
       </template>
     </template>
-    <!-- Opaque so shared edges don't double-composite darker; a step below the
-         live grid's #ccc because hairlines need more contrast at this scale. -->
+    <!-- Opaque so shared edges don't double-composite darker. -->
     <polygon
       v-for="tile in renderTiles"
       v-else
       :key="tile.hexId"
       :points="tile.points"
       :fill="tile.fill"
-      stroke="#aaa"
+      :stroke="TILE_STROKE_COLOR"
       stroke-width="1"
     />
     <polygon

@@ -40,7 +40,7 @@ const contactButton = ref<HTMLElement | null>(null)
 const i18n = useI18nStore()
 const route = useRoute()
 const router = useRouter()
-const { target: localeTarget, pick: pickLocale } = useLocaleSwitch()
+const { target: localeTarget, pick: switchLocale } = useLocaleSwitch()
 const { open: openSearch } = useSearchOverlay()
 useLiftGuard()
 
@@ -64,19 +64,14 @@ runVersionStoragePass()
 const strippedSeason = runSeasonRotationPass()
 if (strippedSeason !== null) useSeasonNotice().notify(strippedSeason)
 
-// Locale-prefixed routes are authoritative: keep the store in sync with the
-// path so the header and skill browser render in the URL's language (during
-// SSG and client navigation alike). URL-derived locale is display-only:
-// following a shared /zh/... link must not overwrite the saved preference
-// (only the language menu and ?l= persist).
-watch(
-  () => route.path,
-  (path) => {
-    const { locale } = splitLocalePath(path)
-    if (locale) i18n.setLocale(locale, { persist: false })
-  },
-  { immediate: true },
-)
+// The address and the saved pick set the site language, during SSG and client
+// navigation alike. A skill page's prefix is its text language, so it is the
+// one prefixed page that does not pin.
+const syncLocale = (path: string) => {
+  const { locale } = splitLocalePath(path)
+  i18n.applyAddressLocale(locale, { pins: router.resolve(path).name !== 'skill' })
+}
+watch(() => route.path, syncLocale, { immediate: true })
 
 // About links to Help; the popup must not stay open over the page it opened.
 watch(
@@ -86,10 +81,9 @@ watch(
 
 // No skill text ships with the app, so the reader's language is fetched in
 // the background and the first skill popup or text search finds it warm. It
-// waits for the first route: until then the path has not pinned the locale,
-// and a /zh/ page would fetch English. A skill page has loaded the language
-// it shows and needs no other. A failed fetch is left to the surface that
-// needs the text, which reports it.
+// waits for the first route, which tells a skill page apart: that page has
+// loaded the language it shows and needs no other. A failed fetch is left to
+// the surface that needs the text, which reports it.
 const routeSettled = ref(false)
 watch(
   () => (routeSettled.value && route.name !== 'skill' ? i18n.effectiveSkillLocale : null),
@@ -98,15 +92,14 @@ watch(
   },
 )
 
-// The unprefixed shells (/, /skills, …) are pre-rendered in English; applying
-// the saved locale only after mount keeps hydration matched to the baked HTML
-// (the post-mount swap updates text and link hrefs alike). Prefixed routes are
-// language-pinned by the path via the watcher above.
+// Saved preferences are read only after mount, so the first render matches the
+// baked HTML. The first route has not resolved here, so the address stands in
+// for it.
 onMounted(() => {
   i18n.initializeSkillLocale()
-  if (!splitLocalePath(window.location.pathname).locale) {
-    i18n.initializeLocale()
-  }
+  const path = window.location.pathname
+  i18n.initializeLocale({ readQuery: !splitLocalePath(path).locale })
+  syncLocale(path)
   void router.isReady().then(() => (routeSettled.value = true))
 })
 
@@ -118,7 +111,7 @@ const handleKeyDown = (e: KeyboardEvent) => {
   if (e.altKey && e.code === 'KeyL') {
     e.preventDefault()
     const next = APP_LOCALES.indexOf(i18n.currentLocale) + 1
-    pickLocale(APP_LOCALES[next % APP_LOCALES.length]!)
+    switchLocale(APP_LOCALES[next % APP_LOCALES.length]!)
   }
 }
 
@@ -227,7 +220,7 @@ onUnmounted(() => {
           <LocaleMenu
             :current="i18n.currentLocale"
             :link-to="localeTarget"
-            @select="i18n.setLocale"
+            @select="i18n.pickLocale"
           />
         </li>
       </ul>
@@ -355,7 +348,7 @@ nav ul li {
 }
 
 /* The magnifier's handle hangs bottom-right, so box-centering leaves the
-   circle — what the eye reads — ~1px above its siblings; nudge to optically
+   circle (what the eye reads) ~1px above its siblings; nudge to optically
    align. */
 .menu-search svg {
   transform: translateY(1px);

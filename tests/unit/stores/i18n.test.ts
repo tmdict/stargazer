@@ -97,23 +97,53 @@ describe('i18nStore', () => {
       expect(localStorage.getItem('stargazer.locale')).toBeNull()
     })
 
-    it('initializeLocale applies the saved preference without re-persisting', () => {
+    it('a site-language pick resets the skill-text language, a ?l= link keeps it', () => {
+      store.setSkillLocale('ja')
+      vi.stubGlobal('window', { location: { search: '?l=zh' } })
+      store.initializeLocale({ readQuery: true })
+      expect(store.effectiveSkillLocale).toBe('ja')
+
+      store.pickLocale('ko')
+      expect(store.effectiveSkillLocale).toBe('ko')
+      expect(localStorage.getItem('stargazer.skillLocale')).toBeNull()
+    })
+
+    it('the saved preference applies after mount without being re-persisted', () => {
       localStorage.setItem('stargazer.locale', 'zh')
       // The fixture's setItem is already a mock, so spyOn returns it with the
       // seeding call recorded; only calls after this point matter
       const spy = vi.spyOn(localStorage, 'setItem')
       spy.mockClear()
 
-      store.initializeLocale()
+      store.initializeLocale({ readQuery: false })
+      store.applyAddressLocale(null, { pins: false })
 
       expect(store.currentLocale).toBe('zh')
       expect(spy).not.toHaveBeenCalled()
     })
 
+    it('an address sets the site language only where the saved pick allows', () => {
+      // Nothing saved: a skill page's prefix stands in, and stays on leaving.
+      store.applyAddressLocale('zh', { pins: false })
+      store.applyAddressLocale(null, { pins: true })
+      expect(store.currentLocale).toBe('zh')
+
+      store.setLocale('ko')
+      store.applyAddressLocale('en', { pins: false })
+      expect(store.currentLocale).toBe('ko')
+
+      // A page written in English shows in it, until it is left.
+      store.applyAddressLocale('en', { pins: true })
+      expect(store.currentLocale).toBe('en')
+      store.applyAddressLocale(null, { pins: true })
+      expect(store.currentLocale).toBe('ko')
+      expect(localStorage.getItem('stargazer.locale')).toBe('ko')
+    })
+
     it('initializeLocale persists a valid ?l= param (external language-pinning contract)', () => {
       vi.stubGlobal('window', { location: { search: '?l=zh' } })
 
-      store.initializeLocale()
+      store.initializeLocale({ readQuery: true })
 
       expect(store.currentLocale).toBe('zh')
       expect(localStorage.getItem('stargazer.locale')).toBe('zh')
@@ -123,7 +153,7 @@ describe('i18nStore', () => {
       localStorage.setItem('stargazer.locale', 'zh')
       vi.stubGlobal('window', { location: { search: '?l=en' } })
 
-      store.initializeLocale()
+      store.initializeLocale({ readQuery: true })
 
       expect(store.currentLocale).toBe('en')
       expect(localStorage.getItem('stargazer.locale')).toBe('en')
@@ -132,7 +162,7 @@ describe('i18nStore', () => {
     it('initializeLocale ignores an invalid ?l= param', () => {
       vi.stubGlobal('window', { location: { search: '?l=fr' } })
 
-      store.initializeLocale()
+      store.initializeLocale({ readQuery: true })
 
       expect(store.currentLocale).toBe('en')
       expect(localStorage.getItem('stargazer.locale')).toBeNull()

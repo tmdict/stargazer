@@ -61,6 +61,11 @@ export const getTeamFromTileState = (state: State): Team | null => {
   return null
 }
 
+// Tile outlines on the light boards. The strong one rings a tile that holds a
+// hero and outlines a tile drawn on its own.
+export const TILE_STROKE_COLOR = '#a9afb6'
+export const TILE_STROKE_COLOR_STRONG = '#8a8f98'
+
 export const getTileHatchFill = (patternId: string, state: State): string | null =>
   state === State.BLOCKED_BREAKABLE ? `url(#${patternId}-breakable)` : null
 

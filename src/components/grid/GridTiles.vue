@@ -17,6 +17,8 @@ import {
   getTileFillColor,
   getTileHatchFill,
   getWallStrokeColor,
+  TILE_STROKE_COLOR,
+  TILE_STROKE_COLOR_STRONG,
 } from '@/utils/tileStateFormatting'
 
 interface Props {
@@ -43,7 +45,6 @@ const TEXT_ROTATION = 30
 const TEXT_COLOR = '#222'
 const COORDINATE_COLOR = '#555'
 const HEX_FILL_COLOR = '#fff'
-const HEX_STROKE_COLOR = '#ccc'
 // Skill fill-paints are blended into one opaque color, not a translucent layer,
 // so an exported PNG has no partial alpha for a viewer to composite against its
 // own background. Kept below the arrow opacity (0.8); a full-cell tint reads strong.
@@ -298,7 +299,7 @@ const getHexStroke = (hex: Hex) => {
   }
 
   const isOccupied = hasCharacter(ctx.grid, hexId)
-  return isOccupied ? '#999' : HEX_STROKE_COLOR
+  return isOccupied ? TILE_STROKE_COLOR_STRONG : TILE_STROKE_COLOR
 }
 
 const getHexStrokeWidth = (hex: Hex) => {
