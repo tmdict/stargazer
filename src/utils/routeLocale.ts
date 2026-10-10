@@ -13,9 +13,8 @@ const LOCALE_PATH_RE = new RegExp(`^/(${APP_LOCALES.join('|')})(/.*)?$`)
  * Invariant: the prefix set is APP_LOCALES. This is the APP-locale
  * classifier, so a prefix that only names a skill-text language, like
  * `/ja/…`, must parse as "unprefixed": that is what keeps the App store sync
- * from pinning chrome to a language without chrome strings, and what makes
- * the header menu switch the chrome preference without rewriting the content
- * URL. Widening it to the skill-locale set would silently break both.
+ * from pinning chrome to a language without chrome strings. Widening it to
+ * the skill-locale set would silently break that.
  */
 export function splitLocalePath(path: string): { locale: AppLocale | null; rest: string } {
   const match = path.match(LOCALE_PATH_RE)

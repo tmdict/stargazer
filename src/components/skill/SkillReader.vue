@@ -59,8 +59,8 @@ const dismissLocaleHint = () => {
 // teaches; treat it as a dismissal.
 watch(
   () => i18n.skillLocale,
-  () => {
-    if (showLocaleHint.value) dismissLocaleHint()
+  (picked) => {
+    if (picked && showLocaleHint.value) dismissLocaleHint()
   },
 )
 </script>
