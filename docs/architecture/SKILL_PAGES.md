@@ -59,7 +59,7 @@ Every language is one chunk: its `index.ts` globs its own directory eagerly, so 
 
 A loaded language is one object: its heroes, terms, glossary and charm text. `SkillSections` picks one language, the one it was asked for or en when that one is not warm, and takes all four from it, so the labels and tooltips are always in the language of the text.
 
-Outside skill pages nothing has asked for a language yet, so `App.vue` fetches `effectiveSkillLocale` in the background once the first route has settled, and the first skill popup or text search finds it warm. It waits for the route because the path has not pinned the chrome locale before that, and it skips skill pages, which have loaded the language they show.
+Outside skill pages nothing has asked for a language yet, so `App.vue` fetches `effectiveSkillLocale` in the background once the first route has settled, and the first skill popup or text search finds it warm. It waits for the route to tell a skill page apart, and skips that page, which has loaded the language it shows.
 
 That puts the burden on whoever navigates. `warmSkillLocale` (`src/router/routes.ts`) awaits the chunk before any `skill` route resolves. vite-ssg renders each route once with no `<Suspense>`, so without the guard a page would bake the could-not-load line in place of its text and have no description to derive from it. The guard is a global `beforeResolve` because `beforeEnter` skips param-only navigation, and the globe menu's language switch is exactly that. If the chunk fails mid-session (offline, or a stale tab after a deploy), the guard hard-navigates to the target URL to pick up fresh HTML. On the initial load it proceeds, and the reader shows en if that happens to be warm, otherwise a line saying the text could not be loaded.
 
@@ -85,7 +85,7 @@ The labels come from `_terms.json` (`cooldown` with one line per value, `range`,
 
 ## Pages and meta
 
-`SkillsBrowser` backs both `/skills` and every hero page, so the URL is the whole state. Hero-list links point at the page's text locale on a hero page, and at `effectiveSkillLocale` (the saved globe choice in `stargazer.skillLocale`, else the chrome locale) on the index and on other surfaces with no text locale of their own. The globe menu (`SkillLocaleMenu`) picks the text locale and the header's language menu the chrome locale. The two meet when the text locale is also an app locale: the path then pins chrome to it ([Pre-Rendering](./PRE_RENDERING.md)), so `/ko/skill/<slug>` reads in Korean throughout.
+`SkillsBrowser` backs both `/skills` and every hero page, so the URL is the whole state. Hero-list links point at the page's text locale on a hero page, and at `effectiveSkillLocale` (the saved globe choice in `stargazer.skillLocale`, else the chrome locale) on the index and on other surfaces with no text locale of their own. The globe menu (`SkillLocaleMenu`) picks the text locale and saves it. The header's language menu picks the chrome locale and resets the text locale to it (`pickLocale`): the saved globe choice is dropped, and a skill page moves to the picked language's URL, from a text-only prefix such as `/ja/` too. A `?l=` link sets the chrome locale and leaves a globe choice alone. The two axes also meet when the text locale is an app locale and the visitor has saved no site language: the prefix then stands in as the chrome locale ([Pre-Rendering](./PRE_RENDERING.md)), so `/ko/skill/<slug>` is pre-rendered, and reads for a new visitor, in Korean throughout. A saved site language stays in place around the text.
 
 `setupSkillContentMeta` runs in `SkillSections` on the server and the client. It sets the title, Open Graph tags, canonical and `hreflang` alternates for every language, and takes `<html lang>` for the text locale through an owner token, so keyed remounts in either order cannot clear a newer owner. The modal provides `ContentInModalKey`, which skips all of this so the popup leaves the host page's head alone.
 
@@ -158,12 +158,12 @@ An optional `src/content/skill/<slug>/<HeroNameCamelCase>.<lang>.vue` adds comme
 
 ## Stored preferences
 
-| Key                             | Example   | Holds                                                                                           |
-| ------------------------------- | --------- | ----------------------------------------------------------------------------------------------- |
-| `stargazer.skillLocale`         | `"ja"`    | The globe menu's text language, one of `SKILL_LOCALES`. Anything else follows the app language. |
-| `stargazer.skillLocaleHintSeen` | `"1"`     | Present once the skill-language tip is dismissed.                                               |
-| `stargazer.recentHeroes`        | see below | Recently viewed hero slugs, newest first, at most 5. Entries that are not strings are dropped.  |
-| `stargazer.tags.expanded`       | `"1"`     | Present while the hero lists show the mechanic filter as chips. Anything else reads as absent.  |
+| Key                             | Example   | Holds                                                                                                                                   |
+| ------------------------------- | --------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `stargazer.skillLocale`         | `"ja"`    | The globe menu's text language, one of `SKILL_LOCALES`. Anything else follows the app language. Removed when a site language is picked. |
+| `stargazer.skillLocaleHintSeen` | `"1"`     | Present once the skill-language tip is dismissed.                                                                                       |
+| `stargazer.recentHeroes`        | see below | Recently viewed hero slugs, newest first, at most 5. Entries that are not strings are dropped.                                          |
+| `stargazer.tags.expanded`       | `"1"`     | Present while the hero lists show the mechanic filter as chips. Anything else reads as absent.                                          |
 
 ```json
 ["valen", "rowan", "athalia"]

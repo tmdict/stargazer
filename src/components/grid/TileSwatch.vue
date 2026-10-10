@@ -7,7 +7,12 @@ import { computed, useId } from 'vue'
 
 import TileHatchPatterns from './TileHatchPatterns.vue'
 import type { State } from '@/lib/types/state'
-import { getTileFillColor, getTileHatchFill, getWallStrokeColor } from '@/utils/tileStateFormatting'
+import {
+  getTileFillColor,
+  getTileHatchFill,
+  getWallStrokeColor,
+  TILE_STROKE_COLOR_STRONG,
+} from '@/utils/tileStateFormatting'
 
 const { state, points } = defineProps<{
   state: State
@@ -34,6 +39,11 @@ const stroke = computed(() => getWallStrokeColor(state))
 
 <template>
   <TileHatchPatterns v-if="hatch" :id :hex-size light :stroke-width="hexSize / 10" />
-  <polygon :points :fill="getTileFillColor(state)" stroke="#888" stroke-width="2" />
+  <polygon
+    :points
+    :fill="getTileFillColor(state)"
+    :stroke="TILE_STROKE_COLOR_STRONG"
+    stroke-width="2"
+  />
   <polygon v-if="stroke" :points :fill="hatch ?? 'none'" :stroke stroke-width="2" />
 </template>

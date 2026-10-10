@@ -48,7 +48,8 @@ export function useModalSkillLocale(show: WatchSource<boolean>): {
       })
   }
 
-  watch(show, (isOpen) => {
+  // The site language is also watched: Alt+L can switch it under an open modal.
+  watch([show, () => i18n.currentLocale], ([isOpen]) => {
     if (isOpen) apply(i18n.effectiveSkillLocale)
   })
 

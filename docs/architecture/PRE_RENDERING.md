@@ -40,9 +40,17 @@ A page is baked once per path, so nothing from the query string is in its HTML. 
 
 ## Two locale axes
 
-The skill-text locale is the URL prefix on skill pages and has 16 values. The chrome locale is one of `APP_LOCALES` (en, zh, ko). `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleSwitch`, and its prefix set must stay `APP_LOCALES`. A path whose prefix only names a skill-text language, such as `/ja/...`, then parses as unprefixed, so chrome is never pinned to a language without chrome strings, and the header's language menu switches the chrome preference instead of rewriting the content URL. On a path that does carry an app locale, each row of that menu links to the same page under the other prefix.
+The skill-text locale is the URL prefix on skill pages and has 16 values. The chrome locale is one of `APP_LOCALES` (en, zh, ko). `splitLocalePath` (`src/utils/routeLocale.ts`) is the chrome classifier used by `useRouteLocale`, the `App.vue` store sync and `useLocaleSwitch`, and its prefix set must stay `APP_LOCALES`. A path whose prefix only names a skill-text language, such as `/ja/...`, then parses as unprefixed, so chrome is never pinned to a language without chrome strings. On a path that carries an app locale, and on every skill page, each row of the header's language menu links to the same page under that language's prefix.
 
-`App.vue` watches the path and applies an app-locale prefix with `setLocale(locale, { persist: false })`, because following a shared `/zh/...` link must not overwrite the saved preference. Saved preferences apply only after mount (`initializeSkillLocale` always, `initializeLocale` on unprefixed routes), so hydration matches the English-chrome HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
+`App.vue` watches the path and hands its app-locale prefix to `applyAddressLocale` (`src/stores/i18n.ts`), which sets the chrome locale without saving it, because following a shared `/zh/...` link must not overwrite the saved preference.
+
+| Path                                            | Chrome locale                                          |
+| ----------------------------------------------- | ------------------------------------------------------ |
+| Guide or Help page, `/zh/guide`                 | the prefix, since the page is written in that language |
+| Skill page under an app locale, `/zh/skill/...` | the saved preference, else the prefix                  |
+| Anything else, `/`, `/skills`, `/ja/skill/...`  | the saved preference, else the locale in use           |
+
+A skill page's prefix names only its text, so a saved site language frames it as it frames the skill popup, and the prefix stands in for a visitor who has saved none, which is also how the page is pre-rendered. The last row is what returns a visitor to their saved language on leaving a Guide or Help page in another one. Saved preferences are read only after mount (`initializeSkillLocale`, `initializeLocale`), so hydration matches the baked HTML before text and link hrefs swap. `?l=<app locale>` on an unprefixed URL (`?l=en`, `?l=zh`, `?l=ko`) is an external contract: it pins the chrome locale for the recipient and saves it.
 
 ## Head tags
 
