@@ -11,6 +11,7 @@ import {
   getTileFillColor,
   getTileHatchFill,
   getWallStrokeColor,
+  TILE_STROKE_COLOR,
 } from '@/utils/tileStateFormatting'
 
 type Cell = readonly [row: number, col: number]
@@ -136,7 +137,12 @@ const arrowPath = computed(() => {
       <TileHatchPatterns :id :hex-size="R" light />
     </defs>
     <template v-for="tile in tiles" :key="tile.key">
-      <polygon :points="tile.points" :fill="tile.fill" stroke="#d4cfc0" stroke-width="1" />
+      <polygon
+        :points="tile.points"
+        :fill="tile.fill"
+        :stroke="TILE_STROKE_COLOR"
+        stroke-width="1"
+      />
       <polygon v-if="tile.hatch" :points="tile.points" :fill="tile.hatch" />
     </template>
     <polygon

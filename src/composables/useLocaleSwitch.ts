@@ -17,14 +17,15 @@ export function useLocaleSwitch() {
 
   /** The current page in `locale`; undefined where the path carries no locale. */
   const target = (locale: AppLocale): string | undefined => {
+    // A site-language pick resets the skill text to that language, so a skill
+    // page moves under any prefix, `/ja/...` included.
+    if (route.name === 'skill') return `/${locale}/skill/${route.params.name as string}`
     const { locale: current, rest } = splitLocalePath(route.path)
     return current ? `/${locale}${rest}` : undefined
   }
 
   const pick = (locale: AppLocale): void => {
-    // Explicit user choice: persist it (the route watcher alone applies
-    // URL locales without persisting)
-    i18n.setLocale(locale)
+    i18n.pickLocale(locale)
     const to = target(locale)
     if (to) void router.push(to)
   }

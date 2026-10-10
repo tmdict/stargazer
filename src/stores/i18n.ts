@@ -10,6 +10,7 @@ import {
 } from '@/lib/types/i18n'
 import { loadAllLocales } from '@/utils/dataLoader'
 import { interpolate } from '@/utils/interpolate'
+import { removeStorage } from '@/utils/storage'
 
 // Constants
 const LOCALE_STORAGE_KEY = 'stargazer.locale'
@@ -18,13 +19,15 @@ const SKILL_LOCALE_STORAGE_KEY = 'stargazer.skillLocale'
 export const useI18nStore = defineStore('i18n', () => {
   // State
   const currentLocale = ref<AppLocale>('en')
+  // The user's saved pick, known once initializeLocale has read it.
+  const savedLocale = ref<AppLocale | null>(null)
   const translations = ref<LocaleDictionary>({})
   const loaded = ref(false)
   const error = ref<string | null>(null)
 
   // Saved skill-text preference; null = follow the app locale. Written only by
   // explicit globe picks (URL visits never persist, mirroring the chrome
-  // prefix contract).
+  // prefix contract) and dropped by the next site-language pick.
   const skillLocale = ref<SkillLocale | null>(null)
 
   // On skill routes the content locale owns <html lang> (the page is mostly
@@ -70,6 +73,7 @@ export const useI18nStore = defineStore('i18n', () => {
    */
   const setLocale = (locale: AppLocale, { persist = true }: { persist?: boolean } = {}) => {
     currentLocale.value = locale
+    if (persist) savedLocale.value = locale
 
     // Only access DOM/localStorage on client
     if (!import.meta.env.SSR) {
@@ -86,41 +90,33 @@ export const useI18nStore = defineStore('i18n', () => {
     }
   }
 
-  // Apply the saved locale, then the `?l=` query param. Called from App.vue
-  // after mount, and only on unprefixed routes: the unprefixed shells are
-  // pre-rendered in English, so applying the saved locale before hydration
-  // would mismatch the baked HTML, and locale-prefixed routes are already
-  // language-pinned by the path.
-  const initializeLocale = () => {
-    // Guard against non-client callers
-    if (import.meta.env.SSR) {
-      return
-    }
+  // Reads the saved locale, then the `?l=` query param where `readQuery`
+  // allows it. Called after mount: the pages are pre-rendered without a saved
+  // locale, so an earlier read would mismatch the baked HTML.
+  const initializeLocale = ({ readQuery }: { readQuery: boolean }) => {
+    if (import.meta.env.SSR) return
 
-    // Load saved locale from localStorage with error handling
     try {
-      const savedLocale = localStorage.getItem(LOCALE_STORAGE_KEY)
-      if (savedLocale && isAppLocale(savedLocale)) {
-        currentLocale.value = savedLocale
-      }
+      const saved = localStorage.getItem(LOCALE_STORAGE_KEY)
+      if (saved && isAppLocale(saved)) savedLocale.value = saved
     } catch (e) {
-      // If localStorage is not available (private browsing, disabled, etc.),
-      // fallback to default 'en'
       console.warn('Could not access localStorage for locale preference:', e)
-      currentLocale.value = 'en'
     }
 
+    if (!readQuery) return
     // `?l=` is an intentional external contract: a shared link like `/?l=zh`
     // pins the app language for the recipient and persists it as their saved
     // preference.
-    const urlParams = new URLSearchParams(window.location.search)
-    const localeParam = urlParams.get('l')
-    if (localeParam && isAppLocale(localeParam)) {
-      setLocale(localeParam)
-    } else {
-      // Set the HTML lang attribute for the initial locale
-      applyDocumentLang()
-    }
+    const localeParam = new URLSearchParams(window.location.search).get('l')
+    if (localeParam && isAppLocale(localeParam)) setLocale(localeParam)
+  }
+
+  // Sets the site language for an address whose prefix is `locale`. A page
+  // written in that language (`pins`) shows in it; elsewhere the saved pick
+  // comes first.
+  const applyAddressLocale = (locale: AppLocale | null, { pins }: { pins: boolean }) => {
+    const next = pins ? (locale ?? savedLocale.value) : (savedLocale.value ?? locale)
+    setLocale(next ?? currentLocale.value, { persist: false })
   }
 
   // Read post-mount (like initializeLocale) so link hrefs baked into static
@@ -146,6 +142,13 @@ export const useI18nStore = defineStore('i18n', () => {
         console.warn('Could not save skill locale preference to localStorage:', e)
       }
     }
+  }
+
+  // The user's own pick of a site language, which the skill text follows again.
+  const pickLocale = (locale: AppLocale) => {
+    setLocale(locale)
+    skillLocale.value = null
+    removeStorage(SKILL_LOCALE_STORAGE_KEY)
   }
 
   // Skill-text language for surfaces with no content context: /skills hero list
@@ -223,7 +226,9 @@ export const useI18nStore = defineStore('i18n', () => {
     initialize,
     initializeLocale,
     initializeSkillLocale,
+    applyAddressLocale,
     setLocale,
+    pickLocale,
     setSkillLocale,
     setHtmlLangOverride,
     clearHtmlLangOverride,
