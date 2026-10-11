@@ -37,9 +37,12 @@ const teamName = (id: string): string => {
   const team = props.summary.teams.find((t) => t.id === id)
   return team ? nameOf(team) : id
 }
-// Zero-width spaces let a long label wrap between its heroes.
+// Zero-width spaces let a long label wrap between its heroes, and a plus
+// stays with the hero it adds, so no line ends on one.
 const ZERO_WIDTH_SPACE = String.fromCodePoint(0x200b)
-const wrappable = (name: string): string => name.replace(/[/·]/g, `$&${ZERO_WIDTH_SPACE}`)
+const NO_BREAK_SPACE = String.fromCodePoint(0xa0)
+const wrappable = (name: string): string =>
+  name.replace(/[/／]/g, `$&${ZERO_WIDTH_SPACE}`).replace(/ \+ /g, ` +${NO_BREAK_SPACE}`)
 const edgeText = (counter: PvpCounter): string =>
   interpolate(label('ladder-edge'), {
     winner: teamName(counter.winner),
@@ -315,6 +318,11 @@ onUnmounted(() => {
 .name > span,
 .name > small {
   display: block;
+}
+/* Chinese may break between any two characters, which would split a hero's
+   name across lines: its labels wrap only where wrappable allows. */
+.name > span:lang(zh) {
+  word-break: keep-all;
 }
 .name > small {
   font-size: 12px;
