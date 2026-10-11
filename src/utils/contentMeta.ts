@@ -82,9 +82,9 @@ const GUIDE_META: Record<GuidePage, Record<AppLocale, { title: string; descripti
         'AFK Journey arena guide: season PvP reports with a counter ladder, heroes grouped by skill mechanic, and Paragon and EX Refinement stat tables.',
     },
     zh: {
-      title: '指南',
+      title: '攻略',
       description:
-        '剑与远征启程竞技场指南：赛季 PvP 报告与克制关系图、按技能机制分组的英雄，以及冠阶与精炼属性表。',
+        '剑与远征启程竞技场攻略：赛季 PvP 报告与克制关系图、按技能机制分组的英雄，以及冠阶与精炼属性表。',
     },
     ko: {
       title: '가이드',
