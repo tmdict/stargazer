@@ -58,7 +58,7 @@ describe('setupGuideContentMeta', () => {
     locale.value = 'zh'
     await nextTick()
     expect(await resolved()).toEqual({
-      title: '指南 | Stargazer',
+      title: '攻略 | Stargazer',
       canonical: `${SITE_ORIGIN}/zh/guide`,
     })
   })
