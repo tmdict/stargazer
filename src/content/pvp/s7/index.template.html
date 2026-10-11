@@ -53,7 +53,8 @@ body{margin:0;background:var(--bg);color:var(--fg);
 /* A page asked for in Chinese is kept out of sight until its text is swapped (i18n/runtime.mjs). */
 html.lang-wait body>*{visibility:hidden}
 /* Chinese has no capitals to space out: the tracked small labels sit tight. */
-html[lang="zh-CN"] .stat span,html[lang="zh-CN"] th,html[lang="zh-CN"] .insights h4,html[lang="zh-CN"] .insight .conf,
+html[lang="zh-CN"] .stat span,html[lang="zh-CN"] th,html[lang="zh-CN"] .less-used-toggle .lineup-toggle,
+html[lang="zh-CN"] .insights h4,html[lang="zh-CN"] .insight .conf,
 html[lang="zh-CN"] .insight .bh,html[lang="zh-CN"] .pr-lab,html[lang="zh-CN"] .pr-cell .mapn,html[lang="zh-CN"] .h5,
 html[lang="zh-CN"] .comp-columns,html[lang="zh-CN"] .side-label,html[lang="zh-CN"] .rel-label,html[lang="zh-CN"] .abbr-title{letter-spacing:0}
 .wrap{max-width:1560px;margin:0 auto;padding:44px 26px 110px}
@@ -80,6 +81,9 @@ h2:hover .hlink,h3:hover .hlink,.hlink:focus-visible{opacity:1}
 html[lang="zh-CN"] .hlink.copied::after{content:"链接已复制"}
 h4{font-size:18px;margin:0}
 p{margin:12px 0;color:#d5dce5}
+/* A table stands further from the paragraph above it than the next paragraph
+   would, so it reads as a new block and not as the paragraph's next line. */
+p+.scroll,p+.comp-table{margin-top:28px}
 .lede{color:var(--dim);font-size:19.5px;line-height:1.55;margin:0 0 6px}
 .abbr{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 18px;margin:14px 0;font-size:14px;color:var(--dim)}
 .abbr-title{font-size:12px;text-transform:uppercase;letter-spacing:.06em;color:var(--faint);font-weight:600}
@@ -115,13 +119,19 @@ li::marker{color:var(--faint)}
   border-radius:10px;padding:15px 17px}
 .stat b{display:block;font-size:30px;line-height:1.15;font-weight:650}
 .stat span{font-size:12.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--faint)}
+/* The label under the figure sets its own line height, so one too long for its
+   box wraps into two lines that stay close together. */
+.stat>span{display:block;line-height:1.4;margin:7px 0 4px}
 
 .scroll{overflow-x:auto;margin:16px 0;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
 .scroll.tall{max-height:600px;overflow-y:auto}
 table{border-collapse:separate;border-spacing:0;width:100%;font-size:15px;background:var(--panel)}
 th,td{padding:9px 13px;text-align:left;border-bottom:1px solid var(--line);white-space:nowrap}
-th{background:var(--panel2);color:var(--dim);font-weight:600;font-size:12.5px;
-  text-transform:uppercase;letter-spacing:.05em;position:sticky;top:0;z-index:3}
+th{background:var(--panel2);position:sticky;top:0;z-index:3}
+/* The row that opens a variation's less-used options is set as a column
+   heading is: it heads those rows as "Flex options" heads the ones above it. */
+th,.less-used-toggle .lineup-toggle{color:var(--dim);font-weight:600;font-size:12.5px;
+  text-transform:uppercase;letter-spacing:.05em}
 td.wraptext{white-space:normal;min-width:230px;line-height:1.5}
 tbody tr:last-child td{border-bottom:0}
 tbody tr:hover>td{background:rgba(255,255,255,.015)}
@@ -490,7 +500,7 @@ td.build-heroes{min-width:220px;line-height:1.8}
 .variation-detail>td>.scroll{width:0;min-width:100%;margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0}
 details.fine.other-lineups>.inner{padding-left:0;padding-right:0}
 .other-lineups>.inner>p{padding:0 18px}
-.other-lineups>.inner>.scroll{margin:14px 0 0;border:0;border-top:1px solid var(--line);border-radius:0}
+.other-lineups>.inner>.scroll{margin-bottom:0;border:0;border-top:1px solid var(--line);border-radius:0}
 .lineup-options>thead th:nth-child(2),.lineup-options>thead th:nth-child(3),
 .lineup-options>thead th:nth-child(4){width:150px}
 .lineup-options>thead th:nth-child(5){width:110px}
@@ -511,7 +521,6 @@ details.fine.other-lineups>.inner{padding-left:0;padding-right:0}
 .lineup-options .lineup-names,.common-variations .lineup-names{flex-wrap:nowrap;flex:none}
 .lineup-evidence{font-size:11px;color:var(--dim);white-space:nowrap}
 .lineup-evidence:empty{display:none}
-.less-used-toggle{color:var(--dim);font-size:13px}
 .hero-table{table-layout:fixed}
 .hero-table-name{display:flex;align-items:center;gap:8px}
 .hero-table-name .pt{margin:0}
