@@ -10,7 +10,7 @@ import { loadCharacters } from './dataLoader'
 let vocabulary: TagVocabulary | null = null
 
 export function loadTagVocabulary(): TagVocabulary {
-  vocabulary ??= tagVocabulary(loadCharacters())
+  vocabulary ??= tagVocabulary(loadCharacters(), isHeroModifier)
   return vocabulary
 }
 

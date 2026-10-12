@@ -10,6 +10,6 @@
   "season": 0,
   "tags": {
     "summon": [{ "ultimate": 1 }],
-    "temp-buff": [{ "ex": 1 }]
+    "temp-buff": [{ "ex": 1, "mods": ["aoe", "dionel", "orion", "perseus"] }]
   }
 }

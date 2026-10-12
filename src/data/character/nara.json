@@ -9,7 +9,7 @@
   "range": 1,
   "season": 2,
   "tags": {
-    "dot": [{ "skill2": 1 }],
+    "dot": [{ "skill2": 1, "mods": ["shadewing"] }],
     "special-target": [{ "skill2": 1 }]
   }
 }

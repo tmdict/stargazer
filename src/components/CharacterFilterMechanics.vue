@@ -29,7 +29,12 @@ import { tagPick } from '@/lib/tags'
 import type { CharacterType } from '@/lib/types/character'
 import type { TagPick } from '@/lib/types/skill'
 import { useI18nStore } from '@/stores/i18n'
-import { mechanicLabel, mechanicPickLabel, modifierLabel } from '@/utils/skillLabels'
+import {
+  mechanicLabel,
+  mechanicPickLabel,
+  modifierLabel,
+  modifierLabelParts,
+} from '@/utils/skillLabels'
 import { loadTagVocabulary } from '@/utils/tagData'
 
 const { pool } = defineProps<{ pool: readonly CharacterType[] }>()
@@ -75,7 +80,7 @@ const items = computed(() =>
       mods: (info && !info.solo ? info.mods : []).map((mod) => ({
         mod,
         pick: { tag: key, mods: [mod] },
-        label: modifierLabel(mod, lang.value),
+        ...modifierLabelParts(mod, lang.value),
         count: count({ tag: key, mods: [mod] }),
       })),
     }
@@ -168,7 +173,8 @@ function toggle(item: { key: string; pick: MechanicPick }) {
                 v-for="mod in item.mods"
                 :key="mod.mod"
                 sub
-                :label="mod.label"
+                :lead="mod.hero"
+                :label="mod.rest"
                 :meta="mod.count"
                 :selected="isPicked(mod.pick)"
                 :disabled="mod.count === 0 && !isPicked(mod.pick)"
@@ -229,6 +235,13 @@ function toggle(item: { key: string; pick: MechanicPick }) {
 
 .menu {
   --dropdown-trigger-min-width: var(--dropdown-large-width);
+}
+
+/* A synergy's hero is named in the Epic tier's orange. That orange is made
+   for dark surfaces, so it is darkened here until it reads on white as well
+   as the teal of a hovered row. */
+.menu-body {
+  --dropdown-row-lead: oklch(from var(--color-tier-2) calc(l - 0.12) c h);
 }
 
 .all {

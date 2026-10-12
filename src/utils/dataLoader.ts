@@ -157,8 +157,9 @@ function withCharmTags(character: CharacterType): CharacterType {
   const charmTags = charm ? loadCharmTags()[charm.slug] : undefined
   if (!charmTags) return character
   const tags: Record<string, readonly TagAttachment[]> = { ...character.tags }
-  for (const [tag, tiers] of Object.entries(charmTags)) {
-    tags[tag] = [...(tags[tag] ?? []), ...tiers.map((tier) => ({ charm: tier }))]
+  for (const [tag, { tiers, mods }] of Object.entries(charmTags)) {
+    const pins = tiers.map((tier) => (mods ? { charm: tier, mods } : { charm: tier }))
+    tags[tag] = [...(tags[tag] ?? []), ...pins]
   }
   return { ...character, tags }
 }

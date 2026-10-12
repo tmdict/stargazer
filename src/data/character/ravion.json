@@ -12,6 +12,10 @@
     "cheat-death": [{ "ex": 3, "mods": ["ally", "self"] }],
     "energy-battery": [{ "skill2": 1 }],
     "special-target": [{ "skill2": 1 }],
-    "temp-buff": [{ "skill2": 1 }, { "ex": 3 }, { "awakening": 1, "mods": ["opening"] }]
+    "temp-buff": [
+      { "skill2": 1, "mods": ["dionel", "orion", "perseus", "single"] },
+      { "ex": 3, "mods": ["dionel", "orion", "perseus", "single"] },
+      { "awakening": 1, "mods": ["dionel", "opening", "orion", "perseus", "single"] }
+    ]
   }
 }

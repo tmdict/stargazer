@@ -10,6 +10,9 @@
   "season": 5,
   "tags": {
     "debuff": [{ "skill3": 1, "mods": ["eryndor", "global"] }],
-    "dot": [{ "ultimate": 1 }, { "skill2": 1 }]
+    "dot": [
+      { "ultimate": 1, "mods": ["shadewing"] },
+      { "skill2": 1, "mods": ["shadewing"] }
+    ]
   }
 }
