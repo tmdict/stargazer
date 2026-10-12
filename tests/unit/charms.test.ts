@@ -58,24 +58,27 @@ describe('charm tags', () => {
     const labels = loadAppLocales()
     for (const [slug, tags] of tagged) {
       expect(charms[slug], `${slug} is not a current charm`).toBeDefined()
-      for (const [tag, tiers] of Object.entries(tags)) {
+      for (const [tag, { tiers }] of Object.entries(tags)) {
         expect(labels[tag], `${tag} has no app locale label`).toBeDefined()
         for (const tier of tiers) expect([1, 2, 3, 4], `${slug} ${tag}`).toContain(tier)
       }
     }
   })
 
-  it.runIf(tagged.length > 0)('joins every sharing hero, pinned to the charm tiers', () => {
-    const characters = new Map(loadCharacters().map((c) => [c.name, c]))
-    const charms = loadCharms()
-    for (const [slug, tags] of tagged) {
-      for (const hero of charms[slug]!.heroes) {
-        const character = characters.get(hero)!
-        for (const [tag, tiers] of Object.entries(tags)) {
-          const pinned = pinnedLevels(character.tags, [{ tag, mods: [] }], 'charm')
-          expect(pinned, `${hero} ${tag}`).toEqual([...tiers].sort((a, b) => a - b))
+  it.runIf(tagged.length > 0)(
+    'joins every sharing hero, pinned to the charm tiers with the modifiers',
+    () => {
+      const characters = new Map(loadCharacters().map((c) => [c.name, c]))
+      const charms = loadCharms()
+      for (const [slug, tags] of tagged) {
+        for (const hero of charms[slug]!.heroes) {
+          const character = characters.get(hero)!
+          for (const [tag, { tiers, mods = [] }] of Object.entries(tags)) {
+            const pinned = pinnedLevels(character.tags, [{ tag, mods }], 'charm')
+            expect(pinned, `${hero} ${tag}`).toEqual([...tiers].sort((a, b) => a - b))
+          }
         }
       }
-    }
-  })
+    },
+  )
 })

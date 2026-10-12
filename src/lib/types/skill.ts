@@ -110,8 +110,14 @@ export interface SkillLanguage {
 export type CharmData = Record<string, { heroes: string[] }>
 
 // On-disk shape of src/data/seasonal/charm/tags.json (hand-written): charm
-// slug → tag → every tier (1-4) whose text carries the effect. Each tier's
-// text is complete on its own, unlike a skill level's upgrade line, so an
-// effect a charm has from Elite lists all four. Written once per charm, and
-// joined to each sharing hero's tags at load time.
-export type CharmTags = Readonly<Record<string, Readonly<Record<string, readonly number[]>>>>
+// slug → tag → every tier (1-4) whose text carries the effect, and the
+// modifiers that describe it. Each tier's text is complete on its own, unlike
+// a skill level's upgrade line, so an effect a charm has from Elite lists all
+// four. Written once per charm, and joined to each sharing hero's tags at
+// load time.
+export interface CharmTag {
+  readonly tiers: readonly number[]
+  readonly mods?: readonly string[]
+}
+
+export type CharmTags = Readonly<Record<string, Readonly<Record<string, CharmTag>>>>

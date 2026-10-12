@@ -13,7 +13,7 @@
     "energy-denial": [{ "awakening": 2 }],
     "heal-denial": [{ "ultimate": 1 }],
     "special-target": [{ "ex": 1 }],
-    "temp-buff": [{ "awakening": 1 }],
+    "temp-buff": [{ "awakening": 1, "mods": ["dionel", "global", "orion", "perseus"] }],
     "ult-denial": [{ "ultimate": 1 }]
   }
 }

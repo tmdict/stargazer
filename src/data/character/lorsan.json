@@ -9,6 +9,9 @@
   "range": 5,
   "season": 3,
   "tags": {
-    "temp-buff": [{ "skill3": 1 }, { "awakening": 2 }]
+    "temp-buff": [
+      { "skill3": 1, "mods": ["dionel", "orion", "perseus", "single"] },
+      { "awakening": 2, "mods": ["dionel", "orion", "perseus", "single"] }
+    ]
   }
 }

@@ -10,7 +10,10 @@
   "season": 2,
   "tags": {
     "energy-battery": [{ "skill3": 1 }],
-    "temp-buff": [{ "ultimate": 1 }, { "skill3": 1, "mods": ["opening"] }],
+    "temp-buff": [
+      { "ultimate": 1, "mods": ["dionel", "orion", "perseus", "single"] },
+      { "skill3": 1, "mods": ["dionel", "opening", "orion", "perseus", "single"] }
+    ],
     "tile-effect": [{ "skill3": 1 }]
   }
 }

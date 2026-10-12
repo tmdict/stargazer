@@ -69,17 +69,35 @@ export function openingPicks(
 }
 
 interface TagModifiers {
-  /** Modifiers in use under the tag, sorted. */
+  /** Modifiers in use under the tag: those that describe the effect in
+   * `MODIFIER_ORDER`, then the synergies in key order. */
   readonly mods: readonly string[]
+  /** The modifiers of `mods` that mark a synergy with a hero. */
+  readonly synergies: readonly string[]
   /** The tag's one modifier when every attachment carries it. Such a tag has
-   * no second layer to choose from and reads as one entry, "Ult (Opening)". */
+   * no second layer to choose from and reads as one entry, "Ult (Opening)".
+   * A synergy is never solo, so its tag keeps its own name ("DoT"). */
   readonly solo: string | null
+}
+
+/** The order a tag lists the modifiers that describe its effect: when it
+ * happens, who it is for, then how far it reaches, narrowest first. A modifier
+ * missing here follows these, in key order. */
+const MODIFIER_ORDER: readonly string[] = ['opening', 'self', 'ally', 'single', 'aoe', 'global']
+
+const modifierRank = (mod: string): number => {
+  const at = MODIFIER_ORDER.indexOf(mod)
+  return at === -1 ? MODIFIER_ORDER.length : at
 }
 
 /** Every tag in use, in key order. */
 export type TagVocabulary = ReadonlyMap<string, TagModifiers>
 
-export function tagVocabulary(heroes: readonly { readonly tags: CharacterTags }[]): TagVocabulary {
+/** `isSynergy` is passed in because the hero list sits behind the data loader. */
+export function tagVocabulary(
+  heroes: readonly { readonly tags: CharacterTags }[],
+  isSynergy: (mod: string) => boolean = () => false,
+): TagVocabulary {
   const seen = new Map<string, { mods: Set<string>; bare: boolean }>()
   for (const { tags } of heroes) {
     for (const [tag, entries] of Object.entries(tags)) {
@@ -95,7 +113,12 @@ export function tagVocabulary(heroes: readonly { readonly tags: CharacterTags }[
     [...seen.keys()].sort().map((tag) => {
       const { mods, bare } = seen.get(tag)!
       const sorted = [...mods].sort()
-      return [tag, { mods: sorted, solo: sorted.length === 1 && !bare ? sorted[0]! : null }]
+      const synergies = sorted.filter((mod) => isSynergy(mod))
+      const others = sorted
+        .filter((mod) => !isSynergy(mod))
+        .sort((a, b) => modifierRank(a) - modifierRank(b))
+      const solo = sorted.length === 1 && !bare && synergies.length === 0 ? sorted[0]! : null
+      return [tag, { mods: [...others, ...synergies], synergies, solo }]
     }),
   )
 }
@@ -107,11 +130,11 @@ export function tagPick(tag: string, vocabulary: TagVocabulary): TagPick {
 }
 
 /** A hero's chips: one per tag, plus one per modifier it carries under a tag
- * with a second layer. With `pin`, only that slot's attachments count, which
- * gives the chips of one skill heading. */
+ * with a second layer. A synergy has no chip. With `pin`, only that slot's
+ * attachments count, which gives the chips of one skill heading. */
 export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary, pin?: TagPin): TagPick[] {
   const chips: TagPick[] = []
-  for (const [tag, { mods, solo }] of vocabulary) {
+  for (const [tag, { mods, synergies, solo }] of vocabulary) {
     const all = tags[tag]
     if (!all) continue
     const entries = pin ? all.filter((entry) => entry[pin] !== undefined) : all
@@ -119,10 +142,17 @@ export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary, pin?: 
     chips.push(tagPick(tag, vocabulary))
     if (solo) continue
     for (const mod of mods) {
+      if (synergies.includes(mod)) continue
       if (entries.some((entry) => entry.mods?.includes(mod))) chips.push({ tag, mods: [mod] })
     }
   }
   return chips
+}
+
+/** The chip a pick lights: the pick without its synergies, which have none. */
+export function chipPick(pick: TagPick, vocabulary: TagVocabulary): TagPick {
+  const synergies = vocabulary.get(pick.tag)?.synergies ?? []
+  return { tag: pick.tag, mods: pick.mods.filter((mod) => !synergies.includes(mod)) }
 }
 
 /** Whether the picks light a chip. A chip without modifiers is the plain tag,

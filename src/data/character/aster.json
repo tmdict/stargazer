@@ -9,6 +9,6 @@
   "range": 7,
   "season": 8,
   "tags": {
-    "dot": [{ "ex": 1 }]
+    "dot": [{ "ex": 1, "mods": ["shadewing"] }]
   }
 }

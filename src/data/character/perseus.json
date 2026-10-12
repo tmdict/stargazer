@@ -9,6 +9,6 @@
   "range": 1,
   "season": 5,
   "tags": {
-    "temp-buff": [{ "skill3": 1, "mods": ["opening"] }]
+    "temp-buff": [{ "skill3": 1, "mods": ["aoe", "dionel", "opening", "orion"] }]
   }
 }

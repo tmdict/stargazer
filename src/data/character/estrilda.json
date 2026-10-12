@@ -9,6 +9,6 @@
   "range": 1,
   "season": 8,
   "tags": {
-    "temp-buff": [{ "ex": 1 }]
+    "temp-buff": [{ "ex": 1, "mods": ["aoe", "dionel", "orion", "perseus"] }]
   }
 }

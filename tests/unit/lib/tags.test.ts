@@ -67,6 +67,33 @@ describe('vocabulary', () => {
     expect(solo([opening, { ult: [{ charm: 1 }, { ex: 1, mods: ['opening'] }] }])!.solo).toBeNull()
     expect(solo([opening, { ult: [{ ex: 1, mods: ['global'] }] }])!.solo).toBeNull()
   })
+
+  it('never calls a synergy solo, so its tag keeps its own name', () => {
+    const heroes = [{ tags: { dot: [{ ex: 1, mods: ['shadewing'] }] } }]
+    const isSynergy = (mod: string) => mod === 'shadewing'
+    expect(tagVocabulary(heroes).get('dot')!.solo).toBe('shadewing')
+    expect(tagVocabulary(heroes, isSynergy).get('dot')!.solo).toBeNull()
+  })
+
+  it('lists synergies after the other modifiers', () => {
+    const debuff = tagVocabulary([{ tags: apart }], (mod) => mod === 'eryndor').get('debuff')!
+    expect(debuff.mods).toEqual(['global', 'eryndor'])
+  })
+
+  it('lists the other modifiers in their fixed order, an unlisted one after them', () => {
+    const mods = ['global', 'zeal', 'aoe', 'single', 'ally', 'bold', 'self', 'opening']
+    const buff = tagVocabulary([{ tags: { buff: [{ ex: 1, mods }] } }]).get('buff')!
+    expect(buff.mods).toEqual([
+      'opening',
+      'self',
+      'ally',
+      'single',
+      'aoe',
+      'global',
+      'bold',
+      'zeal',
+    ])
+  })
 })
 
 describe('tag links', () => {

@@ -9,6 +9,9 @@
   "range": 8,
   "season": 0,
   "tags": {
-    "temp-buff": [{ "ultimate": 1 }, { "skill2": 1, "mods": ["opening"] }]
+    "temp-buff": [
+      { "ultimate": 1, "mods": ["aoe", "dionel", "orion", "perseus"] },
+      { "skill2": 1, "mods": ["aoe", "dionel", "opening", "orion", "perseus"] }
+    ]
   }
 }

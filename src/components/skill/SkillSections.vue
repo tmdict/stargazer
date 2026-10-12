@@ -9,6 +9,7 @@ import { useSnippetAnchors } from '@/composables/useSnippetAnchors'
 import { ownEnergy } from '@/lib/mechanics'
 import {
   chipActive,
+  chipPick,
   heroChips,
   pinnedLevels,
   toggleChip,
@@ -59,8 +60,9 @@ const numbers = getSkillNumbers(props.slug)
 
 const heroName = computed(() => heroDisplayName(props.slug, props.lang))
 
+const initial = (props.initialChips ?? []).map((pick) => chipPick(pick, vocabulary))
 // A pick this hero does not satisfy would hide every slot, so those are left off.
-const picks = ref<readonly TagPick[]>(usablePicks(tags, props.initialChips ?? []))
+const picks = ref<readonly TagPick[]>(usablePicks(tags, initial))
 
 const chipKey = (chip: TagPick): string => `${chip.tag}:${chip.mods.join(',')}`
 
