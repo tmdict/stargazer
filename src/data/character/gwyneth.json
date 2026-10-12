@@ -9,7 +9,7 @@
   "range": 8,
   "season": 7,
   "tags": {
-    "dot": [{ "skill3": 1 }],
+    "dot": [{ "skill3": 1, "mods": ["shadewing"] }],
     "ult-denial": [{ "skill2": 1 }, { "ex": 1 }]
   }
 }

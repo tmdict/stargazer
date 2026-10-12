@@ -9,7 +9,7 @@
   "range": 1,
   "season": 4,
   "tags": {
-    "temp-buff": [{ "skill2": 1, "mods": ["opening"] }],
+    "temp-buff": [{ "skill2": 1, "mods": ["aoe", "dionel", "opening", "orion", "perseus"] }],
     "tile-effect": [{ "skill2": 1 }]
   }
 }

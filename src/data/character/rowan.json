@@ -11,6 +11,6 @@
   "tags": {
     "energy-battery": [{ "ultimate": 1 }, { "skill2": 3 }],
     "energy-denial": [{ "skill3": 1 }],
-    "temp-buff": [{ "awakening": 2 }]
+    "temp-buff": [{ "awakening": 2, "mods": ["dionel", "orion", "perseus", "single"] }]
   }
 }

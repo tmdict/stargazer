@@ -7,6 +7,8 @@ import { RouterLink, type RouteLocationRaw } from 'vue-router'
 
 defineProps<{
   label: string
+  // Shown before the label, in the owner's `--dropdown-row-lead` colour.
+  lead?: string
   meta?: string | number
   selected?: boolean
   // Nested under the row above it.
@@ -25,7 +27,10 @@ defineProps<{
     class="row"
     :class="{ selected, sub, action }"
   >
-    <span class="label">{{ label }}</span>
+    <span class="label"
+      ><span v-if="lead" class="lead">{{ lead }}</span
+      >{{ label }}</span
+    >
     <span v-if="meta !== undefined" class="meta">{{ meta }}</span>
   </component>
 </template>
@@ -100,6 +105,16 @@ defineProps<{
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Only while the row is at rest: hovered or selected, a row is one colour. */
+.lead {
+  color: var(--dropdown-row-lead, inherit);
+}
+
+.row:hover:not(:disabled) .lead,
+.row.selected .lead {
+  color: inherit;
 }
 
 .sub {

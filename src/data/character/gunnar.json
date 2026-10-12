@@ -9,10 +9,13 @@
   "range": 20,
   "season": 6,
   "tags": {
-    "dot": [{ "ultimate": 1 }, { "awakening": 1 }],
+    "dot": [
+      { "ultimate": 1, "mods": ["shadewing"] },
+      { "awakening": 1, "mods": ["shadewing"] }
+    ],
     "heal-denial": [{ "awakening": 1 }],
     "invincibility": [{ "ex": 4 }],
-    "temp-buff": [{ "skill3": 1, "mods": ["opening"] }],
+    "temp-buff": [{ "skill3": 1, "mods": ["dionel", "opening", "orion", "perseus", "single"] }],
     "tile-effect": [{ "ultimate": 1 }]
   }
 }
