@@ -1,6 +1,8 @@
 {
-  "ep8buffboost": { "temp-buff": [1, 2, 3, 4] },
-  "ep8frontbuff": { "temp-buff": [1, 2, 3, 4] },
-  "ep8heal": { "temp-buff": [1, 2, 3, 4] },
-  "ep8shield": { "temp-buff": [1, 2, 3, 4] }
+  "ep8buffboost": { "temp-buff": { "tiers": [1, 2, 3, 4] } },
+  "ep8frontbuff": {
+    "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["aoe", "dionel", "orion", "perseus"] }
+  },
+  "ep8heal": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["dionel", "orion", "perseus"] } },
+  "ep8shield": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["dionel", "orion", "perseus"] } }
 }

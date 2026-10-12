@@ -9,7 +9,10 @@
   "range": 5,
   "season": 0,
   "tags": {
-    "dot": [{ "ultimate": 1 }, { "ex": 1 }],
+    "dot": [
+      { "ultimate": 1, "mods": ["shadewing"] },
+      { "ex": 1, "mods": ["shadewing"] }
+    ],
     "summon": [{ "ultimate": 1 }]
   }
 }

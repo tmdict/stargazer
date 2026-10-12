@@ -17,19 +17,28 @@ export function appLabel(key: string, lang: AppLocale): string {
   return loadAppLocales()[key]?.[lang] ?? key
 }
 
-/** A tag modifier's label; a hero's name as a modifier reads "<Hero> Synergy", joined
- * without a space in Chinese. */
-export function modifierLabel(mod: string, lang: AppLocale): string {
-  if (!isHeroModifier(mod)) return appLabel(mod, lang)
+/** A tag modifier's label in two parts, for a list that sets a hero's name
+ * apart. A hero's name as a modifier reads "<Hero> Synergy", joined without a
+ * space in Chinese, and the name is `hero`. Any other modifier is all `rest`. */
+export function modifierLabelParts(mod: string, lang: AppLocale): { hero?: string; rest: string } {
+  if (!isHeroModifier(mod)) return { rest: appLabel(mod, lang) }
   const gap = lang === 'zh' ? '' : ' '
-  return `${curatedHeroName(mod, lang)}${gap}${appLabel('synergy', lang)}`
+  return { hero: curatedHeroName(mod, lang), rest: `${gap}${appLabel('synergy', lang)}` }
 }
 
-/** A tag with its modifiers: "Debuff", "Debuff (Global, Eryndor Synergy)". */
+export function modifierLabel(mod: string, lang: AppLocale): string {
+  const { hero = '', rest } = modifierLabelParts(mod, lang)
+  return hero + rest
+}
+
+/** A tag with its modifiers, in the order its menu lists them: "Debuff",
+ * "Debuff (Global, Eryndor Synergy)". */
 export function tagPickLabel(pick: TagPick, lang: AppLocale): string {
   const tag = appLabel(pick.tag, lang)
   if (pick.mods.length === 0) return tag
-  return `${tag} (${pick.mods.map((mod) => modifierLabel(mod, lang)).join(', ')})`
+  const order = loadTagVocabulary().get(pick.tag)?.mods ?? []
+  const mods = [...pick.mods].sort((a, b) => order.indexOf(a) - order.indexOf(b))
+  return `${tag} (${mods.map((mod) => modifierLabel(mod, lang)).join(', ')})`
 }
 
 /** A tag named by itself. One that shows as one entry includes its modifier
