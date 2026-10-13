@@ -15,7 +15,7 @@
     ],
     "heal-denial": [{ "awakening": 1 }],
     "invincibility": [{ "ex": 4 }],
-    "temp-buff": [{ "skill3": 1, "mods": ["dionel", "opening", "orion", "perseus", "single"] }],
+    "temp-buff": [{ "skill3": 1, "mods": ["opening", "orion", "perseus", "single"] }],
     "tile-effect": [{ "ultimate": 1 }]
   }
 }

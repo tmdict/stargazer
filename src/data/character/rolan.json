@@ -12,8 +12,8 @@
     "dot": [{ "ex": 4, "mods": ["shadewing"] }],
     "summon": [{ "ex": 1 }],
     "temp-buff": [
-      { "skill2": 1, "mods": ["dionel", "orion", "perseus", "single"] },
-      { "awakening": 1, "mods": ["dionel", "global", "opening", "orion", "perseus"] }
+      { "skill2": 1, "mods": ["orion", "perseus", "single"] },
+      { "awakening": 1, "mods": ["global", "opening", "orion", "perseus"] }
     ]
   }
 }

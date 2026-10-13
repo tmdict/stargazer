@@ -9,6 +9,6 @@
   "range": 4,
   "season": 0,
   "tags": {
-    "temp-buff": [{ "awakening": 1, "mods": ["dionel", "orion", "perseus", "single"] }]
+    "temp-buff": [{ "awakening": 1, "mods": ["orion", "perseus", "single"] }]
   }
 }

@@ -13,8 +13,8 @@ import {
   heroChips,
   pinnedLevels,
   toggleChip,
-  toTagQuery,
   usablePicks,
+  type TagChip,
 } from '@/lib/tags'
 import { isAppLocale, type AppLocale, type SkillLocale } from '@/lib/types/i18n'
 import { SLOT_ORDER, type TagPick, type TagPin } from '@/lib/types/skill'
@@ -64,9 +64,9 @@ const initial = (props.initialChips ?? []).map((pick) => chipPick(pick, vocabula
 // A pick this hero does not satisfy would hide every slot, so those are left off.
 const picks = ref<readonly TagPick[]>(usablePicks(tags, initial))
 
-const chipKey = (chip: TagPick): string => `${chip.tag}:${chip.mods.join(',')}`
+const chipKey = (chip: TagChip): string => `${chip.tag}:${chip.mods.join(',')}`
 
-function toggle(chip: TagPick) {
+function toggle(chip: TagChip) {
   picks.value = toggleChip(picks.value, chip)
 }
 
@@ -78,10 +78,7 @@ function clearChips() {
 // levels before it, so a tagged row is never shown alone.
 function applyChips(pin: TagPin) {
   const filter = usablePicks(tags, picks.value)
-  const slotTags = heroChips(tags, vocabulary, pin).map((chip) => ({
-    label: tagPickLabel(chip, appLang.value),
-    query: toTagQuery(chip),
-  }))
+  const slotTags = heroChips(tags, vocabulary, pin).map((chip) => tagPickLabel(chip, appLang.value))
   const highlight = pinnedLevels(tags, filter, pin)
   return { slotTags, highlight, visible: filter.length === 0 || highlight.length > 0 }
 }

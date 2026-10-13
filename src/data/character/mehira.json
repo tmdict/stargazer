@@ -13,6 +13,6 @@
       { "skill3": 1, "mods": ["eryndor", "global"] },
       { "awakening": 1, "mods": ["global"] }
     ],
-    "temp-buff": [{ "skill2": 1, "mods": ["aoe", "dionel", "orion", "perseus"] }]
+    "temp-buff": [{ "skill2": 1, "mods": ["aoe", "orion", "perseus"] }]
   }
 }

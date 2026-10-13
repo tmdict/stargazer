@@ -1,6 +1,10 @@
 <script setup lang="ts">
 /* A toggle chip with a hero count. `large` is the size of the dropdown pills
-   it sits beside; `dark` is for the guide's panels. */
+   it sits beside; `dark` is for the guide's panels. With `join` it is one part
+   of a pill made of several chips, square on the sides where the pill goes
+   on. */
+
+import type { PillJoin } from '@/composables/usePillJoins'
 
 defineProps<{
   label: string
@@ -8,11 +12,24 @@ defineProps<{
   active?: boolean
   large?: boolean
   dark?: boolean
+  join?: PillJoin
 }>()
 </script>
 
 <template>
-  <button type="button" class="chip" :class="{ active, large, dark }" :aria-pressed="active">
+  <button
+    type="button"
+    class="chip"
+    :class="{
+      active,
+      large,
+      dark,
+      joined: join,
+      'joins-left': join?.left,
+      'joins-right': join?.right,
+    }"
+    :aria-pressed="active"
+  >
     <span>{{ label }}</span>
     <span class="count">{{ count }}</span>
   </button>
@@ -23,20 +40,18 @@ defineProps<{
   display: inline-flex;
   align-items: center;
   gap: var(--chip-count-gap);
-  padding: 3px 10px;
-  border: 1.5px solid var(--color-border-primary);
+  padding: var(--chip-padding-block) 10px;
+  border: var(--chip-border) solid var(--color-border-primary);
   border-radius: 999px;
   background: var(--color-bg-white);
   color: var(--color-text-secondary);
   font: inherit;
-  font-size: 0.8rem;
+  font-size: var(--chip-font-size);
   font-weight: 600;
-  line-height: 1.4;
+  line-height: var(--chip-line-height);
   white-space: nowrap;
   cursor: pointer;
-  transition:
-    border-color var(--transition-fast),
-    background-color var(--transition-fast);
+  transition: border-color var(--transition-fast);
 }
 
 .count {
@@ -49,8 +64,12 @@ defineProps<{
 
 .chip.active {
   border-color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 13%, transparent);
-  color: var(--color-primary-hover);
+  background: var(--color-primary);
+  color: #fff;
+}
+
+.chip.active:not(.dark) .count {
+  opacity: 0.8;
 }
 
 .chip:disabled {
@@ -91,5 +110,40 @@ defineProps<{
 
 .dark:disabled:hover {
   border-color: var(--chip-dark-border-color);
+}
+
+/* ---- joined: one part of a pill ---- */
+
+.joined,
+.joined:disabled:hover {
+  border-color: var(--color-primary);
+}
+
+.joined {
+  transition: none;
+}
+
+.joined:disabled {
+  opacity: 1;
+  color: color-mix(in srgb, var(--color-text-secondary) 40%, transparent);
+}
+
+.joined:not(.active):not(:disabled):hover {
+  background: var(--color-bg-tertiary);
+}
+
+.joins-left {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.active + .active.joins-left {
+  border-left-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-bg-white));
+}
+
+.chip.joined.joins-right {
+  border-right-color: transparent;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
 }
 </style>

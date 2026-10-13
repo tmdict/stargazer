@@ -1,8 +1,6 @@
 {
   "s8-9": { "temp-buff": { "tiers": [1, 2, 3, 4] } },
-  "s8-13": {
-    "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["aoe", "dionel", "orion", "perseus"] }
-  },
-  "s8-10": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["dionel", "orion", "perseus"] } },
-  "s8-7": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["dionel", "orion", "perseus"] } }
+  "s8-13": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["aoe", "orion", "perseus"] } },
+  "s8-10": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } },
+  "s8-7": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } }
 }

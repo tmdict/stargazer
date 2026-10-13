@@ -107,7 +107,6 @@ defineProps<{
   text-overflow: ellipsis;
 }
 
-/* Only while the row is at rest: hovered or selected, a row is one colour. */
 .lead {
   color: var(--dropdown-row-lead, inherit);
 }

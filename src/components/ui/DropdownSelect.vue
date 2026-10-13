@@ -23,6 +23,8 @@ import type { RouteLocationRaw } from 'vue-router'
 
 import DropdownRow from './DropdownRow.vue'
 import IconClose from './IconClose.vue'
+import IconMinus from './IconMinus.vue'
+import IconPlus from './IconPlus.vue'
 import { opensElsewhere, useDropdown } from '@/composables/useDropdown'
 import { useFloatingPanel } from '@/composables/useFloatingPanel'
 import { usePanelFit } from '@/composables/usePanelFit'
@@ -59,8 +61,8 @@ const {
   clickOnly?: boolean
   title?: string
   action?: string
-  // The segment's text (a symbol such as +) and its accessible name.
-  segment?: string
+  // The segment's sign and its accessible name.
+  segment?: 'plus' | 'minus'
   segmentLabel?: string
 }>()
 
@@ -215,7 +217,8 @@ const pressSegment = (): void => {
       @mouseenter="hide"
       @click="pressSegment"
     >
-      {{ segment }}
+      <IconPlus v-if="segment === 'plus'" />
+      <IconMinus v-else />
     </button>
     <!-- The variant class is repeated on the list: on <body> it has no root
          to inherit the variant's type size from. -->
@@ -397,6 +400,12 @@ const pressSegment = (): void => {
   line-height: 1;
   cursor: pointer;
   transition: all var(--transition-fast);
+}
+
+/* A press replaces the sign. As the click's target it would be off the page
+   before the click reaches the host, which could not tell a button was hit. */
+.segment > * {
+  pointer-events: none;
 }
 
 .segment:hover {

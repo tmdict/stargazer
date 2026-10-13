@@ -11,6 +11,6 @@
   "tags": {
     "energy-battery": [{ "awakening": 1 }],
     "execute": [{ "ex": 1 }],
-    "temp-buff": [{ "awakening": 1, "mods": ["aoe", "dionel", "opening", "orion", "perseus"] }]
+    "temp-buff": [{ "awakening": 1, "mods": ["aoe", "opening", "orion", "perseus"] }]
   }
 }

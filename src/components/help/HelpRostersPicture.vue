@@ -94,7 +94,7 @@ const HEROES = [
               <IconUser :size="15" />
             </template>
           </DropdownSelect>
-          <DropdownSelect large :label="label('mechanics')" :segment="narrow ? undefined : '+'">
+          <DropdownSelect large :label="label('mechanics')" :segment="narrow ? undefined : 'plus'">
             <template #icon>
               <IconFilter :size="15" />
             </template>

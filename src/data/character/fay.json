@@ -10,9 +10,9 @@
   "season": 0,
   "tags": {
     "temp-buff": [
-      { "ultimate": 1, "mods": ["aoe", "dionel", "orion", "perseus"] },
-      { "skill3": 3, "mods": ["aoe", "dionel", "opening", "orion", "perseus"] },
-      { "ex": 1, "mods": ["dionel", "opening", "orion", "perseus", "single"] }
+      { "ultimate": 1, "mods": ["aoe", "orion", "perseus"] },
+      { "skill3": 3, "mods": ["aoe", "opening", "orion", "perseus"] },
+      { "ex": 1, "mods": ["opening", "orion", "perseus", "single"] }
     ]
   }
 }

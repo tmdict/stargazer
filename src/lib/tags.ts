@@ -129,53 +129,62 @@ export function tagPick(tag: string, vocabulary: TagVocabulary): TagPick {
   return { tag, mods: solo ? [solo] : [] }
 }
 
-/** A hero's chips: one per tag, plus one per modifier it carries under a tag
- * with a second layer. A synergy has no chip. With `pin`, only that slot's
- * attachments count, which gives the chips of one skill heading. */
-export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary, pin?: TagPin): TagPick[] {
-  const chips: TagPick[] = []
-  for (const [tag, { mods, synergies, solo }] of vocabulary) {
-    const all = tags[tag]
-    if (!all) continue
+/** A chip: a tag with every modifier that by itself matches the same
+ * attachments of a hero, which the chip as a pick matches too. */
+export interface TagChip extends TagPick {
+  /** The tag by itself matches them as well. */
+  readonly whole: boolean
+}
+
+/** A hero's chips: under each tag, one for the tag and one per modifier it
+ * carries, those that match the same attachments merged into one ("Temp Buff
+ * (Opening, Single Target)"). A synergy has no chip. With `pin`, only that
+ * slot's attachments count, which gives the chips of one skill heading. */
+export function heroChips(tags: CharacterTags, vocabulary: TagVocabulary, pin?: TagPin): TagChip[] {
+  const chips: TagChip[] = []
+  for (const [tag, { mods, synergies }] of vocabulary) {
+    const all = tags[tag] ?? []
     const entries = pin ? all.filter((entry) => entry[pin] !== undefined) : all
-    if (pin && entries.length === 0) continue
-    chips.push(tagPick(tag, vocabulary))
-    if (solo) continue
+    if (entries.length === 0) continue
+    // Keyed by the attachments matched; the tag alone matches them all.
+    const every = entries.map((_, at) => at).join()
+    const groups = new Map<string, string[]>([[every, []]])
     for (const mod of mods) {
       if (synergies.includes(mod)) continue
-      if (entries.some((entry) => entry.mods?.includes(mod))) chips.push({ tag, mods: [mod] })
+      const key = entries.flatMap((entry, at) => (entry.mods?.includes(mod) ? [at] : [])).join()
+      if (key) groups.set(key, [...(groups.get(key) ?? []), mod])
     }
+    for (const [key, group] of groups) chips.push({ tag, mods: group, whole: key === every })
   }
   return chips
 }
 
-/** The chip a pick lights: the pick without its synergies, which have none. */
+/** A filter's pick as a hero's chips read it: without its synergies, which
+ * have no chip. */
 export function chipPick(pick: TagPick, vocabulary: TagVocabulary): TagPick {
   const synergies = vocabulary.get(pick.tag)?.synergies ?? []
   return { tag: pick.tag, mods: pick.mods.filter((mod) => !synergies.includes(mod)) }
 }
 
-/** Whether the picks light a chip. A chip without modifiers is the plain tag,
- * lit only by a pick that is also plain. */
-export function chipActive(picks: readonly TagPick[], chip: TagPick): boolean {
-  return picks.some(
-    (pick) =>
-      pick.tag === chip.tag &&
-      (chip.mods.length === 0 ? pick.mods.length === 0 : hasAll(pick.mods, chip.mods)),
-  )
+/** Whether a pick lights a chip: it names a modifier of the chip, or is the
+ * tag by itself when the chip stands for that. */
+const lights = (pick: TagPick, chip: TagChip): boolean =>
+  pick.tag === chip.tag &&
+  (pick.mods.length === 0 ? chip.whole : pick.mods.some((mod) => chip.mods.includes(mod)))
+
+export function chipActive(picks: readonly TagPick[], chip: TagChip): boolean {
+  return picks.some((pick) => lights(pick, chip))
 }
 
 /** The picks after a chip is clicked. A chip switched on is its own pick, so
- * chips combine as "any of". Switching one off takes it out of every pick
- * that carries it, which keeps a pick that arrived with several modifiers
- * whole until then. */
-export function toggleChip(picks: readonly TagPick[], chip: TagPick): TagPick[] {
+ * chips combine as "any of". Switching one off takes its modifiers out of
+ * every pick that lights it, which keeps a pick that arrived with several
+ * modifiers whole until then. */
+export function toggleChip(picks: readonly TagPick[], chip: TagChip): TagPick[] {
   if (!chipActive(picks, chip)) return [...picks, chip]
   return picks.flatMap((pick) => {
-    if (pick.tag !== chip.tag) return [pick]
-    if (chip.mods.length === 0) return pick.mods.length === 0 ? [] : [pick]
+    if (!lights(pick, chip)) return [pick]
     const mods = pick.mods.filter((mod) => !chip.mods.includes(mod))
-    if (mods.length === pick.mods.length) return [pick]
     return mods.length > 0 ? [{ tag: pick.tag, mods }] : []
   })
 }
