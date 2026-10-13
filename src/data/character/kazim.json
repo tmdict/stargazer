@@ -9,6 +9,6 @@
   "range": 7,
   "season": 7,
   "tags": {
-    "temp-buff": [{ "skill3": 1, "mods": ["dionel", "global", "opening", "orion", "perseus"] }]
+    "temp-buff": [{ "skill3": 1, "mods": ["global", "opening", "orion", "perseus"] }]
   }
 }

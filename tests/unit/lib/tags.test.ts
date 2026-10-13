@@ -1,15 +1,18 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  chipActive,
   entryPin,
   fromTagQuery,
+  heroChips,
   matchesPick,
   openingPicks,
   pinnedLevels,
   tagVocabulary,
+  toggleChip,
   toTagQuery,
 } from '@/lib/tags'
-import type { CharacterTags, TagPick } from '@/lib/types/skill'
+import type { CharacterTags, TagPick, TagPin } from '@/lib/types/skill'
 import { loadAppLocales, loadCharacters } from '@/utils/dataLoader'
 import { isHeroModifier } from '@/utils/tagData'
 
@@ -56,6 +59,35 @@ describe('skill text', () => {
   })
 })
 
+describe('chips', () => {
+  const chip = (tag: string, whole: boolean, ...mods: string[]) => ({ tag, mods, whole })
+  const chipsOf = (tags: CharacterTags, pin?: TagPin) =>
+    heroChips(tags, tagVocabulary([{ tags }]), pin)
+
+  // The first effect is the hero's only opening and only single-target one.
+  const tags: CharacterTags = {
+    'temp-buff': [{ skill3: 1, mods: ['opening', 'single'] }, { ex: 1 }],
+  }
+  const merged = chip('temp-buff', false, 'opening', 'single')
+
+  it('shares one chip between the picks that match the same attachments', () => {
+    expect(chipsOf(tags)).toEqual([chip('temp-buff', true), merged])
+    expect(chipsOf(tags, 'skill3')).toEqual([chip('temp-buff', true, 'opening', 'single')])
+  })
+
+  it('lights a shared chip from any pick it stands for, and clears those picks with it', () => {
+    const [whole] = chipsOf(tags, 'skill3')
+    for (const picks of [[pick('temp-buff')], [pick('temp-buff', 'single')]]) {
+      expect(chipActive(picks, whole!)).toBe(true)
+      expect(toggleChip(picks, whole!)).toEqual([])
+    }
+    expect(chipActive([pick('temp-buff')], merged)).toBe(false)
+    expect(toggleChip([pick('temp-buff', 'opening', 'global')], merged)).toEqual([
+      pick('temp-buff', 'global'),
+    ])
+  })
+})
+
 describe('vocabulary', () => {
   const solo = (heroes: CharacterTags[]) =>
     tagVocabulary(heroes.map((tags) => ({ tags }))).get('ult')
@@ -78,21 +110,6 @@ describe('vocabulary', () => {
   it('lists synergies after the other modifiers', () => {
     const debuff = tagVocabulary([{ tags: apart }], (mod) => mod === 'eryndor').get('debuff')!
     expect(debuff.mods).toEqual(['global', 'eryndor'])
-  })
-
-  it('lists the other modifiers in their fixed order, an unlisted one after them', () => {
-    const mods = ['global', 'zeal', 'aoe', 'single', 'ally', 'bold', 'self', 'opening']
-    const buff = tagVocabulary([{ tags: { buff: [{ ex: 1, mods }] } }]).get('buff')!
-    expect(buff.mods).toEqual([
-      'opening',
-      'self',
-      'ally',
-      'single',
-      'aoe',
-      'global',
-      'bold',
-      'zeal',
-    ])
   })
 })
 

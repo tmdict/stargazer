@@ -1,7 +1,13 @@
 <script setup lang="ts">
 /* A number stepped down and up by two buttons, for a filter that takes a
    value. It is the size of the dropdown pills it sits beside; `dark` is the
-   size and look of the chips on the guide's panels. */
+   size and look of the chips on the guide's panels. `compact` is the two
+   buttons alone at a filter chip's size, for a stepper beside the chip that
+   shows its value; with `join` it is the last part of that chip's pill. */
+
+import IconMinus from './IconMinus.vue'
+import IconPlus from './IconPlus.vue'
+import type { PillJoin } from '@/composables/usePillJoins'
 
 const { min, max, step } = defineProps<{
   // Names the control for assistive tech; the two buttons have their own names.
@@ -15,6 +21,8 @@ const { min, max, step } = defineProps<{
   count?: number
   active?: boolean
   dark?: boolean
+  compact?: boolean
+  join?: PillJoin
 }>()
 
 const model = defineModel<number>({ required: true })
@@ -42,7 +50,7 @@ function onKeydown(e: KeyboardEvent) {
 <template>
   <div
     class="stepper"
-    :class="{ active, dark }"
+    :class="{ active, dark, compact, 'joins-left': join?.left }"
     role="group"
     :aria-label="label"
     @keydown="onKeydown"
@@ -56,7 +64,7 @@ function onKeydown(e: KeyboardEvent) {
       :aria-disabled="model <= min"
       @click="move(-1)"
     >
-      −
+      <IconMinus class="sign" />
     </button>
     <span class="value" aria-live="polite">
       <span>
@@ -71,7 +79,7 @@ function onKeydown(e: KeyboardEvent) {
       :aria-disabled="model >= max"
       @click="move(1)"
     >
-      +
+      <IconPlus class="sign" />
     </button>
   </div>
 </template>
@@ -111,6 +119,10 @@ function onKeydown(e: KeyboardEvent) {
   line-height: 1;
   cursor: pointer;
   transition: background-color var(--transition-fast);
+}
+
+.sign {
+  stroke-width: 3;
 }
 
 .step:first-child {
@@ -187,6 +199,51 @@ function onKeydown(e: KeyboardEvent) {
 .dark .value {
   min-width: 4.4em;
   padding: var(--chip-dark-padding-block) 2px;
+}
+
+/* ---- compact: the buttons alone, as tall as a filter chip ---- */
+
+.compact {
+  min-height: calc(
+    var(--chip-line-height) * var(--chip-font-size) + 2 *
+      (var(--chip-padding-block) + var(--chip-border))
+  );
+  border-width: var(--chip-border);
+  font-size: var(--chip-font-size);
+}
+
+.compact .step {
+  width: 26px;
+  font-size: 1rem;
+}
+
+.compact .step:first-child {
+  border-right-width: var(--chip-border);
+}
+
+.compact .step:last-child {
+  border-left: none;
+}
+
+.compact .value {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* ---- joined: the last part of a pill ---- */
+
+.joins-left {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.joins-left .step:first-child {
+  border-radius: 0;
 }
 
 @media (max-width: 768px) {

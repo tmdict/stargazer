@@ -18,8 +18,7 @@ export function appLabel(key: string, lang: AppLocale): string {
 }
 
 /** A tag modifier's label in two parts, for a list that sets a hero's name
- * apart. A hero's name as a modifier reads "<Hero> Synergy", joined without a
- * space in Chinese, and the name is `hero`. Any other modifier is all `rest`. */
+ * apart: "<Hero> Synergy" is `hero` plus `rest`, any other modifier all `rest`. */
 export function modifierLabelParts(mod: string, lang: AppLocale): { hero?: string; rest: string } {
   if (!isHeroModifier(mod)) return { rest: appLabel(mod, lang) }
   const gap = lang === 'zh' ? '' : ' '

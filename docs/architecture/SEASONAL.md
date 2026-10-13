@@ -80,7 +80,7 @@ A charm is a four-tier skill upgrade shared by several heroes, so its text is st
 Charms can carry tags. `src/data/seasonal/charm/tags.json` is hand-written, and gives each tag of a charm every tier (1 to 4) whose text carries the effect, plus the modifiers that describe the effect when it has any. Each tier's text is complete on its own, so an effect present from Elite lists all four:
 
 ```json
-{ "ep8heal": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["dionel", "orion", "perseus"] } } }
+{ "ep8heal": { "temp-buff": { "tiers": [1, 2, 3, 4], "mods": ["orion", "perseus"] } } }
 ```
 
 `loadCharacters` adds these to every hero sharing the charm as `{ "charm": <tier> }` pins that carry the tag's modifiers, so the hero-list filter, the Mechanics guide and the skill-page chips treat them as the hero's own tags. An active tag shows the whole charm with the pinned tiers accented, as it does a skill slot. A charm's effects change with the season, so `import:charms` fails when the file names a charm the feed lacks, and `--retire` deletes it with the text.

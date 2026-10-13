@@ -10,8 +10,8 @@
   "season": 0,
   "tags": {
     "temp-buff": [
-      { "ultimate": 1, "mods": ["aoe", "dionel", "orion", "perseus"] },
-      { "ex": 3, "mods": ["aoe", "dionel", "orion", "perseus"] }
+      { "ultimate": 1, "mods": ["aoe", "orion", "perseus"] },
+      { "ex": 3, "mods": ["aoe", "orion", "perseus"] }
     ]
   }
 }

@@ -129,7 +129,7 @@ const narrow = useNarrowViewport()
           lit
           clearable
           :label="tagLabel(MECHANIC_TAG, lang)"
-          :segment="narrow ? undefined : '+'"
+          :segment="narrow ? undefined : 'plus'"
         >
           <template #icon>
             <IconFilter :size="15" />

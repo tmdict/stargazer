@@ -3,6 +3,7 @@
    one place, for the hero lists and the Mechanics guide. */
 
 import FilterStepper from './ui/FilterStepper.vue'
+import type { PillJoin } from '@/composables/usePillJoins'
 import { ENERGY_KEY, ENERGY_MAX, ENERGY_MIN, ENERGY_STEP, energyAboveLabel } from '@/lib/mechanics'
 import type { AppLocale } from '@/lib/types/i18n'
 import { interpolate } from '@/utils/interpolate'
@@ -13,6 +14,8 @@ const { lang } = defineProps<{
   count?: number
   active?: boolean
   dark?: boolean
+  compact?: boolean
+  join?: PillJoin
 }>()
 
 const model = defineModel<number>({ required: true })
@@ -29,6 +32,8 @@ const stepLabel = (key: string): string => interpolate(appLabel(key, lang), { n:
     :count
     :active
     :dark
+    :compact
+    :join
     :label="mechanicLabel(ENERGY_KEY, lang)"
     :lower-label="stepLabel('energy-lower')"
     :raise-label="stepLabel('energy-raise')"
