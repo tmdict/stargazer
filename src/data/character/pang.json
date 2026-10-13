@@ -10,6 +10,6 @@
   "season": 4,
   "tags": {
     "energy-denial": [{ "ultimate": 1 }],
-    "temp-buff": [{ "ex": 3, "mods": ["dionel", "orion", "perseus", "single"] }]
+    "temp-buff": [{ "ex": 3, "mods": ["orion", "perseus", "single"] }]
   }
 }

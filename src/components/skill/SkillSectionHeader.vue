@@ -1,32 +1,20 @@
 <script setup lang="ts">
 import { useI18nStore } from '@/stores/i18n'
 
-// A heading chip: its label and the tag link it opens on `/skills`.
-export interface SlotChip {
-  label: string
-  query: { tag: string; mods?: string }
-}
-
 defineProps<{
   heading?: string
-  slotTags?: SlotChip[]
+  slotTags?: string[]
 }>()
 
-// Chip labels are in the app locale, whatever language the heading is in.
+// Tag labels are in the app locale, whatever language the heading is in.
 const i18n = useI18nStore()
 </script>
 
 <template>
   <header v-if="heading || slotTags?.length" class="skill-section-header">
     <h2 v-if="heading" class="skill-section-heading">{{ heading }}</h2>
-    <span v-if="slotTags?.length" class="skill-section-chips" :lang="i18n.currentLocale">
-      <RouterLink
-        v-for="chip in slotTags"
-        :key="chip.label"
-        class="skill-level-chip"
-        :to="{ path: '/skills', query: chip.query }"
-        >{{ chip.label }}</RouterLink
-      >
+    <span v-if="slotTags?.length" class="skill-section-tags" :lang="i18n.currentLocale">
+      <span v-for="label in slotTags" :key="label" class="skill-section-tag">{{ label }}</span>
     </span>
   </header>
 </template>
@@ -50,31 +38,22 @@ const i18n = useI18nStore()
 }
 
 /* The heading's capitals sit about half a pixel below the middle of its line
-   box, so centered chips read high; 1px of top margin moves them down half a
+   box, so centered tags read high; 1px of top margin moves them down half a
    pixel, onto the capitals' middle. */
-.skill-section-chips {
+.skill-section-tags {
   display: inline-flex;
   flex-wrap: wrap;
   gap: 4px;
   margin-top: 1px;
 }
 
-.skill-level-chip {
+.skill-section-tag {
   display: inline-block;
   padding: 2px 10px;
   border-radius: 999px;
   font-size: 12px;
+  font-weight: 500;
   background: color-mix(in srgb, var(--color-accent) 18%, transparent);
   color: var(--color-accent);
-  text-decoration: none;
-  transition: background-color 0.15s;
-}
-
-/* Override content.css's global `.content a:hover` (red + underline) so the
-   chip just lifts its background and keeps its teal text. */
-.skill-level-chip:hover {
-  background: color-mix(in srgb, var(--color-accent) 28%, transparent);
-  color: var(--color-accent);
-  text-decoration: none;
 }
 </style>

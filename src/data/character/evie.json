@@ -16,8 +16,8 @@
     "dot": [{ "ultimate": 1, "mods": ["shadewing"] }],
     "special-target": [{ "ultimate": 1 }, { "skill3": 1 }],
     "temp-buff": [
-      { "skill3": 1, "mods": ["dionel", "opening", "orion", "perseus", "single"] },
-      { "awakening": 1, "mods": ["dionel", "orion", "perseus", "single"] }
+      { "skill3": 1, "mods": ["opening", "orion", "perseus", "single"] },
+      { "awakening": 1, "mods": ["orion", "perseus", "single"] }
     ],
     "ult-denial": [{ "ultimate": 1 }]
   }

@@ -10,7 +10,7 @@
   "season": 5,
   "tags": {
     "heal-denial": [{ "ultimate": 1 }],
-    "temp-buff": [{ "ultimate": 1, "mods": ["aoe", "dionel", "orion", "perseus"] }],
+    "temp-buff": [{ "ultimate": 1, "mods": ["aoe", "orion", "perseus"] }],
     "ult": [{ "ultimate": 1, "mods": ["opening"] }]
   }
 }

@@ -2,10 +2,11 @@
 /* The mechanic filter of a hero list: a menu of every tag with its modifiers
    and of the energy filter, the pick's own controls beside it (a tag's
    modifiers as chips, the energy value's stepper), and a switch that lays the
-   menu out as chips instead. Counts come from `pool`, the list with the host's
-   other filters applied. */
+   menu out as a row of chips instead. In that row the pick's controls follow
+   its chip as parts of one pill. Counts come from `pool`, the list with the
+   host's other filters applied. */
 
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 
 import CharacterFilterEnergy from './CharacterFilterEnergy.vue'
 import DropdownRow from './ui/DropdownRow.vue'
@@ -15,6 +16,7 @@ import IconFilter from './ui/IconFilter.vue'
 import { useEnergyValue } from '@/composables/useEnergyValue'
 import { useMechanicsExpanded } from '@/composables/useMechanicsExpanded'
 import { useNarrowViewport } from '@/composables/useNarrowViewport'
+import { usePillJoins, type PillJoin } from '@/composables/usePillJoins'
 import { guidePath } from '@/lib/guide'
 import {
   ENERGY_KEY,
@@ -49,7 +51,7 @@ const vocabulary = loadTagVocabulary()
 const { expanded: wantsChips, setExpanded } = useMechanicsExpanded()
 const narrow = useNarrowViewport()
 const expanded = computed(() => wantsChips.value && !narrow.value)
-const segment = computed(() => (narrow.value ? undefined : expanded.value ? '−' : '+'))
+const segment = computed(() => (narrow.value ? undefined : expanded.value ? 'minus' : 'plus'))
 
 const count = (pick: MechanicPick): number => pool.filter((c) => matchesMechanic(c, pick)).length
 
@@ -91,7 +93,7 @@ const pickedKey = computed(() => (model.value ? pickKey(model.value) : null))
 const pickedTag = computed(() => (model.value && !isEnergyPick(model.value) ? model.value : null))
 const energyCount = computed(() => count({ energyAbove: energyAbove.value }))
 
-// Expanded, the pick shows as its chip, so the pill keeps its own name.
+// Expanded, the pick shows as its chip, so the dropdown keeps its own name.
 const triggerLabel = computed(() =>
   pickedKey.value && !expanded.value
     ? mechanicLabel(pickedKey.value, lang.value)
@@ -106,16 +108,37 @@ const chips = computed(() => {
   if (!pick || !info || info.solo) return []
   return info.mods.map((mod) => {
     const active = pick.mods.includes(mod)
-    const toggled = active ? pick.mods.filter((m) => m !== mod) : [...pick.mods, mod].sort()
+    const toggled = {
+      tag: pick.tag,
+      mods: active ? pick.mods.filter((m) => m !== mod) : [...pick.mods, mod].sort(),
+    }
+    const matching = count(active ? pick : toggled)
     return {
       mod,
-      label: modifierLabel(mod, lang.value),
-      active,
-      count: count(active ? pick : { tag: pick.tag, mods: toggled }),
-      toggled: { tag: pick.tag, mods: toggled },
+      toggled,
+      chip: {
+        label: modifierLabel(mod, lang.value),
+        count: matching,
+        active,
+        disabled: !active && matching === 0,
+      },
     }
   })
 })
+
+// The picked entry, when it comes with controls of its own.
+const controlled = computed(() =>
+  pickedKey.value === ENERGY_KEY || chips.value.length > 0 ? pickedKey.value : null,
+)
+
+// In the row of chips those controls and the picked chip are the parts of one
+// pill. The row spaces its chips by margin, not a gap, so neighbouring parts
+// can overlap by a border and share one outline; its end padding is the room
+// for that overlap.
+const tray = ref<HTMLElement>()
+const joins = usePillJoins(tray, '.part')
+const APART: PillJoin = { left: false, right: false }
+const joinOf = (part: number): PillJoin => joins.value[part] ?? APART
 
 const isPicked = (pick: TagPick): boolean => {
   const current = pickedTag.value
@@ -192,36 +215,55 @@ function toggle(item: { key: string; pick: MechanicPick }) {
       </template>
     </DropdownSelect>
 
-    <div v-if="pickedKey === ENERGY_KEY || chips.length > 0" class="mods">
+    <div v-if="controlled && !expanded" class="mods">
       <CharacterFilterEnergy
-        v-if="pickedKey === ENERGY_KEY"
+        v-if="controlled === ENERGY_KEY"
         v-model="energyAbove"
         active
         :count="energyCount"
         :lang
       />
       <FilterChip
-        v-for="chip in chips"
-        :key="chip.mod"
+        v-for="{ mod, toggled, chip } in chips"
+        :key="mod"
         large
-        :label="chip.label"
-        :count="chip.count"
-        :active="chip.active"
-        :disabled="!chip.active && chip.count === 0"
-        @click="model = chip.toggled"
+        v-bind="chip"
+        @click="model = toggled"
       />
     </div>
 
-    <div v-if="expanded" class="tray">
-      <FilterChip
-        v-for="item in items"
-        :key="item.key"
-        :label="item.label"
-        :count="item.count"
-        :active="pickedKey === item.key"
-        :disabled="item.deadEnd && pickedKey !== item.key"
-        @click="toggle(item)"
-      />
+    <div v-if="expanded" ref="tray" class="tray">
+      <template v-for="item in items" :key="item.key">
+        <FilterChip
+          :class="{ part: item.key === controlled }"
+          :label="item.label"
+          :count="item.count"
+          :active="pickedKey === item.key"
+          :disabled="item.deadEnd && pickedKey !== item.key"
+          :join="item.key === controlled ? joinOf(0) : undefined"
+          @click="toggle(item)"
+        />
+        <template v-if="item.key === controlled">
+          <CharacterFilterEnergy
+            v-if="controlled === ENERGY_KEY"
+            v-model="energyAbove"
+            class="part"
+            compact
+            active
+            :count="energyCount"
+            :join="joinOf(1)"
+            :lang
+          />
+          <FilterChip
+            v-for="({ mod, toggled, chip }, i) in chips"
+            :key="mod"
+            class="part"
+            v-bind="chip"
+            :join="joinOf(i + 1)"
+            @click="model = toggled"
+          />
+        </template>
+      </template>
     </div>
   </div>
 </template>
@@ -237,11 +279,8 @@ function toggle(item: { key: string; pick: MechanicPick }) {
   --dropdown-trigger-min-width: var(--dropdown-large-width);
 }
 
-/* A synergy's hero is named in the Epic tier's orange. That orange is made
-   for dark surfaces, so it is darkened here until it reads on white as well
-   as the teal of a hovered row. */
 .menu-body {
-  --dropdown-row-lead: oklch(from var(--color-tier-2) calc(l - 0.12) c h);
+  --dropdown-row-lead: var(--upgrade-pill-refinement-max);
 }
 
 .all {
@@ -274,7 +313,16 @@ function toggle(item: { key: string; pick: MechanicPick }) {
   display: flex;
   flex-wrap: wrap;
   flex-basis: 100%;
-  gap: var(--spacing-sm) var(--spacing-md);
+  row-gap: var(--spacing-sm);
+  padding-right: var(--chip-border);
+}
+
+.tray > * {
+  margin-right: var(--spacing-md);
+}
+
+.tray > .part:has(+ .part) {
+  margin-right: calc(-1 * var(--chip-border));
 }
 
 @media (max-width: 768px) {
