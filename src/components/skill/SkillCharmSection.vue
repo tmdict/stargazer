@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import SkillSectionHeader, { type SlotChip } from './SkillSectionHeader.vue'
+import SkillSectionHeader from './SkillSectionHeader.vue'
 import { useI18nStore } from '@/stores/i18n'
 import { highlightSkillText } from '@/utils/textHighlight'
 
@@ -9,7 +9,7 @@ const props = defineProps<{
   /** In the app locale, like `sharedLabel`; the tiers and names are in the
    * skill text's language. */
   heading: string
-  slotTags?: SlotChip[]
+  slotTags?: string[]
   /** Localized tier labels, Elite → Mythic order. */
   tierNames: string[]
   tiers: { tier: number; text: string }[]

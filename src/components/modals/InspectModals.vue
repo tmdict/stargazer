@@ -14,8 +14,8 @@ import { useInspect } from '@/composables/useInspect'
 const { target, open, close } = useInspect()
 
 // Living at the root, the modal outlives the page that opened it, so any
-// navigation (a tag chip link inside the skill page, browser Back) closes it,
-// as the search overlay does.
+// navigation (a link inside it, browser Back) closes it, as the search
+// overlay does.
 const route = useRoute()
 watch(
   () => route.fullPath,

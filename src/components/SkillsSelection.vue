@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import CharacterFilterStrip from './CharacterFilterStrip.vue'
 import CharacterGrid from './CharacterGrid.vue'
 import CharacterIcon from './CharacterIcon.vue'
 import SkillSearchTrigger from '@/components/search/SkillSearchTrigger.vue'
 import { useCharacterFilters } from '@/composables/useCharacterFilters'
-import { fromMechanicQuery } from '@/lib/mechanics'
+import { fromMechanicQuery, toMechanicQuery } from '@/lib/mechanics'
 import type { CharacterType } from '@/lib/types/character'
 import type { SkillLocale } from '@/lib/types/i18n'
 import { loadTagVocabulary } from '@/utils/tagData'
@@ -33,16 +33,23 @@ const {
   energyPicked,
 } = useCharacterFilters(computed(() => props.characters.filter((c) => !c.placeholder)))
 
-// A mechanic link (`/skills?tag=debuff&mods=global`, e.g. a clicked skill
-// chip, or `/skills?energy=500`) seeds the mechanic filter. First applied
-// after mount: the baked page has no query, and the first client render has
-// to match it.
+// A mechanic link (`/skills?tag=debuff&mods=global` or `/skills?energy=500`)
+// seeds the mechanic filter. First applied after mount: the baked page has no
+// query, and the first client render has to match it.
 const route = useRoute()
+const router = useRouter()
 const applyLink = () => {
   mechanicFilter.value = fromMechanicQuery(route.query, loadTagVocabulary())
 }
 onMounted(applyLink)
 watch([() => route.query.tag, () => route.query.mods, () => route.query.energy], applyLink)
+
+// On the index the address names the filter, which makes it the link to share.
+// Replaced, not pushed: a pick is not a step for Back to undo.
+watch(mechanicFilter, (pick) => {
+  if (route.name !== 'skills') return
+  void router.replace({ query: pick ? toMechanicQuery(pick) : {} })
+})
 </script>
 
 <template>
